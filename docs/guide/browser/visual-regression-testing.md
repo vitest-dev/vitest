@@ -3,71 +3,126 @@ title: Visual Regression Testing
 outline: [2, 3]
 ---
 
+<script setup>
+import MoonPhase from '../../.vitepress/components/MoonPhase.vue'
+</script>
+
 # Visual Regression Testing
 
-Vitest can run visual regression tests out of the box. It captures screenshots
-of your UI components and pages, then compares them against reference images to
-detect unintended visual changes.
+Vitest can run visual regression tests out of the box. It captures screenshots of your UI components and pages, then compares them against reference images to detect unintended visual changes.
 
-Unlike functional tests that verify behavior, visual tests catch styling issues,
-layout shifts, and rendering problems that might otherwise go unnoticed without
-thorough manual testing.
+Unlike functional tests that verify behavior, visual tests catch styling issues, layout shifts, and rendering problems that might otherwise go unnoticed without thorough manual testing.
 
-## Why Visual Regression Testing?
+## Why visual regression testing?
 
-Visual bugs don’t throw errors, they just look wrong. That’s where visual
-testing comes in.
+Visual bugs don’t throw errors, they just look wrong. That’s where visual testing comes in.
 
 - That button still submits the form... but why is it hot pink now?
 - The text fits perfectly... until someone views it on mobile
-- Everything works great... except those two containers are out of viewport
+- Everything works great... except those two containers are outside the viewport
 - That careful CSS refactor works... but broke the layout on a page no one tests
 
-Visual regression testing acts as a safety net for your UI, automatically
-catching these visual changes before they reach production.
+Visual regression testing acts as a safety net for your UI, automatically catching these visual changes before they reach production.
 
-## Getting Started
+## Example
 
-::: warning Browser Rendering Differences
-Visual regression tests are **inherently unstable across different
-environments**. Screenshots will look different on different machines because
-of:
-
-- Font rendering (the big one. Windows, macOS, Linux, they all render text
-differently)
-- GPU drivers and hardware acceleration
-- Whether you're running headless or not
-- Browser settings and versions
-- ...and honestly, sometimes just the phase of the moon
-
-That's why Vitest includes the browser and platform in screenshot names (like
-`button-chromium-darwin.png`).
-
-For stable tests, use the same environment everywhere. We **strongly recommend**
-cloud services like
-[Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/)
-or [Docker containers](https://playwright.dev/docs/docker).
-:::
-
-Visual regression testing in Vitest can be done through the
-[`toMatchScreenshot` assertion](/api/browser/assertions.html#tomatchscreenshot):
+Visual regression testing in Vitest can be done through the [`toMatchScreenshot` assertion](/api/browser/assertions#tomatchscreenshot):
 
 ```ts
 import { expect, test } from 'vitest'
 import { page } from 'vitest/browser'
 
-test('hero section looks correct', async () => {
-  // ...the rest of the test
+test('button renders in default state', async () => {
+  // render your component
 
   // capture and compare screenshot
-  await expect(page.getByTestId('hero')).toMatchScreenshot('hero-section')
+  await expect(page.getByRole('button')).toMatchScreenshot()
 })
 ```
 
-### Creating References
+## Getting started
 
-When you run a visual test for the first time, Vitest creates a reference (also
-called baseline) screenshot and fails the test with the following error message:
+### Environmental stability
+
+Visual regression tests are **sensitive to environmental differences** because rendering is not perfectly deterministic across environments and depends on multiple factors:
+
+- GPU, drivers, and hardware acceleration
+- Operating System
+- Font rendering pipelines
+- Browser, browser versions, and settings
+- Whether the browser is running headless or headed
+- Screen scaling, color profiles, and display settings
+- ...and occasionally what feels like the phase of the moon <MoonPhase />
+
+In practice, even seemingly identical environments can occasionally produce subtle rendering differences. For this reason, **visual regression tests are most reliable when run in a standardized and tightly controlled environment**. This is also why [Docker containers](https://playwright.dev/docs/docker), [CI-only visual testing workflows, or cloud services](#visual-testing-for-teams) are strongly recommended.
+
+### Not a replacement for behavior testing
+
+When a visual test fails alongside behavior tests, it's harder to tell what's actually broken or why. Visual failures are also expected during intentional UI work, but a failing unit test usually is not. Keeping them separate means each suite can fail loudly for the right reasons.
+
+It's worth calling out that **`toMatchScreenshot` is not a substitute for proper assertions**.
+
+A test that renders a button and just takes a screenshot is just documenting the current state. There's no way to tell from a screenshot whether users can interact with the button. **Visual tests work best as a complementary layer on top of behavior tests, not a replacement for them**.
+
+Put another way, **visual testing doesn't tell you why something renders the way it does**. It just tells you that something rendered a certain way, or a different way than it did last time.
+
+For example, take a business requirement to sort recent purchases in a table by purchase date. If you're looking only at the visual regression tests, you might notice that the same items from the last test are in a different order. This could be because you just introduced the sorting or because the sorting is broken. Either way, you don't know why the order is different just by looking at the UI. Someone could dismiss the visual diff as noise because the table "looks the same", even though the ordering logic is now broken. Now you have a broken business requirement in production.
+
+### Project structure
+
+Separating your visual suite from other tests gives you cleaner failure signals and a more deliberate update workflow. The recommended setup uses [projects](/guide/projects) with a `[name].vrt.test.[ext]` naming convention to keep them distinct, and runs them in headless mode for consistency. As the browser instance might have a different default size, it also sets a specific viewport size.
+
+```ts [vitest.config.ts]
+import { defaultExclude, defineConfig } from 'vitest/config'
+
+const vrtPattern = '**/*.vrt.test.[tj]s?(x)'
+
+export default defineConfig({
+  test: {
+    // ...other configurations
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          exclude: [vrtPattern, ...defaultExclude],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'vrt',
+          browser: {
+            headless: true,
+            instances: [
+              {
+                browser: '[browser-name]',
+                viewport: { width: 1280, height: 720 },
+              },
+            ],
+          },
+          include: [vrtPattern],
+        },
+      },
+    ],
+  },
+})
+```
+
+With this configuration in place, add scripts to launch each project separately:
+
+```json [package.json]
+{
+  "scripts": {
+    "test:unit": "vitest --project unit",
+    "test:visual": "vitest --project vrt"
+  }
+}
+```
+
+### Creating references
+
+When you run a visual test for the first time, Vitest creates a reference (also called baseline) screenshot and fails the test with the following error message:
 
 ```
 expect(element).toMatchScreenshot()
@@ -75,78 +130,102 @@ expect(element).toMatchScreenshot()
 No existing reference screenshot found; a new one was created. Review it before running tests again.
 
 Reference screenshot:
-  tests/__screenshots__/hero.test.ts/hero-section-chromium-darwin.png
+  tests/__screenshots__/button.vrt.test.ts/button-default-state-chromium-darwin.png
 ```
 
-This is normal. Check that the screenshot looks right, then run the test again.
-Vitest will now compare future runs against this baseline.
+This is normal. Check that the screenshot looks right, then run the test again. Vitest will now compare future runs against this baseline.
 
 ::: tip
-Reference screenshots live in `__screenshots__` folders next to your tests.
-**Don't forget to commit them!**
+Reference screenshots live in `__screenshots__` folders next to your tests. **Commit them to your repository.**
 :::
 
-### Screenshot Organization
+### Screenshot organization
 
 By default, screenshots are organized as:
 
 ```
 .
 ├── __screenshots__
-│   └── test-file.test.ts
+│   └── test-file.vrt.test.ts
 │       ├── test-name-chromium-darwin.png
 │       ├── test-name-firefox-linux.png
 │       └── test-name-webkit-win32.png
-└── test-file.test.ts
+└── test-file.vrt.test.ts
 ```
 
 The naming convention includes:
-- **Test name**: either the first argument of the `toMatchScreenshot()` call,
-or automatically generated from the test's name.
-- **Browser name**: `chrome`, `chromium`, `firefox` or `webkit`.
-- **Platform**: `aix`, `darwin`, `freebsd`, `linux`, `openbsd`, `sunos`, or
-`win32`.
+- **Test name**: either the first argument of the `toMatchScreenshot()` call, or automatically generated from the test's name.
+- **Browser name**: depends on the configured browser provider, for example `chrome`, `chromium`, `firefox` or `webkit`.
+- **Platform**: `aix`, `darwin`, `freebsd`, `linux`, `openbsd`, `sunos`, or `win32`.
 
 This ensures screenshots from different environments don't overwrite each other.
 
-### Updating References
+### Updating references
 
-When you intentionally change your UI, you'll need to update the reference
-screenshots:
+When you intentionally change your UI, you'll need to update the reference screenshots just as you would update snapshots:
 
 ```bash
-$ vitest --update
+$ vitest --project vrt --update
 ```
 
-Review updated screenshots before committing to make sure changes are
-intentional.
+Review updated screenshots before committing to make sure changes are intentional.
 
-## How Visual Tests Work
+::: warning Stale screenshots
+Note that **screenshots for deleted or renamed tests aren't removed automatically**. Clean up the `__screenshots__` folder manually when you remove or rename tests, otherwise stale references will accumulate over time.
+:::
 
-Visual regression tests need stable screenshots to compare against. But pages aren't instantly stable as images load, animations finish, fonts render, and layouts settle.
+### Debugging failed tests
 
-Vitest handles this automatically through "Stable Screenshot Detection":
+When a visual test fails, Vitest provides three images to help debug:
 
-1. Vitest takes a first screenshot (or uses the reference screenshot if available) as baseline
-1. It takes another screenshot and compares it with the baseline
-    - If the screenshots match, the page is stable and testing continues
-    - If they differ, Vitest uses the newest screenshot as the baseline and repeats
-1. This continues until stability is achieved or the timeout is reached
+1. **Reference screenshot**: the expected baseline image
+1. **Actual screenshot**: what was captured during the test
+1. **Diff image**: highlights the differences; only generated when the screenshots have the same dimensions (behavior may vary with custom matchers)
 
-This ensures that transient visual changes (like loading spinners or animations) don't cause false failures. If something never stops animating though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).
+You'll see something like this in the CLI output:
 
-If a stable screenshot is captured after retries (one or more) and a reference screenshot exists, Vitest performs a final comparison with the reference using `createDiff: true`. This will generate a diff image if they don't match.
+```
+expect(element).toMatchScreenshot()
 
-During stability detection, Vitest calls comparators with `createDiff: false` since it only needs to know if screenshots match. This keeps the detection process fast.
+Screenshot does not match the stored reference.
+245 pixels (ratio 0.03) differ.
 
-## Configuring Visual Tests
+Reference screenshot:
+  tests/__screenshots__/button.vrt.test.ts/button-chromium-darwin.png
 
-### Global Configuration
+Actual screenshot:
+  tests/.vitest/attachments/button.vrt.test.ts/button-chromium-darwin-actual.png
 
-Configure visual regression testing defaults in your
-[Vitest config](/config/browser/expect#tomatchscreenshot):
+Diff image:
+  tests/.vitest/attachments/button.vrt.test.ts/button-chromium-darwin-diff.png
+```
 
-```ts [vitest.config.ts]
+While in UI mode, Vitest shows a tabbed diff view with an A/B slider as shown below.
+
+<center>
+  <img alt="Animated demo of the visual regression diff view, switching tabs and using the slider to reveal differences" img-light src="/visual-regression/diff-view-light.avif">
+  <img alt="Animated demo of the visual regression diff view, switching tabs and using the slider to reveal differences" img-dark src="/visual-regression/diff-view-dark.avif">
+
+  <sup>An example of the visual regression diff UI, showing the "Diff", "Reference", "Actual", and "Slider" tabs, and how the slider reveals unexpected visual changes in a component.</sup>
+</center>
+
+#### Understanding the diff image
+
+- **Red pixels** are areas that differ between reference and actual
+- **Yellow pixels** are anti-aliasing differences (when anti-alias is not ignored)
+- **Transparent/original** are unchanged areas
+
+:::tip
+If the diff is mostly red, something's really wrong. If it's speckled with a few red pixels around text, you probably just need to bump your threshold.
+:::
+
+## Configuring the `toMatchScreenshot` assertion
+
+It's possible to configure the `toMatchScreenshot` assertion either globally, by changing its default options, or on a per-test basis.
+
+To change the defaults, you have to change the [Vitest config](/config/browser/expect#tomatchscreenshot):
+
+```ts{6-16} [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -168,12 +247,10 @@ export default defineConfig({
 })
 ```
 
-### Per-Test Configuration
+For more fine-grained control, override global settings in specific tests by passing options directly to the assertion:
 
-Override global settings for specific tests:
-
-```ts
-await expect(element).toMatchScreenshot('button-hover', {
+```ts{2-6}
+await expect(element).toMatchScreenshot('button', {
   comparatorName: 'pixelmatch',
   comparatorOptions: {
     // more lax comparison for text-heavy elements
@@ -182,149 +259,178 @@ await expect(element).toMatchScreenshot('button-hover', {
 })
 ```
 
-## Best Practices
+## Third-party comparators
 
-### Test Specific Elements
+Vitest ships with `pixelmatch` as its built-in comparator. It's fast, compares images pixel-by-pixel, has no native dependencies, and handles the majority of cases well. Perceptual comparators aren't included by default because they bring heavier dependencies and there's no clear single "best one" to pick as different algorithms make different trade-offs, but the comparator API exists precisely to let you plug in whatever fits your needs. This decision may change as the ecosystem matures, though.
 
-Unless you explicitly want to test the whole page, prefer capturing specific
-components to reduce false positives:
+For use cases where pixel-level diffing produces excessive noise, a perceptual or structural similarity comparator may be a better fit. These compare images more like a human would, tolerating minor rendering differences while still detecting meaningful visual changes.
+
+There are many algorithms, so these are a useful starting point:
+
+- [`@blazediff/ssim`](https://blazediff.dev/docs/ssim), [SSIM (Structural Similarity Index)](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) implementations for perceptual image quality assessment. It offers standard SSIM, MS-SSIM (Multi-Scale SSIM), and Hitchhiker’s SSIM for various use cases
+- [`@blazediff/gmsd`](https://blazediff.dev/docs/gmsd), a single-threaded GMSD (Gradient Magnitude Similarity Deviation) metric for perceptual image quality assessment, good for CI environments
+
+To use one, install and register it:
+
+```ts{5-11,18-46} [vitest.config.ts]
+import ssim from '@blazediff/ssim/ssim'
+import type { SsimOptionsExtended } from '@blazediff/ssim/ssim'
+import { defineConfig } from 'vitest/config'
+
+declare module 'vitest/browser' {
+  interface ScreenshotComparatorRegistry {
+    'standard-ssim': SsimOptionsExtended & {
+      threshold?: number
+    }
+  }
+}
+
+export default defineConfig({
+  test: {
+    browser: {
+      expect: {
+        toMatchScreenshot: {
+          comparators: {
+            // naive implementation, always check the library's docs
+            'standard-ssim': (
+              reference,
+              actual,
+              { createDiff, ...options }
+            ) => {
+              const diffBuffer = createDiff
+                ? new Uint8Array(reference.data.length)
+                : undefined
+
+              const output = ssim(
+                reference.data,
+                actual.data,
+                diffBuffer,
+                reference.metadata.width,
+                reference.metadata.height,
+                options,
+              )
+
+              const pass = output >= (options.threshold ?? 0.95)
+
+              return {
+                pass,
+                diff: diffBuffer ?? null,
+                message: pass ? null : `SSIM score: ${output}.`,
+              }
+            },
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+Once registered, the comparator can be referenced by name in your config or on a per-test basis:
+
+:::code-group
+
+```ts{8} [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      expect: {
+        toMatchScreenshot: {
+          comparatorName: 'standard-ssim',
+        },
+      },
+    },
+  },
+})
+```
+
+```ts{2} [button.vrt.test.tsx]
+await expect(button).toMatchScreenshot('button', {
+  comparatorName: 'standard-ssim',
+})
+```
+
+:::
+
+## Best practices
+
+### Test specific elements
+
+Unless you explicitly want to test the whole page, prefer capturing specific components to reduce false positives:
 
 ```ts
 // ❌ Captures entire page; prone to unrelated changes
 await expect(page).toMatchScreenshot()
 
 // ✅ Captures only the component under test
-await expect(page.getByTestId('product-card')).toMatchScreenshot()
+await expect(
+  page.getByRole('article', { name: 'Tote bag' })
+).toMatchScreenshot()
 ```
 
-### Handle Dynamic Content
+### Handle dynamic content
 
-Dynamic content like timestamps, user data, or random values will cause tests
-to fail. You can either mock the sources of dynamic content or mask them when
-using the Playwright provider by using the
-[`mask` option](https://playwright.dev/docs/api/class-page#page-screenshot-option-mask)
-in `screenshotOptions`.
+Dynamic content like timestamps, user data, or random values will cause tests to fail. Either mock the underlying data sources or mask them using the [`mask` option](https://playwright.dev/docs/api/class-page#page-screenshot-option-mask) in `screenshotOptions` when using the Playwright provider.
 
-```ts
-await expect(page.getByTestId('profile')).toMatchScreenshot({
+```ts{8}
+const profile = page.getByRole(
+  'article',
+  { name: 'Gracie\'s profile' },
+)
+
+await expect(profile).toMatchScreenshot({
   screenshotOptions: {
-    mask: [page.getByTestId('last-seen')],
+    mask: [profile.getByRole('status')],
   },
 })
 ```
 
-### Disable Animations
-
-Animations can cause flaky tests. Disable them during testing by injecting
-a custom CSS snippet:
-
-```css
-*, *::before, *::after {
-  animation-duration: 0s !important;
-  animation-delay: 0s !important;
-  transition-duration: 0s !important;
-  transition-delay: 0s !important;
-}
-```
+### Disable animations
 
 ::: tip
-When using the Playwright provider, animations are automatically disabled
-when using the assertion: the `animations` option's value in `screenshotOptions`
-is set to `"disabled"` by default.
+When using the Playwright provider, animations are automatically disabled when using the built-in assertion: the `animations` option's value in `screenshotOptions` is set to `"disabled"` by default.
+
+If you prefer to disable all animations to save some execution time, continue reading.
 :::
 
-### Set Appropriate Thresholds
-
-Tuning thresholds is tricky. It depends on the content, test environment,
-what's acceptable for your app, and might also change based on the test.
-
-Vitest does not set a default for the mismatching pixels, that's up for the
-user to decide based on their needs. The recommendation is to use
-`allowedMismatchedPixelRatio`, so that the threshold is computed on the size
-of the screenshot and not a fixed number.
-
-When setting both `allowedMismatchedPixelRatio` and
-`allowedMismatchedPixels`, Vitest uses whichever limit is stricter.
-
-### Set consistent viewport sizes
-
-As the browser instance might have a different default size, it's best to
-set a specific viewport size, either on the test or the instance
-configuration:
+Animations can cause flaky tests. Disable them during testing by injecting a custom CSS snippet using [`setupFiles`](/config/setupfiles) or directly in your tests:
 
 ```ts
-await page.viewport(1280, 720)
+const stylesheet = document.createElement('style')
+
+stylesheet.textContent = /* css */`
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+`
+
+document.head.appendChild(stylesheet)
 ```
 
-```ts [vitest.config.ts]
-import { playwright } from '@vitest/browser-playwright'
-import { defineConfig } from 'vitest/config'
+Alternatively, you can declare the CSS in a custom HTML template by using [`browser.testerHtmlPath`](/config/browser/testerhtmlpath).
 
-export default defineConfig({
-  test: {
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-          viewport: { width: 1280, height: 720 },
-        },
-      ],
-    },
-  },
-})
-```
+### Set appropriate thresholds
+
+Tuning thresholds is tricky. It depends on the content, test environment, what's acceptable for your app, and might also change based on the test.
+
+Vitest does not define a default tolerance for mismatched pixels. The appropriate value depends on your application and environment. The recommendation is to use `allowedMismatchedPixelRatio`, so that the threshold is computed on the size of the screenshot and not a fixed number.
+
+When setting both `allowedMismatchedPixelRatio` and `allowedMismatchedPixels`, Vitest uses whichever limit is stricter.
 
 ### Use Git LFS
 
-Store reference screenshots in
-[Git LFS](https://github.com/git-lfs/git-lfs?tab=readme-ov-file) if you plan to
-have a large test suite.
+Store reference screenshots in [Git LFS](https://github.com/git-lfs/git-lfs?tab=readme-ov-file) if you plan to have a large test suite.
 
-## Debugging Failed Tests
+## Common issues and solutions
 
-When a visual test fails, Vitest provides three images to help debug:
+### False positives from font rendering
 
-1. **Reference screenshot**: the expected baseline image
-1. **Actual screenshot**: what was captured during the test
-1. **Diff image**: highlights the differences, but this might not get generated
-
-You'll see something like:
-
-```
-expect(element).toMatchScreenshot()
-
-Screenshot does not match the stored reference.
-245 pixels (ratio 0.03) differ.
-
-Reference screenshot:
-  tests/__screenshots__/button.test.ts/button-chromium-darwin.png
-
-Actual screenshot:
-  tests/.vitest/attachments/button.test.ts/button-chromium-darwin-actual.png
-
-Diff image:
-  tests/.vitest/attachments/button.test.ts/button-chromium-darwin-diff.png
-```
-
-### Understanding the diff image
-
-- **Red pixels** are areas that differ between reference and actual
-- **Yellow pixels** are anti-aliasing differences (when anti-alias is not ignored)
-- **Transparent/original** are unchanged areas
-
-:::tip
-If the diff is mostly red, something's really wrong. If it's speckled with a
-few red pixels around text, you probably just need to bump your threshold.
-:::
-
-## Common Issues and Solutions
-
-### False Positives from Font Rendering
-
-Font availability and rendering varies significantly between systems. Some
-possible solutions might be to:
+Font availability and rendering varies significantly between systems. Some possible solutions might be to:
 
 - Use web fonts and wait for them to load:
 
@@ -337,8 +443,10 @@ possible solutions might be to:
 
 - Increase comparison threshold for text-heavy areas:
 
-  ```ts
-  await expect(page.getByTestId('article-summary')).toMatchScreenshot({
+  ```ts{6-7}
+  await expect(
+    page.getByRole('article', { name: 'How to grow tomatoes' })
+  ).toMatchScreenshot({
     comparatorName: 'pixelmatch',
     comparatorOptions: {
       // 10% of the pixels are allowed to change
@@ -347,82 +455,40 @@ possible solutions might be to:
   })
   ```
 
-- Use a cloud service or containerized environment for consistent font rendering.
+- [Consider a shared environment setup](#visual-testing-for-teams) for consistent font rendering.
 
-### Flaky Tests or Different Screenshot Sizes
+### Flaky tests or different screenshot sizes
 
-If tests pass and fail randomly, or if screenshots have different dimensions
-between runs:
+If tests pass and fail randomly, or if screenshots have different dimensions between runs:
 
 - Wait for everything to load, including loading indicators
 - Set explicit viewport sizes: `await page.viewport(1920, 1080)`
 - Check for responsive behavior at viewport boundaries
 - Check for unintended animations or transitions
 - Increase test timeout for large screenshots
-- Use a cloud service or containerized environment
+- [Consider a shared environment setup](#visual-testing-for-teams)
 
-## Visual Regression Testing for Teams
+## Visual testing for teams
 
-Remember when we mentioned visual tests need a stable environment? Well, here's
-the thing: your local machine isn't it.
+Even with a controlled local setup, references generated on one machine will often fail on another. This matters as soon as more than one person is running the suite.
 
-For teams, you've basically got three options:
+Running the visual regression suite in a shared environment solves this problem. There are three ways to do this:
 
-1. **Self-hosted runners**, complex to set up, painful to maintain
-1. **GitHub Actions**, free (for open source), works with any provider
-1. **Cloud services**, like
-[Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/),
-built for this exact problem
+1. **Self-hosted runners** (e.g., Docker images), complex to set up and maintain
+1. **Generate references in CI**, which requires some setup
+1. **Cloud services**, like [Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/), built to solve this exact problem, but usually restricted to specific providers and browsers
 
-We'll focus on options 2 and 3 since they're the quickest to get running.
+Options 2 and 3 are the quickest to get running, so those are covered below.
 
-To be upfront, the main trade-offs for each are:
+:::: tabs key:shared-environment-vrt
+=== GitHub Actions (CI)
 
-- **GitHub Actions**: visual tests only run in CI (developers can't run them
-locally)
-- **Microsoft's service**: works everywhere but costs money and only works
-with Playwright
-
-:::: tabs key:vrt-for-teams
-=== GitHub Actions
-
-The trick here is keeping visual tests separate from your regular tests,
-otherwise, you'll waste hours checking failing logs of screenshot mismatches.
-
-### Organizing Your Tests
-
-First, isolate your visual tests. Stick them in a `visual` folder (or whatever
-makes sense for your project):
-
-```json [package.json]
-{
-  "scripts": {
-    "test:unit": "vitest --exclude tests/visual/*.test.ts",
-    "test:visual": "vitest tests/visual/*.test.ts"
-  }
-}
-```
-
-Now developers can run `npm run test:unit` locally without visual tests getting
-in the way. Visual tests stay in CI where the environment is consistent.
-
-::: tip Alternative
-Not a fan of glob patterns? You could also use separate
-[Test Projects](/guide/projects) instead and run them using:
-
-- `vitest --project unit`
-- `vitest --project visual`
-:::
-
-### CI Setup
-
-Your CI needs browsers installed. How you do this depends on your provider:
+GitHub runners don't have browsers preinstalled. Install them before running tests, using the steps for your provider:
 
 ::: tabs key:provider
 == Playwright
 
-[Playwright](https://npmx.dev/package/playwright) makes this easy. Just pin
-your version and add this before running tests:
+[Playwright](https://npmx.dev/package/playwright) makes this easy. Just pin your version and add this step before running tests:
 
 ```yaml [.github/workflows/ci.yml]
 # ...the rest of the workflow
@@ -432,9 +498,7 @@ your version and add this before running tests:
 
 == WebdriverIO
 
-[WebdriverIO](https://npmx.dev/package/webdriverio) expects you to bring
-your own browsers. The folks at
-[@browser-actions](https://github.com/browser-actions) have your back:
+[WebdriverIO](https://npmx.dev/package/webdriverio) installs browsers automatically if none can be found when a test run starts, but it's recommended to decouple the installation process. To help with this, the folks at [@browser-actions](https://github.com/browser-actions) have packaged scripts to install [Chrome](https://github.com/browser-actions/setup-chrome), [Edge](https://github.com/browser-actions/setup-edge), and [Firefox](https://github.com/browser-actions/setup-firefox) in convenient reusable actions:
 
 ```yaml [.github/workflows/ci.yml]
 # ...the rest of the workflow
@@ -445,7 +509,7 @@ your own browsers. The folks at
 
 :::
 
-Then run your visual tests:
+Then in your existing workflow run the visual tests:
 
 ```yaml [.github/workflows/ci.yml]
 # ...the rest of the workflow
@@ -454,12 +518,11 @@ Then run your visual tests:
   run: npm run test:visual
 ```
 
-### The Update Workflow
+### The update workflow
 
-Here's where it gets interesting. You don't want to update screenshots on every
-PR automatically <small>*(chaos!)*</small>. Instead, create a
-manually-triggered workflow that developers can run when they intentionally
-change the UI.
+Running `vitest --update` locally would generate screenshots on your machine, defeating the whole point of a controlled environment. Instead, you need a way to trigger the update in CI where the environment matches the one that runs the tests.
+
+You don't want this to happen automatically on every PR <small>*(chaos!)*</small>. Instead, create a manually-triggered workflow that runs when there are intentional changes to the UI.
 
 The workflow below:
 - Only runs on feature branches (never on main)
@@ -477,10 +540,9 @@ The workflow below:
     <img alt="Action summary after no updates" img-dark src="/vrt-gha-summary-no-update-dark.png">
 
 ::: tip
-This is just one approach. Some teams prefer PR comments (`/update-screenshots`),
-others use labels. Adjust it to fit your workflow!
+This is just one approach. Some prefer PR comments (`/update-screenshots`), others use labels. Adjust it to fit your workflow.
 
-The important part is having a controlled way to update baselines.
+The important part is having a controlled way to update reference screenshots.
 :::
 
 ```yaml [.github/workflows/update-screenshots.yml]
@@ -537,7 +599,6 @@ jobs:
       - name: Install Playwright Browsers
         run: npx --no playwright install --with-deps --only-shell
 
-      # the magic happens below 🪄
       - name: Update Visual Regression Screenshots
         run: npm run test:visual --update
 
@@ -594,44 +655,30 @@ jobs:
           fi
 ```
 
-=== Azure App Testing
+=== Azure App Testing (Cloud service)
 
-Your tests stay local, only the browsers run in the cloud. It's Playwright's
-remote browser feature, but Microsoft handles all the infrastructure.
+With this method, your tests stay local but the browsers run in the cloud. This is built on top of Playwright's remote browser feature and Azure handles all the infrastructure.
 
-### Organizing Your Tests
+Everyone uses the same cloud browsers, so references are consistent regardless of who runs them. Tests work locally, you pay only for what you use, and there's nothing to maintain.
 
-Keep visual tests separate to control costs. Only tests that actually take
-screenshots should use the service.
+### Configuration
 
-The cleanest approach is using [Test Projects](/guide/projects):
+To have Playwright connect to the browsers spawned within the service, you have to update the provider configuration.
 
-```ts [vitest.config.ts]
+```ts{14-28} [vitest.config.ts]
 import { env } from 'node:process'
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
-  // ...global Vite config
-  tests: {
-    // ...global Vitest config
+  test: {
+    // ...other configurations
     projects: [
       {
         extends: true,
         test: {
-          name: 'unit',
-          include: ['tests/**/*.test.ts'],
-          // regular config, can use local browsers
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: 'visual',
-          // or you could use a different suffix, e.g.,: `tests/**/*.visual.ts?(x)`
-          include: ['visual-regression-tests/**/*.test.ts?(x)'],
+          name: 'vrt',
           browser: {
-            enabled: true,
             provider: playwright({
               connectOptions: {
                 wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?${new URLSearchParams({
@@ -650,63 +697,45 @@ export default defineConfig({
             headless: true,
             instances: [
               {
-                browser: 'chromium',
-                viewport: { width: 2560, height: 1440 },
+                browser: '[browser-name]',
+                viewport: { width: 1280, height: 720 },
               },
             ],
           },
+          include: [vrtPattern],
         },
       },
+      // ...other projects
     ],
   },
 })
 ```
 
-Follow the [official guide to create a Playwright Workspace](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#create-a-workspace).
+To create a Playwright Workspace follow the [official guide](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#create-a-workspace).
 
 Once your workspace is created, configure Vitest to use it:
 
 1. **Set the endpoint URL**: following the [official guide](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#configure-the-browser-endpoint), retrieve the URL and set it as the `PLAYWRIGHT_SERVICE_URL` environment variable.
 1. **Enable token authentication**: [enable access tokens](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/how-to-manage-authentication?pivots=playwright-test-runner#enable-authentication-using-access-tokens) for your workspace, then [generate a token](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/how-to-manage-access-tokens#generate-a-workspace-access-token) and set it as the `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` environment variable.
 
-::: danger Keep that Token Secret!
-Never commit `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` to your repository. Anyone with
-the token can rack up your bill. Use environment variables locally and secrets
-in CI.
+::: danger Keep that token secret!
+Never commit `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` to your repository. Anyone with the token can rack up your bill. Use environment variables locally and secrets in CI.
 :::
 
-Then split your `test` script like this:
-
-```json [package.json]
-{
-  "scripts": {
-    "test:visual": "vitest --project visual",
-    "test:unit": "vitest --project unit"
-  }
-}
-```
-
-### Running Tests
+### Running tests
 
 ```bash
 # Local development
-npm run test:unit    # free, runs locally
+npm run test:unit    # runs locally using your browsers
 npm run test:visual  # uses cloud browsers
 
 # Update screenshots
 npm run test:visual -- --update
 ```
 
-The best part of this approach is that it just works:
+### CI setup
 
-- **Consistent screenshots**, everyone uses the same cloud browsers
-- **Works locally**, developers can run and update visual tests on their machines
-- **Pay for what you use**, only visual tests consume service minutes
-- **No Docker or workflow setups needed**, nothing to manage or maintain
-
-### CI Setup
-
-In your CI, add the secrets:
+Add the secrets to your CI configuration:
 
 ```yaml
 env:
@@ -714,26 +743,36 @@ env:
   PLAYWRIGHT_SERVICE_ACCESS_TOKEN: ${{ secrets.PLAYWRIGHT_SERVICE_ACCESS_TOKEN }}
 ```
 
-Then run your tests like normal. The service handles the rest.
+Then run your tests like normal. The service handles the browser infrastructure.
 
 ::::
 
-### So Which One?
+### Picking the right option
 
-Both approaches work. The real question is what pain points matter most to your
-team.
+All approaches work. The real question is what pain points matter most to you and your team.
 
-If you're already deep in the GitHub ecosystem, GitHub Actions is hard to beat.
-Free for open source, works with any browser provider, and you control
-everything.
+If you're comfortable with containerization, a self-hosted Docker setup gives you a controlled environment without any external dependencies or costs. The downside is maintenance as you own the setup, the browser versions, and any breakage.
 
-The downside? That "works on my machine" conversation when someone generates
-screenshots locally and they don't match CI expectations anymore.
+CI runs work with any browser provider and give you full control, but screenshots can only be generated in CI. If someone runs `vitest --update` locally and commits the result, those references will likely fail on the next CI run. This is preventable by guarding the command behind a CI environment check.
 
-A cloud service makes sense if developers need to run visual tests locally.
+A cloud service makes sense if you want developers to be able to run and update visual tests locally without risking mismatched references. It becomes even more useful when designers are involved in reviewing changes, or when the push-wait-check-fix-push cycle becomes a real bottleneck.
 
-Some teams have designers checking their work or developers who prefer catching
-issues before pushing. It allows skipping the push-wait-check-fix-push cycle.
+Still on the fence? Start with the CI workflow. You can always move to a container or cloud service later if it becomes a pain point.
 
-Still on the fence? Start with GitHub Actions. You can always add a cloud
-service later if local testing becomes a pain point.
+## Going deeper
+
+### How Vitest ensures screenshot stability
+
+Visual regression tests rely on screenshots remaining stable across runs. In practice, pages are not instantly stable: images load asynchronously, animations finish at different times, fonts render, and layouts settle. To mitigate this, Vitest uses a "Stable Screenshot Detection" strategy:
+
+1. It takes an initial screenshot (or uses the reference screenshot if available) as baseline
+1. It takes another screenshot and compares it with the baseline
+    - If the screenshots match, the page is stable and testing continues
+    - If they differ, Vitest uses the newest screenshot as the baseline and repeats
+1. This continues until stability is achieved or the timeout is reached
+
+This ensures that transient visual changes (like loading spinners or animations) don't cause false positives. If something never stops animating, though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).
+
+If a stable screenshot is captured after one or more retries and a reference screenshot exists, Vitest performs a final comparison with the reference using `createDiff: true`. This will generate a diff image if they don't match.
+
+During stability detection, Vitest calls comparators with `createDiff: false` since it only needs to know if screenshots match. This keeps the detection process fast.
