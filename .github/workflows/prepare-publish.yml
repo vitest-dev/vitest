@@ -6,7 +6,7 @@ on:
       target_branch:
         description: Release target branch.
         required: true
-        default: v4
+        default: main
         type: string
       release:
         description: Bumpp release type.
@@ -31,9 +31,6 @@ concurrency:
   cancel-in-progress: false
 
 permissions: {}
-
-env:
-  VITE_TEST_WATCHER_DEBUG: 'false'
 
 jobs:
   prepare:
