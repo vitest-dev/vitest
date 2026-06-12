@@ -3,8 +3,9 @@ import { fileURLToPath } from 'node:url'
 import * as semver from 'semver'
 import { $ } from 'zx'
 
-// Example:
-// VITE_TEST_WATCHER_DEBUG=false PUBLISH_DRY_RUN=true PUBLISH_BRANCH=main pnpm publish-ci 5.0.0-beta.4
+// How to test release script locally:
+// RELEASE_VERSION=5.0.0-beta.5 pnpm release
+// VITE_TEST_WATCHER_DEBUG=false PUBLISH_DRY_RUN=true PUBLISH_BRANCH=main pnpm publish-ci 5.0.0-beta.5
 
 const $$ = $({ stdio: 'inherit' })
 
