@@ -34,8 +34,8 @@ test('trace view artifacts', async () => {
       startTime: undefined,
       duration: undefined,
       snapshot: {
-        selectorResolution: raw.snapshot.selectorResolution,
-        selectorError: raw.snapshot.selectorError,
+        selectorResolution: raw.snapshot?.selectorResolution,
+        selectorError: raw.snapshot?.selectorError,
       },
     }
     // remove noisy undefined properties

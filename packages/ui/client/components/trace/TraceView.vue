@@ -31,7 +31,7 @@ function onSelectStep(index: number) {
 }
 
 watch([selectedStep, iframeEl], ([step, iframe]) => {
-  if (!step || !iframe) {
+  if (!step?.snapshot || !iframe) {
     return
   }
   const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
@@ -194,12 +194,15 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
     <Pane :size="70" min-size="20">
       <div class="h-full min-h-0" flex="~ col" overflow-auto>
         <iframe
-          v-if="selectedStep"
+          v-if="selectedStep?.snapshot"
           ref="iframeEl"
           :key="iframeSandbox"
           :sandbox="iframeSandbox"
           style="background: white; border: none; color-scheme: normal; flex: none"
         />
+        <div v-else-if="selectedStep" class="text-sm opacity-50 p-4">
+          No DOM snapshot captured for this trace step
+        </div>
         <div v-else class="text-sm opacity-50 p-4">
           No trace step found
         </div>
