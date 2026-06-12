@@ -33,7 +33,7 @@ jobs:
           SUBJECT="$(git log -1 --format=%s)"
           VERSION="$(jq -r .version package.json)"
           EXPECTED="chore: release v$VERSION"
-          # use prefix match since commit has PR number trailier.
+          # use prefix match since commit has PR number trailer.
           if [[ "$SUBJECT" == "$EXPECTED"* ]]; then
             echo "release=true" >> "$GITHUB_OUTPUT"
             echo "version=$VERSION" >> "$GITHUB_OUTPUT"
