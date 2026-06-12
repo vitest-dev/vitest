@@ -174,7 +174,9 @@ Releases — publishing the npm packages, creating the git release tag, and gene
 
 2. **Review and merge the PR.** Check the version bump, then merge so the `chore: release v*` commit lands on the release branch — that commit is what triggers publishing.
 
-3. **Approve the publish.** Merging triggers the `Publish Package` workflow, which builds the packages and then pauses for `Release` environment approval. Approve it when prompted; the workflow publishes to npm, pushes the release tag, and generates the GitHub release. Afterwards, confirm npm, the tag, and the GitHub release all look right.
+3. **Approve the publish workflow.** Merging triggers the `Publish Package` workflow, which builds the packages and then pauses for `Release` environment approval. Open the workflow run in GitHub Actions and approve the `Release` environment deployment; the workflow then stages the packages on npm, pushes the release tag, and generates the GitHub release.
+
+4. **Approve the npm staged publish.** Review the staged packages on npm, then approve them with 2FA so the release becomes installable. Afterwards, confirm npm, the tag, and the GitHub release all look right.
 
 ### Issue Triaging Workflow
 

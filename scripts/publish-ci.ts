@@ -37,8 +37,8 @@ async function main() {
   if (dryRun) {
     console.log('== DRY RUN ==')
   }
-  console.log(`Publishing version '${version}' with tag '${releaseTag}'`)
-  await $$`pnpm -r publish --access public --no-git-checks --tag ${releaseTag} ${dryRun ? ['--dry-run'] : []}`
+  console.log(`Staging version '${version}' with tag '${releaseTag}'`)
+  await $$`pnpm -r stage publish --access public --no-git-checks --tag ${releaseTag} ${dryRun ? ['--dry-run'] : []}`
 }
 
 async function getReleaseTag(version: string, publishBranch: string) {

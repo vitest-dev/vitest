@@ -88,17 +88,14 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Install good npm
-        run: npm i -g npm@^11.5.2
-
-      - name: Publish to npm (dry run)
+      - name: Stage publish to npm (dry run)
         env:
           VERSION: ${{ needs.detect.outputs.version }}
           PUBLISH_BRANCH: ${{ github.ref_name }}
           PUBLISH_DRY_RUN: 'true'
         run: pnpm run publish-ci "$VERSION"
 
-      - name: Publish to npm
+      - name: Stage publish to npm
         env:
           VERSION: ${{ needs.detect.outputs.version }}
           PUBLISH_BRANCH: ${{ github.ref_name }}
