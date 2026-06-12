@@ -25,6 +25,7 @@ import BrowserContext from './plugins/pluginContext'
 export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
+const API_TOKEN_FS_DENY = '**/.vitest/secrets/**'
 
 export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
   function isPackageExists(pkg: string, root: string) {
@@ -402,6 +403,10 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
         viteConfig.server.fs ??= {}
         viteConfig.server.fs.allow = viteConfig.server.fs.allow || []
+        viteConfig.server.fs.deny = [
+          ...(viteConfig.server.fs.deny ?? []),
+          API_TOKEN_FS_DENY,
+        ]
         viteConfig.server.fs.allow.push(
           ...resolveFsAllow(
             parentServer.vitest.config.root,

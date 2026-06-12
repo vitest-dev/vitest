@@ -70,7 +70,7 @@ function devUiScriptPlugin(): Plugin {
   const UI_SCRIPT_RE = /<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/
   const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
 
-  const uiUrl = `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`
+  const uiUrl = resolveDevUiUrl()
   const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
 
   return {
@@ -117,6 +117,15 @@ function devUiScriptPlugin(): Plugin {
       ]
     },
   }
+}
+
+// TODO: use resolveApiToken with process.env.UI_TEST_ROOT
+function resolveDevUiUrl(): string {
+  const url = new URL(process.env.VITEST_UI_URL ?? `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`)
+  if (process.env.VITEST_API_TOKEN) {
+    url.searchParams.set('token', process.env.VITEST_API_TOKEN)
+  }
+  return url.toString()
 }
 
 function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {

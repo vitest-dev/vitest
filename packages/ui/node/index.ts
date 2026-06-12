@@ -94,11 +94,17 @@ export default (ctx: Vitest): Vite.Plugin => {
           if (req.url) {
             const url = new URL(req.url, 'http://localhost')
             if (url.pathname === base) {
+              if (!isValidApiRequest(ctx.config, req)) {
+                res.statusCode = 403
+                res.end('Use the Vitest UI URL printed by the server.')
+                return
+              }
               const html = clientIndexHtml.replace(
                 '<!-- !LOAD_METADATA! -->',
                 `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
               )
               res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+              res.setHeader('Referrer-Policy', 'no-referrer')
               res.setHeader('Content-Type', 'text/html; charset=utf-8')
               res.write(html)
               res.end()
