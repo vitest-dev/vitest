@@ -236,7 +236,7 @@ export type MergeReport = [
   coverage: unknown,
   executionTime: number,
   environmentModules: MergeReportEnvironmentModules,
-  transformTime?: number,
+  transformTime: number,
 ]
 
 interface MergeReportEnvironmentModules {
