@@ -163,32 +163,42 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   }
 }
 
+const serializableDiffKeys = [
+  'aAnnotation',
+  'aIndicator',
+  'bAnnotation',
+  'bIndicator',
+  'commonIndicator',
+  'contextLines',
+  'emptyFirstOrLastLinePlaceholder',
+  'expand',
+  'includeChangeCounts',
+  'omitAnnotationLines',
+  'printBasicPrototype',
+  'maxDepth',
+  'truncateThreshold',
+  'truncateAnnotation',
+] satisfies (keyof SerializedDiffOptions)[]
+
 // `diff` can be an inline object containing color/compareKeys functions
 // (`DiffOptions`). Those functions are not structured-cloneable (threads pool)
 // and are silently dropped over `child_process` IPC (forks pool), so passing
 // the raw object to workers throws `DataCloneError`. Forward only the
-// serializable fields declared by `SerializedDiffOptions`; the function-based
-// options still require the file-path form, which workers import locally.
+// serializable fields declared by `SerializedDiffOptions`, and only the ones
+// actually set — explicit `undefined` values would override the diff defaults
+// when the worker merges the options. The function-based options still
+// require the file-path form, which workers import locally.
 function serializeDiffOptions(
   diff: string | SerializedDiffOptions | undefined,
 ): string | SerializedDiffOptions | undefined {
   if (diff == null || typeof diff === 'string') {
     return diff
   }
-  return {
-    aAnnotation: diff.aAnnotation,
-    aIndicator: diff.aIndicator,
-    bAnnotation: diff.bAnnotation,
-    bIndicator: diff.bIndicator,
-    commonIndicator: diff.commonIndicator,
-    contextLines: diff.contextLines,
-    emptyFirstOrLastLinePlaceholder: diff.emptyFirstOrLastLinePlaceholder,
-    expand: diff.expand,
-    includeChangeCounts: diff.includeChangeCounts,
-    omitAnnotationLines: diff.omitAnnotationLines,
-    printBasicPrototype: diff.printBasicPrototype,
-    maxDepth: diff.maxDepth,
-    truncateThreshold: diff.truncateThreshold,
-    truncateAnnotation: diff.truncateAnnotation,
+  const result: SerializedDiffOptions = {}
+  for (const key of serializableDiffKeys) {
+    if (diff[key] !== undefined) {
+      (result as Record<string, unknown>)[key] = diff[key]
+    }
   }
+  return result
 }
