@@ -17,5 +17,3 @@ export function second() {
 export function uncovered() {
   return "Always present"
 }
-
-export const changedMarker = true
