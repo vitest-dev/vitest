@@ -72,7 +72,11 @@ export class TestRunner implements VitestTestRunner {
         },
       },
       () => {
-        if (!this.viteModuleRunner) {
+        const shouldInvalidate = !this.viteModuleRunner
+        // this is require for in-source tests to be invalidated if
+        // one of the files already imported it in --maxWorkers=1 --no-isolate
+          || (source === 'collect' && this.workerState.evaluatedModules.getModuleById(filepath)?.evaluated)
+        if (shouldInvalidate) {
           filepath = `${filepath}?vitest=${Date.now()}`
         }
         return this.moduleRunner.import(filepath)
