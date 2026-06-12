@@ -244,6 +244,7 @@ export class Logger {
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.vite.config.server.port
+      // TODO: run server.openBrowser here?
       const url = getUiCapabilityUrl(
         `http://${host}:${port}`,
         this.ctx.config.uiBase,

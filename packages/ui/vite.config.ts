@@ -119,6 +119,7 @@ function devUiScriptPlugin(): Plugin {
   }
 }
 
+// TODO: use resolveApiToken with process.env.UI_TEST_ROOT
 function resolveDevUiUrl(): string {
   const url = new URL(process.env.VITEST_UI_URL ?? `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`)
   if (process.env.VITEST_API_TOKEN) {

@@ -8,9 +8,11 @@ import {
 } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 
+// TODO: .vitest/.secrets?
 export const API_TOKEN_FS_DENY = '**/.vitest/secrets/**'
 
 export function resolveApiToken(root: string): string {
+  // TODO: self expire token?
   const tokenPath = resolve(root, '.vitest/secrets/api-token')
   if (existsSync(tokenPath)) {
     return readFileSync(tokenPath, 'utf-8').trim()
@@ -26,6 +28,7 @@ export function resolveApiToken(root: string): string {
   return token
 }
 
+// TODO: inline. or stash UI url earlier in ctx.something?
 export function getUiCapabilityPath(base: string, token: string): string {
   const url = new URL(base, 'http://localhost')
   url.searchParams.set('token', token)
