@@ -32,9 +32,6 @@ concurrency:
 
 permissions: {}
 
-env:
-  VITE_TEST_WATCHER_DEBUG: 'false'
-
 jobs:
   prepare:
     if: github.repository == 'vitest-dev/vitest'
