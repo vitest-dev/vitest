@@ -617,10 +617,110 @@ describe('jest mock compat layer', () => {
     Spy.mockImplementation(MockExample)
 
     expect(new Spy()).toBeInstanceOf(Spy)
-    expect(new Spy()).not.toBeInstanceOf(MockExample)
+    // the implementation's prototype is linked into the chain so that
+    // instances keep its prototype methods (#10553)
+    expect(new Spy()).toBeInstanceOf(MockExample)
+    expect(typeof new Spy().test).toBe('function')
 
     const instance = new Spy()
     expectTypeOf(instance).toEqualTypeOf<Example>()
+  })
+
+  it('instances created from a spied class keep prototype methods', () => {
+    class Example {
+      test() {
+        return 'original'
+      }
+    }
+
+    const obj = { Example }
+    const Spy = vi.spyOn(obj, 'Example')
+
+    const instance = new obj.Example()
+
+    expect(instance).toBeInstanceOf(Spy)
+    expect(instance.test()).toBe('original')
+    expect(Spy).toHaveBeenCalledTimes(1)
+  })
+
+  it('mockImplementation with a class keeps prototype methods (#10553)', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+
+    vi.spyOn(myObj, 'TestClass').mockImplementation(
+      class MockClass extends OriginalClass {
+        method() {
+          return 'mocked'
+        }
+      },
+    )
+
+    const instance = new myObj.TestClass()
+
+    expect(typeof instance.method).toBe('function')
+    expect(instance.method()).toBe('mocked')
+    expect(instance).toBeInstanceOf(myObj.TestClass)
+    expect(instance).toBeInstanceOf(OriginalClass)
+  })
+
+  it('vi.fn with a class keeps prototype methods', () => {
+    const MockedClass = vi.fn(class {
+      method() {
+        return 'fn-mocked'
+      }
+    })
+
+    const instance = new MockedClass()
+
+    expect(instance.method()).toBe('fn-mocked')
+    expect(instance).toBeInstanceOf(MockedClass)
+  })
+
+  it('methods assigned on the mock prototype take priority over the implementation', () => {
+    class Example {
+      test() {
+        return 'class method'
+      }
+    }
+
+    const obj = { Example }
+    const Spy = vi.spyOn(obj, 'Example')
+    ;(Spy.prototype as any).test = vi.fn(() => 'assigned method')
+
+    const instance = new obj.Example() as any
+
+    expect(instance.test()).toBe('assigned method')
+  })
+
+  it('mockImplementationOnce with different classes resolves each prototype', () => {
+    class Example {
+      which() {
+        return 'original'
+      }
+    }
+
+    const obj = { Example }
+    const Spy = vi.spyOn(obj, 'Example')
+
+    Spy.mockImplementationOnce(class {
+      which() {
+        return 'A'
+      }
+    } as typeof Example)
+    Spy.mockImplementationOnce(class {
+      which() {
+        return 'B'
+      }
+    } as typeof Example)
+
+    expect(new obj.Example().which()).toBe('A')
+    expect(new obj.Example().which()).toBe('B')
+    expect(new obj.Example().which()).toBe('original')
   })
 
   it('returns temporary implementations from getMockImplementation()', () => {

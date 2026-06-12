@@ -499,6 +499,24 @@ function createMock(
 
       try {
         if (new.target) {
+          // The created instance inherits from `new.target.prototype`, which
+          // is the mock's own prototype when the mock is constructed directly,
+          // so prototype methods of the implementation would be lost. Link the
+          // implementation's prototype into the chain instead; methods
+          // assigned directly on `mock.prototype` keep priority.
+          const implementationPrototype = (implementation as Constructable).prototype
+          if (
+            implementationPrototype
+            && typeof implementationPrototype === 'object'
+            // eslint-disable-next-line ts/no-use-before-define
+            && implementationPrototype !== mock.prototype
+            // eslint-disable-next-line ts/no-use-before-define
+            && Object.getPrototypeOf(mock.prototype) !== implementationPrototype
+          ) {
+            // eslint-disable-next-line ts/no-use-before-define
+            Object.setPrototypeOf(mock.prototype, implementationPrototype)
+          }
+
           returnValue = Reflect.construct(implementation, args, new.target)
 
           // jest calls this before the implementation, but we have to resolve this _after_
