@@ -41,26 +41,28 @@ async function main() {
 }
 
 async function getReleaseTag(version: string, publishBranch: string) {
-  if (version.includes('beta')) {
-    return 'beta'
-  }
-  if (version.includes('alpha')) {
-    return 'alpha'
-  }
-
-  // Need to specify tag explicitly for backport version releases
-  // since otherwise `latest` tag would be overwritten.
+  // Always specify the dist-tag explicitly since otherwise `latest` would be overwritten.
   // Note that `main` branch doesn't always mean `latest` tag because of pre-release phase.
-  // Use following mapping to avoid https://docs.npmjs.com/cli/v11/commands/npm-dist-tag#caveats
-  // - v4 branch -> V4 dist tag
-  // - v4.1 branch -> V4.1 dist tag
 
+  // check prerelease e.g. beta, alpha, rc
+  const parsed = semver.parse(version, {}, true)
+  if (parsed.prerelease.length > 0) {
+    return parsed.prerelease[0]
+  }
+
+  // If the version is not a pre-release and is greater than the latest version on npm,
+  // then that should become the new latest version.
   const npmView = await $`npm view vitest dist-tags --json`
   const latestVersion = JSON.parse(npmView.stdout).latest
   if (semver.gt(version, latestVersion)) {
     return 'latest'
   }
 
+  // Otherwise this is a backport release.
+  // Use the uppercase of the branch name to avoid npm dist-tag caveats
+  // https://docs.npmjs.com/cli/v11/commands/npm-dist-tag#caveats
+  // - v4 branch -> V4 dist tag
+  // - v4.1 branch -> V4.1 dist tag
   return publishBranch.toUpperCase()
 }
 
