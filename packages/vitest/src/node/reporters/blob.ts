@@ -134,7 +134,7 @@ export async function readBlobs(
       )
     }
     const content = await readFile(fullPath, 'utf-8')
-    const [version, files, errors, coverage, executionTime, environmentModules, transformTime = 0] = parse(
+    const [version, files, errors, coverage, executionTime, environmentModules, transformTime] = parse(
       content,
     ) as MergeReport
     if (!version) {
@@ -210,7 +210,7 @@ export async function readBlobs(
   const errors = blobs.flatMap(blob => blob.errors)
   const coverages = blobs.map(blob => blob.coverage)
   const executionTimes = blobs.map(blob => blob.executionTime)
-  const transformTimes = blobs.map(blob => blob.transformTime ?? 0)
+  const transformTimes = blobs.map(blob => blob.transformTime)
 
   return {
     files,
