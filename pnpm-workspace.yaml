@@ -60,6 +60,7 @@ catalog:
   '@types/istanbul-lib-report': ^3.0.3
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
+  '@types/semver': ^7.7.1
   '@types/ws': ^8.18.1
   '@types/yauzl': ^2.10.3
   '@unocss/reset': ^66.6.6
@@ -80,6 +81,7 @@ catalog:
   obug: ^2.1.1
   pathe: ^2.0.3
   playwright: ^1.59.0
+  semver: ^7.8.3
   sinon: ^21.0.3
   sinon-chai: ^4.0.1
   sirv: ^3.0.2
