@@ -287,15 +287,16 @@ export default class SnapshotState {
 
       const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== snapshot)
       if (differentSnapshot) {
-        throw Object.assign(
-          new Error(
-            `${assertionName} with different snapshots cannot be called at the same location`,
-          ),
-          {
-            actual: snapshot,
-            expected: differentSnapshot.snapshot,
-          },
+        const stackTraceLimit = Error.stackTraceLimit
+        Error.stackTraceLimit = stackTraceLimit + 20
+        const error = new Error(
+          `${assertionName} with different snapshots cannot be called at the same location`,
         )
+        Error.stackTraceLimit = stackTraceLimit
+        throw Object.assign(error, {
+          actual: snapshot,
+          expected: differentSnapshot.snapshot,
+        })
       }
     }
     this._inlineSnapshotStacks.push({ ...stack, testId, snapshot })
@@ -308,11 +309,10 @@ export default class SnapshotState {
     count: number
     pass: boolean
     hasSnapshot: boolean
-    snapshotIsPersisted: boolean
     addValue: string
     actualDisplay: string
     expectedDisplay?: string
-    stack?: ParsedStack
+    stack?: () => ParsedStack
     rawSnapshot?: RawSnapshotInfo
     assertionName?: string
   }): SnapshotReturnOptions {
@@ -324,10 +324,10 @@ export default class SnapshotState {
     //  * The update flag is set to 'none'.
     //  * There's no snapshot file or a file without this snapshot on a CI environment.
     if (
-      (opts.hasSnapshot && this._updateSnapshot === 'all')
-      || ((!opts.hasSnapshot || !opts.snapshotIsPersisted)
-        && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
+      this._updateSnapshot === 'all'
+      || (this._updateSnapshot === 'new' && !opts.hasSnapshot)
     ) {
+      const stack = opts.stack?.()
       if (this._updateSnapshot === 'all') {
         if (!opts.pass) {
           if (opts.hasSnapshot) {
@@ -337,7 +337,7 @@ export default class SnapshotState {
             this.added.increment(opts.testId)
           }
           this._addSnapshot(opts.key, opts.addValue, {
-            stack: opts.stack,
+            stack,
             testId: opts.testId,
             rawSnapshot: opts.rawSnapshot,
             assertionName: opts.assertionName,
@@ -349,7 +349,7 @@ export default class SnapshotState {
       }
       else {
         this._addSnapshot(opts.key, opts.addValue, {
-          stack: opts.stack,
+          stack,
           testId: opts.testId,
           rawSnapshot: opts.rawSnapshot,
           assertionName: opts.assertionName,
@@ -514,11 +514,6 @@ export default class SnapshotState {
     const expectedTrimmed = rawSnapshot ? expected : expected?.trim()
     const pass = expectedTrimmed === (rawSnapshot ? receivedSerialized : receivedSerialized.trim())
     const hasSnapshot = expected !== undefined
-    const snapshotIsPersisted
-      = isInline
-        || this._fileExists
-        || (rawSnapshot && rawSnapshot.content != null)
-
     if (pass && !isInline && !rawSnapshot) {
       // When the file is re-saved (because other snapshots changed), the JS
       // round-trip can lose proper escaping. Refresh in-memory data with the
@@ -529,12 +524,13 @@ export default class SnapshotState {
       this._snapshotData[key] = receivedSerialized
     }
 
+    const stackTraceError = error || new Error('STACK_TRACE_ERROR')
     const stack = isInline
-      ? this._resolveInlineStack({
+      ? () => this._resolveInlineStack({
           testId,
           snapshot: receivedSerialized,
           assertionName: assertionName || 'toMatchInlineSnapshot',
-          error: error || new Error('snapshot'),
+          error: stackTraceError,
         })
       : undefined
 
@@ -544,7 +540,6 @@ export default class SnapshotState {
       count,
       pass,
       hasSnapshot,
-      snapshotIsPersisted: !!snapshotIsPersisted,
       addValue: receivedSerialized,
       actualDisplay: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
       expectedDisplay: expectedTrimmed !== undefined
@@ -565,12 +560,13 @@ export default class SnapshotState {
     error,
     assertionName,
   }: ProcessDomainSnapshotOptions): SnapshotReturnOptions {
+    const stackTraceError = error || new Error('STACK_TRACE_ERROR')
     const stack = isInline
-      ? this._resolveInlineStack({
+      ? () => this._resolveInlineStack({
           testId,
           snapshot: received,
           assertionName: assertionName!,
-          error: error || new Error('STACK_TRACE_ERROR'),
+          error: stackTraceError,
         })
       : undefined
     const actualResolved = matchResult?.resolved ?? received
@@ -581,7 +577,6 @@ export default class SnapshotState {
       count: expectedSnapshot.count,
       pass: matchResult?.pass ?? false,
       hasSnapshot: expectedSnapshot.data !== undefined,
-      snapshotIsPersisted: isInline ? true : this._fileExists,
       addValue: actualResolved,
       actualDisplay: removeExtraLineBreaks(actualResolved),
       expectedDisplay: expectedResolved !== undefined
