@@ -1,5 +1,5 @@
 import type { Options } from 'tinyexec'
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { FSWatcher, UserConfig as ViteUserConfig } from 'vite'
 import type { ParsedStack, SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
@@ -227,6 +227,15 @@ export async function runVitest(
     }
   }
 
+  // In watch mode, `startVitest` can resolve before the file watcher finished
+  // its initial scan (especially in standalone mode, which doesn't run any
+  // tests on startup). A test file created right after would be folded into the
+  // watcher's baseline and ignored, so newly added files wouldn't trigger a
+  // rerun. Wait for the watcher to be ready before handing control back.
+  if (watch && ctx) {
+    await waitForWatcherReady(ctx.vite.watcher, ctx.config.root)
+  }
+
   return {
     thrown,
     ctx,
@@ -258,6 +267,27 @@ export async function runVitest(
       await new Promise<void>(resolve => ctx!.onClose(resolve))
       return ctx?.closingPromise
     },
+  }
+}
+
+// In watch mode `startVitest` can resolve before the file watcher has finished
+// establishing itself. chokidar's `ready`/`_readyEmitted` fires after the
+// initial scan, but with polling the root directory isn't fully watched for new
+// children until its parent shows up in `getWatched()`. A test file created
+// before that point gets folded into the watcher's baseline and never emits an
+// `add` event, so newly added files wouldn't trigger a rerun. Wait for both
+// signals (with a timeout safety net) before handing control back.
+async function waitForWatcherReady(watcher: FSWatcher, root: string): Promise<void> {
+  const slash = (p: string) => p.replace(/\\/g, '/')
+  const parent = slash(dirname(root))
+  const deadline = Date.now() + 2000
+  while (Date.now() < deadline) {
+    const isReady = (watcher as { _readyEmitted?: boolean })._readyEmitted
+    const watchesParent = Object.keys(watcher.getWatched()).some(dir => slash(dir) === parent)
+    if (isReady && watchesParent) {
+      return
+    }
+    await new Promise(resolve => setTimeout(resolve, 10))
   }
 }
 
