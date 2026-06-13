@@ -182,7 +182,7 @@ export function resolveTestConfig(
       viteConfig.test?.environment != null
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
-      logger.console.warn(
+      logger.warn(
         withLabel(
           'yellow',
           'Vitest',
@@ -208,7 +208,7 @@ export function resolveTestConfig(
   resolved.mode ??= viteConfig.mode ?? 'test'
 
   if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
-    logger.console.warn(
+    logger.warn(
       c.yellow('Warning: retry.condition function cannot be used inside a config file. '
         + 'Use a RegExp pattern instead, or define the function in your test file.'),
     )
@@ -225,7 +225,7 @@ export function resolveTestConfig(
   }
 
   if ('poolOptions' in resolved) {
-    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework')
+    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://v4.vitest.dev/guide/migration#pool-rework')
   }
 
   if ('workspace' in resolved) {
@@ -659,10 +659,12 @@ export function resolveTestConfig(
       }
     }
   }
+  else {
+    resolved.reporters = []
+  }
 
-  // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
   // it is passed down as "vitest --reporter ../reporter.js"
-  const reportersFromCLI = resolved.reporter
+  const reportersFromCLI = options.reporter
 
   const cliReporters = toArray(reportersFromCLI || []).map(
     (reporter: string) => {

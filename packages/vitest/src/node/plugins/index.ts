@@ -4,9 +4,11 @@ import type { PluginHarness } from '../config/pluginHarness'
 import type { UserConfig } from '../types/config'
 import { deepMerge } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
+import { isRunnableDevEnvironment } from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { resolveApiServerConfig } from '../config/resolveConfig'
+import { ServerModuleRunner } from '../environments/serverRunner'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -17,9 +19,7 @@ import { resolveFsAllow } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
 // the plugins required when starting Vitest
-export function VitestCorePlugin(
-  harness: PluginHarness,
-): VitePlugin[] {
+export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
   return [
     ...CSSEnablerPlugin({
       get config() {
@@ -46,35 +46,35 @@ export function VitestCorePlugin(
         }
       },
     },
-    // TODO: separetly
-    // {
-    //   name: 'vitest:module-runner-fixer',
-    //   configureServer: {
-    //     // Install a `ServerModuleRunner` override on the SSR environment so
-    //     // that user plugins' `configureServer` hooks can call
-    //     // `server.environments.ssr.runner.import(...)` and get Vitest's
-    //     // module runner (which respects `noExternal` etc.) instead of Vite's
-    //     // default `ESModulesEvaluator` (which does not support CJS deps).
-    //     //
-    //     // Runs `enforce: 'pre'` so it sits before user plugins in the chain.
-    //     order: 'pre',
-    //     async handler(server) {
-    //       const ssrEnvironment = server.environments.ssr
-    //       if (vite.isRunnableDevEnvironment(ssrEnvironment)) {
-    //         const ssrRunner = new ServerModuleRunner(
-    //           ssrEnvironment,
-    //           vitest._fetcher,
-    //           vitest.config,
-    //         )
-    //         Object.defineProperty(ssrEnvironment, 'runner', {
-    //           value: ssrRunner,
-    //           writable: true,
-    //           configurable: true,
-    //         })
-    //       }
-    //     },
-    //   },
-    // },
+    {
+      name: 'vitest:module-runner-fixer',
+      configureServer: {
+        // Install a `ServerModuleRunner` override on the SSR environment so
+        // that user plugins' `configureServer` hooks can call
+        // `server.environments.ssr.runner.import(...)` and get Vitest's
+        // module runner (which respects `noExternal` etc.) instead of Vite's
+        // default `ESModulesEvaluator` (which does not support CJS deps).
+        //
+        // Runs `enforce: 'pre'` so it sits before user plugins in the chain.
+        order: 'pre',
+        async handler(server) {
+          const ssrEnvironment = server.environments.ssr
+          if (isRunnableDevEnvironment(ssrEnvironment)) {
+            const vitest = harness.getVitest()
+            const ssrRunner = new ServerModuleRunner(
+              ssrEnvironment,
+              vitest._fetcher,
+              vitest.config,
+            )
+            Object.defineProperty(ssrEnvironment, 'runner', {
+              value: ssrRunner,
+              writable: true,
+              configurable: true,
+            })
+          }
+        },
+      },
+    },
   ]
 }
 
@@ -90,17 +90,17 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
       enforce: 'pre',
       config: {
         order: 'pre',
-        handler() {
+        handler(config) {
           if (options.watch) {
             // Earlier runs have overwritten values of the `options`.
             // Reset it back to initial user config before setting up the server again.
             options = deepMerge({}, userConfig) as UserConfig
           }
 
-          return {
-            // Vite will automatically merge CLI options
-            test: options,
-          }
+          config.test ??= {}
+          // We don't want to use Vite's merge because we want to OVERRIDE options
+          // By default, Vite extends arrays, for example, but CLI options should have the priority
+          config.test = deepMerge({}, config.test, options)
         },
       },
     },
@@ -133,7 +133,7 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
             open = testConfig.uiBase ?? '/__vitest__/'
           }
 
-          const root = resolve(options.root || process.cwd())
+          const root = resolve(options.root || viteConfig.test?.root || viteConfig.root || process.cwd())
 
           const config: ViteConfig = {
             base: '/',

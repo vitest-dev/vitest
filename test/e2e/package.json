@@ -35,6 +35,7 @@
     "jest-image-snapshot": "^6.5.1",
     "obug": "^2.1.1",
     "other-dep": "file:./deps/vite-ssr-resolve/other-dep",
+    "pathe": "catalog:",
     "playwright": "catalog:",
     "ssr-no-external-dep": "file:./deps/vite-ssr-resolve/ssr-no-external-dep",
     "test-dep-conditions": "file:./deps/test-dep-conditions",

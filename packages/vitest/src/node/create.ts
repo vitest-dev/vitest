@@ -54,7 +54,10 @@ export async function createVitest(
     pluginHarness,
   )
 
-  const vitest = new Vitest(pluginHarness)
+  const vitest = new Vitest(
+    pluginHarness,
+    config,
+  )
 
   try {
     await vitest._start(config)

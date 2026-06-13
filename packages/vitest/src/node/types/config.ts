@@ -1128,6 +1128,11 @@ export interface UserConfig extends InlineConfig {
   listTags?: boolean | 'json'
 
   configLoader?: 'bundle' | 'runner' | 'native'
+
+  /**
+   * The `--reporter` argument from the CLI
+   */
+  reporter?: string | string[]
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1162,6 +1167,7 @@ export interface ResolvedConfig
     | 'vmMemoryLimit'
     | 'fileParallelism'
     | 'tagsFilter'
+    | 'reporter'
   > {
   name: ProjectName['label']
   color?: ProjectName['color']

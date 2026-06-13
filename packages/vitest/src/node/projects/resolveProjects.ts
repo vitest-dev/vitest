@@ -317,9 +317,6 @@ async function resolveSingleProjectEntry(
 
   const mergedOptions = (projectViteConfig.test ?? {}) as UserConfig
 
-  // Keep definitions from the global config to avoid a filter error
-  mergedOptions.tags = [...mergedOptions.tags || [], ...globalConfig.tags]
-
   const projectConfig = resolveTestConfig(
     harness.logger,
     {

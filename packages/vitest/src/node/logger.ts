@@ -37,7 +37,7 @@ export class Logger {
   private _highlights = new Map<string, string>()
   private cleanupListeners: Listener[] = []
   public console: Console
-  public ctx!: Vitest
+  private ctx!: Vitest
 
   constructor(
     public outputStream: NodeJS.WriteStream | Writable = process.stdout,

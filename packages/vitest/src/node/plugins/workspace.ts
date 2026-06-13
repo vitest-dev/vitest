@@ -1,9 +1,11 @@
-import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type * as vite from 'vite'
+import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, resolve } from 'pathe'
+import { isRunnableDevEnvironment } from 'vite'
+import { ServerModuleRunner } from '../environments/serverRunner'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -84,7 +86,7 @@ export function WorkspaceVitestPlugin(
       },
       config(viteConfig) {
         const testConfig = viteConfig.test || {}
-        const root = testConfig.root || viteConfig.root || options.root
+        const root = options.root || testConfig.root || viteConfig.root
 
         const config: ViteConfig = {
           base: '/',
@@ -129,35 +131,33 @@ export function WorkspaceVitestPlugin(
         return config
       },
     },
-    // TODO
-    // {
-    //   name: 'vitest:project:server',
-    //   enforce: 'pre',
-    //   configureServer: {
-    //     // Install Vitest's `ServerModuleRunner` on the project's SSR
-    //     // environment so user plugins' `configureServer` hooks can use
-    //     // `server.environments.ssr.runner.import(...)` and get the runner
-    //     // that respects Vitest's external/noExternal semantics.
-    //     order: 'pre',
-    //     async handler(server) {
-    //       const { ServerModuleRunner } = await import('../environments/serverRunner')
-    //       const { isRunnableDevEnvironment } = await import('vite')
-    //       const ssrEnvironment = server.environments.ssr
-    //       if (isRunnableDevEnvironment(ssrEnvironment)) {
-    //         const ssrRunner = new ServerModuleRunner(
-    //           ssrEnvironment,
-    //           vitest._fetcher,
-    //           vitest.config,
-    //         )
-    //         Object.defineProperty(ssrEnvironment, 'runner', {
-    //           value: ssrRunner,
-    //           writable: true,
-    //           configurable: true,
-    //         })
-    //       }
-    //     },
-    //   },
-    // },
+    {
+      name: 'vitest:project:server',
+      enforce: 'pre',
+      configureServer: {
+        // Install Vitest's `ServerModuleRunner` on the project's SSR
+        // environment so user plugins' `configureServer` hooks can use
+        // `server.environments.ssr.runner.import(...)` and get the runner
+        // that respects Vitest's external/noExternal semantics.
+        order: 'pre',
+        async handler(server) {
+          const ssrEnvironment = server.environments.ssr
+          if (isRunnableDevEnvironment(ssrEnvironment)) {
+            const vitest = harness.getVitest()
+            const ssrRunner = new ServerModuleRunner(
+              ssrEnvironment,
+              vitest._fetcher,
+              vitest.config,
+            )
+            Object.defineProperty(ssrEnvironment, 'runner', {
+              value: ssrRunner,
+              writable: true,
+              configurable: true,
+            })
+          }
+        },
+      },
+    },
     MetaEnvReplacerPlugin(),
     // TODO: should be testProject's config
     ...CSSEnablerPlugin({ config: globalConfig }),

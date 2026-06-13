@@ -151,7 +151,7 @@ export class Vitest {
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ runner!: ModuleRunner
-  /** @internal */ _testRun: TestRun = undefined!
+  /** @internal */ _testRun: TestRun
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _fsCache!: FileSystemModuleCache
@@ -171,8 +171,13 @@ export class Vitest {
    */
   public readonly mode = 'test'
 
-  constructor(harness: PluginHarness) {
+  constructor(
+    harness: PluginHarness,
+    viteConfig: ResolvedViteConfig,
+  ) {
     this._harness = harness
+    this.viteConfig = viteConfig
+    this.config = viteConfig.test
     this.logger = harness.logger.setVitest(this)
     this.packageInstaller = harness.packageInstaller
     this.specifications = new VitestSpecifications(this)
@@ -180,6 +185,7 @@ export class Vitest {
       this.scheduleRerun(file), // TODO: error handling
     )
     harness.setVitest(this)
+    this._testRun = new TestRun(this)
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
@@ -224,17 +230,15 @@ export class Vitest {
       onUnhandledError: resolved.onUnhandledError,
     })
     this.cache = new VitestCache(this.logger)
-    this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
-    this._testRun = new TestRun(this)
-    const otelSdkPath = resolved.experimental.openTelemetry?.sdkPath
+    const otelSdkPath = this.config.experimental.openTelemetry?.sdkPath
     this._traces = new Traces({
-      enabled: !!resolved.experimental.openTelemetry?.enabled,
+      enabled: !!this.config.experimental.openTelemetry?.enabled,
       sdkPath: otelSdkPath,
-      watchMode: resolved.watch,
+      watchMode: this.config.watch,
     })
-
-    this._resolver = new VitestResolver(this.viteConfig.cacheDir, resolved)
     this._fsCache = new FileSystemModuleCache(this)
+    this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
+    this._resolver = new VitestResolver(this.viteConfig.cacheDir, resolved)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       resolved,
