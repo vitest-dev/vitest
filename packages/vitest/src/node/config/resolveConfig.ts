@@ -1,22 +1,26 @@
-import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { Vitest } from '../core'
+import type {
+  InlineConfig,
+  ResolvedConfig as ResolvedViteConfig,
+  UserConfig as ViteUserConfig,
+} from 'vite'
 import type { Logger } from '../logger'
-import type { ResolvedBrowserOptions } from '../types/browser'
+// import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
   ResolvedConfig,
+  TestProjectConfiguration,
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { slash, toArray } from '@vitest/utils/helpers'
+import { deepClone, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { mergeConfig } from 'vite'
+import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import {
   configFiles,
   defaultBrowserPort,
@@ -24,11 +28,15 @@ import {
   defaultPort,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
+import { VitestConfigPlugin, VitestCorePlugin } from '../plugins/index'
+import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { PluginHarness } from './pluginHarness'
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -76,9 +84,6 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
-/**
- * @deprecated Internal function
- */
 export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
   options: Options,
   defaultPort: number,
@@ -159,12 +164,17 @@ function resolveInlineWorkerOption(value: string | number): number {
 // that's why it's on a module-level
 let warnedTypeCheck = false
 
-export function resolveConfig(
-  vitest: Vitest,
+/**
+ * Resolve Vitest's test config for a single Vite resolved config (root or a single project).
+ *
+ * This is the internal single-config resolver. The top-level `resolveConfig`
+ * orchestrates the full pipeline (root + projects + browser/benchmark expansion).
+ */
+export function resolveTestConfig(
+  logger: Logger,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
-  const logger = vitest.logger
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
@@ -214,6 +224,10 @@ export function resolveConfig(
 
   if ('poolOptions' in resolved) {
     logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework')
+  }
+
+  if ('workspace' in resolved) {
+    throw new Error('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
   }
 
   resolved.pool ??= 'forks'
@@ -337,18 +351,19 @@ export function resolveConfig(
     }
   }
 
+  // TODO: TEST THIS
   // apply browser CLI options only if the config already has the browser config and not disabled manually
-  if (
-    vitest._cliOptions.browser
-    && resolved.browser
-    // if enabled is set to `false`, but CLI overrides it, then always override it
-    && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
-  ) {
-    resolved.browser = mergeConfig(
-      resolved.browser,
-      vitest._cliOptions.browser,
-    ) as ResolvedBrowserOptions
-  }
+  // if (
+  //   options.browser
+  //   && resolved.browser
+  //   // if enabled is set to `false`, but CLI overrides it, then always override it
+  //   && (resolved.browser.enabled !== false || options.browser.enabled)
+  // ) {
+  //   resolved.browser = mergeConfig(
+  //     resolved.browser,
+  //     options.browser,
+  //   ) as ResolvedBrowserOptions
+  // }
 
   resolved.browser ??= {} as any
   const browser = resolved.browser
@@ -389,8 +404,8 @@ export function resolveConfig(
     logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
   }
 
-  const containsChromium = hasBrowserChromium(vitest, resolved)
-  const hasOnlyChromium = hasOnlyBrowserChromium(vitest, resolved)
+  const containsChromium = hasChromiumBrowser(resolved.project, resolved)
+  const hasOnlyChromium = hasOnlyChromiumBrowser(resolved.project, resolved)
 
   // Browser-mode "Chromium" only features:
   if (browser.enabled && (!containsChromium || !hasOnlyChromium)) {
@@ -764,7 +779,7 @@ export function resolveConfig(
 
   if (resolved.cache !== false) {
     if (resolved.cache && typeof resolved.cache.dir === 'string') {
-      vitest.logger.deprecate(
+      logger.deprecate(
         `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
       )
     }
@@ -1002,8 +1017,67 @@ export function resolveConfig(
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig): boolean {
-  return Boolean(config.browser?.enabled)
+function resolveConfigPath(root: string, options: UserConfig) {
+  if (options.config === false) {
+    return false
+  }
+  if (options.config) {
+    return resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config)
+  }
+  return findConfigFile(root)
+}
+
+export async function resolveConfig(
+  options: UserConfig = {},
+  viteOverrides: ViteUserConfig = {},
+  pluginsHarness: PluginHarness = new PluginHarness(),
+): Promise<ResolvedViteConfig> {
+  // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
+  const cliOptionsCopy = deepClone(options)
+  const viteOverridesCopy = deepClone(viteOverrides)
+  const root = resolve(options.root || process.cwd())
+  const configPath = resolveConfigPath(root, options)
+  options.config = configPath
+  options.root = root
+
+  const { browser: _removeBrowser, ...restOptions } = options
+  const inlineConfig: InlineConfig = mergeConfig(
+    {
+      configFile: configPath,
+      configLoader: options.configLoader,
+      mode: options.mode || 'test',
+      plugins: [
+        VitestConfigPlugin(pluginsHarness, restOptions),
+        ...VitestCorePlugin(pluginsHarness),
+      ],
+    } satisfies InlineConfig,
+    mergeConfig(viteOverrides, { root }),
+  )
+
+  const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
+
+  const rootConfig = resolveTestConfig(
+    pluginsHarness.logger,
+    (rootViteConfig.test as UserConfig | undefined) || {},
+    rootViteConfig,
+  )
+  rootViteConfig.test = rootConfig
+
+  rootConfig.cliOptions = cliOptionsCopy
+  rootConfig.viteOverrides = viteOverridesCopy
+
+  const userDefinitions = rootConfig.projects as
+    | TestProjectConfiguration[]
+    | undefined
+
+  rootConfig.projects = await resolveProjectEntries(
+    pluginsHarness,
+    rootViteConfig,
+    rootConfig,
+    userDefinitions,
+  )
+
+  return rootViteConfig
 }
 
 export function resolveCoverageReporters(configReporters: NonNullable<CoverageOptions['reporter']>): CoverageReporterWithOptions[] {
@@ -1035,7 +1109,7 @@ function isChromiumName(provider: string, name: string) {
   return name === 'chrome' || name === 'edge'
 }
 
-function hasBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
+function hasChromiumBrowser(projects: string[], config: ResolvedConfig) {
   const browser = config.browser
   if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
     return false
@@ -1049,14 +1123,14 @@ function hasBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
   return browser.instances.some((instance) => {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
-    if (!vitest.matchesProjectFilter(name)) {
+    if (!matchesProjectFilter(projects, name)) {
       return false
     }
     return isChromiumName(browser.provider!.name, instance.browser)
   })
 }
 
-function hasOnlyBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
+function hasOnlyChromiumBrowser(projects: string[], config: ResolvedConfig) {
   const browser = config.browser
   if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
     return false
@@ -1070,9 +1144,34 @@ function hasOnlyBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
   return browser.instances.every((instance) => {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
-    if (!vitest.matchesProjectFilter(name)) {
+    if (!matchesProjectFilter(projects, name)) {
       return true // ignore this project
     }
     return isChromiumName(browser.provider!.name, instance.browser)
+  })
+}
+
+export function matchesProjectFilter(projects: string[], name: string): boolean {
+  // no filters applied, any project can be included
+  if (!projects.length) {
+    return true
+  }
+  return projects.some((project) => {
+    const regexp = wildcardPatternToRegExp(project)
+    return regexp.test(name)
+  })
+}
+
+export function isExcludedByProjectFilter(projects: string[], name: string): boolean {
+  if (!projects.length) {
+    return false
+  }
+
+  return projects.some((project) => {
+    if (!project.startsWith('!')) {
+      return false
+    }
+    const positivePattern = project.slice(1)
+    return wildcardPatternToRegExp(positivePattern).test(name)
   })
 }

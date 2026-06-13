@@ -150,7 +150,7 @@ function printErrorInner(
           // we are checking that this module was processed by us at one point
           try {
             const environments = [
-              ...Object.values(project._vite?.environments || {}),
+              ...Object.values(project.vite.environments || {}),
               ...Object.values(project.browser?.vite.environments || {}),
             ]
             const hasResult = environments.some((environment) => {

@@ -7,8 +7,7 @@ import { configDefaults } from '../../defaults'
 import { isAgent, isForceColor } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
-  const { config, globalConfig } = project
-  const viteConfig = project._vite?.config
+  const { config, globalConfig, viteConfig } = project
   const optimizer = config.deps?.optimizer || {}
 
   return {

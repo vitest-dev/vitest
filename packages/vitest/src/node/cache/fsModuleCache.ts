@@ -46,7 +46,7 @@ export class FileSystemModuleCache {
   >()
 
   constructor(private vitest: Vitest) {
-    const workspaceRoot = searchForWorkspaceRoot(vitest.vite.config.root)
+    const workspaceRoot = searchForWorkspaceRoot(vitest.viteConfig.root)
     this.rootCache = vitest.config.experimental.fsModuleCachePath
       || join(workspaceRoot, 'node_modules', '.experimental-vitest-cache')
     this.metadataFilePath = join(this.rootCache, METADATA_FILE)

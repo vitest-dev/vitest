@@ -37,20 +37,25 @@ export class Logger {
   private _highlights = new Map<string, string>()
   private cleanupListeners: Listener[] = []
   public console: Console
+  public ctx!: Vitest
 
   constructor(
-    public ctx: Vitest,
     public outputStream: NodeJS.WriteStream | Writable = process.stdout,
     public errorStream: NodeJS.WriteStream | Writable = process.stderr,
   ) {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
     this._highlights.clear()
-    this.addCleanupListeners()
-    this.registerUnhandledRejection()
 
     if ((this.outputStream as typeof process.stdout).isTTY) {
       (this.outputStream as Writable).write(HIDE_CURSOR)
     }
+  }
+
+  setVitest(vitest: Vitest): this {
+    this.ctx = vitest
+    this.addCleanupListeners()
+    this.registerUnhandledRejection()
+    return this
   }
 
   log(...args: any[]): void {

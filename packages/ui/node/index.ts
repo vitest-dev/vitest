@@ -1,4 +1,5 @@
-import type { Vite, Vitest } from 'vitest/node'
+import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
+import type { Logger, ResolvedConfig, Vite } from 'vitest/node'
 import fs from 'node:fs'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
@@ -9,28 +10,38 @@ import { distClientRoot } from './paths'
 
 export { distClientRoot }
 
-export default (ctx: Vitest): Vite.Plugin => {
-  if (ctx.version !== version) {
-    ctx.logger.warn(
+export default (logger: Logger, vitestVersion: string): Vite.Plugin => {
+  if (vitestVersion !== version) {
+    logger.warn(
       c.yellow(
-        `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
+        `Loaded ${c.inverse(c.yellow(` vitest@${vitestVersion} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
         + '\nRunning mixed versions is not supported and may lead into bugs'
         + '\nUpdate your dependencies and make sure the versions match.',
       ),
     )
   }
 
+  let globalViteConfig: ResolvedViteConfig
+  let globalConfig: ResolvedConfig
+
   return <Vite.Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
+    configResolved: {
+      order: 'post',
+      handler(config) {
+        globalViteConfig = config
+        globalConfig = (config as any).test
+      },
+    },
     configureServer: {
       order: 'post',
       handler(server) {
-        const uiOptions = ctx.config
+        const uiOptions = globalConfig
         const base = uiOptions.uiBase
 
         // Serve coverage HTML at ./coverage if configured
-        const coverageHtmlDir = ctx.config.coverage?.htmlDir
+        const coverageHtmlDir = globalConfig.coverage?.htmlDir
         if (coverageHtmlDir) {
           server.middlewares.use(
             join(base, 'coverage'),
@@ -61,13 +72,13 @@ export default (ctx: Vitest): Vite.Plugin => {
             const contentType = url.searchParams.get('contentType')
 
             // ignore invalid requests
-            if (!isValidApiRequest(ctx.config, req) || !contentType || !path) {
+            if (!isValidApiRequest(globalConfig, req) || !contentType || !path) {
               return next()
             }
 
             const fsPath = decodeURIComponent(path)
 
-            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
+            if (!isFileServingAllowed(globalViteConfig, fsPath)) {
               return next()
             }
 
@@ -96,7 +107,7 @@ export default (ctx: Vitest): Vite.Plugin => {
             if (url.pathname === base) {
               const html = clientIndexHtml.replace(
                 '<!-- !LOAD_METADATA! -->',
-                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
+                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(globalConfig.api.token)}</script>`,
               )
               res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
               res.setHeader('Content-Type', 'text/html; charset=utf-8')

@@ -153,7 +153,7 @@ interface ImportDuration {
 function logs(): ReadonlyArray<UserConsoleLog>
 ```
 
-Console logs recorded on top level of the module during test collection.For example:
+Console logs recorded on top level of the module during test collection. For example:
 
 ```ts
 console.log('included') // [!code highlight]
