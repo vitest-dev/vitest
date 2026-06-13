@@ -217,8 +217,9 @@ async function resolveDeclaredProjectEntries(
         : false
     // if `root` is configured, resolve it relative to the workspace file or vite root (like other options)
     // if `root` is not specified, inline configs use the same root as the root project
-    const root = options.root
-      ? resolve(configRoot, options.root)
+    const rawRoot = options.test?.root ?? options.root
+    const root = rawRoot
+      ? resolve(configRoot, rawRoot)
       : globalConfig.root
 
     promises.push(concurrent(() => resolveSingleProjectEntry(harness, globalViteConfig, globalConfig, {
@@ -309,7 +310,28 @@ async function resolveSingleProjectEntry(
     mode: options.test?.mode || options.mode || globalConfig.mode,
     plugins: [
       ...(options.plugins || []),
-      ...WorkspaceVitestPlugin(harness, globalViteConfig, globalConfig, { ...options, workspacePath }),
+      ...WorkspaceVitestPlugin(
+        harness,
+        globalViteConfig,
+        globalConfig,
+        { ...options, workspacePath },
+      ),
+      {
+        name: 'vitest:tags',
+        config(config) {
+          // We need to keep the `tags` array untouched if `extends` is `true`,
+          // Otherwise it gets merged with the top level tags and we don't want that _yet_
+          // Setting it to `options.test?.tags` overrides the merged value
+          if (config.test?.tags) {
+            config.test.tags = options.test?.tags
+          }
+        },
+        api: {
+          vitest: {
+            experimental: { ignoreFsModuleCache: true },
+          },
+        },
+      },
     ],
   }
 
