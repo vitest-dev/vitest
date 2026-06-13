@@ -252,12 +252,14 @@ export class Vitest {
     await Promise.all(this._onRestartListeners.map(fn => fn(reason)))
     this.report('onServerRestart', reason)
     await this.close()
+    // harness mimics `vitest` access like in `node/create.ts`
     this._harness.setVitest(undefined)
     const config = await resolveConfig(
       this.config.cliOptions,
       this.config.viteOverrides,
       this._harness,
     )
+    this._harness.setVitest(this)
     await this._start(config)
   }
 
@@ -1244,10 +1246,10 @@ export class Vitest {
   /** @internal */
   async changeProjectName(pattern: string): Promise<void> {
     if (pattern === '') {
-      this.configOverride.project = undefined
+      this.config.cliOptions.project = undefined
     }
     else {
-      this.configOverride.project = [pattern]
+      this.config.cliOptions.project = [pattern]
     }
 
     await this.vite.restart()

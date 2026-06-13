@@ -414,8 +414,8 @@ function expandBrowserInstancesInEntries(
 
       const provider = instance.provider?.name ?? projectConfig.browser.provider?.name ?? 'preview'
 
-      // Browser-mode "Chromium" only features:
-      if (!isChromiumName(provider, browser)) {
+      // Browser-mode CDP only features:
+      if (provider === 'preview' || !isChromiumName(provider, browser)) {
         const browserConfig = `
 {
   browser: {
@@ -458,9 +458,8 @@ function expandBrowserInstancesInEntries(
           )
         }
 
-        // ignores non-chromium browsers when there is at least one chromium project
-        if (projectConfig.inspect || projectConfig.inspectBrk) {
-          const inspectOption = `--inspect${projectConfig.inspectBrk ? '-brk' : ''}`
+        if (globalConfig.inspect || globalConfig.inspectBrk) {
+          const inspectOption = `--inspect${globalConfig.inspectBrk ? '-brk' : ''}`
 
           throw new Error(
             `${inspectOption} does not work with\n${browserConfig}\n`

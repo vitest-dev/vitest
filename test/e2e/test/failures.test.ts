@@ -271,14 +271,14 @@ test('v8 coverage provider cannot be used in workspace without chromium', async 
   }, { fails: true })
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
-    {
-      browser: {
-        provider: webdriverio(),
-        instances: [
-          { browser: 'webkit' }
-        ],
-      },
-    }`,
+{
+  browser: {
+    provider: webdriverio(),
+    instances: [
+      { browser: 'webkit' }
+    ],
+  },
+}`,
   )
 })
 
