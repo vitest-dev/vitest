@@ -825,6 +825,7 @@ export function resolveConfig(
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
   resolved.browser.commands ??= {}
   resolved.browser.detailsPanelPosition ??= 'right'
+  resolved.browser.rawScreenshotDirectory = resolved.browser.screenshotDirectory
   if (resolved.browser.screenshotDirectory) {
     resolved.browser.screenshotDirectory = resolve(
       resolved.root,
