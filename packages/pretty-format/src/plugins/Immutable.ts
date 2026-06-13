@@ -8,7 +8,7 @@
 import type { Config, NewPlugin, Printer, Refs } from '../types'
 import { printIteratorEntries, printIteratorValues } from '../collections'
 
-// SENTINEL constants are from https://github.com/facebook/immutable-js
+// SENTINEL constants are from https://github.com/immutable-js/immutable-js
 const IS_ITERABLE_SENTINEL = '@@__IMMUTABLE_ITERABLE__@@'
 const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'
 const IS_KEYED_SENTINEL = '@@__IMMUTABLE_KEYED__@@'
