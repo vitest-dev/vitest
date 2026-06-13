@@ -366,8 +366,12 @@ export class PoolRunner {
     }
   }
 
-  private emitUnexpectedExit = (code: number, signal?: string): void => {
-    const error = new Error(`Worker exited unexpectedly with code ${code} ${signal ? `(signal: ${signal})` : ''}during ${this._state} state`)
+  private emitUnexpectedExit = (code?: number, signal?: string): void => {
+    const hasCode = typeof code === 'number'
+    const errorDetails = hasCode || signal
+      ? `with ${hasCode ? `exit code ${code} ` : ''}${signal ? `signal ${signal} ` : ''}`
+      : ''
+    const error = new Error(`Worker exited unexpectedly ${errorDetails}during ${this._state} state`)
     this._state = RunnerState.STOPPED
 
     this._eventEmitter.emit('error', error)
