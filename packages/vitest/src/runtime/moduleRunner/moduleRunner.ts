@@ -168,23 +168,29 @@ export class VitestModuleRunner
     if (mod.meta && 'mockedModule' in mod.meta) {
       const mockedModule = mod.meta.mockedModule as MockedModule
       const mockId = this.mocker.getMockPath(mod.id)
+      const currentMock = this.mocker.getDependencyMock(mod.id)
       // bypass mock and force "importActual" behavior when:
       // - mock was removed by doUnmock (stale mockedModule in meta)
-      // - self-import: mock factory/file is importing the module it's mocking
-      const isStale = !this.mocker.getDependencyMock(mod.id)
-      const isSelfImport = callstack.includes(mockId)
-        || callstack.includes(url)
-        || ('redirect' in mockedModule && callstack.includes(mockedModule.redirect))
-      if (isStale || isSelfImport) {
+      if (!currentMock) {
         const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
         return this._cachedRequest(node.url, node, callstack, metadata)
       }
-      mocked = await this.mocker.requestWithMockedModule(
-        url,
-        mod,
-        callstack,
-        mockedModule,
-      )
+      // - self-import: mock factory/file is importing the module it's mocking
+      const isSelfImport = callstack.includes(mockId)
+        || callstack.includes(url)
+        || ('redirect' in currentMock && callstack.includes(currentMock.redirect))
+      if (isSelfImport) {
+        const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
+        return this._cachedRequest(node.url, node, callstack, metadata)
+      }
+      const isAutoMock = currentMock.type === 'automock' || currentMock.type === 'autospy'
+      if (isAutoMock && currentMock !== mockedModule) {
+        const freshNode = await this.fetchModule(injectQuery(url, '_vitest_original'))
+        mocked = await this.mocker.requestWithMockedModule(url, freshNode, callstack, currentMock)
+      }
+      else {
+        mocked = await this.mocker.requestWithMockedModule(url, mod, callstack, currentMock)
+      }
     }
     else {
       mocked = await this.mocker.mockedRequest(url, mod, callstack)
