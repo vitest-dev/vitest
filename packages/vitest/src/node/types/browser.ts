@@ -478,6 +478,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     sources?: boolean
   }
   traceView: Required<BrowserTraceViewOptions>
+  rawScreenshotDirectory?: string
 }
 
 type ToMatchScreenshotResolvePath = (data: {
