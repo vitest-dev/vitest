@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - 'v[0-9]*'
-      - backport/pr-driven-release-pipeline-v4
 
 permissions: {}
 
@@ -17,7 +16,7 @@ jobs:
   # Keep detection outside the Release environment. Environment approval is job-level,
   # so the publish job is only created after a release commit is detected.
   detect:
-    if: false
+    if: github.repository == 'vitest-dev/vitest'
     name: Detect release commit
     runs-on: ubuntu-slim
     outputs:
@@ -46,7 +45,7 @@ jobs:
           fi
 
   publish:
-    if: false
+    if: needs.detect.outputs.release == 'true'
     needs: detect
     name: Publish Vitest
     runs-on: ubuntu-latest
@@ -134,67 +133,3 @@ jobs:
         run: |
           TAG="v$VERSION"
           npx changelogithub --to "$TAG" --name "$TAG"
-
-  publish-test:
-    if: github.repository == 'hi-ogawa/vitest'
-    name: Publish test
-    runs-on: ubuntu-latest
-    env:
-      VITEST_GENERATE_UI_TOKEN: 'true'
-      VITE_TEST_WATCHER_DEBUG: 'false'
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Set node version to 24
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org/
-          package-manager-cache: false
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
-
-      - name: Check branch pnpm
-        run: pnpm --version
-
-      - name: Install
-        run: pnpm install --frozen-lockfile --prefer-offline
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-
-      - name: Test release bump
-        env:
-          RELEASE_TYPE: next
-        run: |
-          git config user.name "vitest-release-bot"
-          git config user.email "actions@github.com"
-          pnpm release
-
-      - name: Build
-        run: pnpm build
-
-      - name: Install pnpm for staged publishing
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
-        with:
-          version: 11.6.0
-          # Do not read package.json's pnpm@10 packageManager field when installing pnpm 11.
-          package_json_file: .github/pnpm-publish-package.json
-
-      - name: Check staged pnpm
-        env:
-          PNPM_CONFIG_PM_ON_FAIL: ignore
-        run: pnpm --version
-
-      - name: Stage publish dry run
-        env:
-          PUBLISH_BRANCH: v4
-          PUBLISH_DRY_RUN: 'true'
-          # Keep pnpm 11 instead of switching to package.json's pnpm@10 during staged publishing.
-          PNPM_CONFIG_PM_ON_FAIL: ignore
-          # Avoid pnpm 11 rerunning install before pnpm run, which can fail on unapproved builds.
-          PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'
-        run: pnpm run publish-ci "$(jq -r .version package.json)"
