@@ -166,6 +166,14 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
+      - name: Test release bump
+        env:
+          RELEASE_TYPE: next
+        run: |
+          git config user.name "vitest-release-bot"
+          git config user.email "actions@github.com"
+          pnpm release
+
       - name: Build
         run: pnpm build
 
