@@ -39,6 +39,9 @@ catalogs:
     '@types/istanbul-reports':
       specifier: ^3.0.4
       version: 3.0.4
+    '@types/semver':
+      specifier: ^7.7.1
+      version: 7.7.1
     '@types/test-exclude':
       specifier: ^6.0.2
       version: 6.0.2
@@ -96,6 +99,9 @@ catalogs:
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
+    semver:
+      specifier: ^7.8.3
+      version: 7.8.4
     sirv:
       specifier: ^3.0.1
       version: 3.0.1
@@ -178,6 +184,9 @@ importers:
       '@types/node':
         specifier: ^22.15.32
         version: 22.15.32
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.7.1
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
@@ -223,6 +232,9 @@ importers:
       rollup-plugin-license:
         specifier: ^3.6.0
         version: 3.6.0(picomatch@4.0.2)(rollup@4.43.0)
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.4
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.14
@@ -3710,6 +3722,9 @@ packages:
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
@@ -7703,6 +7718,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.8.4:
+    resolution: {integrity: sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   send@0.18.0:
     resolution: {integrity: sha512-qqWzuOjSFOuqPjFe4NOsMLafToQQwBSOEpS+FwEt3A2V3vKubTquT3vmLTQpFgMXp8AlFWFuP1qKaJZOtPpVXg==}
     engines: {node: '>= 0.8.0'}
@@ -11120,6 +11140,8 @@ snapshots:
       csstype: 3.1.3
 
   '@types/resolve@1.20.2': {}
+
+  '@types/semver@7.7.1': {}
 
   '@types/sinonjs__fake-timers@8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)': {}
 
@@ -15714,6 +15736,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.2: {}
+
+  semver@7.8.4: {}
 
   send@0.18.0:
     dependencies:
