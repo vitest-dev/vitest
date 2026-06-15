@@ -29,8 +29,7 @@ jobs:
 
       - name: Push and delete test tag
         env:
-          # GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           TAG="v0.0.0-test.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
           git config user.name "vitest-release-bot[bot]"
