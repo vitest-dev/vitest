@@ -47,7 +47,7 @@ This allows users to have the speed of V8 coverage with accuracy of Istanbul cov
 :::
 
 By default Vitest uses `'v8'` coverage provider.
-This provider requires Javascript runtime that's implemented on top of [V8 engine](https://v8.dev/), such as NodeJS, Deno or any Chromium based browsers such as Google Chrome.
+This provider requires JavaScript runtime that's implemented on top of [V8 engine](https://v8.dev/), such as NodeJS, Deno or any Chromium based browsers such as Google Chrome.
 
 Coverage collection is performed during runtime by instructing V8 using [`node:inspector`](https://nodejs.org/api/inspector.html) and [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/tot/Profiler/) in browsers. User's source files can be executed as-is without any pre-instrumentation steps.
 
@@ -82,9 +82,9 @@ import Box from '../.vitepress/components/Box.vue'
 ## Istanbul Provider
 
 [Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
-This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
+This provider works on any JavaScript runtime as coverage tracking is done by instrumenting user's source files.
 
-In practice, instrumenting source files means adding additional Javascript in user's files:
+In practice, instrumenting source files means adding additional JavaScript in user's files:
 
 ```js
 // Simplified example of branch and function coverage counters
@@ -113,7 +113,7 @@ globalThis.__VITEST_COVERAGE__ ||= {} // [!code ++]
 globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 ```
 
-- ✅ Works on any Javascript runtime
+- ✅ Works on any JavaScript runtime
 - ✅ Widely used and battle-tested for over 13 years.
 - ✅ In some cases faster than V8. Coverage instrumentation can be limited to specific files, as opposed to V8 where all modules are instrumented.
 - ❌ Requires pre-instrumentation step
@@ -128,7 +128,7 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
   <ArrowDown />
   <Box>Run file</Box>
   <ArrowDown />
-  <Box>Collect coverage results from Javascript scope</Box>
+  <Box>Collect coverage results from JavaScript scope</Box>
   <ArrowDown />
   <Box>Remap coverage results to source files</Box>
   <ArrowDown />

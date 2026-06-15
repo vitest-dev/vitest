@@ -195,7 +195,7 @@ In previous versions Vitest included all uncovered files in coverage report by d
 This was due to `coverage.all` defaulting to `true`, and `coverage.include` defaulting to `**`.
 These default values were chosen for a good reason - it is impossible for testing tools to guess where users are storing their source files.
 
-This ended up having Vitest's coverage providers processing unexpected files, like minified Javascript, leading to slow/stuck coverage report generations.
+This ended up having Vitest's coverage providers processing unexpected files, like minified JavaScript, leading to slow/stuck coverage report generations.
 In Vitest v4 we have removed `coverage.all` completely and <ins>**defaulted to include only covered files in the report**</ins>.
 
 When upgrading to v4 it is recommended to define `coverage.include` in your configuration, and then start applying simple `coverage.exclude` patterns if needed.

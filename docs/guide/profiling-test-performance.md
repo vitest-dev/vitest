@@ -230,7 +230,7 @@ $ DEBUG=vitest:coverage vitest --run --coverage
 ```
 
 This profiling approach is great for detecting large files that are accidentally picked by coverage providers.
-For example if your configuration is accidentally including large built minified Javascript files in code coverage, they should appear in logs.
+For example if your configuration is accidentally including large built minified JavaScript files in code coverage, they should appear in logs.
 In these cases you might want to adjust your [`coverage.include`](/config/coverage#coverage-include) and [`coverage.exclude`](/config/coverage#coverage-exclude) options.
 
 ## Inspecting Profiling Records
