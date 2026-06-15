@@ -101,23 +101,16 @@ jobs:
           PUBLISH_BRANCH: ${{ github.ref_name }}
         run: pnpm run publish-ci "$VERSION"
 
-      - id: generate-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.RELEASE_GITHUB_APP_ID }}
-          private-key: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}
-          permission-contents: write
-
       - name: Push release tag
         env:
           VERSION: ${{ needs.detect.outputs.version }}
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v$VERSION"
-          git config user.name "vitest-release-bot[bot]"
-          git config user.email "292707936+vitest-release-bot[bot]@users.noreply.github.com"
+          git config user.name "vitest-release-bot"
+          git config user.email "actions@github.com"
           git tag "$TAG" "$GITHUB_SHA"
-          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$TAG"
+          git push "https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$TAG"
 
       - name: Generate Changelog
         env:
