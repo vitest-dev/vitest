@@ -102,6 +102,7 @@ jobs:
           PUBLISH_BRANCH: ${{ github.ref_name }}
           PUBLISH_DRY_RUN: 'true'
           PNPM_CONFIG_PM_ON_FAIL: ignore
+          PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'
         run: pnpm run publish-ci "$VERSION"
 
       - name: Stage publish to npm
@@ -109,6 +110,7 @@ jobs:
           VERSION: ${{ needs.detect.outputs.version }}
           PUBLISH_BRANCH: ${{ github.ref_name }}
           PNPM_CONFIG_PM_ON_FAIL: ignore
+          PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'
         run: pnpm run publish-ci "$VERSION"
 
       - name: Push release tag
@@ -180,4 +182,5 @@ jobs:
           PUBLISH_BRANCH: v4
           PUBLISH_DRY_RUN: 'true'
           PNPM_CONFIG_PM_ON_FAIL: ignore
+          PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'
         run: pnpm run publish-ci "$(jq -r .version package.json)"
