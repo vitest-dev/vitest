@@ -114,8 +114,8 @@ jobs:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           TAG="v$VERSION"
-          git config user.name "vitest-release-bot"
-          git config user.email "actions@github.com"
+          git config user.name "vitest-release-bot[bot]"
+          git config user.email "292707936+vitest-release-bot[bot]@users.noreply.github.com"
           git tag "$TAG" "$GITHUB_SHA"
           git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$TAG"
 
