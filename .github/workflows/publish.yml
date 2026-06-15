@@ -101,14 +101,14 @@ jobs:
           VERSION: ${{ needs.detect.outputs.version }}
           PUBLISH_BRANCH: ${{ github.ref_name }}
           PUBLISH_DRY_RUN: 'true'
-          PNPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS: 'false'
+          PNPM_CONFIG_PM_ON_FAIL: ignore
         run: pnpm run publish-ci "$VERSION"
 
       - name: Stage publish to npm
         env:
           VERSION: ${{ needs.detect.outputs.version }}
           PUBLISH_BRANCH: ${{ github.ref_name }}
-          PNPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS: 'false'
+          PNPM_CONFIG_PM_ON_FAIL: ignore
         run: pnpm run publish-ci "$VERSION"
 
       - name: Push release tag
@@ -172,12 +172,12 @@ jobs:
 
       - name: Check staged pnpm
         env:
-          PNPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS: 'false'
+          PNPM_CONFIG_PM_ON_FAIL: ignore
         run: pnpm --version
 
       - name: Stage publish dry run
         env:
           PUBLISH_BRANCH: v4
           PUBLISH_DRY_RUN: 'true'
-          PNPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS: 'false'
+          PNPM_CONFIG_PM_ON_FAIL: ignore
         run: pnpm run publish-ci "$(jq -r .version package.json)"
