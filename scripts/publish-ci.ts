@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import * as semver from 'semver'
 import { $ } from 'zx'
 
+// (This probably requires temporarily installing pnpm 11 like publish.yml)
 // How to test release script locally:
 // RELEASE_VERSION=4.1.9 pnpm release
 // VITEST_GENERATE_UI_TOKEN=true VITE_TEST_WATCHER_DEBUG=false PUBLISH_DRY_RUN=true PUBLISH_BRANCH=v4 pnpm publish-ci 4.1.9
