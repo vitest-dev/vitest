@@ -771,11 +771,11 @@ test("works on browser", () => {
 })
 `,
   })
-  const baseConfig: RunVitestConfig = {
+  const baseConfig = (): RunVitestConfig => ({
+    config: false,
     root,
     projects: [
       {
-        extends: true,
         test: {
           name: 'node',
           sequence: {
@@ -784,7 +784,6 @@ test("works on browser", () => {
         },
       },
       {
-        extends: true,
         test: {
           name: 'browser',
           sequence: {
@@ -804,9 +803,9 @@ test("works on browser", () => {
         },
       },
     ],
-  }
+  })
   const result1 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: [['blob', { label: 'linux' }]],
   })
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
@@ -833,7 +832,7 @@ test("works on browser", () => {
     }
   `)
   const result2 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: [['blob', { label: 'macos' }]],
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
@@ -860,7 +859,7 @@ test("works on browser", () => {
     }
   `)
   const result = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: resolve(root, '.vitest/blob'),
   })
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
