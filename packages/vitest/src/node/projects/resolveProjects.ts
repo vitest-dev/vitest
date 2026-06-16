@@ -320,9 +320,10 @@ async function resolveSingleProjectEntry(
         name: 'vitest:tags',
         config(config) {
           // We need to keep the `tags` array untouched if `extends` is `true`,
-          // Otherwise it gets merged with the top level tags and we don't want that _yet_
+          // Otherwise it gets merged with the top level tags and we don't want that because tags could be overwritten
           // Setting it to `options.test?.tags` overrides the merged value
-          if (config.test?.tags) {
+          if (options.test?.tags) {
+            config.test ??= {}
             config.test.tags = options.test?.tags
           }
         },
