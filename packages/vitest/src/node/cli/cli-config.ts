@@ -138,6 +138,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
   },
+  reporter: null,
   reporters: {
     alias: 'reporter',
     description: `Specify reporters (default, agent, minimal, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
@@ -384,10 +385,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '[port]',
         subcommands: apiConfig(defaultBrowserPort),
       },
-      isolate: {
-        description:
-          'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
-      },
       ui: {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
@@ -396,10 +393,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
         argument: '<position>',
-      },
-      fileParallelism: {
-        description:
-          'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
       },
       connectTimeout: {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',

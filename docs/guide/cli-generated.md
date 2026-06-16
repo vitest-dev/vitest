@@ -388,13 +388,6 @@ Allow API to execute code. (Be careful when enabling this option in untrusted en
 
 Allow API to edit files. (Be careful when enabling this option in untrusted environments)
 
-### browser.isolate
-
-- **CLI:** `--browser.isolate`
-- **Config:** [browser.isolate](/config/browser/isolate)
-
-Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)
-
 ### browser.ui
 
 - **CLI:** `--browser.ui`
@@ -408,12 +401,6 @@ Show Vitest UI when running tests (default: `!process.env.CI`)
 - **Config:** [browser.detailsPanelPosition](/config/browser/detailspanelposition)
 
 Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)
-
-### browser.fileParallelism
-
-- **CLI:** `--browser.fileParallelism`
-
-Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)
 
 ### browser.connectTimeout
 

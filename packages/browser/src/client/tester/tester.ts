@@ -250,7 +250,7 @@ async function prepare(options: PrepareOptions) {
 
   await Promise.all([
     setupCommonEnv(config),
-    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }),
+    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
     (async () => {
       const VitestIndex = await import('vitest')
       Object.defineProperty(window, '__vitest_index__', {
@@ -295,7 +295,7 @@ async function cleanup() {
     await rpc.wdioSwitchContext('parent')
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
-  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
+  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })
 }

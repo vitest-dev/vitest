@@ -85,7 +85,7 @@ export class IframeOrchestrator {
       }
     }
 
-    if (config.browser.isolate === false) {
+    if (config.isolate === false) {
       await this.runNonIsolatedTests(container, options, startTime, orchestratorSpan.context)
       await endSpan()
       return
@@ -118,7 +118,7 @@ export class IframeOrchestrator {
 
   public async cleanupTesters(): Promise<void> {
     const config = getConfig()
-    if (config.browser.isolate) {
+    if (config.isolate) {
       // isolated mode assigns filepaths as ids
       const files = Array.from(this.iframes.keys())
       // when the run is completed, show the last file in the UI

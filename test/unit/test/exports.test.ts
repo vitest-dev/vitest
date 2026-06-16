@@ -102,6 +102,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "VitestPackageInstaller": "function",
         "VmForksPoolWorker": "function",
         "VmThreadsPoolWorker": "function",
+        "createCLI": "function",
         "createDebugger": "function",
         "createMethodsRPC": "function",
         "createViteLogger": "function",

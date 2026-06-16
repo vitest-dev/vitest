@@ -111,7 +111,6 @@ test('inherits browser options', async () => {
       screenshotFailures: false,
       testerHtmlPath: '/custom-path.html',
       screenshotDirectory: '/custom-directory',
-      fileParallelism: false,
       viewport: {
         width: 300,
         height: 900,
@@ -159,7 +158,6 @@ test('inherits browser options', async () => {
         locators: {
           testIdAttribute: 'data-tid',
         },
-        fileParallelism: false,
         testerHtmlPath: '/custom-path.html',
       },
     },
@@ -609,8 +607,8 @@ test('fileParallelism on the instance works properly', async () => {
     },
   })
   expect(v.projects).toHaveLength(2)
-  expect(v.projects[0].config.browser.fileParallelism).toBe(false)
-  expect(v.projects[1].config.browser.fileParallelism).toBe(true)
+  expect(v.projects[0].config.maxWorkers).toBe(1)
+  expect(v.projects[1].config.maxWorkers).toBe(1)
 })
 
 test('detailsPanelPosition defaults to right', async () => {

@@ -50,12 +50,6 @@ describe('correctly defines api flag', () => {
     })
   })
 
-  it('browser.isolate is inherited', async () => {
-    const c = await vitest({ isolate: false }, {})
-    expect(c.config.isolate).toBe(false)
-    expect(c.config.browser.isolate).toBe(false)
-  })
-
   it('allowWrite and allowExec default to true when not exposed to network', async () => {
     const c = await config({ api: { port: 5555 } }, {})
     expect(c.api.allowWrite).toBe(true)

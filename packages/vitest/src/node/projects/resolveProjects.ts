@@ -640,6 +640,7 @@ function cloneProjectConfigForBrowserInstance(
   const clonedConfig = deepClone(parentConfig)
   return mergeConfig<any, any>({
     ...clonedConfig,
+    maxWorkers: config.fileParallelism === false ? 1 : clonedConfig.maxWorkers,
     browser: {
       ...parentConfig.browser,
       locators: locators
@@ -655,7 +656,6 @@ function cloneProjectConfigForBrowserInstance(
       screenshotFailures: screenshotFailures ?? currentBrowser.screenshotFailures,
       headless: headless ?? currentBrowser.headless,
       provider: provider ?? currentBrowser.provider,
-      fileParallelism: fileParallelism ?? currentBrowser.fileParallelism,
       name: browser,
       instances: [], // projects cannot spawn more configs
     },

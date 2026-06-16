@@ -179,23 +179,6 @@ export interface BrowserConfigOptions {
   api?: ApiConfig | number
 
   /**
-   * Isolate test environment after each test
-   *
-   * @default true
-   * @deprecated use top-level `isolate` instead
-   */
-  isolate?: boolean
-
-  /**
-   * Run test files in parallel if provider supports this option
-   * This option only has effect in headless mode (enabled in CI by default)
-   *
-   * @default // Same as "test.fileParallelism"
-   * @deprecated use top-level `fileParallelism` instead
-   */
-  fileParallelism?: boolean
-
-  /**
    * Show Vitest UI
    *
    * @default !process.env.CI
@@ -456,8 +439,6 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   name: string
   enabled: boolean
   headless: boolean
-  isolate: boolean
-  fileParallelism: boolean
   api: ApiConfig
   ui: boolean
   viewport: {
