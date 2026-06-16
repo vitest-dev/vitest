@@ -33,7 +33,7 @@ it('editing a test file in a project reruns its tests', async () => {
   fs.editFile('space_2/node.spec.ts', content => `${content}\n`)
 
   await vitest.waitForStdout('RERUN  ../space_2/node.spec.ts')
-  await vitest.waitForStdout('|space_2| space_2/node.spec.ts')
+  await vitest.waitForStdout('|space_2| node.spec.ts')
   await vitest.waitForStdout('Test Files  1 passed')
 })
 
@@ -79,8 +79,8 @@ it('editing a file imported in different projects reruns both files', async () =
   fs.editFile('src/math.ts', content => `${content}\n`)
 
   await vitest.waitForStdout('RERUN  ../src/math.ts')
-  await vitest.waitForStdout('|space_1| space_1/math.spec.ts')
-  await vitest.waitForStdout('|space_3| space_3/math.space-3-test.ts')
+  await vitest.waitForStdout('|space_1| math.spec.ts')
+  await vitest.waitForStdout('|space_3| math.space-3-test.ts')
   await vitest.waitForStdout('Test Files  2 passed')
 })
 
@@ -156,7 +156,7 @@ it('adding a new test file matching the default project config triggers a re-run
 
   await vitest.waitForStdout('Running added dynamic test')
   await vitest.waitForStdout('RERUN  ../space_2/new-dynamic.test.ts')
-  await vitest.waitForStdout('|space_2| space_2/new-dynamic.test.ts')
+  await vitest.waitForStdout('|space_2| new-dynamic.test.ts')
 
   // Wait for tests to end
   await vitest.waitForStdout('Waiting for file changes')
@@ -199,7 +199,7 @@ it('adding a new test file matching a project specific config triggers a re-run'
 
   await vitest.waitForStdout('Running added dynamic test')
   await vitest.waitForStdout('RERUN  ../space_3/new-dynamic.space-3-test.ts')
-  await vitest.waitForStdout('|space_3| space_3/new-dynamic.space-3-test.ts')
+  await vitest.waitForStdout('|space_3| new-dynamic.space-3-test.ts')
 
   // Wait for tests to end
   await vitest.waitForStdout('Waiting for file changes')
