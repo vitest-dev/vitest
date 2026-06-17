@@ -4,6 +4,14 @@ import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
 import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, startHtmlReportPreview, startVitestUi } from './helper'
 
+const TEST_COUNTS = {
+  pass: 18,
+  fail: 3,
+  files: {
+    pass: 7,
+  },
+}
+
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let pageUrl: string
@@ -222,14 +230,6 @@ test.describe('html report', () => {
     await testModuleGraph(page)
   })
 })
-
-const TEST_COUNTS = {
-  pass: 18,
-  fail: 3,
-  files: {
-    pass: 7,
-  },
-}
 
 async function testBasic(page: Page, pageUrl: string) {
   const pageErrors: unknown[] = []
