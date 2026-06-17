@@ -9,7 +9,6 @@ import { resolve } from 'node:path'
 import { deepClone, slash } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { mergeConfig } from 'vite'
-import { getUiCapabilityPath } from './config/apiToken'
 import { findConfigFile } from './config/resolveConfig'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
@@ -77,7 +76,7 @@ export async function createVitest(
     if (ctx.config.api?.port) {
       await server.listen()
       if (ctx.config.ui && ctx.config.open) {
-        server.config.server.open = getUiCapabilityPath(ctx.config.uiBase, ctx.config.api.token)
+        server.config.server.open = ctx.config.uiBase
         server.openBrowser()
       }
     }

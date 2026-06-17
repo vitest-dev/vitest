@@ -1,5 +1,5 @@
-import type { Vite, Vitest } from 'vitest/node'
 import type { IncomingMessage } from 'node:http'
+import type { Vite, Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
