@@ -6,13 +6,13 @@ import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, resolve } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { ServerModuleRunner } from '../environments/serverRunner'
+import { VitestConfigApi } from './api'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { resolveFsAllow } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends TestProjectInlineConfiguration {
@@ -80,7 +80,7 @@ export function WorkspaceVitestPlugin(
     },
     {
       name: 'vitest:project',
-      enforce: 'pre',
+      enforce: 'post',
       options() {
         this.meta.watchMode = false
       },
@@ -92,19 +92,11 @@ export function WorkspaceVitestPlugin(
           base: '/',
           root,
           server: {
-            // disable watch mode in workspaces,
-            // because it is handled by the top-level watcher
+            // disable watch mode in projects because it is handled by the top-level watcher
             watch: null,
             open: false,
-            hmr: false,
-            ws: false,
-            preTransformRequests: false,
-            middlewareMode: true,
             fs: {
-              allow: resolveFsAllow(
-                globalConfig.root,
-                globalViteConfig.configFile,
-              ),
+              allow: globalViteConfig.server.fs.allow,
             },
           },
         }
@@ -130,7 +122,12 @@ export function WorkspaceVitestPlugin(
 
         return config
       },
+      configResolved(config) {
+        config.test.coverage = globalConfig.coverage
+        config.test.attachmentsDir = globalConfig.attachmentsDir
+      },
     },
+    VitestConfigApi(harness, globalConfig),
     {
       name: 'vitest:project:server',
       enforce: 'pre',

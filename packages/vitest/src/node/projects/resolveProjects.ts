@@ -5,6 +5,7 @@ import type {
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
+import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   BrowserInstanceOption,
   ResolvedConfig,
@@ -23,9 +24,9 @@ import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
+import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
-import { createViteServer } from '../vite'
 
 // vitest.config.*
 // vite.config.*
@@ -80,13 +81,13 @@ export async function resolveProjectEntries(
   globalConfig: ResolvedConfig,
   definitions: TestProjectConfiguration[] | undefined,
   workspaceConfigPath?: string,
-  options?: { throwIfEmpty?: boolean; existingNames?: Set<string> },
+  options: { throwIfEmpty?: boolean; existingNames?: Set<string> } = {},
 ): Promise<ResolvedProjectEntry[]> {
-  const throwIfEmpty = options?.throwIfEmpty ?? true
-  const existingNames = options?.existingNames
+  const throwIfEmpty = options.throwIfEmpty ?? true
+  const existingNames = options.existingNames
   // `definitions: []` is treated as "user declared workspace but it's empty"
-  // (the old behavior throws). `definitions === undefined` means "no
-  // workspace declared" and falls through to the default root-project entry.
+  // `definitions === undefined` means "no workspace declared" and
+  // falls through to the default root-project entry.
   let baseEntries: ResolvedProjectEntry[]
   if (definitions !== undefined) {
     baseEntries = await resolveDeclaredProjectEntries(
@@ -302,6 +303,8 @@ async function resolveSingleProjectEntry(
 ): Promise<ResolvedProjectEntry> {
   const { configFile, ...restOptions } = options
 
+  const browserHolder: BrowserContributionHolder = {}
+
   const projectInline: ViteInlineConfig = {
     ...restOptions,
     configFile,
@@ -316,6 +319,7 @@ async function resolveSingleProjectEntry(
         globalConfig,
         { ...options, workspacePath },
       ),
+      BrowserLoaderPlugin(browserHolder, harness),
       {
         name: 'vitest:tags',
         config(config) {
@@ -342,22 +346,19 @@ async function resolveSingleProjectEntry(
 
   const projectConfig = resolveTestConfig(
     harness.logger,
-    {
-      ...mergedOptions,
-      // root-only configs that projects inherit
-      coverage: globalConfig.coverage,
-      attachmentsDir: globalConfig.attachmentsDir,
-    },
+    mergedOptions,
     projectViteConfig,
     globalConfig.cliOptions,
   )
   projectConfig.api.token = globalConfig.api.token
   projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel
 
-  // Mirror the resolved test config back onto the Vite resolved config so that
-  // `viteConfig.test` always reflects the most recently resolved variant of
-  // that vite cluster (the "primary" view).
   projectViteConfig.test = projectConfig
+
+  // The browser provider's contribution (captured during this resolution by the
+  // `vitest:browser:loader` plugin) is carried on the resolved config + entry so
+  // server creation can build the single shared Vite server.
+  projectConfig._browserContribution = browserHolder.contribution
 
   return {
     viteConfig: projectViteConfig,
@@ -840,6 +841,12 @@ export async function attachProjectsFromEntries(
   // here so siblings can attach to it.
   if (!vitest.coreWorkspaceProject && vitest.vite) {
     vitest.coreWorkspaceProject = TestProject._createBasicProject(vitest)
+    // If the root server is itself a browser server (no `projects`, browser
+    // enabled at the root), it owns the cluster's parent browser project so
+    // instance siblings can attach to it.
+    if (vitest._rootBrowserParent) {
+      vitest.coreWorkspaceProject._parentBrowser = vitest._rootBrowserParent
+    }
     primaryByViteConfig.set(vitest.vite.config, vitest.coreWorkspaceProject)
   }
 
@@ -861,15 +868,24 @@ export async function attachProjectsFromEntries(
         continue
       }
       const sibling = TestProject._spawnSibling(primary, projectConfig)
+      // Browser-instance siblings share the primary's single (browser) Vite
+      // server; each gets its own `ProjectBrowser` view onto it.
+      if (primary._parentBrowser) {
+        sibling.browser = primary._parentBrowser.spawn(sibling)
+      }
       projects.push(sibling)
       continue
     }
 
-    const server = await createViteServer(viteConfig)
-
-    // Workspace project with its own `viteConfig`: own a fresh Vite server.
+    // Workspace project with its own `viteConfig`: own a fresh Vite server. For
+    // a browser cluster this is the single server shared by `project.vite` and
+    // `project.browser.vite`.
+    const { server, parent } = await createClusterServer(vitest, viteConfig, projectConfig)
     const project = new TestProject(vitest, server, viteConfig, projectConfig)
     project._initializeRunners(server)
+    if (parent) {
+      project._parentBrowser = parent
+    }
     primaryByViteConfig.set(viteConfig, project)
     if (!hidden) {
       projects.push(project)

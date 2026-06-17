@@ -14,6 +14,7 @@ import type { ProcessPool } from './pool'
 import type { Report } from './reporters/report'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './test-specification'
+import type { ParentProjectBrowser } from './types/browser'
 import type { ResolvedConfig, TestProjectConfiguration } from './types/config'
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
@@ -41,6 +42,7 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { FilesNotFoundError } from './errors'
 import { collectModuleDurationsDiagnostic, collectSourceModulesLocations } from './module-diagnostic'
+import { createClusterServer } from './plugins/browserLoader'
 import { createPool } from './pool'
 import { TestProject } from './project'
 import { attachProjectsFromEntries, resolveAndAttachProjects } from './projects/resolveProjects'
@@ -54,7 +56,6 @@ import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
 import { loadVCSProvider } from './vcs/vcs'
-import { createViteServer } from './vite'
 import { VitestWatcher } from './watcher'
 
 const WATCHER_DEBOUNCE = 100
@@ -148,6 +149,13 @@ export class Vitest {
   /** @internal */ cancelPromise?: Promise<void | void[]>
   /** @internal */ isCancelling = false
   /** @internal */ coreWorkspaceProject: TestProject | undefined
+  /**
+   * When the root config is itself browser-enabled (no `projects`), the root
+   * Vite server is the single browser server and this is its parent browser
+   * project (assigned to `coreWorkspaceProject._parentBrowser`).
+   * @internal
+   */
+  _rootBrowserParent: ParentProjectBrowser | undefined
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ runner!: ModuleRunner
@@ -218,6 +226,7 @@ export class Vitest {
     this.projects = []
     this.runningPromise = undefined
     this.coreWorkspaceProject = undefined
+    this._rootBrowserParent = undefined
     this.specifications.clearCache()
     this._coverageProvider = undefined
     this._onUserTestsRerun = []
@@ -268,8 +277,11 @@ export class Vitest {
    */
   async _attachRootServer(): Promise<void> {
     const resolved = this.config
-    const server = await createViteServer(this.viteConfig)
+    // For a root-level browser config (no `projects`) this builds the single
+    // browser server; otherwise it just creates the Vite server.
+    const { server, parent } = await createClusterServer(this, this.viteConfig, resolved)
     this.vite = server
+    this._rootBrowserParent = parent
 
     const environment = server.environments.__vitest__
     this.runner = resolved.experimental.viteModuleRunner === false
@@ -309,8 +321,10 @@ export class Vitest {
       }
     }
 
-    // API setup (watch mode only)
-    if (resolved.api && resolved.watch) {
+    // API setup (watch mode only). Skipped when the root server is itself a
+    // browser server: `createClusterServer` already wires the browser RPC and,
+    // for `browser.ui`, the API server, on the same httpServer.
+    if (resolved.api && resolved.watch && !this._rootBrowserParent) {
       (await import('../api/setup')).setup(this)
     }
 
@@ -1175,11 +1189,6 @@ export class Vitest {
 
     await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise
-  }
-
-  /** @internal */
-  async _initBrowserServers(): Promise<void> {
-    await Promise.all(this.projects.map(p => p._initBrowserServer()))
   }
 
   private async initializeGlobalSetup(paths: TestSpecification[]): Promise<void> {

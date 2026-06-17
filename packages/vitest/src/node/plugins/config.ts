@@ -22,33 +22,40 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
         const testConfig = viteConfig.test || {}
         const resolveOptions = getDefaultResolveOptions()
 
-        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
+        const defines = deleteDefineConfig(viteConfig)
 
-        const config: ViteConfig = {
-          define: {
-            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
-            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+        const browserEnabled = !!testConfig.browser?.enabled
+
+        const config: ViteConfig = browserEnabled
+          ? {
+              resolve: {
+                alias: viteConfig.test?.alias,
+              },
+              test: {},
+            }
+          : {
+              define: {
+                // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+                'process.env.NODE_ENV': 'process.env.NODE_ENV',
+              },
+              resolve: {
+                ...resolveOptions,
+                alias: viteConfig.test?.alias,
+              },
+              test: {},
+            }
+
+        config.environments = {
+          ssr: {
+            resolve: resolveOptions,
           },
-          resolve: {
-            ...resolveOptions,
-            alias: viteConfig.test?.alias,
+          __vitest__: {
+            dev: {},
+            resolve: resolveOptions,
           },
-          // eslint-disable-next-line ts/ban-ts-comment
-          // @ts-ignore Vite 6 compat
-          environments: {
-            ssr: {
-              resolve: resolveOptions,
-            },
-            __vitest__: {
-              dev: {},
-            },
-          },
-          test: {},
         }
 
         ;(config.test as ResolvedConfig).defines = defines
-        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         if ('rolldownVersion' in vite) {
           // eslint-disable-next-line ts/ban-ts-comment
@@ -78,7 +85,7 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
             && testConfig.css?.modules?.classNameStrategy)
           || 'stable'
 
-        if (classNameStrategy !== 'scoped') {
+        if (!browserEnabled && classNameStrategy !== 'scoped') {
           config.css ??= {}
           config.css.modules ??= {}
           if (config.css.modules) {

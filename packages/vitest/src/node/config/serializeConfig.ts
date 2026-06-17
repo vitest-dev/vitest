@@ -1,6 +1,5 @@
 import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
-import type { ApiConfig } from '../types/config'
 import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
 import { isAgent, isForceColor } from '../../utils/env'
@@ -35,12 +34,10 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
-    api: ((api: ApiConfig | undefined) => {
-      return {
-        allowExec: api?.allowExec,
-        allowWrite: api?.allowWrite,
-      }
-    })(project.isBrowserEnabled() ? config.browser.api : config.api),
+    api: {
+      allowExec: config.api.allowExec,
+      allowWrite: config.api.allowWrite,
+    },
     // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,

@@ -1,10 +1,12 @@
 import type {
+  FileSystemServeOptions,
   InlineConfig,
   ResolvedConfig as ResolvedViteConfig,
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { CliOptions } from '../cli/cli-api'
 import type { Logger } from '../logger'
+import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
@@ -24,15 +26,15 @@ import c from 'tinyrainbow'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import {
   configFiles,
-  defaultBrowserPort,
   defaultInspectPort,
-  defaultPort,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
+import { BrowserLoaderPlugin } from '../plugins/browserLoader'
 import { VitestConfigPlugin, VitestCorePlugin } from '../plugins/index'
+import { resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
@@ -85,38 +87,39 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
-export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
-  options: Options,
+export function resolveApiServerConfig(
+  config: UserConfig,
   defaultPort: number,
-  parentApi?: ApiConfig,
-  logger?: Logger,
+  logger: Logger,
 ): ApiConfig | undefined {
+  const isBrowserEnabled = !!config.browser?.enabled
+
   let api: ApiConfig | undefined
 
-  if (options.ui && !options.api) {
+  if (config.ui && !config.api) {
     api = { port: defaultPort }
   }
-  else if (options.api === true) {
+  else if (config.api === true) {
     api = { port: defaultPort }
   }
-  else if (typeof options.api === 'number') {
-    api = { port: options.api }
+  else if (typeof config.api === 'number') {
+    api = { port: config.api }
   }
 
-  if (typeof options.api === 'object') {
+  if (typeof config.api === 'object') {
     if (api) {
-      if (options.api.port) {
-        api.port = options.api.port
+      if (config.api.port) {
+        api.port = config.api.port
       }
-      if (options.api.strictPort) {
-        api.strictPort = options.api.strictPort
+      if (config.api.strictPort) {
+        api.strictPort = config.api.strictPort
       }
-      if (options.api.host) {
-        api.host = options.api.host
+      if (config.api.host) {
+        api.host = config.api.host
       }
     }
     else {
-      api = { ...options.api }
+      api = { ...config.api }
     }
   }
 
@@ -129,24 +132,26 @@ export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConf
     api = { middlewareMode: true }
   }
 
+  if (api && isBrowserEnabled) {
+    // Always force middlewareMode to false in browser mode
+    api.middlewareMode = false
+  }
+
   // if the API server is exposed to network, disable write operations by default
   if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
-    // assigned to browser
-    if (parentApi) {
-      if (api.allowWrite == null && api.allowExec == null) {
-        logger?.error(
-          c.yellow(
-            `${c.yellowBright(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
-          ),
-        )
-      }
+    if (api.allowWrite == null && api.allowExec == null) {
+      logger.error(
+        c.yellow(
+          `${c.yellowBright(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
+        ),
+      )
     }
-    api.allowWrite ??= parentApi?.allowWrite ?? false
-    api.allowExec ??= parentApi?.allowExec ?? false
+    api.allowWrite ??= false
+    api.allowExec ??= false
   }
   else {
-    api.allowWrite ??= parentApi?.allowWrite ?? true
-    api.allowExec ??= parentApi?.allowExec ?? true
+    api.allowWrite ??= true
+    api.allowExec ??= true
   }
 
   return api
@@ -608,9 +613,8 @@ export function resolveTestConfig(
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 
-  // the server has been created, we don't need to override vite.server options
-  const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: crypto.randomUUID() }
+  // the server has ben created, we don't need to override vite.server options
+  resolved.api.token = crypto.randomUUID()
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -820,13 +824,8 @@ export function resolveTestConfig(
     resolved.browser.provider.options = {}
   }
 
-  resolved.browser.api = resolveApiServerConfig(
-    resolved.browser,
-    defaultBrowserPort,
-    resolved.api,
-    logger,
-  ) || {
-    port: defaultBrowserPort,
+  if ('api' in resolved.browser) {
+    logger.deprecate('`test.browser.api` was deprecated in Vitest 5. Use `test.api` instead.')
   }
 
   // enable includeTaskLocation by default in UI mode
@@ -971,6 +970,7 @@ export async function resolveConfig(
   options.root = root
 
   const { browser: _removeBrowser, ...restOptions } = options
+  const rootBrowserHolder: BrowserContributionHolder = {}
   const inlineConfig: InlineConfig = mergeConfig(
     {
       configFile: configPath,
@@ -979,6 +979,7 @@ export async function resolveConfig(
       plugins: [
         VitestConfigPlugin(pluginsHarness, restOptions),
         ...VitestCorePlugin(pluginsHarness),
+        BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
       ],
     } satisfies InlineConfig,
     mergeConfig(viteOverrides, { root }),
@@ -994,8 +995,15 @@ export async function resolveConfig(
   )
   rootViteConfig.test = rootConfig
 
+  rootViteConfig.server.fs ??= {} as Required<FileSystemServeOptions>
+  rootViteConfig.server.fs.allow ??= []
+  rootViteConfig.server.fs.allow.push(
+    ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
+  )
+
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
+  rootConfig._browserContribution = rootBrowserHolder.contribution
 
   const userDefinitions = rootConfig.projects as
     | TestProjectConfiguration[]

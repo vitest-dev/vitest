@@ -169,12 +169,6 @@ export async function readBlobs(
     projectsArray.map(p => [p.name, p]),
   )
 
-  for (const project of projectsArray) {
-    if (project.isBrowserEnabled()) {
-      await project._initBrowserServer()
-    }
-  }
-
   blobs.forEach((blob) => {
     Object.entries(blob.environmentModules).forEach(([projectName, modulesByProject]) => {
       const project = projects[projectName]

@@ -5,17 +5,15 @@ import type { UserConfig } from '../types/config'
 import { deepMerge } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
-import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
-import { resolveApiServerConfig } from '../config/resolveConfig'
 import { ServerModuleRunner } from '../environments/serverRunner'
+import { VitestConfigApi } from './api'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { resolveFsAllow } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
 // the plugins required when starting Vitest
@@ -118,37 +116,11 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
         handler(viteConfig) {
           // Custom user config, this includes CLI overrides
           const testConfig = viteConfig.test ?? {}
-
-          const api = resolveApiServerConfig(
-            testConfig,
-            defaultPort,
-            undefined,
-            harness.logger,
-          )
-          testConfig.api = api
-
-          let open: string | boolean | undefined = false
-
-          if (testConfig.ui && testConfig.open) {
-            open = testConfig.uiBase ?? '/__vitest__/'
-          }
-
           const root = resolve(options.root || viteConfig.test?.root || viteConfig.root || process.cwd())
 
           const config: ViteConfig = {
             base: '/',
             root,
-            server: {
-              ...api,
-              open,
-              hmr: false,
-              ws: api?.middlewareMode ? false : undefined,
-              preTransformRequests: false,
-              watch: testConfig.watch ? {} : null,
-              fs: {
-                allow: resolveFsAllow(root, options.config),
-              },
-            },
             build: {
               // Vitest doesn't use outputDir, but this value affects what folders are watched
               // https://github.com/vitejs/vite/pull/16453
@@ -161,24 +133,11 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
             testConfig.benchmark.enabled = true
           }
 
-          // chokidar fsevents is unstable on macos when emitting "ready" event
-          if (
-            process.platform === 'darwin'
-            && process.env.VITE_TEST_WATCHER_DEBUG
-          ) {
-            const watch = config.server!.watch
-            if (watch) {
-              // eslint-disable-next-line ts/ban-ts-comment
-              // @ts-ignore Vite 6 compat
-              watch.useFsEvents = false
-              watch.usePolling = false
-            }
-          }
-
           return config
         },
       },
     },
+    VitestConfigApi(harness),
     ...VitestConfig(harness),
     // Final config resolution. Making sure that CLI options always have precedent
     // even if the value was changed by a user plugin.

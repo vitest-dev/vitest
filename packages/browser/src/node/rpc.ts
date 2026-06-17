@@ -124,9 +124,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
   function canWrite(project: TestProject) {
     return (
-      project.config.browser.api.allowWrite
-      && project.vitest.config.browser.api.allowWrite
-      && project.config.api.allowWrite
+      project.config.api.allowWrite
       && project.vitest.config.api.allowWrite
     )
   }
@@ -134,13 +132,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   function isCdpAllowed(project: TestProject) {
     return (
       project.config.api.allowExec
-      && project.config.browser.api.allowExec
       && project.vitest.config.api.allowExec
-      && project.vitest.config.browser.api.allowExec
       && project.config.api.allowWrite
-      && project.config.browser.api.allowWrite
       && project.vitest.config.api.allowWrite
-      && project.vitest.config.browser.api.allowWrite
     )
   }
 

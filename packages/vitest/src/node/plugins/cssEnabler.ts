@@ -56,6 +56,11 @@ export function CSSEnablerPlugin(ctx: {
       name: 'vitest:css-disable',
       enforce: 'pre',
       transform(code, id) {
+        // In browser mode the `client` environment renders real CSS; leave it to
+        // Vite (the node `ssr`/`__vitest__` envs still get CSS disabled below).
+        if (ctx.config.browser?.enabled && this.environment.name === 'client') {
+          return
+        }
         if (!isCSS(id)) {
           return
         }
@@ -70,6 +75,9 @@ export function CSSEnablerPlugin(ctx: {
       name: 'vitest:css-empty-post',
       enforce: 'post',
       transform(_, id) {
+        if (ctx.config.browser?.enabled && this.environment.name === 'client') {
+          return
+        }
         if (!isCSS(id) || shouldProcessCSS(id)) {
           return
         }

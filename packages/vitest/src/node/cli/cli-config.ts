@@ -109,7 +109,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   api: {
     argument: '[port]',
-    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
+    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort} or ${defaultBrowserPort} in browser mode`,
     subcommands: apiConfig(defaultPort),
     transform(portOrOptions) {
       if (typeof portOrOptions === 'number') {
@@ -378,12 +378,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
       headless: {
         description:
           'Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: `process.env.CI`)',
-      },
-      api: {
-        description:
-          'Specify options for the browser API server. Does not affect the --api option',
-        argument: '[port]',
-        subcommands: apiConfig(defaultBrowserPort),
       },
       ui: {
         description:

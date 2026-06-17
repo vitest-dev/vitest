@@ -23,7 +23,6 @@ import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { isRunnableDevEnvironment } from 'vite'
-import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { BenchmarkManager } from './benchmark'
@@ -31,9 +30,6 @@ import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
-import { CoverageTransform } from './plugins/coverageTransform'
-import { MetaEnvReplacerPlugin } from './plugins/metaEnvReplacer'
-import { MocksPlugins } from './plugins/mocks'
 import { getFilePoolName } from './pool'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './test-specification'
@@ -466,42 +462,16 @@ export class TestProject {
     return testFiles
   }
 
-  private _parentBrowser?: ParentProjectBrowser
+  /**
+   * The parent browser project that owns this cluster's single Vite server.
+   * Set on the primary (the hidden parent of a browser cluster) at server
+   * creation; instance siblings get their own `ProjectBrowser` view via
+   * `_parentBrowser.spawn`.
+   * @internal
+   */
+  _parentBrowser?: ParentProjectBrowser
   /** @internal */
   public _parent?: TestProject
-  /** @internal */
-  _initParentBrowser = deduped(async (childProject: TestProject) => {
-    if (!this.isBrowserEnabled() || this._parentBrowser) {
-      return
-    }
-    const provider = this.config.browser.provider || childProject.config.browser.provider
-    if (provider == null) {
-      throw new Error(`Provider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
-    }
-    if (typeof provider.serverFactory !== 'function') {
-      throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider.name}" package?`)
-    }
-    const browser = await provider.serverFactory({
-      project: this,
-      mocksPlugins: options => MocksPlugins(options),
-      metaEnvReplacer: () => MetaEnvReplacerPlugin(),
-      coveragePlugin: () => CoverageTransform(this.vitest._harness),
-    })
-    this._parentBrowser = browser
-    if (this.config.browser.ui) {
-      setup(this.vitest, browser.vite)
-    }
-  })
-
-  /** @internal */
-  _initBrowserServer = deduped(async () => {
-    await this._parent?._initParentBrowser(this)
-
-    if (!this.browser && this._parent?._parentBrowser) {
-      this.browser = this._parent._parentBrowser.spawn(this)
-      await this.vitest.report('onBrowserInit', this)
-    }
-  })
 
   /**
    * Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts.
@@ -511,10 +481,8 @@ export class TestProject {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all(
         [
-          this.vite?.close(),
+          this.vite.close(),
           this.typechecker?.stop(),
-          // browser might not be set if it threw an error during initialization
-          (this.browser || this._parent?._parentBrowser?.vite)?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
       ).then(() => {
@@ -538,10 +506,7 @@ export class TestProject {
 
   /** @internal */
   public _getViteEnvironments(): DevEnvironment[] {
-    return [
-      ...Object.values(this.browser?.vite.environments || {}),
-      ...Object.values(this.vite.environments || {}),
-    ]
+    return Object.values(this.vite.environments || {})
   }
 
   /** @internal */
@@ -626,8 +591,10 @@ export class TestProject {
     if (!this.isBrowserEnabled() || this.browser?.provider) {
       return
     }
-    if (!this.browser) {
-      await this._initBrowserServer()
+    // The browser server is created eagerly with the project, so `this.browser`
+    // is already set here; we only need to initialize the provider.
+    if (this.browser) {
+      await this.vitest.report('onBrowserInit', this)
     }
     await this.browser?.initBrowserProvider(this)
   })

@@ -21,7 +21,7 @@ import type { TestSequencerConstructor } from '../sequencers/types'
 import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
-import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
+import type { BrowserConfigOptions, BrowserServerContribution, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Reporter } from './reporter'
 
@@ -1193,7 +1193,6 @@ export interface ResolvedConfig
   reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
-  viteDefine: Record<string, any>
 
   api: ApiConfig & { token: string }
   cliExclude?: string[]
@@ -1251,6 +1250,15 @@ export interface ResolvedConfig
   cliOptions: CliOptions
   viteOverrides: ViteUserConfig
   projects?: ResolvedProjectEntry[]
+  /**
+   * Browser server contribution captured by the `vitest:browser:loader` plugin
+   * during this config's resolution (set only when `browser.enabled`). Used by
+   * server creation to build the single Vite server shared by `project.vite` and
+   * `project.browser.vite`.
+   *
+   * @internal
+   */
+  _browserContribution?: BrowserServerContribution
 }
 
 /**
