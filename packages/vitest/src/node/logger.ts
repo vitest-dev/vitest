@@ -7,7 +7,6 @@ import { Console } from 'node:console'
 import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { getUiCapabilityUrl } from './config/apiToken'
 import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -244,11 +243,8 @@ export class Logger {
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.vite.config.server.port
-      const url = getUiCapabilityUrl(
-        `http://${host}:${port}`,
-        this.ctx.config.uiBase,
-        this.ctx.config.api.token,
-      )
+      const url = new URL(this.ctx.config.uiBase, `http://${host}:${port}`)
+      url.searchParams.set('token', this.ctx.config.api.token)
 
       this.log(PAD + c.dim(c.green(`UI started at ${url}`)))
     }

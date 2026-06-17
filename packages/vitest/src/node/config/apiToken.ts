@@ -41,7 +41,6 @@ function resolveTokenFromPath(tokenPath: string): string | undefined {
 }
 
 export function resolveApiToken(root: string): string {
-  // TODO: self expire token?
   const tokenPaths = [
     join(getUserDataDir(), 'vitest/.vitest-secret-token'),
     join(searchForWorkspaceRoot(root), 'node_modules/.vitest/.vitest-secret-token'),
@@ -58,15 +57,4 @@ export function resolveApiToken(root: string): string {
   }
 
   throw new Error(`Failed to create Vitest API token at ${tokenPaths.join(' or ')}`)
-}
-
-// TODO: inline. or stash UI url earlier in ctx.something?
-export function getUiCapabilityPath(base: string, token: string): string {
-  const url = new URL(base, 'http://localhost')
-  url.searchParams.set('token', token)
-  return `${url.pathname}${url.search}${url.hash}`
-}
-
-export function getUiCapabilityUrl(origin: string, base: string, token: string): string {
-  return new URL(getUiCapabilityPath(base, token), origin).toString()
 }
