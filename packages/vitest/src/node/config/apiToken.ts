@@ -10,7 +10,7 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'pathe'
 import { searchForWorkspaceRoot } from 'vite'
 
-export const API_TOKEN_FS_DENY = '**/.vitest-secret-token'
+export const API_TOKEN_FS_DENY = '.vitest-secret-token'
 
 // Follows env-paths' user data directory conventions:
 // https://github.com/sindresorhus/env-paths/blob/v4.0.0/index.js
