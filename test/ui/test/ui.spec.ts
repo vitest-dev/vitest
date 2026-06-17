@@ -49,6 +49,20 @@ test.describe('ui', () => {
     await expect(badToken.text()).resolves.toBe('Use the Vitest UI URL printed by the server.')
   })
 
+  test('allows direct ui access after opening authenticated url', async ({ page }) => {
+    const cleanUrl = new URL(pageUrl)
+    cleanUrl.search = ''
+    const cleanPageUrl = cleanUrl.toString()
+
+    await page.goto(pageUrl)
+    await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
+    expect(page.url()).toBe(`${cleanPageUrl}#/`)
+
+    await page.goto(cleanPageUrl)
+    await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
+    expect(page.url()).toBe(`${cleanPageUrl}#/`)
+  })
+
   test('coverage', async ({ page }) => {
     await page.goto(pageUrl)
     await testCoverage(page)
