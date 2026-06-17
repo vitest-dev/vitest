@@ -33,6 +33,22 @@ test.describe('ui', () => {
     await testCrossOriginAccess(page, pageUrl)
   })
 
+  test('blocks unauthenticated ui html requests', async ({ request }) => {
+    const cleanUrl = new URL(pageUrl)
+    cleanUrl.search = ''
+    const cleanPageUrl = cleanUrl.toString()
+
+    const tokenless = await request.get(cleanPageUrl)
+    expect(tokenless.status()).toBe(403)
+    await expect(tokenless.text()).resolves.toBe('Use the Vitest UI URL printed by the server.')
+
+    const badTokenUrl = new URL(cleanPageUrl)
+    badTokenUrl.searchParams.set('token', 'invalid')
+    const badToken = await request.get(badTokenUrl.toString())
+    expect(badToken.status()).toBe(403)
+    await expect(badToken.text()).resolves.toBe('Use the Vitest UI URL printed by the server.')
+  })
+
   test('coverage', async ({ page }) => {
     await page.goto(pageUrl)
     await testCoverage(page)
