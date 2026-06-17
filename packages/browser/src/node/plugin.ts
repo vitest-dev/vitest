@@ -403,10 +403,8 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
         viteConfig.server.fs ??= {}
         viteConfig.server.fs.allow = viteConfig.server.fs.allow || []
-        viteConfig.server.fs.deny = [
-          ...(viteConfig.server.fs.deny ?? []),
-          API_TOKEN_FS_DENY,
-        ]
+        viteConfig.server.fs.deny ??= []
+        viteConfig.server.fs.deny.push(API_TOKEN_FS_DENY)
         viteConfig.server.fs.allow.push(
           ...resolveFsAllow(
             parentServer.vitest.config.root,
