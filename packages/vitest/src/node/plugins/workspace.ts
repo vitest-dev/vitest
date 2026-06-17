@@ -176,7 +176,7 @@ export function WorkspaceVitestPlugin(
                 project.vitest.config.root,
                 project.vitest.vite.config.configFile,
               ),
-              deny: [...(viteConfig.server?.fs?.deny ?? []), API_TOKEN_FS_DENY],
+              deny: [API_TOKEN_FS_DENY],
             },
           },
           // eslint-disable-next-line ts/ban-ts-comment

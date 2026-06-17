@@ -89,8 +89,7 @@ export async function VitestPlugin(
             preTransformRequests: false,
             fs: {
               allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
-              // TODO: already additive
-              deny: [...(viteConfig.server?.fs?.deny ?? []), API_TOKEN_FS_DENY],
+              deny: [API_TOKEN_FS_DENY],
             },
           },
           build: {
