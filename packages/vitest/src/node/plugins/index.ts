@@ -83,6 +83,7 @@ export async function VitestPlugin(
           },
           server: {
             ...testConfig.api,
+            // auto open UI via `vite.openBrowser` manually later
             open: false,
             hmr: false,
             ws: testConfig.api?.middlewareMode ? false : undefined,

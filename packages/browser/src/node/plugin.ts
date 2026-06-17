@@ -25,6 +25,7 @@ import BrowserContext from './plugins/pluginContext'
 export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
+// TODO: don't duplicate
 const API_TOKEN_FS_DENY = '.vitest-secret-token'
 
 export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {

@@ -10,6 +10,7 @@ import { distClientRoot } from './paths'
 
 export { distClientRoot }
 
+// TODO: verify with proper lib
 const UI_TOKEN_COOKIE = 'vitest-ui-token'
 
 function getCookie(req: IncomingMessage, name: string): string | undefined {
@@ -113,7 +114,7 @@ export default (ctx: Vitest): Vite.Plugin => {
                 return
               }
               const cookieToken = getCookie(req, UI_TOKEN_COOKIE)
-              if (cookieToken !== encodeURIComponent(ctx.config.api.token)) {
+              if (cookieToken !== ctx.config.api.token) {
                 res.statusCode = 403
                 res.end('Use the Vitest UI URL printed by the server.')
                 return
