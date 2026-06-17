@@ -18,7 +18,7 @@ test.describe('ui', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
@@ -618,7 +618,7 @@ test.describe('standalone', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
@@ -661,7 +661,7 @@ test.describe('security', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
