@@ -29,7 +29,7 @@ function resolveTokenFromPath(tokenPath: string): string | undefined {
     return readFileSync(tokenPath, 'utf-8').trim()
   }
 
-  const token = crypto.randomBytes(32).toString('base64url')
+  const token = crypto.randomUUID()
   mkdirSync(dirname(tokenPath), { recursive: true, mode: 0o700 })
   writeFileSync(tokenPath, `${token}\n`, { mode: 0o600 })
   try {
