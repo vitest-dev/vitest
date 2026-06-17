@@ -12,6 +12,8 @@ import { searchForWorkspaceRoot } from 'vite'
 
 export const API_TOKEN_FS_DENY = '**/.vitest-secret-token'
 
+// Follows env-paths' user data directory conventions:
+// https://github.com/sindresorhus/env-paths/blob/v4.0.0/index.js
 function getUserDataDir(): string {
   if (process.platform === 'win32') {
     return process.env.LOCALAPPDATA || join(homedir(), 'AppData/Local')
