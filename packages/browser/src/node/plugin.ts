@@ -25,7 +25,7 @@ import BrowserContext from './plugins/pluginContext'
 export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
-const API_TOKEN_FS_DENY = '**/.vitest/secrets/**'
+const API_TOKEN_FS_DENY = '**/.vitest-secret-token'
 
 export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
   function isPackageExists(pkg: string, root: string) {

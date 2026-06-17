@@ -659,7 +659,7 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: resolveApiToken(resolved.root) }
+  resolved.api = { ...api, token: resolveApiToken() }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
