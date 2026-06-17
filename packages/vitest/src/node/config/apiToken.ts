@@ -8,6 +8,7 @@ import {
 } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'pathe'
+import { searchForWorkspaceRoot } from 'vite'
 
 export const API_TOKEN_FS_DENY = '**/.vitest-secret-token'
 
@@ -21,9 +22,7 @@ function getUserDataDir(): string {
   return process.env.XDG_DATA_HOME || join(homedir(), '.local/share')
 }
 
-export function resolveApiToken(): string {
-  // TODO: self expire token?
-  const tokenPath = join(getUserDataDir(), 'vitest/.vitest-secret-token')
+function resolveTokenFromPath(tokenPath: string): string | undefined {
   if (existsSync(tokenPath)) {
     return readFileSync(tokenPath, 'utf-8').trim()
   }
@@ -37,6 +36,26 @@ export function resolveApiToken(): string {
   }
   catch {}
   return token
+}
+
+export function resolveApiToken(root: string): string {
+  // TODO: self expire token?
+  const tokenPaths = [
+    join(getUserDataDir(), 'vitest/.vitest-secret-token'),
+    join(searchForWorkspaceRoot(root), 'node_modules/.vitest/.vitest-secret-token'),
+  ]
+
+  for (const tokenPath of tokenPaths) {
+    try {
+      const token = resolveTokenFromPath(tokenPath)
+      if (token) {
+        return token
+      }
+    }
+    catch {}
+  }
+
+  throw new Error(`Failed to create Vitest API token at ${tokenPaths.join(' or ')}`)
 }
 
 // TODO: inline. or stash UI url earlier in ctx.something?
