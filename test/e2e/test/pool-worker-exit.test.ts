@@ -72,7 +72,7 @@ test('worker death on a shared runner does not skip coverage finalization', asyn
   expect(stderr).toContain('caught 2 unhandled errors')
 })
 
-test('worker process exit and kill raises exit code and signal to stderr', async () => {
+test('worker process exit and kill raises exit code and signal to stderr along with which files were in process', async () => {
   const root = './fixtures/pool-worker-exit'
 
   const { buildTree, stderr } = await runVitest({
@@ -93,6 +93,16 @@ test('worker process exit and kill raises exit code and signal to stderr', async
 
     reporters: 'default',
   })
+
+  // should report one error in stderr
+  expect(stderr).toContain('caught 2 unhandled errors')
+  // should report the exit code (5-exit.test.ts exits its own process mid-way with code 42)
+  expect(stderr).toContain('exited unexpectedly with exit code 42')
+  // should report the signal (3-crash.test.ts kills itself with SIGINT)
+  expect(stderr).toContain('exited unexpectedly with signal SIGINT')
+  // should report both crashed files in the error
+  expect(stderr).toContain('3-crash.test.ts')
+  expect(stderr).toContain('5-exit.test.ts')
 
   expect(buildTree(t => ({ state: t.result().state }))).toMatchInlineSnapshot(`
     {
@@ -118,11 +128,4 @@ test('worker process exit and kill raises exit code and signal to stderr', async
       },
     }
   `)
-
-  // should report one error in stderr
-  expect(stderr).toContain('caught 2 unhandled errors')
-  // should report the exit code (5-exit.test.ts exits its own process mid-way with code 42)
-  expect(stderr).toContain('exited unexpectedly with exit code 42')
-  // should report the signal (3-crash.test.ts kills itself with SIGINT)
-  expect(stderr).toContain('exited unexpectedly with signal SIGINT')
 })
