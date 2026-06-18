@@ -89,7 +89,7 @@ test('retries after an initial failure', async () => {
 })
 ```
 
-For convenience, `then*Once` shorthands are available as sugar for `{ times: 1 }`: `thenReturnOnce`, `thenResolveOnce`, `thenThrowOnce`, `thenRejectOnce`.
+For convenience, `then*Once` shorthands are available and equivalent to `{ times: 1 }`: `thenReturnOnce`, `thenResolveOnce`, `thenThrowOnce`, `thenRejectOnce`.
 
 ## Asymmetric matchers
 
@@ -174,7 +174,7 @@ The error message includes the unmatched arguments. The error type and message a
 
 ### `onUnmatched: fn`
 
-Pass a function to handle unmatched calls with custom logic. This is useful when you set up the mock once but want a different fallback in each test:
+Pass a function to handle unmatched calls with custom logic, for example when a shared mock needs a different fallback per test.
 
 ```ts
 const db = { findById: vi.fn<FindById>() }
@@ -196,7 +196,7 @@ The function is called with the same arguments as the spy and its return value i
 
 ### Asymmetric matcher as catch-all
 
-Building on the [previous section](#asymmetric-matchers): registering a broad `calledWith` as the last entry naturally acts as a fallback for everything that doesn't match the earlier, more specific behaviors:
+Registering a broad `calledWith` last acts as a fallback for calls that do not match any earlier, more specific behavior. The fallback behavior can return a specific value, resolve or reject a promise, or throw a typed error.
 
 ```ts
 vi.when(db.findById)
@@ -207,8 +207,6 @@ vi.when(db.findById)
   .calledWith(expect.any(Number))
   .thenReject(new Error('user not found'))
 ```
-
-Unlike `onUnmatched: 'throw'`, this approach gives you more flexibility for the fallback: you can return a specific value, resolve or reject a promise, or throw a typed error.
 
 ## Asserting that all behaviors were called
 
@@ -240,14 +238,16 @@ AssertionError: expected all behaviors to have been exhausted, but some remain:
 ```
 
 ::: warning Caveat
-A `vi.when` chain with no behaviors or a behavior with no actions (a bare `.calledWith()` with no `then*` call) is never considered exhausted and will always cause `toHaveBeenExhausted` to fail.
+A `vi.when` chain with no behaviors is never considered exhausted. The same applies to a bare `.calledWith()` with no `then*` action attached. Both will always cause `toHaveBeenExhausted` to fail.
 
 Indefinite actions (no `times` limit) satisfy exhaustion checks after being used at least once. The actions keep responding after that, but the assertion is satisfied.
 :::
 
 ## Automatic cleanup with `using`
 
-`vi.when` supports the [Explicit Resource Management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Resource_management) protocol. Declaring the chain with `using` scopes the mock behaviors to the current block: when execution leaves the block, the spy's original implementation is automatically restored.
+`vi.when` supports the [Explicit Resource Management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Resource_management) protocol.
+
+Declare the chain with `using` to scope behaviors to the current block and restore the spy automatically when execution leaves it.
 
 ```ts
 const spy = vi.fn(() => 'original')
@@ -261,8 +261,6 @@ test('without mocked behavior', () => {
   expect(spy('hello')).toBe('original')
 })
 ```
-
-This is particularly handy when you need to override a shared spy for just one branch of a test without manually calling cleanup code afterwards.
 
 ## See also
 
