@@ -348,7 +348,6 @@ async function resolveSingleProjectEntry(
     harness.logger,
     mergedOptions,
     projectViteConfig,
-    globalConfig.cliOptions,
   )
   projectConfig.api.token = globalConfig.api.token
   projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel

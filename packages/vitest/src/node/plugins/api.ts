@@ -39,7 +39,7 @@ export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedC
         }
 
         // Always disable the websocket server in middlewareMode
-        if (!isBrowserEnabled && api?.middlewareMode) {
+        if (!isBrowserEnabled && api.middlewareMode) {
           server.ws = false
         }
 

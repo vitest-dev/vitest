@@ -628,10 +628,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/browser/testerhtmlpath',
               },
               {
-                text: 'browser.api',
-                link: '/config/browser/api',
-              },
-              {
                 text: 'browser.provider',
                 link: '/config/browser/provider',
               },

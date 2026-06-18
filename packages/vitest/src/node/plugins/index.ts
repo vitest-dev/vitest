@@ -78,30 +78,7 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
 
 // the plugins required when resolving the config
 export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions = {}): VitePlugin[] {
-  const userConfig = deepMerge({}, options) as CliOptions
-
   return [
-    // The CLI plugin overwrites config values with CLI options, making them
-    // avalable in the next plugin. We have to do this via plugins because of watch mode.
-    {
-      name: 'vitest:config:cli',
-      enforce: 'pre',
-      config: {
-        order: 'pre',
-        handler(config) {
-          if (options.watch) {
-            // Earlier runs have overwritten values of the `options`.
-            // Reset it back to initial user config before setting up the server again.
-            options = deepMerge({}, userConfig) as UserConfig
-          }
-
-          config.test ??= {}
-          // We don't want to use Vite's merge because we want to OVERRIDE options
-          // By default, Vite extends arrays, for example, but CLI options should have the priority
-          config.test = deepMerge({}, config.test, options)
-        },
-      },
-    },
     // Setting Vite config values based on user settings,
     // The resolved config value is determined in `configResolved:post`
     // This is simmilar to `vitest:config` plugin, but the options here are affected by CLI

@@ -4,7 +4,6 @@ import type {
   ResolvedConfig as ResolvedViteConfig,
   UserConfig as ViteUserConfig,
 } from 'vite'
-import type { CliOptions } from '../cli/cli-api'
 import type { Logger } from '../logger'
 import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type { ResolvedBrowserOptions } from '../types/browser'
@@ -18,7 +17,7 @@ import type { CoverageOptions, CoverageReporterWithOptions } from '../types/cove
 import crypto from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { deepClone, slash, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -91,7 +90,7 @@ export function resolveApiServerConfig(
   config: UserConfig,
   defaultPort: number,
   logger: Logger,
-): ApiConfig | undefined {
+): ApiConfig {
   const isBrowserEnabled = !!config.browser?.enabled
 
   let api: ApiConfig | undefined
@@ -180,7 +179,6 @@ export function resolveTestConfig(
   logger: Logger,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
-  cliOptions: CliOptions,
 ): ResolvedConfig {
   if (options.dom) {
     if (
@@ -358,13 +356,14 @@ export function resolveTestConfig(
     }
   }
 
+  // TODO: apply for _PROJECTS_, this needs to happen _first_, not after the config is resolved
   // apply browser CLI options only if the config already has the browser config and not disabled manually
-  if (resolved.browser && cliOptions.browser && (resolved.browser.enabled !== false || cliOptions.browser.enabled)) {
-    resolved.browser = mergeConfig(
-      resolved.browser,
-      cliOptions.browser,
-    ) as ResolvedBrowserOptions
-  }
+  // if (resolved.browser && cliOptions.browser && (resolved.browser.enabled !== false || cliOptions.browser.enabled)) {
+  //   resolved.browser = mergeConfig(
+  //     resolved.browser,
+  //     cliOptions.browser,
+  //   ) as ResolvedBrowserOptions
+  // }
 
   resolved.browser ??= {} as any
   const browser = resolved.browser
@@ -977,6 +976,36 @@ export async function resolveConfig(
       configLoader: options.configLoader,
       mode: options.mode || 'test',
       plugins: [
+        // The CLI plugin overwrites config values with CLI options, making them
+        // avalable in the next plugin. We have to do this via plugins because of watch mode.
+        {
+          name: 'vitest:config:cli',
+          enforce: 'pre',
+          config: {
+            order: 'pre',
+            handler(config) {
+              if (options.watch) {
+                // Earlier runs have overwritten values of the `options`.
+                // Reset it back to initial user config before setting up the server again.
+                options = deepMerge({}, cliOptionsCopy) as UserConfig
+              }
+
+              config.test ??= {}
+              // We don't want to use Vite's merge because we want to OVERRIDE options
+              // By default, Vite extends arrays, for example, but CLI options should have the priority
+              config.test = deepMerge({}, config.test, options)
+
+              // apply browser CLI options only if the config already has the browser config and not disabled manually
+              // TODO: do the same for the browser in _PROJECTS_
+              if (config.test.browser && options.browser && (config.test.browser.enabled !== false || options.browser.enabled)) {
+                config.test.browser = mergeConfig(
+                  config.test.browser,
+                  options.browser,
+                ) as ResolvedBrowserOptions
+              }
+            },
+          },
+        },
         VitestConfigPlugin(pluginsHarness, restOptions),
         ...VitestCorePlugin(pluginsHarness),
         BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
@@ -991,7 +1020,6 @@ export async function resolveConfig(
     pluginsHarness.logger,
     (rootViteConfig.test as UserConfig | undefined) || {},
     rootViteConfig,
-    cliOptionsCopy,
   )
   rootViteConfig.test = rootConfig
 
