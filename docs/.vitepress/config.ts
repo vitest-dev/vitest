@@ -1048,6 +1048,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/recipes/explicit-resources',
               },
               {
+                text: 'Conditional Mocking with `vi.when`',
+                link: '/guide/recipes/conditional-mocking',
+              },
+              {
                 text: 'Per-File Isolation Settings',
                 link: '/guide/recipes/disable-isolation',
               },
