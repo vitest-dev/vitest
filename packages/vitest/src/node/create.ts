@@ -76,6 +76,13 @@ export async function createVitest(
     if (ctx.config.api?.port) {
       await server.listen()
       if (ctx.config.ui && ctx.config.open) {
+        // Open the clean UI base URL (without `?token=`) rather than the
+        // authenticated URL printed by the logger. On macOS, `openBrowser`
+        // reuses an existing tab whose URL matches via substring and reloads
+        // it (Vite's `bin/openChrome.js`). Since the 302 redirect strips the
+        // token, an already-authenticated tab lives at the clean URL, so
+        // opening the clean URL matches and reloads it; opening the token URL
+        // would never match and would spawn a new tab on every restart.
         server.config.server.open = ctx.config.uiBase
         server.openBrowser()
       }
