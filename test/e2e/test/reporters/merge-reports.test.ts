@@ -265,7 +265,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}],
+      [version, [file], [], undefined, 1500 * index, {}, 2000 * index],
       resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
     )
   }
@@ -279,7 +279,7 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('✓ first.test.ts (1 test)')
   expect(stdout).toContain('✓ second.test.ts (1 test)')
 
-  expect(stdout).toContain('Duration  4.50s')
+  expect(stdout).toContain('Duration  4.50s (transform 6.00s')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 

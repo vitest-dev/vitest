@@ -125,5 +125,25 @@ declare module 'vitest' {
       expected: BenchResult,
       options?: { delta?: number },
     ) => void
+
+    /**
+     * Ensures a `vi.when` chain has been exhausted.
+     *
+     * A chain is exhausted when at least one `calledWith` with an associated action (`then*`) has been registered
+     * and every registered behavior has been fully consumed. A chain with no registered
+     * behaviors, or with `calledWith` entries that have no associated `then*` actions, is never considered exhausted.
+     *
+     * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
+     *
+     * @example
+     * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+     *
+     * expect(w).not.toHaveBeenExhausted()
+     *
+     * expect(spy('hello')).toBe('HELLO')
+     *
+     * expect(w).toHaveBeenExhausted()
+     */
+    toHaveBeenExhausted: () => void
   }
 }
