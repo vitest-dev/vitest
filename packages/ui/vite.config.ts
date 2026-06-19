@@ -98,10 +98,11 @@ function devUiScriptPlugin(): Plugin {
         ]
       }
 
+      const token = resolveApiToken(process.cwd()).token
       return [
         {
           tag: 'script',
-          children: `window.VITEST_API_TOKEN = ${JSON.stringify(resolveApiToken(process.cwd()))}`,
+          children: `window.VITEST_API_TOKEN = ${JSON.stringify(token)}`,
           injectTo: 'head-prepend',
         },
       ]

@@ -24,9 +24,9 @@ function getUserDataDir(): string {
   return process.env.XDG_DATA_HOME || join(homedir(), '.local/share')
 }
 
-function resolveTokenFromPath(tokenPath: string): string | undefined {
+function resolveTokenFromPath(tokenPath: string): { token: string; tokenCreated: boolean } {
   if (existsSync(tokenPath)) {
-    return readFileSync(tokenPath, 'utf-8').trim()
+    return { token: readFileSync(tokenPath, 'utf-8').trim(), tokenCreated: false }
   }
 
   const token = crypto.randomUUID()
@@ -37,10 +37,10 @@ function resolveTokenFromPath(tokenPath: string): string | undefined {
     chmodSync(tokenPath, 0o600)
   }
   catch {}
-  return token
+  return { token, tokenCreated: true }
 }
 
-export function resolveApiToken(root: string): string {
+export function resolveApiToken(root: string): { token: string; tokenCreated: boolean } {
   const tokenPaths = [
     join(getUserDataDir(), 'vitest/.vitest-secret-token'),
     join(searchForWorkspaceRoot(root), 'node_modules/.vitest/.vitest-secret-token'),
@@ -48,10 +48,7 @@ export function resolveApiToken(root: string): string {
 
   for (const tokenPath of tokenPaths) {
     try {
-      const token = resolveTokenFromPath(tokenPath)
-      if (token) {
-        return token
-      }
+      return resolveTokenFromPath(tokenPath)
     }
     catch {}
   }
