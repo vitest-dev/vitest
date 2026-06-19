@@ -8,7 +8,6 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import crypto from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
@@ -29,6 +28,7 @@ import { getWorkersCountByPercentage } from '../../utils/workers'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { resolveApiToken } from './apiToken'
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -659,7 +659,8 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: crypto.randomUUID() }
+  const { token, tokenCreated } = resolveApiToken(resolved.root)
+  resolved.api = { ...api, token, tokenCreated }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
