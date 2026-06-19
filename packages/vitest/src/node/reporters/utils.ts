@@ -53,9 +53,6 @@ function createReporters(
         else if (reporterName in ReportersMap) {
           const BuiltinReporter
             = ReportersMap[reporterName as BuiltinReporters]
-          // `reporterName` is not narrowed from `reporterOptions` here, so the
-          // option type still includes the (already handled) `html` reporter
-          // options, which share no properties with the builtin reporters.
           return new BuiltinReporter(reporterOptions as any)
         }
         else {
