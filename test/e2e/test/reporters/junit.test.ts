@@ -1,5 +1,5 @@
 import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite, RunnerTask as Task } from 'vitest'
-import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { runVitest, runVitestCli } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test, TestRunner } from 'vitest'
@@ -8,7 +8,7 @@ import { rolldownVersion } from 'vitest/node'
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
 function readJunitReport(reportRoot: string) {
-  return readFile(resolve(reportRoot, '.vitest', 'junit', 'output.xml'), 'utf-8')
+  return readFileSync(resolve(reportRoot, '.vitest', 'junit', 'output.xml'), 'utf-8')
 }
 
 test('calc the duration used by junit', () => {
@@ -63,7 +63,7 @@ test('calc the duration used by junit', () => {
 test('emits <failure> if a test has a syntax error', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root }, ['with-syntax-error'])
 
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
 
   expect(xml).toContain('<testsuite name="with-syntax-error.test.js" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">')
   expect(xml).toContain('<failure')
@@ -72,7 +72,7 @@ test('emits <failure> if a test has a syntax error', async () => {
 test('emits <failure> when beforeAll/afterAll failed', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root: './fixtures/reporters/suite-hook-failure' })
 
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
 
   expect(xml).toMatchSnapshot()
 })
@@ -80,7 +80,7 @@ test('emits <failure> when beforeAll/afterAll failed', async () => {
 test('time', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root: './fixtures/reporters/duration' })
 
-  const xml = stabilizeReportWOTime(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReportWOTime(readJunitReport(ctx!.config.root))
 
   const fastTestRegex = /<testcase classname="basic\.test\.ts" name="fast" time="(?<floatNumber>[\d.]+)">/
   const fastTestTime = matchJunitTime(xml, fastTestRegex)
@@ -101,13 +101,13 @@ test('time', async () => {
 
 test('format error', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root }, ['error.test.ts'])
-  expect(stabilizeReport(await readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
 })
 
 test('write testsuite name relative to root config', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root: './fixtures/reporters/better-testsuite-name' })
 
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
 
   expect(xml).toContain('<testsuite name="space-1/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
   expect(xml).toContain('<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
@@ -120,7 +120,7 @@ test('options.suiteName changes name property', async () => {
     include: ['a.test.ts'],
   })
 
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
 
   expect(xml).not.toContain('<testsuites name="vitest tests"')
   expect(xml).toContain('<testsuites name="some-custom-suiteName"')
@@ -154,7 +154,7 @@ test.each([true, false])('includeConsoleOutput %s', async (t) => {
     root,
     include: ['console-simple.test.ts'],
   })
-  expect(stabilizeReport(await readJunitReport(ctx!.config.root))).matchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).matchSnapshot()
 })
 
 test.each([true, false])('addFileAttribute %s', async (t) => {
@@ -163,7 +163,7 @@ test.each([true, false])('addFileAttribute %s', async (t) => {
     root,
     include: ['ok.test.ts'],
   })
-  expect(stabilizeReport(await readJunitReport(ctx!.config.root))).matchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).matchSnapshot()
 })
 
 test('many errors without warning', async () => {
@@ -174,7 +174,7 @@ test('many errors without warning', async () => {
     '--root',
     manyErrorsRoot,
   )
-  const xml = stabilizeReport(await readJunitReport(manyErrorsRoot))
+  const xml = stabilizeReport(readJunitReport(manyErrorsRoot))
   expect(xml.split('\n')[1]).toMatchInlineSnapshot(
     `"<testsuites name="vitest tests" tests="20" failures="20" errors="0" time="...">"`,
   )
@@ -191,7 +191,7 @@ test('CLI reporter option preserves config file options', async () => {
     cliOptionsRoot,
   )
 
-  const xml = stabilizeReport(await readJunitReport(cliOptionsRoot))
+  const xml = stabilizeReport(readJunitReport(cliOptionsRoot))
 
   // Verify that suiteName from config is preserved
   expect(xml).not.toContain('<testsuites name="vitest tests"')
@@ -206,7 +206,7 @@ test('suiteNameTemplate string uses {title} (first top-level describe)', async (
     reporters: [['junit', { suiteNameTemplate: '{title}' }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   expect(xml).toMatchInlineSnapshot(`
     "<?xml version="1.0" encoding="UTF-8" ?>
     <testsuites name="vitest tests" tests="4" failures="0" errors="0" time="...">
@@ -230,7 +230,7 @@ test('suiteNameTemplate string uses {basename}', async () => {
     reporters: [['junit', { suiteNameTemplate: '{basename}' }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   expect(xml).toContain('<testsuite name="sample.test.ts"')
 })
 
@@ -239,7 +239,7 @@ test('suiteNameTemplate function', async () => {
     reporters: [['junit', { suiteNameTemplate: (vars: any) => `custom:${vars.title}` }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   // {title} resolves to the first top-level describe block name
   expect(xml).toContain('<testsuite name="custom:MyModule"')
 })
@@ -249,7 +249,7 @@ test('titleTemplate {title} gives leaf test name only', async () => {
     reporters: [['junit', { titleTemplate: '{title}' }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   expect(xml).toMatchInlineSnapshot(`
     "<?xml version="1.0" encoding="UTF-8" ?>
     <testsuites name="vitest tests" tests="4" failures="0" errors="0" time="...">
@@ -273,7 +273,7 @@ test('titleTemplate {classname} {title} with ancestorSeparator', async () => {
     reporters: [['junit', { titleTemplate: '{classname} > {title}', ancestorSeparator: ' > ' }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   // classname = ancestor path, title = leaf name – combined they match the default
   // Note: > in attribute values is XML-escaped to &gt;
   expect(xml).toContain('name="MyModule &gt; feature A &gt; works correctly"')
@@ -287,7 +287,7 @@ test('titleTemplate function', async () => {
     reporters: [['junit', { titleTemplate: (vars: any) => `[${vars.suitename}] ${vars.title}` }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   expect(xml).toContain('name="[MyModule] works correctly"')
   expect(xml).toContain('name="[MyModule] handles edge case"')
   expect(xml).toContain('name="[MyModule] top-level in describe"')
@@ -299,7 +299,7 @@ test('classnameTemplate {classname} gives ancestor describe path', async () => {
     reporters: [['junit', { classnameTemplate: '{classname}' }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   // Note: > in attribute values is XML-escaped to &gt;
   expect(xml).toContain('classname="MyModule &gt; feature A"')
   expect(xml).toContain('classname="MyModule"')
@@ -312,7 +312,7 @@ test('classnameTemplate {basename} gives file basename', async () => {
     reporters: [['junit', { classnameTemplate: '{basename}' }]],
     root,
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   // Relative path would be "space-1/test/base.test.ts" but basename is just "base.test.ts"
   expect(xml).not.toContain('classname="space-1/test/base.test.ts"')
   expect(xml).toContain('classname="base.test.ts"')
@@ -323,7 +323,7 @@ test('classnameTemplate {suitename} gives top-level describe name', async () => 
     reporters: [['junit', { classnameTemplate: '{suitename}' }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   expect(xml).toContain('classname="MyModule"')
   // top-level test has no suitename
   expect(xml).toContain('classname=""')
@@ -334,7 +334,7 @@ test('ancestorSeparator changes separator in default testcase name', async () =>
     reporters: [['junit', { ancestorSeparator: ' \u203A ' }]],
     root: './fixtures/reporters/junit-options',
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   expect(xml).toContain('name="MyModule \u203A feature A \u203A works correctly"')
   expect(xml).not.toContain('name="MyModule &gt; feature A &gt; works correctly"')
 })
@@ -345,7 +345,7 @@ test('stackTrace set to false omits stack trace content from failure', async () 
     root,
     include: ['error.test.ts'],
   })
-  const xml = stabilizeReport(await readJunitReport(ctx!.config.root))
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
   // failure elements are present but their text content (stack trace) is absent
   expect(xml).toContain('<failure')
   expect(xml).not.toContain('❯ error.test.ts')
@@ -356,7 +356,7 @@ test('emits one <testcase> per unhandled error and titles them by error.type', a
     reporters: 'junit',
     root: './fixtures/reporters/unhandled-errors-multi',
   })
-  expect(stabilizeReport(await readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
 })
 
 test('resolves unhandled errors to the owning project in a multi-project workspace', async () => {
@@ -364,7 +364,7 @@ test('resolves unhandled errors to the owning project in a multi-project workspa
     reporters: [['junit', { addFileAttribute: true }]],
     root: './fixtures/reporters/unhandled-errors-multi-project',
   })
-  expect(stabilizeReport(await readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
 })
 
 function executionTime(durationMS: number) {

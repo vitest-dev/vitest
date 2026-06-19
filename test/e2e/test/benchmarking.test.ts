@@ -1,6 +1,6 @@
 import type { BaselineData, BenchResult, TestBenchmark, TestBenchmarkTask } from 'vitest'
 import type { JsonTestResults } from 'vitest/node'
-import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
@@ -345,7 +345,7 @@ test('junit reporter embeds the benchmark table inside <system-out>', async () =
     },
   )
 
-  const xml = await readFile(resolve(root, '.vitest', 'junit', 'output.xml'), 'utf-8')
+  const xml = readFileSync(resolve(root, '.vitest', 'junit', 'output.xml'), 'utf-8')
 
   // extract the <system-out> block from the rendered XML
   // eslint-disable-next-line regexp/no-super-linear-backtracking
@@ -932,7 +932,7 @@ test('json reporter surfaces benchmarks on each assertion result', async () => {
     },
   )
   expect(stderr).toBe('')
-  const parsed = JSON.parse(await readFile(resolve(root, '.vitest', 'json', 'output.json'), 'utf-8')) as JsonTestResults
+  const parsed = JSON.parse(readFileSync(resolve(root, '.vitest', 'json', 'output.json'), 'utf-8')) as JsonTestResults
   const assertionResults = parsed.testResults.flatMap(tr => tr.assertionResults)
   const smoke = assertionResults.find(a => a.title === 'smoke')!
   expect(

@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 
@@ -8,8 +8,8 @@ describe('json reporter', async () => {
   const root = resolve(import.meta.dirname, '..', '..', 'fixtures', 'reporters')
   const projectRoot = resolve(import.meta.dirname, '..', '..', '..', '..')
 
-  async function readJsonReport() {
-    return JSON.parse(await readFile(resolve(root, '.vitest', 'json', 'output.json'), 'utf-8'))
+  function readJsonReport() {
+    return JSON.parse(readFileSync(resolve(root, '.vitest', 'json', 'output.json'), 'utf-8'))
   }
 
   it('generates correct report', async () => {
@@ -20,7 +20,7 @@ describe('json reporter', async () => {
       includeTaskLocation: true,
     }, ['json-fail'])
 
-    const data = await readJsonReport()
+    const data = readJsonReport()
 
     expect(data.testResults).toHaveLength(2)
 
@@ -51,7 +51,7 @@ describe('json reporter', async () => {
       includeTaskLocation: true,
     }, ['json-non-existing-files'])
 
-    const json = await readJsonReport()
+    const json = readJsonReport()
     json.startTime = 0
     expect(json).toMatchInlineSnapshot(`
       {
@@ -95,7 +95,7 @@ describe('json reporter', async () => {
       passWithNoTests: true,
     }, ['json-non-existing-files'])
 
-    const json = await readJsonReport()
+    const json = readJsonReport()
     json.startTime = 0
     expect(json).toMatchInlineSnapshot(`
       {
@@ -138,7 +138,7 @@ describe('json reporter', async () => {
   ])('resolves to "%s" status for test file "%s"', async (expected, file) => {
     await runVitest({ reporters: 'json', root, include: [`**/${file}`] })
 
-    const data = await readJsonReport()
+    const data = readJsonReport()
 
     expect(data.testResults).toHaveLength(1)
     expect(data.testResults[0].status).toBe(expected)
@@ -151,7 +151,7 @@ describe('json reporter', async () => {
       include: ['**/json-meta.test.ts'],
     })
 
-    const data = await readJsonReport()
+    const data = readJsonReport()
     const results = data.testResults[0].assertionResults
     const passing = results.find((r: any) => r.title === 'pass')
 
@@ -167,7 +167,7 @@ describe('json reporter', async () => {
       include: ['**/json-meta.test.ts'],
     })
 
-    const data = await readJsonReport()
+    const data = readJsonReport()
     const results = data.testResults[0].assertionResults
 
     for (const result of results) {

@@ -2,8 +2,8 @@ import type { RunVitestConfig } from '#test-utils'
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
-import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
@@ -127,7 +127,7 @@ test('merge reports', async () => {
   const path = (r: string) => slash(r)
     .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
 
-  const json = JSON.parse(await readFile(resolve(ctx!.config.root, '.vitest', 'json', 'output.json'), 'utf-8'))
+  const json = JSON.parse(readFileSync(resolve(ctx!.config.root, '.vitest', 'json', 'output.json'), 'utf-8'))
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'
