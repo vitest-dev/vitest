@@ -60,7 +60,13 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
+Most of Vitest's reporters print their output to the terminal. The `json`, `html` and `junit` reporters instead write their output to a file. By default, with no `outputFile` configured, they write to a scoped directory under `.vitest/`:
+
+- `json` writes `.vitest/json/output.json`
+- `junit` writes `.vitest/junit/output.xml`
+- `html` writes `.vitest/index.html`
+
+You can override the location with the `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
 
 :::code-group
 ```bash [CLI]
@@ -316,7 +322,7 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/outputfile) configuration option.
+Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`; use the [`outputFile`](/config/outputfile) configuration option to write it elsewhere.
 
 :::code-group
 ```bash [CLI]
@@ -420,7 +426,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/outputfile) configuration option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`; use the [`outputFile`](/config/outputfile) configuration option to write it elsewhere.
 
 :::code-group
 ```bash [CLI]

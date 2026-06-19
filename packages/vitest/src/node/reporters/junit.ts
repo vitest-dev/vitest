@@ -256,20 +256,21 @@ export class JUnitReporter implements Reporter {
       if (!existsSync(outputDirectory)) {
         await fs.mkdir(outputDirectory, { recursive: true })
       }
-
-      const fileFd = await fs.open(this.reportFile, 'w+')
-      this.fileFd = fileFd
-
-      this.baseLog = async (text: string) => {
-        if (!this.fileFd) {
-          this.fileFd = await fs.open(this.reportFile!, 'w+')
-        }
-
-        await fs.writeFile(this.fileFd, `${text}\n`)
-      }
     }
     else {
-      this.baseLog = async (text: string) => this.ctx.logger.log(text)
+      const junit = this.ctx.createReport('junit')
+      this.reportFile = resolve(junit.root, 'output.xml')
+    }
+
+    const fileFd = await fs.open(this.reportFile, 'w+')
+    this.fileFd = fileFd
+
+    this.baseLog = async (text: string) => {
+      if (!this.fileFd) {
+        this.fileFd = await fs.open(this.reportFile!, 'w+')
+      }
+
+      await fs.writeFile(this.fileFd, `${text}\n`)
     }
 
     this._timeStart = new Date()

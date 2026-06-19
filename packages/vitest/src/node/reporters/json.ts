@@ -224,8 +224,8 @@ export class JsonReporter implements Reporter {
   }
 
   /**
-   * Writes the report to an output file if specified in the config,
-   * or logs it to the console otherwise.
+   * Writes the report to an explicit output file if specified in the config,
+   * or to `.vitest/json/output.json` otherwise.
    * @param report
    */
   async writeReport(report: string): Promise<void> {
@@ -244,7 +244,9 @@ export class JsonReporter implements Reporter {
       this.ctx.logger.log(`JSON report written to ${reportFile}`)
     }
     else {
-      this.ctx.logger.log(report)
+      const json = this.ctx.createReport('json')
+      await json.writeFile('output.json', report)
+      this.ctx.logger.log(`JSON report written to ${resolve(json.root, 'output.json')}`)
     }
   }
 }

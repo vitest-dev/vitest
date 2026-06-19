@@ -8,5 +8,5 @@ outline: deep
 - **Type:** `string | Record<string, string>`
 - **CLI:** `--outputFile=<path>`, `--outputFile.json=./path`
 
-Write test results to a file when the `--reporter=json`, `--reporter=html` or `--reporter=junit` option is also specified.
+Override the output location of the `--reporter=json`, `--reporter=html` or `--reporter=junit` reporters. When not set, these reporters write to a scoped directory under `.vitest/` (`.vitest/json/output.json`, `.vitest/index.html`, `.vitest/junit/output.xml`).
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
