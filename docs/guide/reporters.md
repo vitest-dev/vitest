@@ -506,7 +506,7 @@ export default defineConfig({
 
 Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
-The report artifact root can be specified using the reporter's `outputDir` option. The report entry is written to `<outputDir>/index.html` and the UI implementation files live under `<outputDir>/ui/`. By default `outputDir` is `.vitest`, the shared Vitest artifact directory, so attachments (`.vitest/attachments`) and coverage (`.vitest/coverage`) are reused without being copied.
+The report artifact root can be specified using the reporter's `outputDir` option. The report entry is written to `<outputDir>/index.html` and the UI assets files live under `<outputDir>/ui/`. By default `outputDir` is `.vitest`, the shared Vitest artifact directory, so attachments (`.vitest/attachments`) and coverage (`.vitest/coverage`) are reused without being copied.
 
 :::code-group
 ```bash [CLI]

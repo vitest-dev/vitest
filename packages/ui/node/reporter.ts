@@ -60,11 +60,11 @@ export default class HTMLReporter implements Reporter {
       })
     }
     else {
-      // copy ui implementation files into `<outputDir>/ui`
+      // copy ui assets into `<outputDir>/ui`
       const uiDir = resolve(this.reporterDir, 'ui')
       await fs.rm(uiDir, { recursive: true, force: true })
       await fs.cp(distClientRoot, uiDir, { recursive: true })
-      // the report entry lives at the artifact root, so drop the copied template
+      // no need of ui/index.html
       await fs.rm(resolve(uiDir, 'index.html'), { force: true })
       // create `<outputDir>/index.html` and `<outputDir>/ui/html.meta.json.gz`
       await handleIndexHtml({
@@ -74,9 +74,8 @@ export default class HTMLReporter implements Reporter {
         singleFile: false,
       })
 
-      // copy attachments into `<outputDir>/attachments` unless they already
-      // live there. With the default `.vitest` output and the default
-      // `.vitest/attachments` location this is a no-op (zero-copy).
+      // copy attachments into `<outputDir>/attachments` if needed.
+      // the default location matches so no extra copy.
       const attachmentsDir = this.ctx.config.attachmentsDir
       const destAttachmentsDir = resolve(this.reporterDir, 'attachments')
       if (existsSync(attachmentsDir) && attachmentsDir !== destAttachmentsDir) {
@@ -211,8 +210,7 @@ async function handleIndexHtml(options: {
     const dataFile = 'html.meta.json.gz'
     await fs.writeFile(resolve(options.dstDir, 'ui', dataFile), options.data)
     metadataCode = `fetch(new URL("./ui/${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
-    // ui implementation files live under `./ui/`, so point the report entry's
-    // relative asset references (`./assets/...`, `./favicon.*`) at that subdir.
+    // rewrite the asset path from `./*` to `./ui/*`
     html = html.replace(/\b(href|src)="\.\//g, '$1="./ui/')
   }
 

@@ -7,8 +7,6 @@ export function getAttachmentUrl(attachment: TestAttachment): string {
   const contentType = attachment.contentType ?? 'application/octet-stream'
   if (attachment.path) {
     if (isReport) {
-      // html reporter serves attachments from the `attachments/` directory
-      // next to the report entry (reused from `.vitest/attachments` by default)
       return `./attachments/${basename(attachment.path)}`
     }
     return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${contentType}&token=${(window as any).VITEST_API_TOKEN}`
