@@ -127,7 +127,7 @@ test('merge reports', async () => {
   const path = (r: string) => slash(r)
     .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
 
-  const json = JSON.parse(readFileSync(resolve(ctx!.config.root, '.vitest', 'json', 'output.json'), 'utf-8'))
+  const json = JSON.parse(readFileSync(resolve(ctx!.config.root, '.vitest/json/output.json'), 'utf-8'))
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'

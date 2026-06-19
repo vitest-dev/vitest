@@ -8,7 +8,7 @@ import { rolldownVersion } from 'vitest/node'
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
 function readJunitReport(reportRoot: string) {
-  return readFileSync(resolve(reportRoot, '.vitest', 'junit', 'output.xml'), 'utf-8')
+  return readFileSync(resolve(reportRoot, '.vitest/junit/output.xml'), 'utf-8')
 }
 
 test('calc the duration used by junit', () => {

@@ -9,7 +9,7 @@ describe('json reporter', async () => {
   const projectRoot = resolve(import.meta.dirname, '..', '..', '..', '..')
 
   function readJsonReport() {
-    return JSON.parse(readFileSync(resolve(root, '.vitest', 'json', 'output.json'), 'utf-8'))
+    return JSON.parse(readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8'))
   }
 
   it('generates correct report', async () => {
