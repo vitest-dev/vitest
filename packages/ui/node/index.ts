@@ -1,6 +1,6 @@
-import type { IncomingMessage } from 'node:http'
 import type { Vite, Vitest } from 'vitest/node'
 import fs from 'node:fs'
+import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
@@ -10,16 +10,7 @@ import { distClientRoot } from './paths'
 
 export { distClientRoot }
 
-// TODO: verify with proper lib
 const UI_TOKEN_COOKIE = 'vitest-ui-token'
-
-function getCookie(req: IncomingMessage, name: string): string | undefined {
-  return req.headers.cookie
-    ?.split(';')
-    .map(cookie => cookie.trim())
-    .find(cookie => cookie.startsWith(`${name}=`))
-    ?.slice(name.length + 1)
-}
 
 export default (ctx: Vitest): Vite.Plugin => {
   if (ctx.version !== version) {
@@ -108,12 +99,16 @@ export default (ctx: Vitest): Vite.Plugin => {
             if (url.pathname === base) {
               if (isValidApiRequest(ctx.config, req)) {
                 res.statusCode = 302
-                res.setHeader('Set-Cookie', `${UI_TOKEN_COOKIE}=${encodeURIComponent(ctx.config.api.token)}; Path=${base}; HttpOnly; SameSite=Strict`)
+                res.setHeader('Set-Cookie', serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
+                  path: base,
+                  httpOnly: true,
+                  sameSite: 'strict',
+                }))
                 res.setHeader('Location', base)
                 res.end()
                 return
               }
-              const cookieToken = getCookie(req, UI_TOKEN_COOKIE)
+              const cookieToken = parseCookie(req.headers.cookie ?? '')[UI_TOKEN_COOKIE]
               if (cookieToken !== ctx.config.api.token) {
                 res.statusCode = 403
                 res.end('Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...')
