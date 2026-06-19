@@ -10,13 +10,7 @@ export default defineConfig({
         ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
         : {}),
       (process.env.VITEST_CI_MERGE_REPORTS
-        ? [
-            'html',
-            {
-              outputDir: '.vitest/html',
-              singleFile: true,
-            },
-          ]
+        ? ['html', { singleFile: true }]
         : {}),
     ],
     onConsoleLog(log) {
