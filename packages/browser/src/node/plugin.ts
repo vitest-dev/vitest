@@ -17,6 +17,7 @@ import {
   rolldownVersion,
   distDir as vitestDist,
 } from 'vitest/node'
+import { API_TOKEN_FS_DENY } from '../../../vitest/src/node/config/apiToken'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
@@ -25,8 +26,6 @@ import BrowserContext from './plugins/pluginContext'
 export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
-// TODO: don't duplicate
-const API_TOKEN_FS_DENY = '.vitest-secret-token'
 
 export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
   function isPackageExists(pkg: string, root: string) {
