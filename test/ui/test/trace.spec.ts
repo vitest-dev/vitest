@@ -17,7 +17,7 @@ test.describe('ui', () => {
       open: false,
     })
     vitest = server.vitest
-    baseURL = `${server.url}/__vitest__/`
+    baseURL = server.url
   })
 
   test.afterAll(async () => {
@@ -83,7 +83,7 @@ test.describe('html reporter', () => {
       },
       {
         root,
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
     previewServer = server.previewServer

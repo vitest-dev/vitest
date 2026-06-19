@@ -43,6 +43,15 @@ test('sort', async ({ bench }) => { // [!code ++]
 - **`benchmark.outputJson` config and the `--outputJson` CLI flag** are removed. Use `--reporter=json --outputFile=<path>` to capture benchmark results; the JSON reporter now includes a `benchmarks` field on each test case.
 - **`Vitest` instance `mode` property** is now always `'test'`. The previous `'benchmark'` value is no longer used; benchmarks run inside a dedicated project of the same `Vitest` instance.
 
+### Vitest UI Requires an Authenticated URL
+
+Vitest UI now requires token authentication for the HTML page and API access. The `/__vitest__/` URL will show an error until the browser is authenticated. To authenticate, open the URL with a token printed by Vitest, as shown below. Once authenticated, the direct `/__vitest__/` URL will work correctly.
+
+```bash
+vitest --ui
+# UI started at http://localhost:51204/__vitest__/?token=...
+```
+
 ### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
 
 Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.
@@ -167,12 +176,15 @@ If you manually opened the browser preview by copying the Vite server URL or vis
 
 ### Generated Reports and Artifacts Use the `.vitest` Directory
 
-Vitest now uses a single `.vitest` directory at the project root as the shared artifact root. The `json` and `junit` reporters now write to this directory by default instead of printing to stdout:
+Vitest now uses a single `.vitest` directory at the project root as the shared artifact root, so one `.vitest` entry in `.gitignore` is enough. Defaults that moved this major:
 
+- **Attachments** ([`attachmentsDir`](/config/attachmentsdir)): `.vitest-attachements/` → `.vitest/attachments/`
+- **Blob reporter** and `--merge-reports`: `.vitest-reports/blob-*.json` → `.vitest/blob/blob-*.json`
+- **HTML reporter** ([`html`](/guide/reporters#html-reporter)): `html/index.html` → `.vitest/index.html`, and its option changed from `outputFile` (a file) to `outputDir` (a directory)
 - **JSON reporter** ([`json`](/guide/reporters#json-reporter)): stdout → `.vitest/json/output.json`
 - **JUnit reporter** ([`junit`](/guide/reporters#junit-reporter)): stdout → `.vitest/junit/output.xml`
 
-If you previously relied on the report being printed to stdout (for example `vitest --reporter=json > out.json` or `vitest --reporter=json | jq`), read the generated artifact file instead (for example `jq . .vitest/json/output.json`). An explicit `outputFile` is still respected and unchanged.
+The `json` and `junit` reporters now write to a file by default instead of printing to stdout. If you previously relied on the report being printed to stdout (for example `vitest --reporter=json > out.json` or `vitest --reporter=json | jq`), read the generated artifact file instead (for example `jq . .vitest/json/output.json`). An explicit `outputFile` is still respected and unchanged.
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 

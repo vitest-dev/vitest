@@ -323,10 +323,10 @@ jobs:
         run: |
           set +e
           pnpm --filter=./packages/ui --no-bail test:ui --merge-reports
-          cp ./packages/ui/.vitest/html/index.html ./packages/ui/.vitest/html/test-ui.html
+          cp ./packages/ui/.vitest/index.html ./packages/ui/.vitest/test-ui.html
           pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports
-          cp -rf ./test/unit/.vitest/html/index.html ./test/unit/.vitest/html/test-unit.html
-          cp -rf ./test/e2e/.vitest/html/index.html ./test/e2e/.vitest/html/test-e2e.html
+          cp -rf ./test/unit/.vitest/index.html ./test/unit/.vitest/test-unit.html
+          cp -rf ./test/e2e/.vitest/index.html ./test/e2e/.vitest/test-e2e.html
         env:
           VITEST_CI_MERGE_REPORTS: 'true'
 
@@ -334,7 +334,7 @@ jobs:
         id: upload-ui-report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          path: ./packages/ui/.vitest/html/test-ui.html
+          path: ./packages/ui/.vitest/test-ui.html
           archive: false
           retention-days: 7
 
@@ -342,7 +342,7 @@ jobs:
         id: upload-unit-report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          path: ./test/unit/.vitest/html/test-unit.html
+          path: ./test/unit/.vitest/test-unit.html
           archive: false
           retention-days: 7
 
@@ -350,7 +350,7 @@ jobs:
         id: upload-e2e-report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          path: ./test/e2e/.vitest/html/test-e2e.html
+          path: ./test/e2e/.vitest/test-e2e.html
           archive: false
           retention-days: 7
 

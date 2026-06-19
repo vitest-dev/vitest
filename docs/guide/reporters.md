@@ -60,14 +60,12 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters print their output to the terminal. When using the `html` reporter, you can write the report to a file with the `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
-
-The `json` and `junit` reporters instead write to a scoped directory under `.vitest/` when no `outputFile` is configured:
+By default, Vitest's reporters print their output to the terminal. The `json` and `junit` reporters instead write to a scoped directory under `.vitest/` when no `outputFile` is configured:
 
 - `json` writes `.vitest/json/output.json`
 - `junit` writes `.vitest/junit/output.xml`
 
-An explicit `outputFile` overrides these locations.
+You can override these locations with the `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI. The `html` reporter writes a report directory instead; see its [`outputDir`](#html-reporter) option.
 
 :::code-group
 ```bash [CLI]
@@ -513,7 +511,7 @@ export default defineConfig({
 
 Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
-Output file can be specified using the [`outputFile`](/config/outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
+The report artifact root can be specified using the reporter's `outputDir` option. The report entry is written to `<outputDir>/index.html` and the UI assets files live under `<outputDir>/ui/`. By default `outputDir` is `.vitest`, the shared Vitest artifact directory, so attachments (`.vitest/attachments`) and coverage (`.vitest/coverage`) are reused without being copied.
 
 :::code-group
 ```bash [CLI]

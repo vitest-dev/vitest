@@ -487,7 +487,7 @@ test.for([
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
   expect(result3.stdout).toMatchInlineSnapshot(`
     " HTML  Report is generated
-           You can run npx vite preview --outDir html to see the test results.
+           You can run npx vite preview --outDir .vitest to see the test results.
     "
   `)
 })
