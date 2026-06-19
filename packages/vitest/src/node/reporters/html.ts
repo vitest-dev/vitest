@@ -4,8 +4,7 @@ export interface HTMLOptions {
    *
    * The report entry is written to `<outputDir>/index.html` and the UI
    * implementation files live under `<outputDir>/ui/`. By default this is the
-   * shared `.vitest` artifact directory, so attachments (`.vitest/attachments`)
-   * and coverage (`.vitest/coverage`) can be reused without an extra copy.
+   * shared `.vitest` artifact directory.
    *
    * @default '.vitest'
    */
