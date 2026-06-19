@@ -1,7 +1,10 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
+import { existsSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
+import { join } from 'pathe'
+import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
 import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 const TEST_COUNTS = {
@@ -55,6 +58,15 @@ test.describe('ui', () => {
     const badToken = await request.get(badTokenUrl.toString())
     expect(badToken.status()).toBe(403)
     await expect(badToken.text()).resolves.toBe('Use the Vitest UI URL printed by the server.')
+  })
+
+  test('does not serve the api token file', async ({ request }) => {
+    const { tokenPath } = resolveApiToken(vitest!.config.root)
+    expect(existsSync(tokenPath)).toBe(true)
+
+    const fsUrl = new URL(join('/@fs/', tokenPath), pageUrl)
+    const res = await request.get(fsUrl.toString())
+    expect(res.status()).toBe(403)
   })
 
   test('allows direct ui access after opening authenticated url', async ({ page }) => {

@@ -40,7 +40,7 @@ function resolveTokenFromPath(tokenPath: string): { token: string; tokenCreated:
   return { token, tokenCreated: true }
 }
 
-export function resolveApiToken(root: string): { token: string; tokenCreated: boolean } {
+export function resolveApiToken(root: string): { token: string; tokenCreated: boolean; tokenPath: string } {
   const tokenPaths = [
     join(getUserDataDir(), 'vitest/.vitest-secret-token'),
     join(searchForWorkspaceRoot(root), 'node_modules/.vitest/.vitest-secret-token'),
@@ -48,7 +48,7 @@ export function resolveApiToken(root: string): { token: string; tokenCreated: bo
 
   for (const tokenPath of tokenPaths) {
     try {
-      return resolveTokenFromPath(tokenPath)
+      return { ...resolveTokenFromPath(tokenPath), tokenPath }
     }
     catch {}
   }
