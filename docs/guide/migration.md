@@ -165,6 +165,15 @@ Vitest no longer serves the browser orchestrator UI from a bare `/__vitest_test_
 
 If you manually opened the browser preview by copying the Vite server URL or visiting `/__vitest_test__/` directly, use the URL opened or printed by Vitest instead.
 
+### Generated Reports and Artifacts Use the `.vitest` Directory
+
+Vitest now uses a single `.vitest` directory at the project root as the shared artifact root. The `json` and `junit` reporters now write to this directory by default instead of printing to stdout:
+
+- **JSON reporter** ([`json`](/guide/reporters#json-reporter)): stdout → `.vitest/json/output.json`
+- **JUnit reporter** ([`junit`](/guide/reporters#junit-reporter)): stdout → `.vitest/junit/output.xml`
+
+If you previously relied on the report being printed to stdout (for example `vitest --reporter=json > out.json` or `vitest --reporter=json | jq`), read the generated artifact file instead (for example `jq . .vitest/json/output.json`). An explicit `outputFile` is still respected and unchanged.
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
