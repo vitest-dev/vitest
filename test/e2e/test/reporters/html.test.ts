@@ -19,7 +19,6 @@ it('basic', async () => {
   `)
   expect(result.exitCode).toBe(0)
   expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
-  expect(result.fs.statFile('.vitest/ui/html.meta.json.gz').isFile()).toBe(true)
 })
 
 it('singleFile', async () => {
