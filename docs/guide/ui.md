@@ -51,10 +51,10 @@ If you still want to see how your tests are running in real time in the terminal
 To preview your HTML report, you can use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
 
 ```sh
-npx vite preview --outDir ./html
+npx vite preview --outDir .vitest
 ```
 
-You can configure output with [`outputFile`](/config/outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.
+You can configure the output location with the HTML reporter's `outputDir` option. It points to the report artifact root, and the report entry is written to `<outputDir>/index.html`. The default value is `.vitest`, the shared Vitest artifact directory.
 :::
 
 If you need a portable report that can be opened or shared as one file, see [`singleFile`](/guide/reporters#html-reporter) in the HTML reporter documentation.
@@ -67,7 +67,7 @@ To view the HTML report from CI, for example in GitHub Actions, upload the outpu
   id: upload-report
   with:
     name: vitest-report
-    path: html/
+    path: .vitest/
 
 - name: Viewer link in summary
   run: echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
@@ -80,7 +80,7 @@ When you use `singleFile: true`, you can upload the report as a single file and 
 ```yaml
 - uses: actions/upload-artifact@v7
   with:
-    path: html/index.html
+    path: .vitest/index.html
     archive: false
 ```
 :::
