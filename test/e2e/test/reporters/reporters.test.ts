@@ -10,6 +10,14 @@ function getTestModules(_files = files) {
   return _files.map(task => ({ task }) as TestModule)
 }
 
+function readJunitReport(reportRoot: string) {
+  return readFileSync(resolve(reportRoot, 'junit/output.xml'), 'utf8')
+}
+
+function readJsonReport(reportRoot: string) {
+  return readFileSync(resolve(reportRoot, 'json/output.json'), 'utf8')
+}
+
 beforeEach(() => {
   vi.setSystemTime(1642587001759)
   return () => {
@@ -55,7 +63,7 @@ test('JUnit reporter', async () => {
   await reporter.onTestRunEnd([])
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(readJunitReport(context.reportRoot)).toMatchSnapshot()
 })
 
 test('JUnit reporter without classname', async () => {
@@ -70,7 +78,7 @@ test('JUnit reporter without classname', async () => {
   await reporter.onTestRunEnd(testModules)
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(readJunitReport(context.reportRoot)).toMatchSnapshot()
 })
 
 test('JUnit reporter with custom string classname', async () => {
@@ -85,7 +93,7 @@ test('JUnit reporter with custom string classname', async () => {
   await reporter.onTestRunEnd(testModules)
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(readJunitReport(context.reportRoot)).toMatchSnapshot()
 })
 
 test('JUnit reporter with custom function classnameTemplate', async () => {
@@ -103,7 +111,7 @@ test('JUnit reporter with custom function classnameTemplate', async () => {
   await reporter.onTestRunEnd(testModules)
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(readJunitReport(context.reportRoot)).toMatchSnapshot()
 })
 test('JUnit reporter with custom string classnameTemplate', async () => {
   // Arrange
@@ -120,7 +128,7 @@ test('JUnit reporter with custom string classnameTemplate', async () => {
   await reporter.onTestRunEnd(testModules)
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(readJunitReport(context.reportRoot)).toMatchSnapshot()
 })
 
 test('JUnit reporter (no outputFile entry)', async () => {
@@ -134,7 +142,7 @@ test('JUnit reporter (no outputFile entry)', async () => {
   await reporter.onTestRunEnd([])
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(readJunitReport(context.reportRoot)).toMatchSnapshot()
 })
 
 test('JUnit reporter with outputFile', async () => {
@@ -236,7 +244,7 @@ test('json reporter', async () => {
   await reporter.onTestRunEnd(testModules)
 
   // Assert
-  expect(JSON.parse(context.output)).toMatchSnapshot()
+  expect(JSON.parse(readJsonReport(context.reportRoot))).toMatchSnapshot()
 })
 
 test('json reporter (no outputFile entry)', async () => {
@@ -253,7 +261,7 @@ test('json reporter (no outputFile entry)', async () => {
   await reporter.onTestRunEnd(testModules)
 
   // Assert
-  expect(JSON.parse(context.output)).toMatchSnapshot()
+  expect(JSON.parse(readJsonReport(context.reportRoot))).toMatchSnapshot()
 })
 
 test('json reporter with outputFile', async () => {

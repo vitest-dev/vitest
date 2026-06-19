@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { readFileSync } from 'node:fs'
+import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
