@@ -18,6 +18,10 @@ vitest --ui
 
 Then you can visit the Vitest UI at <a href="http://localhost:51204/__vitest__/">`http://localhost:51204/__vitest__/`</a>
 
+::: tip
+Vitest UI access is protected. If the direct URL shows an error, open the URL with a token printed by Vitest in the terminal, for example `http://localhost:51204/__vitest__/?token=...`.
+:::
+
 ::: warning
 The UI is interactive and requires a running Vite server, so make sure to run Vitest in `watch` mode (the default). Alternatively, you can generate a static HTML report that looks identical to the Vitest UI by specifying `html` in config's `reporters` option.
 :::

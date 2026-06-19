@@ -1,8 +1,19 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
+import { existsSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
+import { join } from 'pathe'
+import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
 import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, startHtmlReportPreview, startVitestUi } from './helper'
+
+const TEST_COUNTS = {
+  pass: 18,
+  fail: 3,
+  files: {
+    pass: 7,
+  },
+}
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -18,7 +29,7 @@ test.describe('ui', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
@@ -31,6 +42,45 @@ test.describe('ui', () => {
 
   test('cross origin access', async ({ page }) => {
     await testCrossOriginAccess(page, pageUrl)
+  })
+
+  test('blocks unauthenticated ui html requests', async ({ request }) => {
+    const cleanUrl = new URL(pageUrl)
+    cleanUrl.search = ''
+    const cleanPageUrl = cleanUrl.toString()
+
+    const tokenless = await request.get(cleanPageUrl)
+    expect(tokenless.status()).toBe(403)
+    await expect(tokenless.text()).resolves.toContain('Vitest UI requires authentication.')
+
+    const badTokenUrl = new URL(cleanPageUrl)
+    badTokenUrl.searchParams.set('token', 'invalid')
+    const badToken = await request.get(badTokenUrl.toString())
+    expect(badToken.status()).toBe(403)
+    await expect(badToken.text()).resolves.toContain('Vitest UI requires authentication.')
+  })
+
+  test('does not serve the api token file', async ({ request }) => {
+    const { tokenPath } = resolveApiToken(vitest!.config.root)
+    expect(existsSync(tokenPath)).toBe(true)
+
+    const fsUrl = new URL(join('/@fs/', tokenPath), pageUrl)
+    const res = await request.get(fsUrl.toString())
+    expect(res.status()).toBe(403)
+  })
+
+  test('allows direct ui access after opening authenticated url', async ({ page }) => {
+    const cleanUrl = new URL(pageUrl)
+    cleanUrl.search = ''
+    const cleanPageUrl = cleanUrl.toString()
+
+    await page.goto(pageUrl)
+    await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
+    expect(page.url()).toBe(`${cleanPageUrl}#/`)
+
+    await page.goto(cleanPageUrl)
+    await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
+    expect(page.url()).toBe(`${cleanPageUrl}#/`)
   })
 
   test('coverage', async ({ page }) => {
@@ -192,14 +242,6 @@ test.describe('html report', () => {
     await testModuleGraph(page)
   })
 })
-
-const TEST_COUNTS = {
-  pass: 18,
-  fail: 3,
-  files: {
-    pass: 7,
-  },
-}
 
 async function testBasic(page: Page, pageUrl: string) {
   const pageErrors: unknown[] = []
@@ -618,7 +660,7 @@ test.describe('standalone', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
@@ -661,7 +703,7 @@ test.describe('security', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
