@@ -10,7 +10,7 @@ import { homedir } from 'node:os'
 import { dirname, join } from 'pathe'
 import { searchForWorkspaceRoot } from 'vite'
 
-export const API_TOKEN_FS_DENY = '.vitest-secret-token'
+export const API_TOKEN_FILE = '.vitest-secret-token'
 
 // Follows env-paths' user data directory conventions:
 // https://github.com/sindresorhus/env-paths/blob/v4.0.0/index.js
@@ -42,8 +42,8 @@ function resolveTokenFromPath(tokenPath: string): { token: string; tokenCreated:
 
 export function resolveApiToken(root: string): { token: string; tokenCreated: boolean; tokenPath: string } {
   const tokenPaths = [
-    join(getUserDataDir(), 'vitest/.vitest-secret-token'),
-    join(searchForWorkspaceRoot(root), 'node_modules/.vitest/.vitest-secret-token'),
+    join(getUserDataDir(), 'vitest', API_TOKEN_FILE),
+    join(searchForWorkspaceRoot(root), 'node_modules/.vitest', API_TOKEN_FILE),
   ]
 
   for (const tokenPath of tokenPaths) {

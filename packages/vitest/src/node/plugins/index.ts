@@ -6,7 +6,7 @@ import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { API_TOKEN_FS_DENY } from '../config/apiToken'
+import { API_TOKEN_FILE } from '../config/apiToken'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
@@ -90,7 +90,7 @@ export async function VitestPlugin(
             preTransformRequests: false,
             fs: {
               allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
-              deny: [API_TOKEN_FS_DENY],
+              deny: [API_TOKEN_FILE],
             },
           },
           build: {
