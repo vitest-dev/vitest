@@ -60,12 +60,13 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters print their output to the terminal. The `json` and `junit` reporters instead write to a scoped directory under `.vitest/` when no `outputFile` is configured:
+By default, Vitest's reporters print their output to the terminal. The `json`, `junit` and `html` reporters instead write to a scoped location under `.vitest/`:
 
 - `json` writes `.vitest/json/output.json`
 - `junit` writes `.vitest/junit/output.xml`
+- `html` writes `.vitest/index.html`
 
-You can override these locations with the `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI. The `html` reporter writes a report directory instead; see its [`outputDir`](#html-reporter) option.
+The `json` and `junit` locations can be overridden with the `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI; the `html` reporter uses its [`outputDir`](#html-reporter) option instead.
 
 :::code-group
 ```bash [CLI]
