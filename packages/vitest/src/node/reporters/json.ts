@@ -220,15 +220,7 @@ export class JsonReporter implements Reporter {
       coverageMap: this.coverageMap,
     }
 
-    await this.writeReport(JSON.stringify(result))
-  }
-
-  /**
-   * Writes the report to an explicit output file if specified in the config,
-   * or to `.vitest/json/output.json` otherwise.
-   * @param report
-   */
-  async writeReport(report: string): Promise<void> {
+    const resultString = JSON.stringify(result)
     const outputFile
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
 
@@ -240,13 +232,13 @@ export class JsonReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
       }
 
-      await fs.writeFile(reportFile, report, 'utf-8')
+      await fs.writeFile(reportFile, resultString, 'utf-8')
       this.ctx.logger.log(`JSON report written to ${reportFile}`)
     }
     else {
-      const json = this.ctx.createReport('json')
-      await json.writeFile('output.json', report)
-      this.ctx.logger.log(`JSON report written to ${resolve(json.root, 'output.json')}`)
+      const report = this.ctx.createReport('json')
+      await report.writeFile('output.json', resultString)
+      this.ctx.logger.log(`JSON report written to ${resolve(report.root, 'output.json')}`)
     }
   }
 }

@@ -258,8 +258,8 @@ export class JUnitReporter implements Reporter {
       }
     }
     else {
-      const junit = this.ctx.createReport('junit')
-      this.reportFile = resolve(junit.root, 'output.xml')
+      const report = this.ctx.createReport('junit')
+      this.reportFile = resolve(report.root, 'output.xml')
     }
 
     const fileFd = await fs.open(this.reportFile, 'w+')
