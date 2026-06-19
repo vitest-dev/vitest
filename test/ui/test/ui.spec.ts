@@ -51,13 +51,13 @@ test.describe('ui', () => {
 
     const tokenless = await request.get(cleanPageUrl)
     expect(tokenless.status()).toBe(403)
-    await expect(tokenless.text()).resolves.toBe('Use the Vitest UI URL printed by the server.')
+    await expect(tokenless.text()).resolves.toContain('Vitest UI requires authentication.')
 
     const badTokenUrl = new URL(cleanPageUrl)
     badTokenUrl.searchParams.set('token', 'invalid')
     const badToken = await request.get(badTokenUrl.toString())
     expect(badToken.status()).toBe(403)
-    await expect(badToken.text()).resolves.toBe('Use the Vitest UI URL printed by the server.')
+    await expect(badToken.text()).resolves.toContain('Vitest UI requires authentication.')
   })
 
   test('does not serve the api token file', async ({ request }) => {

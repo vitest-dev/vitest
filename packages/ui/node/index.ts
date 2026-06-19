@@ -116,7 +116,7 @@ export default (ctx: Vitest): Vite.Plugin => {
               const cookieToken = getCookie(req, UI_TOKEN_COOKIE)
               if (cookieToken !== ctx.config.api.token) {
                 res.statusCode = 403
-                res.end('Use the Vitest UI URL printed by the server.')
+                res.end('Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...')
                 return
               }
               const html = clientIndexHtml.replace(
