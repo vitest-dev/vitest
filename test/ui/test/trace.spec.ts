@@ -83,7 +83,7 @@ test.describe('html reporter', () => {
       },
       {
         root,
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
     previewServer = server.previewServer

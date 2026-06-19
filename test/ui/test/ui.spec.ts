@@ -117,7 +117,7 @@ test.describe('html report', () => {
       {
         root: './fixtures/main',
         base: '/custom/base/',
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
     previewServer = server.previewServer

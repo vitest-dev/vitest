@@ -34,7 +34,7 @@ const testConfig = defineConfig({
         ? [
             'html',
             {
-              outputFile: '.vitest/html/index.html',
+              outputDir: '.vitest/html',
               singleFile: true,
             },
           ]

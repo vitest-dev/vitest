@@ -139,7 +139,7 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url || '', `http://localhost`)
         if (url.pathname === `/${REPORT_FILE}`) {
-          const data = fs.readFileSync(path.join(htmlDir, REPORT_FILE))
+          const data = fs.readFileSync(path.join(htmlDir, 'ui', REPORT_FILE))
           res.end(data)
           return
         }

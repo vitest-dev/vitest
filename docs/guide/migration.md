@@ -165,6 +165,14 @@ Vitest no longer serves the browser orchestrator UI from a bare `/__vitest_test_
 
 If you manually opened the browser preview by copying the Vite server URL or visiting `/__vitest_test__/` directly, use the URL opened or printed by Vitest instead.
 
+### Generated Reports and Artifacts Use the `.vitest` Directory
+
+Vitest now uses a single `.vitest` directory at the project root as the shared artifact root, so one `.vitest` entry in `.gitignore` is enough. Defaults that moved this major:
+
+- **Attachments** ([`attachmentsDir`](/config/attachmentsdir)): `.vitest-attachements/` → `.vitest/attachments/`
+- **Blob reporter** and `--merge-reports`: `.vitest-reports/blob-*.json` → `.vitest/blob/blob-*.json`
+- **HTML reporter** ([`html`](/guide/reporters#html-reporter)): `html/index.html` → `.vitest/index.html`, and its option changed from `outputFile` (a file) to `outputDir` (a directory)
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
