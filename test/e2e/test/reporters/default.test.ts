@@ -18,30 +18,38 @@ describe('default reporter', async () => {
 
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "❯ b1.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b1 passed (6)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms
+         ❯ b1 failed (7)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
            × b failed test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms
        ❯ b2.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b2 passed (6)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms
+         ❯ b2 failed (7)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
            × b failed test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms"
