@@ -366,7 +366,7 @@ export class IframeOrchestrator {
     iframe.style.setProperty('border', 'none')
     iframe.style.setProperty('background-color', '#fff')
     iframe.style.setProperty('width', 'var(--viewport-width)')
-    iframe.style.setProperty('height', 'var(--viewport-height)')
+    iframe.style.setProperty('height', 'var(--inner-height, var(--viewport-height))')
 
     // enable scaling only when using the UI, without UI the iframe fills the page
     if (config.browser.ui) {
