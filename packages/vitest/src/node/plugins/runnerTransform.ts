@@ -4,6 +4,13 @@ import { normalize } from 'pathe'
 import { escapeRegExp } from '../../utils/base'
 import { resolveOptimizerConfig } from './utils'
 
+export function resolveBuiltinExternalModules(modules: readonly string[]): string[] {
+  return [
+    ...modules,
+    ...modules.map(m => m.startsWith('node:') ? m : `node:${m}`),
+  ]
+}
+
 export function ModuleRunnerTransform(): VitePlugin {
   let testConfig: NonNullable<UserConfig['test']>
   const noExternal: (string | RegExp)[] = []
@@ -97,10 +104,7 @@ export function ModuleRunnerTransform(): VitePlugin {
         }
 
         // remove Vite's externalization logic because we have our own (unfortunately)
-        config.resolve.external = [
-          ...builtinModules,
-          ...builtinModules.map(m => `node:${m}`),
-        ]
+        config.resolve.external = resolveBuiltinExternalModules(builtinModules)
 
         // by setting `noExternal` to `true`, we make sure that
         // Vite will never use its own externalization mechanism
