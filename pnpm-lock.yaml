@@ -943,6 +943,9 @@ importers:
       codemirror-theme-vars:
         specifier: ^0.1.2
         version: 0.1.2
+      cookie:
+        specifier: ^1.0.2
+        version: 1.0.2
       d3-graph-controller:
         specifier: ^3.1.8
         version: 3.1.8
@@ -1287,7 +1290,7 @@ importers:
         version: 2.4.11(@vue/compiler-dom@3.5.29)(@vue/server-renderer@3.5.29(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
       happy-dom:
         specifier: latest
-        version: 20.10.2
+        version: 20.10.6
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -1524,7 +1527,7 @@ importers:
         version: link:../../packages/browser-preview
       happy-dom:
         specifier: latest
-        version: 20.10.2
+        version: 20.10.6
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -7280,8 +7283,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@20.10.2:
-    resolution: {integrity: sha512-5p9Sxis3eowDJKqx90QCsgbNA02XXqJ59NOHvD4V6cxp+rP4d/xOyVx7uY3hS8hiUbY1VeiFH8lbJ81AyuDVLQ==}
+  happy-dom@20.10.6:
+    resolution: {integrity: sha512-6QD0ilzDDt93tX44y8tbmZdAcdTRYDhUP+Asgi6pC8Pp5IA3cvaZGyoVN/EGtlq9ziT65iPuBBn3ASLr6hCgVw==}
     engines: {node: '>=20.0.0'}
 
   happy-dom@20.8.3:
@@ -13677,7 +13680,7 @@ snapshots:
       eslint: 10.0.3(jiti@2.6.1)
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
-      semver: 7.7.4
+      semver: 7.8.3
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -16165,7 +16168,7 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@20.10.2:
+  happy-dom@20.10.6:
     dependencies:
       '@types/node': 24.12.0
       '@types/whatwg-mimetype': 3.0.2

@@ -1185,7 +1185,7 @@ export interface ResolvedConfig
   defines: Record<string, any>
   viteDefine: Record<string, any>
 
-  api: ApiConfig & { token: string }
+  api: ApiConfig & { token: string; tokenCreated: boolean }
   cliExclude?: string[]
 
   project: string[]

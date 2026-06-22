@@ -29,9 +29,12 @@ export async function startVitestUi(
   const address = vitest.vite.httpServer?.address()
   assert(address && typeof address === 'object', 'Invalid server address')
 
+  const uiUrl = new URL(vitest.config.uiBase, `http://localhost:${address.port}`)
+  uiUrl.searchParams.set('token', vitest.config.api.token)
+
   return {
     vitest,
-    url: `http://localhost:${address.port}`,
+    url: uiUrl.toString(),
   }
 }
 

@@ -15,7 +15,7 @@ test.describe('html singleFile', () => {
       },
       {
         root,
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
     previewServer = server.previewServer
