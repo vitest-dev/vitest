@@ -23,6 +23,10 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
     return rpc().readSnapshotFile(filepath)
   }
 
+  readSnapshotFileData(filepath: string): Promise<Record<string, string> | null> {
+    return rpc().readSnapshotFileData(filepath)
+  }
+
   saveSnapshotFile(filepath: string, snapshot: string): Promise<void> {
     return rpc().saveSnapshotFile(filepath, snapshot)
   }

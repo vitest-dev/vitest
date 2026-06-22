@@ -1,6 +1,7 @@
 import type { SnapshotEnvironment, SnapshotEnvironmentOptions } from '../types'
 import { existsSync, promises as fs } from 'node:fs'
 import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
+import { evaluateSnapshotFile } from '../port/utils'
 
 export class NodeSnapshotEnvironment implements SnapshotEnvironment {
   constructor(private options: SnapshotEnvironmentOptions = {}) {}
@@ -38,6 +39,14 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
       return null
     }
     return fs.readFile(filepath, 'utf-8')
+  }
+
+  async readSnapshotFileData(filepath: string): Promise<Record<string, string> | null> {
+    const content = await this.readSnapshotFile(filepath)
+    if (content == null) {
+      return null
+    }
+    return evaluateSnapshotFile(filepath, content)
   }
 
   async removeSnapshotFile(filepath: string): Promise<void> {

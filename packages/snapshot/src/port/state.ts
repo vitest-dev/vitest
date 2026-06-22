@@ -97,9 +97,20 @@ export default class SnapshotState {
     public snapshotPath: string,
     snapshotContent: string | null,
     options: SnapshotStateOptions,
+    preEvaluatedData?: Record<string, string> | null,
   ) {
-    const { data, dirty } = getSnapshotData(snapshotContent, options)
-    this._fileExists = snapshotContent != null // TODO: update on watch?
+    let data: SnapshotData
+    let dirty: boolean
+    if (preEvaluatedData !== undefined) {
+      data = preEvaluatedData ?? Object.create(null)
+      this._fileExists = preEvaluatedData !== null
+      const update = options.updateSnapshot
+      dirty = (update === 'all' || update === 'new') && preEvaluatedData !== null
+    }
+    else {
+      ;({ data, dirty } = getSnapshotData(snapshotContent, options))
+      this._fileExists = snapshotContent != null // TODO: update on watch?
+    }
     this._initialData = { ...data }
     this._snapshotData = { ...data }
     this._dirty = dirty
@@ -125,6 +136,10 @@ export default class SnapshotState {
     const snapshotPath = await options.snapshotEnvironment.resolvePath(
       testFilePath,
     )
+    if (options.snapshotEnvironment.readSnapshotFileData) {
+      const fileData = await options.snapshotEnvironment.readSnapshotFileData(snapshotPath)
+      return new SnapshotState(testFilePath, snapshotPath, null, options, fileData)
+    }
     const content = await options.snapshotEnvironment.readSnapshotFile(
       snapshotPath,
     )

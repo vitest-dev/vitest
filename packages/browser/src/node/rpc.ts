@@ -268,6 +268,28 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
           return fs.readFile(snapshotPath, 'utf-8')
         },
+        async readSnapshotFileData(snapshotPath) {
+          checkFileAccess(snapshotPath)
+          if (!existsSync(snapshotPath)) {
+            return null
+          }
+          const content = await fs.readFile(snapshotPath, 'utf-8')
+          const data = Object.create(null)
+          try {
+            // eslint-disable-next-line no-new-func
+            const populate = new Function('exports', content)
+            populate(data)
+          }
+          catch (cause) {
+            // surface corrupted snapshot files as a hard error instead of
+            // silently ignoring them
+            throw new Error(
+              `Invalid snapshot file, please manually fix or delete it: ${snapshotPath}`,
+              { cause },
+            )
+          }
+          return data
+        },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
           if (!canWrite(project)) {

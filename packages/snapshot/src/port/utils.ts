@@ -62,6 +62,28 @@ export function getSnapshotData(
   return { data, dirty }
 }
 
+// Evaluate a snapshot file's content into its snapshot data.
+// Throws a hard error when the content cannot be evaluated so corrupted
+// snapshot files surface immediately instead of being silently ignored.
+export function evaluateSnapshotFile(
+  filepath: string,
+  content: string,
+): SnapshotData {
+  const data = Object.create(null)
+  try {
+    // eslint-disable-next-line no-new-func
+    const populate = new Function('exports', content)
+    populate(data)
+  }
+  catch (cause) {
+    throw new Error(
+      `Invalid snapshot file, please manually fix or delete it: ${filepath}`,
+      { cause },
+    )
+  }
+  return data
+}
+
 // Add extra line breaks at beginning and end of multiline snapshot
 // to make the content easier to read.
 export function addExtraLineBreaks(string: string): string {

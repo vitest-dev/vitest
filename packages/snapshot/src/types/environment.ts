@@ -7,6 +7,7 @@ export interface SnapshotEnvironment {
   resolveRawPath: (testPath: string, rawPath: string) => Promise<string>
   saveSnapshotFile: (filepath: string, snapshot: string) => Promise<void>
   readSnapshotFile: (filepath: string) => Promise<string | null>
+  readSnapshotFileData?: (filepath: string) => Promise<Record<string, string> | null>
   removeSnapshotFile: (filepath: string) => Promise<void>
   processStackTrace?: (stack: ParsedStack) => ParsedStack
 }
