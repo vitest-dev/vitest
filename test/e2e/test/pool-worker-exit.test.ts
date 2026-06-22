@@ -1,3 +1,4 @@
+import { sep } from 'node:path'
 import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
@@ -95,7 +96,7 @@ test('worker process exit and kill raises exit code and signal to stderr along w
   })
 
   let errors = stderr
-    .replaceAll(process.cwd(), '<process-cwd>')
+    .replaceAll(process.cwd().replaceAll(sep, '/'), '<process-cwd>')
     .split('\n')
     .filter(line => !line.startsWith(' ❯') && line.trim().length > 0)
     .join('\n')
