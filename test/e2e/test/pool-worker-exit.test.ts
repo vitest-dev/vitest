@@ -94,15 +94,29 @@ test('worker process exit and kill raises exit code and signal to stderr along w
     reporters: 'default',
   })
 
-  // should report one error in stderr
-  expect(stderr).toContain('caught 2 unhandled errors')
-  // should report the exit code (5-exit.test.ts exits its own process mid-way with code 42)
-  expect(stderr).toContain('exited unexpectedly with exit code 42')
-  // should report the signal (3-crash.test.ts kills itself with SIGINT)
-  expect(stderr).toContain('exited unexpectedly with signal SIGINT')
-  // should report both crashed files in the error
-  expect(stderr).toContain('3-crash.test.ts')
-  expect(stderr).toContain('5-exit.test.ts')
+  let errors = stderr
+    .replaceAll(process.cwd(), '<process-cwd>')
+    .split('\n')
+    .filter(line => !line.startsWith(' ❯') && line.trim().length > 0)
+    .join('\n')
+
+  // Windows has no signals
+  if (process.platform === 'win32') {
+    errors = errors.replaceAll('with exit code 1', 'with signal SIGINT')
+  }
+
+  expect(errors).toMatchInlineSnapshot(`
+    "⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+    Vitest caught 2 unhandled errors during the test run.
+    This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+    ⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+    Error: [vitest-pool]: Worker forks emitted error.
+    Caused by: Error: Worker exited unexpectedly with signal SIGINT during started state while running test file <process-cwd>/fixtures/pool-worker-exit/3-crash.test.ts
+    ⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+    Error: [vitest-pool]: Worker forks emitted error.
+    Caused by: Error: Worker exited unexpectedly with exit code 42 during started state while running test file <process-cwd>/fixtures/pool-worker-exit/5-exit.test.ts
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
+  `)
 
   expect(buildTree(t => ({ state: t.result().state }))).toMatchInlineSnapshot(`
     {
