@@ -12,7 +12,7 @@
     "@opentelemetry/context-zone": "^2.6.0",
     "@opentelemetry/exporter-trace-otlp-proto": "^0.213.0",
     "@opentelemetry/resources": "^2.6.0",
-    "@opentelemetry/sdk-node": "^0.213.0",
+    "@opentelemetry/sdk-node": "^0.217.0",
     "@opentelemetry/sdk-trace-web": "^2.6.0",
     "@vitest/browser-playwright": "latest",
     "vite": "latest",
