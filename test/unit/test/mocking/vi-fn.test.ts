@@ -49,6 +49,48 @@ describe('vi.fn() copies static properties', () => {
     const spy = vi.fn(Example)
     expect(spy[promisifySymbol]).toBe(undefined)
   })
+
+  test('vi.fn() updates static properties when mockImplementation is called with a class', () => {
+    class Original {
+      static value = 'original'
+    }
+
+    class Replacement {
+      static value = 'replacement'
+      static replacementOnly = 'replacement-only'
+    }
+
+    const Mock = vi.fn(Original) as any
+
+    expect(Mock.value).toBe('original')
+    expect(Mock.replacementOnly).toBeUndefined()
+
+    Mock.mockImplementation(Replacement)
+
+    expect(Mock.value).toBe('replacement')
+    expect(Mock.replacementOnly).toBe('replacement-only')
+  })
+
+  test('vi.fn() removes old static properties when mockImplementation replaces class', () => {
+    class Original {
+      static originalOnly = 'original-only'
+      static shared = 'from-original'
+    }
+
+    class Replacement {
+      static shared = 'from-replacement'
+    }
+
+    const Mock = vi.fn(Original) as any
+
+    expect(Mock.originalOnly).toBe('original-only')
+    expect(Mock.shared).toBe('from-original')
+
+    Mock.mockImplementation(Replacement)
+
+    expect(Mock.originalOnly).toBeUndefined()
+    expect(Mock.shared).toBe('from-replacement')
+  })
 })
 
 describe('fn.length is consistent', () => {

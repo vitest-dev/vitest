@@ -26,6 +26,9 @@ const MOCK_RESTORE = new Set<() => void>()
 // if you stored it before calling `mockClear` where it will be recreated
 const REGISTERED_MOCKS = new Set<Mock<Procedure | Constructable>>()
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
+// Tracks the set of static property keys that were copied from a class/function
+// implementation onto the mock, so they can be removed when the implementation changes.
+const MOCK_COPIED_STATIC_KEYS = new WeakMap<Mock<Procedure | Constructable>, Set<string | symbol>>()
 
 export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
@@ -80,6 +83,9 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 
   mock.mockImplementation = function mockImplementation(implementation) {
     config.mockImplementation = implementation
+    if (typeof implementation === 'function') {
+      updateMockStaticProperties(mock, implementation)
+    }
     return mock
   }
 
@@ -626,6 +632,7 @@ function registerContext(context: MockProcedureContext<Procedure>, state: MockCo
 
 function copyOriginalStaticProperties(mock: Mock<Procedure | Constructable>, original: Procedure | Constructable) {
   const { properties, descriptors } = getAllProperties(original)
+  const copiedKeys = new Set<string | symbol>()
 
   for (const key of properties) {
     const descriptor = descriptors[key]!
@@ -635,7 +642,33 @@ function copyOriginalStaticProperties(mock: Mock<Procedure | Constructable>, ori
     }
 
     Object.defineProperty(mock, key, descriptor)
+    copiedKeys.add(key)
   }
+
+  MOCK_COPIED_STATIC_KEYS.set(mock, copiedKeys)
+}
+
+function updateMockStaticProperties(mock: Mock<Procedure | Constructable>, newImpl: Procedure | Constructable) {
+  // Remove previously copied static properties from the old implementation.
+  const previousKeys = MOCK_COPIED_STATIC_KEYS.get(mock)
+  if (previousKeys) {
+    for (const key of previousKeys) {
+      if (Object.prototype.hasOwnProperty.call(mock, key)) {
+        Reflect.deleteProperty(mock, key)
+      }
+    }
+  }
+
+  const { properties, descriptors } = getAllProperties(newImpl)
+  const copiedKeys = new Set<string | symbol>()
+
+  for (const key of properties) {
+    const descriptor = descriptors[key]!
+    Object.defineProperty(mock, key, descriptor)
+    copiedKeys.add(key)
+  }
+
+  MOCK_COPIED_STATIC_KEYS.set(mock, copiedKeys)
 }
 
 const ignoreProperties = new Set<string | symbol>([
