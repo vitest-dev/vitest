@@ -46,6 +46,15 @@ export default defineConfig({
 can be configured here. Additionally, two path resolution functions are
 available: `resolveScreenshotPath` and `resolveDiffPath`.
 
+## browser.expect.toMatchScreenshot.screenshotDirectory
+
+- **Type:** `string | undefined`
+- **Default:** `__screenshots__`
+
+The directory name used for storing reference screenshots.
+
+This value is passed as `screenshotDirectory` to [`browser.expect.toMatchScreenshot.resolveScreenshotPath`](#browserexpecttomatchscreenshotresolvescreenshotpath) and [`browser.expect.toMatchScreenshot.resolveDiffPath`](#browserexpecttomatchscreenshotresolvediffpath), and used in the default path resolution of `resolveScreenshotPath`.
+
 ## browser.expect.toMatchScreenshot.resolveScreenshotPath
 
 - **Type:** `(data: PathResolveData) => string`
@@ -92,9 +101,7 @@ receives an object with the following properties:
 
 - `screenshotDirectory: string`
 
-  The value provided to
-  [`browser.screenshotDirectory`](/config/browser/screenshotdirectory),
-  if none is provided, its default value.
+  The value provided to [`browser.expect.toMatchScreenshot.screenshotDirectory`](#browserexpecttomatchscreenshotscreenshotdirectory), if none is provided, its default value (`__screenshots__`).
 
 - `root: string`
 

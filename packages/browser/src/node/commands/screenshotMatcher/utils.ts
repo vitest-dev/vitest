@@ -17,7 +17,7 @@ type GlobalOptions = Required<Omit<
     NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']
     & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
   >,
-  'comparators'
+  'comparators' | 'screenshotDirectory'
 >>
 
 const defaultOptions = {
@@ -135,10 +135,7 @@ export function resolveOptions(
     ext: `.${extension}`,
     platform: platform(),
     root,
-    screenshotDirectory: relative(
-      root,
-      join(root, context.project.config.browser.screenshotDirectory ?? '__screenshots__'),
-    ),
+    screenshotDirectory: context.project.config.browser.expect?.toMatchScreenshot?.screenshotDirectory ?? '__screenshots__',
     attachmentsDir: relative(root, context.project.config.attachmentsDir),
     testFileDirectory: relative(root, dirname(context.testPath)),
     testFileName: basename(context.testPath),

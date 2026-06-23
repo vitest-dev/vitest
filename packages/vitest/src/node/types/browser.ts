@@ -518,9 +518,7 @@ type ToMatchScreenshotResolvePath = (data: {
    */
   platform: NodeJS.Platform
   /**
-   * The value provided to
-   * {@linkcode https://vitest.dev/config/browser/screenshotdirectory|browser.screenshotDirectory},
-   * if none is provided, its default value.
+   * The value provided to {@linkcode ToMatchScreenshotOptions.screenshotDirectory|browser.expect.toMatchScreenshot.screenshotDirectory}, if none is provided, its default value (`__screenshots__`).
    */
   screenshotDirectory: string
   /**
@@ -557,6 +555,14 @@ type ToMatchScreenshotResolvePath = (data: {
 }) => string
 
 export interface ToMatchScreenshotOptions {
+  /**
+   * The directory name used for storing reference screenshots.
+   *
+   * This value is passed as `screenshotDirectory` to {@linkcode resolveScreenshotPath|browser.expect.toMatchScreenshot.resolveScreenshotPath} and {@linkcode resolveDiffPath|browser.expect.toMatchScreenshot.resolveDiffPath}, and used in the default path resolution of `resolveScreenshotPath`.
+   *
+   * @default `__screenshots__`.
+   */
+  screenshotDirectory?: string
   /**
    * Overrides default reference screenshot path.
    *
