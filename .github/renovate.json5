@@ -6,6 +6,13 @@
   // Align with pnpm's `minimumReleaseAge` default (1440 minutes) so Renovate does
   // not propose versions that pnpm's supply-chain check would reject as too new.
   "minimumReleaseAge": "1 day",
+  // Cap Node memory for package-manager (pnpm) commands to avoid Mend-hosted
+  // `kernel-out-of-memory` job failures. Free plan has a 3GB limit; leave
+  // headroom for Renovate itself.
+  // https://github.com/renovatebot/renovate/discussions/40942#discussioncomment-16011497
+  "toolSettings": {
+    "nodeMaxMemory": 1024
+  },
   "packageRules": [
     {
       "groupName": "Eslint packages",
