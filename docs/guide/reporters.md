@@ -66,7 +66,7 @@ By default, Vitest's reporters print their output to the terminal. The `json`, `
 - `junit` writes `.vitest/junit/output.xml`
 - `html` writes `.vitest/index.html`
 
-The `json` and `junit` locations can be overridden with the `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI; the `html` reporter uses its [`outputDir`](#html-reporter) option instead.
+The `json` and `junit` locations can be overridden with the `outputFile` [configuration option](/config/outputfile) in your Vite configuration file or via CLI. The `html` reporter uses its [`outputDir`](#html-reporter) option instead.
 
 :::code-group
 ```bash [CLI]
@@ -82,6 +82,16 @@ export default defineConfig({
 })
 ```
 :::
+
+The `json` and `junit` reporters also accept `outputFile` as a reporter option, which takes precedence over the top-level `outputFile`:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [['json', { outputFile: './test-output.json' }]],
+  },
+})
+```
 
 ## Combining Reporters
 
@@ -322,7 +332,7 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`; use the [`outputFile`](/config/outputfile) configuration option to write it elsewhere.
+Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option.
 
 :::code-group
 ```bash [CLI]
@@ -426,7 +436,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`; use the [`outputFile`](/config/outputfile) configuration option to write it elsewhere.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option.
 
 :::code-group
 ```bash [CLI]
