@@ -91,16 +91,9 @@ export class BaseCoverageProvider {
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  reportsDirectoryLock!: ReportsDirectoryLock
   roots: string[] = []
   changedFiles?: string[]
-
-  private _reportsDirectoryLock?: ReportsDirectoryLock
-
-  private get reportsDirectoryLock(): ReportsDirectoryLock {
-    return (this._reportsDirectoryLock ??= new ReportsDirectoryLock(
-      resolve(this.options.reportsDirectory),
-    ))
-  }
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -150,6 +143,7 @@ export class BaseCoverageProvider {
       this.options.reportsDirectory,
       tempDirectory,
     )
+    this.reportsDirectoryLock = new ReportsDirectoryLock(resolve(this.options.reportsDirectory))
 
     // If --project filter is set pick only roots of resolved projects
     this.roots = ctx.config.project?.length

@@ -104,8 +104,11 @@ function createProvider() {
   onTestFinished(() => rmSync(reportsDirectory, { recursive: true, force: true }))
 
   const provider = new BaseCoverageProvider()
-  provider.coverageFilesDirectory = join(reportsDirectory, '.tmp')
-  provider.options = { reportsDirectory } as any
+  provider._initialize({
+    logger: { warn: () => {} },
+    config: { root: process.cwd() },
+    _coverageOptions: { reportsDirectory },
+  } as any)
 
   // eslint-disable-next-line dot-notation -- Accessing private property
   const lockFile = provider['reportsDirectoryLock'].lockFile
