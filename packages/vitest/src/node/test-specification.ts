@@ -2,8 +2,8 @@ import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
 import type { Pool } from './types/config'
-import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
+import { generateFileHash } from '../utils/tasks'
 
 export interface TestSpecificationOptions {
   testNamePattern?: RegExp

@@ -1,6 +1,6 @@
-import type { FileSpecification } from '@vitest/runner'
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { WorkerSetupContext } from '../../types/worker'
+import type { FileSpecification } from '../runner/types'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
 import { disableDefaultColors } from 'tinyrainbow'
@@ -30,6 +30,7 @@ export function init(worker: Options): void {
   let isRunning = false
   let workerTeardown: (() => Promise<unknown>) | undefined | void
   let setupContext!: WorkerSetupContext
+  let poolId!: number
 
   function send(response: WorkerResponse) {
     worker.post(worker.serialize ? worker.serialize(response) : response)
@@ -49,6 +50,7 @@ export function init(worker: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.workerId)
         reportMemory = message.options.reportMemory
+        poolId = message.poolId
 
         if (message.context.config.disableColors) {
           disableDefaultColors()
@@ -128,7 +130,7 @@ export function init(worker: Options): void {
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.run({ ...setupContext, ...message.context }, worker, traces)
+            () => entrypoint.run({ ...setupContext, ...message.context, concurrencyId: poolId }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
@@ -186,7 +188,7 @@ export function init(worker: Options): void {
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.collect({ ...setupContext, ...message.context }, worker, traces)
+            () => entrypoint.collect({ ...setupContext, ...message.context, concurrencyId: poolId }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise

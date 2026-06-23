@@ -1,12 +1,12 @@
 import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '../../runtime/runner/types'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
@@ -27,9 +27,9 @@ import type { Reporter } from './reporter'
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
+export type { SequenceHooks, SequenceSetupFiles } from '../../runtime/runner/types'
 export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
-export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
 export type BuiltinEnvironment
   = | 'node'
@@ -831,6 +831,13 @@ export interface InlineConfig {
   retry?: SerializableRetry
 
   /**
+   * Repeat every test a specific number of times regardless of the result.
+   *
+   * @default 0 // Don't repeat
+   */
+  repeats?: number
+
+  /**
    * Show full diff when snapshot fails instead of a patch.
    */
   expandSnapshotDiff?: boolean
@@ -1178,7 +1185,7 @@ export interface ResolvedConfig
   defines: Record<string, any>
   viteDefine: Record<string, any>
 
-  api: ApiConfig & { token: string }
+  api: ApiConfig & { token: string; tokenCreated: boolean }
   cliExclude?: string[]
 
   project: string[]

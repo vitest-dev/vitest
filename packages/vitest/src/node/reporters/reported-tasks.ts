@@ -1,3 +1,5 @@
+import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type {
   ImportDuration,
   Task as RunnerTask,
@@ -9,9 +11,7 @@ import type {
   TestAnnotation,
   TestArtifact,
   TestBenchmark,
-} from '@vitest/runner'
-import type { SerializedError, TestError } from '@vitest/utils'
-import type { DevEnvironment } from 'vite'
+} from '../../runtime/runner/types'
 import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
@@ -578,6 +578,8 @@ export class TestModule extends SuiteImplementation {
       duration,
       heap,
       importDurations,
+      concurrencyId: this.task.concurrencyId,
+      workerId: this.task.workerId,
     }
   }
 }
@@ -741,6 +743,26 @@ export interface ModuleDiagnostic {
    * The time spent importing every non-externalized dependency that Vitest has processed.
    */
   readonly importDurations: Record<string, ImportDuration>
+  /**
+   * The id of the worker that ran this file. This value cannot be higher than `maxWorkers`.
+   * If file did not run yet, this will be 0.
+   *
+   * **Warning**: Node.js tests and browser tests run in different pools and do not share `concurrencyId`.
+   * It is possible to have multiple modules with the same `concurrencyId` because of that.
+   * Use `project.isBrowserEnabled()` to distinguish the concurrency.
+   * @since 5.0.0
+   */
+  readonly concurrencyId: number
+  /**
+   * Incremental number of the worker that ran this file. This number increases with each worker.
+   * If file did not run yet, this will be 0.
+   *
+   * **Warning**: Node.js tests and browser tests run in different pools and do not share `workerId`.
+   * It is possible to have multiple modules with the same `workerId` because of that.
+   * Use `project.isBrowserEnabled()` to distinguish the concurrency.
+   * @since 5.0.0
+   */
+  readonly workerId: number
 }
 
 function storeTask(

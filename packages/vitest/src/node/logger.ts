@@ -243,9 +243,10 @@ export class Logger {
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.vite.config.server.port
-      const base = this.ctx.config.uiBase
+      const url = new URL(this.ctx.config.uiBase, `http://${host}:${port}`)
+      url.searchParams.set('token', this.ctx.config.api.token)
 
-      this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
+      this.log(PAD + c.dim(c.green(`UI started at ${url}`)))
     }
     else if (this.ctx.config.api?.port) {
       const resolvedUrls = this.ctx.vite.resolvedUrls
@@ -266,29 +267,6 @@ export class Logger {
     else {
       this.log()
     }
-  }
-
-  printBrowserBanner(project: TestProject): void {
-    if (!project.browser) {
-      return
-    }
-
-    const resolvedUrls = project.browser.vite.resolvedUrls
-    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-    if (!origin) {
-      return
-    }
-
-    const output = project.isRootProject()
-      ? ''
-      : formatProjectName(project)
-    const provider = project.browser.provider?.name
-    const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
-    this.log(
-      c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
-      ),
-    )
   }
 
   printUnhandledErrors(errors: ReadonlyArray<unknown>): void {

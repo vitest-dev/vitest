@@ -1,7 +1,7 @@
-import type { CancelReason } from '@vitest/runner'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types/worker'
+import type { CancelReason } from './runner/types'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { createBirpc } from 'birpc'
 import { getWorkerState } from './utils'

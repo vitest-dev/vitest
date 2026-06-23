@@ -45,4 +45,4 @@ jobs:
           VITE_TEST_WATCHER_DEBUG: 'false'
 
       - name: Publish to StackBlitz
-        run: pnpx pkg-pr-new publish --compact --no-template --pnpm './packages/*'
+        run: pnpx pkg-pr-new publish --compact --commentWithSha --no-template --pnpm './packages/*'

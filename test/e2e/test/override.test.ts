@@ -31,6 +31,7 @@ describe('correctly defines api flag', () => {
       allowWrite: true,
       middlewareMode: true,
       token: expect.any(String),
+      tokenCreated: expect.any(Boolean),
     })
   })
 
@@ -47,6 +48,7 @@ describe('correctly defines api flag', () => {
       allowWrite: true,
       allowExec: true,
       token: expect.any(String),
+      tokenCreated: expect.any(Boolean),
     })
   })
 

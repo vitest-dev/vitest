@@ -1,5 +1,5 @@
-import type { Task } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
+import type { Task } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { ErrorOptions } from '../logger'
 import type { Reporter } from '../types/reporter'
@@ -8,9 +8,9 @@ import { existsSync, promises as fs } from 'node:fs'
 
 import { hostname } from 'node:os'
 import { stripVTControlCharacters } from 'node:util'
-import { getSuites } from '@vitest/runner/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
+import { getSuites } from '../../utils/tasks'
 import { renderBenchmarkTableText } from './renderers/benchmark-table'
 import { IndentedLogger } from './renderers/indented-logger'
 

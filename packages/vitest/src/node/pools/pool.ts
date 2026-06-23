@@ -75,7 +75,7 @@ export class Pool {
       let isMemoryLimitReached = false
       const runner = this.getPoolRunner(task, method)
 
-      const poolId = runner.poolId ?? this.getWorkerId()
+      const poolId = runner.poolId ?? this.getConcurrencyId()
       runner.poolId = poolId
 
       const activeTask = { task, resolver, method, cancelTask }
@@ -101,19 +101,21 @@ export class Pool {
           }
 
           runner.off('message', onFinished)
+          runner.off('error', onTaskError)
           resolver.resolve()
         }
       }
 
+      function onTaskError(error: unknown) {
+        runner.off('message', onFinished)
+        runner.off('error', onTaskError)
+        resolver.reject(new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }))
+      }
+
       runner.on('message', onFinished)
+      runner.on('error', onTaskError)
 
       if (!runner.isStarted) {
-        runner.on('error', (error) => {
-          resolver.reject(
-            new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
-          )
-        })
-
         const id = setTimeout(
           () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,
@@ -148,6 +150,7 @@ export class Pool {
 
       if (
         !task.isolate
+        && !runner.isTerminated
         && !isMemoryLimitReached
         && this.queue[0]?.task.isolate === false
         && isEqualRunner(runner, this.queue[0].task)
@@ -261,17 +264,21 @@ export class Pool {
     throw new Error(`Runner ${task.worker} is not supported. Test files: ${formatFiles(task)}.`)
   }
 
-  private getWorkerId() {
-    let workerId = 0
+  private getConcurrencyId() {
+    let concurrencyId: number | undefined
 
     this.workerIds.forEach((state, id) => {
-      if (state && !workerId) {
-        workerId = id
+      if (state && concurrencyId == null) {
+        concurrencyId = id
         this.workerIds.set(id, false)
       }
     })
 
-    return workerId
+    if (concurrencyId == null) {
+      throw new Error('Cannot set concurrency id because there are no valid free ids.')
+    }
+
+    return concurrencyId
   }
 
   private freeWorkerId(id: number) {

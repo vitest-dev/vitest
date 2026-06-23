@@ -1,10 +1,10 @@
 import type { MockedModule } from '@vitest/mocker'
-import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
 import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
+import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
@@ -375,6 +375,7 @@ export interface BrowserCommandContext {
 export interface BrowserServerStateSession {
   project: TestProject
   otelCarrier?: OTELCarrier
+  concurrencyId: number
   connected: () => void
   ready: () => void
   fail: (v: Error) => void

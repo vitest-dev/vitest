@@ -8,7 +8,7 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import crypto from 'node:crypto'
+import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
@@ -28,6 +28,7 @@ import { getWorkersCountByPercentage } from '../../utils/workers'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { resolveApiToken } from './apiToken'
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -43,6 +44,15 @@ function resolvePath(path: string, root: string) {
     /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
     ?? resolve(root, path),
   )
+}
+
+export function findConfigFile(root: string): string | undefined {
+  for (const configFile of configFiles) {
+    const configPath = resolve(root, configFile)
+    if (existsSync(configPath)) {
+      return configPath
+    }
+  }
 }
 
 function parseInspector(inspect: string | undefined | boolean | number) {
@@ -177,6 +187,11 @@ export function resolveConfig(
     ...options,
     root: viteConfig.root,
   } as any as ResolvedConfig
+
+  const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
+  if (!rootStats?.isDirectory()) {
+    throw new Error(`Root path does not exist or is not a directory: ${resolved.root}`)
+  }
 
   resolved.mode ??= viteConfig.mode ?? 'test'
 
@@ -644,7 +659,8 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: crypto.randomUUID() }
+  const { token, tokenCreated } = resolveApiToken(resolved.root)
+  resolved.api = { ...api, token, tokenCreated }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>

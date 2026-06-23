@@ -1,4 +1,3 @@
-import type { BaselineData, Test, TestBenchmark, TestBenchmarkTask } from '@vitest/runner'
 import type {
   BenchOptions as BenchCompareOptions,
   Fn,
@@ -9,6 +8,7 @@ import type {
   Task as TinybenchTask,
 } from 'tinybench'
 import type { SerializedConfig } from './config'
+import type { BaselineData, Test, TestBenchmark, TestBenchmarkTask } from './runner/types'
 import { isAbsolute, relative } from 'pathe'
 import { Bench as Tinybench } from 'tinybench'
 import c from 'tinyrainbow'

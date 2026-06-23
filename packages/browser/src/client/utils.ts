@@ -1,6 +1,5 @@
-import type { VitestRunner } from '@vitest/runner'
 import type { Ivya } from 'ivya'
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, VitestTestRunner, WorkerGlobalState } from 'vitest'
 import type { OTELCarrier, Traces } from 'vitest/internal/traces'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
@@ -80,7 +79,7 @@ export interface BrowserRunnerState {
   runningFiles: string[]
   config: SerializedConfig
   provider: string
-  runner: VitestRunner
+  runner: VitestTestRunner
   viteConfig: {
     root: string
   }

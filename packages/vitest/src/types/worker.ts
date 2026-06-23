@@ -1,8 +1,8 @@
-import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { SerializedConfig } from '../runtime/config'
 import type { GetterTracker } from '../runtime/getter-tracker'
+import type { CancelReason, FileSpecification, Task } from '../runtime/runner/types'
 import type { Traces } from '../utils/traces'
 import type { Environment } from './environment'
 import type { RunnerRPC, RuntimeRPC } from './rpc'
@@ -43,6 +43,7 @@ export interface ContextRPC {
 
   /** Exposed to test runner as `VITEST_WORKER_ID`. Value is unique per each isolated worker. */
   workerId: number
+  concurrencyId: number
 }
 
 export interface WorkerSetupContext {

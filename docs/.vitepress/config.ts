@@ -508,6 +508,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/retry',
               },
               {
+                text: 'repeats',
+                link: '/config/repeats',
+              },
+              {
                 text: 'onConsoleLog',
                 link: '/config/onconsolelog',
               },
@@ -1042,6 +1046,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Auto-Cleanup with `using`',
                 link: '/guide/recipes/explicit-resources',
+              },
+              {
+                text: 'Conditional Mocking with `vi.when`',
+                link: '/guide/recipes/conditional-mocking',
               },
               {
                 text: 'Per-File Isolation Settings',

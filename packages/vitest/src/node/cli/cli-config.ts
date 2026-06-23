@@ -215,7 +215,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           perFile: {
             description:
-              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)',
+              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.',
+            subcommands: null,
+            argument: '<boolean>',
           },
           autoUpdate: {
             description:
@@ -629,6 +631,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
         },
       },
     },
+  },
+  repeats: {
+    description:
+      'Repeat every test a specific number of times regardless of the result (default: `0`)',
+    argument: '<number>',
   },
   diff: {
     description:

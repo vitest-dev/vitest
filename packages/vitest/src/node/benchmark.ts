@@ -1,4 +1,4 @@
-import type { BaselineData } from '@vitest/runner'
+import type { BaselineData } from '../runtime/runner/types'
 import type { TestProject } from './project'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'

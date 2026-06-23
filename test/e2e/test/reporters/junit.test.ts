@@ -1,16 +1,14 @@
-import type { Task } from '@vitest/runner'
-import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite } from 'vitest'
+import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite, RunnerTask as Task } from 'vitest'
 import { runVitest, runVitestCli } from '#test-utils'
-import { createFileTask } from '@vitest/runner/utils'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, test, TestRunner } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
 test('calc the duration used by junit', () => {
   const result: RunnerTaskResult = { state: 'pass', duration: 0 }
-  const file: RunnerTestFile = createFileTask('/test.ts', '/', 'test')
+  const file: RunnerTestFile = TestRunner.createFileTask('/test.ts', '/', 'test')
   const suiteName
     = 'suite'
   const suite: RunnerTestSuite = {
@@ -40,6 +38,7 @@ test('calc the duration used by junit', () => {
     context: null as any,
     suite,
     meta: {},
+    benchmarks: [],
   }
   file.tasks = [suite]
   suite.tasks = [task]

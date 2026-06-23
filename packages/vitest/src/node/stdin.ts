@@ -1,9 +1,8 @@
-import type { File, Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
+import type { File, Task } from '../runtime/runner/types'
 import type { Vitest } from './core'
 import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { isTestCase } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -19,7 +18,6 @@ const keys = [
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
-  ['b', 'start the browser server if not started yet'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
@@ -41,7 +39,7 @@ ${keys
 }
 
 function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterObject> {
-  if (isTestCase(t)) {
+  if (t.type === 'test') {
     if (t.name.match(filter)) {
       const displayName = `${parentName} > ${t.name}`
       yield { key: t.name, toString: () => displayName }
@@ -151,14 +149,6 @@ export function registerConsoleShortcuts(
     // change fileNamePattern
     if (name === 'p') {
       return inputFilePattern()
-    }
-    if (name === 'b') {
-      await ctx._initBrowserServers()
-      ctx.projects.forEach((project) => {
-        ctx.logger.log()
-        ctx.logger.printBrowserBanner(project)
-      })
-      return null
     }
   }
 

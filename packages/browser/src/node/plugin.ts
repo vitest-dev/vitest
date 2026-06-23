@@ -17,6 +17,7 @@ import {
   rolldownVersion,
   distDir as vitestDist,
 } from 'vitest/node'
+import { API_TOKEN_FILE } from '../../../vitest/src/node/config/apiToken'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
@@ -219,7 +220,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           '@vitest/browser/client',
           '@vitest/utils',
           '@vitest/utils/source-map',
-          '@vitest/runner',
           '@vitest/spy',
           '@vitest/utils/error',
           'std-env',
@@ -403,6 +403,8 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
         viteConfig.server.fs ??= {}
         viteConfig.server.fs.allow = viteConfig.server.fs.allow || []
+        viteConfig.server.fs.deny ??= []
+        viteConfig.server.fs.deny.push(API_TOKEN_FILE)
         viteConfig.server.fs.allow.push(
           ...resolveFsAllow(
             parentServer.vitest.config.root,

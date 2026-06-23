@@ -1,6 +1,6 @@
-import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import type { Formatter } from 'tinyrainbow'
+import type { Task } from '../../../runtime/runner/types'
 import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
 import { truncateString as utilsTruncateString } from '@vitest/utils/display'
