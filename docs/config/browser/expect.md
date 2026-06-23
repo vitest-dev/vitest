@@ -58,7 +58,7 @@ This value is passed as `screenshotDirectory` to [`browser.expect.toMatchScreens
 ## browser.expect.toMatchScreenshot.resolveScreenshotPath
 
 - **Type:** `(data: PathResolveData) => string`
-- **Default output:** `` `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}` ``
+- **Default output:** ``path.resolve(root, testFileDirectory, screenshotDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)``
 
 A function to customize where reference screenshots are stored. The function
 receives an object with the following properties:
@@ -139,7 +139,7 @@ resolveScreenshotPath: ({ arg, browserName, ext, root, testFileName }) =>
 ## browser.expect.toMatchScreenshot.resolveDiffPath
 
 - **Type:** `(data: PathResolveData) => string`
-- **Default output:** `` `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}` ``
+- **Default output:** ``path.resolve(root, attachmentsDir, testFileDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)``
 
 A function to customize where diff images are stored when screenshot comparisons
 fail. Receives the same data object as
