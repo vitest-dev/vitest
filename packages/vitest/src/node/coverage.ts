@@ -5,8 +5,10 @@ import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportCon
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
+import { createHash } from 'node:crypto'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl, slash } from '@vitest/utils/helpers'
@@ -89,6 +91,7 @@ export class BaseCoverageProvider {
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  reportsDirectoryLock!: ReportsDirectoryLock
   roots: string[] = []
   changedFiles?: string[]
 
@@ -140,6 +143,7 @@ export class BaseCoverageProvider {
       this.options.reportsDirectory,
       tempDirectory,
     )
+    this.reportsDirectoryLock = new ReportsDirectoryLock(resolve(this.options.reportsDirectory))
 
     // If --project filter is set pick only roots of resolved projects
     this.roots = ctx.config.project?.length
@@ -245,6 +249,8 @@ export class BaseCoverageProvider {
   }
 
   async clean(clean = true): Promise<void> {
+    await this.reportsDirectoryLock.acquire()
+
     if (clean && existsSync(this.options.reportsDirectory)) {
       await fs.rm(this.options.reportsDirectory, {
         recursive: true,
@@ -354,12 +360,17 @@ export class BaseCoverageProvider {
   }
 
   async cleanAfterRun(): Promise<void> {
-    this.coverageFiles = new Map()
-    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    try {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
 
-    // Remove empty reports directory, e.g. when only text-reporter is used
-    if (readdirSync(this.options.reportsDirectory).length === 0) {
-      await fs.rm(this.options.reportsDirectory, { recursive: true })
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0) {
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      }
+    }
+    finally {
+      await this.reportsDirectoryLock.release()
     }
   }
 
@@ -950,5 +961,114 @@ function resolveMergeConfig(mod: any): any {
         return config
       }
     }
+  }
+}
+
+/**
+ * Cross-process lock on a coverage `reportsDirectory`.
+ *
+ * Two `vitest run --coverage` runs pointed at the same reports directory delete
+ * each other's reports, so the second one to start fails fast instead. The lock
+ * file lives in the OS temp directory so it survives the cleanup it guards, and a
+ * lock left behind by a process that no longer exists is reclaimed on the next run.
+ */
+interface LockOwner {
+  pid: number
+  reportsDirectory: string
+}
+
+class ReportsDirectoryLock {
+  readonly lockFile: string
+
+  constructor(private readonly reportsDirectory: string) {
+    const hash = createHash('sha256')
+      .update(reportsDirectory)
+      .digest('hex')
+      .slice(0, 16)
+
+    this.lockFile = resolve(tmpdir(), `vitest-coverage-${hash}.lock`)
+  }
+
+  async acquire(): Promise<void> {
+    if (await this.tryWrite()) {
+      return
+    }
+
+    const owner = await this.readOwner()
+
+    // We already hold the lock for this directory (e.g. watch-mode reruns).
+    if (owner?.pid === process.pid) {
+      return
+    }
+
+    // Another running Vitest owns this directory.
+    if (owner && isProcessAlive(owner.pid)) {
+      throw this.inUseError(owner)
+    }
+
+    // The lock was left behind by a process that no longer exists. Reclaim it.
+    await fs.rm(this.lockFile, { force: true })
+
+    if (!(await this.tryWrite())) {
+      throw this.inUseError(await this.readOwner())
+    }
+  }
+
+  async release(): Promise<void> {
+    const owner = await this.readOwner()
+
+    if (owner?.pid === process.pid) {
+      await fs.rm(this.lockFile, { force: true })
+    }
+  }
+
+  private async tryWrite(): Promise<boolean> {
+    const payload = JSON.stringify({ pid: process.pid, reportsDirectory: this.reportsDirectory })
+
+    try {
+      // `wx` fails with EEXIST if the file already exists, so only one process wins.
+      await fs.writeFile(this.lockFile, payload, { flag: 'wx' })
+      return true
+    }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        return false
+      }
+      throw error
+    }
+  }
+
+  private async readOwner(): Promise<LockOwner | null> {
+    try {
+      const owner = JSON.parse(await fs.readFile(this.lockFile, 'utf-8'))
+      return typeof owner?.pid === 'number' ? owner : null
+    }
+    catch {
+      return null
+    }
+  }
+
+  private inUseError(owner: LockOwner | null): Error {
+    return new Error(
+      `The coverage report directory "${this.reportsDirectory}" is already in use by `
+      + `another Vitest process${owner ? ` (pid ${owner.pid})` : ''}. Running coverage for multiple `
+      + `Vitest processes in the same directory at the same time is not supported, because they would `
+      + `delete each other's reports.\nGive each run its own "coverage.reportsDirectory" `
+      + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
+    )
+  }
+}
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    // Sending signal 0 checks if the process exists without actually killing it:
+    // https://nodejs.org/api/process.html#processkillpid-signal
+    process.kill(pid, 0)
+    return true
+  }
+  catch (error) {
+    // ESRCH means the process is gone. Treat anything else (e.g. EPERM) as alive
+    // so we never reclaim a lock from a process that is still running.
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
   }
 }
