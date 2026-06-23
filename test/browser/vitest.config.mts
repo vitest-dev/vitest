@@ -72,12 +72,14 @@ export default defineConfig({
       { name: 'test', priority: 5 },
       { name: 'browser', priority: 1 },
     ],
+    benchmark: {
+      enabled: true,
+    },
     alias: {
       '#src': resolve(dir, './src'),
     },
     diff: './custom-diff-config.ts',
     outputFile: {
-      html: './html/index.html',
       json: './browser.json',
     },
     onConsoleLog(log) {

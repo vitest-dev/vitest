@@ -1,10 +1,9 @@
-import type { FileSpecification } from '@vitest/runner'
 import type { Environment } from '../types/environment'
 import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
 import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
+import type { FileSpecification } from './runner/types'
 import { performance } from 'node:perf_hooks'
-import { collectTests, startTests } from '@vitest/runner'
 import {
   startCoverageInsideWorker,
   stopCoverageInsideWorker,
@@ -13,6 +12,7 @@ import { resolveSnapshotEnvironment } from '../integrations/snapshot/environment
 import { vi } from '../integrations/vi'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
+import { collectTests, startTests } from './runner/run'
 import { resolveTestRunner } from './runners'
 import { setupGlobalEnv } from './setup-node'
 import { getWorkerState, resetModules } from './utils'

@@ -46,6 +46,7 @@ export class PoolRunner {
   public readonly project: TestProject
   public environment: ContextTestEnvironment
 
+  private _lastTestFiles: string[]
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
   private _terminatePromise: DeferPromise<void> = createDefer()
@@ -79,6 +80,7 @@ export class PoolRunner {
     this.environment = options.environment
 
     const vitest = this.project.vitest
+    this._lastTestFiles = []
     this._traces = vitest._traces
     if (this._traces.isEnabled()) {
       const { span: workerSpan, context } = this._traces.startContextSpan('vitest.worker')
@@ -147,7 +149,8 @@ export class PoolRunner {
   }
 
   request(method: 'run' | 'collect', context: WorkerExecuteContext): void {
-    this._otel?.files.push(...context.files.map(f => f.filepath))
+    this._lastTestFiles = context.files.map(f => f.filepath)
+    this._otel?.files.push(...this._lastTestFiles)
     return this.postMessage({
       __vitest_worker_request__: true,
       type: method,
@@ -325,6 +328,7 @@ export class PoolRunner {
       throw error
     }
     finally {
+      this._lastTestFiles = []
       this._operationLock.resolve()
       this._operationLock = null
       this._otel?.span.end()
@@ -366,8 +370,14 @@ export class PoolRunner {
     }
   }
 
-  private emitUnexpectedExit = (): void => {
-    const error = new Error('Worker exited unexpectedly')
+  private emitUnexpectedExit = (code?: number, signal?: string): void => {
+    const hasCode = typeof code === 'number'
+    const errorDetails = hasCode || signal
+      ? `with ${hasCode ? `exit code ${code} ` : ''}${signal ? `signal ${signal} ` : ''}`
+      : ''
+    const testFileDetails = this._lastTestFiles.length ? ` while running test file${this._lastTestFiles.length === 1 ? '' : 's'} ${this._lastTestFiles.join(', ')}` : ''
+    const error = new Error(`Worker exited unexpectedly ${errorDetails}during ${this._state} state${testFileDetails}`)
+    this._state = RunnerState.STOPPED
 
     this._eventEmitter.emit('error', error)
   }

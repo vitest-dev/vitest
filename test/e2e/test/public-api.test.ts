@@ -1,4 +1,4 @@
-import type { TaskMeta } from '@vitest/runner'
+import type { TaskMeta } from 'vitest'
 import type { TestModule, TestUserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'

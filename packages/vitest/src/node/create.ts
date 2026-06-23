@@ -7,21 +7,47 @@ import type { VitestOptions } from './core'
 import type { VitestRunMode } from './types/config'
 import { resolve } from 'node:path'
 import { deepClone, slash } from '@vitest/utils/helpers'
-import * as find from 'empathic/find'
 import { resolveModule } from 'local-pkg'
 import { mergeConfig } from 'vite'
-import { configFiles } from '../constants'
+import { findConfigFile } from './config/resolveConfig'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
 
 export async function createVitest(
+  options: CliOptions,
+  viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
+): Promise<Vitest>
+/**
+ * @deprecated The `mode` argument is no longer used. Use `createVitest(options, viteOverrides?, vitestOptions?)` instead.
+ */
+export async function createVitest(
   mode: VitestRunMode,
   options: CliOptions,
-  viteOverrides: ViteUserConfig = {},
-  vitestOptions: VitestOptions = {},
+  viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
+): Promise<Vitest>
+export async function createVitest(
+  modeOrOptions: VitestRunMode | CliOptions,
+  optionsOrViteOverrides: CliOptions | ViteUserConfig = {},
+  viteOverridesOrVitestOptions: ViteUserConfig | VitestOptions = {},
+  maybeVitestOptions: VitestOptions = {},
 ): Promise<Vitest> {
-  const ctx = new Vitest(mode, deepClone(options), vitestOptions)
+  let options: CliOptions
+  let viteOverrides: ViteUserConfig
+  let vitestOptions: VitestOptions
+  if (typeof modeOrOptions === 'string') {
+    options = optionsOrViteOverrides as CliOptions
+    viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig
+    vitestOptions = maybeVitestOptions
+  }
+  else {
+    options = modeOrOptions
+    viteOverrides = optionsOrViteOverrides as ViteUserConfig
+    vitestOptions = viteOverridesOrVitestOptions as VitestOptions
+  }
+  const ctx = new Vitest(deepClone(options), vitestOptions)
   const root = slash(resolve(options.root || process.cwd()))
 
   const configPath
@@ -29,7 +55,7 @@ export async function createVitest(
       ? false
       : options.config
         ? (resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config))
-        : find.any(configFiles, { cwd: root })
+        : findConfigFile(root)
 
   options.config = configPath
 
@@ -38,8 +64,7 @@ export async function createVitest(
   const config: ViteInlineConfig = {
     configFile: configPath,
     configLoader: options.configLoader,
-    // this will make "mode": "test" | "benchmark" inside defineConfig
-    mode: options.mode || mode,
+    mode: options.mode || 'test',
     plugins: await VitestPlugin(restOptions, ctx),
   }
 
@@ -50,6 +75,32 @@ export async function createVitest(
 
     if (ctx.config.api?.port) {
       await server.listen()
+      if (ctx.config.ui && ctx.config.open) {
+        // Note: `tokenCreated` is only an approximation of "the browser is not
+        // authenticated yet". If the user clears cookies while the token file
+        // persists, the clean URL will block until they re-open the `?token=`
+        // URL printed in the terminal.
+        if (ctx.config.api.tokenCreated) {
+          // First run that generated the token: no browser holds the auth
+          // cookie yet, so open the authenticated URL to set it. A new tab
+          // here is fine since no clean-URL tab exists to reuse.
+          const url = new URL(ctx.config.uiBase, 'http://localhost')
+          url.searchParams.set('token', ctx.config.api.token)
+          server.config.server.open = `${url.pathname}${url.search}`
+        }
+        else {
+          // Subsequent runs: open the clean UI base URL (without `?token=`)
+          // rather than the authenticated URL printed by the logger. On macOS,
+          // `openBrowser` reuses an existing tab whose URL matches via substring
+          // and reloads it (Vite's `bin/openChrome.js`). Since the 302 redirect
+          // strips the token, an already-authenticated tab lives at the clean
+          // URL, so opening the clean URL matches and reloads it; opening the
+          // token URL would never match and would spawn a new tab on every
+          // restart.
+          server.config.server.open = ctx.config.uiBase
+        }
+        server.openBrowser()
+      }
     }
 
     return ctx

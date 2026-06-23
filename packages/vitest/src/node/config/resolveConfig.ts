@@ -1,7 +1,6 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { Vitest } from '../core'
 import type { Logger } from '../logger'
-import type { BenchmarkBuiltinReporters } from '../reporters'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
@@ -9,7 +8,7 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import crypto from 'node:crypto'
+import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
@@ -29,6 +28,7 @@ import { getWorkersCountByPercentage } from '../../utils/workers'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { resolveApiToken } from './apiToken'
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -44,6 +44,15 @@ function resolvePath(path: string, root: string) {
     /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
     ?? resolve(root, path),
   )
+}
+
+export function findConfigFile(root: string): string | undefined {
+  for (const configFile of configFiles) {
+    const configPath = resolve(root, configFile)
+    if (existsSync(configPath)) {
+      return configPath
+    }
+  }
 }
 
 function parseInspector(inspect: string | undefined | boolean | number) {
@@ -155,7 +164,6 @@ export function resolveConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
-  const mode = vitest.mode
   const logger = vitest.logger
   if (options.dom) {
     if (
@@ -178,8 +186,14 @@ export function resolveConfig(
     ...configDefaults,
     ...options,
     root: viteConfig.root,
-    mode,
   } as any as ResolvedConfig
+
+  const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
+  if (!rootStats?.isDirectory()) {
+    throw new Error(`Root path does not exist or is not a directory: ${resolved.root}`)
+  }
+
+  resolved.mode ??= viteConfig.mode ?? 'test'
 
   if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
     logger.console.warn(
@@ -245,6 +259,11 @@ export function resolveConfig(
     throw new Error(`Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`)
   }
 
+  resolved.benchmark = {
+    ...benchmarkConfigDefaults,
+    ...resolved.benchmark,
+  }
+
   const inspector = resolved.inspect || resolved.inspectBrk
 
   resolved.inspector = {
@@ -295,8 +314,7 @@ export function resolveConfig(
     resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
-  // run benchmark sequentially by default
-  const fileParallelism = options.fileParallelism ?? mode !== 'benchmark'
+  const fileParallelism = options.fileParallelism ?? true
 
   if (!fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
@@ -634,44 +652,6 @@ export function resolveConfig(
     resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
   }
 
-  if (mode === 'benchmark') {
-    resolved.benchmark = {
-      ...benchmarkConfigDefaults,
-      ...resolved.benchmark,
-    }
-    // override test config
-    resolved.coverage.enabled = false
-    resolved.typecheck.enabled = false
-    resolved.include = resolved.benchmark.include
-    resolved.exclude = resolved.benchmark.exclude
-    resolved.includeSource = resolved.benchmark.includeSource
-    const reporters = Array.from(
-      new Set<BenchmarkBuiltinReporters>([
-        ...toArray(resolved.benchmark.reporters),
-        // @ts-expect-error reporter is CLI flag
-        ...toArray(options.reporter),
-      ]),
-    ).filter(Boolean)
-    if (reporters.length) {
-      resolved.benchmark.reporters = reporters
-    }
-    else {
-      resolved.benchmark.reporters = ['default']
-    }
-
-    if (options.outputFile) {
-      resolved.benchmark.outputFile = options.outputFile
-    }
-
-    // --compare from cli
-    if (options.compare) {
-      resolved.benchmark.compare = options.compare
-    }
-    if (options.outputJson) {
-      resolved.benchmark.outputJson = options.outputJson
-    }
-  }
-
   if (typeof resolved.diff === 'string') {
     resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
@@ -679,7 +659,8 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: crypto.randomUUID() }
+  const { token, tokenCreated } = resolveApiToken(resolved.root)
+  resolved.api = { ...api, token, tokenCreated }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -729,39 +710,37 @@ export function resolveConfig(
     }
   }
 
-  if (mode !== 'benchmark') {
-    // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
-    // it is passed down as "vitest --reporter ../reporter.js"
-    const reportersFromCLI = resolved.reporter
+  // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
+  // it is passed down as "vitest --reporter ../reporter.js"
+  const reportersFromCLI = resolved.reporter
 
-    const cliReporters = toArray(reportersFromCLI || []).map(
-      (reporter: string) => {
-        // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
-        if (/^\.\.?\//.test(reporter)) {
-          return resolve(process.cwd(), reporter)
-        }
-        return reporter
-      },
-    )
+  const cliReporters = toArray(reportersFromCLI || []).map(
+    (reporter: string) => {
+      // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
+      if (/^\.\.?\//.test(reporter)) {
+        return resolve(process.cwd(), reporter)
+      }
+      return reporter
+    },
+  )
 
-    if (cliReporters.length) {
-      // When CLI reporters are specified, preserve options from config file
-      const configReportersMap = new Map<string, Record<string, unknown>>()
+  if (cliReporters.length) {
+    // When CLI reporters are specified, preserve options from config file
+    const configReportersMap = new Map<string, Record<string, unknown>>()
 
-      // Build a map of reporter names to their options from the config
-      for (const reporter of resolved.reporters) {
-        if (Array.isArray(reporter)) {
-          const [reporterName, reporterOptions] = reporter
-          if (typeof reporterName === 'string') {
-            configReportersMap.set(reporterName, reporterOptions as Record<string, unknown>)
-          }
+    // Build a map of reporter names to their options from the config
+    for (const reporter of resolved.reporters) {
+      if (Array.isArray(reporter)) {
+        const [reporterName, reporterOptions] = reporter
+        if (typeof reporterName === 'string') {
+          configReportersMap.set(reporterName, reporterOptions as Record<string, unknown>)
         }
       }
-
-      resolved.reporters = Array.from(new Set(toArray(cliReporters)))
-        .filter(Boolean)
-        .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
     }
+
+    resolved.reporters = Array.from(new Set(toArray(cliReporters)))
+      .filter(Boolean)
+      .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
   }
 
   resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
@@ -842,7 +821,7 @@ export function resolveConfig(
   }
   resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
-    ??= options.fileParallelism ?? mode !== 'benchmark'
+    ??= options.fileParallelism ?? true
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
   resolved.browser.commands ??= {}

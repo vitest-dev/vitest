@@ -215,7 +215,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           perFile: {
             description:
-              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)',
+              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.',
+            subcommands: null,
+            argument: '<boolean>',
           },
           autoUpdate: {
             description:
@@ -332,7 +334,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   mode: {
-    description: 'Override Vite mode (default: `test` or `benchmark`)',
+    description: 'Override Vite mode (default: `test`)',
     argument: '<name>',
   },
   isolate: {
@@ -629,6 +631,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
         },
       },
     },
+  },
+  repeats: {
+    description:
+      'Repeat every test a specific number of times regardless of the result (default: `0`)',
+    argument: '<number>',
   },
   diff: {
     description:
@@ -976,8 +983,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   snapshotEnvironment: null,
-  compare: null,
-  outputJson: null,
   json: null,
   provide: null,
   filesOnly: null,
@@ -986,21 +991,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
+  benchmarkOnly: null,
   taskTitleValueFormatTruncate: null,
-}
-
-export const benchCliOptionsConfig: Pick<
-  VitestCLIOptions,
-  'compare' | 'outputJson'
-> = {
-  compare: {
-    description: 'Benchmark output file to compare against',
-    argument: '<filename>',
-  },
-  outputJson: {
-    description: 'Benchmark output file',
-    argument: '<filename>',
-  },
 }
 
 export const collectCliOptionsConfig: VitestCLIOptions = {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task, TaskState } from '@vitest/runner'
+import type { RunnerTask as Task, TaskState } from 'vitest'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { computed, nextTick } from 'vue'

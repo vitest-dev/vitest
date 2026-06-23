@@ -1,10 +1,12 @@
 import type { Context as OTELContext } from '@opentelemetry/api'
-import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
-import type { FileSpecification } from '@vitest/runner'
+import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
+import type { FileSpecification } from 'vitest/internal/browser'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { relative } from 'pathe'
 import { Traces } from 'vitest/internal/traces'
+// This needs to be tree shaken properly to not include the whole runner by accident
+import { generateFileHash } from '../../../vitest/src/utils/tasks.js'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
@@ -14,6 +16,8 @@ export class IframeOrchestrator {
   private cancelled = false
   private recreateNonIsolatedIframe = false
   private iframes = new Map<string, HTMLIFrameElement>()
+  private readyIframes = new Set<string>()
+  private readyWaiters = new Map<string, () => void>()
 
   public eventTarget: EventTarget = new EventTarget()
 
@@ -36,6 +40,13 @@ export class IframeOrchestrator {
       'message',
       e => this.onGlobalChannelEvent(e),
     )
+
+    // Notify the server once the websocket is ready without blocking orchestrator creation.
+    void client.waitForConnection()
+      .then(() => client.rpc.onOrchestratorReady())
+      .catch((error) => {
+        debug('failed to notify orchestrator readiness', error)
+      })
   }
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
@@ -82,6 +93,8 @@ export class IframeOrchestrator {
 
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
+    this.readyIframes.clear()
+    this.readyWaiters.clear()
 
     for (let i = 0; i < options.files.length; i++) {
       if (this.cancelled) {
@@ -140,8 +153,7 @@ export class IframeOrchestrator {
       // because we called "cleanup" in the previous run
       // the iframe is not removed immediately to let the user see the last test
       this.recreateNonIsolatedIframe = false
-      this.iframes.get(ID_ALL)!.remove()
-      this.iframes.delete(ID_ALL)
+      this.removeIframe(ID_ALL)
       debug('recreate non-isolated iframe')
     }
 
@@ -161,6 +173,8 @@ export class IframeOrchestrator {
       files: options.files,
       method: options.method,
       context: options.providedContext,
+      concurrencyId: options.concurrencyId,
+      workerId: options.workerId,
     })
     debug('finished running tests', options.files.join(', '))
     // we don't cleanup here because in non-isolated mode
@@ -180,8 +194,7 @@ export class IframeOrchestrator {
     const file = spec.filepath
 
     if (this.iframes.has(file)) {
-      this.iframes.get(file)!.remove()
-      this.iframes.delete(file)
+      this.removeIframe(file)
     }
 
     await this.prepareIframe(
@@ -198,6 +211,8 @@ export class IframeOrchestrator {
       method: options.method,
       iframeId: file,
       context: options.providedContext,
+      concurrencyId: options.concurrencyId,
+      workerId: options.workerId,
     })
     // perform "cleanup" to cleanup resources and calculate the coverage
     await this.sendEventToIframe({
@@ -244,12 +259,14 @@ export class IframeOrchestrator {
         }
         else {
           this.iframes.set(iframeId, iframe)
-          this.sendEventToIframe({
-            event: 'prepare',
-            iframeId,
-            startTime,
-            otelCarrier: this.traces.getContextCarrier(otelContext),
-          }).then(resolve, error => reject(this.dispatchIframeError(error)))
+          this.waitForReady(iframeId)
+            .then(() => this.sendEventToIframe({
+              event: 'prepare',
+              iframeId,
+              startTime,
+              otelCarrier: this.traces.getContextCarrier(otelContext),
+            }))
+            .then(resolve, error => reject(this.dispatchIframeError(error)))
         }
       }
       iframe.onerror = (e) => {
@@ -265,6 +282,34 @@ export class IframeOrchestrator {
       }
     })
     return iframe
+  }
+
+  private markReady(iframeId: string) {
+    this.readyIframes.add(iframeId)
+
+    const waiter = this.readyWaiters.get(iframeId)
+    if (waiter) {
+      this.readyWaiters.delete(iframeId)
+      waiter()
+    }
+  }
+
+  private waitForReady(iframeId: string): Promise<void> {
+    if (this.readyIframes.has(iframeId)) {
+      return Promise.resolve()
+    }
+
+    return new Promise((resolve) => {
+      this.readyWaiters.set(iframeId, resolve)
+    })
+  }
+
+  private removeIframe(iframeId: string) {
+    const iframe = this.iframes.get(iframeId)
+    this.iframes.delete(iframeId)
+    this.readyIframes.delete(iframeId)
+    this.readyWaiters.delete(iframeId)
+    iframe?.remove()
   }
 
   private loggedIframe = new WeakSet<HTMLIFrameElement>()
@@ -308,7 +353,7 @@ export class IframeOrchestrator {
 
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
-    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${encodeURIComponent(iframeId)}`
     const config = getConfig()
 
     iframe.setAttribute('loading', 'eager')
@@ -356,9 +401,13 @@ export class IframeOrchestrator {
     }
   }
 
-  private async onIframeEvent(e: MessageEvent<IframeChannelIncomingEvent>) {
+  private async onIframeEvent(e: MessageEvent<IframeChannelEvent>) {
     debug('iframe event', JSON.stringify(e.data))
     switch (e.data.event) {
+      case 'ready': {
+        this.markReady(e.data.iframeId)
+        break
+      }
       case 'viewport': {
         const { width, height, iframeId: id } = e.data
         const iframe = this.iframes.get(id)
@@ -472,39 +521,6 @@ function generateFileId(file: string) {
       __vitest_label__: config.mergeReportsLabel,
     },
   )
-}
-
-// TODO: copied from packages/runner/src/utils/collect.ts
-interface HashMeta {
-  typecheck?: boolean
-  __vitest_label__?: string
-}
-
-function generateFileHash(
-  file: string,
-  projectName: string | undefined,
-  meta?: HashMeta,
-): string {
-  const seed = [
-    file,
-    projectName || '',
-    meta?.typecheck ? '__typecheck__' : '',
-    meta?.__vitest_label__ || '',
-  ].join('\0')
-  return generateHash(seed)
-}
-
-function generateHash(str: string): string {
-  let hash = 0
-  if (str.length === 0) {
-    return `${hash}`
-  }
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return `${hash}`
 }
 
 async function setIframeViewport(

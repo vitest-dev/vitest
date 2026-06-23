@@ -1,6 +1,6 @@
 import type { Context, Span } from '@opentelemetry/api'
-import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
+import type { FileSpecification } from '../../runtime/runner/types'
 import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
@@ -264,7 +264,7 @@ class BrowserPool {
       this.project.vitest._browserSessions.sessionIds.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
-      let page = this._traces.$(
+      const page = this._traces.$(
         `vitest.browser.open`,
         {
           context: this._otel.context,
@@ -273,8 +273,7 @@ class BrowserPool {
           },
         },
         () => this.openPage(sessionId, { parallel: workerCount > 1 }),
-      )
-      page = page.then(() => {
+      ).then(() => {
         // start running tests on the page when it's ready
         this.runNextTest(method, sessionId)
       })
@@ -290,6 +289,33 @@ class BrowserPool {
       reject: error => this.reject(error),
       parallel: options.parallel,
     })
+  }
+
+  // stable slot id (1..maxWorkers) assigned to each session/orchestrator on its
+  // first run, exposed to the test runner as both `concurrencyId` and `workerId`.
+  // the id lives on the session, so it is freed when the session disconnects, and
+  // the used set is derived from the live orchestrators, so it stays within maxWorkers
+  private getConcurrencyId(sessionId: string): number {
+    const sessions = this.project.vitest._browserSessions
+    const session = sessions.getSession(sessionId)
+    if (session?.concurrencyId) {
+      return session.concurrencyId
+    }
+    const used = new Set<number>()
+    for (const id of this.orchestrators.keys()) {
+      const concurrencyId = sessions.getSession(id)?.concurrencyId
+      if (concurrencyId) {
+        used.add(concurrencyId)
+      }
+    }
+    let concurrencyId = 1
+    while (used.has(concurrencyId)) {
+      concurrencyId++
+    }
+    if (session) {
+      session.concurrencyId = concurrencyId
+    }
+    return concurrencyId
   }
 
   private getOrchestrator(sessionId: string) {
@@ -359,6 +385,7 @@ class BrowserPool {
           },
         },
         async () => {
+          const concurrencyId = this.getConcurrencyId(sessionId)
           return orchestrator.createTesters(
             {
               method,
@@ -367,6 +394,10 @@ class BrowserPool {
               // so we need to stringify it first to avoid double serialization
               providedContext: this._providedContext || '[{}]',
               otelCarrier: this._traces.getContextCarrier(),
+              concurrencyId,
+              // in the browser there is a single tab per orchestrator,
+              // so the worker id matches the concurrency slot
+              workerId: concurrencyId,
             },
           )
         },

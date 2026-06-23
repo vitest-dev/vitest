@@ -12,7 +12,7 @@ import { startVitest } from 'vitest/node'
 export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  const vitest = await startVitest('test', undefined, cliOptions, {}, { stdout, stderr })
+  const vitest = await startVitest(undefined, cliOptions, {}, { stdout, stderr })
   await vitest.close()
   return vitest
 }
@@ -24,14 +24,17 @@ export async function startVitestUi(
   // silence Vitest logs
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  const vitest = await startVitest('test', undefined, cliOptions, viteOverrides, { stdout, stderr })
+  const vitest = await startVitest(undefined, cliOptions, viteOverrides, { stdout, stderr })
 
   const address = vitest.vite.httpServer?.address()
   assert(address && typeof address === 'object', 'Invalid server address')
 
+  const uiUrl = new URL(vitest.config.uiBase, `http://localhost:${address.port}`)
+  uiUrl.searchParams.set('token', vitest.config.api.token)
+
   return {
     vitest,
-    url: `http://localhost:${address.port}`,
+    url: uiUrl.toString(),
   }
 }
 

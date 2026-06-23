@@ -1,5 +1,5 @@
-import type { File, Task, TestAnnotation } from '@vitest/runner'
 import type { ParsedStack, SerializedError } from '@vitest/utils'
+import type { File, Task, TestAnnotation, TestBenchmark, TestBenchmarkTask } from '../../runtime/runner/types'
 import type { AsyncLeak, TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
@@ -7,15 +7,15 @@ import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
-import { getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
-import { hasFailedSnapshot } from '../../utils/tasks'
+import { getSuites, getTestName, getTests, hasFailed, hasFailedSnapshot } from '../../utils/tasks'
 import { generateCodeFrame, printStack } from '../printError'
+import { BENCH_TABLE_HEAD, computeBenchColumnWidths, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
   countTestErrors,
@@ -54,6 +54,7 @@ export abstract class BaseReporter implements Reporter {
 
   private _filesInWatchMode = new Map<string, number>()
   private _timeStart = formatTimeString(new Date())
+  private _perProjectBenchmarks = new Map<string, Map<string, TestBenchmarkTask>>()
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? isTTY
@@ -82,6 +83,7 @@ export abstract class BaseReporter implements Reporter {
   onTestRunStart(_specifications: ReadonlyArray<TestSpecification>): void {
     this.start = performance.now()
     this._timeStart = formatTimeString(new Date())
+    this._perProjectBenchmarks.clear()
   }
 
   onTestRunEnd(
@@ -97,6 +99,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
     }
     else {
+      this.printPerProjectBenchmarks()
       this.reportSummary(files, errors)
     }
   }
@@ -104,6 +107,22 @@ export abstract class BaseReporter implements Reporter {
   onTestCaseResult(testCase: TestCase): void {
     if (testCase.result().state === 'failed') {
       this.logFailedTask(testCase.task)
+    }
+  }
+
+  onTestCaseBenchmark(testCase: TestCase, benchmark: TestBenchmark): void {
+    const projectName = testCase.project.name || ''
+    for (const task of benchmark.tasks) {
+      if (!task.perProject) {
+        continue
+      }
+      const benchKey = `${testCase.module.relativeModuleId} > ${testCase.fullName} > ${task.name}`
+      let projectMap = this._perProjectBenchmarks.get(benchKey)
+      if (!projectMap) {
+        projectMap = new Map()
+        this._perProjectBenchmarks.set(benchKey, projectMap)
+      }
+      projectMap.set(projectName, task)
     }
   }
 
@@ -206,6 +225,10 @@ export abstract class BaseReporter implements Reporter {
     const { duration = 0 } = test.diagnostic() || {}
     const padding = this.getTestIndentation(test.task)
     const suffix = this.getTestCaseSuffix(test)
+    const benchmarks = test.benchmarks()
+    // perProject tasks still appear in the inline table — they're additionally
+    // aggregated in the cross-project section at the end of the run
+    const inlineBenchmarks: TestBenchmark[] = benchmarks.filter(b => b.tasks.length > 0)
 
     if (testResult.state === 'failed') {
       this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, separator)}`) + suffix)
@@ -213,15 +236,19 @@ export abstract class BaseReporter implements Reporter {
 
     // also print slow tests
     else if (duration > this.ctx.config.slowTestThreshold) {
-      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)} ${suffix}`)
+      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)}${suffix}`)
     }
 
     else if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
       // Skipped tests are hidden when --hideSkippedTests
     }
 
-    else if (this.renderSucceed || moduleState === 'failed') {
+    else if (this.renderSucceed || moduleState === 'failed' || inlineBenchmarks.length) {
       this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`)
+    }
+
+    if (inlineBenchmarks.length > 0) {
+      this.printBenchmarkTable(inlineBenchmarks, padding)
     }
   }
 
@@ -545,12 +572,7 @@ export abstract class BaseReporter implements Reporter {
 
     const leakCount = this.printLeaksSummary()
 
-    if (this.ctx.config.mode === 'benchmark') {
-      this.reportBenchmarkSummary(files)
-    }
-    else {
-      this.reportTestSummary(files, errors, leakCount)
-    }
+    this.reportTestSummary(files, errors, leakCount)
   }
 
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
@@ -873,34 +895,91 @@ export abstract class BaseReporter implements Reporter {
     return leakWithStacks.size
   }
 
-  reportBenchmarkSummary(files: File[]): void {
-    const benches = getTests(files)
-    const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
+  protected printPerProjectBenchmarks(): void {
+    if (this._perProjectBenchmarks.size === 0) {
+      return
+    }
 
-    this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
+    let hasComparable = false
+    for (const projectMap of this._perProjectBenchmarks.values()) {
+      if (projectMap.size > 1) {
+        hasComparable = true
+        break
+      }
+    }
+    if (!hasComparable) {
+      return
+    }
 
-    for (const bench of topBenches) {
-      const group = bench.suite || bench.file
+    this.log('')
+    this.log(divider(c.bold(c.bgBlue(` Cross-Project Benchmark Comparison `)), null, null, c.blue))
 
-      if (!group) {
+    for (const [benchName, projectMap] of this._perProjectBenchmarks) {
+      const tasks = [...projectMap.entries()]
+        .sort((a, b) => a[1].latency.mean - b[1].latency.mean)
+        .map(([projectName, task], index) => ({ ...task, name: projectName, rank: index + 1 }))
+
+      if (tasks.length <= 1) {
         continue
       }
 
-      const groupName = this.getFullName(group, separator)
-      const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
+      this.log('')
+      this.log(`  ${c.dim(benchName)}`)
+      this.printBenchmarkTable([{ name: benchName, tasks }], '', 'project')
+    }
 
-      this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
+    this.log('')
+  }
 
-      const siblings = group.tasks
-        .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
-        .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
-
-      for (const sibling of siblings) {
-        const number = (sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)
-        this.log(c.green(`    ${number}x `) + c.gray('faster than ') + sibling.name)
+  protected printBenchmarkTable(benchmarks: readonly TestBenchmark[], basePadding: string, columnName = 'name'): void {
+    let printedCount = 0
+    for (const benchmark of benchmarks) {
+      const { tasks } = benchmark
+      if (tasks.length === 0) {
+        continue
       }
 
-      this.log('')
+      if (printedCount > 0) {
+        this.log('')
+      }
+
+      const rows = tasks.map(t => renderBenchmarkRow(t))
+      const tableHead = [
+        columnName,
+        ...BENCH_TABLE_HEAD,
+      ]
+      const widths = computeBenchColumnWidths(tableHead, rows)
+      const indent = ` ${basePadding}  `
+
+      this.log(`${indent}${padBenchRow(tableHead, widths).map(c.bold).join('  ')}`)
+      printedCount++
+
+      for (const task of tasks) {
+        const padded = padBenchRow(renderBenchmarkRow(task), widths)
+        let row = [
+          padded[0],
+          c.blue(padded[1]),
+          c.cyan(padded[2]),
+          c.cyan(padded[3]),
+          c.cyan(padded[4]),
+          c.cyan(padded[5]),
+          c.cyan(padded[6]),
+          c.cyan(padded[7]),
+          c.cyan(padded[8]),
+          c.dim(padded[9]),
+          c.dim(padded[10]),
+        ].join('  ')
+
+        if (task.rank === 1 && tasks.length > 1) {
+          row += c.bold(c.green('   fastest'))
+        }
+
+        if (task.rank === tasks.length && tasks.length > 2) {
+          row += c.bold(c.gray('   slowest'))
+        }
+
+        this.log(`${indent}${row}`)
+      }
     }
   }
 

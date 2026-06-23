@@ -1,5 +1,5 @@
 import type { RunVitestConfig } from '#test-utils'
-import type { File, Test } from '@vitest/runner/types'
+import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
 import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
@@ -7,10 +7,9 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
-import { createFileTask } from '@vitest/runner/utils'
 import { stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
-import { beforeEach, expect, test } from 'vitest'
+import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
 import { getModuleGraph } from 'vitest/src/utils/graph.js'
 
@@ -176,6 +175,7 @@ test('merge reports', async () => {
           "assertionResults": [
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "test 1-1",
               "meta": {},
@@ -185,6 +185,7 @@ test('merge reports', async () => {
             },
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [
                 "AssertionError: expected 1 to be 2 // Object.is equality
         at <root>/fixtures/reporters/merge-reports/first.test.ts:15:13",
@@ -206,6 +207,7 @@ test('merge reports', async () => {
           "assertionResults": [
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [
                 "AssertionError: expected 1 to be 2 // Object.is equality
         at <root>/fixtures/reporters/merge-reports/second.test.ts:5:13",
@@ -220,6 +222,7 @@ test('merge reports', async () => {
               "ancestorTitles": [
                 "group",
               ],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "group test 2-2",
               "meta": {},
@@ -231,6 +234,7 @@ test('merge reports', async () => {
               "ancestorTitles": [
                 "group",
               ],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "group test 2-3",
               "meta": {},
@@ -253,7 +257,7 @@ test('merge reports', async () => {
 test('total and merged execution times are shown', async () => {
   for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
     const index = 1 + _index
-    const file = createFileTask(
+    const file = TestRunner.createFileTask(
       resolve('./fixtures/reporters/merge-reports', name),
       resolve('./fixtures/reporters/merge-reports'),
       '',
@@ -261,7 +265,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}],
+      [version, [file], [], undefined, 1500 * index, {}, 2000 * index],
       resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
     )
   }
@@ -275,7 +279,7 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('✓ first.test.ts (1 test)')
   expect(stdout).toContain('✓ second.test.ts (1 test)')
 
-  expect(stdout).toContain('Duration  4.50s')
+  expect(stdout).toContain('Duration  4.50s (transform 6.00s')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
@@ -483,7 +487,7 @@ test.for([
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
   expect(result3.stdout).toMatchInlineSnapshot(`
     " HTML  Report is generated
-           You can run npx vite preview --outDir html to see the test results.
+           You can run npx vite preview --outDir .vitest to see the test results.
     "
   `)
 })
@@ -494,12 +498,10 @@ async function getSerializedModuleGraph(ctx: Vitest) {
     await Promise.all(
       files.map(async (file) => {
         const projectName = file.projectName || ''
-        const project = ctx.getProjectByName(projectName)
         const graph = await getModuleGraph(
           ctx,
           projectName,
           file.filepath,
-          project.config.browser.enabled,
         )
         return [file.filepath, graph] as const
       }),
@@ -544,6 +546,7 @@ function createTest(name: string, file: File): Test {
     result: { state: 'pass' },
     meta: {},
     context: {} as any,
+    benchmarks: [],
   }
 }
 

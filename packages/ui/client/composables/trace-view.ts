@@ -19,33 +19,50 @@ export interface TraceEditorMarker {
   active?: boolean
 }
 
+export interface NormalizedBrowserTraceData extends BrowserTraceData {
+  entries: NormalizedBrowserTraceEntry[]
+}
+
+export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
+  depth: number
+}
+
 export const activeTraceView = ref<TraceSelection>()
 
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }
 
-function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry[] {
-  const merged: BrowserTraceEntry[] = []
+function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
+  const merged: NormalizedBrowserTraceEntry[] = []
   const startMap = new Map<string, number>()
+  const parents: string[] = []
 
   for (const entry of entries) {
     const range = entry.range
     if (!range) {
-      merged.push(entry)
+      merged.push({
+        ...entry,
+        depth: parents.length,
+      })
       continue
     }
 
     if (range.phase === 'start') {
       startMap.set(range.id, merged.length)
-      merged.push(entry)
+      merged.push({
+        ...entry,
+        depth: parents.length,
+      })
+      parents.push(range.id)
       continue
     }
 
+    // when range.phase === 'end'
     const index = startMap.get(range.id)
     if (index == null) {
       // unpaired range shouldn't happen but just leave it there
-      merged.push(entry)
+      merged.push({ ...entry, depth: 0 })
       continue
     }
 
@@ -58,12 +75,13 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry
       startTime: start.startTime,
       duration: entry.startTime - start.startTime,
     }
+    parents.pop()
   }
 
   return merged
 }
 
-export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, BrowserTraceData> {
+export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, NormalizedBrowserTraceData> {
   const grouped: Record<string, BrowserTraceData[]> = {}
   for (const artifact of artifacts) {
     if (artifact.type !== 'internal:browserTrace') {
@@ -75,19 +93,19 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
     grouped[key].push(trace)
   }
 
-  const merged: Record<string, BrowserTraceData> = {}
+  const merged: Record<string, NormalizedBrowserTraceData> = {}
   for (const [key, traces] of Object.entries(grouped)) {
     const trace = traces[0]
     const entries = traces.flatMap(trace => trace.entries)
     merged[key] = {
       ...trace,
-      entries: mergeTraceRangeEntries(entries),
+      entries: normalizeTraceEntries(entries),
     }
   }
   return merged
 }
 
-export function getSelectedTrace(selection: TraceSelection): BrowserTraceData | undefined {
+export function getSelectedTrace(selection: TraceSelection): NormalizedBrowserTraceData | undefined {
   const attempts = getTraceAttemptMap(selection.test.artifacts)
   return selection.attemptKey
     ? attempts[selection.attemptKey]

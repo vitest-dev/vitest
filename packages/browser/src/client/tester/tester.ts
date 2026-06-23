@@ -1,5 +1,5 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
-import type { FileSpecification } from '@vitest/runner'
+import type { FileSpecification } from 'vitest/internal/browser'
 import { channel, client, onCancel, registerPageMarkHandler } from '@vitest/browser/client'
 import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
@@ -53,12 +53,16 @@ channel.addEventListener('message', async (e) => {
 
   switch (data.event) {
     case 'execute': {
-      const { method, files, context } = data
+      const { method, files, context, concurrencyId, workerId } = data
       const state = getWorkerState()
       const parsedContext = parse(context)
 
+      state.ctx.concurrencyId = concurrencyId
+      state.ctx.workerId = workerId
       state.ctx.providedContext = parsedContext
       state.providedContext = parsedContext
+      state.metaEnv.VITEST_POOL_ID = String(concurrencyId)
+      state.metaEnv.VITEST_WORKER_ID = String(workerId)
 
       if (method === 'collect') {
         await executeTests('collect', files).catch(err => unhandledError(err, 'Collect Error'))
@@ -113,6 +117,11 @@ getBrowserState().browserTraceAttempts = new Map()
 getBrowserState().iframeId = iframeId
 
 registerPageMarkHandler((name, options) => page.mark(name, options))
+
+channel.postMessage({
+  event: 'ready',
+  iframeId,
+})
 
 let contextSwitched = false
 

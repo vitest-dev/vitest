@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { BrowserTraceData, BrowserTraceEntry } from '../../../../browser/src/client/tester/trace'
-import type { TraceSelection } from '~/composables/trace-view'
+import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
@@ -9,7 +8,7 @@ import { openLocation } from '~/composables/location'
 import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
 
 const props = defineProps<{
-  trace: BrowserTraceData
+  trace: NormalizedBrowserTraceData
   selection: TraceSelection
 }>()
 
@@ -90,7 +89,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   }
 }, { immediate: true })
 
-function getStepButtonClass(step: BrowserTraceEntry, index: number) {
+function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
   const selected = props.selection.selectedStepIndex === index
   // TODO: move trace step state colors to shared semantic UI shortcuts.
   if (isTraceStepInProgress(step)) {
@@ -112,7 +111,7 @@ function formatTraceTime(ms: number) {
     : `${(ms / 1000).toFixed(1)}s`
 }
 
-function formatTraceTiming(step: BrowserTraceEntry) {
+function formatTraceTiming(step: NormalizedBrowserTraceEntry) {
   if (isTraceStepInProgress(step)) {
     return 'running'
   }
@@ -123,7 +122,7 @@ function formatTraceTiming(step: BrowserTraceEntry) {
     : `${startTime} · ${formatTraceTime(step.duration)}`
 }
 
-function formatStepName(step: BrowserTraceEntry) {
+function formatStepName(step: NormalizedBrowserTraceEntry) {
   if (step.name === 'vitest:onAfterRetryTask') {
     return 'test finished'
   }
@@ -133,7 +132,7 @@ function formatStepName(step: BrowserTraceEntry) {
   return step.name
 }
 
-function isTraceStepInProgress(step: BrowserTraceEntry) {
+function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
 </script>
@@ -150,11 +149,17 @@ function isTraceStepInProgress(step: BrowserTraceEntry) {
           type="button"
           data-testid="trace-step"
           :data-test-range="step.range?.phase"
-          class="w-full text-left px-2 py-1 rounded text-sm"
+          class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
+          :style="{ paddingInlineStart: `${0.5 + step.depth}rem` }"
           :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
           @click="onSelectStep(index)"
         >
+          <span
+            v-if="step.depth > 0"
+            class="absolute bottom-1 top-1 border-l border-gray/40 dark:border-gray/50"
+            :style="{ insetInlineStart: `${step.depth - 0.05}rem` }"
+          />
           <div class="flex items-start gap-2">
             <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">
               <span

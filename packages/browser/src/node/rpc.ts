@@ -69,7 +69,8 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     if (type === 'orchestrator') {
       const session = sessions.getSession(sessionId)
-      // it's possible the session was already resolved by the preview provider
+      // it's possible the session was already resolved by the preview provider,
+      // but we still mark the websocket connection when the page reconnects
       session?.connected()
     }
 
@@ -84,7 +85,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const { rpc, offCancel } = setupClient(project, rpcId, ws)
+      const { rpc, offCancel } = setupClient(project, rpcId, ws, { sessionId })
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -130,7 +131,35 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     )
   }
 
-  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
+  function isCdpAllowed(project: TestProject) {
+    return (
+      project.config.api.allowExec
+      && project.config.browser.api.allowExec
+      && project.vitest.config.api.allowExec
+      && project.vitest.config.browser.api.allowExec
+      && project.config.api.allowWrite
+      && project.config.browser.api.allowWrite
+      && project.vitest.config.api.allowWrite
+      && project.vitest.config.browser.api.allowWrite
+    )
+  }
+
+  function assertCdpAllowed(project: TestProject) {
+    if (!isCdpAllowed(project)) {
+      throw new Error(
+        `Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.`,
+      )
+    }
+  }
+
+  function setupClient(
+    project: TestProject,
+    rpcId: string,
+    ws: WebSocket,
+    options: {
+      sessionId: string
+    },
+  ) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config?.deps?.moduleDirectories,
     })
@@ -138,6 +167,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
+        onOrchestratorReady() {
+          const sessions = vitest._browserSessions
+          sessions.getSession(options.sessionId)?.ready()
+        },
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
             const _error = error as TestError
@@ -180,6 +213,23 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
 
           return vitest._testRun.recordArtifact(id, artifact)
+        },
+        async onTestBenchmark(testId, benchmark) {
+          return vitest._testRun.recordBenchmark(testId, benchmark)
+        },
+        async readBenchmarkResult(relativePath) {
+          checkFileAccess(project.benchmark.resolve(relativePath))
+          return project.benchmark.readResult(relativePath)
+        },
+        async writeBenchmarkResult(relativePath, data) {
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot write benchmark artifact "${relativePath}" because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
+          checkFileAccess(project.benchmark.resolve(relativePath))
+          return project.benchmark.writeResult(relativePath, data)
         },
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
@@ -304,6 +354,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
                   ...args,
                 )
               },
+              __ensureCDPHandler: () => globalServer.ensureCDPHandler(sessionId, rpcId),
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
@@ -381,10 +432,12 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
         // CDP
         async sendCdpEvent(sessionId: string, event: string, payload?: Record<string, unknown>) {
+          assertCdpAllowed(project)
           const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           return cdp.send(event, payload)
         },
         async trackCdpEvent(sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
+          assertCdpAllowed(project)
           const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           cdp[type](event, listenerId)
         },

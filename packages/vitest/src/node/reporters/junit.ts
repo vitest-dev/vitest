@@ -1,5 +1,5 @@
-import type { Task } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
+import type { Task } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { ErrorOptions } from '../logger'
 import type { Reporter } from '../types/reporter'
@@ -8,9 +8,10 @@ import { existsSync, promises as fs } from 'node:fs'
 
 import { hostname } from 'node:os'
 import { stripVTControlCharacters } from 'node:util'
-import { getSuites } from '@vitest/runner/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
+import { getSuites } from '../../utils/tasks'
+import { renderBenchmarkTableText } from './renderers/benchmark-table'
 import { IndentedLogger } from './renderers/indented-logger'
 
 export interface ClassnameTemplateVariables {
@@ -319,6 +320,30 @@ export class JUnitReporter implements Reporter {
     })
   }
 
+  async writeSystemOut(task: Task): Promise<void> {
+    const logs
+      = this.options.includeConsoleOutput && task.logs
+        ? task.logs.filter(log => log.type === 'stdout')
+        : []
+    const benchmarks = task.type === 'test' ? task.benchmarks : []
+
+    if (logs.length === 0 && benchmarks.length === 0) {
+      return
+    }
+
+    await this.writeElement('system-out', {}, async () => {
+      for (const log of logs) {
+        await this.baseLog(escapeXML(log.content))
+      }
+      if (benchmarks.length > 0) {
+        if (logs.length > 0) {
+          await this.baseLog('')
+        }
+        await this.baseLog(escapeXML(renderBenchmarkTableText(benchmarks)))
+      }
+    })
+  }
+
   private applyTemplate(
     template: string | ((vars: ClassnameTemplateVariables) => string),
     vars: ClassnameTemplateVariables,
@@ -368,8 +393,8 @@ export class JUnitReporter implements Reporter {
           time: getDuration(task),
         },
         async () => {
+          await this.writeSystemOut(task)
           if (this.options.includeConsoleOutput) {
-            await this.writeLogs(task, 'out')
             await this.writeLogs(task, 'err')
           }
 
@@ -569,6 +594,7 @@ export class JUnitReporter implements Reporter {
           file: null as any,
           annotations: [],
           artifacts: [],
+          benchmarks: [],
         } satisfies Task)
       }
 

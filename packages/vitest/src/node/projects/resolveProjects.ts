@@ -9,12 +9,12 @@ import type {
 } from '../types/config'
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import os from 'node:os'
-import { limitConcurrency } from '@vitest/runner/utils'
 import { deepClone } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { limitConcurrency } from '../../utils/limit-concurrency'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 
@@ -52,6 +52,7 @@ export async function resolveProjects(
     'expandSnapshotDiff',
     'disableConsoleIntercept',
     'retry',
+    'repeats',
     'testNamePattern',
     'passWithNoTests',
     'bail',
@@ -197,10 +198,80 @@ export async function resolveProjects(
     names.add(name)
   }
 
-  return resolveBrowserProjects(vitest, names, resolvedProjects)
+  return resolveDefaultProjects(vitest, names, resolvedProjects)
 }
 
-export async function resolveBrowserProjects(
+export async function resolveDefaultProjects(
+  vitest: Vitest,
+  names: Set<string>,
+  resolvedProjects: TestProject[],
+): Promise<TestProject[]> {
+  const newProjects = await resolveBrowserProjects(vitest, names, resolvedProjects)
+
+  let lastGroupOrder = Math.max(0, ...newProjects.map(p => p.config.sequence.groupOrder))
+
+  newProjects.forEach((project) => {
+    const benchmark = project.config.benchmark
+    if (!benchmark.enabled) {
+      return
+    }
+
+    if (vitest.isExcludedByProjectFilter(project.config.name)) {
+      benchmark.enabled = false
+      return
+    }
+
+    const name = project.config.name ? `${project.config.name} (bench)` : 'bench'
+    if (!vitest.matchesProjectFilter(name)) {
+      benchmark.enabled = false
+      return
+    }
+
+    if (names.has(name)) {
+      throw new Error(`Cannot create a benchmark project because the name "${name}" is already in use.`)
+    }
+    names.add(name)
+
+    const benchmarkProject = TestProject._cloneTestProject(project, {
+      ...project.config,
+      name,
+      include: benchmark.include,
+      exclude: benchmark.exclude,
+      includeSource: benchmark.includeSource,
+      coverage: {
+        ...project.config.coverage,
+        enabled: false,
+      },
+      maxWorkers: 1,
+      maxConcurrency: 1,
+      testTimeout: project.config.testTimeout < 60_000 ? 60_000 : project.config.testTimeout,
+      hookTimeout: project.config.hookTimeout < 120_000 ? 120_000 : project.config.hookTimeout,
+      // Spread because we disable it in the original project. `projectName`
+      // carries the parent's name so the runtime can substitute it into
+      // `${projectName}` placeholders inside `writeResult` / `bench.from()`
+      // paths — `project.config.name` already excludes the ` (bench)` suffix
+      // we add to the cloned project's own name above.
+      benchmark: { ...benchmark, projectName: project.config.name ?? '' },
+      sequence: {
+        ...project.config.sequence,
+        concurrent: false,
+        // benchmarks should always run in a separate isolated group
+        groupOrder: ++lastGroupOrder,
+      },
+      typecheck: {
+        ...project.config.typecheck,
+        enabled: false,
+      },
+      // TODO: mark if benchmark project?
+    })
+    // disable benchmark in the original project
+    benchmark.enabled = false
+    newProjects.push(benchmarkProject)
+  })
+  return newProjects
+}
+
+async function resolveBrowserProjects(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
@@ -260,7 +331,7 @@ export async function resolveBrowserProjects(
       names.add(name)
       const clonedConfig = cloneConfig(project, config)
       clonedConfig.name = name
-      const clone = TestProject._cloneBrowserProject(project, clonedConfig)
+      const clone = TestProject._cloneTestProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })
 
@@ -481,11 +552,15 @@ export function getDefaultTestProject(vitest: Vitest): TestProject | null {
 
 function getPotentialProjectNames(project: TestProject) {
   const names = [project.name]
+  // TODO: include benchmarks in browsers
   if (project.config.browser.instances) {
     names.push(...project.config.browser.instances.map(i => i.name!))
   }
   else if (project.config.browser.name) {
     names.push(project.config.browser.name)
+  }
+  if (project.config.benchmark.enabled) {
+    names.push(project.name ? `${project.name} (bench)` : 'bench')
   }
   return names
 }

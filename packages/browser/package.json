@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "5.0.0-beta.3",
+  "version": "5.0.0-beta.5",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -78,6 +78,7 @@
   "dependencies": {
     "@blazediff/core": "1.9.1",
     "@vitest/mocker": "workspace:*",
+    "@vitest/ui": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
     "pngjs": "^7.0.0",
@@ -91,7 +92,6 @@
     "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
-    "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.8.2",
