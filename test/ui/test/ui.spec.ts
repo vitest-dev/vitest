@@ -66,7 +66,17 @@ test.describe('ui', () => {
 
     const fsUrl = new URL(join('/@fs/', tokenPath), pageUrl)
     const res = await request.get(fsUrl.toString())
-    expect(res.status()).toBe(403)
+    if (process.platform === 'win32') {
+      // On Windows the token may live on a different drive than the project
+      // (e.g. LOCALAPPDATA on C: vs repo on D: in CI). Vite strips the drive
+      // letter from `/@fs/` paths and re-roots at the cwd drive, so the file is
+      // unreachable and Vite responds 404 instead of 403. Both mean it is not
+      // served. See https://github.com/vitejs/vite/issues/10802
+      expect([403, 404]).toContain(res.status())
+    }
+    else {
+      expect(res.status()).toBe(403)
+    }
   })
 
   test('allows direct ui access after opening authenticated url', async ({ page }) => {
