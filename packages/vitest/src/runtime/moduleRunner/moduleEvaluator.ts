@@ -330,6 +330,15 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     // this will always be 1 element because it's cached after load
     const importer = module.importers.values().next().value
+
+    // Initialize execution info in case worker exited before module evaluation finished
+    this.options.moduleExecutionInfo?.set(options.filename, {
+      duration: 0,
+      selfTime: 0,
+      startOffset: codeDefinition.length,
+      importer,
+    })
+
     const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, {
       startOffset: codeDefinition.length,
       importer,
