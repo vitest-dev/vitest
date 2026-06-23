@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { assert, expect, onTestFinished, test } from 'vitest'
 import { BaseCoverageProvider } from 'vitest/node'
 
@@ -59,7 +59,7 @@ test('clean() throws an actionable error when another live process holds the loc
   writeFileSync(lockFile, JSON.stringify({ pid: childPid, reportsDirectory }))
 
   await expect(provider.clean(true)).rejects.toThrow(
-    `The coverage report directory "${reportsDirectory}" is already in use by `
+    `The coverage report directory "${reportsDirectory.replaceAll(sep, '/')}" is already in use by `
     + `another Vitest process (pid ${childPid}). Running coverage for multiple `
     + `Vitest processes in the same directory at the same time is not supported, because they would `
     + `delete each other's reports.\nGive each run its own "coverage.reportsDirectory" `
