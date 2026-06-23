@@ -81,10 +81,7 @@ import Box from '../.vitepress/components/Box.vue'
 
 ## Istanbul Provider
 
-[Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
-This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
-
-In practice, instrumenting source files means adding additional Javascript in user's files:
+[Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested. This provider works on any JavaScript runtime as coverage tracking works by transforming your source code to add instrumentation logic. In practice, the code vitest will end up running looks something like this:
 
 ```js
 // Simplified example of branch and function coverage counters
@@ -116,9 +113,7 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 - ✅ Works on any Javascript runtime
 - ✅ Widely used and battle-tested for over 13 years.
 - ✅ In some cases faster than V8. Coverage instrumentation can be limited to specific files, as opposed to V8 where all modules are instrumented.
-- ❌ Requires pre-instrumentation step
 - ❌ Execution speed is slower than V8 due to instrumentation overhead
-- ❌ Instrumentation increases file sizes
 - ❌ Memory usage is higher than V8
 
 <div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
