@@ -11,7 +11,6 @@ import type {
   ResolvedConfig,
   ResolvedProjectEntry,
   TestProjectConfiguration,
-  TestProjectInlineConfiguration,
   UserConfig,
   UserWorkspaceConfig,
 } from '../types/config'
@@ -25,6 +24,7 @@ import { configFiles as defaultConfigFiles } from '../../constants'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
+import { CliOverride } from '../plugins/cliOverride'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
 
@@ -227,7 +227,6 @@ async function resolveDeclaredProjectEntries(
       ...options,
       root,
       configFile,
-      test: { ...options.test, ...cliOverrides },
     }, index, cliOverrides)))
   })
 
@@ -250,7 +249,7 @@ async function resolveDeclaredProjectEntries(
       harness,
       globalViteConfig,
       globalConfig,
-      { root: projectRoot, configFile, test: cliOverrides },
+      { root: projectRoot, configFile },
       path,
       cliOverrides,
     )))
@@ -288,18 +287,13 @@ async function resolveDeclaredProjectEntries(
   return entries
 }
 
-interface ProjectInlineOptions extends TestProjectInlineConfiguration {
-  root?: string
-  configFile: string | false
-}
-
 async function resolveSingleProjectEntry(
   harness: PluginHarness,
   globalViteConfig: ResolvedViteConfig,
   globalConfig: ResolvedConfig,
-  options: ProjectInlineOptions,
+  options: ViteInlineConfig,
   workspacePath: string | number,
-  _cliOverrides: UserConfig, // TODO: respect cliOverrides
+  cliOverrides: UserConfig,
 ): Promise<ResolvedProjectEntry> {
   const { configFile, ...restOptions } = options
 
@@ -309,9 +303,10 @@ async function resolveSingleProjectEntry(
     ...restOptions,
     configFile,
     configLoader: globalViteConfig.inlineConfig.configLoader,
-    // this will make "mode": "test" | "benchmark" inside defineConfig
+    // this will make "mode": "test" inside defineConfig
     mode: options.test?.mode || options.mode || globalConfig.mode,
     plugins: [
+      CliOverride(cliOverrides),
       ...(options.plugins || []),
       ...WorkspaceVitestPlugin(
         harness,
@@ -324,7 +319,7 @@ async function resolveSingleProjectEntry(
         name: 'vitest:tags',
         config(config) {
           // We need to keep the `tags` array untouched if `extends` is `true`,
-          // Otherwise it gets merged with the top level tags and we don't want that because tags could be overwritten
+          // Otherwise it gets merged with the top level tags and we don't want that because tags could be overridden
           // Setting it to `options.test?.tags` overrides the merged value
           if (options.test?.tags) {
             config.test ??= {}
@@ -349,8 +344,6 @@ async function resolveSingleProjectEntry(
     mergedOptions,
     projectViteConfig,
   )
-  projectConfig.api.token = globalConfig.api.token
-  projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel
 
   projectViteConfig.test = projectConfig
 

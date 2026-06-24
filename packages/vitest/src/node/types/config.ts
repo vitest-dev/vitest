@@ -686,6 +686,12 @@ export interface InlineConfig {
   sequence?: SequenceOptions
 
   /**
+   * Overrides Vite mode
+   * @default 'test'
+   */
+  mode?: string
+
+  /**
    * Specifies an `Object`, or an `Array` of `Object`,
    * which defines aliases used to replace values in `import` or `require` statements.
    * Will be merged with the default aliases inside `resolve.alias`.
@@ -1076,12 +1082,6 @@ export interface UserConfig extends InlineConfig {
    * Run tests that cover a list of source files
    */
   related?: string[] | string
-
-  /**
-   * Overrides Vite mode
-   * @default 'test'
-   */
-  mode?: string
 
   /**
    * Test suite shard to execute in a format of <index>/<count>.
