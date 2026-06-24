@@ -1,5 +1,4 @@
 import type {
-  FileSystemServeOptions,
   InlineConfig,
   ResolvedConfig as ResolvedViteConfig,
   UserConfig as ViteUserConfig,
@@ -14,7 +13,6 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import crypto from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
@@ -38,6 +36,7 @@ import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { API_TOKEN_FILE, resolveApiToken } from './apiToken'
 import { PluginHarness } from './pluginHarness'
 
 function resolvePath(path: string, root: string) {
@@ -73,7 +72,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
     return { port: inspect }
   }
 
-  if (inspect.match(/https?:\//)) {
+  if (/https?:\//.test(inspect)) {
     throw new Error(
       `Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`,
     )
@@ -250,13 +249,13 @@ export function resolveTestConfig(
     if (definedTags.has(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
     }
-    if (tag.name.match(/\s/)) {
+    if (/\s/.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
     }
-    if (tag.name.match(/([!()*|&])/)) {
+    if (/[!()*|&]/.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
     }
-    if (tag.name.match(/^\s*(and|or|not)\s*$/i)) {
+    if (/^\s*(?:and|or|not)\s*$/i.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
     }
     if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
@@ -611,9 +610,6 @@ export function resolveTestConfig(
     resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }
-
-  // the server has ben created, we don't need to override vite.server options
-  resolved.api.token = crypto.randomUUID()
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -1023,11 +1019,41 @@ export async function resolveConfig(
   )
   rootViteConfig.test = rootConfig
 
-  rootViteConfig.server.fs ??= {} as Required<FileSystemServeOptions>
-  rootViteConfig.server.fs.allow ??= []
   rootViteConfig.server.fs.allow.push(
     ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
   )
+  rootViteConfig.server.fs.deny.push(API_TOKEN_FILE)
+
+  // the server has been created, we don't need to override vite.server options
+  const { token, tokenCreated } = resolveApiToken(rootViteConfig.root)
+  rootConfig.api.token = token
+  rootConfig.api.tokenCreated = tokenCreated
+
+  if (rootConfig.ui && rootConfig.open) {
+    // Note: `tokenCreated` is only an approximation of "the browser is not
+    // authenticated yet". If the user clears cookies while the token file
+    // persists, the clean URL will block until they re-open the `?token=`
+    // URL printed in the terminal.
+    if (rootConfig.api.tokenCreated) {
+      // First run that generated the token: no browser holds the auth
+      // cookie yet, so open the authenticated URL to set it. A new tab
+      // here is fine since no clean-URL tab exists to reuse.
+      const url = new URL(rootConfig.uiBase, 'http://localhost')
+      url.searchParams.set('token', rootConfig.api.token)
+      rootViteConfig.server.open = `${url.pathname}${url.search}`
+    }
+    else {
+      // Subsequent runs: open the clean UI base URL (without `?token=`)
+      // rather than the authenticated URL printed by the logger. On macOS,
+      // `openBrowser` reuses an existing tab whose URL matches via substring
+      // and reloads it (Vite's `bin/openChrome.js`). Since the 302 redirect
+      // strips the token, an already-authenticated tab lives at the clean
+      // URL, so opening the clean URL matches and reloads it; opening the
+      // token URL would never match and would spawn a new tab on every
+      // restart.
+      rootViteConfig.server.open = rootConfig.uiBase
+    }
+  }
 
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy

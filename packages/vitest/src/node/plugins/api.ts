@@ -1,6 +1,6 @@
 import type { Plugin, ServerOptions } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
-import type { ResolvedConfig } from '../types/config'
+import type { ResolvedApiConfig, ResolvedConfig } from '../types/config'
 import { defaultBrowserPort, defaultPort } from '../../constants'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 
@@ -19,13 +19,18 @@ export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedC
           testConfig,
           isBrowserEnabled ? defaultBrowserPort : defaultPort,
           harness.logger,
-        )
+        ) as ResolvedApiConfig
         testConfig.api = api
+        if (globalConfig) {
+          api.token = globalConfig.api.token
+          api.tokenCreated = globalConfig.api.tokenCreated
+        }
 
         const server: ServerOptions = {
           ...api,
           preTransformRequests: false,
           hmr: false,
+          open: false,
         }
 
         const watch = globalConfig?.watch ?? testConfig.watch

@@ -268,7 +268,7 @@ export function parseStacktrace(
 
     const { line, column, source, name } = position
     let file = source || stack.file
-    if (file.match(/\/\w:\//)) {
+    if (/\/\w:\//.test(file)) {
       file = file.slice(1)
     }
 

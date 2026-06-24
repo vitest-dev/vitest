@@ -11,7 +11,6 @@ const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && 
 
 const skipCli = new Set([
   'mergeReports',
-  'changed',
   'shard',
 ])
 

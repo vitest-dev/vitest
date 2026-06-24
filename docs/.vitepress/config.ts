@@ -584,6 +584,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/disableconsoleintercept',
               },
               {
+                text: 'changed',
+                link: '/config/changed',
+              },
+              {
                 text: 'experimental',
                 link: '/config/experimental',
               },

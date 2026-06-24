@@ -104,7 +104,7 @@ function versionsToText(versions: string[]) {
     return versions[0]
   }
   return (
-    `${versions.slice(0, -1).join(', ')} and ${versions[versions.length - 1]}`
+    `${versions.slice(0, -1).join(', ')} and ${versions.at(-1)}`
   )
 }
 

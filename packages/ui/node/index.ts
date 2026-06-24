@@ -1,6 +1,7 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { Logger, ResolvedConfig, Vite } from 'vitest/node'
 import fs from 'node:fs'
+import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
@@ -9,6 +10,8 @@ import { version } from '../package.json'
 import { distClientRoot } from './paths'
 
 export { distClientRoot }
+
+const UI_TOKEN_COOKIE = 'vitest-ui-token'
 
 export default (logger: Logger, vitestVersion: string): Vite.Plugin => {
   if (vitestVersion !== version) {
@@ -105,11 +108,29 @@ export default (logger: Logger, vitestVersion: string): Vite.Plugin => {
           if (req.url) {
             const url = new URL(req.url, 'http://localhost')
             if (url.pathname === base) {
+              if (isValidApiRequest(globalConfig, req)) {
+                res.statusCode = 302
+                res.setHeader('Set-Cookie', serializeCookie(UI_TOKEN_COOKIE, globalConfig.api.token, {
+                  path: base,
+                  httpOnly: true,
+                  sameSite: 'strict',
+                }))
+                res.setHeader('Location', base)
+                res.end()
+                return
+              }
+              const cookieToken = parseCookie(req.headers.cookie ?? '')[UI_TOKEN_COOKIE]
+              if (cookieToken !== globalConfig.api.token) {
+                res.statusCode = 403
+                res.end('Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...')
+                return
+              }
               const html = clientIndexHtml.replace(
                 '<!-- !LOAD_METADATA! -->',
                 `<script>window.VITEST_API_TOKEN = ${JSON.stringify(globalConfig.api.token)}</script>`,
               )
               res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+              res.setHeader('Referrer-Policy', 'no-referrer')
               res.setHeader('Content-Type', 'text/html; charset=utf-8')
               res.write(html)
               res.end()

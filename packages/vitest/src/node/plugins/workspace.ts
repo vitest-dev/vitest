@@ -5,6 +5,7 @@ import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/co
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, resolve } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
+import { API_TOKEN_FILE } from '../config/apiToken'
 import { ServerModuleRunner } from '../environments/serverRunner'
 import { VitestConfigApi } from './api'
 import { VitestConfig } from './config'
@@ -97,6 +98,7 @@ export function WorkspaceVitestPlugin(
             open: false,
             fs: {
               allow: globalViteConfig.server.fs.allow,
+              deny: [API_TOKEN_FILE],
             },
           },
         }
