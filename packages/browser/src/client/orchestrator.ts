@@ -609,5 +609,5 @@ function debug(...args: unknown[]) {
 // not a timeout for the test work itself. Overridable via the `VITEST_BROWSER_IFRAME_TIMEOUT`
 // env in case a tester legitimately needs longer to boot or acknowledge.
 function getIframeTimeout(): number {
-  return Number(getConfig().env.VITEST_BROWSER_IFRAME_TIMEOUT) || 10_000
+  return Number(getConfig().env.VITEST_BROWSER_IFRAME_TIMEOUT) || 60_000
 }
