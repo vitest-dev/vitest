@@ -35,7 +35,7 @@ export interface BrowserTraceEntry {
   // resolved server-side from stack in __vitest_recordBrowserTrace command
   location?: { file: string; line: number; column: number }
   element?: SerializedLocator
-  snapshot: TraceSnapshot
+  snapshot?: TraceSnapshot
 }
 
 interface TraceSnapshot {
@@ -89,14 +89,18 @@ export async function recordBrowserTraceEntry(
 ): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
   const relativeStartTime = now() - attemptInfo.startTime
-  const snapshot = takeSnapshot(options.element)
+  const traceView = getBrowserState().config.browser.traceView
+  const shouldTakeSnapshot
+    = traceView.snapshot === 'always'
+      || (traceView.snapshot === 'on-failure' && options.status === 'fail')
+  const snapshot = shouldTakeSnapshot ? await takeSnapshot(options.element) : undefined
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
     snapshot,
   }
   const { retry, repeats } = attemptInfo
-  const { recordCanvas } = getBrowserState().config.browser.traceView
+  const { recordCanvas } = traceView
 
   // An async lane could defer artifact recording and flush it at test-attempt end,
   // but the synchronous snapshot work is already a comparable cost, and this path
@@ -123,8 +127,8 @@ export async function recordBrowserTraceEntry(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
-  const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
+async function takeSnapshot(serializedLocator?: SerializedLocator): Promise<TraceSnapshot> {
+  const { snapshot, createMirror } = await getBrowserState().browserTraceDomSnapshot!()
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()

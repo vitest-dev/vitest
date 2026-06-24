@@ -5,7 +5,7 @@ outline: deep
 
 # browser.traceView <Badge type="warning" text="Experimental" /> <Version>5.0.0</Version>
 
-- **Type:** `boolean | { enabled?: boolean; recordCanvas?: boolean; inlineImages?: boolean }`
+- **Type:** `boolean | { enabled?: boolean; snapshot?: 'always' | 'on-failure'; recordCanvas?: boolean; inlineImages?: boolean }`
 - **CLI:** `--browser.traceView`
 - **Default:** `false`
 
@@ -29,6 +29,7 @@ export default defineConfig({
     browser: {
       traceView: {
         enabled: true,
+        snapshot: 'always',
         inlineImages: true,
         recordCanvas: true,
       },
@@ -40,6 +41,7 @@ export default defineConfig({
 | Option | Default | Description |
 | --- | --- | --- |
 | `enabled` | `false` | Enables Vitest trace-view artifact collection. |
+| `snapshot` | `'always'` | Controls when DOM snapshots are captured for trace-view entries. |
 | `inlineImages` | `false` | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter. |
 | `recordCanvas` | `false` | Captures canvas pixels in snapshots. |
 
@@ -50,6 +52,14 @@ export default defineConfig({
 - **CLI:** `--browser.traceView.enabled`
 
 Enables Vitest trace-view artifact collection.
+
+## browser.traceView.snapshot {#traceview-snapshot}
+
+- **Type:** `'always' | 'on-failure'`
+- **Default:** `'always'`
+- **CLI:** `--browser.traceView.snapshot <policy>`
+
+Controls when DOM snapshots are captured for trace-view entries.
 
 ## browser.traceView.inlineImages {#traceview-inlineimages}
 
