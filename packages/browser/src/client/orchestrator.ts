@@ -486,6 +486,8 @@ export class IframeOrchestrator {
         events!.delete(event.event)
       }
 
+      // TODO: add timeout handshake here and in tester.ts
+
       this.eventTarget.addEventListener('iframeerror', onError)
       channel.addEventListener('message', onReceived)
     })
