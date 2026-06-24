@@ -53,7 +53,7 @@ catalog:
   '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
-  '@playwright/test': ^1.60.0
+  '@playwright/test': ^1.61.0
   '@rolldown/plugin-babel': ^0.2.1
   '@types/chai': ^5.2.2
   '@types/estree': ^1.0.8
@@ -84,7 +84,7 @@ catalog:
   msw: ^2.12.10
   obug: ^2.1.1
   pathe: ^2.0.3
-  playwright: ^1.60.0
+  playwright: ^1.61.0
   rollup: ^4.59.0
   semver: ^7.8.3
   sinon: ^21.0.3
