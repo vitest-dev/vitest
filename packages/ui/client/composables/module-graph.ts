@@ -34,7 +34,7 @@ function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
         fontSize: '0.875rem',
         text: id.includes('node_modules')
           ? (map.get(raw) ?? raw)
-          : splitsCopy[splitsCopy.length - 1],
+          : splitsCopy.at(-1),
       },
       isFocused: false,
       id,

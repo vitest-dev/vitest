@@ -63,7 +63,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
     return { port: inspect }
   }
 
-  if (inspect.match(/https?:\//)) {
+  if (/https?:\//.test(inspect)) {
     throw new Error(
       `Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`,
     )
@@ -231,13 +231,13 @@ export function resolveConfig(
     if (definedTags.has(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
     }
-    if (tag.name.match(/\s/)) {
+    if (/\s/.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
     }
-    if (tag.name.match(/([!()*|&])/)) {
+    if (/[!()*|&]/.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
     }
-    if (tag.name.match(/^\s*(and|or|not)\s*$/i)) {
+    if (/^\s*(?:and|or|not)\s*$/i.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
     }
     if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {

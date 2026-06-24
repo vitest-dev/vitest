@@ -34,8 +34,8 @@ To fix this, you'll need to make sure your code cleans the timeout properly:
 
 ```js
 useEffect(() => {
-  setTimeout(() => setWindowWidth(window.innerWidth), 150) // [!code --]
-  const timeout = setTimeout(() => setWindowWidth(window.innerWidth), 150) // [!code ++]
+  setTimeout(setWindowWidth, 150, window.innerWidth) // [!code --]
+  const timeout = setTimeout(setWindowWidth, 150, window.innerWidth) // [!code ++]
 
   return function cleanup() { // [!code ++]
     clearTimeout(timeout) // [!code ++]

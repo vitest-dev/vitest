@@ -516,7 +516,7 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }
 
     // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
+    pendingCall ??= setTimeout(call.bind(this), ms, ...args)
   } as any
 }
 
@@ -570,7 +570,7 @@ function passesRetryCondition(test: Test, errors: TestError[] | undefined): bool
     return true
   }
 
-  const error = errors[errors.length - 1]
+  const error = errors.at(-1)
 
   if (condition instanceof RegExp) {
     return condition.test(error.message || '')
@@ -1061,7 +1061,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
       await Promise.all(
-        [...TestFixtures.getWorkerContexts()].map(context => callFixtureCleanup(context)),
+        Array.from(TestFixtures.getWorkerContexts(), context => callFixtureCleanup(context)),
       ).finally(() => {
         TestFixtures.clearDefinitions()
       })

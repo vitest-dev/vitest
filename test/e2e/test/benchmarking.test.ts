@@ -706,7 +706,7 @@ test('`bench.from()` rows render rme and samples columns from the stored data', 
   const cells = storedRow.trim().replace(/\s+(?:fastest|slowest)\s*$/, '').split(/\s+/)
   // rme + samples must be real values, not the `-` placeholder
   expect(cells[cells.length - 2]).toBe('±1.23%')
-  expect(cells[cells.length - 1]).toBe('7')
+  expect(cells.at(-1)).toBe('7')
 })
 
 test('`benchmark.include` overrides the default `*.bench.ts` pattern', async () => {
