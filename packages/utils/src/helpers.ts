@@ -140,9 +140,7 @@ export function isBareImport(id: string): boolean {
 }
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  if (array === null || array === undefined) {
-    array = []
-  }
+  array ??= []
 
   if (Array.isArray(array)) {
     return array

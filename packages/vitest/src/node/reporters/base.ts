@@ -1080,7 +1080,7 @@ function deepEqual(a: any, b: any): boolean {
   }
 
   for (const key of keysA) {
-    if (!Object.prototype.hasOwnProperty.call(b, key) || !deepEqual(a[key], b[key])) {
+    if (!Object.hasOwn(b, key) || !deepEqual(a[key], b[key])) {
       return false
     }
   }

@@ -9,7 +9,7 @@
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "scripts": {
-    "ci": "ni && nr typecheck && nr lint && nr build && nr test:ci",
+    "ci": "pnpm typecheck && pnpm lint && pnpm build && pnpm test:ci",
     "ci:docs": "pnpm run build && pnpm run docs:build",
     "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
@@ -20,7 +20,7 @@
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
     "docs:contributors": "tsx scripts/update-contributors.ts",
     "lint": "eslint --cache .",
-    "lint:fix": "nr lint --fix",
+    "lint:fix": "pnpm run lint --fix",
     "publish-ci": "tsx scripts/publish-ci.ts",
     "release": "tsx scripts/release.ts",
     "test": "pnpm --filter test-unit test:threads",
@@ -40,7 +40,7 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^7.6.1",
+    "@antfu/eslint-config": "^7.7.3",
     "@antfu/ni": "^28.3.0",
     "@playwright/test": "catalog:",
     "@rollup/plugin-commonjs": "^29.0.2",
@@ -56,7 +56,7 @@
     "bumpp": "^10.4.1",
     "changelogithub": "^14.0.0",
     "esbuild": "^0.27.3",
-    "eslint": "^10.0.3",
+    "eslint": "^10.5.0",
     "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",

@@ -101,7 +101,7 @@ const depsExternal = [
 ]
 
 export function guessCJSversion(id: string): string | undefined {
-  if (id.match(ESM_EXT_RE)) {
+  if (ESM_EXT_RE.test(id)) {
     for (const i of [
       id.replace(ESM_EXT_RE, '.mjs'),
       id.replace(ESM_EXT_RE, '.umd.js'),
@@ -113,7 +113,7 @@ export function guessCJSversion(id: string): string | undefined {
       }
     }
   }
-  if (id.match(ESM_FOLDER_RE)) {
+  if (ESM_FOLDER_RE.test(id)) {
     for (const i of [
       id.replace(ESM_FOLDER_RE, '/umd/$1'),
       id.replace(ESM_FOLDER_RE, '/cjs/$1'),
