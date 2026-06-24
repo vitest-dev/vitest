@@ -93,6 +93,20 @@ export default defineConfig({
 })
 ```
 
+To print the report to the terminal instead of writing it to a file, set the `stdout` option on the `json` or `junit` reporter. This is ignored when `outputFile` is set:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [['json', { stdout: true }]],
+  },
+})
+```
+
+::: warning
+When `stdout` is enabled, the report can be interleaved with other output written directly to the terminal — for example `process.stdout.write` in a test file, or logs from the main process such as a global setup file — which can make the JSON or XML unparsable. Prefer the default file output when you need to consume the report programmatically.
+:::
+
 ## Combining Reporters
 
 You can use multiple reporters simultaneously to print your test results in different formats. For example:
@@ -332,7 +346,7 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option.
+Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
 ```bash [CLI]
@@ -436,7 +450,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
 ```bash [CLI]

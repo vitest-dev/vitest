@@ -51,6 +51,13 @@ export interface JUnitOptions {
   outputFile?: string
 
   /**
+   * Print the report to stdout instead of writing it to a file.
+   * Ignored when {@link outputFile} is set.
+   * @default false
+   */
+  stdout?: boolean
+
+  /**
    * Template for the `classname` attribute of `<testcase>`.
    *
    * Can be a template string or a function.
@@ -257,20 +264,25 @@ export class JUnitReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
       }
     }
-    else {
+    else if (!this.options.stdout) {
       const report = this.ctx.createReport('junit')
       this.reportFile = resolve(report.root, 'output.xml')
     }
 
-    const fileFd = await fs.open(this.reportFile, 'w+')
-    this.fileFd = fileFd
+    if (this.reportFile) {
+      const fileFd = await fs.open(this.reportFile, 'w+')
+      this.fileFd = fileFd
 
-    this.baseLog = async (text: string) => {
-      if (!this.fileFd) {
-        this.fileFd = await fs.open(this.reportFile!, 'w+')
+      this.baseLog = async (text: string) => {
+        if (!this.fileFd) {
+          this.fileFd = await fs.open(this.reportFile!, 'w+')
+        }
+
+        await fs.writeFile(this.fileFd, `${text}\n`)
       }
-
-      await fs.writeFile(this.fileFd, `${text}\n`)
+    }
+    else {
+      this.baseLog = async (text: string) => this.ctx.logger.log(text)
     }
 
     this._timeStart = new Date()

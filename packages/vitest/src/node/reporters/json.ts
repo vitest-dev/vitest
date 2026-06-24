@@ -75,6 +75,12 @@ export interface JsonTestResults {
 
 export interface JsonOptions {
   outputFile?: string
+  /**
+   * Print the report to stdout instead of writing it to a file.
+   * Ignored when {@link outputFile} is set.
+   * @default false
+   */
+  stdout?: boolean
   /** @experimental */
   filterMeta?: (key: string, value: unknown) => unknown
 }
@@ -234,6 +240,9 @@ export class JsonReporter implements Reporter {
 
       await fs.writeFile(reportFile, resultString, 'utf-8')
       this.ctx.logger.log(`JSON report written to ${reportFile}`)
+    }
+    else if (this.options.stdout) {
+      this.ctx.logger.log(resultString)
     }
     else {
       const report = this.ctx.createReport('json')
