@@ -562,15 +562,15 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
 function passesRetryCondition(test: Test, errors: TestError[] | undefined): boolean {
   const condition = getRetryCondition(test.retry)
 
-  if (!errors || errors.length === 0) {
+  const error = errors?.at(-1)
+
+  if (error == null) {
     return false
   }
 
   if (!condition) {
     return true
   }
-
-  const error = errors.at(-1)
 
   if (condition instanceof RegExp) {
     return condition.test(error.message || '')
