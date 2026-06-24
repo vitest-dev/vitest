@@ -58,3 +58,89 @@ test('prepare waits until the tester can receive browser channel events', { time
     }
   `)
 })
+
+test('fails instead of hanging when the tester never becomes ready', { timeout: 20000 }, async () => {
+  const { stderr } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': `
+        import { expect, test } from 'vitest'
+
+        test('never runs', () => {
+          expect(1).toBe(1)
+        })
+      `,
+      'silent-tester.html': `
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <script>
+              // simulate a tester that loads but never reports readiness
+              const postMessage = BroadcastChannel.prototype.postMessage
+              BroadcastChannel.prototype.postMessage = function (message) {
+                if (message && message.event === 'ready') {
+                  return
+                }
+                return postMessage.call(this, message)
+              }
+            </script>
+          </head>
+          <body></body>
+        </html>
+      `,
+    },
+    {
+      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '2000' },
+      browser: {
+        instances: [instances[0]],
+        testerHtmlPath: './silent-tester.html',
+      },
+    },
+  )
+
+  expect(stderr).toContain('did not become ready within 2000ms')
+})
+
+test('fails instead of hanging when the tester stops responding to messages', { timeout: 20000 }, async () => {
+  const { stderr } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': `
+        import { expect, test } from 'vitest'
+
+        test('never runs', () => {
+          expect(1).toBe(1)
+        })
+      `,
+      'unresponsive-tester.html': `
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <script>
+              // tester reports readiness but its acknowledgements and responses
+              // never reach the orchestrator (e.g. it crashed mid-run)
+              const postMessage = BroadcastChannel.prototype.postMessage
+              BroadcastChannel.prototype.postMessage = function (message) {
+                if (message && typeof message.event === 'string'
+                  && (message.event.startsWith('ack:') || message.event.startsWith('response:'))) {
+                  return
+                }
+                return postMessage.call(this, message)
+              }
+            </script>
+          </head>
+          <body></body>
+        </html>
+      `,
+    },
+    {
+      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '2000' },
+      browser: {
+        instances: [instances[0]],
+        testerHtmlPath: './unresponsive-tester.html',
+      },
+    },
+  )
+
+  expect(stderr).toContain('did not acknowledge the "prepare" message within 2000ms')
+})
