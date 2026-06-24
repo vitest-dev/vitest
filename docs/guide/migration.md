@@ -59,8 +59,7 @@ Vitest now mocks the [`Temporal`](https://developer.mozilla.org/en-US/docs/Web/J
 Previously `Temporal.Now` kept returning the real wall-clock time even when [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers) was active. Now it follows the mocked clock:
 
 ```ts
-vi.useFakeTimers()
-vi.setSystemTime(0)
+vi.useFakeTimers({ now: 0 })
 
 Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 ```

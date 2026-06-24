@@ -13,11 +13,9 @@ afterEach(() => {
 it('Temporal.Now follows fake timers', () => {
   const real = globalThis.Temporal
 
-  vi.useFakeTimers()
+  vi.useFakeTimers({ now: 0 })
   // fake-timers replaces the global `Temporal` with a clock-backed one
   expect(globalThis.Temporal).not.toBe(real)
-
-  vi.setSystemTime(0)
   expect(globalThis.Temporal.Now.instant().epochMilliseconds).toBe(0)
 
   vi.advanceTimersByTime(1234)
