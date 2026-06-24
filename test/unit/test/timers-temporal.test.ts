@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
 // use polyfill for node < 26
-if (!globalThis.Temporal) {
+if (typeof Temporal === 'undefined') {
   await import('temporal-polyfill/global')
 }
 
