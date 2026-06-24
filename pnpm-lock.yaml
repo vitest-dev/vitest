@@ -171,6 +171,9 @@ catalogs:
     ws:
       specifier: ^8.19.0
       version: 8.19.0
+    yauzl:
+      specifier: ^3.2.0
+      version: 3.2.1
 
 overrides:
   '@types/node': 24.12.0
@@ -186,7 +189,7 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@15.3.2': 5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0
+  '@sinonjs/fake-timers@15.4.0': 8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb
   acorn@8.11.3: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
   cac@6.7.14: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
   istanbul-lib-instrument: fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11
@@ -1102,8 +1105,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       '@sinonjs/fake-timers':
-        specifier: 15.3.2
-        version: 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
+        specifier: 15.4.0
+        version: 15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -5123,6 +5126,9 @@ packages:
 
   '@sinonjs/fake-timers@15.3.2':
     resolution: {integrity: sha512-mrn35Jl2pCpns+mE3HaZa1yPN5EYCRgiMI+135COjr2hr8Cls9DXqIZ57vZe2cz7y2XVSq92tcs6kGQcT1J8Rw==}
+
+  '@sinonjs/fake-timers@15.4.0':
+    resolution: {integrity: sha512-DsG+8/LscQIQg68J6Ef3dv10u6nVyetYn923s3/sus5eaGfTo1of5WMZSLf0UJc9KDuKPilPH0UDJCjvNbDNCA==}
 
   '@sinonjs/samsam@9.0.3':
     resolution: {integrity: sha512-ZgYY7Dc2RW+OUdnZ1DEHg00lhRt+9BjymPKHog4PRFzr1U3MbK57+djmscWyKxzO1qfunHqs4N45WWyKIFKpiQ==}
@@ -13972,7 +13978,11 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)':
+  '@sinonjs/fake-timers@15.3.2':
+    dependencies:
+      '@sinonjs/commons': 3.0.1
+
+  '@sinonjs/fake-timers@15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
@@ -19554,7 +19564,7 @@ snapshots:
   sinon@21.0.3:
     dependencies:
       '@sinonjs/commons': 3.0.1
-      '@sinonjs/fake-timers': 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
+      '@sinonjs/fake-timers': 15.3.2
       '@sinonjs/samsam': 9.0.3
       diff: 8.0.3
       supports-color: 7.2.0
