@@ -184,7 +184,7 @@ Vitest now uses a single `.vitest` directory at the project root as the shared a
 - **JSON reporter** ([`json`](/guide/reporters#json-reporter)): stdout → `.vitest/json/output.json`
 - **JUnit reporter** ([`junit`](/guide/reporters#junit-reporter)): stdout → `.vitest/junit/output.xml`
 
-The `json` and `junit` reporters now write to a file by default instead of printing to stdout. If you previously relied on the report being printed to stdout (for example `vitest --reporter=json > out.json` or `vitest --reporter=json | jq`), read the generated artifact file instead (for example `jq . .vitest/json/output.json`). An explicit `outputFile` is still respected and unchanged.
+The `json` and `junit` reporters now write to a file by default instead of printing to stdout. If you previously relied on the report being printed to stdout (for example `vitest --reporter=json > out.json` or `vitest --reporter=json | jq`), either read the generated artifact file instead (for example `jq . .vitest/json/output.json`), or opt back into stdout with the reporter's `stdout` option (`reporters: [['json', { stdout: true }]]`). An explicit `outputFile` is still respected and unchanged.
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 
