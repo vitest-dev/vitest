@@ -284,7 +284,7 @@ export function asyncTimeout(timeout: number): Promise<null> {
       resolve(null)
     }
     else {
-      setTimeout(() => resolve(null), timeout)
+      setTimeout(resolve, timeout, null)
     }
   })
 }

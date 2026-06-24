@@ -1196,7 +1196,7 @@ export class Vitest {
    */
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
-    this.cancelPromise = Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
+    this.cancelPromise = Promise.all(Array.from(this._onCancelListeners, listener => listener(reason)))
 
     await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise

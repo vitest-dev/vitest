@@ -499,8 +499,8 @@ export default class SnapshotState {
       // normalize EOL when snapshot contains CRLF but received is LF
       if (
         rawSnapshot.content
-        && rawSnapshot.content.match(/\r\n/)
-        && !receivedSerialized.match(/\r\n/)
+        && /\r\n/.test(rawSnapshot.content)
+        && !/\r\n/.test(receivedSerialized)
       ) {
         rawSnapshot.content = normalizeNewlines(rawSnapshot.content)
       }

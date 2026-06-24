@@ -462,7 +462,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public toTestSpecification(): TestSpecification {
     const isTypecheck = this.task.meta.typecheck === true
-    const testIds = [...this.children.allTests()].map(test => test.id)
+    const testIds = Array.from(this.children.allTests(), test => test.id)
     return this.project.createSpecification(
       this.module.moduleId,
       { testIds },
