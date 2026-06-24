@@ -975,7 +975,7 @@ export async function resolveConfig(
         CliOverride(cliOptionsCopy),
         VitestConfigPlugin(pluginsHarness, restOptions),
         ...VitestCorePlugin(pluginsHarness),
-        BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
+        ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
       ],
     } satisfies InlineConfig,
     mergeConfig(viteOverrides, { root }),

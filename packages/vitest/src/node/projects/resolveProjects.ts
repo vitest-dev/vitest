@@ -314,7 +314,7 @@ async function resolveSingleProjectEntry(
         globalConfig,
         { ...options, workspacePath },
       ),
-      BrowserLoaderPlugin(browserHolder, harness),
+      ...BrowserLoaderPlugin(browserHolder, harness),
       {
         name: 'vitest:tags',
         config(config) {

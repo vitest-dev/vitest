@@ -38,47 +38,72 @@ function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
 export function BrowserLoaderPlugin(
   holder: BrowserContributionHolder,
   harness: PluginHarness,
-): VitePlugin {
-  return {
-    name: 'vitest:browser:loader',
-    // `pre` so the browser plugins injected via `applyToEnvironment` land before
-    // Vite's internal resolver in the `client` environment (so e.g. the
-    // `vitest/browser` virtual module wins over the node stub resolution).
-    enforce: 'pre',
-    async config(viteConfig) {
-      const browser = viteConfig.test?.browser
-      if (!browser?.enabled) {
-        return
-      }
-      const provider = browser.provider
-      if (!provider || typeof provider.serverFactory !== 'function') {
-        return
-      }
-      const contribution = await provider.serverFactory()
-      holder.contribution = contribution
-      const browserConfig = await contribution.config(viteConfig, harness)
-      return browserConfig
-    },
-    applyToEnvironment(environment) {
-      const contribution = holder.contribution
-      if (contribution && environment.name === 'client') {
-        return sortPluginsByEnforce(contribution.plugins)
-      }
-      return false
-    },
-    configureServer: {
-      order: 'pre',
-      async handler(server) {
-        await holder.contribution?.configureServer(server)
+): VitePlugin[] {
+  return [
+    {
+      name: 'vitest:browser:loader',
+      // `pre` so the browser plugins injected via `applyToEnvironment` land before
+      // Vite's internal resolver in the `client` environment (so e.g. the
+      // `vitest/browser` virtual module wins over the node stub resolution).
+      enforce: 'pre',
+      async config(viteConfig) {
+        const browser = viteConfig.test?.browser
+        if (!browser?.enabled) {
+          return
+        }
+        const provider = browser.provider
+        if (!provider || typeof provider.serverFactory !== 'function') {
+          return
+        }
+        const contribution = await provider.serverFactory()
+        holder.contribution = contribution
+        const browserConfig = await contribution.config(viteConfig, harness)
+        return browserConfig
+      },
+      applyToEnvironment(environment) {
+        const contribution = holder.contribution
+        if (contribution && environment.name === 'client') {
+          // `post` browser plugins are injected by `vitest:browser:loader:post`
+          // instead, so they run after the `post` plugins of the main pipeline
+          // (e.g. `vitest:mocks` hoisting) rather than at this `pre` position.
+          return sortPluginsByEnforce(
+            contribution.plugins.filter(plugin => plugin.enforce !== 'post'),
+          )
+        }
+        return false
+      },
+      configureServer: {
+        order: 'pre',
+        async handler(server) {
+          await holder.contribution?.configureServer(server)
+        },
+      },
+      transformIndexHtml: {
+        order: 'pre',
+        async handler(html, ctx) {
+          return holder.contribution?.transformIndexHtml(ctx)
+        },
       },
     },
-    transformIndexHtml: {
-      order: 'pre',
-      async handler(html, ctx) {
-        return holder.contribution?.transformIndexHtml(ctx)
+    {
+      name: 'vitest:browser:loader:post',
+      // `post` so the browser's `post` plugins (e.g. the esm injector that wraps
+      // the dynamic imports produced by `vitest:mocks` hoisting) run after the
+      // main pipeline's `post` plugins. Vite expands `applyToEnvironment` in place
+      // without re-sorting, so a `post` plugin nested under the `pre` host above
+      // would otherwise run before hoisting and miss the imports it must wrap.
+      enforce: 'post',
+      applyToEnvironment(environment) {
+        const contribution = holder.contribution
+        if (contribution && environment.name === 'client') {
+          return sortPluginsByEnforce(
+            contribution.plugins.filter(plugin => plugin.enforce === 'post'),
+          )
+        }
+        return false
       },
     },
-  }
+  ]
 }
 
 export async function createClusterServer(
