@@ -174,4 +174,18 @@ describe('json reporter', async () => {
       expect(result.meta).toEqual({})
     }
   })
+
+  it('prints report to stdout when stdout option is set', async () => {
+    const { stdout } = await runVitest({
+      reporters: [['json', { stdout: true }]],
+      root,
+      include: ['**/ok.test.ts'],
+    })
+    const data = JSON.parse(stdout)
+    expect(data).toMatchObject({
+      numTotalTests: 1,
+      numPassedTests: 1,
+      success: true,
+    })
+  })
 })

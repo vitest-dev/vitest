@@ -126,6 +126,25 @@ test('options.suiteName changes name property', async () => {
   expect(xml).toContain('<testsuites name="some-custom-suiteName"')
 })
 
+test('prints report to stdout when stdout option is set', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { stdout: true }]],
+    root,
+    include: ['ok.test.ts'],
+  })
+  const xml = stabilizeReport(stdout)
+  expect(xml).toMatchInlineSnapshot(`
+    "<?xml version="1.0" encoding="UTF-8" ?>
+    <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+        <testsuite name="ok.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+            <testcase classname="ok.test.ts" name="ok" time="...">
+            </testcase>
+        </testsuite>
+    </testsuites>
+    "
+  `)
+})
+
 function stabilizeReport(report: string) {
   let normalized = report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
   // rolldown's source map for the inline async IIFE on error.test.ts:16 anchors
