@@ -6,7 +6,6 @@ test('rollup error node', async () => {
   const { stderr } = await runVitest({
     root: './fixtures/rollup-error',
     environment: 'node',
-    reporters: ['default'],
   })
   if (rolldownVersion) {
     expect(stderr).toContain('"./no-such-export" is not exported')
@@ -23,7 +22,6 @@ test('rollup error web', async () => {
   const { stderr } = await runVitest({
     root: './fixtures/rollup-error',
     environment: 'jsdom',
-    reporters: ['default'],
   })
   if (rolldownVersion) {
     expect(stderr).toContain('"./no-such-export" is not exported')

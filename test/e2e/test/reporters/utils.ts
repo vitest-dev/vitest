@@ -5,9 +5,6 @@ import type { Logger } from 'vitest/src/node/logger.js'
 import type { StateManager } from 'vitest/src/node/state.js'
 import type { ResolvedConfig } from 'vitest/src/node/types/config.js'
 import type { RunnerTestFile } from 'vitest/src/public/index.js'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'pathe'
 import { TestRunner } from 'vitest'
 
 export function trimReporterOutput(report: string) {
@@ -23,7 +20,6 @@ export function trimReporterOutput(report: string) {
 interface Context {
   vitest: Vitest
   output: string
-  reportRoot: string
 }
 
 export function getContext(): Context {
@@ -32,8 +28,6 @@ export function getContext(): Context {
   const config: Partial<ResolvedConfig> = {
     root: '/vitest',
   }
-
-  const reportRoot = mkdtempSync(join(tmpdir(), 'vitest-report-'))
 
   const moduleGraph: Partial<ModuleGraph> = {
     getModuleById: () => undefined,
@@ -55,16 +49,6 @@ export function getContext(): Context {
     snapshot: {
       summary: { added: 100, _test: true },
     } as any,
-    createReport: (scope: string) => {
-      const dir = resolve(reportRoot, scope)
-      mkdirSync(dir, { recursive: true })
-      return {
-        root: dir,
-        async writeFile(filename, content, encoding = 'utf8') {
-          writeFileSync(resolve(dir, filename), content, encoding)
-        },
-      } as any
-    },
   }
 
   // @ts-expect-error logger is readonly
@@ -79,7 +63,6 @@ export function getContext(): Context {
     get output() {
       return output
     },
-    reportRoot,
   }
 }
 
