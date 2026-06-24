@@ -90,7 +90,7 @@ test.each([
 ])('return a promise like result %#', async (a, b, expected) => {
   const promiseResolver = (first: number, second: number) => {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(first + second), 1)
+      setTimeout(resolve, 1, first + second)
     })
   }
 
@@ -112,7 +112,7 @@ test.each([
 ])('return a promise like result %$', async (a, b, expected) => {
   const promiseResolver = (first: number, second: number) => {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(first + second), 1)
+      setTimeout(resolve, 1, first + second)
     })
   }
 

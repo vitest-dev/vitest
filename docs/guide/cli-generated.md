@@ -197,10 +197,10 @@ Shortcut to set all coverage thresholds to 100 (default: `false`)
 
 ### coverage.thresholds.perFile
 
-- **CLI:** `--coverage.thresholds.perFile`
+- **CLI:** `--coverage.thresholds.perFile <boolean>`
 - **Config:** [coverage.thresholds.perFile](/config/coverage#coverage-thresholds-perfile)
 
-Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)
+Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.
 
 ### coverage.thresholds.autoUpdate
 
@@ -540,6 +540,13 @@ Allow tests and suites that are marked as only (default: `!process.env.CI`)
 - **Config:** [dangerouslyIgnoreUnhandledErrors](/config/dangerouslyignoreunhandlederrors)
 
 Ignore any unhandled errors that occur
+
+### changed
+
+- **CLI:** `--changed [since]`
+- **Config:** [changed](/config/changed)
+
+Run tests that are affected by the changed files (default: `false`)
 
 ### sequence.shuffle.files
 

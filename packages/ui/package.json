@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "5.0.0-beta.4",
+  "version": "5.0.0-beta.5",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -79,6 +79,7 @@
     "birpc": "catalog:",
     "codemirror": "^5.65.18",
     "codemirror-theme-vars": "^0.1.2",
+    "cookie": "^1.0.2",
     "d3-graph-controller": "^3.1.8",
     "floating-vue": "^5.2.2",
     "mime": "^4.1.0",

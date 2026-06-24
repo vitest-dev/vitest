@@ -243,9 +243,10 @@ export class Logger {
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.vite.config.server.port
-      const base = this.ctx.config.uiBase
+      const url = new URL(this.ctx.config.uiBase, `http://${host}:${port}`)
+      url.searchParams.set('token', this.ctx.config.api.token)
 
-      this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
+      this.log(PAD + c.dim(c.green(`UI started at ${url}`)))
     }
     else if (this.ctx.config.api?.port) {
       const resolvedUrls = this.ctx.vite.resolvedUrls

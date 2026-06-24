@@ -642,8 +642,9 @@ export class Vitest {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
 
-      const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
-      this.state.blobs = { files, errors, coverages, executionTimes }
+      const { files, errors, coverages, executionTimes, transformTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+      this.state.blobs = { files, errors, coverages, executionTimes, transformTimes }
+      this.state.transformTime = transformTimes.reduce((a, b) => a + b, 0)
 
       await this.report('onInit', this)
 
@@ -1195,7 +1196,7 @@ export class Vitest {
    */
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
-    this.cancelPromise = Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
+    this.cancelPromise = Promise.all(Array.from(this._onCancelListeners, listener => listener(reason)))
 
     await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise

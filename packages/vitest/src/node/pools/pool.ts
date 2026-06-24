@@ -101,19 +101,21 @@ export class Pool {
           }
 
           runner.off('message', onFinished)
+          runner.off('error', onTaskError)
           resolver.resolve()
         }
       }
 
+      function onTaskError(error: unknown) {
+        runner.off('message', onFinished)
+        runner.off('error', onTaskError)
+        resolver.reject(new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }))
+      }
+
       runner.on('message', onFinished)
+      runner.on('error', onTaskError)
 
       if (!runner.isStarted) {
-        runner.on('error', (error) => {
-          resolver.reject(
-            new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
-          )
-        })
-
         const id = setTimeout(
           () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,
@@ -148,6 +150,7 @@ export class Pool {
 
       if (
         !task.isolate
+        && !runner.isTerminated
         && !isMemoryLimitReached
         && this.queue[0]?.task.isolate === false
         && isEqualRunner(runner, this.queue[0].task)
@@ -350,7 +353,7 @@ function deepEqual(obj1: any, obj2: any): boolean {
   }
 
   for (const key of keys1) {
-    if (!Object.prototype.hasOwnProperty.call(obj2, key) || !deepEqual(obj1[key], obj2[key])) {
+    if (!Object.hasOwn(obj2, key) || !deepEqual(obj1[key], obj2[key])) {
       return false
     }
   }

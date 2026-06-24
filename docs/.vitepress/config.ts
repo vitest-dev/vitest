@@ -584,6 +584,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/disableconsoleintercept',
               },
               {
+                text: 'changed',
+                link: '/config/changed',
+              },
+              {
                 text: 'experimental',
                 link: '/config/experimental',
               },
@@ -1046,6 +1050,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Auto-Cleanup with `using`',
                 link: '/guide/recipes/explicit-resources',
+              },
+              {
+                text: 'Conditional Mocking with `vi.when`',
+                link: '/guide/recipes/conditional-mocking',
               },
               {
                 text: 'Per-File Isolation Settings',

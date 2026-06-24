@@ -9,6 +9,6 @@ export function removeCleanupListener(listener: () => unknown): void {
 }
 
 export async function cleanup(): Promise<void> {
-  const promises = [...listeners].map(l => l())
+  const promises = Array.from(listeners, l => l())
   await Promise.all(promises)
 }

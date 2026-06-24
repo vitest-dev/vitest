@@ -364,7 +364,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     map?: Vite.Rollup.SourceMap
   }> {
     // TODO: need to standardize file urls before this call somehow, this is messy
-    const filepath = url.match(/^file:\/\/\/\w:\//)
+    const filepath = /^file:\/\/\/\w:\//.test(url)
       ? url.slice(8)
       : removeStartsWith(url, FILE_PROTOCOL)
     // TODO: do we still need to "catch" here? why would it fail?
