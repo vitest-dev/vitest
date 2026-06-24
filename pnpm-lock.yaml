@@ -169,7 +169,7 @@ catalogs:
       specifier: ^3.5.29
       version: 3.5.29
     ws:
-      specifier: ^8.19.0
+      specifier: ^8.20.1
       version: 8.21.0
     yauzl:
       specifier: ^3.2.0
