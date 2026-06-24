@@ -47,6 +47,9 @@ export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedC
         if (!isBrowserEnabled && api.middlewareMode) {
           server.ws = false
         }
+        else if (viteConfig.server && 'ws' in viteConfig.server) {
+          viteConfig.server.ws = undefined
+        }
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (

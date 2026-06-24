@@ -1,4 +1,5 @@
 import type { MockerRegistry } from '@vitest/mocker'
+import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
@@ -26,7 +27,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
   const wss = new WebSocketServer({ noServer: true })
 
-  vite.httpServer?.on('upgrade', (request, socket: Duplex, head: Buffer) => {
+  vite.httpServer?.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     if (!request.url) {
       return
     }

@@ -180,9 +180,6 @@ export async function runVitest(
     }, {
       ...viteConfig,
       server: {
-        // we never need a websocket connection for the root config because it doesn't connect to the browser
-        // browser mode uses a separate config that doesn't inherit CLI overrides
-        ws: false,
         watch: {
           // During tests we edit the files too fast and sometimes chokidar
           // misses change events, so enforce polling for consistency
@@ -483,6 +480,11 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
       fs.rmSync(root, { recursive: true, force: true })
     }
   })
+  task?.context.signal.addEventListener('abort', () => {
+    if (process.env.VITEST_FS_CLEANUP !== 'false') {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
   return {
     root,
     readFile: (file: string): string => {
@@ -538,7 +540,7 @@ export async function runInlineTests(
   task?: TestContext['task'],
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  const fs = useFS(root, structure, undefined, task)
+  const fs = useFS(root, structure, undefined, task ?? TestRunner.getCurrentTest())
   const vitest = await runVitest({
     root,
     ...config,
