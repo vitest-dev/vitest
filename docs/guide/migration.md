@@ -182,6 +182,32 @@ Vitest now uses a single `.vitest` directory at the project root as the shared a
 - **Blob reporter** and `--merge-reports`: `.vitest-reports/blob-*.json` → `.vitest/blob/blob-*.json`
 - **HTML reporter** ([`html`](/guide/reporters#html-reporter)): `html/index.html` → `.vitest/index.html`, and its option changed from `outputFile` (a file) to `outputDir` (a directory)
 
+### `toMatchScreenshot` Now Uses a Dedicated Screenshot Directory Config
+
+Previously, reference screenshots for `toMatchScreenshot` did not correctly respect `browser.screenshotDirectory`. As a result, screenshots were saved in an unintended location when a custom directory was configured.
+
+This has now been fixed by introducing a dedicated option: `browser.expect.toMatchScreenshot.screenshotDirectory`. Its default value is `__screenshots__`.
+
+- If you did not set `browser.screenshotDirectory`, no changes are required.
+- If you did set `browser.screenshotDirectory`, you must now explicitly configure the new option:
+
+    ```ts [vitest.config.ts]
+    export default defineConfig({
+      test: {
+        browser: {
+          screenshotDirectory: 'my-screenshots',
+          expect: { // [!code ++]
+            toMatchScreenshot: { // [!code ++]
+              screenshotDirectory: 'my-screenshots', // [!code ++]
+            }, // [!code ++]
+          }, // [!code ++]
+        },
+      },
+    })
+    ```
+
+    Then either move existing reference screenshots to the new location or regenerate them.
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
