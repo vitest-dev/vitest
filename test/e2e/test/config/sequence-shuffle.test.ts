@@ -148,6 +148,23 @@ test('should log seed when shuffle is true', async () => {
   expect(stdout).toContain('Running tests with seed "67890"')
 })
 
+test('should log seed when a project shuffles tests', async () => {
+  const { stdout } = await runInlineTests({
+    'a.test.js': /* js */ `
+      import { test } from 'vitest'
+      test('example', () => {})
+    `,
+  }, {
+    // the root config does not shuffle; only the project does
+    sequence: { seed: 54321 },
+    projects: [
+      { test: { name: 'shuffled', include: ['a.test.js'], sequence: { shuffle: { tests: true } } } },
+    ],
+  })
+
+  expect(stdout).toContain('Running tests with seed "54321"')
+})
+
 test('should not log seed when shuffle is disabled', async () => {
   const { stdout } = await runInlineTests({
     'basic.test.js': /* js */ `
