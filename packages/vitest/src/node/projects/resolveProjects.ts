@@ -268,16 +268,6 @@ export async function resolveDefaultProjects(
     benchmark.enabled = false
     newProjects.push(benchmarkProject)
   })
-
-  // Tests can be shuffled per project (`sequence.shuffle`), but `sequence.seed`
-  // is resolved from the root config and shared across all projects. Make sure
-  // a seed exists when any project shuffles, so per-project shuffling stays
-  // reproducible even if the root config itself doesn't shuffle.
-  const rootSeed = vitest.config.sequence.seed as number | undefined
-  if (rootSeed == null && newProjects.some(p => p.config.sequence.shuffle)) {
-    vitest.config.sequence.seed = Date.now()
-  }
-
   return newProjects
 }
 

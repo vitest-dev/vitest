@@ -677,10 +677,10 @@ export class Vitest {
   }
 
   /**
-   * Returns the seed, if tests are running in a random order.
+   * Returns the seed used to randomize test order (`sequence.seed`).
    */
-  public getSeed(): number | null {
-    return this.config.sequence.seed ?? null
+  public getSeed(): number {
+    return this.config.sequence.seed
   }
 
   /** @internal */
