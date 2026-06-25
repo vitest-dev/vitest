@@ -3,25 +3,22 @@ import { expect, test } from 'vitest'
 
 test('per-project sequence options: override, inheritance, and shared seed', async () => {
   const { ctx, stderr } = await runInlineTests({
-    'vitest.config.ts': /* ts */ `
-      import { defineConfig } from 'vitest/config'
-      export default defineConfig({
-        test: {
-          sequence: { concurrent: false, hooks: 'list', setupFiles: 'list', seed: 123 },
-          projects: [
-            {
-              test: {
-                name: 'custom',
-                include: ['a.test.ts'],
-                sequence: { concurrent: true, hooks: 'stack', setupFiles: 'parallel', shuffle: { tests: true } },
-              },
+    'vitest.config.ts': {
+      test: {
+        sequence: { concurrent: false, hooks: 'list', setupFiles: 'list', seed: 123 },
+        projects: [
+          {
+            test: {
+              name: 'custom',
+              include: ['a.test.ts'],
+              sequence: { concurrent: true, hooks: 'stack', setupFiles: 'parallel', shuffle: { tests: true } },
             },
-            { test: { name: 'no-extends', include: ['a.test.ts'] } },
-            { extends: true, test: { name: 'with-extends', include: ['a.test.ts'] } },
-          ],
-        },
-      })
-    `,
+          },
+          { test: { name: 'no-extends', include: ['a.test.ts'] } },
+          { extends: true, test: { name: 'with-extends', include: ['a.test.ts'] } },
+        ],
+      },
+    },
     'a.test.ts': /* ts */ `
       import { test } from 'vitest'
       test('example', () => {})
