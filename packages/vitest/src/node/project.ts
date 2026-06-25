@@ -13,7 +13,7 @@ import type {
   SerializedConfig,
 } from './types/config'
 import crypto from 'node:crypto'
-import { promises as fs, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
@@ -28,7 +28,7 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { getFilePoolName } from './pool'
-import { globProjectFiles } from './projects/globProjectFiles'
+import { globProjectFiles, globProjectTestFiles } from './projects/globProjectFiles'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './test-specification'
 
@@ -328,25 +328,7 @@ export class TestProject {
       return this.testFilesList
     }
 
-    const testFiles = await this.globFiles(include, exclude, cwd)
-
-    if (includeSource?.length) {
-      const files = await this.globFiles(includeSource, exclude, cwd)
-
-      await Promise.all(
-        files.map(async (file) => {
-          try {
-            const code = await fs.readFile(file, 'utf-8')
-            if (this.isInSourceTestCode(code)) {
-              testFiles.push(file)
-            }
-          }
-          catch {
-            return null
-          }
-        }),
-      )
-    }
+    const testFiles = await globProjectTestFiles(include, exclude, includeSource, cwd)
 
     this.testFilesList = testFiles
 

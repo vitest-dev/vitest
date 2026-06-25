@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { slash } from '@vitest/utils/helpers'
 import { glob } from 'tinyglobby'
@@ -20,4 +21,42 @@ export async function globProjectFiles(
     expandDirectories: false,
   })
   return files.map(file => slash(path.resolve(cwd, file)))
+}
+
+function isInSourceTestCode(code: string): boolean {
+  return code.includes('import.meta.vitest')
+}
+
+/**
+ * Glob a project's test files, including in-source test files from
+ * `includeSource` that actually contain `import.meta.vitest`. Typecheck test
+ * files are not included.
+ */
+export async function globProjectTestFiles(
+  include: string[],
+  exclude: string[],
+  includeSource: string[] | undefined,
+  cwd: string,
+): Promise<string[]> {
+  const testFiles = await globProjectFiles(include, exclude, cwd)
+
+  if (includeSource?.length) {
+    const files = await globProjectFiles(includeSource, exclude, cwd)
+
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          const code = await readFile(file, 'utf-8')
+          if (isInSourceTestCode(code)) {
+            testFiles.push(file)
+          }
+        }
+        catch {
+          return null
+        }
+      }),
+    )
+  }
+
+  return testFiles
 }

@@ -28,7 +28,7 @@ import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoad
 import { CliOverride } from '../plugins/cliOverride'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
-import { globProjectFiles } from './globProjectFiles'
+import { globProjectTestFiles } from './globProjectFiles'
 
 // vitest.config.*
 // vite.config.*
@@ -211,15 +211,28 @@ async function applyBrowserOptimizeDeps(
     group.push(projectConfig)
   }
 
+  // Most projects in a group share identical glob inputs (the `dir`/`root` is
+  // always the same and cannot be overridden by an instance option), so cache
+  // the result per unique input set to avoid re-globbing the same files.
+  const fileListCache = new Map<string, Promise<string[]>>()
+  const globTestFiles = (config: ResolvedConfig) => {
+    const cwd = config.dir || config.root
+    const key = JSON.stringify([config.include, config.exclude, config.includeSource, cwd])
+    let fileList = fileListCache.get(key)
+    if (!fileList) {
+      fileList = globProjectTestFiles(config.include, config.exclude, config.includeSource, cwd)
+      fileListCache.set(key, fileList)
+    }
+    return fileList
+  }
+
   await Promise.all(
     Array.from(groups, async ([viteConfig, projectConfigs]) => {
       const contribution = projectConfigs.find(config => config._browserContribution)?._browserContribution
       if (!contribution) {
         return
       }
-      const fileLists = await Promise.all(
-        projectConfigs.map(config => globProjectFiles(config.include, config.exclude, config.dir || config.root)),
-      )
+      const fileLists = await Promise.all(projectConfigs.map(globTestFiles))
       const testFiles = [...new Set(fileLists.flat())]
       const optimizeDeps = await contribution.resolveOptimizeDeps(projectConfigs, testFiles, harness)
       mergeBrowserOptimizeDeps(viteConfig, optimizeDeps)
