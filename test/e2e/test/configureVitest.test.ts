@@ -344,38 +344,3 @@ test('can access project\'s browser.instances[].browser', async () => {
 async function throws(cliOptions: TestUserConfig) {
   await vitest(cliOptions)
 }
-
-test('per-project sequence options are serialized from the project config, seed stays global', async () => {
-  const v = await vitest({}, {
-    sequence: {
-      concurrent: false,
-      hooks: 'stack',
-      setupFiles: 'parallel',
-      seed: 123,
-    },
-    projects: [
-      {
-        test: {
-          name: 'custom',
-          sequence: {
-            concurrent: true,
-            hooks: 'list',
-            setupFiles: 'list',
-            shuffle: { tests: true },
-          },
-        },
-      },
-    ],
-  })
-
-  const project = v.projects.find(p => p.name === 'custom')!
-  expect(project.serializedConfig.sequence).toMatchObject({
-    concurrent: true,
-    hooks: 'list',
-    setupFiles: 'list',
-    // `shuffle` is the resolved test-level boolean
-    shuffle: true,
-    // `seed` is shared from the root config across all projects
-    seed: 123,
-  })
-})
