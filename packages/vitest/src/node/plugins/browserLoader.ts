@@ -51,9 +51,14 @@ export function BrowserLoaderPlugin(
         if (!browser?.enabled) {
           return
         }
+        // The provider can be configured at the project level or per instance
+        // (e.g. connect mode). All instances in a project share one provider
+        // (validated in `resolveTestConfig`), so any instance's server factory
+        // builds the shared server.
         const provider = browser.provider
+          ?? browser.instances?.find(instance => instance.provider)?.provider
         if (!provider || typeof provider.serverFactory !== 'function') {
-          return
+          throw new Error(`Browser Mode was enabled, but provider was not specified anywhere. See https://vitest.dev/guide/browser/#configuration`)
         }
         const contribution = await provider.serverFactory()
         holder.contribution = contribution

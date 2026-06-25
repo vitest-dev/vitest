@@ -373,6 +373,31 @@ export function resolveTestConfig(
       browser.instances = []
     }
 
+    // The whole project shares a single browser Vite server, so every instance
+    // must use the same provider. Validate that here and hoist the provider to
+    // the project level so the cluster resolves one even when it is only set per
+    // instance (e.g. connect mode). Because the provider is uniform, any
+    // instance's server factory represents the whole project.
+    const providerNames = new Set<string>()
+    // It's possible to provide the same name and sneak in a different factory
+    const providerFactories = new Set()
+    if (browser.provider?.name) {
+      providerNames.add(browser.provider.name)
+      providerFactories.add(browser.provider.serverFactory)
+    }
+    for (const instance of browser.instances) {
+      if (instance.provider?.name) {
+        providerNames.add(instance.provider.name)
+        providerFactories.add(instance.provider.serverFactory)
+      }
+    }
+    if (providerNames.size > 1 || providerFactories.size > 1) {
+      throw new Error(
+        `All browser instances within a project must use the same provider, but found: ${[...providerNames].join(', ')}. `
+        + `Use a single provider for the project, or move the instances into separate projects.`,
+      )
+    }
+
     // use `chromium` by default when the preview provider is specified
     // for a smoother experience. if chromium is not available, it will
     // open the default browser anyway
