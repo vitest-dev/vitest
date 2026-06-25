@@ -66,7 +66,7 @@ By default, Vitest's reporters print their output to the terminal. The `json`, `
 - `junit` writes `.vitest/junit/output.xml`
 - `html` writes `.vitest/index.html`
 
-The `json` and `junit` locations can be overridden with the `outputFile` [configuration option](/config/outputfile) in your Vite configuration file or via CLI. The `html` reporter uses its [`outputDir`](#html-reporter) option instead.
+The `json` and `junit` locations can be overridden with the `outputFile` [configuration option](/config/outputfile) in your Vitest configuration file or via CLI. The `html` reporter uses its [`outputDir`](#html-reporter) option instead.
 
 :::code-group
 ```bash [CLI]
