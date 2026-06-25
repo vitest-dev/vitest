@@ -374,15 +374,23 @@ export interface BrowserServerContribution {
   transformIndexHtml: (ctx: IndexHtmlTransformContext) => Awaitable<IndexHtmlTransformResult | undefined>
   configureServer: (server: ViteDevServer) => Awaitable<void>
   /**
-   * Browser-specific Vite config (`resolve.alias`, `define`, esbuild,
-   * `optimizeDeps`). Applied by the core loader plugin's `config` hook during the
-   * single project resolution, so other plugins observe it (e.g. alias must be
-   * baked at resolution time, optimizeDeps must reach the `client` environment).
-   * The loader always forces `server.middlewareMode = false` on top. `context`
-   * provides the package installer's `isPackageExists` (no `Vitest` instance is
-   * available during resolution).
+   * Browser-specific Vite config (`resolve.alias`, `define`, esbuild). Applied
+   * by the core loader plugin's `config` hook during the single project
+   * resolution, so other plugins observe it (e.g. alias must be baked at
+   * resolution time). The loader always forces `server.middlewareMode = false`
+   * on top. `harness` provides the package installer's `isPackageExists` (no
+   * `Vitest` instance is available during resolution).
    */
   config: (config: ViteUserConfig, harness: PluginHarness) => Awaitable<ViteUserConfig>
+  /**
+   * Browser `optimizeDeps`, aggregated across every project that shares the
+   * single browser Vite server (instance and benchmark variants). Called by core
+   * after all projects are resolved and before the server is created; the result
+   * is merged into the resolved Vite config's `client` environment
+   * `optimizeDeps`. `testFiles` is the aggregated, already-globbed set of test
+   * files for the server (globbing lives in the core package).
+   */
+  resolveOptimizeDeps: (projectConfigs: ResolvedConfig[], testFiles: string[], harness: PluginHarness) => Awaitable<NonNullable<ViteUserConfig['optimizeDeps']>>
   /**
    * Runtime plugins. Injected into the browser (`client`) environment by the
    * loader's `applyToEnvironment`; their `configureServer`/`transformIndexHtml`

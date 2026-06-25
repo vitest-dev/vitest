@@ -1,18 +1,14 @@
-import type { GlobOptions } from 'tinyglobby'
 import type { HtmlTagDescriptor, UserConfig, UserConfig as ViteUserConfig } from 'vite'
-import type { BrowserCommand, BrowserProviderOption, BrowserServerContribution, BrowserServerFactory, PluginHarness } from 'vitest/node'
+import type { BrowserCommand, BrowserProviderOption, BrowserServerContribution, BrowserServerFactory, PluginHarness, ResolvedConfig } from 'vitest/node'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { resolve as nodeResolve } from 'node:path'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { toArray } from '@vitest/utils/helpers'
-import { dirname, join, resolve } from 'pathe'
+import { join, resolve } from 'pathe'
 import sirv from 'sirv'
-import { glob } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { configDefaults } from 'vitest/config'
 import { isFileServingAllowed, isValidApiRequest, rolldownVersion, distDir as vitestDist } from 'vitest/node'
 import { version } from '../../package.json'
 import { distRoot } from './constants'
@@ -21,7 +17,6 @@ import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserPlugin from './plugin'
 import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
-import { slash } from './utils'
 
 export type { CustomComparatorsRegistry } from './commands/screenshotMatcher/types'
 
@@ -290,7 +285,7 @@ body {
     // Resolution-time config: only what is derivable from the (partial) user
     // config. The mocks / coverage / meta-env plugins come from the shared
     // workspace plugin set, not from here.
-    async config(viteConfig, harness: PluginHarness) {
+    async config(viteConfig) {
       const testConfig = viteConfig.test || {}
       const config: UserConfig = {
         resolve: {
@@ -316,10 +311,10 @@ body {
         define[`import.meta.env.${env}`] = JSON.stringify(envVars[env])
       }
       config.define = define
-      const optimizeDeps = await resolveBrowserOptimizeDeps(viteConfig, harness)
-      config.optimizeDeps = optimizeDeps
-      config.environments = { client: { optimizeDeps } }
       return config
+    },
+    resolveOptimizeDeps(projectConfigs, testFiles, harness) {
+      return resolveBrowserOptimizeDeps(projectConfigs, testFiles, harness)
     },
     plugins: [],
     createParent({ config, vitest }) {
@@ -347,29 +342,24 @@ body {
   return contribution
 }
 
-async function resolveBrowserOptimizeDeps(
-  viteConfig: ViteUserConfig,
+function resolveBrowserOptimizeDeps(
+  projectConfigs: ResolvedConfig[],
+  testFiles: string[],
   harness: PluginHarness,
-): Promise<NonNullable<ViteUserConfig['optimizeDeps']>> {
-  // Runs in the config hook (resolution time), so the test config is partial:
-  // fall back to defaults and use `require.resolve` for package detection (no
-  // `Vitest` instance available yet).
-  const testConfig = viteConfig.test || {}
-  const root = testConfig.root || viteConfig.root || process.cwd()
-  const cwd = testConfig.dir || root
-  const globInclude = testConfig.include || configDefaults.include
-  const globExclude = testConfig.exclude || configDefaults.exclude
-  const browserTestFiles = await globFiles(globInclude, globExclude, cwd)
-  const benchInclude = testConfig.benchmark?.enabled
-    ? (testConfig.benchmark.include || ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'])
-    : []
-  const browserBenchFiles = benchInclude.length > 0
-    ? await globFiles(benchInclude, testConfig.benchmark?.exclude ?? globExclude, cwd)
-    : []
-  const setupFiles = toArray(testConfig.setupFiles || [])
+): NonNullable<ViteUserConfig['optimizeDeps']> {
+  // `testFiles` are globbed by the core package and aggregated across every
+  // project that shares this browser Vite server (instance and benchmark
+  // variants). The remaining options are shared by those projects, so the first
+  // config is representative.
+  const testConfig = projectConfigs[0]
+  const root = testConfig.root || process.cwd()
+
+  const setupFiles = new Set(
+    projectConfigs.flatMap(config => toArray(config.setupFiles || [])),
+  )
 
   const entries: string[] = [
-    ...new Set([...browserTestFiles, ...browserBenchFiles]),
+    ...testFiles,
     ...setupFiles,
     resolve(vitestDist, 'index.js'),
     resolve(vitestDist, 'browser.js'),
@@ -438,9 +428,8 @@ async function resolveBrowserOptimizeDeps(
     )
   }
 
-  const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : root
   const isPackageExists = (pkg: string) => {
-    return harness.packageInstaller.isPackageExists(pkg, { paths: [fileRoot] })
+    return harness.packageInstaller.isPackageExists(pkg, { paths: [root] })
   }
 
   if (isPackageExists('vitest-browser-svelte')) {
@@ -494,21 +483,8 @@ async function resolveBrowserOptimizeDeps(
     include,
     ...(rolldownVersion
       ? { rolldownOptions: { plugins: [rolldownPlugin] } }
-      : { esbuildOptions: { plugins: [esbuildPlugin as any] } }),
+      : { esbuildOptions: { plugins: [esbuildPlugin] } }),
   }
-}
-
-async function globFiles(include: string[], exclude: string[], cwd: string) {
-  const globOptions: GlobOptions = {
-    dot: true,
-    cwd,
-    ignore: exclude,
-    expandDirectories: false,
-  }
-  const files = await glob(include, globOptions)
-  // keep the slashes consistent with Vite (node path, not pathe, to avoid
-  // normalizing the Windows drive letter)
-  return files.map(file => slash(nodeResolve(cwd, file)))
 }
 
 function tryResolve(path: string, paths: string[]) {

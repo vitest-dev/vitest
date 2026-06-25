@@ -1,4 +1,3 @@
-import type { GlobOptions } from 'tinyglobby'
 import type { DevEnvironment, ResolvedConfig as ResolvedViteConfig, ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
@@ -17,11 +16,9 @@ import crypto from 'node:crypto'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
-import { glob } from 'tinyglobby'
 import { isRunnableDevEnvironment } from 'vite'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
@@ -31,6 +28,7 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { getFilePoolName } from './pool'
+import { globProjectFiles } from './projects/globProjectFiles'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './test-specification'
 
@@ -387,19 +385,8 @@ export class TestProject {
   }
 
   /** @internal */
-  async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: GlobOptions = {
-      dot: true,
-      cwd,
-      ignore: exclude,
-      expandDirectories: false,
-    }
-
-    const files = await glob(include, globOptions)
-    // keep the slashes consistent with Vite
-    // we are not using the pathe here because it normalizes the drive letter on Windows
-    // and we want to keep it the same as working dir
-    return files.map(file => slash(path.resolve(cwd, file)))
+  globFiles(include: string[], exclude: string[], cwd: string): Promise<string[]> {
+    return globProjectFiles(include, exclude, cwd)
   }
 
   /**

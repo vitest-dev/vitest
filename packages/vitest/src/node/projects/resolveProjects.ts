@@ -2,6 +2,7 @@ import type { GlobOptions } from 'tinyglobby'
 import type {
   ResolvedConfig as ResolvedViteConfig,
   InlineConfig as ViteInlineConfig,
+  UserConfig as ViteUserConfig,
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
@@ -27,6 +28,7 @@ import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoad
 import { CliOverride } from '../plugins/cliOverride'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
+import { globProjectFiles } from './globProjectFiles'
 
 // vitest.config.*
 // vite.config.*
@@ -181,7 +183,69 @@ export async function resolveProjectEntries(
     )
   }
 
+  // Browser servers must pre-bundle dependencies before they are created, and a
+  // single server can be shared by several projects (browser instances and
+  // benchmark variants). Aggregate each shared server's `optimizeDeps` now that
+  // every project's config is fully resolved.
+  await applyBrowserOptimizeDeps(harness, filtered)
+
   return filtered
+}
+
+/**
+ * Aggregate `optimizeDeps` for each browser Vite server across every project
+ * that shares it, then merge the result into the resolved Vite config's `client`
+ * environment. Runs after resolution (so project `include`/`setupFiles` are
+ * known) and before server creation (so `createViteServer` reuses the mutated
+ * resolved config).
+ */
+async function applyBrowserOptimizeDeps(
+  harness: PluginHarness,
+  entries: ResolvedProjectEntry[],
+): Promise<void> {
+  const groups = new Map<ResolvedViteConfig, ResolvedConfig[]>()
+  for (const { viteConfig, projectConfig } of entries) {
+    let group = groups.get(viteConfig)
+    if (!group) {
+      group = []
+      groups.set(viteConfig, group)
+    }
+    group.push(projectConfig)
+  }
+
+  await Promise.all(
+    Array.from(groups, async ([viteConfig, projectConfigs]) => {
+      const contribution = projectConfigs.find(config => config._browserContribution)?._browserContribution
+      if (!contribution) {
+        return
+      }
+      const fileLists = await Promise.all(
+        projectConfigs.map(config => globProjectFiles(config.include, config.exclude, config.dir || config.root)),
+      )
+      const testFiles = [...new Set(fileLists.flat())]
+      const optimizeDeps = await contribution.resolveOptimizeDeps(projectConfigs, testFiles, harness)
+      mergeBrowserOptimizeDeps(viteConfig, optimizeDeps)
+    }),
+  )
+}
+
+/**
+ * Merge the computed browser `optimizeDeps` into the already-resolved Vite
+ * config. The browser optimizer reads the `client` environment; the top-level
+ * `optimizeDeps` is kept in sync for the scanner. Vite's own `mergeConfig`
+ * concatenates the arrays (entries, include, exclude, esbuild/rolldown plugins)
+ * so existing user / default values are preserved.
+ */
+function mergeBrowserOptimizeDeps(
+  viteConfig: ResolvedViteConfig,
+  optimizeDeps: NonNullable<ViteUserConfig['optimizeDeps']>,
+): void {
+  const { optimizeDeps: resolvedOptimizedDeps } = mergeConfig(
+    { optimizeDeps: viteConfig.optimizeDeps },
+    { optimizeDeps },
+  )
+  ;(viteConfig as any).optimizeDeps = { ...resolvedOptimizedDeps }
+  viteConfig.environments.client.optimizeDeps = { ...viteConfig.optimizeDeps }
 }
 
 async function resolveDeclaredProjectEntries(
