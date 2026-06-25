@@ -344,8 +344,6 @@ async function resolveSingleProjectEntry(
     mergedOptions,
     projectViteConfig,
   )
-  projectConfig.coverage = globalConfig.coverage
-  projectConfig.attachmentsDir = globalConfig.attachmentsDir
   projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel
 
   projectViteConfig.test = projectConfig

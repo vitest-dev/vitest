@@ -124,6 +124,11 @@ export function WorkspaceVitestPlugin(
 
         return config
       },
+      configResolved(config) {
+        // Projects always inherit non-project config options
+        config.test.coverage = globalConfig.coverage
+        config.test.attachmentsDir = globalConfig.attachmentsDir
+      },
     },
     VitestConfigApi(harness, globalConfig),
     {
@@ -157,9 +162,9 @@ export function WorkspaceVitestPlugin(
     // TODO: should be testProject's config
     ...CSSEnablerPlugin({ config: globalConfig }),
     CoverageTransform(harness),
+    ...VitestConfig(harness),
     ...MocksPlugins(),
     VitestProjectResolver(harness),
     NormalizeURLPlugin(),
-    ...VitestConfig(harness),
   ]
 }
