@@ -1296,11 +1296,15 @@ export interface ServerDepsOptions {
 export type ProjectConfig = Omit<
   InlineConfig,
   NonProjectOptions
-  | 'sequencer'
+  | 'sequence'
   | 'deps'
 > & {
   mode?: string
-  sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
+  sequence?: Omit<SequenceOptions, 'sequencer' | 'seed' | 'shuffle'> & {
+    // `shuffle.files` controls cross-project file ordering, which is resolved
+    // from the root config only, so projects can only shuffle their own tests.
+    shuffle?: boolean | { tests?: boolean }
+  }
   deps?: Omit<DepsOptions, 'moduleDirectories'>
 }
 

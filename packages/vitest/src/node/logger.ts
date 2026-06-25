@@ -235,8 +235,14 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    // Log seed if either files (RandomSequencer) or tests are shuffled
-    if (this.ctx.config.sequence.sequencer === RandomSequencer || this.ctx.config.sequence.shuffle) {
+    // Log seed if either files (RandomSequencer) or tests are shuffled, in the
+    // root config or in any project (tests can be shuffled per project).
+    const shuffles = (sequence: { sequencer?: unknown; shuffle?: unknown }) =>
+      sequence.sequencer === RandomSequencer || !!sequence.shuffle
+    if (
+      shuffles(this.ctx.config.sequence)
+      || this.ctx.projects.some(p => shuffles(p.config.sequence))
+    ) {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
