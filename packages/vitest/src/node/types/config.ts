@@ -1251,7 +1251,7 @@ export interface ResolvedConfig
 
   cliOptions: CliOptions
   viteOverrides: ViteUserConfig
-  projects?: ResolvedProjectEntry[]
+  projects: ResolvedProjectEntry[]
   /**
    * Browser server contribution captured by the `vitest:browser:loader` plugin
    * during this config's resolution (set only when `browser.enabled`). Used by

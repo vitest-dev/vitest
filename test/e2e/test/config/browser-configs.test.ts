@@ -2,7 +2,7 @@ import type { TestFsStructure } from '#test-utils'
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestUserConfig, VitestOptions } from 'vitest/node'
 import crypto from 'node:crypto'
-import { runVitest, runVitestCli, useFS } from '#test-utils'
+import { runVitest, runVitestCli, useFS, useTmpFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
 import { resolve } from 'pathe'
@@ -10,8 +10,22 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 const vitest = vi.defineHelper(async (cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) => {
-  const vitest = await createVitest({ ...cliOptions, watch: false, config: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
-  onTestFinished(() => vitest.close())
+  const vitest = await createVitest(
+    {
+      ...cliOptions,
+      watch: false,
+      config: false,
+    },
+    {
+      ...viteConfig,
+      test: configValue as any,
+    },
+    vitestOptions,
+  )
+  onTestFinished(async () => {
+    await vitest.vite.waitForRequestsIdle()
+    await vitest.close()
+  })
   return vitest
 })
 
@@ -99,6 +113,10 @@ test('assigns names as browsers in a custom project', async () => {
 })
 
 test('inherits browser options', async () => {
+  const fs = useTmpFS({
+    './custom-path.html': ``,
+    './custom-overridden-path.html': ``,
+  })
   const { projects } = await vitest({}, {
     setupFiles: ['/test/setup.ts'],
     provide: {
@@ -109,7 +127,7 @@ test('inherits browser options', async () => {
       provider: preview(),
       headless: true,
       screenshotFailures: false,
-      testerHtmlPath: '/custom-path.html',
+      testerHtmlPath: fs.resolveFile('./custom-path.html'),
       screenshotDirectory: '/custom-directory',
       viewport: {
         width: 300,
@@ -133,7 +151,7 @@ test('inherits browser options', async () => {
             width: 900,
             height: 300,
           },
-          testerHtmlPath: '/custom-overridden-path.html',
+          testerHtmlPath: fs.resolveFile('./custom-overridden-path.html'),
           screenshotDirectory: '/custom-overridden-directory',
         },
       ],
@@ -158,7 +176,7 @@ test('inherits browser options', async () => {
         locators: {
           testIdAttribute: 'data-tid',
         },
-        testerHtmlPath: '/custom-path.html',
+        testerHtmlPath: fs.resolveFile('./custom-path.html'),
       },
     },
     {
@@ -179,7 +197,7 @@ test('inherits browser options', async () => {
         locators: {
           testIdAttribute: 'data-custom',
         },
-        testerHtmlPath: '/custom-overridden-path.html',
+        testerHtmlPath: fs.resolveFile('./custom-overridden-path.html'),
       },
     },
   ])
@@ -1176,10 +1194,8 @@ test('show a warning if host is exposed', async () => {
         },
       },
     ],
-    browser: {
-      api: {
-        host: 'custom-host',
-      },
+    api: {
+      host: 'custom-host',
     },
   })
   expect(stderr).toContain(

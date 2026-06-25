@@ -14,7 +14,7 @@ import type {
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { deepClone, slash, toArray } from '@vitest/utils/helpers'
+import { deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -957,8 +957,8 @@ export async function resolveConfig(
   pluginsHarness: PluginHarness = new PluginHarness(),
 ): Promise<ResolvedViteConfig> {
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
-  const cliOptionsCopy = deepClone(options)
-  const viteOverridesCopy = deepClone(viteOverrides)
+  const cliOptionsCopy = deepMerge({}, options)
+  const viteOverridesCopy = deepMerge({}, viteOverrides)
   const root = resolve(options.root || process.cwd())
   const configPath = resolveConfigPath(root, options)
   options.config = configPath

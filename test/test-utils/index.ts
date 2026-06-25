@@ -462,6 +462,11 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
+export function useTmpFS<T extends TestFsStructure>(structure: T, ensureConfig = true, task?: TestContext['task']) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  return useFS(root, structure, ensureConfig, task)
+}
+
 export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true, task?: TestContext['task']) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
@@ -539,15 +544,14 @@ export async function runInlineTests(
   options?: VitestRunnerCLIOptions,
   task?: TestContext['task'],
 ) {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  const fs = useFS(root, structure, undefined, task ?? TestRunner.getCurrentTest())
+  const fs = useTmpFS(structure, undefined, task ?? TestRunner.getCurrentTest())
   const vitest = await runVitest({
-    root,
+    root: fs.root,
     ...config,
   }, config?.$cliFilters ?? [], options)
   return {
     fs,
-    root,
+    root: fs.root,
     ...vitest,
     get results() {
       return vitest.ctx?.state.getTestModules() || []
