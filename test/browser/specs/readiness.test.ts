@@ -60,7 +60,7 @@ test('prepare waits until the tester can receive browser channel events', { time
 })
 
 test('fails instead of hanging when the tester never becomes ready', { timeout: 20000 }, async () => {
-  const { stderr } = await runInlineBrowserTests(
+  const { stderr, fs, testTree } = await runInlineBrowserTests(
     {
       'basic.test.ts': `
         import { expect, test } from 'vitest'
@@ -98,11 +98,13 @@ test('fails instead of hanging when the tester never becomes ready', { timeout: 
     },
   )
 
-  expect(stderr).toContain('did not become ready within 2000ms')
+  expect(stderr).toContain(`Failed to run the test ${fs.resolveFile('basic.test.ts')}`)
+  expect(stderr).toContain(`The iframe "${fs.resolveFile('basic.test.ts')}" did not become ready within 2000ms. The tester likely failed to initialize, check the browser console for errors.`)
+  expect(testTree()).toMatchInlineSnapshot(`{}`)
 })
 
 test('fails instead of hanging when the tester stops responding to messages', { timeout: 20000 }, async () => {
-  const { stderr } = await runInlineBrowserTests(
+  const { stderr, fs, testTree } = await runInlineBrowserTests(
     {
       'basic.test.ts': `
         import { expect, test } from 'vitest'
@@ -142,5 +144,7 @@ test('fails instead of hanging when the tester stops responding to messages', { 
     },
   )
 
-  expect(stderr).toContain('did not acknowledge the "prepare" message within 2000ms')
+  expect(stderr).toContain(`Failed to run the test ${fs.resolveFile('basic.test.ts')}`)
+  expect(stderr).toContain(`The iframe "${fs.resolveFile('basic.test.ts')}" did not acknowledge the "prepare" message within 2000ms. The tester might have crashed, been removed, or be blocked by a long synchronous task.`)
+  expect(testTree()).toMatchInlineSnapshot(`{}`)
 })
