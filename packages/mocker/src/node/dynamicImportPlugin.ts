@@ -18,15 +18,18 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
   return {
     name: 'vitest:browser:esm-injector',
     enforce: 'post',
-    transform(source, id) {
+    transform: {
+      order: 'post',
+      handler(source, id) {
       // TODO: test is not called for static imports
-      if (!regexDynamicImport.test(source)) {
-        return
-      }
-      if (options.filter && !options.filter(id, this.environment)) {
-        return
-      }
-      return injectDynamicImport(source, id, this.parse, options)
+        if (!regexDynamicImport.test(source)) {
+          return
+        }
+        if (options.filter && !options.filter(id, this.environment)) {
+          return
+        }
+        return injectDynamicImport(source, id, this.parse, options)
+      },
     },
   }
 }

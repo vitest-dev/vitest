@@ -15,10 +15,13 @@ export default function BrowserContext(contribution: BrowserServerContribution):
   return {
     name: 'vitest:browser:virtual-module:context',
     enforce: 'pre',
-    resolveId(id) {
-      if (id === ID_CONTEXT) {
-        return VIRTUAL_ID_CONTEXT
-      }
+    resolveId: {
+      order: 'pre',
+      handler(id) {
+        if (id === ID_CONTEXT) {
+          return VIRTUAL_ID_CONTEXT
+        }
+      },
     },
     load(id) {
       const globalServer = contribution.parent as ParentBrowserProject

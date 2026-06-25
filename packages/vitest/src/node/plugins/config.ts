@@ -21,10 +21,17 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
       config(viteConfig) {
         const testConfig = viteConfig.test || {}
         const resolveOptions = getDefaultResolveOptions()
-
-        const defines = deleteDefineConfig(viteConfig)
-
         const browserEnabled = !!testConfig.browser?.enabled
+
+        if (viteConfig.define) {
+          delete viteConfig.define['import.meta.vitest']
+        }
+
+        // We inject the defines string in non-browser tests,
+        // But keep the original behaviour in the browser mode
+        const defines = browserEnabled
+          ? viteConfig.define
+          : deleteDefineConfig(viteConfig)
 
         const config: ViteConfig = browserEnabled
           ? {
@@ -55,7 +62,7 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
           },
         }
 
-        ;(config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).defines = defines || {}
 
         if ('rolldownVersion' in vite) {
           // eslint-disable-next-line ts/ban-ts-comment

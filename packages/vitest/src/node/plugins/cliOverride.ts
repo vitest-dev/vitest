@@ -3,7 +3,6 @@ import type { ResolvedBrowserOptions } from '../types/browser'
 import type { UserConfig } from '../types/config'
 import { deepMerge } from '@vitest/utils/helpers'
 import { mergeConfig } from 'vite'
-import { configDefaults } from '../../defaults'
 
 export function CliOverride(cliOptions: UserConfig): Plugin {
   return {
@@ -14,13 +13,7 @@ export function CliOverride(cliOptions: UserConfig): Plugin {
     config: {
       order: 'pre',
       handler(config) {
-        const watch = cliOptions.watch ?? config.test?.watch ?? configDefaults.watch
-
-        // Earlier runs have overwritten values of the `options`.
-        // Reset it back to initial user config before setting up the server again.
-        const options = watch
-          ? deepMerge({}, cliOptions) as UserConfig
-          : cliOptions
+        const { browser, ...options } = cliOptions
 
         config.test ??= {}
         // We don't want to use Vite's merge because we want to OVERRIDE options
@@ -28,10 +21,10 @@ export function CliOverride(cliOptions: UserConfig): Plugin {
         config.test = deepMerge({}, config.test, options)
 
         // apply browser CLI options only if the config already has the browser config and not disabled manually
-        if (config.test.browser && options.browser && (config.test.browser.enabled !== false || options.browser.enabled)) {
+        if (config.test.browser && browser && (config.test.browser.enabled !== false || browser.enabled)) {
           config.test.browser = mergeConfig(
             config.test.browser,
-            options.browser,
+            browser,
           ) as ResolvedBrowserOptions
         }
       },

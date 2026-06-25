@@ -59,6 +59,7 @@ const PROJECT_CLI_OVERRIDES = [
   'inspectBrk',
   'fileParallelism',
   'tagsFilter',
+  'browser',
 ] as const
 
 /**
@@ -234,7 +235,6 @@ async function resolveDeclaredProjectEntries(
     // if file leads to the root config, then we can just reuse it because we already initialized it
     if (globalViteConfig.configFile === path) {
       // The root viteConfig is already resolved; emit it as an entry directly.
-      // Note: this matches today's "reuse default project" behavior.
       promises.push(Promise.resolve({
         viteConfig: globalViteConfig,
         projectConfig: globalConfig,

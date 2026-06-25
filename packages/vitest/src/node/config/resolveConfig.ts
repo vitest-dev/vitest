@@ -961,7 +961,6 @@ export async function resolveConfig(
   options.config = configPath
   options.root = root
 
-  const { browser: _removeBrowser, ...restOptions } = options
   const rootBrowserHolder: BrowserContributionHolder = {}
   const inlineConfig: InlineConfig = mergeConfig(
     {
@@ -970,7 +969,7 @@ export async function resolveConfig(
       mode: options.mode || 'test',
       plugins: [
         CliOverride(cliOptionsCopy),
-        VitestConfigPlugin(pluginsHarness, restOptions),
+        VitestConfigPlugin(pluginsHarness, options),
         ...VitestCorePlugin(pluginsHarness),
         ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
       ],

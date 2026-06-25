@@ -66,7 +66,6 @@ export function resolveOptimizerConfig(
 export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> {
   const defines: Record<string, any> = {}
   if (viteConfig.define) {
-    delete viteConfig.define['import.meta.vitest']
     delete viteConfig.define['process.env']
     delete viteConfig.define.process
     delete viteConfig.define.global

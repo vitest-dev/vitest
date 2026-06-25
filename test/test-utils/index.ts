@@ -43,6 +43,41 @@ export interface RunVitestConfig extends TestUserConfig {
 
 const process_ = process
 
+export function createConsole({ tty, std }: { tty?: boolean; std?: 'inherit' } = {}) {
+  const stdout = new Writable({
+    write(chunk, __, callback) {
+      if (std === 'inherit') {
+        process.stdout.write(chunk.toString())
+      }
+      callback()
+    },
+  })
+
+  if (tty) {
+    (stdout as typeof process.stdout).isTTY = true
+  }
+
+  const stderr = new Writable({
+    write(chunk, __, callback) {
+      if (std === 'inherit') {
+        process.stderr.write(chunk.toString())
+      }
+      callback()
+    },
+  })
+
+  // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
+  const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
+  stdin.isTTY = true
+  stdin.setRawMode = () => stdin
+
+  return {
+    stdin,
+    stdout,
+    stderr,
+  }
+}
+
 /**
  * The config is assumed to be the config on the file system, not CLI options
  * (Note that CLI only options like "standalone" are passed as CLI options, not config options)
@@ -78,32 +113,8 @@ export async function runVitest(
   const exit = process.exit
   process.exit = (() => { }) as never
 
-  const stdout = new Writable({
-    write(chunk, __, callback) {
-      if (runnerOptions.std === 'inherit') {
-        process.stdout.write(chunk.toString())
-      }
-      callback()
-    },
-  })
+  const { stdout, stderr, stdin } = createConsole(runnerOptions)
 
-  if (runnerOptions?.tty) {
-    (stdout as typeof process.stdout).isTTY = true
-  }
-
-  const stderr = new Writable({
-    write(chunk, __, callback) {
-      if (runnerOptions.std === 'inherit') {
-        process.stderr.write(chunk.toString())
-      }
-      callback()
-    },
-  })
-
-  // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
-  const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
-  stdin.isTTY = true
-  stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
   // @ts-expect-error not typed global
   const currentConfig: SerializedConfig = __vitest_worker__.ctx.config

@@ -22,7 +22,7 @@ export type {
 export { BaseCoverageProvider } from '../node/coverage'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
-export type { Logger } from '../node/logger'
+export { Logger } from '../node/logger'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'

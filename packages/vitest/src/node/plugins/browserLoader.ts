@@ -87,11 +87,6 @@ export function BrowserLoaderPlugin(
     },
     {
       name: 'vitest:browser:loader:post',
-      // `post` so the browser's `post` plugins (e.g. the esm injector that wraps
-      // the dynamic imports produced by `vitest:mocks` hoisting) run after the
-      // main pipeline's `post` plugins. Vite expands `applyToEnvironment` in place
-      // without re-sorting, so a `post` plugin nested under the `pre` host above
-      // would otherwise run before hoisting and miss the imports it must wrap.
       enforce: 'post',
       applyToEnvironment(environment) {
         const contribution = holder.contribution

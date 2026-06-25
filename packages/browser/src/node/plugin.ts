@@ -14,21 +14,24 @@ export default (contribution: BrowserServerContribution): Plugin[] => {
     {
       name: 'vitest:browser:tests',
       enforce: 'pre',
-      async resolveId(id) {
-        if (!/\?browserv=\w+$/.test(id)) {
-          return
-        }
+      resolveId: {
+        order: 'pre',
+        handler(id) {
+          if (!/\?browserv=\w+$/.test(id)) {
+            return
+          }
 
-        let useId = id.slice(0, id.lastIndexOf('?'))
-        if (useId.startsWith('/@fs/')) {
-          useId = useId.slice(5)
-        }
+          let useId = id.slice(0, id.lastIndexOf('?'))
+          if (useId.startsWith('/@fs/')) {
+            useId = useId.slice(5)
+          }
 
-        if (/^\w:/.test(useId)) {
-          useId = useId.replace(/\\/g, '/')
-        }
+          if (/^\w:/.test(useId)) {
+            useId = useId.replace(/\\/g, '/')
+          }
 
-        return useId
+          return useId
+        },
       },
     },
     {
