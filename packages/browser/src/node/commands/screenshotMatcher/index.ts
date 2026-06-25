@@ -1,15 +1,12 @@
 import type { SerializedLocator } from '@vitest/browser'
 import type { SnapshotUpdateState } from 'vitest'
 import type { ScreenshotMatcherOptions } from 'vitest/browser'
-import type { BrowserCommand, BrowserCommandContext, TestProject } from 'vitest/node'
+import type { BrowserCommand, BrowserCommandContext, TypedArray } from 'vitest/node'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
 import type { AnyComparator } from './comparators'
-import type { TypedArray } from './types'
-import type { ResolvedOptions } from './utils'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { basename, dirname } from 'pathe'
-import { assertBrowserApiWrite, assertBrowserFileAccess } from '../../utils'
+import type { IO, ResolvedOptions } from './utils'
+import { basename } from 'pathe'
 import { asyncTimeout, resolveOptions, takeDecodedScreenshot, takeScreenshotBuffer } from './utils'
 
 /** Decoded image data with dimensions metadata. */
@@ -19,12 +16,12 @@ type DecodedImage = Awaited<ReturnType<AnyCodec['decode']>>
 interface ScreenshotData {
   image: DecodedImage
   path: string
-  buffer?: Buffer<ArrayBufferLike>
+  buffer?: TypedArray
 }
 
 interface CapturedScreenshot {
   image: DecodedImage
-  buffer: Buffer<ArrayBufferLike>
+  buffer: TypedArray
 }
 
 /**
@@ -88,6 +85,7 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
   const {
     codec,
     comparator,
+    io,
     paths,
     resolvedOptions: { comparatorName, comparatorOptions, screenshotOptions, timeout },
   } = resolveOptions({ context, name, testName, options })
@@ -101,7 +99,7 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     target,
   } satisfies Parameters<typeof takeScreenshotBuffer>[0]
 
-  const referenceFile = await readFile(paths.reference).catch(() => null)
+  const referenceFile = await io.read({ path: paths.reference, project: context.project })
   let reference: DecodedImage | null = null
   let initialScreenshot: CapturedScreenshot | null = null
 
@@ -149,7 +147,7 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     comparatorOptions,
   })
 
-  await performSideEffects(outcome, codec, context.project)
+  await performSideEffects(outcome, codec, io, context)
 
   return buildOutput(outcome, timeout)
 }
@@ -176,7 +174,7 @@ async function determineOutcome(
     reference: DecodedImage | null
     retries: number
     screenshot: DecodedImage | null
-    screenshotBuffer?: Buffer<ArrayBufferLike>
+    screenshotBuffer?: TypedArray
     updateSnapshot: SnapshotUpdateState
   },
 ): Promise<MatchOutcome> {
@@ -277,33 +275,37 @@ async function determineOutcome(
 async function performSideEffects(
   outcome: MatchOutcome,
   codec: AnyCodec,
-  project: TestProject,
+  io: IO,
+  context: BrowserCommandContext,
 ): Promise<void> {
   switch (outcome.type) {
     case 'missing-reference':
     case 'update-reference': {
-      await writeScreenshot(
-        outcome.reference.path,
-        await encodeScreenshot(outcome.reference, codec),
-        project,
-      )
+      await io.write({
+        path: outcome.reference.path,
+        data: await encodeScreenshot(outcome.reference, codec),
+        kind: 'reference',
+        project: context.project
+      })
 
       break
     }
 
     case 'mismatch': {
-      await writeScreenshot(
-        outcome.actual.path,
-        await encodeScreenshot(outcome.actual, codec),
-        project,
-      )
+      await io.write({
+        path: outcome.actual.path,
+        data: await encodeScreenshot(outcome.actual, codec),
+        kind: 'actual',
+        project: context.project
+      })
 
       if (outcome.diff) {
-        await writeScreenshot(
-          outcome.diff.path,
-          await codec.encode(outcome.diff.image, {}),
-          project,
-        )
+        await io.write({
+          path: outcome.diff.path,
+          data: await encodeScreenshot(outcome.diff, codec),
+          kind: 'diff',
+          project: context.project
+        })
       }
 
       break
@@ -421,7 +423,7 @@ interface StableScreenshotOptions {
  * Wraps {@linkcode getStableScreenshot} with an abort controller that triggers when the timeout expires. Returns `null` if the page never stabilizes.
  */
 async function waitForStableScreenshot(options: StableScreenshotOptions, timeout: number,
-): Promise<{ actual: DecodedImage; buffer: Buffer<ArrayBufferLike>; retries: number } | null> {
+): Promise<{ actual: DecodedImage; buffer: TypedArray; retries: number } | null> {
   const abortController = new AbortController()
 
   const stableScreenshot = getStableScreenshot(
@@ -470,7 +472,7 @@ async function getStableScreenshot({
 }: StableScreenshotOptions, signal: AbortSignal): Promise<{
   retries: number
   actual: DecodedImage
-  buffer: Buffer<ArrayBufferLike>
+  buffer: TypedArray
 }> {
   const screenshotArgument = {
     codec,
@@ -537,7 +539,7 @@ async function takeScreenshotData({
   screenshotOptions,
   target,
 }: {
-  buffer?: Buffer<ArrayBufferLike>
+  buffer?: TypedArray
   codec: AnyCodec
   context: BrowserCommandContext
   element?: SerializedLocator
@@ -556,18 +558,5 @@ async function takeScreenshotData({
   return {
     buffer: screenshot,
     image: await codec.decode(screenshot, {}),
-  }
-}
-
-/** Writes encoded images to disk, creating parent directories as needed. */
-async function writeScreenshot(path: string, image: TypedArray, project: TestProject) {
-  try {
-    assertBrowserApiWrite(project, path)
-    assertBrowserFileAccess(project, path)
-    await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, image)
-  }
-  catch (cause) {
-    throw new Error('Couldn\'t write file to fs', { cause })
   }
 }
