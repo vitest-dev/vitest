@@ -588,7 +588,7 @@ function expandBenchmarksInEntries(
 
   for (const entry of entries) {
     const benchmark = entry.projectConfig.benchmark
-    if (!benchmark.enabled) {
+    if (!benchmark.enabled || entry.hidden) {
       continue
     }
 
