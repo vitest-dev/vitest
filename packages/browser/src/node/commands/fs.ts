@@ -19,7 +19,7 @@ function assertFileAccess(path: string, project: TestProject) {
 
 function assertWrite(path: string, project: TestProject) {
   if (!project.vitest.config.api.allowWrite) {
-    throw new Error(`Cannot modify file "${path}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`)
+    throw new Error(`Cannot modify file "${path}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/api.`)
   }
 }
 

@@ -142,7 +142,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   function assertCdpAllowed(project: TestProject) {
     if (!isCdpAllowed(project)) {
       throw new Error(
-        `Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.`,
+        `Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/api.`,
       )
     }
   }
@@ -194,7 +194,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             if (artifact.type === 'internal:annotation' && artifact.annotation.attachment) {
               artifact.annotation.attachment = undefined
               vitest.logger.error(
-                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/api.`,
               )
             }
             // remove attachments if cannot write
@@ -202,7 +202,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               const attachments = artifact.attachments.map(n => n.path).filter(r => !!r).join('", "')
               artifact.attachments = []
               vitest.logger.error(
-                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/browser/api.`,
+                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/api.`,
               )
             }
           }
@@ -219,7 +219,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         async writeBenchmarkResult(relativePath, data) {
           if (!canWrite(project)) {
             vitest.logger.error(
-              `[vitest] Cannot write benchmark artifact "${relativePath}" because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+              `[vitest] Cannot write benchmark artifact "${relativePath}" because file writing is disabled. See https://vitest.dev/config/api.`,
             )
             return
           }
@@ -267,7 +267,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           checkFileAccess(id)
           if (!canWrite(project)) {
             vitest.logger.error(
-              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/api.`,
             )
             return
           }
@@ -278,7 +278,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           checkFileAccess(id)
           if (!canWrite(project)) {
             vitest.logger.error(
-              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/api.`,
             )
             return
           }

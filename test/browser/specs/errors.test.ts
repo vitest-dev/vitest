@@ -242,7 +242,7 @@ test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is d
       "chromium": {
         "cdp.test.ts": {
           "cdp throws an error": [
-            "Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.",
+            "Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/api.",
           ],
         },
       },
