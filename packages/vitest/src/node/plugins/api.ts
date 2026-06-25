@@ -1,7 +1,7 @@
 import type { Plugin, ServerOptions } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedApiConfig, ResolvedConfig } from '../types/config'
-import { defaultBrowserPort, defaultPort } from '../../constants'
+import { defaultPort } from '../../constants'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 
 export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedConfig): Plugin {
@@ -17,7 +17,7 @@ export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedC
 
         const api = resolveApiServerConfig(
           testConfig,
-          isBrowserEnabled ? defaultBrowserPort : defaultPort,
+          isBrowserEnabled ? harness._browserLastPort++ : defaultPort,
           harness.logger,
         ) as ResolvedApiConfig
         testConfig.api = api

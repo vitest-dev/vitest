@@ -1,5 +1,6 @@
 import type { Vitest } from '../core'
 import { version } from '../../../package.json' with { type: 'json' }
+import { defaultBrowserPort } from '../../constants'
 import { Logger } from '../logger'
 import { VitestPackageInstaller } from '../packageInstaller'
 
@@ -7,6 +8,11 @@ export class PluginHarness {
   public vitest?: Vitest
 
   public version: string = version
+
+  /**
+   * @internal
+   */
+  public _browserLastPort = defaultBrowserPort
 
   constructor(
     public logger: Logger = new Logger(),
