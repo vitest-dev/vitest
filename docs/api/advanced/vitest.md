@@ -548,10 +548,10 @@ This method disables coverage collection for tests that run afterwards.
 ## getSeed <Version>4.0.0</Version> {#getseed}
 
 ```ts
-function getSeed(): number
+function getSeed(): number | null
 ```
 
-Returns the seed used to randomize test order ([`sequence.seed`](/config/sequence#sequence-seed)).
+Returns the seed, if tests are running in a random order.
 
 ## experimental_parseSpecification <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecification}
 

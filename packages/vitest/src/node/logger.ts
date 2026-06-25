@@ -9,7 +9,6 @@ import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
-import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
   type?: string
@@ -235,14 +234,9 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    // Log seed if either files (RandomSequencer) or tests are shuffled. Tests
-    // can be shuffled per project, so check projects as well.
-    if (
-      this.ctx.config.sequence.sequencer === RandomSequencer
-      || this.ctx.config.sequence.shuffle
-      || this.ctx.projects.some(p => p.config.sequence.shuffle)
-    ) {
-      this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
+    const seed = this.ctx.getSeed()
+    if (seed != null) {
+      this.log(PAD + c.gray(`Running tests with seed "${seed}"`))
     }
 
     if (this.ctx.config.ui) {
