@@ -771,8 +771,8 @@ export class BaseCoverageProvider {
       }
     }
 
-    if (project.isBrowserEnabled() || viteEnvironment === '__browser__') {
-      const client = project.browser?.vite.environments.client || project.vite.environments.client
+    if (project.isBrowserEnabled()) {
+      const client = project.vite.environments.client
       const result = await client.transformRequest(url)
 
       if (result) {

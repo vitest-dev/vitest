@@ -474,11 +474,8 @@ export class Vitest {
   }
 
   private clearAllCachePaths() {
-    this.projects.forEach(({ vite, browser }) => {
-      const environments = [
-        ...Object.values(vite.environments),
-        ...Object.values(browser?.vite.environments || {}),
-      ]
+    this.projects.forEach(({ vite }) => {
+      const environments = Object.values(vite.environments)
       environments.forEach(environment =>
         this._fsCache.invalidateAllCachePaths(environment),
       )
@@ -1446,11 +1443,8 @@ export class Vitest {
    * Invalidate a file in all projects.
    */
   public invalidateFile(filepath: string): void {
-    this.projects.forEach(({ vite, browser }) => {
-      const environments = [
-        ...Object.values(vite.environments),
-        ...Object.values(browser?.vite.environments || {}),
-      ]
+    this.projects.forEach(({ vite }) => {
+      const environments = Object.values(vite.environments)
 
       environments.forEach((environment) => {
         const { moduleGraph } = environment

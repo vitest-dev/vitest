@@ -124,12 +124,6 @@ export function WorkspaceVitestPlugin(
 
         return config
       },
-      configResolved(config) {
-        // Projects always inherit non-project config options
-        config.test.coverage = globalConfig.coverage
-        config.test.attachmentsDir = globalConfig.attachmentsDir
-        config.test.mergeReportsLabel = globalConfig.mergeReportsLabel
-      },
     },
     VitestConfigApi(harness, globalConfig),
     {

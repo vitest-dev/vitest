@@ -140,7 +140,7 @@ export function resolveApiServerConfig(
     if (api.allowWrite == null && api.allowExec == null) {
       logger.error(
         c.yellow(
-          `${c.yellowBright(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
+          `${c.bgYellow(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
         ),
       )
     }

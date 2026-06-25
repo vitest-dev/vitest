@@ -5,7 +5,7 @@ import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { buildTestTree, runVitest, useFS } from '#test-utils'
+import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
@@ -351,24 +351,28 @@ test.for([
   const reportsDir = resolve(root, '.vitest/blob')
   rmSync(reportsDir, { force: true, recursive: true })
 
-  const baseConfig: TestUserConfig = {
-    root,
-  }
-  if (mode === 'browser') {
-    baseConfig.browser = {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-        },
-      ],
-      headless: true,
+  const baseConfig = () => {
+    const baseConfig: TestUserConfig = {
+      root,
     }
+
+    if (mode === 'browser') {
+      baseConfig.browser = {
+        enabled: true,
+        provider: playwright(),
+        instances: [
+          {
+            browser: 'chromium',
+          },
+        ],
+        headless: true,
+      }
+    }
+    return baseConfig
   }
 
   const result = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: ['blob'],
   })
   expect.assert(result.ctx)
@@ -471,7 +475,7 @@ test.for([
   }
 
   const result2 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: reportsDir,
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
@@ -480,7 +484,7 @@ test.for([
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
   const result3 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: resolve(root, '.vitest/blob'),
     reporters: ['html'],
   })
@@ -502,6 +506,7 @@ async function getSerializedModuleGraph(ctx: Vitest) {
           ctx,
           projectName,
           file.filepath,
+          file.viteEnvironment,
         )
         return [file.filepath, graph] as const
       }),
@@ -755,8 +760,7 @@ test("macos only", () => {})
 })
 
 test('merge reports with projects and labels', async () => {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  useFS(root, {
+  const { root } = useTmpFS({
     'basic.test.ts': `
 import { test, expect } from "vitest";
 

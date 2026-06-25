@@ -21,7 +21,7 @@ import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished, TestRunner } from 'vitest'
-import { startVitest } from 'vitest/node'
+import { Logger, PluginHarness, resolveConfig, startVitest } from 'vitest/node'
 import { Cli } from './cli'
 
 // override default colors to disable them in tests
@@ -75,6 +75,28 @@ export function createConsole({ tty, std }: { tty?: boolean; std?: 'inherit' } =
     stdin,
     stdout,
     stderr,
+  }
+}
+
+export async function resolveTestConfig(
+  config: RunVitestConfig,
+  runnerOptions: VitestRunnerCLIOptions = {},
+) {
+  const { stdout, stderr, stdin } = createConsole(runnerOptions)
+
+  const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
+  const { $cliOptions, $viteConfig, ...restConfig } = config
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const resolved = await resolveConfig(
+    { config: false, ...$cliOptions },
+    { ...$viteConfig, test: restConfig },
+    harness,
+  )
+  return {
+    config: resolved,
+    vitest: cli,
+    stdout: cli.stdout,
+    stderr: cli.stderr,
   }
 }
 
@@ -503,6 +525,9 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
   })
   return {
     root,
+    readdir: (file: string): string[] => {
+      return fs.readdirSync(resolve(root, file))
+    },
     readFile: (file: string): string => {
       const filepath = resolve(root, file)
       if (relative(root, filepath).startsWith('..')) {
