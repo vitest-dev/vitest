@@ -83,7 +83,6 @@ export async function resolveProjectEntries(
   globalViteConfig: ResolvedViteConfig,
   globalConfig: ResolvedConfig,
   definitions: TestProjectConfiguration[] | undefined,
-  workspaceConfigPath?: string,
   options: { throwIfEmpty?: boolean; existingNames?: Set<string> } = {},
 ): Promise<ResolvedProjectEntry[]> {
   const throwIfEmpty = options.throwIfEmpty ?? true
@@ -98,7 +97,6 @@ export async function resolveProjectEntries(
       globalViteConfig,
       globalConfig,
       definitions,
-      workspaceConfigPath,
     )
   }
   else {
@@ -253,12 +251,10 @@ async function resolveDeclaredProjectEntries(
   globalViteConfig: ResolvedViteConfig,
   globalConfig: ResolvedConfig,
   definitions: TestProjectConfiguration[],
-  workspaceConfigPath: string | undefined,
 ): Promise<ResolvedProjectEntry[]> {
   const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
     globalViteConfig,
     globalConfig,
-    workspaceConfigPath,
     definitions,
   )
 
@@ -274,19 +270,19 @@ async function resolveDeclaredProjectEntries(
   const promises: Promise<ResolvedProjectEntry>[] = []
 
   projectConfigs.forEach((options, index) => {
-    const configRoot = workspaceConfigPath ? dirname(workspaceConfigPath) : globalConfig.root
+    const configRoot = globalConfig.root
     // if extends a config file, resolve the file path
     const configFile = typeof options.extends === 'string'
       ? resolve(configRoot, options.extends)
       : options.extends === true
         ? (globalViteConfig.configFile || false)
         : false
-    // if `root` is configured, resolve it relative to the workspace file or vite root (like other options)
+    // if `root` is configured, resolve it relative to vite root (like other options)
     // if `root` is not specified, inline configs use the same root as the root project
     const rawRoot = options.test?.root ?? options.root
     const root = rawRoot
       ? resolve(configRoot, rawRoot)
-      : globalConfig.root
+      : configRoot
 
     promises.push(concurrent(() => resolveSingleProjectEntry(harness, globalViteConfig, globalConfig, {
       ...options,
@@ -727,7 +723,6 @@ function cloneProjectConfigForBrowserInstance(
 async function resolveTestProjectConfigs(
   globalViteConfig: ResolvedViteConfig,
   globalConfig: ResolvedConfig,
-  workspaceConfigPath: string | undefined,
   projectsDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
@@ -751,11 +746,7 @@ async function resolveTestProjectConfigs(
         const file = resolve(globalConfig.root, stringOption)
 
         if (!existsSync(file)) {
-          const relativeWorkspaceConfigPath = workspaceConfigPath
-            ? relative(globalConfig.root, workspaceConfigPath)
-            : undefined
-          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkspaceConfigPath}"` : 'Projects definition'
-          throw new Error(`${note} references a non-existing file or a directory: ${file}`)
+          throw new Error(`Projects definition references a non-existing file or a directory: ${file}`)
         }
 
         const stats = statSync(file)
@@ -960,7 +951,6 @@ export async function attachProjectsFromEntries(
 export async function resolveAndAttachProjects(
   harness: PluginHarness,
   definitions: TestProjectConfiguration[],
-  workspaceConfigPath?: string,
 ): Promise<TestProject[]> {
   // Use the same per-entry resolution as the main pipeline (no expansion of
   // browser instances or benchmarks here — injected projects already pass
@@ -977,7 +967,6 @@ export async function resolveAndAttachProjects(
     vitest.viteConfig,
     vitest.config,
     definitions,
-    workspaceConfigPath,
     {
       throwIfEmpty: false,
       existingNames: new Set(vitest.projects.map(p => p.name)),
