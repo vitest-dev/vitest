@@ -741,10 +741,7 @@ export function resolveTestConfig(
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
-  // Set seed if either files or tests are shuffled
-  if (resolved.sequence.sequencer === RandomSequencer || resolved.sequence.shuffle) {
-    resolved.sequence.seed ??= Date.now()
-  }
+  resolved.sequence.seed ??= Date.now()
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
