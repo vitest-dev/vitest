@@ -46,10 +46,15 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   doc.open()
   doc.close()
   const mirror = createMirror()
+  // rrweb >=2.0 guards rebuild() behind its createSandboxedIframe()/WeakSet
+  // contract (CVE-2025-45806). We already render into our own sandboxed iframe
+  // (see iframeSandbox), so opt out of rrweb owning iframe creation rather than
+  // weakening anything — the sandbox attribute is still enforced by us.
   rebuild(serialized, {
     doc,
     cache: createCache(),
     mirror,
+    UNSAFE_allowUnprotectedRebuild: true,
   })
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
