@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-      - v4
+      - main
     paths:
       - '.github/workflows/**'
 
@@ -13,7 +13,7 @@ permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: ${{ github.ref_name != 'v4' }}
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
 
 jobs:
   zizmor:
