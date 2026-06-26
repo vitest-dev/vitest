@@ -415,7 +415,7 @@ test('browser.instances is empty', async () => {
 test('browser.name or browser.instances are required', async () => {
   const { stderr, exitCode } = await runVitestCli('--browser.enabled', '--root=./fixtures/browser-no-config')
   expect(exitCode).toBe(1)
-  expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
+  expect(stderr).toMatch('Browser Mode was enabled, but provider was not specified anywhere.')
 })
 
 test('--browser flag without browser configuration throws an error', async () => {

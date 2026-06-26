@@ -1,12 +1,11 @@
 import type { TestFsStructure } from '#test-utils'
 import type { ViteUserConfig } from 'vitest/config'
 import type { CliOptions, TestUserConfig, VitestOptions } from 'vitest/node'
-import crypto from 'node:crypto'
-import { createConsole, runVitest, runVitestCli, useFS, useTmpFS } from '#test-utils'
+import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
 import { resolve } from 'pathe'
-import { describe, expect, onTestFinished, test, vi } from 'vitest'
+import { describe, expect, onTestFailed, onTestFinished, test, vi } from 'vitest'
 import { createVitest, Logger, PluginHarness, resolveConfig } from 'vitest/node'
 import { Cli } from '../../../test-utils/cli'
 
@@ -721,9 +720,8 @@ test('CLI option --browser.detailsPanelPosition overrides config', async () => {
   expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('bottom')
 })
 
-function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  useFS(root, {
+async function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
+  const { root } = useTmpFS({
     ...fs,
     'basic.test.ts': /* ts */`
       import { test } from 'vitest'
@@ -731,7 +729,19 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
         expect(1).toBe(1)
       })
     `,
-    'vitest.config.ts': /* ts */ `
+    'vitest.config.js': /* ts */ `
+      import { playwright } from '@vitest/browser-playwright'
+      const config = ${JSON.stringify(options)}
+      if (config.projects) {
+        config.projects.forEach(p => {
+          if (p.test?.browser?.provider) {
+            p.test.browser.provider = playwright()
+          }
+        })
+      }
+      if (config.browser?.provider) {
+        config.browser.provider = playwright()
+      }
       export default {
         test: {
           reporters: [
@@ -763,12 +773,12 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
               },
             },
           ],
-          ...${JSON.stringify(options)}
+          ...config,
         }
       }
     `,
   })
-  return runVitestCli(
+  const result = await runVitestCli(
     {
       nodeOptions: {
         env: {
@@ -782,6 +792,10 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
     '--no-watch',
     ...cli,
   )
+  onTestFailed(() => {
+    console.error(`stdout: ${result.stdout}\nstderr:${result.stderr}`)
+  })
+  return result
 }
 
 describe('[e2e] workspace configs are affected by the CLI options', () => {
