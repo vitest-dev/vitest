@@ -133,6 +133,11 @@ export function resolveApiServerConfig(
   if (api && isBrowserEnabled) {
     // Always force middlewareMode to false in browser mode
     api.middlewareMode = false
+    // The browser server is standalone, so it always needs a port even when the
+    // user didn't configure `api`/`ui` (in which case `api` defaulted above)
+    if (!api.port) {
+      api.port = defaultPort
+    }
   }
 
   // if the API server is exposed to network, disable write operations by default

@@ -115,8 +115,8 @@ export async function createClusterServer(
 
   if (!contribution) {
     const server = await createViteServer(viteConfig)
-    if (viteConfig.test.api?.port) {
-      await server.listen()
+    if (config.api.port) {
+      await server.listen(config.api.port)
     }
     return { server }
   }
@@ -125,7 +125,7 @@ export async function createClusterServer(
   contribution.parent = parent
 
   const server = await createViteServer(viteConfig)
-  await server.listen()
+  await server.listen(config.api.port)
   contribution.setupRpc(parent)
   if (config.browser.ui) {
     setupApiServer(vitest, server)
