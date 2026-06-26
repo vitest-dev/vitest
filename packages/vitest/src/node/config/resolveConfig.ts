@@ -8,7 +8,6 @@ import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   ApiConfig,
   ResolvedConfig,
-  TestProjectConfiguration,
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
@@ -1056,15 +1055,11 @@ export async function resolveConfig(
   rootConfig.viteOverrides = viteOverridesCopy
   rootConfig._browserContribution = rootBrowserHolder.contribution
 
-  const userDefinitions = rootConfig.projects as
-    | TestProjectConfiguration[]
-    | undefined
-
-  rootConfig.projects = await resolveProjectEntries(
+  rootConfig.resolvedProjects = await resolveProjectEntries(
     pluginsHarness,
     rootViteConfig,
     rootConfig,
-    userDefinitions,
+    rootConfig.projects,
   )
 
   return rootViteConfig

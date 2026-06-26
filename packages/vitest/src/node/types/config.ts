@@ -1143,7 +1143,6 @@ export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
     | 'project'
-    | 'projects'
     | 'config'
     | 'filters'
     | 'browser'
@@ -1251,7 +1250,7 @@ export interface ResolvedConfig
 
   cliOptions: CliOptions
   viteOverrides: ViteUserConfig
-  projects: ResolvedProjectEntry[]
+  resolvedProjects: ResolvedProjectEntry[]
   /**
    * Browser server contribution captured by the `vitest:browser:loader` plugin
    * during this config's resolution (set only when `browser.enabled`). Used by

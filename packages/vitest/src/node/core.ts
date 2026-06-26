@@ -351,7 +351,7 @@ export class Vitest {
    */
   async _attachProjectServers(): Promise<void> {
     const resolved = this.config
-    const entries = resolved.projects || []
+    const entries = resolved.resolvedProjects || []
     this.projects = await attachProjectsFromEntries(this, entries)
 
     // `--benchmark` (CLI `benchmarkOnly`) narrows `vitest.projects` to only
