@@ -1,9 +1,26 @@
 import { getSafeTimers } from '@vitest/utils/timers'
+import { describeBudgetedTimeout, normalizeTimeoutConfig, resolveBudgetedTimeout } from '../runtime/runner/context'
+import { getWorkerState } from '../runtime/utils'
 import { vi } from './vi'
 
 // The waitFor function was inspired by https://github.com/testing-library/web-testing-library/pull/2
 
 export type WaitForCallback<T> = () => T | Promise<T>
+
+function resolveWaitOptions(options: number | WaitForOptions): { interval: number; timeout: number; timeoutDescription: string } {
+  const userOptions = typeof options === 'number' ? { timeout: options } : options
+  const { timeout: cfgTimeout, interval: cfgInterval } = normalizeTimeoutConfig(
+    getWorkerState().config.timeout?.wait,
+  )
+  // `'auto'` rides the remaining test/hook budget; a number caps below it; a
+  // per-call timeout wins but is still clamped to the budget.
+  const resolved = resolveBudgetedTimeout(userOptions.timeout, cfgTimeout)
+  return {
+    interval: userOptions.interval ?? cfgInterval ?? 50,
+    timeout: resolved.timeout,
+    timeoutDescription: describeBudgetedTimeout(resolved, 'test.timeout.wait'),
+  }
+}
 
 export interface WaitForOptions {
   /**
@@ -31,8 +48,7 @@ export function waitFor<T>(
 ): Promise<T> {
   const { setTimeout, setInterval, clearTimeout, clearInterval }
     = getSafeTimers()
-  const { interval = 50, timeout = 1000 }
-    = typeof options === 'number' ? { timeout: options } : options
+  const { interval, timeout, timeoutDescription } = resolveWaitOptions(options)
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<T>((resolve, reject) => {
@@ -59,7 +75,7 @@ export function waitFor<T>(
       let error = lastError
       if (!error) {
         error = copyStackTrace(
-          new Error('Timed out in waitFor!'),
+          new Error(`Timed out in waitFor! Timed out in ${timeoutDescription}.`),
           STACK_TRACE_ERROR,
         )
       }
@@ -127,8 +143,7 @@ export function waitUntil<T>(
 ): Promise<Truthy<T>> {
   const { setTimeout, setInterval, clearTimeout, clearInterval }
     = getSafeTimers()
-  const { interval = 50, timeout = 1000 }
-    = typeof options === 'number' ? { timeout: options } : options
+  const { interval, timeout, timeoutDescription } = resolveWaitOptions(options)
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<Truthy<T>>((resolve, reject) => {
@@ -142,7 +157,7 @@ export function waitUntil<T>(
       }
       if (!error) {
         error = copyStackTrace(
-          new Error('Timed out in waitUntil!'),
+          new Error(`Timed out in waitUntil! Timed out in ${timeoutDescription}.`),
           STACK_TRACE_ERROR,
         )
       }

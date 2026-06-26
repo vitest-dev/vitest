@@ -474,6 +474,19 @@ export interface VitestUtils {
   setConfig: (config: RuntimeOptions) => void
 
   /**
+   * Sets timeouts for the rest of the current run, as a focused shorthand over
+   * `vi.setConfig`. A number sets the test timeout; an object sets specific
+   * timeouts. Like `setConfig`, this affects tests/hooks that have not started yet.
+   */
+  setTimeout: (timeout: number | {
+    test?: number
+    hook?: number
+    action?: number | 'auto'
+    poll?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+    wait?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+  }) => void
+
+  /**
    * If config was changed with `vi.setConfig`, this will reset it to the original state().
    */
   resetConfig: () => void
@@ -832,6 +845,30 @@ function createVitest(): VitestUtils {
         _config = { ...state().config }
       }
       Object.assign(state().config, config)
+    },
+
+    setTimeout(timeout) {
+      if (!_config) {
+        _config = { ...state().config }
+      }
+      const cfg = state().config
+      if (typeof timeout === 'number') {
+        cfg.testTimeout = timeout
+        return
+      }
+      if (timeout.test != null) {
+        cfg.testTimeout = timeout.test
+      }
+      if (timeout.hook != null) {
+        cfg.hookTimeout = timeout.hook
+      }
+      if (timeout.action != null || timeout.poll != null || timeout.wait != null) {
+        cfg.timeout = {
+          action: timeout.action ?? cfg.timeout.action,
+          poll: timeout.poll ?? cfg.timeout.poll,
+          wait: timeout.wait ?? cfg.timeout.wait,
+        }
+      }
     },
 
     resetConfig() {

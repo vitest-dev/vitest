@@ -10,3 +10,7 @@ outline: deep
 - **CLI:** `--test-timeout=5000`, `--testTimeout=5000`
 
 Default timeout of a test in milliseconds. Use `0` to disable timeout completely.
+
+::: warning DEPRECATED
+Use [`timeout.test`](/config/timeout#timeout-test) instead. If both are set, `timeout.test` takes precedence.
+:::

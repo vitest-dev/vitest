@@ -28,6 +28,11 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     testTimeout: config.testTimeout,
     testNamePattern: config.testNamePattern,
     hookTimeout: config.hookTimeout,
+    timeout: {
+      action: config.timeout?.action ?? 'auto',
+      poll: config.timeout?.poll ?? 1000,
+      wait: config.timeout?.wait ?? 1000,
+    },
     clearMocks: config.clearMocks,
     mockReset: config.mockReset,
     restoreMocks: config.restoreMocks,

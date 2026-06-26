@@ -30,6 +30,11 @@ export interface SerializedConfig {
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
+  timeout: {
+    action: number | 'auto'
+    poll: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+    wait: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+  }
   retry: SerializableRetry
   repeats?: number
   includeTaskLocation: boolean | undefined
@@ -190,6 +195,7 @@ export type RuntimeConfig = Pick<
   | 'allowOnly'
   | 'testTimeout'
   | 'hookTimeout'
+  | 'timeout'
   | 'clearMocks'
   | 'mockReset'
   | 'restoreMocks'

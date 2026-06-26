@@ -616,6 +616,62 @@ Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable 
 
 Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.
 
+### timeout.test
+
+- **CLI:** `--timeout.test <timeout>`
+- **Config:** [timeout.test](/config/timeout#timeout-test)
+
+Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.
+
+### timeout.hook
+
+- **CLI:** `--timeout.hook <timeout>`
+- **Config:** [timeout.hook](/config/timeout#timeout-hook)
+
+Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.
+
+### timeout.teardown
+
+- **CLI:** `--timeout.teardown <timeout>`
+- **Config:** [timeout.teardown](/config/timeout#timeout-teardown)
+
+Default teardown timeout in milliseconds (default: `10000`).
+
+### timeout.action
+
+- **CLI:** `--timeout.action <timeout>`
+- **Config:** [timeout.action](/config/timeout#timeout-action)
+
+Timeout for browser actions, locators and `expect.element()` (default: `auto`).
+
+### timeout.poll.timeout
+
+- **CLI:** `--timeout.poll.timeout <timeout>`
+- **Config:** [timeout.poll.timeout](/config/timeout#timeout-poll-timeout)
+
+Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`).
+
+### timeout.poll.interval
+
+- **CLI:** `--timeout.poll.interval <interval>`
+- **Config:** [timeout.poll.interval](/config/timeout#timeout-poll-interval)
+
+Poll interval in milliseconds for `expect.poll()` assertions (default: `50`).
+
+### timeout.wait.timeout
+
+- **CLI:** `--timeout.wait.timeout <timeout>`
+- **Config:** [timeout.wait.timeout](/config/timeout#timeout-wait-timeout)
+
+Timeout in milliseconds for `vi.waitFor()` / `vi.waitUntil()` (default: `1000`).
+
+### timeout.wait.interval
+
+- **CLI:** `--timeout.wait.interval <interval>`
+- **Config:** [timeout.wait.interval](/config/timeout#timeout-wait-interval)
+
+Polling interval in milliseconds for `vi.waitFor()` / `vi.waitUntil()` (default: `50`).
+
 ### bail
 
 - **CLI:** `--bail <number>`

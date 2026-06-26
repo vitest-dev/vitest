@@ -426,6 +426,7 @@ export interface InlineConfig {
    * Default timeout of a test in milliseconds
    *
    * @default 5000
+   * @deprecated Use `timeout.test` instead.
    */
   testTimeout?: number
 
@@ -433,6 +434,7 @@ export interface InlineConfig {
    * Default timeout of a hook in milliseconds
    *
    * @default 10000
+   * @deprecated Use `timeout.hook` instead.
    */
   hookTimeout?: number
 
@@ -440,8 +442,53 @@ export interface InlineConfig {
    * Default timeout to wait for close when Vitest shuts down, in milliseconds
    *
    * @default 10000
+   * @deprecated Use `timeout.teardown` instead.
    */
   teardownTimeout?: number
+
+  /**
+   * Unified timeout configuration.
+   *
+   * `action`/`poll`/`wait` default to `'auto'`, meaning the operation rides the
+   * remaining test budget (failing just before the test itself times out, with
+   * a descriptive error). A number sets a fixed cap below the budget.
+   */
+  timeout?: {
+    /**
+     * Test body timeout in milliseconds (was `testTimeout`).
+     * @default 5000 (node) / 15000 (browser)
+     */
+    test?: number
+    /**
+     * Lifecycle hook timeout in milliseconds (was `hookTimeout`).
+     * @default 10000 (node) / 30000 (browser)
+     */
+    hook?: number
+    /**
+     * Process shutdown timeout in milliseconds (was `teardownTimeout`).
+     * @default 10000
+     */
+    teardown?: number
+    /**
+     * Timeout for browser actions, locators and `expect.element()`.
+     * @default 'auto'
+     */
+    action?: number | 'auto'
+    /**
+     * Timeout for `expect.poll()` (was `expect.poll.timeout`). The object form
+     * also sets the polling `interval`. Use `'auto'` to ride the remaining test
+     * budget instead of a fixed timeout.
+     * @default 1000
+     */
+    poll?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+    /**
+     * Timeout for `vi.waitFor()` / `vi.waitUntil()`. The object form also sets
+     * the polling `interval`. Use `'auto'` to ride the remaining test budget
+     * instead of a fixed timeout.
+     * @default 1000
+     */
+    wait?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+  }
 
   /**
    * Silent mode

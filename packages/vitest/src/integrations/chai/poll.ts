@@ -2,6 +2,7 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
+import { describeBudgetedTimeout, normalizeTimeoutConfig, resolveBudgetedTimeout } from '../../runtime/runner/context'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
 
@@ -47,12 +48,16 @@ function throwWithCause(error: any, source: Error) {
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const state = getWorkerState()
-    const defaults = state.config.expect?.poll ?? {}
-    const {
-      interval = defaults.interval ?? 50,
-      timeout = defaults.timeout ?? 1000,
-      message,
-    } = options
+    const { timeout: pollTimeoutConfig, interval: pollIntervalConfig } = normalizeTimeoutConfig(
+      state.config.timeout?.poll,
+    )
+    const { message } = options
+    const interval = options.interval ?? pollIntervalConfig ?? 50
+    // `'auto'` rides the remaining test budget; a number caps below it; a
+    // per-call timeout wins but is still clamped to the budget.
+    const resolvedTimeout = resolveBudgetedTimeout(options.timeout, pollTimeoutConfig)
+    const timeout = resolvedTimeout.timeout
+    const timeoutDescription = describeBudgetedTimeout(resolvedTimeout, 'test.timeout.poll')
     // @ts-expect-error private poll access
     const assertion = expect(null, message).withContext({
       poll: true,
@@ -151,7 +156,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     timeoutPromise,
                   )
                   if (!fnResult.ok) {
-                    lastError ??= new Error(`expect.poll() function didn't resolve in time.`)
+                    lastError ??= new Error(`expect.poll() callback timed out in ${timeoutDescription}.`)
                     break
                   }
                   const obj = fnResult.value
@@ -162,7 +167,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     timeoutPromise,
                   )
                   if (!assertionResult.ok) {
-                    lastError ??= new Error(`expect.poll() assertion didn't resolve in time.`)
+                    lastError ??= new Error(`expect.poll() assertion timed out in ${timeoutDescription}.`)
                     break
                   }
                   const output = assertionResult.value
