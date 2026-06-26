@@ -237,6 +237,7 @@ describe('project filtering', () => {
     { pattern: '!project_1', expected: ['project_2', 'space_1'] },
     { pattern: '!project*', expected: ['space_1'] },
     { pattern: '!project', expected: allProjects },
+    { pattern: ['!project_1', '!project_2'], expected: ['space_1'] },
   ])('should match projects correctly: $pattern', async ({ pattern, expected }) => {
     const { ctx, stderr, stdout } = await runVitest({
       root: 'fixtures/project',

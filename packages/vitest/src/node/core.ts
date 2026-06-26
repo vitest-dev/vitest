@@ -1675,10 +1675,26 @@ export class Vitest {
     if (!projects || !projects.length) {
       return true
     }
-    return toArray(projects).some((project) => {
-      const regexp = wildcardPatternToRegExp(project)
-      return regexp.test(name)
-    })
+
+    let hasPositiveFilter = false
+    let matchesPositiveFilter = false
+
+    for (const project of toArray(projects)) {
+      if (project.startsWith('!')) {
+        const positivePattern = project.slice(1)
+        if (wildcardPatternToRegExp(positivePattern).test(name)) {
+          return false
+        }
+      }
+      else {
+        hasPositiveFilter = true
+        if (wildcardPatternToRegExp(project).test(name)) {
+          matchesPositiveFilter = true
+        }
+      }
+    }
+
+    return hasPositiveFilter ? matchesPositiveFilter : true
   }
 
   /** @internal */
