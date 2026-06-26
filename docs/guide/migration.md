@@ -52,6 +52,24 @@ vitest --ui
 # UI started at http://localhost:51204/__vitest__/?token=...
 ```
 
+### Fake Timers Now Mock `Temporal`
+
+Vitest now mocks the [`Temporal`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) API alongside `Date` when fake timers are enabled, following the [`@sinonjs/fake-timers` v15.4 update](https://github.com/sinonjs/fake-timers/blob/main/CHANGELOG.md#1540--2026-05-05). This only takes effect when `Temporal` is available on the global object — either natively (Node.js >= 26 by default, behind `--harmony-temporal` on older versions, and supporting browsers) or through a globally installed polyfill such as `import 'temporal-polyfill/global'`.
+
+Previously `Temporal.Now` kept returning the real wall-clock time even when [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers) was active. Now it follows the mocked clock:
+
+```ts
+vi.useFakeTimers({ now: 0 })
+
+Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
+```
+
+`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
+
+```ts
+vi.useFakeTimers({ toNotFake: ['Temporal'] })
+```
+
 ### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
 
 Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.

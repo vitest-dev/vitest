@@ -124,8 +124,8 @@ catalogs:
       specifier: ^7.8.3
       version: 7.8.3
     sinon:
-      specifier: ^21.0.3
-      version: 21.0.3
+      specifier: ^22.0.0
+      version: 22.0.0
     sinon-chai:
       specifier: ^4.0.1
       version: 4.0.1
@@ -189,7 +189,7 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@15.3.2': 5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0
+  '@sinonjs/fake-timers@15.4.0': 8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb
   acorn@8.11.3: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
   cac@6.7.14: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
   istanbul-lib-instrument: fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11
@@ -1105,8 +1105,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       '@sinonjs/fake-timers':
-        specifier: 15.3.2
-        version: 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
+        specifier: 15.4.0
+        version: 15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1611,10 +1611,10 @@ importers:
         version: react@18.3.1
       sinon:
         specifier: 'catalog:'
-        version: 21.0.3
+        version: 22.0.0
       sinon-chai:
         specifier: 'catalog:'
-        version: 4.0.1(chai@6.2.2)(sinon@21.0.3)
+        version: 4.0.1(chai@6.2.2)(sinon@22.0.0)
       temporal-polyfill:
         specifier: ~0.3.0
         version: 0.3.0
@@ -5141,11 +5141,11 @@ packages:
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@15.3.2':
-    resolution: {integrity: sha512-mrn35Jl2pCpns+mE3HaZa1yPN5EYCRgiMI+135COjr2hr8Cls9DXqIZ57vZe2cz7y2XVSq92tcs6kGQcT1J8Rw==}
+  '@sinonjs/fake-timers@15.4.0':
+    resolution: {integrity: sha512-DsG+8/LscQIQg68J6Ef3dv10u6nVyetYn923s3/sus5eaGfTo1of5WMZSLf0UJc9KDuKPilPH0UDJCjvNbDNCA==}
 
-  '@sinonjs/samsam@9.0.3':
-    resolution: {integrity: sha512-ZgYY7Dc2RW+OUdnZ1DEHg00lhRt+9BjymPKHog4PRFzr1U3MbK57+djmscWyKxzO1qfunHqs4N45WWyKIFKpiQ==}
+  '@sinonjs/samsam@10.0.2':
+    resolution: {integrity: sha512-8lVwD1Df1BmzoaOLhMcGGcz/Jyr5QY2KSB75/YK1QgKzoabTeLdIVyhXNZK9ojfSKSdirbXqdbsXXqP9/Ve8+A==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -6911,8 +6911,8 @@ packages:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
-  diff@8.0.3:
-    resolution: {integrity: sha512-qejHi7bcSD4hQAZE0tNAawRK1ZtafHDmMTMkrrIGgSLl7hTnQHmKCeB45xAcbfTqK2zowkM3j3bHt/4b/ARbYQ==}
+  diff@9.0.0:
+    resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
     engines: {node: '>=0.3.1'}
 
   dom-accessibility-api@0.5.16:
@@ -9827,8 +9827,8 @@ packages:
       chai: ^5.0.0 || ^6.0.0
       sinon: '>=4.0.0'
 
-  sinon@21.0.3:
-    resolution: {integrity: sha512-0x8TQFr8EjADhSME01u1ZK31yv2+bd6Z5NrBCHVM+n4qL1wFqbxftmeyi3bwlr49FbbzRfrqSFOpyHCOh/YmYA==}
+  sinon@22.0.0:
+    resolution: {integrity: sha512-sq/6DpdXOrLyfbKlXLg/Usc7xu8YXPeLkOFZRvA3bNUSA2lhbrZ06yuXbH1fkzBPCbz9O10+7hznzUsjaYNm0Q==}
 
   sirv@3.0.2:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
@@ -14020,11 +14020,11 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)':
+  '@sinonjs/fake-timers@15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
-  '@sinonjs/samsam@9.0.3':
+  '@sinonjs/samsam@10.0.2':
     dependencies:
       '@sinonjs/commons': 3.0.1
       type-detect: 4.1.0
@@ -15982,7 +15982,7 @@ snapshots:
 
   diff-sequences@29.6.3: {}
 
-  diff@8.0.3: {}
+  diff@9.0.0: {}
 
   dom-accessibility-api@0.5.16: {}
 
@@ -19623,18 +19623,17 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
 
-  sinon-chai@4.0.1(chai@6.2.2)(sinon@21.0.3):
+  sinon-chai@4.0.1(chai@6.2.2)(sinon@22.0.0):
     dependencies:
       chai: 6.2.2
-      sinon: 21.0.3
+      sinon: 22.0.0
 
-  sinon@21.0.3:
+  sinon@22.0.0:
     dependencies:
       '@sinonjs/commons': 3.0.1
-      '@sinonjs/fake-timers': 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
-      '@sinonjs/samsam': 9.0.3
-      diff: 8.0.3
-      supports-color: 7.2.0
+      '@sinonjs/fake-timers': 15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)
+      '@sinonjs/samsam': 10.0.2
+      diff: 9.0.0
 
   sirv@3.0.2:
     dependencies:
