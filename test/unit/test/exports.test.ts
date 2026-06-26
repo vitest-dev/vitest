@@ -90,6 +90,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "HangingProcessReporter": "function",
         "JUnitReporter": "function",
         "JsonReporter": "function",
+        "Logger": "function",
         "MinimalReporter": "function",
         "PluginHarness": "function",
         "ReportersMap": "object",
