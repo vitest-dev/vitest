@@ -49,11 +49,11 @@ const vitest = vi.defineHelper(async (options: TestUserConfig & { $viteConfig?: 
 })
 
 async function config(options?: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions }, pluginHarness?: PluginHarness) {
-  const { test: { projects } } = await resolveConfig({ config: false, ...options?.$cliConfig }, {
+  const { test: { resolvedProjects } } = await resolveConfig({ config: false, ...options?.$cliConfig }, {
     ...options?.$viteConfig,
     test: options,
   }, pluginHarness)
-  return projects.filter(p => !p.hidden)
+  return resolvedProjects.filter(p => !p.hidden)
 }
 
 test('assigns names as browsers', async () => {

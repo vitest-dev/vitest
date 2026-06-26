@@ -138,10 +138,10 @@ it('experimental fsModuleCache is inherited in a project', async () => {
     ],
   })
   expect(v.experimental.fsModuleCache).toBe(true)
-  expect(v.projects[0].projectConfig.experimental.fsModuleCache).toBe(true)
+  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCache).toBe(true)
 
   expect(v.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.projects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
 })
 
 it('project overrides experimental fsModuleCache', async () => {
@@ -163,8 +163,8 @@ it('project overrides experimental fsModuleCache', async () => {
     ],
   })
   expect(v.experimental.fsModuleCache).toBe(true)
-  expect(v.projects[0].projectConfig.experimental.fsModuleCache).toBe(false)
+  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCache).toBe(false)
 
   expect(v.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.projects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
 })
