@@ -33,6 +33,7 @@ export interface WebSocketBrowserHandlers {
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
+  readSnapshotFileData: (id: string) => Promise<Record<string, string> | null>
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
   sendLog: (method: TestExecutionMethod, log: UserConsoleLog) => void

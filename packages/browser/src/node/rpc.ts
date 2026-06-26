@@ -9,6 +9,7 @@ import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -267,6 +268,14 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             return null
           }
           return fs.readFile(snapshotPath, 'utf-8')
+        },
+        async readSnapshotFileData(snapshotPath) {
+          checkFileAccess(snapshotPath)
+          if (!existsSync(snapshotPath)) {
+            return null
+          }
+          const content = await fs.readFile(snapshotPath, 'utf-8')
+          return evaluateSnapshotFile(snapshotPath, content)
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
