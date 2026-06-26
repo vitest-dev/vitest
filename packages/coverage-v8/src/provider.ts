@@ -5,7 +5,7 @@ import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
-import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import { mergeScriptCovs } from '@bcoe/v8-coverage'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
@@ -28,12 +28,6 @@ export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 const FILE_PROTOCOL = 'file://'
-
-// Flush the buffered raw coverages into the running merge once they grow past this
-// many bytes, so the amount of raw coverage held in memory at once stays bounded on
-// very large suites (#4476). The threshold is high enough that typical runs still
-// merge everything in a single pass. See `generateCoverage`.
-const MAX_BATCH_BYTES = 16 * 1024 * 1024
 
 const debug = createDebug('vitest:coverage')
 
@@ -66,85 +60,46 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     const coverageMap = this.createCoverageMap()
 
-    // `mergeProcessCovs` is the expensive part of coverage generation: every call
-    // rebuilds the full range-tree forest, so its cost (in both time and peak memory)
-    // scales with the number of calls. Merging the whole run in a single pass is
-    // therefore the fastest and lightest option - but it would hold every raw coverage
-    // in memory at once, which can OOM very large suites (#4476).
-    //
-    // So we accumulate raw coverages and merge them in as few passes as possible:
-    // a single merge for the common case, flushing early only once the buffered raw
-    // coverage grows past `MAX_BATCH_BYTES`. This keeps resident raw coverage bounded
-    // while keeping the merge count (and thus the overhead) minimal.
-    let merged: RawCoverage = { result: [] }
-    let batch: RawCoverage[] = []
-    let batchBytes = 0
-
-    // `mergeProcessCovs` drops `startOffset` (e.g. in vue) and `isExtendedContext`,
-    // so remember the originals per-url and restore them after merging.
-    const startOffsets = new Map<string, number>()
-    const extendedContexts = new Set<string>()
-
+    const mergedScripts = new Map<string, ScriptCoverageWithOffset>()
     const autoAttachSubprocess = this.options.autoAttachSubprocess
 
-    const mergeBatch = () => {
-      if (batch.length === 0) {
-        return
-      }
-
-      merged = mergeProcessCovs([merged, ...batch])
-      batch = []
-      batchBytes = 0
-    }
-
     await this.readCoverageFiles<RawCoverage>({
-      onFileRead(coverage, size) {
-        batch.push(coverage)
-        batchBytes += size
+      onFileRead(coverage) {
+        for (const script of coverage.result) {
+          const previous = mergedScripts.get(script.url)
+          const startOffset = previous?.startOffset || script.startOffset || 0
+          const isExtendedContext = autoAttachSubprocess
+            && (previous?.isExtendedContext || script.isExtendedContext)
+          const merged = mergeScriptCovs(previous ? [previous, script] : [script]) as ScriptCoverageWithOffset
 
-        for (const result of coverage.result) {
-          if (result.startOffset && !startOffsets.has(result.url)) {
-            startOffsets.set(result.url, result.startOffset)
+          merged.startOffset ||= startOffset
+
+          if (isExtendedContext) {
+            merged.isExtendedContext = true
           }
 
-          if (autoAttachSubprocess && result.isExtendedContext) {
-            extendedContexts.add(result.url)
-          }
-        }
-
-        if (batchBytes >= MAX_BATCH_BYTES) {
-          mergeBatch()
+          mergedScripts.set(merged.url, merged)
         }
       },
       onFinished: async (project, environment) => {
-        mergeBatch()
+        const result = Array.from(mergedScripts.values())
+          .sort((a, b) => a.url.localeCompare(b.url))
 
-        // Restore values dropped by the merge in one pass over the result.
-        for (const result of merged.result) {
-          if (!result.startOffset) {
-            result.startOffset = startOffsets.get(result.url) || 0
-          }
-
-          if (autoAttachSubprocess && !result.isExtendedContext && extendedContexts.has(result.url)) {
-            result.isExtendedContext = true
-          }
+        for (const [scriptId, script] of result.entries()) {
+          script.scriptId = String(scriptId)
         }
 
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const converted = await this.convertCoverage(
-          merged,
+          { result },
           project,
           environment,
         )
 
         coverageMap.merge(converted)
 
-        merged = { result: [] }
-        batch = []
-        batchBytes = 0
-        startOffsets.clear()
-        extendedContexts.clear()
+        mergedScripts.clear()
       },
       onDebug: debug,
     })

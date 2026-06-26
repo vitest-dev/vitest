@@ -326,8 +326,8 @@ export class BaseCoverageProvider {
   }
 
   async readCoverageFiles<CoverageType>({ onFileRead, onFinished, onDebug }: {
-    /** Callback invoked with a single coverage result and the byte size of its serialized form */
-    onFileRead: (data: CoverageType, size: number) => void
+    /** Callback invoked with a single coverage result */
+    onFileRead: (data: CoverageType) => void
     /** Callback invoked once all results of a project for specific transform mode are read */
     onFinished: (project: Vitest['projects'][number], environment: string) => Promise<void>
     onDebug: ((...logs: any[]) => void) & { enabled: boolean }
@@ -356,7 +356,7 @@ export class BaseCoverageProvider {
               })
             const coverage = JSON.parse(contents)
 
-            onFileRead(coverage, contents.length)
+            onFileRead(coverage)
           }),
           )
         }
