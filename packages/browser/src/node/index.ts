@@ -303,6 +303,10 @@ body {
           },
           middlewareMode: false,
           watch: null,
+          // Vitest forwards browser console logs and unhandled errors through its
+          // own RPC, so Vite's client forwarding (defaults on under agents) would
+          // double-report them and leak into stderr.
+          forwardConsole: false,
         },
       }
       // Enables using the @preserve ignore hint for coverage providers. Only for
