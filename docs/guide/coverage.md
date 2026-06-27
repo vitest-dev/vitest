@@ -113,6 +113,7 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 - ✅ Works on any Javascript runtime
 - ✅ Widely used and battle-tested for over 13 years.
 - ✅ In some cases faster than V8. Coverage instrumentation can be limited to specific files, as opposed to V8 where all modules are instrumented.
+- ❌ Test code is transformed to add instrumentation before running
 - ❌ Execution speed is slower than V8 due to instrumentation overhead
 - ❌ Memory usage is higher than V8
 
