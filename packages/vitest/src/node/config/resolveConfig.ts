@@ -200,11 +200,8 @@ export function resolveTestConfig(
     options.environment = 'happy-dom'
   }
 
-  const resolved = {
-    ...configDefaults,
-    ...options,
-    root: viteConfig.root,
-  } as any as ResolvedConfig
+  const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
+  resolved.root = viteConfig.root
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
   if (!rootStats?.isDirectory()) {
@@ -359,15 +356,6 @@ export function resolveTestConfig(
     }
   }
 
-  // TODO: apply for _PROJECTS_, this needs to happen _first_, not after the config is resolved
-  // apply browser CLI options only if the config already has the browser config and not disabled manually
-  // if (resolved.browser && cliOptions.browser && (resolved.browser.enabled !== false || cliOptions.browser.enabled)) {
-  //   resolved.browser = mergeConfig(
-  //     resolved.browser,
-  //     cliOptions.browser,
-  //   ) as ResolvedBrowserOptions
-  // }
-
   resolved.browser ??= {} as any
   const browser = resolved.browser
 
@@ -422,6 +410,12 @@ export function resolveTestConfig(
         ].join(''))
       }
     }
+
+    browser.instances.forEach((instance) => {
+      instance.name ??= resolved.name
+        ? `${resolved.name} (${instance.browser})`
+        : instance.browser
+    })
   }
 
   if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {

@@ -23,7 +23,7 @@ export async function globProjectFiles(
   return files.map(file => slash(path.resolve(cwd, file)))
 }
 
-function isInSourceTestCode(code: string): boolean {
+export function isInSourceTestCode(code: string): boolean {
   return code.includes('import.meta.vitest')
 }
 

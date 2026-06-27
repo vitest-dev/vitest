@@ -19,7 +19,6 @@ import { tmpdir } from 'node:os'
 import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
-import { isRunnableDevEnvironment } from 'vite'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { BenchmarkManager } from './benchmark'
@@ -28,7 +27,7 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { getFilePoolName } from './pool'
-import { globProjectFiles, globProjectTestFiles } from './projects/globProjectFiles'
+import { globProjectFiles, globProjectTestFiles, isInSourceTestCode } from './projects/globProjectFiles'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './test-specification'
 
@@ -114,20 +113,6 @@ export class TestProject {
           this._fetcher,
           this.config,
         )
-
-    const ssrEnvironment = server.environments.ssr
-    if (isRunnableDevEnvironment(ssrEnvironment)) {
-      const ssrRunner = new ServerModuleRunner(
-        ssrEnvironment,
-        this._fetcher,
-        this.config,
-      )
-      Object.defineProperty(ssrEnvironment, 'runner', {
-        value: ssrRunner,
-        writable: true,
-        configurable: true,
-      })
-    }
   }
 
   // "provide" is a property, not a method to keep the context when destructed in the global setup,
@@ -391,16 +376,12 @@ export class TestProject {
       && pm.isMatch(relativeId, this.config.includeSource)
     ) {
       const code = source?.() || readFileSync(moduleId, 'utf-8')
-      if (this.isInSourceTestCode(code)) {
+      if (isInSourceTestCode(code)) {
         this.markTestFile(moduleId)
         return true
       }
     }
     return false
-  }
-
-  private isInSourceTestCode(code: string): boolean {
-    return code.includes('import.meta.vitest')
   }
 
   private filterFiles(testFiles: string[], filters: string[], dir: string): string[] {

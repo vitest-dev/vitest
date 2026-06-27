@@ -1,12 +1,7 @@
-import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { Plugin as VitePlugin } from 'vite'
 import type { CliOptions } from '../cli/cli-api'
 import type { PluginHarness } from '../config/pluginHarness'
-import type { UserConfig } from '../types/config'
-import { deepMerge } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
-import { isRunnableDevEnvironment } from 'vite'
-import { configDefaults } from '../../defaults'
-import { ServerModuleRunner } from '../environments/serverRunner'
 import { VitestConfigApi } from './api'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
@@ -14,6 +9,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
+import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
 import { VitestCoreResolver } from './vitestResolver'
 
 // the plugins required when starting Vitest
@@ -25,6 +21,7 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
     VitestCoreResolver(),
     NormalizeURLPlugin(),
     MetaEnvReplacerPlugin(),
+    SsrRunnerFixerPlugin(harness),
     {
       name: 'vitest:ui-injector',
       enforce: 'post',
@@ -35,35 +32,6 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
           // @ts-expect-error mutate readonly
           config.plugins.push(uiPlugin)
         }
-      },
-    },
-    {
-      name: 'vitest:module-runner-fixer',
-      configureServer: {
-        // Install a `ServerModuleRunner` override on the SSR environment so
-        // that user plugins' `configureServer` hooks can call
-        // `server.environments.ssr.runner.import(...)` and get Vitest's
-        // module runner (which respects `noExternal` etc.) instead of Vite's
-        // default `ESModulesEvaluator` (which does not support CJS deps).
-        //
-        // Runs `enforce: 'pre'` so it sits before user plugins in the chain.
-        order: 'pre',
-        async handler(server) {
-          const ssrEnvironment = server.environments.ssr
-          if (isRunnableDevEnvironment(ssrEnvironment)) {
-            const vitest = harness.getVitest()
-            const ssrRunner = new ServerModuleRunner(
-              ssrEnvironment,
-              vitest._fetcher,
-              vitest.config,
-            )
-            Object.defineProperty(ssrEnvironment, 'runner', {
-              value: ssrRunner,
-              writable: true,
-              configurable: true,
-            })
-          }
-        },
       },
     },
   ]
@@ -84,11 +52,9 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
       config: {
         order: 'post',
         handler(viteConfig) {
-          // Custom user config, this includes CLI overrides
-          const testConfig = viteConfig.test ?? {}
           const root = resolve(options.root || viteConfig.test?.root || viteConfig.root || process.cwd())
 
-          const config: ViteConfig = {
+          return {
             base: '/',
             root,
             build: {
@@ -97,67 +63,10 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
               emptyOutDir: false,
             },
           }
-
-          if (options.benchmarkOnly) {
-            testConfig.benchmark ??= {}
-            testConfig.benchmark.enabled = true
-          }
-
-          return config
         },
       },
     },
     VitestConfigApi(harness),
     ...VitestConfig(harness),
-    // Final config resolution. Making sure that CLI options always have precedent
-    // even if the value was changed by a user plugin.
-    {
-      name: 'vitest:config:resolve',
-      enforce: 'post',
-      configResolved: {
-        order: 'post',
-        handler(viteConfig) {
-          const testConfig = (viteConfig.test ?? {}) as UserConfig
-
-          if ('alias' in testConfig) {
-            delete testConfig.alias
-          }
-
-          const resolvedConfig: UserConfig = deepMerge(
-            {},
-            configDefaults,
-            testConfig,
-          )
-
-          // Auto-name browser instances based on the project name + browser kind.
-          if (resolvedConfig.browser?.instances) {
-            const baseName = resolvedConfig.name
-            resolvedConfig.browser.instances.forEach((instance) => {
-              instance.name ??= baseName ? `${baseName} (${instance.browser})` : instance.browser
-            })
-          }
-
-          // we replace every "import.meta.env" with "process.env"
-          // to allow reassigning, so we need to put all envs on process.env
-          const { PROD, DEV, ...envs } = viteConfig.env
-
-          // process.env can have only string values and will cast string on it if we pass other type,
-          // so we are making them truthy
-          process.env.PROD ??= PROD ? '1' : ''
-          process.env.DEV ??= DEV ? '1' : ''
-
-          for (const name in envs) {
-            process.env[name] ??= envs[name]
-          }
-
-          // don't watch files in run mode
-          if (!resolvedConfig.watch) {
-            viteConfig.server.watch = null
-          }
-
-          ;(viteConfig as any).test = resolvedConfig
-        },
-      },
-    },
   ]
 }

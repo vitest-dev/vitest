@@ -27,6 +27,10 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
           delete viteConfig.define['import.meta.vitest']
         }
 
+        // move `test.alias` to Vite's `resolve.alias`
+        const alias = testConfig.alias
+        delete testConfig.alias
+
         // We inject the defines string in non-browser tests,
         // But keep the original behaviour in the browser mode
         const defines = browserEnabled
@@ -36,7 +40,7 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
         const config: ViteConfig = browserEnabled
           ? {
               resolve: {
-                alias: viteConfig.test?.alias,
+                alias,
               },
               test: {},
             }
@@ -47,7 +51,7 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
               },
               resolve: {
                 ...resolveOptions,
-                alias: viteConfig.test?.alias,
+                alias,
               },
               test: {},
             }

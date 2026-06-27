@@ -9,13 +9,14 @@ import type { Vitest } from '../core'
 import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   BrowserInstanceOption,
+  ProjectName,
   ResolvedConfig,
   ResolvedProjectEntry,
   TestProjectConfiguration,
   UserConfig,
   UserWorkspaceConfig,
 } from '../types/config'
-import { existsSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import os from 'node:os'
 import { deepClone } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -151,7 +152,8 @@ export async function resolveProjectEntries(
   const afterBrowser = expandBrowserInstancesInEntries(globalConfig, baseEntries, seenNamesSet)
 
   // Benchmark expansion (per-entry config injection, runs over post-browser list).
-  const afterBenchmark = expandBenchmarksInEntries(afterBrowser, seenNamesSet)
+  // `--benchmark` makes every project run as a benchmark.
+  const afterBenchmark = expandBenchmarksInEntries(afterBrowser, seenNamesSet, !!globalConfig.cliOptions.benchmarkOnly)
 
   // --project filter (applied after expansion so all candidate names are known).
   const filtered = applyProjectFilter(globalConfig, afterBenchmark)
@@ -328,16 +330,6 @@ async function resolveDeclaredProjectEntries(
     )))
   }
 
-  if (!promises.length) {
-    throw new Error(
-      [
-        'No projects were found. Make sure your configuration is correct. ',
-        globalConfig.project.length ? `The filter matched no projects: ${globalConfig.project.join(', ')}. ` : '',
-        `The projects definition: ${JSON.stringify(definitions, null, 4)}.`,
-      ].join(''),
-    )
-  }
-
   const settled = await Promise.allSettled(promises)
   const errors: Error[] = []
   const entries: ResolvedProjectEntry[] = []
@@ -385,7 +377,7 @@ async function resolveSingleProjectEntry(
         harness,
         globalViteConfig,
         globalConfig,
-        { ...options, workspacePath },
+        options,
       ),
       ...BrowserLoaderPlugin(browserHolder, harness),
       {
@@ -410,7 +402,16 @@ async function resolveSingleProjectEntry(
 
   const projectViteConfig = await viteResolveConfig(projectInline, 'serve')
 
+  // inherit the root's resolved env as defaults; a project's own env wins,
+  // like every other option a project can override
+  for (const key in globalViteConfig.env) {
+    projectViteConfig.env[key] ??= globalViteConfig.env[key]
+  }
+
   const mergedOptions = (projectViteConfig.test ?? {}) as UserConfig
+
+  // resolved after `viteResolveConfig` so a plugin can still set `test.name`
+  mergedOptions.name = resolveProjectName(mergedOptions.name, workspacePath)
 
   const projectConfig = resolveTestConfig(
     harness.logger,
@@ -448,9 +449,7 @@ function expandBrowserInstancesInEntries(
   entries: ResolvedProjectEntry[],
   names: Set<string>,
 ): ResolvedProjectEntry[] {
-  // Non-browser entries first, then browser-instance entries at the end.
-  // Matches the old workspace behavior where the original browser project was
-  // removed from the list and instance clones were appended.
+  // non-browser entries first, then each browser parent followed by its instances
   const result: ResolvedProjectEntry[] = []
   const browserEntries: ResolvedProjectEntry[] = []
 
@@ -465,7 +464,7 @@ function expandBrowserInstancesInEntries(
 
   for (const entry of browserEntries) {
     const { projectConfig, viteConfig } = entry
-    const instances = projectConfig.browser.instances || [] // FIXME: duplicated somewhere
+    const instances = projectConfig.browser.instances ?? []
     const parentName = projectConfig.name
 
     if (instances.length === 0 || isExcludedByProjectFilter(globalConfig.project, parentName)) {
@@ -584,9 +583,9 @@ function expandBrowserInstancesInEntries(
 }
 
 /**
- * For each entry whose `benchmark.enabled` is true, inject an additional
- * benchmark variant entry. The new entry shares `viteConfig` with its
- * non-benchmark counterpart and carries its own benchmark-shaped
+ * For each benchmark-enabled entry (or every entry when `benchmarkOnly`), inject
+ * an additional benchmark variant entry. The new entry shares `viteConfig` with
+ * its non-benchmark counterpart and carries its own benchmark-shaped
  * `projectConfig`.
  *
  * Iterates the post-browser list, so benchmark variants also spawn from
@@ -595,13 +594,14 @@ function expandBrowserInstancesInEntries(
 function expandBenchmarksInEntries(
   entries: ResolvedProjectEntry[],
   names: Set<string>,
+  benchmarkOnly: boolean,
 ): ResolvedProjectEntry[] {
   let lastGroupOrder = Math.max(0, ...entries.map(e => e.projectConfig.sequence.groupOrder))
   const result = [...entries]
 
   for (const entry of entries) {
     const benchmark = entry.projectConfig.benchmark
-    if (!benchmark.enabled || entry.hidden) {
+    if ((!benchmark.enabled && !benchmarkOnly) || entry.hidden) {
       continue
     }
 
@@ -626,11 +626,11 @@ function expandBenchmarksInEntries(
       maxConcurrency: 1,
       testTimeout: entry.projectConfig.testTimeout < 60_000 ? 60_000 : entry.projectConfig.testTimeout,
       hookTimeout: entry.projectConfig.hookTimeout < 120_000 ? 120_000 : entry.projectConfig.hookTimeout,
-      // Spread because we disable it in the original entry. `projectName`
-      // carries the parent's name so the runtime can substitute it into
-      // `${projectName}` placeholders inside `writeResult` / `bench.from()`
-      // paths.
-      benchmark: { ...benchmark, projectName: entry.projectConfig.name ?? '' },
+      // `enabled` because the original entry might not be benchmark-enabled (when
+      // forced by `--benchmark`); `projectName` carries the parent's name so the
+      // runtime can substitute it into `${projectName}` placeholders inside
+      // `writeResult` / `bench.from()` paths.
+      benchmark: { ...benchmark, enabled: true, projectName: entry.projectConfig.name ?? '' },
       sequence: {
         ...entry.projectConfig.sequence,
         concurrent: false,
@@ -874,6 +874,39 @@ function resolveDirectoryConfig(directory: string) {
     return resolve(directory, configFile)
   }
   return null
+}
+
+/**
+ * Resolve a project's name, falling back to the `package.json` name or the
+ * directory/index when neither the config nor a plugin provided one.
+ */
+function resolveProjectName(
+  name: string | ProjectName | undefined,
+  workspacePath: string | number,
+): ProjectName {
+  let { label, color }: ProjectName = typeof name === 'string'
+    ? { label: name }
+    : { label: '', ...name }
+
+  if (label) {
+    return { label, color }
+  }
+
+  if (typeof workspacePath === 'number') {
+    return { label: workspacePath.toString(), color }
+  }
+
+  const dir = workspacePath.endsWith('/')
+    ? workspacePath.slice(0, -1)
+    : dirname(workspacePath)
+  const pkgJsonPath = resolve(dir, 'package.json')
+  if (existsSync(pkgJsonPath)) {
+    label = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')).name
+  }
+  if (typeof label !== 'string' || !label) {
+    label = basename(dir)
+  }
+  return { label, color }
 }
 
 /**

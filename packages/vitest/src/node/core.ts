@@ -26,6 +26,7 @@ import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
+import { defaultBrowserPort } from '../constants'
 import { distDir } from '../paths'
 import { createTagsFilter } from '../runtime/runner/utils/tags'
 import { limitConcurrency } from '../utils/limit-concurrency'
@@ -262,6 +263,9 @@ export class Vitest {
     await Promise.all(this._onRestartListeners.map(fn => fn(reason)))
     this.report('onServerRestart', reason)
     await this.close()
+    // reuse the same browser ports as the previous run instead of letting the
+    // reused harness keep incrementing them
+    this._harness._browserLastPort = defaultBrowserPort
     // harness mimics `vitest` access like in `node/create.ts`
     this._harness.setVitest(undefined)
     const config = await resolveConfig(
