@@ -35,10 +35,7 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
       async configResolved(config) {
         if (config.test.ui) {
           await harness.packageInstaller.ensureInstalled('@vitest/ui', resolve(config.root), harness.version)
-          const uiPlugin = (await import('@vitest/ui')).default(
-            harness.logger,
-            harness.version,
-          )
+          const uiPlugin = (await import('@vitest/ui')).default(harness)
           // @ts-expect-error mutate readonly
           config.plugins.push(uiPlugin)
         }
