@@ -737,6 +737,10 @@ export function resolveTestConfig(
     resolved.passWithNoTests ??= true
   }
 
+  if (resolved.browser.enabled) {
+    // browser mode renders real CSS in the page
+    resolved.css = true
+  }
   resolved.css ??= {}
   if (typeof resolved.css === 'object') {
     resolved.css.modules ??= {}

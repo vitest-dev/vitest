@@ -159,8 +159,7 @@ export function WorkspaceVitestPlugin(
       },
     },
     MetaEnvReplacerPlugin(),
-    // TODO: should be testProject's config
-    ...CSSEnablerPlugin({ config: globalConfig }),
+    ...CSSEnablerPlugin(),
     CoverageTransform(harness),
     ...VitestConfig(harness),
     ...MocksPlugins(),

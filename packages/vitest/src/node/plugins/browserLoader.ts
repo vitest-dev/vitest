@@ -10,7 +10,6 @@ import type {
   ParentProjectBrowser,
 } from '../types/browser'
 import type { ResolvedConfig } from '../types/config'
-import { setup as setupApiServer } from '../../api/setup'
 import { createViteServer } from '../vite'
 
 export interface BrowserContributionHolder {
@@ -127,8 +126,7 @@ export async function createClusterServer(
   const server = await createViteServer(viteConfig)
   await server.listen(config.api.port)
   contribution.setupRpc(parent)
-  if (config.browser.ui) {
-    setupApiServer(vitest, server)
-  }
+  // The UI/API WebSocket server is set up later in `_attachProjectServers`,
+  // after the reporters array is built, so its reporter is not discarded.
   return { server, parent }
 }

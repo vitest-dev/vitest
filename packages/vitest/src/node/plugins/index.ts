@@ -19,11 +19,7 @@ import { VitestCoreResolver } from './vitestResolver'
 // the plugins required when starting Vitest
 export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
   return [
-    ...CSSEnablerPlugin({
-      get config() {
-        return harness.getVitest().config
-      },
-    }),
+    ...CSSEnablerPlugin(),
     ...MocksPlugins(),
     CoverageTransform(harness),
     VitestCoreResolver(),

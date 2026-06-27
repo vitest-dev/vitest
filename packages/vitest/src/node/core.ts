@@ -322,13 +322,6 @@ export class Vitest {
       }
     }
 
-    // API setup (watch mode only). Skipped when the root server is itself a
-    // browser server: `createClusterServer` already wires the browser RPC and,
-    // for `browser.ui`, the API server, on the same httpServer.
-    if (resolved.api && resolved.watch && !this._rootBrowserParent) {
-      (await import('../api/setup')).setup(this)
-    }
-
     // In run mode we don't need the watcher; closing it improves performance (#415).
     if (!resolved.watch) {
       await server.watcher.close()
@@ -408,6 +401,15 @@ export class Vitest {
     }
 
     this.reporters = await createReporters(resolved.reporters, this)
+
+    // API setup (watch mode only). Must run after the reporters array is built
+    // above, since `setup()` appends the UI/API WebSocket reporter to it. For a
+    // root-level browser server the API lives on the same shared httpServer and
+    // is only needed when a UI (Vitest dashboard or browser orchestrator) is served.
+    const apiNeeded = !this._rootBrowserParent || resolved.ui || resolved.browser.ui
+    if (resolved.api && resolved.watch && apiNeeded) {
+      (await import('../api/setup')).setup(this)
+    }
 
     await this._fsCache.ensureCacheIntegrity()
 

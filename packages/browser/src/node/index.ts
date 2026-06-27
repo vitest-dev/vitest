@@ -277,10 +277,15 @@ body {
         }
       })
 
-      server.middlewares.use(
-        '/__vitest__',
-        sirv(uiClientRoot),
-      )
+      // When the Vitest UI (`test.ui`) is enabled, the `vitest:ui` plugin owns
+      // `/__vitest__` (including the token-injected index.html and its assets),
+      // so registering sirv here would shadow it and serve the page without a token.
+      if (!parentServer.vitest.config.ui) {
+        server.middlewares.use(
+          '/__vitest__',
+          sirv(uiClientRoot),
+        )
+      }
     },
     // Resolution-time config: only what is derivable from the (partial) user
     // config. The mocks / coverage / meta-env plugins come from the shared
