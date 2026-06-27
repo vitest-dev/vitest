@@ -625,6 +625,17 @@ export function resolveTestConfig(
     resolved.isolate = false
   }
 
+  // `browser.isolate` was replaced by the top-level `isolate` option. Map it so
+  // existing configs keep working instead of silently falling back to the
+  // isolated default (which is much slower).
+  const browserIsolate = (options.browser as { isolate?: boolean } | undefined)?.isolate
+  if (browserIsolate !== undefined) {
+    logger.deprecate('`browser.isolate` is deprecated. Use the top-level `isolate` option instead.')
+    if (options.isolate === undefined) {
+      resolved.isolate = browserIsolate
+    }
+  }
+
   if (process.env.VITEST_MAX_WORKERS) {
     resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
   }
