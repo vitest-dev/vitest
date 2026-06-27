@@ -177,11 +177,14 @@ let warnedTypeCheck = false
  *
  * This is the internal single-config resolver. The top-level `resolveConfig`
  * orchestrates the full pipeline (root + projects + browser/benchmark expansion).
+ *
+ * `globalConfig` is the resolved root config, passed when resolving a project.
  */
 export function resolveTestConfig(
   logger: Logger,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
+  globalConfig?: ResolvedConfig,
 ): ResolvedConfig {
   if (options.dom) {
     if (
@@ -202,6 +205,13 @@ export function resolveTestConfig(
 
   const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
   resolved.root = viteConfig.root
+
+  // Coverage is collected once for the whole run using the root config, so projects
+  // share its resolved coverage. Each project's setup/test/config files are then
+  // appended to the same exclude list below, keeping them out of the report.
+  if (globalConfig) {
+    resolved.coverage = globalConfig.coverage
+  }
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
   if (!rootStats?.isDirectory()) {

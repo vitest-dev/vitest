@@ -417,6 +417,7 @@ async function resolveSingleProjectEntry(
     harness.logger,
     mergedOptions,
     projectViteConfig,
+    globalConfig,
   )
   projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel
 
