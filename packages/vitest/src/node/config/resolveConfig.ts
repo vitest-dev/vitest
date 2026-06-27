@@ -333,7 +333,16 @@ export function resolveTestConfig(
     resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
-  const fileParallelism = options.fileParallelism ?? true
+  // `browser.fileParallelism` was replaced by the top-level `fileParallelism`. Map
+  // it (only when browser is enabled, since it was a browser-only option) so
+  // existing configs keep working instead of being silently ignored.
+  const browserOptions = options.browser as { enabled?: boolean; fileParallelism?: boolean } | undefined
+  const browserFileParallelism = browserOptions?.enabled ? browserOptions.fileParallelism : undefined
+  if (browserFileParallelism !== undefined) {
+    logger.deprecate('`browser.fileParallelism` is deprecated. Use the top-level `fileParallelism` option instead.')
+  }
+
+  const fileParallelism = options.fileParallelism ?? browserFileParallelism ?? true
 
   if (!fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
@@ -625,10 +634,11 @@ export function resolveTestConfig(
     resolved.isolate = false
   }
 
-  // `browser.isolate` was replaced by the top-level `isolate` option. Map it so
+  // `browser.isolate` was replaced by the top-level `isolate` option. Map it
+  // (only when browser is enabled, since it was a browser-only option) so
   // existing configs keep working instead of silently falling back to the
   // isolated default (which is much slower).
-  const browserIsolate = (options.browser as { isolate?: boolean } | undefined)?.isolate
+  const browserIsolate = browser.enabled ? (browser as { isolate?: boolean }).isolate : undefined
   if (browserIsolate !== undefined) {
     logger.deprecate('`browser.isolate` is deprecated. Use the top-level `isolate` option instead.')
     if (options.isolate === undefined) {
