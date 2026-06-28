@@ -33,16 +33,6 @@ export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedC
           open: false,
         }
 
-        const watch = globalConfig?.watch ?? testConfig.watch
-
-        // Disable bultin watch mode if Vitest is not in --watch mode
-        if (!watch) {
-          server.watch = null
-        }
-        else {
-          server.watch ??= {}
-        }
-
         // Always disable the websocket server in middlewareMode
         if (!isBrowserEnabled && api.middlewareMode) {
           server.ws = false
@@ -51,20 +41,30 @@ export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedC
           viteConfig.server.ws = undefined
         }
 
-        // chokidar fsevents is unstable on macos when emitting "ready" event
-        if (
-          process.platform === 'darwin'
-          && process.env.VITE_TEST_WATCHER_DEBUG
-        ) {
-          const watch = server.watch
-          if (watch) {
-            watch.useFsEvents = false
-            watch.usePolling = false
-          }
-        }
-
         return {
           server,
+        }
+      },
+    },
+    configResolved: {
+      order: 'post',
+      handler(viteConfig) {
+        // The watcher is set on the resolved config directly because returning
+        // `watch: null` from the `config` hook is a no-op: Vite's config merge
+        // drops `null` overrides, so a user-provided `server.watch` object wins.
+        const server = viteConfig.server
+        const watch = globalConfig?.watch ?? viteConfig.test?.watch
+        if (!watch) {
+          // disable the builtin watcher when Vitest is not in --watch mode
+          server.watch = null
+        }
+        else {
+          server.watch ??= {}
+          // chokidar fsevents is unstable on macos when emitting "ready" event
+          if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
+            server.watch.useFsEvents = false
+            server.watch.usePolling = false
+          }
         }
       },
     },
