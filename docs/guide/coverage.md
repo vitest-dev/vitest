@@ -81,7 +81,7 @@ import Box from '../.vitepress/components/Box.vue'
 
 ## Istanbul Provider
 
-[Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested. This provider works on any JavaScript runtime as coverage tracking works by transforming your source code to add instrumentation logic. In practice, the code vitest will end up running looks something like this:
+[Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested. This provider works on any JavaScript runtime as coverage tracking works by transforming your source code to add instrumentation logic. In practice, the code Vitest will end up running looks something like this:
 
 ```js
 // Simplified example of branch and function coverage counters
