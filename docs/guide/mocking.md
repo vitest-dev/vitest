@@ -6,19 +6,24 @@ outline: false
 # Mocking
 
 ::: tip
+
 New to mocking? Start with the [Mock Functions](/guide/learn/mock-functions) tutorial for a hands-on introduction to `vi.fn`, `vi.spyOn`, and `vi.mock`.
+
 :::
 
-When writing tests it's only a matter of time before you need to create a "fake" version of an internal — or external — service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its `vi` helper. You can import it from `vitest` or access it globally if [`global` configuration](/config/globals) is enabled.
+When writing tests, you will often need to create a "fake" version of an internal or external service. This is commonly referred to as mocking.
+
+Vitest provides utility functions to help you create and manage mocks through its `vi` helper. You can import it from `vitest` or access it globally when global configuration is enabled.
 
 ::: warning
+
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/mock#mockreset) docs for more info.
+
 :::
 
-If you are not familiar with `vi.fn`, `vi.mock` or `vi.spyOn` methods, check the [API section](/api/vi) first.
+If you are not familiar with `vi.fn`, `vi.mock`, or `vi.spyOn`, check the [API section](/api/vi) first.
 
-Vitest has a comprehensive list of guides regarding mocking:
-
+Vitest includes dedicated guides for common mocking scenarios. Choose the one that best matches what you're trying to mock:
 - [Mocking Classes](/guide/mocking/classes.md)
 - [Mocking Dates](/guide/mocking/dates.md)
 - [Mocking the File System](/guide/mocking/file-system.md)
@@ -27,6 +32,18 @@ Vitest has a comprehensive list of guides regarding mocking:
 - [Mocking Modules](/guide/mocking/modules.md)
 - [Mocking Requests](/guide/mocking/requests.md)
 - [Mocking Timers](/guide/mocking/timers.md)
+
+::: tip
+
+Not sure which guide you need?
+
+- Use [Mocking Functions](/guide/mocking/functions) for individual functions and spies.
+- Use [Mocking Modules](/guide/mocking/modules) when replacing imports with mocked implementations.
+- Use [Mocking Requests](/guide/mocking/requests) for HTTP APIs.
+- Use [Mocking Timers](/guide/mocking/timers) when testing time-dependent code.
+- Use [Mocking Dates](/guide/mocking/dates) when your code depends on the current date or time.
+
+:::
 
 For a simpler and quicker way to get started with mocking, you can check the Cheat Sheet below.
 
@@ -45,7 +62,9 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
 ::: warning
+
 This will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+
 :::
 
 ### Mock an exported function
@@ -53,7 +72,9 @@ This will not work in the Browser Mode. For a workaround, see [Limitations](/gui
 1. Example with `vi.mock`:
 
 ::: warning
+
 Don't forget that a `vi.mock` call is hoisted to top of the file. It will always be executed before all imports.
+
 :::
 
 ```ts [example.js]
@@ -75,10 +96,12 @@ vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
 ::: warning
+
 `vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+
 :::
 
-### Mock an exported class implementation
+### Mock an exported class
 
 1. Example with a fake `class`:
 ```ts [example.js]
@@ -106,7 +129,9 @@ vi.spyOn(mod, 'SomeClass').mockImplementation(class FakeClass {
 ```
 
 ::: warning
+
 `vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+
 :::
 
 ### Spy on an object returned from a function
@@ -137,7 +162,7 @@ vi.mock(import('./example.js'), () => {
         method: vi.fn(),
       }
     }
-    // now every time that useObject() is called it will
+    // now every time that useObject() is called, it will
     // return the same object reference
     return _cache
   }
@@ -166,7 +191,9 @@ mocked() // is a spy function
 ```
 
 ::: warning
+
 Don't forget that this only [mocks _external_ access](/guide/mocking/modules#mocking-modules-pitfalls). In this example, if `original` calls `mocked` internally, it will always call the function defined in the module, not in the mock factory.
+
 :::
 
 ### Mock the current date
@@ -195,10 +222,12 @@ expect(__VERSION__).toBe('1.0.0')
 
 ### Mock `import.meta.env`
 
-1. To change environmental variable, you can just assign a new value to it.
+1. To change an environment variable, you can assign a new value to it.
 
 ::: warning
+
 The environmental variable value will **_not_** automatically reset between different tests.
+
 :::
 
 ```ts
@@ -230,7 +259,7 @@ it('changes value', () => {
   expect(import.meta.env.VITE_ENV).toBe('staging')
 })
 
-it('the value is restored before running an other test', () => {
+it('the value is restored before running another test', () => {
   expect(import.meta.env.VITE_ENV).toBe('test')
 })
 ```
