@@ -8,7 +8,6 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import crypto from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
@@ -29,6 +28,7 @@ import { getWorkersCountByPercentage } from '../../utils/workers'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { resolveApiToken } from './apiToken'
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -63,7 +63,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
     return { port: inspect }
   }
 
-  if (inspect.match(/https?:\//)) {
+  if (/https?:\//.test(inspect)) {
     throw new Error(
       `Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`,
     )
@@ -231,13 +231,13 @@ export function resolveConfig(
     if (definedTags.has(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
     }
-    if (tag.name.match(/\s/)) {
+    if (/\s/.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
     }
-    if (tag.name.match(/([!()*|&])/)) {
+    if (/[!()*|&]/.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
     }
-    if (tag.name.match(/^\s*(and|or|not)\s*$/i)) {
+    if (/^\s*(?:and|or|not)\s*$/i.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
     }
     if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
@@ -659,7 +659,8 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: crypto.randomUUID() }
+  const { token, tokenCreated } = resolveApiToken(resolved.root)
+  resolved.api = { ...api, token, tokenCreated }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -789,10 +790,7 @@ export function resolveConfig(
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
-  // Set seed if either files or tests are shuffled
-  if (resolved.sequence.sequencer === RandomSequencer || resolved.sequence.shuffle) {
-    resolved.sequence.seed ??= Date.now()
-  }
+  resolved.sequence.seed ??= Date.now()
 
   resolved.typecheck = {
     ...configDefaults.typecheck,

@@ -29,11 +29,11 @@ export class ForksPoolWorker implements PoolWorker {
     this.entrypoint = resolve(options.distPath, 'workers/forks.js')
   }
 
-  on(event: string, callback: (arg: any) => void): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     this.fork.on(event, callback)
   }
 
-  off(event: string, callback: (arg: any) => void): void {
+  off(event: string, callback: (...args: any[]) => void): void {
     this.fork.off(event, callback)
   }
 

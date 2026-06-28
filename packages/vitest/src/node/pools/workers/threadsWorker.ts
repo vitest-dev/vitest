@@ -25,11 +25,11 @@ export class ThreadsPoolWorker implements PoolWorker {
     this.entrypoint = resolve(options.distPath, 'workers/threads.js')
   }
 
-  on(event: string, callback: (arg: any) => void): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     this.thread.on(event, callback)
   }
 
-  off(event: string, callback: (arg: any) => void): void {
+  off(event: string, callback: (...args: any[]) => void): void {
     this.thread.off(event, callback)
   }
 

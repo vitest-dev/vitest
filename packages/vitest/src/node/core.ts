@@ -51,6 +51,7 @@ import { HangingProcessReporter } from './reporters/hanging-process'
 import { createReport } from './reporters/report'
 import { createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
+import { RandomSequencer } from './sequencers/RandomSequencer'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
@@ -680,7 +681,11 @@ export class Vitest {
    * Returns the seed, if tests are running in a random order.
    */
   public getSeed(): number | null {
-    return this.config.sequence.seed ?? null
+    // Tests can be shuffled per project, so check projects as well.
+    const randomized = this.config.sequence.sequencer === RandomSequencer
+      || !!this.config.sequence.shuffle
+      || this.projects.some(p => !!p.config.sequence.shuffle)
+    return randomized ? this.config.sequence.seed : null
   }
 
   /** @internal */
@@ -1196,7 +1201,7 @@ export class Vitest {
    */
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
-    this.cancelPromise = Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
+    this.cancelPromise = Promise.all(Array.from(this._onCancelListeners, listener => listener(reason)))
 
     await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise

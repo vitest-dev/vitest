@@ -1,5 +1,7 @@
 import type { BaselineData, BenchResult, TestBenchmark, TestBenchmarkTask } from 'vitest'
 import type { JsonTestResults } from 'vitest/node'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
@@ -322,7 +324,7 @@ test('`bench(..., { perProject: true }, fn)` records a perProject task in the in
 })
 
 test('junit reporter embeds the benchmark table inside <system-out>', async () => {
-  const { stdout } = await runInlineTests(
+  const { root } = await runInlineTests(
     {
       'junit.bench.ts': /* ts */`
         import { test, inject } from 'vitest'
@@ -343,10 +345,12 @@ test('junit reporter embeds the benchmark table inside <system-out>', async () =
     },
   )
 
+  const xml = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
+
   // extract the <system-out> block from the rendered XML
   // eslint-disable-next-line regexp/no-super-linear-backtracking
-  const systemOut = stdout.match(/<system-out>\s*\n([\s\S]*?)<\/system-out>/)?.[1]
-  expect(systemOut, stdout).toBeDefined()
+  const systemOut = xml.match(/<system-out>\s*\n([\s\S]*?)<\/system-out>/)?.[1]
+  expect(systemOut, xml).toBeDefined()
 
   // a header + 2 data rows — reformat through the shared helper so digits
   // collapse to `d+` and widths become measurement-independent
@@ -706,7 +710,7 @@ test('`bench.from()` rows render rme and samples columns from the stored data', 
   const cells = storedRow.trim().replace(/\s+(?:fastest|slowest)\s*$/, '').split(/\s+/)
   // rme + samples must be real values, not the `-` placeholder
   expect(cells[cells.length - 2]).toBe('±1.23%')
-  expect(cells[cells.length - 1]).toBe('7')
+  expect(cells.at(-1)).toBe('7')
 })
 
 test('`benchmark.include` overrides the default `*.bench.ts` pattern', async () => {
@@ -908,7 +912,7 @@ test('`vitest bench` CLI invocation filters to the cloned benchmark project', as
 })
 
 test('json reporter surfaces benchmarks on each assertion result', async () => {
-  const { stderr, stdout } = await runInlineTests(
+  const { stderr, root } = await runInlineTests(
     {
       'foo.bench.ts': /* ts */`
         import { test, inject } from 'vitest'
@@ -928,7 +932,7 @@ test('json reporter surfaces benchmarks on each assertion result', async () => {
     },
   )
   expect(stderr).toBe('')
-  const parsed = JSON.parse(stdout) as JsonTestResults
+  const parsed = JSON.parse(readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8')) as JsonTestResults
   const assertionResults = parsed.testResults.flatMap(tr => tr.assertionResults)
   const smoke = assertionResults.find(a => a.title === 'smoke')!
   expect(

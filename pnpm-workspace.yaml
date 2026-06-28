@@ -39,12 +39,12 @@ overrides:
   vite: 'catalog:'
   vitest: workspace:*
 patchedDependencies:
-  '@sinonjs/fake-timers@15.3.2': patches/@sinonjs__fake-timers@15.3.2.patch
+  '@sinonjs/fake-timers@15.4.0': patches/@sinonjs__fake-timers@15.4.0.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
   istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
-  rrweb-snapshot: patches/rrweb-snapshot.patch
+  rrweb-snapshot@2.0.1: patches/rrweb-snapshot@2.0.1.patch
 catalog:
   '@babel/core': ^7.29.0
   '@babel/plugin-proposal-decorators': ^7.29.0
@@ -53,7 +53,7 @@ catalog:
   '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
-  '@playwright/test': ^1.60.0
+  '@playwright/test': ^1.61.0
   '@rolldown/plugin-babel': ^0.2.1
   '@types/chai': ^5.2.2
   '@types/estree': ^1.0.8
@@ -84,10 +84,10 @@ catalog:
   msw: ^2.12.10
   obug: ^2.1.1
   pathe: ^2.0.3
-  playwright: ^1.60.0
+  playwright: ^1.61.0
   rollup: ^4.59.0
   semver: ^7.8.3
-  sinon: ^21.0.3
+  sinon: ^22.0.0
   sinon-chai: ^4.0.1
   sirv: ^3.0.2
   std-env: ^4.0.0-rc.1
@@ -103,7 +103,7 @@ catalog:
   vite: 8.0.11
   vitest-sonar-reporter: 3.0.0
   vue: ^3.5.29
-  ws: ^8.19.0
+  ws: ^8.20.1
   yauzl: ^3.2.0
 peerDependencyRules:
   ignoreMissing:

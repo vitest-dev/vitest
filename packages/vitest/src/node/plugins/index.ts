@@ -6,6 +6,7 @@ import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { API_TOKEN_FILE } from '../config/apiToken'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
@@ -67,12 +68,6 @@ export async function VitestPlugin(
         ;(options as unknown as ResolvedConfig).defines = defines
         ;(options as unknown as ResolvedConfig).viteDefine = originalDefine
 
-        let open: string | boolean | undefined = false
-
-        if (testConfig.ui && testConfig.open) {
-          open = testConfig.uiBase ?? '/__vitest__/'
-        }
-
         const resolveOptions = getDefaultResolveOptions()
 
         let config: ViteConfig = {
@@ -88,12 +83,14 @@ export async function VitestPlugin(
           },
           server: {
             ...testConfig.api,
-            open,
+            // auto open UI via `vite.openBrowser` manually later
+            open: false,
             hmr: false,
             ws: testConfig.api?.middlewareMode ? false : undefined,
             preTransformRequests: false,
             fs: {
               allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
+              deny: [API_TOKEN_FILE],
             },
           },
           build: {

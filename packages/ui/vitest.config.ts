@@ -31,13 +31,7 @@ const testConfig = defineConfig({
         ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
         : {},
       process.env.VITEST_CI_MERGE_REPORTS
-        ? [
-            'html',
-            {
-              outputFile: '.vitest/html/index.html',
-              singleFile: true,
-            },
-          ]
+        ? ['html', { singleFile: true }]
         : {},
       ...configDefaults.reporters,
     ],
