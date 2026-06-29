@@ -69,6 +69,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "processError": "function",
         "setSafeTimers": "function",
         "setupCommonEnv": "function",
+        "setupEnv": "function",
         "startCoverageInsideWorker": "function",
         "startTests": "function",
         "stopCoverageInsideWorker": "function",
