@@ -41,7 +41,7 @@ When there is no test budget (outside a test, or when the test timeout is disabl
 - **Default:** `5_000` in Node.js, `15_000` if `browser.enabled` is `true`
 - **CLI:** `--timeout.test=5000`
 
-Default timeout of a test in milliseconds. Use `0` to disable timeout completely. Replaces [`testTimeout`](/config/testtimeout).
+Default timeout of a test in milliseconds. Use `0` to disable timeout completely.
 
 ## timeout.hook
 
@@ -49,7 +49,7 @@ Default timeout of a test in milliseconds. Use `0` to disable timeout completely
 - **Default:** `10_000` in Node.js, `30_000` if `browser.enabled` is `true`
 - **CLI:** `--timeout.hook=10000`
 
-Default timeout of a hook in milliseconds. Use `0` to disable timeout completely. Replaces [`hookTimeout`](/config/hooktimeout).
+Default timeout of a hook in milliseconds. Use `0` to disable timeout completely.
 
 ## timeout.teardown
 
@@ -57,7 +57,7 @@ Default timeout of a hook in milliseconds. Use `0` to disable timeout completely
 - **Default:** `10_000`
 - **CLI:** `--timeout.teardown=10000`
 
-Default timeout to wait for close when Vitest shuts down, in milliseconds. Replaces [`teardownTimeout`](/config/teardowntimeout).
+Default timeout to wait for close when Vitest shuts down, in milliseconds.
 
 ## timeout.action
 
@@ -73,7 +73,7 @@ Timeout for browser actions, locator interactions and `expect.element()`. Defaul
 - **Default:** `1_000`
 - **CLI:** `--timeout.poll=1000`
 
-Default timeout for [`expect.poll()`](/api/expect#poll). Replaces `expect.poll.timeout`. Use `'auto'` to ride the test budget instead of a fixed timeout.
+Default timeout for [`expect.poll()`](/api/expect#poll). Use `'auto'` to ride the test budget instead of a fixed timeout.
 
 The polling cadence is configured **per-call** via `expect.poll(fn, { intervals })`, an ascending backoff array (the last value repeats for further attempts). The default is `[0, 25, 50, 100, 250, 500]`: the first retry is immediate to catch values that settle right away, then the gap grows so long waits don't over-poll. The previous global `expect.poll.interval` option has been removed.
 
