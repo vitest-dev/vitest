@@ -29,7 +29,13 @@ declare module 'vitest' {
   }
 
   interface ExpectPollOptions {
-    interval?: number
+    /**
+     * Ascending poll backoff in milliseconds; the last value repeats for
+     * further attempts. Also drives the stability loop of domain snapshot
+     * matchers such as `toMatchScreenshot`.
+     * @default [0, 25, 50, 100, 250, 500]
+     */
+    intervals?: number[]
     timeout?: number
     message?: string
   }

@@ -69,16 +69,20 @@ Timeout for browser actions, locator interactions and `expect.element()`. Defaul
 
 ## timeout.poll
 
-- **Type:** `number | 'auto' | { timeout?: number | 'auto'; interval?: number }`
+- **Type:** `number | 'auto'`
 - **Default:** `1_000`
-- **CLI:** `--timeout.poll.timeout=1000`, `--timeout.poll.interval=50`
+- **CLI:** `--timeout.poll=1000`
 
-Default timeout for [`expect.poll()`](/api/expect#poll). Replaces `expect.poll.timeout`. Use `'auto'` to ride the test budget instead of a fixed timeout. The object form also sets the polling `interval` (default `50`).
+Default timeout for [`expect.poll()`](/api/expect#poll). Replaces `expect.poll.timeout`. Use `'auto'` to ride the test budget instead of a fixed timeout.
+
+The polling cadence is configured **per-call** via `expect.poll(fn, { intervals })`, an ascending backoff array (the last value repeats for further attempts). The default is `[0, 25, 50, 100, 250, 500]`: the first retry is immediate to catch values that settle right away, then the gap grows so long waits don't over-poll. The previous global `expect.poll.interval` option has been removed.
 
 ## timeout.wait
 
-- **Type:** `number | 'auto' | { timeout?: number | 'auto'; interval?: number }`
+- **Type:** `number | 'auto'`
 - **Default:** `1_000`
-- **CLI:** `--timeout.wait.timeout=1000`, `--timeout.wait.interval=50`
+- **CLI:** `--timeout.wait=1000`
 
-Default timeout for [`vi.waitFor()`](/api/vi#vi-waitfor) and [`vi.waitUntil()`](/api/vi#vi-waituntil). Use `'auto'` to ride the test budget instead of a fixed timeout. The object form also sets the polling `interval` (default `50`).
+Default timeout for [`vi.waitFor()`](/api/vi#vi-waitfor) and [`vi.waitUntil()`](/api/vi#vi-waituntil). Use `'auto'` to ride the test budget instead of a fixed timeout.
+
+Like `expect.poll`, the polling cadence is configured **per-call** via the `{ intervals }` option (ascending backoff, default `[0, 25, 50, 100, 250, 500]`).

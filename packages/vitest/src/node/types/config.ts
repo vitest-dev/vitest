@@ -475,19 +475,19 @@ export interface InlineConfig {
      */
     action?: number | 'auto'
     /**
-     * Timeout for `expect.poll()` (was `expect.poll.timeout`). The object form
-     * also sets the polling `interval`. Use `'auto'` to ride the remaining test
-     * budget instead of a fixed timeout.
+     * Timeout for `expect.poll()` (was `expect.poll.timeout`). Use `'auto'` to
+     * ride the remaining test budget instead of a fixed timeout. The polling
+     * cadence is configured per-call via `expect.poll(fn, { intervals })`.
      * @default 1000
      */
-    poll?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+    poll?: number | 'auto'
     /**
-     * Timeout for `vi.waitFor()` / `vi.waitUntil()`. The object form also sets
-     * the polling `interval`. Use `'auto'` to ride the remaining test budget
-     * instead of a fixed timeout.
+     * Timeout for `vi.waitFor()` / `vi.waitUntil()`. Use `'auto'` to ride the
+     * remaining test budget instead of a fixed timeout. The polling cadence is
+     * configured per-call via the `{ intervals }` option.
      * @default 1000
      */
-    wait?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+    wait?: number | 'auto'
   }
 
   /**
@@ -829,18 +829,17 @@ export interface InlineConfig {
     requireAssertions?: boolean
     /**
      * Default options for expect.poll()
+     * @deprecated Use `timeout.poll` for the timeout. The global polling
+     * `interval` is removed; configure the cadence per-call via
+     * `expect.poll(fn, { intervals })`.
      */
     poll?: {
       /**
        * Timeout in milliseconds
        * @default 1000
+       * @deprecated Use `timeout.poll` instead.
        */
       timeout?: number
-      /**
-       * Polling interval in milliseconds
-       * @default 50
-       */
-      interval?: number
     }
   }
 

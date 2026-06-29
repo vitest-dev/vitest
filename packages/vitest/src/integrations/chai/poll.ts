@@ -2,7 +2,7 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
-import { describeBudgetedTimeout, normalizeTimeoutConfig, resolveBudgetedTimeout } from '../../runtime/runner/context'
+import { DEFAULT_POLL_INTERVALS, describeBudgetedTimeout, intervalForAttempt, resolveBudgetedTimeout } from '../../runtime/runner/context'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
 
@@ -48,14 +48,11 @@ function throwWithCause(error: any, source: Error) {
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const state = getWorkerState()
-    const { timeout: pollTimeoutConfig, interval: pollIntervalConfig } = normalizeTimeoutConfig(
-      state.config.timeout?.poll,
-    )
     const { message } = options
-    const interval = options.interval ?? pollIntervalConfig ?? 50
+    const intervals = options.intervals ?? DEFAULT_POLL_INTERVALS
     // `'auto'` rides the remaining test budget; a number caps below it; a
     // per-call timeout wins but is still clamped to the budget.
-    const resolvedTimeout = resolveBudgetedTimeout(options.timeout, pollTimeoutConfig)
+    const resolvedTimeout = resolveBudgetedTimeout(options.timeout, state.config.timeout?.poll)
     const timeout = resolvedTimeout.timeout
     const timeoutDescription = describeBudgetedTimeout(resolvedTimeout, 'test.timeout.poll')
     // @ts-expect-error private poll access
@@ -66,7 +63,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     // injected so that domain snapshot can take over poll implementation.
     chai.util.flag(assertion, '_poll.fn', fn)
     chai.util.flag(assertion, '_poll.timeout', timeout)
-    chai.util.flag(assertion, '_poll.interval', interval)
+    // pass the raw per-call value so domain matchers keep their own default
+    // stability cadence (50ms) when no `intervals` was provided.
+    chai.util.flag(assertion, '_poll.intervals', options.intervals)
     const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
@@ -147,6 +146,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               }, timeout)
             })
             let lastError: unknown
+            let attempt = 0
 
             try {
               while (true) {
@@ -182,6 +182,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   if (key === 'toMatchScreenshot') {
                     break
                   }
+                  const interval = intervalForAttempt(intervals, attempt++)
                   const result = await raceWith(
                     delay(interval, setTimeout),
                     timeoutPromise,

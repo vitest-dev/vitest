@@ -22,7 +22,7 @@ describe('waitFor', () => {
       await expect(
         vi.waitFor(callback, {
           timeout: 60,
-          interval: 30,
+          intervals: [30],
         }),
       ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: interval error]`)
 
@@ -110,7 +110,7 @@ describe('waitFor', () => {
         callbackRanAfterTimeout = timedOut
         throw new Error('waitFor error')
       }, {
-        interval: 10,
+        intervals: [10],
         timeout: 50,
       })
     }
@@ -144,7 +144,7 @@ describe('waitUntil', () => {
       await expect(
         vi.waitUntil(callback, {
           timeout: 500,
-          interval: 400,
+          intervals: [400],
         }),
       ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Timed out in waitUntil!]`)
 
@@ -210,7 +210,7 @@ describe('waitUntil', () => {
         callbackRanAfterTimeout = timedOut
         return false
       }, {
-        interval: 10,
+        intervals: [10],
         timeout: 50,
       })
     }

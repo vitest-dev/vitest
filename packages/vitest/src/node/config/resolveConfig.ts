@@ -968,20 +968,22 @@ export function resolveConfig(
   resolved.hookTimeout = timeoutOptions.hook ?? resolved.hookTimeout ?? (resolved.browser.enabled ? 30_000 : 10_000)
   resolved.teardownTimeout = timeoutOptions.teardown ?? resolved.teardownTimeout ?? 10_000
 
-  // `expect.poll.{timeout,interval}` is a deprecated alias for `timeout.poll`.
+  // `expect.poll.timeout` is a deprecated alias for `timeout.poll`. The global
+  // polling `interval` is removed; the cadence is configured per-call via
+  // `expect.poll(fn, { intervals })`.
   // `action` defaults to `'auto'` (rides the test budget, matching today's
   // browser behavior); `poll`/`wait` default to the historical fixed `1000`
   // (still clamped to the budget as `min(budget, 1000)`), with `'auto'` opt-in.
-  const deprecatedPoll = resolved.expect?.poll
+  const deprecatedPollTimeout = resolved.expect?.poll?.timeout
+  if (timeoutOptions.poll != null && deprecatedPollTimeout != null) {
+    logger.deprecate('Both `test.timeout.poll` and the deprecated `test.expect.poll.timeout` are set; `test.timeout.poll` takes precedence.')
+  }
   resolved.timeout = {
     test: resolved.testTimeout,
     hook: resolved.hookTimeout,
     teardown: resolved.teardownTimeout,
     action: timeoutOptions.action ?? 'auto',
-    poll: timeoutOptions.poll
-      ?? (deprecatedPoll != null
-        ? { timeout: deprecatedPoll.timeout ?? 1000, interval: deprecatedPoll.interval }
-        : 1000),
+    poll: timeoutOptions.poll ?? deprecatedPollTimeout ?? 1000,
     wait: timeoutOptions.wait ?? 1000,
   }
 

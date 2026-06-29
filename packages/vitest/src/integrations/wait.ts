@@ -1,5 +1,5 @@
 import { getSafeTimers } from '@vitest/utils/timers'
-import { describeBudgetedTimeout, normalizeTimeoutConfig, resolveBudgetedTimeout } from '../runtime/runner/context'
+import { DEFAULT_POLL_INTERVALS, describeBudgetedTimeout, intervalForAttempt, resolveBudgetedTimeout } from '../runtime/runner/context'
 import { getWorkerState } from '../runtime/utils'
 import { vi } from './vi'
 
@@ -7,16 +7,13 @@ import { vi } from './vi'
 
 export type WaitForCallback<T> = () => T | Promise<T>
 
-function resolveWaitOptions(options: number | WaitForOptions): { interval: number; timeout: number; timeoutDescription: string } {
+function resolveWaitOptions(options: number | WaitForOptions): { intervals: number[]; timeout: number; timeoutDescription: string } {
   const userOptions = typeof options === 'number' ? { timeout: options } : options
-  const { timeout: cfgTimeout, interval: cfgInterval } = normalizeTimeoutConfig(
-    getWorkerState().config.timeout?.wait,
-  )
   // `'auto'` rides the remaining test/hook budget; a number caps below it; a
   // per-call timeout wins but is still clamped to the budget.
-  const resolved = resolveBudgetedTimeout(userOptions.timeout, cfgTimeout)
+  const resolved = resolveBudgetedTimeout(userOptions.timeout, getWorkerState().config.timeout?.wait)
   return {
-    interval: userOptions.interval ?? cfgInterval ?? 50,
+    intervals: userOptions.intervals ?? DEFAULT_POLL_INTERVALS,
     timeout: resolved.timeout,
     timeoutDescription: describeBudgetedTimeout(resolved, 'test.timeout.wait'),
   }
@@ -24,10 +21,11 @@ function resolveWaitOptions(options: number | WaitForOptions): { interval: numbe
 
 export interface WaitForOptions {
   /**
-   * @description Time in ms between each check callback
-   * @default 50ms
+   * @description Ascending poll backoff in ms between checks; the last value
+   * repeats for further attempts.
+   * @default [0, 25, 50, 100, 250, 500]
    */
-  interval?: number
+  intervals?: number[]
   /**
    * @description Time in ms after which the throw a timeout error
    * @default 1000ms
@@ -46,32 +44,35 @@ export function waitFor<T>(
   callback: WaitForCallback<T>,
   options: number | WaitForOptions = {},
 ): Promise<T> {
-  const { setTimeout, setInterval, clearTimeout, clearInterval }
-    = getSafeTimers()
-  const { interval, timeout, timeoutDescription } = resolveWaitOptions(options)
+  const { setTimeout, clearTimeout } = getSafeTimers()
+  const { intervals, timeout, timeoutDescription } = resolveWaitOptions(options)
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<T>((resolve, reject) => {
     let lastError: unknown
     let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
-    let timeoutId: ReturnType<typeof setTimeout>
-    let intervalId: ReturnType<typeof setInterval>
+    let settled = false
+    let attempt = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    let nextId: ReturnType<typeof setTimeout> | undefined
 
-    const onResolve = (result: T) => {
+    const cleanup = () => {
+      settled = true
       if (timeoutId) {
         clearTimeout(timeoutId)
       }
-      if (intervalId) {
-        clearInterval(intervalId)
+      if (nextId) {
+        clearTimeout(nextId)
       }
+    }
 
+    const onResolve = (result: T) => {
+      cleanup()
       resolve(result)
     }
 
     const handleTimeout = () => {
-      if (intervalId) {
-        clearInterval(intervalId)
-      }
+      cleanup()
       let error = lastError
       if (!error) {
         error = copyStackTrace(
@@ -83,9 +84,9 @@ export function waitFor<T>(
       reject(error)
     }
 
-    const checkCallback = () => {
+    const checkCallback = (advanceBy: number) => {
       if (vi.isFakeTimers()) {
-        vi.advanceTimersByTime(interval)
+        vi.advanceTimersByTime(advanceBy)
       }
 
       if (promiseStatus === 'pending') {
@@ -121,19 +122,29 @@ export function waitFor<T>(
       }
     }
 
-    if (checkCallback() === true) {
+    const scheduleNext = () => {
+      const interval = intervalForAttempt(intervals, attempt++)
+      nextId = setTimeout(() => {
+        checkCallback(interval)
+        if (!settled) {
+          scheduleNext()
+        }
+      }, interval)
+    }
+
+    if (checkCallback(0) === true) {
       return
     }
 
     timeoutId = setTimeout(handleTimeout, timeout)
-    intervalId = setInterval(checkCallback, interval)
+    scheduleNext()
   })
 }
 
 export type WaitUntilCallback<T> = () => T | Promise<T>
 
 export interface WaitUntilOptions
-  extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
+  extends Pick<WaitForOptions, 'intervals' | 'timeout'> {}
 
 type Truthy<T> = T extends false | '' | 0 | null | undefined ? never : T
 
@@ -141,20 +152,29 @@ export function waitUntil<T>(
   callback: WaitUntilCallback<T>,
   options: number | WaitUntilOptions = {},
 ): Promise<Truthy<T>> {
-  const { setTimeout, setInterval, clearTimeout, clearInterval }
-    = getSafeTimers()
-  const { interval, timeout, timeoutDescription } = resolveWaitOptions(options)
+  const { setTimeout, clearTimeout } = getSafeTimers()
+  const { intervals, timeout, timeoutDescription } = resolveWaitOptions(options)
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<Truthy<T>>((resolve, reject) => {
     let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
-    let timeoutId: ReturnType<typeof setTimeout>
-    let intervalId: ReturnType<typeof setInterval>
+    let settled = false
+    let attempt = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    let nextId: ReturnType<typeof setTimeout> | undefined
+
+    const cleanup = () => {
+      settled = true
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+      if (nextId) {
+        clearTimeout(nextId)
+      }
+    }
 
     const onReject = (error?: Error) => {
-      if (intervalId) {
-        clearInterval(intervalId)
-      }
+      cleanup()
       if (!error) {
         error = copyStackTrace(
           new Error(`Timed out in waitUntil! Timed out in ${timeoutDescription}.`),
@@ -168,21 +188,14 @@ export function waitUntil<T>(
       if (!result) {
         return
       }
-
-      if (timeoutId) {
-        clearTimeout(timeoutId)
-      }
-      if (intervalId) {
-        clearInterval(intervalId)
-      }
-
+      cleanup()
       resolve(result as Truthy<T>)
       return true
     }
 
-    const checkCallback = () => {
+    const checkCallback = (advanceBy: number) => {
       if (vi.isFakeTimers()) {
-        vi.advanceTimersByTime(interval)
+        vi.advanceTimersByTime(advanceBy)
       }
 
       if (promiseStatus === 'pending') {
@@ -217,11 +230,21 @@ export function waitUntil<T>(
       }
     }
 
-    if (checkCallback() === true) {
+    const scheduleNext = () => {
+      const interval = intervalForAttempt(intervals, attempt++)
+      nextId = setTimeout(() => {
+        checkCallback(interval)
+        if (!settled) {
+          scheduleNext()
+        }
+      }, interval)
+    }
+
+    if (checkCallback(0) === true) {
       return
     }
 
     timeoutId = setTimeout(onReject, timeout)
-    intervalId = setInterval(checkCallback, interval)
+    scheduleNext()
   })
 }

@@ -55,7 +55,7 @@ test('expect.element aria retry', async () => {
       <p>World</p>
     `
   }, 10)
-  await expect.element(page.getByTestId('body'), { interval: 20 })
+  await expect.element(page.getByTestId('body'), { intervals: [20] })
     .toMatchAriaInlineSnapshot(`
     - heading "Hello" [level=1]
     - paragraph: World

@@ -209,7 +209,7 @@ function toMatchDomainSnapshotImpl(opts: {
       isInline: opts.isInline,
       errorMessage: chai.util.flag(assertion, 'message'),
       timeout: chai.util.flag(assertion, '_poll.timeout') as number | undefined,
-      interval: chai.util.flag(assertion, '_poll.interval') as number | undefined,
+      intervals: chai.util.flag(assertion, '_poll.intervals') as number[] | undefined,
       assertionName,
       inlineSnapshot,
       error: chai.util.flag(assertion, 'error'),

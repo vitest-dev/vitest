@@ -32,8 +32,8 @@ export interface SerializedConfig {
   hookTimeout: number
   timeout: {
     action: number | 'auto'
-    poll: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
-    wait: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+    poll: number | 'auto'
+    wait: number | 'auto'
   }
   retry: SerializableRetry
   repeats?: number
@@ -67,7 +67,6 @@ export interface SerializedConfig {
     requireAssertions?: boolean
     poll?: {
       timeout?: number
-      interval?: number
     }
   }
   printConsoleTrace: boolean | undefined

@@ -35,7 +35,7 @@ test('simple usage', async () => {
 
 test('timeout', async () => {
   await expect(async () => {
-    await expect.poll(() => false, { timeout: 100, interval: 10 }).toBe(true)
+    await expect.poll(() => false, { timeout: 100, intervals: [10] }).toBe(true)
   }).rejects.toThrow(expect.objectContaining({
     message: 'expected false to be true // Object.is equality',
     stack: expect.stringContaining('expect-poll.test.ts:38:68'),
@@ -49,7 +49,7 @@ test('interval', async () => {
   const fn = vi.fn(() => true)
   await expect(async () => {
     // using big values because CI can be slow
-    await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
+    await expect.poll(fn, { intervals: [100], timeout: 500 }).toBe(false)
   }).rejects.toThrow()
   // CI can be unstable, but there should be always at least 5 calls
   expect(fn.mock.calls.length >= 4).toBe(true)
@@ -78,7 +78,7 @@ test('fake timers are advanced on each poll interval', async ({ onTestFinished }
     didAdvance = true
   }, 50)
 
-  await expect.poll(() => didAdvance, { interval: 100 }).toBe(true)
+  await expect.poll(() => didAdvance, { intervals: [100] }).toBe(true)
 })
 
 test('custom matcher works correctly', async () => {
@@ -94,7 +94,7 @@ test('custom matcher works correctly', async () => {
       }
     },
   })
-  await expect.poll(() => 1, { interval: 10 }).toBeJestCompatible()
+  await expect.poll(() => 1, { intervals: [10] }).toBeJestCompatible()
   expect(fn).toHaveBeenCalledTimes(3)
   expect(fn).toHaveBeenCalledWith({ poll: true })
 })
@@ -104,7 +104,7 @@ test('toBeDefined', async () => {
   await expect.poll(() => undefined).not.toBeDefined()
 
   await expect(() =>
-    expect.poll(() => 1, { timeout: 100, interval: 10 }).not.toBeDefined(),
+    expect.poll(() => 1, { timeout: 100, intervals: [10] }).not.toBeDefined(),
   ).rejects.toThrow(expect.objectContaining({
     message: 'expected 1 to be undefined',
     cause: expect.objectContaining({
@@ -113,7 +113,7 @@ test('toBeDefined', async () => {
   }))
 
   await expect(() =>
-    expect.poll(() => undefined, { timeout: 100, interval: 10 }).toBeDefined(),
+    expect.poll(() => undefined, { timeout: 100, intervals: [10] }).toBeDefined(),
   ).rejects.toThrow(expect.objectContaining({
     message: 'expected undefined to be defined',
     cause: expect.objectContaining({
@@ -124,7 +124,7 @@ test('toBeDefined', async () => {
 
 test('custom message', async () => {
   await expect(() =>
-    expect.poll(() => 1, { timeout: 100, interval: 10, message: 'custom' }).toBe(2),
+    expect.poll(() => 1, { timeout: 100, intervals: [10], message: 'custom' }).toBe(2),
   ).rejects.toMatchInlineSnapshot(`[AssertionError: custom: expected 1 to be 2 // Object.is equality]`)
 })
 

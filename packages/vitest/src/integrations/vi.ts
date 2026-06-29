@@ -167,7 +167,7 @@ export interface VitestUtils {
    *     console.log('Server started')
    *   }, {
    *     timeout: 500, // default is 1000
-   *     interval: 20, // default is 50
+   *     intervals: [0, 25, 50], // default backoff is [0, 25, 50, 100, 250, 500]
    *   }
    * )
    * ```
@@ -218,7 +218,7 @@ export interface VitestUtils {
    *   () => document.querySelector('.element'),
    *   {
    *     timeout: 500, // default is 1000
-   *     interval: 20, // default is 50
+   *     intervals: [0, 25, 50], // default backoff is [0, 25, 50, 100, 250, 500]
    *   }
    * )
    *
@@ -482,8 +482,8 @@ export interface VitestUtils {
     test?: number
     hook?: number
     action?: number | 'auto'
-    poll?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
-    wait?: number | 'auto' | { timeout?: number | 'auto'; interval?: number }
+    poll?: number | 'auto'
+    wait?: number | 'auto'
   }) => void
 
   /**

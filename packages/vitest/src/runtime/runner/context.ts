@@ -24,6 +24,22 @@ export const TIMEOUT_BUFFER = 300
 export const AUTO_TIMEOUT_FALLBACK = 1000
 
 /**
+ * Default ascending poll backoff (ms) for `expect.poll`/`vi.waitFor`/`vi.waitUntil`.
+ * The first retry is immediate to catch predicates that resolve right away, then
+ * the gap grows so long waits don't over-poll; the last value repeats for further
+ * attempts. Override per-call with `{ intervals }`.
+ */
+export const DEFAULT_POLL_INTERVALS: number[] = [0, 25, 50, 100, 250, 500]
+
+/**
+ * Pick the retry gap for a given (zero-based) attempt from an ascending
+ * `intervals` curve, repeating the last value once exhausted.
+ */
+export function intervalForAttempt(intervals: number[], attempt: number): number {
+  return intervals[Math.min(attempt, intervals.length - 1)] ?? 0
+}
+
+/**
  * The remaining budget of the currently-executing test or hook, or `undefined`
  * when it can't be determined: outside a test/hook, when the budget is disabled
  * (`0`/`Infinity`), or when more than one test is running concurrently (the
@@ -58,22 +74,6 @@ export function clampToBudget(desired: number | undefined): number | undefined {
     return remaining
   }
   return Math.min(desired, remaining)
-}
-
-/**
- * Split a `number | 'auto' | { timeout?, interval? }` config value into its
- * timeout and interval parts.
- */
-export function normalizeTimeoutConfig(
-  value: number | 'auto' | { timeout?: number | 'auto'; interval?: number } | undefined,
-): { timeout: number | 'auto' | undefined; interval: number | undefined } {
-  if (value == null) {
-    return { timeout: undefined, interval: undefined }
-  }
-  if (typeof value === 'object') {
-    return { timeout: value.timeout, interval: value.interval }
-  }
-  return { timeout: value, interval: undefined }
 }
 
 export interface BudgetedTimeout {
