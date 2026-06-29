@@ -1006,7 +1006,7 @@ importers:
         specifier: workspace:*
         version: link:../browser-preview
       '@vitest/browser-webdriverio':
-        specifier: 5.0.0-beta.5
+        specifier: ^5.0.0-beta.5 || >=5.0.0
         version: 5.0.0-beta.5(vitest@packages+vitest)(webdriverio@9.29.1)
       '@vitest/coverage-istanbul':
         specifier: workspace:*
