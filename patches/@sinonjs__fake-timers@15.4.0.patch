@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 7d4cfa1b6b8aebc8575e08bd432f8f8ca43d3c4f..09d12bec356aa1048f09771e915075fdecb065b9 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd41680f2e 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -2,14 +2,14 @@
@@ -20,7 +20,7 @@ index 7d4cfa1b6b8aebc8575e08bd432f8f8ca43d3c4f..09d12bec356aa1048f09771e915075fd
      } catch {
          // ignored
      }
-@@ -510,7 +510,7 @@ function withGlobal(_global) {
+@@ -537,7 +537,7 @@ function withGlobal(_global) {
          isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
      isPresent.nextTick =
          _global.process && typeof _global.process.nextTick === "function";

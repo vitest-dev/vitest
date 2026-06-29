@@ -90,7 +90,7 @@ Some older APIs use callbacks instead of promises. Since Vitest works with promi
 
 ```js
 function fetchData(callback) {
-  setTimeout(() => callback('peanut butter'), 100)
+  setTimeout(callback, 100, 'peanut butter')
 }
 
 test('the data is peanut butter', async () => {

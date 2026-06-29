@@ -294,7 +294,7 @@ export function createBrowserRunner(
             line,
             column: column + 1,
             // if the file path is on windows, we need to remove the starting slash
-            file: file.match(/\/\w:\//) ? file.slice(1) : file,
+            file: /\/\w:\//.test(file) ? file.slice(1) : file,
           }
 
           if (artifact.type === 'internal:annotation') {

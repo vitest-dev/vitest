@@ -985,6 +985,13 @@ export interface InlineConfig {
    * @default true
    */
   strictTags?: boolean
+
+  /**
+   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
+   * Requires initialized git repository
+   * @default false
+   */
+  changed?: boolean | string
 }
 
 export interface TypecheckConfig {
@@ -1072,13 +1079,6 @@ export interface UserConfig extends InlineConfig {
    * @default 'test'
    */
   mode?: string
-
-  /**
-   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
-   * Requires initialized git repository
-   * @default false
-   */
-  changed?: boolean | string
 
   /**
    * Test suite shard to execute in a format of <index>/<count>.
@@ -1185,7 +1185,7 @@ export interface ResolvedConfig
   defines: Record<string, any>
   viteDefine: Record<string, any>
 
-  api: ApiConfig & { token: string }
+  api: ApiConfig & { token: string; tokenCreated: boolean }
   cliExclude?: string[]
 
   project: string[]
@@ -1296,11 +1296,15 @@ export interface ServerDepsOptions {
 export type ProjectConfig = Omit<
   InlineConfig,
   NonProjectOptions
-  | 'sequencer'
+  | 'sequence'
   | 'deps'
 > & {
   mode?: string
-  sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
+  sequence?: Omit<SequenceOptions, 'sequencer' | 'seed' | 'shuffle'> & {
+    // `shuffle.files` controls cross-project file ordering, which is resolved
+    // from the root config only, so projects can only shuffle their own tests.
+    shuffle?: boolean | { tests?: boolean }
+  }
   deps?: Omit<DepsOptions, 'moduleDirectories'>
 }
 

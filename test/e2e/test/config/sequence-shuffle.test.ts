@@ -148,8 +148,25 @@ test('should log seed when shuffle is true', async () => {
   expect(stdout).toContain('Running tests with seed "67890"')
 })
 
+test('should log seed when a project shuffles tests', async () => {
+  const { stdout, ctx } = await runInlineTests({
+    'a.test.js': /* js */ `
+      import { test } from 'vitest'
+      test('example', () => {})
+    `,
+  }, {
+    projects: [
+      { test: { sequence: { shuffle: { tests: true } } } },
+    ],
+  })
+
+  const seed = ctx?.getSeed()
+  expect(seed).toEqual(expect.any(Number))
+  expect(stdout).toContain(`Running tests with seed "${seed}"`)
+})
+
 test('should not log seed when shuffle is disabled', async () => {
-  const { stdout } = await runInlineTests({
+  const { stdout, ctx } = await runInlineTests({
     'basic.test.js': /* js */ `
       import { test } from 'vitest'
       test('example', () => {})
@@ -160,5 +177,6 @@ test('should not log seed when shuffle is disabled', async () => {
     },
   })
 
+  expect(ctx?.getSeed()).toBe(null)
   expect(stdout).not.toContain('Running tests with seed')
 })

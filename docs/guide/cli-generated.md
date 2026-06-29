@@ -541,6 +541,13 @@ Allow tests and suites that are marked as only (default: `!process.env.CI`)
 
 Ignore any unhandled errors that occur
 
+### changed
+
+- **CLI:** `--changed [since]`
+- **Config:** [changed](/config/changed)
+
+Run tests that are affected by the changed files (default: `false`)
+
 ### sequence.shuffle.files
 
 - **CLI:** `--sequence.shuffle.files`

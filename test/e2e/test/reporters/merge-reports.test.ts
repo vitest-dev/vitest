@@ -2,7 +2,7 @@ import type { RunVitestConfig } from '#test-utils'
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
-import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { buildTestTree, runVitest, useFS } from '#test-utils'
@@ -117,17 +117,17 @@ test('merge reports', async () => {
        Per blob  <time> <time>"
   `)
 
-  const { stdout: reporterJson } = await runVitest({
+  const { ctx } = await runVitest({
     root: './fixtures/reporters/merge-reports',
     mergeReports: reportsDir,
-    reporters: [['json', { outputFile: /** so it outputs into stdout */ null }]],
+    reporters: 'json',
   })
 
   const slash = (r: string) => r.replace(/\\/g, '/')
   const path = (r: string) => slash(r)
     .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
 
-  const json = JSON.parse(reporterJson)
+  const json = JSON.parse(readFileSync(resolve(ctx!.config.root, '.vitest/json/output.json'), 'utf-8'))
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'
@@ -487,7 +487,7 @@ test.for([
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
   expect(result3.stdout).toMatchInlineSnapshot(`
     " HTML  Report is generated
-           You can run npx vite preview --outDir html to see the test results.
+           You can run npx vite preview --outDir .vitest to see the test results.
     "
   `)
 })
