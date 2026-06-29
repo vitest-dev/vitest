@@ -6,6 +6,7 @@ import { page, server, userEvent } from 'vitest/browser'
 import {
   collectTests,
   setupCommonEnv,
+  setupEnv,
   SpyModule,
   startCoverageInsideWorker,
   startTests,
@@ -247,6 +248,8 @@ async function prepare(options: PrepareOptions) {
   state.durations.prepare = performance.now() - state.durations.prepare
 
   debug?.('prepare time', state.durations.prepare, 'ms')
+
+  setupEnv(config.env, state.metaEnv)
 
   await Promise.all([
     setupCommonEnv(config),

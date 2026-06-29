@@ -15,6 +15,7 @@ import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startVitestModuleRunner'
 import { run } from '../runBaseTests'
+import { setupEnv } from '../setup-common'
 import { getSafeWorkerState, provideWorkerState } from '../utils'
 
 let _moduleRunner: TestModuleRunner
@@ -81,6 +82,8 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
     rpc,
     config,
   } = context
+
+  setupEnv(config.env, context.metaEnv)
 
   // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
   if (context.config.serializedDefines) {
