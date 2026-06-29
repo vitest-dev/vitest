@@ -1,6 +1,7 @@
 import type { SerializedLocator } from '@vitest/browser'
 import type { UserEventUploadOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
+import { assertBrowserFileAccess } from '@vitest/browser'
 import { resolve } from 'pathe'
 
 export const upload: UserEventCommand<(element: SerializedLocator, files: Array<string | {
@@ -29,6 +30,7 @@ export const upload: UserEventCommand<(element: SerializedLocator, files: Array<
 
   for (const file of files) {
     const filepath = resolve(root, file as string)
+    assertBrowserFileAccess(context.project, filepath)
     const remoteFilePath = await context.browser.uploadFile(filepath)
     await element.addValue(remoteFilePath)
   }
