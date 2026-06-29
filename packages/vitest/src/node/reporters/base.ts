@@ -1,5 +1,5 @@
 import type { ParsedStack, SerializedError } from '@vitest/utils'
-import type { File, Task, TestAnnotation, TestBenchmark, TestBenchmarkTask } from '../../runtime/runner/types'
+import type { File, Suite, Task, TestAnnotation, TestBenchmark, TestBenchmarkTask } from '../../runtime/runner/types'
 import type { AsyncLeak, TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
@@ -55,6 +55,7 @@ export abstract class BaseReporter implements Reporter {
   private _filesInWatchMode = new Map<string, number>()
   private _timeStart = formatTimeString(new Date())
   private _perProjectBenchmarks = new Map<string, Map<string, TestBenchmarkTask>>()
+  private _printedSuites = new Set<string>()
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? isTTY
@@ -154,6 +155,8 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
+    this._printedSuites.clear()
+
     let testsCount = 0
     let failedCount = 0
     let skippedCount = 0
@@ -236,6 +239,7 @@ export abstract class BaseReporter implements Reporter {
 
     // also print slow tests
     else if (duration > this.ctx.config.slowTestThreshold) {
+      this.printTestCaseParents(test)
       this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)}${suffix}`)
     }
 
@@ -244,10 +248,15 @@ export abstract class BaseReporter implements Reporter {
     }
 
     else if (this.renderSucceed || moduleState === 'failed' || inlineBenchmarks.length) {
+      if (inlineBenchmarks.length) {
+        this.printTestCaseParents(test)
+      }
+
       this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`)
     }
 
     if (inlineBenchmarks.length > 0) {
+      this.printTestCaseParents(test)
       this.printBenchmarkTable(inlineBenchmarks, padding)
     }
   }
@@ -289,11 +298,41 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
-    const indentation = '  '.repeat(getIndentation(testSuite.task))
-    const tests = Array.from(testSuite.children.allTests())
-    const state = this.getStateSymbol(testSuite)
+    this.printTestSuiteEntry(testSuite)
+  }
 
-    this.log(` ${indentation}${state} ${testSuite.name} ${c.dim(`(${tests.length})`)}`)
+  private printTestSuiteEntry(testSuite: TestSuite): void {
+    this.printSuiteTaskEntry(testSuite.task)
+  }
+
+  private printTestCaseParents(test: TestCase): void {
+    if (this.renderSucceed) {
+      return
+    }
+
+    const parents: Suite[] = []
+    let parent = test.task.suite
+
+    while (parent && !('filepath' in parent) && !this._printedSuites.has(parent.id)) {
+      parents.push(parent)
+      parent = parent.suite
+    }
+
+    parents.reverse().forEach(parent => this.printSuiteTaskEntry(parent))
+  }
+
+  private printSuiteTaskEntry(suite: Suite): void {
+    if (this._printedSuites.has(suite.id)) {
+      return
+    }
+
+    this._printedSuites.add(suite.id)
+
+    const indentation = '  '.repeat(getIndentation(suite))
+    const tests = getTests(suite)
+    const state = getStateSymbol(suite)
+
+    this.log(` ${indentation}${state} ${suite.name} ${c.dim(`(${tests.length})`)}`)
   }
 
   protected getTestName(test: Task, _separator?: string): string {

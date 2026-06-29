@@ -1,8 +1,10 @@
 import type { RunnerTask } from 'vitest/node'
-import { runVitest, runVitestCli, StableTestFileOrderSorter } from '#test-utils'
+import { runInlineTests, runVitest, runVitestCli, StableTestFileOrderSorter } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/node'
 import { trimReporterOutput } from './utils'
+
+const fastBenchOptions = { time: 0, iterations: 2, warmupTime: 0, warmupIterations: 0 }
 
 describe('default reporter', async () => {
   test('normal', async () => {
@@ -63,6 +65,67 @@ describe('default reporter', async () => {
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "✓ b1.test.ts (13 tests | 7 skipped) [...]ms
        ✓ b2.test.ts (13 tests | 7 skipped) [...]ms"
+    `)
+  })
+
+  test('prints parent suites for slow tests without rendering all passed tests', async () => {
+    const { stdout, stderr } = await runInlineTests(
+      {
+        'slow.test.ts': `
+          import { describe, test } from 'vitest'
+
+          describe('outer suite', () => {
+            describe('inner suite', () => {
+              test('slow nested test', async () => {
+                await new Promise(resolve => setTimeout(resolve, 50))
+              })
+            })
+          })
+        `,
+      },
+      {
+        reporters: [['default', { isTTY: false, summary: false }]],
+        slowTestThreshold: 1,
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ slow.test.ts (1 test) [...]ms
+         ✓ outer suite (1)
+           ✓ inner suite (1)
+             ✓ slow nested test [...]ms"
+    `)
+  })
+
+  test('prints parent suites for inline benchmarks without rendering all passed tests', async () => {
+    const { stdout, stderr } = await runInlineTests(
+      {
+        'suite.bench.ts': `
+          import { describe, inject, test } from 'vitest'
+
+          describe('first suite', () => {
+            test('bench test', async ({ bench }) => {
+              await bench('bench', () => {}).run(inject('options'))
+            })
+          })
+        `,
+      },
+      {
+        benchmark: { enabled: true },
+        reporters: [['default', { isTTY: false, summary: false }]],
+        provide: { options: fastBenchOptions },
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(trimReporterOutput(stdout)
+      .split('\n')
+      .filter(line => /[✓❯×↓]/.test(line))
+      .join('\n')).toMatchInlineSnapshot(`
+      "✓ |bench| suite.bench.ts (1 test) [...]ms
+         ✓ first suite (1)
+           ✓ bench test [...]ms"
     `)
   })
 
