@@ -38,7 +38,7 @@ test('timeout', async () => {
     await expect.poll(() => false, { timeout: 100, intervals: [10] }).toBe(true)
   }).rejects.toThrow(expect.objectContaining({
     message: 'expected false to be true // Object.is equality',
-    stack: expect.stringContaining('expect-poll.test.ts:38:68'),
+    stack: expect.stringContaining('expect-poll.test.ts:38:71'),
     cause: expect.objectContaining({
       message: 'Matcher did not succeed in time.',
     }),
@@ -143,7 +143,7 @@ test('unresolved function', async () => {
         { timeout: 50 },
       )
       .toBe('ok'),
-  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() function didn't resolve in time.]`)
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() callback timed out in 50ms (test.timeout.poll).]`)
   expect(aborted).toBe(true)
 })
 
@@ -171,6 +171,6 @@ test('unresolved assertion', async () => {
         { timeout: 50 },
       ) as any
     ).toTestSlow(),
-  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() assertion didn't resolve in time.]`)
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() assertion timed out in 50ms (test.timeout.poll).]`)
   expect(aborted).toBe(true)
 })
