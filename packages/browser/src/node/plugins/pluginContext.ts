@@ -37,8 +37,20 @@ async function generateContextFile(
   globalServer: ParentBrowserProject,
 ) {
   const commands = Object.keys(globalServer.commands)
-  const provider = [...globalServer.children][0].provider
-  const providerName = provider?.name || 'preview'
+  // The provider instance is initialized lazily when a page opens, so reading
+  // `child.provider` here races and can be `undefined` before the first page is
+  // opened. The provider name is uniform across a project's instances and is
+  // already resolved on the config, so read it from there for this shared
+  // (cached) context module. The instance is still used below for the
+  // preview-only user-event import.
+  const child = [...globalServer.children][0]
+  const provider = child.provider
+  const providerName = child.config.browser.provider?.name
+  if (!providerName) {
+    throw new Error(
+      `Browser provider is not defined for the project "${child.project.name}". This is a bug in Vitest. Please, open a new issue with a reproduction.`,
+    )
+  }
 
   const commandsCode = commands
     .filter(command => !command.startsWith('__vitest'))
