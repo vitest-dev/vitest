@@ -75,6 +75,52 @@ export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.t
   return sorted
 }
 
+function removeTreeNode(node: UITaskTreeNode) {
+  if (isParentNode(node)) {
+    for (let i = 0; i < node.tasks.length; i++) {
+      removeTreeNode(node.tasks[i])
+    }
+  }
+  explorerTree.nodes.delete(node.id)
+}
+
+// remove tracked children that are gone from the re-collected tasks, so a
+// removed or commented-out test does not linger in the sidebar until a reload
+function removeStaleChildNodes(node: FileTreeNode | SuiteTreeNode, tasks: Task[]) {
+  if (!node.children.size) {
+    return
+  }
+
+  const collected = new Set<string>()
+  for (let i = 0; i < tasks.length; i++) {
+    collected.add(tasks[i].id)
+  }
+
+  let stale = false
+  for (const id of node.children) {
+    if (!collected.has(id)) {
+      stale = true
+      break
+    }
+  }
+  if (!stale) {
+    return
+  }
+
+  const remaining: UITaskTreeNode[] = []
+  for (let i = 0; i < node.tasks.length; i++) {
+    const child = node.tasks[i]
+    if (collected.has(child.id)) {
+      remaining.push(child)
+    }
+    else {
+      node.children.delete(child.id)
+      removeTreeNode(child)
+    }
+  }
+  node.tasks = remaining
+}
+
 export function createOrUpdateFileNode(
   file: File,
   collect = false,
@@ -126,6 +172,7 @@ export function createOrUpdateFileNode(
     for (let i = 0; i < file.tasks.length; i++) {
       createOrUpdateNode(file.id, file.tasks[i], true)
     }
+    removeStaleChildNodes(fileNode, file.tasks)
   }
 }
 
@@ -234,6 +281,7 @@ export function createOrUpdateNode(
       for (let i = 0; i < task.tasks.length; i++) {
         createOrUpdateNode(taskNode.id, task.tasks[i], createAll)
       }
+      removeStaleChildNodes(taskNode as SuiteTreeNode, task.tasks)
     }
   }
 }
