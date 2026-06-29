@@ -155,7 +155,7 @@ test('trace view artifacts', async () => {
                       "selector": "internal:role=button",
                     },
                     "kind": "mark",
-                    "location": "exotic.test.ts:58",
+                    "location": "exotic.test.ts:54",
                     "name": "button rendered with adopted stylesheet",
                     "snapshot": {
                       "selectorResolution": "matched",
@@ -167,7 +167,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "exotic.test.ts:51",
+                    "location": "exotic.test.ts:47",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "pass",
@@ -213,7 +213,7 @@ test('trace view artifacts', async () => {
                       "selector": "internal:role=button[name="Custom element button"s]",
                     },
                     "kind": "mark",
-                    "location": "exotic.test.ts:47",
+                    "location": "exotic.test.ts:43",
                     "name": "custom element rendered",
                     "snapshot": {
                       "selectorResolution": "matched",
@@ -225,7 +225,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "exotic.test.ts:32",
+                    "location": "exotic.test.ts:30",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "pass",
@@ -242,7 +242,7 @@ test('trace view artifacts', async () => {
                       "selector": "internal:role=button[name="Shadow button"s]",
                     },
                     "kind": "mark",
-                    "location": "exotic.test.ts:28",
+                    "location": "exotic.test.ts:26",
                     "name": "shadow button rendered",
                     "snapshot": {
                       "selectorResolution": "matched",
@@ -325,7 +325,7 @@ test('trace view artifacts', async () => {
                       "selector": "internal:role=button[name="Missing"s]",
                     },
                     "kind": "action",
-                    "location": "expect.test.ts:33",
+                    "location": "expect.test.ts:31",
                     "name": "vitest:click",
                     "range": {
                       "phase": "start",
@@ -344,7 +344,7 @@ test('trace view artifacts', async () => {
                       "selector": "internal:role=button[name="Missing"s]",
                     },
                     "kind": "action",
-                    "location": "expect.test.ts:33",
+                    "location": "expect.test.ts:31",
                     "name": "vitest:click",
                     "range": {
                       "phase": "end",
@@ -360,7 +360,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "expect.test.ts:33",
+                    "location": "expect.test.ts:31",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "fail",
