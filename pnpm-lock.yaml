@@ -1588,9 +1588,6 @@ importers:
       '@vueuse/integrations':
         specifier: ^14.2.1
         version: 14.2.1(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.29(typescript@5.9.3))
-      axios:
-        specifier: ^1.13.4
-        version: 1.13.4
       immutable:
         specifier: 5.1.5
         version: 5.1.5
@@ -15288,6 +15285,7 @@ snapshots:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+    optional: true
 
   b4a@1.6.4: {}
 
@@ -16781,7 +16779,8 @@ snapshots:
     dependencies:
       tabbable: 6.4.0
 
-  follow-redirects@1.15.11: {}
+  follow-redirects@1.15.11:
+    optional: true
 
   for-each@0.3.5:
     dependencies:
