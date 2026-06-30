@@ -260,6 +260,22 @@ await expect.element(banner).toMatchTextContent(/error/i) // [!code ++]
 await expect.element(banner).toHaveTextContent('Error!')
 ```
 
+### `render` Is Async in `vitest-browser-vue` and `vitest-browser-svelte`
+
+The companion component-testing packages [`vitest-browser-vue`](https://npmx.dev/package/vitest-browser-vue) and [`vitest-browser-svelte`](https://npmx.dev/package/vitest-browser-svelte) now return a promise from `render`, so the call must be awaited before you query the rendered output:
+
+```ts
+import { render } from 'vitest-browser-vue'
+import Component from './Component.vue'
+
+test('renders', async () => {
+  const screen = render(Component) // [!code --]
+  const screen = await render(Component) // [!code ++]
+
+  await expect.element(screen.getByRole('heading')).toBeVisible()
+})
+```
+
 ### Glob Coverage Thresholds No Longer Inherit `perFile`
 
 `coverage.thresholds.perFile` previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
