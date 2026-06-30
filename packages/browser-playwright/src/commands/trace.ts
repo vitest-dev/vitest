@@ -2,6 +2,7 @@ import type { ParsedStack } from 'vitest'
 import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vitest/node'
 import type { PlaywrightBrowserProvider } from '../playwright'
 import { unlink } from 'node:fs/promises'
+import { assertBrowserApiWrite, assertBrowserFileAccess } from '@vitest/browser'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { getDescribedLocator } from './utils'
 
@@ -51,6 +52,8 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
 ) => {
   if (isPlaywrightProvider(context.provider)) {
     const path = resolveTracesPath(context, name)
+    assertBrowserApiWrite(context.project, path)
+    assertBrowserFileAccess(context.project, path)
     context.provider.pendingTraces.delete(path)
     await context.context.tracing.stopChunk({ path })
     return { tracePath: path }
@@ -162,6 +165,10 @@ export const deleteTracing: BrowserCommand<[{ traces: string[] }]> = async (
     throw new Error(`stopChunkTrace cannot be called outside of the test file.`)
   }
   if (isPlaywrightProvider(context.provider)) {
+    for (const trace of traces) {
+      assertBrowserApiWrite(context.project, trace)
+      assertBrowserFileAccess(context.project, trace)
+    }
     return Promise.all(
       traces.map(trace => unlink(trace).catch((err) => {
         if (err.code === 'ENOENT') {
