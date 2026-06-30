@@ -24,7 +24,7 @@ import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { hasFailed, hasTests } from '../../utils/tasks'
+import { hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -949,7 +949,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {
-      if (!runner.config.passWithNoTests && !hasTests(suite)) {
+      if (!runner.config.passWithNoTests && !suite.containsTest) {
         suite.result.state = 'fail'
         if (!suite.result.errors?.length) {
           const error = processError(

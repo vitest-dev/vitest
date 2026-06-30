@@ -553,11 +553,22 @@ function createSuiteCollector(
 
     const allChildren: Task[] = []
 
+    let containsOnly = false
+    let containsTest = false
     for (const i of tasks) {
-      allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
+      const child = i.type === 'collector' ? await i.collect(file) : i
+      allChildren.push(child)
+      if (child.mode === 'only' || (child.type === 'suite' && child.containsOnly)) {
+        containsOnly = true
+      }
+      if (child.type === 'test' || (child.type === 'suite' && child.containsTest)) {
+        containsTest = true
+      }
     }
 
     suite.tasks = allChildren
+    suite.containsOnly = containsOnly
+    suite.containsTest = containsTest
 
     return suite
   }

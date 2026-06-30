@@ -52,13 +52,6 @@ export function getSuites(suite: Arrayable<Task>): Suite[] {
 }
 
 /* @__NO_SIDE_EFFECTS__ */
-export function hasTests(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s =>
-    s.tasks.some(c => isTestCase(c) || hasTests(c)),
-  )
-}
-
-/* @__NO_SIDE_EFFECTS__ */
 export function hasFailed(suite: Arrayable<Task>): boolean {
   return toArray(suite).some(
     s =>
@@ -98,13 +91,6 @@ export function getTestName(task: Task, separator = ' > '): string {
 /* @__NO_SIDE_EFFECTS__ */
 export function createTaskName(names: readonly (string | undefined)[], separator = ' > '): string {
   return names.filter(name => name !== undefined).join(separator)
-}
-
-/* @__NO_SIDE_EFFECTS__ */
-export function hasBenchmark(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s =>
-    s?.tasks?.some(c => c.meta?.benchmark || hasBenchmark(c as Suite)),
-  )
 }
 
 /* @__NO_SIDE_EFFECTS__ */
@@ -261,19 +247,18 @@ export function interpretTaskModes(
   const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
-    // Check if any tasks in this suite have `.only` - if so, only those should run
-    const hasSomeTasksOnly = onlyMode && suite.tasks.some(
-      t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
-    )
+    // Check if any tasks in this suite have `.only` - if so, only those should run.
+    // `containsOnly` is computed during collection (in the runtime/AST collectors).
+    const hasSomeTasksOnly = !!(onlyMode && suite.containsOnly)
 
     suite.tasks.forEach((t) => {
       // Check if either the parent suite or the task itself are marked as included
       // If there are tasks with `.only` in this suite, only include those (not all tasks from describe.only)
       const includeTask = hasSomeTasksOnly
-        ? (t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+        ? (t.mode === 'only' || (t.type === 'suite' && !!t.containsOnly))
         : (suiteIsOnly || t.mode === 'only')
       if (onlyMode) {
-        if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
+        if (t.type === 'suite' && (includeTask || t.containsOnly)) {
           // Don't skip this suite
           if (t.mode === 'only') {
             checkAllowOnly(t, allowOnly)
@@ -308,7 +293,7 @@ export function interpretTaskModes(
       }
 
       if (t.type === 'test') {
-        if (namePattern && !getTaskFullName(t).match(namePattern)) {
+        if (namePattern && !t.fullTestName.match(namePattern)) {
           t.mode = 'skip'
         }
         if (testIdsSet && !testIdsSet.has(t.id)) {
@@ -364,17 +349,6 @@ export function interpretTaskModes(
       stack: error.stack,
     })
   }
-}
-
-function getTaskFullName(task: TaskBase): string {
-  return `${task.suite ? `${getTaskFullName(task.suite)} ` : ''}${task.name}`
-}
-
-/* @__NO_SIDE_EFFECTS__ */
-export function someTasksAreOnly(suite: Suite): boolean {
-  return suite.tasks.some(
-    t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
-  )
 }
 
 function skipAllTasks(suite: Suite) {

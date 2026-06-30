@@ -52,6 +52,25 @@ export default defineConfig({
 })
 ```
 
+### `testNamePattern` Matches the `>`-Joined Full Name
+
+[`testNamePattern`](/config/testnamepattern) (the `-t` CLI flag) now matches against the test's full name with the suite chain and test name joined by `' > '`, the same string shown in the reporter output. Previously the segments were joined with a single space, mirroring Jest.
+
+This only affects patterns that span the boundary between a suite and a test (or between nested suites). Patterns that match within a single name segment, and patterns that use `.`/`.*` between segments, are unaffected.
+
+```ts
+describe('math', () => {
+  test('adds', () => {})
+})
+```
+
+```bash
+vitest -t 'math adds' # [!code --]
+vitest -t 'math > adds' # [!code ++]
+```
+
+To keep a pattern working regardless of the separator, match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
 ### Benchmarking API Rewrite
 
 The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`; it is a [test-context fixture](/guide/test-context#bench) accessed from inside a regular `test()`. See the [Benchmarking guide](/guide/benchmarking) for the new API.
@@ -836,6 +855,13 @@ Vitest's `test` names are joined with a `>` symbol to make it easier to distingu
 ```diff
 - `${describeTitle} ${testTitle}`
 + `${describeTitle} > ${testTitle}`
+```
+
+The same applies to [`testNamePattern`](/config/testnamepattern) (the `-t` flag): Vitest matches against the `>`-joined full name, while Jest matches the space-joined name. Update patterns that span a suite and a test accordingly, or match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
+```diff
+- vitest -t 'math adds'
++ vitest -t 'math > adds'
 ```
 
 ### Envs
