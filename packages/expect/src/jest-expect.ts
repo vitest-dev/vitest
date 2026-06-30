@@ -683,11 +683,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const afterInvocationCallOrder = afterSpy.mock.invocationCallOrder
 
     if (beforeInvocationCallOrder.length === 0) {
-      return !failIfNoFirstInvocation
+      return false
     }
 
     if (afterInvocationCallOrder.length === 0) {
-      return false
+      return !failIfNoFirstInvocation
     }
 
     return beforeInvocationCallOrder[0] < afterInvocationCallOrder[0]
