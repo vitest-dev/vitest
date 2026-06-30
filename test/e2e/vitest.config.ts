@@ -2,6 +2,15 @@ import path from 'node:path'
 import { defineConfig } from 'vite'
 import { defaultExclude } from 'vitest/config'
 
+// Tests that drive git `--changed` against shared fixtures and cannot tolerate
+// other tests mutating the working tree concurrently. Run in a serial project.
+const serialTests = [
+  'test/git-changed.test.ts',
+  'test/list-changed.test.ts',
+  'test/setup-files.test.ts',
+  'test/watch/related.test.ts',
+]
+
 export default defineConfig({
   test: {
     experimental: {
@@ -27,6 +36,7 @@ export default defineConfig({
         test: {
           name: 'main',
           include: ['test/**/**.{test,spec}.ts'],
+          exclude: [...defaultExclude, ...serialTests],
           includeTaskLocation: true,
           testTimeout: 60_000,
           isolate: false,
@@ -62,6 +72,20 @@ export default defineConfig({
           testTimeout: process.env.CI ? 20_000 : undefined,
           sequence: {
             groupOrder: 1,
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'serial',
+          include: serialTests,
+          includeTaskLocation: true,
+          testTimeout: 60_000,
+          isolate: false,
+          fileParallelism: false,
+          sequence: {
+            groupOrder: 2,
           },
         },
       },

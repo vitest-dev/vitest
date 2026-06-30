@@ -139,6 +139,11 @@ export async function runVitest(
     throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
   }
 
+  // Don't let unrelated package.json / config edits made by other tests running
+  // in parallel force-rerun this test's watcher. Applied as a default here so a
+  // fixture config or an explicit `forceRerunTriggers` still takes precedence.
+  rest.forceRerunTriggers ??= []
+
   ;(viteConfig as any).test = rest
 
   try {
