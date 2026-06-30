@@ -3,6 +3,7 @@ import type { UserEventCommand } from './utils'
 import { resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { assertBrowserFileAccess } from '../utils'
 
 export const upload: UserEventCommand<(element: string, files: Array<string | {
   name: string
@@ -24,7 +25,9 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
     const { iframe } = context
     const playwrightFiles = files.map((file) => {
       if (typeof file === 'string') {
-        return resolve(root, file)
+        const filepath = resolve(root, file)
+        assertBrowserFileAccess(context.project, filepath)
+        return filepath
       }
       return {
         name: file.name,
@@ -45,6 +48,7 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
 
     for (const file of files) {
       const filepath = resolve(root, file as string)
+      assertBrowserFileAccess(context.project, filepath)
       const remoteFilePath = await context.browser.uploadFile(filepath)
       await element.addValue(remoteFilePath)
     }

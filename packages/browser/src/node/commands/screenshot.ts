@@ -5,6 +5,7 @@ import { normalize } from 'node:path'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { assertBrowserApiWrite, assertBrowserFileAccess } from '../utils'
 
 export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   context,
@@ -29,6 +30,12 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
         context.project.config,
       )
   const savePath = normalize(path)
+
+  if (options.save) {
+    assertBrowserApiWrite(context.project, savePath)
+    assertBrowserFileAccess(context.project, savePath)
+  }
+
   await mkdir(dirname(path), { recursive: true })
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
