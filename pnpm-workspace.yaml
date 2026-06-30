@@ -65,7 +65,7 @@ catalog:
   '@types/ws': ^8.18.1
   '@types/yauzl': ^2.10.3
   '@unocss/reset': ^66.6.6
-  '@vitejs/plugin-vue': ^6.0.4
+  '@vitejs/plugin-vue': ^6.0.7
   '@vueuse/core': ^14.2.1
   acorn-walk: ^8.3.5
   ansivision: ^0.2.7
