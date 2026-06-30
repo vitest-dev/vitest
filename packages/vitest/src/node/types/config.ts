@@ -971,6 +971,14 @@ export interface InlineConfig {
      * This will apply `.only` flag and test name pattern across all files without running them.
      */
     preParse?: boolean
+
+    /**
+     * Print a hint after the run when `isolate: true` spends a significant amount
+     * of time spawning a fresh worker (and re-creating the environment) for every
+     * test file, estimating how much could be saved with `isolate: false`.
+     * @default true
+     */
+    isolateDiagnostic?: boolean
   }
 
   /**

@@ -6,6 +6,7 @@ import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { readFileSync } from 'node:fs'
+import { availableParallelism } from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
@@ -660,7 +661,77 @@ export abstract class BaseReporter implements Reporter {
 
     this.reportImportDurations()
 
+    this.reportIsolateDiagnostic(files)
+
     this.log()
+  }
+
+  /**
+   * Surfaces the cost of `isolate: true`: with isolation enabled Vitest spawns a
+   * fresh worker (and re-creates the test environment) for every test file. When
+   * that repeated startup cost is significant, hint that `isolate: false` would
+   * reuse workers across files.
+   */
+  private reportIsolateDiagnostic(files: File[]): void {
+    // opt-out via `experimental.isolateDiagnostic`; the timers it relies on are
+    // only shown for a full (non-watch) run
+    if (this.ctx.config.watch || !this.ctx.config.experimental.isolateDiagnostic) {
+      return
+    }
+
+    const state = this.ctx.state
+    const numWorkers = state.workersSpawned
+    // only meaningful when at least one non-browser project isolates workers
+    const isolates = this.ctx.projects.some(
+      project => project.config.isolate && !project.config.browser.enabled,
+    )
+    if (!numWorkers || !isolates) {
+      return
+    }
+
+    const numFiles = files.length
+    // `startupTime` is the summed (across workers) time spent spawning the worker,
+    // loading its bundle and setting up the environment. The environment setup is
+    // already part of this window, so it is not added separately.
+    const startupTime = state.startupTime
+    const avgStartup = startupTime / numWorkers
+
+    // with `isolate: false` the same files would run in ~`parallelism` reused
+    // workers instead of spawning a fresh worker for every file
+    const configuredMaxWorkers = this.ctx.config.maxWorkers
+    const maxWorkers = typeof configuredMaxWorkers === 'number' && configuredMaxWorkers > 0
+      ? configuredMaxWorkers
+      : Math.max(1, availableParallelism() - 1)
+    const parallelism = Math.max(1, Math.min(numFiles, maxWorkers))
+
+    // nothing was actually spawned per-file (e.g. a single worker handled everything)
+    if (numWorkers <= parallelism) {
+      return
+    }
+
+    // Spawns are spread across ~`parallelism` lanes, so the wall-clock cost is the
+    // summed startup divided by parallelism. Reusing workers leaves ~1 spawn per
+    // lane, so the reducible wall-clock time is the rest.
+    const wallStartup = startupTime / parallelism
+    const estimatedSavings = wallStartup - avgStartup
+
+    // only surface the hint when it is actually worth acting on
+    if (estimatedSavings < 250) {
+      return
+    }
+
+    this.log()
+    this.log(
+      padSummaryTitle('Isolate'),
+      c.yellow(`${numWorkers} workers spawned`)
+      + c.dim(` · ~${formatTime(avgStartup)} startup each (spawn + environment, per file)`),
+    )
+    this.log(
+      padSummaryTitle(''),
+      c.dim(`~${formatTime(estimatedSavings)} faster with `)
+      + c.yellow('isolate: false')
+      + c.dim(' — reuses workers across files instead of one per file'),
+    )
   }
 
   private reportImportDurations() {
