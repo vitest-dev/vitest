@@ -990,12 +990,14 @@ describe('toHaveBeenCalledBefore', () => {
     }).toThrow(/^expected "vi\.fn\(\)" to have been called before "resultMock"/)
   })
 
-  it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
-    const resultMock = vi.fn()
+  it('fails if expect mock is not called even with option `failIfNoFirstInvocation` set to false', () => {
+    const resultMock = vi.fn().mockName('resultMock')
 
     resultMock()
 
-    expect(vi.fn()).toHaveBeenCalledBefore(resultMock, false)
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledBefore(resultMock, false)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called before "resultMock"/)
   })
 
   it('fails if result mock is not called', () => {
@@ -1006,6 +1008,14 @@ describe('toHaveBeenCalledBefore', () => {
     expect(() => {
       expect(expectMock).toHaveBeenCalledBefore(vi.fn())
     }).toThrow(/^expected "expectMock" to have been called before "vi\.fn\(\)"/)
+  })
+
+  it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const expectMock = vi.fn().mockName('expectMock')
+
+    expectMock()
+
+    expect(expectMock).toHaveBeenCalledBefore(vi.fn(), false)
   })
 })
 
@@ -1066,12 +1076,14 @@ describe('toHaveBeenCalledAfter', () => {
     }).toThrow(/^expected "expectMock" to have been called after "vi\.fn\(\)"/)
   })
 
-  it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
-    const expectMock = vi.fn()
+  it('fails if result mock is not called even with option `failIfNoFirstInvocation` set to false', () => {
+    const expectMock = vi.fn().mockName('expectMock')
 
     expectMock()
 
-    expect(expectMock).toHaveBeenCalledAfter(vi.fn(), false)
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledAfter(vi.fn(), false)
+    }).toThrow(/^expected "expectMock" to have been called after "vi\.fn\(\)"/)
   })
 
   it('fails if expect mock is not called', () => {
@@ -1082,6 +1094,14 @@ describe('toHaveBeenCalledAfter', () => {
     expect(() => {
       expect(vi.fn()).toHaveBeenCalledAfter(resultMock)
     }).toThrow(/^expected "vi\.fn\(\)" to have been called after "resultMock"/)
+  })
+
+  it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const resultMock = vi.fn().mockName('resultMock')
+
+    resultMock()
+
+    expect(vi.fn()).toHaveBeenCalledAfter(resultMock, false)
   })
 })
 
