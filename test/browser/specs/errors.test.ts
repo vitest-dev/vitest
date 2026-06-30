@@ -280,7 +280,7 @@ test('takeScreenshot is blocked for files denied by server.fs.deny', async () =>
       "chromium": {
         "screenshot-denied.test.ts": {
           "screenshot denied path": [
-            "Access denied to "<root>/my-secret.txt". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.",
+            "Access denied to "<root>/my-secret.png". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.",
           ],
         },
       },
