@@ -33,7 +33,15 @@ runs:
         restore-keys: |
           ${{ runner.os }}-playwright-
 
-    - name: Install Playwright Dependencies
+    # Only Linux needs --with-deps: it apt-installs system libraries the browser
+    # links against. On Windows --with-deps triggers a slow Media Foundation DISM
+    # install (~3min) that the tests don't need, and on macOS it is a no-op.
+    - name: Install Playwright browser with system deps (Linux)
       shell: bash
-      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      if: steps.playwright-cache.outputs.cache-hit != 'true' && runner.os == 'Linux'
       run: pnpm exec playwright install --with-deps --only-shell
+
+    - name: Install Playwright browser (macOS/Windows)
+      shell: bash
+      if: steps.playwright-cache.outputs.cache-hit != 'true' && runner.os != 'Linux'
+      run: pnpm exec playwright install --only-shell
