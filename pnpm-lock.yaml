@@ -1562,9 +1562,9 @@ importers:
       '@vueuse/integrations':
         specifier: ^14.2.1
         version: 14.2.1(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.29(typescript@5.9.3))
-      axios:
-        specifier: ^1.13.4
-        version: 1.13.4
+      http-client:
+        specifier: file:./projects/http-client
+        version: file:test/unit/projects/http-client
       immutable:
         specifier: 5.1.5
         version: 5.1.5
@@ -7704,6 +7704,9 @@ packages:
 
   htmlparser2@10.1.0:
     resolution: {integrity: sha512-VTZkM9GWRAtEpveh7MSF6SjjrpNVNNVJfFup7xTY3UpFtm67foy9HDVXneLtFVt4pMz5kZtgNcvCniNFb1hlEQ==}
+
+  http-client@file:test/unit/projects/http-client:
+    resolution: {directory: test/unit/projects/http-client, type: directory}
 
   http-deceiver@1.2.7:
     resolution: {integrity: sha512-LmpOGxTfbpgtGVxJrj5k7asXHCgNZp5nLfp+hWc8QQRqtb7fUy6kRY3BO1h9ddF6yIPYUARgxGOwB42DnxIaNw==}
@@ -15164,6 +15167,7 @@ snapshots:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+    optional: true
 
   b4a@1.8.1: {}
 
@@ -16668,7 +16672,8 @@ snapshots:
     dependencies:
       tabbable: 6.4.0
 
-  follow-redirects@1.15.11: {}
+  follow-redirects@1.15.11:
+    optional: true
 
   for-each@0.3.5:
     dependencies:
@@ -16985,6 +16990,8 @@ snapshots:
       domhandler: 5.0.3
       domutils: 3.2.2
       entities: 7.0.1
+
+  http-client@file:test/unit/projects/http-client: {}
 
   http-deceiver@1.2.7: {}
 
