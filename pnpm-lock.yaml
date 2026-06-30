@@ -1588,6 +1588,9 @@ importers:
       '@vueuse/integrations':
         specifier: ^14.2.1
         version: 14.2.1(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.29(typescript@5.9.3))
+      http-client:
+        specifier: link:./projects/http-client
+        version: link:projects/http-client
       immutable:
         specifier: 5.1.5
         version: 5.1.5

@@ -77,7 +77,6 @@ export default defineConfig({
     alias: [
       { find: /^#/, replacement: resolve(import.meta.dirname, 'src') },
       { find: /^custom-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'custom-lib') },
-      { find: /^http-client$/, replacement: resolve(import.meta.dirname, 'projects', 'http-client') },
       { find: /^inline-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'inline-lib') },
     ],
     noExternal: [/projects\/vite-external/],
