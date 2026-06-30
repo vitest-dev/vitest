@@ -3,12 +3,13 @@ export {
   stopCoverageInsideWorker,
   takeCoverageInsideWorker,
 } from '../integrations/coverage'
+export { collectTests, startTests } from '../runtime/runner/run'
+export type { FileSpecification } from '../runtime/runner/types'
 export {
   loadDiffConfig,
   loadSnapshotSerializers,
   setupCommonEnv,
 } from '../runtime/setup-common'
-export { collectTests, startTests } from '@vitest/runner'
 export * as SpyModule from '@vitest/spy'
 export type { ParsedStack, StringifyOptions } from '@vitest/utils'
 export {

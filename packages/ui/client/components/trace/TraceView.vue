@@ -1,29 +1,19 @@
 <script setup lang="ts">
-import type { RunnerTestCase } from 'vitest'
-import type { BrowserTraceData, BrowserTraceEntry } from '../../../../browser/src/client/tester/trace'
+import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
+import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
 
 const props = defineProps<{
-  trace: BrowserTraceData
-  test: RunnerTestCase
+  trace: NormalizedBrowserTraceData
+  selection: TraceSelection
 }>()
 
 const entries = computed(() => props.trace.entries)
-
-// preserve step on live update
-const selectedStepIndex = ref(0)
-watch([
-  () => props.test,
-  () => props.trace.repeats,
-  () => props.trace.retry,
-], () => {
-  selectedStepIndex.value = 0
-})
-const selectedStep = computed(() => entries.value[selectedStepIndex.value])
+const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
 
 const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
@@ -33,10 +23,10 @@ const iframeSandbox = computed(() => {
 })
 
 function onSelectStep(index: number) {
-  selectedStepIndex.value = index
+  selectActiveTraceStep(index)
   const step = entries.value[index]
   if (step?.location) {
-    openLocation(props.test, step.location)
+    openLocation(props.selection.test, step.location)
   }
 }
 
@@ -56,10 +46,12 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   doc.open()
   doc.close()
   const mirror = createMirror()
+  // rrweb >=2.0 hardened the API to force sandbox iframe usage https://github.com/rrweb-io/rrweb/issues/1817. We already ensure the same manually so opt-out the guard by UNSAFE_allowUnprotectedRebuild
   rebuild(serialized, {
     doc,
     cache: createCache(),
     mirror,
+    UNSAFE_allowUnprotectedRebuild: true,
   })
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
@@ -99,8 +91,8 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   }
 }, { immediate: true })
 
-function getStepButtonClass(step: BrowserTraceEntry, index: number) {
-  const selected = selectedStepIndex.value === index
+function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
+  const selected = props.selection.selectedStepIndex === index
   // TODO: move trace step state colors to shared semantic UI shortcuts.
   if (isTraceStepInProgress(step)) {
     return selected
@@ -121,7 +113,7 @@ function formatTraceTime(ms: number) {
     : `${(ms / 1000).toFixed(1)}s`
 }
 
-function formatTraceTiming(step: BrowserTraceEntry) {
+function formatTraceTiming(step: NormalizedBrowserTraceEntry) {
   if (isTraceStepInProgress(step)) {
     return 'running'
   }
@@ -132,7 +124,7 @@ function formatTraceTiming(step: BrowserTraceEntry) {
     : `${startTime} · ${formatTraceTime(step.duration)}`
 }
 
-function formatStepName(step: BrowserTraceEntry) {
+function formatStepName(step: NormalizedBrowserTraceEntry) {
   if (step.name === 'vitest:onAfterRetryTask') {
     return 'test finished'
   }
@@ -142,20 +134,7 @@ function formatStepName(step: BrowserTraceEntry) {
   return step.name
 }
 
-function getStepMarkerClass(step: BrowserTraceEntry) {
-  if (step.kind === 'action') {
-    return 'bg-blue-500/80'
-  }
-  if (step.kind === 'expect') {
-    return 'bg-green-500/80'
-  }
-  if (step.kind === 'mark') {
-    return 'bg-amber-500/80'
-  }
-  return 'bg-gray-400/80 dark:bg-gray-500/80'
-}
-
-function isTraceStepInProgress(step: BrowserTraceEntry) {
+function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
 </script>
@@ -172,21 +151,28 @@ function isTraceStepInProgress(step: BrowserTraceEntry) {
           type="button"
           data-testid="trace-step"
           :data-test-range="step.range?.phase"
-          class="w-full text-left px-2 py-1 rounded text-sm"
+          class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
-          :aria-current="selectedStepIndex === index ? 'step' : undefined"
+          :style="{ paddingInlineStart: `${0.5 + step.depth}rem` }"
+          :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
           @click="onSelectStep(index)"
         >
+          <span
+            v-if="step.depth > 0"
+            class="absolute bottom-1 top-1 border-l border-gray/40 dark:border-gray/50"
+            :style="{ insetInlineStart: `${step.depth - 0.05}rem` }"
+          />
           <div class="flex items-start gap-2">
             <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">
               <span
                 v-if="isTraceStepInProgress(step)"
-                class="h-3 w-3 animate-spin rounded-full border border-yellow-500 border-t-transparent"
+                class="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent"
+                :class="getTraceEntryClass(step)"
               />
               <span
                 v-else
-                class="h-2 w-2 rounded-full"
-                :class="getStepMarkerClass(step)"
+                class="h-2 w-2 rounded-full bg-current opacity-80"
+                :class="getTraceEntryClass(step)"
               />
             </span>
             <div class="min-w-0 flex-1">

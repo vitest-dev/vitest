@@ -74,6 +74,11 @@ export default antfu(
       ],
 
       'import/no-named-as-default': 'off',
+      // Has dangerous false positives
+      'e18e/prefer-array-fill': 'off',
+      // Doesn't actually matter, JS engines cache them
+      // Also has dangerous false positives (reports /g/)
+      'e18e/prefer-static-regex': 'off',
     },
   },
   {
@@ -122,6 +127,7 @@ export default antfu(
       'no-self-compare': 'off',
       'import/no-mutable-exports': 'off',
       'no-throw-literal': 'off',
+      'import/no-duplicates': 'off',
     },
   },
   {

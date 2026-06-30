@@ -60,7 +60,13 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
+By default, Vitest's reporters print their output to the terminal. The `json`, `junit` and `html` reporters instead write to a scoped location under `.vitest/`:
+
+- `json` writes `.vitest/json/output.json`
+- `junit` writes `.vitest/junit/output.xml`
+- `html` writes `.vitest/index.html`
+
+The `json` and `junit` locations can be overridden with the `outputFile` [configuration option](/config/outputfile) in your Vitest configuration file or via CLI. The `html` reporter uses its [`outputDir`](#html-reporter) option instead.
 
 :::code-group
 ```bash [CLI]
@@ -75,6 +81,30 @@ export default defineConfig({
   },
 })
 ```
+:::
+
+The `json` and `junit` reporters also accept `outputFile` as a reporter option, which takes precedence over the top-level `outputFile`:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [['json', { outputFile: './test-output.json' }]],
+  },
+})
+```
+
+To print the report to the terminal instead of writing it to a file, set the `stdout` option on the `json` or `junit` reporter. This is ignored when `outputFile` is set:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [['json', { stdout: true }]],
+  },
+})
+```
+
+::: warning
+When `stdout` is enabled, the report can be interleaved with other output written directly to the terminal — for example `process.stdout.write` in a test file, or logs from the main process such as a global setup file — which can make the JSON or XML unparsable. Prefer the default file output when you need to consume the report programmatically.
 :::
 
 ## Combining Reporters
@@ -316,7 +346,7 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/outputfile) configuration option.
+Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
 ```bash [CLI]
@@ -420,7 +450,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/outputfile) configuration option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
 ```bash [CLI]
@@ -506,7 +536,7 @@ export default defineConfig({
 
 Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
-Output file can be specified using the [`outputFile`](/config/outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
+The report artifact root can be specified using the reporter's `outputDir` option. The report entry is written to `<outputDir>/index.html` and the UI assets files live under `<outputDir>/ui/`. By default `outputDir` is `.vitest`, the shared Vitest artifact directory, so attachments (`.vitest/attachments`) and coverage (`.vitest/coverage`) are reused without being copied.
 
 :::code-group
 ```bash [CLI]
@@ -520,6 +550,29 @@ export default defineConfig({
   },
 })
 ```
+:::
+
+Set `singleFile` to generate a self-contained HTML report:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['html', { singleFile: true }],
+    ],
+  },
+})
+```
+
+When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole `html` output directory.
+
+::: warning
+`singleFile` has two caveats:
+
+- The file can grow very large because everything is embedded inline — slow to open, memory-hungry, and possibly over the size limits of artifact viewers or static hosts.
+- Coverage HTML reports are not inlined yet and remain as separate files.
+
+Prefer the default multi-file report when the suite has many or large attachments, or when you need coverage included in the bundle.
 :::
 
 ::: tip

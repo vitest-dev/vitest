@@ -18,6 +18,10 @@ vitest --ui
 
 Then you can visit the Vitest UI at <a href="http://localhost:51204/__vitest__/">`http://localhost:51204/__vitest__/`</a>
 
+::: tip
+Vitest UI access is protected. If the direct URL shows an error, open the URL with a token printed by Vitest in the terminal, for example `http://localhost:51204/__vitest__/?token=...`.
+:::
+
 ::: warning
 The UI is interactive and requires a running Vite server, so make sure to run Vitest in `watch` mode (the default). Alternatively, you can generate a static HTML report that looks identical to the Vitest UI by specifying `html` in config's `reporters` option.
 :::
@@ -47,27 +51,38 @@ If you still want to see how your tests are running in real time in the terminal
 To preview your HTML report, you can use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
 
 ```sh
-npx vite preview --outDir ./html
+npx vite preview --outDir .vitest
 ```
 
-You can configure output with [`outputFile`](/config/outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.
+You can configure the output location with the HTML reporter's `outputDir` option. It points to the report artifact root, and the report entry is written to `<outputDir>/index.html`. The default value is `.vitest`, the shared Vitest artifact directory.
 :::
+
+If you need a portable report that can be opened or shared as one file, see [`singleFile`](/guide/reporters#html-reporter) in the HTML reporter documentation.
 
 ::: tip
 To view the HTML report from CI, for example in GitHub Actions, upload the output directory as an artifact:
 
 ```yaml
-- uses: actions/upload-artifact@v4
+- uses: actions/upload-artifact@v7
   id: upload-report
   with:
     name: vitest-report
-    path: html/
+    path: .vitest/
 
 - name: Viewer link in summary
   run: echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
 ```
 
 This adds a link to the job summary. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
+
+When you use `singleFile: true`, you can upload the report as a single file and it will become viewable directly GitHub artifacts with `archive: false` option:
+
+```yaml
+- uses: actions/upload-artifact@v7
+  with:
+    path: .vitest/index.html
+    archive: false
+```
 :::
 
 ## Module Graph

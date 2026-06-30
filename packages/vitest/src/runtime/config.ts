@@ -1,15 +1,45 @@
 import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
-import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { DiffOptions, SerializedDiffOptions } from '@vitest/utils/diff'
 import type { LabelColor } from '../types/general'
+import type {
+  SequenceHooks,
+  SequenceSetupFiles,
+  SerializableRetry,
+  TestTagDefinition,
+} from './runner/types'
 
 /**
  * Config that tests have access to.
  */
 export interface SerializedConfig {
+  root: string
+  setupFiles: string[]
   name: string | undefined
+  passWithNoTests: boolean
+  testNamePattern: RegExp | undefined
+  allowOnly: boolean
+  sequence: {
+    shuffle?: boolean
+    concurrent?: boolean
+    seed: number
+    hooks: SequenceHooks
+    setupFiles: SequenceSetupFiles
+  }
+  maxConcurrency: number
+  testTimeout: number
+  hookTimeout: number
+  retry: SerializableRetry
+  repeats?: number
+  includeTaskLocation: boolean | undefined
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
+  /**
+   * @internal
+   */
+  _diffOptions?: DiffOptions
   color?: LabelColor
   globals: boolean
   base: string | undefined
@@ -18,16 +48,8 @@ export interface SerializedConfig {
   runner: string | undefined
   isolate: boolean
   maxWorkers: number
-  mode: 'test' | 'benchmark'
   bail: number | undefined
   environmentOptions?: Record<string, any>
-  root: string
-  setupFiles: string[]
-  passWithNoTests: boolean
-  testNamePattern: RegExp | undefined
-  allowOnly: boolean
-  testTimeout: number
-  hookTimeout: number
   clearMocks: boolean
   mockReset: boolean
   restoreMocks: boolean
@@ -35,7 +57,6 @@ export interface SerializedConfig {
   unstubEnvs: boolean
   // TODO: make optional
   fakeTimers: FakeTimersConfig
-  maxConcurrency: number
   defines: Record<string, any>
   expect: {
     requireAssertions?: boolean
@@ -45,13 +66,6 @@ export interface SerializedConfig {
     }
   }
   printConsoleTrace: boolean | undefined
-  sequence: {
-    shuffle?: boolean
-    concurrent?: boolean
-    seed: number
-    hooks: SequenceHooks
-    setupFiles: SequenceSetupFiles
-  }
   deps: {
     web: {
       transformAssets?: boolean
@@ -84,8 +98,6 @@ export interface SerializedConfig {
     allowWrite: boolean | undefined
   }
   diff: string | SerializedDiffOptions | undefined
-  retry: SerializableRetry
-  includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
   inspector: {
@@ -130,8 +142,11 @@ export interface SerializedConfig {
   detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
-    includeSamples: boolean
-  } | undefined
+    enabled: boolean
+    retainSamples: boolean
+    suppressExportGetterWarnings: boolean
+    projectName: string
+  }
   serializedDefines: string
   experimental: {
     fsModuleCache: boolean
@@ -152,9 +167,6 @@ export interface SerializedConfig {
       browserSdkPath?: string
     } | undefined
   }
-  tags: TestTagDefinition[]
-  tagsFilter: string[] | undefined
-  strictTags: boolean
   mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
   disableColors: boolean

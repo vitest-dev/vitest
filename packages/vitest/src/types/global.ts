@@ -1,9 +1,8 @@
-import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
+import type { PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
-import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { BenchmarkResult } from '../runtime/types/benchmark'
-import type { UserConsoleLog } from './general'
+import type { BenchResult } from '../runtime/benchmark'
+import type { Test } from '../runtime/runner/types'
 
 interface SnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
@@ -92,37 +91,59 @@ declare module 'vitest' {
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
-  }
-}
 
-declare module '@vitest/runner' {
-  interface TestContext {
     /**
-     * `expect` instance bound to the current test.
+     * Asserts that a benchmark result is faster than another benchmark result.
+     * Compares mean latency — lower is faster.
      *
-     * This API is useful for running snapshot tests concurrently because global expect cannot track them.
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'))
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'), { delta: 0.1 })
      */
-    readonly expect: ExpectStatic
-    /** @internal */
-    _local: boolean
-  }
+    toBeFasterThan: (
+      expected: BenchResult,
+      options?: { delta?: number },
+    ) => void
 
-  interface TaskMeta {
-    typecheck?: boolean
-    benchmark?: boolean
-    __vitest_label__?: string
-  }
+    /**
+     * Asserts that a benchmark result is slower than another benchmark result.
+     * Compares mean latency — higher is slower.
+     *
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'))
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'), { delta: 0.2 })
+     */
+    toBeSlowerThan: (
+      expected: BenchResult,
+      options?: { delta?: number },
+    ) => void
 
-  interface File {
-    prepareDuration?: number
-    environmentLoad?: number
-  }
-
-  interface TaskBase {
-    logs?: UserConsoleLog[]
-  }
-
-  interface TaskResult {
-    benchmark?: BenchmarkResult
+    /**
+     * Ensures a `vi.when` chain has been exhausted.
+     *
+     * A chain is exhausted when at least one `calledWith` with an associated action (`then*`) has been registered
+     * and every registered behavior has been fully consumed. A chain with no registered
+     * behaviors, or with `calledWith` entries that have no associated `then*` actions, is never considered exhausted.
+     *
+     * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
+     *
+     * @example
+     * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+     *
+     * expect(w).not.toHaveBeenExhausted()
+     *
+     * expect(spy('hello')).toBe('HELLO')
+     *
+     * expect(w).toHaveBeenExhausted()
+     */
+    toHaveBeenExhausted: () => void
   }
 }

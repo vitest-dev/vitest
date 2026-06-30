@@ -9,25 +9,14 @@ export async function resolveOrchestrator(
   url: URL,
   res: ServerResponse<IncomingMessage>,
 ): Promise<string | undefined> {
-  let sessionId = url.searchParams.get('sessionId')
-  // it's possible to open the page without a context
-  if (!sessionId) {
-    const contexts = [...globalServer.children].flatMap(p => [...p.state.orchestrators.keys()])
-    sessionId = contexts.at(-1) ?? 'none'
-  }
-
-  // it's ok to not have a session here, especially in the preview provider
-  // because the user could refresh the page which would remove the session id from the url
-
-  const session = globalServer.vitest._browserSessions.getSession(sessionId!)
-  const browserProject = (session?.project.browser as ProjectBrowser | undefined) || [...globalServer.children][0]
-
-  if (!browserProject) {
+  const sessionId = url.searchParams.get('sessionId')
+  const session = sessionId && globalServer.vitest._browserSessions.getSession(sessionId)
+  if (!session) {
     return
   }
 
-  // ignore unknown pages
-  if (sessionId && sessionId !== 'none' && !globalServer.vitest._browserSessions.sessionIds.has(sessionId)) {
+  const browserProject = session.project.browser as ProjectBrowser | undefined
+  if (!browserProject) {
     return
   }
 
@@ -61,7 +50,7 @@ export async function resolveOrchestrator(
       for (const attr in script.attrs || {}) {
         html += `${attr}="${script.attrs![attr]}" `
       }
-      html += `>${script.children}</script>`
+      html += `>${escapeInlineScript(typeof script.children === 'string' ? script.children : '')}</script>`
       return html
     }).join('\n')
   }
@@ -96,8 +85,14 @@ export async function resolveOrchestrator(
     __VITEST_FAVICON__: globalServer.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Runner',
     __VITEST_SCRIPTS__: globalServer.orchestratorScripts,
-    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
+    __VITEST_INJECTOR__: `<script type="module">${escapeInlineScript(injector)}</script>`,
     __VITEST_ERROR_CATCHER__: `<script type="module" src="${globalServer.errorCatcherUrl}"></script>`,
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
   })
+}
+
+function escapeInlineScript(content: string): string {
+  return content
+    .replace(/<!--/g, '<\\!--')
+    .replace(/<\/(script)/gi, '</\\$1')
 }

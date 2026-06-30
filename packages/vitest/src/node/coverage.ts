@@ -1,12 +1,14 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap, CoverageSummary } from 'istanbul-lib-coverage'
 import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
 import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
+import { createHash } from 'node:crypto'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl, slash } from '@vitest/utils/helpers'
@@ -24,6 +26,10 @@ interface ResolvedThreshold {
   coverageMap: CoverageMap
   name: string
   thresholds: Partial<Record<Threshold, number | undefined>>
+  /** When `true`, check `thresholds` against each file instead of the aggregate. */
+  perFile: boolean
+  /** Additional per-file-only minimums (object form of `perFile`), or `null`. */
+  perFileThresholds: Partial<Record<Threshold, number | undefined>> | null
 }
 
 /**
@@ -85,6 +91,7 @@ export class BaseCoverageProvider {
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  reportsDirectoryLock!: ReportsDirectoryLock
   roots: string[] = []
   changedFiles?: string[]
 
@@ -136,6 +143,7 @@ export class BaseCoverageProvider {
       this.options.reportsDirectory,
       tempDirectory,
     )
+    this.reportsDirectoryLock = new ReportsDirectoryLock(resolve(this.options.reportsDirectory))
 
     // If --project filter is set pick only roots of resolved projects
     this.roots = ctx.config.project?.length
@@ -156,14 +164,15 @@ export class BaseCoverageProvider {
       return cacheHit
     }
 
+    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
+
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
+    if (this.options.allowExternal === false && !matchingRoot) {
       this.globCache.set(filename, false)
 
       return false
     }
 
-    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
     const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
 
     if (pm.isMatch(relativeFilename, this.options.exclude, { dot: true })) {
@@ -240,6 +249,8 @@ export class BaseCoverageProvider {
   }
 
   async clean(clean = true): Promise<void> {
+    await this.reportsDirectoryLock.acquire()
+
     if (clean && existsSync(this.options.reportsDirectory)) {
       await fs.rm(this.options.reportsDirectory, {
         recursive: true,
@@ -349,12 +360,17 @@ export class BaseCoverageProvider {
   }
 
   async cleanAfterRun(): Promise<void> {
-    this.coverageFiles = new Map()
-    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    try {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
 
-    // Remove empty reports directory, e.g. when only text-reporter is used
-    if (readdirSync(this.options.reportsDirectory).length === 0) {
-      await fs.rm(this.options.reportsDirectory, { recursive: true })
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0) {
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      }
+    }
+    finally {
+      await this.reportsDirectoryLock.release()
     }
   }
 
@@ -450,7 +466,8 @@ export class BaseCoverageProvider {
       }
 
       const glob = key
-      const globThresholds = resolveGlobThresholds(this.options.thresholds![glob])
+      const globEntry = this.options.thresholds![glob]
+      const globThresholds = resolveGlobThresholds(globEntry)
       const globCoverageMap = this.createCoverageMap()
 
       const matcher = pm(glob)
@@ -467,6 +484,7 @@ export class BaseCoverageProvider {
         name: glob,
         coverageMap: globCoverageMap,
         thresholds: globThresholds,
+        ...resolvePerFile(globEntry),
       })
     }
 
@@ -485,6 +503,7 @@ export class BaseCoverageProvider {
         lines: this.options.thresholds?.lines,
         statements: this.options.thresholds?.statements,
       },
+      ...resolvePerFile(this.options.thresholds),
     })
 
     return resolvedThresholds
@@ -494,80 +513,106 @@ export class BaseCoverageProvider {
    * Check collected coverage against configured thresholds. Sets exit code to 1 when thresholds not reached.
    */
   private checkThresholds(allThresholds: ResolvedThreshold[]) {
-    for (const { coverageMap, thresholds, name } of allThresholds) {
-      if (
-        thresholds.branches === undefined
-        && thresholds.functions === undefined
-        && thresholds.lines === undefined
-        && thresholds.statements === undefined
-      ) {
+    for (const { coverageMap, thresholds, perFile, perFileThresholds, name } of allThresholds) {
+      const groups: {
+        file: string | null
+        thresholds: ResolvedThreshold['thresholds']
+        summary: CoverageSummary
+        name: string
+      }[] = []
+
+      if (!perFile) {
+        groups.push({
+          file: null,
+          thresholds,
+          summary: coverageMap.getCoverageSummary(),
+          name: name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`,
+        })
+      }
+
+      if (perFile) {
+        for (const file of coverageMap.files().sort()) {
+          groups.push({
+            file,
+            thresholds,
+            summary: coverageMap.fileCoverageFor(file).toSummary(),
+            name: name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`,
+          })
+        }
+      }
+
+      if (perFileThresholds) {
+        for (const file of coverageMap.files().sort()) {
+          groups.push({
+            file,
+            thresholds: perFileThresholds,
+            summary: coverageMap.fileCoverageFor(file).toSummary(),
+            name: 'per-file',
+          })
+        }
+      }
+
+      for (const group of groups) {
+        if (
+          group.thresholds.branches === undefined
+          && group.thresholds.functions === undefined
+          && group.thresholds.lines === undefined
+          && group.thresholds.statements === undefined
+        ) {
+          continue
+        }
+
+        this.reportThresholdViolations(group.thresholds, group.summary, group.file, group.name)
+      }
+    }
+  }
+
+  private reportThresholdViolations(
+    thresholds: ResolvedThreshold['thresholds'],
+    summary: CoverageSummary,
+    file: string | null,
+    label: string,
+  ) {
+    for (const thresholdKey of THRESHOLD_KEYS) {
+      const threshold = thresholds[thresholdKey]
+
+      if (threshold === undefined) {
         continue
       }
 
-      // Construct list of coverage summaries where thresholds are compared against
-      const summaries = this.options.thresholds?.perFile
-        ? coverageMap.files().map((file: string) => ({
-            file,
-            summary: coverageMap.fileCoverageFor(file).toSummary(),
-          }))
-        : [{ file: null, summary: coverageMap.getCoverageSummary() }]
+      /**
+       * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
+       * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
+       */
+      if (threshold >= 0) {
+        const coverage = summary.data[thresholdKey].pct
 
-      // Check thresholds of each summary
-      for (const { summary, file } of summaries) {
-        for (const thresholdKey of THRESHOLD_KEYS) {
-          const threshold = thresholds[thresholdKey]
+        if (coverage < threshold) {
+          process.exitCode = 1
 
-          if (threshold === undefined) {
-            continue
+          let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${label} threshold (${threshold}%)`
+
+          if (file) {
+            errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
           }
 
-          /**
-           * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
-           * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
-           */
-          if (threshold >= 0) {
-            const coverage = summary.data[thresholdKey].pct
+          this.ctx.logger.error(errorMessage)
+        }
+      }
+      else {
+        const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
+        const absoluteThreshold = threshold * -1
 
-            if (coverage < threshold) {
-              process.exitCode = 1
+        if (uncovered > absoluteThreshold) {
+          process.exitCode = 1
 
-              /**
-               * Generate error message based on perFile flag:
-               * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
-               * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
-               */
-              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-              } threshold (${threshold}%)`
+          let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${label} threshold (${absoluteThreshold})`
 
-              if (this.options.thresholds?.perFile && file) {
-                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-              }
-
-              this.ctx.logger.error(errorMessage)
-            }
+          if (file) {
+            errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
           }
-          else {
-            const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
-            const absoluteThreshold = threshold * -1
 
-            if (uncovered > absoluteThreshold) {
-              process.exitCode = 1
-
-              /**
-               * Generate error message based on perFile flag:
-               * - ERROR: Uncovered statements (33) exceed threshold (30) for src/math.ts
-               * - ERROR: Uncovered statements (33) exceed global threshold (30)
-               */
-              let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-              } threshold (${absoluteThreshold})`
-
-              if (this.options.thresholds?.perFile && file) {
-                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-              }
-
-              this.ctx.logger.error(errorMessage)
-            }
-          }
+          this.ctx.logger.error(errorMessage)
         }
       }
     }
@@ -586,8 +631,8 @@ export class BaseCoverageProvider {
     const config = resolveConfig(configurationFile)
     assertConfigurationModule(config)
 
-    for (const { coverageMap, thresholds, name } of allThresholds) {
-      const summaries = this.options.thresholds?.perFile
+    for (const { coverageMap, thresholds, name, perFile } of allThresholds) {
+      const summaries = perFile
         ? coverageMap
             .files()
             .map((file: string) =>
@@ -595,7 +640,13 @@ export class BaseCoverageProvider {
             )
         : [coverageMap.getCoverageSummary()]
 
-      const thresholdsToUpdate: [Threshold, number][] = []
+      // A `perFile` glob may match no files; skip it instead of writing
+      // Infinity thresholds from `Math.min(...[])`.
+      if (summaries.length === 0) {
+        continue
+      }
+
+      const thresholdsToUpdate: [Threshold, number, number][] = []
 
       for (const key of THRESHOLD_KEYS) {
         const threshold = thresholds[key] ?? 100
@@ -609,7 +660,7 @@ export class BaseCoverageProvider {
           )
 
           if (actual > threshold) {
-            thresholdsToUpdate.push([key, actual])
+            thresholdsToUpdate.push([key, actual, threshold])
           }
         }
         else {
@@ -621,7 +672,7 @@ export class BaseCoverageProvider {
           if (actual < absoluteThreshold) {
             // If everything was covered, set new threshold to 100% (since a threshold of 0 would be considered as 0%)
             const updatedThreshold = actual === 0 ? 100 : actual * -1
-            thresholdsToUpdate.push([key, updatedThreshold])
+            thresholdsToUpdate.push([key, updatedThreshold, threshold])
           }
         }
       }
@@ -634,8 +685,8 @@ export class BaseCoverageProvider {
 
       const thresholdFormatter = typeof this.options.thresholds?.autoUpdate === 'function' ? this.options.thresholds?.autoUpdate : (value: number) => value
 
-      for (const [threshold, newValue] of thresholdsToUpdate) {
-        const formattedValue = thresholdFormatter(newValue)
+      for (const [threshold, newValue, previousValue] of thresholdsToUpdate) {
+        const formattedValue = thresholdFormatter(newValue, previousValue)
         if (name === GLOBAL_THRESHOLDS_KEY) {
           config.test.coverage.thresholds[threshold] = formattedValue
         }
@@ -766,6 +817,27 @@ export class BaseCoverageProvider {
   }
 }
 
+function resolvePerFile(thresholds: unknown): {
+  perFile: boolean
+  perFileThresholds: ResolvedThreshold['thresholds'] | null
+} {
+  if (!thresholds || typeof thresholds !== 'object' || !('perFile' in thresholds)) {
+    return { perFile: false, perFileThresholds: null }
+  }
+
+  const { perFile } = thresholds
+
+  if (perFile === true) {
+    return { perFile: true, perFileThresholds: null }
+  }
+
+  if (perFile && typeof perFile === 'object') {
+    return { perFile: false, perFileThresholds: resolveGlobThresholds(perFile) }
+  }
+
+  return { perFile: false, perFileThresholds: null }
+}
+
 /**
  * Narrow down `unknown` glob thresholds to resolved ones
  */
@@ -889,5 +961,114 @@ function resolveMergeConfig(mod: any): any {
         return config
       }
     }
+  }
+}
+
+/**
+ * Cross-process lock on a coverage `reportsDirectory`.
+ *
+ * Two `vitest run --coverage` runs pointed at the same reports directory delete
+ * each other's reports, so the second one to start fails fast instead. The lock
+ * file lives in the OS temp directory so it survives the cleanup it guards, and a
+ * lock left behind by a process that no longer exists is reclaimed on the next run.
+ */
+interface LockOwner {
+  pid: number
+  reportsDirectory: string
+}
+
+class ReportsDirectoryLock {
+  readonly lockFile: string
+
+  constructor(private readonly reportsDirectory: string) {
+    const hash = createHash('sha256')
+      .update(reportsDirectory)
+      .digest('hex')
+      .slice(0, 16)
+
+    this.lockFile = resolve(tmpdir(), `vitest-coverage-${hash}.lock`)
+  }
+
+  async acquire(): Promise<void> {
+    if (await this.tryWrite()) {
+      return
+    }
+
+    const owner = await this.readOwner()
+
+    // We already hold the lock for this directory (e.g. watch-mode reruns).
+    if (owner?.pid === process.pid) {
+      return
+    }
+
+    // Another running Vitest owns this directory.
+    if (owner && isProcessAlive(owner.pid)) {
+      throw this.inUseError(owner)
+    }
+
+    // The lock was left behind by a process that no longer exists. Reclaim it.
+    await fs.rm(this.lockFile, { force: true })
+
+    if (!(await this.tryWrite())) {
+      throw this.inUseError(await this.readOwner())
+    }
+  }
+
+  async release(): Promise<void> {
+    const owner = await this.readOwner()
+
+    if (owner?.pid === process.pid) {
+      await fs.rm(this.lockFile, { force: true })
+    }
+  }
+
+  private async tryWrite(): Promise<boolean> {
+    const payload = JSON.stringify({ pid: process.pid, reportsDirectory: this.reportsDirectory })
+
+    try {
+      // `wx` fails with EEXIST if the file already exists, so only one process wins.
+      await fs.writeFile(this.lockFile, payload, { flag: 'wx' })
+      return true
+    }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        return false
+      }
+      throw error
+    }
+  }
+
+  private async readOwner(): Promise<LockOwner | null> {
+    try {
+      const owner = JSON.parse(await fs.readFile(this.lockFile, 'utf-8'))
+      return typeof owner?.pid === 'number' ? owner : null
+    }
+    catch {
+      return null
+    }
+  }
+
+  private inUseError(owner: LockOwner | null): Error {
+    return new Error(
+      `The coverage report directory "${this.reportsDirectory}" is already in use by `
+      + `another Vitest process${owner ? ` (pid ${owner.pid})` : ''}. Running coverage for multiple `
+      + `Vitest processes in the same directory at the same time is not supported, because they would `
+      + `delete each other's reports.\nGive each run its own "coverage.reportsDirectory" `
+      + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
+    )
+  }
+}
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    // Sending signal 0 checks if the process exists without actually killing it:
+    // https://nodejs.org/api/process.html#processkillpid-signal
+    process.kill(pid, 0)
+    return true
+  }
+  catch (error) {
+    // ESRCH means the process is gone. Treat anything else (e.g. EPERM) as alive
+    // so we never reclaim a lock from a process that is still running.
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
   }
 }

@@ -1,10 +1,10 @@
 import type { MockedModule } from '@vitest/mocker'
-import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
 import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
+import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
@@ -358,12 +358,26 @@ export interface BrowserCommandContext {
     name: K,
     ...args: Parameters<BrowserCommands[K]>
   ) => ReturnType<BrowserCommands[K]>
+  /**
+   * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   * This works similar to client `cdp()` API.
+   *
+   * Unlike `provider.getCDPSession`, this preserves CDP session state across
+   * multiple command calls from the same browser tester. This matters for
+   * stateful CDP domains such as `Profiler`, where `startPreciseCoverage` and
+   * `takePreciseCoverage` must run on the same CDP session.
+   *
+   * @internal
+   */
+  __ensureCDPHandler: () => Promise<any> // use `any` since type is messy
 }
 
 export interface BrowserServerStateSession {
   project: TestProject
   otelCarrier?: OTELCarrier
+  concurrencyId: number
   connected: () => void
+  ready: () => void
   fail: (v: Error) => void
 }
 
@@ -504,9 +518,7 @@ type ToMatchScreenshotResolvePath = (data: {
    */
   platform: NodeJS.Platform
   /**
-   * The value provided to
-   * {@linkcode https://vitest.dev/config/browser/screenshotdirectory|browser.screenshotDirectory},
-   * if none is provided, its default value.
+   * The value provided to {@linkcode ToMatchScreenshotOptions.screenshotDirectory|browser.expect.toMatchScreenshot.screenshotDirectory}, if none is provided, its default value (`__screenshots__`).
    */
   screenshotDirectory: string
   /**
@@ -544,15 +556,23 @@ type ToMatchScreenshotResolvePath = (data: {
 
 export interface ToMatchScreenshotOptions {
   /**
+   * The directory name used for storing reference screenshots.
+   *
+   * This value is passed as `screenshotDirectory` to {@linkcode resolveScreenshotPath|browser.expect.toMatchScreenshot.resolveScreenshotPath} and {@linkcode resolveDiffPath|browser.expect.toMatchScreenshot.resolveDiffPath}, and used in the default path resolution of `resolveScreenshotPath`.
+   *
+   * @default `__screenshots__`.
+   */
+  screenshotDirectory?: string
+  /**
    * Overrides default reference screenshot path.
    *
-   * @default `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
+   * @default path.resolve(root, testFileDirectory, screenshotDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)
    */
   resolveScreenshotPath?: ToMatchScreenshotResolvePath
   /**
    * Overrides default screenshot path used for diffs.
    *
-   * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
+   * @default path.resolve(root, attachmentsDir, testFileDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)
    */
   resolveDiffPath?: ToMatchScreenshotResolvePath
 }

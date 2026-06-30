@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertTestCounts, evaluateEditor, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -17,7 +17,7 @@ test.describe('ui', () => {
       open: false,
     })
     vitest = server.vitest
-    baseURL = `${server.url}/__vitest__/`
+    baseURL = server.url
   })
 
   test.afterAll(async () => {
@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 11, fail: 0 })
+    await assertTestCounts(page, { pass: 12, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -51,6 +51,10 @@ test.describe('ui', () => {
 
   test('scroll', async ({ page }) => {
     await testScroll(page)
+  })
+
+  test('nested', async ({ page }) => {
+    await testNested(page)
   })
 
   test('attempts', async ({ page }) => {
@@ -79,7 +83,7 @@ test.describe('html reporter', () => {
       },
       {
         root,
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
     previewServer = server.previewServer
@@ -92,11 +96,10 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 11, fail: 0 })
+    await assertTestCounts(page, { pass: 12, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
-    await page.goto(baseURL)
     await testBasic(page)
   })
 
@@ -120,6 +123,10 @@ test.describe('html reporter', () => {
     await testScroll(page)
   })
 
+  test('nested', async ({ page }) => {
+    await testNested(page)
+  })
+
   test('attempts', async ({ page }) => {
     await testAttempts(page)
   })
@@ -132,11 +139,28 @@ async function testBasic(page: Page) {
   await openExplorerItem(page, 'simple')
   await expect(traceView).toBeVisible()
 
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+    'Render simple',
+    'Render another',
+    'test finished',
+  ])
+
   // selecting steps should open source code view
-  const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
-  await traceSteps.getByText('Render simple').click()
+  await traceStepNames.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
+
+  // verify editor cursor position
+  const getEditorCursor = () => evaluateEditor(page, editor => editor.getCursor())
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 32 })
+
+  // markers ordered by 'test finished' > 'Render simple' > 'Render another'
+  const traceEditorMarkers = page.getByTestId('editor').getByTestId('trace-editor-marker')
+  await expect(traceEditorMarkers).toHaveCount(3)
+  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
 
   // verify snapshot replay in iframe
   const traceFrame = traceView.frameLocator('iframe')
@@ -144,6 +168,21 @@ async function testBasic(page: Page) {
 
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+
+  // selecting 2nd trace step and verify again
+  await traceStepNames.getByText('Render another').click()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 32 })
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')
+
+  // selecting 1st trace step from editor and verify again
+  await traceEditorMarkers.nth(1).click()
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
@@ -269,4 +308,21 @@ async function testAttempts(page: Page) {
   await traceOpenButtons.nth(2).click()
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+}
+
+async function testNested(page: Page) {
+  await openExplorerItem(page, 'nested')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect(traceView).toBeVisible()
+  await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+    'Outer group',
+    'Outer mark',
+    'Inner group',
+    'Inner mark',
+    'click',
+    'Sibling mark',
+    'test finished',
+  ])
 }

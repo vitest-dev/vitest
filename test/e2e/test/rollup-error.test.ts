@@ -3,35 +3,33 @@ import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 
 test('rollup error node', async () => {
-  const { stdout } = await runVitest({
+  const { stderr } = await runVitest({
     root: './fixtures/rollup-error',
     environment: 'node',
-    reporters: ['junit'],
   })
   if (rolldownVersion) {
-    expect(stdout).toContain('&quot;./no-such-export&quot; is not exported')
-    expect(stdout).toContain(`Plugin: builtin:vite-resolve`)
+    expect(stderr).toContain('"./no-such-export" is not exported')
+    expect(stderr).toContain(`Plugin: builtin:vite-resolve`)
   }
   else {
-    expect(stdout).toContain(`Error: Missing &quot;./no-such-export&quot; specifier in &quot;vite&quot; package`)
-    expect(stdout).toContain(`Plugin: vite:import-analysis`)
+    expect(stderr).toContain(`Error: Missing "./no-such-export" specifier in "vite" package`)
+    expect(stderr).toContain(`Plugin: vite:import-analysis`)
   }
-  expect(stdout).toContain(`Error: Cannot find package &apos;@vitejs/no-such-package&apos;`)
+  expect(stderr).toContain(`Error: Cannot find package '@vitejs/no-such-package'`)
 })
 
 test('rollup error web', async () => {
-  const { stdout } = await runVitest({
+  const { stderr } = await runVitest({
     root: './fixtures/rollup-error',
     environment: 'jsdom',
-    reporters: ['junit'],
   })
   if (rolldownVersion) {
-    expect(stdout).toContain('&quot;./no-such-export&quot; is not exported')
-    expect(stdout).toContain(`Plugin: builtin:vite-resolve`)
+    expect(stderr).toContain('"./no-such-export" is not exported')
+    expect(stderr).toContain(`Plugin: builtin:vite-resolve`)
   }
   else {
-    expect(stdout).toContain(`Error: Missing &quot;./no-such-export&quot; specifier in &quot;vite&quot; package`)
+    expect(stderr).toContain(`Error: Missing "./no-such-export" specifier in "vite" package`)
   }
-  expect(stdout).toContain(`Plugin: vite:import-analysis`)
-  expect(stdout).toContain(`Error: Failed to resolve import &quot;@vitejs/no-such-package&quot; from &quot;fixtures/rollup-error/not-found-package.test.ts&quot;. Does the file exist?`)
+  expect(stderr).toContain(`Plugin: vite:import-analysis`)
+  expect(stderr).toContain(`Error: Failed to resolve import "@vitejs/no-such-package" from "fixtures/rollup-error/not-found-package.test.ts". Does the file exist?`)
 })

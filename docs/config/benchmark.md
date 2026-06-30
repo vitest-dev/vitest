@@ -9,6 +9,13 @@ outline: deep
 
 Options used when running `vitest bench`.
 
+## benchmark.enabled
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enables the benchmark project. When set, Vitest creates a dedicated benchmark project alongside your regular test project, runs files matching [`benchmark.include`](#benchmark-include) in it, and exposes the [`bench` fixture](/guide/test-context#bench) to those files. Running `vitest bench` enables this automatically.
+
 ## benchmark.include
 
 - **Type:** `string[]`
@@ -32,39 +39,18 @@ Include globs for in-source benchmark test files. This option is similar to [`in
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
-## benchmark.reporters
+## benchmark.retainSamples
 
-- **Type:** `Arrayable<BenchmarkBuiltinReporters | Reporter>`
-- **Default:** `'default'`
+- **Type:** `boolean`
+- **Default:** `false`
 
-Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
+Include the `samples` array of per-iteration timings on every benchmark result. Disabled by default to reduce memory usage; enable when a custom reporter or API consumer needs the raw samples.
 
-## benchmark.outputFile
 
-Deprecated in favor of `benchmark.outputJson`.
+## benchmark.suppressExportGetterWarnings
 
-## benchmark.outputJson {#benchmark-outputJson}
+- **Type:** `boolean`
+- **Default:** `false`
 
-- **Type:** `string | undefined`
-- **Default:** `undefined`
+Suppress the warning printed when a benchmark accesses module export getters too many times. Vitest tracks getter access during benchmark runs because Vite's module runner wraps every export in a getter, and excessive access can dominate the measurement (see [Module Runner Overhead](/guide/benchmarking#module-runner-overhead)). Enable this when you've intentionally accepted the overhead, or when the warning is noisy for benchmarks where the getter cost is negligible.
 
-A file path to store the benchmark result, which can be used for `--compare` option later.
-
-For example:
-
-```sh
-# save main branch's result
-git checkout main
-vitest bench --outputJson main.json
-
-# change a branch and compare against main
-git checkout feature
-vitest bench --compare main.json
-```
-
-## benchmark.compare {#benchmark-compare}
-
-- **Type:** `string | undefined`
-- **Default:** `undefined`
-
-A file path to a previous benchmark result to compare against current runs.

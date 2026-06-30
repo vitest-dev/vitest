@@ -5,13 +5,109 @@ outline: deep
 
 # Migration Guide
 
-[Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
+[Migrating to Vitest 4.0](https://v4.vitest.dev/guide/migration) | [Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration)
 
 ## Migrating to Vitest 5.0 {#vitest-5}
 
 ::: warning Work in progress
 Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
 :::
+
+### `clearMocks` is Enabled by Default
+
+[`clearMocks`](/config/#clearmocks) now defaults to `true`. Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, resetting the `mock.calls`, `mock.instances`, `mock.contexts` and `mock.results` of every mock. Mock implementations are left intact, so this only affects the recorded history.
+
+In practice this means a mock no longer carries calls from one test into the next:
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+const fn = vi.fn()
+
+test('first', () => {
+  fn()
+  expect(fn).toHaveBeenCalledTimes(1)
+})
+
+test('second', () => {
+  fn()
+  // v4: the call from "first" was kept, so this was 2 // [!code --]
+  expect(fn).toHaveBeenCalledTimes(2) // [!code --]
+  // v5: history is cleared before each test, so only this test's call counts // [!code ++]
+  expect(fn).toHaveBeenCalledTimes(1) // [!code ++]
+})
+```
+
+Tests that record calls outside of the test body (for example in a setup file, at the top level of a module, or in a `beforeAll` hook) are the most affected, because that history is cleared before the test that asserts on it runs.
+
+To keep the previous behavior, set `clearMocks` back to `false`:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    clearMocks: false, // [!code ++]
+  },
+})
+```
+
+### Benchmarking API Rewrite
+
+The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`; it is a [test-context fixture](/guide/test-context#bench) accessed from inside a regular `test()`. See the [Benchmarking guide](/guide/benchmarking) for the new API.
+
+Removed, with replacements where applicable:
+
+- **`bench(name, fn)` at module scope**: destructure `bench` from the test context instead.
+
+```ts
+// v4
+import { bench } from 'vitest' // [!code --]
+
+bench('sort', () => { // [!code --]
+  [3, 1, 2].sort() // [!code --]
+}) // [!code --]
+
+// v5
+import { test } from 'vitest' // [!code ++]
+
+test('sort', async ({ bench }) => { // [!code ++]
+  await bench('sort', () => { [3, 1, 2].sort() }).run() // [!code ++]
+}) // [!code ++]
+```
+
+- **`bench.skip`, `bench.only`, `bench.todo`** are removed. Use the regular `test.skip`, `test.only`, `test.todo` on the surrounding `test()` instead.
+- **`benchmark.reporters` / `benchmark.outputFile`** are removed. Benchmark output is now part of the default reporter and the `json` reporter; configure those at the top level via `test.reporters` instead.
+- **`benchmark.compare` config and the `--compare` CLI flag** are removed. Pass [`writeResult`](/guide/benchmarking#storing-and-replaying-results) as a per-bench option to persist a result, and read it back with [`bench.from()`](/guide/benchmarking#bench-from) inside `bench.compare()`.
+- **`benchmark.outputJson` config and the `--outputJson` CLI flag** are removed. Use `--reporter=json --outputFile=<path>` to capture benchmark results; the JSON reporter now includes a `benchmarks` field on each test case.
+- **`Vitest` instance `mode` property** is now always `'test'`. The previous `'benchmark'` value is no longer used; benchmarks run inside a dedicated project of the same `Vitest` instance.
+
+### Vitest UI Requires an Authenticated URL
+
+Vitest UI now requires token authentication for the HTML page and API access. The `/__vitest__/` URL will show an error until the browser is authenticated. To authenticate, open the URL with a token printed by Vitest, as shown below. Once authenticated, the direct `/__vitest__/` URL will work correctly.
+
+```bash
+vitest --ui
+# UI started at http://localhost:51204/__vitest__/?token=...
+```
+
+### Fake Timers Now Mock `Temporal`
+
+Vitest now mocks the [`Temporal`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) API alongside `Date` when fake timers are enabled, following the [`@sinonjs/fake-timers` v15.4 update](https://github.com/sinonjs/fake-timers/blob/main/CHANGELOG.md#1540--2026-05-05). This only takes effect when `Temporal` is available on the global object — either natively (Node.js >= 26 by default, behind `--harmony-temporal` on older versions, and supporting browsers) or through a globally installed polyfill such as `import 'temporal-polyfill/global'`.
+
+Previously `Temporal.Now` kept returning the real wall-clock time even when [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers) was active. Now it follows the mocked clock:
+
+```ts
+vi.useFakeTimers({ now: 0 })
+
+Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
+```
+
+`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
+
+```ts
+vi.useFakeTimers({ toNotFake: ['Temporal'] })
+```
 
 ### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
 
@@ -56,6 +152,17 @@ export async function customClick(
 }
 ```
 
+### Locators are Strict by Default
+
+Browser locators now match the text exactly by default, requiring a full, case-sensitive match. To keep the previous behaviour, you can set [`browser.locators.exact`](/config/browser/locators#browser-locators-exact) to `false`.
+
+```ts
+// With exact: true (default), this only matches the string "Hello, World" exactly.
+// With exact: false, this matches "Hello, World!", "Say Hello, World", etc.
+const locator = page.getByText('Hello, World', { exact: true })
+await locator.click()
+```
+
 ### Removed Deprecated Entrypoints
 
 Several entry points were marked as deprecated in Vitest 4.1. This release removes them entirely.
@@ -68,6 +175,99 @@ Several entry points were marked as deprecated in Vitest 4.1. This release remov
 - `vitest/suite`: use static methods on `TestRunner` from vitest instead (for example, `TestRunner.getCurrentTest()`)
 - `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
 - `vitest/internal/module-runner` is removed
+
+### `toHaveTextContent` Now Performs Strict Equality
+
+The browser-mode [`toHaveTextContent`](/api/browser/assertions#tohavetextcontent) matcher now validates that an element's text content is exactly equal to the expected string instead of performing a partial, case-sensitive match. Regular expressions are no longer accepted. The previous behaviour, including `RegExp` support, has moved to the new [`toMatchTextContent`](/api/browser/assertions#tomatchtextcontent) matcher.
+
+```ts
+// Partial or regex matches:
+await expect.element(banner).toHaveTextContent('Error') // [!code --]
+await expect.element(banner).toHaveTextContent(/error/i) // [!code --]
+await expect.element(banner).toMatchTextContent('Error') // [!code ++]
+await expect.element(banner).toMatchTextContent(/error/i) // [!code ++]
+
+// Exact matches stay on `toHaveTextContent`:
+await expect.element(banner).toHaveTextContent('Error!')
+```
+
+### Glob Coverage Thresholds No Longer Inherit `perFile`
+
+`coverage.thresholds.perFile` previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      thresholds: {
+        'perFile': true,
+
+        'src/utils/**': {
+          lines: 80,
+          perFile: true, // [!code ++]
+        },
+      },
+    },
+  },
+})
+```
+
+### Config Files Are Not Looked Up From Parent Directories
+
+Vitest no longer searches parent directories for config files. If you previously relied on running `vitest` from a subdirectory while using a config file from a parent directory, pass the config explicitly and scope test discovery with `--dir`. For example,
+
+```bash
+$ cd subdir && vitest # [!code --]
+$ cd subdir && vitest --config ../vitest.config.ts # [!code ++]
+```
+
+### DOM Environment Global Assignments Now Update the Underlying Window
+
+Assignments to properties on `globalThis` or `window` in `jsdom` and `happy-dom` environments are now propagated to the underlying DOM implementation. Mutable properties such as `innerWidth` can affect APIs implemented by the DOM environment, for example `happy-dom`'s `matchMedia`.
+
+### Browser Orchestrator URL Requires a Session
+
+Vitest no longer serves the browser orchestrator UI from a bare `/__vitest_test__/` URL. Browser runner URLs are now session-bound and must include the `sessionId` generated by Vitest, for example `/__vitest_test__/?sessionId=...`.
+
+If you manually opened the browser preview by copying the Vite server URL or visiting `/__vitest_test__/` directly, use the URL opened or printed by Vitest instead.
+
+### Generated Reports and Artifacts Use the `.vitest` Directory
+
+Vitest now uses a single `.vitest` directory at the project root as the shared artifact root, so one `.vitest` entry in `.gitignore` is enough. Defaults that moved this major:
+
+- **Attachments** ([`attachmentsDir`](/config/attachmentsdir)): `.vitest-attachements/` → `.vitest/attachments/`
+- **Blob reporter** and `--merge-reports`: `.vitest-reports/blob-*.json` → `.vitest/blob/blob-*.json`
+- **HTML reporter** ([`html`](/guide/reporters#html-reporter)): `html/index.html` → `.vitest/index.html`, and its option changed from `outputFile` (a file) to `outputDir` (a directory)
+- **JSON reporter** ([`json`](/guide/reporters#json-reporter)): stdout → `.vitest/json/output.json`
+- **JUnit reporter** ([`junit`](/guide/reporters#junit-reporter)): stdout → `.vitest/junit/output.xml`
+
+The `json` and `junit` reporters now write to a file by default instead of printing to stdout. If you previously relied on the report being printed to stdout (for example `vitest --reporter=json > out.json` or `vitest --reporter=json | jq`), either read the generated artifact file instead (for example `jq . .vitest/json/output.json`), or opt back into stdout with the reporter's `stdout` option (`reporters: [['json', { stdout: true }]]`). An explicit `outputFile` is still respected and unchanged.
+
+### `toMatchScreenshot` Now Uses a Dedicated Screenshot Directory Config
+
+Previously, reference screenshots for `toMatchScreenshot` did not correctly respect `browser.screenshotDirectory`. As a result, screenshots were saved in an unintended location when a custom directory was configured.
+
+This has now been fixed by introducing a dedicated option: `browser.expect.toMatchScreenshot.screenshotDirectory`. Its default value is `__screenshots__`.
+
+- If you did not set `browser.screenshotDirectory`, no changes are required.
+- If you did set `browser.screenshotDirectory`, you must now explicitly configure the new option:
+
+    ```ts [vitest.config.ts]
+    export default defineConfig({
+      test: {
+        browser: {
+          screenshotDirectory: 'my-screenshots',
+          expect: { // [!code ++]
+            toMatchScreenshot: { // [!code ++]
+              screenshotDirectory: 'my-screenshots', // [!code ++]
+            }, // [!code ++]
+          }, // [!code ++]
+        },
+      },
+    })
+    ```
+
+    Then either move existing reference screenshots to the new location or regenerate them.
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 
@@ -479,7 +679,7 @@ export default defineConfig({
 ```
 :::
 
-See [Recipes](/guide/recipes) for more examples.
+See [Per-File Isolation Settings](/guide/recipes/disable-isolation) and [Parallel and Sequential Test Files](/guide/recipes/parallel-sequential) for more examples.
 
 ### Reporter Updates
 

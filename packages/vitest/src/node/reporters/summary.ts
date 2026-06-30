@@ -2,7 +2,7 @@ import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
 import type { Options as WindowRendererOptions } from './renderers/windowedRenderer'
-import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
+import type { ReportedHookContext, TestCase, TestModule, TestSuite } from './reported-tasks'
 import c from 'tinyrainbow'
 import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
 import { formatProjectName, formatTime, formatTimeString, padSummaryTitle } from './renderers/utils'
@@ -36,14 +36,14 @@ interface SlowTask {
   visible: boolean
   startTime: number
   onFinish: () => void
-  hook?: Omit<SlowTask, 'hook'>
+  step?: Omit<SlowTask, 'step'>
 }
 
 interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   filename: TestModule['task']['name']
   projectName: TestModule['project']['name']
   projectColor: TestModule['project']['color']
-  hook?: Omit<SlowTask, 'hook'>
+  step?: Omit<SlowTask, 'step'>
   tests: Map<TestCase['id'], SlowTask>
   meta: TestModule['task']['meta']
 }
@@ -139,42 +139,44 @@ export class SummaryReporter implements Reporter {
     this.renderer.schedule()
   }
 
-  onHookStart(options: ReportedHookContext): void {
-    const stats = this.getHookStats(options)
-
-    if (!stats) {
-      return
-    }
-
-    const hook = {
-      name: options.name,
+  private startStep(stats: RunningModule | SlowTask, name: string) {
+    const step = {
+      name,
       visible: false,
       startTime: performance.now(),
       onFinish: () => {},
     }
-    stats.hook?.onFinish?.()
-    stats.hook = hook
+    stats.step?.onFinish?.()
+    stats.step = step
 
     if (!Number.isFinite(this.ctx.config.slowTestThreshold)) {
       return
     }
 
     const timeout = setTimeout(() => {
-      hook.visible = true
+      step.visible = true
     }, this.ctx.config.slowTestThreshold).unref()
 
-    hook.onFinish = () => clearTimeout(timeout)
+    step.onFinish = () => clearTimeout(timeout)
+  }
+
+  onHookStart(options: ReportedHookContext): void {
+    const stats = this.getStepStats(options.entity)
+
+    if (stats) {
+      this.startStep(stats, options.name)
+    }
   }
 
   onHookEnd(options: ReportedHookContext): void {
-    const stats = this.getHookStats(options)
+    const stats = this.getStepStats(options.entity)
 
-    if (stats?.hook?.name !== options.name) {
+    if (stats?.step?.name !== options.name) {
       return
     }
 
-    stats.hook.onFinish()
-    stats.hook.visible = false
+    stats.step.onFinish()
+    stats.step.visible = false
   }
 
   onTestCaseReady(test: TestCase): void {
@@ -203,7 +205,7 @@ export class SummaryReporter implements Reporter {
       : undefined
 
     slowTest.onFinish = () => {
-      slowTest.hook?.onFinish()
+      slowTest.step?.onFinish()
       clearTimeout(timeout)
     }
 
@@ -283,7 +285,7 @@ export class SummaryReporter implements Reporter {
     this.renderer.schedule()
   }
 
-  private getHookStats({ entity }: ReportedHookContext) {
+  private getStepStats(entity: TestSuite | TestModule | TestCase) {
     // Track slow running hooks only on verbose mode
     if (!this.options.verbose) {
       return
@@ -317,7 +319,7 @@ export class SummaryReporter implements Reporter {
       )
 
       const slowTasks = [
-        testFile.hook,
+        testFile.step,
         ...testFile.tests.values(),
       ].filter((t): t is SlowTask => t != null && t.visible)
 
@@ -331,8 +333,8 @@ export class SummaryReporter implements Reporter {
           + c.bold(c.yellow(` ${formatTime(Math.max(0, elapsed))}`)),
         )
 
-        if (task.hook?.visible) {
-          summary.push(c.bold(c.yellow(`      ${F_TREE_NODE_END} `)) + task.hook.name)
+        if (task.step?.visible) {
+          summary.push(c.bold(c.yellow(`      ${F_TREE_NODE_END} `)) + task.step.name)
         }
       }
     }
@@ -367,7 +369,7 @@ export class SummaryReporter implements Reporter {
     }
 
     const testFile = this.runningModules.get(id)
-    testFile?.hook?.onFinish()
+    testFile?.step?.onFinish()
     testFile?.tests?.forEach(test => test.onFinish())
 
     this.runningModules.delete(id)

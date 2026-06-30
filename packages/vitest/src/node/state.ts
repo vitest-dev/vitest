@@ -1,11 +1,11 @@
-import type { File, FileSpecification, Task, TaskResultPack } from '@vitest/runner'
+import type { File, FileSpecification, Task, TaskResultPack } from '../runtime/runner/types'
 import type { AsyncLeak, UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
-import { createFileTask, generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 import { defaultBrowserPort } from '../constants'
+import { createFileTask, generateFileHash } from '../utils/tasks'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 function isAggregateError(err: unknown): err is AggregateError {

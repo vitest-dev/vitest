@@ -20,6 +20,8 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /\/@vitest\/\w+\/dist\//,
   '/vitest/dist/',
   '/vitest/src/',
+  '/packages/expect/src/',
+  '/packages/snapshot/src/',
   '/node_modules/chai/',
   '/node_modules/tinyspy/',
   '/vite/dist/node/module-runner',
@@ -266,7 +268,7 @@ export function parseStacktrace(
 
     const { line, column, source, name } = position
     let file = source || stack.file
-    if (file.match(/\/\w:\//)) {
+    if (/\/\w:\//.test(file)) {
       file = file.slice(1)
     }
 

@@ -7,6 +7,7 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import * as vite from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { API_TOKEN_FILE } from '../config/apiToken'
 import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
@@ -37,7 +38,9 @@ export function WorkspaceVitestPlugin(
       name: 'vitest:project:name',
       enforce: 'post',
       config(viteConfig) {
-        const testConfig = viteConfig.test || {}
+        viteConfig.test ??= {}
+
+        const testConfig = viteConfig.test
 
         let { label: name, color } = typeof testConfig.name === 'string'
           ? { label: testConfig.name }
@@ -62,6 +65,11 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        if (project.vitest._cliOptions.benchmarkOnly) {
+          viteConfig.test.benchmark ??= {}
+          viteConfig.test.benchmark.enabled = true
+        }
+
         const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
         const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
         // keep project names to potentially filter it out
@@ -79,6 +87,9 @@ export function WorkspaceVitestPlugin(
             workspaceNames.push(instance.name)
           }
         })
+        if (viteConfig.test?.benchmark?.enabled) {
+          workspaceNames.push(name ? `${name} (bench)` : 'bench')
+        }
 
         const filters = project.vitest.config.project
         // if there is `--project=...` filter, check if any of the potential projects match
@@ -165,6 +176,7 @@ export function WorkspaceVitestPlugin(
                 project.vitest.config.root,
                 project.vitest.vite.config.configFile,
               ),
+              deny: [API_TOKEN_FILE],
             },
           },
           // eslint-disable-next-line ts/ban-ts-comment

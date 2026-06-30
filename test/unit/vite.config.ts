@@ -127,11 +127,14 @@ export default defineConfig({
     includeTaskLocation: true,
     reporters: [
       ...(process.env.GITHUB_ACTIONS
-        ? [['default'], ['github-actions', { displayAnnotations: false }] as any]
+        ? [['minimal'], ['github-actions', { displayAnnotations: false }] as any]
         : [['default', { summary: true }], ['hanging-process']]),
       ...(process.env.VITEST_CI_BLOB_LABEL
         ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]]
         : []),
+      process.env.VITEST_CI_MERGE_REPORTS
+        ? ['html', { singleFile: true }]
+        : {},
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
@@ -167,9 +170,7 @@ export default defineConfig({
     alias: [
       {
         find: 'test-alias',
-        replacement: '',
-        // vitest doesn't crash because function is defined
-        customResolver: () => resolve(import.meta.dirname, 'src', 'aliased-mod.ts'),
+        replacement: resolve(import.meta.dirname, 'src', 'aliased-mod.ts'),
       },
     ],
     onConsoleLog(log) {

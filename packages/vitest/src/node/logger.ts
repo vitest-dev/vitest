@@ -9,7 +9,6 @@ import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
-import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
   type?: string
@@ -169,20 +168,20 @@ export class Logger {
     const config = this.ctx.config
 
     if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected ${config.mode} files found\n`)
+      this.log(`No affected test files found\n`)
     }
     else if (config.watch) {
       this.log(
-        c.red(`No ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+        c.red(`No test files found. You can change the file name pattern by pressing "p"\n`),
       )
     }
     else {
       if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+        this.log(`No test files found, exiting with code 0\n`)
       }
       else {
         this.error(
-          c.red(`No ${config.mode} files found, exiting with code 1\n`),
+          c.red(`No test files found, exiting with code 1\n`),
         )
       }
     }
@@ -235,17 +234,18 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    // Log seed if either files (RandomSequencer) or tests are shuffled
-    if (this.ctx.config.sequence.sequencer === RandomSequencer || this.ctx.config.sequence.shuffle) {
-      this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
+    const seed = this.ctx.getSeed()
+    if (seed != null) {
+      this.log(PAD + c.gray(`Running tests with seed "${seed}"`))
     }
 
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.vite.config.server.port
-      const base = this.ctx.config.uiBase
+      const url = new URL(this.ctx.config.uiBase, `http://${host}:${port}`)
+      url.searchParams.set('token', this.ctx.config.api.token)
 
-      this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
+      this.log(PAD + c.dim(c.green(`UI started at ${url}`)))
     }
     else if (this.ctx.config.api?.port) {
       const resolvedUrls = this.ctx.vite.resolvedUrls
@@ -266,29 +266,6 @@ export class Logger {
     else {
       this.log()
     }
-  }
-
-  printBrowserBanner(project: TestProject): void {
-    if (!project.browser) {
-      return
-    }
-
-    const resolvedUrls = project.browser.vite.resolvedUrls
-    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-    if (!origin) {
-      return
-    }
-
-    const output = project.isRootProject()
-      ? ''
-      : formatProjectName(project)
-    const provider = project.browser.provider?.name
-    const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
-    this.log(
-      c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
-      ),
-    )
   }
 
   printUnhandledErrors(errors: ReadonlyArray<unknown>): void {

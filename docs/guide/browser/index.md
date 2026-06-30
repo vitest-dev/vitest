@@ -119,8 +119,6 @@ export default defineConfig({
 
 ::: info
 Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel. You can change that with the [`browser.api`](/config/browser/api) option.
-
-The CLI does not print the Vite server URL automatically. You can press "b" to print the URL when running in watch mode.
 :::
 
 If you have not used Vite before, make sure you have your framework's plugin installed and specified in the config. Some frameworks might require extra configuration to work - check their Vite related documentation to be sure.
@@ -432,7 +430,7 @@ import { render } from 'vitest-browser-vue'
 import Component from './Component.vue'
 
 test('properly handles v-model', async () => {
-  const screen = render(Component)
+  const screen = await render(Component)
 
   // Asserts initial state.
   await expect.element(screen.getByText('Hi, my name is Alice')).toBeInTheDocument()
@@ -454,7 +452,7 @@ import { expect, test } from 'vitest'
 import Greeter from './greeter.svelte'
 
 test('greeting appears on click', async () => {
-  const screen = render(Greeter, { name: 'World' })
+  const screen = await render(Greeter, { name: 'World' })
 
   const button = screen.getByRole('button')
   await button.click()

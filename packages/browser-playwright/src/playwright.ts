@@ -388,7 +388,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const ids = sessionIds.get(sessionId) ?? new Set<string>()
-        const promises = [...ids].map((id) => {
+        const promises = Array.from(ids, (id) => {
           const key = predicateKey(sessionId, id)
           const predicate = idPredicates.get(key)
           if (predicate) {
@@ -434,7 +434,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       ...contextOptions,
       ignoreHTTPSErrors: true,
     } satisfies BrowserContextOptions
-    if (this.project.config.browser.ui) {
+    // A `null` viewport lets the page adopt the real window size, which is only
+    // meaningful for a headed UI. In headless mode there is no real window, so it
+    // would inherit the host's device scale factor and produce screenshots that
+    // differ from non-UI runs on the same machine.
+    if (this.project.config.browser.ui && !this.project.config.browser.headless) {
       options.viewport = null
     }
     return options
@@ -537,19 +541,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
-      send(method, params) {
-        return cdp.send(method as any, params)
-      },
-      on(event, listener) {
-        return cdp.on(event as any, listener)
-      },
-      off(event, listener) {
-        return cdp.off(event as any, listener)
-      },
-      once(event, listener) {
-        return cdp.once(event as any, listener)
-      },
-    }
+      send: cdp.send.bind(cdp),
+      on: cdp.on.bind(cdp),
+      off: cdp.off.bind(cdp),
+      once: cdp.once.bind(cdp),
+    } as any // overloaded CDPSession type is too tricky in monorepo
   }
 
   async close(): Promise<void> {
@@ -563,13 +559,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const browser = this.browser
     this.browser = null
-    await Promise.all([...this.pages.values()].map(p => p.close()))
+    await Promise.all(Array.from(this.pages.values(), p => p.close()))
     this.pages.clear()
     if (this.persistentContext) {
       await this.persistentContext.close()
     }
     else {
-      await Promise.all([...this.contexts.values()].map(c => c.close()))
+      await Promise.all(Array.from(this.contexts.values(), c => c.close()))
     }
     this.contexts.clear()
     await browser?.close()

@@ -1,4 +1,5 @@
 import type { BaseCoverageProvider, CoverageOptions } from 'vitest/node'
+import { mkdirSync, rmSync } from 'node:fs'
 import { join, resolve, sep } from 'node:path'
 import { Writable } from 'node:stream'
 import { expect, onTestFinished, test } from 'vitest'
@@ -144,10 +145,30 @@ test('files outside project when allowExternal: true', async () => {
   expect(isIncluded(resolve(process.cwd(), '../../package-b/src/two.ts'))).toBe(false)
 })
 
-async function init(options: Partial<CoverageOptions> & { testInclude?: string[] }) {
+test('files with almost matching name, outside project when allowExternal: false', async () => {
+  const parent = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  const root = resolve(parent, 'something')
+  mkdirSync(root, { recursive: true })
+  onTestFinished(() => {
+    rmSync(parent, { recursive: true, force: true })
+  })
+
+  const isIncluded = await init({
+    include: ['**/*.ts'],
+    root,
+    allowExternal: false,
+  })
+
+  expect(isIncluded(resolve(parent, './something/src/one.ts'))).toBe(true)
+  expect(isIncluded(resolve(parent, './not-something/src/two.ts'))).toBe(false)
+  expect(isIncluded(resolve(parent, './something-else/src/three.ts'))).toBe(false)
+})
+
+async function init(options: Partial<CoverageOptions> & { testInclude?: string[]; root?: string }) {
   const vitest = await createVitest('test', {
     config: false,
     include: ['dont-match-anything', ...(options.testInclude || [])],
+    root: options.root,
     coverage: {
       ...options,
       enabled: true,

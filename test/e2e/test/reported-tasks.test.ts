@@ -99,6 +99,8 @@ it('correctly reports a file', ({ testModule, files, project }) => {
   expect(diagnostic.prepareDuration).toBeGreaterThan(0)
   expect(diagnostic.collectDuration).toBeGreaterThan(0)
   expect(diagnostic.duration).toBeGreaterThan(0)
+  expect(diagnostic.concurrencyId).toBeGreaterThan(0)
+  expect(diagnostic.workerId).toBeGreaterThan(0)
   // doesn't have a setup file
   expect(diagnostic.setupDuration).toBe(0)
 })

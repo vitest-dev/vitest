@@ -1,8 +1,19 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
+import { existsSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
+import { join } from 'pathe'
+import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
 import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, startHtmlReportPreview, startVitestUi } from './helper'
+
+const TEST_COUNTS = {
+  pass: 18,
+  fail: 3,
+  files: {
+    pass: 7,
+  },
+}
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -18,7 +29,7 @@ test.describe('ui', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
@@ -31,6 +42,55 @@ test.describe('ui', () => {
 
   test('cross origin access', async ({ page }) => {
     await testCrossOriginAccess(page, pageUrl)
+  })
+
+  test('blocks unauthenticated ui html requests', async ({ request }) => {
+    const cleanUrl = new URL(pageUrl)
+    cleanUrl.search = ''
+    const cleanPageUrl = cleanUrl.toString()
+
+    const tokenless = await request.get(cleanPageUrl)
+    expect(tokenless.status()).toBe(403)
+    await expect(tokenless.text()).resolves.toContain('Vitest UI requires authentication.')
+
+    const badTokenUrl = new URL(cleanPageUrl)
+    badTokenUrl.searchParams.set('token', 'invalid')
+    const badToken = await request.get(badTokenUrl.toString())
+    expect(badToken.status()).toBe(403)
+    await expect(badToken.text()).resolves.toContain('Vitest UI requires authentication.')
+  })
+
+  test('does not serve the api token file', async ({ request }) => {
+    const { tokenPath } = resolveApiToken(vitest!.config.root)
+    expect(existsSync(tokenPath)).toBe(true)
+
+    const fsUrl = new URL(join('/@fs/', tokenPath), pageUrl)
+    const res = await request.get(fsUrl.toString())
+    if (process.platform === 'win32') {
+      // On Windows the token may live on a different drive than the project
+      // (e.g. LOCALAPPDATA on C: vs repo on D: in CI). Vite strips the drive
+      // letter from `/@fs/` paths and re-roots at the cwd drive, so the file is
+      // unreachable and Vite responds 404 instead of 403. Both mean it is not
+      // served. See https://github.com/vitejs/vite/issues/10802
+      expect([403, 404]).toContain(res.status())
+    }
+    else {
+      expect(res.status()).toBe(403)
+    }
+  })
+
+  test('allows direct ui access after opening authenticated url', async ({ page }) => {
+    const cleanUrl = new URL(pageUrl)
+    cleanUrl.search = ''
+    const cleanPageUrl = cleanUrl.toString()
+
+    await page.goto(pageUrl)
+    await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
+    expect(page.url()).toBe(`${cleanPageUrl}#/`)
+
+    await page.goto(cleanPageUrl)
+    await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
+    expect(page.url()).toBe(`${cleanPageUrl}#/`)
   })
 
   test('coverage', async ({ page }) => {
@@ -51,6 +111,12 @@ test.describe('ui', () => {
   test('filter', async ({ page }) => {
     await page.goto(pageUrl)
     await testFilter(page, { mode: 'ui' })
+  })
+
+  test('filter reveals initially invisible explorer item', async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 500 })
+    await page.goto(pageUrl)
+    await testFilterInitiallyInvisibleItem(page)
   })
 
   test('tags filter', async ({ page }) => {
@@ -87,6 +153,11 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
     await testExecute(page, { mode: 'ui' })
   })
+
+  test('module graph', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testModuleGraph(page)
+  })
 })
 
 test.describe('html report', () => {
@@ -106,7 +177,7 @@ test.describe('html report', () => {
       {
         root: './fixtures/main',
         base: '/custom/base/',
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
     previewServer = server.previewServer
@@ -175,6 +246,11 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
     await testExecute(page, { mode: 'static' })
   })
+
+  test('module graph', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testModuleGraph(page)
+  })
 })
 
 async function testBasic(page: Page, pageUrl: string) {
@@ -184,7 +260,7 @@ async function testBasic(page: Page, pageUrl: string) {
   await page.goto(pageUrl)
 
   // dashboard
-  await assertTestCounts(page, { pass: 17, fail: 3 })
+  await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
 
   // unhandled errors
   await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -208,6 +284,18 @@ async function testBasic(page: Page, pageUrl: string) {
   await expect(page.getByTestId('console')).toContainText('log test')
 
   expect(pageErrors).toEqual([])
+}
+
+async function testModuleGraph(page: Page) {
+  await openExplorerFileItem(page, 'sample.test.ts')
+  await page.getByTestId('btn-graph').click()
+  await expect(page.locator('[data-testid=graph] text')).toBeVisible()
+  await expect(page.locator('[data-testid=graph] text')).toHaveText('sample.test.ts')
+
+  await openExplorerFileItem(page, 'sample-browser.test.ts')
+  await page.getByTestId('btn-graph').click()
+  await expect(page.locator('[data-testid=graph] text')).toBeVisible()
+  await expect(page.locator('[data-testid=graph] text')).toHaveText('sample-browser.test.ts')
 }
 
 async function testCoverage(page: Page) {
@@ -355,6 +443,13 @@ async function testError(page: Page) {
 
   await getExplorerItem(page, 'colored error message').click()
   await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /node/error.test.ts:12:17')
+
+  // switch to Code tab and verify ANSI is rendered as HTML in the editor line widget
+  await page.getByTestId('btn-code').click()
+  await expect(page.getByTestId('editor').getByTestId('error-line-gadget')).toHaveText([
+    /AssertionError: expected/,
+    /Error: this-is-blue/,
+  ])
 }
 
 async function testTagsFilter(page: Page) {
@@ -414,7 +509,7 @@ async function testDashboardFilter(page: Page) {
 async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
-  await page.getByText('PASS (6)').click()
+  await page.getByText(`PASS (${TEST_COUNTS.files.pass})`).click()
   await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
 
   // match nothing
@@ -464,6 +559,12 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
     await testItem.getByLabel('Run current test').click()
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   }
+}
+
+async function testFilterInitiallyInvisibleItem(page: Page) {
+  await expect(getExplorerItem(page, 'sample.test.ts')).not.toBeVisible()
+  await page.getByPlaceholder('Search...').fill('sample.test.ts')
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 }
 
 async function testCrossOriginAccess(page: Page, pageUrl: string) {
@@ -527,7 +628,6 @@ async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | '
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).toBeEnabled()
 
-    await page.getByPlaceholder('Search...').fill('snapshot')
     const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).toBeVisible()
@@ -539,7 +639,6 @@ async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | '
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).toBeDisabled()
 
-    await page.getByPlaceholder('Search...').fill('snapshot')
     const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()
@@ -551,7 +650,6 @@ async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | '
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).not.toBeVisible()
 
-    await page.getByPlaceholder('Search...').fill('snapshot')
     const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()
@@ -572,7 +670,7 @@ test.describe('standalone', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {
@@ -615,7 +713,7 @@ test.describe('security', () => {
       reporters: [],
     })
     vitest = server.vitest
-    pageUrl = `${server.url}/__vitest__/`
+    pageUrl = server.url
   })
 
   test.afterAll(async () => {

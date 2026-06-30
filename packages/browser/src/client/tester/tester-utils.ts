@@ -245,11 +245,10 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_: 
   const currentTime = now()
   const endTime = startTime + timeout
   const remainingTime = Math.floor(endTime - currentTime)
-  if (remainingTime <= 0) {
-    return options_
-  }
-  // give us some time to process the timeout
-  options_.timeout = remainingTime - 100
+  // keep some buffer to process the timeout, but always hand the provider a
+  // positive value so it surfaces a descriptive, source-mapped locator error
+  // instead of letting the task timer win the race with a generic timeout
+  options_.timeout = Math.max(remainingTime - 100, 1)
   return options_
 }
 

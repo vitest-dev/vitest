@@ -14,13 +14,13 @@ describe('Button with increment', async () => {
   it('should increment the count on each click', async () => {
     await page.getByRole('button').click()
 
-    await expect.element(page.getByRole('button')).toHaveTextContent('2')
+    await expect.element(page.getByRole('button')).toMatchTextContent('2')
     if (import.meta.env.VITE_FAIL_TEST) {
-      await expect.element(page.getByRole('button'), { timeout: 3000 }).toHaveTextContent('3')
+      await expect.element(page.getByRole('button'), { timeout: 3000 }).toMatchTextContent('3')
     }
   })
 
   it('should show name props', async () => {
-    await expect.element(page.getByRole('heading')).toHaveTextContent('World')
+    await expect.element(page.getByRole('heading')).toMatchTextContent('World')
   })
 })

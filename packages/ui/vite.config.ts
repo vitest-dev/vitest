@@ -6,6 +6,7 @@ import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
+import { resolveApiToken } from '../vitest/src/node/config/apiToken'
 
 export default defineConfig({
   base: './',
@@ -20,6 +21,14 @@ export default defineConfig({
     Vue(),
     Unocss({
       presets: [presetWind3(), presetAttributify(), presetIcons()],
+      content: {
+        pipeline: {
+          include: [
+            // by default .ts is excluded
+            /\/client\/.*\.(ts|vue)($|\?)/,
+          ],
+        },
+      },
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -59,10 +68,8 @@ export default defineConfig({
 })
 
 function devUiScriptPlugin(): Plugin {
-  const UI_SCRIPT_RE = /<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/
   const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
 
-  const uiUrl = `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`
   const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
 
   return {
@@ -91,19 +98,11 @@ function devUiScriptPlugin(): Plugin {
         ]
       }
 
-      const response = await fetch(uiUrl)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch VITEST_API_TOKEN from ${uiUrl}`)
-      }
-      const testHtml = await response.text()
-      const tokenScript = testHtml.match(UI_SCRIPT_RE)?.[1]
-      if (!tokenScript) {
-        throw new Error('Failed to extract VITEST_API_TOKEN from the response')
-      }
+      const token = resolveApiToken(process.cwd()).token
       return [
         {
           tag: 'script',
-          children: tokenScript,
+          children: `window.VITEST_API_TOKEN = ${JSON.stringify(token)}`,
           injectTo: 'head-prepend',
         },
       ]
@@ -119,10 +118,11 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       return !!htmlDir && env.command === 'serve' && env.mode !== 'test'
     },
     async transformIndexHtml() {
+      const metadataCode = `window.HTML_REPORT_METADATA=fetch(new URL("./${REPORT_FILE}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
       return [
         {
           tag: 'script',
-          children: `window.METADATA_PATH="${REPORT_FILE}"`,
+          children: metadataCode,
         },
       ]
     },
@@ -130,7 +130,7 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url || '', `http://localhost`)
         if (url.pathname === `/${REPORT_FILE}`) {
-          const data = fs.readFileSync(path.join(htmlDir, REPORT_FILE))
+          const data = fs.readFileSync(path.join(htmlDir, 'ui', REPORT_FILE))
           res.end(data)
           return
         }

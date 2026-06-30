@@ -18,7 +18,29 @@ it('basic', async () => {
     }
   `)
   expect(result.exitCode).toBe(0)
-  expect(result.fs.statFile('html/index.html').isFile()).toBe(true)
+  expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
+})
+
+it('singleFile', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `test('basic', () => {});`,
+  }, {
+    globals: true,
+    reporters: [
+      'default',
+      ['html', { singleFile: true }],
+    ],
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
+  expect(result.exitCode).toBe(0)
+  expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
 })
 
 it('browser mode headless', async () => {
@@ -46,7 +68,7 @@ test('basic', () => {});
       },
     }
   `)
-  expect(result.fs.statFile('html/index.html').isFile()).toBe(true)
+  expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
 })
 
 it('html and coverage already next each other', async () => {
@@ -64,7 +86,7 @@ test('add', () => {
   }, {
     reporters: [
       'default',
-      ['html', { outputFile: './custom-dir/index.html' }],
+      ['html', { outputDir: './custom-dir' }],
     ],
     coverage: {
       enabled: true,

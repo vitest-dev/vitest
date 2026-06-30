@@ -1,0 +1,23 @@
+diff --git a/dist/rrweb-snapshot.js b/dist/rrweb-snapshot.js
+index f2694ac8c01dd248a2d659f1ec2628bc9e65729a..ed99e153f33e5235602cf09efc8dab5bd6c98903 100644
+--- a/dist/rrweb-snapshot.js
++++ b/dist/rrweb-snapshot.js
+@@ -1534,6 +1534,18 @@ const pseudoClassPlugin = {
+           if (selector.includes(":hover")) {
+             rule2.selector += ",\n" + selector.replace(/:hover/g, ".\\:hover");
+           }
++          if (selector.includes(":active")) {
++            rule2.selector += ",\n" + selector.replace(/:active/g, ".\\:active");
++          }
++          if (selector.includes(":focus-visible")) {
++            rule2.selector += ",\n" + selector.replace(/:focus-visible/g, ".\\:focus-visible");
++          }
++          if (selector.includes(":focus-within")) {
++            rule2.selector += ",\n" + selector.replace(/:focus-within/g, ".\\:focus-within");
++          }
++          if (/:focus(?![-\w])/.test(selector)) {
++            rule2.selector += ",\n" + selector.replace(/:focus(?![-\w])/g, ".\\:focus");
++          }
+         });
+       }
+     };

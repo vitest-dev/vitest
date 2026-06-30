@@ -1,9 +1,9 @@
-import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig, SerializedRootConfig } from '../runtime/config'
+import type { CancelReason, File } from '../runtime/runner/types'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
 import type { CliOptions } from './cli/cli-api'
@@ -18,7 +18,6 @@ import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
-import { createTagsFilter, getTasks, hasFailed, interpretTaskModes, limitConcurrency, someTasksAreOnly } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
@@ -26,9 +25,11 @@ import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
 import { distDir } from '../paths'
+import { createTagsFilter } from '../runtime/runner/utils/tags'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { limitConcurrency } from '../utils/limit-concurrency'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
-import { convertTasksToEvents } from '../utils/tasks'
+import { convertTasksToEvents, getTasks, hasFailed, interpretTaskModes, someTasksAreOnly } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
@@ -44,12 +45,13 @@ import { collectModuleDurationsDiagnostic, collectSourceModulesLocations } from 
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
-import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from './projects/resolveProjects'
+import { getDefaultTestProject, resolveDefaultProjects, resolveProjects } from './projects/resolveProjects'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
 import { createReport } from './reporters/report'
-import { createBenchmarkReporters, createReporters } from './reporters/utils'
+import { createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
+import { RandomSequencer } from './sequencers/RandomSequencer'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
@@ -77,7 +79,7 @@ export class Vitest {
    * The logger instance used to log messages. It's recommended to use this logger instead of `console`.
    * It's possible to override stdout and stderr streams when initiating Vitest.
    * @example
-   * new Vitest('test', {
+   * new Vitest({
    *   stdout: new Writable(),
    * })
    */
@@ -143,11 +145,38 @@ export class Vitest {
   private _snapshot?: SnapshotManager
   private _coverageProvider?: CoverageProvider | null | undefined
 
+  /**
+   * @deprecated Do not rely on this property, it's always `test`. Scheduled to be removed in the next major.
+   */
+  public readonly mode = 'test'
+
   constructor(
-    public readonly mode: VitestRunMode,
     cliOptions: UserConfig,
-    options: VitestOptions = {},
+    options?: VitestOptions,
+  )
+  /**
+   * @deprecated The `mode` argument is no longer used. Use `new Vitest(cliOptions, options)` instead.
+   */
+  constructor(
+    mode: VitestRunMode,
+    cliOptions: UserConfig,
+    options?: VitestOptions,
+  )
+  constructor(
+    modeOrCliOptions: VitestRunMode | UserConfig,
+    cliOptionsOrOptions?: UserConfig | VitestOptions,
+    maybeOptions?: VitestOptions,
   ) {
+    let cliOptions: UserConfig
+    let options: VitestOptions
+    if (typeof modeOrCliOptions === 'string') {
+      cliOptions = cliOptionsOrOptions as UserConfig
+      options = maybeOptions ?? {}
+    }
+    else {
+      cliOptions = modeOrCliOptions
+      options = (cliOptionsOrOptions as VitestOptions) ?? {}
+    }
     this._cliOptions = cliOptions
     this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
@@ -306,10 +335,12 @@ export class Vitest {
     }
     catch { }
 
-    const projects = await this.resolveProjects(this._cliOptions)
-    this.projects = projects
+    this.projects = await this.resolveProjects(this._cliOptions)
+    if (this._cliOptions.benchmarkOnly) {
+      this.projects = this.projects.filter(c => c.config.benchmark.enabled)
+    }
 
-    await Promise.all(projects.flatMap((project) => {
+    await Promise.all(this.projects.flatMap((project) => {
       const hooks = project.vite.config.getSortedPluginHooks('configureVitest')
       return hooks.map(hook => hook({
         project,
@@ -356,9 +387,7 @@ export class Vitest {
       populateProjectsTags(this.coreWorkspaceProject, this.projects)
     }
 
-    this.reporters = resolved.mode === 'benchmark'
-      ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
-      : await createReporters(resolved.reporters, this)
+    this.reporters = await createReporters(resolved.reporters, this)
 
     await this._fsCache.ensureCacheIntegrity()
 
@@ -567,7 +596,7 @@ export class Vitest {
     if (!project) {
       return []
     }
-    return resolveBrowserProjects(this, new Set([project.name]), [project])
+    return resolveDefaultProjects(this, new Set([project.name]), [project])
   }
 
   /**
@@ -614,8 +643,9 @@ export class Vitest {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
 
-      const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
-      this.state.blobs = { files, errors, coverages, executionTimes }
+      const { files, errors, coverages, executionTimes, transformTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+      this.state.blobs = { files, errors, coverages, executionTimes, transformTimes }
+      this.state.transformTime = transformTimes.reduce((a, b) => a + b, 0)
 
       await this.report('onInit', this)
 
@@ -651,7 +681,11 @@ export class Vitest {
    * Returns the seed, if tests are running in a random order.
    */
   public getSeed(): number | null {
-    return this.config.sequence.seed ?? null
+    // Tests can be shuffled per project, so check projects as well.
+    const randomized = this.config.sequence.sequencer === RandomSequencer
+      || !!this.config.sequence.shuffle
+      || this.projects.some(p => !!p.config.sequence.shuffle)
+    return randomized ? this.config.sequence.seed : null
   }
 
   /** @internal */
@@ -797,7 +831,7 @@ export class Vitest {
         })
 
         if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
-          throw new FilesNotFoundError(this.mode)
+          throw new FilesNotFoundError()
         }
       }
 
@@ -1042,9 +1076,6 @@ export class Vitest {
     /** @default os.availableParallelism() */
     concurrency?: number
   }): Promise<TestModule[]> {
-    if (this.mode !== 'test') {
-      throw new Error(`The \`experimental_parseSpecifications\` does not support "${this.mode}" mode.`)
-    }
     const concurrency = options?.concurrency ?? (typeof os.availableParallelism === 'function'
       ? os.availableParallelism()
       : os.cpus().length)
@@ -1084,9 +1115,6 @@ export class Vitest {
   }
 
   public async experimental_parseSpecification(specification: TestSpecification): Promise<TestModule> {
-    if (this.mode !== 'test') {
-      throw new Error(`The \`experimental_parseSpecification\` does not support "${this.mode}" mode.`)
-    }
     const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
       return createFailedFileTask(specification.project, specification.moduleId, error)
     })
@@ -1173,7 +1201,7 @@ export class Vitest {
    */
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
-    this.cancelPromise = Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
+    this.cancelPromise = Promise.all(Array.from(this._onCancelListeners, listener => listener(reason)))
 
     await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise
