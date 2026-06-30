@@ -19,12 +19,19 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  # Trust the committed lockfile and skip pnpm's per-install supply-chain
+  # verification (trustPolicy: no-downgrade, ~15-20s on every job). The lint job
+  # overrides this to false so the lockfile is still verified once per run.
+  PNPM_CONFIG_TRUST_LOCKFILE: true
 
 jobs:
   lint:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
+    # verify the lockfile against supply-chain policies once per run
+    env:
+      PNPM_CONFIG_TRUST_LOCKFILE: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
