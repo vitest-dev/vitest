@@ -9,7 +9,7 @@ test('module is processed and scoped', async () => {
   element.className = 'module main'
   const computedStatic = window.getComputedStyle(element)
   expect(computedStatic.display).toBe('block')
-  expect(computedStatic.width).toBe('')
+    expect(computedStatic.width).toBe('auto')
   expect(element).toMatchInlineSnapshot(`
     <div
       class="module main"
