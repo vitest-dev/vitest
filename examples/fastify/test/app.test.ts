@@ -26,7 +26,7 @@ test('with a running server', async () => {
   expect(response.body).toStrictEqual(usersData)
 })
 
-test('with axios', async () => {
+test('with fetch', async () => {
   await app.listen()
   await app.ready()
 

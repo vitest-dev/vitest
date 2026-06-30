@@ -496,7 +496,7 @@ export interface InlineConfig {
 
   /**
    * Will call `.mockClear()` on all spies before each test
-   * @default false
+   * @default true
    */
   clearMocks?: boolean
 

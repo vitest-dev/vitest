@@ -13,6 +13,45 @@ outline: deep
 Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
 :::
 
+### `clearMocks` is Enabled by Default
+
+[`clearMocks`](/config/#clearmocks) now defaults to `true`. Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, resetting the `mock.calls`, `mock.instances`, `mock.contexts` and `mock.results` of every mock. Mock implementations are left intact, so this only affects the recorded history.
+
+In practice this means a mock no longer carries calls from one test into the next:
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+const fn = vi.fn()
+
+test('first', () => {
+  fn()
+  expect(fn).toHaveBeenCalledTimes(1)
+})
+
+test('second', () => {
+  fn()
+  // v4: the call from "first" was kept, so this was 2 // [!code --]
+  expect(fn).toHaveBeenCalledTimes(2) // [!code --]
+  // v5: history is cleared before each test, so only this test's call counts // [!code ++]
+  expect(fn).toHaveBeenCalledTimes(1) // [!code ++]
+})
+```
+
+Tests that record calls outside of the test body (for example in a setup file, at the top level of a module, or in a `beforeAll` hook) are the most affected, because that history is cleared before the test that asserts on it runs.
+
+To keep the previous behavior, set `clearMocks` back to `false`:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    clearMocks: false, // [!code ++]
+  },
+})
+```
+
 ### Benchmarking API Rewrite
 
 The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`; it is a [test-context fixture](/guide/test-context#bench) accessed from inside a regular `test()`. See the [Benchmarking guide](/guide/benchmarking) for the new API.
