@@ -40,7 +40,7 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - name: Build
         run: pnpm run build
@@ -117,7 +117,7 @@ jobs:
           node-version: ${{ matrix.node_version }}
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
 
@@ -183,7 +183,7 @@ jobs:
           node-version: ${{ matrix.node_version }}
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
 
@@ -221,7 +221,7 @@ jobs:
       - name: Install
         run: |
           pnpm override-vite7
-          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
 
@@ -267,7 +267,7 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - name: Build
         run: pnpm run build
