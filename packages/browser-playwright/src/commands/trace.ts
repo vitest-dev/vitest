@@ -190,6 +190,8 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
 ) => {
   const vitest = project.vitest
   await Promise.all(traces.map((trace) => {
+    assertBrowserApiWrite(project, trace)
+    assertBrowserFileAccess(project, trace)
     const entity = vitest.state.getReportedEntityById(testId)
     const location = entity?.location
       ? {
