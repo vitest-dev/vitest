@@ -347,6 +347,22 @@ test('configure expect', () => {
   })
 })
 
+test('smartRerun is parsed correctly', () => {
+  expect(getCLIOptions('--smartRerun')).toEqual({ smartRerun: true })
+  expect(getCLIOptions('--smart-rerun')).toEqual({ smartRerun: true })
+  expect(getCLIOptions('--no-smart-rerun')).toEqual({ smartRerun: false })
+})
+
+test('smartRerunOnlyFailed is parsed correctly', () => {
+  expect(getCLIOptions('--smartRerunOnlyFailed')).toEqual({ smartRerunOnlyFailed: true })
+  expect(getCLIOptions('--smart-rerun-only-failed')).toEqual({ smartRerunOnlyFailed: true })
+  expect(getCLIOptions('--no-smart-rerun-only-failed')).toEqual({ smartRerunOnlyFailed: false })
+  expect(getCLIOptions('--smart-rerun --smart-rerun-only-failed')).toEqual({
+    smartRerun: true,
+    smartRerunOnlyFailed: true,
+  })
+})
+
 test('silent', () => {
   expect(getCLIOptions('--silent')).toEqual({ silent: true })
   expect(getCLIOptions('--silent=true')).toEqual({ silent: true })

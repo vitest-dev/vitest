@@ -992,6 +992,23 @@ export interface InlineConfig {
    * @default false
    */
   changed?: boolean | string
+
+  /**
+   * Cache the file paths of failed tests in `.vitest-failed-cache.json` in the project root.
+   * On the next run, previously failed tests are moved to the front of the test queue so they run first.
+   * The cache file is automatically removed once all tests pass.
+   * @default false
+   */
+  smartRerun?: boolean
+
+  /**
+   * Requires `smartRerun` to be enabled. Instead of just moving previously failed tests to the front,
+   * skips files that passed in the previous run entirely and only runs files from the failed tests cache.
+   * Skipped files are not part of the run's report, the same way files excluded by `--shard` are not reported.
+   * Falls back to running every file when the cache is empty or none of the cached files still exist.
+   * @default false
+   */
+  smartRerunOnlyFailed?: boolean
 }
 
 export interface TypecheckConfig {
