@@ -13,6 +13,10 @@ outline: deep
 Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
 :::
 
+::: warning Prerequisites
+Vitest 5.0 requires Vite >= 6.4.0 and Node.js >= 22.12.0. Before proceeding with any other migration steps, ensure your environment meets these requirements. Running Vitest 5.0 on older versions of Vite or Node.js is not supported and may result in unexpected errors.
+:::
+
 ### `clearMocks` is Enabled by Default
 
 [`clearMocks`](/config/#clearmocks) now defaults to `true`. Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, resetting the `mock.calls`, `mock.instances`, `mock.contexts` and `mock.results` of every mock. Mock implementations are left intact, so this only affects the recorded history.
@@ -51,6 +55,40 @@ export default defineConfig({
   },
 })
 ```
+
+### Hoisted Mocking Calls Must Be at the Top Level
+
+[`vi.mock`](/api/vi#vi-mock), [`vi.unmock`](/api/vi#vi-unmock), and [`vi.hoisted`](/api/vi#vi-hoisted) are hoisted to the top of the file and run before any surrounding code. Calling them inside a function, block, or `describe`/`test` callback previously only logged a warning. Vitest 5.0 now throws, because the call does not execute where it is written:
+
+```ts
+describe('calculator', () => {
+  vi.mock('./calculator') // [!code --]
+})
+
+vi.mock('./calculator') // [!code ++]
+
+describe('calculator', () => {
+  // ...
+})
+```
+
+The error reports every offending call and its location:
+
+```
+1 call in "calculator.test.ts" was defined outside of the module's top level scope:
+
+- vi.mock("./calculator") at calculator.test.ts:2:3
+
+Although it appears nested, it will be hoisted and executed before anything in this file. Move it to the top level to reflect its actual execution order.
+```
+
+The dynamic variants [`vi.doMock`](/api/vi#vi-domock) and [`vi.doUnmock`](/api/vi#vi-dounmock) are not hoisted and may still be called anywhere.
+
+### Automocked Modules Stay Automocked in the Browser
+
+In browser mode, mock metadata is serialized between Vitest and the test iframe. An automocked module (a [`vi.mock`](/api/vi#vi-mock) call with no factory) was incorrectly restored as a spy on the other side, so its exports kept calling the real implementation instead of the auto-generated stubs.
+
+Automocks are now restored as automocks. If a browser test relied on the original implementation running through an automocked module, its exports now return `undefined` by default. Pass [`{ spy: true }`](/api/vi#vi-mock) to keep calling the real implementation while still tracking calls, or provide a factory with the behavior you need.
 
 ### Benchmarking API Rewrite
 
@@ -108,6 +146,50 @@ Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 ```ts
 vi.useFakeTimers({ toNotFake: ['Temporal'] })
 ```
+
+### `toThrow("")` Matches Any Error Message
+
+[`toThrow`](/api/expect#tothrow) (and its alias `toThrowError`) treats a string argument as a substring of the error message. In Vitest 4 an empty string was special-cased to the `/^$/` pattern, so it matched only an error whose message was empty. It now behaves like any other substring, and an empty string is contained in every message:
+
+```ts
+expect(() => { throw new Error('boom') }).not.toThrow('') // [!code --]
+expect(() => { throw new Error('boom') }).toThrow('') // [!code ++]
+```
+
+To assert that a thrown error has an empty message, match the pattern explicitly:
+
+```ts
+expect(() => { throw new Error('boom') }).not.toThrow(/^$/)
+```
+
+### `expect.poll` Fails When It Times Out
+
+[`expect.poll`](/api/expect#poll) now rejects when its callback, or the polled assertion, does not settle within `timeout`. Previously a callback that resolved after the deadline, or an assertion that only passed on a late attempt, could still succeed. The callback now also receives an `AbortSignal` that aborts when the timeout elapses, so you can cancel in-flight work:
+
+```ts
+await expect.poll(async ({ signal }) => {
+  const response = await fetch('/api/status', { signal })
+  return response.status
+}, { timeout: 1000 }).toBe(200)
+```
+
+A poll that legitimately needs more time should raise its `timeout`. Otherwise it fails with `expect.poll() function didn't resolve in time.` (or `expect.poll() assertion didn't resolve in time.`).
+
+### Test Titles and Inspected Values Use `pretty-format`
+
+Vitest now formats values with [`pretty-format`](https://www.npmjs.com/package/pretty-format) instead of `loupe` when it inspects them, including the values interpolated into [`test.each`](/api/test#test-each) and [`test.for`](/api/test#test-for) titles. The rendering of some values changes, so snapshots or assertions that capture inspected output may need updating.
+
+Two changes are specific to generated test titles:
+
+- A string value interpolated through a `$` placeholder is no longer wrapped in quotes:
+
+```ts
+test.for([{ id: 'a1' }])('case $id', ({ id }) => { /* ... */ })
+// v4 title: case 'a1' // [!code --]
+// v5 title: case a1   // [!code ++]
+```
+
+- The length limit for interpolated values is now controlled by the new [`taskTitleValueFormatTruncate`](/config/tasktitlevalueformattruncate) option (default `40`).
 
 ### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
 
@@ -199,6 +281,24 @@ export default defineConfig({
 })
 ```
 
+### Coverage `include` and `exclude` Match More Precisely
+
+`coverage.include` and `coverage.exclude` were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. For example, a pattern could match a file because a parent directory in its absolute path happened to contain the same segment. Patterns are now matched against each file's path relative to the project root, without `contains`.
+
+A pattern with no glob wildcard is treated as a directory and expanded to match everything inside it:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      include: ['src'], // matches src/**, not every path that contains "src"
+    },
+  },
+})
+```
+
+Review your `include` and `exclude` patterns after upgrading and confirm the reported file set is what you expect. Files that were previously matched only by the looser behavior may no longer be included.
+
 ### Config Files Are Not Looked Up From Parent Directories
 
 Vitest no longer searches parent directories for config files. If you previously relied on running `vitest` from a subdirectory while using a config file from a parent directory, pass the config explicitly and scope test discovery with `--dir`. For example,
@@ -256,6 +356,24 @@ This has now been fixed by introducing a dedicated option: `browser.expect.toMat
 
     Then either move existing reference screenshots to the new location or regenerate them.
 
+### Worker and Concurrency Ids Are 1-based
+
+Worker and pool identifiers now start at `1` instead of `0`. This changes the values of the `VITEST_POOL_ID` and `VITEST_WORKER_ID` environment variables, which now range from `1` to the worker count. Update any logic that derives a value from these ids, such as a per-worker database name or an array index.
+
+For custom reporters, the [`TestModule`](/advanced/api/test-module#diagnostic) diagnostics now expose both ids: the existing `workerId` (now 1-based) and a new `concurrencyId`.
+
+```ts
+import type { Reporter, TestModule } from 'vitest/node'
+
+class MyReporter implements Reporter {
+  onTestModuleEnd(testModule: TestModule) {
+    const { workerId, concurrencyId } = testModule.diagnostic()
+  }
+}
+```
+
+Node.js and browser tests run in separate pools and do not share these ids, so the same value can appear in both.
+
 ### Package Migration
 
 The following packages are deprecated as of this release. They will no longer receive feature updates, but security fixes will continue to be backported:
@@ -277,8 +395,6 @@ Several entry points were marked as deprecated in Vitest 4.1. This release remov
 - `vitest/suite`: use static methods on `TestRunner` from vitest instead (for example, `TestRunner.getCurrentTest()`)
 - `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
 - `vitest/internal/module-runner` is removed
-
-### Deprecated APIs removed
 
 ## Migrating from Jest {#jest}
 
