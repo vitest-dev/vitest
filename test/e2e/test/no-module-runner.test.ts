@@ -147,7 +147,7 @@ describe.runIf(module.registerHooks)('supported', () => {
           expect(greet).toHaveBeenCalledOnce()
         })
       `,
-    }, { watch: true })
+    }, { watch: true, clearMocks: false })
 
     await vitest.waitForStdout('1 passed')
 
