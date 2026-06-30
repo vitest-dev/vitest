@@ -1,7 +1,7 @@
 # Configuring WebdriverIO
 
-::: info Playwright vs WebdriverIO
-If you do not already use WebdriverIO in your project, we recommend starting with [Playwright](/config/browser/playwright) as it is easier to configure and has more flexible API.
+::: info Community maintained
+The WebdriverIO provider ([`@vitest/browser-webdriverio`](https://github.com/vitest-community/vitest-webdriverio)) is maintained by the Vitest community in the [`vitest-community`](https://github.com/vitest-community) organization, separately from the core Vitest packages. Please report provider-specific issues to its repository.
 :::
 
 To run tests using WebdriverIO, you need to install the [`@vitest/browser-webdriverio`](https://npmx.dev/package/@vitest/browser-webdriverio) npm package and specify its `webdriverio` export in the `test.browser.provider` property of your config:
