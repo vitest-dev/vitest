@@ -12,7 +12,7 @@ import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 import { slash } from './utils'
@@ -181,6 +181,22 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
         },
         async onTaskAnnotate(id, annotation) {
+          const attachment = annotation.attachment
+          if (
+            attachment?.path
+            && !attachment.path.startsWith('http://')
+            && !attachment.path.startsWith('https://')
+          ) {
+            // attachment files are copied into `attachmentsDir`, so confine
+            // client-supplied paths to Vite's `server.fs` boundary
+            checkFileAccess(resolve(project.config.root, attachment.path))
+            if (!canWrite(project)) {
+              annotation.attachment = undefined
+              vitest.logger.error(
+                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+              )
+            }
+          }
           return vitest._testRun.annotate(id, annotation)
         },
         async onTaskUpdate(method, packs, events) {
