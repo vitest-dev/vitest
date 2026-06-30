@@ -1088,8 +1088,8 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
-                text: 'Migrating to Vitest 4.0',
-                link: '/guide/migration#vitest-4',
+                text: 'Migrating to Vitest 5.0',
+                link: '/guide/migration#vitest-5',
               },
               {
                 text: 'Migrating from Jest',
