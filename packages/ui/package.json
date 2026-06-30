@@ -73,7 +73,6 @@
     "@vitejs/plugin-vue": "catalog:",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
-    "@vitest/browser-webdriverio": "workspace:*",
     "@vueuse/core": "catalog:",
     "ansi-to-html": "^0.7.2",
     "birpc": "catalog:",

@@ -36,7 +36,6 @@
     "ui:dev": "npm -C packages/ui run dev:client",
     "ui:test": "npm -C packages/ui run test:run",
     "override-vite7": "yq -i '.overrides.vite = \"npm:vite@7\"' pnpm-workspace.yaml",
-    "test:browser:webdriverio": "pnpm -C test/browser run test:webdriverio",
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
