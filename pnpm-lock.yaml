@@ -1589,8 +1589,8 @@ importers:
         specifier: ^14.2.1
         version: 14.2.1(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.29(typescript@5.9.3))
       http-client:
-        specifier: link:./projects/http-client
-        version: link:projects/http-client
+        specifier: file:./projects/http-client
+        version: file:test/unit/projects/http-client
       immutable:
         specifier: 5.1.5
         version: 5.1.5
@@ -7760,6 +7760,9 @@ packages:
 
   htmlparser2@9.1.0:
     resolution: {integrity: sha512-5zfg6mHUoaer/97TxnGpxmbR7zJtPwIYFMZ/H5ucTlPZhKvtum05yiPK3Mgai3a0DyVxv7qYqoweaEd2nrYQzQ==}
+
+  http-client@file:test/unit/projects/http-client:
+    resolution: {directory: test/unit/projects/http-client, type: directory}
 
   http-deceiver@1.2.7:
     resolution: {integrity: sha512-LmpOGxTfbpgtGVxJrj5k7asXHCgNZp5nLfp+hWc8QQRqtb7fUy6kRY3BO1h9ddF6yIPYUARgxGOwB42DnxIaNw==}
@@ -17125,6 +17128,8 @@ snapshots:
       domhandler: 5.0.3
       domutils: 3.2.2
       entities: 4.5.0
+
+  http-client@file:test/unit/projects/http-client: {}
 
   http-deceiver@1.2.7: {}
 
