@@ -1275,8 +1275,6 @@ export interface ResolvedProjectEntry {
    * to a parent that owns the Vite server and (later) the browser provider.
    * The resulting `TestProject` is created and kept alive (so siblings can
    * reference it via `_parent`) but is NOT pushed to `vitest.projects`.
-   *
-   * @internal
    */
   hidden?: boolean
 }

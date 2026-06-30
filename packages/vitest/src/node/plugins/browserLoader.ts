@@ -126,7 +126,5 @@ export async function createClusterServer(
   const server = await createViteServer(viteConfig)
   await server.listen(config.api.port)
   contribution.setupRpc(parent)
-  // The UI/API WebSocket server is set up later in `_attachProjectServers`,
-  // after the reporters array is built, so its reporter is not discarded.
   return { server, parent }
 }

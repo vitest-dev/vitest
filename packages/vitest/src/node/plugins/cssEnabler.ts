@@ -35,8 +35,6 @@ function getCSSModuleProxyReturn(
 }
 
 export function CSSEnablerPlugin(): VitePlugin[] {
-  // Keep a reference to the resolved Vite config rather than a snapshot of
-  // `.test`, which Vitest replaces after the config is resolved.
   let viteConfig: ViteResolvedConfig
 
   const shouldProcessCSS = (id: string) => {

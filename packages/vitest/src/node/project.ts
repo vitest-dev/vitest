@@ -560,21 +560,13 @@ export class TestProject {
     }
   }
 
-  /**
-   * Create a project that reuses the root's Vite server, runner, resolver,
-   * and fetcher. The default `projectConfig` is the root's `vitest.config`,
-   * but callers can pass a variant (e.g. a browser-instance config) to give
-   * the project its own resolved test config while still sharing the root
-   * server's resources.
-   *
-   * @internal
-   */
-  static _createBasicProject(vitest: Vitest, projectConfig: ResolvedConfig = vitest.config): TestProject {
+  /** @internal */
+  static _createBasicProject(vitest: Vitest): TestProject {
     const project = new TestProject(
       vitest,
       vitest.vite,
       vitest.viteConfig,
-      projectConfig,
+      vitest.config,
     )
     project.runner = vitest.runner
     project._resolver = vitest._resolver

@@ -12,7 +12,6 @@ import { NormalizeURLPlugin } from './normalizeURL'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
 import { VitestCoreResolver } from './vitestResolver'
 
-// the plugins required when starting Vitest
 export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
   return [
     ...CSSEnablerPlugin(),
@@ -37,7 +36,6 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
   ]
 }
 
-// the plugins required when resolving the config
 export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions = {}): VitePlugin[] {
   return [
     // Setting Vite config values based on user settings,

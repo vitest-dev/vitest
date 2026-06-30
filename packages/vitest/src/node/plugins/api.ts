@@ -11,7 +11,7 @@ export function VitestConfigApi(harness: PluginHarness, globalConfig?: ResolvedC
     config: {
       order: 'post',
       handler(viteConfig) {
-        // Custom user config, this includes CLI overrides
+        // Custom user config, this plugin already received CLI overrides
         const testConfig = viteConfig.test ?? {}
         const isBrowserEnabled = !!testConfig.browser?.enabled
 
