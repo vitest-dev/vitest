@@ -434,7 +434,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       ...contextOptions,
       ignoreHTTPSErrors: true,
     } satisfies BrowserContextOptions
-    if (this.project.config.browser.ui) {
+    // A `null` viewport lets the page adopt the real window size, which is only
+    // meaningful for a headed UI. In headless mode there is no real window, so it
+    // would inherit the host's device scale factor and produce screenshots that
+    // differ from non-UI runs on the same machine.
+    if (this.project.config.browser.ui && !this.project.config.browser.headless) {
       options.viewport = null
     }
     return options

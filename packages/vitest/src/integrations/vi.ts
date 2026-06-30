@@ -294,9 +294,9 @@ export interface VitestUtils {
    * @example
    * ```ts
    * vi.mock('./example.js', async () => {
-   *  const axios = await vi.importActual<typeof import('./example.js')>('./example.js')
+   *  const original = await vi.importActual<typeof import('./example.js')>('./example.js')
    *
-   *  return { ...axios, get: vi.fn() }
+   *  return { ...original, get: vi.fn() }
    * })
    * ```
    * @param path Path to the module. Can be aliased, if your config supports it

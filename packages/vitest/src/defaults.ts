@@ -108,7 +108,7 @@ export const configDefaults: Readonly<{
   watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
   environment: 'node',
-  clearMocks: false,
+  clearMocks: true,
   restoreMocks: false,
   mockReset: false,
   unstubGlobals: false,

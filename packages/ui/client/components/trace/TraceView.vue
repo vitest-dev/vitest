@@ -46,10 +46,12 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   doc.open()
   doc.close()
   const mirror = createMirror()
+  // rrweb >=2.0 hardened the API to force sandbox iframe usage https://github.com/rrweb-io/rrweb/issues/1817. We already ensure the same manually so opt-out the guard by UNSAFE_allowUnprotectedRebuild
   rebuild(serialized, {
     doc,
     cache: createCache(),
     mirror,
+    UNSAFE_allowUnprotectedRebuild: true,
   })
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
