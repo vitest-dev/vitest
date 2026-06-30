@@ -220,7 +220,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
     const uncoveredFiles = await this.getUntestedFiles(coveredFiles)
 
-    const cacheKey = new Date().getTime()
+    const cacheKey = Date.now()
     const coverageMap = this.createCoverageMap()
 
     const transform = this.createUncoveredFileTransformer(this.ctx)

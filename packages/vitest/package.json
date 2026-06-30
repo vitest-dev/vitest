@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "5.0.0-beta.4",
+  "version": "5.0.0-beta.5",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -192,7 +192,7 @@
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.0",
-    "@sinonjs/fake-timers": "15.3.2",
+    "@sinonjs/fake-timers": "15.4.0",
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",

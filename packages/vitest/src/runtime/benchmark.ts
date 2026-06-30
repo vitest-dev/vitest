@@ -360,7 +360,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     validateBenchmarkProject(config)
 
     // extract optional trailing BenchCompareOptions argument
-    const lastArg = args[args.length - 1]
+    const lastArg = args.at(-1)
     const isOptions = lastArg != null && typeof lastArg === 'object' && !(kRegistration in lastArg)
     const benchOptions = isOptions ? args.pop() as BenchCompareOptions : undefined
     const registrations = args as BenchRegistration<any>[]
@@ -453,7 +453,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     if (pending.size === 0) {
       return
     }
-    const names = [...pending].map(reg => `"${reg.name}"`).join(', ')
+    const names = Array.from(pending, reg => `"${reg.name}"`).join(', ')
     pending.clear()
     console.warn(
       [

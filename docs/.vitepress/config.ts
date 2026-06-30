@@ -63,15 +63,6 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
       ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
-      [
-        'script',
-        {
-          'src': 'https://cdn.usefathom.com/script.js',
-          'data-site': 'BEAFAKYG',
-          'data-spa': 'auto',
-          'defer': '',
-        },
-      ],
     ],
     lastUpdated: true,
     vite: {
@@ -584,6 +575,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/disableconsoleintercept',
               },
               {
+                text: 'changed',
+                link: '/config/changed',
+              },
+              {
                 text: 'experimental',
                 link: '/config/experimental',
               },
@@ -1046,6 +1041,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Auto-Cleanup with `using`',
                 link: '/guide/recipes/explicit-resources',
+              },
+              {
+                text: 'Conditional Mocking with `vi.when`',
+                link: '/guide/recipes/conditional-mocking',
               },
               {
                 text: 'Per-File Isolation Settings',

@@ -9,7 +9,6 @@ import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
-import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
   type?: string
@@ -235,17 +234,18 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    // Log seed if either files (RandomSequencer) or tests are shuffled
-    if (this.ctx.config.sequence.sequencer === RandomSequencer || this.ctx.config.sequence.shuffle) {
-      this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
+    const seed = this.ctx.getSeed()
+    if (seed != null) {
+      this.log(PAD + c.gray(`Running tests with seed "${seed}"`))
     }
 
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.vite.config.server.port
-      const base = this.ctx.config.uiBase
+      const url = new URL(this.ctx.config.uiBase, `http://${host}:${port}`)
+      url.searchParams.set('token', this.ctx.config.api.token)
 
-      this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
+      this.log(PAD + c.dim(c.green(`UI started at ${url}`)))
     }
     else if (this.ctx.config.api?.port) {
       const resolvedUrls = this.ctx.vite.resolvedUrls
