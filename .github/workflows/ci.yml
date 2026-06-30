@@ -93,25 +93,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node_version: [22, 24]
-        # split the test files across two runners per os/node combination
-        shard: [1, 2]
         include:
           - os: macos-latest
             node_version: 24
-            shard: 1
-          - os: macos-latest
-            node_version: 24
-            shard: 2
           - os: windows-latest
             node_version: 24
-            # Windows runs only the OS-sensitive suites in the default config;
-            # the remaining suites are covered on Windows by the test-cached job.
-            test_cmd: test:ci:os-sensitive
-            shard: 1
-          - os: windows-latest
-            node_version: 24
-            test_cmd: test:ci:os-sensitive
-            shard: 2
       fail-fast: false
 
     steps:
@@ -132,23 +118,15 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run ${{ matrix.test_cmd || 'test:ci' }} --shard=${{ matrix.shard }}/2
+        run: pnpm run test:ci
         env:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
-      # dts packages run tsc, not vitest, so they are not sharded; run them once
-      # per os/node where the full test:ci suite runs (skipped on the Windows
-      # os-sensitive run, which never included them).
-      - name: Type Check (dts)
-        if: matrix.os != 'windows-latest' && matrix.shard == 1
-        run: pnpm run test:dts
-
       - name: Test Examples
-        if: matrix.os == 'ubuntu-latest' && matrix.shard == 1
+        if: matrix.os == 'ubuntu-latest'
         run: pnpm run test:examples
 
       - name: Unit Test UI
-        if: matrix.shard == 1
         run: pnpm -C packages/ui test:ui
         env:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
@@ -156,14 +134,14 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}-shard-${{ matrix.shard }}
+          name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: test/ui/test-results/
           retention-days: 30
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
-          name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}-shard-${{ matrix.shard }}
+          name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: |
             README.md
             test/unit/.vitest
@@ -171,45 +149,6 @@ jobs:
             packages/ui/.vitest
           retention-days: 1
           include-hidden-files: true
-
-  test-cached:
-    needs: changed
-    name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ${{ matrix.os }}
-
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        node_version: [24]
-        # split the test files across two runners per os
-        shard: [1, 2]
-        os:
-          # the fs cache is filesystem-sensitive, so Linux + Windows (NTFS) suffice.
-          - ubuntu-latest
-          - windows-latest
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
-
-      - name: Install
-        run: pnpm i
-
-      - uses: ./.github/actions/setup-playwright
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test
-        run: pnpm run test:ci:cache --shard=${{ matrix.shard }}/2
 
   test-browser:
     needs: changed
@@ -220,8 +159,6 @@ jobs:
     strategy:
       matrix:
         node_version: [24]
-        # split the browser spec files across two runners per os
-        shard: [1, 2]
         os:
           - macos-latest
           - windows-latest
@@ -247,30 +184,22 @@ jobs:
         run: pnpm run build
 
       - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright --shard=${{ matrix.shard }}/2
+        run: pnpm run test:browser:playwright
 
   test-vite7:
     needs: changed
     # macos-latest is the fastest one
-    name: 'Test: vite@7, ${{ matrix.suite }}${{ matrix.shard }}, node-24, macos-latest'
+    name: 'Test: vite@7, ${{ matrix.suite }}, node-24, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: macos-latest
 
     timeout-minutes: 30
 
     strategy:
-      # split the node suite (across two shards) and the browser suite onto
-      # separate runners so they run in parallel instead of sequentially
+      # split the node suite and the browser suite onto separate runners so they
+      # run in parallel instead of sequentially on a single machine
       matrix:
-        include:
-          - suite: node
-            shard: 1
-          - suite: node
-            shard: 2
-          - suite: browser
-            shard: 1
-          - suite: browser
-            shard: 2
+        suite: [node, browser]
       fail-fast: false
 
     steps:
@@ -294,30 +223,26 @@ jobs:
 
       - name: Test
         if: ${{ matrix.suite == 'node' }}
-        run: pnpm run test:ci:no-bail --shard=${{ matrix.shard }}/2
-
-      - name: Type Check (dts)
-        if: ${{ matrix.suite == 'node' && matrix.shard == 1 && !cancelled() }}
-        run: pnpm run test:dts
+        run: pnpm run test:ci:no-bail
 
       - name: Test Examples
-        if: ${{ matrix.suite == 'node' && matrix.shard == 1 && !cancelled() }}
+        if: ${{ matrix.suite == 'node' && !cancelled() }}
         run: pnpm run test:examples
 
       - name: Unit Test UI
-        if: ${{ matrix.suite == 'node' && matrix.shard == 1 && !cancelled() }}
+        if: ${{ matrix.suite == 'node' && !cancelled() }}
         run: pnpm -C packages/ui test:ui
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ matrix.suite == 'node' && !cancelled() }}
         with:
-          name: playwright-report-vite7-shard-${{ matrix.shard }}
+          name: playwright-report-vite7
           path: test/ui/test-results/
           retention-days: 30
 
       - name: Test Browser (playwright)
         if: ${{ matrix.suite == 'browser' && !cancelled() }}
-        run: pnpm run test:browser:playwright --shard=${{ matrix.shard }}/2
+        run: pnpm run test:browser:playwright
 
   merge-reports:
     needs:

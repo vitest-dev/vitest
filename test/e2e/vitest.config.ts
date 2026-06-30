@@ -4,6 +4,9 @@ import { defaultExclude } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    experimental: {
+      fsModuleCache: true,
+    },
     reporters: [
       process.env.CI ? 'minimal' : 'verbose',
       (process.env.VITEST_CI_BLOB_LABEL
@@ -27,7 +30,8 @@ export default defineConfig({
           includeTaskLocation: true,
           testTimeout: 60_000,
           isolate: false,
-          fileParallelism: false,
+          fileParallelism: true,
+          maxWorkers: 2,
           // TODO: should enabled when support for older node is dropped?
           // experimental: {
           //   viteModuleRunner: false,
