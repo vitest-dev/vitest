@@ -346,9 +346,7 @@ test('user-event', async () => {
   const { stdout, stderr } = await runBrowserTests({
     root: './fixtures/user-event',
   })
-  if (provider.name !== 'webdriverio') {
-    expect(stderr).toBe('')
-  }
+  expect(stderr).toBe('')
   onTestFailed(() => console.error(stderr))
   instances.forEach(({ browser }) => {
     expect(stdout).toReportPassedTest('cleanup-retry.test.ts', browser)
@@ -367,9 +365,6 @@ test('timeout settings', async () => {
   if (provider.name === 'playwright') {
     expect(stderr).toContain('locator.click: Timeout 500ms exceeded.')
     expect(stderr).toContain('locator.click: Timeout 345ms exceeded.')
-  }
-  if (provider.name === 'webdriverio') {
-    expect(stderr).toContain('Cannot find element with locator')
   }
 })
 
