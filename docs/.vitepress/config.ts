@@ -359,6 +359,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/maxworkers',
               },
               {
+                text: 'timeout',
+                link: '/config/timeout',
+              },
+              {
                 text: 'testTimeout',
                 link: '/config/testtimeout',
               },

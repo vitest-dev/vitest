@@ -220,35 +220,50 @@ export class CommandsManager {
   }
 }
 
+// Mirror of the runtime budget clamp (packages/vitest .../runner/context.ts);
+// kept local so it doesn't pull node-only runner code into the browser bundle.
+const ACTION_TIMEOUT_BUFFER = 300
+const ACTION_TIMEOUT_FALLBACK = 1000
+
 export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
-  if (
-    // if timeout is set, keep it
-    (options_ && options_.timeout != null)
-  ) {
-    return options_
+  const config = getWorkerState().config
+  const actionConfig = config.timeout?.action
+  const providerActionTimeout = config.browser.providerOptions.actionTimeout
+
+  // Resolve the desired cap: a per-call timeout wins, then `timeout.action`
+  // (when a fixed number), then the provider-level `actionTimeout` override.
+  // `'auto'` (and an unset config) leave the cap open so the op rides the budget.
+  let cap: number | undefined = options_?.timeout
+  if (cap == null) {
+    if (typeof actionConfig === 'number') {
+      cap = actionConfig
+    }
+    else if (providerActionTimeout != null) {
+      cap = providerActionTimeout
+    }
   }
-  // if there is a default action timeout, use it
-  if (getWorkerState().config.browser.providerOptions.actionTimeout != null) {
-    return options_
-  }
+
   const runner = getBrowserState().runner
   const startTime = runner._currentTaskStartTime
-  // ignore timeout if this is called outside of a test
-  if (!startTime) {
-    return options_
-  }
   const timeout = runner._currentTaskTimeout
-  if (timeout === 0 || timeout == null || timeout === Number.POSITIVE_INFINITY) {
-    return options_
+  const hasBudget = startTime != null
+    && timeout != null
+    && timeout !== 0
+    && timeout !== Number.POSITIVE_INFINITY
+
+  let effective: number
+  if (hasBudget) {
+    // keep a buffer so the action fails before the task timer, surfacing a
+    // descriptive, source-mapped locator error instead of a generic timeout
+    const remaining = Math.max(Math.floor(startTime + timeout - now()) - ACTION_TIMEOUT_BUFFER, 1)
+    effective = cap == null ? remaining : Math.min(cap, remaining)
   }
+  else {
+    effective = cap ?? ACTION_TIMEOUT_FALLBACK
+  }
+
   options_ = options_ || {} as T
-  const currentTime = now()
-  const endTime = startTime + timeout
-  const remainingTime = Math.floor(endTime - currentTime)
-  // keep some buffer to process the timeout, but always hand the provider a
-  // positive value so it surfaces a descriptive, source-mapped locator error
-  // instead of letting the task timer win the race with a generic timeout
-  options_.timeout = Math.max(remainingTime - 100, 1)
+  options_.timeout = effective
   return options_
 }
 

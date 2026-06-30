@@ -616,6 +616,48 @@ Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable 
 
 Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.
 
+### timeout.test
+
+- **CLI:** `--timeout.test <timeout>`
+- **Config:** [timeout.test](/config/timeout#timeout-test)
+
+Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.
+
+### timeout.hook
+
+- **CLI:** `--timeout.hook <timeout>`
+- **Config:** [timeout.hook](/config/timeout#timeout-hook)
+
+Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.
+
+### timeout.teardown
+
+- **CLI:** `--timeout.teardown <timeout>`
+- **Config:** [timeout.teardown](/config/timeout#timeout-teardown)
+
+Default teardown timeout in milliseconds (default: `10000`).
+
+### timeout.action
+
+- **CLI:** `--timeout.action <timeout>`
+- **Config:** [timeout.action](/config/timeout#timeout-action)
+
+Timeout for browser actions, locators and `expect.element()` (default: `auto`).
+
+### timeout.poll
+
+- **CLI:** `--timeout.poll <timeout>`
+- **Config:** [timeout.poll](/config/timeout#timeout-poll)
+
+Default timeout in milliseconds for `expect.poll()` (default: `1000`). Use `auto` to ride the remaining test budget.
+
+### timeout.wait
+
+- **CLI:** `--timeout.wait <timeout>`
+- **Config:** [timeout.wait](/config/timeout#timeout-wait)
+
+Default timeout in milliseconds for `vi.waitFor()` / `vi.waitUntil()` (default: `1000`). Use `auto` to ride the remaining test budget.
+
 ### bail
 
 - **CLI:** `--bail <number>`
@@ -860,19 +902,12 @@ Maximum number of concurrent tests and suites during test file execution (defaul
 
 Require that all tests have at least one assertion
 
-### expect.poll.interval
-
-- **CLI:** `--expect.poll.interval <interval>`
-- **Config:** [expect.poll.interval](/config/expect#expect-poll-interval)
-
-Poll interval in milliseconds for `expect.poll()` assertions (default: `50`)
-
 ### expect.poll.timeout
 
 - **CLI:** `--expect.poll.timeout <timeout>`
 - **Config:** [expect.poll.timeout](/config/expect#expect-poll-timeout)
 
-Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`)
+Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`, deprecated; use `--timeout.poll`)
 
 ### printConsoleTrace
 

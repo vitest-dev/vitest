@@ -59,11 +59,11 @@ test('deadlocks with insufficient maxConcurrency', async () => {
         "wrapper": {
           "a": [
             "Test timed out in 500ms.
-    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "timeout.test".",
           ],
           "b": [
             "Test timed out in 500ms.
-    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "timeout.test".",
           ],
           "c": "passed",
         },
@@ -144,11 +144,11 @@ test('suite deadlocks with insufficient maxConcurrency', async () => {
           "1st suite": {
             "a": [
               "Test timed out in 500ms.
-    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "timeout.test".",
             ],
             "b": [
               "Test timed out in 500ms.
-    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "timeout.test".",
             ],
           },
           "2nd suite": {
@@ -231,7 +231,7 @@ test('neighboring suite beforeAll deadlocks with insufficient maxConcurrency', a
         "s1": {
           "__suite_errors__": [
             "Hook timed out in 500ms.
-    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "timeout.hook".",
           ],
           "a": "skipped",
         },
@@ -311,7 +311,7 @@ test('neighboring suite afterAll deadlocks with insufficient maxConcurrency', as
         "s1": {
           "__suite_errors__": [
             "Hook timed out in 500ms.
-    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "timeout.hook".",
           ],
           "a": "passed",
         },
@@ -393,7 +393,7 @@ test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
         "wrapper": {
           "t": [
             "Hook timed out in 500ms.
-    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "timeout.hook".",
           ],
         },
       },
@@ -469,7 +469,7 @@ test('afterEach deadlocks with insufficient maxConcurrency', async () => {
         "wrapper": {
           "t": [
             "Hook timed out in 500ms.
-    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "timeout.hook".",
           ],
         },
       },
@@ -714,7 +714,7 @@ test('neighboring suite aroundAll does not hang when setup times out before late
         "s2": {
           "b": [
             "Test timed out in 500ms.
-    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "timeout.test".",
           ],
         },
       },

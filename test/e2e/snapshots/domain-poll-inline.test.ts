@@ -31,7 +31,7 @@ test('domain inline snapshot with poll', async () => {
     expect.poll(() => {
         trial++
         return { name: 'a', age: '23' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
         name=a
         age=23
       \`)
@@ -42,7 +42,7 @@ test('domain inline snapshot with poll', async () => {
           throw new Error(\`Fail at \${trial}\`)
         }
         return { name: 'b', age: '23' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
         name=b
         age=23
       \`)
@@ -51,27 +51,27 @@ test('domain inline snapshot with poll', async () => {
         trial++
         if (trial <= 3) return { status: 'loading', trial } // unstable
         return { status: 'done' } // then stable
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`status=done\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`status=done\`)
 
     expect.poll(() => {
         return { x: '1' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`x=1\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`x=1\`)
 
     expect.poll(() => {
         return { y: '2' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`y=2\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`y=2\`)
 
     expect({ static: 'value' }).toMatchKvInlineSnapshot(\`static=value\`)
 
     expect.poll(() => {
         return { polled: 'value' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`polled=value\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`polled=value\`)
 
     expect({ another: 'static' }).toMatchKvInlineSnapshot(\`another=static\`)
 
     expect.poll(() => {
         return {}
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 
@@ -110,11 +110,11 @@ test('domain inline snapshot with poll', async () => {
     + name=a
       age=23
 
-     ❯ basic.test.ts:9:24
+     ❯ basic.test.ts:9:27
           7|     trial++
           8|     return { name: 'a', age: '23' }
-          9|   }, { interval: 10 }).toMatchKvInlineSnapshot(\`
-           |                        ^
+          9|   }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
+           |                           ^
          10|     name=a-changed
          11|     age=23
 
@@ -160,7 +160,7 @@ test('domain inline snapshot with poll', async () => {
     expect.poll(() => {
         trial++
         return { name: 'a', age: '23' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
         name=a
         age=23
       \`)
@@ -171,7 +171,7 @@ test('domain inline snapshot with poll', async () => {
           throw new Error(\`Fail at \${trial}\`)
         }
         return { name: 'b', age: '23' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
         name=b
         age=23
       \`)
@@ -180,27 +180,27 @@ test('domain inline snapshot with poll', async () => {
         trial++
         if (trial <= 3) return { status: 'loading', trial } // unstable
         return { status: 'done' } // then stable
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`status=done\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`status=done\`)
 
     expect.poll(() => {
         return { x: '1' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`x=1\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`x=1\`)
 
     expect.poll(() => {
         return { y: '2' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`y=2\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`y=2\`)
 
     expect({ static: 'value' }).toMatchKvInlineSnapshot(\`static=value\`)
 
     expect.poll(() => {
         return { polled: 'value' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`polled=value\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`polled=value\`)
 
     expect({ another: 'static' }).toMatchKvInlineSnapshot(\`another=static\`)
 
     expect.poll(() => {
         return {}
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 
@@ -227,7 +227,7 @@ test('domain inline snapshot with poll', async () => {
     expect.poll(() => {
         trial++
         return { name: 'a', age: '23' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
         name=/\\\\w/
         age=23
       \`)
@@ -238,7 +238,7 @@ test('domain inline snapshot with poll', async () => {
           throw new Error(\`Fail at \${trial}\`)
         }
         return { name: 'b', age: '23' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
         name=b
         age=23
       \`)
@@ -247,27 +247,27 @@ test('domain inline snapshot with poll', async () => {
         trial++
         if (trial <= 3) return { status: 'loading', trial } // unstable
         return { status: 'done' } // then stable
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`status=done\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`status=done\`)
 
     expect.poll(() => {
         return { x: '1' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`x=1\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`x=1\`)
 
     expect.poll(() => {
         return { y: '2' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`y=2\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`y=2\`)
 
     expect({ static: 'value' }).toMatchKvInlineSnapshot(\`static=value\`)
 
     expect.poll(() => {
         return { polled: 'value' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`polled=value\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`polled=value\`)
 
     expect({ another: 'static' }).toMatchKvInlineSnapshot(\`another=static\`)
 
     expect.poll(() => {
         return {}
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 })
@@ -284,7 +284,7 @@ test('stable wrong then right', async () => {
     trial++
     if (trial <= 4) return { phase: 'pending' }
     return { phase: 'complete' }
-  }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+  }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
     phase=complete
   \`)
   expect(trial).toBe(6)
@@ -315,7 +315,7 @@ test('stable wrong then right', async () => {
     trial++
     if (trial <= 4) return { phase: 'pending' }
     return { phase: 'complete' }
-  }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+  }, { intervals: [10] }).toMatchKvInlineSnapshot(\`
     phase=complete
   \`)
   expect(trial).toBe(2)
@@ -343,7 +343,7 @@ test('stable wrong then right', async () => {
         trial++
         if (trial <= 4) return { phase: 'pending' }
         return { phase: 'complete' }
-      }, { interval: 10 }).toMatchKvInlineSnapshot(\`phase=pending\`)
+      }, { intervals: [10] }).toMatchKvInlineSnapshot(\`phase=pending\`)
       expect(trial).toBe(2)
     })
     "
@@ -361,7 +361,7 @@ test('unstable', async () => {
   await expect.poll(() => {
     trial++
     return { name: 'x', counter: String(trial) }
-  }, { timeout: 100, interval: 10 }).toMatchKvInlineSnapshot(\`\`)
+  }, { timeout: 100, intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
 })
 
 test('hanging', async () => {
@@ -369,7 +369,7 @@ test('hanging', async () => {
   await expect.poll(() => {
     trial++
     return new Promise(() => {})
-  }, { timeout: 100, interval: 10 }).toMatchKvInlineSnapshot(\`\`)
+  }, { timeout: 100, intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
 })
 
 test('throwing', async () => {
@@ -377,7 +377,7 @@ test('throwing', async () => {
   await expect.poll(() => {
     trial++
     throw new Error("ALWAYS_THROWS")
-  }, { timeout: 100, interval: 10 }).toMatchKvInlineSnapshot(\`\`)
+  }, { timeout: 100, intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
 })
 `,
   }, {
@@ -389,11 +389,11 @@ test('throwing', async () => {
 
      FAIL  basic.test.ts > unstable
     Error: poll() did not produce a stable snapshot within the timeout
-     ❯ basic.test.ts:10:38
+     ❯ basic.test.ts:10:41
           8|     trial++
           9|     return { name: 'x', counter: String(trial) }
-         10|   }, { timeout: 100, interval: 10 }).toMatchKvInlineSnapshot(\`\`)
-           |                                      ^
+         10|   }, { timeout: 100, intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
+           |                                         ^
          11| })
          12|
 
@@ -404,11 +404,11 @@ test('throwing', async () => {
 
      FAIL  basic.test.ts > hanging
     Error: poll() did not produce a stable snapshot within the timeout
-     ❯ basic.test.ts:18:38
+     ❯ basic.test.ts:18:41
          16|     trial++
          17|     return new Promise(() => {})
-         18|   }, { timeout: 100, interval: 10 }).toMatchKvInlineSnapshot(\`\`)
-           |                                      ^
+         18|   }, { timeout: 100, intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
+           |                                         ^
          19| })
          20|
 
@@ -419,11 +419,11 @@ test('throwing', async () => {
 
      FAIL  basic.test.ts > throwing
     Error: ALWAYS_THROWS
-     ❯ basic.test.ts:26:38
+     ❯ basic.test.ts:26:41
          24|     trial++
          25|     throw new Error("ALWAYS_THROWS")
-         26|   }, { timeout: 100, interval: 10 }).toMatchKvInlineSnapshot(\`\`)
-           |                                      ^
+         26|   }, { timeout: 100, intervals: [10] }).toMatchKvInlineSnapshot(\`\`)
+           |                                         ^
          27| })
          28|
 

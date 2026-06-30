@@ -60,7 +60,8 @@ interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
 interface AssertDomainPollOptions extends Omit<AssertDomainOptions, 'received'> {
   poll: (options: { signal: AbortSignal }) => Promise<unknown> | unknown
   timeout?: number
-  interval?: number
+  /** Ascending poll backoff (ms); the last value repeats for further attempts. */
+  intervals?: number[]
 }
 
 /** Same shape as expect.extend custom matcher result (SyncExpectationResult from @vitest/expect) */
@@ -274,7 +275,7 @@ export class SnapshotClient {
       inlineSnapshot,
       error,
       timeout = 1000,
-      interval = 50,
+      intervals = [50],
     } = options
 
     if (!filepath) {
@@ -304,7 +305,7 @@ export class SnapshotClient {
     const stableResult = await getStableSnapshot({
       adapter,
       poll: () => poll({ signal: timeoutController.signal }),
-      interval,
+      intervals,
       timedOut,
       match: reference
         ? captured => adapter.match(captured, reference).pass
@@ -394,10 +395,10 @@ export class SnapshotClient {
  * so that hanging polls and delays are interrupted.
  */
 async function getStableSnapshot(
-  { adapter, poll, interval, timedOut, match }: {
+  { adapter, poll, intervals, timedOut, match }: {
     adapter: DomainSnapshotAdapter<any, any>
     poll: () => Promise<unknown> | unknown
-    interval: number
+    intervals: number[]
     timedOut?: Promise<void>
     match?: (captured: unknown) => boolean
   },
@@ -405,6 +406,7 @@ async function getStableSnapshot(
   let lastRendered: string | undefined
   let lastPollError: unknown
   let lastStable: { captured: unknown; rendered: string } | undefined
+  let attempt = 0
 
   while (true) {
     try {
@@ -431,6 +433,7 @@ async function getStableSnapshot(
       lastStable = undefined
       lastPollError = pollError
     }
+    const interval = intervals[Math.min(attempt++, intervals.length - 1)] ?? 0
     const delayed = await raceWith(
       new Promise<void>(r => setTimeout(r, interval)),
       timedOut,

@@ -599,6 +599,44 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
+  timeout: {
+    description: 'Unified timeout configuration. `action`/`poll`/`wait` accept `auto` to ride the remaining test budget.',
+    argument: '', // not displayed
+    subcommands: {
+      test: {
+        description: 'Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.',
+        argument: '<timeout>',
+      },
+      hook: {
+        description: 'Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.',
+        argument: '<timeout>',
+      },
+      teardown: {
+        description: 'Default teardown timeout in milliseconds (default: `10000`).',
+        argument: '<timeout>',
+      },
+      action: {
+        description: 'Timeout for browser actions, locators and `expect.element()` (default: `auto`).',
+        argument: '<timeout>',
+      },
+      poll: {
+        description: 'Default timeout in milliseconds for `expect.poll()` (default: `1000`). Use `auto` to ride the remaining test budget.',
+        argument: '<timeout>',
+      },
+      wait: {
+        description: 'Default timeout in milliseconds for `vi.waitFor()` / `vi.waitUntil()` (default: `1000`). Use `auto` to ride the remaining test budget.',
+        argument: '<timeout>',
+      },
+    },
+    transform(value) {
+      if (typeof value !== 'object') {
+        throw new TypeError(
+          `Unexpected value for --timeout: ${value}. Use --timeout.{test,hook,teardown,action,poll,wait}=<value> syntax`,
+        )
+      }
+      return value
+    },
+  },
   bail: {
     description:
       'Stop test execution when given number of tests have failed (default: `0`)',
@@ -795,17 +833,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Require that all tests have at least one assertion',
       },
       poll: {
-        description: 'Default options for `expect.poll()`',
+        description: 'Default options for `expect.poll()` (deprecated; use `--timeout.poll`)',
         argument: '',
         subcommands: {
-          interval: {
-            description:
-              'Poll interval in milliseconds for `expect.poll()` assertions (default: `50`)',
-            argument: '<interval>',
-          },
           timeout: {
             description:
-              'Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`)',
+              'Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`, deprecated; use `--timeout.poll`)',
             argument: '<timeout>',
           },
         },

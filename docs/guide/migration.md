@@ -269,6 +269,70 @@ This has now been fixed by introducing a dedicated option: `browser.expect.toMat
 
     Then either move existing reference screenshots to the new location or regenerate them.
 
+### Unified `timeout` Configuration and Budget Clamp
+
+Vitest 5.0 groups every timeout under a single `timeout` namespace and makes operation timeouts (`expect.poll`, `vi.waitFor`/`vi.waitUntil`, and browser locator actions / `expect.element`) aware of the remaining test budget.
+
+#### Standalone timeout options are deprecated in favor of `timeout.*`
+
+`testTimeout`, `hookTimeout`, `teardownTimeout`, and `expect.poll.timeout` still work as aliases but emit a deprecation warning when set alongside the new options.
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    testTimeout: 5_000, // [!code --]
+    hookTimeout: 10_000, // [!code --]
+    teardownTimeout: 10_000, // [!code --]
+    expect: { poll: { timeout: 1_000 } }, // [!code --]
+    timeout: { // [!code ++]
+      test: 5_000, // [!code ++]
+      hook: 10_000, // [!code ++]
+      teardown: 10_000, // [!code ++]
+      action: 'auto', // browser actions / locators / expect.element // [!code ++]
+      poll: 1_000, // expect.poll // [!code ++]
+      wait: 1_000, // vi.waitFor / vi.waitUntil // [!code ++]
+    }, // [!code ++]
+  },
+})
+```
+
+#### Operation timeouts are clamped to the remaining test budget
+
+`expect.poll` and `vi.waitFor`/`vi.waitUntil` now fail just before the surrounding test or hook itself times out, throwing their own error that points to the assertion's source location. In Vitest 4, when one of these node operations outlasted the test (its own `timeout` was larger than the remaining time), the failure was subsumed into the generic test/hook timeout, which gave no indication of which assertion was still pending.
+
+Browser locator actions and `expect.element()` were already clamped to the budget; what changes for them is that an explicit per-call `timeout` is now treated as a cap rather than overriding the budget.
+
+```ts
+// inside a test with a 5s timeout
+await expect.poll(() => ready, { timeout: 30_000 }).toBe(true)
+// Vitest 4: keeps polling toward 30s, then the test times out at 5s with a generic error
+// Vitest 5: fails just before the 5s deadline, reporting the expect.poll() error directly
+```
+
+If an operation legitimately needs to run longer, raise `timeout.test` or `timeout.hook` — a per-call `timeout` can no longer extend an operation past the surrounding test or hook budget.
+
+#### Polling cadence moved from a fixed `interval` to an `intervals` backoff
+
+The per-call `interval` option is replaced by `intervals`, an ascending array whose last value repeats for further attempts. The default changed from a flat `50ms` to `[0, 25, 50, 100, 250, 500]`, so the first retry is immediate and the gap grows for longer waits. A single-element array such as `[100]` reproduces the previous fixed interval.
+
+```ts
+await expect.poll(() => getStatus(), { interval: 100 }).toBe('ready') // [!code --]
+await expect.poll(() => getStatus(), { intervals: [100] }).toBe('ready') // [!code ++]
+
+await vi.waitFor(check, { interval: 50, timeout: 2_000 }) // [!code --]
+await vi.waitFor(check, { intervals: [50], timeout: 2_000 }) // [!code ++]
+```
+
+The global `expect.poll.interval` config is removed as well; there is no project-wide replacement, so configure the cadence per call with `intervals`.
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    expect: { poll: { interval: 100 } }, // [!code --]
+  },
+})
+```
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
