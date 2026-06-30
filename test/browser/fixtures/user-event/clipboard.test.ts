@@ -2,7 +2,6 @@ import { expect, test } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 
 test('clipboard', async () => {
-  // make it smaller since webdriverio fails when scaled
   page.viewport(300, 300)
 
   document.body.innerHTML = `

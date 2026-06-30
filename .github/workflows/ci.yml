@@ -109,11 +109,6 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-        with:
-          firefox-version: false
-
       - name: Install
         run: pnpm i
 
@@ -179,11 +174,6 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-        with:
-          firefox-version: false
-
       - name: Install
         run: pnpm i
 
@@ -220,9 +210,6 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-
       - name: Install
         run: pnpm i
 
@@ -233,9 +220,6 @@ jobs:
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
-
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
 
   test-vite7:
     needs: changed
@@ -254,11 +238,6 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
         with:
           node-version: 24
-
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-        with:
-          firefox-version: false
 
       - name: Install
         run: |

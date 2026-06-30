@@ -24,7 +24,6 @@
     "@vitejs/test-dep-virtual": "file:./deps/test-dep-virtual",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
-    "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/test-dep-optimizer-external": "file:./deps/optimizer/external",
     "@vitest/test-dep-optimizer-optimized": "file:./deps/optimizer/optimized",

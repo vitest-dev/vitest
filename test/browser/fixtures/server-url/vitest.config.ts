@@ -9,11 +9,9 @@ import { instances, providers, provider } from '../../settings'
 
 // ignore https errors due to self-signed certificate from plugin-basic-ssl
 // https://playwright.dev/docs/api/class-browser#browser-new-context-option-ignore-https-errors
-// https://webdriver.io/docs/configuration/#strictssl and acceptInsecureCerts in https://webdriver.io/docs/api/browser/#properties
 const configuredProvider = (function () {
   switch (provider.name) {
     case 'playwright': return providers.playwright()
-    case 'webdriverio': return providers.webdriverio({ strictSSL: false, capabilities: { acceptInsecureCerts: true } })
     default: {
       throw new Error(`Invalid provider: ${provider.name}`)
     }
