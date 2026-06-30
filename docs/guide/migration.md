@@ -376,7 +376,7 @@ This has now been fixed by introducing a dedicated option: `browser.expect.toMat
 
 Worker and pool identifiers now start at `1` instead of `0`. This changes the values of the `VITEST_POOL_ID` and `VITEST_WORKER_ID` environment variables, which now range from `1` to the worker count. Update any logic that derives a value from these ids, such as a per-worker database name or an array index.
 
-For custom reporters, the [`TestModule`](/advanced/api/test-module#diagnostic) diagnostics now expose both ids: the existing `workerId` (now 1-based) and a new `concurrencyId`.
+For custom reporters, the [`TestModule`](/api/advanced/test-module#diagnostic) diagnostics now expose both ids: the existing `workerId` (now 1-based) and a new `concurrencyId`.
 
 ```ts
 import type { Reporter, TestModule } from 'vitest/node'
