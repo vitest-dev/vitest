@@ -29,7 +29,7 @@ import { createTagsFilter } from '../runtime/runner/utils/tags'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { limitConcurrency } from '../utils/limit-concurrency'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
-import { convertTasksToEvents, getTasks, hasFailed, interpretTaskModes, someTasksAreOnly } from '../utils/tasks'
+import { convertTasksToEvents, getTasks, hasFailed, interpretTaskModes } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
@@ -1095,7 +1095,7 @@ export class Vitest {
       ? createTagsFilter(this.config.tagsFilter, this.config.tags)
       : undefined
     // Phase 2: cross-file .only resolution
-    const globalHasOnly = results.some(({ file }) => someTasksAreOnly(file))
+    const globalHasOnly = results.some(({ file }) => !!file.containsOnly)
     for (const { file, specification } of results) {
       const config = specification.project.config
       interpretTaskModes(
@@ -1119,7 +1119,7 @@ export class Vitest {
       return createFailedFileTask(specification.project, specification.moduleId, error)
     })
     const config = specification.project.config
-    const hasOnly = someTasksAreOnly(file)
+    const hasOnly = !!file.containsOnly
     const tagsFilter = this.config.tagsFilter
       ? createTagsFilter(this.config.tagsFilter, this.config.tags)
       : undefined

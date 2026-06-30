@@ -44,7 +44,7 @@ This is useful when you know which file you need to work on and want to skip eve
 
 ## Filtering by Test Name
 
-Sometimes the test you care about is buried in a file with many other tests. The `-t` (or `--testNamePattern`) option filters by the test's name rather than the filename. It accepts a regex pattern and matches against the full test name, which includes any `describe` block names:
+Sometimes the test you care about is buried in a file with many other tests. The `-t` (or `--testNamePattern`) option filters by the test's name rather than the filename. It accepts a regex pattern and matches against the full test name, which is the enclosing `describe` block names and the test name joined with `' > '` (for example `math > adds`):
 
 ```bash
 vitest -t "handles empty input"
