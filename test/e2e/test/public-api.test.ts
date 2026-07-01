@@ -46,7 +46,7 @@ it.each([
 
   expect(stderr).toBe('')
 
-  expect(stdout).toContain('custom.spec.ts:14:1 > custom')
+  expect(stdout).toContain('custom.spec.ts:14 > custom')
 
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-handler' }

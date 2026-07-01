@@ -307,7 +307,7 @@ export abstract class BaseReporter implements Reporter {
 
     let name = test.file.name
     if (test.location) {
-      name += c.dim(`:${test.location.line}:${test.location.column}`)
+      name += c.dim(`:${test.location.line}`)
     }
     name += separator
     name += getTestName(test, separator)

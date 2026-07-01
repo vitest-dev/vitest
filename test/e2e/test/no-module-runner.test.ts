@@ -517,7 +517,7 @@ if (import.meta.vitest) {
       "
       ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-       FAIL  in-source.ts:12:3 > works
+       FAIL  in-source.ts:12 > works
       Error: test throws correctly
        ❯ <anonymous> in-source.ts:13:11
            11|
