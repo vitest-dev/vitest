@@ -1,0 +1,5 @@
+rules:
+  concurrency-limits:
+    ignore:
+      # publish workflow doesn't run concurrently and requires a manual approval
+      - publish.yml
