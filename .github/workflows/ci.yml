@@ -99,14 +99,18 @@ jobs:
     strategy:
       # Split the heavy e2e and coverage suites onto their own runners so they run
       # in parallel with the rest instead of sequentially on a single machine.
-      # Linux (node 22/24/26) covers all POSIX behaviour, so macOS only runs a
-      # single e2e leg as an Apple-hardware smoke; the rest/coverage suites are
-      # macOS-redundant.
+      # Linux runs the full matrix on node 24/26; node 22 (the minimum supported
+      # version, currently in maintenance LTS) gets a single e2e leg as a floor
+      # smoke. macOS runs one e2e leg as an Apple-hardware smoke; rest/coverage are
+      # redundant on both.
       matrix:
         suite: [rest, e2e, coverage]
         os: [ubuntu-latest]
         node_version: [24, 26]
         include:
+          - suite: e2e
+            os: ubuntu-latest
+            node_version: 22
           - suite: e2e
             os: macos-latest
             node_version: 24
