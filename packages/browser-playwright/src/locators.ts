@@ -17,11 +17,23 @@ import {
   getByTitleSelector,
   getIframeScale,
   Locator,
-  processTimeoutOptions,
+  resolveActionTimeout,
   selectorEngine,
 } from '@vitest/browser/locators'
 import { page, server } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
+
+// Resolve the action budget (from `timeout.action`): set the effective timeout on
+// the options and return its description so the base action can pass it down to
+// the command dispatch, which unifies a provider-native timeout error with it.
+function withActionTimeout<T extends { timeout?: number }>(
+  options: T | undefined,
+): { options: T; timeoutDescription: string } {
+  const resolved = resolveActionTimeout(options?.timeout)
+  const resolvedOptions = (options ?? {}) as T
+  resolvedOptions.timeout = resolved.timeout
+  return { options: resolvedOptions, timeoutDescription: resolved.description }
+}
 
 class PlaywrightLocator extends Locator {
   constructor(public selector: string, protected _container?: Element) {
@@ -29,47 +41,54 @@ class PlaywrightLocator extends Locator {
   }
 
   public override click(options?: UserEventClickOptions) {
-    return super.click(processTimeoutOptions(processClickOptions(options)))
+    const { options: o, timeoutDescription } = withActionTimeout(processClickOptions(options))
+    return super.click(o, timeoutDescription)
   }
 
   public override dblClick(options?: UserEventClickOptions): Promise<void> {
-    return super.dblClick(processTimeoutOptions(processClickOptions(options)))
+    const { options: o, timeoutDescription } = withActionTimeout(processClickOptions(options))
+    return super.dblClick(o, timeoutDescription)
   }
 
   public override tripleClick(options?: UserEventClickOptions): Promise<void> {
-    return super.tripleClick(processTimeoutOptions(processClickOptions(options)))
+    const { options: o, timeoutDescription } = withActionTimeout(processClickOptions(options))
+    return super.tripleClick(o, timeoutDescription)
   }
 
   public override selectOptions(
     value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void> {
-    return super.selectOptions(value, processTimeoutOptions(options))
+    const { options: o, timeoutDescription } = withActionTimeout(options)
+    return super.selectOptions(value, o, timeoutDescription)
   }
 
   public override clear(options?: UserEventClearOptions): Promise<void> {
-    return super.clear(processTimeoutOptions(options))
+    const { options: o, timeoutDescription } = withActionTimeout(options)
+    return super.clear(o, timeoutDescription)
   }
 
   public override hover(options?: UserEventHoverOptions): Promise<void> {
-    return super.hover(processTimeoutOptions(processHoverOptions(options)))
+    const { options: o, timeoutDescription } = withActionTimeout(processHoverOptions(options))
+    return super.hover(o, timeoutDescription)
   }
 
   public override upload(
     files: string | string[] | File | File[],
     options?: UserEventUploadOptions,
   ): Promise<void> {
-    return super.upload(files, processTimeoutOptions(options))
+    const { options: o, timeoutDescription } = withActionTimeout(options)
+    return super.upload(files, o, timeoutDescription)
   }
 
   public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    return super.fill(text, processTimeoutOptions(options))
+    const { options: o, timeoutDescription } = withActionTimeout(options)
+    return super.fill(text, o, timeoutDescription)
   }
 
   public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
-    return super.dropTo(target, processTimeoutOptions(
-      processDragAndDropOptions(options),
-    ))
+    const { options: o, timeoutDescription } = withActionTimeout(processDragAndDropOptions(options))
+    return super.dropTo(target, o, timeoutDescription)
   }
 
   protected locator(selector: string) {

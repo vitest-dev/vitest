@@ -116,6 +116,34 @@ const ACTION_TRACE_COMMANDS = new Set([
   '__vitest_takeScreenshot',
 ])
 
+// Provider-native timeout error names. `err.name` is preserved across the RPC
+// hop, so this is a reliable classifier (avoid brittle message matching).
+const PROVIDER_TIMEOUT_ERROR_NAMES = new Set(['TimeoutError'])
+
+function isProviderTimeoutError(err: unknown): boolean {
+  return !!err && PROVIDER_TIMEOUT_ERROR_NAMES.has((err as { name?: string }).name ?? '')
+}
+
+// The bare "Timeout <n>ms exceeded." sentence a provider (Playwright) puts at the
+// head of its timeout error. We patch over just this sentence so the useful parts
+// of the provider message (the API prefix like `locator.click:` and the "Call log")
+// are preserved, while the *reason* (budget-capped / which `timeout.*` governs) is
+// surfaced consistently with poll/wait/findElement/domain-snapshot.
+const PROVIDER_TIMEOUT_PHRASE = /Timeout \d+ms exceeded\.?/
+
+/**
+ * Rewrite a provider-native timeout error message to carry the unified budget
+ * `timeoutDescription`, preserving the rest of the provider message. Falls back
+ * to prefixing when the provider's phrasing isn't recognized.
+ */
+function applyTimeoutDescription(message: string, timeoutDescription: string): string {
+  const replacement = `Timed out in ${timeoutDescription}.`
+  if (PROVIDER_TIMEOUT_PHRASE.test(message)) {
+    return message.replace(PROVIDER_TIMEOUT_PHRASE, replacement)
+  }
+  return `${replacement}\n${message}`
+}
+
 export class CommandsManager {
   private _listeners: ((command: string, args: any[]) => void)[] = []
 
@@ -129,6 +157,9 @@ export class CommandsManager {
     // error makes sure the stack trace is correct on webkit,
     // if we make the error here, it looses the context
     clientError: Error = new Error('empty'),
+    // budget-resolved description of the action timeout (from `timeout.action`),
+    // used to unify provider-native timeout errors with the rest of Vitest
+    timeoutDescription?: string,
   ): Promise<T> {
     const state = getWorkerState()
     const rpc = state.rpc as any as BrowserRPC
@@ -190,25 +221,16 @@ export class CommandsManager {
         }
         catch (err: any) {
           status = 'fail'
-          // TODO: unify provider timeout errors with the budget `timeoutDescription`.
-          // Budget-clamped provider actions (Playwright locator click/fill/hover/...
-          // via browser-playwright/src/locators.ts, and page.screenshot) only feed the
-          // effective timeout *value* to the provider, so on expiry the provider throws
-          // its own native error (Playwright: `TimeoutError`) without the unified
-          // description that poll/wait/findElement/domain-snapshot now surface.
-          //
-          // Fix here: classify the failure as a timeout and prepend the description, e.g.
-          //   if (isProviderTimeoutError(err)) {
-          //     err.message = `Timed out in ${timeoutDescription}.\n${err.message}`
-          //   }
-          // Notes:
-          // - err.name/err.message survive the RPC hop (copied just below), so
-          //   classification by name is reliable. Use a per-provider set of timeout
-          //   error names (Playwright: 'TimeoutError'); avoid brittle message matching.
-          // - `timeoutDescription` can't be recomputed from the effective number alone
-          //   (loses requested/clampedByBudget), so pass it into triggerCommand as an
-          //   explicit param (sibling to `clientError`, NOT inside `args` which is sent
-          //   to the provider). Callers get it from resolveActionTimeout().description.
+          // Unify provider-native timeout errors with the budget model: when a
+          // budget-clamped action (Playwright locator ops, page.screenshot) hits the
+          // provider timeout, patch the provider's bare "Timeout <n>ms exceeded"
+          // sentence with the resolved `timeout.action` description (so it matches
+          // poll/wait/findElement/domain-snapshot) while preserving the provider's
+          // API prefix and Call log. `err.name` survives the RPC hop (copied just
+          // below), so classification by name is reliable.
+          if (timeoutDescription && isProviderTimeoutError(err)) {
+            err.message = applyTimeoutDescription(err.message, timeoutDescription)
+          }
           // rethrow an error to keep the stack trace in browser
           clientError.message = err.message
           clientError.name = err.name

@@ -20,7 +20,8 @@ import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
+import { resolveActionTimeout } from './budget'
+import { isLocator, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
@@ -30,8 +31,8 @@ const provider = __vitest_browser_runner__.provider
 const sessionId = getBrowserState().sessionId
 const channel = new BroadcastChannel(`vitest:${sessionId}`)
 
-function triggerCommand<T>(command: string, args: any[], error?: Error) {
-  return getBrowserState().commands.triggerCommand<T>(command, args, error)
+function triggerCommand<T>(command: string, args: any[], error?: Error, timeoutDescription?: string) {
+  return getBrowserState().commands.triggerCommand<T>(command, args, error, timeoutDescription)
 }
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
@@ -344,16 +345,17 @@ export const page: BrowserPage = {
       ? { ...options, mask }
       : options
 
+    const screenshotOptions = { ...normalizedOptions, element } as any /** TODO */
+    // Resolve the action budget so the timeout rides/clamps to the remaining test
+    // time and its description can unify a provider-native timeout error.
+    const resolvedTimeout = resolveActionTimeout(screenshotOptions.timeout)
+    screenshotOptions.timeout = resolvedTimeout.timeout
+
     return ensureAwaited(error => triggerCommand(
       '__vitest_screenshot',
-      [
-        name,
-        processTimeoutOptions({
-          ...normalizedOptions,
-          element,
-        } as any /** TODO */),
-      ],
+      [name, screenshotOptions],
       error,
+      resolvedTimeout.description,
     ))
   },
   mark<T>(

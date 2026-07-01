@@ -33,6 +33,7 @@ import { convertElementToCssSelector, escapeForTextSelector, isLocator, resolveU
 import { recordBrowserTraceEntry } from './trace'
 
 export { ensureAwaited } from '../utils'
+export { resolveActionTimeout } from './budget'
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from './tester-utils'
 export {
   getByAltTextSelector,
@@ -92,16 +93,16 @@ export abstract class Locator {
     })
   }
 
-  public click(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_click', this.serialize(), options)
+  public click(options?: UserEventClickOptions, timeoutDescription?: string): Promise<void> {
+    return this.triggerCommand<void>('__vitest_click', timeoutDescription, this.serialize(), options)
   }
 
-  public dblClick(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_dblClick', this.serialize(), options)
+  public dblClick(options?: UserEventClickOptions, timeoutDescription?: string): Promise<void> {
+    return this.triggerCommand<void>('__vitest_dblClick', timeoutDescription, this.serialize(), options)
   }
 
-  public tripleClick(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_tripleClick', this.serialize(), options)
+  public tripleClick(options?: UserEventClickOptions, timeoutDescription?: string): Promise<void> {
+    return this.triggerCommand<void>('__vitest_tripleClick', timeoutDescription, this.serialize(), options)
   }
 
   public wheel(options: UserEventWheelOptions): Promise<void> {
@@ -125,23 +126,23 @@ export abstract class Locator {
     })
   }
 
-  public clear(options?: UserEventClearOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_clear', this.serialize(), options)
+  public clear(options?: UserEventClearOptions, timeoutDescription?: string): Promise<void> {
+    return this.triggerCommand<void>('__vitest_clear', timeoutDescription, this.serialize(), options)
   }
 
-  public hover(options?: UserEventHoverOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_hover', this.serialize(), options)
+  public hover(options?: UserEventHoverOptions, timeoutDescription?: string): Promise<void> {
+    return this.triggerCommand<void>('__vitest_hover', timeoutDescription, this.serialize(), options)
   }
 
   public unhover(options?: UserEventHoverOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_hover', { selector: 'html > body', locator: 'locator(\'body\')' }, options)
+    return this.triggerCommand<void>('__vitest_hover', undefined, { selector: 'html > body', locator: 'locator(\'body\')' }, options)
   }
 
-  public fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_fill', this.serialize(), text, options)
+  public fill(text: string, options?: UserEventFillOptions, timeoutDescription?: string): Promise<void> {
+    return this.triggerCommand<void>('__vitest_fill', timeoutDescription, this.serialize(), text, options)
   }
 
-  public upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
+  public upload(files: string | string[] | File | File[], options?: UserEventUploadOptions, timeoutDescription?: string): Promise<void> {
     return ensureAwaited(async (error) => {
       const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
         if (typeof file === 'string') {
@@ -165,13 +166,15 @@ export abstract class Locator {
         '__vitest_upload',
         [this.serialize(), await Promise.all(filesPromise), options],
         error,
+        timeoutDescription,
       )
     })
   }
 
-  public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {
+  public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}, timeoutDescription?: string): Promise<void> {
     return this.triggerCommand<void>(
       '__vitest_dragAndDrop',
+      timeoutDescription,
       this.toJSON(),
       target.toJSON(),
       options,
@@ -181,6 +184,7 @@ export abstract class Locator {
   public selectOptions(
     value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
+    timeoutDescription?: string,
   ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
@@ -194,7 +198,7 @@ export abstract class Locator {
       }
       return v
     })
-    return this.triggerCommand('__vitest_selectOptions', this.serialize(), values, options)
+    return this.triggerCommand('__vitest_selectOptions', timeoutDescription, this.serialize(), values, options)
   }
 
   public screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
@@ -398,18 +402,20 @@ export abstract class Locator {
     }
   }
 
-  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
+  protected triggerCommand<T>(command: string, timeoutDescription: string | undefined, ...args: any[]): Promise<T> {
     if (this._errorSource) {
       return triggerCommandWithTrace<T>({
         name: command,
         arguments: args,
         errorSource: this._errorSource,
+        timeoutDescription,
       })
     }
     return ensureAwaited(error => triggerCommandWithTrace<T>({
       name: command,
       arguments: args,
       errorSource: error,
+      timeoutDescription,
     }))
   }
 }
@@ -419,12 +425,14 @@ export function triggerCommandWithTrace<T>(
     name: string
     arguments: unknown[]
     errorSource?: Error | undefined
+    timeoutDescription?: string | undefined
   },
 ): Promise<T> {
   return getBrowserState().commands.triggerCommand<T>(
     options.name,
     options.arguments,
     options.errorSource,
+    options.timeoutDescription,
   )
 }
 
