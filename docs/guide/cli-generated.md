@@ -1019,3 +1019,10 @@ Custom provider for detecting changed files. (default: `git`)
 - **Config:** [experimental.preParse](/config/experimental#experimental-preparse)
 
 Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)
+
+### experimental.isolateDiagnostic
+
+- **CLI:** `--experimental.isolateDiagnostic`
+- **Config:** [experimental.isolateDiagnostic](/config/experimental#experimental-isolatediagnostic)
+
+Print a hint after the run estimating how much time `isolate: false` would save when `isolate: true` spends a significant amount of time spawning a worker per test file. (default: `true`)

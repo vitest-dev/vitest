@@ -180,6 +180,8 @@ export async function runVitest(
       // override cache config with the one that was used to run `vitest` from the CLI
       experimental: {
         fsModuleCache: rest.experimental?.fsModuleCache ?? currentConfig.experimental.fsModuleCache,
+        // keep the isolate diagnostic out of captured test output unless a test opts in
+        isolateDiagnostic: rest.experimental?.isolateDiagnostic ?? false,
         ...cliOptions?.experimental,
       },
     }, {
