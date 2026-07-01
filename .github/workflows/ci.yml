@@ -142,7 +142,8 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci:${{ matrix.suite }}
+        # matrix.suite is a fixed, workflow-defined value (rest/e2e/coverage)
+        run: pnpm run test:ci:${{ matrix.suite }} # zizmor: ignore[template-injection]
         env:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
@@ -225,14 +226,15 @@ jobs:
         run: pnpm run build
 
       - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright ${{ matrix.shard && format('--shard={0}/3', matrix.shard) || '' }}
+        # matrix.shard is a fixed, workflow-defined value (1/2/3 or empty)
+        run: pnpm run test:browser:playwright ${{ matrix.shard && format('--shard={0}/3', matrix.shard) || '' }} # zizmor: ignore[template-injection]
 
   test-vite7:
     needs: changed
-    # macos-latest is the fastest one
-    name: 'Test: vite@7, ${{ matrix.suite }}, node-24, macos-latest'
+    # Runs on ubuntu to keep macOS under its ~5 concurrent-runner limit.
+    name: 'Test: vite@7, ${{ matrix.suite }}, node-24, ubuntu-latest'
     if: needs.changed.outputs.should_skip != 'true'
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     timeout-minutes: 30
 
