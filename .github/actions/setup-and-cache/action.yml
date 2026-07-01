@@ -32,10 +32,6 @@ runs:
           "
         )" >> $GITHUB_OUTPUT
 
-    - name: Print versions
-      shell: bash
-      run: echo "${{ toJson(steps.resolve-package-versions.outputs) }}"
-
     - name: Check resolved package versions
       shell: bash
       if: |
