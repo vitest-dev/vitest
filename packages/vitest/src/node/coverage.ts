@@ -86,6 +86,7 @@ export class BaseCoverageProvider {
   version!: string
   options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
+  private _globMatchers?: { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean }
   autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
 
   coverageFiles: CoverageFiles = new Map()
@@ -175,18 +176,15 @@ export class BaseCoverageProvider {
 
     const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
 
-    if (pm.isMatch(relativeFilename, this.options.exclude, { dot: true })) {
+    const { matchExclude, matchInclude } = this.getGlobMatchers()
+
+    if (matchExclude(relativeFilename)) {
       this.globCache.set(filename, false)
       return false
     }
 
     // By default `coverage.include` matches all files, except "coverage.exclude"
-    const glob = this.options.include || '**'
-
-    let included = pm.isMatch(relativeFilename, glob, {
-      dot: true,
-      ignore: this.options.exclude,
-    })
+    let included = matchInclude(relativeFilename)
 
     if (included && this.changedFiles) {
       included = this.changedFiles.includes(filename)
@@ -195,6 +193,25 @@ export class BaseCoverageProvider {
     this.globCache.set(filename, included)
 
     return included
+  }
+
+  /**
+   * Compile `coverage.include`/`coverage.exclude` into reusable matchers once.
+   * `picomatch.isMatch(file, patterns, options)` recompiles the patterns on
+   * every call, which dominates the filtering step on large test suites.
+   */
+  private getGlobMatchers(): { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean } {
+    if (!this._globMatchers) {
+      const exclude = this.options.exclude
+      const include = this.options.include
+
+      this._globMatchers = {
+        matchExclude: exclude.length ? pm(exclude, { dot: true }) : () => false,
+        matchInclude: include ? pm(include, { dot: true, ignore: exclude }) : () => true,
+      }
+    }
+
+    return this._globMatchers
   }
 
   private async getUntestedFilesByRoot(
