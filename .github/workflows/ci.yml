@@ -99,18 +99,15 @@ jobs:
     strategy:
       # Split the heavy e2e and coverage suites onto their own runners so they run
       # in parallel with the rest instead of sequentially on a single machine.
+      # Linux (node 22/24/26) covers all POSIX behaviour, so macOS only runs a
+      # single e2e leg as an Apple-hardware smoke; the rest/coverage suites are
+      # macOS-redundant.
       matrix:
         suite: [rest, e2e, coverage]
         os: [ubuntu-latest]
         node_version: [22, 24, 26]
         include:
-          - suite: rest
-            os: macos-latest
-            node_version: 24
           - suite: e2e
-            os: macos-latest
-            node_version: 24
-          - suite: coverage
             os: macos-latest
             node_version: 24
           - suite: rest
@@ -191,11 +188,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       # runner.test.ts is the heaviest spec (~28% of the suite, ~70% of whichever
-      # shard it lands in). Windows has runner headroom, so it runs runner in its
-      # own job and shards the other 32 specs. macOS is capped at ~5 runners and
-      # can't spare a dedicated runner job, so it shards the whole suite 2 ways
-      # (runner rides along in one shard). Every spec, runner included, runs on
-      # both OSes.
+      # shard it lands in). Windows isolates it in its own job and shards the other
+      # 32 specs; Ubuntu shards the whole suite 2 ways (runner rides in one shard).
+      # Every spec, runner included, runs on both OSes.
       matrix:
         include:
           - os: windows-latest
@@ -207,10 +202,10 @@ jobs:
           - os: windows-latest
             name: rest 2/2
             command: "pnpm run test:browser:playwright --exclude 'specs/runner.test.ts' --shard=2/2"
-          - os: macos-latest
+          - os: ubuntu-latest
             name: shard 1/2
             command: pnpm run test:browser:playwright --shard=1/2
-          - os: macos-latest
+          - os: ubuntu-latest
             name: shard 2/2
             command: pnpm run test:browser:playwright --shard=2/2
       fail-fast: false
@@ -230,6 +225,8 @@ jobs:
         run: pnpm i --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
+        with:
+          browsers: all
 
       - name: Build
         run: pnpm run build
@@ -271,6 +268,8 @@ jobs:
           git add . && git -c user.email=ci@vitest.dev -c user.name=vitest-ci commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
+        with:
+          browsers: all
 
       - name: Build
         run: pnpm run build
