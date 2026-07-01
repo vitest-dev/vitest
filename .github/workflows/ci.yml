@@ -185,25 +185,34 @@ jobs:
 
   test-browser:
     needs: changed
-    name: "Browsers: ${{ matrix.shard && format('shard {0}/3', matrix.shard) || 'all' }}, node-24, ${{ matrix.os }}"
+    name: "Browsers: ${{ matrix.name }}, node-24, ${{ matrix.os }}"
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
     strategy:
-      # Windows has runner headroom, so shard the specs across runners to run them
-      # in parallel. Each shard still runs every browser instance, so browser
-      # coverage and the suite's all-instance expectations are unchanged. macOS is
-      # capped at ~5 concurrent runners, so it runs the whole suite in one job.
+      # runner.test.ts is the heaviest spec (~28% of the suite, ~70% of whichever
+      # shard it lands in). Windows has runner headroom, so it runs runner in its
+      # own job and shards the other 32 specs. macOS is capped at ~5 runners and
+      # can't spare a dedicated runner job, so it shards the whole suite 2 ways
+      # (runner rides along in one shard). Every spec, runner included, runs on
+      # both OSes.
       matrix:
         include:
           - os: windows-latest
-            shard: 1
+            name: runner
+            command: pnpm run test:browser:playwright runner.test.ts
           - os: windows-latest
-            shard: 2
+            name: rest 1/2
+            command: "pnpm run test:browser:playwright --exclude 'specs/runner.test.ts' --shard=1/2"
           - os: windows-latest
-            shard: 3
+            name: rest 2/2
+            command: "pnpm run test:browser:playwright --exclude 'specs/runner.test.ts' --shard=2/2"
           - os: macos-latest
-            shard: ''
+            name: shard 1/2
+            command: pnpm run test:browser:playwright --shard=1/2
+          - os: macos-latest
+            name: shard 2/2
+            command: pnpm run test:browser:playwright --shard=2/2
       fail-fast: false
 
     timeout-minutes: 30
@@ -226,8 +235,8 @@ jobs:
         run: pnpm run build
 
       - name: Test Browser (playwright)
-        # matrix.shard is a fixed, workflow-defined value (1/2/3 or empty)
-        run: pnpm run test:browser:playwright ${{ matrix.shard && format('--shard={0}/3', matrix.shard) || '' }} # zizmor: ignore[template-injection]
+        # matrix.command is a fixed, workflow-defined string
+        run: ${{ matrix.command }} # zizmor: ignore[template-injection]
 
   test-vite7:
     needs: changed
