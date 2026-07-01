@@ -482,6 +482,12 @@ async function getStableScreenshot({
   let nextScreenshot = initialScreenshot
   let lastCapturedScreenshot: CapturedScreenshot | null = null
 
+  // Note: unlike the other retry mechanisms (findElement, expect.poll/vi.waitFor,
+  // domain snapshot), this stability loop intentionally does not (yet) use a
+  // backoff `intervals`. It runs at an effective interval of 0, spaced only by the
+  // capture+decode+compare latency, which suits consecutive-frame stability
+  // detection. We deliberately keep the scope small here rather than introducing a
+  // backoff mechanism.
   while (signal.aborted === false) {
     if (decodedBaseline === null) {
       decodedBaseline = takeDecodedScreenshot(screenshotArgument)
