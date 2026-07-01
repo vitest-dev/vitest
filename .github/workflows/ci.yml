@@ -185,7 +185,7 @@ jobs:
 
   test-browser:
     needs: changed
-    name: "Browsers: ${{ matrix.name }}, node-24, ${{ matrix.os }}"
+    name: 'Browsers: ${{ matrix.name }}, node-24, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
