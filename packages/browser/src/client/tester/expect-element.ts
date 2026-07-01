@@ -5,8 +5,8 @@ import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState, now } from '../utils'
 import { ariaMatchers } from './aria'
+import { resolveActionTimeout } from './budget'
 import { matchers } from './expect'
-import { processTimeoutOptions } from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
@@ -16,8 +16,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }
 
-  const pollOptions = processTimeoutOptions(options)
-  const deadline = pollOptions?.timeout ? now() + pollOptions.timeout : undefined
+  // Resolve the action budget once. It is passed to `expect.poll` as a
+  // pre-resolved timeout (`__resolved`) so poll uses it verbatim instead of
+  // clamping the budget a second time.
+  const resolved = resolveActionTimeout(options?.timeout)
+  const deadline = now() + resolved.timeout
   const expectElement = expect.poll(async function element(this: object): Promise<HTMLElement | SVGElement | null> {
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
@@ -36,10 +39,10 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     }
 
     return elementOrLocator.findElement({
-      ...pollOptions,
-      timeout: deadline ? Math.max(deadline - now(), 0) : undefined,
+      ...options,
+      timeout: Math.max(deadline - now(), 0),
     })
-  }, pollOptions)
+  }, { ...options, timeout: resolved.timeout, __resolved: resolved } as ExpectPollOptions)
 
   chai.util.flag(expectElement, '_poll.element', true)
 

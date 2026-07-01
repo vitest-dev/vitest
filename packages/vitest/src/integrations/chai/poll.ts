@@ -1,10 +1,20 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
+import type { BudgetedTimeout } from '../../runtime/runner/context'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { DEFAULT_POLL_INTERVALS, describeBudgetedTimeout, intervalForAttempt, resolveBudgetedTimeout } from '../../runtime/runner/context'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
+
+/**
+ * The internal `__resolved` channel used by trusted callers (e.g.
+ * `expect.element`) to pass an already budget-resolved timeout so that
+ * `expect.poll` does not clamp the budget a second time.
+ */
+interface PollOptionsInternal {
+  __resolved?: BudgetedTimeout & { description: string }
+}
 
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
@@ -50,11 +60,16 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     const state = getWorkerState()
     const { message } = options
     const intervals = options.intervals ?? DEFAULT_POLL_INTERVALS
-    // `'auto'` rides the remaining test budget; a number caps below it; a
-    // per-call timeout wins but is still clamped to the budget.
-    const resolvedTimeout = resolveBudgetedTimeout(options.timeout, state.config.timeout?.poll)
+    // A trusted internal caller (e.g. `expect.element`) may pass an already
+    // resolved budget via `__resolved` so we don't clamp the budget twice;
+    // otherwise `'auto'` rides the remaining test budget, a number caps below
+    // it, and a per-call timeout wins but is still clamped to the budget.
+    const preResolved = (options as PollOptionsInternal).__resolved
+    const resolvedTimeout = preResolved
+      ?? resolveBudgetedTimeout(options.timeout, state.config.timeout?.poll)
     const timeout = resolvedTimeout.timeout
-    const timeoutDescription = describeBudgetedTimeout(resolvedTimeout, 'test.timeout.poll')
+    const timeoutDescription = preResolved?.description
+      ?? describeBudgetedTimeout(resolvedTimeout, 'test.timeout.poll')
     // @ts-expect-error private poll access
     const assertion = expect(null, message).withContext({
       poll: true,
@@ -63,6 +78,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     // injected so that domain snapshot can take over poll implementation.
     chai.util.flag(assertion, '_poll.fn', fn)
     chai.util.flag(assertion, '_poll.timeout', timeout)
+    chai.util.flag(assertion, '_poll.timeoutDescription', timeoutDescription)
     // pass the raw per-call value so domain matchers keep their own default
     // stability cadence (50ms) when no `intervals` was provided.
     chai.util.flag(assertion, '_poll.intervals', options.intervals)

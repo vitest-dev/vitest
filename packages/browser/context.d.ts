@@ -973,7 +973,7 @@ export const utils: {
   /**
    * Creates "Cannot find element" error. Useful for custom locators.
    */
-  getElementError(selector: string | Locator, container?: Element): Error
+  getElementError(selector: string | Locator, container?: Element, timeoutDescription?: string): Error
 
   /**
    * Utilities for generating and working with ARIA trees and templates.

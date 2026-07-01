@@ -28,7 +28,8 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertElementToCssSelector, escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
+import { resolveActionTimeout } from './budget'
+import { convertElementToCssSelector, escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from './tester-utils'
 import { recordBrowserTraceEntry } from './trace'
 
 export { ensureAwaited } from '../utils'
@@ -368,9 +369,9 @@ export abstract class Locator {
   }
 
   public async findElement(options_: SelectorOptions = {}): Promise<HTMLElement | SVGElement> {
-    const options = processTimeoutOptions(options_)
-    const timeout = options?.timeout
-    const strict = options?.strict ?? true
+    const resolved = resolveActionTimeout(options_.timeout)
+    const timeout = resolved.timeout
+    const strict = options_?.strict ?? true
     const startTime = now()
     let intervalIndex = 0
     while (true) {
@@ -387,7 +388,7 @@ export abstract class Locator {
       const elapsed = now() - startTime
       const isLastCall = timeout != null && elapsed >= timeout
       if (isLastCall) {
-        throw utils.getElementError(this, this._container || document.body)
+        throw utils.getElementError(this, this._container || document.body, resolved.description)
       }
       const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]
       const nextInterval = timeout != null

@@ -2,7 +2,8 @@ import type { Locator, SelectorOptions, SerializedLocator, UserEventWheelDeltaOp
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
-import { getBrowserState, getWorkerState, now } from '../utils'
+import { getBrowserState, getWorkerState } from '../utils'
+import { resolveActionTimeout } from './budget'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
@@ -220,50 +221,9 @@ export class CommandsManager {
   }
 }
 
-// Mirror of the runtime budget clamp (packages/vitest .../runner/context.ts);
-// kept local so it doesn't pull node-only runner code into the browser bundle.
-const ACTION_TIMEOUT_BUFFER = 300
-const ACTION_TIMEOUT_FALLBACK = 1000
-
 export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
-  const config = getWorkerState().config
-  const actionConfig = config.timeout?.action
-  const providerActionTimeout = config.browser.providerOptions.actionTimeout
-
-  // Resolve the desired cap: a per-call timeout wins, then `timeout.action`
-  // (when a fixed number), then the provider-level `actionTimeout` override.
-  // `'auto'` (and an unset config) leave the cap open so the op rides the budget.
-  let cap: number | undefined = options_?.timeout
-  if (cap == null) {
-    if (typeof actionConfig === 'number') {
-      cap = actionConfig
-    }
-    else if (providerActionTimeout != null) {
-      cap = providerActionTimeout
-    }
-  }
-
-  const runner = getBrowserState().runner
-  const startTime = runner._currentTaskStartTime
-  const timeout = runner._currentTaskTimeout
-  const hasBudget = startTime != null
-    && timeout != null
-    && timeout !== 0
-    && timeout !== Number.POSITIVE_INFINITY
-
-  let effective: number
-  if (hasBudget) {
-    // keep a buffer so the action fails before the task timer, surfacing a
-    // descriptive, source-mapped locator error instead of a generic timeout
-    const remaining = Math.max(Math.floor(startTime + timeout - now()) - ACTION_TIMEOUT_BUFFER, 1)
-    effective = cap == null ? remaining : Math.min(cap, remaining)
-  }
-  else {
-    effective = cap ?? ACTION_TIMEOUT_FALLBACK
-  }
-
   options_ = options_ || {} as T
-  options_.timeout = effective
+  options_.timeout = resolveActionTimeout(options_.timeout).timeout
   return options_
 }
 

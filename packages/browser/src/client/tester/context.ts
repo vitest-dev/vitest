@@ -578,10 +578,11 @@ function prettyDOM(
     : pretty
 }
 
-function getElementError(selector: string | Locator, container: Element): Error {
+function getElementError(selector: string | Locator, container: Element, timeoutDescription?: string): Error {
   const locator = typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()
   const formatted = formatDOM(container)
-  const error = new Error(`Cannot find element with locator: ${locator}\n\n${formatted}`)
+  const timedOut = timeoutDescription ? `Timed out in ${timeoutDescription}.\n\n` : ''
+  const error = new Error(`${timedOut}Cannot find element with locator: ${locator}\n\n${formatted}`)
   error.name = 'VitestBrowserElementError'
   return error
 }

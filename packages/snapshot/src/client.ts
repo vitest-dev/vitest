@@ -60,6 +60,8 @@ interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
 interface AssertDomainPollOptions extends Omit<AssertDomainOptions, 'received'> {
   poll: (options: { signal: AbortSignal }) => Promise<unknown> | unknown
   timeout?: number
+  /** Human-readable description of the effective timeout, used in error messages. */
+  timeoutDescription?: string
   /** Ascending poll backoff (ms); the last value repeats for further attempts. */
   intervals?: number[]
 }
@@ -275,6 +277,7 @@ export class SnapshotClient {
       inlineSnapshot,
       error,
       timeout = 1000,
+      timeoutDescription,
       intervals = [50],
     } = options
 
@@ -322,7 +325,7 @@ export class SnapshotClient {
       }
       return {
         pass: false,
-        message: () => `poll() did not produce a stable snapshot within the timeout`,
+        message: () => `poll() did not produce a stable snapshot within ${timeoutDescription ?? 'the timeout'}.`,
       }
     }
 
