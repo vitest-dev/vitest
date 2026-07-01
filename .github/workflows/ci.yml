@@ -267,7 +267,8 @@ jobs:
       - name: Install
         run: |
           pnpm override-vite7
-          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile --filter '!docs'
+          # ubuntu runners have no default git identity; set one for this commit
+          git add . && git -c user.email=ci@vitest.dev -c user.name=vitest-ci commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
 
