@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@vitest/browser-playwright": "latest",
-    "jsdom": "latest",
+    "jsdom": "^29.1.1",
     "playwright": "^1.61.0",
     "vite": "latest",
     "vitest": "latest"
