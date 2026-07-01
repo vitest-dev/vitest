@@ -1,277 +1,89 @@
+import type * as vite from 'vite'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import type { TestProject } from '../project'
-import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
-import { existsSync, readFileSync } from 'node:fs'
-import { deepMerge } from '@vitest/utils/helpers'
-import { basename, dirname, relative, resolve } from 'pathe'
-import * as vite from 'vite'
-import { configDefaults } from '../../defaults'
-import { generateScopedClassName } from '../../integrations/css/css-modules'
+import type { PluginHarness } from '../config/pluginHarness'
+import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { API_TOKEN_FILE } from '../config/apiToken'
-import { VitestFilteredOutProjectError } from '../errors'
-import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
+import { VitestConfigApi } from './api'
+import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { VitestOptimizer } from './optimizer'
-import { ModuleRunnerTransform } from './runnerTransform'
-import {
-  deleteDefineConfig,
-  getDefaultResolveOptions,
-  resolveFsAllow,
-} from './utils'
+import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
 import { VitestProjectResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends TestProjectInlineConfiguration {
   root?: string
-  workspacePath: string | number
 }
 
 export function WorkspaceVitestPlugin(
-  project: TestProject,
+  harness: PluginHarness,
+  globalViteConfig: vite.ResolvedConfig,
+  globalConfig: ResolvedConfig,
   options: WorkspaceOptions,
-) {
-  return <VitePlugin[]>[
-    {
-      name: 'vitest:project:name',
-      enforce: 'post',
-      config(viteConfig) {
-        viteConfig.test ??= {}
-
-        const testConfig = viteConfig.test
-
-        let { label: name, color } = typeof testConfig.name === 'string'
-          ? { label: testConfig.name }
-          : { label: '', ...testConfig.name }
-
-        if (!name) {
-          if (typeof options.workspacePath === 'string') {
-            // if there is a package.json, read the name from it
-            const dir = options.workspacePath.endsWith('/')
-              ? options.workspacePath.slice(0, -1)
-              : dirname(options.workspacePath)
-            const pkgJsonPath = resolve(dir, 'package.json')
-            if (existsSync(pkgJsonPath)) {
-              name = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')).name
-            }
-            if (typeof name !== 'string' || !name) {
-              name = basename(dir)
-            }
-          }
-          else {
-            name = options.workspacePath.toString()
-          }
-        }
-
-        if (project.vitest._cliOptions.benchmarkOnly) {
-          viteConfig.test.benchmark ??= {}
-          viteConfig.test.benchmark.enabled = true
-        }
-
-        const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
-        const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
-        // keep project names to potentially filter it out
-        const workspaceNames = [name]
-        const browser = (viteConfig.test!.browser || {}) as BrowserConfigOptions
-        if (isBrowserEnabled && browser.name && !browser.instances?.length) {
-          // vitest injects `instances` in this case later on
-          workspaceNames.push(name ? `${name} (${browser.name})` : browser.name)
-        }
-
-        viteConfig.test?.browser?.instances?.forEach((instance) => {
-          // every instance is a potential project
-          instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
-          if (isBrowserEnabled) {
-            workspaceNames.push(instance.name)
-          }
-        })
-        if (viteConfig.test?.benchmark?.enabled) {
-          workspaceNames.push(name ? `${name} (bench)` : 'bench')
-        }
-
-        const filters = project.vitest.config.project
-        // if there is `--project=...` filter, check if any of the potential projects match
-        // if projects don't match, we ignore the test project altogether
-        // if some of them match, they will later be filtered again by `resolveWorkspace`
-        if (filters.length) {
-          const hasProject = workspaceNames.some((name) => {
-            return project.vitest.matchesProjectFilter(name)
-          })
-          if (!hasProject) {
-            throw new VitestFilteredOutProjectError()
-          }
-        }
-
-        const vitestConfig: UserConfig = {
-          name: { label: name, color },
-        }
-
-        vitestConfig.experimental ??= {}
-
-        // always inherit the global `fsModuleCache` value even without `extends: true`
-        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache != null) {
-          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
-        }
-        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath != null) {
-          vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
-        }
-        if (testConfig.experimental?.viteModuleRunner == null && project.vitest.config.experimental?.viteModuleRunner != null) {
-          vitestConfig.experimental.viteModuleRunner = project.vitest.config.experimental.viteModuleRunner
-        }
-        if (testConfig.experimental?.nodeLoader == null && project.vitest.config.experimental?.nodeLoader != null) {
-          vitestConfig.experimental.nodeLoader = project.vitest.config.experimental.nodeLoader
-        }
-        if (testConfig.experimental?.importDurations == null && project.vitest.config.experimental?.importDurations != null) {
-          vitestConfig.experimental.importDurations = project.vitest.config.experimental.importDurations
-        }
-
-        return {
-          base: '/',
-          environments: {
-            __vitest__: {
-              dev: {},
-            },
-          },
-          test: vitestConfig,
-        }
-      },
-    },
+): VitePlugin[] {
+  return [
     {
       name: 'vitest:project',
-      enforce: 'pre',
+      enforce: 'post',
       options() {
         this.meta.watchMode = false
       },
       config(viteConfig) {
-        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
-
         const testConfig = viteConfig.test || {}
-        const root = testConfig.root || viteConfig.root || options.root
+        const root = options.root || testConfig.root || viteConfig.root
 
-        const resolveOptions = getDefaultResolveOptions()
-        let config: ViteConfig = {
+        const config: ViteConfig = {
+          base: '/',
           root,
-          define: {
-            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
-            'process.env.NODE_ENV': 'process.env.NODE_ENV',
-          },
-          resolve: {
-            ...resolveOptions,
-            alias: testConfig.alias,
-          },
           server: {
-            // disable watch mode in workspaces,
-            // because it is handled by the top-level watcher
+            // disable watch mode in projects because it is handled by the top-level watcher
             watch: null,
             open: false,
-            hmr: false,
-            ws: false,
-            preTransformRequests: false,
-            middlewareMode: true,
             fs: {
-              allow: resolveFsAllow(
-                project.vitest.config.root,
-                project.vitest.vite.config.configFile,
-              ),
+              allow: globalViteConfig.server.fs.allow,
               deny: [API_TOKEN_FILE],
             },
           },
-          // eslint-disable-next-line ts/ban-ts-comment
-          // @ts-ignore Vite 6 compat
-          environments: {
-            ssr: {
-              resolve: resolveOptions,
-            },
-          },
-          test: {},
         }
 
-        if ('rolldownVersion' in vite) {
-          config = {
-            ...config,
-            // eslint-disable-next-line ts/ban-ts-comment
-            // @ts-ignore rolldown-vite only
-            oxc: viteConfig.oxc === false
-              ? false
-              : {
-                  // eslint-disable-next-line ts/ban-ts-comment
-                  // @ts-ignore rolldown-vite only
-                  target: viteConfig.oxc?.target || 'node18',
-                },
-          }
-        }
-        else {
-          config = {
-            ...config,
-            esbuild: viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
-          }
-        }
+        // TODO: remove this after "extends: false" is flipped
+        testConfig.experimental ??= {}
 
-        ;(config.test as ResolvedConfig).defines = defines
-        ;(config.test as ResolvedConfig).viteDefine = originalDefine
-
-        const classNameStrategy
-          = (typeof testConfig.css !== 'boolean'
-            && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
-
-        if (classNameStrategy !== 'scoped') {
-          config.css ??= {}
-          config.css.modules ??= {}
-          if (config.css.modules) {
-            config.css.modules.generateScopedName = (
-              name: string,
-              filename: string,
-            ) => {
-              const root = project.config.root
-              return generateScopedClassName(
-                classNameStrategy,
-                name,
-                relative(root, filename),
-              )!
-            }
-          }
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && globalConfig.experimental?.fsModuleCache != null) {
+          testConfig.experimental.fsModuleCache = globalConfig.experimental.fsModuleCache
         }
-        config.customLogger = createViteLogger(
-          project.vitest.logger,
-          viteConfig.logLevel || 'warn',
-          {
-            allowClearScreen: false,
-          },
-        )
-        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
+        if (testConfig.experimental?.fsModuleCachePath == null && globalConfig.experimental?.fsModuleCachePath != null) {
+          testConfig.experimental.fsModuleCachePath = globalConfig.experimental.fsModuleCachePath
+        }
+        if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
+          testConfig.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
+        }
+        if (testConfig.experimental?.nodeLoader == null && globalConfig.experimental?.nodeLoader != null) {
+          testConfig.experimental.nodeLoader = globalConfig.experimental.nodeLoader
+        }
+        if (testConfig.experimental?.importDurations == null && globalConfig.experimental?.importDurations != null) {
+          testConfig.experimental.importDurations = globalConfig.experimental.importDurations
+        }
 
         return config
       },
-    },
-    {
-      name: 'vitest:project:server',
-      enforce: 'pre',
-      async configureServer(server) {
-        const options = deepMerge({}, configDefaults, server.config.test || {})
-        await project._configureServer(options, server)
-
-        await server.watcher.close()
+      configResolved(config) {
+        // Projects always inherit non-project config options
+        config.test.coverage = globalConfig.coverage
+        config.test.attachmentsDir = globalConfig.attachmentsDir
       },
     },
+    VitestConfigApi(harness, globalConfig),
+    SsrRunnerFixerPlugin(harness),
     MetaEnvReplacerPlugin(),
-    ...CSSEnablerPlugin(project),
-    CoverageTransform(project.vitest),
+    ...CSSEnablerPlugin(),
+    CoverageTransform(harness),
+    ...VitestConfig(harness),
     ...MocksPlugins(),
-    VitestProjectResolver(project.vitest),
-    VitestOptimizer(),
+    VitestProjectResolver(harness),
     NormalizeURLPlugin(),
-    ModuleRunnerTransform(),
   ]
 }

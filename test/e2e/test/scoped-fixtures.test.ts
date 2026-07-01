@@ -1281,11 +1281,11 @@ describe('browser tests', () => {
       },
       'vitest.config.js': {
         test: {
+          isolate: false,
           browser: {
             enabled: true,
             provider: playwright(),
             headless: true,
-            isolate: false,
             instances: [
               { browser: 'chromium' },
             ],

@@ -14,6 +14,7 @@ const state: WorkerGlobalState = {
     concurrencyId: 1,
     config,
     projectName: config.name || '',
+    metaEnv: null as any,
     files: [],
     environment: {
       name: 'browser',

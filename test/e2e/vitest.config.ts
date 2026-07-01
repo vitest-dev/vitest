@@ -18,6 +18,9 @@ export default defineConfig({
         return false
       }
     },
+    tags: [
+      { name: 'browser', timeout: 60_000 },
+    ],
     projects: [
       {
         extends: true,

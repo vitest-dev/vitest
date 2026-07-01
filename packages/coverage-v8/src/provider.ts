@@ -407,13 +407,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     project: TestProject = this.ctx.getRootProject(),
     environment: string,
   ): Promise<CoverageMap> {
-    if (environment === '__browser__' && !project.browser) {
-      throw new Error(`Cannot access browser module graph because it was torn down.`)
-    }
-
     const onTransform = async (filepath: string, isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false) => {
       const result = await this.transformFile(filepath, project, environment, !isExtendedContext)
-      if (result && environment === '__browser__' && project.browser) {
+      if (result && project.isBrowserEnabled()) {
         return { ...result, code: `${result.code}// <inline-source-map>` }
       }
       return result
@@ -422,7 +418,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const scriptCoverages = []
 
     for (const result of coverage.result) {
-      if (environment === '__browser__') {
+      if (environment === 'client' && project.isBrowserEnabled()) {
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
         }

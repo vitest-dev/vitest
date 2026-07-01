@@ -9,6 +9,7 @@ export {
   loadDiffConfig,
   loadSnapshotSerializers,
   setupCommonEnv,
+  setupEnv,
 } from '../runtime/setup-common'
 export * as SpyModule from '@vitest/spy'
 export type { ParsedStack, StringifyOptions } from '@vitest/utils'

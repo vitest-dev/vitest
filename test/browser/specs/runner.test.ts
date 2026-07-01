@@ -66,7 +66,7 @@ describe('running browser tests', async () => {
   test('tests are actually running', () => {
     expect(stderr).toBe('')
 
-    const testFiles = browserResultJson.testResults.map(t => t.name)
+    const testFiles = Array.from(new Set(browserResultJson.testResults.map(t => t.name)))
 
     vitest.projects.forEach((project) => {
       // the order is non-deterministic
@@ -75,7 +75,7 @@ describe('running browser tests', async () => {
 
     // test files are optimized automatically (type-check-only files are excluded)
     const runtimeTestFiles = testFiles.filter(f => !f.endsWith('.test-d.ts'))
-    expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
+    expect(vitest.projects.map(p => p.vite.config.optimizeDeps.entries))
       .toEqual(vitest.projects.map(() => expect.arrayContaining(runtimeTestFiles)))
 
     const testFilesCount = readdirSync('./test')

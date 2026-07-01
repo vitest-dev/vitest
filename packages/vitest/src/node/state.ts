@@ -4,7 +4,6 @@ import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
 import { relative } from 'pathe'
-import { defaultBrowserPort } from '../constants'
 import { createFileTask, generateFileHash } from '../utils/tasks'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
@@ -42,7 +41,6 @@ export class StateManager {
 
   /** @internal */
   _data = {
-    browserLastPort: defaultBrowserPort,
     timeoutIncreased: false,
   }
 

@@ -1,14 +1,16 @@
 import type { MockedModule } from '@vitest/mocker'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { Plugin, ViteDevServer } from 'vite'
+import type { IndexHtmlTransformContext, IndexHtmlTransformResult, Plugin, ViteDevServer, UserConfig as ViteUserConfig } from 'vite'
 import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { OTELCarrier } from '../../utils/traces'
+import type { PluginHarness } from '../config/pluginHarness'
+import type { Vitest } from '../core'
 import type { TestProject } from '../project'
-import type { ApiConfig, ProjectConfig } from './config'
+import type { ProjectConfig, ResolvedConfig } from './config'
 
 export type { CDPSession }
 
@@ -26,15 +28,8 @@ export interface BrowserProviderOption<Options extends object = object> {
   serverFactory: BrowserServerFactory
 }
 
-export interface BrowserServerOptions {
-  project: TestProject
-  coveragePlugin: () => Plugin
-  mocksPlugins: (options: { filter: (id: string) => boolean }) => Plugin[]
-  metaEnvReplacer: () => Plugin
-}
-
 export interface BrowserServerFactory {
-  (options: BrowserServerOptions): Promise<ParentProjectBrowser>
+  (): Promise<BrowserServerContribution>
 }
 
 export interface BrowserProvider {
@@ -170,30 +165,6 @@ export interface BrowserConfigOptions {
    * @default process.env.CI
    */
   headless?: boolean
-
-  /**
-   * Serve API options.
-   *
-   * The default port is 63315.
-   */
-  api?: ApiConfig | number
-
-  /**
-   * Isolate test environment after each test
-   *
-   * @default true
-   * @deprecated use top-level `isolate` instead
-   */
-  isolate?: boolean
-
-  /**
-   * Run test files in parallel if provider supports this option
-   * This option only has effect in headless mode (enabled in CI by default)
-   *
-   * @default // Same as "test.fileParallelism"
-   * @deprecated use top-level `fileParallelism` instead
-   */
-  fileParallelism?: boolean
 
   /**
    * Show Vitest UI
@@ -395,6 +366,49 @@ export interface BrowserServerState {
 export interface ParentProjectBrowser {
   spawn: (project: TestProject) => ProjectBrowser
   vite: ViteDevServer
+  vitest: Vitest
+  config: ResolvedConfig
+}
+
+export interface BrowserServerContribution {
+  transformIndexHtml: (ctx: IndexHtmlTransformContext) => Awaitable<IndexHtmlTransformResult | undefined>
+  configureServer: (server: ViteDevServer) => Awaitable<void>
+  /**
+   * Browser-specific Vite config (`resolve.alias`, `define`, esbuild). Applied
+   * by the core loader plugin's `config` hook during the single project
+   * resolution, so other plugins observe it (e.g. alias must be baked at
+   * resolution time). The loader always forces `server.middlewareMode = false`
+   * on top. `harness` provides the package installer's `isPackageExists` (no
+   * `Vitest` instance is available during resolution).
+   */
+  config: (config: ViteUserConfig, harness: PluginHarness) => Awaitable<ViteUserConfig>
+  /**
+   * Browser `optimizeDeps`, aggregated across every project that shares the
+   * single browser Vite server (instance and benchmark variants). Called by core
+   * after all projects are resolved and before the server is created; the result
+   * is merged into the resolved Vite config's `client` environment
+   * `optimizeDeps`. `testFiles` is the aggregated, already-globbed set of test
+   * files for the server (globbing lives in the core package).
+   */
+  resolveOptimizeDeps: (projectConfigs: ResolvedConfig[], testFiles: string[], harness: PluginHarness) => Awaitable<NonNullable<ViteUserConfig['optimizeDeps']>>
+  /**
+   * Runtime plugins. Injected into the browser (`client`) environment by the
+   * loader's `applyToEnvironment`; their `configureServer`/`transformIndexHtml`
+   * are run by the loader. MUST NOT define `config`/`configResolved` hooks.
+   */
+  plugins: Plugin[]
+  /**
+   * Constructs the `ParentBrowserProject`. Called by core at server creation,
+   * when the `Vitest` instance exists.
+   */
+  createParent: (ctx: { config: ResolvedConfig; vitest: Vitest }) => ParentProjectBrowser
+  /** Called by core after `server.listen()` to wire up the browser RPC. */
+  setupRpc: (parent: ParentProjectBrowser) => void
+  /**
+   * Mutable. Filled by core at server creation; the pushed `BrowserPlugin`
+   * closes over this same object and reads `.parent` in `configureServer`.
+   */
+  parent?: ParentProjectBrowser
 }
 
 export interface ProjectBrowser {
@@ -456,9 +470,6 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   name: string
   enabled: boolean
   headless: boolean
-  isolate: boolean
-  fileParallelism: boolean
-  api: ApiConfig
   ui: boolean
   viewport: {
     width: number

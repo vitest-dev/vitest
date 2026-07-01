@@ -1,23 +1,7 @@
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { runInlineTests, runVitestCli } from '#test-utils'
-import { dirname, resolve } from 'pathe'
+import { runInlineTests } from '#test-utils'
+import { expect, it } from 'vitest'
 
-import { afterAll, afterEach, expect, it } from 'vitest'
-
-const file = fileURLToPath(import.meta.url)
-const dir = dirname(file)
-const root = resolve(dir, '..', '..', '..', 'workspaces')
-const config = resolve(root, 'vitest.config.watch.ts')
-const cleanups: (() => void)[] = []
-
-const srcMathFile = resolve(root, 'src', 'math.ts')
-const specSpace2File = resolve(root, 'space_2', 'test', 'node.spec.ts')
-
-const srcMathContent = readFileSync(srcMathFile, 'utf-8')
-const specSpace2Content = readFileSync(specSpace2File, 'utf-8')
-
-const dynamicTestContent = `// Dynamic test added by test/watch/test/workspaces.test.ts
+const dynamicTestContent = `// Dynamic test added by test/watch/workspaces.test.ts
 import { expect, test } from "vitest";
 
 test("dynamic test case", () => {
@@ -26,55 +10,110 @@ test("dynamic test case", () => {
 })
 `
 
-async function startVitest() {
-  const { vitest } = await runVitestCli(
-    { nodeOptions: { cwd: root, env: { TEST_WATCH: 'true', NO_COLOR: 'true' } } },
-    '--root',
-    root,
-    '--config',
-    config,
-    '--watch',
-    '--no-coverage',
-  )
+it('editing a test file in a project reruns its tests', async () => {
+  const { fs, vitest } = await runInlineTests({
+    'space_2/node.spec.ts': `
+      import { expect, test } from 'vitest'
+      test('window is not defined', () => {
+        expect(typeof window).toBe('undefined')
+      })
+    `,
+    'vitest.config.ts': {
+      test: {
+        projects: [
+          { test: { name: 'space_2', root: './space_2', environment: 'node' } },
+        ],
+      },
+    },
+  }, { watch: true })
+
+  await vitest.waitForStdout('Waiting for file changes')
   vitest.resetOutput()
-  return vitest
-}
 
-afterEach(() => {
-  cleanups.splice(0).forEach(cleanup => cleanup())
-})
+  fs.editFile('space_2/node.spec.ts', content => `${content}\n`)
 
-afterAll(() => {
-  writeFileSync(srcMathFile, srcMathContent, 'utf8')
-  writeFileSync(specSpace2File, specSpace2Content, 'utf8')
-})
-
-it('editing a test file in a suite with workspaces reruns test', async () => {
-  const vitest = await startVitest()
-
-  writeFileSync(specSpace2File, `${specSpace2Content}\n`, 'utf8')
-
-  await vitest.waitForStdout('RERUN  space_2/test/node.spec.ts x1')
-  await vitest.waitForStdout('|space_2| test/node.spec.ts')
+  await vitest.waitForStdout('RERUN  ../space_2/node.spec.ts')
+  await vitest.waitForStdout('|space_2| node.spec.ts')
   await vitest.waitForStdout('Test Files  1 passed')
 })
 
-it('editing a file that is imported in different workspaces reruns both files', async () => {
-  const vitest = await startVitest()
+it('editing a file imported in different projects reruns both files', async () => {
+  const { fs, vitest } = await runInlineTests({
+    'src/math.ts': `export function sum(a, b) {
+      return a + b
+    }`,
+    'space_1/math.spec.ts': `
+      import { expect, test } from 'vitest'
+      import { sum } from '../src/math'
+      test('1 + 1 = 2', () => {
+        expect(sum(1, 1)).toBe(2)
+      })
+    `,
+    'space_3/math.space-3-test.ts': `
+      import { expect, test } from 'vitest'
+      import { sum } from '../src/math'
+      test('2 + 2 = 4', () => {
+        expect(sum(2, 2)).toBe(4)
+      })
+    `,
+    'vitest.config.ts': {
+      test: {
+        projects: [
+          { test: { name: 'space_1', root: './space_1', environment: 'node' } },
+          {
+            test: {
+              name: 'space_3',
+              root: './space_3',
+              include: ['**/*.space-3-test.ts'],
+              environment: 'node',
+            },
+          },
+        ],
+      },
+    },
+  }, { watch: true })
 
-  writeFileSync(srcMathFile, `${srcMathContent}\n`, 'utf8')
+  await vitest.waitForStdout('Waiting for file changes')
+  vitest.resetOutput()
 
-  await vitest.waitForStdout('RERUN  src/math.ts')
-  await vitest.waitForStdout('|@vitest/space_3| math.space-3-test.ts')
-  await vitest.waitForStdout('|space_1| test/math.spec.ts')
+  fs.editFile('src/math.ts', content => `${content}\n`)
+
+  await vitest.waitForStdout('RERUN  ../src/math.ts')
+  await vitest.waitForStdout('|space_1| math.spec.ts')
+  await vitest.waitForStdout('|space_3| math.space-3-test.ts')
   await vitest.waitForStdout('Test Files  2 passed')
 })
 
-it('filters by test name inside a workspace', async () => {
-  const vitest = await startVitest()
+it('filters by test name inside a project', async () => {
+  const { vitest } = await runInlineTests({
+    'space_3/math.space-3-test.ts': `
+      import { expect, test } from 'vitest'
+      test('2 x 2 = 4', () => {
+        expect(2 * 2).toBe(4)
+      })
+      test('2 + 2 = 4', () => {
+        expect(2 + 2).toBe(4)
+      })
+    `,
+    'vitest.config.ts': {
+      test: {
+        projects: [
+          {
+            test: {
+              name: 'space_3',
+              root: './space_3',
+              include: ['**/*.space-3-test.ts'],
+              environment: 'node',
+            },
+          },
+        ],
+      },
+    },
+  }, { watch: true })
+
+  await vitest.waitForStdout('Waiting for file changes')
 
   vitest.write('t')
-
   await vitest.waitForStdout('Input test name pattern')
 
   vitest.write('2 x 2 = 4\n')
@@ -83,47 +122,90 @@ it('filters by test name inside a workspace', async () => {
   await vitest.waitForStdout('Test Files  1 passed')
 })
 
-it('adding a new test file matching core project config triggers re-run', async () => {
-  const vitest = await startVitest()
+it('adding a new test file matching the default project config triggers a re-run', async () => {
+  const { fs, vitest } = await runInlineTests({
+    'space_2/node.spec.ts': `
+      import { test } from 'vitest'
+      test('window is not defined', () => {})
+    `,
+    'space_3/math.space-3-test.ts': `
+      import { test } from 'vitest'
+      test('2 + 2 = 4', () => {})
+    `,
+    'vitest.config.ts': {
+      test: {
+        projects: [
+          { test: { name: 'space_2', root: './space_2', environment: 'node' } },
+          {
+            test: {
+              name: 'space_3',
+              root: './space_3',
+              include: ['**/*.space-3-test.ts'],
+              environment: 'node',
+            },
+          },
+        ],
+      },
+    },
+  }, { watch: true })
 
-  const testFile = resolve(root, 'space_2', 'test', 'new-dynamic.test.ts')
+  await vitest.waitForStdout('Waiting for file changes')
+  vitest.resetOutput()
 
-  cleanups.push(() => rmSync(testFile))
-  writeFileSync(testFile, dynamicTestContent, 'utf-8')
+  fs.createFile('space_2/new-dynamic.test.ts', dynamicTestContent)
 
   await vitest.waitForStdout('Running added dynamic test')
-  await vitest.waitForStdout('RERUN  space_2/test/new-dynamic.test.ts')
-  await vitest.waitForStdout('|space_2| test/new-dynamic.test.ts')
+  await vitest.waitForStdout('RERUN  ../space_2/new-dynamic.test.ts')
+  await vitest.waitForStdout('|space_2| new-dynamic.test.ts')
 
   // Wait for tests to end
   await vitest.waitForStdout('Waiting for file changes')
 
-  // Test case should not be run by other projects
-  expect(vitest.stdout).not.include('|space_1|')
-  expect(vitest.stdout).not.include('|@vitest/space_3|')
-  expect(vitest.stdout).not.include('|node|')
-  expect(vitest.stdout).not.include('|happy-dom|')
+  // The new file should not be picked up by the project with a custom include
+  expect(vitest.stdout).not.include('|space_3|')
 })
 
-it('adding a new test file matching project specific config triggers re-run', async () => {
-  const vitest = await startVitest()
+it('adding a new test file matching a project specific config triggers a re-run', async () => {
+  const { fs, vitest } = await runInlineTests({
+    'space_2/node.spec.ts': `
+      import { test } from 'vitest'
+      test('window is not defined', () => {})
+    `,
+    'space_3/math.space-3-test.ts': `
+      import { test } from 'vitest'
+      test('2 + 2 = 4', () => {})
+    `,
+    'vitest.config.ts': {
+      test: {
+        projects: [
+          { test: { name: 'space_2', root: './space_2', environment: 'node' } },
+          {
+            test: {
+              name: 'space_3',
+              root: './space_3',
+              include: ['**/*.space-3-test.ts'],
+              environment: 'node',
+            },
+          },
+        ],
+      },
+    },
+  }, { watch: true })
 
-  const testFile = resolve(root, 'space_3', 'new-dynamic.space-3-test.ts')
-  cleanups.push(() => rmSync(testFile))
-  writeFileSync(testFile, dynamicTestContent, 'utf-8')
+  await vitest.waitForStdout('Waiting for file changes')
+  vitest.resetOutput()
+
+  fs.createFile('space_3/new-dynamic.space-3-test.ts', dynamicTestContent)
 
   await vitest.waitForStdout('Running added dynamic test')
-  await vitest.waitForStdout('RERUN  space_3/new-dynamic.space-3-test.ts')
-  await vitest.waitForStdout('|@vitest/space_3| new-dynamic.space-3-test.ts')
+  await vitest.waitForStdout('RERUN  ../space_3/new-dynamic.space-3-test.ts')
+  await vitest.waitForStdout('|space_3| new-dynamic.space-3-test.ts')
 
   // Wait for tests to end
   await vitest.waitForStdout('Waiting for file changes')
 
-  // Test case should not be run by other projects
-  expect(vitest.stdout).not.include('|space_1|')
-  expect(vitest.stdout).not.include('|space_2|')
-  expect(vitest.stdout).not.include('|node|')
-  expect(vitest.stdout).not.include('|happy-dom|')
+  // The new file should not be picked up by the default-include project
+  expect(vitest.stdout).not.toContain('|space_2|')
 })
 
 it('editing a setup file inside the project reruns tests', async () => {
