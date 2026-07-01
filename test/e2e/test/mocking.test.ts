@@ -3,7 +3,7 @@ import path from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runInlineTests, runVitest } from '../../test-utils'
+import { runInlineTests, runVitest, StableTestFileOrderSorter } from '../../test-utils'
 
 test('setting resetMocks works if restoreMocks is also set', async () => {
   const { stderr, testTree } = await runInlineTests({
@@ -506,6 +506,68 @@ test("local", async () => {
       },
       "local.test.ts": {
         "local": "passed",
+      },
+    }
+  `)
+})
+
+test('automocking works with isolate:false when factory mock runs first (resolve alias)', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': `
+import path from 'node:path'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '~': path.resolve(import.meta.dirname, 'src'),
+    },
+  },
+  test: {
+    isolate: false,
+  },
+})
+    `,
+    './src/dep.ts': `
+export function useDep(): string { return 'real' }
+export function helperDep(): number { return 42 }
+    `,
+    './a-factory.test.ts': `
+import { vi, test, expect } from 'vitest'
+import { useDep } from '~/dep'
+vi.mock(import('~/dep'), () => ({
+  useDep: () => 'factory',
+  helperDep: () => 0,
+}))
+test('factory mock', () => {
+  expect(useDep()).toBe('factory')
+})
+    `,
+    './b-automock.test.ts': `
+import { vi, test, expect } from 'vitest'
+import { useDep } from '~/dep'
+vi.mock(import('~/dep'))
+test('automock exports are mock functions', () => {
+  expect(vi.isMockFunction(useDep)).toBe(true)
+})
+test('automock mockReturnValue works', () => {
+  vi.mocked(useDep).mockReturnValue('mocked')
+  expect(useDep()).toBe('mocked')
+})
+    `,
+  }, {
+    sequence: { sequencer: StableTestFileOrderSorter },
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a-factory.test.ts": {
+        "factory mock": "passed",
+      },
+      "b-automock.test.ts": {
+        "automock exports are mock functions": "passed",
+        "automock mockReturnValue works": "passed",
       },
     }
   `)
