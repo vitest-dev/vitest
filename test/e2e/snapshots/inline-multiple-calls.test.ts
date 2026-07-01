@@ -247,12 +247,28 @@ Received: ""test2""
     include: [testFile],
     update: false,
   })
-  expect(vitest.stderr).toContain(`
-Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+  expect(vitest.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-Expected: ""test1""
-Received: ""test2""
-`)
+     FAIL  different.test.ts > single
+    Error: Snapshot \`single 2\` mismatched
+
+    Expected: ""test1""
+    Received: ""test2""
+
+     ❯ different.test.ts:5:19
+          3| test('single', () => {
+          4|   for (const value of ["test1", "test2"]) {
+          5|     expect(value).toMatchInlineSnapshot(\`"test1"\`)
+           |                   ^
+          6|   }
+          7| })
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
 
   // current snapshot is "test2"
@@ -348,12 +364,29 @@ Received: ""test2""
     include: [testFile],
     update: false,
   })
-  expect(vitest.stderr).toContain(`
-Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+  expect(vitest.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-Expected: ""test1""
-Received: ""test2""
-`)
+     FAIL  different2.test.ts > b
+    Error: Snapshot \`b 1\` mismatched
+
+    Expected: ""test1""
+    Received: ""test2""
+
+     ❯ snap different2.test.ts:12:17
+         10|
+         11| function snap(value: unknown) {
+         12|   expect(value).toMatchInlineSnapshot(\`"test1"\`)
+           |                 ^
+         13| }
+         14|
+     ❯ different2.test.ts:8:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
 
   // current snapshot is "test2"
@@ -459,7 +492,7 @@ test('test.each/for', async () => {
   result = await runVitest({ root, include: [testFile], update: false })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  each.test.ts > test hey
     Error: Snapshot \`test hey 1\` mismatched
@@ -475,23 +508,7 @@ test('test.each/for', async () => {
           5| });
           6|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
-
-     FAIL  each.test.ts > test world
-    Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
-
-    Expected: "3"
-    Received: "5"
-
-     ❯ each.test.ts:4:22
-          2|
-          3| test.for(["hey", "world"])("test %s", (arg) => {
-          4|   expect(arg.length).toMatchInlineSnapshot(\`5\`);
-           |                      ^
-          5| });
-          6|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
 
      FAIL  each.test.ts > suite hey > length
     Error: Snapshot \`suite hey > length 1\` mismatched
@@ -507,23 +524,7 @@ test('test.each/for', async () => {
          10|   });
          11| });
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
-
-     FAIL  each.test.ts > suite world > length
-    Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
-
-    Expected: "3"
-    Received: "5"
-
-     ❯ each.test.ts:9:24
-          7| describe.for(["hey", "world"])("suite %s", (arg) => {
-          8|   test("length", () => {
-          9|     expect(arg.length).toMatchInlineSnapshot(\`5\`);
-           |                        ^
-         10|   });
-         11| });
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
 
      FAIL  each.test.ts > toThrowErrorMatchingInlineSnapshot hey
     Error: Snapshot \`toThrowErrorMatchingInlineSnapshot hey 1\` mismatched
@@ -539,23 +540,7 @@ test('test.each/for', async () => {
          17| });
          18|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
-
-     FAIL  each.test.ts > toThrowErrorMatchingInlineSnapshot world
-    Error: toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location
-
-    Expected: "[Error: length = 3]"
-    Received: "[Error: length = 5]"
-
-     ❯ each.test.ts:16:6
-         14|   expect(() => {
-         15|     throw new Error(\`length = \${arg.length}\`);
-         16|   }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
-           |      ^
-         17| });
-         18|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
     "
   `)
@@ -568,22 +553,16 @@ test('test.each/for', async () => {
           ],
         },
         "suite world": {
-          "length": [
-            "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
-          ],
+          "length": "passed",
         },
         "test hey": [
           "Snapshot \`test hey 1\` mismatched",
         ],
-        "test world": [
-          "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
-        ],
+        "test world": "passed",
         "toThrowErrorMatchingInlineSnapshot hey": [
           "Snapshot \`toThrowErrorMatchingInlineSnapshot hey 1\` mismatched",
         ],
-        "toThrowErrorMatchingInlineSnapshot world": [
-          "toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location",
-        ],
+        "toThrowErrorMatchingInlineSnapshot world": "passed",
       },
     }
   `)
@@ -597,8 +576,8 @@ test('test.each/for', async () => {
       "filesRemovedList": [],
       "filesUnmatched": 1,
       "filesUpdated": 0,
-      "matched": 0,
-      "total": 3,
+      "matched": 3,
+      "total": 6,
       "unchecked": 0,
       "uncheckedKeysByFile": [],
       "unmatched": 3,
