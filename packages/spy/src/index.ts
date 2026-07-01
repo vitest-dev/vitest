@@ -500,6 +500,23 @@ function createMock(
       try {
         if (new.target) {
           returnValue = Reflect.construct(implementation, args, new.target)
+          const implementationPrototype = (implementation as any).prototype
+          if (
+            // prototypeMembers is used by automocking case and we want to skip that case.
+            prototypeMembers.length === 0
+            && new.target.prototype
+            && implementationPrototype
+            // skip when constructor returns value
+            && Object.getPrototypeOf(returnValue) === new.target.prototype
+          ) {
+            const { properties, descriptors } = getAllProperties(implementationPrototype)
+            for (const property of properties) {
+              if (property === 'constructor' || property in returnValue) {
+                continue
+              }
+              Object.defineProperty(returnValue, property, descriptors[property]!)
+            }
+          }
 
           // jest calls this before the implementation, but we have to resolve this _after_
           // because we cannot do it before the `Reflect.construct` called the custom implementation.
