@@ -23,7 +23,7 @@ export function defineBrowserCommand<T extends unknown[]>(
 }
 
 // export type { ProjectBrowser } from './project'
-export { parseKeyDef, resolveScreenshotPath } from './utils'
+export { assertBrowserApiWrite, assertBrowserFileAccess, parseKeyDef, resolveScreenshotPath } from './utils'
 
 export const createBrowserServer: BrowserServerFactory = async (options) => {
   const project = options.project
