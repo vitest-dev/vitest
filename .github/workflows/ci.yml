@@ -184,24 +184,25 @@ jobs:
 
   test-browser:
     needs: changed
-    name: "Browsers: ${{ matrix.browser || 'all' }}, node-24, ${{ matrix.os }}"
+    name: "Browsers: ${{ matrix.shard && format('shard {0}/3', matrix.shard) || 'all' }}, node-24, ${{ matrix.os }}"
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
     strategy:
-      # Windows has runner headroom, so split the slow browser job per browser to
-      # run them in parallel. macOS is capped at ~5 concurrent runners, so keep it
-      # a single job that runs all three browsers (empty TEST_BROWSER = all).
+      # Windows has runner headroom, so shard the specs across runners to run them
+      # in parallel. Each shard still runs every browser instance, so browser
+      # coverage and the suite's all-instance expectations are unchanged. macOS is
+      # capped at ~5 concurrent runners, so it runs the whole suite in one job.
       matrix:
         include:
           - os: windows-latest
-            browser: chromium
+            shard: 1
           - os: windows-latest
-            browser: firefox
+            shard: 2
           - os: windows-latest
-            browser: webkit
+            shard: 3
           - os: macos-latest
-            browser: ''
+            shard: ''
       fail-fast: false
 
     timeout-minutes: 30
@@ -224,9 +225,7 @@ jobs:
         run: pnpm run build
 
       - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
-        env:
-          TEST_BROWSER: ${{ matrix.browser }}
+        run: pnpm run test:browser:playwright ${{ matrix.shard && format('--shard={0}/3', matrix.shard) || '' }}
 
   test-vite7:
     needs: changed
@@ -270,10 +269,9 @@ jobs:
 
       - name: Test Browser (playwright)
         if: ${{ matrix.suite == 'browser' && !cancelled() }}
-        run: pnpm run test:browser:playwright
-        # vite7 is a smoke: chromium is representative of browser-mode compat
-        env:
-          TEST_BROWSER: chromium
+        # smoke: runner.test.ts exercises the core browser-runner behaviour across
+        # every instance, enough to catch vite7 browser-mode regressions
+        run: pnpm run test:browser:playwright runner.test.ts
 
   merge-reports:
     needs:
