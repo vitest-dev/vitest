@@ -41,7 +41,7 @@ export default defineConfig({
           testTimeout: 60_000,
           isolate: false,
           fileParallelism: true,
-          maxWorkers: 2,
+          maxWorkers: Number(process.env.VITEST_E2E_MAX_WORKERS) || 2,
           // TODO: should enabled when support for older node is dropped?
           // experimental: {
           //   viteModuleRunner: false,
