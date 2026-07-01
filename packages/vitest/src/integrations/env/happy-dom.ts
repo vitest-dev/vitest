@@ -82,7 +82,7 @@ export default <Environment>{
       async teardown(global) {
         await teardownWindow(win)
         keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => (global[k] = v))
+        originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }
   },

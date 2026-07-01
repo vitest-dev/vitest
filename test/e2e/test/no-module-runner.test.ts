@@ -712,7 +712,7 @@ test('2+2=4', () => {
       `)
     })
 
-    test('with --experimental-transform-types is supported', async () => {
+    test.runIf(process.allowedNodeEnvironmentFlags.has('--experimental-transform-types'))('with --experimental-transform-types is supported', async () => {
       const { errorTree } = await runNoViteModuleRunnerTests(
         {
           'add.cts': /* ts */`
