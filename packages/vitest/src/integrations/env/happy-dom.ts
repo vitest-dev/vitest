@@ -2,10 +2,17 @@ import type { Environment } from '../../types/environment'
 import { populateGlobal } from './utils'
 
 async function teardownWindow(win: {
-  happyDOM: { abort?: () => Promise<void>; cancelAsync: () => void }
+  happyDOM: {
+    abort?: () => Promise<void>
+    close?: () => Promise<void>
+    cancelAsync: () => void
+  }
   close?: () => void
 }) {
-  if (win.close && win.happyDOM.abort) {
+  if (win.close && win.happyDOM.close) {
+    await win.happyDOM.close()
+  }
+  else if (win.close && win.happyDOM.abort) {
     await win.happyDOM.abort()
     win.close()
   }
@@ -75,6 +82,15 @@ export default <Environment>{
         'URL',
         'URLSearchParams',
         'FormData',
+
+        // in order for happy-dom to be able to teardown timers, we need to use the implementation from happy-dom
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+        'requestAnimationFrame',
+        'cancelAnimationFrame',
+        'queueMicrotask',
       ],
     })
 
