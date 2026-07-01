@@ -13,6 +13,10 @@ outline: deep
 Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
 :::
 
+::: warning Prerequisites
+Vitest 5.0 requires Vite >= 6.4.0 and Node.js >= 22.12.0. Before proceeding with any other migration steps, ensure your environment meets these requirements. Running Vitest 5.0 on older versions of Vite or Node.js is not supported and may result in unexpected errors.
+:::
+
 ### `clearMocks` is Enabled by Default
 
 [`clearMocks`](/config/#clearmocks) now defaults to `true`. Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, resetting the `mock.calls`, `mock.instances`, `mock.contexts` and `mock.results` of every mock. Mock implementations are left intact, so this only affects the recorded history.
@@ -51,6 +55,40 @@ export default defineConfig({
   },
 })
 ```
+
+### Hoisted Mocking Calls Must Be at the Top Level
+
+[`vi.mock`](/api/vi#vi-mock), [`vi.unmock`](/api/vi#vi-unmock), and [`vi.hoisted`](/api/vi#vi-hoisted) are hoisted to the top of the file and run before any surrounding code. Calling them inside a function, block, or `describe`/`test` callback previously only logged a warning. Vitest 5.0 now throws, because the call does not execute where it is written:
+
+```ts
+describe('calculator', () => {
+  vi.mock('./calculator') // [!code --]
+})
+
+vi.mock('./calculator') // [!code ++]
+
+describe('calculator', () => {
+  // ...
+})
+```
+
+The error reports every offending call and its location:
+
+```
+1 call in "calculator.test.ts" was defined outside of the module's top level scope:
+
+- vi.mock("./calculator") at calculator.test.ts:2:3
+
+Although it appears nested, it will be hoisted and executed before anything in this file. Move it to the top level to reflect its actual execution order.
+```
+
+The dynamic variants [`vi.doMock`](/api/vi#vi-domock) and [`vi.doUnmock`](/api/vi#vi-dounmock) are not hoisted and may still be called anywhere.
+
+### Automocked Modules Stay Automocked in the Browser
+
+In browser mode, mock metadata is serialized between Vitest and the test iframe. An automocked module (a [`vi.mock`](/api/vi#vi-mock) call with no factory) was incorrectly restored as a spy on the other side, so its exports kept calling the real implementation instead of the auto-generated stubs.
+
+Automocks are now restored as automocks. If a browser test relied on the original implementation running through an automocked module, its exports now return `undefined` by default. Pass [`{ spy: true }`](/api/vi#vi-mock) to keep calling the real implementation while still tracking calls, or provide a factory with the behavior you need.
 
 ### Benchmarking API Rewrite
 
@@ -109,6 +147,50 @@ Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 vi.useFakeTimers({ toNotFake: ['Temporal'] })
 ```
 
+### `toThrow("")` Matches Any Error Message
+
+[`toThrow`](/api/expect#tothrow) (and its alias `toThrowError`) treats a string argument as a substring of the error message. In Vitest 4 an empty string was special-cased to the `/^$/` pattern, so it matched only an error whose message was empty. It now behaves like any other substring, and an empty string is contained in every message:
+
+```ts
+expect(() => { throw new Error('boom') }).not.toThrow('') // [!code --]
+expect(() => { throw new Error('boom') }).toThrow('') // [!code ++]
+```
+
+To assert that a thrown error has an empty message, match the pattern explicitly:
+
+```ts
+expect(() => { throw new Error('boom') }).not.toThrow(/^$/)
+```
+
+### `expect.poll` Fails When It Times Out
+
+[`expect.poll`](/api/expect#poll) now rejects when its callback, or the polled assertion, does not settle within `timeout`. Previously a callback that resolved after the deadline, or an assertion that only passed on a late attempt, could still succeed. The callback now also receives an `AbortSignal` that aborts when the timeout elapses, so you can cancel in-flight work:
+
+```ts
+await expect.poll(async ({ signal }) => {
+  const response = await fetch('/api/status', { signal })
+  return response.status
+}, { timeout: 1000 }).toBe(200)
+```
+
+A poll that legitimately needs more time should raise its `timeout`. Otherwise it fails with `expect.poll() function didn't resolve in time.` (or `expect.poll() assertion didn't resolve in time.`).
+
+### Test Titles and Inspected Values Use `pretty-format`
+
+Vitest now formats values with [`pretty-format`](https://www.npmjs.com/package/pretty-format) instead of `loupe` when it inspects them, including the values interpolated into [`test.each`](/api/test#test-each) and [`test.for`](/api/test#test-for) titles. The rendering of some values changes, so snapshots or assertions that capture inspected output may need updating.
+
+Two changes are specific to generated test titles:
+
+- A string value interpolated through a `$` placeholder is no longer wrapped in quotes:
+
+```ts
+test.for([{ id: 'a1' }])('case $id', ({ id }) => { /* ... */ })
+// v4 title: case 'a1' // [!code --]
+// v5 title: case a1   // [!code ++]
+```
+
+- The length limit for interpolated values is now controlled by the new [`taskTitleValueFormatTruncate`](/config/tasktitlevalueformattruncate) option (default `40`).
+
 ### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
 
 Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.
@@ -163,19 +245,6 @@ const locator = page.getByText('Hello, World', { exact: true })
 await locator.click()
 ```
 
-### Removed Deprecated Entrypoints
-
-Several entry points were marked as deprecated in Vitest 4.1. This release removes them entirely.
-
-- `vitest/coverage`: use `vitest/node` instead
-- `vitest/reporters`: use `vitest/node` instead
-- `vitest/environments`: use `vitest/runtime` instead
-- `vitest/snapshot`: use `vitest/runtime` instead
-- `vitest/runners`: use `TestRunner` from `vitest` instead
-- `vitest/suite`: use static methods on `TestRunner` from vitest instead (for example, `TestRunner.getCurrentTest()`)
-- `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
-- `vitest/internal/module-runner` is removed
-
 ### `toHaveTextContent` Now Performs Strict Equality
 
 The browser-mode [`toHaveTextContent`](/api/browser/assertions#tohavetextcontent) matcher now validates that an element's text content is exactly equal to the expected string instead of performing a partial, case-sensitive match. Regular expressions are no longer accepted. The previous behaviour, including `RegExp` support, has moved to the new [`toMatchTextContent`](/api/browser/assertions#tomatchtextcontent) matcher.
@@ -189,6 +258,22 @@ await expect.element(banner).toMatchTextContent(/error/i) // [!code ++]
 
 // Exact matches stay on `toHaveTextContent`:
 await expect.element(banner).toHaveTextContent('Error!')
+```
+
+### `render` Is Async in `vitest-browser-vue` and `vitest-browser-svelte`
+
+The companion component-testing packages [`vitest-browser-vue`](https://npmx.dev/package/vitest-browser-vue) and [`vitest-browser-svelte`](https://npmx.dev/package/vitest-browser-svelte) now return a promise from `render`, so the call must be awaited before you query the rendered output:
+
+```ts
+import { render } from 'vitest-browser-vue'
+import Component from './Component.vue'
+
+test('renders', async () => {
+  const screen = render(Component) // [!code --]
+  const screen = await render(Component) // [!code ++]
+
+  await expect.element(screen.getByRole('heading')).toBeVisible()
+})
 ```
 
 ### Glob Coverage Thresholds No Longer Inherit `perFile`
@@ -211,6 +296,24 @@ export default defineConfig({
   },
 })
 ```
+
+### Coverage `include` and `exclude` Match More Precisely
+
+`coverage.include` and `coverage.exclude` were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. For example, a pattern could match a file because a parent directory in its absolute path happened to contain the same segment. Patterns are now matched against each file's path relative to the project root, without `contains`.
+
+A pattern with no glob wildcard is treated as a directory and expanded to match everything inside it:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      include: ['src'], // matches src/**, not every path that contains "src"
+    },
+  },
+})
+```
+
+Review your `include` and `exclude` patterns after upgrading and confirm the reported file set is what you expect. Files that were previously matched only by the looser behavior may no longer be included.
 
 ### Config Files Are Not Looked Up From Parent Directories
 
@@ -269,501 +372,45 @@ This has now been fixed by introducing a dedicated option: `browser.expect.toMat
 
     Then either move existing reference screenshots to the new location or regenerate them.
 
-## Migrating to Vitest 4.0 {#vitest-4}
+### Worker and Concurrency Ids Are 1-based
 
-::: warning Prerequisites
-Vitest 4.0 requires **Vite >= 6.0.0** and **Node.js >= 20.0.0**. Before proceeding
-with any other migration steps, ensure your environment meets these requirements.
-Running Vitest 4.0 on older versions of Vite or Node.js is not supported and may
-result in unexpected errors.
-:::
+Worker and pool identifiers now start at `1` instead of `0`. This changes the values of the `VITEST_POOL_ID` and `VITEST_WORKER_ID` environment variables, which now range from `1` to the worker count. Update any logic that derives a value from these ids, such as a per-worker database name or an array index.
 
-### V8 Code Coverage Major Changes
-
-Vitest's V8 code coverage provider is now using more accurate coverage result remapping logic.
-It is expected for users to see changes in their coverage reports when updating from Vitest v3.
-
-In the past Vitest used [`v8-to-istanbul`](https://github.com/istanbuljs/v8-to-istanbul) for remapping V8 coverage results into your source files.
-This method wasn't very accurate and provided plenty of false positives in the coverage reports.
-We've now developed a new package that utilizes AST based analysis for the V8 coverage.
-This allows V8 reports to be as accurate as `@vitest/coverage-istanbul` reports.
-
-- Coverage ignore hints have updated. See [Coverage | Ignoring Code](/guide/coverage.html#ignoring-code).
-- `coverage.ignoreEmptyLines` is removed. Lines without runtime code are no longer included in reports.
-- `coverage.experimentalAstAwareRemapping` is removed. This option is now enabled by default, and is the only supported remapping method.
-- `coverage.ignoreClassMethods` is now supported by V8 provider too.
-
-### Removed Options `coverage.all` and `coverage.extensions`
-
-In previous versions Vitest included all uncovered files in coverage report by default.
-This was due to `coverage.all` defaulting to `true`, and `coverage.include` defaulting to `**`.
-These default values were chosen for a good reason - it is impossible for testing tools to guess where users are storing their source files.
-
-This ended up having Vitest's coverage providers processing unexpected files, like minified Javascript, leading to slow/stuck coverage report generations.
-In Vitest v4 we have removed `coverage.all` completely and <ins>**defaulted to include only covered files in the report**</ins>.
-
-When upgrading to v4 it is recommended to define `coverage.include` in your configuration, and then start applying simple `coverage.exclude` patterns if needed.
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    coverage: {
-      // Include covered and uncovered files matching this pattern:
-      include: ['packages/**/src/**.{js,jsx,ts,tsx}'], // [!code ++]
-
-      // Exclusion is applied for the files that match include pattern above
-      // No need to define root level *.config.ts files or node_modules, as we didn't add those in include
-      exclude: ['**/some-pattern/**'], // [!code ++]
-
-      // These options are removed now
-      all: true, // [!code --]
-      extensions: ['js', 'ts'], // [!code --]
-    }
-  }
-})
-```
-
-If `coverage.include` is not defined, coverage report will include only files that were loaded during test run:
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    coverage: {
-      // Include not set, include only files that are loaded during test run
-      include: undefined, // [!code ++]
-
-      // Loaded files that match this pattern will be excluded:
-      exclude: ['**/some-pattern/**'], // [!code ++]
-    }
-  }
-})
-```
-
-See also new guides:
-- [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
-- [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
-
-### Simplified `exclude`
-
-By default, Vitest now only excludes tests from `node_modules` and `.git` folders. This means that Vitest no longer excludes:
-
-- `dist` and `cypress` folders
-- `.idea`, `.cache`, `.output`, `.temp` folders
-- config files like `rollup.config.js`, `prettier.config.js`, `ava.config.js` and so on
-
-If you need to limit the directory where your tests files are located, use the [`test.dir`](/config/dir) option instead because it is more performant than excluding files:
+For custom reporters, the [`TestModule`](/api/advanced/test-module#diagnostic) diagnostics now expose both ids: the existing `workerId` (now 1-based) and a new `concurrencyId`.
 
 ```ts
-import { configDefaults, defineConfig } from 'vitest/config'
+import type { Reporter, TestModule } from 'vitest/node'
 
-export default defineConfig({
-  test: {
-    dir: './frontend/tests', // [!code ++]
-  },
-})
-```
-
-To restore the previous behaviour, specify old `excludes` manually:
-
-```ts
-import { configDefaults, defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    exclude: [
-      ...configDefaults.exclude,
-      '**/dist/**', // [!code ++]
-      '**/cypress/**', // [!code ++]
-      '**/.{idea,git,cache,output,temp}/**', // [!code ++]
-      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*' // [!code ++]
-    ],
-  },
-})
-```
-
-### `spyOn` and `fn` Support Constructors
-
-Previously, if you tried to spy on a constructor with `vi.spyOn`, you would get an error like `Constructor <name> requires 'new'`. Since Vitest 4, all mocks called with a `new` keyword construct the instance instead of calling `mock.apply`. This means that the mock implementation has to use either the `function` or the `class` keyword in these cases:
-
-```ts {12-14,16-20}
-const cart = {
-  Apples: class Apples {
-    getApples() {
-      return 42
-    }
-  }
-}
-
-const Spy = vi.spyOn(cart, 'Apples')
-  .mockImplementation(() => ({ getApples: () => 0 })) // [!code --]
-  // with a function keyword
-  .mockImplementation(function () {
-    this.getApples = () => 0
-  })
-  // with a custom class
-  .mockImplementation(class MockApples {
-    getApples() {
-      return 0
-    }
-  })
-
-const mock = new Spy()
-```
-
-Note that now if you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
-
-### Changes to Mocking
-
-Alongside new features like supporting constructors, Vitest 4 creates mocks differently to address several module mocking issues that we received over the years. This release attempts to make module spies less confusing, especially when working with classes.
-
-- `vi.fn().getMockName()` now returns `vi.fn()` by default instead of `spy`. This can affect snapshots with mocks - the name will be changed from `[MockFunction spy]` to `[MockFunction]`. Spies created with `vi.spyOn` will keep using the original name by default for better debugging experience
-- `vi.restoreAllMocks` no longer resets the state of spies and only restores spies created manually with `vi.spyOn`, automocks are no longer affected by this function (this also affects the config option [`restoreMocks`](/config/restoremocks)). Note that `.mockRestore` will still reset the mock implementation and clear the state
-- Calling `vi.spyOn` on a mock now returns the same mock
-- `mock.settledResults` are now populated immediately on function invocation with an `'incomplete'` result. When the promise is finished, the type is changed according to the result.
-- Automocked instance methods are now properly isolated, but share a state with the prototype. Overriding the prototype implementation will always affect instance methods unless the methods have a custom mock implementation of their own. Calling `.mockReset` on the mock also no longer breaks that inheritance.
-```ts
-import { AutoMockedClass } from './example.js'
-const instance1 = new AutoMockedClass()
-const instance2 = new AutoMockedClass()
-
-instance1.method.mockReturnValue(42)
-
-expect(instance1.method()).toBe(42)
-expect(instance2.method()).toBe(undefined)
-
-expect(AutoMockedClass.prototype.method).toHaveBeenCalledTimes(2)
-
-instance1.method.mockReset()
-AutoMockedClass.prototype.method.mockReturnValue(100)
-
-expect(instance1.method()).toBe(100)
-expect(instance2.method()).toBe(100)
-
-expect(AutoMockedClass.prototype.method).toHaveBeenCalledTimes(4)
-```
-- Automocked methods can no longer be restored, even with a manual `.mockRestore`. Automocked modules with `spy: true` will keep working as before
-- Automocked getters no longer call the original getter. By default, automocked getters now return `undefined`. You can keep using `vi.spyOn(object, name, 'get')` to spy on a getter and change its implementation
-- The mock `vi.fn(implementation).mockReset()` now correctly returns the mock implementation in `.getMockImplementation()`
-- `vi.fn().mock.invocationCallOrder` now starts with `1`, like Jest does, instead of `0`
-
-### Standalone Mode with Filename Filter
-
-To improve user experience, Vitest will now start running the matched files when [`--standalone`](/guide/cli#standalone) is used with filename filter.
-
-```sh
-# In Vitest v3 and below this command would ignore "math.test.ts" filename filter.
-# In Vitest v4 the math.test.ts will run automatically.
-$ vitest --standalone math.test.ts
-```
-
-This allows users to create re-usable `package.json` scripts for standalone mode.
-
-::: code-group
-```json [package.json]
-{
-  "scripts": {
-    "test:dev": "vitest --standalone"
+class MyReporter implements Reporter {
+  onTestModuleEnd(testModule: TestModule) {
+    const { workerId, concurrencyId } = testModule.diagnostic()
   }
 }
 ```
-```bash [CLI]
-# Start Vitest in standalone mode, without running any files on start
-$ pnpm run test:dev
 
-# Run math.test.ts immediately
-$ pnpm run test:dev math.test.ts
-```
-:::
+Node.js and browser tests run in separate pools and do not share these ids, so the same value can appear in both.
 
-### Replacing `vite-node` with [Module Runner](https://vite.dev/guide/api-environment-runtimes.html#modulerunner)
+### Package Migration
 
-Module Runner is a successor to `vite-node` implemented directly in Vite. Vitest now uses it directly instead of having a wrapper around Vite SSR handler. This means that certain features are no longer available:
+The following packages are deprecated as of this release. They will no longer receive feature updates, but security fixes will continue to be backported:
 
-- `VITE_NODE_DEPS_MODULE_DIRECTORIES` environment variable was replaced with `VITEST_MODULE_DIRECTORIES`
-- Vitest no longer injects `__vitest_executor` into every [test runner](/api/advanced/runner). Instead, it injects `moduleRunner` which is an instance of [`ModuleRunner`](https://vite.dev/guide/api-environment-runtimes.html#modulerunner)
-- `vitest/execute` entry point was removed. It was always meant to be internal
-- [Custom environments](/guide/environment) no longer need to provide a `transformMode` property. Instead, provide `viteEnvironment`. If it is not provided, Vitest will use the environment name to transform files on the server (see [`server.environments`](https://vite.dev/guide/api-environment-instances.html))
-- `vite-node` is no longer a dependency of Vitest
-- `deps.optimizer.web` was renamed to [`deps.optimizer.client`](/config/deps#deps-client). You can also use any custom names to apply optimizer configs when using other server environments
+- [`@vitest/runner`](https://npmx.dev/package/@vitest/runner)
+- [`@vitest/ws-client`](https://npmx.dev/package/@vitest/ws-client)
 
-Vite has its own externalization mechanism, but we decided to keep using the old one to reduce the amount of breaking changes. You can keep using [`server.deps`](/config/server#deps) to inline or externalize packages.
+The [`@vitest/browser-webdriverio`](https://npmx.dev/package/@vitest/browser-webdriverio) provider has been moved to the [vitest-community](https://github.com/vitest-community/vitest-webdriverio) organization. Going forward, WebdriverIO support is community-maintained and addressed on a per-issue basis. If you use it, update your dependency to the new package and report any issues in the new repository.
 
-This update should not be noticeable unless you rely on advanced features mentioned above.
+### Removed Deprecated Entrypoints
 
-### `workspace` is Replaced with `projects`
+Several entry points were marked as deprecated in Vitest 4.1. This release removes them entirely.
 
-The `workspace` configuration option was renamed to [`projects`](/guide/projects) in Vitest 3.2. They are functionally the same, except you cannot specify another file as the source of your workspace (previously you could specify a file that would export an array of projects). Migrating to `projects` is easy, just move the code from `vitest.workspace.js` to `vitest.config.ts`:
-
-::: code-group
-```ts [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    workspace: './vitest.workspace.js', // [!code --]
-    projects: [ // [!code ++]
-      './packages/*', // [!code ++]
-      { // [!code ++]
-        test: { // [!code ++]
-          name: 'unit', // [!code ++]
-        }, // [!code ++]
-      }, // [!code ++]
-    ] // [!code ++]
-  }
-})
-```
-```ts [vitest.workspace.js]
-import { defineWorkspace } from 'vitest/config' // [!code --]
-
-export default defineWorkspace([ // [!code --]
-  './packages/*', // [!code --]
-  { // [!code --]
-    test: { // [!code --]
-      name: 'unit', // [!code --]
-    }, // [!code --]
-  } // [!code --]
-]) // [!code --]
-```
-:::
-
-### Browser Provider Rework
-
-In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). The `preview` is no longer a default. This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
-
-```ts
-import { playwright } from '@vitest/browser-playwright' // [!code ++]
-
-export default defineConfig({
-  test: {
-    browser: {
-      provider: 'playwright', // [!code --]
-      provider: playwright({ // [!code ++]
-        launchOptions: { // [!code ++]
-          slowMo: 100, // [!code ++]
-        }, // [!code ++]
-      }), // [!code ++]
-      instances: [
-        {
-          browser: 'chromium',
-          launch: { // [!code --]
-            slowMo: 100, // [!code --]
-          }, // [!code --]
-        },
-      ],
-    },
-  },
-})
-```
-
-The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
-
-With this change, the `@vitest/browser` package is no longer needed, and you can remove it from your dependencies. To support the context import, you should update the `@vitest/browser/context` to `vitest/browser`:
-
-```ts
-import { page } from '@vitest/browser/context' // [!code --]
-import { page } from 'vitest/browser' // [!code ++]
-
-test('example', async () => {
-  await page.getByRole('button').click()
-})
-```
-
-The modules are identical, so doing a simple "Find and Replace" should be sufficient.
-
-If you were using the `@vitest/browser/utils` module, you can now import those utilities from `vitest/browser` as well:
-
-```ts
-import { getElementError } from '@vitest/browser/utils' // [!code --]
-import { utils } from 'vitest/browser' // [!code ++]
-const { getElementError } = utils // [!code ++]
-```
-
-::: warning
-Both `@vitest/browser/context` and `@vitest/browser/utils` work at runtime during the transition period, but they will be removed in a future release.
-:::
-
-### Pool Rework
-
-Vitest has used [`tinypool`](https://github.com/tinylibs/tinypool) for orchestrating how test files are run in the test runner workers. Tinypool has controlled how complex tasks like parallelism, isolation and IPC communication works internally. However we've found that Tinypool has some flaws that are slowing down development of Vitest. In Vitest v4 we've completely removed Tinypool and rewritten how pools work without new dependencies. Read more about reasoning from [feat!: rewrite pools without tinypool #8705
-](https://github.com/vitest-dev/vitest/pull/8705).
-
-New pool architecture allows Vitest to simplify many previously complex configuration options:
-
-- `maxThreads` and `maxForks` are now `maxWorkers`.
-- Environment variables `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` are now `VITEST_MAX_WORKERS`.
-- `singleThread` and `singleFork` are now `maxWorkers: 1, isolate: false`. If your tests were relying on module reset between tests, you'll need to add [setupFile](/config/setupfiles) that calls [`vi.resetModules()`](/api/vi.html#vi-resetmodules) in [`beforeAll` test hook](/api/hooks#beforeall).
-- `poolOptions` is removed. All previous `poolOptions` are now top-level options. The `memoryLimit` of VM pools is renamed to `vmMemoryLimit`.
-- `threads.useAtomics` is removed. If you have a use case for this, feel free to open a new feature request.
-- Custom pool interface has been rewritten, see [Custom Pool](/guide/advanced/pool#custom-pool)
-
-```ts
-export default defineConfig({
-  test: {
-    poolOptions: { // [!code --]
-      forks: { // [!code --]
-        execArgv: ['--expose-gc'], // [!code --]
-        isolate: false, // [!code --]
-        singleFork: true, // [!code --]
-      }, // [!code --]
-      vmThreads: { // [!code --]
-        memoryLimit: '300Mb' // [!code --]
-      }, // [!code --]
-    }, // [!code --]
-    execArgv: ['--expose-gc'], // [!code ++]
-    isolate: false, // [!code ++]
-    maxWorkers: 1, // [!code ++]
-    vmMemoryLimit: '300Mb', // [!code ++]
-  }
-})
-```
-
-Previously it was not possible to specify some pool related options per project when using [Vitest Projects](/guide/projects). With the new architecture this is no longer a blocker.
-
-::: code-group
-```ts [Isolation per project]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    projects: [
-      {
-        // Non-isolated unit tests
-        name: 'Unit tests',
-        isolate: false,
-        exclude: ['**.integration.test.ts'],
-      },
-      {
-        // Isolated integration tests
-        name: 'Integration tests',
-        include: ['**.integration.test.ts'],
-      },
-    ],
-  },
-})
-```
-```ts [Parallel & Sequential projects]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    projects: [
-      {
-        name: 'Parallel',
-        exclude: ['**.sequential.test.ts'],
-      },
-      {
-        name: 'Sequential',
-        include: ['**.sequential.test.ts'],
-        fileParallelism: false,
-      },
-    ],
-  },
-})
-```
-```ts [Node CLI options per project]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    projects: [
-      {
-        name: 'Production env',
-        execArgv: ['--env-file=.env.prod']
-      },
-      {
-        name: 'Staging env',
-        execArgv: ['--env-file=.env.staging']
-      },
-    ],
-  },
-})
-```
-:::
-
-See [Per-File Isolation Settings](/guide/recipes/disable-isolation) and [Parallel and Sequential Test Files](/guide/recipes/parallel-sequential) for more examples.
-
-### Reporter Updates
-
-Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished` were removed. See [`Reporters API`](/api/advanced/reporters) for new alternatives. The new APIs were introduced in Vitest `v3.0.0`.
-
-The `basic` reporter was removed as it is equal to:
-
-```ts
-export default defineConfig({
-  test: {
-    reporters: [
-      ['default', { summary: false }]
-    ]
-  }
-})
-```
-
-The [`verbose`](/guide/reporters#verbose-reporter) reporter now prints test cases as a flat list. To revert to the previous behaviour, use `--reporter=tree`:
-
-```ts
-export default defineConfig({
-  test: {
-    reporters: ['verbose'], // [!code --]
-    reporters: ['tree'], // [!code ++]
-  }
-})
-```
-
-### Snapshots using Custom Elements Print the Shadow Root
-
-In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/snapshotformat) to `false`.
-
-```js{15-22}
-// before Vitest 4.0
-exports[`custom element with shadow root 1`] = `
-"<body>
-  <div>
-    <custom-element />
-  </div>
-</body>"
-`
-
-// after Vitest 4.0
-exports[`custom element with shadow root 1`] = `
-"<body>
-  <div>
-    <custom-element>
-      #shadow-root
-        <span
-          class="some-name"
-          data-test-id="33"
-          id="5"
-        >
-          hello
-        </span>
-    </custom-element>
-  </div>
-</body>"
-`
-```
-
-### Deprecated APIs are Removed
-
-Vitest 4.0 removes some deprecated APIs, including:
-
-- `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
-- `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
-- `deps.external`, `deps.inline`, `deps.fallbackCJS` config options. Use `server.deps.external`, `server.deps.inline`, or `server.deps.fallbackCJS` instead.
-- `browser.testerScripts` config option. Use [`browser.testerHtmlPath`](/config/browser/testerhtmlpath) instead.
-- `minWorkers` config option. Only `maxWorkers` has any effect on how tests are running, so we are removing this public option.
-- Vitest no longer supports providing test options object as a third argument to `test` and `describe`. Use the second argument instead:
-
-```ts
-test('example', () => { /* ... */ }, { retry: 2 }) // [!code --]
-test('example', { retry: 2 }, () => { /* ... */ }) // [!code ++]
-```
-
-Note that providing a timeout number as the last argument is still supported:
-
-```ts
-test('example', () => { /* ... */ }, 1000) // ✅
-```
-
-This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `@types/node` (see [#5481](https://github.com/vitest-dev/vitest/issues/5481) and [#6141](https://github.com/vitest-dev/vitest/issues/6141)).
+- `vitest/coverage`: use `vitest/node` instead
+- `vitest/reporters`: use `vitest/node` instead
+- `vitest/environments`: use `vitest/runtime` instead
+- `vitest/snapshot`: use `vitest/runtime` instead
+- `vitest/runners`: use `TestRunner` from `vitest` instead
+- `vitest/suite`: use static methods on `TestRunner` from vitest instead (for example, `TestRunner.getCurrentTest()`)
+- `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
+- `vitest/internal/module-runner` is removed
 
 ## Migrating from Jest {#jest}
 
