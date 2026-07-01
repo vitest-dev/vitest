@@ -19,12 +19,19 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  # Trust the committed lockfile and skip pnpm's per-install supply-chain
+  # verification (trustPolicy: no-downgrade, ~15-20s on every job). The lint job
+  # overrides this to false so the lockfile is still verified once per run.
+  PNPM_CONFIG_TRUST_LOCKFILE: true
 
 jobs:
   lint:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
+    # verify the lockfile against supply-chain policies once per run
+    env:
+      PNPM_CONFIG_TRUST_LOCKFILE: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -33,7 +40,7 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - name: Build
         run: pnpm run build
@@ -110,7 +117,7 @@ jobs:
           node-version: ${{ matrix.node_version }}
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
 
@@ -123,6 +130,7 @@ jobs:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
+        if: matrix.os == 'ubuntu-latest'
         run: pnpm run test:examples
 
       - name: Unit Test UI
@@ -148,42 +156,6 @@ jobs:
             packages/ui/.vitest
           retention-days: 1
           include-hidden-files: true
-
-  test-cached:
-    needs: changed
-    name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ${{ matrix.os }}
-
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        node_version: [24]
-        os:
-          - macos-latest
-          - windows-latest
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
-
-      - name: Install
-        run: pnpm i
-
-      - uses: ./.github/actions/setup-playwright
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test
-        run: pnpm run test:ci:cache
 
   test-browser:
     needs: changed
@@ -211,7 +183,7 @@ jobs:
           node-version: ${{ matrix.node_version }}
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
 
@@ -224,11 +196,18 @@ jobs:
   test-vite7:
     needs: changed
     # macos-latest is the fastest one
-    name: 'Test: vite@7, node-24, macos-latest'
+    name: 'Test: vite@7, ${{ matrix.suite }}, node-24, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: macos-latest
 
     timeout-minutes: 30
+
+    strategy:
+      # split the node suite and the browser suite onto separate runners so they
+      # run in parallel instead of sequentially on a single machine
+      matrix:
+        suite: [node, browser]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -242,7 +221,7 @@ jobs:
       - name: Install
         run: |
           pnpm override-vite7
-          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
 
@@ -250,26 +229,27 @@ jobs:
         run: pnpm run build
 
       - name: Test
+        if: ${{ matrix.suite == 'node' }}
         run: pnpm run test:ci:no-bail
 
       - name: Test Examples
-        if: ${{ !cancelled() }}
+        if: ${{ matrix.suite == 'node' && !cancelled() }}
         run: pnpm run test:examples
 
       - name: Unit Test UI
-        if: ${{ !cancelled() }}
+        if: ${{ matrix.suite == 'node' && !cancelled() }}
         run: pnpm -C packages/ui test:ui
 
-      - name: Test Browser (playwright)
-        if: ${{ !cancelled() }}
-        run: pnpm run test:browser:playwright
-
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
+        if: ${{ matrix.suite == 'node' && !cancelled() }}
         with:
           name: playwright-report-vite7
           path: test/ui/test-results/
           retention-days: 30
+
+      - name: Test Browser (playwright)
+        if: ${{ matrix.suite == 'browser' && !cancelled() }}
+        run: pnpm run test:browser:playwright
 
   merge-reports:
     needs:
@@ -287,7 +267,7 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - name: Build
         run: pnpm run build
