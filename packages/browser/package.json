@@ -76,7 +76,7 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "@blazediff/core": "1.9.1",
+    "@blazediff/core": "1.9.3",
     "@vitest/mocker": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/utils": "workspace:*",
@@ -87,7 +87,7 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api": "^1.9.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
@@ -97,7 +97,7 @@
     "ivya": "^1.8.2",
     "mime": "^4.1.0",
     "pathe": "catalog:",
-    "rrweb-snapshot": "2.0.1",
+    "rrweb-snapshot": "2.1.0",
     "vitest": "workspace:*"
   }
 }
