@@ -246,9 +246,24 @@ function printErrorInner(
     )
   }
 
-  if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
-    (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    printErrorInner(e.cause, project, {
+  if (e.cause != null) {
+    // Render the cause regardless of its shape. Previously this branch only
+    // fired for object-causes with a `name` property, so non-`Error` throws
+    // (strings, plain objects, wasm-bindgen JsValues) propagated through the
+    // pool wrapper's `{ cause }` but were silently dropped by the reporter —
+    // see https://github.com/vitest-dev/vitest/issues/10557.
+    let cause: any = e.cause
+    if (typeof cause !== 'object' || cause === null) {
+      const causeStr = String(cause)
+      cause = { name: 'Caused by', message: causeStr, stack: causeStr }
+    }
+    else if (!('name' in cause)) {
+      cause = { ...cause, name: 'Caused by' }
+    }
+    else {
+      cause.name = `Caused by: ${cause.name}`
+    }
+    printErrorInner(cause, project, {
       showCodeFrame: false,
       logger: options.logger,
       parseErrorStacktrace: options.parseErrorStacktrace,
