@@ -20,8 +20,8 @@ export const readFile: BrowserCommand<
 export const writeFile: BrowserCommand<
   Parameters<BrowserCommands['writeFile']>
 > = async ({ project }, path, data, options) => {
+  assertBrowserApiWrite(project, path)
   const filepath = resolve(project.config.root, path)
-  assertBrowserApiWrite(project, filepath)
   assertBrowserFileAccess(project, filepath)
   const dir = dirname(filepath)
   if (!fs.existsSync(dir)) {
@@ -33,8 +33,8 @@ export const writeFile: BrowserCommand<
 export const removeFile: BrowserCommand<
   Parameters<BrowserCommands['removeFile']>
 > = async ({ project }, path) => {
+  assertBrowserApiWrite(project, path)
   const filepath = resolve(project.config.root, path)
-  assertBrowserApiWrite(project, filepath)
   assertBrowserFileAccess(project, filepath)
   await fsp.rm(filepath)
 }
