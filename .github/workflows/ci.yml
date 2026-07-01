@@ -90,20 +90,37 @@ jobs:
 
   test:
     needs: changed
-    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    name: 'Test: ${{ matrix.suite }}, node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: ${{ matrix.os }}
 
     timeout-minutes: 30
 
     strategy:
+      # Split the heavy e2e and coverage suites onto their own runners so they run
+      # in parallel with the rest instead of sequentially on a single machine.
       matrix:
+        suite: [rest, e2e, coverage]
         os: [ubuntu-latest]
         node_version: [22, 24]
         include:
-          - os: macos-latest
+          - suite: rest
+            os: macos-latest
             node_version: 24
-          - os: windows-latest
+          - suite: e2e
+            os: macos-latest
+            node_version: 24
+          - suite: coverage
+            os: macos-latest
+            node_version: 24
+          - suite: rest
+            os: windows-latest
+            node_version: 24
+          - suite: e2e
+            os: windows-latest
+            node_version: 24
+          - suite: coverage
+            os: windows-latest
             node_version: 24
       fail-fast: false
 
@@ -125,35 +142,43 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm run test:ci:${{ matrix.suite }}
         env:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.suite == 'rest' && matrix.os == 'ubuntu-latest'
         run: pnpm run test:examples
 
       - name: Unit Test UI
+        if: matrix.suite == 'rest'
         run: pnpm -C packages/ui test:ui
         env:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
+        if: ${{ matrix.suite == 'rest' && !cancelled() }}
         with:
           name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: test/ui/test-results/
           retention-days: 30
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
+        if: ${{ matrix.suite == 'rest' && !cancelled() }}
         with:
-          name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}
+          name: vitest-results-rest-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: |
             README.md
             test/unit/.vitest
-            test/e2e/.vitest
             packages/ui/.vitest
+          retention-days: 1
+          include-hidden-files: true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ matrix.suite == 'e2e' && !cancelled() }}
+        with:
+          name: vitest-results-e2e-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: test/e2e/.vitest
           retention-days: 1
           include-hidden-files: true
 
