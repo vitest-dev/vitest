@@ -228,10 +228,11 @@ jobs:
     timeout-minutes: 30
 
     strategy:
-      # split the node suite and the browser suite onto separate runners so they
-      # run in parallel instead of sequentially on a single machine
+      # vite7 is a compatibility smoke, not a coverage gate. Run the e2e suite
+      # (which exercises real config resolution, transform and runs) and the
+      # browser suite on separate runners in parallel.
       matrix:
-        suite: [node, browser]
+        suite: [e2e, browser]
       fail-fast: false
 
     steps:
@@ -253,24 +254,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test
-        if: ${{ matrix.suite == 'node' }}
-        run: pnpm run test:ci:no-bail
-
-      - name: Test Examples
-        if: ${{ matrix.suite == 'node' && !cancelled() }}
-        run: pnpm run test:examples
-
-      - name: Unit Test UI
-        if: ${{ matrix.suite == 'node' && !cancelled() }}
-        run: pnpm -C packages/ui test:ui
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ matrix.suite == 'node' && !cancelled() }}
-        with:
-          name: playwright-report-vite7
-          path: test/ui/test-results/
-          retention-days: 30
+      - name: Test E2E
+        if: ${{ matrix.suite == 'e2e' }}
+        run: pnpm run test:ci:e2e
 
       - name: Test Browser (playwright)
         if: ${{ matrix.suite == 'browser' && !cancelled() }}
