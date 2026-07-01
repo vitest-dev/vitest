@@ -1,7 +1,28 @@
 import type { BrowserProviderModule, ResolvedBrowserOptions, TestProject } from 'vitest/node'
+import { isFileServingAllowed } from 'vitest/node'
 
 export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
+}
+
+export function assertBrowserFileAccess(project: TestProject, path: string): void {
+  const normalized = slash(path)
+  if (
+    !isFileServingAllowed(normalized, project.vite)
+    && !isFileServingAllowed(normalized, project.vitest.server)
+  ) {
+    throw new Error(
+      `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
+    )
+  }
+}
+
+export function assertBrowserApiWrite(project: TestProject, path: string): void {
+  if (!project.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
+    throw new Error(
+      `Cannot modify file "${path}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+    )
+  }
 }
 
 const builtinProviders = ['webdriverio', 'playwright', 'preview']
