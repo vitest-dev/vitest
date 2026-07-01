@@ -1,6 +1,6 @@
 import type { SnapshotUpdateState } from 'vitest'
 import type { ScreenshotMatcherOptions } from 'vitest/browser'
-import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
+import type { BrowserCommand, BrowserCommandContext, TestProject } from 'vitest/node'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
 import type { AnyComparator } from './comparators'
@@ -8,6 +8,7 @@ import type { TypedArray } from './types'
 import type { ResolvedOptions } from './utils'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname } from 'pathe'
+import { assertBrowserApiWrite, assertBrowserFileAccess } from '../../utils'
 import { asyncTimeout, resolveOptions, takeDecodedScreenshot } from './utils'
 
 /** Decoded image data with dimensions metadata. */
@@ -108,7 +109,7 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     comparatorOptions,
   })
 
-  await performSideEffects(outcome, codec)
+  await performSideEffects(outcome, codec, context.project)
 
   return buildOutput(outcome, timeout)
 }
@@ -230,6 +231,7 @@ async function determineOutcome(
 async function performSideEffects(
   outcome: MatchOutcome,
   codec: AnyCodec,
+  project: TestProject,
 ): Promise<void> {
   switch (outcome.type) {
     case 'missing-reference':
@@ -237,6 +239,7 @@ async function performSideEffects(
       await writeScreenshot(
         outcome.reference.path,
         await codec.encode(outcome.reference.image, {}),
+        project,
       )
 
       break
@@ -246,12 +249,14 @@ async function performSideEffects(
       await writeScreenshot(
         outcome.actual.path,
         await codec.encode(outcome.actual.image, {}),
+        project,
       )
 
       if (outcome.diff) {
         await writeScreenshot(
           outcome.diff.path,
           await codec.encode(outcome.diff.image, {}),
+          project,
         )
       }
 
@@ -456,8 +461,10 @@ async function getStableScreenshot({
 }
 
 /** Writes encoded images to disk, creating parent directories as needed. */
-async function writeScreenshot(path: string, image: TypedArray) {
+async function writeScreenshot(path: string, image: TypedArray, project: TestProject) {
   try {
+    assertBrowserApiWrite(project, path)
+    assertBrowserFileAccess(project, path)
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, image)
   }
