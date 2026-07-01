@@ -6,7 +6,7 @@
  */
 
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SnapshotData, SnapshotStateOptions } from '../types'
+import type { SnapshotData } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
 import { format as prettyFormat } from '@vitest/pretty-format'
 import { isObject } from '@vitest/utils/helpers'
@@ -27,39 +27,26 @@ export function keyToTestName(key: string): string {
   return key.replace(/ \d+$/, '')
 }
 
-export function getSnapshotData(
-  content: string | null,
-  options: SnapshotStateOptions,
-): {
-  data: SnapshotData
-  dirty: boolean
-} {
-  const update = options.updateSnapshot
+// Evaluate a snapshot file's content into its snapshot data.
+// Throws a hard error when the content cannot be evaluated, so corrupted
+// snapshot files surface immediately instead of being silently ignored.
+export function evaluateSnapshotFile(
+  filepath: string,
+  content: string,
+): SnapshotData {
   const data = Object.create(null)
-  let snapshotContents = ''
-  let dirty = false
-
-  if (content != null) {
-    try {
-      snapshotContents = content
-      // eslint-disable-next-line no-new-func
-      const populate = new Function('exports', snapshotContents)
-      populate(data)
-    }
-    catch {}
+  try {
+    // eslint-disable-next-line no-new-func
+    const populate = new Function('exports', content)
+    populate(data)
   }
-
-  // const validationResult = validateSnapshotVersion(snapshotContents)
-  const isInvalid = snapshotContents // && validationResult
-
-  // if (update === 'none' && isInvalid)
-  //   throw validationResult
-
-  if ((update === 'all' || update === 'new') && isInvalid) {
-    dirty = true
+  catch (cause) {
+    throw new Error(
+      `Invalid snapshot file, please manually fix or delete it: ${filepath}`,
+      { cause },
+    )
   }
-
-  return { data, dirty }
+  return data
 }
 
 // Add extra line breaks at beginning and end of multiline snapshot
