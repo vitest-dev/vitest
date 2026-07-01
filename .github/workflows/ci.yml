@@ -28,6 +28,8 @@ jobs:
     name: 'Lint: node-latest, ubuntu-latest'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -61,6 +63,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Get changed files
         id: changed-files
@@ -93,6 +97,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -135,6 +141,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -169,6 +177,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
         with:
