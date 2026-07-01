@@ -21,7 +21,7 @@ jobs:
       contents: read # to check out the repo for local actions
       pull-requests: write # comment and label on PRs
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           ref: main
@@ -54,7 +54,7 @@ jobs:
       contents: read # to check out the repo for local actions
       pull-requests: write # comment and label on PRs
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           # we checkout just to read ./issue-helper
@@ -62,7 +62,7 @@ jobs:
           ref: main
       - name: AgentScan
         id: agentscan
-        uses: MatteoGabriele/agentscan-action@f41545309db947a68e22ed2643f182e754f4d41a # v1.8.0
+        uses: MatteoGabriele/agentscan-action@51fb33d2bf6290780418ae231d7e7096ef5d8311 # v1.15.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           agent-scan-comment: false

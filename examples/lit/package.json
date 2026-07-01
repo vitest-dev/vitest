@@ -14,12 +14,12 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "lit": "^3.3.2"
+    "lit": "^3.3.3"
   },
   "devDependencies": {
     "@vitest/browser-playwright": "latest",
     "jsdom": "^29.1.1",
-    "playwright": "^1.61.0",
+    "playwright": "^1.61.1",
     "vite": "latest",
     "vitest": "latest"
   },

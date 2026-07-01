@@ -29,22 +29,22 @@
     "docker": "docker compose"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.17",
     "@types/yauzl": "catalog:",
-    "@vitejs/plugin-basic-ssl": "^2.1.4",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitest/browser": "workspace:*",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "playwright": "catalog:",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "test-dep-error": "file:./deps/test-dep-error",
     "tinyexec": "catalog:",
     "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^2.0.5",
+    "vitest-browser-react": "^2.2.0",
     "ws": "catalog:",
     "yauzl": "catalog:"
   }

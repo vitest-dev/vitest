@@ -14,7 +14,7 @@
     "@vitest/ui": "latest",
     "fastify": "^5.7.2",
     "supertest": "^7.2.2",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "vite": "latest",
     "vitest": "latest"
   },
