@@ -122,6 +122,7 @@ export type {
   ResolvedBrowserOptions,
   ToMatchScreenshotComparators,
   ToMatchScreenshotOptions,
+  TypedArray,
 } from '../node/types/browser'
 export const createViteServer: typeof vite.createServer = vite.createServer
 export type {

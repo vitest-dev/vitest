@@ -575,6 +575,44 @@ export interface ToMatchScreenshotOptions {
    * @default path.resolve(root, attachmentsDir, testFileDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)
    */
   resolveDiffPath?: ToMatchScreenshotResolvePath
+  /**
+   * Overrides the default filesystem access used to read and write screenshots.
+   *
+   * By default, reference, actual, and diff images are read from and written to disk at the paths resolved by {@linkcode resolveScreenshotPath|browser.expect.toMatchScreenshot.resolveScreenshotPath} and {@linkcode resolveDiffPath|browser.expect.toMatchScreenshot.resolveDiffPath}. Providing `io` lets you redirect this to a different storage backend (e.g. object storage or a remote service) instead of the local filesystem.
+   *
+   * @default Node's `fs` module, reading/writing at the resolved paths.
+   */
+  io?: {
+    /**
+     * Reads image data from `path`.
+     *
+     * @returns The image data, or `null` if no data exists at `path` (e.g. no reference screenshot has been captured yet).
+     */
+    read: (data: {
+      /** The path resolved by {@linkcode resolveScreenshotPath|browser.expect.toMatchScreenshot.resolveScreenshotPath}. */
+      path: string
+      /** The {@linkcode https://vitest.dev/api/advanced/test-project|TestProject} the test belongs to. */
+      project: TestProject
+    }) => Promise<TypedArray | null>
+    /**
+     * Writes image `data` to `path`.
+     */
+    write: (data: {
+      /** The path resolved by {@linkcode resolveScreenshotPath|browser.expect.toMatchScreenshot.resolveScreenshotPath} or {@linkcode resolveDiffPath|browser.expect.toMatchScreenshot.resolveDiffPath}. */
+      path: string
+      /** The image data to write, as a `Buffer` or `Uint8Array`. */
+      data: TypedArray
+      /** Indicates which type of image is being written, so implementations can apply different handling (e.g. retention policies) for reference, actual, and diff images. */
+      kind: 'reference' | 'actual' | 'diff'
+      /** The {@linkcode https://vitest.dev/api/advanced/test-project|TestProject} the test belongs to. */
+      project: TestProject
+    }) => Promise<void>
+  }
 }
 
 export interface ToMatchScreenshotComparators {}
+
+/**
+ * Binary image data accepted and returned by {@linkcode ToMatchScreenshotOptions.io|io}'s `read` and `write` functions.
+ */
+export type TypedArray = Buffer<ArrayBufferLike> | Uint8Array<ArrayBufferLike>
