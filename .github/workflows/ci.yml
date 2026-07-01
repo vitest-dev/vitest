@@ -105,7 +105,7 @@ jobs:
       matrix:
         suite: [rest, e2e, coverage]
         os: [ubuntu-latest]
-        node_version: [22, 24, 26]
+        node_version: [24, 26]
         include:
           - suite: e2e
             os: macos-latest
