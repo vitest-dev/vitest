@@ -190,6 +190,25 @@ export class CommandsManager {
         }
         catch (err: any) {
           status = 'fail'
+          // TODO: unify provider timeout errors with the budget `timeoutDescription`.
+          // Budget-clamped provider actions (Playwright locator click/fill/hover/...
+          // via browser-playwright/src/locators.ts, and page.screenshot) only feed the
+          // effective timeout *value* to the provider, so on expiry the provider throws
+          // its own native error (Playwright: `TimeoutError`) without the unified
+          // description that poll/wait/findElement/domain-snapshot now surface.
+          //
+          // Fix here: classify the failure as a timeout and prepend the description, e.g.
+          //   if (isProviderTimeoutError(err)) {
+          //     err.message = `Timed out in ${timeoutDescription}.\n${err.message}`
+          //   }
+          // Notes:
+          // - err.name/err.message survive the RPC hop (copied just below), so
+          //   classification by name is reliable. Use a per-provider set of timeout
+          //   error names (Playwright: 'TimeoutError'); avoid brittle message matching.
+          // - `timeoutDescription` can't be recomputed from the effective number alone
+          //   (loses requested/clampedByBudget), so pass it into triggerCommand as an
+          //   explicit param (sibling to `clientError`, NOT inside `args` which is sent
+          //   to the provider). Callers get it from resolveActionTimeout().description.
           // rethrow an error to keep the stack trace in browser
           clientError.message = err.message
           clientError.name = err.name

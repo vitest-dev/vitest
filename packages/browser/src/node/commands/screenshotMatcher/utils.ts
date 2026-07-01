@@ -32,6 +32,9 @@ const defaultOptions = {
     omitBackground: false,
     scale: 'device',
   },
+  // TODO(#9751): remove this fixed default; fold the stability timeout into
+  // `timeout.action`, resolved+budget-clamped client-side (see the TODO in
+  // browser/.../tester/expect/toMatchScreenshot.ts).
   timeout: 5_000,
   strict: true,
   resolveDiffPath: ({

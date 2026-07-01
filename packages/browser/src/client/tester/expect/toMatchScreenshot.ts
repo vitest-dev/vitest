@@ -62,6 +62,20 @@ export default async function toMatchScreenshot(
       : options as any
   )
 
+  // TODO: unify this matcher's stability timeout with the budget model (#9751).
+  // Today the timeout (default 5000) is resolved node-side in resolveOptions()
+  // (browser/.../screenshotMatcher/utils.ts) from `browser.expect.toMatchScreenshot.timeout`
+  // + per-call `options.timeout`, and is NOT budget-clamped nor does it surface the
+  // unified `timeoutDescription`. Plan (per maintainer comment on #9751):
+  // - Fold it into `timeout.action`: resolve HERE (client, where the budget lives) via
+  //     const resolved = resolveActionTimeout(options.timeout)  // from ./budget
+  //   and send `{ ...options, timeout: resolved.timeout, timeoutDescription: resolved.description }`.
+  // - Remove `browser.expect.toMatchScreenshot.timeout` (types + resolveConfig + docs) and
+  //   drop `timeout: 5000` from node defaultOptions so the client-resolved value wins.
+  // - Thread `timeoutDescription` into buildOutput() so the `unstable-screenshot` error
+  //   (screenshotMatcher/index.ts) matches poll/wait/findElement/domain-snapshot.
+  // Note: this flips the default stability window from a fixed 5000ms to `'auto'` (rides the
+  // remaining test budget). Per-call `{ timeout: 0 }` must still disable the timeout.
   const result = await getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
     '__vitest_screenshotMatcher',
     [
