@@ -180,10 +180,14 @@ export interface ScreenshotMatcherOptions<
   /**
    * Time to wait until a stable screenshot is found.
    *
+   * This is a per-call override for the unified `timeout.action` config: when
+   * omitted, the timeout derives from `timeout.action` (by default `'auto'`,
+   * clamped to the remaining test time).
+   *
    * Setting this value to `0` disables the timeout, but if a stable screenshot
    * can't be determined the process will not end.
    *
-   * @default 5000
+   * @default `timeout.action`
    */
   timeout?: number
   /**

@@ -58,10 +58,14 @@ export type CustomComparatorsRegistry
     : { comparators: CustomComparatorsToRegister }
 
 declare module 'vitest/node' {
+  // `timeout` is intentionally omitted here: the stability timeout is unified with
+  // `timeout.action` (resolved + budget-clamped on the client), so it is no longer a
+  // global `browser.expect.toMatchScreenshot` option. It remains a per-call override
+  // on `ScreenshotMatcherOptions`.
   export interface ToMatchScreenshotOptions
     extends Omit<
       ScreenshotMatcherOptions,
-      'comparatorName' | 'comparatorOptions'
+      'comparatorName' | 'comparatorOptions' | 'timeout'
     >, CustomComparatorsRegistry {}
 
   export interface ToMatchScreenshotComparators

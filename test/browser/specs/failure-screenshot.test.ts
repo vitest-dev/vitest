@@ -70,7 +70,7 @@ describe('failure screenshots', () => {
         },
       )
 
-      expect(stderr).toContain('Could not capture a stable screenshot within 1ms.')
+      expect(stderr).toContain('Could not capture a stable screenshot; timed out in 1ms (test.timeout.action).')
       expect(stderr).toContain('Failure screenshot:')
     })
 

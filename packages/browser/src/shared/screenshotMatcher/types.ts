@@ -10,6 +10,11 @@ export type ScreenshotMatcherArguments<
       element?: SerializedLocator
       target?: 'element' | 'page'
       screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & { mask?: readonly SerializedLocator[] }
+      /**
+       * Human-readable description of the (already budget-resolved) `timeout`,
+       * resolved on the client via `timeout.action`. Surfaced in the timeout error.
+       */
+      timeoutDescription?: string
     },
 ]
 

@@ -3,7 +3,6 @@ import type { SerializedLocator } from '@vitest/browser'
 // Note: this augments `screenshotOptions` types
 import type {} from '@vitest/browser-playwright'
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
-import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
@@ -12,12 +11,14 @@ import { basename, dirname, extname, join, relative, resolve } from 'pathe'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
 
+// `timeout` is resolved separately (client-side, via `timeout.action`) and is not
+// part of the merged global options here.
 type GlobalOptions = Required<Omit<
   NonNullable<
     NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']
     & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
   >,
-  'comparators' | 'screenshotDirectory'
+  'comparators' | 'screenshotDirectory' | 'timeout'
 >>
 
 const defaultOptions = {
@@ -32,10 +33,6 @@ const defaultOptions = {
     omitBackground: false,
     scale: 'device',
   },
-  // TODO(#9751): remove this fixed default; fold the stability timeout into
-  // `timeout.action`, resolved+budget-clamped client-side (see the TODO in
-  // browser/.../tester/expect/toMatchScreenshot.ts).
-  timeout: 5_000,
   strict: true,
   resolveDiffPath: ({
     arg,
@@ -78,6 +75,13 @@ export interface ResolvedOptions {
   codec: ReturnType<typeof getCodec>
   comparator: ReturnType<typeof getComparator>
   resolvedOptions: GlobalOptions
+  /**
+   * Effective stability timeout (ms), already resolved + budget-clamped on the
+   * client from `timeout.action` / per-call override. `0` disables the timeout.
+   */
+  timeout: number
+  /** Human-readable description of {@link timeout} for the timeout error message. */
+  timeoutDescription: string | undefined
   paths: {
     reference: string
     diffs: {
@@ -98,7 +102,7 @@ export function resolveOptions(
     context: BrowserCommandContext
     name: string
     testName: string
-    options: ScreenshotMatcherOptions
+    options: ScreenshotMatcherArguments[2]
   },
 ): ResolvedOptions {
   if (context.testPath === undefined) {
@@ -151,6 +155,11 @@ export function resolveOptions(
     codec: getCodec(extension),
     comparator: getComparator(resolvedOptions.comparatorName, context),
     resolvedOptions,
+    // Sourced from the command args: the client already resolved + budget-clamped
+    // this via `timeout.action`. The `?? 5_000` is only a defensive fallback for
+    // callers that don't send a resolved value (the tester always does).
+    timeout: options.timeout ?? 5_000,
+    timeoutDescription: options.timeoutDescription,
     paths: {
       reference: resolvedOptions.resolveScreenshotPath(resolvePathData),
       // lazily initialize this, as it might not be needed at all

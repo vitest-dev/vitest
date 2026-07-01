@@ -65,7 +65,7 @@ Default timeout to wait for close when Vitest shuts down, in milliseconds.
 - **Default:** `'auto'`
 - **CLI:** `--timeout.action=5000`
 
-Timeout for browser actions, locator interactions and `expect.element()`. Defaults to `'auto'` (rides the test budget). A provider-level `browser.providerOptions.actionTimeout` continues to work as an override; the budget clamp still applies on top.
+Timeout for browser actions, locator interactions, `expect.element()` and the `toMatchScreenshot()` stability loop. Defaults to `'auto'` (rides the test budget). A provider-level `browser.providerOptions.actionTimeout` continues to work as an override; the budget clamp still applies on top.
 
 ## timeout.poll
 

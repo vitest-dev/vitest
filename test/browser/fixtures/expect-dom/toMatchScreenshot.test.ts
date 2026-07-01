@@ -314,7 +314,7 @@ describe('.toMatchScreenshot', () => {
       expect(errorMessage).toMatchInlineSnapshot(`
         expect(element).toMatchScreenshot()
 
-        Could not capture a stable screenshot within 1ms.
+        Could not capture a stable screenshot; timed out in 1ms (test.timeout.action).
       `)
     },
   )
@@ -473,7 +473,7 @@ describe('.toMatchScreenshot', () => {
       errorMessage = error.message
     }
 
-    expect(errorMessage).matches(/^Could not capture a stable screenshot within 100ms\.$/m)
+    expect(errorMessage).matches(/^Could not capture a stable screenshot; timed out in 100ms \(test\.timeout\.action\)\.$/m)
   })
 
   // Only run this test if snapshots aren't being updated

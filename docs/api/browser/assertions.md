@@ -1225,9 +1225,13 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
   - `'save'`
   - `'type'`
 
-- `timeout: number = 5_000`
+- `timeout: number = timeout.action`
 
   Time to wait until a stable screenshot is found.
+
+  This is a per-call override for the [`timeout.action`](/config/timeout#timeout-action) config.
+  When omitted, the timeout derives from `timeout.action` (by default `'auto'`,
+  clamped to the remaining test time).
 
   Setting this value to `0` disables the timeout, but if a stable screenshot
   can't be determined the process will not end.

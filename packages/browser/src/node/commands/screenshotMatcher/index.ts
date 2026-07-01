@@ -88,7 +88,9 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     codec,
     comparator,
     paths,
-    resolvedOptions: { comparatorName, comparatorOptions, screenshotOptions, timeout },
+    timeout,
+    timeoutDescription,
+    resolvedOptions: { comparatorName, comparatorOptions, screenshotOptions },
   } = resolveOptions({ context, name, testName, options })
 
   const screenshotName = `${Date.now()}-${basename(paths.reference)}`
@@ -111,7 +113,7 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     // Keep custom comparator semantics intact: only the built-in pixelmatch
     // comparator is known to pass byte-identical PNGs without side effects.
     if (comparatorName === 'pixelmatch' && Buffer.compare(referenceFile, initialScreenshotBuffer) === 0) {
-      return buildOutput({ type: 'matched-immediately' }, timeout)
+      return buildOutput({ type: 'matched-immediately' }, timeout, timeoutDescription)
     }
 
     [reference, initialScreenshot] = await Promise.all([
@@ -150,7 +152,7 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
 
   await performSideEffects(outcome, codec)
 
-  return buildOutput(outcome, timeout)
+  return buildOutput(outcome, timeout, timeoutDescription)
 }
 
 /**
@@ -318,6 +320,7 @@ function encodeScreenshot(screenshot: ScreenshotData, codec: AnyCodec) {
 function buildOutput(
   outcome: MatchOutcome,
   timeout: number,
+  timeoutDescription: string | undefined,
 ): Awaited<ScreenshotMatcherOutput> {
   switch (outcome.type) {
     case 'unstable-screenshot':
@@ -331,7 +334,7 @@ function buildOutput(
         },
         actual: null,
         diff: null,
-        message: `Could not capture a stable screenshot within ${timeout}ms.`,
+        message: `Could not capture a stable screenshot; timed out in ${timeoutDescription ?? `${timeout}ms`}.`,
       }
 
     case 'missing-reference': {
