@@ -517,6 +517,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Run tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
   },
+  smartRerun: {
+    description:
+      'Run previously failed tests first, caching failed test files between runs in `.vitest-failed-cache.json` (default: `false`)',
+  },
+  smartRerunOnlyFailed: {
+    description:
+      'Requires `--smart-rerun`. Skip files that passed in the previous run and only run files from the failed tests cache (default: `false`)',
+  },
   sequence: {
     description: 'Options for how tests should be sorted',
     argument: '<options>',

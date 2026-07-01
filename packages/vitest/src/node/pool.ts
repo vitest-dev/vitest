@@ -13,6 +13,7 @@ import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
 import { getSpecificationsOptions } from '../utils/test-helpers'
+import { filterToFailedSpecs, prioritizeFailedSpecs, readSmartRerunCache } from './cache/smart-rerun'
 import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
@@ -86,7 +87,13 @@ export function createPool(ctx: Vitest): ProcessPool {
     }[] = []
     let workerId = 1
 
-    const sorted = await sequencer.sort(specs)
+    let sorted = await sequencer.sort(specs)
+    if (ctx.config.smartRerun) {
+      const failedFiles = await readSmartRerunCache(ctx.config.root)
+      sorted = ctx.config.smartRerunOnlyFailed
+        ? filterToFailedSpecs(sorted, failedFiles)
+        : prioritizeFailedSpecs(sorted, failedFiles)
+    }
     const { environments, tags } = await getSpecificationsOptions(specs)
     const groups = groupSpecs(sorted, environments)
 

@@ -548,6 +548,20 @@ Ignore any unhandled errors that occur
 
 Run tests that are affected by the changed files (default: `false`)
 
+### smartRerun
+
+- **CLI:** `--smartRerun`
+- **Config:** [smartRerun](/config/smartrerun)
+
+Run previously failed tests first, caching failed test files between runs in `.vitest-failed-cache.json` (default: `false`)
+
+### smartRerunOnlyFailed
+
+- **CLI:** `--smartRerunOnlyFailed`
+- **Config:** [smartRerunOnlyFailed](/config/smartrerunonlyfailed)
+
+Requires `--smart-rerun`. Skip files that passed in the previous run and only run files from the failed tests cache (default: `false`)
+
 ### sequence.shuffle.files
 
 - **CLI:** `--sequence.shuffle.files`

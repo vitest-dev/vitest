@@ -33,3 +33,4 @@ test/e2e/fixtures/browser-multiple/basic-*
 .vitest
 explainFiles.txt
 .vitest-dump
+.vitest-failed-cache.json

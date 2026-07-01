@@ -35,6 +35,7 @@ import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { FileSystemModuleCache } from './cache/fsModuleCache'
+import { clearSmartRerunCache, writeSmartRerunCache } from './cache/smart-rerun'
 import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -1004,6 +1005,19 @@ export class Vitest {
             await this.cache.results.writeToCache()
           }
           catch {}
+
+          if (this.config.smartRerun) {
+            const failedFilepaths = this.state.getFailedFilepaths()
+            try {
+              if (failedFilepaths.length) {
+                await writeSmartRerunCache(this.config.root, failedFilepaths)
+              }
+              else {
+                await clearSmartRerunCache(this.config.root)
+              }
+            }
+            catch {}
+          }
 
           return {
             testModules: this.state.getTestModules(),
