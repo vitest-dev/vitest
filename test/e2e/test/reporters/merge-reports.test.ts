@@ -267,9 +267,11 @@ test('merge reports from glob pattern', async () => {
     reporters: [['blob', { outputFile: './.vitest/blob/second-run.json' }]],
   })
 
+  await writeFile(resolve(reportsDir, 'ignored.json'), '{"not":"a blob report"}')
+
   const { stdout, exitCode } = await runVitest({
     root: './fixtures/reporters/merge-reports',
-    mergeReports: `${reportsDir}/*.json`,
+    mergeReports: `${reportsDir}/*-run.json`,
     reporters: [['default', { isTTY: false }]],
   })
 
