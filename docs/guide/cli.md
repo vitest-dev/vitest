@@ -219,7 +219,7 @@ If `--reporter=blob` is used without an output file, the default path will inclu
 
 - **Type:** `boolean | string`
 
-Merges every blob report located in the specified folder (`.vitest/blob/` by default). You can use any reporters with this command (except [`blob`](/guide/reporters#blob-reporter)):
+Merges every blob report located in the specified folder (`.vitest/blob/` by default) or matching the specified glob pattern. You can use any reporters with this command (except [`blob`](/guide/reporters#blob-reporter)):
 
 ```sh
 vitest --merge-reports --reporter=junit

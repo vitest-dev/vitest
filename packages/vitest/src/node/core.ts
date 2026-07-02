@@ -635,7 +635,7 @@ export class Vitest {
   }
 
   /**
-   * Merge reports from multiple runs located in the specified directory (value from `--merge-reports` if not specified).
+   * Merge reports from multiple runs located in the specified directory or matching the specified glob pattern (value from `--merge-reports` if not specified).
    */
   public async mergeReports(directory?: string): Promise<TestRunResult> {
     return this._traces.$('vitest.merge_reports', async () => {

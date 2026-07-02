@@ -327,6 +327,7 @@ test('merge-reports', () => {
   expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest/blob' })
   expect(getCLIOptions('--merge-reports=different-folder')).toEqual({ mergeReports: 'different-folder' })
   expect(getCLIOptions('--merge-reports different-folder')).toEqual({ mergeReports: 'different-folder' })
+  expect(getCLIOptions('--merge-reports .vitest/blob/**/*.json')).toEqual({ mergeReports: '.vitest/blob/**/*.json' })
 })
 
 test('configure expect', () => {
