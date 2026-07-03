@@ -12,7 +12,7 @@ it('spying on an esm module prints an error', () => {
     }
   })()
   expect(error.name).toBe('TypeError')
-  expect(error.message).toMatchInlineSnapshot(`"Cannot spy on export "calculator". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/browser/#limitations"`)
+  expect(error.message).toMatchInlineSnapshot(`"Cannot spy on export "calculator". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/mocking/modules#mocking-a-module"`)
 
   expect(error.cause).toBeInstanceOf(TypeError)
 })

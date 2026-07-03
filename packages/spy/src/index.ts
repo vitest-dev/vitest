@@ -410,7 +410,7 @@ export function spyOn<T extends object, K extends keyof any>(
         || error.message.includes('can\'t redefine non-configurable property'))
     ) {
       throw new TypeError(
-        `Cannot spy on export "${String(key)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/browser/#limitations`,
+        `Cannot spy on export "${String(key)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/mocking/modules#mocking-a-module`,
         { cause: error },
       )
     }
