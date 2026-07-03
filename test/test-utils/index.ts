@@ -184,6 +184,23 @@ export async function runVitest(
       },
     }, {
       ...viteConfig,
+      plugins: [
+        ...(viteConfig.plugins ?? []),
+        // Spawning the worker is the dominant cost of these meta-tests (each `runVitest`
+        // boots a fresh Vitest). Default the spawned run to `threads`, which is cheaper
+        // to start than `forks`, especially on Windows. A `config` hook only fills the
+        // gap when nothing else set a pool, so an explicit `pool` (from `config` or the
+        // fixture's own config file) always wins. Browser runs are left alone since they
+        // don't execute in a node pool.
+        {
+          name: 'vitest:test-utils:default-pool',
+          config(config) {
+            if (config.test?.pool == null && !config.test?.browser?.enabled) {
+              return { test: { pool: 'threads' } }
+            }
+          },
+        },
+      ],
       server: {
         // we never need a websocket connection for the root config because it doesn't connect to the browser
         // browser mode uses a separate config that doesn't inherit CLI overrides
