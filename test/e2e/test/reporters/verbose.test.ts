@@ -135,20 +135,20 @@ test('renders locations if enabled', async () => {
   })
 
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
-    "✓ fixtures/reporters/verbose/example-1.test.ts:3:1 > test pass in root [...]ms
-     ↓ fixtures/reporters/verbose/example-1.test.ts:5:6 > test skip in root
-     ✓ fixtures/reporters/verbose/example-1.test.ts:8:3 > suite in root > test pass in 1. suite #1 [...]ms
-     ✓ fixtures/reporters/verbose/example-1.test.ts:10:3 > suite in root > test pass in 1. suite #2 [...]ms
-     ✓ fixtures/reporters/verbose/example-1.test.ts:13:5 > suite in root > suite in suite > test pass in nested suite #1 [...]ms
-     ✓ fixtures/reporters/verbose/example-1.test.ts:15:5 > suite in root > suite in suite > test pass in nested suite #2 [...]ms
-     × fixtures/reporters/verbose/example-1.test.ts:18:7 > suite in root > suite in suite > suite in nested suite > test failure in 2x nested suite [...]ms
+    "✓ fixtures/reporters/verbose/example-1.test.ts:3 > test pass in root [...]ms
+     ↓ fixtures/reporters/verbose/example-1.test.ts:5 > test skip in root
+     ✓ fixtures/reporters/verbose/example-1.test.ts:8 > suite in root > test pass in 1. suite #1 [...]ms
+     ✓ fixtures/reporters/verbose/example-1.test.ts:10 > suite in root > test pass in 1. suite #2 [...]ms
+     ✓ fixtures/reporters/verbose/example-1.test.ts:13 > suite in root > suite in suite > test pass in nested suite #1 [...]ms
+     ✓ fixtures/reporters/verbose/example-1.test.ts:15 > suite in root > suite in suite > test pass in nested suite #2 [...]ms
+     × fixtures/reporters/verbose/example-1.test.ts:18 > suite in root > suite in suite > suite in nested suite > test failure in 2x nested suite [...]ms
        → expected 'should fail' to be 'as expected' // Object.is equality
-     ↓ fixtures/reporters/verbose/example-1.test.ts:26:3 > suite skip in root > test 1.3
-     ↓ fixtures/reporters/verbose/example-1.test.ts:29:5 > suite skip in root > suite in suite > test in nested suite
-     ↓ fixtures/reporters/verbose/example-1.test.ts:31:5 > suite skip in root > suite in suite > test failure in nested suite of skipped suite
-     ✓ fixtures/reporters/verbose/example-2.test.ts:3:1 > test 0.1 [...]ms
-     ↓ fixtures/reporters/verbose/example-2.test.ts:5:6 > test 0.2
-     ✓ fixtures/reporters/verbose/example-2.test.ts:8:3 > suite 1.1 > test 1.1 [...]ms"
+     ↓ fixtures/reporters/verbose/example-1.test.ts:26 > suite skip in root > test 1.3
+     ↓ fixtures/reporters/verbose/example-1.test.ts:29 > suite skip in root > suite in suite > test in nested suite
+     ↓ fixtures/reporters/verbose/example-1.test.ts:31 > suite skip in root > suite in suite > test failure in nested suite of skipped suite
+     ✓ fixtures/reporters/verbose/example-2.test.ts:3 > test 0.1 [...]ms
+     ↓ fixtures/reporters/verbose/example-2.test.ts:5 > test 0.2
+     ✓ fixtures/reporters/verbose/example-2.test.ts:8 > suite 1.1 > test 1.1 [...]ms"
   `)
 })
 

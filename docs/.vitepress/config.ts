@@ -129,11 +129,11 @@ export default ({ mode }: { mode: string }) => {
       }, */
       },
 
-      banner: {
-        id: 'viteplus-alpha',
-        text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
-        url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
-      },
+      // banner: {
+      //   id: 'viteplus-alpha',
+      //   text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
+      //   url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
+      // },
 
       carbonAds: {
         code: 'CW7DVKJE',
@@ -1080,8 +1080,8 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
-                text: 'Migrating to Vitest 4.0',
-                link: '/guide/migration#vitest-4',
+                text: 'Migrating to Vitest 5.0',
+                link: '/guide/migration#vitest-5',
               },
               {
                 text: 'Migrating from Jest',

@@ -517,7 +517,7 @@ if (import.meta.vitest) {
       "
       ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-       FAIL  in-source.ts:12:3 > works
+       FAIL  in-source.ts:12 > works
       Error: test throws correctly
        ❯ <anonymous> in-source.ts:13:11
            11|
@@ -712,7 +712,7 @@ test('2+2=4', () => {
       `)
     })
 
-    test('with --experimental-transform-types is supported', async () => {
+    test.runIf(process.allowedNodeEnvironmentFlags.has('--experimental-transform-types'))('with --experimental-transform-types is supported', async () => {
       const { errorTree } = await runNoViteModuleRunnerTests(
         {
           'add.cts': /* ts */`

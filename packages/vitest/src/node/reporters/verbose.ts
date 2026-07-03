@@ -26,7 +26,7 @@ export class VerboseReporter extends DefaultReporter {
 
     title += test.module.task.name
     if (test.location) {
-      title += c.dim(`:${test.location.line}:${test.location.column}`)
+      title += c.dim(`:${test.location.line}`)
     }
     title += separator
 
