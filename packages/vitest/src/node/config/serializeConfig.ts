@@ -87,11 +87,13 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         ?? globalConfig.snapshotOptions.expand,
     },
     sequence: {
-      shuffle: globalConfig.sequence.shuffle,
-      concurrent: globalConfig.sequence.concurrent,
+      shuffle: config.sequence.shuffle,
+      concurrent: config.sequence.concurrent,
+      // `seed` and `sequencer` drive cross-project file ordering, so they are
+      // resolved from the root config and shared across all projects.
       seed: globalConfig.sequence.seed,
-      hooks: globalConfig.sequence.hooks,
-      setupFiles: globalConfig.sequence.setupFiles,
+      hooks: config.sequence.hooks,
+      setupFiles: config.sequence.setupFiles,
     },
     inspect: globalConfig.inspect,
     inspectBrk: globalConfig.inspectBrk,

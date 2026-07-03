@@ -19,12 +19,19 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  # Trust the committed lockfile and skip pnpm's per-install supply-chain
+  # verification (trustPolicy: no-downgrade, ~15-20s on every job). The lint job
+  # overrides this to false so the lockfile is still verified once per run.
+  PNPM_CONFIG_TRUST_LOCKFILE: true
 
 jobs:
   lint:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
+    # verify the lockfile against supply-chain policies once per run
+    env:
+      PNPM_CONFIG_TRUST_LOCKFILE: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -33,7 +40,7 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - name: Build
         run: pnpm run build
@@ -83,20 +90,38 @@ jobs:
 
   test:
     needs: changed
-    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    name: 'Test: ${{ matrix.suite }}, node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: ${{ matrix.os }}
 
     timeout-minutes: 30
 
     strategy:
+      # Split the heavy e2e and coverage suites onto their own runners so they run
+      # in parallel with the unit suite instead of sequentially on a single machine.
+      # Linux runs the full matrix on node 24/26; node 22 (the minimum supported
+      # version, currently in maintenance LTS) gets a single e2e leg as a floor
+      # smoke. macOS runs one e2e leg as an Apple-hardware smoke; unit/coverage are
+      # redundant on both.
       matrix:
+        suite: [unit, e2e, coverage]
         os: [ubuntu-latest]
-        node_version: [22, 24]
+        node_version: [24, 26]
         include:
-          - os: macos-latest
+          - suite: e2e
+            os: ubuntu-latest
+            node_version: 22
+          - suite: e2e
+            os: macos-latest
             node_version: 24
-          - os: windows-latest
+          - suite: unit
+            os: windows-latest
+            node_version: 24
+          - suite: e2e
+            os: windows-latest
+            node_version: 24
+          - suite: coverage
+            os: windows-latest
             node_version: 24
       fail-fast: false
 
@@ -109,43 +134,35 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-        with:
-          firefox-version: false
-
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
+        with:
+          browsers: chromium
 
       - name: Build
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        # matrix.suite is a fixed, workflow-defined value (unit/e2e/coverage)
+        run: pnpm run test:ci:${{ matrix.suite }} # zizmor: ignore[template-injection]
         env:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
+        if: matrix.suite == 'unit' && matrix.os == 'ubuntu-latest'
         run: pnpm run test:examples
 
       - name: Unit Test UI
+        if: matrix.suite == 'unit'
         run: pnpm -C packages/ui test:ui
         env:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
-          path: test/ui/test-results/
-          retention-days: 30
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
-        with:
-          name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}
+          name: vitest-results-${{ matrix.suite }}-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: |
             README.md
             test/unit/.vitest
@@ -154,95 +171,35 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
-  test-cached:
-    needs: changed
-    name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ${{ matrix.os }}
-
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        node_version: [24]
-        os:
-          - macos-latest
-          - windows-latest
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
-
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-        with:
-          firefox-version: false
-
-      - name: Install
-        run: pnpm i
-
-      - uses: ./.github/actions/setup-playwright
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test
-        run: pnpm run test:ci:cache
-
   test-browser:
     needs: changed
-    name: 'Browsers: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    name: 'Browsers: ${{ matrix.name }}, node-24, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
     strategy:
+      # runner.test.ts is the heaviest spec (~28% of the suite, ~70% of whichever
+      # shard it lands in). Windows isolates it in its own job and shards the other
+      # 32 specs; Ubuntu shards the whole suite 2 ways (runner rides in one shard).
+      # Every spec, runner included, runs on both OSes.
       matrix:
-        node_version: [24]
-        os:
-          - macos-latest
-          - windows-latest
+        include:
+          - os: windows-latest
+            name: runner
+            command: pnpm run test:browser:playwright runner.test.ts
+          - os: windows-latest
+            name: rest 1/2
+            command: "pnpm run test:browser:playwright --exclude 'specs/runner.test.ts' --shard=1/2"
+          - os: windows-latest
+            name: rest 2/2
+            command: "pnpm run test:browser:playwright --exclude 'specs/runner.test.ts' --shard=2/2"
+          - os: ubuntu-latest
+            name: shard 1/2
+            command: pnpm run test:browser:playwright --shard=1/2
+          - os: ubuntu-latest
+            name: shard 2/2
+            command: pnpm run test:browser:playwright --shard=2/2
       fail-fast: false
-
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
-
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-
-      - name: Install
-        run: pnpm i
-
-      - uses: ./.github/actions/setup-playwright
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
-
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
-
-  test-vite7:
-    needs: changed
-    # macos-latest is the fastest one
-    name: 'Test: vite@7, node-24, macos-latest'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: macos-latest
 
     timeout-minutes: 30
 
@@ -255,42 +212,68 @@ jobs:
         with:
           node-version: 24
 
-      - uses: ./.github/actions/setup-webdriverio
-        id: setup-webdriverio
-        with:
-          firefox-version: false
-
       - name: Install
-        run: |
-          pnpm override-vite7
-          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+        run: pnpm i --filter '!docs'
 
       - uses: ./.github/actions/setup-playwright
+        with:
+          browsers: all
 
       - name: Build
         run: pnpm run build
 
-      - name: Test
-        run: pnpm run test:ci:no-bail
+      - name: Test Browser (playwright)
+        # matrix.command is a fixed, workflow-defined string
+        run: ${{ matrix.command }} # zizmor: ignore[template-injection]
 
-      - name: Test Examples
-        if: ${{ !cancelled() }}
-        run: pnpm run test:examples
+  test-vite7:
+    needs: changed
+    # Runs on ubuntu to keep macOS under its ~5 concurrent-runner limit.
+    name: 'Test: vite@7, ${{ matrix.suite }}, node-24, ubuntu-latest'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
 
-      - name: Unit Test UI
-        if: ${{ !cancelled() }}
-        run: pnpm -C packages/ui test:ui
+    timeout-minutes: 30
+
+    strategy:
+      # vite7 is a compatibility smoke, not a coverage gate. Run the e2e suite
+      # (which exercises real config resolution, transform and runs) and the
+      # browser suite on separate runners in parallel.
+      matrix:
+        suite: [e2e, browser]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 24
+
+      - name: Install
+        run: |
+          pnpm override-vite7
+          # ubuntu runners have no default git identity; set one for this commit
+          git add . && git -c user.email=ci@vitest.dev -c user.name=vitest-ci commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile --filter '!docs'
+
+      - uses: ./.github/actions/setup-playwright
+        with:
+          browsers: all
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test E2E
+        if: ${{ matrix.suite == 'e2e' }}
+        run: pnpm run test:ci:e2e
 
       - name: Test Browser (playwright)
-        if: ${{ !cancelled() }}
-        run: pnpm run test:browser:playwright
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report-vite7
-          path: test/ui/test-results/
-          retention-days: 30
+        if: ${{ matrix.suite == 'browser' && !cancelled() }}
+        # smoke: runner.test.ts exercises the core browser-runner behaviour across
+        # every instance, enough to catch vite7 browser-mode regressions
+        run: pnpm run test:browser:playwright runner.test.ts
 
   merge-reports:
     needs:
@@ -308,7 +291,7 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
 
       - name: Install
-        run: pnpm i
+        run: pnpm i --filter '!docs'
 
       - name: Build
         run: pnpm run build

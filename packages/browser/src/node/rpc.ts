@@ -12,7 +12,7 @@ import { ServerMockResolver } from '@vitest/mocker/node'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -209,6 +209,19 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               vitest.logger.error(
                 `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/browser/api.`,
               )
+            }
+          }
+          else {
+            // attachment files are copied into `attachmentsDir`, so confine
+            // client-supplied paths to Vite's `server.fs` boundary
+            const attachments = artifact.type === 'internal:annotation'
+              ? (artifact.annotation.attachment ? [artifact.annotation.attachment] : [])
+              : (artifact.attachments ?? [])
+            for (const attachment of attachments) {
+              const path = attachment.path
+              if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
+                checkFileAccess(resolve(project.config.root, path))
+              }
             }
           }
 

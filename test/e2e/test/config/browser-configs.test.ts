@@ -467,21 +467,6 @@ test('core provider has options if `provider` is playwright', async () => {
   })
 })
 
-test('core provider has options if `provider` is wdio', async () => {
-  const v = await vitest({}, {
-    browser: {
-      enabled: true,
-      provider: playwright({ contextOptions: { hasTouch: true } }),
-      instances: [
-        { browser: 'chrome' },
-      ],
-    },
-  })
-  expect(v.config.browser.provider?.options).toEqual({
-    contextOptions: { hasTouch: true },
-  })
-})
-
 test('core provider has options if `provider` is preview', async () => {
   const v = await vitest({}, {
     browser: {

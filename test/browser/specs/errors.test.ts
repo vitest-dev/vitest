@@ -251,3 +251,51 @@ test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is d
     }
   `)
 })
+
+test('upload is blocked for files denied by server.fs.deny', async () => {
+  const result = await runBrowserTests({
+    root: './fixtures/command-permissions-upload-denied',
+    project: [instances[0].browser],
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "upload-denied.test.ts": {
+        "upload denied path": [
+          "Access denied to "<root>/my-secret.txt". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.",
+        ],
+      },
+    }
+  `)
+})
+
+test('takeScreenshot is blocked for files denied by server.fs.deny', async () => {
+  const result = await runBrowserTests({
+    root: './fixtures/command-permissions-screenshot-denied',
+    project: [instances[0].browser],
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "screenshot-denied.test.ts": {
+        "screenshot denied path": [
+          "Access denied to "<root>/my-secret.png". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.",
+        ],
+      },
+    }
+  `)
+})
+
+test('takeScreenshot is blocked when write is disabled', async () => {
+  const result = await runBrowserTests({
+    root: './fixtures/command-permissions-screenshot-no-write',
+    project: [instances[0].browser],
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "screenshot-write.test.ts": {
+        "screenshot blocked": [
+          "Cannot modify file "<root>/out.png". File writing is disabled because the server is exposed to the internet, see https://vitest.dev/config/browser/api.",
+        ],
+      },
+    }
+  `)
+})
