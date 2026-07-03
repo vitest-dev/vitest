@@ -89,9 +89,8 @@ function pruneRemovedChildren(parentNode: ParentTreeNode, tasks: Task[]) {
  * the same path (one per project), so we match by `filepath`.
  */
 export function removeFileByPath(filepath: string, search: SearchMatcher, filter: Filter) {
-  const normalized = normalizePath(filepath)
   const toRemove = explorerTree.root.tasks.filter(
-    fileNode => normalizePath(fileNode.filepath) === normalized,
+    fileNode => fileNode.filepath === filepath,
   )
   if (!toRemove.length) {
     return
@@ -107,10 +106,6 @@ export function removeFileByPath(filepath: string, search: SearchMatcher, filter
 
   uiFiles.value = [...explorerTree.root.tasks]
   runFilter(search, filter)
-}
-
-function normalizePath(path: string) {
-  return path.replace(/\\/g, '/')
 }
 
 export function preparePendingTasks(packs: TaskResultPack[]) {
