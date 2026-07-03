@@ -40,9 +40,19 @@ export const client: VitestClient = (function createVitestClient() {
         onTestArtifactRecord(testId, artifact) {
           explorerTree.recordTestArtifact(testId, artifact)
         },
+        onCollected(files) {
+          if (files?.length) {
+            explorerTree.collectFiles(files)
+          }
+        },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
           explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
+        },
+        onTestRemoved(path?: string) {
+          if (path) {
+            explorerTree.removeFile(path)
+          }
         },
         onSpecsCollected(_specs, startTime) {
           explorerTree.startTime = startTime || performance.now()

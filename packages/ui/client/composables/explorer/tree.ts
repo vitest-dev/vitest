@@ -8,7 +8,7 @@ import type {
 import { useRafFn } from '@vueuse/core'
 import { reactive } from 'vue'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { collectTestsTotalData, preparePendingTasks, recordTestArtifact, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { collectTestsTotalData, preparePendingTasks, reconcileFile, recordTestArtifact, removeFileByPath, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
@@ -103,6 +103,26 @@ export class ExplorerTree {
       this.collect(true, false, false)
       this.rafCollector.resume()
     }
+  }
+
+  collectFiles(files: File[]) {
+    queueMicrotask(() => {
+      for (let i = 0; i < files.length; i++) {
+        reconcileFile(files[i])
+      }
+    })
+  }
+
+  removeFile(filepath: string) {
+    queueMicrotask(() => {
+      removeFileByPath(filepath, searchMatcher.value.matcher, {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        slow: filter.slow,
+        onlyTests: filter.onlyTests,
+      })
+    })
   }
 
   endRun(executionTime = performance.now() - this.startTime) {

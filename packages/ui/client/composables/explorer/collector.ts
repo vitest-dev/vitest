@@ -1,6 +1,6 @@
 import type { Arrayable } from '@vitest/utils'
 import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
+import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, ParentTreeNode, SearchMatcher } from '~/composables/explorer/types'
 import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
@@ -18,8 +18,10 @@ import {
   createOrUpdateFileNode,
   createOrUpdateNodeTask,
   createOrUpdateSuiteTask,
+  isParentNode,
   isRunningTestNode,
   isSlowTestTask,
+  removeNodeSubtree,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
 import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
@@ -44,6 +46,71 @@ export function runLoadFiles(
     slow: filter.slow,
     onlyTests: filter.onlyTests,
   })
+}
+
+/**
+ * Reconcile a file's mirror subtree with the freshly collected task tree.
+ *
+ * The mirror is otherwise append-only, so a watch re-run that removes or renames
+ * tests/suites leaves ghost nodes behind. This creates/updates the current nodes and
+ * prunes any node that is no longer present in the collected `file.tasks`.
+ *
+ * The view (`uiEntries`) is refreshed by the surrounding run's filter pass, so this only
+ * repairs the structure and does not trigger its own full-tree filter.
+ */
+export function reconcileFile(file: File) {
+  createOrUpdateFileNode(file, true)
+  const fileNode = explorerTree.nodes.get(file.id)
+  if (fileNode && isParentNode(fileNode)) {
+    pruneRemovedChildren(fileNode, file.tasks)
+  }
+}
+
+function pruneRemovedChildren(parentNode: ParentTreeNode, tasks: Task[]) {
+  const currentIds = new Set(tasks.map(task => task.id))
+  const taskById = new Map(tasks.map(task => [task.id, task] as const))
+  for (const child of [...parentNode.tasks]) {
+    if (!currentIds.has(child.id)) {
+      removeNodeSubtree(child)
+    }
+    else if (isParentNode(child)) {
+      const childTask = taskById.get(child.id)
+      if (childTask && 'tasks' in childTask) {
+        pruneRemovedChildren(child, childTask.tasks)
+      }
+    }
+  }
+}
+
+/**
+ * Remove a deleted/renamed test file (and its subtree) from the mirror.
+ *
+ * The event carries a file path (not a task id) and there can be several file nodes for
+ * the same path (one per project), so we match by `filepath`.
+ */
+export function removeFileByPath(filepath: string, search: SearchMatcher, filter: Filter) {
+  const normalized = normalizePath(filepath)
+  const toRemove = explorerTree.root.tasks.filter(
+    fileNode => normalizePath(fileNode.filepath) === normalized,
+  )
+  if (!toRemove.length) {
+    return
+  }
+
+  for (const fileNode of toRemove) {
+    removeNodeSubtree(fileNode)
+    const index = explorerTree.root.tasks.indexOf(fileNode)
+    if (index !== -1) {
+      explorerTree.root.tasks.splice(index, 1)
+    }
+  }
+
+  uiFiles.value = [...explorerTree.root.tasks]
+  runFilter(search, filter)
+}
+
+function normalizePath(path: string) {
+  return path.replace(/\\/g, '/')
 }
 
 export function preparePendingTasks(packs: TaskResultPack[]) {

@@ -67,7 +67,50 @@ export class StateManager {
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
+      this.pruneStaleTaskIds(file)
     })
+  }
+
+  /**
+   * Remove `idMap` entries for a re-collected file whose position-based ids no longer
+   * exist in the fresh task tree, so stale tasks cannot be resolved after a re-run.
+   * Scoped to the file's own id subtree (`${file.id}_*`).
+   */
+  pruneStaleTaskIds(file: RunnerTestFile): void {
+    const valid = new Set<string>()
+    const collect = (task: RunnerTask): void => {
+      valid.add(task.id)
+      if (task.type === 'suite') {
+        task.tasks.forEach(collect)
+      }
+    }
+    collect(file)
+
+    const prefix = `${file.id}_`
+    for (const id of [...this.idMap.keys()]) {
+      if (id.startsWith(prefix) && !valid.has(id)) {
+        this.idMap.delete(id)
+      }
+    }
+  }
+
+  /**
+   * Remove a deleted/renamed test file and its whole id subtree from the state.
+   * Called when the server reports a removed test file (`onTestRemoved`).
+   */
+  removeFile(filepath: string): void {
+    const files = this.filesMap.get(filepath)
+    if (files) {
+      for (const file of files) {
+        const prefix = `${file.id}_`
+        for (const id of [...this.idMap.keys()]) {
+          if (id === file.id || id.startsWith(prefix)) {
+            this.idMap.delete(id)
+          }
+        }
+      }
+    }
+    this.filesMap.delete(filepath)
   }
 
   // this file is reused by ws-client, and should not rely on heavy dependencies like workspace

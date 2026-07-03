@@ -177,6 +177,13 @@ export function createOrUpdateNode(
     : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
+    // the runner reuses position-based ids across re-runs, so the same id can
+    // switch between a test and a suite (e.g. a test wrapped in a describe).
+    // drop the stale node and recreate it with the correct shape.
+    if (taskNode && taskNode.type !== task.type) {
+      removeNodeSubtree(taskNode)
+      taskNode = undefined
+    }
     if (taskNode) {
       if (!node.children.has(task.id)) {
         node.tasks.push(taskNode)
@@ -236,4 +243,37 @@ export function createOrUpdateNode(
       }
     }
   }
+}
+
+function collectSubtreeIds(node: UITaskTreeNode, acc: Set<string>) {
+  acc.add(node.id)
+  if (isParentNode(node)) {
+    for (let i = 0; i < node.tasks.length; i++) {
+      collectSubtreeIds(node.tasks[i], acc)
+    }
+  }
+}
+
+export function detachNodeFromParent(node: UITaskTreeNode) {
+  const parent = explorerTree.nodes.get(node.parentId)
+  if (parent && isParentNode(parent) && parent.children.delete(node.id)) {
+    const index = parent.tasks.findIndex(task => task.id === node.id)
+    if (index !== -1) {
+      parent.tasks.splice(index, 1)
+    }
+  }
+}
+
+/**
+ * Remove a node and all of its descendants from the flat `nodes` map and detach
+ * it from its parent. File nodes must also be spliced from `root.tasks` by the caller.
+ */
+export function removeNodeSubtree(node: UITaskTreeNode) {
+  const ids = new Set<string>()
+  collectSubtreeIds(node, ids)
+  for (const id of ids) {
+    explorerTree.nodes.delete(id)
+  }
+  detachNodeFromParent(node)
+  return ids
 }
