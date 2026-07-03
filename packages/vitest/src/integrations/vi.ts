@@ -440,7 +440,7 @@ export interface VitestUtils {
    */
   stubEnv: <T extends string>(
     name: T,
-    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string | undefined,
+    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean | undefined : string | undefined,
   ) => VitestUtils
 
   /**

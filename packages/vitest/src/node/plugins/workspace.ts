@@ -3,13 +3,13 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { API_TOKEN_FILE } from '../config/apiToken'
-import { VitestConfigApi } from './api'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestConfigServer } from './server'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
 import { VitestProjectResolver } from './vitestResolver'
 
@@ -38,8 +38,6 @@ export function WorkspaceVitestPlugin(
           base: '/',
           root,
           server: {
-            // disable watch mode in projects because it is handled by the top-level watcher
-            watch: null,
             open: false,
             fs: {
               allow: globalViteConfig.server.fs.allow,
@@ -74,9 +72,11 @@ export function WorkspaceVitestPlugin(
         // Projects always inherit non-project config options
         config.test.coverage = globalConfig.coverage
         config.test.attachmentsDir = globalConfig.attachmentsDir
+        // project servers never watch; the top-level server owns the watcher
+        config.server.watch = null
       },
     },
-    VitestConfigApi(harness, globalConfig),
+    VitestConfigServer(harness, globalConfig),
     SsrRunnerFixerPlugin(harness),
     MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(),

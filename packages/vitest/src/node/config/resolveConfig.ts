@@ -1044,6 +1044,21 @@ export async function resolveConfig(
   )
   rootViteConfig.test = rootConfig
 
+  // The top-level server owns the file watcher in watch mode; `watch` is only
+  // defaulted by `resolveTestConfig` (above), so it can't be set from a plugin.
+  const rootServer = rootViteConfig.server
+  if (!rootConfig.watch) {
+    rootServer.watch = null
+  }
+  else {
+    rootServer.watch ??= {}
+    // chokidar fsevents is unstable on macos when emitting the "ready" event
+    if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
+      rootServer.watch.useFsEvents = false
+      rootServer.watch.usePolling = false
+    }
+  }
+
   rootViteConfig.server.fs.allow.push(
     ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
   )

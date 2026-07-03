@@ -53,10 +53,8 @@ export default (contribution: BrowserServerContribution): Plugin[] => {
     BrowserContext(contribution),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
-      filter(id, environment) {
-        if (environment.name !== 'client') {
-          return false
-        }
+      // injected only into the `client` environment via the browser contribution
+      filter(id) {
         if (id.includes(distRoot)) {
           return false
         }

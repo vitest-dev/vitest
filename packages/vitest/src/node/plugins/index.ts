@@ -2,13 +2,13 @@ import type { Plugin as VitePlugin } from 'vite'
 import type { CliOptions } from '../cli/cli-api'
 import type { PluginHarness } from '../config/pluginHarness'
 import { resolve } from 'pathe'
-import { VitestConfigApi } from './api'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestConfigServer } from './server'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
 import { VitestCoreResolver } from './vitestResolver'
 
@@ -64,7 +64,7 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
         },
       },
     },
-    VitestConfigApi(harness),
+    VitestConfigServer(harness),
     ...VitestConfig(harness),
   ]
 }

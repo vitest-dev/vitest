@@ -69,7 +69,9 @@ export function BrowserLoaderPlugin(
         if (contribution && environment.name === 'client') {
           // `post` browser plugins are injected by `vitest:browser:loader:post`
           // instead, so they run after the `post` plugins of the main pipeline
-          // (e.g. `vitest:mocks` hoisting) rather than at this `pre` position.
+          // rather than at this `pre` position. For example, the mocker's
+          // `vitest:browser:esm-injector` must run after `vitest:mocks`, which is
+          // added by the main pipeline and is not part of `contribution.plugins`.
           return sortPluginsByEnforce(
             contribution.plugins.filter(plugin => plugin.enforce !== 'post'),
           )

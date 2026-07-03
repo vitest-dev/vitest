@@ -2,7 +2,6 @@ import type { GlobOptions } from 'tinyglobby'
 import type {
   ResolvedConfig as ResolvedViteConfig,
   InlineConfig as ViteInlineConfig,
-  UserConfig as ViteUserConfig,
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
@@ -237,28 +236,17 @@ async function applyBrowserOptimizeDeps(
       const fileLists = await Promise.all(projectConfigs.map(globTestFiles))
       const testFiles = [...new Set(fileLists.flat())]
       const optimizeDeps = await contribution.resolveOptimizeDeps(projectConfigs, testFiles, harness)
-      mergeBrowserOptimizeDeps(viteConfig, optimizeDeps)
+      // the browser runs in the `client` environment, but Vite's dep scanner
+      // reads the top-level `optimizeDeps`, so keep both in sync (`mergeConfig`
+      // concatenates arrays, preserving user/default values)
+      const merged = mergeConfig(
+        { optimizeDeps: viteConfig.optimizeDeps },
+        { optimizeDeps },
+      ).optimizeDeps
+      ;(viteConfig as any).optimizeDeps = { ...merged }
+      viteConfig.environments.client.optimizeDeps = { ...viteConfig.optimizeDeps }
     }),
   )
-}
-
-/**
- * Merge the computed browser `optimizeDeps` into the already-resolved Vite
- * config. The browser optimizer reads the `client` environment; the top-level
- * `optimizeDeps` is kept in sync for the scanner. Vite's own `mergeConfig`
- * concatenates the arrays (entries, include, exclude, esbuild/rolldown plugins)
- * so existing user / default values are preserved.
- */
-function mergeBrowserOptimizeDeps(
-  viteConfig: ResolvedViteConfig,
-  optimizeDeps: NonNullable<ViteUserConfig['optimizeDeps']>,
-): void {
-  const { optimizeDeps: resolvedOptimizedDeps } = mergeConfig(
-    { optimizeDeps: viteConfig.optimizeDeps },
-    { optimizeDeps },
-  )
-  ;(viteConfig as any).optimizeDeps = { ...resolvedOptimizedDeps }
-  viteConfig.environments.client.optimizeDeps = { ...viteConfig.optimizeDeps }
 }
 
 async function resolveDeclaredProjectEntries(

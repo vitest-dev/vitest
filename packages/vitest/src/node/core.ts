@@ -212,7 +212,6 @@ export class Vitest {
     this._setRootConfig(config)
     await this._attachRootServer()
     await this._attachProjectServers()
-    this._harness.setVitest(this)
   }
 
   /**

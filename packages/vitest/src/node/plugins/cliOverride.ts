@@ -7,7 +7,7 @@ import { mergeConfig } from 'vite'
 export function CliOverride(cliOptions: UserConfig): Plugin {
   return {
     // The CLI plugin overwrites config values with CLI options, making them
-    // avalable in the next plugin. We have to do this via plugins because of watch mode.
+    // available in the next plugin. We have to do this via plugins because of watch mode.
     name: 'vitest:config:cli',
     enforce: 'pre',
     config: {
