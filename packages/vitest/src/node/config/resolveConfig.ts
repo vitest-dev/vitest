@@ -29,7 +29,9 @@ import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
 import { CliOverride } from '../plugins/cliOverride'
-import { VitestConfigPlugin, VitestCorePlugin } from '../plugins/index'
+import { VitestConfig } from '../plugins/config'
+import { VitestCorePlugin } from '../plugins/index'
+import { VitestConfigServer } from '../plugins/server'
 import { resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
@@ -1027,8 +1029,9 @@ export async function resolveConfig(
       mode: options.mode || 'test',
       plugins: [
         CliOverride(cliOptionsCopy),
-        VitestConfigPlugin(pluginsHarness, options),
-        ...VitestCorePlugin(pluginsHarness),
+        VitestConfigServer(pluginsHarness),
+        ...VitestConfig(pluginsHarness),
+        ...VitestCorePlugin(pluginsHarness, options),
         ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
       ],
     } satisfies InlineConfig,
@@ -1043,21 +1046,6 @@ export async function resolveConfig(
     rootViteConfig,
   )
   rootViteConfig.test = rootConfig
-
-  // The top-level server owns the file watcher in watch mode; `watch` is only
-  // defaulted by `resolveTestConfig` (above), so it can't be set from a plugin.
-  const rootServer = rootViteConfig.server
-  if (!rootConfig.watch) {
-    rootServer.watch = null
-  }
-  else {
-    rootServer.watch ??= {}
-    // chokidar fsevents is unstable on macos when emitting the "ready" event
-    if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
-      rootServer.watch.useFsEvents = false
-      rootServer.watch.usePolling = false
-    }
-  }
 
   rootViteConfig.server.fs.allow.push(
     ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
