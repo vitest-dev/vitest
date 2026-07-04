@@ -322,6 +322,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       __vite_track_exportName__ || __vite_ssr_exportName__,
     ]
 
+    // TODO@discuss switch the default in Vitest 6(?)
+    // backwards compat for vite-node
     const injectCjsGlobals = this.options.injectCjsGlobals !== false
       // the module type is provided by the server only when `injectCjsGlobals` is disabled.
       // CommonJS modules always receive these variables because they are part
@@ -331,9 +333,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     if (injectCjsGlobals) {
       const cjsGlobals = this._createCJSGlobals(context, module, span)
       argumentsList.push(
-        // TODO@discuss deprecate in Vitest 5, remove in Vitest 6(?)
-        // backwards compat for vite-node
-        // https://github.com/vitest-dev/vitest/issues/10292
         '__filename',
         '__dirname',
         'module',
