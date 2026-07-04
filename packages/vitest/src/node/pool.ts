@@ -127,6 +127,14 @@ export function createPool(ctx: Vitest): ProcessPool {
             ...project.config.env,
           }
 
+          // V8 serializes compile-cached scripts without the source positions
+          // that precise coverage relies on — never let workers (or the
+          // processes they spawn) use the compile cache when coverage is on
+          if (ctx.config.coverage.enabled) {
+            delete env.NODE_COMPILE_CACHE
+            env.NODE_DISABLE_COMPILE_CACHE = '1'
+          }
+
           // env are case-insensitive on Windows, but spawned processes don't support it
           if (isWindows) {
             for (const name in env) {

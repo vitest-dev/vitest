@@ -1,3 +1,5 @@
+import type { EnvironmentModuleNode, FetchResult, ViteDevServer } from 'vite'
+import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
@@ -13,6 +15,16 @@ interface MethodsOptions {
   // do not report files
   collect?: boolean
 }
+
+// externalize verdicts served during this session, shared with fresh workers
+// via `fetchWarmModules`. Only verdicts for already-resolved urls are stored:
+// an unresolved specifier (a runtime-variable dynamic import of a bare name)
+// resolves through the requesting environment's plugin container, so its
+// verdict is environment- and importer-specific and cannot be shared. Resolved
+// ids always externalize the same way (the resolver memoizes by resolved id).
+// Keyed by the Vite server so a server restart drops the accumulated verdicts
+// together with the resolver that produced them.
+const warmExternals = new WeakMap<ViteDevServer, Record<string, FetchResult>>()
 
 export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
   const vitest = project.vitest
@@ -47,6 +59,16 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         const metadata = project.vitest.state.metadata[project.name]
         if ('externalize' in result) {
           metadata.externalized[url] = result.externalize
+          // builtins and network urls are already resolved inside the worker
+          // without a round-trip, only module externalizations are worth sharing
+          if (result.type === 'module' && url[0] === '/') {
+            let externals = warmExternals.get(project.vite)
+            if (!externals) {
+              externals = Object.create(null) as Record<string, FetchResult>
+              warmExternals.set(project.vite, externals)
+            }
+            externals[url] = result
+          }
         }
         if ('tmp' in result) {
           metadata.tmps[url] = result.tmp
@@ -55,6 +77,70 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         metadata.duration[url].push(duration)
         return result
       })
+    },
+    async fetchWarmModules(environmentName, files) {
+      const environment = project.vite.environments[environmentName]
+      if (!environment) {
+        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+      }
+
+      const warm: Record<string, FetchResult | FetchCachedFileSystemResult> = Object.create(null)
+
+      // walk the import graphs of the requested files instead of dumping the
+      // whole module graph — in large (watch) sessions the graph accumulates
+      // modules this worker will never load
+      const moduleGraph = environment.moduleGraph
+      const queue: EnvironmentModuleNode[] = []
+      for (const file of [...files, ...project.config.setupFiles]) {
+        const nodes = moduleGraph.getModulesByFile(file)
+        if (nodes) {
+          queue.push(...nodes)
+        }
+      }
+
+      const seen = new Set<EnvironmentModuleNode>()
+      while (queue.length) {
+        const node = queue.pop()!
+        if (seen.has(node)) {
+          continue
+        }
+        seen.add(node)
+        queue.push(...node.importedModules)
+
+        const transformResult = node.transformResult
+        if (!transformResult || node.id == null) {
+          continue
+        }
+        // the transformed code is already stored on disk either by the forks
+        // pool (`cacheFs`) or by `experimental.fsModuleCache` — the worker can
+        // read the file itself instead of fetching each module separately.
+        // invalidated modules lose `transformResult` and drop out automatically
+        const tmp = transformResult.__vitestTmp ?? (transformResult as { _vitest_tmp?: string })._vitest_tmp
+        if (typeof tmp !== 'string') {
+          continue
+        }
+        const entry: FetchCachedFileSystemResult = {
+          cached: true,
+          file: node.file,
+          id: node.id,
+          tmp,
+          url: node.url,
+          invalidate: false,
+        }
+        warm[node.url] = entry
+        if (node.id !== node.url) {
+          warm[node.id] = entry
+        }
+      }
+
+      const externals = warmExternals.get(project.vite)
+      if (externals) {
+        for (const url in externals) {
+          warm[url] ??= externals[url]
+        }
+      }
+
+      return warm
     },
     async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]

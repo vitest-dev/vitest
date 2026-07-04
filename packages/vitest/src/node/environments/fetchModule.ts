@@ -136,7 +136,14 @@ class ModuleFetcher {
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    return this.cacheResult(result, cachePath, importedUrls, !!mappings)
+    const cachedResult = await this.cacheResult(result, cachePath, importedUrls, !!mappings)
+    // remember where the code is stored on disk so that repeat fetches and the
+    // `fetchWarmModules` snapshot can point at it in this session already, not
+    // only after the cache is read back in the next one
+    if ('code' in result && moduleGraphModule.transformResult) {
+      moduleGraphModule.transformResult.__vitestTmp = cachePath
+    }
+    return cachedResult
   }
 
   // we need this for UI to be able to show a module graph
