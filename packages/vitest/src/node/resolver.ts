@@ -182,13 +182,22 @@ const ESM_SYNTAX_MARKERS = [
   '__vite_ssr_exportName__',
 ]
 
+const CJS_GLOBALS_REFERENCE_RE = /\b(?:module|exports|require|__filename|__dirname)\b/
+
 // mirrors the Node.js module detection algorithm: the file extension wins,
 // then the `type` field in the package scope, then the presence of
 // ESM syntax. the ssr transform always rewrites static imports/exports and
-// `import.meta` into `__vite_ssr_` helpers, so the transformed code can be
-// checked instead of parsing the original source. dynamic imports don't
-// count because they are allowed in CommonJS modules
-export function detectModuleType(file: string | null, code: string): ModuleType {
+// `import.meta` into `__vite_ssr_` helpers, so the transformed code is
+// checked first: it reflects the compiled output (type-only imports are
+// already erased), and a module without the markers cannot be an ES module.
+// a marker hit is then confirmed against the lexed source because the
+// transform preserves comments and strings that can mention the markers.
+// dynamic imports never count because they are allowed in CommonJS modules
+export async function detectModuleType(
+  file: string | null,
+  code: string,
+  loadSource?: () => Promise<string | null>,
+): Promise<ModuleType> {
   if (file) {
     const filepath = cleanUrl(file)
     const extension = extname(filepath)
@@ -203,7 +212,29 @@ export function detectModuleType(file: string | null, code: string): ModuleType 
       return scopeType
     }
   }
-  return ESM_SYNTAX_MARKERS.some(marker => code.includes(marker)) ? 'esm' : 'cjs'
+  if (!ESM_SYNTAX_MARKERS.some(marker => code.includes(marker))) {
+    return 'cjs'
+  }
+  // a false "esm" verdict can only break modules that reference the CommonJS
+  // variables, so the source is read and lexed only when both signals appear
+  if (!CJS_GLOBALS_REFERENCE_RE.test(code)) {
+    return 'esm'
+  }
+  const source = loadSource ? await loadSource() : null
+  if (source != null) {
+    try {
+      await esModuleLexer.init
+      const [, , , hasModuleSyntax] = esModuleLexer.parse(source)
+      if (!hasModuleSyntax) {
+        return 'cjs'
+      }
+    }
+    catch {
+      // the lexer cannot parse TypeScript types or non-JS sources,
+      // trust the markers
+    }
+  }
+  return 'esm'
 }
 
 const packageScopeTypeCache = new Map<string, ModuleType | 'none'>()

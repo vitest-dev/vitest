@@ -28,7 +28,7 @@ When this option is disabled, only modules that are detected to be CommonJS rece
 
 1. The file extension: `.cjs` and `.cts` files are always CommonJS, `.mjs` and `.mts` files are always ES modules.
 2. The `type` field in the nearest `package.json`: `"module"` means ES module, `"commonjs"` means CommonJS. Same as in Node.js, the lookup stops at the first `package.json` and never crosses a `node_modules` boundary, so dependencies don't inherit the `type` of your project.
-3. The presence of ESM syntax in the file: if the file has no static `import`/`export` declarations and doesn't reference `import.meta`, it is treated as CommonJS. Note that dynamic imports are allowed in CommonJS modules, so they don't affect the detection.
+3. The presence of ESM syntax in the file: if the file has no static `import`/`export` declarations and doesn't reference `import.meta`, it is treated as CommonJS. Syntax inside comments and strings doesn't affect the detection. Dynamic imports are allowed in CommonJS modules, so they don't count as ESM syntax; type-only TypeScript imports are erased during the transform, so they don't count either.
 
 The syntax detection is always enabled: Vitest doesn't respect Node.js CLI flags that modify the module type resolution, like `--no-experimental-detect-module`, `--input-type` (it only applies to the string input in Node.js), or the `--experimental-default-type` flag removed in Node.js 23.
 

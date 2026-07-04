@@ -242,7 +242,11 @@ class ModuleFetcher {
         url: moduleGraphModule.url,
         invalidate: false,
         moduleType: this.detectModuleType
-          ? detectModuleType(moduleGraphModule.file, moduleGraphModule.transformResult.code)
+          ? await detectModuleType(
+              moduleGraphModule.file,
+              moduleGraphModule.transformResult.code,
+              this.sourceLoader(moduleGraphModule.file),
+            )
           : undefined,
       }
     }
@@ -293,7 +297,7 @@ class ModuleFetcher {
       url: cachedModule.url,
       invalidate: false,
       moduleType: this.detectModuleType
-        ? detectModuleType(cachedModule.file, cachedModule.code)
+        ? await detectModuleType(cachedModule.file, cachedModule.code, this.sourceLoader(cachedModule.file))
         : undefined,
     }
   }
@@ -317,9 +321,16 @@ class ModuleFetcher {
 
     const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
     if (this.detectModuleType && 'code' in result) {
-      result.moduleType = detectModuleType(result.file, result.code)
+      result.moduleType = await detectModuleType(result.file, result.code, this.sourceLoader(result.file))
     }
     return result
+  }
+
+  private sourceLoader(file: string | null): (() => Promise<string | null>) | undefined {
+    if (!file || file.startsWith('\x00') || file.startsWith('virtual:')) {
+      return undefined
+    }
+    return () => this.readFileConcurrently(file)
   }
 
   private async cacheResult(

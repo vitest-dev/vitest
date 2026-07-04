@@ -103,6 +103,53 @@ test('"type": "commonjs" in package.json keeps the module scope when injectCjsGl
   expect(exitCode).toBe(0)
 })
 
+test('esm markers inside comments do not affect the detection', async () => {
+  const { stderr, exitCode } = await runInlineTests({
+    'package.json': '{}',
+    'cjs-dep.js': ts`
+      // this module mentions __vite_ssr_import__ and __vite_ssr_exports__ in a comment
+      module.exports = { answer: 42 }
+    `,
+    'basic.test.js': ts`
+      // the marker __vite_ssr_import__ in a comment doesn't make a real ES module less strict
+      import { expect, test } from 'vitest'
+      import cjs from './cjs-dep.js'
+
+      test('cjs module is evaluated, the test file is strict', () => {
+        expect(cjs.answer).toBe(42)
+        expect(typeof module).toBe('undefined')
+      })
+    `,
+  }, { injectCjsGlobals: false })
+  expect(stderr).toBe('')
+  expect(exitCode).toBe(0)
+})
+
+test('typescript file with only type imports is detected as commonjs', async () => {
+  const { stderr, exitCode } = await runInlineTests({
+    'package.json': '{}',
+    'cjs-dep.ts': ts`
+      import type { Stats } from 'node:fs'
+
+      module.exports = {
+        dirname: __dirname,
+        isStats: (stats: Stats) => stats instanceof Object,
+      }
+    `,
+    'basic.test.js': ts`
+      import { expect, test } from 'vitest'
+      import cjs from './cjs-dep.ts'
+
+      test('cjs module is evaluated', () => {
+        expect(typeof cjs.dirname).toBe('string')
+        expect(cjs.isStats({})).toBe(true)
+      })
+    `,
+  }, { injectCjsGlobals: false })
+  expect(stderr).toBe('')
+  expect(exitCode).toBe(0)
+})
+
 test('typeless files inside node_modules do not inherit the project package type', async () => {
   const { stderr, exitCode } = await runInlineTests({
     'package.json': '{ "type": "module" }',
