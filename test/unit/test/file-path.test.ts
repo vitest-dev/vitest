@@ -1,9 +1,37 @@
 import { describe, expect, it, vi } from 'vitest'
+import { isSameFilePath, normalizeWindowsDriveLetter } from '../../../packages/vitest/src/runtime/utils/paths'
 
 vi.mock('fs', () => {
   return {
     existsSync: vi.fn(),
   }
+})
+
+describe('isSameFilePath', () => {
+  it('matches windows paths that only differ by drive letter casing', () => {
+    expect(isSameFilePath('c:/project/test.ts', 'C:/project/test.ts', 'win32')).toBe(true)
+    expect(isSameFilePath('C:\\project\\test.ts', 'c:\\project\\test.ts', 'win32')).toBe(true)
+  })
+
+  it('does not normalize non-drive-letter casing', () => {
+    expect(isSameFilePath('C:/project/Test.ts', 'C:/project/test.ts', 'win32')).toBe(false)
+  })
+
+  it('preserves case-sensitive comparisons on non-windows platforms', () => {
+    expect(isSameFilePath('c:/project/test.ts', 'C:/project/test.ts', 'linux')).toBe(false)
+  })
+})
+
+describe('normalizeWindowsDriveLetter', () => {
+  it('normalizes only the drive letter on windows', () => {
+    expect(normalizeWindowsDriveLetter('C:/project/Test.ts', 'win32')).toBe('c:/project/Test.ts')
+    expect(normalizeWindowsDriveLetter('D:\\project\\Test.ts', 'win32')).toBe('d:\\project\\Test.ts')
+  })
+
+  it('does not change non-windows paths', () => {
+    expect(normalizeWindowsDriveLetter('C:/project/Test.ts', 'linux')).toBe('C:/project/Test.ts')
+    expect(normalizeWindowsDriveLetter('/project/Test.ts', 'win32')).toBe('/project/Test.ts')
+  })
 })
 
 const isWindows = process.platform === 'win32'

@@ -20,6 +20,7 @@ import {
   ssrModuleExportsKey,
 } from 'vite/module-runner'
 import { Traces } from '../../utils/traces'
+import { isSameFilePath } from '../utils/paths'
 import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
@@ -278,7 +279,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     meta.env = this.env
 
     const testFilepath = this.options.getCurrentTestFilepath?.()
-    if (testFilepath === module.file) {
+    if (isSameFilePath(testFilepath, module.file)) {
       const globalNamespace = this.vm?.context || globalThis
       Object.defineProperty(meta, 'vitest', {
         // @ts-expect-error injected untyped global

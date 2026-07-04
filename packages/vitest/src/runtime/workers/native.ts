@@ -12,10 +12,12 @@ import { resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { distDir } from '../../paths'
 import { toBuiltin } from '../../utils/modules'
+import { normalizeWindowsDriveLetter } from '../utils/paths'
 
 const NOW_LENGTH = Date.now().toString().length
 const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
 const REGEXP_MOCK_ACTUAL = /\?mock=actual/
+const isWindows = process.platform === 'win32'
 
 export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<void> {
   if (module.setSourceMapsSupport) {
@@ -138,8 +140,13 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
   }
   if (overridden) {
     const filename = resolve(fileURLToPath(url))
+    const escapedFilename = filename.replace(/"/g, '\\"')
+    const normalizedFilename = normalizeWindowsDriveLetter(filename).replace(/"/g, '\\"')
+    const filenameMatches = isWindows
+      ? `filepath === "${escapedFilename}" || (filepath[1] === ':' && filepath[0].toLowerCase() + filepath.slice(1) === "${normalizedFilename}")`
+      : `filepath === "${escapedFilename}"`
     // appending instead of prepending because functions are hoisted and we don't change the offset
-    ms().append(`;\nfunction IMPORT_META_TEST() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined; }`)
+    ms().append(`;\nfunction IMPORT_META_TEST() { const filepath = typeof __vitest_worker__ !== 'undefined' ? __vitest_worker__.filepath : undefined; return typeof filepath === 'string' && (${filenameMatches}) ? __vitest_index__ : undefined; }`)
   }
 }
 
