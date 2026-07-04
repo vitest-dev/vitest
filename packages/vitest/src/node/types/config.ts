@@ -309,6 +309,24 @@ export interface InlineConfig {
   globals?: boolean
 
   /**
+   * Inject CommonJS module variables (`module`, `exports`, `require`,
+   * `__filename`, `__dirname`) into every module processed by Vitest.
+   *
+   * When disabled, ES modules no longer have access to CommonJS variables,
+   * matching how the code runs outside of Vitest. Modules detected to be
+   * CommonJS keep these variables because they are part of the module scope.
+   * The module type is detected the same way Node.js does it: the file
+   * extension wins, then the `type` field in the nearest package.json,
+   * then the presence of ESM syntax in the file.
+   *
+   * This option doesn't affect externalized modules which are always
+   * executed by the native runtime.
+   *
+   * @default true
+   */
+  injectCjsGlobals?: boolean
+
+  /**
    * Running environment
    *
    * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'

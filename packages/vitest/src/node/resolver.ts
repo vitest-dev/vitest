@@ -1,12 +1,19 @@
+import type { ModuleType } from '../types/general'
 import type { ResolvedConfig, ServerDepsOptions } from './types/config'
-import { existsSync, promises as fsp } from 'node:fs'
+import { existsSync, promises as fsp, readFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
-import { dirname, extname, join, resolve } from 'pathe'
+import { basename, dirname, extname, join, resolve } from 'pathe'
+import {
+  ssrExportAllKey,
+  ssrImportKey,
+  ssrImportMetaKey,
+  ssrModuleExportsKey,
+} from 'vite/module-runner'
 import { isWindows } from '../utils/env'
 
 export class VitestResolver {
@@ -164,6 +171,83 @@ async function isValidNodeImport(id: string) {
   catch {
     return false
   }
+}
+
+const ESM_SYNTAX_MARKERS = [
+  ssrImportKey,
+  ssrModuleExportsKey,
+  ssrExportAllKey,
+  ssrImportMetaKey,
+  // TODO: use ssrExportNameKey when Vite 6 support is over
+  '__vite_ssr_exportName__',
+]
+
+// mirrors the Node.js module detection algorithm: the file extension wins,
+// then the `type` field in the package scope, then the presence of
+// ESM syntax. the ssr transform always rewrites static imports/exports and
+// `import.meta` into `__vite_ssr_` helpers, so the transformed code can be
+// checked instead of parsing the original source. dynamic imports don't
+// count because they are allowed in CommonJS modules
+export function detectModuleType(file: string | null, code: string): ModuleType {
+  if (file) {
+    const filepath = cleanUrl(file)
+    const extension = extname(filepath)
+    if (extension === '.cjs' || extension === '.cts') {
+      return 'cjs'
+    }
+    if (extension === '.mjs' || extension === '.mts') {
+      return 'esm'
+    }
+    const scopeType = lookupPackageScopeType(dirname(filepath))
+    if (scopeType !== 'none') {
+      return scopeType
+    }
+  }
+  return ESM_SYNTAX_MARKERS.some(marker => code.includes(marker)) ? 'esm' : 'cjs'
+}
+
+const packageScopeTypeCache = new Map<string, ModuleType | 'none'>()
+
+// mirrors LOOKUP_PACKAGE_SCOPE from the ESM resolution algorithm:
+// the lookup stops at the first package.json and never crosses
+// the "node_modules" boundary, so typeless dependencies don't
+// inherit the `type` field of the user's project
+function lookupPackageScopeType(directory: string): ModuleType | 'none' {
+  const visited: string[] = []
+  let result: ModuleType | 'none' = 'none'
+  let current = directory
+  while (current) {
+    const cached = packageScopeTypeCache.get(current)
+    if (cached) {
+      result = cached
+      break
+    }
+    if (basename(current) === 'node_modules') {
+      break
+    }
+    visited.push(current)
+    const packageJsonPath = join(current, 'package.json')
+    if (existsSync(packageJsonPath)) {
+      try {
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+        if (packageJson.type === 'module') {
+          result = 'esm'
+        }
+        else if (packageJson.type === 'commonjs') {
+          result = 'cjs'
+        }
+      }
+      catch {}
+      break
+    }
+    const parent = dirname(current)
+    if (parent === current) {
+      break
+    }
+    current = parent
+  }
+  visited.forEach(dir => packageScopeTypeCache.set(dir, result))
+  return result
 }
 
 export async function shouldExternalize(

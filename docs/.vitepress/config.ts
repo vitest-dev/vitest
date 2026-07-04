@@ -307,6 +307,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/globals',
               },
               {
+                text: 'injectCjsGlobals',
+                link: '/config/injectcjsglobals',
+              },
+              {
                 text: 'environment',
                 link: '/config/environment',
               },

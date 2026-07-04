@@ -33,6 +33,8 @@ export interface ResolveFunctionResult {
   url: string
 }
 
+export type ModuleType = 'cjs' | 'esm'
+
 export interface FetchCachedFileSystemResult {
   cached: true
   tmp: string
@@ -40,6 +42,7 @@ export interface FetchCachedFileSystemResult {
   file: string | null
   url: string
   invalidate: boolean
+  moduleType?: ModuleType
 }
 
 // These need to be compatible with Tinyrainbow's bg-colors, and CSS's background-color

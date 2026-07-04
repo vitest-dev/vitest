@@ -42,6 +42,7 @@ export interface SerializedConfig {
   _diffOptions?: DiffOptions
   color?: LabelColor
   globals: boolean
+  injectCjsGlobals: boolean
   base: string | undefined
   snapshotEnvironment?: string
   disableConsoleIntercept: boolean | undefined

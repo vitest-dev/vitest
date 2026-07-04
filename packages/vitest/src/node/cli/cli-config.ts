@@ -344,6 +344,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   globals: {
     description: 'Inject apis globally',
   },
+  injectCjsGlobals: {
+    description: 'Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)',
+  },
   dom: {
     description: 'Mock browser API with happy-dom',
   },

@@ -5,6 +5,7 @@ import type {
   ModuleRunnerContext,
   ModuleRunnerImportMeta,
 } from 'vite/module-runner'
+import type { ModuleType } from '../../types/general'
 import type { GetterTracker } from '../getter-tracker'
 import type { VitestEvaluatedModules } from './evaluatedModules'
 import type { ModuleExecutionInfo } from './moduleDebug'
@@ -27,6 +28,7 @@ const isWindows = process.platform === 'win32'
 export interface VitestModuleEvaluatorOptions {
   evaluatedModules?: VitestEvaluatedModules
   interopDefault?: boolean | undefined
+  injectCjsGlobals?: boolean | undefined
   moduleExecutionInfo?: ModuleExecutionInfo
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
@@ -288,6 +290,19 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     span.setAttribute('code.file.path', meta.filename)
 
+    const __vite_ssr_exportName__ = context.__vite_ssr_exportName__
+      || ((name: string, getter: () => unknown) => Object.defineProperty(context[ssrModuleExportsKey], name, {
+        enumerable: true,
+        configurable: true,
+        get: getter,
+      }))
+
+    let __vite_track_exportName__: ((name: string, getter: () => unknown) => void) | undefined
+    const getterTracker = this.getterTracker
+    if (getterTracker) {
+      __vite_track_exportName__ = getterTracker.createTracker(module.id, __vite_ssr_exportName__)
+    }
+
     const argumentsList = [
       ssrModuleExportsKey,
       ssrImportMetaKey,
@@ -298,20 +313,49 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       '__vite_ssr_exportName__',
     ]
 
-    const cjsGlobals = this._createCJSGlobals(context, module, span)
-    argumentsList.push(
-      // TODO@discuss deprecate in Vitest 5, remove in Vitest 6(?)
-      // backwards compat for vite-node
-      // https://github.com/vitest-dev/vitest/issues/10292
-      '__filename',
-      '__dirname',
-      'module',
-      'exports',
-      'require',
-    )
+    const argumentsValues: unknown[] = [
+      context[ssrModuleExportsKey],
+      context[ssrImportMetaKey],
+      context[ssrImportKey],
+      context[ssrDynamicImportKey],
+      context[ssrExportAllKey],
+      __vite_track_exportName__ || __vite_ssr_exportName__,
+    ]
+
+    const injectCjsGlobals = this.options.injectCjsGlobals !== false
+      // the module type is provided by the server only when `injectCjsGlobals` is disabled.
+      // CommonJS modules always receive these variables because they are part
+      // of the module scope, without them the module cannot be evaluated at all
+      || (module.meta as { moduleType?: ModuleType } | undefined)?.moduleType === 'cjs'
+
+    if (injectCjsGlobals) {
+      const cjsGlobals = this._createCJSGlobals(context, module, span)
+      argumentsList.push(
+        // TODO@discuss deprecate in Vitest 5, remove in Vitest 6(?)
+        // backwards compat for vite-node
+        // https://github.com/vitest-dev/vitest/issues/10292
+        '__filename',
+        '__dirname',
+        'module',
+        'exports',
+        'require',
+      )
+
+      argumentsValues.push(
+        cjsGlobals.__filename,
+        cjsGlobals.__dirname,
+        cjsGlobals.module,
+        cjsGlobals.exports,
+        cjsGlobals.require,
+      )
+    }
 
     if (this.compiledFunctionArgumentsNames) {
       argumentsList.push(...this.compiledFunctionArgumentsNames)
+    }
+
+    if (this.compiledFunctionArgumentsValues) {
+      argumentsValues.push(...this.compiledFunctionArgumentsValues)
     }
 
     span.setAttribute('vitest.module.arguments', argumentsList)
@@ -349,35 +393,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ? vm.runInContext(wrappedCode, this.vm.context, options)
         : vm.runInThisContext(wrappedCode, options)
 
-      const __vite_ssr_exportName__ = context.__vite_ssr_exportName__
-        || ((name: string, getter: () => unknown) => Object.defineProperty(context[ssrModuleExportsKey], name, {
-          enumerable: true,
-          configurable: true,
-          get: getter,
-        }))
-
-      let __vite_track_exportName__: ((name: string, getter: () => unknown) => void) | undefined
-      const getterTracker = this.getterTracker
-      if (getterTracker) {
-        __vite_track_exportName__ = getterTracker.createTracker(module.id, __vite_ssr_exportName__)
+      await initModule(...argumentsValues)
+    }
+    catch (error: unknown) {
+      if (!injectCjsGlobals) {
+        throw enhanceMissingCjsGlobalsError(error)
       }
-
-      await initModule(
-        context[ssrModuleExportsKey],
-        context[ssrImportMetaKey],
-        context[ssrImportKey],
-        context[ssrDynamicImportKey],
-        context[ssrExportAllKey],
-        __vite_track_exportName__ || __vite_ssr_exportName__,
-
-        cjsGlobals.__filename,
-        cjsGlobals.__dirname,
-        cjsGlobals.module,
-        cjsGlobals.exports,
-        cjsGlobals.require,
-
-        ...this.compiledFunctionArgumentsValues,
-      )
+      throw error
     }
     finally {
       // moduleExecutionInfo needs to use Node filename instead of the normalized one
@@ -562,6 +584,40 @@ function interopModule(mod: any) {
   }
 
   return { mod, defaultExport }
+}
+
+const CJS_GLOBALS_REFERENCE_ERROR_RE = /^(module|exports|require|__filename|__dirname) is not defined$/
+
+const ESM_HINTS: Record<string, string> = {
+  module: 'use "export" declarations instead of "module.exports"',
+  exports: 'use "export" declarations instead of "exports"',
+  require: 'use "import" declarations or "createRequire(import.meta.url)" instead of "require"',
+  __filename: 'use "import.meta.filename" instead of "__filename"',
+  __dirname: 'use "import.meta.dirname" instead of "__dirname"',
+}
+
+function enhanceMissingCjsGlobalsError(error: unknown): unknown {
+  if (error == null || typeof error !== 'object') {
+    return error
+  }
+  const referenceError = error as { name?: unknown; message?: unknown; stack?: unknown }
+  if (referenceError.name !== 'ReferenceError' || typeof referenceError.message !== 'string') {
+    return error
+  }
+  // the message is anchored, so already enhanced errors are not enhanced twice
+  const name = referenceError.message.match(CJS_GLOBALS_REFERENCE_ERROR_RE)?.[1]
+  if (!name) {
+    return error
+  }
+  const message = `${referenceError.message}\n\n`
+    + `"${name}" is a CommonJS variable that is not available in ES modules, and "injectCjsGlobals" is disabled. `
+    + `If this module is meant to be an ES module, ${ESM_HINTS[name]}. `
+    + `If it is meant to be a CommonJS module, use the ".cjs" file extension, set "type": "commonjs" in the nearest package.json, or externalize it with "server.deps.external".`
+  if (typeof referenceError.stack === 'string') {
+    referenceError.stack = referenceError.stack.replace(referenceError.message, message)
+  }
+  referenceError.message = message
+  return error
 }
 
 const VALID_ID_PREFIX = `/@id/`

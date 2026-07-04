@@ -327,6 +327,13 @@ Run every test file in isolation. To disable isolation, use `--no-isolate` (defa
 
 Inject apis globally
 
+### injectCjsGlobals
+
+- **CLI:** `--injectCjsGlobals`
+- **Config:** [injectCjsGlobals](/config/injectcjsglobals)
+
+Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)
+
 ### dom
 
 - **CLI:** `--dom`

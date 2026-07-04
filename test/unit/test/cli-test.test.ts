@@ -212,6 +212,13 @@ test('maxConcurrency is parsed correctly', () => {
   expect(getCLIOptions('--max-concurrency=1000')).toEqual({ maxConcurrency: 1000 })
 })
 
+test('injectCjsGlobals is parsed correctly', () => {
+  expect(getCLIOptions('--injectCjsGlobals')).toEqual({ injectCjsGlobals: true })
+  expect(getCLIOptions('--inject-cjs-globals')).toEqual({ injectCjsGlobals: true })
+  expect(getCLIOptions('--injectCjsGlobals=false')).toEqual({ injectCjsGlobals: false })
+  expect(getCLIOptions('--no-inject-cjs-globals')).toEqual({ injectCjsGlobals: false })
+})
+
 test('cache is parsed correctly', () => {
   expect(getCLIOptions('--cache')).toEqual({ cache: {} })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
