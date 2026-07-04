@@ -95,7 +95,6 @@ export default defineConfig({
     watch: {
       ignored: [
         '**/vitest-test-*/**',
-        '**/fixtures/browser-multiple/**/*',
         '**/fixtures/browser-init/**/*',
         '**/package.json',
       ],

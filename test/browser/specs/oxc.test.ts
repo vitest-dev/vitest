@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '../../test-utils'
 
 test('oxc config on browser', async () => {
   const result = await runInlineTests({
