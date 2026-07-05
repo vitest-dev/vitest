@@ -10,8 +10,9 @@ export default defineConfig({
     reporters: 'verbose',
     setupFiles: ['./setup.unit.ts'],
     // 3 is the maximum of browser instances - in a perfect world they will run in parallel
-    hookTimeout: process.env.CI ? 120_000 * 3 : 20_000,
-    testTimeout: process.env.CI ? 120_000 * 3 : 20_000,
+    // Windows runners (esp. webkit) cold-start much slower than mac/linux, bump cap.
+    hookTimeout: process.env.CI ? 120_000 * (process.platform === 'win32' ? 5 : 3) : 20_000,
+    testTimeout: process.env.CI ? 120_000 * (process.platform === 'win32' ? 5 : 3) : 20_000,
     sequence: {
       // Extend BaseSequencer so `--shard` works (its deterministic hash split),
       // keeping a stable name-based sort. Sharding splits the specs across CI
