@@ -6,6 +6,7 @@ import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
+import process from 'node:process'
 import { isatty } from 'node:tty'
 import { resolve } from 'pathe'
 import { version as viteVersion } from 'vite'
@@ -324,7 +325,7 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
     return null
   }
 
-  const memory = nodeos.totalmem()
+  const memory = process.constrainedMemory?.() || nodeos.totalmem()
   const limit = getWorkerMemoryLimit(config)
 
   if (typeof memory === 'number') {
