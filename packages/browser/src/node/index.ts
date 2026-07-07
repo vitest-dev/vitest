@@ -378,23 +378,18 @@ function resolveBrowserOptimizeDeps(
     ...(testConfig.snapshotSerializers || []),
   ]
 
+  // Keep these external (never pre-bundle by esbuild):
+  // - vitest/browser, @vitest/browser/context, @vitest/browser/utils are
+  //   VIRTUAL modules generated per-server (see pluginContext.ts) — esbuild
+  //   cannot resolve/run their `load`, it would freeze stale/empty content.
+  // - vite/module-runner statically imports node:sqlite/sea/test and reads
+  //   process.getBuiltinModule, so it is not bundlable for the browser.
+  // - msw is a large, side-effectful service-worker library.
   const exclude = [
-    'vitest',
     'vitest/browser',
-    'vitest/internal/browser',
     'vite/module-runner',
     '@vitest/browser/utils',
     '@vitest/browser/context',
-    '@vitest/browser/client',
-    '@vitest/utils',
-    '@vitest/utils/source-map',
-    '@vitest/spy',
-    '@vitest/utils/error',
-    'std-env',
-    'tinybench',
-    'tinyspy',
-    'tinyrainbow',
-    'pathe',
     'msw',
     'msw/browser',
   ]
@@ -424,10 +419,21 @@ function resolveBrowserOptimizeDeps(
     }
   }
 
+  // Pre-bundle the vitest runtime so the browser fetches a few optimized
+  // chunks instead of ~20 separately-served dist chunks (faster startup).
+  // `vitest`, `vitest/internal/browser` and `@vitest/browser/client` are
+  // optimized together in a single pass, so esbuild dedupes their shared
+  // stateful chunks (the test collector, the runner, the RPC client) to a
+  // single instance — preserving module identity between the test files'
+  // `import 'vitest'` and the tester. Their transitive deps (@vitest/utils,
+  // @vitest/spy, pathe, tinyrainbow, …) are inlined into these bundles.
   const include = [
     'vitest > expect-type',
     'vitest > magic-string',
     'vitest > chai',
+    'vitest',
+    'vitest/internal/browser',
+    '@vitest/browser/client',
   ]
 
   const provider = testConfig.browser?.provider
