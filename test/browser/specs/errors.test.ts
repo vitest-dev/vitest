@@ -1,6 +1,5 @@
 import path from 'pathe'
 import { expect, test } from 'vitest'
-import { rolldownVersion } from 'vitest/node'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
@@ -164,40 +163,21 @@ test('prints source-mapped stack for optimized dependency', async () => {
 
   for (const [name, tree] of Object.entries(projectTree)) {
     if (name === 'webkit') {
-      if (rolldownVersion) {
-        expect(tree).toMatchInlineSnapshot(`
-          {
-            "basic.test.ts": {
-              "fail": [
-                {
-                  "message": "this is test dependency error",
-                  "stacks": [
-                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:13",
-                    " at basic.test.ts:5:3",
-                  ],
-                },
-              ],
-            },
-          }
-        `)
-      }
-      else {
-        expect(tree).toMatchInlineSnapshot(`
-          {
-            "basic.test.ts": {
-              "fail": [
-                {
-                  "message": "this is test dependency error",
-                  "stacks": [
-                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:13",
-                    " at basic.test.ts:5:3",
-                  ],
-                },
-              ],
-            },
-          }
-        `)
-      }
+      expect(tree).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "fail": [
+              {
+                "message": "this is test dependency error",
+                "stacks": [
+                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:13",
+                  " at basic.test.ts:5:3",
+                ],
+              },
+            ],
+          },
+        }
+      `)
     }
     else {
       expect(tree).toMatchInlineSnapshot(`

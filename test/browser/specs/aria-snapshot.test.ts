@@ -1,7 +1,6 @@
 import fs, { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { rolldownVersion } from 'vitest/node'
 import { editFile } from '../../test-utils'
 import { instances, runBrowserTests } from './utils'
 
@@ -116,110 +115,38 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
     project: [browser],
     update: 'none',
   })
-  if (browser === 'webkit') {
-    if (rolldownVersion) {
-      expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
-        {
-          "basic.test.ts": {
-            "expect.element aria once": "passed",
-            "expect.element aria retry": "passed",
-            "poll aria once": "passed",
-            "toMatchAriaInlineSnapshot simple": [
-              "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
-        - Expected
-        + Received
+  expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "expect.element aria once": "passed",
+        "expect.element aria retry": "passed",
+        "poll aria once": "passed",
+        "toMatchAriaInlineSnapshot simple": [
+          "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
+    - Expected
+    + Received
 
-        - - paragraph: Original
-        + - paragraph: Changed
-          - button /\\d+/: Pattern
-            at basic.test.ts:22:25",
-            ],
-            "toMatchAriaSnapshot simple": [
-              "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
-        - Expected
-        + Received
+    - - paragraph: Original
+    + - paragraph: Changed
+      - button /\\d+/: Pattern
+        at basic.test.ts:22:25",
+        ],
+        "toMatchAriaSnapshot simple": [
+          "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
+    - Expected
+    + Received
 
-          - main:
-            - heading "Dashboard" [level=1]
-        -   - navigation /A\\w+/:
-        +   - navigation "EDITED":
-              - button "Save"
-              - button "Cancel"
-            at basic.test.ts:14:25",
-            ],
-          },
-        }
-      `)
+      - main:
+        - heading "Dashboard" [level=1]
+    -   - navigation /A\\w+/:
+    +   - navigation "EDITED":
+          - button "Save"
+          - button "Cancel"
+        at basic.test.ts:14:25",
+        ],
+      },
     }
-    else {
-      expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
-        {
-          "basic.test.ts": {
-            "expect.element aria once": "passed",
-            "expect.element aria retry": "passed",
-            "poll aria once": "passed",
-            "toMatchAriaInlineSnapshot simple": [
-              "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
-        - Expected
-        + Received
-
-        - - paragraph: Original
-        + - paragraph: Changed
-          - button /\\d+/: Pattern
-            at basic.test.ts:22:25",
-            ],
-            "toMatchAriaSnapshot simple": [
-              "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
-        - Expected
-        + Received
-
-          - main:
-            - heading "Dashboard" [level=1]
-        -   - navigation /A\\w+/:
-        +   - navigation "EDITED":
-              - button "Save"
-              - button "Cancel"
-            at basic.test.ts:14:25",
-            ],
-          },
-        }
-      `)
-    }
-  }
-  else {
-    expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "passed",
-          "expect.element aria retry": "passed",
-          "poll aria once": "passed",
-          "toMatchAriaInlineSnapshot simple": [
-            "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
-      - Expected
-      + Received
-
-      - - paragraph: Original
-      + - paragraph: Changed
-        - button /\\d+/: Pattern
-          at basic.test.ts:22:25",
-          ],
-          "toMatchAriaSnapshot simple": [
-            "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
-      - Expected
-      + Received
-
-        - main:
-          - heading "Dashboard" [level=1]
-      -   - navigation /A\\w+/:
-      +   - navigation "EDITED":
-            - button "Save"
-            - button "Cancel"
-          at basic.test.ts:14:25",
-          ],
-        },
-      }
-    `)
-  }
+  `)
 
   // run with update: all — should pass, preserve regex, update mismatched literal
   result = await runBrowserTests({
