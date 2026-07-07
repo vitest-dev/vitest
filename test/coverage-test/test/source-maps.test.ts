@@ -9,11 +9,11 @@ test('errors point to correct location', async () => {
 
   if (isBrowser()) {
     expect(stderr).toMatch(`
-❯ throws fixtures/src/throws-error.ts:29:11
+❯ throws fixtures/src/throws-error.ts:29:12
      27|    */
      28|    function throws() {
      29|      throw new Error("Expected error")
-       |           ^
+       |            ^
      30|    }
     `.trim())
   }

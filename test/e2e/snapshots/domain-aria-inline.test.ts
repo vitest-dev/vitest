@@ -100,11 +100,11 @@ test('aria inline snapshot', async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:19:24
+     ❯ basic.test.ts:19:25
          17|     <button aria-label="9999">Pattern</button>
          18|   \`
          19|   expect(document.body).toMatchAriaInlineSnapshot(\`
-           |                        ^
+           |                         ^
          20|     - paragraph: Original
          21|     - button /\\\\d+/: Pattern
 
@@ -243,11 +243,11 @@ test('basic', () => {
     + - paragraph: count - 1
 
 
-     ❯ basic.test.ts:7:26
+     ❯ basic.test.ts:7:27
           5|   for (let i = 0; i < 3; i++) {
           6|     document.body.innerHTML = "<p>count - " + i + "</p>";
           7|     expect(document.body).toMatchAriaInlineSnapshot();
-           |                          ^
+           |                           ^
           8|   }
           9| });
 
@@ -307,11 +307,11 @@ test('basic', () => {
 
      FAIL  |chromium| basic.test.ts > basic
     Error: Aria snapshot must be a YAML sequence, elements starting with " -"
-     ❯ basic.test.ts:5:24
+     ❯ basic.test.ts:5:25
           3|
           4| test('basic', () => {
           5|   expect(document.body).toMatchAriaInlineSnapshot(\`x: y\`);
-           |                        ^
+           |                         ^
           6| });
           7|
 
