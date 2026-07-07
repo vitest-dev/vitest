@@ -285,7 +285,7 @@ importers:
         version: 0.15.7(typescript@5.9.3)
       unplugin-oxc:
         specifier: ^0.6.0
-        version: 0.6.0
+        version: 0.6.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       vite:
         specifier: https://pkg.pr.new/vite@e65ff84
         version: https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -334,7 +334,7 @@ importers:
         version: 6.0.7(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
       '@voidzero-dev/vitepress-theme':
         specifier: ^4.8.3
-        version: 4.8.3(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(typescript@5.9.3)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
+        version: 4.8.3(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(typescript@5.9.3)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
@@ -343,7 +343,7 @@ importers:
         version: 0.2.15
       unocss:
         specifier: 'catalog:'
-        version: 66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
       vite:
         specifier: https://pkg.pr.new/vite@e65ff84
         version: https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -352,7 +352,7 @@ importers:
         version: 1.2.0(@vite-pwa/assets-generator@1.0.2)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.4.0)
       vitepress:
         specifier: 2.0.0-alpha.16
-        version: 2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+        version: 2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
       vitepress-plugin-group-icons:
         specifier: ^1.7.1
         version: 1.7.1(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -361,7 +361,7 @@ importers:
         version: 1.11.0
       vitepress-plugin-tabs:
         specifier: ^0.8.0
-        version: 0.8.0(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
+        version: 0.8.0(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
       workbox-window:
         specifier: ^7.4.0
         version: 7.4.0
@@ -949,7 +949,7 @@ importers:
         version: 5.9.3
       unocss:
         specifier: 'catalog:'
-        version: 66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
       vite:
         specifier: https://pkg.pr.new/vite@e65ff84
         version: https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -2358,10 +2358,6 @@ packages:
     resolution: {integrity: sha512-HrcgcIESLm9aIR842yhJ5RWan/gebQUJ6E/E5+rf0y9o6oj7w0Br+sWuL6kEQ/o/AdfvR1Je9jG18/gnpwjEyA==}
     peerDependencies:
       '@babel/core': ^7.0.0-0 || ^8.0.0-0 <8.0.0
-
-  '@babel/runtime@7.26.0':
-    resolution: {integrity: sha512-FDSOghenHTiToteC/QRlv2q3DhPZ/oOXTBoirfWNx1Cx3TMVcGWQtMMmQcSvb/JjpNeGzx8Pq/b4fKEJuWm1sw==}
-    engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.28.4':
     resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
@@ -7001,10 +6997,6 @@ packages:
   es-module-lexer@2.0.0:
     resolution: {integrity: sha512-5POEcUuZybH7IdmGsD8wlf0AI55wMecM9rVBTI/qEAy2c1kTOm3DjFYjrBdI2K3BaJjJYfYFeRtM0t9ssnRuxw==}
 
-  es-object-atoms@1.1.1:
-    resolution: {integrity: sha512-FGgH2h8zKNim9ljj7dankFPcICIK9Cp5bm+c2gQSYePhpaG5+esrLODihIorn+Pe6FGJzWhXQotPv73jTaldXA==}
-    engines: {node: '>= 0.4'}
-
   es-object-atoms@1.1.2:
     resolution: {integrity: sha512-HWcBoN6NileqtSydK2FqHbS/LoDd2pqrnQHLyJzBj4kOp/ky2MWMN694xOfkK8/SnUsW2DH7EfyVlydKCsm1Zw==}
     engines: {node: '>= 0.4'}
@@ -9134,10 +9126,6 @@ packages:
     resolution: {integrity: sha512-vuwillviilfKZsg0VGj5R/YwwcHx4SLsIOI/7K6mQkWx+l5cUHTjj5g0AasTBcyXsbfTgrwsUNmVUb5xVwyPwg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.6:
-    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
-    engines: {node: ^10 || ^12 || >=14}
-
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
@@ -9339,9 +9327,6 @@ packages:
 
   regenerate@1.4.2:
     resolution: {integrity: sha512-zrceR/XhGYU/d/opr2EKO7aRHUeiBI8qjtfHqADTwZd6Szfy16la6kqD0MIUs5z5hx6AaKa+PixpPrR289+I0A==}
-
-  regenerator-runtime@0.14.1:
-    resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
 
   regex-recursion@6.0.2:
     resolution: {integrity: sha512-0YCaSCq2VRIebiaUviZNs0cBz1kg5kVS2UKUfNIx8YVs1cN3AV7NTctO5FOKBA+UT2BPJIWZauYHPqJODG50cg==}
@@ -10202,12 +10187,6 @@ packages:
 
   trough@2.2.0:
     resolution: {integrity: sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==}
-
-  ts-api-utils@2.4.0:
-    resolution: {integrity: sha512-3TaVTaAv2gTiMB35i3FiGJaRfwb3Pyn/j3m/bfAvGe8FB7CF6u+LMYqYlDh7reQf7UNvoTvdfAqHGmPGOSsPmA==}
-    engines: {node: '>=18.12'}
-    peerDependencies:
-      typescript: '>=4.8.4'
 
   ts-api-utils@2.5.0:
     resolution: {integrity: sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==}
@@ -11071,6 +11050,7 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
       js-tokens: 4.0.0
       picocolors: 1.1.1
+    optional: true
 
   '@babel/code-frame@7.29.0':
     dependencies:
@@ -11321,7 +11301,8 @@ snapshots:
 
   '@babel/helper-string-parser@7.29.7': {}
 
-  '@babel/helper-validator-identifier@7.27.1': {}
+  '@babel/helper-validator-identifier@7.27.1':
+    optional: true
 
   '@babel/helper-validator-identifier@7.28.5': {}
 
@@ -11864,10 +11845,6 @@ snapshots:
       '@babel/helper-plugin-utils': 7.29.7
       '@babel/types': 7.29.7
       esutils: 2.0.3
-
-  '@babel/runtime@7.26.0':
-    dependencies:
-      regenerator-runtime: 0.14.1
 
   '@babel/runtime@7.28.4': {}
 
@@ -13079,9 +13056,12 @@ snapshots:
   '@oxc-minify/binding-openharmony-arm64@0.116.0':
     optional: true
 
-  '@oxc-minify/binding-wasm32-wasi@0.116.0':
+  '@oxc-minify/binding-wasm32-wasi@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.1
+      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
     optional: true
 
   '@oxc-minify/binding-win32-arm64-msvc@0.116.0':
@@ -13194,12 +13174,9 @@ snapshots:
       '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
-  '@oxc-parser/binding-wasm32-wasi@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
+  '@oxc-parser/binding-wasm32-wasi@0.115.0':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
-    transitivePeerDependencies:
-      - '@emnapi/core'
-      - '@emnapi/runtime'
+      '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
   '@oxc-parser/binding-win32-arm64-msvc@0.108.0':
@@ -14133,8 +14110,8 @@ snapshots:
 
   '@testing-library/dom@10.4.1':
     dependencies:
-      '@babel/code-frame': 7.27.1
-      '@babel/runtime': 7.26.0
+      '@babel/code-frame': 7.29.7
+      '@babel/runtime': 7.29.7
       '@types/aria-query': 5.0.3
       aria-query: 5.3.0
       dom-accessibility-api: 0.5.16
@@ -14186,24 +14163,24 @@ snapshots:
 
   '@types/babel__core@7.20.5':
     dependencies:
-      '@babel/parser': 7.29.0
-      '@babel/types': 7.29.0
+      '@babel/parser': 7.29.7
+      '@babel/types': 7.29.7
       '@types/babel__generator': 7.6.6
       '@types/babel__template': 7.4.3
       '@types/babel__traverse': 7.20.3
 
   '@types/babel__generator@7.6.6':
     dependencies:
-      '@babel/types': 7.29.0
+      '@babel/types': 7.29.7
 
   '@types/babel__template@7.4.3':
     dependencies:
-      '@babel/parser': 7.29.0
-      '@babel/types': 7.29.0
+      '@babel/parser': 7.29.7
+      '@babel/types': 7.29.7
 
   '@types/babel__traverse@7.20.3':
     dependencies:
-      '@babel/types': 7.29.0
+      '@babel/types': 7.29.7
 
   '@types/chai@5.2.2':
     dependencies:
@@ -14383,8 +14360,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.56.1(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.56.1(typescript@5.9.3)
-      '@typescript-eslint/types': 8.56.1
+      '@typescript-eslint/tsconfig-utils': 8.62.0(typescript@5.9.3)
+      '@typescript-eslint/types': 8.62.0
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -14457,7 +14434,7 @@ snapshots:
       minimatch: 10.2.4
       semver: 7.8.5
       tinyglobby: 0.2.16
-      ts-api-utils: 2.4.0(typescript@5.9.3)
+      ts-api-utils: 2.5.0(typescript@5.9.3)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -14616,14 +14593,11 @@ snapshots:
       '@unocss/core': 66.6.6
       magic-string: 0.30.21
 
-  '@unocss/transformer-attributify-jsx@66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
+  '@unocss/transformer-attributify-jsx@66.6.6':
     dependencies:
       '@unocss/core': 66.6.6
-      oxc-parser: 0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
-      oxc-walker: 0.7.0(oxc-parser@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))
-    transitivePeerDependencies:
-      - '@emnapi/core'
-      - '@emnapi/runtime'
+      oxc-parser: 0.115.0
+      oxc-walker: 0.7.0(oxc-parser@0.115.0)
 
   '@unocss/transformer-compile-class@66.6.6':
     dependencies:
@@ -14727,7 +14701,7 @@ snapshots:
 
   '@vitest/test-fn@file:test/unit/deps/dep-fn': {}
 
-  '@voidzero-dev/vitepress-theme@4.8.3(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(typescript@5.9.3)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))':
+  '@voidzero-dev/vitepress-theme@4.8.3(axios@1.13.4)(change-case@5.4.4)(focus-trap@7.8.0)(typescript@5.9.3)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))':
     dependencies:
       '@docsearch/css': 4.6.0
       '@docsearch/js': 4.6.0
@@ -14744,7 +14718,7 @@ snapshots:
       minisearch: 7.2.0
       reka-ui: 2.7.0(typescript@5.9.3)(vue@3.5.29(typescript@5.9.3))
       tailwindcss: 4.1.18
-      vitepress: 2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      vitepress: 2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.9.3)
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -14795,7 +14769,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.29':
     dependencies:
-      '@babel/parser': 7.29.0
+      '@babel/parser': 7.29.7
       '@vue/shared': 3.5.29
       entities: 7.0.1
       estree-walker: 2.0.2
@@ -14825,14 +14799,14 @@ snapshots:
 
   '@vue/compiler-sfc@3.5.29':
     dependencies:
-      '@babel/parser': 7.29.0
+      '@babel/parser': 7.29.7
       '@vue/compiler-core': 3.5.29
       '@vue/compiler-dom': 3.5.29
       '@vue/compiler-ssr': 3.5.29
       '@vue/shared': 3.5.29
       estree-walker: 2.0.2
       magic-string: 0.30.21
-      postcss: 8.5.6
+      postcss: 8.5.14
       source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.5.28':
@@ -16117,10 +16091,6 @@ snapshots:
 
   es-module-lexer@2.0.0: {}
 
-  es-object-atoms@1.1.1:
-    dependencies:
-      es-errors: 1.3.0
-
   es-object-atoms@1.1.2:
     dependencies:
       es-errors: 1.3.0
@@ -16130,7 +16100,7 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   es-to-primitive@1.3.1:
     dependencies:
@@ -16770,7 +16740,7 @@ snapshots:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       es-set-tostringtag: 2.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       mime-types: 2.1.35
 
   format@0.2.2: {}
@@ -16844,12 +16814,12 @@ snapshots:
       call-bind-apply-helpers: 1.0.2
       es-define-property: 1.0.1
       es-errors: 1.3.0
-      es-object-atoms: 1.1.1
+      es-object-atoms: 1.1.2
       function-bind: 1.1.2
       get-proto: 1.0.1
       gopd: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       math-intrinsics: 1.1.0
 
   get-own-enumerable-property-symbols@3.0.2: {}
@@ -16859,7 +16829,7 @@ snapshots:
   get-proto@1.0.1:
     dependencies:
       dunder-proto: 1.0.1
-      es-object-atoms: 1.1.1
+      es-object-atoms: 1.1.2
 
   get-stdin@5.0.1: {}
 
@@ -18397,7 +18367,7 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
-  oxc-minify@0.116.0:
+  oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1):
     optionalDependencies:
       '@oxc-minify/binding-android-arm-eabi': 0.116.0
       '@oxc-minify/binding-android-arm64': 0.116.0
@@ -18415,10 +18385,13 @@ snapshots:
       '@oxc-minify/binding-linux-x64-gnu': 0.116.0
       '@oxc-minify/binding-linux-x64-musl': 0.116.0
       '@oxc-minify/binding-openharmony-arm64': 0.116.0
-      '@oxc-minify/binding-wasm32-wasi': 0.116.0
+      '@oxc-minify/binding-wasm32-wasi': 0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       '@oxc-minify/binding-win32-arm64-msvc': 0.116.0
       '@oxc-minify/binding-win32-ia32-msvc': 0.116.0
       '@oxc-minify/binding-win32-x64-msvc': 0.116.0
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
   oxc-parser@0.108.0:
     dependencies:
@@ -18445,7 +18418,7 @@ snapshots:
       '@oxc-parser/binding-win32-ia32-msvc': 0.108.0
       '@oxc-parser/binding-win32-x64-msvc': 0.108.0
 
-  oxc-parser@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1):
+  oxc-parser@0.115.0:
     dependencies:
       '@oxc-project/types': 0.115.0
     optionalDependencies:
@@ -18465,13 +18438,10 @@ snapshots:
       '@oxc-parser/binding-linux-x64-gnu': 0.115.0
       '@oxc-parser/binding-linux-x64-musl': 0.115.0
       '@oxc-parser/binding-openharmony-arm64': 0.115.0
-      '@oxc-parser/binding-wasm32-wasi': 0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+      '@oxc-parser/binding-wasm32-wasi': 0.115.0
       '@oxc-parser/binding-win32-arm64-msvc': 0.115.0
       '@oxc-parser/binding-win32-ia32-msvc': 0.115.0
       '@oxc-parser/binding-win32-x64-msvc': 0.115.0
-    transitivePeerDependencies:
-      - '@emnapi/core'
-      - '@emnapi/runtime'
 
   oxc-resolver@11.19.1:
     optionalDependencies:
@@ -18542,10 +18512,10 @@ snapshots:
       '@oxc-transform/binding-win32-ia32-msvc': 0.116.0
       '@oxc-transform/binding-win32-x64-msvc': 0.116.0
 
-  oxc-walker@0.7.0(oxc-parser@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)):
+  oxc-walker@0.7.0(oxc-parser@0.115.0):
     dependencies:
       magic-regexp: 0.10.0
-      oxc-parser: 0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+      oxc-parser: 0.115.0
 
   p-limit@3.1.0:
     dependencies:
@@ -18730,12 +18700,6 @@ snapshots:
   postcss@8.5.16:
     dependencies:
       nanoid: 3.3.15
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
-  postcss@8.5.6:
-    dependencies:
-      nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -18959,8 +18923,6 @@ snapshots:
       regenerate: 1.4.2
 
   regenerate@1.4.2: {}
-
-  regenerator-runtime@0.14.1: {}
 
   regex-recursion@6.0.2:
     dependencies:
@@ -20025,10 +19987,6 @@ snapshots:
 
   trough@2.2.0: {}
 
-  ts-api-utils@2.4.0(typescript@5.9.3):
-    dependencies:
-      typescript: 5.9.3
-
   ts-api-utils@2.5.0(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
@@ -20223,7 +20181,7 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  unocss@66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)):
+  unocss@66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       '@unocss/cli': 66.6.6
       '@unocss/core': 66.6.6
@@ -20237,14 +20195,12 @@ snapshots:
       '@unocss/preset-wind': 66.6.6
       '@unocss/preset-wind3': 66.6.6
       '@unocss/preset-wind4': 66.6.6
-      '@unocss/transformer-attributify-jsx': 66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+      '@unocss/transformer-attributify-jsx': 66.6.6
       '@unocss/transformer-compile-class': 66.6.6
       '@unocss/transformer-directives': 66.6.6
       '@unocss/transformer-variant-group': 66.6.6
       '@unocss/vite': 66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
     transitivePeerDependencies:
-      - '@emnapi/core'
-      - '@emnapi/runtime'
       - vite
 
   unpipe@1.0.0: {}
@@ -20260,12 +20216,15 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  unplugin-oxc@0.6.0:
+  unplugin-oxc@0.6.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1):
     dependencies:
-      oxc-minify: 0.116.0
+      oxc-minify: 0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       oxc-resolver: 11.19.1
       oxc-transform: 0.116.0
       unplugin: 3.0.0
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
   unplugin-swc@1.5.9(@swc/core@1.4.1(@swc/helpers@0.5.17))(rollup@4.62.2):
     dependencies:
@@ -20421,12 +20380,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vitepress-plugin-tabs@0.8.0(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3)):
+  vitepress-plugin-tabs@0.8.0(vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3)):
     dependencies:
-      vitepress: 2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      vitepress: 2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.9.3)
 
-  vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0)(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2):
+  vitepress@2.0.0-alpha.16(@types/node@24.12.0)(axios@1.13.4)(change-case@5.4.4)(esbuild@0.27.3)(jiti@2.6.1)(oxc-minify@0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(postcss@8.5.14)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2):
     dependencies:
       '@docsearch/css': 4.5.3
       '@docsearch/js': 4.5.3
@@ -20448,7 +20407,7 @@ snapshots:
       vite: https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.9.3)
     optionalDependencies:
-      oxc-minify: 0.116.0
+      oxc-minify: 0.116.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       postcss: 8.5.14
     transitivePeerDependencies:
       - '@types/node'

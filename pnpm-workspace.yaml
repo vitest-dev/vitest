@@ -1,4 +1,5 @@
 catalogMode: prefer
+blockExoticSubdeps: false
 
 cleanupUnusedCatalogs: true
 ignoreWorkspaceRootCheck: true
