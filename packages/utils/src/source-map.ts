@@ -286,7 +286,6 @@ export function parseStacktrace(
     if (line != null && column != null) {
       return {
         line,
-        // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
         column: column + 1,
         file,
         method: name || stack.method,
