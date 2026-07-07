@@ -343,7 +343,7 @@ importers:
         version: 0.2.15
       unocss:
         specifier: 'catalog:'
-        version: 66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
       vite:
         specifier: https://pkg.pr.new/vite@e65ff84
         version: https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -949,7 +949,7 @@ importers:
         version: 5.9.3
       unocss:
         specifier: 'catalog:'
-        version: 66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
       vite:
         specifier: https://pkg.pr.new/vite@e65ff84
         version: https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -3340,6 +3340,12 @@ packages:
 
   '@napi-rs/wasm-runtime@1.1.1':
     resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
+
+  '@napi-rs/wasm-runtime@1.1.4':
+    resolution: {integrity: sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==}
+    peerDependencies:
+      '@emnapi/core': ^1.7.1
+      '@emnapi/runtime': ^1.7.1
 
   '@napi-rs/wasm-runtime@1.1.6':
     resolution: {integrity: sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg==}
@@ -12676,6 +12682,13 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
+  '@napi-rs/wasm-runtime@1.1.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
+    dependencies:
+      '@emnapi/core': 1.11.1
+      '@emnapi/runtime': 1.11.1
+      '@tybys/wasm-util': 0.10.1
+    optional: true
+
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:
       '@emnapi/core': 1.11.1
@@ -13181,9 +13194,12 @@ snapshots:
       '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
-  '@oxc-parser/binding-wasm32-wasi@0.115.0':
+  '@oxc-parser/binding-wasm32-wasi@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.1
+      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
     optional: true
 
   '@oxc-parser/binding-win32-arm64-msvc@0.108.0':
@@ -14600,11 +14616,14 @@ snapshots:
       '@unocss/core': 66.6.6
       magic-string: 0.30.21
 
-  '@unocss/transformer-attributify-jsx@66.6.6':
+  '@unocss/transformer-attributify-jsx@66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:
       '@unocss/core': 66.6.6
-      oxc-parser: 0.115.0
-      oxc-walker: 0.7.0(oxc-parser@0.115.0)
+      oxc-parser: 0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+      oxc-walker: 0.7.0(oxc-parser@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
   '@unocss/transformer-compile-class@66.6.6':
     dependencies:
@@ -14870,7 +14889,7 @@ snapshots:
       alien-signals: 3.0.3
       muggle-string: 0.4.1
       path-browserify: 1.0.1
-      picomatch: 4.0.3
+      picomatch: 4.0.4
 
   '@vue/reactivity@3.5.29':
     dependencies:
@@ -18426,7 +18445,7 @@ snapshots:
       '@oxc-parser/binding-win32-ia32-msvc': 0.108.0
       '@oxc-parser/binding-win32-x64-msvc': 0.108.0
 
-  oxc-parser@0.115.0:
+  oxc-parser@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1):
     dependencies:
       '@oxc-project/types': 0.115.0
     optionalDependencies:
@@ -18446,10 +18465,13 @@ snapshots:
       '@oxc-parser/binding-linux-x64-gnu': 0.115.0
       '@oxc-parser/binding-linux-x64-musl': 0.115.0
       '@oxc-parser/binding-openharmony-arm64': 0.115.0
-      '@oxc-parser/binding-wasm32-wasi': 0.115.0
+      '@oxc-parser/binding-wasm32-wasi': 0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       '@oxc-parser/binding-win32-arm64-msvc': 0.115.0
       '@oxc-parser/binding-win32-ia32-msvc': 0.115.0
       '@oxc-parser/binding-win32-x64-msvc': 0.115.0
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
   oxc-resolver@11.19.1:
     optionalDependencies:
@@ -18520,10 +18542,10 @@ snapshots:
       '@oxc-transform/binding-win32-ia32-msvc': 0.116.0
       '@oxc-transform/binding-win32-x64-msvc': 0.116.0
 
-  oxc-walker@0.7.0(oxc-parser@0.115.0):
+  oxc-walker@0.7.0(oxc-parser@0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)):
     dependencies:
       magic-regexp: 0.10.0
-      oxc-parser: 0.115.0
+      oxc-parser: 0.115.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
 
   p-limit@3.1.0:
     dependencies:
@@ -20201,7 +20223,7 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  unocss@66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)):
+  unocss@66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       '@unocss/cli': 66.6.6
       '@unocss/core': 66.6.6
@@ -20215,12 +20237,14 @@ snapshots:
       '@unocss/preset-wind': 66.6.6
       '@unocss/preset-wind3': 66.6.6
       '@unocss/preset-wind4': 66.6.6
-      '@unocss/transformer-attributify-jsx': 66.6.6
+      '@unocss/transformer-attributify-jsx': 66.6.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       '@unocss/transformer-compile-class': 66.6.6
       '@unocss/transformer-directives': 66.6.6
       '@unocss/transformer-variant-group': 66.6.6
       '@unocss/vite': 66.6.6(vite@https://pkg.pr.new/vite@e65ff84(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2))
     transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
       - vite
 
   unpipe@1.0.0: {}
