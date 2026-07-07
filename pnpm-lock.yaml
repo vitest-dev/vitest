@@ -10546,7 +10546,7 @@ packages:
         optional: true
 
   vite@https://pkg.pr.new/vite@e65ff84:
-    resolution: {tarball: https://pkg.pr.new/vite@e65ff84}
+    resolution: {integrity: sha512-QUrVPrNfOuOKsjrbpwDzC9AcfiRH4W/elEBTSAQwxBW+mzryANt+j+4q4uEvhuJaogATHt0InlL5cUwRZpNBgA==, tarball: https://pkg.pr.new/vite@e65ff84}
     version: 8.1.2
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
