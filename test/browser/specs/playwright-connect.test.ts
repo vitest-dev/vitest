@@ -16,7 +16,7 @@ test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', 
     '--host',
     '127.0.0.1',
     '--unsafe',
-  ]).process
+  ]).process!
   const cli = new Cli({
     stdin: subprocess.stdin,
     stdout: subprocess.stdout,

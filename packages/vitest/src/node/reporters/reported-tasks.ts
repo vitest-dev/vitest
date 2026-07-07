@@ -516,10 +516,7 @@ export class TestModule extends SuiteImplementation {
     super(task, project)
     this.moduleId = task.filepath
     this.relativeModuleId = task.name
-    if (task.viteEnvironment === '__browser__') {
-      this.viteEnvironment = project.browser?.vite.environments.client
-    }
-    else if (typeof task.viteEnvironment === 'string') {
+    if (typeof task.viteEnvironment === 'string') {
       this.viteEnvironment = project.vite.environments[task.viteEnvironment]
     }
   }

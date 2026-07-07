@@ -619,16 +619,8 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/browser/headless',
               },
               {
-                text: 'browser.isolate',
-                link: '/config/browser/isolate',
-              },
-              {
                 text: 'browser.testerHtmlPath',
                 link: '/config/browser/testerhtmlpath',
-              },
-              {
-                text: 'browser.api',
-                link: '/config/browser/api',
               },
               {
                 text: 'browser.provider',

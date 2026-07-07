@@ -55,7 +55,9 @@ describe.for([
 
     await (testType === 'userEvent' ? userEvent.wheel(selector, options) : selector.wheel(options))
 
-    expect(wheel).toHaveBeenCalledOnce()
+    // the wheel event is dispatched asynchronously in the browser, so poll for
+    // it instead of asserting synchronously (matches the default-delta case above)
+    await expect.poll(() => wheel).toHaveBeenCalledOnce()
     expect(wheel.mock.calls[0][0].deltaX).toBe(deltaX)
     expect(wheel.mock.calls[0][0].deltaY).toBe(deltaY)
   })

@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
-test('aria snapshot', async () => {
+test('aria snapshot', { tags: ['browser'] }, async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-aria')
   const testFile = join(root, 'basic.test.ts')
   const snapshotFile = join(root, '__snapshots__/basic.test.ts.snap')

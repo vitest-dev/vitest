@@ -23,8 +23,8 @@ export default defineConfig({
     !!process.env.TEST_HTTPS && basicSsl(),
   ],
   test: {
+    api: process.env.TEST_HTTPS ? 51122 : 51133,
     browser: {
-      api: process.env.TEST_HTTPS ? 51122 : 51133,
       enabled: true,
       provider: configuredProvider,
       instances,

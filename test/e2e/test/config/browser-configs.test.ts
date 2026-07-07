@@ -1,22 +1,63 @@
 import type { TestFsStructure } from '#test-utils'
 import type { ViteUserConfig } from 'vitest/config'
-import type { TestUserConfig, VitestOptions } from 'vitest/node'
-import crypto from 'node:crypto'
-import { runVitest, runVitestCli, useFS } from '#test-utils'
+import type { CliOptions, TestUserConfig, VitestOptions } from 'vitest/node'
+import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
 import { resolve } from 'pathe'
-import { describe, expect, onTestFinished, test } from 'vitest'
-import { createVitest } from 'vitest/node'
+import { describe, expect, onTestFailed, onTestFinished, test, vi } from 'vitest'
+import { createVitest, Logger, PluginHarness, resolveConfig } from 'vitest/node'
+import { Cli } from '../../../test-utils/cli'
 
-async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, watch: false, config: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
-  onTestFinished(() => vitest.close())
+const vitest = vi.defineHelper(async (options: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions }, vitestOptions: VitestOptions = {}) => {
+  const vitest = await createVitest(
+    {
+      ...options.$cliConfig,
+      watch: false,
+      config: false,
+    },
+    {
+      ...options.$viteConfig,
+      plugins: [
+        ...(options.$viteConfig?.plugins || []),
+        {
+          name: 'ignore-optimize-deps',
+          enforce: 'post',
+          config: {
+            order: 'post',
+            handler(config) {
+              config.optimizeDeps ??= {}
+              config.optimizeDeps.include = []
+              config.optimizeDeps.include = []
+              config.optimizeDeps.entries = []
+              config.optimizeDeps.noDiscovery = true
+              config.optimizeDeps.rolldownOptions = {}
+              config.optimizeDeps.ignoreOutdatedRequests = true
+            },
+          },
+        },
+      ],
+      test: options,
+    },
+    vitestOptions,
+  )
+  onTestFinished(async () => {
+    await vitest.vite.waitForRequestsIdle()
+    await vitest.close()
+  })
   return vitest
+})
+
+async function config(options?: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions }, pluginHarness?: PluginHarness) {
+  const { test: { resolvedProjects } } = await resolveConfig({ config: false, ...options?.$cliConfig }, {
+    ...options?.$viteConfig,
+    test: options,
+  }, pluginHarness)
+  return resolvedProjects.filter(p => !p.hidden)
 }
 
 test('assigns names as browsers', async () => {
-  const { projects } = await vitest({}, {
+  const projects = await config({
     browser: {
       enabled: true,
       headless: true,
@@ -28,7 +69,7 @@ test('assigns names as browsers', async () => {
       ],
     },
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'chromium',
     'firefox',
     'webkit',
@@ -36,7 +77,8 @@ test('assigns names as browsers', async () => {
 })
 
 test('filters projects', async () => {
-  const { projects } = await vitest({ project: 'chromium' }, {
+  const projects = await config({
+    project: 'chromium',
     browser: {
       enabled: true,
       provider: preview(),
@@ -47,13 +89,14 @@ test('filters projects', async () => {
       ],
     },
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'chromium',
   ])
 })
 
 test('filters projects with a wildcard', async () => {
-  const { projects } = await vitest({ project: 'chrom*' }, {
+  const projects = await config({
+    project: 'chrom*',
     browser: {
       enabled: true,
       provider: preview(),
@@ -64,13 +107,13 @@ test('filters projects with a wildcard', async () => {
       ],
     },
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'chromium',
   ])
 })
 
 test('assigns names as browsers in a custom project', async () => {
-  const { projects } = await vitest({}, {
+  const projects = await config({
     projects: [
       {
         test: {
@@ -90,7 +133,7 @@ test('assigns names as browsers in a custom project', async () => {
       },
     ],
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'custom (chromium)',
     'custom (firefox)',
     'custom (webkit)',
@@ -99,7 +142,11 @@ test('assigns names as browsers in a custom project', async () => {
 })
 
 test('inherits browser options', async () => {
-  const { projects } = await vitest({}, {
+  const fs = useTmpFS({
+    './custom-path.html': ``,
+    './custom-overridden-path.html': ``,
+  })
+  const projects = await config({
     setupFiles: ['/test/setup.ts'],
     provide: {
       browser: true,
@@ -109,9 +156,8 @@ test('inherits browser options', async () => {
       provider: preview(),
       headless: true,
       screenshotFailures: false,
-      testerHtmlPath: '/custom-path.html',
+      testerHtmlPath: fs.resolveFile('./custom-path.html'),
       screenshotDirectory: '/custom-directory',
-      fileParallelism: false,
       viewport: {
         width: 300,
         height: 900,
@@ -134,13 +180,13 @@ test('inherits browser options', async () => {
             width: 900,
             height: 300,
           },
-          testerHtmlPath: '/custom-overridden-path.html',
+          testerHtmlPath: fs.resolveFile('./custom-overridden-path.html'),
           screenshotDirectory: '/custom-overridden-directory',
         },
       ],
     },
   })
-  expect(projects.map(p => p.config)).toMatchObject([
+  expect(projects.map(p => p.projectConfig)).toMatchObject([
     {
       name: 'chromium',
       setupFiles: ['/test/setup.ts'],
@@ -159,8 +205,7 @@ test('inherits browser options', async () => {
         locators: {
           testIdAttribute: 'data-tid',
         },
-        fileParallelism: false,
-        testerHtmlPath: '/custom-path.html',
+        testerHtmlPath: fs.resolveFile('./custom-path.html'),
       },
     },
     {
@@ -181,18 +226,16 @@ test('inherits browser options', async () => {
         locators: {
           testIdAttribute: 'data-custom',
         },
-        testerHtmlPath: '/custom-overridden-path.html',
+        testerHtmlPath: fs.resolveFile('./custom-overridden-path.html'),
       },
     },
   ])
 })
 
 test('coverage provider v8 works correctly in browser mode if instances are filtered', async () => {
-  const { projects } = await vitest(
+  const projects = await config(
     {
       project: 'chromium',
-    },
-    {
       coverage: {
         enabled: true,
         provider: 'v8',
@@ -208,13 +251,14 @@ test('coverage provider v8 works correctly in browser mode if instances are filt
       },
     },
   )
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'chromium',
   ])
 })
 
 test('coverage provider v8 works correctly in workspaced browser mode if instances are filtered', async () => {
-  const { projects } = await vitest({ project: 'browser (chromium)' }, {
+  const projects = await config({
+    project: 'browser (chromium)',
     projects: [
       {
         test: {
@@ -236,13 +280,13 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
       provider: 'v8',
     },
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'browser (chromium)',
   ])
 })
 
 test('browser instances with include/exclude/includeSource option override parent that patterns', async () => {
-  const { projects } = await vitest({ config: false }, {
+  const projects = await config({
     include: ['**/*.global.test.{js,ts}', '**/*.shared.test.{js,ts}'],
     exclude: ['**/*.skip.test.{js,ts}'],
     includeSource: ['src/**/*.{js,ts}'],
@@ -252,54 +296,64 @@ test('browser instances with include/exclude/includeSource option override paren
       headless: true,
       instances: [
         { browser: 'chromium' },
-        { browser: 'firefox', include: ['test/firefox-specific.test.ts'], exclude: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'], includeSource: ['src/firefox-compat.ts'] },
-        { browser: 'webkit', include: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'], exclude: ['test/firefox-specific.test.ts'], includeSource: ['src/webkit-compat.ts'] },
+        {
+          browser: 'firefox',
+          include: ['test/firefox-specific.test.ts'],
+          exclude: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'],
+          includeSource: ['src/firefox-compat.ts'],
+        },
+        {
+          browser: 'webkit',
+          include: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'],
+          exclude: ['test/firefox-specific.test.ts'],
+          includeSource: ['src/webkit-compat.ts'],
+        },
       ],
     },
   })
 
   // Chromium should inherit parent include/exclude/includeSource patterns (plus default test pattern)
-  expect(projects[0].name).toEqual('chromium')
-  expect(projects[0].config.include).toEqual([
+  expect(projects[0].projectConfig.name).toEqual('chromium')
+  expect(projects[0].projectConfig.include).toEqual([
     '**/*.global.test.{js,ts}',
     '**/*.shared.test.{js,ts}',
   ])
-  expect(projects[0].config.exclude).toEqual([
+  expect(projects[0].projectConfig.exclude).toEqual([
     '**/*.skip.test.{js,ts}',
   ])
-  expect(projects[0].config.includeSource).toEqual([
+  expect(projects[0].projectConfig.includeSource).toEqual([
     'src/**/*.{js,ts}',
   ])
 
   // Firefox should only have its specific include/exclude/includeSource pattern (not parent patterns)
-  expect(projects[1].name).toEqual('firefox')
-  expect(projects[1].config.include).toEqual([
+  expect(projects[1].projectConfig.name).toEqual('firefox')
+  expect(projects[1].projectConfig.include).toEqual([
     'test/firefox-specific.test.ts',
   ])
-  expect(projects[1].config.exclude).toEqual([
+  expect(projects[1].projectConfig.exclude).toEqual([
     'test/webkit-only.test.ts',
     'test/webkit-extra.test.ts',
   ])
-  expect(projects[1].config.includeSource).toEqual([
+  expect(projects[1].projectConfig.includeSource).toEqual([
     'src/firefox-compat.ts',
   ])
 
   // Webkit should only have its specific include/exclude/includeSource patterns (not parent patterns)
-  expect(projects[2].name).toEqual('webkit')
-  expect(projects[2].config.include).toEqual([
+  expect(projects[2].projectConfig.name).toEqual('webkit')
+  expect(projects[2].projectConfig.include).toEqual([
     'test/webkit-only.test.ts',
     'test/webkit-extra.test.ts',
   ])
-  expect(projects[2].config.exclude).toEqual([
+  expect(projects[2].projectConfig.exclude).toEqual([
     'test/firefox-specific.test.ts',
   ])
-  expect(projects[2].config.includeSource).toEqual([
+  expect(projects[2].projectConfig.includeSource).toEqual([
     'src/webkit-compat.ts',
   ])
 })
 
 test('browser instances with empty include array should get parent include patterns', async () => {
-  const { projects } = await vitest({ config: false }, {
+  const projects = await config({
     include: ['**/*.test.{js,ts}'],
     browser: {
       enabled: true,
@@ -313,12 +367,13 @@ test('browser instances with empty include array should get parent include patte
   })
 
   // Both instances should inherit parent include patterns when include is empty or not specified
-  expect(projects[0].config.include).toEqual(['**/*.test.{js,ts}'])
-  expect(projects[1].config.include).toEqual(['**/*.test.{js,ts}'])
+  expect(projects[0].projectConfig.include).toEqual(['**/*.test.{js,ts}'])
+  expect(projects[1].projectConfig.include).toEqual(['**/*.test.{js,ts}'])
 })
 
 test('negation filter excludes all browser instances', async () => {
-  const { projects } = await vitest({ project: '!myproject' }, {
+  const projects = await config({
+    project: '!myproject',
     projects: [
       {
         test: {
@@ -342,13 +397,14 @@ test('negation filter excludes all browser instances', async () => {
       },
     ],
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'other',
   ])
 })
 
 test('negation wildcard filter excludes all matching browser instances', async () => {
-  const { projects } = await vitest({ project: '!my*' }, {
+  const projects = await config({
+    project: '!my*',
     projects: [
       {
         test: {
@@ -371,13 +427,14 @@ test('negation wildcard filter excludes all matching browser instances', async (
       },
     ],
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'other',
   ])
 })
 
 test('filter for the global browser project includes all browser instances', async () => {
-  const { projects } = await vitest({ project: 'myproject' }, {
+  const projects = await config({
+    project: 'myproject',
     projects: [
       {
         test: {
@@ -401,7 +458,7 @@ test('filter for the global browser project includes all browser instances', asy
       },
     ],
   })
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'myproject (chromium)',
     'myproject (firefox)',
     'myproject (webkit)',
@@ -409,15 +466,7 @@ test('filter for the global browser project includes all browser instances', asy
 })
 
 test('can enable browser-cli options for multi-project workspace', async () => {
-  const { projects } = await vitest(
-    {
-      browser: {
-        enabled: true,
-        provider: preview(),
-        headless: true,
-        instances: [],
-      },
-    },
+  const projects = await config(
     {
       projects: [
         {
@@ -437,23 +486,31 @@ test('can enable browser-cli options for multi-project workspace', async () => {
           },
         },
       ],
+      $cliConfig: {
+        browser: {
+          enabled: true,
+          provider: preview(),
+          headless: true,
+          instances: [],
+        },
+      },
     },
   )
-  expect(projects.map(p => p.name)).toEqual([
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
     'unit',
     'browser',
   ])
 
   // unit config
-  expect(projects[0].config.browser.enabled).toBe(false)
+  expect(projects[0].projectConfig.browser.enabled).toBe(false)
 
   // browser config
-  expect(projects[1].config.browser.enabled).toBe(true)
-  expect(projects[1].config.browser.headless).toBe(true)
+  expect(projects[1].projectConfig.browser.enabled).toBe(true)
+  expect(projects[1].projectConfig.browser.headless).toBe(true)
 })
 
 test('core provider has options if `provider` is playwright', async () => {
-  const v = await vitest({}, {
+  const v = await config({
     browser: {
       enabled: true,
       provider: playwright({ actionTimeout: 1000 }),
@@ -462,13 +519,13 @@ test('core provider has options if `provider` is playwright', async () => {
       ],
     },
   })
-  expect(v.config.browser.provider?.options).toEqual({
+  expect(v[0].projectConfig.browser.provider?.options).toEqual({
     actionTimeout: 1000,
   })
 })
 
 test('core provider has options if `provider` is preview', async () => {
-  const v = await vitest({}, {
+  const v = await config({
     browser: {
       enabled: true,
       provider: preview(),
@@ -477,11 +534,11 @@ test('core provider has options if `provider` is preview', async () => {
       ],
     },
   })
-  expect(v.config.browser.provider?.options).toEqual({})
+  expect(v[0].projectConfig.browser.provider?.options).toEqual({})
 })
 
 test('provider options can be changed dynamically', async () => {
-  const v = await vitest({}, {
+  const v = await vitest({
     browser: {
       enabled: true,
       provider: playwright({ actionTimeout: 1000 }),
@@ -489,19 +546,20 @@ test('provider options can be changed dynamically', async () => {
         { browser: 'chromium' },
       ],
     },
-  }, {
-    plugins: [
-      {
-        name: 'update-options',
-        configureVitest({ project }) {
-          if (project.config.browser.provider) {
-            const options = project.config.browser.provider.options as any
-            options.actionTimeout = 400
-            options.someDifferentOption = 'test'
-          }
+    $viteConfig: {
+      plugins: [
+        {
+          name: 'update-options',
+          configureVitest({ project }) {
+            if (project.config.browser.provider) {
+              const options = project.config.browser.provider.options as any
+              options.actionTimeout = 400
+              options.someDifferentOption = 'test'
+            }
+          },
         },
-      },
-    ],
+      ],
+    },
   })
   expect(v.config.browser.provider?.options).toEqual({
     actionTimeout: 400,
@@ -510,7 +568,7 @@ test('provider options can be changed dynamically', async () => {
 })
 
 test('provider options can be changed dynamically if no options are specified', async () => {
-  const v = await vitest({}, {
+  const v = await vitest({
     browser: {
       enabled: true,
       provider: playwright(),
@@ -518,19 +576,20 @@ test('provider options can be changed dynamically if no options are specified', 
         { browser: 'chromium' },
       ],
     },
-  }, {
-    plugins: [
-      {
-        name: 'update-options',
-        configureVitest({ project }) {
-          if (project.config.browser.provider) {
-            const options = project.config.browser.provider.options as any
-            options.actionTimeout = 400
-            options.someDifferentOption = 'test'
-          }
+    $viteConfig: {
+      plugins: [
+        {
+          name: 'update-options',
+          configureVitest({ project }) {
+            if (project.config.browser.provider) {
+              const options = project.config.browser.provider.options as any
+              options.actionTimeout = 400
+              options.someDifferentOption = 'test'
+            }
+          },
         },
-      },
-    ],
+      ],
+    },
   })
   expect(v.config.browser.provider?.options).toEqual({
     actionTimeout: 400,
@@ -541,33 +600,35 @@ test('provider options can be changed dynamically if no options are specified', 
 test('provider options can be changed dynamically in CLI', async () => {
   const v = await vitest({
     browser: {
-      provider: {
-        name: 'playwright',
-        _cli: true,
-      } as any,
-      instances: [],
-    },
-  }, {
-    browser: {
       enabled: true,
       provider: preview(),
       instances: [
         { browser: 'chromium' },
       ],
     },
-  }, {
-    plugins: [
-      {
-        name: 'update-options',
-        configureVitest({ project }) {
-          if (project.config.browser.provider) {
-            const options = project.config.browser.provider.options as any
-            options.actionTimeout = 400
-            options.someDifferentOption = 'test'
-          }
-        },
+    $cliConfig: {
+      browser: {
+        provider: {
+          name: 'playwright',
+          _cli: true,
+        } as any,
+        instances: [],
       },
-    ],
+    },
+    $viteConfig: {
+      plugins: [
+        {
+          name: 'update-options',
+          configureVitest({ project }) {
+            if (project.config.browser.provider) {
+              const options = project.config.browser.provider.options as any
+              options.actionTimeout = 400
+              options.someDifferentOption = 'test'
+            }
+          },
+        },
+      ],
+    },
   })
   expect(v.config.browser.provider?.options).toEqual({
     actionTimeout: 400,
@@ -576,7 +637,7 @@ test('provider options can be changed dynamically in CLI', async () => {
 })
 
 test('fileParallelism on the instance works properly', async () => {
-  const v = await vitest({}, {
+  const projects = await config({
     fileParallelism: true,
     browser: {
       enabled: true,
@@ -593,13 +654,13 @@ test('fileParallelism on the instance works properly', async () => {
       ],
     },
   })
-  expect(v.projects).toHaveLength(2)
-  expect(v.projects[0].config.browser.fileParallelism).toBe(false)
-  expect(v.projects[1].config.browser.fileParallelism).toBe(true)
+  expect(projects).toHaveLength(2)
+  expect(projects[0].projectConfig.maxWorkers).toBe(1)
+  expect(projects[1].projectConfig.maxWorkers).toBe(undefined) // decided dynamically
 })
 
 test('detailsPanelPosition defaults to right', async () => {
-  const { projects } = await vitest({}, {
+  const projects = await config({
     browser: {
       enabled: true,
       provider: preview(),
@@ -608,11 +669,11 @@ test('detailsPanelPosition defaults to right', async () => {
       ],
     },
   })
-  expect(projects[0].config.browser.detailsPanelPosition).toBe('right')
+  expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('right')
 })
 
 test('detailsPanelPosition from config file is respected', async () => {
-  const { projects } = await vitest({}, {
+  const projects = await config({
     browser: {
       enabled: true,
       provider: preview(),
@@ -622,15 +683,16 @@ test('detailsPanelPosition from config file is respected', async () => {
       ],
     },
   })
-  expect(projects[0].config.browser.detailsPanelPosition).toBe('bottom')
+  expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('bottom')
 })
 
 test('CLI option --browser.detailsPanelPosition overrides config', async () => {
-  const { projects } = await vitest({
-    browser: {
-      detailsPanelPosition: 'bottom',
+  const projects = await config({
+    $cliConfig: {
+      browser: {
+        detailsPanelPosition: 'bottom',
+      },
     },
-  }, {
     browser: {
       enabled: true,
       provider: playwright(),
@@ -640,12 +702,11 @@ test('CLI option --browser.detailsPanelPosition overrides config', async () => {
       ],
     },
   })
-  expect(projects[0].config.browser.detailsPanelPosition).toBe('bottom')
+  expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('bottom')
 })
 
-function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  useFS(root, {
+async function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
+  const { root } = useTmpFS({
     ...fs,
     'basic.test.ts': /* ts */`
       import { test } from 'vitest'
@@ -653,7 +714,19 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
         expect(1).toBe(1)
       })
     `,
-    'vitest.config.ts': /* ts */ `
+    'vitest.config.js': /* ts */ `
+      import { playwright } from '@vitest/browser-playwright'
+      const config = ${JSON.stringify(options)}
+      if (config.projects) {
+        config.projects.forEach(p => {
+          if (p.test?.browser?.provider) {
+            p.test.browser.provider = playwright()
+          }
+        })
+      }
+      if (config.browser?.provider) {
+        config.browser.provider = playwright()
+      }
       export default {
         test: {
           reporters: [
@@ -685,12 +758,12 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
               },
             },
           ],
-          ...${JSON.stringify(options)}
+          ...config,
         }
       }
     `,
   })
-  return runVitestCli(
+  const result = await runVitestCli(
     {
       nodeOptions: {
         env: {
@@ -704,6 +777,10 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
     '--no-watch',
     ...cli,
   )
+  onTestFailed(() => {
+    console.error(`stdout: ${result.stdout}\nstderr:${result.stderr}`)
+  })
+  return result
 }
 
 describe('[e2e] workspace configs are affected by the CLI options', () => {
@@ -1067,9 +1144,6 @@ test('browser root', async () => {
   process.env.BROWSER_DEFINE_TEST_PROJECT = 'false'
   const { testTree, stderr } = await runVitest({
     root: './fixtures/config/browser-define',
-    browser: {
-      headless: true,
-    },
   })
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
@@ -1085,9 +1159,6 @@ test('browser project', async () => {
   process.env.BROWSER_DEFINE_TEST_PROJECT = 'true'
   const { testTree, stderr } = await runVitest({
     root: './fixtures/config/browser-define',
-    browser: {
-      headless: true,
-    },
   })
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
@@ -1153,23 +1224,22 @@ test('allows custom transformIndexHtml without custom html file', async () => {
 })
 
 test('show a warning if host is exposed', async () => {
-  const { stderr } = await runVitest({
-    config: false,
-    root: './fixtures/basic',
-    reporters: [
-      {
-        onInit() {
-          throw new Error('stop')
-        },
-      },
-    ],
-    browser: {
+  const { stderr, stdout, stdin } = createConsole()
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const cli = new Cli({ stderr, stdin, stdout })
+
+  await config(
+    {
+      config: false,
+      root: './fixtures/basic',
       api: {
         host: 'custom-host',
       },
     },
-  })
-  expect(stderr).toContain(
-    'API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set `browser.api.allowExec` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.',
+    harness,
+  )
+
+  expect(cli.stderr).toContain(
+    'API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set `browser.api.allowExec` manually to hide this warning. See https://vitest.dev/config/api for more details.',
   )
 })

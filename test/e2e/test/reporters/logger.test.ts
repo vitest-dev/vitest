@@ -16,7 +16,7 @@ test('cursor is hidden during test run in TTY', async () => {
 test('cursor is not hidden during test run in non-TTY', async () => {
   const { stdout } = await runVitest({
     include: ['b1.test.ts'],
-    root: 'fixtures/default',
+    root: 'fixtures/reporters/default',
     reporters: 'none',
     watch: false,
   }, [], { preserveAnsi: true })
