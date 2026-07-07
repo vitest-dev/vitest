@@ -238,20 +238,6 @@ error with a stack
     `.trim())
     // console.trace processes the stack trace correctly
     expect(stderr).toMatch('test/logs.test.ts:60:11')
-
-    if (instances.some(({ browser }) => browser === 'webkit')) {
-    // safari print stack trace in a different place
-      expect(stdout).toMatch(`
-log with a stack
- ❯ test/logs.test.ts:58:11
-    `.trim())
-      expect(stderr).toMatch(`
-error with a stack
- ❯ test/logs.test.ts:59:11
-    `.trim())
-      // console.trace processes the stack trace correctly
-      expect(stderr).toMatch('test/logs.test.ts:60:11')
-    }
   })
 
   test('popup apis should log a warning', () => {
