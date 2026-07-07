@@ -123,6 +123,29 @@ describe.each([
   })
 })
 
+it('disables server.hmr before plugins read it in their own config hook', async () => {
+  // `@vitejs/plugin-react` (and others) turn features like React Fast Refresh
+  // off only when they observe `server.hmr === false` inside their `config`
+  // hook. Vitest must disable HMR early enough for such plugins — which often
+  // run as `enforce: 'post'` — to see it, otherwise Fast Refresh stays on and
+  // injects `$RefreshSig$`, which is undefined outside a browser preamble.
+  let observedHmr: unknown = 'unset'
+  await resolveTestConfig({
+    $viteConfig: {
+      plugins: [
+        {
+          name: 'test:observe-hmr',
+          enforce: 'post',
+          config(userConfig) {
+            observedHmr = userConfig.server?.hmr
+          },
+        },
+      ],
+    },
+  })
+  expect(observedHmr).toBe(false)
+})
+
 it('experimental fsModuleCache is inherited in a project', async () => {
   const v = await config({
     experimental: {
