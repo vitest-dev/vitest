@@ -5,7 +5,7 @@ import type {
   ModuleRunnerContext,
   ModuleRunnerImportMeta,
 } from 'vite/module-runner'
-import type { ModuleType } from '../../types/general'
+import type { VitestFetchResult } from '../../types/general'
 import type { GetterTracker } from '../getter-tracker'
 import type { VitestEvaluatedModules } from './evaluatedModules'
 import type { ModuleExecutionInfo } from './moduleDebug'
@@ -328,7 +328,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       // the module type is provided by the server only when `injectCjsGlobals` is disabled.
       // CommonJS modules always receive these variables because they are part
       // of the module scope, without them the module cannot be evaluated at all
-      || (module.meta as { moduleType?: ModuleType } | undefined)?.moduleType === 'cjs'
+      || (module.meta as VitestFetchResult | undefined)?.moduleType === 'cjs'
 
     if (injectCjsGlobals) {
       const cjsGlobals = this._createCJSGlobals(context, module, span)

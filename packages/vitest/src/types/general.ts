@@ -1,3 +1,5 @@
+import type { FetchResult } from 'vite/module-runner'
+
 export type { ParsedStack, TestError } from '@vitest/utils'
 
 export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
@@ -34,6 +36,8 @@ export interface ResolveFunctionResult {
 }
 
 export type ModuleType = 'cjs' | 'esm'
+
+export type VitestFetchResult = FetchResult & { moduleType?: ModuleType }
 
 export interface FetchCachedFileSystemResult {
   cached: true

@@ -1,7 +1,7 @@
 import type { Span } from '@opentelemetry/api'
-import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, TransformResult } from 'vite'
-import type { FetchFunctionOptions } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult, ModuleType } from '../../types/general'
+import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } from 'vite'
+import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
+import type { FetchCachedFileSystemResult, VitestFetchResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
 import type { FileSystemModuleCache } from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
@@ -14,8 +14,6 @@ import { fetchModule } from 'vite'
 import { hash } from '../hash'
 import { detectModuleType } from '../resolver'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
-
-type VitestFetchResult = FetchResult & { moduleType?: ModuleType }
 
 const saveCachePromises = new Map<string, Promise<VitestFetchResult>>()
 const readFilePromises = new Map<string, Promise<string | null>>()

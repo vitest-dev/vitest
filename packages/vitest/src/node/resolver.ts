@@ -1,13 +1,13 @@
 import type { ModuleType } from '../types/general'
 import type { ResolvedConfig, ServerDepsOptions } from './types/config'
-import { existsSync, promises as fsp, readFileSync } from 'node:fs'
+import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { findNearestPackageData } from '@vitest/utils/resolver'
+import { lookupPackageScopeType } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
-import { basename, dirname, extname, join, resolve } from 'pathe'
+import { dirname, extname, join, resolve } from 'pathe'
 import {
   ssrExportAllKey,
   ssrImportKey,
@@ -152,9 +152,7 @@ async function isValidNodeImport(id: string) {
 
   id = id.replace('file:///', '')
 
-  const package_ = findNearestPackageData(dirname(id))
-
-  if (package_.type === 'module') {
+  if (lookupPackageScopeType(dirname(id)) === 'esm') {
     return true
   }
 
@@ -235,50 +233,6 @@ export async function detectModuleType(
     }
   }
   return 'esm'
-}
-
-const packageScopeTypeCache = new Map<string, ModuleType | 'none'>()
-
-// mirrors LOOKUP_PACKAGE_SCOPE from the ESM resolution algorithm:
-// the lookup stops at the first package.json and never crosses
-// the "node_modules" boundary, so typeless dependencies don't
-// inherit the `type` field of the user's project
-function lookupPackageScopeType(directory: string): ModuleType | 'none' {
-  const visited: string[] = []
-  let result: ModuleType | 'none' = 'none'
-  let current = directory
-  while (current) {
-    const cached = packageScopeTypeCache.get(current)
-    if (cached) {
-      result = cached
-      break
-    }
-    if (basename(current) === 'node_modules') {
-      break
-    }
-    visited.push(current)
-    const packageJsonPath = join(current, 'package.json')
-    if (existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
-        if (packageJson.type === 'module') {
-          result = 'esm'
-        }
-        else if (packageJson.type === 'commonjs') {
-          result = 'cjs'
-        }
-      }
-      catch {}
-      break
-    }
-    const parent = dirname(current)
-    if (parent === current) {
-      break
-    }
-    current = parent
-  }
-  visited.forEach(dir => packageScopeTypeCache.set(dir, result))
-  return result
 }
 
 export async function shouldExternalize(
