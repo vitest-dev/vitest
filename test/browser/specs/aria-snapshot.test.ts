@@ -132,7 +132,7 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
         - - paragraph: Original
         + - paragraph: Changed
           - button /\\d+/: Pattern
-            at basic.test.ts:22:50",
+            at basic.test.ts:22:25",
             ],
             "toMatchAriaSnapshot simple": [
               "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
@@ -145,7 +145,7 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
         +   - navigation "EDITED":
               - button "Save"
               - button "Cancel"
-            at basic.test.ts:14:24",
+            at basic.test.ts:14:25",
             ],
           },
         }
@@ -201,7 +201,7 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
       - - paragraph: Original
       + - paragraph: Changed
         - button /\\d+/: Pattern
-          at basic.test.ts:22:24",
+          at basic.test.ts:22:25",
           ],
           "toMatchAriaSnapshot simple": [
             "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
@@ -214,7 +214,7 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
       +   - navigation "EDITED":
             - button "Save"
             - button "Cancel"
-          at basic.test.ts:14:24",
+          at basic.test.ts:14:25",
           ],
         },
       }

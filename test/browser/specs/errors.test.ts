@@ -9,12 +9,12 @@ test('prints correct unhandled error stack', async () => {
     root: './fixtures/unhandled',
   })
 
-  expect(stderr).toContain('throw-unhandled-error.test.ts:9:10')
+  expect(stderr).toContain('throw-unhandled-error.test.ts:9:11')
   expect(stderr).toContain('This error originated in "throw-unhandled-error.test.ts" test file.')
   expect(stderr).toContain('The last test to run before this error was "unhandled exception".')
 
   if (instances.some(({ browser }) => browser === 'webkit')) {
-    expect(stderr).toContain('throw-unhandled-error.test.ts:9:20')
+    expect(stderr).toContain('throw-unhandled-error.test.ts:9:15')
   }
 })
 
@@ -172,8 +172,8 @@ test('prints source-mapped stack for optimized dependency', async () => {
                 {
                   "message": "this is test dependency error",
                   "stacks": [
-                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
-                    " at basic.test.ts:5:2",
+                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:13",
+                    " at basic.test.ts:5:3",
                   ],
                 },
               ],
@@ -207,8 +207,8 @@ test('prints source-mapped stack for optimized dependency', async () => {
               {
                 "message": "this is test dependency error",
                 "stacks": [
-                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:8",
-                  " at basic.test.ts:5:2",
+                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:9",
+                  " at basic.test.ts:5:3",
                 ],
               },
             ],

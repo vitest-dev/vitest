@@ -107,10 +107,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'button rendered - locator')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:38"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:34"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:33"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:34"`)
           }
         }
 
@@ -129,10 +129,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'button rendered - page')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:18"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:14"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:13"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:14"`)
           }
         }
 
@@ -154,10 +154,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'toHaveTextContent')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:23"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:16"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:15"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:16"`)
           }
         }
 
@@ -183,10 +183,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'toHaveTextContent [ERROR]')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:23"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:16"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:15"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:16"`)
           }
         }
 
@@ -194,10 +194,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'onAfterRetryTask [fail]')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:18"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:13"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:8"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:9"`)
           }
         }
 
@@ -222,14 +222,14 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
             if (rolldownVersion) {
-              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
+              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:34"`)
             }
             else {
               expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:39"`)
             }
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:34"`)
           }
         }
 
@@ -244,10 +244,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'render helper')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:17"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:9"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:8"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:9"`)
           }
         }
 
@@ -262,10 +262,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'button rendered - stack')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:26"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:21"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:16"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:17"`)
           }
         }
 
@@ -280,10 +280,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'render group')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:18"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:14"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:13"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:14"`)
           }
         }
       }
