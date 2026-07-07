@@ -771,15 +771,6 @@ export class BaseCoverageProvider {
       }
     }
 
-    if (project.isBrowserEnabled() || viteEnvironment === '__browser__') {
-      const client = project.browser?.vite.environments.client || project.vite.environments.client
-      const result = await client.transformRequest(url)
-
-      if (result) {
-        return result
-      }
-    }
-
     return project.vite.environments[viteEnvironment].transformRequest(url)
   }
 
@@ -803,7 +794,7 @@ export class BaseCoverageProvider {
 
         try {
           const environment = project.config.environment
-          const viteEnvironment = environment === 'jsdom' || environment === 'happy-dom' ? 'client' : 'ssr'
+          const viteEnvironment = environment === 'jsdom' || environment === 'happy-dom' || project.isBrowserEnabled() ? 'client' : 'ssr'
           return await this.transformFile(filename, project, viteEnvironment)
         }
         catch (err) {

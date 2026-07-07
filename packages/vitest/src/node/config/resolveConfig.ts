@@ -1,7 +1,10 @@
-import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { Vitest } from '../core'
+import type {
+  InlineConfig,
+  ResolvedConfig as ResolvedViteConfig,
+  UserConfig as ViteUserConfig,
+} from 'vite'
 import type { Logger } from '../logger'
-import type { ResolvedBrowserOptions } from '../types/browser'
+import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -10,25 +13,32 @@ import type {
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { slash, toArray } from '@vitest/utils/helpers'
+import { deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { mergeConfig } from 'vite'
+import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import {
   configFiles,
-  defaultBrowserPort,
   defaultInspectPort,
-  defaultPort,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
+import { BrowserLoaderPlugin } from '../plugins/browserLoader'
+import { CliOverride } from '../plugins/cliOverride'
+import { VitestConfig } from '../plugins/config'
+import { VitestCorePlugin } from '../plugins/index'
+import { VitestConfigServer } from '../plugins/server'
+import { resolveFsAllow } from '../plugins/utils'
+import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
-import { resolveApiToken } from './apiToken'
+import { API_TOKEN_FILE, resolveApiToken } from './apiToken'
+import { PluginHarness } from './pluginHarness'
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -76,41 +86,39 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
-/**
- * @deprecated Internal function
- */
-export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
-  options: Options,
+export function resolveApiServerConfig(
+  config: UserConfig,
   defaultPort: number,
-  parentApi?: ApiConfig,
-  logger?: Logger,
-): ApiConfig | undefined {
+  logger: Logger,
+): ApiConfig {
+  const isBrowserEnabled = !!config.browser?.enabled
+
   let api: ApiConfig | undefined
 
-  if (options.ui && !options.api) {
+  if (config.ui && !config.api) {
     api = { port: defaultPort }
   }
-  else if (options.api === true) {
+  else if (config.api === true) {
     api = { port: defaultPort }
   }
-  else if (typeof options.api === 'number') {
-    api = { port: options.api }
+  else if (typeof config.api === 'number') {
+    api = { port: config.api }
   }
 
-  if (typeof options.api === 'object') {
+  if (typeof config.api === 'object') {
     if (api) {
-      if (options.api.port) {
-        api.port = options.api.port
+      if (config.api.port) {
+        api.port = config.api.port
       }
-      if (options.api.strictPort) {
-        api.strictPort = options.api.strictPort
+      if (config.api.strictPort) {
+        api.strictPort = config.api.strictPort
       }
-      if (options.api.host) {
-        api.host = options.api.host
+      if (config.api.host) {
+        api.host = config.api.host
       }
     }
     else {
-      api = { ...options.api }
+      api = { ...config.api }
     }
   }
 
@@ -123,24 +131,31 @@ export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConf
     api = { middlewareMode: true }
   }
 
+  if (api && isBrowserEnabled) {
+    // Always force middlewareMode to false in browser mode
+    api.middlewareMode = false
+    // The browser server is standalone, so it always needs a port even when the
+    // user didn't configure `api`/`ui` (in which case `api` defaulted above)
+    if (!api.port) {
+      api.port = defaultPort
+    }
+  }
+
   // if the API server is exposed to network, disable write operations by default
   if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
-    // assigned to browser
-    if (parentApi) {
-      if (api.allowWrite == null && api.allowExec == null) {
-        logger?.error(
-          c.yellow(
-            `${c.yellowBright(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
-          ),
-        )
-      }
+    if (api.allowWrite == null && api.allowExec == null) {
+      logger.error(
+        c.yellow(
+          `${c.bgYellow(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/api for more details.`,
+        ),
+      )
     }
-    api.allowWrite ??= parentApi?.allowWrite ?? false
-    api.allowExec ??= parentApi?.allowExec ?? false
+    api.allowWrite ??= false
+    api.allowExec ??= false
   }
   else {
-    api.allowWrite ??= parentApi?.allowWrite ?? true
-    api.allowExec ??= parentApi?.allowExec ?? true
+    api.allowWrite ??= true
+    api.allowExec ??= true
   }
 
   return api
@@ -159,18 +174,26 @@ function resolveInlineWorkerOption(value: string | number): number {
 // that's why it's on a module-level
 let warnedTypeCheck = false
 
-export function resolveConfig(
-  vitest: Vitest,
+/**
+ * Resolve Vitest's test config for a single Vite resolved config (root or a single project).
+ *
+ * This is the internal single-config resolver. The top-level `resolveConfig`
+ * orchestrates the full pipeline (root + projects + browser/benchmark expansion).
+ *
+ * `globalConfig` is the resolved root config, passed when resolving a project.
+ */
+export function resolveTestConfig(
+  logger: Logger,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
+  globalConfig?: ResolvedConfig,
 ): ResolvedConfig {
-  const logger = vitest.logger
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
-      logger.console.warn(
+      logger.warn(
         withLabel(
           'yellow',
           'Vitest',
@@ -182,11 +205,15 @@ export function resolveConfig(
     options.environment = 'happy-dom'
   }
 
-  const resolved = {
-    ...configDefaults,
-    ...options,
-    root: viteConfig.root,
-  } as any as ResolvedConfig
+  const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
+  resolved.root = viteConfig.root
+
+  // Coverage is collected once for the whole run using the root config, so projects
+  // share its resolved coverage. Each project's setup/test/config files are then
+  // appended to the same exclude list below, keeping them out of the report.
+  if (globalConfig) {
+    resolved.coverage = globalConfig.coverage
+  }
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
   if (!rootStats?.isDirectory()) {
@@ -196,7 +223,7 @@ export function resolveConfig(
   resolved.mode ??= viteConfig.mode ?? 'test'
 
   if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
-    logger.console.warn(
+    logger.warn(
       c.yellow('Warning: retry.condition function cannot be used inside a config file. '
         + 'Use a RegExp pattern instead, or define the function in your test file.'),
     )
@@ -213,7 +240,11 @@ export function resolveConfig(
   }
 
   if ('poolOptions' in resolved) {
-    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework')
+    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://v4.vitest.dev/guide/migration#pool-rework')
+  }
+
+  if ('workspace' in resolved) {
+    throw new Error('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
   }
 
   resolved.pool ??= 'forks'
@@ -314,7 +345,16 @@ export function resolveConfig(
     resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
-  const fileParallelism = options.fileParallelism ?? true
+  // `browser.fileParallelism` was replaced by the top-level `fileParallelism`. Map
+  // it (only when browser is enabled, since it was a browser-only option) so
+  // existing configs keep working instead of being silently ignored.
+  const browserOptions = options.browser as { enabled?: boolean; fileParallelism?: boolean } | undefined
+  const browserFileParallelism = browserOptions?.enabled ? browserOptions.fileParallelism : undefined
+  if (browserFileParallelism !== undefined) {
+    logger.deprecate('`browser.fileParallelism` is deprecated. Use the top-level `fileParallelism` option instead.')
+  }
+
+  const fileParallelism = options.fileParallelism ?? browserFileParallelism ?? true
 
   if (!fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
@@ -337,19 +377,6 @@ export function resolveConfig(
     }
   }
 
-  // apply browser CLI options only if the config already has the browser config and not disabled manually
-  if (
-    vitest._cliOptions.browser
-    && resolved.browser
-    // if enabled is set to `false`, but CLI overrides it, then always override it
-    && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
-  ) {
-    resolved.browser = mergeConfig(
-      resolved.browser,
-      vitest._cliOptions.browser,
-    ) as ResolvedBrowserOptions
-  }
-
   resolved.browser ??= {} as any
   const browser = resolved.browser
 
@@ -357,6 +384,31 @@ export function resolveConfig(
     const instances = browser.instances
     if (!browser.instances) {
       browser.instances = []
+    }
+
+    // The whole project shares a single browser Vite server, so every instance
+    // must use the same provider. Validate that here and hoist the provider to
+    // the project level so the cluster resolves one even when it is only set per
+    // instance (e.g. connect mode). Because the provider is uniform, any
+    // instance's server factory represents the whole project.
+    const providerNames = new Set<string>()
+    // It's possible to provide the same name and sneak in a different factory
+    const providerFactories = new Set()
+    if (browser.provider?.name) {
+      providerNames.add(browser.provider.name)
+      providerFactories.add(browser.provider.serverFactory)
+    }
+    for (const instance of browser.instances) {
+      if (instance.provider?.name) {
+        providerNames.add(instance.provider.name)
+        providerFactories.add(instance.provider.serverFactory)
+      }
+    }
+    if (providerNames.size > 1 || providerFactories.size > 1) {
+      throw new Error(
+        `All browser instances within a project must use the same provider, but found: ${[...providerNames].join(', ')}. `
+        + `Use a single provider for the project, or move the instances into separate projects.`,
+      )
     }
 
     // use `chromium` by default when the preview provider is specified
@@ -379,6 +431,12 @@ export function resolveConfig(
         ].join(''))
       }
     }
+
+    browser.instances.forEach((instance) => {
+      instance.name ??= resolved.name
+        ? `${resolved.name} (${instance.browser})`
+        : instance.browser
+    })
   }
 
   if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {
@@ -387,66 +445,6 @@ export function resolveConfig(
 
   if (browser.enabled && resolved.detectAsyncLeaks) {
     logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
-  }
-
-  const containsChromium = hasBrowserChromium(vitest, resolved)
-  const hasOnlyChromium = hasOnlyBrowserChromium(vitest, resolved)
-
-  // Browser-mode "Chromium" only features:
-  if (browser.enabled && (!containsChromium || !hasOnlyChromium)) {
-    const browserConfig = `
-{
-  browser: {
-    provider: ${browser.provider?.name || 'preview'}(),
-    instances: [
-      ${(browser.instances || []).map(i => `{ browser: '${i.browser}' }`).join(',\n      ')}
-    ],
-  },
-}
-    `.trim()
-
-    const preferredProvider = (!browser.provider?.name || browser.provider.name === 'preview')
-      ? 'playwright'
-      : browser.provider.name
-    const preferredBrowser = preferredProvider === 'playwright' ? 'chromium' : 'chrome'
-    const correctExample = `
-{
-  browser: {
-    provider: ${preferredProvider}(),
-    instances: [
-      { browser: '${preferredBrowser}' }
-    ],
-  },
-}
-    `.trim()
-
-    // requires all projects to be chromium
-    if (!hasOnlyChromium && resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
-      const coverageExample = `
-{
-  coverage: {
-    provider: 'istanbul',
-  },
-}
-      `.trim()
-
-      throw new Error(
-        `@vitest/coverage-v8 does not work with\n${browserConfig}\n`
-        + `\nUse either:\n${correctExample}`
-        + `\n\n...or change your coverage provider to:\n${coverageExample}\n`,
-      )
-    }
-
-    // ignores non-chromium browsers when there is at least one chromium project
-    if (!containsChromium && (resolved.inspect || resolved.inspectBrk)) {
-      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-
-      throw new Error(
-        `${inspectOption} does not work with\n${browserConfig}\n`
-        + `\nUse either:\n${correctExample}`
-        + `\n\n...or disable ${inspectOption}\n`,
-      )
-    }
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
@@ -648,6 +646,18 @@ export function resolveConfig(
     resolved.isolate = false
   }
 
+  // `browser.isolate` was replaced by the top-level `isolate` option. Map it
+  // (only when browser is enabled, since it was a browser-only option) so
+  // existing configs keep working instead of silently falling back to the
+  // isolated default (which is much slower).
+  const browserIsolate = browser.enabled ? (browser as { isolate?: boolean }).isolate : undefined
+  if (browserIsolate !== undefined) {
+    logger.deprecate('`browser.isolate` is deprecated. Use the top-level `isolate` option instead.')
+    if (options.isolate === undefined) {
+      resolved.isolate = browserIsolate
+    }
+  }
+
   if (process.env.VITEST_MAX_WORKERS) {
     resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
   }
@@ -656,11 +666,6 @@ export function resolveConfig(
     resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }
-
-  // the server has been created, we don't need to override vite.server options
-  const api = resolveApiServerConfig(options, defaultPort)
-  const { token, tokenCreated } = resolveApiToken(resolved.root)
-  resolved.api = { ...api, token, tokenCreated }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -709,10 +714,12 @@ export function resolveConfig(
       }
     }
   }
+  else {
+    resolved.reporters = []
+  }
 
-  // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
   // it is passed down as "vitest --reporter ../reporter.js"
-  const reportersFromCLI = resolved.reporter
+  const reportersFromCLI = options.reporter
 
   const cliReporters = toArray(reportersFromCLI || []).map(
     (reporter: string) => {
@@ -757,6 +764,10 @@ export function resolveConfig(
     resolved.passWithNoTests ??= true
   }
 
+  if (resolved.browser.enabled) {
+    // browser mode renders real CSS in the page
+    resolved.css = true
+  }
   resolved.css ??= {}
   if (typeof resolved.css === 'object') {
     resolved.css.modules ??= {}
@@ -765,7 +776,7 @@ export function resolveConfig(
 
   if (resolved.cache !== false) {
     if (resolved.cache && typeof resolved.cache.dir === 'string') {
-      vitest.logger.deprecate(
+      logger.deprecate(
         `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
       )
     }
@@ -811,14 +822,6 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  if (resolved.browser.isolate) {
-    logger.console.warn(
-      c.yellow('`browser.isolate` is deprecated. Use top-level `isolate` instead.'),
-    )
-  }
-  resolved.browser.isolate ??= resolved.isolate ?? true
-  resolved.browser.fileParallelism
-    ??= options.fileParallelism ?? true
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
   resolved.browser.commands ??= {}
@@ -873,13 +876,8 @@ export function resolveConfig(
     resolved.browser.provider.options = {}
   }
 
-  resolved.browser.api = resolveApiServerConfig(
-    resolved.browser,
-    defaultBrowserPort,
-    resolved.api,
-    logger,
-  ) || {
-    port: defaultBrowserPort,
+  if ('api' in resolved.browser) {
+    logger.deprecate('`test.browser.api` was deprecated in Vitest 5. Use `test.api` instead.')
   }
 
   // enable includeTaskLocation by default in UI mode
@@ -1000,8 +998,103 @@ export function resolveConfig(
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig): boolean {
-  return Boolean(config.browser?.enabled)
+function resolveConfigPath(root: string, options: UserConfig) {
+  if (options.config === false) {
+    return false
+  }
+  if (options.config) {
+    return resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config)
+  }
+  return findConfigFile(root)
+}
+
+export async function resolveConfig(
+  options: UserConfig = {},
+  viteOverrides: ViteUserConfig = {},
+  pluginsHarness: PluginHarness = new PluginHarness(),
+): Promise<ResolvedViteConfig> {
+  // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
+  const cliOptionsCopy = deepMerge({}, options)
+  const viteOverridesCopy = deepMerge({}, viteOverrides)
+  const root = resolve(options.root || process.cwd())
+  const configPath = resolveConfigPath(root, options)
+  options.config = configPath
+  options.root = root
+
+  const rootBrowserHolder: BrowserContributionHolder = {}
+  const inlineConfig: InlineConfig = mergeConfig(
+    {
+      configFile: configPath,
+      configLoader: options.configLoader,
+      mode: options.mode || 'test',
+      plugins: [
+        CliOverride(cliOptionsCopy),
+        VitestConfigServer(pluginsHarness),
+        ...VitestConfig(pluginsHarness),
+        ...VitestCorePlugin(pluginsHarness, options),
+        ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
+      ],
+    } satisfies InlineConfig,
+    mergeConfig(viteOverrides, { root }),
+  )
+
+  const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
+
+  const rootConfig = resolveTestConfig(
+    pluginsHarness.logger,
+    (rootViteConfig.test as UserConfig | undefined) || {},
+    rootViteConfig,
+  )
+  rootViteConfig.test = rootConfig
+
+  rootViteConfig.server.fs.allow.push(
+    ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
+  )
+  rootViteConfig.server.fs.deny.push(API_TOKEN_FILE)
+
+  // the server has been created, we don't need to override vite.server options
+  const { token, tokenCreated } = resolveApiToken(rootViteConfig.root)
+  rootConfig.api.token = token
+  rootConfig.api.tokenCreated = tokenCreated
+
+  if (rootConfig.ui && rootConfig.open) {
+    // Note: `tokenCreated` is only an approximation of "the browser is not
+    // authenticated yet". If the user clears cookies while the token file
+    // persists, the clean URL will block until they re-open the `?token=`
+    // URL printed in the terminal.
+    if (rootConfig.api.tokenCreated) {
+      // First run that generated the token: no browser holds the auth
+      // cookie yet, so open the authenticated URL to set it. A new tab
+      // here is fine since no clean-URL tab exists to reuse.
+      const url = new URL(rootConfig.uiBase, 'http://localhost')
+      url.searchParams.set('token', rootConfig.api.token)
+      rootViteConfig.server.open = `${url.pathname}${url.search}`
+    }
+    else {
+      // Subsequent runs: open the clean UI base URL (without `?token=`)
+      // rather than the authenticated URL printed by the logger. On macOS,
+      // `openBrowser` reuses an existing tab whose URL matches via substring
+      // and reloads it (Vite's `bin/openChrome.js`). Since the 302 redirect
+      // strips the token, an already-authenticated tab lives at the clean
+      // URL, so opening the clean URL matches and reloads it; opening the
+      // token URL would never match and would spawn a new tab on every
+      // restart.
+      rootViteConfig.server.open = rootConfig.uiBase
+    }
+  }
+
+  rootConfig.cliOptions = cliOptionsCopy
+  rootConfig.viteOverrides = viteOverridesCopy
+  rootConfig._browserContribution = rootBrowserHolder.contribution
+
+  rootConfig.resolvedProjects = await resolveProjectEntries(
+    pluginsHarness,
+    rootViteConfig,
+    rootConfig,
+    rootConfig.projects,
+  )
+
+  return rootViteConfig
 }
 
 export function resolveCoverageReporters(configReporters: NonNullable<CoverageOptions['reporter']>): CoverageReporterWithOptions[] {
@@ -1026,51 +1119,27 @@ export function resolveCoverageReporters(configReporters: NonNullable<CoverageOp
   return resolvedReporters
 }
 
-function isChromiumName(provider: string, name: string) {
-  if (provider === 'playwright') {
-    return name === 'chromium'
+export function matchesProjectFilter(projects: string[], name: string): boolean {
+  // no filters applied, any project can be included
+  if (!projects.length) {
+    return true
   }
-  return name === 'chrome' || name === 'edge'
-}
-
-function hasBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
-  const browser = config.browser
-  if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
-    return false
-  }
-  if (browser.name) {
-    return isChromiumName(browser.provider.name, browser.name)
-  }
-  if (!browser.instances) {
-    return false
-  }
-  return browser.instances.some((instance) => {
-    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
-    // browser config is filtered out
-    if (!vitest.matchesProjectFilter(name)) {
-      return false
-    }
-    return isChromiumName(browser.provider!.name, instance.browser)
+  return projects.some((project) => {
+    const regexp = wildcardPatternToRegExp(project)
+    return regexp.test(name)
   })
 }
 
-function hasOnlyBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
-  const browser = config.browser
-  if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
+export function isExcludedByProjectFilter(projects: string[], name: string): boolean {
+  if (!projects.length) {
     return false
   }
-  if (browser.name) {
-    return isChromiumName(browser.provider.name, browser.name)
-  }
-  if (!browser.instances) {
-    return false
-  }
-  return browser.instances.every((instance) => {
-    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
-    // browser config is filtered out
-    if (!vitest.matchesProjectFilter(name)) {
-      return true // ignore this project
+
+  return projects.some((project) => {
+    if (!project.startsWith('!')) {
+      return false
     }
-    return isChromiumName(browser.provider!.name, instance.browser)
+    const positivePattern = project.slice(1)
+    return wildcardPatternToRegExp(positivePattern).test(name)
   })
 }

@@ -65,7 +65,7 @@ export function createBrowserRunner(
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
-      this.viteEnvironment = '__browser__'
+      this.viteEnvironment = 'client'
       this._otel = getBrowserState().traces
     }
 
@@ -240,7 +240,7 @@ export function createBrowserRunner(
         await rpc().onAfterSuiteRun({
           coverage,
           testFiles: files.map(file => file.name),
-          environment: '__browser__',
+          environment: 'client',
           projectName: this.config.name,
         })
       }

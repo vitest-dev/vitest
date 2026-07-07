@@ -1,14 +1,32 @@
-import { rmSync, writeFileSync } from 'node:fs'
-import { runVitest } from '#test-utils'
-import { describe, expect, onTestFinished, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
+import { describe, expect, test } from 'vitest'
 
-const _options = { root: 'fixtures/watch', watch: true }
+const ts = String.raw
+
+const fixture = {
+  'math.test.ts': ts`
+    import { expect, test } from 'vitest'
+    import { sum } from './math'
+
+    test('sum', () => {
+      expect(sum(1, 2)).toBe(3)
+    })
+  `,
+  'math.ts': ts`
+    export function sum(a: number, b: number) {
+      return a + b
+    }
+  `,
+  'basic.test.ts': ts`
+    import { test } from 'vitest'
+
+    test('basic', () => {})
+  `,
+}
 
 describe.each([true, false])('standalone mode is %s', (standalone) => {
-  const options = { ..._options, standalone }
-
   test('quit watch mode', async () => {
-    const { vitest, waitForClose } = await runVitest(options)
+    const { vitest, waitForClose } = await runInlineTests(fixture, { watch: true, standalone })
 
     vitest.write('q')
 
@@ -16,7 +34,7 @@ describe.each([true, false])('standalone mode is %s', (standalone) => {
   })
 
   test('filter by filename', async () => {
-    const { vitest } = await runVitest(options)
+    const { vitest } = await runInlineTests(fixture, { watch: true, standalone })
 
     vitest.write('p')
 
@@ -34,19 +52,18 @@ describe.each([true, false])('standalone mode is %s', (standalone) => {
   })
 
   test('filter by filename when multiple projects match same file', async () => {
-    const { vitest } = await runVitest({
-      ...options,
+    const { vitest } = await runInlineTests(fixture, {
+      watch: true,
+      standalone,
       projects: [
         {
           test: {
             name: 'First',
-            root: options.root,
           },
         },
         {
           test: {
             name: 'Second',
-            root: options.root,
           },
         },
       ],
@@ -69,7 +86,7 @@ describe.each([true, false])('standalone mode is %s', (standalone) => {
   })
 
   test('filter by test name', async () => {
-    const { vitest } = await runVitest(options)
+    const { vitest } = await runInlineTests(fixture, { watch: true, standalone })
 
     vitest.write('t')
 
@@ -91,29 +108,28 @@ describe.each([true, false])('standalone mode is %s', (standalone) => {
   })
 
   test.skipIf(process.env.GITHUB_ACTIONS)('cancel test run', async () => {
-    const { vitest } = await runVitest(options)
+    const { fs, vitest } = await runInlineTests(fixture, { watch: true, standalone })
 
-    const testPath = 'fixtures/watch/cancel.test.ts'
-    const testCase = `// Dynamic test case
-import { afterAll, afterEach, test } from 'vitest'
+    const testCase = ts`
+      // Dynamic test case
+      import { afterAll, afterEach, test } from 'vitest'
 
-// These should be called even when test is cancelled
-afterAll(() => console.log('[cancel-test]: afterAll'))
-afterEach(() => console.log('[cancel-test]: afterEach'))
+      // These should be called even when test is cancelled
+      afterAll(() => console.log('[cancel-test]: afterAll'))
+      afterEach(() => console.log('[cancel-test]: afterEach'))
 
-test('1 - test that finishes', async () => {
-  console.log('[cancel-test]: test')
+      test('1 - test that finishes', async () => {
+        console.log('[cancel-test]: test')
 
-  await new Promise(resolve => setTimeout(resolve, 1000))
-})
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      })
 
-test('2 - test that is cancelled', async () => {
-  console.log('[cancel-test]: should not run')
-})
-`
+      test('2 - test that is cancelled', async () => {
+        console.log('[cancel-test]: should not run')
+      })
+    `
 
-    onTestFinished(() => rmSync(testPath))
-    writeFileSync(testPath, testCase, 'utf8')
+    fs.createFile('cancel.test.ts', testCase)
 
     // Test case is running, cancel it
     await vitest.waitForStdout('[cancel-test]: test')
@@ -129,7 +145,7 @@ test('2 - test that is cancelled', async () => {
 })
 
 test('rerun current pattern tests', async () => {
-  const { vitest } = await runVitest({ ..._options, testNamePattern: 'sum' })
+  const { vitest } = await runInlineTests(fixture, { watch: true, testNamePattern: 'sum' })
 
   vitest.write('r')
 
@@ -139,7 +155,7 @@ test('rerun current pattern tests', async () => {
 })
 
 test('cli filter as watch filename pattern', async () => {
-  const { vitest } = await runVitest(_options, ['math'])
+  const { vitest } = await runInlineTests(fixture, { watch: true, $cliFilters: ['math'] })
 
   vitest.write('r')
 
