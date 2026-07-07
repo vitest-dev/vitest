@@ -112,8 +112,6 @@ export interface SerializedConfig {
   browser: {
     name: string
     headless: boolean
-    isolate: boolean
-    fileParallelism: boolean
     ui: boolean
     viewport: {
       width: number

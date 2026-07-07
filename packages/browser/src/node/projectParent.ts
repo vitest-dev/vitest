@@ -51,13 +51,13 @@ export class ParentBrowserProject {
   private sourceMapCache = new Map<string, any>()
 
   constructor(
-    public project: TestProject,
+    ctx: { config: ResolvedConfig; vitest: Vitest },
     public base: string,
   ) {
-    this.vitest = project.vitest
-    this.config = project.config
+    this.vitest = ctx.vitest
+    this.config = ctx.config
     this.stackTraceOptions = {
-      frameFilter: project.config.onStackTrace,
+      frameFilter: this.config.onStackTrace,
       getSourceMap: (id) => {
         if (this.sourceMapCache.has(id)) {
           return this.sourceMapCache.get(id)
@@ -100,13 +100,13 @@ export class ParentBrowserProject {
     }
 
     // validate names because they can't be used as identifiers
-    for (const command in project.config.browser.commands) {
+    for (const command in this.config.browser.commands) {
       if (!/^[a-z_$][\w$]*$/i.test(command)) {
         throw new Error(
           `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
         )
       }
-      this.commands[command] = project.config.browser.commands[command]
+      this.commands[command] = this.config.browser.commands[command]
     }
 
     this.prefixTesterUrl = `${base || '/'}`
@@ -119,7 +119,7 @@ export class ParentBrowserProject {
       )
     })().then(manifest => (this.manifest = manifest))
 
-    this.orchestratorHtml = (project.config.browser.ui
+    this.orchestratorHtml = (this.config.browser.ui
       ? readFile(resolve(uiClientRoot, 'index.html'), 'utf8')
       : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8'))
       .then(html => (this.orchestratorHtml = html))

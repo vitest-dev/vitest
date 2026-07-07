@@ -30,6 +30,9 @@ export default defineConfig({
         return false
       }
     },
+    tags: [
+      { name: 'browser', timeout: 60_000 },
+    ],
     projects: [
       {
         extends: true,
@@ -95,7 +98,6 @@ export default defineConfig({
     watch: {
       ignored: [
         '**/vitest-test-*/**',
-        '**/fixtures/browser-multiple/**/*',
         '**/fixtures/browser-init/**/*',
         '**/package.json',
       ],

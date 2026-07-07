@@ -1,3 +1,6 @@
+/**
+ * @module-tag browser
+ */
 import { join } from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'

@@ -1,14 +1,12 @@
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
-import type { ApiConfig } from '../types/config'
 import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
 import { isAgent, isForceColor } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
-  const { config, globalConfig } = project
-  const viteConfig = project._vite?.config
+  const { config, globalConfig, viteConfig } = project
   const optimizer = config.deps?.optimizer || {}
 
   return {
@@ -37,12 +35,10 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
-    api: ((api: ApiConfig | undefined) => {
-      return {
-        allowExec: api?.allowExec,
-        allowWrite: api?.allowWrite,
-      }
-    })(project.isBrowserEnabled() ? config.browser.api : config.api),
+    api: {
+      allowExec: config.api.allowExec,
+      allowWrite: config.api.allowWrite,
+    },
     diff: serializeDiffOptions(config.diff),
     retry: config.retry,
     repeats: config.repeats,
@@ -113,8 +109,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       return {
         name: browser.name,
         headless: browser.headless,
-        isolate: browser.isolate,
-        fileParallelism: browser.fileParallelism,
         ui: browser.ui,
         detailsPanelPosition: browser.detailsPanelPosition ?? 'right',
         viewport: browser.viewport,

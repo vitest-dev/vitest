@@ -27,6 +27,7 @@ const isWindows = process.platform === 'win32'
 
 export interface VitestModuleEvaluatorOptions {
   evaluatedModules?: VitestEvaluatedModules
+  metaEnv?: ModuleRunnerImportMeta['env']
   interopDefault?: boolean | undefined
   injectCjsGlobals?: boolean | undefined
   moduleExecutionInfo?: ModuleExecutionInfo
@@ -42,7 +43,7 @@ export interface VitestModuleEvaluatorOptions {
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
   public stubs: Record<string, any> = {}
-  public env: ModuleRunnerImportMeta['env'] = createImportMetaEnvProxy()
+  public env: ModuleRunnerImportMeta['env']
   private vm: VitestVmOptions | undefined
 
   private compiledFunctionArgumentsNames?: string[]
@@ -66,6 +67,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     private options: VitestModuleEvaluatorOptions = {},
   ) {
     this._otel = options.traces || new Traces({ enabled: false })
+    this.env = options.metaEnv ?? createImportMetaEnvProxy()
     this.vm = vmOptions
     this.stubs = getDefaultRequestStubs(vmOptions?.context)
     this._evaluatedModules = options.evaluatedModules
