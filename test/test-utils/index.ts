@@ -19,13 +19,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { inspect, stripVTControlCharacters } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
-import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished, TestRunner } from 'vitest'
-import { Logger, PluginHarness, resolveConfig, startVitest } from 'vitest/node'
+import { disableDefaultColors, Logger, PluginHarness, resolveConfig, startVitest } from 'vitest/node'
 import { Cli } from './cli'
 
-// override default colors to disable them in tests
-Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
+// Vitest bundles its own `tinyrainbow` instance (see rollup `manualChunks`), which
+// is a different object than the one imported above. Disable colors on it too so
+// reporter output captured in tests is deterministic regardless of `CI`/`FORCE_COLOR`.
+disableDefaultColors()
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
