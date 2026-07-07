@@ -125,6 +125,13 @@ export async function createClusterServer(
   const parent = contribution.createParent({ config, vitest })
   contribution.parent = parent
 
+  // let the provider start preparing the browser (e.g. launching it)
+  // while the vite server is being created; like the loader plugin above,
+  // the provider can also be configured per instance
+  const provider = config.browser.provider
+    ?? config.browser.instances?.find(instance => instance.provider)?.provider
+  provider?.prewarm?.({ config, vitest })
+
   const server = await createViteServer(viteConfig)
   await server.listen(config.api.port)
   contribution.setupRpc(parent)
