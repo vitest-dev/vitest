@@ -651,6 +651,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/browser/screenshotfailures',
               },
               {
+                text: 'browser.dependencySourcemaps',
+                link: '/config/browser/dependencysourcemaps',
+              },
+              {
                 text: 'browser.orchestratorScripts',
                 link: '/config/browser/orchestratorscripts',
               },
