@@ -140,8 +140,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     serializedDefines: config.browser.enabled
       ? ''
       : project._serializedDefines || '',
+    fsModuleCache: config.fsModuleCache ?? false,
     experimental: {
-      fsModuleCache: config.experimental.fsModuleCache ?? false,
       importDurations: config.experimental.importDurations,
       viteModuleRunner: config.experimental.viteModuleRunner ?? true,
       nodeLoader: config.experimental.nodeLoader ?? true,

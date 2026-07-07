@@ -805,6 +805,20 @@ Default timeout of a teardown function in milliseconds (default: `10000`)
 
 Maximum number of concurrent tests and suites during test file execution (default: `5`)
 
+### fsModuleCache
+
+- **CLI:** `--fsModuleCache`
+- **Config:** [fsModuleCache](/config/fsmodulecache)
+
+Cache transformed modules on the file system and reuse them between reruns (default: `false`)
+
+### fsModuleCachePath
+
+- **CLI:** `--fsModuleCachePath <path>`
+- **Config:** [fsModuleCachePath](/config/fsmodulecachepath)
+
+Directory where the `fsModuleCache` is stored (default: `node_modules/.vitest-cache`)
+
 ### expect.requireAssertions
 
 - **CLI:** `--expect.requireAssertions`
@@ -887,7 +901,7 @@ List all available tags instead of running tests. `--list-tags=json` will output
 
 - **CLI:** `--clearCache`
 
-Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
+Delete all Vitest caches, including the `fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
 
 ### tagsFilter
 
@@ -901,13 +915,6 @@ Run only tests with the specified tags. You can use logical operators `&&` (and)
 - **Config:** [strictTags](/config/stricttags)
 
 Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)
-
-### experimental.fsModuleCache
-
-- **CLI:** `--experimental.fsModuleCache`
-- **Config:** [experimental.fsModuleCache](/config/experimental#experimental-fsmodulecache)
-
-Enable caching of modules on the file system between reruns.
 
 ### experimental.importDurations.print
 

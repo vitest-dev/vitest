@@ -169,6 +169,7 @@ export class Vitest {
   /** @internal */ _traces!: Traces
   /** @internal */ _harness: PluginHarness
 
+  private _warnedExperimentalCacheKeyGenerator = false
   private isFirstRun = true
   private restartsCount = 0
 
@@ -362,10 +363,17 @@ export class Vitest {
         project,
         vitest: this,
         injectTestProjects: this.injectTestProject,
+        defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
         /**
-         * @experimental
+         * @deprecated Use `defineCacheKeyGenerator` instead.
          */
-        experimental_defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
+        experimental_defineCacheKeyGenerator: (callback) => {
+          if (!this._warnedExperimentalCacheKeyGenerator) {
+            this._warnedExperimentalCacheKeyGenerator = true
+            this.logger.deprecate('`experimental_defineCacheKeyGenerator` is deprecated. Use `defineCacheKeyGenerator` instead.')
+          }
+          this._fsCache.defineCacheKeyGenerator(callback)
+        },
       }))
     }))
 
@@ -618,7 +626,7 @@ export class Vitest {
   }
 
   /**
-   * Deletes all Vitest caches, including `experimental.fsModuleCache`.
+   * Deletes all Vitest caches, including the `fsModuleCache`.
    * @experimental
    */
   public async experimental_clearCache(): Promise<void> {

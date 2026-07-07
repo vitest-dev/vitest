@@ -971,12 +971,6 @@ export function resolveTestConfig(
     )
     resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
   }
-  if (resolved.experimental.fsModuleCachePath) {
-    resolved.experimental.fsModuleCachePath = resolve(
-      resolved.root,
-      resolved.experimental.fsModuleCachePath,
-    )
-  }
   resolved.experimental.importDurations ??= {} as any
   resolved.experimental.importDurations.print ??= false
   resolved.experimental.importDurations.failOnDanger ??= false
@@ -993,6 +987,28 @@ export function resolveTestConfig(
 
   if (typeof resolved.experimental.vcsProvider === 'string' && resolved.experimental.vcsProvider !== 'git') {
     resolved.experimental.vcsProvider = resolvePath(resolved.experimental.vcsProvider, resolved.root)
+  }
+
+  // `experimental.fsModuleCache` / `experimental.fsModuleCachePath` were promoted to
+  // the top-level `fsModuleCache` / `fsModuleCachePath` options.
+  const legacyExperimental = options.experimental as
+    | { fsModuleCache?: boolean; fsModuleCachePath?: string }
+    | undefined
+  if (legacyExperimental?.fsModuleCache != null) {
+    logger.deprecate('`experimental.fsModuleCache` is deprecated. Use the top-level `fsModuleCache` option instead.')
+    if (options.fsModuleCache === undefined) {
+      resolved.fsModuleCache = legacyExperimental.fsModuleCache
+    }
+  }
+  if (legacyExperimental?.fsModuleCachePath != null) {
+    logger.deprecate('`experimental.fsModuleCachePath` is deprecated. Use the top-level `fsModuleCachePath` option instead.')
+    if (options.fsModuleCachePath === undefined) {
+      resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
+    }
+  }
+  resolved.fsModuleCache ??= false
+  if (resolved.fsModuleCachePath) {
+    resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
   }
 
   return resolved
