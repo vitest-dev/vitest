@@ -189,8 +189,8 @@ test('prints source-mapped stack for optimized dependency', async () => {
                 {
                   "message": "this is test dependency error",
                   "stacks": [
-                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
-                    " at basic.test.ts:5:16",
+                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:13",
+                    " at basic.test.ts:5:3",
                   ],
                 },
               ],

@@ -205,7 +205,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:34"`)
             }
             else {
-              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:39"`)
+              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:34"`)
             }
           }
           else {
