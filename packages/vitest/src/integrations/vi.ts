@@ -440,7 +440,7 @@ export interface VitestUtils {
    */
   stubEnv: <T extends string>(
     name: T,
-    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string | undefined,
+    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean | undefined : string | undefined,
   ) => VitestUtils
 
   /**
@@ -779,11 +779,11 @@ function createVitest(): VitestUtils {
       if (!_stubsEnv.has(name)) {
         _stubsEnv.set(name, env[name])
       }
-      if (_envBooleans.includes(name)) {
-        env[name] = value ? '1' : ''
-      }
-      else if (value === undefined) {
+      if (value === undefined) {
         delete env[name]
+      }
+      else if (_envBooleans.includes(name)) {
+        env[name] = value ? '1' : ''
       }
       else {
         env[name] = String(value)

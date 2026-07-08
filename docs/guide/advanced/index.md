@@ -85,19 +85,18 @@ The ["Running Tests"](/guide/advanced/tests#createvitest) guide has a usage exam
 function resolveConfig(
   options: UserConfig = {},
   viteOverrides: ViteUserConfig = {},
-): Promise<{
-  vitestConfig: ResolvedConfig
-  viteConfig: ResolvedViteConfig
-}>
+  harness?: PluginHarness,
+): Promise<ResolvedViteConfig>
 ```
 
-This method resolves the config with custom parameters. If no parameters are given, the `root` will be `process.cwd()`.
+This method resolves the config with custom parameters, without creating a Vite server. If no parameters are given, the `root` will be `process.cwd()`.
+
+It returns the resolved Vite config. The fully resolved Vitest config, including every project, lives on its `test` property.
 
 ```ts
 import { resolveConfig } from 'vitest/node'
 
-// vitestConfig only has resolved "test" properties
-const { vitestConfig, viteConfig } = await resolveConfig({
+const viteConfig = await resolveConfig({
   mode: 'custom',
   configFile: false,
   resolve: {
@@ -108,18 +107,14 @@ const { vitestConfig, viteConfig } = await resolveConfig({
     pool: 'threads',
   },
 })
+
+viteConfig.test.pool // 'threads'
 ```
 
 ::: info
-Due to how Vite's `createServer` works, Vitest has to resolve the config during the plugin's `configResolve` hook. Therefore, this method is not actually used internally and is exposed exclusively as a public API.
+This is the same method Vitest uses internally to resolve the config before creating the server. If you pass the options down to `startVitest` or `createVitest`, Vitest resolves them again.
 
-If you pass down the config to the `startVitest` or `createVitest` APIs, Vitest will still resolve the config again.
-:::
-
-::: warning
-The `resolveConfig` doesn't resolve `projects`. To resolve projects configs, Vitest needs an established Vite server.
-
-Also note that `viteConfig.test` will not be fully resolved. If you need Vitest config, use `vitestConfig` instead.
+You can pass a shared [`PluginHarness`](#pluginharness) as the third argument to reuse a logger and package installer across calls.
 :::
 
 ## parseCLI
@@ -146,4 +141,53 @@ result.options
 
 result.filter
 // ['./files.ts']
+```
+
+## createCLI
+
+```ts
+function createCLI(options?: CliParseOptions): CAC
+```
+
+Creates the Vitest command-line interface: a [`cac`](https://github.com/cacjs/cac) instance with all of Vitest's commands and options registered. [`parseCLI`](#parsecli) is built on top of it; use `createCLI` directly if you need the raw parser.
+
+```ts
+import { createCLI } from 'vitest/node'
+
+const cli = createCLI()
+```
+
+## PluginHarness
+
+```ts
+class PluginHarness {
+  vitest?: Vitest
+  version: string
+  logger: Logger
+  packageInstaller: VitestPackageInstaller
+  getVitest(): Vitest
+}
+```
+
+A container that Vitest passes to its internal plugins while the config is being resolved, before a [`Vitest`](/api/advanced/vitest) instance exists. It holds the [`Logger`](#logger), the package installer and the resolved version, and exposes the `Vitest` instance via `getVitest()` once it has been created (calling it earlier throws).
+
+This is an advanced, plugin-facing API. You rarely construct one directly, but you can pass a shared instance to [`resolveConfig`](#resolveconfig) to reuse a logger and package installer.
+
+## Logger
+
+```ts
+class Logger {
+  constructor(
+    outputStream?: Writable,
+    errorStream?: Writable,
+  )
+}
+```
+
+Vitest's terminal logger, exposed as [`vitest.logger`](/api/advanced/vitest). It handles formatted output, the error summary, the run banner and screen clearing. Construct one with custom `stdout`/`stderr` streams to capture or redirect Vitest's output when running it programmatically.
+
+```ts
+import { Logger } from 'vitest/node'
+
+const logger = new Logger(process.stdout, process.stderr)
 ```

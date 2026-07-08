@@ -26,7 +26,7 @@ export const coverageTest: TestAPI = process.env.COVERAGE_TEST !== 'true'
   ? (() => {}) as any as TestAPI
   : vitestTest
 
-export async function runVitest(config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) {
+export const runVitest = vi.defineHelper(async (config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) => {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
@@ -93,7 +93,7 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
   }
 
   return result
-}
+})
 
 export async function cleanupCoverageJson(name = './coverage/coverage-final.json') {
   if (existsSync(name)) {

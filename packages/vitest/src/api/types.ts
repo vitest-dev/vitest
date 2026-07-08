@@ -47,6 +47,7 @@ export interface WebSocketHandlers {
   getModuleGraph: (
     projectName: string,
     id: string,
+    viteEnvironment?: string,
   ) => Promise<ModuleGraphData>
   getTransformResult: (
     projectName: string,
