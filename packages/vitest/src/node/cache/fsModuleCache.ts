@@ -34,7 +34,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.4'
+  private version = '1.0.0-beta.5'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -214,6 +214,7 @@ export class FileSystemModuleCache {
           mode: config.mode,
           consumer: config.consumer,
           resolve: config.resolve,
+          injectCjsGlobal: vitestConfig.injectCjsGlobals,
           // plugins can have different options, so this is not the best key,
           // but we cannot access the options because there is no standard API for it
           plugins: config.plugins
