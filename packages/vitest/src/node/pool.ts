@@ -127,6 +127,17 @@ export function createPool(ctx: Vitest): ProcessPool {
             ...project.config.env,
           }
 
+          // V8 serializes compile-cached scripts without the source positions
+          // that precise coverage relies on, so the compile cache must stay off
+          // for the v8 provider (and custom providers, whose mechanism we can't
+          // assume) in workers and any process they spawn. istanbul instruments
+          // the source at transform time, so the cache is harmless there and the
+          // boot speedup is kept.
+          if (ctx.config.coverage.enabled && ctx.config.coverage.provider !== 'istanbul') {
+            delete env.NODE_COMPILE_CACHE
+            env.NODE_DISABLE_COMPILE_CACHE = '1'
+          }
+
           // env are case-insensitive on Windows, but spawned processes don't support it
           if (isWindows) {
             for (const name in env) {
