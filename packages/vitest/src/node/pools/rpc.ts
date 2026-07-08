@@ -4,11 +4,13 @@ import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { isBuiltin, toBuiltin } from '../../utils/modules'
 import { handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
+import { detectModuleType } from '../resolver'
 
 interface MethodsOptions {
   cacheFs?: boolean
@@ -25,6 +27,16 @@ interface MethodsOptions {
 // Keyed by the Vite server so a server restart drops the accumulated verdicts
 // together with the resolver that produced them.
 const warmExternals = new WeakMap<ViteDevServer, Record<string, FetchResult>>()
+
+// `detectModuleType` only reads the original source in the ambiguous case where
+// the transformed code both looks like ESM and mentions a CommonJS variable;
+// mirror the guard `ModuleFetcher.sourceLoader` uses for virtual modules
+function warmSourceLoader(file: string | null): (() => Promise<string | null>) | undefined {
+  if (!file || file.startsWith('\x00') || file.startsWith('virtual:')) {
+    return undefined
+  }
+  return () => readFile(file, 'utf-8').then(source => source, () => null)
+}
 
 export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
   const vitest = project.vitest
@@ -84,6 +96,14 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
       }
 
+      // with `injectCjsGlobals: false` the evaluator injects the CommonJS
+      // variables only into modules the server tagged `moduleType: 'cjs'`. that
+      // tag is produced by the per-module `fetch`, which the warm snapshot
+      // bypasses, so it has to be recomputed here — otherwise a CommonJS module
+      // served from the snapshot evaluates without `require`/`module`/`__dirname`
+      // and throws. the detection is skipped entirely on the default path.
+      const detectType = project.config.injectCjsGlobals === false
+
       const warm: Record<string, FetchResult | FetchCachedFileSystemResult> = Object.create(null)
 
       // walk the import graphs of the requested files instead of dumping the
@@ -126,6 +146,9 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           tmp,
           url: node.url,
           invalidate: false,
+          moduleType: detectType
+            ? await detectModuleType(node.file, transformResult.code, warmSourceLoader(node.file))
+            : undefined,
         }
         warm[node.url] = entry
         if (node.id !== node.url) {

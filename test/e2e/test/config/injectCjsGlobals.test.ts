@@ -63,6 +63,50 @@ test.for(pools)('inlined ".cjs" modules keep the module scope when injectCjsGlob
   expect(exitCode).toBe(0)
 })
 
+test('cjs dep served from the warm-modules snapshot keeps the module scope when injectCjsGlobals is disabled', async () => {
+  // the `fetchWarmModules` fast path hands a module the server already
+  // transformed to a fresh worker without the per-module `fetch` that tags its
+  // `moduleType`. that tag is what tells the evaluator to inject the CommonJS
+  // scope when `injectCjsGlobals` is disabled, so the snapshot has to carry it.
+  // isolate + sequential files make the ordering deterministic: the first file
+  // transforms and caches the dependency (direct fetch), every later file reads
+  // it back from the snapshot — without the tag those files throw
+  // "require is not defined" while the first one still passes.
+  const structure: Record<string, string> = {
+    'package.json': '{ "type": "module" }',
+    'cjs-dep.cjs': ts`
+      const path = require('node:path')
+      module.exports = {
+        answer: 42,
+        base: path.basename(__filename),
+        dir: typeof __dirname,
+      }
+    `,
+  }
+  for (const name of ['a', 'b', 'c', 'd']) {
+    structure[`${name}.test.js`] = ts`
+      import { expect, test } from 'vitest'
+      import cjs from './cjs-dep.cjs'
+
+      test('cjs module keeps its scope', () => {
+        expect(cjs.answer).toBe(42)
+        expect(cjs.base).toBe('cjs-dep.cjs')
+        expect(cjs.dir).toBe('string')
+        expect(typeof module).toBe('undefined')
+      })
+    `
+  }
+  const { stderr, exitCode } = await runInlineTests(structure, {
+    pool: 'forks',
+    isolate: true,
+    fileParallelism: false,
+    injectCjsGlobals: false,
+    experimental: { fsModuleCache: true },
+  })
+  expect(stderr).toBe('')
+  expect(exitCode).toBe(0)
+})
+
 test('".js" modules without ESM syntax are detected as commonjs in a typeless package', async () => {
   const { stderr, exitCode } = await runInlineTests({
     'package.json': '{}',
