@@ -1,5 +1,6 @@
 import type vm from 'node:vm'
 import type { RuntimeRPC } from '../types/rpc'
+import type { CodeCache } from './vm/code-cache'
 import type { FileMap } from './vm/file-map'
 import type { VMModule } from './vm/types'
 import fs from 'node:fs'
@@ -20,6 +21,7 @@ const nativeResolve = import.meta.resolve!
 export interface ExternalModulesExecutorOptions {
   context: vm.Context
   fileMap: FileMap
+  codeCache?: CodeCache
   packageCache: Map<string, any>
   transform: RuntimeRPC['transform']
   interopDefault?: boolean
@@ -46,6 +48,7 @@ export class ExternalModulesExecutor {
   private vite: ViteExecutor
   private context: vm.Context
   private fs: FileMap
+  public readonly codeCache: CodeCache | undefined
   private resolvers: ((id: string, parent: string) => string | undefined)[]
     = []
 
@@ -55,6 +58,7 @@ export class ExternalModulesExecutor {
     this.context = options.context
 
     this.fs = options.fileMap
+    this.codeCache = options.codeCache
     this.esm = new EsmExecutor(this, {
       context: this.context,
     })
@@ -62,6 +66,7 @@ export class ExternalModulesExecutor {
       context: this.context,
       importModuleDynamically: this.importModuleDynamically,
       fileMap: options.fileMap,
+      codeCache: options.codeCache,
       interopDefault: options.interopDefault,
     })
     this.vite = new ViteExecutor({

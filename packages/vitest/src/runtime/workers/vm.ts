@@ -15,12 +15,14 @@ import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
 import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
+import { CodeCache } from '../vm/code-cache'
 import { FileMap } from '../vm/file-map'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
+const codeCache = new CodeCache()
 
 export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
   const { ctx, rpc } = state
@@ -28,6 +30,17 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const beforeEnvironmentTime = performance.now()
   const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces, true)
   state.environment = environment
+
+  // let the server transform this file's import graph while this worker is
+  // busy importing the environment package (jsdom takes ~0.5s per worker) —
+  // the server is otherwise idle during that window on a cold start. The
+  // transforms also land in the `fetchWarmModules` snapshot, so the worker's
+  // own fetches short-circuit to disk reads. Failures are ignored: the
+  // worker's own fetch reports them with the proper import context.
+  rpc.prewarmModuleGraph(
+    environment.viteEnvironment || environment.name,
+    ctx.files.map(file => file.filepath),
+  ).catch(() => {})
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
@@ -87,6 +100,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const externalModulesExecutor = new ExternalModulesExecutor({
     context,
     fileMap,
+    codeCache,
     packageCache,
     transform: rpc.transform,
     viteClientModule: stubs['/@vite/client'],

@@ -1,6 +1,8 @@
 import type { DevEnvironment, EnvironmentModuleNode, FetchResult } from 'vite'
+import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { RuntimeRPC } from '../../types/rpc'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -41,6 +43,56 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     mkdirSync(project.config.dumpDir, { recursive: true })
   }
   project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
+
+  function getEnvironment(environmentName: string): DevEnvironment {
+    const environment = project.vite.environments[environmentName]
+    if (!environment) {
+      throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+    }
+    return environment
+  }
+
+  async function fetchModule(
+    url: string,
+    importer: string | undefined,
+    environment: DevEnvironment,
+    options?: FetchFunctionOptions,
+    otelCarrier?: OTELCarrier,
+    // graph prewarm calls race each other and the workers' own fetches over
+    // the same in-flight transforms, so each caller's wall time massively
+    // overcounts the actual transform work — only direct fetches are timed
+    accountTiming = true,
+  ): Promise<FetchResult | FetchCachedFileSystemResult> {
+    const start = performance.now()
+
+    return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
+      const metadata = project.vitest.state.metadata[project.name]
+      if ('externalize' in result) {
+        metadata.externalized[url] = result.externalize
+        // builtins and network urls are already resolved inside the worker
+        // without a round-trip, only module externalizations are worth sharing
+        if (result.type === 'module' && url[0] === '/') {
+          let externals = warmExternals.get(environment)
+          if (!externals) {
+            externals = Object.create(null) as Record<string, FetchResult>
+            warmExternals.set(environment, externals)
+          }
+          externals[url] = result
+        }
+      }
+      if ('tmp' in result) {
+        metadata.tmps[url] = result.tmp
+      }
+      if (accountTiming) {
+        const duration = performance.now() - start
+        project.vitest.state.transformTime += duration
+        metadata.duration[url] ??= []
+        metadata.duration[url].push(duration)
+      }
+      return result
+    })
+  }
+
   return {
     async fetch(
       url,
@@ -49,37 +101,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       options,
       otelCarrier,
     ) {
-      const environment = project.vite.environments[environmentName]
-      if (!environment) {
-        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
-      }
-
-      const start = performance.now()
-
-      return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
-        const duration = performance.now() - start
-        project.vitest.state.transformTime += duration
-        const metadata = project.vitest.state.metadata[project.name]
-        if ('externalize' in result) {
-          metadata.externalized[url] = result.externalize
-          // builtins and network urls are already resolved inside the worker
-          // without a round-trip, only module externalizations are worth sharing
-          if (result.type === 'module' && url[0] === '/') {
-            let externals = warmExternals.get(environment)
-            if (!externals) {
-              externals = Object.create(null) as Record<string, FetchResult>
-              warmExternals.set(environment, externals)
-            }
-            externals[url] = result
-          }
-        }
-        if ('tmp' in result) {
-          metadata.tmps[url] = result.tmp
-        }
-        metadata.duration[url] ??= []
-        metadata.duration[url].push(duration)
-        return result
-      })
+      return fetchModule(url, importer, getEnvironment(environmentName), options, otelCarrier)
     },
     async fetchWarmModules(environmentName, files) {
       const environment = project.vite.environments[environmentName]
@@ -149,6 +171,71 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       }
 
       return warm
+    },
+    async prewarmModuleGraph(environmentName, files) {
+      const environment = getEnvironment(environmentName)
+      const moduleGraph = environment.moduleGraph
+      const seen = new Set<string>()
+
+      async function walkNode(node: EnvironmentModuleNode): Promise<void> {
+        const children: Promise<void>[] = []
+        for (const child of node.importedModules) {
+          if (child.url == null || seen.has(child.url)) {
+            continue
+          }
+          if (child.transformResult) {
+            seen.add(child.url)
+            children.push(walkNode(child))
+          }
+          else {
+            children.push(fetchNode(child.url, node.id ?? undefined))
+          }
+        }
+        if (children.length) {
+          await Promise.all(children)
+        }
+      }
+
+      async function fetchNode(url: string, importer: string | undefined): Promise<void> {
+        if (seen.has(url)) {
+          return
+        }
+        seen.add(url)
+        try {
+          await fetchModule(url, importer, environment, undefined, undefined, false)
+        }
+        catch {
+          // the worker's own fetch will surface the error with the proper
+          // import context
+          return
+        }
+        let node: EnvironmentModuleNode | undefined
+        try {
+          node = await moduleGraph.getModuleByUrl(url) ?? moduleGraph.getModuleById(url) ?? undefined
+        }
+        catch {
+          node = moduleGraph.getModuleById(url) ?? undefined
+        }
+        if (node) {
+          await walkNode(node)
+        }
+      }
+
+      await Promise.all([...files, ...project.config.setupFiles].map(async (file) => {
+        const nodes = moduleGraph.getModulesByFile(file)
+        if (nodes && nodes.size) {
+          await Promise.all(Array.from(nodes, (node) => {
+            if (node.transformResult) {
+              seen.add(node.url)
+              return walkNode(node)
+            }
+            return fetchNode(node.url, undefined)
+          }))
+        }
+        else {
+          await fetchNode(file, undefined)
+        }
+      }))
     },
     async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]
