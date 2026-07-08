@@ -367,10 +367,20 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar', expect.any(Object))
     expect(complex).toHaveProperty('bar.arr', expect.any(Array))
     expect(complex).toHaveProperty('bar.arr.0', expect.anything())
+    expect(null).not.toHaveProperty('foo')
+    expect(undefined).not.toHaveProperty('foo')
 
     expect(() => {
       expect(complex).toHaveProperty('some-unknown-property')
     }).toThrow()
+
+    expect(() => {
+      expect(null).toHaveProperty('foo')
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected null to have property "foo"]`)
+
+    expect(() => {
+      expect(undefined).toHaveProperty('foo')
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected undefined to have property "foo"]`)
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
