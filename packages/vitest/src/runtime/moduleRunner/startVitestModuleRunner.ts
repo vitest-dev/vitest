@@ -66,6 +66,9 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
       get interopDefault() {
         return state().config.deps.interopDefault
       },
+      get injectCjsGlobals() {
+        return state().config.injectCjsGlobals
+      },
       getCurrentTestFilepath: () => state().filepath,
       getterTracker: state().getterTracker,
     },

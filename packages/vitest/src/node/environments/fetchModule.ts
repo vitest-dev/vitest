@@ -1,7 +1,7 @@
 import type { Span } from '@opentelemetry/api'
-import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, TransformResult } from 'vite'
-import type { FetchFunctionOptions } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } from 'vite'
+import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
+import type { FetchCachedFileSystemResult, VitestFetchResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
 import type { FileSystemModuleCache } from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
@@ -12,14 +12,19 @@ import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
 import { join } from 'pathe'
 import { fetchModule } from 'vite'
 import { hash } from '../hash'
+import { detectModuleType } from '../resolver'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
-const saveCachePromises = new Map<string, Promise<FetchResult>>()
+const saveCachePromises = new Map<string, Promise<VitestFetchResult>>()
 const readFilePromises = new Map<string, Promise<string | null>>()
 
 class ModuleFetcher {
   private tmpDirectories = new Set<string>()
   private fsCacheEnabled: boolean
+  // the module type is only needed by the evaluator to decide if CJS
+  // variables should be provided to the module, so don't waste time
+  // on the detection when every module receives them
+  private detectModuleType: boolean
 
   constructor(
     private resolver: VitestResolver,
@@ -28,6 +33,7 @@ class ModuleFetcher {
     private tmpProjectDir: string,
   ) {
     this.fsCacheEnabled = config.experimental?.fsModuleCache === true
+    this.detectModuleType = config.injectCjsGlobals === false
   }
 
   async fetch(
@@ -233,6 +239,13 @@ class ModuleFetcher {
         tmp: moduleGraphModule.transformResult.__vitestTmp,
         url: moduleGraphModule.url,
         invalidate: false,
+        moduleType: this.detectModuleType
+          ? await detectModuleType(
+              moduleGraphModule.file,
+              moduleGraphModule.transformResult.code,
+              this.sourceLoader(moduleGraphModule.file),
+            )
+          : undefined,
       }
     }
 
@@ -281,6 +294,9 @@ class ModuleFetcher {
       tmp: cachePath,
       url: cachedModule.url,
       invalidate: false,
+      moduleType: this.detectModuleType
+        ? await detectModuleType(cachedModule.file, cachedModule.code, this.sourceLoader(cachedModule.file))
+        : undefined,
     }
   }
 
@@ -290,7 +306,7 @@ class ModuleFetcher {
     importer: string | undefined,
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
-  ): Promise<FetchResult> {
+  ): Promise<VitestFetchResult> {
     const moduleRunnerModule = await fetchModule(
       environment,
       url,
@@ -301,7 +317,18 @@ class ModuleFetcher {
       },
     ).catch(handleRollupError)
 
-    return processResultSource(environment, moduleRunnerModule)
+    const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
+    if (this.detectModuleType && 'code' in result) {
+      result.moduleType = await detectModuleType(result.file, result.code, this.sourceLoader(result.file))
+    }
+    return result
+  }
+
+  private sourceLoader(file: string | null): (() => Promise<string | null>) | undefined {
+    if (!file || file.startsWith('\x00') || file.startsWith('virtual:')) {
+      return undefined
+    }
+    return () => this.readFileConcurrently(file)
   }
 
   private async cacheResult(
@@ -452,7 +479,7 @@ function genSourceMapUrl(map: Rollup.SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-function getCachedResult(result: Extract<FetchResult, { code: string }>, tmp: string): FetchCachedFileSystemResult {
+function getCachedResult(result: Extract<VitestFetchResult, { code: string }>, tmp: string): FetchCachedFileSystemResult {
   return {
     cached: true as const,
     file: result.file,
@@ -460,6 +487,7 @@ function getCachedResult(result: Extract<FetchResult, { code: string }>, tmp: st
     tmp,
     url: result.url,
     invalidate: result.invalidate,
+    moduleType: result.moduleType,
   }
 }
 
