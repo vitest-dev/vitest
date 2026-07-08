@@ -18,6 +18,18 @@ import { normalizeResolvedIdToUrl } from './normalizeUrl'
 const saveCachePromises = new Map<string, Promise<VitestFetchResult>>()
 const readFilePromises = new Map<string, Promise<string | null>>()
 
+/**
+ * Tracks the wall time during which at least one transform is running.
+ * Durations of individual fetches cannot be summed instead: concurrent
+ * fetches (parallel workers, the vm pool graph prewarm) all wait on the same
+ * deduplicated in-flight transforms, so per-caller wall times overcount the
+ * actual work by orders of magnitude.
+ */
+export interface TransformClock {
+  transformStarted: () => void
+  transformFinished: () => void
+}
+
 class ModuleFetcher {
   private tmpDirectories = new Set<string>()
   private fsCacheEnabled: boolean
@@ -30,6 +42,7 @@ class ModuleFetcher {
     private resolver: VitestResolver,
     private config: ResolvedConfig,
     private fsCache: FileSystemModuleCache,
+    private clock: TransformClock,
     private tmpProjectDir: string,
   ) {
     this.fsCacheEnabled = config.experimental?.fsModuleCache === true
@@ -312,21 +325,27 @@ class ModuleFetcher {
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
   ): Promise<VitestFetchResult> {
-    const moduleRunnerModule = await fetchModule(
-      environment,
-      url,
-      importer,
-      {
-        ...options,
-        inlineSourceMap: false,
-      },
-    ).catch(handleRollupError)
+    this.clock.transformStarted()
+    try {
+      const moduleRunnerModule = await fetchModule(
+        environment,
+        url,
+        importer,
+        {
+          ...options,
+          inlineSourceMap: false,
+        },
+      ).catch(handleRollupError)
 
-    const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
-    if ('code' in result) {
-      result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
+      const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
+      if ('code' in result) {
+        result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
+      }
+      return result
     }
-    return result
+    finally {
+      this.clock.transformFinished()
+    }
   }
 
   private sourceLoader(file: string | null): (() => Promise<string | null>) | undefined {
@@ -415,10 +434,11 @@ export function createFetchModuleFunction(
   resolver: VitestResolver,
   config: ResolvedConfig,
   fsCache: FileSystemModuleCache,
+  clock: TransformClock,
   traces: Traces,
   tmpProjectDir: string,
 ): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
+  const fetcher = new ModuleFetcher(resolver, config, fsCache, clock, tmpProjectDir)
   return async (url, importer, environment, cacheFs, options, otelCarrier) => {
     await traces.waitInit()
     const context = otelCarrier

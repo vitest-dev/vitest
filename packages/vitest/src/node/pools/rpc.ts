@@ -58,15 +58,16 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     environment: DevEnvironment,
     options?: FetchFunctionOptions,
     otelCarrier?: OTELCarrier,
-    // graph prewarm calls race each other and the workers' own fetches over
-    // the same in-flight transforms, so each caller's wall time massively
-    // overcounts the actual transform work — only direct fetches are timed
-    accountTiming = true,
+    // per-module durations are only recorded for direct worker fetches: the
+    // graph prewarm fetches whole levels concurrently, so its per-module wall
+    // times measure the queue position, not the module's own transform cost
+    accountModuleDuration = true,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
+    const state = project.vitest.state
     const start = performance.now()
 
     return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
-      const metadata = project.vitest.state.metadata[project.name]
+      const metadata = state.metadata[project.name]
       if ('externalize' in result) {
         metadata.externalized[url] = result.externalize
         // builtins and network urls are already resolved inside the worker
@@ -83,9 +84,8 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       if ('tmp' in result) {
         metadata.tmps[url] = result.tmp
       }
-      if (accountTiming) {
+      if (accountModuleDuration) {
         const duration = performance.now() - start
-        project.vitest.state.transformTime += duration
         metadata.duration[url] ??= []
         metadata.duration[url].push(duration)
       }
