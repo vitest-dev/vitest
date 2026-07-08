@@ -269,12 +269,7 @@ class ModuleFetcher {
     if (!map && cachedModule.mappings) {
       map = { mappings: '' }
     }
-    const moduleType = await this.cachedModuleType(
-      cachedModule.file,
-      cachedModule.code,
-      moduleGraphModule.transformResult,
-      cachedModule.moduleType,
-    )
+    const moduleType = cachedModule.moduleType
     moduleGraphModule.transformResult = {
       code: cachedModule.code,
       map,
@@ -350,14 +345,12 @@ class ModuleFetcher {
     file: string | null,
     code: string,
     transformResult: TransformResult | null | undefined,
-    cached?: ModuleType,
   ): Promise<ModuleType | undefined> {
     if (!this.detectModuleType) {
       return undefined
     }
     const moduleType
       = transformResult?.__vitestModuleType
-        ?? cached
         ?? await detectModuleType(file, code, this.sourceLoader(file))
     if (transformResult) {
       transformResult.__vitestModuleType = moduleType
