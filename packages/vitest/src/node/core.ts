@@ -1519,8 +1519,7 @@ export class Vitest {
         // close the pool (and the browser pages with it) BEFORE the Vite
         // servers: closing a server releases its port while automated pages may
         // still be alive — a page's websocket client would auto-reconnect onto
-        // the next server that binds the same port and fail with
-        // "Unknown session id" (#9800)
+        // the next server that binds the same port and fail with "Unknown session id"
         if (this.pool) {
           try {
             await this.pool.close?.()
