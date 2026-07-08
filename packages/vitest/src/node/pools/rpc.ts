@@ -1,4 +1,4 @@
-import type { EnvironmentModuleNode, FetchResult, ViteDevServer } from 'vite'
+import type { DevEnvironment, EnvironmentModuleNode, FetchResult } from 'vite'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
@@ -22,11 +22,14 @@ interface MethodsOptions {
 // via `fetchWarmModules`. Only verdicts for already-resolved urls are stored:
 // an unresolved specifier (a runtime-variable dynamic import of a bare name)
 // resolves through the requesting environment's plugin container, so its
-// verdict is environment- and importer-specific and cannot be shared. Resolved
-// ids always externalize the same way (the resolver memoizes by resolved id).
-// Keyed by the Vite server so a server restart drops the accumulated verdicts
-// together with the resolver that produced them.
-const warmExternals = new WeakMap<ViteDevServer, Record<string, FetchResult>>()
+// verdict is importer-specific and cannot be shared.
+// Keyed by the DevEnvironment, not the server: a leading-slash url still
+// resolves to its id through that environment's plugin container, so a plugin
+// that resolves conditionally (e.g. on `this.environment`) can externalize the
+// same url in one environment and inline it in another — sharing the verdict
+// across environments would serve the wrong one. Per-environment keying also
+// drops the verdicts on a server restart, since environments are recreated.
+const warmExternals = new WeakMap<DevEnvironment, Record<string, FetchResult>>()
 
 // `detectModuleType` only reads the original source in the ambiguous case where
 // the transformed code both looks like ESM and mentions a CommonJS variable;
@@ -74,10 +77,10 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           // builtins and network urls are already resolved inside the worker
           // without a round-trip, only module externalizations are worth sharing
           if (result.type === 'module' && url[0] === '/') {
-            let externals = warmExternals.get(project.vite)
+            let externals = warmExternals.get(environment)
             if (!externals) {
               externals = Object.create(null) as Record<string, FetchResult>
-              warmExternals.set(project.vite, externals)
+              warmExternals.set(environment, externals)
             }
             externals[url] = result
           }
@@ -156,7 +159,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         }
       }
 
-      const externals = warmExternals.get(project.vite)
+      const externals = warmExternals.get(environment)
       if (externals) {
         for (const url in externals) {
           warm[url] ??= externals[url]
