@@ -1,6 +1,7 @@
 import type { Context } from 'node:vm'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
+import type { ModuleInformation } from '../external-executor'
 import { pathToFileURL } from 'node:url'
 import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
@@ -23,6 +24,8 @@ const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 const codeCache = new CodeCache()
+const resolveCache = new Map<string, string>()
+const moduleInfoCache = new Map<string, ModuleInformation>()
 
 export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
   const { ctx, rpc } = state
@@ -101,6 +104,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     context,
     fileMap,
     codeCache,
+    resolveCache,
+    moduleInfoCache,
     packageCache,
     transform: rpc.transform,
     viteClientModule: stubs['/@vite/client'],
