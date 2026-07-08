@@ -21,7 +21,13 @@ test('can force cancel a run via CLI', async () => {
     include: ['blocked-thread.test.ts'],
     reporters: [{ onTestModuleStart: () => onTestModuleStart.resolve() }],
   })
-  onTestFinished(() => vitest.close())
+  onTestFinished(async () => {
+    await vitest.close()
+    // this test stubs `process.exit` to survive `vitest.exit()`, so it also has
+    // to disarm the force-exit watchdog that `exit()` armed — otherwise the
+    // timer would `process.exit()` this worker `teardownTimeout` later
+    clearTimeout(vitest._exitTimeout)
+  })
 
   const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
   stdin.isTTY = true
@@ -46,7 +52,9 @@ test('can force cancel a run via CLI', async () => {
   stdin.emit('data', CTRL_C)
   await promise
 
-  expect(onExit).toHaveBeenCalled()
+  // `exit()` calls `process.exit` only after `close()` finishes — poll instead
+  // of racing the teardown
+  await expect.poll(() => onExit).toHaveBeenCalled()
 })
 
 test('cancelling test run stops test execution immediately', async () => {

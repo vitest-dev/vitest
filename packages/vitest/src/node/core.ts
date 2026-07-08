@@ -168,6 +168,7 @@ export class Vitest {
   /** @internal */ _tmpDir = join(tmpdir(), nanoid())
   /** @internal */ _traces!: Traces
   /** @internal */ _harness: PluginHarness
+  /** @internal */ _exitTimeout: ReturnType<typeof setTimeout> | undefined
 
   private isFirstRun = true
   private restartsCount = 0
@@ -1515,19 +1516,26 @@ export class Vitest {
           })
         }
 
+        // close the pool (and the browser pages with it) BEFORE the Vite
+        // servers: closing a server releases its port while automated pages may
+        // still be alive — a page's websocket client would auto-reconnect onto
+        // the next server that binds the same port and fail with "Unknown session id"
+        if (this.pool) {
+          try {
+            await this.pool.close?.()
+          }
+          catch (error) {
+            teardownErrors.push(error)
+          }
+
+          this.pool = undefined
+        }
+
         const closePromises: unknown[] = this.projects.map(w => w.close())
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
         if (this.coreWorkspaceProject && !this.projects.includes(this.coreWorkspaceProject)) {
           closePromises.push(this.coreWorkspaceProject.close().then(() => this.vite = undefined as any))
-        }
-
-        if (this.pool) {
-          closePromises.push((async () => {
-            await this.pool?.close?.()
-
-            this.pool = undefined
-          })())
         }
 
         closePromises.push(...this._onClose.map(fn => fn()))
@@ -1550,7 +1558,8 @@ export class Vitest {
    * @param force If true, the process will exit immediately after closing the projects.
    */
   public async exit(force = false): Promise<void> {
-    setTimeout(() => {
+    clearTimeout(this._exitTimeout)
+    this._exitTimeout = setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
 
@@ -1574,7 +1583,8 @@ export class Vitest {
 
         process.exit()
       })
-    }, this.config.teardownTimeout).unref()
+    }, this.config.teardownTimeout)
+    this._exitTimeout.unref()
 
     await this.close()
     if (force) {
