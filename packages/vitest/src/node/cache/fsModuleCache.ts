@@ -1,4 +1,5 @@
-import type { DevEnvironment, FetchResult } from 'vite'
+import type { DevEnvironment } from 'vite'
+import type { ModuleType, VitestFetchResult } from '../../types/general'
 import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
@@ -110,12 +111,13 @@ export class FileSystemModuleCache {
       code,
       importedUrls: meta.importedUrls,
       mappings: meta.mappings,
+      moduleType: meta.moduleType,
     }
   }
 
-  async saveCachedModule<T extends FetchResult>(
+  async saveCachedModule(
     cachedFilePath: string,
-    fetchResult: T,
+    fetchResult: VitestFetchResult,
     importedUrls: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
@@ -126,6 +128,7 @@ export class FileSystemModuleCache {
         url: fetchResult.url,
         importedUrls,
         mappings,
+        moduleType: fetchResult.moduleType,
       } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
@@ -366,6 +369,7 @@ export interface CachedInlineModuleMeta {
   code: string
   mappings: boolean
   importedUrls: string[]
+  moduleType?: ModuleType
 }
 
 /**

@@ -1,7 +1,7 @@
 import type { Span } from '@opentelemetry/api'
 import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult, VitestFetchResult } from '../../types/general'
+import type { FetchCachedFileSystemResult, ModuleType, VitestFetchResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
 import type { FileSystemModuleCache } from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
@@ -246,13 +246,11 @@ class ModuleFetcher {
         tmp: moduleGraphModule.transformResult.__vitestTmp,
         url: moduleGraphModule.url,
         invalidate: false,
-        moduleType: this.detectModuleType
-          ? await detectModuleType(
-              moduleGraphModule.file,
-              moduleGraphModule.transformResult.code,
-              this.sourceLoader(moduleGraphModule.file),
-            )
-          : undefined,
+        moduleType: await this.cachedModuleType(
+          moduleGraphModule.file,
+          moduleGraphModule.transformResult.code,
+          moduleGraphModule.transformResult,
+        ),
       }
     }
 
@@ -301,9 +299,12 @@ class ModuleFetcher {
       tmp: cachePath,
       url: cachedModule.url,
       invalidate: false,
-      moduleType: this.detectModuleType
-        ? await detectModuleType(cachedModule.file, cachedModule.code, this.sourceLoader(cachedModule.file))
-        : undefined,
+      moduleType: await this.cachedModuleType(
+        cachedModule.file,
+        cachedModule.code,
+        moduleGraphModule.transformResult,
+        cachedModule.moduleType,
+      ),
     }
   }
 
@@ -325,8 +326,8 @@ class ModuleFetcher {
     ).catch(handleRollupError)
 
     const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
-    if (this.detectModuleType && 'code' in result) {
-      result.moduleType = await detectModuleType(result.file, result.code, this.sourceLoader(result.file))
+    if ('code' in result) {
+      result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
     }
     return result
   }
@@ -336,6 +337,30 @@ class ModuleFetcher {
       return undefined
     }
     return () => this.readFileConcurrently(file)
+  }
+
+  // the module type is a pure function of the module, so detect it at most once
+  // and memoize the verdict on the transform result. repeat fetches, the on-disk
+  // cache (`cached`), and the `fetchWarmModules` snapshot all reuse it instead of
+  // re-detecting. a no-op unless `injectCjsGlobals` is disabled — otherwise every
+  // module receives the CJS globals and the type is irrelevant.
+  private async cachedModuleType(
+    file: string | null,
+    code: string,
+    transformResult: TransformResult | null | undefined,
+    cached?: ModuleType,
+  ): Promise<ModuleType | undefined> {
+    if (!this.detectModuleType) {
+      return undefined
+    }
+    const moduleType
+      = transformResult?.__vitestModuleType
+        ?? cached
+        ?? await detectModuleType(file, code, this.sourceLoader(file))
+    if (transformResult) {
+      transformResult.__vitestModuleType = moduleType
+    }
+    return moduleType
   }
 
   private async cacheResult(
@@ -550,5 +575,6 @@ export function handleRollupError(e: unknown): never {
 declare module 'vite' {
   export interface TransformResult {
     __vitestTmp?: string
+    __vitestModuleType?: ModuleType
   }
 }
