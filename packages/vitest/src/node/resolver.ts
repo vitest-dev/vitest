@@ -1,12 +1,19 @@
+import type { ModuleType } from '../types/general'
 import type { ResolvedConfig, ServerDepsOptions } from './types/config'
 import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { findNearestPackageData } from '@vitest/utils/resolver'
+import { lookupPackageScopeType } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
+import {
+  ssrExportAllKey,
+  ssrImportKey,
+  ssrImportMetaKey,
+  ssrModuleExportsKey,
+} from 'vite/module-runner'
 import { isWindows } from '../utils/env'
 
 export class VitestResolver {
@@ -145,9 +152,7 @@ async function isValidNodeImport(id: string) {
 
   id = id.replace('file:///', '')
 
-  const package_ = findNearestPackageData(dirname(id))
-
-  if (package_.type === 'module') {
+  if (lookupPackageScopeType(dirname(id)) === 'esm') {
     return true
   }
 
@@ -164,6 +169,70 @@ async function isValidNodeImport(id: string) {
   catch {
     return false
   }
+}
+
+const ESM_SYNTAX_MARKERS = [
+  ssrImportKey,
+  ssrModuleExportsKey,
+  ssrExportAllKey,
+  ssrImportMetaKey,
+  // TODO: use ssrExportNameKey when Vite 6 support is over
+  '__vite_ssr_exportName__',
+]
+
+const CJS_GLOBALS_REFERENCE_RE = /\b(?:module|exports|require|__filename|__dirname)\b/
+
+// mirrors the Node.js module detection algorithm: the file extension wins,
+// then the `type` field in the package scope, then the presence of
+// ESM syntax. the ssr transform always rewrites static imports/exports and
+// `import.meta` into `__vite_ssr_` helpers, so the transformed code is
+// checked first: it reflects the compiled output (type-only imports are
+// already erased), and a module without the markers cannot be an ES module.
+// a marker hit is then confirmed against the lexed source because the
+// transform preserves comments and strings that can mention the markers.
+// dynamic imports never count because they are allowed in CommonJS modules
+export async function detectModuleType(
+  file: string | null,
+  code: string,
+  loadSource?: () => Promise<string | null>,
+): Promise<ModuleType> {
+  if (file) {
+    const filepath = cleanUrl(file)
+    const extension = extname(filepath)
+    if (extension === '.cjs' || extension === '.cts') {
+      return 'cjs'
+    }
+    if (extension === '.mjs' || extension === '.mts') {
+      return 'esm'
+    }
+    const scopeType = lookupPackageScopeType(dirname(filepath))
+    if (scopeType !== 'none') {
+      return scopeType
+    }
+  }
+  if (!ESM_SYNTAX_MARKERS.some(marker => code.includes(marker))) {
+    return 'cjs'
+  }
+  // a false "esm" verdict can only break modules that reference the CommonJS
+  // variables, so the source is read and lexed only when both signals appear
+  if (!CJS_GLOBALS_REFERENCE_RE.test(code)) {
+    return 'esm'
+  }
+  const source = loadSource ? await loadSource() : null
+  if (source != null) {
+    try {
+      await esModuleLexer.init
+      const [, , , hasModuleSyntax] = esModuleLexer.parse(source)
+      if (!hasModuleSyntax) {
+        return 'cjs'
+      }
+    }
+    catch {
+      // the lexer cannot parse TypeScript types or non-JS sources,
+      // trust the markers
+    }
+  }
+  return 'esm'
 }
 
 export async function shouldExternalize(

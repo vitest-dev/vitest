@@ -76,7 +76,7 @@ export function WorkspaceVitestPlugin(
         config.server.watch = null
       },
     },
-    VitestConfigServer(harness, globalConfig),
+    ...VitestConfigServer(harness, globalConfig),
     SsrRunnerFixerPlugin(harness),
     MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(),
