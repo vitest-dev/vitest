@@ -59,12 +59,9 @@ export class ServerMockResolver {
   }
 
   public async resolveId(id: string, importer?: string): Promise<ServerIdResolution | null> {
-    const resolved = await this.server.pluginContainer.resolveId(
+    const resolved = await this.server.environments.client.pluginContainer.resolveId(
       id,
       importer,
-      {
-        ssr: false,
-      },
     )
     if (!resolved) {
       return null

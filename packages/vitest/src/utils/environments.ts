@@ -3,7 +3,7 @@ import type { TestProject } from '../node/project'
 
 export function getTestFileEnvironment(project: TestProject, testFile: string, browser = false): DevEnvironment | undefined {
   if (browser) {
-    return project.browser?.vite.environments.client
+    return project.vite.environments.client
   }
   else {
     for (const name in project.vite.environments) {

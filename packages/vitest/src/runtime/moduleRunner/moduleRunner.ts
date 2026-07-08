@@ -22,14 +22,13 @@ export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
   const defaultMeta = viteModuleRunner.createDefaultImportMeta(modulePath)
   const href = defaultMeta.url
 
-  const importMetaResolver = createImportMetaResolver()
+  const importMetaResolver = createImportMetaResolver() ?? defaultMeta.resolve
 
   return {
     ...defaultMeta,
     main: false,
     resolve(id: string, parent?: string) {
-      const resolver = importMetaResolver ?? defaultMeta.resolve
-      return resolver(id, parent ?? href)
+      return importMetaResolver(id, parent ?? href)
     },
   }
 }

@@ -2,7 +2,7 @@ import type { InlineConfig, ResolvedConfig, ViteDevServer } from 'vite'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { createServer, isFileLoadingAllowed, normalizePath } from 'vite'
 
-export async function createViteServer(inlineConfig: InlineConfig): Promise<ViteDevServer> {
+export async function createViteServer(inlineConfig: InlineConfig | ResolvedConfig): Promise<ViteDevServer> {
   // Vite prints an error (https://github.com/vitejs/vite/issues/14328)
   // But Vitest works correctly either way
   const error = console.error

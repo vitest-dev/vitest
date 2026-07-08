@@ -1,5 +1,5 @@
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
-import type { WorkerSetupContext } from '../../types/worker'
+import type { MetaEnv, WorkerSetupContext } from '../../types/worker'
 import type { FileSpecification } from '../runner/types'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
@@ -8,6 +8,35 @@ import { Traces } from '../../utils/traces'
 import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
+
+function createImportMetaEnvProxy(): MetaEnv {
+  const booleanKeys = ['DEV', 'PROD', 'SSR']
+  return new Proxy(process.env, {
+    get(_, key) {
+      if (typeof key !== 'string') {
+        return undefined
+      }
+      if (booleanKeys.includes(key)) {
+        return !!process.env[key]
+      }
+      return process.env[key]
+    },
+    set(_, key, value) {
+      if (typeof key !== 'string') {
+        return true
+      }
+      if (booleanKeys.includes(key)) {
+        process.env[key] = value ? '1' : ''
+      }
+      else {
+        process.env[key] = value
+      }
+      return true
+    },
+  }) as MetaEnv
+}
+
+const importMetaEnvProxy = createImportMetaEnvProxy()
 
 interface Options extends VitestWorker {
   teardown?: () => void
@@ -74,6 +103,7 @@ export function init(worker: Options): void {
             config,
             pool,
             rpc,
+            metaEnv: importMetaEnvProxy,
             projectName: config.name || '',
             traces,
           }

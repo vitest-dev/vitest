@@ -110,7 +110,7 @@ export function assertBrowserFileAccess(project: TestProject, path: string): voi
 }
 
 export function assertBrowserApiWrite(project: TestProject, path: string): void {
-  if (!project.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
+  if (!project.config.api.allowWrite || !project.vitest.config.api.allowWrite) {
     throw new Error(
       `Cannot modify file "${path}". File writing is disabled because the server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
     )

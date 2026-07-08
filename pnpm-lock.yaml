@@ -267,7 +267,7 @@ importers:
         version: 6.3.0(rollup@4.59.0)(typescript@5.9.3)
       rollup-plugin-license:
         specifier: ^3.7.0
-        version: 3.7.0(picomatch@4.0.4)(rollup@4.59.0)
+        version: 3.7.0(picomatch@4.0.3)(rollup@4.59.0)
       semver:
         specifier: 'catalog:'
         version: 7.8.3
@@ -1367,6 +1367,9 @@ importers:
       other-dep:
         specifier: file:./deps/vite-ssr-resolve/other-dep
         version: file:test/e2e/deps/vite-ssr-resolve/other-dep
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
       playwright:
         specifier: 'catalog:'
         version: 1.61.0
@@ -19024,10 +19027,10 @@ snapshots:
     optionalDependencies:
       '@babel/code-frame': 7.27.1
 
-  rollup-plugin-license@3.7.0(picomatch@4.0.4)(rollup@4.59.0):
+  rollup-plugin-license@3.7.0(picomatch@4.0.3)(rollup@4.59.0):
     dependencies:
       commenting: 1.1.0
-      fdir: 6.5.0(picomatch@4.0.4)
+      fdir: 6.5.0(picomatch@4.0.3)
       lodash: 4.17.21
       magic-string: 0.30.21
       moment: 2.30.1
