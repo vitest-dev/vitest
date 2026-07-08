@@ -269,11 +269,18 @@ class ModuleFetcher {
     if (!map && cachedModule.mappings) {
       map = { mappings: '' }
     }
+    const moduleType = await this.cachedModuleType(
+      cachedModule.file,
+      cachedModule.code,
+      moduleGraphModule.transformResult,
+      cachedModule.moduleType,
+    )
     moduleGraphModule.transformResult = {
       code: cachedModule.code,
       map,
       ssr: true,
       __vitestTmp: cachePath,
+      __vitestModuleType: moduleType,
     }
 
     // we populate the module graph to make the watch mode work because it relies on importers
@@ -299,12 +306,7 @@ class ModuleFetcher {
       tmp: cachePath,
       url: cachedModule.url,
       invalidate: false,
-      moduleType: await this.cachedModuleType(
-        cachedModule.file,
-        cachedModule.code,
-        moduleGraphModule.transformResult,
-        cachedModule.moduleType,
-      ),
+      moduleType,
     }
   }
 
