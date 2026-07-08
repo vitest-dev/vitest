@@ -102,7 +102,7 @@ class ModuleFetcher {
       }
 
       const transformResult = moduleGraphModule.transformResult
-      const tmpPath = transformResult && Reflect.get(transformResult, '_vitest_tmp')
+      const tmpPath = transformResult?.__vitestTmp
       if (typeof tmpPath === 'string') {
         return getCachedResult(result, tmpPath)
       }
@@ -118,7 +118,7 @@ class ModuleFetcher {
       const tmpFile = join(tmpDir, hash('sha1', result.id, 'hex'))
       return this.cacheResult(result, tmpFile).then((result) => {
         if (transformResult) {
-          Reflect.set(transformResult, '_vitest_tmp', tmpFile)
+          transformResult.__vitestTmp = tmpFile
         }
         return result
       })
@@ -569,6 +569,8 @@ export function handleRollupError(e: unknown): never {
 
 declare module 'vite' {
   export interface TransformResult {
+    // on-disk location of the transformed code, written by either the
+    // `experimental.fsModuleCache` store or the forks pool's tmp copies
     __vitestTmp?: string
     __vitestModuleType?: ModuleType
   }
