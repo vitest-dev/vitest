@@ -49,3 +49,28 @@ test('NODE_DISABLE_COMPILE_CACHE wins over NODE_COMPILE_CACHE', async () => {
   expect(exitCode).toBe(0)
   expect(existsSync(cacheDir)).toBe(false)
 })
+
+test('the cache is stripped from workers when v8 coverage is enabled', async () => {
+  rmSync(cacheDir, { recursive: true, force: true })
+
+  const { exitCode } = await runVitestCli(
+    { nodeOptions: { env: {
+      NODE_COMPILE_CACHE: cacheDir,
+      EXPECT_COVERAGE_STRIPPED: '1',
+    } } },
+    'run',
+    '--root',
+    fixture,
+    '--coverage.enabled',
+    '--coverage.provider=v8',
+    '--coverage.reporter=text',
+  )
+
+  expect(exitCode).toBe(0)
+
+  // the CLI process itself still persists its own graph (Node enabled its
+  // cache from the env var at startup, before coverage is known), but the
+  // worker's jsdom graph must not reach the cache
+  const entries = existsSync(cacheDir) ? cacheEntries() : []
+  expect(entries.length).toBeLessThan(300)
+})
