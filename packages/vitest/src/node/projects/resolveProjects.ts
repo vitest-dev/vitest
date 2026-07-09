@@ -2,6 +2,7 @@ import type { GlobOptions } from 'tinyglobby'
 import type {
   ResolvedConfig as ResolvedViteConfig,
   InlineConfig as ViteInlineConfig,
+  Plugin as VitePlugin,
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
@@ -28,6 +29,7 @@ import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoad
 import { CliOverride } from '../plugins/cliOverride'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
+import { withLabel } from '../reporters/renderers/utils'
 import { globProjectTestFiles } from './globProjectFiles'
 
 // vitest.config.*
@@ -118,17 +120,19 @@ export async function resolveProjectEntries(
     }
     const existing = seenNames.get(name)
     if (existing) {
-      const entryFile = entry.viteConfig.configFile
+      // inline entries carry the configFile they extend, which doesn't say
+      // where the project is declared, so they are reported without a file
+      const entryFile = !entry.inline && entry.viteConfig.configFile
         ? relative(globalConfig.root, entry.viteConfig.configFile)
         : ''
-      const existingFile = existing.viteConfig.configFile
+      const existingFile = !existing.inline && existing.viteConfig.configFile
         ? relative(globalConfig.root, existing.viteConfig.configFile)
         : ''
       const filesError = baseEntries.length > 1 && (entryFile || existingFile)
         ? [
             '\n\nYour config matched these files:\n',
             baseEntries
-              .filter(e => e.viteConfig.configFile)
+              .filter(e => !e.inline && e.viteConfig.configFile)
               .map(e => ` - ${relative(globalConfig.root, e.viteConfig.configFile as string)}`)
               .join('\n'),
             '\n\n',
@@ -272,12 +276,22 @@ async function resolveDeclaredProjectEntries(
 
   const promises: Promise<ResolvedProjectEntry>[] = []
 
+  if (!globalViteConfig.configFile && projectConfigs.some(options => options.extends === true)) {
+    harness.logger.warn(
+      withLabel(
+        'yellow',
+        'Vitest',
+        'A project has "extends: true", but the root config file does not exist, so there is nothing to inherit.',
+      ),
+    )
+  }
+
   projectConfigs.forEach((options, index) => {
     const configRoot = globalConfig.root
     // if extends a config file, resolve the file path
     const configFile = typeof options.extends === 'string'
       ? resolve(configRoot, options.extends)
-      : options.extends === true
+      : options.extends !== false
         ? (globalViteConfig.configFile || false)
         : false
     // if `root` is configured, resolve it relative to vite root (like other options)
@@ -340,6 +354,53 @@ async function resolveDeclaredProjectEntries(
   return entries
 }
 
+// Options that are always scoped to the project itself and are never
+// inherited from the config the project extends:
+// - `name` identifies the project and must stay unique
+// - `projects` would redefine the whole workspace, including the project itself
+const NON_INHERITED_OPTIONS = ['name', 'projects'] as const
+
+// The root `globalSetup` already runs once per test run on the root config;
+// inheriting it would run the same files again for every project. Extending
+// a non-root config keeps it because nothing else runs it.
+const NON_INHERITED_ROOT_OPTIONS = [...NON_INHERITED_OPTIONS, 'globalSetup'] as const
+
+function ProjectInheritancePlugin(options: ViteInlineConfig, extendsRootConfig: boolean): VitePlugin {
+  const nonInheritedOptions = extendsRootConfig
+    ? NON_INHERITED_ROOT_OPTIONS
+    : NON_INHERITED_OPTIONS
+  return {
+    name: 'vitest:project-inheritance',
+    enforce: 'pre',
+    config: {
+      // run before other `config` hooks so only the values merged from the
+      // extended config file are removed, not the values set by plugins
+      order: 'pre',
+      handler(config) {
+        config.test ??= {}
+        // the project's own `tags` replace the inherited array instead of
+        // being concatenated with it, so tags can be overridden
+        if (options.test?.tags) {
+          config.test.tags = options.test.tags
+        }
+        for (const key of nonInheritedOptions) {
+          if (options.test?.[key] !== undefined) {
+            (config.test as any)[key] = options.test[key]
+          }
+          else {
+            delete config.test[key]
+          }
+        }
+      },
+    },
+    api: {
+      vitest: {
+        experimental: { ignoreFsModuleCache: true },
+      },
+    },
+  }
+}
+
 async function resolveSingleProjectEntry(
   harness: PluginHarness,
   globalViteConfig: ResolvedViteConfig,
@@ -351,6 +412,11 @@ async function resolveSingleProjectEntry(
   const { configFile, ...restOptions } = options
 
   const browserHolder: BrowserContributionHolder = {}
+
+  // inline entries are keyed by their index; file-based projects are keyed
+  // by the config path and don't extend another config, so their own values
+  // must never be un-merged
+  const isInlineEntry = typeof workspacePath === 'number'
 
   const projectInline: ViteInlineConfig = {
     ...restOptions,
@@ -368,23 +434,9 @@ async function resolveSingleProjectEntry(
         options,
       ),
       ...BrowserLoaderPlugin(browserHolder, harness),
-      {
-        name: 'vitest:tags',
-        config(config) {
-          // We need to keep the `tags` array untouched if `extends` is `true`,
-          // Otherwise it gets merged with the top level tags and we don't want that because tags could be overridden
-          // Setting it to `options.test?.tags` overrides the merged value
-          if (options.test?.tags) {
-            config.test ??= {}
-            config.test.tags = options.test?.tags
-          }
-        },
-        api: {
-          vitest: {
-            experimental: { ignoreFsModuleCache: true },
-          },
-        },
-      },
+      ...(isInlineEntry
+        ? [ProjectInheritancePlugin(options, !!configFile && configFile === globalViteConfig.configFile)]
+        : []),
     ],
   }
 
@@ -419,6 +471,7 @@ async function resolveSingleProjectEntry(
   return {
     viteConfig: projectViteConfig,
     projectConfig,
+    inline: isInlineEntry,
   }
 }
 
@@ -728,7 +781,7 @@ async function resolveTestProjectConfigs(
   projectsDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
-  const projectsOptions: (UserWorkspaceConfig & { extends?: true | string })[] = []
+  const projectsOptions: (UserWorkspaceConfig & { extends?: boolean | string })[] = []
 
   // custom config files that were specified directly or resolved from a directory
   const projectsConfigFiles: string[] = []

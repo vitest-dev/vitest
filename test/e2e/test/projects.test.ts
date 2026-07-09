@@ -1,4 +1,4 @@
-import { runInlineTests, runVitest } from '#test-utils'
+import { runInlineTests, runVitest, ts } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 
@@ -82,7 +82,6 @@ it('can define inline workspace config programmatically', async () => {
     },
     projects: [
       {
-        extends: true,
         test: {
           name: 'project-1',
         },
@@ -116,6 +115,141 @@ it('correctly inherits the root config', async () => {
   })
   expect(stderr).toBe('')
   expect(stdout).toContain('repro.test.js > importing a virtual module')
+})
+
+describe('the root config inheritance', () => {
+  const basicTest = ts`
+    import { test } from 'vitest'
+    test('runs', () => {})
+  `
+
+  it('inline projects inherit options from the root config by default', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          testTimeout: 1234,
+          projects: [
+            { test: { name: 'inherited' } },
+            { extends: false, test: { name: 'isolated' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const timeouts = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.config.testTimeout]),
+    )
+    expect(timeouts).toEqual({
+      inherited: 1234,
+      isolated: 5000,
+    })
+    expect(ctx!.projects.map(project => project.config.projects)).toEqual([
+      undefined,
+      undefined,
+    ])
+  })
+
+  it('the root name and globalSetup are not inherited by the projects', async () => {
+    const { stderr, ctx, fs } = await runInlineTests({
+      'globalSetup.js': ts`
+        import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+        import { resolve } from 'node:path'
+
+        export default function setup(project) {
+          const file = resolve(project.config.root, 'setup-runs.txt')
+          const runs = existsSync(file) ? Number(readFileSync(file, 'utf-8')) : 0
+          writeFileSync(file, String(runs + 1))
+        }
+      `,
+      'vitest.config.js': {
+        test: {
+          name: 'root',
+          globalSetup: './globalSetup.js',
+          projects: [
+            { test: {} },
+            { test: {} },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.name)).toEqual(['0', '1'])
+    expect(fs.readFile('setup-runs.txt')).toBe('1')
+  })
+
+  it('globalSetup from an extended non-root config runs for every project', async () => {
+    const { stderr, fs } = await runInlineTests({
+      'globalSetup.js': ts`
+        import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+        import { resolve } from 'node:path'
+
+        export default function setup(project) {
+          const file = resolve(project.config.root, 'setup-runs.txt')
+          const runs = existsSync(file) ? Number(readFileSync(file, 'utf-8')) : 0
+          writeFileSync(file, String(runs + 1))
+        }
+      `,
+      'vitest.shared.js': { test: { globalSetup: './globalSetup.js' } },
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { extends: './vitest.shared.js', test: { name: 'a' } },
+            { extends: './vitest.shared.js', test: { name: 'b' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(fs.readFile('setup-runs.txt')).toBe('2')
+  })
+
+  it('the project tags replace the inherited tags', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          tags: [{ name: 'shared', retry: 2 }],
+          projects: [
+            // the same tag name would be a duplicate tag error
+            // if the arrays were merged instead of replaced
+            { test: { name: 'own-tags', tags: [{ name: 'shared', retry: 5 }] } },
+            { test: { name: 'inherited-tags' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const retries = Object.fromEntries(
+      ctx!.projects.map(project => [
+        project.name,
+        project.config.tags.find(tag => tag.name === 'shared')!.retry,
+      ]),
+    )
+    expect(retries).toEqual({
+      'own-tags': 5,
+      'inherited-tags': 2,
+    })
+  })
+
+  it('warns if "extends: true" is set, but the root config file does not exist', async () => {
+    const { stderr } = await runVitest({
+      root: 'fixtures/workspace/api',
+      passWithNoTests: true,
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'no-extend',
+            include: [],
+          },
+        },
+      ],
+    })
+    expect(stderr).toContain('A project has "extends: true", but the root config file does not exist, so there is nothing to inherit.')
+  })
 })
 
 it('fails if workspace is empty', async () => {

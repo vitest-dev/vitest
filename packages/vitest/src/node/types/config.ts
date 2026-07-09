@@ -1295,6 +1295,12 @@ export interface ResolvedProjectEntry {
    * reference it via `_parent`) but is NOT pushed to `vitest.projects`.
    */
   hidden?: boolean
+  /**
+   * The project was declared as an inline configuration. Its
+   * `viteConfig.configFile` is the config it extends (the root config file
+   * by default), not a file of its own.
+   */
+  inline?: boolean
 }
 
 type NonProjectOptions
@@ -1389,9 +1395,11 @@ export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * If `true`, the project will inherit all options from the root config.
+   * Set to `false` to keep the project configuration completely separate from the root config.
+   * @default true
    * @example '../vite.config.ts'
    */
-  extends?: string | true
+  extends?: string | boolean
 })
 
 export type TestProjectConfiguration
