@@ -233,7 +233,6 @@ describe('the root config inheritance', () => {
       'inherited-tags': 2,
     })
   })
-
 })
 
 it('fails if workspace is empty', async () => {

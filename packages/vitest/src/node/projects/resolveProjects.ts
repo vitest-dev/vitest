@@ -427,7 +427,7 @@ async function resolveSingleProjectEntry(
     // push into a single array shared by the root and every project
     const inherited = deepClone(rootViteOverrides)
     // a CLI-only filter, its per-project semantics are handled by PROJECT_CLI_OVERRIDES
-    delete inherited.test?.tagsFilter
+    delete (inherited.test as UserConfig | undefined)?.tagsFilter
     inlineOptions = mergeConfig(inherited, restOptions)
   }
 
