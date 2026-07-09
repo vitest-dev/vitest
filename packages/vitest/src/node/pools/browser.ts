@@ -187,6 +187,16 @@ class BrowserPool {
   private _promise: DeferPromise<void> | undefined
   private _providedContext: string | undefined
 
+  private _scaling: Promise<void> | undefined
+  // EMA of how long a single file takes in this pool; undefined until the
+  // first file finishes, which means "no signal yet — keep opening sessions"
+  private _fileCostEma: number | undefined
+  // refined with the real duration after every session open
+  private _sessionOpenCost = 250
+  // a session's first file pays the tester bootstrap on top of the test
+  // itself, so it would wildly overestimate the steady per-file cost
+  private _warmedUpSessions = new Set<string>()
+
   private readySessions: Set<string>
 
   private _traces: Traces
@@ -250,37 +260,85 @@ class BrowserPool {
       return this._promise
     }
 
-    // open the minimum amount of tabs
-    // if there is only 1 file running, we don't need 8 tabs running
-    const workerCount = Math.min(
-      this.options.maxWorkers - this.orchestrators.size,
-      files.length,
-    )
-
-    const promises: Promise<void>[] = []
-    for (let i = 0; i < workerCount; i++) {
-      const sessionId = crypto.randomUUID()
-      this.project.vitest._browserSessions.sessionIds.add(sessionId)
-      const project = this.project.name
-      debug?.('[%s] creating session for %s', sessionId, project)
-      const page = this._traces.$(
-        `vitest.browser.open`,
-        {
-          context: this._otel.context,
-          attributes: {
-            'vitest.browser.session_id': sessionId,
-          },
-        },
-        () => this.openPage(sessionId, { parallel: workerCount > 1 }),
-      ).then(() => {
-        // start running tests on the page when it's ready
-        this.runNextTest(method, sessionId)
-      })
-      promises.push(page)
-    }
-    await Promise.all(promises)
-    debug?.('all sessions are created')
+    this.scaleSessions(method)
     return this._promise
+  }
+
+  // Sessions are opened one by one while the queue justifies another tab
+  // instead of `maxWorkers` tabs upfront: every tab pays a context + page +
+  // full module graph bring-up that competes with already-running sessions
+  // for the same Vite server, so for fast suites fewer tabs finish sooner.
+  private scaleSessions(method: 'run' | 'collect'): void {
+    if (this._scaling) {
+      return
+    }
+    this._scaling = (async () => {
+      while (
+        this._queue.length
+        && this.orchestrators.size < this.options.maxWorkers
+        && this.shouldOpenAnotherSession()
+      ) {
+        const sessionId = crypto.randomUUID()
+        this.project.vitest._browserSessions.sessionIds.add(sessionId)
+        debug?.('[%s] creating session for %s', sessionId, this.project.name)
+        const openStart = performance.now()
+        await this._traces.$(
+          `vitest.browser.open`,
+          {
+            context: this._otel.context,
+            attributes: {
+              'vitest.browser.session_id': sessionId,
+            },
+          },
+          () => this.openPage(sessionId, {
+            parallel: this.options.maxWorkers > 1
+              && this.orchestrators.size + this._queue.length > 1,
+          }),
+        )
+        this._sessionOpenCost = performance.now() - openStart
+        // start running tests on the page when it's ready; a failure here
+        // already took a file off the queue, so it can never be swallowed
+        try {
+          this.runNextTest(method, sessionId)
+        }
+        catch (error) {
+          this.reject(error as Error)
+          return
+        }
+      }
+      debug?.('finished scaling sessions, %s sessions are running', this.orchestrators.size)
+    })()
+    this._scaling
+      .catch((error) => {
+        // a failure to open an extra session when the queue is already
+        // drained should not fail the run: the sessions that are still
+        // running have their own error and timeout handling
+        if (!this._queue.length && this.orchestrators.size > 0) {
+          debug?.('failed to open an extra session, ignoring: %s', error)
+          return
+        }
+        this.reject(error as Error)
+      })
+      .finally(() => {
+        this._scaling = undefined
+        // completion might have been blocked by the in-flight scaling
+        this.checkCompletion()
+      })
+  }
+
+  private shouldOpenAnotherSession(): boolean {
+    // the first session always opens; without a per-file signal
+    // keep the old behavior of scaling up to maxWorkers
+    if (this.orchestrators.size === 0 || this._fileCostEma == null) {
+      return true
+    }
+    // only pay for another tab when the remaining work, split across the
+    // sessions we already have, still takes considerably longer than opening
+    // a tab costs — a new tab does not just cost its own bring-up, it also
+    // competes with the running sessions for the same Vite server
+    const projectedDrainMs
+      = (this._queue.length * this._fileCostEma) / this.orchestrators.size
+    return projectedDrainMs > Math.max(this._sessionOpenCost, 100) * 2
   }
 
   private async openPage(sessionId: string, options: { parallel: boolean }): Promise<void> {
@@ -328,20 +386,30 @@ class BrowserPool {
   private finishSession(sessionId: string): void {
     this.readySessions.add(sessionId)
 
-    // the last worker finished running tests
-    if (this.readySessions.size === this.orchestrators.size) {
-      this._otel.span.end()
-      this._promise?.resolve()
-      this._promise = undefined
-      debug?.('[%s] all tests finished running', sessionId)
-    }
-    else {
+    if (!this.checkCompletion()) {
       debug?.(
         `did not finish sessions for ${sessionId}: |ready - %s| |overall - %s|`,
         [...this.readySessions].join(', '),
         [...this.orchestrators.keys()].join(', '),
       )
     }
+  }
+
+  private checkCompletion(): boolean {
+    // the run already finished (or was rejected) — nothing to resolve
+    if (!this._promise) {
+      return false
+    }
+    // the last worker finished running tests; a session that is still
+    // opening (this._scaling) will call this again once it settles
+    if (!this._scaling && this.readySessions.size === this.orchestrators.size) {
+      this._otel.span.end()
+      this._promise.resolve()
+      this._promise = undefined
+      debug?.('all tests finished running')
+      return true
+    }
+    return false
   }
 
   private runNextTest(method: 'run' | 'collect', sessionId: string): void {
@@ -373,7 +441,14 @@ class BrowserPool {
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
 
+    // warm the transform cache while the iframe is booting so the test
+    // file import doesn't wait for the transform; mirrors the URL the
+    // tester will request (see `importFile` in the browser runner)
+    const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(/\/+/g, '/')
+    void this.project.vite.transformRequest(fileUrl).catch(() => {})
+
     this.setBreakpoint(sessionId, file.filepath).then(() => {
+      const fileStart = performance.now()
       // this starts running tests inside the orchestrator
       const testersPromise = this._traces.$(
         `vitest.browser.run`,
@@ -403,6 +478,15 @@ class BrowserPool {
       )
       testersPromise
         .then(() => {
+          if (this._warmedUpSessions.has(sessionId)) {
+            const fileCost = performance.now() - fileStart
+            this._fileCostEma = this._fileCostEma == null
+              ? fileCost
+              : this._fileCostEma * 0.7 + fileCost * 0.3
+          }
+          else {
+            this._warmedUpSessions.add(sessionId)
+          }
           debug?.('[%s] test %s finished running', sessionId, file)
           this.runNextTest(method, sessionId)
         })
