@@ -29,7 +29,6 @@ import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoad
 import { CliOverride } from '../plugins/cliOverride'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
-import { withLabel } from '../reporters/renderers/utils'
 import { globProjectTestFiles } from './globProjectFiles'
 
 // vitest.config.*
@@ -277,16 +276,6 @@ async function resolveDeclaredProjectEntries(
 
   const promises: Promise<ResolvedProjectEntry>[] = []
 
-  if (!globalViteConfig.configFile && projectConfigs.some(options => options.extends === true)) {
-    harness.logger.warn(
-      withLabel(
-        'yellow',
-        'Vitest',
-        'A project has "extends: true", but the root config file does not exist, so there is nothing to inherit.',
-      ),
-    )
-  }
-
   projectConfigs.forEach((options, index) => {
     const configRoot = globalConfig.root
     // if extends a config file, resolve the file path
@@ -406,7 +395,7 @@ async function resolveSingleProjectEntry(
   harness: PluginHarness,
   globalViteConfig: ResolvedViteConfig,
   globalConfig: ResolvedConfig,
-  options: ViteInlineConfig,
+  options: ViteInlineConfig & { extends?: string | boolean },
   workspacePath: string | number,
   cliOverrides: UserConfig,
 ): Promise<ResolvedProjectEntry> {
@@ -418,9 +407,32 @@ async function resolveSingleProjectEntry(
   // by the config path and don't extend another config, so their own values
   // must never be un-merged
   const isInlineEntry = typeof workspacePath === 'number'
+  const inheritsRootConfig = isInlineEntry
+    && options.extends !== false
+    && typeof options.extends !== 'string'
+  // `extends: './path'` can still point back to the root config file
+  const extendsRootConfig = inheritsRootConfig
+    || (!!configFile && configFile === globalViteConfig.configFile)
+
+  // programmatic overrides are part of the effective root config, so an
+  // extending project inherits them like the root config file itself even
+  // when the file doesn't exist; the plugins are live instances owned by
+  // the root server and cannot be shared with the project servers
+  let inlineOptions: ViteInlineConfig = restOptions
+  if (inheritsRootConfig) {
+    const { plugins: _plugins, ...rootViteOverrides } = globalConfig.viteOverrides
+    // the root config file is re-executed for every project, so each resolution
+    // gets its own objects; the clone gives inherited overrides the same
+    // isolation, otherwise plugins that mutate config arrays in place would
+    // push into a single array shared by the root and every project
+    const inherited = deepClone(rootViteOverrides)
+    // a CLI-only filter, its per-project semantics are handled by PROJECT_CLI_OVERRIDES
+    delete inherited.test?.tagsFilter
+    inlineOptions = mergeConfig(inherited, restOptions)
+  }
 
   const projectInline: ViteInlineConfig = {
-    ...restOptions,
+    ...inlineOptions,
     configFile,
     configLoader: globalViteConfig.inlineConfig.configLoader,
     // this will make "mode": "test" inside defineConfig
@@ -436,7 +448,7 @@ async function resolveSingleProjectEntry(
       ),
       ...BrowserLoaderPlugin(browserHolder, harness),
       ...(isInlineEntry
-        ? [ProjectInheritancePlugin(options, !!configFile && configFile === globalViteConfig.configFile)]
+        ? [ProjectInheritancePlugin(options, extendsRootConfig)]
         : []),
     ],
   }

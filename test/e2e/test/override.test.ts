@@ -146,13 +146,11 @@ it('disables server.hmr before plugins read it in their own config hook', async 
   expect(observedHmr).toBe(false)
 })
 
-it('experimental fsModuleCache from the CLI is inherited in a project', async () => {
+it('experimental fsModuleCache is inherited in a project', async () => {
   const v = await config({
-    $cliOptions: {
-      experimental: {
-        fsModuleCache: true,
-        fsModuleCachePath: './node_modules/custom-cache-path',
-      },
+    experimental: {
+      fsModuleCache: true,
+      fsModuleCachePath: './node_modules/custom-cache-path',
     },
     projects: [
       {

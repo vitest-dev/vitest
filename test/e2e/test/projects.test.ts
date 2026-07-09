@@ -234,22 +234,6 @@ describe('the root config inheritance', () => {
     })
   })
 
-  it('warns if "extends: true" is set, but the root config file does not exist', async () => {
-    const { stderr } = await runVitest({
-      root: 'fixtures/workspace/api',
-      passWithNoTests: true,
-      projects: [
-        {
-          extends: true,
-          test: {
-            name: 'no-extend',
-            include: [],
-          },
-        },
-      ],
-    })
-    expect(stderr).toContain('A project has "extends: true", but the root config file does not exist, so there is nothing to inherit.')
-  })
 })
 
 it('fails if workspace is empty', async () => {
