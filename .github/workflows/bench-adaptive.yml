@@ -1,0 +1,44 @@
+# TEMPORARY (PR-only, removed before merge): measures the pool's adaptive
+# worker scaling on/off on the platforms where worker spawn costs differ the
+# most. Windows is the interesting one — process spawn is several times more
+# expensive there.
+name: bench-adaptive
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/bench-adaptive.yml'
+      - 'scripts/bench-adaptive.mjs'
+      - 'packages/vitest/src/node/pools/**'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  bench:
+    name: 'Bench: adaptive scaling, ${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 24
+
+      - name: Install
+        run: pnpm i --filter '!docs'
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Bench
+        run: node scripts/bench-adaptive.mjs
