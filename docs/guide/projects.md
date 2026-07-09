@@ -237,7 +237,7 @@ bun run test --project e2e --project unit
 
 ## Configuration
 
-Projects defined with an inline configuration inherit all options from the root-level config file. This is controlled by the `extends` option, which is enabled by default since Vitest 5.0:
+Projects defined with an inline configuration inherit all options from the root-level configuration. This is controlled by the `extends` option, which is enabled by default since Vitest 5.0:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'

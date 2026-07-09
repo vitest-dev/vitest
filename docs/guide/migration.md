@@ -58,7 +58,7 @@ export default defineConfig({
 
 ### Inline Projects Inherit the Root Config by Default
 
-The [`extends`](/guide/projects#configuration) option now defaults to `true`: every project defined as an inline configuration in [`test.projects`](/guide/projects) inherits all options from the root config file, including Vite options like `plugins` or `resolve.alias`. The options are merged following the same rules as an explicit `extends: true` did before:
+The [`extends`](/guide/projects#configuration) option now defaults to `true`: every project defined as an inline configuration in [`test.projects`](/guide/projects) inherits all options from the root configuration, including Vite options like `plugins` or `resolve.alias`. The options are merged following the same rules as an explicit `extends: true` did before:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
