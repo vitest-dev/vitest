@@ -64,6 +64,7 @@ const PROJECT_CLI_OVERRIDES = [
   'fileParallelism',
   'tagsFilter',
   'browser',
+  'experimental',
 ] as const
 
 /**
