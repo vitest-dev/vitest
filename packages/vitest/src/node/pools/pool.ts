@@ -12,6 +12,9 @@ import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
 const WORKER_START_TIMEOUT = 90_000
 
+// escape hatch while the adaptive worker scaling is validated across platforms
+const isAdaptiveScalingEnabled = process.env.VITEST_POOL_ADAPTIVE !== '0'
+
 interface Options {
   distPath: string
   teardownTimeout: number
@@ -38,6 +41,21 @@ export class Pool {
   private exitPromises: Promise<void>[] = []
   private _isCancelling: boolean = false
 
+  // Workers start one at a time while the queue justifies another one
+  // (mirrors the browser pool's adaptive session scaling): every worker pays
+  // a spawn + runtime bring-up that competes with the already-running workers
+  // for the same CPUs and Vite server, so fast suites finish sooner with
+  // fewer workers, while suites with slower files still scale up to
+  // `maxWorkers`.
+  private _startingCount = 0
+  // refined with the measured duration after every worker start
+  private _spawnCost = 150
+  // EMA of how long a single task takes; undefined until the first signal,
+  // which means "keep starting workers like before". A reused worker's first
+  // task pays the environment bring-up on top of the test, so it only counts
+  // when the worker cannot be reused (then it is the true per-task cost).
+  private _taskCostEma: number | undefined
+
   constructor(private options: Options, private logger: Logger) {}
 
   setMaxWorkers(maxWorkers: number): void {
@@ -46,6 +64,11 @@ export class Pool {
     this.workerIds = new Map(
       Array.from({ length: maxWorkers }).fill(0).map((_, i) => [i + 1, true]),
     )
+
+    // a new task group can have a completely different per-task cost
+    // (different pool, environment or project — e.g. typecheck tasks after
+    // unit tests), so its scaling starts from a clean signal
+    this._taskCostEma = undefined
   }
 
   async run(task: PoolTask, method: 'run' | 'collect'): Promise<void> {
@@ -69,11 +92,18 @@ export class Pool {
       return
     }
 
+    if (isAdaptiveScalingEnabled && !this.canScheduleNext()) {
+      // re-evaluated when the in-flight worker start settles or a task
+      // finishes — both end with another `schedule()` call
+      return
+    }
+
     const { task, resolver, method } = this.queue.shift()!
 
     try {
       let isMemoryLimitReached = false
       const runner = this.getPoolRunner(task, method)
+      const isFreshRunner = !runner.isStarted
 
       const poolId = runner.poolId ?? this.getConcurrencyId()
       runner.poolId = poolId
@@ -121,16 +151,30 @@ export class Pool {
           WORKER_START_TIMEOUT,
         )
 
+        this._startingCount++
+        const startedAt = performance.now()
+
         await runner.start({ workerId: task.context.workerId })
           .catch(error =>
             resolver.reject(
               new Error(`[vitest-pool]: Failed to start ${task.worker} worker for test files ${formatFiles(task)}.`, { cause: error }),
             ),
           )
-          .finally(() => clearTimeout(id))
+          .finally(() => {
+            clearTimeout(id)
+            this._startingCount--
+          })
+
+        if (!resolver.isRejected) {
+          this._spawnCost = performance.now() - startedAt
+        }
+
+        // the next worker can start while this one runs its task
+        void this.schedule()
       }
 
       let span: Span | undefined
+      const requestedAt = performance.now()
 
       if (!resolver.isRejected) {
         span = runner.startTracesSpan(`vitest.worker.${method}`)
@@ -142,6 +186,16 @@ export class Pool {
       await resolver.promise
         .catch(error => span?.recordException(error))
         .finally(() => span?.end())
+
+      // the EMA only informs the scaling of reusable workers, and a fresh
+      // worker's first task pays the environment bring-up on top of the
+      // test itself — only steady-state tasks of reused workers count
+      if (!resolver.isRejected && task.isolate === false && !isFreshRunner) {
+        const taskCost = performance.now() - requestedAt
+        this._taskCostEma = this._taskCostEma == null
+          ? taskCost
+          : this._taskCostEma * 0.7 + taskCost * 0.3
+      }
 
       const index = this.activeTasks.indexOf(activeTask)
       if (index !== -1) {
@@ -217,6 +271,45 @@ export class Pool {
 
   async close(): Promise<void> {
     await this.cancel()
+  }
+
+  private canScheduleNext(): boolean {
+    const { task } = this.queue[0]
+
+    // isolated tasks pay a worker per task no matter what — there is no
+    // avoidable bring-up cost for the scaling to save, so they keep the
+    // unrestricted behavior
+    if (task.isolate !== false) {
+      return true
+    }
+
+    // an idle reusable worker adds no bring-up cost
+    if (this.sharedRunners.some(runner => isEqualRunner(runner, task))) {
+      return true
+    }
+
+    // fresh workers ramp up by doubling (in-flight starts never exceed the
+    // workers that already run) — the queue may no longer justify more
+    // workers by the time the current batch is up, while a long queue still
+    // reaches `maxWorkers` in logarithmic time instead of one by one
+    const startedWorkers = this.activeTasks.length - this._startingCount
+    if (this._startingCount >= Math.max(1, startedWorkers)) {
+      return false
+    }
+
+    // the first worker always starts; without a per-task signal keep the old
+    // behavior of scaling straight up to `maxWorkers`
+    if (this.activeTasks.length === 0 || this._taskCostEma == null) {
+      return true
+    }
+
+    // only pay for another worker when the remaining work, split across the
+    // workers we already have, still takes considerably longer than a worker
+    // start costs — a new worker does not just cost its own bring-up, it
+    // also competes with the running workers for the same CPUs
+    const projectedDrainMs
+      = (this.queue.length * this._taskCostEma) / this.activeTasks.length
+    return projectedDrainMs > Math.max(this._spawnCost, 50) * 2
   }
 
   private getPoolRunner(task: PoolTask, method: 'run' | 'collect'): PoolRunner {
