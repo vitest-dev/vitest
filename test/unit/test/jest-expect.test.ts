@@ -384,6 +384,23 @@ describe('jest-expect', () => {
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`)
   })
 
+  it('toHaveProperty on null/undefined subjects (#10735)', () => {
+    // A nullish subject must fail cleanly instead of throwing a raw
+    // `TypeError: Cannot convert undefined or null to object`.
+    expect(null).not.toHaveProperty('x')
+    expect(undefined).not.toHaveProperty('x')
+    expect(null).not.toHaveProperty('a.b')
+    expect(undefined).not.toHaveProperty(['a', 'b'])
+
+    expect(() => {
+      expect(null).toHaveProperty('x')
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected null to have property "x"]`)
+
+    expect(() => {
+      expect(undefined).toHaveProperty('x', 1)
+    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected undefined to have property "x" with value 1]`)
+  })
+
   it('assertions', () => {
     expect(1).toBe(1)
     expect(1).toBe(1)

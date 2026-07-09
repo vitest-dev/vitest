@@ -469,10 +469,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const actual = this._obj as any
       const [propertyName, expected] = args
       const getValue = () => {
-        const hasOwn = Object.hasOwn(
-          actual,
-          propertyName,
-        )
+        const hasOwn
+          = actual != null && Object.hasOwn(actual, propertyName)
         if (hasOwn) {
           return { value: actual[propertyName], exists: true }
         }
