@@ -1029,7 +1029,7 @@ export async function resolveConfig(
       mode: options.mode || 'test',
       plugins: [
         CliOverride(cliOptionsCopy),
-        VitestConfigServer(pluginsHarness),
+        ...VitestConfigServer(pluginsHarness),
         ...VitestConfig(pluginsHarness),
         ...VitestCorePlugin(pluginsHarness, options),
         ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
