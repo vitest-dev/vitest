@@ -445,7 +445,7 @@ class BrowserPool {
     // file import doesn't wait for the transform; mirrors the URL the
     // tester will request (see `importFile` in the browser runner)
     const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(/\/+/g, '/')
-    void this.project.browser?.vite.transformRequest(fileUrl).catch(() => {})
+    void this.project.vite.transformRequest(fileUrl).catch(() => {})
 
     this.setBreakpoint(sessionId, file.filepath).then(() => {
       const fileStart = performance.now()
