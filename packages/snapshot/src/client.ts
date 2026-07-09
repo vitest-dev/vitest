@@ -326,7 +326,7 @@ export class SnapshotClient {
     }
 
     // TODO: should `all` mode ignore parse error?
-    // Sielently hiding the error and creating snaphsot full scratch isn't good either.
+    // Silently hiding the error and creating snapshot full scratch isn't good either.
     // Users can fix or purge the broken snapshot manually and that decision affects how domain snapshot gets updated.
     const matchResult = expectedSnapshot.data !== undefined
       ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))

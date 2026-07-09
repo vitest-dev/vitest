@@ -302,7 +302,7 @@ export class TestRunner implements VitestTestRunner {
   /**
    * @experimental
    * A function that runs tinybench tasks.
-   * Can be overriden to run tasks in a special environment.
+   * Can be overridden to run tasks in a special environment.
    */
   static async runBenchmarks(tinybench: Tinybench): Promise<TinybenchTask[]> {
     return await tinybench.run()

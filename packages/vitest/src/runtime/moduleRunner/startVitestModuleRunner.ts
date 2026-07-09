@@ -126,7 +126,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         }
 
         // strip _vitest_original query added by importActual so that
-        // the plugin pipeline sees the original import id (e.g. virtual modules's load hook)
+        // the plugin pipeline sees the original import id (e.g. virtual module's load hook)
         const isImportActual = id.includes('_vitest_original')
         if (isImportActual) {
           id = removeQuery(id, '_vitest_original')
