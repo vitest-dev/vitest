@@ -288,10 +288,18 @@ export class Pool {
       return true
     }
 
-    // fresh workers ramp up by doubling (in-flight starts never exceed the
-    // workers that already run) — the queue may no longer justify more
-    // workers by the time the current batch is up, while a long queue still
-    // reaches `maxWorkers` in logarithmic time instead of one by one
+    // the first few workers are justified by any queue that reaches this
+    // point — they start in parallel, which keeps small machines (CI
+    // runners) at exactly the previous behavior; only the wide worker tail
+    // of many-core machines is worth gating
+    if (this.activeTasks.length < Math.min(this.maxWorkers, 4)) {
+      return true
+    }
+
+    // beyond that, fresh workers ramp up by doubling (in-flight starts never
+    // exceed the workers that already run) — the queue may no longer justify
+    // more workers by the time the current batch is up, while a long queue
+    // still reaches `maxWorkers` in logarithmic time instead of one by one
     const startedWorkers = this.activeTasks.length - this._startingCount
     if (this._startingCount >= Math.max(1, startedWorkers)) {
       return false

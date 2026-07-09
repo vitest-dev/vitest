@@ -7,8 +7,8 @@ name: bench-adaptive
 on:
   pull_request:
     paths:
-      - '.github/workflows/bench-adaptive.yml'
-      - 'scripts/bench-adaptive.mjs'
+      - .github/workflows/bench-adaptive.yml
+      - scripts/bench-adaptive.mjs
       - 'packages/vitest/src/node/pools/**'
   workflow_dispatch:
 
