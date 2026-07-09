@@ -12,9 +12,6 @@ import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
 const WORKER_START_TIMEOUT = 90_000
 
-// escape hatch while the adaptive worker scaling is validated across platforms
-const isAdaptiveScalingEnabled = process.env.VITEST_POOL_ADAPTIVE !== '0'
-
 interface Options {
   distPath: string
   teardownTimeout: number
@@ -92,7 +89,7 @@ export class Pool {
       return
     }
 
-    if (isAdaptiveScalingEnabled && !this.canScheduleNext()) {
+    if (!this.canScheduleNext()) {
       // re-evaluated when the in-flight worker start settles or a task
       // finishes — both end with another `schedule()` call
       return
