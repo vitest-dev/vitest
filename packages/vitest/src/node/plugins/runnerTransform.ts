@@ -115,10 +115,7 @@ export function ModuleRunnerTransform(): VitePlugin {
         }
 
         // remove Vite's externalization logic because we have our own (unfortunately)
-        config.resolve.external = [
-          ...builtinModules,
-          ...builtinModules.map(m => `node:${m}`),
-        ]
+        config.resolve.external = resolveBuiltinExternalModules()
 
         // by setting `noExternal` to `true`, we make sure that
         // Vite will never use its own externalization mechanism
@@ -155,6 +152,19 @@ export function ModuleRunnerTransform(): VitePlugin {
       },
     },
   }
+}
+
+export function resolveBuiltinExternalModules(
+  modules: readonly string[] = builtinModules,
+): string[] {
+  // `builtinModules` can already contain `node:`-prefixed entries on newer Node
+  // versions (e.g. `node:sqlite`, `node:test`, `node:test/reporters`), so only add
+  // the prefix when it is missing to avoid producing invalid `node:node:*` externals.
+  return [
+    ...new Set(
+      modules.flatMap(m => (m.startsWith('node:') ? [m] : [m, `node:${m}`])),
+    ),
+  ]
 }
 
 function resolveViteResolveOptions(
