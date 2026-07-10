@@ -428,6 +428,10 @@ async function resolveSingleProjectEntry(
     const inherited = deepClone(rootViteOverrides)
     // a CLI-only filter, its per-project semantics are handled by PROJECT_CLI_OVERRIDES
     delete (inherited.test as UserConfig | undefined)?.tagsFilter
+    // the browser configuration describes the instances of a single project;
+    // inheriting it would create duplicate instance names in every project
+    // (CliOverride has the same guard for the `--browser` flags)
+    delete (inherited.test as UserConfig | undefined)?.browser
     inlineOptions = mergeConfig(inherited, restOptions)
   }
 
