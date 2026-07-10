@@ -80,7 +80,9 @@ export function ModuleRunnerTransform(): VitePlugin {
           else {
             environment.dev.moduleRunnerTransform = true
           }
-          environment.dev.preTransformRequests = false
+          if (name !== 'client' || !browserEnabled) {
+            environment.dev.preTransformRequests = false
+          }
           environment.keepProcessEnv = true
         }
       },
