@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
-import { toArray } from '@vitest/utils/helpers'
+import { cleanUrl, toArray } from '@vitest/utils/helpers'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
@@ -369,7 +369,7 @@ body {
         if (isCSSRequest(id)) {
           return null
         }
-        const path = cleanQueryUrl(id)
+        const path = cleanUrl(id)
         if (path.startsWith(distRoot) || path.startsWith(vitestDist)) {
           return { code, map: { mappings: '' } as any }
         }
@@ -381,7 +381,7 @@ body {
         if (
           parentServer.config.browser.dependencySourcemaps === false
           && path.includes('/node_modules/')
-          && (parentServer.vite?.config.server.sourcemapIgnoreList(path, path) ?? true)
+          && (parentServer.vite.config.server.sourcemapIgnoreList(path, path) ?? true)
         ) {
           return { code, map: { mappings: '' } as any }
         }
@@ -403,10 +403,6 @@ function isHeadlessServer(parentServer: ParentBrowserProject): boolean {
   // lazily populated `children` to stay deterministic across runs
   const instances = parentServer.config.browser.instances ?? []
   return instances.every(instance => instance.headless !== false)
-}
-
-function cleanQueryUrl(url: string): string {
-  return url.replace(/[?#].*$/, '')
 }
 
 function resolveBrowserOptimizeDeps(
