@@ -447,6 +447,9 @@ export interface LocatorOptions {
    * regular expression. Note that exact match still trims whitespace.
    */
   exact?: boolean
+}
+
+export interface LocatorFilterOptions {
   hasText?: string | RegExp
   hasNotText?: string | RegExp
   has?: Locator
@@ -766,7 +769,7 @@ export interface Locator extends LocatorSelectors {
    * Narrows existing locator according to the options.
    * @see {@link https://vitest.dev/api/browser/locators#filter}
    */
-  filter(options: LocatorOptions): Locator
+  filter(options: LocatorFilterOptions): Locator
   /**
    * This method returns an element matching the locator.
    * Unlike [`.element()`](https://vitest.dev/api/browser/locators#element),
