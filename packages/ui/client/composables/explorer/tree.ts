@@ -122,6 +122,7 @@ export class ExplorerTree {
         slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
+      this.collect(false, true)
     })
   }
 
