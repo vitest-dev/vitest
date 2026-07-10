@@ -431,8 +431,12 @@ function groupSpecs(specs: TestSpecification[], environments: WeakMap<TestSpecif
       throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`)
     }
 
-    // Non-isolated single worker can receive all files at once
-    if (isolate === false && maxWorkers === 1) {
+    // Non-isolated single worker can receive all files at once.
+    // vm pools are excluded: their `isolate: false` comes from config
+    // resolution rather than the user, because their isolation is a fresh VM
+    // context per run request — batching files into a single run request
+    // would share one context across all of them.
+    if (isolate === false && maxWorkers === 1 && spec.pool !== 'vmThreads' && spec.pool !== 'vmForks') {
       const previous = groups[order].specs[0]?.[0]
 
       if (previous && previous.project.name === spec.project.name && isEqualEnvironments(spec, previous)) {
