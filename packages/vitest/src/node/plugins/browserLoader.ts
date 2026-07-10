@@ -10,6 +10,7 @@ import type {
   ParentProjectBrowser,
 } from '../types/browser'
 import type { ResolvedConfig } from '../types/config'
+import { filterProjectBrowserInstances } from '../config/resolveConfig'
 import { createViteServer } from '../vite'
 
 export interface BrowserContributionHolder {
@@ -130,7 +131,14 @@ export async function createClusterServer(
   // the provider can also be configured per instance
   const provider = config.browser.provider
     ?? config.browser.instances?.find(instance => instance.provider)?.provider
-  provider?.prewarm?.({ config, vitest })
+  if (provider?.prewarm) {
+    // instances filtered out by `--project` never become projects, so no
+    // provider would ever adopt (or close) a browser prepared for them
+    const instances = filterProjectBrowserInstances(vitest.config.project, config)
+    if (instances.length) {
+      provider.prewarm({ config, vitest, instances })
+    }
+  }
 
   const server = await createViteServer(viteConfig)
   await server.listen(config.api.port)

@@ -23,7 +23,7 @@ import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
+import { filterProjectBrowserInstances, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
 import { CliOverride } from '../plugins/cliOverride'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
@@ -453,17 +453,9 @@ function expandBrowserInstancesInEntries(
 
   for (const entry of browserEntries) {
     const { projectConfig, viteConfig } = entry
-    const instances = projectConfig.browser.instances ?? []
     const parentName = projectConfig.name
 
-    if (instances.length === 0 || isExcludedByProjectFilter(globalConfig.project, parentName)) {
-      continue
-    }
-
-    const keepAllInstances = matchesProjectFilter(globalConfig.project, parentName)
-    const filteredInstances = keepAllInstances
-      ? instances
-      : instances.filter(instance => matchesProjectFilter(globalConfig.project, instance.name!))
+    const filteredInstances = filterProjectBrowserInstances(globalConfig.project, projectConfig)
     if (!filteredInstances.length) {
       continue
     }

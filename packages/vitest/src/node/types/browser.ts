@@ -28,10 +28,16 @@ export interface BrowserProviderOption<Options extends object = object> {
    * Called right before the browser Vite server is created so the provider
    * can start preparing the browser (e.g. launching it) concurrently. Runs
    * before the `TestProject` exists, so it only receives the resolved
-   * config. Optional, fire-and-forget: errors must surface through the
-   * normal provider flow.
+   * config and the `browser.instances` entries that survived the
+   * `--project` filter (filtered-out instances never become projects, so
+   * no browser should be prepared for them). Optional, fire-and-forget:
+   * errors must surface through the normal provider flow.
    */
-  prewarm?: (ctx: { config: ResolvedConfig; vitest: Vitest }) => void
+  prewarm?: (ctx: {
+    config: ResolvedConfig
+    vitest: Vitest
+    instances: BrowserInstanceOption[]
+  }) => void
   providerFactory: (project: TestProject) => BrowserProvider
   serverFactory: BrowserServerFactory
 }

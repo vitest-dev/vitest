@@ -5,6 +5,7 @@ import type {
 } from 'vite'
 import type { Logger } from '../logger'
 import type { BrowserContributionHolder } from '../plugins/browserLoader'
+import type { BrowserInstanceOption } from '../types/browser'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -1142,4 +1143,25 @@ export function isExcludedByProjectFilter(projects: string[], name: string): boo
     const positivePattern = project.slice(1)
     return wildcardPatternToRegExp(positivePattern).test(name)
   })
+}
+
+/**
+ * `browser.instances` that survive the `--project` filter. A matching parent
+ * project keeps all of its instances; otherwise instances are matched by
+ * their own (already resolved) names. Shared by the browser instance
+ * expansion and the provider `prewarm` hook so a browser is never prepared
+ * for an instance that won't become a project.
+ */
+export function filterProjectBrowserInstances(
+  projectsFilter: string[],
+  config: ResolvedConfig,
+): BrowserInstanceOption[] {
+  const instances = config.browser.instances ?? []
+  if (!instances.length || isExcludedByProjectFilter(projectsFilter, config.name)) {
+    return []
+  }
+  if (matchesProjectFilter(projectsFilter, config.name)) {
+    return instances
+  }
+  return instances.filter(instance => matchesProjectFilter(projectsFilter, instance.name!))
 }

@@ -22,6 +22,7 @@ import type {
 } from 'vitest/browser'
 import type {
   BrowserCommand,
+  BrowserInstanceOption,
   BrowserModuleMocker,
   BrowserProvider,
   BrowserProviderOption,
@@ -97,17 +98,8 @@ export function playwright(options: PlaywrightProviderOptions = {}): BrowserProv
     supportedBrowser: playwrightBrowsers,
     options,
     prewarm(ctx) {
-      // `prewarm` receives the primary project's config, where the browser
-      // names usually come from `instances` rather than `browser.name`
-      const browser = ctx.config.browser
-      const names = new Set<string>(browser.name ? [browser.name] : [])
-      for (const instance of browser.instances ?? []) {
-        if (instance.browser) {
-          names.add(instance.browser)
-        }
-      }
-      for (const name of names) {
-        prewarmBrowser(ctx, options, name)
+      for (const instance of ctx.instances) {
+        prewarmBrowser(ctx, options, instance)
       }
     },
     providerFactory(project) {
@@ -137,7 +129,8 @@ const warmBrowsers = new WeakMap<object, Map<string, WarmBrowser>>()
 // launch options are resolved by the same code as the real launch — if they
 // still differ by the time the provider opens the browser, the warm instance
 // is discarded, so this is always safe
-function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptions, browserName: string): void {
+function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptions, instance: BrowserInstanceOption): void {
+  const browserName = instance.browser
   if (
     options.connectOptions
     || options.persistentContext
@@ -146,18 +139,27 @@ function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptio
   ) {
     return
   }
-  if (!(playwrightBrowsers as readonly string[]).includes(browserName)) {
+  if (!browserName || !(playwrightBrowsers as readonly string[]).includes(browserName)) {
     return
   }
   let byName = warmBrowsers.get(options)
   if (!byName) {
-    byName = new Map()
-    warmBrowsers.set(options, byName)
+    const map = new Map<string, WarmBrowser>()
+    byName = map
+    warmBrowsers.set(options, map)
+    // a warm browser whose project never initializes a provider (it has no
+    // test files to run) is only cleaned up when Vitest closes
+    project.vitest.onClose(() => closeWarmBrowsers(map))
   }
   if (byName.has(browserName)) {
     return
   }
-  const launchOptions = resolveLaunchOptions(project, options, browserName)
+  // `headless` is the only launch-relevant option an instance can override;
+  // this mirrors how the instance's project config is cloned from the parent
+  const browserConfig = instance.headless == null
+    ? project.config.browser
+    : { ...project.config.browser, headless: instance.headless }
+  const launchOptions = resolveLaunchOptions(browserConfig, project.vitest.config.inspector, options, browserName)
   const entry: WarmBrowser = {
     launchOptionsJson: JSON.stringify(launchOptions),
     promise: (async () => {
@@ -185,23 +187,28 @@ function takeWarmBrowser(options: PlaywrightProviderOptions, browserName: string
   return warm
 }
 
+async function closeWarmBrowsers(byName: Map<string, WarmBrowser>): Promise<void> {
+  const closing = Array.from(byName.values(), warm =>
+    warm.promise.then(browser => browser.close()).catch(() => {}))
+  byName.clear()
+  await Promise.all(closing)
+}
+
 function resolveLaunchOptions(
-  project: LaunchContext,
+  browser: TestProject['config']['browser'],
+  inspector: TestProject['vitest']['config']['inspector'],
   providerOptions: PlaywrightProviderOptions,
   browserName: string,
 ): LaunchOptions {
-  const options = project.config.browser
-
   const launchOptions: LaunchOptions = {
     ...providerOptions.launchOptions,
-    headless: options.headless,
+    headless: browser.headless,
   }
 
-  if (typeof options.trace === 'object' && options.trace.tracesDir) {
-    launchOptions.tracesDir = options.trace?.tracesDir
+  if (typeof browser.trace === 'object' && browser.trace.tracesDir) {
+    launchOptions.tracesDir = browser.trace.tracesDir
   }
 
-  const inspector = project.vitest.config.inspector
   if (inspector.enabled) {
     // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
     const port = inspector.port || 9229
@@ -211,7 +218,7 @@ function resolveLaunchOptions(
   }
 
   // start Vitest UI maximized only on supported browsers
-  if (options.ui && browserName === 'chromium') {
+  if (browser.ui && browserName === 'chromium') {
     if (!launchOptions.args) {
       launchOptions.args = []
     }
@@ -290,7 +297,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.browserPromise = (async () => {
       const playwright = await import('playwright')
 
-      const launchOptions = resolveLaunchOptions(this.project, this.options, this.browserName)
+      const launchOptions = resolveLaunchOptions(
+        this.project.config.browser,
+        this.project.vitest.config.inspector,
+        this.options,
+        this.browserName,
+      )
 
       const inspector = this.project.vitest.config.inspector
       if (inspector.enabled) {
