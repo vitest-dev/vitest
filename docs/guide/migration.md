@@ -147,6 +147,15 @@ Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 vi.useFakeTimers({ toNotFake: ['Temporal'] })
 ```
 
+### `setSystemTime` Now Mocks Temporal
+
+Previously `vi.setSystemTime` mocked only `Date` without fake timers, but now it also mocks methods of `Temporal.Now`.
+
+```ts
+vi.setSystemTime(0)
+Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
+```
+
 ### `toThrow("")` Matches Any Error Message
 
 [`toThrow`](/api/expect#tothrow) (and its alias `toThrowError`) treats a string argument as a substring of the error message. In Vitest 4 an empty string was special-cased to the `/^$/` pattern, so it matched only an error whose message was empty. It now behaves like any other substring, and an empty string is contained in every message:
