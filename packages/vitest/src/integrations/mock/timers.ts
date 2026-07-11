@@ -14,6 +14,7 @@ import type {
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
 import { mockDate, RealDate, resetDate } from './date'
+import { mockTemporal, resetTemporal } from './temporal'
 
 export class FakeTimers {
   private _global: typeof globalThis
@@ -135,6 +136,7 @@ export class FakeTimers {
   useRealTimers(): void {
     if (this._fakingDate) {
       resetDate()
+      resetTemporal()
       this._fakingDate = null
     }
 
@@ -148,6 +150,7 @@ export class FakeTimers {
     const fakeDate = this._fakingDate || Date.now()
     if (this._fakingDate) {
       resetDate()
+      resetTemporal()
       this._fakingDate = null
     }
 
@@ -199,6 +202,7 @@ export class FakeTimers {
     else {
       this._fakingDate = date ?? new Date(this.getRealSystemTime())
       mockDate(this._fakingDate)
+      mockTemporal(this._fakingDate)
     }
   }
 
