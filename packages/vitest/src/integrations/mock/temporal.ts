@@ -46,6 +46,7 @@ function createMockedTemporal(RealTemporal: typeof Temporal): typeof Temporal {
       }
       return RealTemporal.Now.plainTimeISO(timeZoneLike)
     },
+    [Symbol.toStringTag]: 'Temporal.Now',
   }
   const MockedTemporal = {} as typeof Temporal
   Object.defineProperties(MockedTemporal, propertyDescriptors)
