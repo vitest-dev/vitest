@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Refer to the [Releases](https://vitest.dev/releases) page in the documentation for the supported Vitest versions.
+Refer to the [Releases](https://github.com/vitest-dev/vitest/releases) page in the documentation for the supported Vitest versions.
 
 ## Threat Model
 

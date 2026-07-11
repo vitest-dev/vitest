@@ -31,7 +31,7 @@ _January 17, 2025_
 
 ![Vitest 3 Announcement Cover Image](/og-vitest-3.jpg)
 
-We released Vitest 2 half a year ago. We have seen huge adoption, from 4,8M to 7,7M weekly npm downloads. Our ecosystem is growing rapidly too. Among others, [Storybook new testing capabilities powered by our vscode extension and browser mode](https://storybook.js.org/docs/writing-tests/test-addon) and Matt Pocock is building [Evalite](https://www.evalite.dev/), a tool for evaluating AI-powered apps, on top of Vitest.
+We released Vitest 2 half a year ago. We have seen huge adoption, from 4,8M to 7,7M weekly npm downloads. Our ecosystem is growing rapidly too. Among others, [Storybook new testing capabilities powered by our vscode extension and browser mode](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon) and Matt Pocock is building [Evalite](https://www.evalite.dev/), a tool for evaluating AI-powered apps, on top of Vitest.
 
 ## The next Vitest major is here
 
