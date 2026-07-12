@@ -130,6 +130,6 @@ vitest --inspect-brk --no-file-parallelism
 vitest --inspect-brk --browser --no-file-parallelism
 ```
 
-Once Vitest starts it will stop execution and wait for you to open developer tools that can connect to [Node.js inspector](https://nodejs.org/en/docs/guides/debugging-getting-started/). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.
+Once Vitest starts it will stop execution and wait for you to open developer tools that can connect to [Node.js inspector](https://nodejs.org/en/learn/getting-started/debugging). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.
 
 In watch mode you can keep the debugger open during test re-runs by using the `--isolate false` options.
