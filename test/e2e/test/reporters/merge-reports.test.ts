@@ -108,6 +108,7 @@ test('merge reports', async () => {
 
      ❯ second.test.ts (3 tests | 1 failed) <time>
        × test 2-1 <time>
+       ✓ group (2)
          ✓ test 2-2 <time>
          ✓ test 2-3 <time>
 

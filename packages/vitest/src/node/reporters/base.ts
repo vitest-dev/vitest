@@ -55,6 +55,7 @@ export abstract class BaseReporter implements Reporter {
   private _filesInWatchMode = new Map<string, number>()
   private _timeStart = formatTimeString(new Date())
   private _perProjectBenchmarks = new Map<string, Map<string, TestBenchmarkTask>>()
+  private _printedSuites = new Set<string>()
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? isTTY
@@ -154,6 +155,8 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
+    this._printedSuites.clear()
+
     let testsCount = 0
     let failedCount = 0
     let skippedCount = 0
@@ -231,11 +234,13 @@ export abstract class BaseReporter implements Reporter {
     const inlineBenchmarks: TestBenchmark[] = benchmarks.filter(b => b.tasks.length > 0)
 
     if (testResult.state === 'failed') {
+      this.printAncestorSuites(test)
       this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, separator)}`) + suffix)
     }
 
     // also print slow tests
     else if (duration > this.ctx.config.slowTestThreshold) {
+      this.printAncestorSuites(test)
       this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)}${suffix}`)
     }
 
@@ -244,6 +249,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     else if (this.renderSucceed || moduleState === 'failed' || inlineBenchmarks.length) {
+      this.printAncestorSuites(test)
       this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`)
     }
 
@@ -289,11 +295,41 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
+    this.printSuiteEntry(testSuite)
+  }
+
+  private printSuiteEntry(testSuite: TestSuite): void {
+    if (this._printedSuites.has(testSuite.id)) {
+      return
+    }
+    this._printedSuites.add(testSuite.id)
+
     const indentation = '  '.repeat(getIndentation(testSuite.task))
     const tests = Array.from(testSuite.children.allTests())
     const state = this.getStateSymbol(testSuite)
 
     this.log(` ${indentation}${state} ${testSuite.name} ${c.dim(`(${tests.length})`)}`)
+  }
+
+  // When a test line is emitted while renderSucceed is off (e.g. slow tests
+  // or inline benchmarks in CI), its parent describe suites were never printed
+  // by the outer visitor. Walk up and print any that are still missing so the
+  // nesting matches what the TTY output would show.
+  private printAncestorSuites(test: TestCase): void {
+    if (this.renderSucceed) {
+      return
+    }
+
+    const suites: TestSuite[] = []
+    let parent = test.parent
+    while (parent.type === 'suite' && !this._printedSuites.has(parent.id)) {
+      suites.push(parent)
+      parent = parent.parent
+    }
+
+    for (let i = suites.length - 1; i >= 0; i--) {
+      this.printSuiteEntry(suites[i])
+    }
   }
 
   protected getTestName(test: Task, _separator?: string): string {
