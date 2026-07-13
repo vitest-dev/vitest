@@ -1823,6 +1823,28 @@ it('toHaveProperty error diff', () => {
   `)
 })
 
+it('toHaveProperty on a nullish subject throws a matcher error (#10735)', () => {
+  expect(() => expect(null).toHaveProperty('x')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: .toHaveProperty() expects to receive an object, but got null]`,
+  )
+
+  expect(() => expect(undefined).toHaveProperty('x')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: .toHaveProperty() expects to receive an object, but got undefined]`,
+  )
+
+  expect(() => expect(null).toHaveProperty('x', 1)).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: .toHaveProperty() expects to receive an object, but got null]`,
+  )
+
+  expect(() => expect(null).not.toHaveProperty('x')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: .toHaveProperty() expects to receive an object, but got null]`,
+  )
+
+  expect(() => expect(undefined).not.toHaveProperty('x')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: .toHaveProperty() expects to receive an object, but got undefined]`,
+  )
+})
+
 function snapshotError(f: () => unknown) {
   try {
     f()
