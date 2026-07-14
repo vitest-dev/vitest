@@ -71,6 +71,7 @@ export default class SnapshotState {
   private _inlineSnapshotStacks: Array<ParsedStack & { testId: string; snapshot: string }>
   private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
   private _rawSnapshots: Array<RawSnapshot>
+  private _checkedRawSnapshotFiles = new Set<string>()
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
@@ -419,7 +420,11 @@ export default class SnapshotState {
 
       status.saved = true
     }
-    else if (!hasExternalSnapshots && this._fileExists) {
+    else if (
+      !hasExternalSnapshots
+      && this._fileExists
+      && !this._checkedRawSnapshotFiles.has(this.snapshotPath)
+    ) {
       if (this._updateSnapshot === 'all') {
         await this._environment.removeSnapshotFile(this.snapshotPath)
         this._fileExists = false
@@ -496,6 +501,11 @@ export default class SnapshotState {
     }
 
     if (rawSnapshot) {
+      // remember that this file is an active `toMatchFileSnapshot` target so
+      // `save` does not treat it as an obsolete external snapshot file and
+      // delete it (e.g. when it happens to match the default snapshot path).
+      this._checkedRawSnapshotFiles.add(rawSnapshot.file)
+
       // normalize EOL when snapshot contains CRLF but received is LF
       if (
         rawSnapshot.content
