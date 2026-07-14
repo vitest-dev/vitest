@@ -397,6 +397,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
         argument: '<timeout>',
       },
+      dependencySourcemaps: {
+        description: 'Serve sourcemaps of dependencies to the browser in headless runs, used by devtools when debugging into `node_modules`. Reported test errors are source-mapped either way. Use `--browser.dependencySourcemaps=false` to speed up test runs if you don\'t step into dependency code (default: `true`)',
+      },
       trackUnhandledErrors: {
         description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
       },
