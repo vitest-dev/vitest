@@ -307,6 +307,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/globals',
               },
               {
+                text: 'injectCjsGlobals',
+                link: '/config/injectcjsglobals',
+              },
+              {
                 text: 'environment',
                 link: '/config/environment',
               },
@@ -649,6 +653,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'browser.screenshotFailures',
                 link: '/config/browser/screenshotfailures',
+              },
+              {
+                text: 'browser.dependencySourcemaps',
+                link: '/config/browser/dependencysourcemaps',
               },
               {
                 text: 'browser.orchestratorScripts',

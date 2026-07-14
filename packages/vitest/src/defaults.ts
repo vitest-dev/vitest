@@ -68,6 +68,7 @@ export const configDefaults: Readonly<{
   isolate: boolean
   watch: boolean
   globals: boolean
+  injectCjsGlobals: boolean
   environment: 'node'
   clearMocks: boolean
   restoreMocks: boolean
@@ -107,6 +108,7 @@ export const configDefaults: Readonly<{
   isolate: true,
   watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
+  injectCjsGlobals: true,
   environment: 'node',
   clearMocks: true,
   restoreMocks: false,
