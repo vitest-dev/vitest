@@ -58,11 +58,9 @@ export class TestRunner implements VitestTestRunner {
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
-    if (source === 'setup') {
-      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
-      if (moduleNode) {
-        this.workerState.evaluatedModules.invalidateModule(moduleNode)
-      }
+    const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+    if (moduleNode && (source === 'setup' || moduleNode.evaluated)) {
+      this.workerState.evaluatedModules.invalidateModule(moduleNode)
     }
     return this._otel.$(
       `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
@@ -72,11 +70,7 @@ export class TestRunner implements VitestTestRunner {
         },
       },
       () => {
-        const shouldInvalidate = !this.viteModuleRunner
-        // this is require for in-source tests to be invalidated if
-        // one of the files already imported it in --maxWorkers=1 --no-isolate
-          || (source === 'collect' && this.workerState.evaluatedModules.getModuleById(filepath)?.evaluated)
-        if (shouldInvalidate) {
+        if (!this.viteModuleRunner) {
           filepath = `${filepath}?vitest=${Date.now()}`
         }
         return this.moduleRunner.import(filepath)
