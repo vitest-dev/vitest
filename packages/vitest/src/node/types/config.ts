@@ -668,7 +668,7 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [], modules: { classNameStrategy: false } }
+   * @default { include: [], modules: { classNameStrategy: 'stable' } }
    */
   css?:
     | boolean
