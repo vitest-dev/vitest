@@ -60,21 +60,21 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     const coverageMap = this.createCoverageMap()
 
-    const mergedScripts = new Map<string, ScriptCoverageWithOffset>()
+    const mergedScripts = new Map<ScriptCoverageWithOffset['url'], ScriptCoverageWithOffset>()
     const autoAttachSubprocess = this.options.autoAttachSubprocess
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
         for (const script of coverage.result) {
           const previous = mergedScripts.get(script.url)
+          const merged: typeof script = mergeScriptCovs(previous ? [previous, script] : [script])
+
           const startOffset = previous?.startOffset || script.startOffset || 0
-          const isExtendedContext = autoAttachSubprocess
-            && (previous?.isExtendedContext || script.isExtendedContext)
-          const merged = mergeScriptCovs(previous ? [previous, script] : [script]) as ScriptCoverageWithOffset
+          const isExtendedContext = previous?.isExtendedContext || script.isExtendedContext
 
           merged.startOffset ||= startOffset
 
-          if (isExtendedContext) {
+          if (autoAttachSubprocess && isExtendedContext) {
             merged.isExtendedContext = true
           }
 
@@ -82,17 +82,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         }
       },
       onFinished: async (project, environment) => {
-        const result = Array.from(mergedScripts.values())
-          .sort((a, b) => a.url.localeCompare(b.url))
-
-        for (const [scriptId, script] of result.entries()) {
-          script.scriptId = String(scriptId)
-        }
-
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const converted = await this.convertCoverage(
-          { result },
+          { result: Array.from(mergedScripts.values()) },
           project,
           environment,
         )

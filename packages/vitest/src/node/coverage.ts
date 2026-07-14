@@ -86,8 +86,8 @@ export class BaseCoverageProvider {
   version!: string
   options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
-  private _globMatchers?: { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean }
   autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
+  globMatchers?: { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean }
 
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
@@ -110,6 +110,8 @@ export class BaseCoverageProvider {
     }
 
     const config = ctx._coverageOptions
+
+    this.globMatchers = undefined
 
     this.options = {
       ...coverageConfigDefaults,
@@ -201,17 +203,17 @@ export class BaseCoverageProvider {
    * every call, which dominates the filtering step on large test suites.
    */
   private getGlobMatchers(): { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean } {
-    if (!this._globMatchers) {
+    if (!this.globMatchers) {
       const exclude = this.options.exclude
       const include = this.options.include
 
-      this._globMatchers = {
+      this.globMatchers = {
         matchExclude: exclude.length ? pm(exclude, { dot: true }) : () => false,
         matchInclude: include ? pm(include, { dot: true, ignore: exclude }) : () => true,
       }
     }
 
-    return this._globMatchers
+    return this.globMatchers
   }
 
   private async getUntestedFilesByRoot(
