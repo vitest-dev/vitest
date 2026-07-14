@@ -34,7 +34,7 @@ export const sponsors: SponsorTier[] = [
       {
         name: 'Latitude',
         url: 'https://latitude.so/',
-        img: '/latitude.svg',
+        img: '/latitude.png',
       },
     ],
   },
