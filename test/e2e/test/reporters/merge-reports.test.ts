@@ -912,11 +912,11 @@ test("works on browser", () => {
     Expected: "undefined"
     Received: "object"
 
-     ❯ basic.test.ts:7:24
+     ❯ basic.test.ts:7:25
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
-           |                        ^
+           |                         ^
           8| })
           9|
 
@@ -928,11 +928,11 @@ test("works on browser", () => {
     Expected: "undefined"
     Received: "object"
 
-     ❯ basic.test.ts:7:24
+     ❯ basic.test.ts:7:25
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
-           |                        ^
+           |                         ^
           8| })
           9|
 
