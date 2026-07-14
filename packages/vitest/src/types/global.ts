@@ -1,9 +1,8 @@
-import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
+import type { PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
-import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { Bench, BenchResult } from '../runtime/benchmark'
-import type { UserConsoleLog } from './general'
+import type { BenchResult } from '../runtime/benchmark'
+import type { Test } from '../runtime/runner/types'
 
 interface SnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
@@ -126,38 +125,25 @@ declare module 'vitest' {
       expected: BenchResult,
       options?: { delta?: number },
     ) => void
-  }
-}
 
-declare module '@vitest/runner' {
-  interface TestContext {
     /**
-     * `expect` instance bound to the current test.
+     * Ensures a `vi.when` chain has been exhausted.
      *
-     * This API is useful for running snapshot tests concurrently because global expect cannot track them.
+     * A chain is exhausted when at least one `calledWith` with an associated action (`then*`) has been registered
+     * and every registered behavior has been fully consumed. A chain with no registered
+     * behaviors, or with `calledWith` entries that have no associated `then*` actions, is never considered exhausted.
+     *
+     * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
+     *
+     * @example
+     * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+     *
+     * expect(w).not.toHaveBeenExhausted()
+     *
+     * expect(spy('hello')).toBe('HELLO')
+     *
+     * expect(w).toHaveBeenExhausted()
      */
-    readonly expect: ExpectStatic
-    /**
-     * Create a benchmark to run. It will be reported after the test is finished.
-     * @see {@link https://vitest.dev/guide/benchmarking}
-     */
-    readonly bench: Bench
-    /** @internal */
-    _local: boolean
-  }
-
-  interface TaskMeta {
-    typecheck?: boolean
-    benchmark?: boolean
-    __vitest_label__?: string
-  }
-
-  interface File {
-    prepareDuration?: number
-    environmentLoad?: number
-  }
-
-  interface TaskBase {
-    logs?: UserConsoleLog[]
+    toHaveBeenExhausted: () => void
   }
 }

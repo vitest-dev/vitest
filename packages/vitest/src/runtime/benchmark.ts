@@ -1,4 +1,3 @@
-import type { BaselineData, Test, TestBenchmark, TestBenchmarkTask } from '@vitest/runner'
 import type {
   BenchOptions as BenchCompareOptions,
   Fn,
@@ -9,6 +8,7 @@ import type {
   Task as TinybenchTask,
 } from 'tinybench'
 import type { SerializedConfig } from './config'
+import type { BaselineData, Test, TestBenchmark, TestBenchmarkTask } from './runner/types'
 import { isAbsolute, relative } from 'pathe'
 import { Bench as Tinybench } from 'tinybench'
 import c from 'tinyrainbow'
@@ -360,7 +360,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     validateBenchmarkProject(config)
 
     // extract optional trailing BenchCompareOptions argument
-    const lastArg = args[args.length - 1]
+    const lastArg = args.at(-1)
     const isOptions = lastArg != null && typeof lastArg === 'object' && !(kRegistration in lastArg)
     const benchOptions = isOptions ? args.pop() as BenchCompareOptions : undefined
     const registrations = args as BenchRegistration<any>[]
@@ -453,7 +453,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     if (pending.size === 0) {
       return
     }
-    const names = [...pending].map(reg => `"${reg.name}"`).join(', ')
+    const names = Array.from(pending, reg => `"${reg.name}"`).join(', ')
     pending.clear()
     console.warn(
       [

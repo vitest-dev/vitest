@@ -366,7 +366,7 @@ export function hasProperty(obj: object | null, property: string): boolean {
   return hasProperty(getPrototype(obj), property)
 }
 
-// SENTINEL constants are from https://github.com/facebook/immutable-js
+// SENTINEL constants are from https://github.com/immutable-js/immutable-js
 const IS_KEYED_SENTINEL = '@@__IMMUTABLE_KEYED__@@'
 const IS_SET_SENTINEL = '@@__IMMUTABLE_SET__@@'
 const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'

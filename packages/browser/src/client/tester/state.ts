@@ -11,8 +11,10 @@ const state: WorkerGlobalState = {
     rpc: null as any,
     pool: 'browser',
     workerId: 1,
+    concurrencyId: 1,
     config,
     projectName: config.name || '',
+    metaEnv: null as any,
     files: [],
     environment: {
       name: 'browser',

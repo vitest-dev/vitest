@@ -1,5 +1,5 @@
 import type { Options } from 'tinyexec'
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { FSWatcher, UserConfig as ViteUserConfig } from 'vite'
 import type { ParsedStack, SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
@@ -21,7 +21,7 @@ import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished, TestRunner } from 'vitest'
-import { startVitest } from 'vitest/node'
+import { Logger, PluginHarness, resolveConfig, startVitest } from 'vitest/node'
 import { Cli } from './cli'
 
 // override default colors to disable them in tests
@@ -42,6 +42,63 @@ export interface RunVitestConfig extends TestUserConfig {
 }
 
 const process_ = process
+
+export function createConsole({ tty, std }: { tty?: boolean; std?: 'inherit' } = {}) {
+  const stdout = new Writable({
+    write(chunk, __, callback) {
+      if (std === 'inherit') {
+        process.stdout.write(chunk.toString())
+      }
+      callback()
+    },
+  })
+
+  if (tty) {
+    (stdout as typeof process.stdout).isTTY = true
+  }
+
+  const stderr = new Writable({
+    write(chunk, __, callback) {
+      if (std === 'inherit') {
+        process.stderr.write(chunk.toString())
+      }
+      callback()
+    },
+  })
+
+  // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
+  const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
+  stdin.isTTY = true
+  stdin.setRawMode = () => stdin
+
+  return {
+    stdin,
+    stdout,
+    stderr,
+  }
+}
+
+export async function resolveTestConfig(
+  config: RunVitestConfig,
+  runnerOptions: VitestRunnerCLIOptions = {},
+) {
+  const { stdout, stderr, stdin } = createConsole(runnerOptions)
+
+  const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
+  const { $cliOptions, $viteConfig, ...restConfig } = config
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const resolved = await resolveConfig(
+    { config: false, ...$cliOptions },
+    { ...$viteConfig, test: restConfig },
+    harness,
+  )
+  return {
+    config: resolved,
+    vitest: cli,
+    stdout: cli.stdout,
+    stderr: cli.stderr,
+  }
+}
 
 /**
  * The config is assumed to be the config on the file system, not CLI options
@@ -78,32 +135,8 @@ export async function runVitest(
   const exit = process.exit
   process.exit = (() => { }) as never
 
-  const stdout = new Writable({
-    write(chunk, __, callback) {
-      if (runnerOptions.std === 'inherit') {
-        process.stdout.write(chunk.toString())
-      }
-      callback()
-    },
-  })
+  const { stdout, stderr, stdin } = createConsole(runnerOptions)
 
-  if (runnerOptions?.tty) {
-    (stdout as typeof process.stdout).isTTY = true
-  }
-
-  const stderr = new Writable({
-    write(chunk, __, callback) {
-      if (runnerOptions.std === 'inherit') {
-        process.stderr.write(chunk.toString())
-      }
-      callback()
-    },
-  })
-
-  // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
-  const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
-  stdin.isTTY = true
-  stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
   // @ts-expect-error not typed global
   const currentConfig: SerializedConfig = __vitest_worker__.ctx.config
@@ -138,6 +171,11 @@ export async function runVitest(
   if ((viteConfig as any).test) {
     throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
   }
+
+  // Don't let unrelated package.json / config edits made by other tests running
+  // in parallel force-rerun this test's watcher. Applied as a default here so a
+  // fixture config or an explicit `forceRerunTriggers` still takes precedence.
+  rest.forceRerunTriggers ??= []
 
   ;(viteConfig as any).test = rest
 
@@ -179,10 +217,24 @@ export async function runVitest(
       },
     }, {
       ...viteConfig,
+      plugins: [
+        ...(viteConfig.plugins ?? []),
+        // Spawning the worker is the dominant cost of these meta-tests (each `runVitest`
+        // boots a fresh Vitest). Default the spawned run to `threads`, which is cheaper
+        // to start than `forks`, especially on Windows. A `config` hook only fills the
+        // gap when nothing else set a pool, so an explicit `pool` (from `config` or the
+        // fixture's own config file) always wins. Browser runs are left alone since they
+        // don't execute in a node pool.
+        {
+          name: 'vitest:test-utils:default-pool',
+          config(config) {
+            if (config.test?.pool == null && !config.test?.browser?.enabled) {
+              return { test: { pool: 'threads' } }
+            }
+          },
+        },
+      ],
       server: {
-        // we never need a websocket connection for the root config because it doesn't connect to the browser
-        // browser mode uses a separate config that doesn't inherit CLI overrides
-        ws: false,
         watch: {
           // During tests we edit the files too fast and sometimes chokidar
           // misses change events, so enforce polling for consistency
@@ -213,18 +265,33 @@ export async function runVitest(
     exitCode = process.exitCode
     process.exitCode = 0
 
+    // tests emulating CLI shortcuts (`q`, double CTRL+C) trigger `vitest.exit()`,
+    // which arms an unref'd force-exit watchdog; it must be disarmed before the
+    // real `process.exit` is restored, or it would kill this worker
+    // `teardownTimeout` later, in the middle of a subsequent test file
     if (TestRunner.getCurrentTest()) {
       onTestFinished(async () => {
+        clearTimeout(ctx?._exitTimeout)
         await ctx?.close()
         process.exit = exit
       })
     }
     else {
       afterEach(async () => {
+        clearTimeout(ctx?._exitTimeout)
         await ctx?.close()
         process.exit = exit
       })
     }
+  }
+
+  // In watch mode, `startVitest` can resolve before the file watcher finished
+  // its initial scan (especially in standalone mode, which doesn't run any
+  // tests on startup). A test file created right after would be folded into the
+  // watcher's baseline and ignored, so newly added files wouldn't trigger a
+  // rerun. Wait for the watcher to be ready before handing control back.
+  if (watch && ctx) {
+    await waitForWatcherReady(ctx.vite.watcher, ctx.config.root)
   }
 
   return {
@@ -258,6 +325,27 @@ export async function runVitest(
       await new Promise<void>(resolve => ctx!.onClose(resolve))
       return ctx?.closingPromise
     },
+  }
+}
+
+// In watch mode `startVitest` can resolve before the file watcher has finished
+// establishing itself. chokidar's `ready`/`_readyEmitted` fires after the
+// initial scan, but with polling the root directory isn't fully watched for new
+// children until its parent shows up in `getWatched()`. A test file created
+// before that point gets folded into the watcher's baseline and never emits an
+// `add` event, so newly added files wouldn't trigger a rerun. Wait for both
+// signals (with a timeout safety net) before handing control back.
+async function waitForWatcherReady(watcher: FSWatcher, root: string): Promise<void> {
+  const slash = (p: string) => p.replace(/\\/g, '/')
+  const parent = slash(dirname(root))
+  const deadline = Date.now() + 2000
+  while (Date.now() < deadline) {
+    const isReady = (watcher as { _readyEmitted?: boolean })._readyEmitted
+    const watchesParent = Object.keys(watcher.getWatched()).some(dir => slash(dir) === parent)
+    if (isReady && watchesParent) {
+      return
+    }
+    await new Promise(resolve => setTimeout(resolve, 10))
   }
 }
 
@@ -435,6 +523,11 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
+export function useTmpFS<T extends TestFsStructure>(structure: T, ensureConfig = true, task?: TestContext['task']) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  return useFS(root, structure, ensureConfig, task)
+}
+
 export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true, task?: TestContext['task']) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
@@ -453,8 +546,16 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
       fs.rmSync(root, { recursive: true, force: true })
     }
   })
+  task?.context.signal.addEventListener('abort', () => {
+    if (process.env.VITEST_FS_CLEANUP !== 'false') {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
   return {
     root,
+    readdir: (file: string): string[] => {
+      return fs.readdirSync(resolve(root, file))
+    },
     readFile: (file: string): string => {
       const filepath = resolve(root, file)
       if (relative(root, filepath).startsWith('..')) {
@@ -507,15 +608,14 @@ export async function runInlineTests(
   options?: VitestRunnerCLIOptions,
   task?: TestContext['task'],
 ) {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  const fs = useFS(root, structure, undefined, task)
+  const fs = useTmpFS(structure, undefined, task ?? TestRunner.getCurrentTest())
   const vitest = await runVitest({
-    root,
+    root: fs.root,
     ...config,
   }, config?.$cliFilters ?? [], options)
   return {
     fs,
-    root,
+    root: fs.root,
     ...vitest,
     get results() {
       return vitest.ctx?.state.getTestModules() || []
@@ -577,6 +677,9 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
 
   function mapError(e: { message: string; diff?: string; stacks?: ParsedStack[] }) {
     let message = stripVTControlCharacters(e.message)
+    if (root) {
+      message = replaceRoot(message, root)
+    }
     if (options?.diff && e.diff) {
       message = [message, stripVTControlCharacters(e.diff)].join('\n')
     }

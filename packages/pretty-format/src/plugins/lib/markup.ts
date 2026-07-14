@@ -28,7 +28,7 @@ export function printProps(
         typeof value === 'string'
         && value[0] === '_'
         && value.startsWith('__vitest_')
-        && value.match(/__vitest_\d+__/)
+        && /__vitest_\d+__/.test(value)
       ) {
         return ''
       }

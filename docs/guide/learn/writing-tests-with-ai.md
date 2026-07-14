@@ -45,7 +45,7 @@ This tells the AI exactly which function to focus on, which scenarios matter, an
 ### Tips for Better Prompts
 
 - Ask for edge cases explicitly. "Include tests for empty inputs, boundary values, and error handling" produces more comprehensive coverage than leaving it to the AI's judgment. Without this nudge, most tools will generate a handful of happy-path tests and stop there.
-- Mention specific Vitest features if you want them used. "Use `toMatchInlineSnapshot` for the error messages" or "use `test.each` for the different currency formats" guides the AI toward the right tools instead of letting it fall back to repetitive copy-paste tests.
+- Mention specific Vitest features if you want them used. "Use `toMatchInlineSnapshot` for the error messages" or "use `test.for` for the different currency formats" guides the AI toward the right tools instead of letting it fall back to repetitive copy-paste tests.
 - If you're testing async code, say so. "The function returns a Promise" or "this calls an external API" helps the AI use `async`/`await` and appropriate matchers like `.resolves` and `.rejects`.
 - Tell the AI what *not* to do. "Test against the real implementation, don't mock any modules" or "don't use snapshot tests" prevents common defaults you don't want. AI tools tend to over-mock, and an explicit constraint prevents that.
 - Describe the test structure you want. "Group tests by method using `describe` blocks" or "use `test.extend` fixtures for the database connection instead of `beforeEach`" saves you from restructuring the output afterwards.

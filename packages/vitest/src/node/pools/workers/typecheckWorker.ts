@@ -1,14 +1,14 @@
-import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils'
+import type { FileSpecification } from '../../../runtime/runner/types'
 import type { TypecheckResults } from '../../../typecheck/typechecker'
 import type { Vitest } from '../../core'
 import type { TestProject } from '../../project'
 import type { TestRunEndReason } from '../../types/reporter'
 import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from '../types'
 import EventEmitter from 'node:events'
-import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils/helpers'
 import { Typechecker } from '../../../typecheck/typechecker'
+import { hasFailed } from '../../../utils/tasks'
 
 /** @experimental */
 export class TypecheckPoolWorker implements PoolWorker {
@@ -46,7 +46,7 @@ export class TypecheckPoolWorker implements PoolWorker {
   }
 
   off(event: string, callback: (arg: any) => any): void {
-    this._eventEmitter.on(event, callback)
+    this._eventEmitter.off(event, callback)
   }
 
   deserialize(data: unknown): unknown {

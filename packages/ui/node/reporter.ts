@@ -1,6 +1,5 @@
-import type { TestAttachment } from '@vitest/runner'
-import type { SerializedError } from 'vitest'
-import type { HTMLOptions, Reporter, ResolvedConfig, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
+import type { SerializedError, TestAttachment } from 'vitest'
+import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
@@ -12,18 +11,6 @@ import { getModuleGraph } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
 
 const gzipAsync = promisify(gzip)
-
-function getOutputFile(config: ResolvedConfig) {
-  if (!config.outputFile) {
-    return
-  }
-
-  if (typeof config.outputFile === 'string') {
-    return config.outputFile
-  }
-
-  return config.outputFile.html
-}
 
 export default class HTMLReporter implements Reporter {
   ctx!: Vitest
@@ -37,12 +24,10 @@ export default class HTMLReporter implements Reporter {
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
-    const htmlFile
-      = this.options.outputFile
-        || getOutputFile(this.ctx.config)
-        || 'html/index.html'
-    const htmlFilePath = resolve(this.ctx.config.root, htmlFile)
-    this.reporterDir = dirname(htmlFilePath)
+    this.reporterDir = resolve(
+      this.ctx.config.root,
+      this.options.outputDir || '.vitest',
+    )
   }
 
   async onTestRunEnd(
@@ -58,28 +43,46 @@ export default class HTMLReporter implements Reporter {
       await inlineAttachments(result.files)
     }
 
-    // copy ui assets
-    await fs.cp(distClientRoot, this.reporterDir, { recursive: true })
-
-    // create index.html and metadata
     const rawData = stringify(result)
     const data = await gzipAsync(rawData, {
       level: zlibConstants.Z_BEST_COMPRESSION,
     })
-    await handleIndexHtml({
-      srcDir: distClientRoot,
-      dstDir: this.reporterDir,
-      data,
-      singleFile: this.options.singleFile,
-    })
 
-    // copy attachments
-    // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
-    if (!this.options.singleFile && existsSync(this.ctx.config.attachmentsDir)) {
-      const destAttachmentsDir = resolve(this.reporterDir, 'data')
-      await fs.rm(destAttachmentsDir, { recursive: true, force: true })
-      await fs.mkdir(destAttachmentsDir, { recursive: true })
-      await fs.cp(this.ctx.config.attachmentsDir, destAttachmentsDir, { recursive: true })
+    await fs.mkdir(this.reporterDir, { recursive: true })
+
+    if (this.options.singleFile) {
+      // write a single self-contained `<outputDir>/index.html`
+      await handleIndexHtml({
+        srcDir: distClientRoot,
+        dstDir: this.reporterDir,
+        data,
+        singleFile: true,
+      })
+    }
+    else {
+      // copy ui assets into `<outputDir>/ui`
+      const uiDir = resolve(this.reporterDir, 'ui')
+      await fs.rm(uiDir, { recursive: true, force: true })
+      await fs.cp(distClientRoot, uiDir, { recursive: true })
+      // no need of ui/index.html
+      await fs.rm(resolve(uiDir, 'index.html'), { force: true })
+      // create `<outputDir>/index.html` and `<outputDir>/ui/html.meta.json.gz`
+      await handleIndexHtml({
+        srcDir: distClientRoot,
+        dstDir: this.reporterDir,
+        data,
+        singleFile: false,
+      })
+
+      // copy attachments into `<outputDir>/attachments` if needed.
+      // the default location matches so no extra copy.
+      const attachmentsDir = this.ctx.config.attachmentsDir
+      const destAttachmentsDir = resolve(this.reporterDir, 'attachments')
+      if (existsSync(attachmentsDir) && attachmentsDir !== destAttachmentsDir) {
+        await fs.rm(destAttachmentsDir, { recursive: true, force: true })
+        await fs.mkdir(destAttachmentsDir, { recursive: true })
+        await fs.cp(attachmentsDir, destAttachmentsDir, { recursive: true })
+      }
     }
 
     this.ctx.logger.log(
@@ -100,8 +103,8 @@ export default class HTMLReporter implements Reporter {
       const destCoverageDir = resolve(this.reporterDir, 'coverage')
       if (coverageHtmlDir === destCoverageDir) {
         // skip and preserve already generated coverage report.
-        // this can happen when users configures `outputFile`
-        // next to `coverage.reportsDirectory`.
+        // this can happen when the report `outputDir` resolves next to
+        // `coverage.reportsDirectory` (e.g. default `.vitest/coverage`).
         return
       }
       await fs.rm(destCoverageDir, { recursive: true, force: true })
@@ -179,6 +182,7 @@ async function serializeReportMetadata(
         ctx,
         projectName,
         testModule.moduleId,
+        testModule.viteEnvironment?.name,
       )
     })())
   }
@@ -205,8 +209,10 @@ async function handleIndexHtml(options: {
   }
   else {
     const dataFile = 'html.meta.json.gz'
-    await fs.writeFile(resolve(options.dstDir, dataFile), options.data)
-    metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
+    await fs.writeFile(resolve(options.dstDir, 'ui', dataFile), options.data)
+    metadataCode = `fetch(new URL("./ui/${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
+    // rewrite the asset path from `./*` to `./ui/*`
+    html = html.replace(/\b(href|src)="\.\//g, '$1="./ui/')
   }
 
   await fs.writeFile(

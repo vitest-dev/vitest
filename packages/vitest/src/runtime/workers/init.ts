@@ -1,13 +1,45 @@
-import type { FileSpecification } from '@vitest/runner'
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
-import type { WorkerSetupContext } from '../../types/worker'
+import type { MetaEnv, WorkerSetupContext } from '../../types/worker'
+import type { FileSpecification } from '../runner/types'
 import type { VitestWorker } from './types'
+// default import: `flushCompileCache` only exists since Node 22.10, a named
+// import would fail to link on older versions
+import Module from 'node:module'
 import { serializeError } from '@vitest/utils/error'
 import { disableDefaultColors } from 'tinyrainbow'
 import { Traces } from '../../utils/traces'
 import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
+
+function createImportMetaEnvProxy(): MetaEnv {
+  const booleanKeys = ['DEV', 'PROD', 'SSR']
+  return new Proxy(process.env, {
+    get(_, key) {
+      if (typeof key !== 'string') {
+        return undefined
+      }
+      if (booleanKeys.includes(key)) {
+        return !!process.env[key]
+      }
+      return process.env[key]
+    },
+    set(_, key, value) {
+      if (typeof key !== 'string') {
+        return true
+      }
+      if (booleanKeys.includes(key)) {
+        process.env[key] = value ? '1' : ''
+      }
+      else {
+        process.env[key] = value
+      }
+      return true
+    },
+  }) as MetaEnv
+}
+
+const importMetaEnvProxy = createImportMetaEnvProxy()
 
 interface Options extends VitestWorker {
   teardown?: () => void
@@ -30,6 +62,7 @@ export function init(worker: Options): void {
   let isRunning = false
   let workerTeardown: (() => Promise<unknown>) | undefined | void
   let setupContext!: WorkerSetupContext
+  let poolId!: number
 
   function send(response: WorkerResponse) {
     worker.post(worker.serialize ? worker.serialize(response) : response)
@@ -49,6 +82,7 @@ export function init(worker: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.workerId)
         reportMemory = message.options.reportMemory
+        poolId = message.poolId
 
         if (message.context.config.disableColors) {
           disableDefaultColors()
@@ -72,6 +106,7 @@ export function init(worker: Options): void {
             config,
             pool,
             rpc,
+            metaEnv: importMetaEnvProxy,
             projectName: config.name || '',
             traces,
           }
@@ -128,7 +163,7 @@ export function init(worker: Options): void {
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.run({ ...setupContext, ...message.context }, worker, traces)
+            () => entrypoint.run({ ...setupContext, ...message.context, concurrencyId: poolId }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
@@ -186,7 +221,7 @@ export function init(worker: Options): void {
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.collect({ ...setupContext, ...message.context }, worker, traces)
+            () => entrypoint.collect({ ...setupContext, ...message.context, concurrencyId: poolId }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
@@ -209,6 +244,20 @@ export function init(worker: Options): void {
       case 'stop': {
         await runPromise
 
+        // Persist this worker's compile cache before the parent tears the
+        // worker down — forks are SIGTERM'd and never reach Node's exit-time
+        // flush, so without this the cache stays write-only for them. Runs
+        // even when teardown throws (the compiled modules are still worth
+        // persisting). A no-op when the cache is disabled or was fully loaded
+        // from disk, and cheap (~tens of ms) otherwise, so every worker can
+        // afford it.
+        const persistCompileCache = () => {
+          try {
+            Module.flushCompileCache?.()
+          }
+          catch {}
+        }
+
         try {
           const context = traces.getContextFromCarrier(message.otelCarrier)
 
@@ -224,9 +273,13 @@ export function init(worker: Options): void {
 
           await traces.finish()
 
+          persistCompileCache()
+
           send({ type: 'stopped', error, __vitest_worker_response__ })
         }
         catch (error) {
+          persistCompileCache()
+
           send({ type: 'stopped', error: serializeError(error), __vitest_worker_response__ })
         }
 

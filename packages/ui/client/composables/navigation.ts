@@ -1,4 +1,4 @@
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type { Params } from './params'
 import { useLocalStorage, watchOnce } from '@vueuse/core'
 import { computed, nextTick, reactive, ref, watch } from 'vue'

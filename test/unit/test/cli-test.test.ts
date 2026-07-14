@@ -1,8 +1,11 @@
-import { resolveConfig as viteResolveConfig } from 'vite'
 import { expect, test } from 'vitest'
-import { ReportersMap, rolldownVersion } from 'vitest/node'
-import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
-import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
+import {
+  createCLI,
+  parseCLI,
+  ReportersMap,
+  resolveConfig,
+  rolldownVersion,
+} from 'vitest/node'
 
 const vitestCli = createCLI()
 
@@ -212,6 +215,13 @@ test('maxConcurrency is parsed correctly', () => {
   expect(getCLIOptions('--max-concurrency=1000')).toEqual({ maxConcurrency: 1000 })
 })
 
+test('injectCjsGlobals is parsed correctly', () => {
+  expect(getCLIOptions('--injectCjsGlobals')).toEqual({ injectCjsGlobals: true })
+  expect(getCLIOptions('--inject-cjs-globals')).toEqual({ injectCjsGlobals: true })
+  expect(getCLIOptions('--injectCjsGlobals=false')).toEqual({ injectCjsGlobals: false })
+  expect(getCLIOptions('--no-inject-cjs-globals')).toEqual({ injectCjsGlobals: false })
+})
+
 test('cache is parsed correctly', () => {
   expect(getCLIOptions('--cache')).toEqual({ cache: {} })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
@@ -294,21 +304,15 @@ test('clearScreen', async (ctx) => {
     ['', true],
     ['', false],
   ] as const
-  const baseViteConfig = await viteResolveConfig({ configFile: false }, 'serve')
-  const results = examples.map(([vitestClearScreen, viteClearScreen]) => {
-    const viteConfig = {
-      ...baseViteConfig,
-      clearScreen: viteClearScreen,
-    }
+  const results = examples.map(async ([vitestClearScreen, viteClearScreen]) => {
     const vitestConfig = getCLIOptions(vitestClearScreen)
-    const config = resolveConfig({
-      logger: undefined,
-      mode: 'test',
-      _cliOptions: {},
-    } as any, vitestConfig, viteConfig)
-    return config.clearScreen
+    vitestConfig.config = false
+    const config = await resolveConfig(vitestConfig, {
+      clearScreen: viteClearScreen,
+    })
+    return config.test.clearScreen
   })
-  expect(results).toMatchInlineSnapshot(`
+  expect(await Promise.all(results)).toMatchInlineSnapshot(`
     [
       true,
       true,

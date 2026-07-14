@@ -1,7 +1,7 @@
 /* eslint-disable prefer-rest-params */
 
-import type { InferFixturesTypes } from '@vitest/runner'
 import type { TestAPI } from 'vitest'
+import type { InferFixturesTypes } from '../../../packages/vitest/src/runtime/runner/types'
 import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {
@@ -202,7 +202,7 @@ describe('test.extend()', () => {
   describe('fixture call times', () => {
     const apiFn = vi.fn(() => true)
     const serviceFn = vi.fn(() => true)
-    const teardownFn = vi.fn()
+    let teardownCount = 0
 
     interface APIFixture {
       api: boolean
@@ -213,12 +213,12 @@ describe('test.extend()', () => {
       api: async ({}, use) => {
         await use(apiFn())
         apiFn.mockClear()
-        teardownFn()
+        teardownCount++
       },
       service: async ({}, use) => {
         await use(serviceFn())
         serviceFn.mockClear()
-        teardownFn()
+        teardownCount++
       },
     })
 
@@ -251,7 +251,7 @@ describe('test.extend()', () => {
     afterAll(() => {
       expect(serviceFn).toBeCalledTimes(0)
       expect(apiFn).toBeCalledTimes(0)
-      expect(teardownFn).toBeCalledTimes(4)
+      expect(teardownCount).toBe(4)
     })
   })
 
@@ -261,20 +261,22 @@ describe('test.extend()', () => {
       bar: number
     }
 
-    const fooFn = vi.fn(() => 0)
-    const fooCleanup = vi.fn()
+    let fooFnCount = 0
+    let fooCleanupCount = 0
 
-    const barFn = vi.fn(() => 0)
-    const barCleanup = vi.fn()
+    let barFnCount = 0
+    let barCleanupCount = 0
 
     const nestedTest = test.extend<Fixture>({
       async foo({}, use) {
-        await use(fooFn())
-        fooCleanup()
+        fooFnCount++
+        await use(0)
+        fooCleanupCount++
       },
       async bar({}, use) {
-        await use(barFn())
-        barCleanup()
+        barFnCount++
+        await use(0)
+        barCleanupCount++
       },
     })
 
@@ -284,8 +286,8 @@ describe('test.extend()', () => {
 
     nestedTest('should only initialize foo', ({ foo }) => {
       expect(foo).toBe(0)
-      expect(fooFn).toBeCalledTimes(1)
-      expect(barFn).toBeCalledTimes(0)
+      expect(fooFnCount).toBe(1)
+      expect(barFnCount).toBe(0)
     })
 
     describe('level 2, using both foo and bar together', () => {
@@ -297,8 +299,8 @@ describe('test.extend()', () => {
       nestedTest('should initialize foo and bar', ({ foo, bar }) => {
         expect(foo).toBe(0)
         expect(bar).toBe(0)
-        expect(fooFn).toBeCalledTimes(2)
-        expect(barFn).toBeCalledTimes(1)
+        expect(fooFnCount).toBe(2)
+        expect(barFnCount).toBe(1)
       })
 
       afterEach<Fixture>(({ foo, bar }) => {
@@ -307,16 +309,16 @@ describe('test.extend()', () => {
       })
 
       afterAll(() => {
-        expect(barFn).toHaveBeenCalledTimes(1)
-        expect(barCleanup).toHaveBeenCalledTimes(1)
-        expect(fooFn).toHaveBeenCalledTimes(2)
-        expect(barCleanup).toHaveBeenCalledTimes(1)
+        expect(barFnCount).toBe(1)
+        expect(barCleanupCount).toBe(1)
+        expect(fooFnCount).toBe(2)
+        expect(barCleanupCount).toBe(1)
       })
     })
 
     nestedTest('should initialize foo again', ({ foo }) => {
       expect(foo).toBe(0)
-      expect(fooFn).toBeCalledTimes(3)
+      expect(fooFnCount).toBe(3)
     })
 
     afterEach<Fixture>(({ foo }) => {
@@ -324,17 +326,17 @@ describe('test.extend()', () => {
     })
 
     afterAll(() => {
-      expect(fooFn).toHaveBeenCalledTimes(3)
-      expect(fooCleanup).toHaveBeenCalledTimes(3)
-      expect(barFn).toHaveBeenCalledTimes(1)
-      expect(barCleanup).toHaveBeenCalledTimes(1)
+      expect(fooFnCount).toBe(3)
+      expect(fooCleanupCount).toBe(3)
+      expect(barFnCount).toBe(1)
+      expect(barCleanupCount).toBe(1)
     })
   })
 })
 
 // test extend with top level test
 const numbers: number[] = []
-const teardownFn = vi.fn()
+let teardownCount = 0
 const teardownTest = test.extend<{
   numbers: number[]
 }>({
@@ -342,7 +344,7 @@ const teardownTest = test.extend<{
     numbers.push(1, 2, 3)
     await use(numbers)
     numbers.splice(0, numbers.length)
-    teardownFn()
+    teardownCount++
   },
 })
 
@@ -352,7 +354,7 @@ teardownTest('test without describe', ({ numbers }) => {
 
 test('teardown should be called once time', () => {
   expect(numbers).toHaveLength(0)
-  expect(teardownFn).toBeCalledTimes(1)
+  expect(teardownCount).toBe(1)
 })
 
 describe('asynchronous setup/teardown', () => {

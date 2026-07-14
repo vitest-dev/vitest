@@ -1,4 +1,4 @@
-import type { Test } from '@vitest/runner/types'
+import type { Test } from '../../vitest/src/runtime/runner/types'
 import type { Assertion } from './types'
 import { processError } from '@vitest/utils/error'
 import { noop } from '@vitest/utils/helpers'

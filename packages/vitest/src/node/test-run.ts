@@ -1,3 +1,4 @@
+import type { SerializedError } from '@vitest/utils'
 import type {
   File as RunnerTestFile,
   TaskEventData,
@@ -7,8 +8,7 @@ import type {
   TestArtifact,
   TestAttachment,
   TestBenchmark,
-} from '@vitest/runner'
-import type { SerializedError } from '@vitest/utils'
+} from '../runtime/runner/types'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'

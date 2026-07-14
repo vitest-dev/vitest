@@ -20,6 +20,9 @@ export function createOrchestratorMiddleware(parentServer: ParentBrowserProject)
 
       res.write(html, 'utf-8')
       res.end()
+      return
     }
+    res.statusCode = 404
+    res.end('Not found')
   }
 }

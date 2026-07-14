@@ -39,3 +39,28 @@ test('can pass down a simple form data', async () => {
     await req.formData()
   })()).resolves.not.toThrow()
 })
+
+test('innerWidth and matchMedia', () => {
+  expect(window.innerWidth).toBe(1024)
+  expect(window.matchMedia('(max-width: 100px)').matches).toBe(false)
+  window.innerWidth = 50
+  expect(window.matchMedia('(max-width: 100px)').matches).toBe(true)
+})
+
+test('readonly window assignment throws', ({ task }) => {
+  // happy-dom's vmThreads setup returns Window as a Node VM context directly.
+  // Node contextification reports this getter-only assignment as successful,
+  // unlike the populateGlobal facade used by threads/forks.
+  if (task.file.pool === 'vmThreads') {
+    expect(() => {
+      Object.assign(window, { navigator: {} })
+    }).not.toThrow()
+    return
+  }
+
+  expect(() => {
+    Object.assign(window, { navigator: {} })
+  }).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Cannot set property navigator of #<GlobalWindow> which has only a getter]`,
+  )
+})

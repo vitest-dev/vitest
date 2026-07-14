@@ -1,6 +1,6 @@
-import type { BaselineData, CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
+import type { BaselineData, CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '../runtime/runner/types'
 import type { OTELCarrier } from '../utils/traces'
 import type { AfterSuiteRunMeta, AsyncLeak, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 
@@ -13,6 +13,12 @@ export interface RuntimeRPC {
     otelCarrier?: OTELCarrier,
   ) => Promise<FetchResult | FetchCachedFileSystemResult>
   resolve: (id: string, importer: string | undefined, environment: string) => Promise<ResolveFunctionResult | null>
+  /**
+   * Returns the modules of the given test files' import graphs that the server
+   * has already processed, so a fresh worker can load them from disk without
+   * paying a `fetch` round-trip per module.
+   */
+  fetchWarmModules: (environment: string, files: string[]) => Promise<Record<string, FetchResult | FetchCachedFileSystemResult>>
   transform: (id: string) => Promise<{ code?: string }>
 
   onUserConsoleLog: (log: UserConsoleLog) => void

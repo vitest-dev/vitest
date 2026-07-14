@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "5.0.0-beta.4",
+  "version": "5.0.0-beta.6",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -92,13 +92,12 @@
     "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
-    "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.8.2",
     "mime": "^4.1.0",
     "pathe": "catalog:",
-    "rrweb-snapshot": "2.0.0-alpha.20",
+    "rrweb-snapshot": "2.0.1",
     "vitest": "workspace:*"
   }
 }

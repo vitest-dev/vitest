@@ -1,5 +1,6 @@
-import type { Vite, Vitest } from 'vitest/node'
+import type { PluginHarness, Vite } from 'vitest/node'
 import fs from 'node:fs'
+import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
@@ -9,11 +10,13 @@ import { distClientRoot } from './paths'
 
 export { distClientRoot }
 
-export default (ctx: Vitest): Vite.Plugin => {
-  if (ctx.version !== version) {
-    ctx.logger.warn(
+const UI_TOKEN_COOKIE = 'vitest-ui-token'
+
+export default (harness: PluginHarness): Vite.Plugin => {
+  if (harness.version !== version) {
+    harness.logger.warn(
       c.yellow(
-        `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
+        `Loaded ${c.inverse(c.yellow(` vitest@${harness.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
         + '\nRunning mixed versions is not supported and may lead into bugs'
         + '\nUpdate your dependencies and make sure the versions match.',
       ),
@@ -26,6 +29,7 @@ export default (ctx: Vitest): Vite.Plugin => {
     configureServer: {
       order: 'post',
       handler(server) {
+        const ctx = harness.getVitest()
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
 
@@ -67,7 +71,7 @@ export default (ctx: Vitest): Vite.Plugin => {
 
             const fsPath = decodeURIComponent(path)
 
-            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
+            if (!isFileServingAllowed(ctx.viteConfig, fsPath)) {
               return next()
             }
 
@@ -94,11 +98,29 @@ export default (ctx: Vitest): Vite.Plugin => {
           if (req.url) {
             const url = new URL(req.url, 'http://localhost')
             if (url.pathname === base) {
+              if (isValidApiRequest(ctx.config, req)) {
+                res.statusCode = 302
+                res.setHeader('Set-Cookie', serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
+                  path: base,
+                  httpOnly: true,
+                  sameSite: 'strict',
+                }))
+                res.setHeader('Location', base)
+                res.end()
+                return
+              }
+              const cookieToken = parseCookie(req.headers.cookie ?? '')[UI_TOKEN_COOKIE]
+              if (cookieToken !== ctx.config.api.token) {
+                res.statusCode = 403
+                res.end('Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...')
+                return
+              }
               const html = clientIndexHtml.replace(
                 '<!-- !LOAD_METADATA! -->',
                 `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
               )
               res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+              res.setHeader('Referrer-Policy', 'no-referrer')
               res.setHeader('Content-Type', 'text/html; charset=utf-8')
               res.write(html)
               res.end()

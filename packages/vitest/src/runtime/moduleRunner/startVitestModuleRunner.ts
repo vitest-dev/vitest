@@ -1,5 +1,6 @@
 import type vm from 'node:vm'
-import type { EvaluatedModules } from 'vite/module-runner'
+import type { EvaluatedModules, FetchResult } from 'vite/module-runner'
+import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
@@ -54,16 +55,43 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
       }
     : undefined
 
+  // A fresh worker pays one strictly sequential `fetch` round-trip per module
+  // in its test files' import graphs, even when the server processed all of
+  // them already. Ask the server ONCE per run request for everything it has on
+  // disk and answer those fetches locally. A file change invalidates the module
+  // server-side, dropping it from the snapshot of every subsequent run request,
+  // which keeps reused (isolate: false) workers in sync; an edit DURING a run
+  // was racy before this fast path existed and stays racy with it — the
+  // scheduled rerun always sees the fresh transform.
+  let warmModules: Promise<Record<string, FetchResult | FetchCachedFileSystemResult> | null> | undefined
+  let warmModulesContext: unknown
+
+  function fetchWarmModules() {
+    const workerState = state()
+    if (warmModulesContext !== workerState.ctx) {
+      warmModulesContext = workerState.ctx
+      warmModules = rpc()
+        .fetchWarmModules(environment(), workerState.ctx.files.map(file => file.filepath))
+        // if the snapshot cannot be fetched, fall back to per-module fetches
+        .catch(() => null)
+    }
+    return warmModules!
+  }
+
   const evaluator = options.evaluator || new VitestModuleEvaluator(
     vm,
     {
       traces,
+      metaEnv: state().metaEnv,
       evaluatedModules: options.evaluatedModules,
       get moduleExecutionInfo() {
         return state().moduleExecutionInfo
       },
       get interopDefault() {
         return state().config.deps.interopDefault
+      },
+      get injectCjsGlobals() {
+        return state().config.injectCjsGlobals
       },
       getCurrentTestFilepath: () => state().filepath,
       getterTracker: state().getterTracker,
@@ -138,6 +166,37 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           // so cached is always true in a single worker
           if (!isImportActual && options?.cached) {
             return { cache: true }
+          }
+
+          // only dependency fetches consult the snapshot: by the time the
+          // first dependency is requested, the entry file is transformed and
+          // its import graph is connected on the server, so the snapshot
+          // actually covers the file's transitive dependencies
+          if (importer != null) {
+            const warm = await fetchWarmModules()
+            // the null prototype is not preserved by the IPC serialization, so
+            // ids like "constructor" must not fall through to Object.prototype
+            const warmResult = warm && (
+              Object.hasOwn(warm, id)
+                ? warm[id]
+                : Object.hasOwn(warm, rawId)
+                  ? warm[rawId]
+                  : undefined
+            )
+            if (warmResult) {
+              if ('tmp' in warmResult) {
+                try {
+                  const code = readFileSync(warmResult.tmp, 'utf-8')
+                  return { code, ...warmResult }
+                }
+                catch {
+                  // the tmp file is gone — fall back to a live fetch
+                }
+              }
+              else {
+                return warmResult
+              }
+            }
           }
 
           const otelCarrier = traces?.getContextCarrier()

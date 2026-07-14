@@ -1,0 +1,176 @@
+import { sep } from 'node:path'
+import { runInlineTests, runVitest, StableTestFileOrderSorter } from '#test-utils'
+import { resolve } from 'pathe'
+import { expect, test } from 'vitest'
+import { readCoverageMap } from '../../coverage-test/utils'
+
+test('worker death on a shared runner does not skip coverage finalization', async () => {
+  const root = './fixtures/pool-worker-exit'
+
+  const { buildTree, stderr } = await runVitest({
+    root,
+    pool: 'forks',
+
+    // Disable isolation to make sure crashed worker doesn't hang whole test run
+    isolate: false,
+    maxWorkers: 2,
+
+    sequence: { sequencer: StableTestFileOrderSorter },
+    include: [
+      '1-first.test.ts',
+      '2-crash.test.ts',
+      '3-crash.test.ts',
+      '4-third.test.ts',
+    ],
+
+    reporters: 'default',
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+      reporter: ['json'],
+      reportOnFailure: true,
+    },
+  })
+
+  expect(buildTree(t => ({ state: t.result().state }))).toMatchInlineSnapshot(`
+    {
+      "1-first.test.ts": {
+        "first test exercises src so it should appear in coverage": {
+          "state": "passed",
+        },
+      },
+      "2-crash.test.ts": {
+        "the worker dies before sending testfileFinished": {
+          "state": "pending",
+        },
+      },
+      "3-crash.test.ts": {
+        "the worker dies before sending testfileFinished": {
+          "state": "pending",
+        },
+      },
+      "4-third.test.ts": {
+        "third test": {
+          "state": "passed",
+        },
+      },
+    }
+  `)
+
+  // Crashing worker should not interfere with other test-run, coverage should be reported:
+  const coverageMap = await readCoverageMap(resolve(root, 'coverage/coverage-final.json'))
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/pool-worker-exit/src.ts')
+
+  expect(fileCoverage.toSummary().functions).toMatchInlineSnapshot(`
+    {
+      "covered": 1,
+      "pct": 50,
+      "skipped": 0,
+      "total": 2,
+    }
+  `)
+  // should report two errors in stderr
+  expect(stderr).toContain('caught 2 unhandled errors')
+})
+
+test('worker process exit and kill raises exit code and signal to stderr along with which files were in process', async () => {
+  const root = './fixtures/pool-worker-exit'
+
+  const { buildTree, stderr } = await runVitest({
+    root,
+    pool: 'forks',
+
+    // Disable isolation to make sure crashed worker doesn't hang whole test run
+    isolate: false,
+    maxWorkers: 2,
+
+    sequence: { sequencer: StableTestFileOrderSorter },
+    include: [
+      '1-first.test.ts',
+      '3-crash.test.ts',
+      '4-third.test.ts',
+      '5-exit.test.ts',
+    ],
+
+    reporters: 'default',
+  })
+
+  let errors = stderr
+    .replaceAll(process.cwd().replaceAll(sep, '/'), '<process-cwd>')
+    .split('\n')
+    .filter(line => !line.startsWith(' ❯') && line.trim().length > 0)
+    .join('\n')
+
+  // Windows has no signals
+  if (process.platform === 'win32') {
+    errors = errors.replaceAll('with exit code 1', 'with signal SIGINT')
+  }
+
+  expect(errors).toMatchInlineSnapshot(`
+    "⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+    Vitest caught 2 unhandled errors during the test run.
+    This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+    ⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+    Error: [vitest-pool]: Worker forks emitted error.
+    Caused by: Error: Worker exited unexpectedly with signal SIGINT during started state while running test file <process-cwd>/fixtures/pool-worker-exit/3-crash.test.ts
+    ⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+    Error: [vitest-pool]: Worker forks emitted error.
+    Caused by: Error: Worker exited unexpectedly with exit code 42 during started state while running test file <process-cwd>/fixtures/pool-worker-exit/5-exit.test.ts
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
+  `)
+
+  expect(buildTree(t => ({ state: t.result().state }))).toMatchInlineSnapshot(`
+    {
+      "1-first.test.ts": {
+        "first test exercises src so it should appear in coverage": {
+          "state": "passed",
+        },
+      },
+      "3-crash.test.ts": {
+        "the worker dies before sending testfileFinished": {
+          "state": "pending",
+        },
+      },
+      "4-third.test.ts": {
+        "third test": {
+          "state": "passed",
+        },
+      },
+      "5-exit.test.ts": {
+        "the worker exits before sending testfileFinished": {
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('worker that fails to start surfaces the error instead of hanging', async () => {
+  // An invalid `execArgv` makes the worker process exit immediately, before it
+  // ever reports back. The run must fail fast with the worker error rather than
+  // wait out the worker-start timeout (which previously made the run hang).
+  const { stderr, thrown } = await runInlineTests({
+    'basic.test.ts': `import { test } from 'vitest'\ntest('ok', () => {})`,
+  }, {
+    pool: 'forks',
+    execArgv: ['--vitest-invalid-flag-regression-test'],
+  })
+
+  expect(thrown).toBe(false)
+
+  const errors = stderr
+    .split('\n')
+    .filter(line => !line.startsWith(' ❯') && !line.includes('bad option') && line.trim().length > 0)
+    .join('\n')
+
+  expect(stderr).toContain('bad option: --vitest-invalid-flag-regression-test')
+  expect(errors).toMatchInlineSnapshot(`
+    "⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+    Vitest caught 1 unhandled error during the test run.
+    This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+    ⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+    Error: [vitest-pool]: Worker forks emitted error.
+    Caused by: Error: Worker exited unexpectedly with exit code 9 during starting state
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
+  `)
+})

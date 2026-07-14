@@ -388,7 +388,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const ids = sessionIds.get(sessionId) ?? new Set<string>()
-        const promises = [...ids].map((id) => {
+        const promises = Array.from(ids, (id) => {
           const key = predicateKey(sessionId, id)
           const predicate = idPredicates.get(key)
           if (predicate) {
@@ -434,7 +434,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       ...contextOptions,
       ignoreHTTPSErrors: true,
     } satisfies BrowserContextOptions
-    if (this.project.config.browser.ui) {
+    // A `null` viewport lets the page adopt the real window size, which is only
+    // meaningful for a headed UI. In headless mode there is no real window, so it
+    // would inherit the host's device scale factor and produce screenshots that
+    // differ from non-UI runs on the same machine.
+    if (this.project.config.browser.ui && !this.project.config.browser.headless) {
       options.viewport = null
     }
     return options
@@ -555,13 +559,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const browser = this.browser
     this.browser = null
-    await Promise.all([...this.pages.values()].map(p => p.close()))
+    await Promise.all(Array.from(this.pages.values(), p => p.close()))
     this.pages.clear()
     if (this.persistentContext) {
       await this.persistentContext.close()
     }
     else {
-      await Promise.all([...this.contexts.values()].map(c => c.close()))
+      await Promise.all(Array.from(this.contexts.values(), c => c.close()))
     }
     this.contexts.clear()
     await browser?.close()

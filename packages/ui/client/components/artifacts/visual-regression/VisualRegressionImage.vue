@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TestAttachment } from '@vitest/runner'
+import type { TestAttachment } from 'vitest'
 import { computed } from 'vue'
 import { internalOrExternalUrl, isExternalAttachment } from '~/composables/attachments'
 import VisualRegressionImageContainer from './VisualRegressionImageContainer.vue'

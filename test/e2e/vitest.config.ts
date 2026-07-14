@@ -2,21 +2,27 @@ import path from 'node:path'
 import { defineConfig } from 'vite'
 import { defaultExclude } from 'vitest/config'
 
+// Tests that drive git `--changed` against shared fixtures and cannot tolerate
+// other tests mutating the working tree concurrently. Run in a serial project.
+const serialTests = [
+  'test/git-changed.test.ts',
+  'test/list-changed.test.ts',
+  'test/setup-files.test.ts',
+  'test/watch/related.test.ts',
+]
+
 export default defineConfig({
   test: {
+    experimental: {
+      fsModuleCache: true,
+    },
     reporters: [
       process.env.CI ? 'minimal' : 'verbose',
       (process.env.VITEST_CI_BLOB_LABEL
         ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
         : {}),
       (process.env.VITEST_CI_MERGE_REPORTS
-        ? [
-            'html',
-            {
-              outputFile: '.vitest/html/index.html',
-              singleFile: true,
-            },
-          ]
+        ? ['html', { singleFile: true }]
         : {}),
     ],
     onConsoleLog(log) {
@@ -24,16 +30,21 @@ export default defineConfig({
         return false
       }
     },
+    tags: [
+      { name: 'browser', timeout: 60_000 },
+    ],
     projects: [
       {
         extends: true,
         test: {
           name: 'main',
           include: ['test/**/**.{test,spec}.ts'],
+          exclude: [...defaultExclude, ...serialTests],
           includeTaskLocation: true,
           testTimeout: 60_000,
           isolate: false,
-          fileParallelism: false,
+          fileParallelism: true,
+          maxWorkers: Number(process.env.VITEST_E2E_MAX_WORKERS) || 2,
           // TODO: should enabled when support for older node is dropped?
           // experimental: {
           //   viteModuleRunner: false,
@@ -67,13 +78,26 @@ export default defineConfig({
           },
         },
       },
+      {
+        extends: true,
+        test: {
+          name: 'serial',
+          include: serialTests,
+          includeTaskLocation: true,
+          testTimeout: 60_000,
+          isolate: false,
+          fileParallelism: false,
+          sequence: {
+            groupOrder: 2,
+          },
+        },
+      },
     ],
   },
   server: {
     watch: {
       ignored: [
         '**/vitest-test-*/**',
-        '**/fixtures/browser-multiple/**/*',
         '**/fixtures/browser-init/**/*',
         '**/package.json',
       ],

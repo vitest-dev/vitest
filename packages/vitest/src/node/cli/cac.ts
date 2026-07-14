@@ -315,9 +315,7 @@ async function start(cliFilters: string[], options: CliOptions): Promise<void> {
     console.error(e)
     console.error('\n\n')
 
-    if (process.exitCode == null) {
-      process.exitCode = 1
-    }
+    process.exitCode ??= 1
 
     process.exit()
   }
@@ -373,9 +371,7 @@ async function collect(cliFilters: string[], options: CliOptions): Promise<void>
     console.error(e)
     console.error('\n\n')
 
-    if (process.exitCode == null) {
-      process.exitCode = 1
-    }
+    process.exitCode ??= 1
 
     process.exit()
   }

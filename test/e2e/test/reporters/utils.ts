@@ -5,7 +5,7 @@ import type { Logger } from 'vitest/src/node/logger.js'
 import type { StateManager } from 'vitest/src/node/state.js'
 import type { ResolvedConfig } from 'vitest/src/node/types/config.js'
 import type { RunnerTestFile } from 'vitest/src/public/index.js'
-import { createFileTask } from '@vitest/runner/utils'
+import { TestRunner } from 'vitest'
 
 export function trimReporterOutput(report: string) {
   const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
@@ -66,7 +66,7 @@ export function getContext(): Context {
   }
 }
 
-const file = createFileTask(
+const file = TestRunner.createFileTask(
   '/vitest/test/unit/test/basic.test.ts',
   '/vitest/test/unit/test',
   '',
@@ -91,7 +91,7 @@ const suite: RunnerTestSuite = {
   tasks: [],
 }
 
-const passedFile = createFileTask(
+const passedFile = TestRunner.createFileTask(
   '/vitest/test/unit/test/basic.test.ts',
   '/vitest/test/unit/test',
   '',
