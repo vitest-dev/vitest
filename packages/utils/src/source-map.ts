@@ -261,7 +261,14 @@ export function parseStacktrace(
     }
 
     const traceMap = new DecodedMap(map, stack.file)
-    const position = getOriginalPosition(traceMap, stack)
+    if (stack.line <= 0 || stack.column <= 0) {
+      return stack
+    }
+    const position = getOriginalPosition(traceMap, {
+      line: stack.line,
+      // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
+      column: stack.column - 1,
+    })
     if (!position) {
       return stack
     }
@@ -279,7 +286,7 @@ export function parseStacktrace(
     if (line != null && column != null) {
       return {
         line,
-        column,
+        column: column + 1,
         file,
         method: name || stack.method,
       }
