@@ -10,7 +10,6 @@ import type {
   LocatorSelectors,
   MarkOptions,
   UserEvent,
-  UserEventWheelOptions,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
@@ -20,7 +19,7 @@ import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
+import { isLocator, processTimeoutOptions, resolveUserEventPointerOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
@@ -74,8 +73,16 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     tripleClick(element, options) {
       return convertToLocator(element).tripleClick(options)
     },
-    wheel(elementOrOptions: Element | Locator, options: UserEventWheelOptions) {
+    wheel(elementOrOptions, options) {
       return convertToLocator(elementOrOptions).wheel(options)
+    },
+    pointer(options) {
+      return ensureAwaited<void>(async () => {
+        await triggerCommand<void>(
+          '__vitest_pointer',
+          [await resolveUserEventPointerOptions(options)],
+        )
+      })
     },
     selectOptions(element, value, options) {
       return convertToLocator(element).selectOptions(value, options)
@@ -244,7 +251,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
     async paste() {
       await userEvent.paste(clipboardData)
     },
-    async wheel(element: Element | Locator, options: UserEventWheelOptions) {
+    async wheel(element, options) {
       const resolvedElement = isLocator(element) ? element.element() : element
       const resolvedOptions = resolveUserEventWheelOptions(options)
 
@@ -268,6 +275,10 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
       for (let count = 0; count < times; count += 1) {
         resolvedElement.dispatchEvent(wheelEvent)
       }
+    },
+    async pointer(options) {
+      // @todo
+      const _ = options
     },
   }
 
