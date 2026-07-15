@@ -7,6 +7,7 @@ export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
 >
 
 type ConvertElementToLocator<T> = T extends Element | Locator ? SerializedLocator : T
+// @todo: check if this could take care of nested locators (e.g., `{ target: Locator }[]`)
 type ConvertUserEventParameters<T extends unknown[]> = {
   [K in keyof T]: ConvertElementToLocator<T[K]>;
 }
