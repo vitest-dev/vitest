@@ -28,7 +28,7 @@ describe('don\'t process css by default', () => {
     element.className = '_module_cdbed7'
     const computed = window.getComputedStyle(element)
     expect(computed.display).toBe('block')
-    expect(computed.width).toBe('')
+    expect(computed.width).toBe('auto')
     expect(element).toMatchInlineSnapshot(`
       <div
         class="_module_cdbed7"

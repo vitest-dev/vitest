@@ -18,6 +18,13 @@ export function ModuleRunnerTransform(): VitePlugin {
       handler(config) {
         testConfig = config.test || {}
 
+        // In browser mode the `client` environment serves test code to a real
+        // browser via native ESM, so it must NOT be module-runner-transformed.
+        // `ssr`/`__vitest__` keep the transform (node-side global setup + watch
+        // run there). Note: jsdom/happy-dom (node mode) also uses `client` and
+        // DOES need the transform, hence the `browser.enabled` gate.
+        const browserEnabled = !!config.test?.browser?.enabled
+
         config.environments ??= {}
 
         const names = new Set(Object.keys(config.environments))
@@ -67,10 +74,15 @@ export function ModuleRunnerTransform(): VitePlugin {
             environment.dev.moduleRunnerTransform = false
             environment.consumer = 'client'
           }
+          else if (name === 'client' && browserEnabled) {
+            environment.dev.moduleRunnerTransform = false
+          }
           else {
             environment.dev.moduleRunnerTransform = true
           }
-          environment.dev.preTransformRequests = false
+          if (name !== 'client' || !browserEnabled) {
+            environment.dev.preTransformRequests = false
+          }
           environment.keepProcessEnv = true
         }
       },
@@ -79,6 +91,12 @@ export function ModuleRunnerTransform(): VitePlugin {
       order: 'post',
       handler(name, config) {
         if (name === '__vitest_vm__' || name === '__vitest__') {
+          return
+        }
+        // In browser mode the `client` environment is browser-managed: don't
+        // apply node-runner externalization / `optimizeDeps` to it (that would
+        // discard the browser `optimizeDeps.include`, e.g. `vitest > expect-type`).
+        if (name === 'client' && testConfig.browser?.enabled) {
           return
         }
 

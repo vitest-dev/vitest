@@ -51,22 +51,35 @@ export class ParentBrowserProject {
   private sourceMapCache = new Map<string, any>()
 
   constructor(
-    public project: TestProject,
+    ctx: { config: ResolvedConfig; vitest: Vitest },
     public base: string,
   ) {
-    this.vitest = project.vitest
-    this.config = project.config
+    this.vitest = ctx.vitest
+    this.config = ctx.config
     this.stackTraceOptions = {
-      frameFilter: project.config.onStackTrace,
+      frameFilter: this.config.onStackTrace,
       getSourceMap: (id) => {
         if (this.sourceMapCache.has(id)) {
           return this.sourceMapCache.get(id)
         }
 
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
-        // handle non-inline source map such as pre-bundled deps in node_modules/.vite
-        if (result && !result.map) {
-          const filePath = id.split('?')[0]
+        const filePath = id.split('?')[0]
+        // prefer the map stored on disk when the transform pipeline can't
+        // provide a usable one:
+        // - pre-bundled deps: the pipeline map resolves back into the
+        //   optimizer cache, while the map esbuild wrote next to the file
+        //   points at the real package sources
+        // - an empty `mappings` means the map was intentionally not served
+        //   to the browser (`vitest:browser:framework-sourcemaps`), but disk
+        //   is still the source of truth for error stack traces
+        if (
+          result && (
+            !result.map
+            || result.map.mappings === ''
+            || filePath.startsWith(this.vite.config.cacheDir)
+          )
+        ) {
           const extracted = extractSourcemapFromFile(result.code, filePath)
           this.sourceMapCache.set(id, extracted?.map)
           return extracted?.map
@@ -100,13 +113,13 @@ export class ParentBrowserProject {
     }
 
     // validate names because they can't be used as identifiers
-    for (const command in project.config.browser.commands) {
+    for (const command in this.config.browser.commands) {
       if (!/^[a-z_$][\w$]*$/i.test(command)) {
         throw new Error(
           `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
         )
       }
-      this.commands[command] = project.config.browser.commands[command]
+      this.commands[command] = this.config.browser.commands[command]
     }
 
     this.prefixTesterUrl = `${base || '/'}`
@@ -119,7 +132,7 @@ export class ParentBrowserProject {
       )
     })().then(manifest => (this.manifest = manifest))
 
-    this.orchestratorHtml = (project.config.browser.ui
+    this.orchestratorHtml = (this.config.browser.ui
       ? readFile(resolve(uiClientRoot, 'index.html'), 'utf8')
       : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8'))
       .then(html => (this.orchestratorHtml = html))

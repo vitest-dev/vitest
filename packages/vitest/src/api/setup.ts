@@ -156,8 +156,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           catch {}
           return result
         },
-        async getModuleGraph(project, id): Promise<ModuleGraphData> {
-          return getModuleGraph(ctx, project, id)
+        async getModuleGraph(project, id, viteEnvironment): Promise<ModuleGraphData> {
+          return getModuleGraph(ctx, project, id, viteEnvironment)
         },
         async updateSnapshot(file?: File) {
           // silently ignore exec/write attempts if not allowed

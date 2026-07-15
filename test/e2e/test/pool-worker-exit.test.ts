@@ -1,5 +1,5 @@
 import { sep } from 'node:path'
-import { runVitest, StableTestFileOrderSorter } from '#test-utils'
+import { runInlineTests, runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { readCoverageMap } from '../../coverage-test/utils'
@@ -142,5 +142,35 @@ test('worker process exit and kill raises exit code and signal to stderr along w
         },
       },
     }
+  `)
+})
+
+test('worker that fails to start surfaces the error instead of hanging', async () => {
+  // An invalid `execArgv` makes the worker process exit immediately, before it
+  // ever reports back. The run must fail fast with the worker error rather than
+  // wait out the worker-start timeout (which previously made the run hang).
+  const { stderr, thrown } = await runInlineTests({
+    'basic.test.ts': `import { test } from 'vitest'\ntest('ok', () => {})`,
+  }, {
+    pool: 'forks',
+    execArgv: ['--vitest-invalid-flag-regression-test'],
+  })
+
+  expect(thrown).toBe(false)
+
+  const errors = stderr
+    .split('\n')
+    .filter(line => !line.startsWith(' ❯') && !line.includes('bad option') && line.trim().length > 0)
+    .join('\n')
+
+  expect(stderr).toContain('bad option: --vitest-invalid-flag-regression-test')
+  expect(errors).toMatchInlineSnapshot(`
+    "⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+    Vitest caught 1 unhandled error during the test run.
+    This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+    ⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+    Error: [vitest-pool]: Worker forks emitted error.
+    Caused by: Error: Worker exited unexpectedly with exit code 9 during starting state
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
   `)
 })

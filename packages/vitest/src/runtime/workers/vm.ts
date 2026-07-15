@@ -13,6 +13,7 @@ import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
+import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
 
@@ -118,6 +119,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     writable: false,
   })
   context.__vitest_mocker__ = moduleRunner.mocker
+
+  setupEnv(ctx.config.env, state.metaEnv)
 
   if (ctx.config.serializedDefines) {
     try {

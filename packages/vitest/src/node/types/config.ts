@@ -3,13 +3,14 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
-import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
+import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ResolvedConfig as ResolvedViteConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
 import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '../../runtime/runner/types'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import type { CliOptions } from '../cli/cli-api'
 import type { PoolRunnerInitializer } from '../pools/types'
 import type {
   BuiltinReporterOptions,
@@ -20,7 +21,7 @@ import type { TestSequencerConstructor } from '../sequencers/types'
 import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
-import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
+import type { BrowserConfigOptions, BrowserServerContribution, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Reporter } from './reporter'
 
@@ -61,6 +62,8 @@ export type ApiConfig = Pick<
    */
   allowExec?: boolean
 }
+
+export type ResolvedApiConfig = ApiConfig & { token: string; tokenCreated: boolean }
 
 export interface EnvironmentOptions {
   /**
@@ -309,6 +312,24 @@ export interface InlineConfig {
   globals?: boolean
 
   /**
+   * Inject CommonJS module variables (`module`, `exports`, `require`,
+   * `__filename`, `__dirname`) into every module processed by Vitest.
+   *
+   * When disabled, ES modules no longer have access to CommonJS variables,
+   * matching how the code runs outside of Vitest. Modules detected to be
+   * CommonJS keep these variables because they are part of the module scope.
+   * The module type is detected the same way Node.js does it: the file
+   * extension wins, then the `type` field in the nearest package.json,
+   * then the presence of ESM syntax in the file.
+   *
+   * This option doesn't affect externalized modules which are always
+   * executed by the native runtime.
+   *
+   * @default true
+   */
+  injectCjsGlobals?: boolean
+
+  /**
    * Running environment
    *
    * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
@@ -496,7 +517,7 @@ export interface InlineConfig {
 
   /**
    * Will call `.mockClear()` on all spies before each test
-   * @default false
+   * @default true
    */
   clearMocks?: boolean
 
@@ -681,6 +702,12 @@ export interface InlineConfig {
    * Options for configuring the order of running tests.
    */
   sequence?: SequenceOptions
+
+  /**
+   * Overrides Vite mode
+   * @default 'test'
+   */
+  mode?: string
 
   /**
    * Specifies an `Object`, or an `Array` of `Object`,
@@ -1075,12 +1102,6 @@ export interface UserConfig extends InlineConfig {
   related?: string[] | string
 
   /**
-   * Overrides Vite mode
-   * @default 'test'
-   */
-  mode?: string
-
-  /**
    * Test suite shard to execute in a format of <index>/<count>.
    * Will divide tests into a `count` numbers, and run only the `indexed` part.
    * Cannot be used with enabled watch.
@@ -1125,6 +1146,13 @@ export interface UserConfig extends InlineConfig {
    * Log all available tags instead of running tests.
    */
   listTags?: boolean | 'json'
+
+  configLoader?: 'bundle' | 'runner' | 'native'
+
+  /**
+   * The `--reporter` argument from the CLI
+   */
+  reporter?: string | string[]
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1158,6 +1186,7 @@ export interface ResolvedConfig
     | 'vmMemoryLimit'
     | 'fileParallelism'
     | 'tagsFilter'
+    | 'reporter'
   > {
   name: ProjectName['label']
   color?: ProjectName['color']
@@ -1183,9 +1212,8 @@ export interface ResolvedConfig
   reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
-  viteDefine: Record<string, any>
 
-  api: ApiConfig & { token: string; tokenCreated: boolean }
+  api: ResolvedApiConfig
   cliExclude?: string[]
 
   project: string[]
@@ -1237,6 +1265,36 @@ export interface ResolvedConfig
       }
     }
   }
+
+  cliOptions: CliOptions
+  viteOverrides: ViteUserConfig
+  resolvedProjects: ResolvedProjectEntry[]
+  /**
+   * Browser server contribution captured by the `vitest:browser:loader` plugin
+   * during this config's resolution (set only when `browser.enabled`). Used by
+   * server creation to build the single Vite server shared by `project.vite` and
+   * `project.browser.vite`.
+   *
+   * @internal
+   */
+  _browserContribution?: BrowserServerContribution
+}
+
+/**
+ * A resolved project entry. `viteConfig` may be shared by reference across multiple
+ * entries (e.g. browser instances or benchmark variants of the same parent), while
+ * `projectConfig` is always a distinct object per entry.
+ */
+export interface ResolvedProjectEntry {
+  viteConfig: ResolvedViteConfig
+  projectConfig: ResolvedConfig
+  /**
+   * When set, this entry exists only so browser-instance siblings can attach
+   * to a parent that owns the Vite server and (later) the browser provider.
+   * The resulting `TestProject` is created and kept alive (so siblings can
+   * reference it via `_parent`) but is NOT pushed to `vitest.projects`.
+   */
+  hidden?: boolean
 }
 
 type NonProjectOptions

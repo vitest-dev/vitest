@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
-test('aria snapshot', async () => {
+test('aria snapshot', { tags: ['browser'] }, async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-aria')
   const testFile = join(root, 'basic.test.ts')
   const snapshotFile = join(root, '__snapshots__/basic.test.ts.snap')
@@ -119,11 +119,11 @@ test('aria snapshot', async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:20:24
+     ❯ basic.test.ts:20:25
          18|     <button aria-label="9999">Pattern</button>
          19|   \`
          20|   expect(document.body).toMatchAriaSnapshot()
-           |                        ^
+           |                         ^
          21| })
          22|
 

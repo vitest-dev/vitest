@@ -1,4 +1,5 @@
 import type { MockerRegistry } from '@vitest/mocker'
+import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
@@ -12,7 +13,7 @@ import { ServerMockResolver } from '@vitest/mocker/node'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -26,7 +27,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
   const wss = new WebSocketServer({ noServer: true })
 
-  vite.httpServer?.on('upgrade', (request, socket: Duplex, head: Buffer) => {
+  vite.httpServer?.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     if (!request.url) {
       return
     }
@@ -124,9 +125,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
   function canWrite(project: TestProject) {
     return (
-      project.config.browser.api.allowWrite
-      && project.vitest.config.browser.api.allowWrite
-      && project.config.api.allowWrite
+      project.config.api.allowWrite
       && project.vitest.config.api.allowWrite
     )
   }
@@ -134,20 +133,16 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   function isCdpAllowed(project: TestProject) {
     return (
       project.config.api.allowExec
-      && project.config.browser.api.allowExec
       && project.vitest.config.api.allowExec
-      && project.vitest.config.browser.api.allowExec
       && project.config.api.allowWrite
-      && project.config.browser.api.allowWrite
       && project.vitest.config.api.allowWrite
-      && project.vitest.config.browser.api.allowWrite
     )
   }
 
   function assertCdpAllowed(project: TestProject) {
     if (!isCdpAllowed(project)) {
       throw new Error(
-        `Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.`,
+        `Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/api.`,
       )
     }
   }
@@ -199,7 +194,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             if (artifact.type === 'internal:annotation' && artifact.annotation.attachment) {
               artifact.annotation.attachment = undefined
               vitest.logger.error(
-                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/api.`,
               )
             }
             // remove attachments if cannot write
@@ -207,8 +202,21 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               const attachments = artifact.attachments.map(n => n.path).filter(r => !!r).join('", "')
               artifact.attachments = []
               vitest.logger.error(
-                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/browser/api.`,
+                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/api.`,
               )
+            }
+          }
+          else {
+            // attachment files are copied into `attachmentsDir`, so confine
+            // client-supplied paths to Vite's `server.fs` boundary
+            const attachments = artifact.type === 'internal:annotation'
+              ? (artifact.annotation.attachment ? [artifact.annotation.attachment] : [])
+              : (artifact.attachments ?? [])
+            for (const attachment of attachments) {
+              const path = attachment.path
+              if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
+                checkFileAccess(resolve(project.config.root, path))
+              }
             }
           }
 
@@ -224,7 +232,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         async writeBenchmarkResult(relativePath, data) {
           if (!canWrite(project)) {
             vitest.logger.error(
-              `[vitest] Cannot write benchmark artifact "${relativePath}" because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+              `[vitest] Cannot write benchmark artifact "${relativePath}" because file writing is disabled. See https://vitest.dev/config/api.`,
             )
             return
           }
@@ -272,7 +280,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           checkFileAccess(id)
           if (!canWrite(project)) {
             vitest.logger.error(
-              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/api.`,
             )
             return
           }
@@ -283,7 +291,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           checkFileAccess(id)
           if (!canWrite(project)) {
             vitest.logger.error(
-              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/api.`,
             )
             return
           }

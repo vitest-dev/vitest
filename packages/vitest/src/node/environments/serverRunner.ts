@@ -1,8 +1,9 @@
-import type { DevEnvironment } from 'vite'
+import type { DevEnvironment, ViteDevServer } from 'vite'
 import type { ResolvedConfig } from '../types/config'
 import type { VitestFetchFunction } from './fetchModule'
 import { readFile } from 'node:fs/promises'
 import { VitestModuleEvaluator } from '#module-evaluator'
+import { isRunnableDevEnvironment } from 'vite'
 import { ModuleRunner } from 'vite/module-runner'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
@@ -58,4 +59,23 @@ export class ServerModuleRunner extends ModuleRunner {
     const url = normalizeResolvedIdToUrl(this.environment, resolved.id)
     return super.import(url)
   }
+}
+
+// Override the SSR environment's runner so user `configureServer` hooks that
+// call `server.environments.ssr.runner.import(...)` get Vitest's module runner.
+export function installSsrModuleRunner(
+  server: ViteDevServer,
+  fetcher: VitestFetchFunction,
+  config: ResolvedConfig,
+): void {
+  const ssrEnvironment = server.environments.ssr
+  if (!isRunnableDevEnvironment(ssrEnvironment)) {
+    return
+  }
+  const ssrRunner = new ServerModuleRunner(ssrEnvironment, fetcher, config)
+  Object.defineProperty(ssrEnvironment, 'runner', {
+    value: ssrRunner,
+    writable: true,
+    configurable: true,
+  })
 }

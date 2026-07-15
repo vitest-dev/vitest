@@ -42,6 +42,7 @@ export interface SerializedConfig {
   _diffOptions?: DiffOptions
   color?: LabelColor
   globals: boolean
+  injectCjsGlobals: boolean
   base: string | undefined
   snapshotEnvironment?: string
   disableConsoleIntercept: boolean | undefined
@@ -111,8 +112,6 @@ export interface SerializedConfig {
   browser: {
     name: string
     headless: boolean
-    isolate: boolean
-    fileParallelism: boolean
     ui: boolean
     viewport: {
       width: number

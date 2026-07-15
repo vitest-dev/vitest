@@ -109,7 +109,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   api: {
     argument: '[port]',
-    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
+    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort} or ${defaultBrowserPort} in browser mode`,
     subcommands: apiConfig(defaultPort),
     transform(portOrOptions) {
       if (typeof portOrOptions === 'number') {
@@ -138,6 +138,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
   },
+  reporter: null,
   reporters: {
     alias: 'reporter',
     description: `Specify reporters (default, agent, minimal, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
@@ -344,6 +345,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   globals: {
     description: 'Inject apis globally',
   },
+  injectCjsGlobals: {
+    description: 'Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)',
+  },
   dom: {
     description: 'Mock browser API with happy-dom',
   },
@@ -380,16 +384,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: `process.env.CI`)',
       },
-      api: {
-        description:
-          'Specify options for the browser API server. Does not affect the --api option',
-        argument: '[port]',
-        subcommands: apiConfig(defaultBrowserPort),
-      },
-      isolate: {
-        description:
-          'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
-      },
       ui: {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
@@ -399,13 +393,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
         argument: '<position>',
       },
-      fileParallelism: {
-        description:
-          'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
-      },
       connectTimeout: {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
         argument: '<timeout>',
+      },
+      dependencySourcemaps: {
+        description: 'Serve sourcemaps of dependencies to the browser in headless runs, used by devtools when debugging into `node_modules`. Reported test errors are source-mapped either way. Use `--browser.dependencySourcemaps=false` to speed up test runs if you don\'t step into dependency code (default: `true`)',
       },
       trackUnhandledErrors: {
         description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',

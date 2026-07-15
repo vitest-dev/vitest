@@ -26,8 +26,8 @@ test.runIf(provider.name === 'playwright')('exposes concurrencyId/workerId bound
 
   const { stderr, stdout } = await runInlineBrowserTests(files, {
     maxWorkers,
+    fileParallelism: true,
     browser: {
-      fileParallelism: true,
       instances: [firstInstance],
     },
     reporters: [
