@@ -8,7 +8,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 
 - **Language**: TypeScript/JavaScript (ESM-first)
 - **Package Manager**: pnpm (required)
-- **Node Version**: ^20.0.0 || ^22.0.0 || >=24.0.0
+- **Node Version**: ^22.12.0 || ^24.0.0 || >=26.0.0
 - **Build System**: Vite + Rollup
 - **Monorepo Structure**: 15+ packages in `packages/` directory
 
