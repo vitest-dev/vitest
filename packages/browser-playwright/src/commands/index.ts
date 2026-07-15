@@ -4,6 +4,7 @@ import { dragAndDrop } from './dragAndDrop'
 import { fill } from './fill'
 import { hover } from './hover'
 import { keyboard, keyboardCleanup } from './keyboard'
+import { pointer } from './pointer'
 import { takeScreenshot } from './screenshot'
 import { selectOptions } from './select'
 import { tab } from './tab'
@@ -28,6 +29,7 @@ export default {
   __vitest_dblClick: dblClick as typeof dblClick,
   __vitest_tripleClick: tripleClick as typeof tripleClick,
   __vitest_wheel: wheel as typeof wheel,
+  __vitest_pointer: pointer as typeof pointer,
   __vitest_takeScreenshot: takeScreenshot as typeof takeScreenshot,
   __vitest_type: type as typeof type,
   __vitest_clear: clear as typeof clear,

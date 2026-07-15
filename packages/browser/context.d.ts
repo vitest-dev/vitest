@@ -252,6 +252,10 @@ export interface UserEvent {
    */
   wheel(element: Element | Locator, options: UserEventWheelOptions): Promise<void>
   /**
+   * @todo
+   */
+  pointer(options: readonly UserEventPointerOptions[]): Promise<void>
+  /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
    * @example
@@ -440,6 +444,84 @@ export interface UserEventWheelDirectionOptions extends UserEventWheelBaseOption
  * @since 4.1.0
  */
 export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelDirectionOptions
+
+/**
+ * Base options shared by all pointer event configurations.
+ *
+ * @since 5.0.0
+ */
+export interface UserEventPointerBaseOptions {
+  /**
+   * The keys to press while interacting with the pointer.
+   *
+   * @default undefined
+   */
+  keys?: string
+  /**
+   * The button to use for the pointer event.
+   *
+   * @default 'left'
+   */
+  button?: 'left' | 'right' | 'middle'
+  /**
+   * The action to perform with the pointer event.
+   *
+   * @default undefined
+   */
+  action?: 'down' | 'up' | 'click'
+
+}
+
+/**
+ * Options for triggering pointer events using coordinates.
+ *
+ * @since 5.0.0
+ */
+export interface UserEventPointerCoordinatesOptions extends UserEventPointerBaseOptions {
+  /**
+   * The coordinates to interact with.
+   */
+  coordinates: { x: number; y: number }
+  target?: undefined
+}
+
+/**
+ * Options for triggering pointer events using a target element.
+ *
+ * @since 5.0.0
+ */
+export interface UserEventPointerTargetOptions extends UserEventPointerBaseOptions {
+  /**
+   * The target element to interact with.
+   */
+  target: Element | Locator
+  coordinates?: undefined
+}
+
+/**
+ * Options for triggering pointer events.
+ *
+ * Specify pointer position using either `coordinates` for precise pixel values, or `target` for element-based interaction. These are mutually exclusive.
+ *
+ * @since 5.0.0
+ */
+export type UserEventPointerOptions = UserEventPointerCoordinatesOptions | UserEventPointerTargetOptions
+
+/**
+ * Serialized options for triggering pointer events using a target element.
+ *
+ * @internal
+ */
+export interface SerializedUserEventPointerTargetOptions extends UserEventPointerTargetOptions {
+  target: SerializedLocator
+}
+
+/**
+ * Serialized options for triggering pointer events.
+ *
+ * @internal
+ */
+export type SerializedUserEventPointerOptions = UserEventPointerCoordinatesOptions | SerializedUserEventPointerTargetOptions
 
 export interface LocatorOptions {
   /**
