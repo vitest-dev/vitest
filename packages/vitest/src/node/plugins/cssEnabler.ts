@@ -8,6 +8,7 @@ const cssLangs = '\\.(?:css|less|sass|scss|styl|stylus|pcss|postcss)(?:$|\\?)'
 const cssLangRE = new RegExp(cssLangs)
 const cssModuleRE = new RegExp(`\\.module${cssLangs}`)
 const cssInlineRE = /[?&]inline(?:&|$)/
+const cssRawRE = /[?&]raw(?:&|$)/
 
 function isCSS(id: string) {
   return cssLangRE.test(id)
@@ -21,6 +22,12 @@ function isCSSModule(id: string) {
 // string content directly and not the proxy module
 function isInline(id: string) {
   return cssInlineRE.test(id)
+}
+
+// raw requests ask for the file source text and are served by
+// Vite's asset plugin, so css processing must not touch them
+function isRaw(id: string) {
+  return cssRawRE.test(id)
 }
 
 function getCSSModuleProxyReturn(
@@ -56,7 +63,7 @@ export function CSSEnablerPlugin(): VitePlugin[] {
       name: 'vitest:css-disable',
       enforce: 'pre',
       transform(_code, id) {
-        if (!isCSS(id)) {
+        if (!isCSS(id) || isRaw(id)) {
           return
         }
         // css plugin inside Vite won't do anything if the code is empty
@@ -73,7 +80,7 @@ export function CSSEnablerPlugin(): VitePlugin[] {
         viteConfig = config
       },
       transform(_, id) {
-        if (!isCSS(id) || shouldProcessCSS(id)) {
+        if (!isCSS(id) || isRaw(id) || shouldProcessCSS(id)) {
           return
         }
 
