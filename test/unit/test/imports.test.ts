@@ -2,7 +2,9 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { NonExported } from '@test/dep-esm-non-existing'
 import { resolve } from 'pathe'
+import { ssrImportMetaKey, ssrModuleExportsKey } from 'vite/module-runner'
 import { describe, expect, test, vi } from 'vitest'
+import { VitestModuleEvaluator } from '../../../packages/vitest/src/runtime/moduleRunner/moduleEvaluator'
 // @ts-expect-error module is not typed
 import promiseExport from '../src/cjs/promise-export'
 
@@ -139,6 +141,27 @@ describe('importing special files from node_modules', async () => {
 })
 
 describe.runIf(process.platform === 'win32')('importing files with different drive casing', async () => {
+  test('injects import.meta.vitest when the test drive uses different casing', async () => {
+    const evaluator = new VitestModuleEvaluator(undefined, {
+      getCurrentTestFilepath: () => 'f:\\workspace\\lib.ts',
+    })
+    const context = {
+      [ssrImportMetaKey]: {
+        filename: 'F:\\workspace\\lib.ts',
+        url: 'file:///F:/workspace/lib.ts',
+      },
+      [ssrModuleExportsKey]: {},
+    } as any
+
+    await evaluator.runInlinedModule(context, '', {
+      file: 'F:\\workspace\\lib.ts',
+      id: 'F:\\workspace\\lib.ts',
+      importers: new Set(),
+    } as any)
+
+    expect(context[ssrImportMetaKey]).toHaveProperty('vitest')
+  })
+
   test('importing a local file with different drive casing works', async () => {
     const path = new URL('./../src/timeout', import.meta.url)
     const filepath = fileURLToPath(path)

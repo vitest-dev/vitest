@@ -282,7 +282,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     meta.env = this.env
 
     const testFilepath = this.options.getCurrentTestFilepath?.()
-    if (testFilepath === module.file) {
+    const isTestFile = testFilepath === module.file
+      || (isWindows && testFilepath?.toLowerCase() === module.file?.toLowerCase())
+    if (isTestFile) {
       const globalNamespace = this.vm?.context || globalThis
       Object.defineProperty(meta, 'vitest', {
         // @ts-expect-error injected untyped global
