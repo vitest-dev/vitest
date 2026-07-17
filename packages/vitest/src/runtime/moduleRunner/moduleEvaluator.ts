@@ -283,7 +283,11 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const testFilepath = this.options.getCurrentTestFilepath?.()
     const isTestFile = testFilepath === module.file
-      || (isWindows && testFilepath?.toLowerCase() === module.file?.toLowerCase())
+      || (isWindows
+        && testFilepath?.[1] === ':'
+        && module.file?.[1] === ':'
+        && testFilepath[0].toLowerCase() === module.file[0].toLowerCase()
+        && testFilepath.slice(1) === module.file.slice(1))
     if (isTestFile) {
       const globalNamespace = this.vm?.context || globalThis
       Object.defineProperty(meta, 'vitest', {

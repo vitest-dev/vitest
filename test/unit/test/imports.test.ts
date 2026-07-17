@@ -162,6 +162,27 @@ describe.runIf(process.platform === 'win32')('importing files with different dri
     expect(context[ssrImportMetaKey]).toHaveProperty('vitest')
   })
 
+  test('does not inject import.meta.vitest when a directory uses different casing', async () => {
+    const evaluator = new VitestModuleEvaluator(undefined, {
+      getCurrentTestFilepath: () => 'F:\\workspace\\lib.ts',
+    })
+    const context = {
+      [ssrImportMetaKey]: {
+        filename: 'F:\\Workspace\\lib.ts',
+        url: 'file:///F:/Workspace/lib.ts',
+      },
+      [ssrModuleExportsKey]: {},
+    } as any
+
+    await evaluator.runInlinedModule(context, '', {
+      file: 'F:\\Workspace\\lib.ts',
+      id: 'F:\\Workspace\\lib.ts',
+      importers: new Set(),
+    } as any)
+
+    expect(context[ssrImportMetaKey]).not.toHaveProperty('vitest')
+  })
+
   test('importing a local file with different drive casing works', async () => {
     const path = new URL('./../src/timeout', import.meta.url)
     const filepath = fileURLToPath(path)
