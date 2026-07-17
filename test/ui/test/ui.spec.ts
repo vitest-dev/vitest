@@ -158,6 +158,11 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
     await testModuleGraph(page)
   })
+
+  test('explorer distinguishes suites from tests', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testExplorerSuiteDistinction(page)
+  })
 })
 
 test.describe('html report', () => {
@@ -251,6 +256,11 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
     await testModuleGraph(page)
   })
+
+  test('explorer distinguishes suites from tests', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testExplorerSuiteDistinction(page)
+  })
 })
 
 async function testBasic(page: Page, pageUrl: string) {
@@ -296,6 +306,13 @@ async function testModuleGraph(page: Page) {
   await page.getByTestId('btn-graph').click()
   await expect(page.locator('[data-testid=graph] text')).toBeVisible()
   await expect(page.locator('[data-testid=graph] text')).toHaveText('sample-browser.test.ts')
+}
+
+async function testExplorerSuiteDistinction(page: Page) {
+  await expect(getExplorerItem(page, 'console.test.ts').locator('[truncate]')).toHaveCSS('font-weight', '500')
+  await expect(getExplorerItem(page, 'suite').locator('[truncate]')).toHaveCSS('font-weight', '500')
+  await expect(getExplorerItem(page, 'nested suite').locator('[truncate]')).toHaveCSS('font-weight', '500')
+  await expect(getExplorerItem(page, 'test').locator('[truncate]')).toHaveCSS('font-weight', '300')
 }
 
 async function testCoverage(page: Page) {
