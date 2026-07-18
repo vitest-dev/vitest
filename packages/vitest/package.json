@@ -77,6 +77,11 @@
       "__vitest_source__": "./src/utils/traces.ts",
       "default": "./dist/traces.js"
     },
+    "./internal/src/*": {
+      "__vitest_source__": "./src/*",
+      "development": "./src/*",
+      "default": null
+    },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
