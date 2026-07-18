@@ -1,7 +1,7 @@
 import type { RunVitestConfig } from '#test-utils'
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
+import type { MergeReport } from 'vitest/internal/src/node/reporters/blob.js'
 import type { TestUserConfig, Vitest } from 'vitest/node'
-import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -10,8 +10,8 @@ import { playwright } from '@vitest/browser-playwright'
 import { stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test, TestRunner } from 'vitest'
+import { getModuleGraph } from 'vitest/internal/src/utils/graph.js'
 import { version } from 'vitest/package.json'
-import { getModuleGraph } from 'vitest/src/utils/graph.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here

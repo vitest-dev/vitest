@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getWorkerMemoryLimit } from 'vitest/src/utils/memory-limit.js'
+import { getWorkerMemoryLimit } from 'vitest/internal/src/utils/memory-limit.js'
 
 describe('getWorkerMemoryLimit', () => {
   it('should prioritize vmMemoryLimit', () => {

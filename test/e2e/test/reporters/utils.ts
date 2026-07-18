@@ -1,10 +1,10 @@
 import type { ModuleGraph, ViteDevServer } from 'vite'
 import type { RunnerTestCase, RunnerTestSuite, TestError } from 'vitest'
-import type { Vitest } from 'vitest/src/node/core.js'
-import type { Logger } from 'vitest/src/node/logger.js'
-import type { StateManager } from 'vitest/src/node/state.js'
-import type { ResolvedConfig } from 'vitest/src/node/types/config.js'
-import type { RunnerTestFile } from 'vitest/src/public/index.js'
+import type { Vitest } from 'vitest/internal/src/node/core.js'
+import type { Logger } from 'vitest/internal/src/node/logger.js'
+import type { StateManager } from 'vitest/internal/src/node/state.js'
+import type { ResolvedConfig } from 'vitest/internal/src/node/types/config.js'
+import type { RunnerTestFile } from 'vitest/internal/src/public/index.js'
 import { TestRunner } from 'vitest'
 
 export function trimReporterOutput(report: string) {
