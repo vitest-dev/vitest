@@ -240,10 +240,13 @@ export class TestRunner implements VitestTestRunner {
     let _bench: Bench | undefined
     const runnerConfig = this.config
     const benchInstances = this.benchInstances
+    const moduleRunner = this.moduleRunner
     Object.defineProperty(context, 'bench', {
       get() {
         if (!_bench) {
-          _bench = createBench(context.task, runnerConfig)
+          _bench = createBench(context.task, runnerConfig, {
+            import: id => moduleRunner.import(id),
+          })
           benchInstances.set(context.task, _bench)
         }
         return _bench

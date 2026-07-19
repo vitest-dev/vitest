@@ -294,6 +294,12 @@ export function resolveTestConfig(
     ...benchmarkConfigDefaults,
     ...resolved.benchmark,
   }
+  if (resolved.benchmark.provider && resolved.benchmark.provider !== 'default') {
+    resolved.benchmark.provider = resolvePath(
+      resolved.benchmark.provider,
+      resolved.root,
+    )
+  }
 
   const inspector = resolved.inspect || resolved.inspectBrk
 

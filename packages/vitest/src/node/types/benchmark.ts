@@ -29,6 +29,18 @@ export interface BenchmarkUserOptions {
   retainSamples?: boolean
 
   /**
+   * The benchmark provider that executes registered benchmarks and produces
+   * their results. Either the built-in `'default'` provider (backed by
+   * tinybench) or a path to a module whose default export implements
+   * `BenchmarkProviderModule`. The path is resolved relative to the project
+   * root.
+   *
+   * @default 'default'
+   * @experimental
+   */
+  provider?: 'default' | (string & {})
+
+  /**
    * Disable warnings when a benchmark accesses module export getters too many times.
    * @default false
    */

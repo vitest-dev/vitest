@@ -134,6 +134,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     benchmark: {
       enabled: config.benchmark.enabled,
       retainSamples: config.benchmark.retainSamples,
+      provider: config.benchmark.provider,
       suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
       projectName: config.benchmark.projectName,
     },

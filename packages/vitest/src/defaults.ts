@@ -20,6 +20,7 @@ export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
   exclude: defaultExclude,
   includeSource: [],
   retainSamples: false,
+  provider: 'default',
   suppressExportGetterWarnings: false,
   // Populated automatically when Vitest clones the parent project; the default
   // here applies to the (unused) raw config that's never run as a benchmark.

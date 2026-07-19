@@ -38,10 +38,17 @@ export type { VitestUtils } from '../integrations/vi'
 export type {
   Bench,
   BenchCompareOptions,
+  BenchFn,
   BenchFnOptions,
   BenchFromSource,
+  BenchHooks,
+  BenchmarkGroup,
+  BenchmarkProvider,
+  BenchmarkProviderModule,
   BenchRegistration,
+  BenchRegistrationInput,
   BenchResult,
+  BenchRunOptions,
   BenchStorage,
 } from '../runtime/benchmark'
 
