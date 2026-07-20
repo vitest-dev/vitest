@@ -381,7 +381,7 @@ async function resolveSingleProjectEntry(
         },
         api: {
           vitest: {
-            experimental: { ignoreFsModuleCache: true },
+            ignoreFsModuleCache: true,
           },
         },
       },
