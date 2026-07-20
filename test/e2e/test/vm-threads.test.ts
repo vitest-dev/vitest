@@ -16,6 +16,36 @@ test('importing files in restricted fs works correctly', async () => {
   expect(exitCode).toBe(0)
 })
 
+// vm pools resolve `isolate` to false (isolation comes from a fresh VM
+// context per run request), which used to trigger the "single non-isolated
+// worker receives all files at once" batching with `maxWorkers: 1` — all
+// files then shared one VM context and leaked state into each other
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s keeps per-file isolation when maxWorkers is 1',
+  async (pool) => {
+    // each file both expects a clean context and pollutes it, so the test
+    // does not depend on the file execution order
+    const pollutingTest = `
+      import { expect, test } from 'vitest'
+
+      test('does not see state from other test files', () => {
+        expect(globalThis.__isolation_leak__).toBeUndefined()
+        globalThis.__isolation_leak__ = import.meta.url
+      })
+    `
+    const { stderr, exitCode } = await runInlineTests({
+      'a.test.js': pollutingTest,
+      'b.test.js': pollutingTest,
+    }, {
+      pool,
+      maxWorkers: 1,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // The module-sync condition was added in Node 22.12/20.19 when require(esm)
 // was unflagged. The fix uses the _resolveFilename conditions option which
 // is only available on Node 22.12+. Node 20 is unfixable and reaches EOL

@@ -327,6 +327,13 @@ Run every test file in isolation. To disable isolation, use `--no-isolate` (defa
 
 Inject apis globally
 
+### injectCjsGlobals
+
+- **CLI:** `--injectCjsGlobals`
+- **Config:** [injectCjsGlobals](/config/injectcjsglobals)
+
+Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)
+
 ### dom
 
 - **CLI:** `--dom`
@@ -373,6 +380,13 @@ Default position for the details panel in browser mode. Either `right` (horizont
 - **Config:** [browser.connectTimeout](/config/browser/connecttimeout)
 
 If connection to the browser takes longer, the test suite will fail (default: `60_000`)
+
+### browser.dependencySourcemaps
+
+- **CLI:** `--browser.dependencySourcemaps`
+- **Config:** [browser.dependencySourcemaps](/config/browser/dependencysourcemaps)
+
+Serve sourcemaps of dependencies to the browser in headless runs, used by devtools when debugging into `node_modules`. Reported test errors are source-mapped either way. Use `--browser.dependencySourcemaps=false` to speed up test runs if you don't step into dependency code (default: `true`)
 
 ### browser.trackUnhandledErrors
 

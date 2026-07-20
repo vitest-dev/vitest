@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isBareImport, splitFileAndPostfix } from '@vitest/utils/helpers'
-import { findNearestPackageData } from '@vitest/utils/resolver'
+import { lookupPackageScopeType } from '@vitest/utils/resolver'
 import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
@@ -158,8 +158,7 @@ export class ExternalModulesExecutor {
       type = 'wasm'
     }
     else {
-      const pkgData = findNearestPackageData(normalize(pathUrl))
-      type = pkgData.type === 'module' ? 'module' : 'commonjs'
+      type = lookupPackageScopeType(normalize(pathUrl)) === 'esm' ? 'module' : 'commonjs'
     }
 
     return { type, path: pathUrl, url: fileUrl }

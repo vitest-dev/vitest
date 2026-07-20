@@ -1,4 +1,5 @@
-import type { DevEnvironment, FetchResult } from 'vite'
+import type { DevEnvironment } from 'vite'
+import type { ModuleType, VitestFetchResult } from '../../types/general'
 import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
@@ -37,7 +38,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.4'
+  private version = '1.0.0-beta.5'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -134,12 +135,13 @@ export class FileSystemModuleCache {
       code,
       importedUrls: meta.importedUrls,
       mappings: meta.mappings,
+      moduleType: meta.moduleType,
     }
   }
 
-  async saveCachedModule<T extends FetchResult>(
+  async saveCachedModule(
     cachedFilePath: string,
-    fetchResult: T,
+    fetchResult: VitestFetchResult,
     importedUrls: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
@@ -150,6 +152,7 @@ export class FileSystemModuleCache {
         url: fetchResult.url,
         importedUrls,
         mappings,
+        moduleType: fetchResult.moduleType,
       } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
@@ -235,6 +238,7 @@ export class FileSystemModuleCache {
           mode: config.mode,
           consumer: config.consumer,
           resolve: config.resolve,
+          injectCjsGlobal: vitestConfig.injectCjsGlobals,
           // plugins can have different options, so this is not the best key,
           // but we cannot access the options because there is no standard API for it
           plugins: config.plugins
@@ -390,6 +394,7 @@ export interface CachedInlineModuleMeta {
   code: string
   mappings: boolean
   importedUrls: string[]
+  moduleType?: ModuleType
 }
 
 /**

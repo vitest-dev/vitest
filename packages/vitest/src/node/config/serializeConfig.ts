@@ -47,6 +47,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     name: config.name,
     color: config.color,
     globals: config.globals,
+    injectCjsGlobals: config.injectCjsGlobals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {

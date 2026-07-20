@@ -18,7 +18,6 @@ export function VitestConfigServer(harness: PluginHarness, globalConfig?: Resolv
         handler() {
           return {
             server: {
-              preTransformRequests: false,
               hmr: false,
               open: false,
             },
@@ -49,6 +48,9 @@ export function VitestConfigServer(harness: PluginHarness, globalConfig?: Resolv
 
           const server: ServerOptions = {
             ...api,
+          }
+          if (!isBrowserEnabled) {
+            server.preTransformRequests = false
           }
 
           // Always disable the websocket server in middlewareMode

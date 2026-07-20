@@ -345,6 +345,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   globals: {
     description: 'Inject apis globally',
   },
+  injectCjsGlobals: {
+    description: 'Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)',
+  },
   dom: {
     description: 'Mock browser API with happy-dom',
   },
@@ -393,6 +396,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       connectTimeout: {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
         argument: '<timeout>',
+      },
+      dependencySourcemaps: {
+        description: 'Serve sourcemaps of dependencies to the browser in headless runs, used by devtools when debugging into `node_modules`. Reported test errors are source-mapped either way. Use `--browser.dependencySourcemaps=false` to speed up test runs if you don\'t step into dependency code (default: `true`)',
       },
       trackUnhandledErrors: {
         description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
