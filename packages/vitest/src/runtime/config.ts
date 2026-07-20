@@ -147,8 +147,8 @@ export interface SerializedConfig {
     projectName: string
   }
   serializedDefines: string
+  fsModuleCache: boolean
   experimental: {
-    fsModuleCache: boolean
     importDurations: {
       print: boolean | 'on-warn'
       limit: number

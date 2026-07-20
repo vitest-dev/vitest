@@ -780,6 +780,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Maximum number of concurrent tests and suites during test file execution (default: `5`)',
     argument: '<number>',
   },
+  fsModuleCache: {
+    description: 'Cache transformed modules on the file system and reuse them between reruns (default: `false`)',
+  },
+  fsModuleCachePath: {
+    description: 'Directory where the `fsModuleCache` is stored (default: `node_modules/.vitest-cache`)',
+    argument: '<path>',
+  },
   expect: {
     description: 'Configuration options for `expect()` matches',
     argument: '', // no displayed
@@ -869,7 +876,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[type]',
   },
   clearCache: {
-    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+    description: 'Delete all Vitest caches, including the `fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
   },
   tagsFilter: {
     description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](https://vitest.dev/guide/test-tags#syntax) for more information.',
@@ -884,10 +891,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Experimental features.',
     argument: '<features>',
     subcommands: {
-      fsModuleCache: {
-        description: 'Enable caching of modules on the file system between reruns.',
-      },
-      fsModuleCachePath: null,
       openTelemetry: null,
       importDurations: {
         description: 'Configure import duration collection and CLI display. Note that UI\'s "Module Graph" tab can always show import breakdown regardless of the `print` setting.',
