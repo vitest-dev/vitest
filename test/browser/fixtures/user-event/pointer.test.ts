@@ -109,6 +109,28 @@ test('down only fires mousedown', async ({ expect }) => {
   expect(click).not.toHaveBeenCalled()
 })
 
+test.fails('double clicks', async ({ expect }) => {
+  document.body.innerHTML = `<button>Button</button>`
+
+  const click = vi.fn<PointerAction>()
+  const doubleClick = vi.fn<PointerAction>()
+
+  const buttonElement = document.body.querySelector('button')
+
+  buttonElement.addEventListener('click', click)
+  buttonElement.addEventListener('dblclick', doubleClick)
+
+  const target = page.getByRole('button')
+
+  await userEvent.pointer([
+    { target, action: 'click' },
+    { target, action: 'click' },
+  ])
+
+  expect(click).toHaveBeenCalledTimes(2)
+  expect(doubleClick).toHaveBeenCalledOnce()
+})
+
 test('middle click', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
