@@ -471,6 +471,14 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/cache',
               },
               {
+                text: 'fsModuleCache',
+                link: '/config/fsmodulecache',
+              },
+              {
+                text: 'fsModuleCachePath',
+                link: '/config/fsmodulecachepath',
+              },
+              {
                 text: 'sequence',
                 link: '/config/sequence',
               },
