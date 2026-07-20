@@ -79,7 +79,6 @@
     },
     "./internal/src/*": {
       "__vitest_source__": "./src/*",
-      "development": "./src/*",
       "default": null
     },
     "./config": {
