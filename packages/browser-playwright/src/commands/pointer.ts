@@ -1,10 +1,21 @@
-import type { UserEvent } from 'vitest/browser'
+import type { SerializedLocator } from '@vitest/browser'
+import type { Locator, UserEventPointerOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 import { parseKeyDef } from '@vitest/browser'
 import { click } from './click'
 import { hover } from './hover'
 
-export const pointer: UserEventCommand<UserEvent['pointer']> = async (
+type PointerEvent = (
+  options: readonly ElementToSerializedLocator<UserEventPointerOptions>[],
+) => Promise<void>
+
+type ElementToSerializedLocator<T> = T extends Element | Locator
+  ? SerializedLocator
+  : {
+      [K in keyof T]: ElementToSerializedLocator<T[K]>
+    }
+
+export const pointer: UserEventCommand<PointerEvent> = async (
   context,
   options,
 ) => {
