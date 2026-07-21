@@ -131,7 +131,7 @@ test.fails('double clicks', async ({ expect }) => {
   expect(doubleClick).toHaveBeenCalledOnce()
 })
 
-test('middle click', async ({ expect }) => {
+test('clicks with middle button', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
   const down = vi.fn<PointerAction>()
@@ -154,6 +154,35 @@ test('middle click', async ({ expect }) => {
     button: 1,
   }))
   expect(up).not.toHaveBeenCalled()
+  expect(click).not.toHaveBeenCalled()
+})
+
+test('clicks with right button', async ({ expect }) => {
+  document.body.innerHTML = `<button>Button</button>`
+
+  const down = vi.fn<PointerAction>()
+  const up = vi.fn<PointerAction>()
+  const click = vi.fn<PointerAction>()
+
+  const buttonElement = document.body.querySelector('button')
+
+  buttonElement.addEventListener('mousedown', down)
+  buttonElement.addEventListener('mouseup', up)
+  buttonElement.addEventListener('click', click)
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  const target = page.getByRole('button')
+
+  await userEvent.pointer([
+    { target, button: 'right', action: 'click' },
+  ])
+
+  expect(down).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    button: 2,
+  }))
+  expect(up).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    button: 2,
+  }))
   expect(click).not.toHaveBeenCalled()
 })
 
@@ -275,41 +304,4 @@ test('modifiers work with coordinates', async ({ expect }) => {
     clientX: expect.closeTo(11),
     clientY: expect.closeTo(11),
   }))
-})
-
-// on webkit, right click opens the context menu even in headless
-// keep as the last test to prevent failing tests
-test('right click', async ({ expect }) => {
-  document.body.innerHTML = `<button>Button</button>`
-
-  const down = vi.fn<PointerAction>()
-  const up = vi.fn<PointerAction>()
-  const click = vi.fn<PointerAction>()
-
-  const buttonElement = document.body.querySelector('button')
-
-  buttonElement.addEventListener('mousedown', down)
-  buttonElement.addEventListener('mouseup', up)
-  buttonElement.addEventListener('click', click)
-
-  const target = page.getByRole('button')
-
-  await userEvent.pointer([
-    { target, button: 'right', action: 'click' },
-  ])
-
-  expect(down).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-    button: 2,
-  }))
-
-  // mouseup is not fired on webkit when right clicking
-  if (server.config.browser.name === 'webkit') {
-    expect(up).not.toHaveBeenCalled()
-  } else {
-    expect(up).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-      button: 2,
-    }))
-  }
-
-  expect(click).not.toHaveBeenCalled()
 })
