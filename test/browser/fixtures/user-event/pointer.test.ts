@@ -119,6 +119,33 @@ test('down only fires mousedown event', async ({ expect }) => {
   expect(click).not.toHaveBeenCalled()
 })
 
+test.for([
+  { action: 'down' },
+  { action: 'up' },
+  { action: 'click' },
+] as const)('pointer $action action works with offsets', async ({ action }, { expect }) => {
+  document.body.innerHTML = `
+    <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
+  `
+
+  const spy = vi.fn<PointerAction>()
+
+  const buttonElement = document.body.querySelector('button')
+
+  buttonElement.addEventListener(action === 'click' ? 'click' : `mouse${action}`, spy)
+
+  await userEvent.pointer([
+    { target: buttonElement, offset: { x: 10, y: 10 }, action },
+  ])
+
+  expect(spy).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    clientX: expect.closeTo(20, -2),
+    clientY: expect.closeTo(20, -2),
+    offsetX: expect.closeTo(10),
+    offsetY: expect.closeTo(10),
+  }))
+})
+
 test('multiple clicks trigger double click', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
