@@ -20,7 +20,7 @@ import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { ScreenshotAction } from './action'
-import { isLocator, resolveUserEventPointerOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
+import { isLocator, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
@@ -79,9 +79,22 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     pointer(options) {
       return ensureAwaited<void>(async () => {
+        const pointerOptions = await Promise.all(options.map(async (option) => {
+          if ('target' in option && option.target) {
+            const target = (await serializeElement(option.target))
+
+            return {
+              ...option,
+              target,
+            }
+          }
+
+          return option
+        }))
+
         await triggerCommand<void>(
           '__vitest_pointer',
-          [await resolveUserEventPointerOptions(options)],
+          [pointerOptions],
         )
       })
     },
