@@ -1,4 +1,4 @@
-import type { Locator, SelectorOptions, SerializedLocator, SerializedUserEventPointerOptions, UserEventPointerOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
+import type { Locator, SelectorOptions, SerializedLocator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
@@ -352,19 +352,4 @@ export function resolveUserEventWheelOptions(options: UserEventWheelOptions): Us
     delta,
     times: options.times,
   }
-}
-
-export async function resolveUserEventPointerOptions(options: readonly UserEventPointerOptions[]): Promise<SerializedUserEventPointerOptions[]> {
-  return await Promise.all(options.map(async (option) => {
-    if ('target' in option && option.target) {
-      const target = (await serializeElement(option.target))
-
-      return {
-        ...option,
-        target,
-      }
-    }
-
-    return option
-  }))
 }
