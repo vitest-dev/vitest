@@ -39,7 +39,7 @@ export const pointer: UserEventCommand<UserEvent['pointer']> = async (
     // `click` has its own moving logic, no need to move twice
     if (option.action !== 'click') {
       if (option.target) {
-        await hover(context, option.target)
+        await hover(context, option.target, { position: option.offset })
       }
       else {
         await context.page.mouse.move(option.coordinates.x, option.coordinates.y)
