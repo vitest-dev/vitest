@@ -235,14 +235,23 @@ test('drags and drops', async ({ expect }) => {
     <div id="target" style="position: absolute; top: 0; left: 300px; width: 100px; height: 100px;">Drop here</div>
   `
 
+  const DRAG_CONTENT = 'drag content'
+
   const source = document.body.querySelector<HTMLElement>('#source')
   const dropTarget = document.body.querySelector<HTMLElement>('#target')
 
   type DragAction = (event: DragEvent) => void
 
-  const dragStart = vi.fn<DragAction>()
+  let dragData: string
+
+  const dragStart = vi.fn<DragAction>((event) => {
+    event.dataTransfer.setData('text/plain', DRAG_CONTENT)
+  })
   const dragEnter = vi.fn<DragAction>()
-  const drop = vi.fn<DragAction>()
+  const drop = vi.fn<DragAction>((event) => {
+    // retrieving the data from the mock doesn't work, so we need to save it
+    dragData = event.dataTransfer.getData('text/plain')
+  })
   const dragEnd = vi.fn<DragAction>()
 
   source.addEventListener('dragstart', dragStart)
@@ -253,7 +262,6 @@ test('drags and drops', async ({ expect }) => {
 
   await userEvent.pointer([
     { target: source, action: 'down' },
-    { target: dropTarget },
     { target: dropTarget, action: 'up' },
   ])
 
@@ -264,6 +272,8 @@ test('drags and drops', async ({ expect }) => {
   expect(dragStart).toHaveBeenCalledBefore(dragEnter)
   expect(dragEnter).toHaveBeenCalledBefore(drop)
   expect(drop).toHaveBeenCalledBefore(dragEnd)
+
+  expect(dragData).toBe(DRAG_CONTENT)
 })
 
 test('temporary modifiers apply to one action', async ({ expect }) => {
