@@ -175,6 +175,8 @@ export interface SerializedConfig {
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
+  /** Directory where workers write raw coverage results, shard-aware */
+  coverageFilesDirectory: string
   htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined

@@ -3,6 +3,7 @@ import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
 import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
+import { getCoverageFilesDirectory } from '../../utils/coverage'
 import { isAgent, isForceColor } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
@@ -51,8 +52,10 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
+      const reportsDirectory = resolve(globalConfig.root, coverage.reportsDirectory)
       return {
-        reportsDirectory: resolve(globalConfig.root, coverage.reportsDirectory),
+        reportsDirectory,
+        coverageFilesDirectory: getCoverageFilesDirectory(reportsDirectory, globalConfig.shard),
         provider: coverage.provider,
         enabled: coverage.enabled,
         customProviderModule: 'customProviderModule' in coverage
