@@ -1,5 +1,5 @@
 import { test, vi } from 'vitest'
-import { userEvent, page, server } from 'vitest/browser'
+import { userEvent, page } from 'vitest/browser'
 
 type PointerAction = (event: PointerEvent) => void
 
@@ -35,6 +35,37 @@ test('click triggers hover events', async ({ expect }) => {
   expect(click).toHaveBeenCalledBefore(leave)
 })
 
+test('click at coordinates triggers hover events', async ({ expect }) => {
+  document.body.innerHTML = `
+    <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
+  `
+
+  const enter = vi.fn<PointerAction>()
+  const leave = vi.fn<PointerAction>()
+  const click = vi.fn<PointerAction>()
+
+  const buttonElement = document.body.querySelector('button')
+
+  buttonElement.addEventListener('mouseenter', enter)
+  buttonElement.addEventListener('mouseleave', leave)
+  buttonElement.addEventListener('click', click)
+
+  await userEvent.pointer([
+    { coordinates: { x: 11, y: 11 }, action: 'click' },
+    { target: document.body },
+  ])
+
+  expect(enter).toHaveBeenCalledOnce()
+  expect(click).toHaveBeenCalledOnce()
+  expect(click).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    clientX: expect.closeTo(11),
+    clientY: expect.closeTo(11),
+  }))
+
+  expect(enter).toHaveBeenCalledBefore(click)
+  expect(click).toHaveBeenCalledBefore(leave)
+})
+
 test('moves between coordinates', async ({ expect }) => {
   document.body.innerHTML = `
     <div id="a" style="position:absolute; top:0; left:0; width:100px; height:100px;"></div>
@@ -64,28 +95,7 @@ test('moves between coordinates', async ({ expect }) => {
   expect(leaveA).toHaveBeenCalledBefore(enterB)
 })
 
-test('clicks at coordinates', async ({ expect }) => {
-  document.body.innerHTML = `
-    <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
-  `
-
-  const click = vi.fn<PointerAction>()
-
-  const buttonElement = document.body.querySelector('button')
-
-  buttonElement.addEventListener('click', click)
-
-  await userEvent.pointer([
-    { coordinates: { x: 11, y: 11 }, action: 'click' },
-  ])
-
-  expect(click).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-    clientX: expect.closeTo(11),
-    clientY: expect.closeTo(11),
-  }))
-})
-
-test('down only fires mousedown', async ({ expect }) => {
+test('down only fires mousedown event', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
   const down = vi.fn<PointerAction>()
@@ -109,7 +119,7 @@ test('down only fires mousedown', async ({ expect }) => {
   expect(click).not.toHaveBeenCalled()
 })
 
-test.fails('double clicks', async ({ expect }) => {
+test('multiple clicks trigger double click', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
   const click = vi.fn<PointerAction>()
@@ -123,11 +133,15 @@ test.fails('double clicks', async ({ expect }) => {
   const target = page.getByRole('button')
 
   await userEvent.pointer([
-    { target, action: 'click' },
-    { target, action: 'click' },
+    { target, action: 'click', times: 3 },
   ])
 
-  expect(click).toHaveBeenCalledTimes(2)
+  expect(click).toHaveBeenCalledTimes(3)
+
+  expect(click).toHaveBeenNthCalledWith(1, expect.objectContaining({ detail: 1 }))
+  expect(click).toHaveBeenNthCalledWith(2, expect.objectContaining({ detail: 2 }))
+  expect(click).toHaveBeenNthCalledWith(3, expect.objectContaining({ detail: 3 }))
+
   expect(doubleClick).toHaveBeenCalledOnce()
 })
 

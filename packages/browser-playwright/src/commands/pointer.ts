@@ -1,11 +1,10 @@
-import type { SerializedUserEventPointerOptions } from 'vitest/browser'
+import type { UserEvent } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 import { parseKeyDef } from '@vitest/browser'
+import { click } from './click'
 import { hover } from './hover'
 
-type PointerCommand = (options: readonly SerializedUserEventPointerOptions[]) => void
-
-export const pointer: UserEventCommand<PointerCommand> = async (
+export const pointer: UserEventCommand<UserEvent['pointer']> = async (
   context,
   options,
 ) => {
@@ -37,30 +36,48 @@ export const pointer: UserEventCommand<PointerCommand> = async (
       }
     }
 
-    if (option.target) {
-      await hover(context, option.target)
-    }
-    else {
-      await context.page.mouse.move(option.coordinates.x, option.coordinates.y)
+    // `click` has its own moving logic, no need to move twice
+    if (option.action !== 'click') {
+      if (option.target) {
+        await hover(context, option.target)
+      }
+      else {
+        await context.page.mouse.move(option.coordinates.x, option.coordinates.y)
+      }
     }
 
     if (option.action) {
-      const options = {
+      const mouseOptions = {
         button: option.button,
       }
 
       switch (option.action) {
         case 'down': {
-          await context.page.mouse.down(options)
+          await context.page.mouse.down(mouseOptions)
           break
         }
         case 'up': {
-          await context.page.mouse.up(options)
+          await context.page.mouse.up(mouseOptions)
           break
         }
         case 'click': {
-          await context.page.mouse.down(options)
-          await context.page.mouse.up(options)
+          const clickOptions = {
+            ...mouseOptions,
+            clickCount: option.times ?? 1,
+            position: option.offset,
+          } satisfies Parameters<typeof click>[2]
+
+          if (option.target) {
+            await click(context, option.target, clickOptions)
+          }
+          else {
+            await context.page.mouse.click(
+              option.coordinates.x,
+              option.coordinates.y,
+              clickOptions,
+            )
+          }
+
           break
         }
       }
