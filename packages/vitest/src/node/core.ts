@@ -1549,11 +1549,18 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         await Promise.allSettled(closePromises).then((results) => {
-          [...results, ...teardownErrors.map(r => ({ status: 'rejected', reason: r }))].forEach((r) => {
-            if (r.status === 'rejected') {
-              this.logger.error('error during close', r.reason)
-            }
-          })
+          const errors = [
+            ...results
+              .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+              .map(r => r.reason),
+            ...teardownErrors,
+          ]
+
+          for (const error of errors) {
+            this.logger.error('error during close', error)
+          }
+
+          this._checkUnhandledErrors(errors)
         })
         await this._traces?.finish()
       })()
