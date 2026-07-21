@@ -188,13 +188,15 @@ test('clicks with middle button', async ({ expect }) => {
   const target = page.getByRole('button')
 
   await userEvent.pointer([
-    { target, button: 'middle', action: 'down' },
+    { target, button: 'middle', action: 'click' },
   ])
 
   expect(down).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
     button: 1,
   }))
-  expect(up).not.toHaveBeenCalled()
+  expect(up).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    button: 1,
+  }))
   expect(click).not.toHaveBeenCalled()
 })
 
