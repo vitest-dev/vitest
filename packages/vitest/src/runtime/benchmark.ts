@@ -129,7 +129,7 @@ export function resolveBenchmarkProvider(
 ): Promise<BenchmarkProvider> {
   if (!cachedProvider) {
     const provider = config.benchmark.provider
-    cachedProvider = provider === 'default' || !provider
+    cachedProvider = !provider
       ? Promise.resolve(createDefaultBenchmarkProvider(config))
       : loadProviderModule(provider, moduleRunner)
   }

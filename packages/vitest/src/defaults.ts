@@ -1,6 +1,6 @@
 import type {
-  BenchmarkUserOptions,
   CoverageOptions,
+  ResolvedBenchmarkOptions,
   UserConfig,
 } from './node/types/config'
 import type { FieldsWithDefaultValues } from './node/types/coverage'
@@ -14,13 +14,12 @@ export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/.git/**',
 ]
-export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
+export const benchmarkConfigDefaults: ResolvedBenchmarkOptions = {
   enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
   retainSamples: false,
-  provider: 'default',
   suppressExportGetterWarnings: false,
   // Populated automatically when Vitest clones the parent project; the default
   // here applies to the (unused) raw config that's never run as a benchmark.

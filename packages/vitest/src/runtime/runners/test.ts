@@ -243,9 +243,7 @@ export class TestRunner implements VitestTestRunner {
     Object.defineProperty(context, 'bench', {
       get() {
         if (!_bench) {
-          _bench = createBench(context.task, runnerConfig, {
-            import: id => moduleRunner.import(id),
-          })
+          _bench = createBench(context.task, runnerConfig, moduleRunner)
           benchInstances.set(context.task, _bench)
         }
         return _bench
