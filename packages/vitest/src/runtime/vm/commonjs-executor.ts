@@ -120,7 +120,7 @@ export class CommonjsExecutor {
           cachedData,
           importModuleDynamically: options.importModuleDynamically,
         } as any)
-        if (cachedData && (script as any).cachedDataRejected) {
+        if (cachedData && script.cachedDataRejected) {
           codeCache!.delete(filename)
         }
         // @ts-expect-error mark script with current identifier
