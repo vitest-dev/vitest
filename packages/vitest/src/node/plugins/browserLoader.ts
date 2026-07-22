@@ -9,8 +9,7 @@ import type {
   BrowserServerContribution,
   ParentProjectBrowser,
 } from '../types/browser'
-import type { ResolvedConfig } from '../types/config'
-import { filterProjectBrowserInstances } from '../config/resolveConfig'
+import type { ResolvedConfig, ResolvedProjectEntry } from '../types/config'
 import { createViteServer } from '../vite'
 
 export interface BrowserContributionHolder {
@@ -112,6 +111,7 @@ export async function createClusterServer(
   vitest: Vitest,
   viteConfig: ResolvedViteConfig,
   config: ResolvedConfig,
+  children: readonly ResolvedProjectEntry[],
 ): Promise<{ server: ViteDevServer; parent?: ParentProjectBrowser }> {
   const contribution = config._browserContribution
 
@@ -126,18 +126,21 @@ export async function createClusterServer(
   const parent = contribution.createParent({ config, vitest })
   contribution.parent = parent
 
-  // let the provider start preparing the browser (e.g. launching it)
-  // while the vite server is being created; like the loader plugin above,
-  // the provider can also be configured per instance
-  const provider = config.browser.provider
-    ?? config.browser.instances?.find(instance => instance.provider)?.provider
-  if (provider?.prewarm) {
-    // instances filtered out by `--project` never become projects, so no
-    // provider would ever adopt (or close) a browser prepared for them
-    const instances = filterProjectBrowserInstances(vitest.config.project, config)
-    if (instances.length) {
-      provider.prewarm({ config, vitest, instances })
+  // Start browser launches now so their latency overlaps Vite server creation.
+  // Entries that cannot run browser tests are skipped because they will never
+  // initialize a provider that could adopt and close the prepared browser.
+  for (const child of children) {
+    if (
+      child.hidden
+      || child.hasTestFiles === false
+      || (child.projectConfig.typecheck.enabled && child.projectConfig.typecheck.only)
+    ) {
+      continue
     }
+    // The Vite server is shared, but each child carries its own resolved
+    // provider and browser options, so it must be prewarmed independently.
+    const projectConfig = child.projectConfig
+    projectConfig.browser.provider?.prewarm?.({ config: projectConfig, vitest })
   }
 
   const server = await createViteServer(viteConfig)

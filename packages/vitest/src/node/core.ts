@@ -283,9 +283,11 @@ export class Vitest {
    */
   async _attachRootServer(): Promise<void> {
     const resolved = this.config
+    const children = resolved.resolvedProjects
+      .filter(entry => entry.viteConfig === this.viteConfig)
     // For a root-level browser config (no `projects`) this builds the single
     // browser server; otherwise it just creates the Vite server.
-    const { server, parent } = await createClusterServer(this, this.viteConfig, resolved)
+    const { server, parent } = await createClusterServer(this, this.viteConfig, resolved, children)
     this.vite = server
     this._rootBrowserParent = parent
 

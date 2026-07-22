@@ -22,7 +22,6 @@ import type {
 } from 'vitest/browser'
 import type {
   BrowserCommand,
-  BrowserInstanceOption,
   BrowserModuleMocker,
   BrowserProvider,
   BrowserProviderOption,
@@ -98,9 +97,7 @@ export function playwright(options: PlaywrightProviderOptions = {}): BrowserProv
     supportedBrowser: playwrightBrowsers,
     options,
     prewarm(ctx) {
-      for (const instance of ctx.instances) {
-        prewarmBrowser(ctx, options, instance)
-      }
+      prewarmBrowser(ctx, options)
     },
     providerFactory(project) {
       return new PlaywrightBrowserProvider(project, options)
@@ -111,6 +108,7 @@ export function playwright(options: PlaywrightProviderOptions = {}): BrowserProv
 interface WarmBrowser {
   promise: Promise<Browser>
   launchOptionsJson: string
+  pending: Set<WarmBrowser>
 }
 
 // the subset of `TestProject` the launch-option resolution needs; `prewarm`
@@ -120,17 +118,18 @@ interface LaunchContext {
   vitest: TestProject['vitest']
 }
 
-// keyed by the provider options object (shared between the factory and every
-// provider instance created from it), then by browser name
-const warmBrowsers = new WeakMap<object, Map<string, WarmBrowser>>()
+// The resolved config object is passed unchanged to the eventual TestProject,
+// so it identifies the browser this project can adopt.
+const warmBrowsers = new WeakMap<LaunchContext['config'], WarmBrowser>()
+const pendingWarmBrowsers = new WeakMap<LaunchContext['vitest'], Set<WarmBrowser>>()
 
 // starts importing playwright and launching the browser while the node side
 // is still creating the vite server, so the launch latency overlaps it. The
 // launch options are resolved by the same code as the real launch — if they
 // still differ by the time the provider opens the browser, the warm instance
 // is discarded, so this is always safe
-function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptions, instance: BrowserInstanceOption): void {
-  const browserName = instance.browser
+function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptions): void {
+  const browserName = project.config.browser.name
   if (
     options.connectOptions
     || options.persistentContext
@@ -142,26 +141,22 @@ function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptio
   if (!browserName || !(playwrightBrowsers as readonly string[]).includes(browserName)) {
     return
   }
-  let byName = warmBrowsers.get(options)
-  if (!byName) {
-    const map = new Map<string, WarmBrowser>()
-    byName = map
-    warmBrowsers.set(options, map)
-    // a warm browser whose project never initializes a provider (it has no
-    // test files to run) is only cleaned up when Vitest closes
-    project.vitest.onClose(() => closeWarmBrowsers(map))
-  }
-  if (byName.has(browserName)) {
+  if (warmBrowsers.has(project.config)) {
     return
   }
-  // `headless` is the only launch-relevant option an instance can override;
-  // this mirrors how the instance's project config is cloned from the parent
-  const browserConfig = instance.headless == null
-    ? project.config.browser
-    : { ...project.config.browser, headless: instance.headless }
-  const launchOptions = resolveLaunchOptions(browserConfig, project.vitest.config.inspector, options, browserName)
+  let pending = pendingWarmBrowsers.get(project.vitest)
+  if (!pending) {
+    const pendingBrowsers = new Set<WarmBrowser>()
+    pending = pendingBrowsers
+    pendingWarmBrowsers.set(project.vitest, pendingBrowsers)
+    // Browsers whose projects never initialize a provider (they have no test
+    // files to run) are cleaned up when Vitest closes.
+    project.vitest.onClose(() => closeWarmBrowsers(pendingBrowsers))
+  }
+  const launchOptions = resolveLaunchOptions(project.config.browser, project.vitest.config.inspector, options, browserName)
   const entry: WarmBrowser = {
     launchOptionsJson: JSON.stringify(launchOptions),
+    pending,
     promise: (async () => {
       debug?.('[%s] prewarming the browser', browserName)
       const playwright = await import('playwright')
@@ -171,26 +166,27 @@ function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptio
   // if the warm launch fails, drop it so the real launch retries
   // and surfaces the error through the normal path
   entry.promise.catch(() => {
-    if (byName.get(browserName) === entry) {
-      byName.delete(browserName)
+    if (warmBrowsers.get(project.config) === entry) {
+      warmBrowsers.delete(project.config)
+      entry.pending.delete(entry)
     }
   })
-  byName.set(browserName, entry)
+  pending.add(entry)
+  warmBrowsers.set(project.config, entry)
 }
 
-function takeWarmBrowser(options: PlaywrightProviderOptions, browserName: string): WarmBrowser | undefined {
-  const byName = warmBrowsers.get(options)
-  const warm = byName?.get(browserName)
+function takeWarmBrowser(config: LaunchContext['config']): WarmBrowser | undefined {
+  const warm = warmBrowsers.get(config)
   if (warm) {
-    byName!.delete(browserName)
+    warmBrowsers.delete(config)
+    warm.pending.delete(warm)
   }
   return warm
 }
 
-async function closeWarmBrowsers(byName: Map<string, WarmBrowser>): Promise<void> {
-  const closing = Array.from(byName.values(), warm =>
-    warm.promise.then(browser => browser.close()).catch(() => {}))
-  byName.clear()
+async function closeWarmBrowsers(pending: Set<WarmBrowser>): Promise<void> {
+  const closing = Array.from(pending, warm => warm.promise.then(browser => browser.close()).catch(() => {}))
+  pending.clear()
   await Promise.all(closing)
 }
 
@@ -360,7 +356,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         this.browser = this.persistentContext.browser()!
       }
       else {
-        const warm = takeWarmBrowser(this.options, this.browserName)
+        const warm = takeWarmBrowser(this.project.config)
         if (warm && warm.launchOptionsJson === JSON.stringify(launchOptions)) {
           const browser = await warm.promise.catch(() => null)
           if (browser?.isConnected()) {
@@ -678,7 +674,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
     // a prewarmed browser that was never adopted must not outlive the provider
-    const warm = takeWarmBrowser(this.options, this.browserName)
+    const warm = takeWarmBrowser(this.project.config)
     if (warm) {
       void warm.promise.then(browser => browser.close()).catch(() => {})
     }
