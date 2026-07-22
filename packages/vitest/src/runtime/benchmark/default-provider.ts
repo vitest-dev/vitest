@@ -9,7 +9,7 @@ const now = globalThis.performance
 
 /**
  * The built-in benchmark provider, backed by tinybench. Selected when
- * `benchmark.provider` is `'default'` (the default).
+ * `benchmark.provider` is not configured.
  */
 export function createDefaultBenchmarkProvider(config: SerializedConfig): BenchmarkProvider {
   let benchIdx = 0

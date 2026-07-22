@@ -143,7 +143,7 @@ export interface SerializedConfig {
   benchmark: {
     enabled: boolean
     retainSamples: boolean
-    provider: string
+    provider: string | undefined
     suppressExportGetterWarnings: boolean
     projectName: string
   }

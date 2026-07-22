@@ -30,15 +30,13 @@ export interface BenchmarkUserOptions {
 
   /**
    * The benchmark provider that executes registered benchmarks and produces
-   * their results. Either the built-in `'default'` provider (backed by
-   * tinybench) or a path to a module whose default export implements
+   * their results. Provide a path to a module whose default export implements
    * `BenchmarkProvider`. The path is resolved relative to the project
-   * root.
+   * root. If not specified, the built-in provider is used.
    *
-   * @default 'default'
    * @experimental
    */
-  provider?: 'default' | (string & {})
+  provider?: string
 
   /**
    * Disable warnings when a benchmark accesses module export getters too many times.
@@ -54,4 +52,8 @@ export interface BenchmarkUserOptions {
    * @internal
    */
   projectName?: string
+}
+
+export type ResolvedBenchmarkOptions = Omit<Required<BenchmarkUserOptions>, 'provider'> & {
+  provider?: string | undefined
 }
