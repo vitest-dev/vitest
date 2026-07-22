@@ -31,9 +31,9 @@ type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
 export type BenchFn = Fn
 
 /**
- * Per-benchmark lifecycle hooks passed to `bench(name, hooks, fn)`.
+ * Per-benchmark initialization options passed to `bench(name, options, fn)`.
  */
-export type BenchHooks = FnOptions
+export type BenchOptions = FnOptions
 
 /**
  * Engine-neutral run options forwarded to a {@link BenchmarkProvider}. These
@@ -61,7 +61,7 @@ export interface BenchResult extends TaskResultCompleted, TaskResultRuntimeInfo,
 export interface BenchRegistrationInput {
   name: string
   fn: BenchFn
-  fnOpts?: BenchHooks
+  fnOpts?: BenchOptions
 }
 
 /**
@@ -146,7 +146,7 @@ export type { BenchOptions as BenchCompareOptions } from 'tinybench'
  * Options accepted by `bench(name, options, fn)`. Extends the per-benchmark
  * lifecycle hooks with Vitest-specific fields.
  */
-export interface BenchFnOptions extends BenchHooks {
+export interface BenchFnOptions extends BenchOptions {
   /**
    * Path (relative to the project root) where the benchmark result is written
    * after a successful run. The string `${projectName}` is substituted with
@@ -173,7 +173,7 @@ export interface BenchRegistration<Name extends string> {
    * Per-benchmark options (`beforeEach`, `beforeAll`, etc.). Absent for
    * registrations created via `bench.from()`.
    */
-  fnOpts?: BenchHooks
+  fnOpts?: BenchOptions
   /**
    * @internal
    */
@@ -208,7 +208,7 @@ export interface Bench extends BenchFactory {
 
 interface RunnableRegistration<Name extends string> extends BenchRegistration<Name> {
   fn: BenchFn
-  fnOpts?: BenchHooks
+  fnOpts?: BenchOptions
   [kWriteResult]?: string
   [kPerProject]?: true
 }
@@ -375,7 +375,7 @@ export function createBench(
   const runSingle = async (
     name: string,
     fn: BenchFn,
-    fnOpts: BenchHooks | undefined,
+    fnOpts: BenchOptions | undefined,
     options: BenchRunOptions | undefined,
     meta: TaskMeta | undefined,
     writeResult: string | undefined,
@@ -568,7 +568,7 @@ function formatModuleId(moduleId: string, root: string): string {
 function normalizeBenchArgs(
   a: BenchFn | BenchFnOptions,
   b: BenchFn | BenchFnOptions | undefined,
-): { fn: BenchFn; fnOpts: BenchHooks | undefined; writeResult: string | undefined; perProject: boolean } {
+): { fn: BenchFn; fnOpts: BenchOptions | undefined; writeResult: string | undefined; perProject: boolean } {
   if (typeof a === 'function') {
     if (b !== undefined) {
       throw new TypeError('`bench()` does not accept options as the third argument. Pass options as the second argument instead: `bench(name, options, fn)`.')
@@ -583,12 +583,12 @@ function normalizeBenchArgs(
   // `registration.fnOpts` and the provider sees the same object the caller
   // passed in.
   if (a.writeResult === undefined && a.perProject === undefined) {
-    return { fn: b, fnOpts: a as BenchHooks, writeResult: undefined, perProject: false }
+    return { fn: b, fnOpts: a as BenchOptions, writeResult: undefined, perProject: false }
   }
   const { writeResult, perProject, ...fnOpts } = a
   return {
     fn: b,
-    fnOpts: Object.keys(fnOpts).length > 0 ? fnOpts as BenchHooks : undefined,
+    fnOpts: Object.keys(fnOpts).length > 0 ? fnOpts as BenchOptions : undefined,
     writeResult,
     perProject: perProject ?? false,
   }
