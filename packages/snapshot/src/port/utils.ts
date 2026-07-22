@@ -15,8 +15,11 @@ import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
 
+// Escape line endings in keys so that titles with `\r\n`, `\r` and `\n`
+// don't collide when the snapshot file is parsed back (template literals
+// normalize CRLF to LF in source)
 export function testNameToKey(testName: string, count: number): string {
-  return `${testName} ${count}`
+  return `${testName.replace(/[\r\n]/g, c => (c === '\r' ? '\\r' : '\\n'))} ${count}`
 }
 
 export function keyToTestName(key: string): string {
@@ -24,7 +27,9 @@ export function keyToTestName(key: string): string {
     throw new Error('Snapshot keys must end with a number.')
   }
 
-  return key.replace(/ \d+$/, '')
+  return key
+    .replace(/ \d+$/, '')
+    .replace(/\\r|\\n/g, c => (c === '\\r' ? '\r' : '\n'))
 }
 
 export function getSnapshotData(

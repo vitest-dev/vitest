@@ -119,3 +119,48 @@ test.fails('soft', () => {
     }
   `)
 })
+
+// https://github.com/vitest-dev/vitest/issues/7305
+test('test names with different line endings get distinct snapshots', async () => {
+  const { fs, root, exitCode } = await runInlineTests({
+    'basic.test.ts': `
+import { expect, test } from 'vitest'
+
+test.for([
+  'a\\nb',
+  'a\\r\\nb',
+])('%s', (input) => {
+  expect(input.split('')).toMatchSnapshot()
+})
+`,
+  }, { update: true })
+  expect(exitCode).toBe(0)
+  expect(fs.readFile('__snapshots__/basic.test.ts.snap')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`a\\\\nb 1\`] = \`
+    [
+      "a",
+      "
+    ",
+      "b",
+    ]
+    \`;
+
+    exports[\`a\\\\r\\\\nb 1\`] = \`
+    [
+      "a",
+      "
+    ",
+      "
+    ",
+      "b",
+    ]
+    \`;
+    "
+  `)
+
+  // the saved snapshots have to match when the file is parsed back
+  const second = await runVitest({ root })
+  expect(second.exitCode).toBe(0)
+})
