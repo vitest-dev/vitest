@@ -101,7 +101,7 @@ test('cjs dep served from the warm-modules snapshot keeps the module scope when 
     isolate: true,
     fileParallelism: false,
     injectCjsGlobals: false,
-    experimental: { fsModuleCache: true },
+    fsModuleCache: true,
   })
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)

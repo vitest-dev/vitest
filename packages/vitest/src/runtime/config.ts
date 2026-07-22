@@ -143,12 +143,13 @@ export interface SerializedConfig {
   benchmark: {
     enabled: boolean
     retainSamples: boolean
+    provider: string | undefined
     suppressExportGetterWarnings: boolean
     projectName: string
   }
   serializedDefines: string
+  fsModuleCache: boolean
   experimental: {
-    fsModuleCache: boolean
     importDurations: {
       print: boolean | 'on-warn'
       limit: number
