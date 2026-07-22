@@ -1084,6 +1084,10 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Custom Pool',
                 link: '/guide/advanced/pool',
               },
+              {
+                text: 'Benchmark Provider',
+                link: '/guide/advanced/benchmark-provider',
+              },
             ],
           },
           // Migration — one-time transitional content: cross-version
