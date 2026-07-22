@@ -1,5 +1,6 @@
 import type { File, FileSpecification, Task, TaskResultPack } from '../runtime/runner/types'
 import type { AsyncLeak, UserConsoleLog } from '../types/general'
+import type { TransformClock } from './environments/fetchModule'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
@@ -15,7 +16,7 @@ function isAggregateError(err: unknown): err is AggregateError {
   return err instanceof Error && 'errors' in err
 }
 
-export class StateManager {
+export class StateManager implements TransformClock {
   filesMap: Map<string, File[]> = new Map()
   pathsSet: Set<string> = new Set()
   idMap: Map<string, Task> = new Map()
