@@ -7,6 +7,7 @@ import type {
   TaskResultTimestampProviderInfo,
 } from 'tinybench'
 import type { SerializedConfig } from './config'
+import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import type { BaselineData, Test, TestBenchmark, TestBenchmarkTask } from './runner/types'
 import { isAbsolute, relative } from 'pathe'
 import c from 'tinyrainbow'
@@ -81,6 +82,8 @@ export interface BenchmarkGroup {
 /**
  * Executes the benchmarks of a single test and returns their results.
  *
+ * A custom provider module must default-export an object of this shape.
+ *
  * The returned array is the sole source of results: it's what `bench().run()`
  * resolves to and what the reporter serializes. Results are matched to
  * registrations by `name`; return one {@link BenchResult} per registration.
@@ -91,30 +94,15 @@ export interface BenchmarkProvider {
   run: (group: BenchmarkGroup) => Promise<BenchResult[]>
 }
 
-/**
- * The module contract a custom benchmark provider must satisfy. The module's
- * default export must be an object of this shape.
- *
- * @experimental
- */
-export interface BenchmarkProviderModule {
-  /** Factory that creates the provider used to run benchmarks. */
-  getProvider: () => BenchmarkProvider | Promise<BenchmarkProvider>
-}
-
-interface BenchmarkProviderLoader {
-  import: (id: string) => Promise<Record<string, any>>
-}
-
 let cachedProvider: Promise<BenchmarkProvider> | undefined
 
 async function loadProviderModule(
   provider: string,
-  loader: BenchmarkProviderLoader,
-): Promise<BenchmarkProviderModule> {
+  moduleRunner: TestModuleRunner,
+): Promise<BenchmarkProvider> {
   let mod: Record<string, any>
   try {
-    mod = await loader.import(provider)
+    mod = await moduleRunner.import(provider)
   }
   catch (error) {
     throw new Error(
@@ -137,13 +125,13 @@ async function loadProviderModule(
  */
 export function resolveBenchmarkProvider(
   config: SerializedConfig,
-  loader: BenchmarkProviderLoader,
+  moduleRunner: TestModuleRunner,
 ): Promise<BenchmarkProvider> {
   if (!cachedProvider) {
     const provider = config.benchmark.provider
     cachedProvider = provider === 'default' || !provider
       ? Promise.resolve(createDefaultBenchmarkProvider(config))
-      : Promise.resolve(loadProviderModule(provider, loader)).then(mod => mod.getProvider())
+      : loadProviderModule(provider, moduleRunner)
   }
   return cachedProvider
 }
@@ -240,7 +228,7 @@ function substitutePath(template: string, projectName: string | undefined): stri
 export function createBench(
   test: Test,
   config: SerializedConfig,
-  loader: BenchmarkProviderLoader,
+  moduleRunner: TestModuleRunner,
 ): Bench {
   const pending = new Set<BenchRegistration<any>>()
 
@@ -352,7 +340,7 @@ export function createBench(
     const getterTracker = workerState.getterTracker
     getterTracker?.resetInvocations()
     try {
-      const provider = await resolveBenchmarkProvider(config, loader)
+      const provider = await resolveBenchmarkProvider(config, moduleRunner)
       const results = await provider.run({ test, config: config.benchmark, registrations, options })
       const byName = new Map<string, BenchResult>()
       for (const result of results) {

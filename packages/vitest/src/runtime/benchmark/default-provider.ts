@@ -2,7 +2,6 @@ import type { Task as TinybenchTask } from 'tinybench'
 import type { BenchmarkGroup, BenchmarkProvider, BenchResult } from '../benchmark'
 import type { SerializedConfig } from '../config'
 import { Bench as Tinybench } from 'tinybench'
-import { TestRunner } from '../runners/test'
 
 const now = globalThis.performance
   ? globalThis.performance.now.bind(globalThis.performance)
@@ -27,7 +26,7 @@ export function createDefaultBenchmarkProvider(config: SerializedConfig): Benchm
       for (const { name, fn, fnOpts } of registrations) {
         tinybench.add(name, fn, fnOpts)
       }
-      await TestRunner.runBenchmarks(tinybench)
+      await tinybench.run()
 
       const errors = tinybench.tasks
         .filter(task => task.result.state === 'errored')

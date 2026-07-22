@@ -44,7 +44,6 @@ export type {
   BenchHooks,
   BenchmarkGroup,
   BenchmarkProvider,
-  BenchmarkProviderModule,
   BenchRegistration,
   BenchRegistrationInput,
   BenchResult,

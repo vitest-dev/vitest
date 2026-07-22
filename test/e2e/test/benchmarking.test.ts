@@ -1339,19 +1339,15 @@ test('`benchmark.provider` runs a custom provider whose returned results are aut
           }
         }
         export default {
-          getProvider() {
-            return {
-              async run({ registrations }) {
-                return registrations.map((reg, i) => ({
-                  name: reg.name,
-                  state: 'completed',
-                  latency: stats((i + 1) * 100),
-                  throughput: stats(1 / ((i + 1) * 100)),
-                  period: (i + 1) * 100,
-                  totalTime: (i + 1) * 1000,
-                }))
-              },
-            }
+          async run({ registrations }) {
+            return registrations.map((reg, i) => ({
+              name: reg.name,
+              state: 'completed',
+              latency: stats((i + 1) * 100),
+              throughput: stats(1 / ((i + 1) * 100)),
+              period: (i + 1) * 100,
+              totalTime: (i + 1) * 1000,
+            }))
           },
         }
       `,
@@ -1399,22 +1395,18 @@ test('`benchmark.provider` receives the registrations with raw fn and fnOpts', a
           }
         }
         export default {
-          getProvider() {
-            return {
-              async run({ registrations }) {
-                const out = []
-                for (const reg of registrations) {
-                  await reg.fnOpts?.beforeAll?.()
-                  await reg.fn()
-                  await reg.fnOpts?.afterAll?.()
-                  out.push({
-                    name: reg.name, state: 'completed',
-                    latency: stats(1), throughput: stats(1), period: 1, totalTime: 1,
-                  })
-                }
-                return out
-              },
+          async run({ registrations }) {
+            const out = []
+            for (const reg of registrations) {
+              await reg.fnOpts?.beforeAll?.()
+              await reg.fn()
+              await reg.fnOpts?.afterAll?.()
+              out.push({
+                name: reg.name, state: 'completed',
+                latency: stats(1), throughput: stats(1), period: 1, totalTime: 1,
+              })
             }
+            return out
           },
         }
       `,

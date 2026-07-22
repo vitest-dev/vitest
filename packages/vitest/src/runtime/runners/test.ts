@@ -1,6 +1,5 @@
 import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
-import type { Bench as Tinybench, Task as TinybenchTask } from 'tinybench'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
 import type { Bench } from '../benchmark'
@@ -301,15 +300,6 @@ export class TestRunner implements VitestTestRunner {
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
   static createFileTask: typeof createFileTask = createFileTask
-
-  /**
-   * @experimental
-   * A function that runs tinybench tasks.
-   * Can be overriden to run tasks in a special environment.
-   */
-  static async runBenchmarks(tinybench: Tinybench): Promise<TinybenchTask[]> {
-    return await tinybench.run()
-  }
 }
 
 function clearModuleMocks(config: SerializedConfig) {
