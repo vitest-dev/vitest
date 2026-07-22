@@ -2,6 +2,9 @@ import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { MetaEnv, WorkerSetupContext } from '../../types/worker'
 import type { FileSpecification } from '../runner/types'
 import type { VitestWorker } from './types'
+// default import: `flushCompileCache` only exists since Node 22.10, a named
+// import would fail to link on older versions
+import Module from 'node:module'
 import { serializeError } from '@vitest/utils/error'
 import { disableDefaultColors } from 'tinyrainbow'
 import { Traces } from '../../utils/traces'
@@ -241,6 +244,20 @@ export function init(worker: Options): void {
       case 'stop': {
         await runPromise
 
+        // Persist this worker's compile cache before the parent tears the
+        // worker down — forks are SIGTERM'd and never reach Node's exit-time
+        // flush, so without this the cache stays write-only for them. Runs
+        // even when teardown throws (the compiled modules are still worth
+        // persisting). A no-op when the cache is disabled or was fully loaded
+        // from disk, and cheap (~tens of ms) otherwise, so every worker can
+        // afford it.
+        const persistCompileCache = () => {
+          try {
+            Module.flushCompileCache?.()
+          }
+          catch {}
+        }
+
         try {
           const context = traces.getContextFromCarrier(message.otelCarrier)
 
@@ -256,9 +273,13 @@ export function init(worker: Options): void {
 
           await traces.finish()
 
+          persistCompileCache()
+
           send({ type: 'stopped', error, __vitest_worker_response__ })
         }
         catch (error) {
+          persistCompileCache()
+
           send({ type: 'stopped', error: serializeError(error), __vitest_worker_response__ })
         }
 

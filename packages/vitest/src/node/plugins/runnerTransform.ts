@@ -80,7 +80,9 @@ export function ModuleRunnerTransform(): VitePlugin {
           else {
             environment.dev.moduleRunnerTransform = true
           }
-          environment.dev.preTransformRequests = false
+          if (name !== 'client' || !browserEnabled) {
+            environment.dev.preTransformRequests = false
+          }
           environment.keepProcessEnv = true
         }
       },
@@ -115,7 +117,9 @@ export function ModuleRunnerTransform(): VitePlugin {
         // remove Vite's externalization logic because we have our own (unfortunately)
         config.resolve.external = [
           ...builtinModules,
-          ...builtinModules.map(m => `node:${m}`),
+          ...builtinModules
+            .filter(m => !m.startsWith('node:'))
+            .map(m => `node:${m}`),
         ]
 
         // by setting `noExternal` to `true`, we make sure that

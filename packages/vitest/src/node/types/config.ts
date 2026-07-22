@@ -20,13 +20,13 @@ import type { TestCase, TestModule, TestSuite } from '../reporters/reported-task
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
-import type { BenchmarkUserOptions } from './benchmark'
+import type { BenchmarkUserOptions, ResolvedBenchmarkOptions } from './benchmark'
 import type { BrowserConfigOptions, BrowserServerContribution, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Reporter } from './reporter'
 
 export type { CoverageOptions, ResolvedCoverageOptions }
-export type { BenchmarkUserOptions }
+export type { BenchmarkUserOptions, ResolvedBenchmarkOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
 export type { SequenceHooks, SequenceSetupFiles } from '../../runtime/runner/types'
 export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
@@ -310,6 +310,24 @@ export interface InlineConfig {
    * @default false
    */
   globals?: boolean
+
+  /**
+   * Inject CommonJS module variables (`module`, `exports`, `require`,
+   * `__filename`, `__dirname`) into every module processed by Vitest.
+   *
+   * When disabled, ES modules no longer have access to CommonJS variables,
+   * matching how the code runs outside of Vitest. Modules detected to be
+   * CommonJS keep these variables because they are part of the module scope.
+   * The module type is detected the same way Node.js does it: the file
+   * extension wins, then the `type` field in the nearest package.json,
+   * then the presence of ESM syntax in the file.
+   *
+   * This option doesn't affect externalized modules which are always
+   * executed by the native runtime.
+   *
+   * @default true
+   */
+  injectCjsGlobals?: boolean
 
   /**
    * Running environment
@@ -681,6 +699,25 @@ export interface InlineConfig {
     }
 
   /**
+   * Cache transformed modules on the file system and reuse them between reruns
+   * and separate Vitest processes, which can significantly speed up cold starts.
+   *
+   * @default false
+   */
+  fsModuleCache?: boolean
+
+  /**
+   * Directory where the {@link fsModuleCache} is stored. Can be set per project;
+   * projects that don't override it fall back to the root's cache directory.
+   *
+   * By default the cache is stored inside `node_modules` at the workspace root, so
+   * that it is naturally invalidated when dependencies are reinstalled.
+   *
+   * @default 'node_modules/.vitest-cache'
+   */
+  fsModuleCachePath?: string
+
+  /**
    * Options for configuring the order of running tests.
    */
   sequence?: SequenceOptions
@@ -888,15 +925,6 @@ export interface InlineConfig {
    * @experimental
    */
   experimental?: {
-    /**
-     * Enable caching of modules on the file system between reruns.
-     */
-    fsModuleCache?: boolean
-    /**
-     * Path relative to the root of the project where the fs module cache will be stored.
-     * @default node_modules/.experimental-vitest-cache
-     */
-    fsModuleCachePath?: string
     /**
      * {@link https://vitest.dev/guide/open-telemetry}
      */
@@ -1113,7 +1141,7 @@ export interface UserConfig extends InlineConfig {
   mergeReports?: string
 
   /**
-   * Delete all Vitest caches, including `experimental.fsModuleCache`.
+   * Delete all Vitest caches, including the `fsModuleCache`.
    * @experimental
    */
   clearCache?: boolean
@@ -1199,7 +1227,7 @@ export interface ResolvedConfig
   cliExclude?: string[]
 
   project: string[]
-  benchmark: Required<BenchmarkUserOptions>
+  benchmark: ResolvedBenchmarkOptions
   shard?: {
     index: number
     count: number

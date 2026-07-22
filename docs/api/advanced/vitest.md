@@ -603,7 +603,7 @@ This method will [collect tests](#parsespecification) from an array of specifica
 function experimental_clearCache(): Promise<void>
 ```
 
-Deletes all Vitest caches, including [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache).
+Deletes all Vitest caches, including [`fsModuleCache`](/config/fsmodulecache).
 
 ## experimental_getSourceModuleDiagnostic <Version type="experimental">4.0.15</Version> <Experimental /> {#getsourcemodulediagnostic}
 

@@ -47,6 +47,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     name: config.name,
     color: config.color,
     globals: config.globals,
+    injectCjsGlobals: config.injectCjsGlobals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
@@ -133,6 +134,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     benchmark: {
       enabled: config.benchmark.enabled,
       retainSamples: config.benchmark.retainSamples,
+      provider: config.benchmark.provider,
       suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
       projectName: config.benchmark.projectName,
     },
@@ -140,8 +142,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     serializedDefines: config.browser.enabled
       ? ''
       : project._serializedDefines || '',
+    fsModuleCache: config.fsModuleCache ?? false,
     experimental: {
-      fsModuleCache: config.experimental.fsModuleCache ?? false,
       importDurations: config.experimental.importDurations,
       viteModuleRunner: config.experimental.viteModuleRunner ?? true,
       nodeLoader: config.experimental.nodeLoader ?? true,

@@ -46,16 +46,17 @@ export function WorkspaceVitestPlugin(
           },
         }
 
+        // always inherit the global `fsModuleCache` values even without `extends: true`
+        if (testConfig.fsModuleCache == null && globalConfig.fsModuleCache != null) {
+          testConfig.fsModuleCache = globalConfig.fsModuleCache
+        }
+        if (testConfig.fsModuleCachePath == null && globalConfig.fsModuleCachePath != null) {
+          testConfig.fsModuleCachePath = globalConfig.fsModuleCachePath
+        }
+
         // TODO: remove this after "extends: false" is flipped
         testConfig.experimental ??= {}
 
-        // always inherit the global `fsModuleCache` value even without `extends: true`
-        if (testConfig.experimental?.fsModuleCache == null && globalConfig.experimental?.fsModuleCache != null) {
-          testConfig.experimental.fsModuleCache = globalConfig.experimental.fsModuleCache
-        }
-        if (testConfig.experimental?.fsModuleCachePath == null && globalConfig.experimental?.fsModuleCachePath != null) {
-          testConfig.experimental.fsModuleCachePath = globalConfig.experimental.fsModuleCachePath
-        }
         if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
           testConfig.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
         }
@@ -76,7 +77,7 @@ export function WorkspaceVitestPlugin(
         config.server.watch = null
       },
     },
-    VitestConfigServer(harness, globalConfig),
+    ...VitestConfigServer(harness, globalConfig),
     SsrRunnerFixerPlugin(harness),
     MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(),

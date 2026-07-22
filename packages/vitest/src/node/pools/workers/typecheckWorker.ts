@@ -46,7 +46,7 @@ export class TypecheckPoolWorker implements PoolWorker {
   }
 
   off(event: string, callback: (arg: any) => any): void {
-    this._eventEmitter.on(event, callback)
+    this._eventEmitter.off(event, callback)
   }
 
   deserialize(data: unknown): unknown {
