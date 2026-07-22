@@ -146,12 +146,10 @@ it('disables server.hmr before plugins read it in their own config hook', async 
   expect(observedHmr).toBe(false)
 })
 
-it('experimental fsModuleCache is inherited in a project', async () => {
+it('fsModuleCache is inherited in a project', async () => {
   const v = await config({
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/custom-cache-path',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/custom-cache-path',
     projects: [
       {
         test: {
@@ -160,34 +158,41 @@ it('experimental fsModuleCache is inherited in a project', async () => {
       },
     ],
   })
-  expect(v.experimental.fsModuleCache).toBe(true)
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCache).toBe(true)
+  expect(v.fsModuleCache).toBe(true)
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCache).toBe(true)
 
-  expect(v.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
 })
 
-it('project overrides experimental fsModuleCache', async () => {
+it('project overrides fsModuleCache', async () => {
+  const v = await config({
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/custom-cache-path',
+    projects: [
+      {
+        test: {
+          name: 'project',
+          fsModuleCache: false,
+          fsModuleCachePath: './node_modules/project-cache-path',
+        },
+      },
+    ],
+  })
+  expect(v.fsModuleCache).toBe(true)
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCache).toBe(false)
+
+  expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
+})
+
+it('migrates the deprecated `experimental.fsModuleCache*` options to the top level', async () => {
   const v = await config({
     experimental: {
       fsModuleCache: true,
       fsModuleCachePath: './node_modules/custom-cache-path',
     },
-    projects: [
-      {
-        test: {
-          name: 'project',
-          experimental: {
-            fsModuleCache: false,
-            fsModuleCachePath: './node_modules/project-cache-path',
-          },
-        },
-      },
-    ],
-  })
-  expect(v.experimental.fsModuleCache).toBe(true)
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCache).toBe(false)
-
-  expect(v.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
+  } as any)
+  expect(v.fsModuleCache).toBe(true)
+  expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
 })

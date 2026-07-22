@@ -52,6 +52,36 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// vm pools resolve `isolate` to false (isolation comes from a fresh VM
+// context per run request), which used to trigger the "single non-isolated
+// worker receives all files at once" batching with `maxWorkers: 1` — all
+// files then shared one VM context and leaked state into each other
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s keeps per-file isolation when maxWorkers is 1',
+  async (pool) => {
+    // each file both expects a clean context and pollutes it, so the test
+    // does not depend on the file execution order
+    const pollutingTest = `
+      import { expect, test } from 'vitest'
+
+      test('does not see state from other test files', () => {
+        expect(globalThis.__isolation_leak__).toBeUndefined()
+        globalThis.__isolation_leak__ = import.meta.url
+      })
+    `
+    const { stderr, exitCode } = await runInlineTests({
+      'a.test.js': pollutingTest,
+      'b.test.js': pollutingTest,
+    }, {
+      pool,
+      maxWorkers: 1,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // the graph prewarm triggered by vm workers swallows its own transform
 // errors — the worker's fetch must still report them with the import context
 test('vm pools report errors from modules covered by the graph prewarm', async () => {

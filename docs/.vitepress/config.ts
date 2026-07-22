@@ -471,6 +471,14 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/cache',
               },
               {
+                text: 'fsModuleCache',
+                link: '/config/fsmodulecache',
+              },
+              {
+                text: 'fsModuleCachePath',
+                link: '/config/fsmodulecachepath',
+              },
+              {
                 text: 'sequence',
                 link: '/config/sequence',
               },
@@ -653,6 +661,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'browser.screenshotFailures',
                 link: '/config/browser/screenshotfailures',
+              },
+              {
+                text: 'browser.dependencySourcemaps',
+                link: '/config/browser/dependencysourcemaps',
               },
               {
                 text: 'browser.orchestratorScripts',
@@ -1071,6 +1083,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Custom Pool',
                 link: '/guide/advanced/pool',
+              },
+              {
+                text: 'Benchmark Provider',
+                link: '/guide/advanced/benchmark-provider',
               },
             ],
           },

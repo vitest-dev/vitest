@@ -12,9 +12,7 @@ const FIXTURES = '**/fixtures/**'
 
 export default defineConfig({
   test: {
-    experimental: {
-      fsModuleCache: true,
-    },
+    fsModuleCache: true,
     reporters: process.env.CI ? 'minimal' : 'verbose',
     isolate: false,
     setupFiles: ['./setup.ts'],

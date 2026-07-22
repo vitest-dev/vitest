@@ -13,9 +13,7 @@ const serialTests = [
 
 export default defineConfig({
   test: {
-    experimental: {
-      fsModuleCache: true,
-    },
+    fsModuleCache: true,
     reporters: [
       process.env.CI ? 'minimal' : 'verbose',
       (process.env.VITEST_CI_BLOB_LABEL

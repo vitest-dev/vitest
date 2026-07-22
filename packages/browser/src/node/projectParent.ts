@@ -64,9 +64,22 @@ export class ParentBrowserProject {
         }
 
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
-        // handle non-inline source map such as pre-bundled deps in node_modules/.vite
-        if (result && !result.map) {
-          const filePath = id.split('?')[0]
+        const filePath = id.split('?')[0]
+        // prefer the map stored on disk when the transform pipeline can't
+        // provide a usable one:
+        // - pre-bundled deps: the pipeline map resolves back into the
+        //   optimizer cache, while the map esbuild wrote next to the file
+        //   points at the real package sources
+        // - an empty `mappings` means the map was intentionally not served
+        //   to the browser (`vitest:browser:framework-sourcemaps`), but disk
+        //   is still the source of truth for error stack traces
+        if (
+          result && (
+            !result.map
+            || result.map.mappings === ''
+            || filePath.startsWith(this.vite.config.cacheDir)
+          )
+        ) {
           const extracted = extractSourcemapFromFile(result.code, filePath)
           this.sourceMapCache.set(id, extracted?.map)
           return extracted?.map
