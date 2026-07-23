@@ -3,7 +3,6 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { API_TOKEN_FILE } from '../config/apiToken'
-import { ROOT_DEFAULT_EXPERIMENTAL_OPTIONS, ROOT_DEFAULT_OPTIONS } from '../config/propagation'
 import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -47,18 +46,25 @@ export function WorkspaceVitestPlugin(
           },
         }
 
-        // always inherit these root values even without `extends: true`
-        // TODO: remove this after "extends: false" is flipped
-        for (const option of ROOT_DEFAULT_OPTIONS) {
-          if (testConfig[option] == null && globalConfig[option] != null) {
-            (testConfig as any)[option] = globalConfig[option]
-          }
+        // always inherit the global `fsModuleCache` values even without `extends: true`
+        if (testConfig.fsModuleCache == null && globalConfig.fsModuleCache != null) {
+          testConfig.fsModuleCache = globalConfig.fsModuleCache
         }
+        if (testConfig.fsModuleCachePath == null && globalConfig.fsModuleCachePath != null) {
+          testConfig.fsModuleCachePath = globalConfig.fsModuleCachePath
+        }
+
+        // TODO: remove this after "extends: false" is flipped
         testConfig.experimental ??= {}
-        for (const option of ROOT_DEFAULT_EXPERIMENTAL_OPTIONS) {
-          if (testConfig.experimental[option] == null && globalConfig.experimental?.[option] != null) {
-            (testConfig.experimental as any)[option] = globalConfig.experimental[option]
-          }
+
+        if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
+          testConfig.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
+        }
+        if (testConfig.experimental?.nodeLoader == null && globalConfig.experimental?.nodeLoader != null) {
+          testConfig.experimental.nodeLoader = globalConfig.experimental.nodeLoader
+        }
+        if (testConfig.experimental?.importDurations == null && globalConfig.experimental?.importDurations != null) {
+          testConfig.experimental.importDurations = globalConfig.experimental.importDurations
         }
 
         return config

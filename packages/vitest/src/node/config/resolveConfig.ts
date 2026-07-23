@@ -39,7 +39,6 @@ import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 import { API_TOKEN_FILE, resolveApiToken } from './apiToken'
 import { PluginHarness } from './pluginHarness'
-import { RUN_LEVEL_OPTIONS } from './propagation'
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -209,10 +208,9 @@ export function resolveTestConfig(
   const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
   resolved.root = viteConfig.root
 
-  // Coverage is a run-level option (see ./propagation.ts), but unlike
-  // `RUN_LEVEL_OPTIONS` it is shared by reference and assigned before the rest
-  // of the resolution: each project's setup/test/config files are appended to
-  // the same `coverage.exclude` list below, keeping them out of the report.
+  // Coverage is collected once for the whole run using the root config, so projects
+  // share its resolved coverage by reference. Each project's setup/test/config files
+  // are then appended to the same exclude list below, keeping them out of the report.
   if (globalConfig) {
     resolved.coverage = globalConfig.coverage
   }
@@ -1020,12 +1018,11 @@ export function resolveTestConfig(
     resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
   }
 
-  // Run-level options are resolved once on the root config; a project always
-  // receives the root's resolved values (see ./propagation.ts).
+  // Like coverage above, these options only make sense for the test run as a
+  // whole; a project always receives the root's resolved values.
   if (globalConfig) {
-    for (const option of RUN_LEVEL_OPTIONS) {
-      (resolved as any)[option] = globalConfig[option]
-    }
+    resolved.attachmentsDir = globalConfig.attachmentsDir
+    resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
   }
 
   return resolved
