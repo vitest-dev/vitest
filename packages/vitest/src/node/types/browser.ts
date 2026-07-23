@@ -24,6 +24,16 @@ export interface BrowserProviderOption<Options extends object = object> {
   name: string
   supportedBrowser?: ReadonlyArray<string>
   options: Options
+  /**
+   * Called once for every resolved browser project right before its shared
+   * Vite server is created, so the provider can start preparing the browser
+   * (e.g. launching it) concurrently. Optional, fire-and-forget: errors must
+   * surface through the normal provider flow.
+   */
+  prewarm?: (ctx: {
+    config: ResolvedConfig
+    vitest: Vitest
+  }) => void
   providerFactory: (project: TestProject) => BrowserProvider
   serverFactory: BrowserServerFactory
 }

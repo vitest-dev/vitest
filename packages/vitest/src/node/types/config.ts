@@ -1299,6 +1299,14 @@ export interface ResolvedProjectEntry {
   viteConfig: ResolvedViteConfig
   projectConfig: ResolvedConfig
   /**
+   * Whether test files were found while resolving browser dependencies. This
+   * early result is used only to decide whether prewarming is useful; runtime
+   * discovery still globs after plugins have configured the server.
+   *
+   * @internal
+   */
+  hasTestFiles?: boolean
+  /**
    * When set, this entry exists only so browser-instance siblings can attach
    * to a parent that owns the Vite server and (later) the browser provider.
    * The resulting `TestProject` is created and kept alive (so siblings can

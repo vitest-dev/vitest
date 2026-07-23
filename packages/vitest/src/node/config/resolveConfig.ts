@@ -416,6 +416,7 @@ export function resolveTestConfig(
         + `Use a single provider for the project, or move the instances into separate projects.`,
       )
     }
+    browser.provider ??= browser.instances.find(instance => instance.provider)?.provider
 
     // use `chromium` by default when the preview provider is specified
     // for a smoother experience. if chromium is not available, it will
