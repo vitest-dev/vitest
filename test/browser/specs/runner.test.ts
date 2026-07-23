@@ -181,6 +181,9 @@ describe('console logging tests', async () => {
       stdout,
     } = await runBrowserTests({
       root: './fixtures/print-logs',
+      // assert on Vitest's own console forwarding rather than Vite's client
+      // relay, which does not run when the tester loads the stubbed @vite/client
+      reporters: ['default'],
     }))
   })
 
