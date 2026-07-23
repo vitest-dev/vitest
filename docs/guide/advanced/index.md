@@ -117,6 +117,31 @@ This is the same method Vitest uses internally to resolve the config before crea
 You can pass a shared [`PluginHarness`](#pluginharness) as the third argument to reuse a logger and package installer across calls.
 :::
 
+## Project Configuration Resolution
+
+This section describes how the arguments of `startVitest`, `createVitest`, and `resolveConfig` interact with [test projects](/guide/projects). Without projects, all resolved options apply to the single root project and none of this matters.
+
+The root configuration is resolved from three inputs, in ascending priority:
+
+1. the root config file
+2. `viteOverrides`, merged on top of the config file values
+3. CLI options (`options`), applied on top of everything else
+
+Every project then resolves its own Vite config independently:
+
+- A project referenced as a config file or a directory resolves only its own file. It does not inherit any options from the root configuration.
+- An inline project with the [`extends`](/guide/projects#configuration) option re-executes the extended config file and merges the project's own options on top. Only the config **file** participates in this: `viteOverrides` and CLI options are not part of the file, so `extends` does not carry them into projects.
+
+Independently of `extends`, several groups of options reach every project:
+
+- A fixed subset of CLI options that configure how tests run (`--testTimeout`, `--retry`, `--pool`, and similar) is applied to every project at the highest priority, mirroring the root resolution.
+- Run-level options only make sense for the test run as a whole: every project receives the root's resolved `coverage`, `attachmentsDir`, and `mergeReportsLabel` values.
+- The root's `fsModuleCache`, `fsModuleCachePath`, `experimental.viteModuleRunner`, `experimental.nodeLoader`, and `experimental.importDurations` values are applied as defaults to every project that doesn't define them.
+
+The project's own `tags` always replace the `tags` array merged from an extended config instead of being concatenated with it, so the same tag names can be redefined.
+
+Note that `plugins` reach a project only through a config file: the file is re-executed for every project, which creates fresh plugin instances. Plugin instances passed in `viteOverrides` belong to the root Vite server and are never shared with project servers.
+
 ## parseCLI
 
 ```ts

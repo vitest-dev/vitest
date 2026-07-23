@@ -49,9 +49,6 @@ export function WorkspaceVitestPlugin(
         return config
       },
       configResolved(config) {
-        // Projects always inherit non-project config options
-        config.test.coverage = globalConfig.coverage
-        config.test.attachmentsDir = globalConfig.attachmentsDir
         // project servers never watch; the top-level server owns the watcher
         config.server.watch = null
       },
