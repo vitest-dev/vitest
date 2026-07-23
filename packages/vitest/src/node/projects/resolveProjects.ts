@@ -351,15 +351,11 @@ async function resolveDeclaredProjectEntries(
   return entries
 }
 
-// Options that are always scoped to the project itself and are never
-// inherited from the config the project extends:
-// - `name` identifies the project and must stay unique
-// - `projects` would redefine the whole workspace, including the project itself
+// `name` must stay unique per project, `projects` would redefine the whole workspace
 const NON_INHERITED_OPTIONS = ['name', 'projects'] as const
 
-// The root `globalSetup` already runs once per test run on the root config;
-// inheriting it would run the same files again for every project. Extending
-// a non-root config keeps it because nothing else runs it.
+// the root `globalSetup` already runs once per test run; a non-root
+// config keeps it because nothing else runs it
 const NON_INHERITED_ROOT_OPTIONS = [...NON_INHERITED_OPTIONS, 'globalSetup'] as const
 
 function ProjectInheritancePlugin(options: ViteInlineConfig, extendsRootConfig: boolean): VitePlugin {
@@ -375,8 +371,7 @@ function ProjectInheritancePlugin(options: ViteInlineConfig, extendsRootConfig: 
       order: 'pre',
       handler(config) {
         config.test ??= {}
-        // the project's own `tags` replace the inherited array instead of
-        // being concatenated with it, so tags can be overridden
+        // the project's own `tags` replace the inherited array so tags can be overridden
         if (options.test?.tags) {
           config.test.tags = options.test.tags
         }
@@ -398,6 +393,30 @@ function ProjectInheritancePlugin(options: ViteInlineConfig, extendsRootConfig: 
   }
 }
 
+/**
+ * Merges the programmatic config passed to `createVitest` into an extending
+ * project's options. The programmatic config is part of the effective root
+ * config, so a project inherits it even when the root config file doesn't
+ * exist. Some options never transfer to a project:
+ * - `plugins` are live instances owned by the root server
+ * - `tagsFilter` is CLI-only; `PROJECT_CLI_OVERRIDES` applies it per project
+ * - `browser` describes the instances of a single project; inheriting it
+ *   would create duplicate instance names (the `--browser` flags have the
+ *   same guard in `CliOverride`)
+ */
+function inheritRootViteOverrides(
+  globalConfig: ResolvedConfig,
+  options: ViteInlineConfig,
+): ViteInlineConfig {
+  const { plugins: _plugins, ...rootViteOverrides } = globalConfig.viteOverrides
+  // cloned so plugins that mutate inherited arrays in place don't share
+  // them between the root and every project
+  const inherited = deepClone(rootViteOverrides)
+  delete (inherited.test as UserConfig | undefined)?.tagsFilter
+  delete (inherited.test as UserConfig | undefined)?.browser
+  return mergeConfig(inherited, options)
+}
+
 async function resolveSingleProjectEntry(
   harness: PluginHarness,
   globalViteConfig: ResolvedViteConfig,
@@ -410,9 +429,8 @@ async function resolveSingleProjectEntry(
 
   const browserHolder: BrowserContributionHolder = {}
 
-  // inline entries are keyed by their index; file-based projects are keyed
-  // by the config path and don't extend another config, so their own values
-  // must never be un-merged
+  // only inline entries (keyed by their index) extend another config;
+  // file-based projects own all of their values
   const isInlineEntry = typeof workspacePath === 'number'
   const inheritsRootConfig = isInlineEntry
     && options.extends !== false
@@ -421,26 +439,9 @@ async function resolveSingleProjectEntry(
   const extendsRootConfig = inheritsRootConfig
     || (!!configFile && configFile === globalViteConfig.configFile)
 
-  // programmatic overrides are part of the effective root config, so an
-  // extending project inherits them like the root config file itself even
-  // when the file doesn't exist; the plugins are live instances owned by
-  // the root server and cannot be shared with the project servers
-  let inlineOptions: ViteInlineConfig = restOptions
-  if (inheritsRootConfig) {
-    const { plugins: _plugins, ...rootViteOverrides } = globalConfig.viteOverrides
-    // the root config file is re-executed for every project, so each resolution
-    // gets its own objects; the clone gives inherited overrides the same
-    // isolation, otherwise plugins that mutate config arrays in place would
-    // push into a single array shared by the root and every project
-    const inherited = deepClone(rootViteOverrides)
-    // a CLI-only filter, its per-project semantics are handled by PROJECT_CLI_OVERRIDES
-    delete (inherited.test as UserConfig | undefined)?.tagsFilter
-    // the browser configuration describes the instances of a single project;
-    // inheriting it would create duplicate instance names in every project
-    // (CliOverride has the same guard for the `--browser` flags)
-    delete (inherited.test as UserConfig | undefined)?.browser
-    inlineOptions = mergeConfig(inherited, restOptions)
-  }
+  const inlineOptions = inheritsRootConfig
+    ? inheritRootViteOverrides(globalConfig, restOptions)
+    : restOptions
 
   const projectInline: ViteInlineConfig = {
     ...inlineOptions,
