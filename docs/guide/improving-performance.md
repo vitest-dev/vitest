@@ -8,15 +8,17 @@ The `Duration` line of the summary breaks the run down into phases, as percentag
 Duration  3.76s (environment 79%, import 14%, transform 6%, tests 1%)
 ```
 
-The percentages are relative to the sum of all tracked phases, not to the wall-clock time: phases run in parallel workers, so their sum is usually larger than the run itself. In a multi-project setup the percentages aggregate over all [projects](/guide/projects), so a phase that dominates one project can be diluted by the others.
+The percentages are relative to the sum of all tracked phases, not to the wall-clock time: phases run in parallel workers, so their sum is usually larger than the run itself. In a multi-project setup the percentages aggregate over all [projects](/guide/projects), so a phase that dominates one project can be diluted by the others; the performance hints below analyze each project separately.
 
 The phases map to configuration options:
 
-- `environment` - creating the test environment (`jsdom`, `happy-dom`) for test files.
+- `environment` - creating the test environment (`jsdom`, `happy-dom`) for test files. See [Test Environments](#test-environments).
 - `transform` - transforming files with Vite. See [Caching Between Reruns](#caching-between-reruns).
 - `import` - importing test files and their modules. When files import mostly the same modules (typical for barrel-file imports), isolation re-evaluates that shared graph for every file. See [Test Isolation](#test-isolation).
 - `setup` - running [`setupFiles`](/config/setupfiles).
 - `tests` - running the tests themselves. A run dominated by this phase has little to gain from configuration changes.
+
+When the collected timings show that a configuration change would make the run significantly faster, Vitest also prints a hint after the summary, see [`experimental.diagnostics`](/config/experimental#experimental-diagnostics). Hints never suggest changing an option that was set explicitly.
 
 ## Test Isolation
 
@@ -90,6 +92,31 @@ export default defineConfig({
 })
 ```
 :::
+
+## Test Environments
+
+DOM environments are expensive to create: `jsdom` costs roughly 200-500ms per import and `happy-dom` roughly 90-200ms, plus the time to construct the window. With an isolating pool (the default), that cost is paid for every test file, because every file gets a fresh worker. On DOM-heavy suites this is often the largest cost of the run; it appears as the `environment` share of the `Duration` breakdown.
+
+Three configurations reduce this cost:
+
+| configuration | environment created | isolation | trade-off |
+|---|---|---|---|
+| `pool: 'forks'`/`'threads'` + `isolate: true` (default) | once per file | fresh process/thread and environment per file | safest, slowest |
+| `pool: 'vmThreads'` | once per worker | fresh VM context and `window` per file | test code runs in a VM realm: cross-realm `instanceof` edge cases with externalized packages, and memory is not reclaimed as reliably (see [`vmMemoryLimit`](/config/vmmemorylimit)) |
+| `isolate: false` | once per worker | none - files in the same worker share the environment and module state | tests must not depend on a clean `window` or module state |
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    pool: 'vmThreads', // environment per worker, fresh window per file
+  },
+})
+```
+
+Prefer `isolate: false` with `threads` if the tests tolerate shared state: it is the fastest option and keeps memory behavior simple. Use `vmThreads` when every file needs a fresh `window` and the per-file environment cost dominates the run. `happy-dom` is cheaper to create than `jsdom` in every setup.
 
 ## Limiting Directory Search
 

@@ -26,13 +26,14 @@ const readFilePromises = new Map<string, Promise<string | null>>()
  * actual work by orders of magnitude.
  */
 export interface TransformClock {
-  transformStarted: () => void
-  transformFinished: () => void
+  transformStarted: (projectName: string) => void
+  transformFinished: (projectName: string) => void
 }
 
 class ModuleFetcher {
   private tmpDirectories = new Set<string>()
   private fsCacheEnabled: boolean
+  private projectName: string
   // the module type is only needed by the evaluator to decide if CJS
   // variables should be provided to the module, so don't waste time
   // on the detection when every module receives them
@@ -47,6 +48,7 @@ class ModuleFetcher {
   ) {
     this.fsCacheEnabled = config.fsModuleCache === true
     this.detectModuleType = config.injectCjsGlobals === false
+    this.projectName = config.name || ''
   }
 
   async fetch(
@@ -325,7 +327,7 @@ class ModuleFetcher {
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
   ): Promise<VitestFetchResult> {
-    this.clock.transformStarted()
+    this.clock.transformStarted(this.projectName)
     try {
       const moduleRunnerModule = await fetchModule(
         environment,
@@ -344,7 +346,7 @@ class ModuleFetcher {
       return result
     }
     finally {
-      this.clock.transformFinished()
+      this.clock.transformFinished(this.projectName)
     }
   }
 

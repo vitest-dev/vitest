@@ -6,15 +6,17 @@ import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { readFileSync } from 'node:fs'
+import { availableParallelism } from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { groupBy } from '../../utils/base'
-import { isTTY } from '../../utils/env'
+import { isCI, isTTY } from '../../utils/env'
 import { getSuites, getTestName, getTests, hasFailed, hasFailedSnapshot } from '../../utils/tasks'
 import { generateCodeFrame, printStack } from '../printError'
+import { estimateModuleEvaluationSaving, getEnvironmentDiagnostics, getImportDiagnostics, getTransformDiagnostics, isSavingWorthHinting } from './diagnostics'
 import { computeDurationBreakdown, formatDurationBreakdown } from './durationBreakdown'
 import { BENCH_TABLE_HEAD, computeBenchColumnWidths, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
@@ -657,7 +659,347 @@ export abstract class BaseReporter implements Reporter {
 
     this.reportImportDurations()
 
+    // at most one hint per family: the environment hint is the most specific,
+    // the import hint explains the same `isolate` remedy through module data,
+    // and the transform hint (a cache, helping the *next* run) only speaks up
+    // when neither applies
+    const hinted = this.reportEnvironmentDiagnostic(files)
+      || this.reportImportDiagnostic(files)
+      || this.reportTransformDiagnostic(files)
+    if (!hinted) {
+      this.reportIsolateDiagnostic(files)
+    }
+
     this.log()
+  }
+
+  private getEffectiveMaxWorkers(): number {
+    const configured = this.ctx.config.maxWorkers
+    return typeof configured === 'number' && configured > 0
+      ? configured
+      : Math.max(1, availableParallelism() - 1)
+  }
+
+  /**
+   * Surfaces the cost of re-creating a DOM environment for every test file:
+   * with an isolating pool, `jsdom`/`happy-dom` are imported and set up once
+   * per file. When that repeated setup dominates the run, hint that a `vm`
+   * pool sets the environment up once per worker while keeping per-file
+   * isolation, and that `isolate: false` shares it across files.
+   */
+  private reportEnvironmentDiagnostic(files: File[]): boolean {
+    // merged blob reports replay durations of past runs: no environments were
+    // created by this process, and the per-project transform split needed for
+    // an accurate share is not part of the blob format
+    if (this.ctx.config.watch || this.ctx.state.blobs || !this.ctx.config.experimental.diagnostics.environment) {
+      return false
+    }
+
+    const executionTime = this.end - this.start
+    const maxWorkers = this.getEffectiveMaxWorkers()
+    const transformTimes = this.ctx.state.transformTimes
+    const inputs = this.ctx.projects.map((project) => {
+      const projectFiles = files.filter(file => (file.projectName || '') === project.name)
+      let environmentTime = 0
+      let environmentCount = 0
+      let trackedTime = transformTimes.get(project.name) || 0
+      for (const file of projectFiles) {
+        if (file.environmentLoad) {
+          environmentTime += file.environmentLoad
+          environmentCount++
+        }
+        trackedTime
+          += (file.environmentLoad || 0)
+            + (file.setupDuration || 0)
+            + (file.collectDuration || 0)
+            + (file.result?.duration || 0)
+      }
+      return {
+        name: project.name,
+        environment: project.config.environment,
+        pool: project.config.pool,
+        isolate: project.config.isolate,
+        browser: project.config.browser.enabled,
+        poolProvided: project.config.providedOptions.pool,
+        isolateProvided: project.config.providedOptions.isolate,
+        environmentTime,
+        environmentCount,
+        trackedTime,
+        parallelism: Math.max(1, Math.min(environmentCount, maxWorkers)),
+        executionTime,
+      }
+    })
+
+    const diagnostics = getEnvironmentDiagnostics(inputs)
+    if (!diagnostics.length) {
+      return false
+    }
+
+    for (const diagnostic of diagnostics) {
+      const project = this.ctx.projects.find(p => p.name === diagnostic.name)
+      this.log()
+      this.log(
+        padSummaryTitle('Environment'),
+        formatProjectName(project)
+        + c.yellow(`${diagnostic.environment} was created ${diagnostic.environmentCount} times`)
+        + c.dim(` · ${formatTime(diagnostic.environmentTime)} total, ${Math.round(diagnostic.share * 100)}% of tracked time`),
+      )
+      const alternative = diagnostic.suggestIsolate
+        ? c.dim(' (keeps per-file isolation) or ') + c.yellow('isolate: false') + c.dim(' (shares it across files)')
+        : c.dim(' (keeps per-file isolation)')
+      this.log(
+        padSummaryTitle(''),
+        c.dim('create it once per worker with ')
+        + c.yellow(`pool: 'vmThreads'`)
+        + alternative,
+      )
+      this.log(
+        padSummaryTitle(''),
+        c.dim('learn more: https://vitest.dev/guide/improving-performance#test-environments'),
+      )
+    }
+
+    return true
+  }
+
+  /**
+   * Surfaces repeated evaluation of the same module graph: with `isolate: true`
+   * every test file re-imports its whole graph, so suites where files share
+   * most of their modules (typically through barrel files) pay the graph cost
+   * once per file. The duplication is measured from server-side fetch counts,
+   * so suites with disjoint per-file graphs stay quiet.
+   */
+  private reportImportDiagnostic(files: File[]): boolean {
+    if (this.ctx.config.watch || this.ctx.state.blobs || !this.ctx.config.experimental.diagnostics.import) {
+      return false
+    }
+
+    const executionTime = this.end - this.start
+    const maxWorkers = this.getEffectiveMaxWorkers()
+    const transformTimes = this.ctx.state.transformTimes
+    const inputs = this.ctx.projects.map((project) => {
+      const projectFiles = files.filter(file => (file.projectName || '') === project.name)
+      let importTime = 0
+      let trackedTime = transformTimes.get(project.name) || 0
+      for (const file of projectFiles) {
+        importTime += file.collectDuration || 0
+        trackedTime
+          += (file.environmentLoad || 0)
+            + (file.setupDuration || 0)
+            + (file.collectDuration || 0)
+            + (file.result?.duration || 0)
+      }
+      const durations = this.ctx.state.metadata[project.name]?.duration
+      return {
+        name: project.name,
+        pool: project.config.pool,
+        isolate: project.config.isolate,
+        browser: project.config.browser.enabled,
+        isolateProvided: project.config.providedOptions.isolate,
+        importTime,
+        trackedTime,
+        fetchCounts: durations ? Object.values(durations).map(times => times.length) : [],
+        fileCount: projectFiles.length,
+        parallelism: Math.max(1, Math.min(projectFiles.length, maxWorkers)),
+        executionTime,
+      }
+    })
+
+    const diagnostics = getImportDiagnostics(inputs)
+    if (!diagnostics.length) {
+      return false
+    }
+
+    for (const diagnostic of diagnostics) {
+      const project = this.ctx.projects.find(p => p.name === diagnostic.name)
+      this.log()
+      this.log(
+        padSummaryTitle('Import'),
+        formatProjectName(project)
+        + c.yellow(`${diagnostic.uniqueModules} modules were evaluated ${diagnostic.totalFetches} times`)
+        + c.dim(` · ${formatTime(diagnostic.importTime)} total, ${Math.round(diagnostic.share * 100)}% of tracked time`),
+      )
+      this.log(
+        padSummaryTitle(''),
+        c.dim(`~${formatTime(diagnostic.estimatedSaving)} faster with `)
+        + c.yellow('isolate: false')
+        + c.dim(' — shared modules are evaluated once per worker instead of once per file'),
+      )
+      this.log(
+        padSummaryTitle(''),
+        c.dim('learn more: https://vitest.dev/guide/improving-performance#test-isolation'),
+      )
+    }
+
+    return true
+  }
+
+  /**
+   * Surfaces transform-dominated runs: without the fs module cache every
+   * `vitest run` transforms the whole module graph from scratch. Enabling
+   * `fsModuleCache` persists the results so the next run skips them.
+   */
+  private reportTransformDiagnostic(files: File[]): boolean {
+    if (this.ctx.config.watch || this.ctx.state.blobs || !this.ctx.config.experimental.diagnostics.transform) {
+      return false
+    }
+
+    const executionTime = this.end - this.start
+    const transformTimes = this.ctx.state.transformTimes
+    const inputs = this.ctx.projects.map((project) => {
+      const projectFiles = files.filter(file => (file.projectName || '') === project.name)
+      const transformTime = transformTimes.get(project.name) || 0
+      let trackedTime = transformTime
+      for (const file of projectFiles) {
+        trackedTime
+          += (file.environmentLoad || 0)
+            + (file.setupDuration || 0)
+            + (file.collectDuration || 0)
+            + (file.result?.duration || 0)
+      }
+      return {
+        name: project.name,
+        transformTime,
+        trackedTime,
+        fsModuleCache: project.config.fsModuleCache === true,
+        fsModuleCacheProvided: project.config.providedOptions.fsModuleCache,
+        executionTime,
+      }
+    })
+
+    const diagnostics = getTransformDiagnostics(inputs)
+    if (!diagnostics.length) {
+      return false
+    }
+
+    for (const diagnostic of diagnostics) {
+      const project = this.ctx.projects.find(p => p.name === diagnostic.name)
+      this.log()
+      this.log(
+        padSummaryTitle('Transform'),
+        formatProjectName(project)
+        + c.yellow(`transforming modules took ${formatTime(diagnostic.transformTime)}`)
+        + c.dim(` · ${Math.round(diagnostic.share * 100)}% of tracked time, re-done on every run`),
+      )
+      this.log(
+        padSummaryTitle(''),
+        c.dim('persist transforms across runs with ')
+        + c.yellow('fsModuleCache: true'),
+      )
+      if (isCI) {
+        this.log(
+          padSummaryTitle(''),
+          c.dim('on CI this only helps when the cache directory is persisted between runs'),
+        )
+      }
+      this.log(
+        padSummaryTitle(''),
+        c.dim('learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns'),
+      )
+    }
+
+    return true
+  }
+
+  /**
+   * Surfaces the cost of `isolate: true`: with isolation enabled Vitest spawns a
+   * fresh worker (and re-creates the test environment) for every test file. When
+   * that repeated startup cost is significant, hint that `isolate: false` would
+   * reuse workers across files.
+   */
+  private reportIsolateDiagnostic(files: File[]): void {
+    // opt-out via `experimental.diagnostics.isolate`; the timers it relies on
+    // are only shown for a full (non-watch) run
+    if (this.ctx.config.watch || !this.ctx.config.experimental.diagnostics.isolate) {
+      return
+    }
+
+    const state = this.ctx.state
+    const numWorkers = state.workersSpawned
+    // only meaningful when at least one non-browser project isolates workers
+    // without the user having explicitly chosen isolation
+    const isolates = this.ctx.projects.some(
+      project => project.config.isolate
+        && !project.config.browser.enabled
+        && !project.config.providedOptions.isolate,
+    )
+    if (!numWorkers || !isolates) {
+      return
+    }
+
+    const numFiles = files.length
+    // `startupTime` is the summed (across workers) time spent spawning the worker,
+    // loading its bundle and setting up the environment. The environment setup is
+    // already part of this window, so it is not added separately.
+    const startupTime = state.startupTime
+    const avgStartup = startupTime / numWorkers
+
+    // with `isolate: false` the same files would run in ~`parallelism` reused
+    // workers instead of spawning a fresh worker for every file
+    const parallelism = Math.max(1, Math.min(numFiles, this.getEffectiveMaxWorkers()))
+
+    // nothing was actually spawned per-file (e.g. a single worker handled everything)
+    if (numWorkers <= parallelism) {
+      return
+    }
+
+    // Spawns are spread across ~`parallelism` lanes, so the wall-clock cost is the
+    // summed startup divided by parallelism. Reusing workers leaves ~1 spawn per
+    // lane, so the reducible wall-clock time is the rest.
+    const wallStartup = startupTime / parallelism
+
+    // Reused workers also keep evaluated modules alive, so every module a later
+    // file would re-evaluate is saved as well. Per-module evaluation times are
+    // only collected when `experimental.importDurations` is enabled — without
+    // them the spawn saving is reported as a lower bound ("at least").
+    const measuresModules = this.ctx.config.experimental.importDurations.limit > 0
+    let moduleSavings = 0
+    if (measuresModules) {
+      // vm pools re-create the module graph per VM context regardless of
+      // `isolate`, so only files of `forks`/`threads` projects count
+      const eligibleProjects = new Set(this.ctx.projects
+        .filter(project => (project.config.pool === 'forks' || project.config.pool === 'threads')
+          && project.config.isolate
+          && !project.config.browser.enabled
+          && !project.config.providedOptions.isolate)
+        .map(project => project.name))
+      const moduleSelfTimes = new Map<string, number[]>()
+      for (const file of files) {
+        if (!eligibleProjects.has(file.projectName || '') || !file.importDurations) {
+          continue
+        }
+        for (const moduleId in file.importDurations) {
+          let times = moduleSelfTimes.get(moduleId)
+          if (!times) {
+            times = []
+            moduleSelfTimes.set(moduleId, times)
+          }
+          times.push(file.importDurations[moduleId].selfTime)
+        }
+      }
+      moduleSavings = estimateModuleEvaluationSaving(moduleSelfTimes.values(), parallelism)
+    }
+
+    const estimatedSavings = wallStartup - avgStartup + moduleSavings
+
+    if (!isSavingWorthHinting(estimatedSavings, this.end - this.start)) {
+      return
+    }
+
+    this.log()
+    this.log(
+      padSummaryTitle('Isolate'),
+      c.yellow(`${numWorkers} workers spawned`)
+      + c.dim(` · ~${formatTime(avgStartup)} startup each (spawn + environment, per file)`),
+    )
+    this.log(
+      padSummaryTitle(''),
+      c.dim(`${measuresModules ? '' : 'at least '}~${formatTime(estimatedSavings)} faster with `)
+      + c.yellow('isolate: false')
+      + c.dim(measuresModules
+        ? ' — reuses workers across files and evaluates shared modules once per worker'
+        : ' — reuses workers across files instead of one per file'),
+    )
   }
 
   private reportImportDurations() {
