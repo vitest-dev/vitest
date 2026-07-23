@@ -295,6 +295,8 @@ All options from the extended config are merged with the project's own options. 
 - `globalSetup` is not inherited from the root config: the root-level `globalSetup` already runs once per test run, so inheriting it would run the same files again for every project. It is still inherited when extending a non-root config file.
 - The project's own `tags` replace the inherited array instead of being merged with it.
 
+If you run Vitest through the [advanced API](/guide/advanced/), see [Project Configuration Resolution](/guide/advanced/#project-configuration-resolution) for how the programmatic configuration participates in inheritance.
+
 Projects referenced as config files or directories do not inherit any options from the root config. You can create a shared config file and merge it with the project config yourself:
 
 ```ts [packages/a/vitest.config.ts]
