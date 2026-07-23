@@ -269,7 +269,7 @@ export default defineConfig({
 })
 ```
 
-The `extends` option also accepts a path to another config file, in case you want to inherit options from a config that is not the root one:
+The `extends` option also accepts a path to another config file if you want to inherit options from a config file other than the root config:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'

@@ -121,7 +121,7 @@ Inline configurations inherit the root config by default. If you want to inherit
 
 The project's `configFile` can be accessed in Vite's config: `project.vite.config.configFile`.
 
-Note that the `name` is never inherited - Vitest doesn't allow multiple projects with the same name. Make sure you specified a unique name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
+Note that the `name` is never inherited because Vitest doesn't allow multiple projects with the same name. Make sure every project has a unique name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
 :::
 
 ### defineCacheKeyGenerator <Version>5.0.0</Version> {#definecachekeygenerator}
