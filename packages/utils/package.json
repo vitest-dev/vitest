@@ -17,54 +17,66 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest_source__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./diff": {
+      "__vitest_source__": "./src/diff/index.ts",
       "types": "./dist/diff.d.ts",
       "default": "./dist/diff.js"
     },
     "./resolver": {
+      "__vitest_source__": "./src/resolver.ts",
       "types": "./dist/resolver.d.ts",
       "default": "./dist/resolver.js"
     },
     "./error": {
+      "__vitest_source__": "./src/error.ts",
       "types": "./dist/error.d.ts",
       "default": "./dist/error.js"
     },
     "./helpers": {
+      "__vitest_source__": "./src/helpers.ts",
       "types": "./dist/helpers.d.ts",
       "default": "./dist/helpers.js"
     },
     "./offset": {
+      "__vitest_source__": "./src/offset.ts",
       "types": "./dist/offset.d.ts",
       "default": "./dist/offset.js"
     },
     "./constants": {
+      "__vitest_source__": "./src/constants.ts",
       "types": "./dist/constants.d.ts",
       "default": "./dist/constants.js"
     },
     "./timers": {
+      "__vitest_source__": "./src/timers.ts",
       "types": "./dist/timers.d.ts",
       "default": "./dist/timers.js"
     },
     "./display": {
+      "__vitest_source__": "./src/display.ts",
       "types": "./dist/display.d.ts",
       "default": "./dist/display.js"
     },
     "./source-map": {
+      "__vitest_source__": "./src/source-map.ts",
       "types": "./dist/source-map.d.ts",
       "default": "./dist/source-map.js"
     },
     "./source-map/node": {
+      "__vitest_source__": "./src/source-map/node.ts",
       "types": "./dist/source-map/node.d.ts",
       "default": "./dist/source-map/node.js"
     },
     "./serialize": {
+      "__vitest_source__": "./src/serialize.ts",
       "types": "./dist/serialize.d.ts",
       "default": "./dist/serialize.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

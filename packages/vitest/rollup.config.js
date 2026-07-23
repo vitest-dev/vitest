@@ -160,7 +160,17 @@ export default ({ watch }) =>
       },
       watch: false,
       external,
-      plugins: dtsUtils.dts(),
+      plugins: [
+        ...dtsUtils.dts(),
+        {
+          name: 'vitest-bundle-optional-types',
+          resolveId(source) {
+            if (source === '@vitest/spy/optional-types.js') {
+              return 'vitest/optional-runtime-types.js'
+            }
+          },
+        },
+      ],
     },
   ])
 
