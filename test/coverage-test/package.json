@@ -20,7 +20,7 @@
     "happy-dom": "^20.10.6",
     "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",
-    "magic-string": "^0.30.21",
+    "magic-string": "^1.0.0",
     "magicast": "^0.5.2",
     "sass-embedded": "^1.97.3",
     "unplugin-swc": "^1.5.9",

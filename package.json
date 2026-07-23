@@ -58,7 +58,7 @@
     "changelogithub": "^14.0.0",
     "esbuild": "^0.27.3",
     "eslint": "^10.7.0",
-    "magic-string": "^0.30.21",
+    "magic-string": "^1.0.0",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
     "rollup": "^4.59.0",
