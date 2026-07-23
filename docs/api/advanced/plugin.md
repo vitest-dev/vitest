@@ -124,7 +124,7 @@ The project's `configFile` can be accessed in Vite's config: `project.vite.confi
 Note that the `name` is never inherited - Vitest doesn't allow multiple projects with the same name. Make sure you specified a unique name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
 :::
 
-### experimental_defineCacheKeyGenerator <Version type="experimental">4.0.11</Version> <Experimental /> {#definecachekeygenerator}
+### defineCacheKeyGenerator <Version>5.0.0</Version> {#definecachekeygenerator}
 
 ```ts
 interface CacheKeyIdGeneratorContext {
@@ -133,7 +133,7 @@ interface CacheKeyIdGeneratorContext {
   sourceCode: string
 }
 
-function experimental_defineCacheKeyGenerator(
+function defineCacheKeyGenerator(
   callback: (context: CacheKeyIdGeneratorContext) => string | undefined | null | false
 ): void
 ```
@@ -142,7 +142,7 @@ Define a generator that will be applied before hashing the cache key.
 
 Use this to make sure Vitest generates correct hash. It is a good idea to define this function if your plugin can be registered with different options.
 
-This is called only if [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache) is defined.
+This is called only if [`fsModuleCache`](/config/fsmodulecache) is enabled.
 
 ```ts
 interface PluginOptions {
@@ -159,8 +159,8 @@ export function plugin(options: PluginOptions) {
         options.replacePropertyValue
       )
     },
-    configureVitest({ experimental_defineCacheKeyGenerator }) {
-      experimental_defineCacheKeyGenerator(() => {
+    configureVitest({ defineCacheKeyGenerator }) {
+      defineCacheKeyGenerator(() => {
         // since these options affect the transform result,
         // return them together as a unique string
         return options.replacePropertyKey + options.replacePropertyValue

@@ -170,6 +170,7 @@ export class Vitest {
   /** @internal */ _harness: PluginHarness
   /** @internal */ _exitTimeout: ReturnType<typeof setTimeout> | undefined
 
+  private _warnedExperimentalCacheKeyGenerator = false
   private isFirstRun = true
   private restartsCount = 0
 
@@ -254,6 +255,7 @@ export class Vitest {
       this._resolver,
       resolved,
       this._fsCache,
+      this.state,
       this._traces,
       this._tmpDir,
     )
@@ -282,9 +284,11 @@ export class Vitest {
    */
   async _attachRootServer(): Promise<void> {
     const resolved = this.config
+    const children = resolved.resolvedProjects
+      .filter(entry => entry.viteConfig === this.viteConfig)
     // For a root-level browser config (no `projects`) this builds the single
     // browser server; otherwise it just creates the Vite server.
-    const { server, parent } = await createClusterServer(this, this.viteConfig, resolved)
+    const { server, parent } = await createClusterServer(this, this.viteConfig, resolved, children)
     this.vite = server
     this._rootBrowserParent = parent
 
@@ -363,10 +367,17 @@ export class Vitest {
         project,
         vitest: this,
         injectTestProjects: this.injectTestProject,
+        defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
         /**
-         * @experimental
+         * @deprecated Use `defineCacheKeyGenerator` instead.
          */
-        experimental_defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
+        experimental_defineCacheKeyGenerator: (callback) => {
+          if (!this._warnedExperimentalCacheKeyGenerator) {
+            this._warnedExperimentalCacheKeyGenerator = true
+            this.logger.deprecate('`experimental_defineCacheKeyGenerator` is deprecated. Use `defineCacheKeyGenerator` instead.')
+          }
+          this._fsCache.defineCacheKeyGenerator(callback)
+        },
       }))
     }))
 
@@ -619,7 +630,7 @@ export class Vitest {
   }
 
   /**
-   * Deletes all Vitest caches, including `experimental.fsModuleCache`.
+   * Deletes all Vitest caches, including the `fsModuleCache`.
    * @experimental
    */
   public async experimental_clearCache(): Promise<void> {
@@ -1541,11 +1552,18 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         await Promise.allSettled(closePromises).then((results) => {
-          [...results, ...teardownErrors.map(r => ({ status: 'rejected', reason: r }))].forEach((r) => {
-            if (r.status === 'rejected') {
-              this.logger.error('error during close', r.reason)
-            }
-          })
+          const errors = [
+            ...results
+              .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+              .map(r => r.reason),
+            ...teardownErrors,
+          ]
+
+          for (const error of errors) {
+            this.logger.error('error during close', error)
+          }
+
+          this._checkUnhandledErrors(errors)
         })
         await this._traces?.finish()
       })()

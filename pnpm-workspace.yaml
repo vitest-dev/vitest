@@ -78,7 +78,7 @@ catalog:
   istanbul-lib-source-maps: ^5.0.6
   istanbul-reports: ^3.2.0
   loupe: ^3.2.1
-  magic-string: ^0.30.21
+  magic-string: ^1.0.0
   magicast: ^0.5.2
   msw: ^2.12.10
   obug: ^2.1.1

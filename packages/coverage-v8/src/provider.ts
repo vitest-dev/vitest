@@ -5,7 +5,7 @@ import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
-import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import { mergeScriptCovs } from '@bcoe/v8-coverage'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
@@ -17,6 +17,7 @@ import { provider } from 'std-env'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider, parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
+import { commands } from './commands'
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
@@ -37,6 +38,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
+
+    for (const project of ctx.projects) {
+      if (project.isBrowserEnabled() && project.browser) {
+        for (const [name, command] of Object.entries(commands)) {
+          project.browser.registerCommand(`__vitest_${name}` as any, command)
+        }
+      }
+    }
 
     if (this.options.autoAttachSubprocess) {
       const isAnyThreadsPools = ctx.projects.some(p => p.config.pool === 'threads' || p.config.pool === 'vmThreads')
@@ -59,42 +68,40 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let merged: RawCoverage = { result: [] }
 
+    const mergedScripts = new Map<ScriptCoverageWithOffset['url'], ScriptCoverageWithOffset>()
     const autoAttachSubprocess = this.options.autoAttachSubprocess
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
-        merged = mergeProcessCovs([merged, coverage])
+        for (const script of coverage.result) {
+          const previous = mergedScripts.get(script.url)
+          const merged: typeof script = mergeScriptCovs(previous ? [previous, script] : [script])
 
-        // mergeProcessCovs sometimes loses autoAttachSubprocess
-        const fromExtendedContext = autoAttachSubprocess ? coverage.result.filter(r => r.isExtendedContext) : []
+          const startOffset = previous?.startOffset || script.startOffset || 0
+          const isExtendedContext = previous?.isExtendedContext || script.isExtendedContext
 
-        // mergeProcessCovs sometimes loses startOffset, e.g. in vue
-        merged.result.forEach((result) => {
-          if (!result.startOffset) {
-            const original = coverage.result.find(r => r.url === result.url)
-            result.startOffset = original?.startOffset || 0
+          merged.startOffset ||= startOffset
+
+          if (autoAttachSubprocess && isExtendedContext) {
+            merged.isExtendedContext = true
           }
 
-          if (autoAttachSubprocess && !result.isExtendedContext) {
-            const actual = fromExtendedContext.find(r => r.url === result.url)
-            result.isExtendedContext = actual?.isExtendedContext
-          }
-        })
+          mergedScripts.set(merged.url, merged)
+        }
       },
       onFinished: async (project, environment) => {
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const converted = await this.convertCoverage(
-          merged,
+          { result: Array.from(mergedScripts.values()) },
           project,
           environment,
         )
 
         coverageMap.merge(converted)
 
-        merged = { result: [] }
+        mergedScripts.clear()
       },
       onDebug: debug,
     })

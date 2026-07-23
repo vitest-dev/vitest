@@ -59,13 +59,15 @@ export async function resolveTester(
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
-  const testerHtml = typeof browserProject.testerHtml === 'string'
-    ? browserProject.testerHtml
-    : await browserProject.testerHtml
-
   try {
-    const url = join('/@fs/', browserProject.testerFilepath)
-    const indexhtml = await browserProject.vite.transformIndexHtml(url, testerHtml)
+    browserProject.testerHtmlTransformed ??= (async () => {
+      const testerHtml = typeof browserProject.testerHtml === 'string'
+        ? browserProject.testerHtml
+        : await browserProject.testerHtml
+      const url = join('/@fs/', browserProject.testerFilepath)
+      return await browserProject.vite.transformIndexHtml(url, testerHtml)
+    })()
+    const indexhtml = await browserProject.testerHtmlTransformed
     const html = replacer(indexhtml, {
       __VITEST_FAVICON__: globalServer.faviconUrl,
       __VITEST_INJECTOR__: injector,
@@ -73,6 +75,8 @@ export async function resolveTester(
     return html
   }
   catch (err: any) {
+    // don't cache a rejection — the next request should retry the transform
+    browserProject.testerHtmlTransformed = undefined
     session.fail(err)
     next(err)
   }
