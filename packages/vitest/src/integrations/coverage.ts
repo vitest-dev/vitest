@@ -27,7 +27,10 @@ export async function takeCoverageInsideWorker(
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
-    return coverageModule.takeCoverage?.({ moduleExecutionInfo: loader.moduleExecutionInfo })
+    return coverageModule.takeCoverage?.({
+      moduleExecutionInfo: loader.moduleExecutionInfo,
+      coverageFilesDirectory: options.coverageFilesDirectory,
+    })
   }
 
   return null

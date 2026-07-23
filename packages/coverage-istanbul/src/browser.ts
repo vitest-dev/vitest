@@ -1,20 +1,19 @@
 import type { CoverageProviderModule } from 'vitest/node'
-import assert from 'node:assert'
 import { BaseCoverageProviderModule } from './base'
-import { writeCoverageFile } from './commands'
+
+function triggerCommand(command: string, args: any[] = []): Promise<any> {
+  return (globalThis as any).__vitest_browser_runner__?.commands?.triggerCommand?.(command, args)
+}
 
 const mod: CoverageProviderModule = {
-  takeCoverage(options) {
+  takeCoverage() {
     const coverage = BaseCoverageProviderModule.takeCoverage()
 
     if (!coverage) {
       return
     }
 
-    const coverageFilesDirectory = options?.coverageFilesDirectory
-    assert(coverageFilesDirectory, 'coverageFilesDirectory is required')
-
-    return writeCoverageFile(coverageFilesDirectory, coverage)
+    return triggerCommand('__vitest_writeCoverageFile', [coverage])
   },
 
   startCoverage() {
