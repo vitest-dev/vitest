@@ -31,10 +31,6 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   '/deps/@vitest',
   '/deps/loupe',
   '/deps/chai',
-  // the Vitest runtime is pre-bundled into a dedicated optimizer cache
-  // (`node_modules/.vite/vitest/<hash>/deps/`) in browser mode, so its internal
-  // frames must be ignored the same way as the un-bundled `/vitest/dist/` ones
-  '/.vite/vitest/',
   '/browser-playwright/dist/locators.js',
   '/browser-webdriverio/dist/locators.js',
   '/browser-preview/dist/locators.js',
@@ -43,6 +39,7 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /__vitest_browser__/,
   '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
+  '/deps/vitest.js',
 ]
 
 export { stackIgnorePatterns as defaultStackIgnorePatterns }
