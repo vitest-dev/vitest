@@ -267,10 +267,7 @@ export class Vitest {
   // Restarts must not overlap: chokidar regularly delivers several change
   // events for one edit, and a restart that starts while another is still
   // re-creating the servers reports `onServerRestart` to reporters that were
-  // re-instantiated but not yet initialized (`ctx` is only assigned by
-  // `onInit`), crashing the run. Coalesce every request that arrives during a
-  // restart into a single trailing restart - it re-resolves the config from
-  // scratch, so it picks up whatever changed in the meantime.
+  // re-instantiated but not yet initialized.
   private _restart(reason?: string): Promise<void> {
     if (this._restartPromise) {
       this._restartQueued = true
