@@ -1,4 +1,4 @@
-import { runVitest } from '#test-utils'
+import { runVitest, runVitestCli } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import TestReporter from '../../fixtures/reporters/implementations/custom-reporter'
@@ -71,5 +71,18 @@ describe('custom reporters', () => {
     })
     expect(stdout).includes('hello from custom reporter')
     expect(stdout).includes('custom reporter options {"some":{"custom":"option here"}}')
+  })
+
+  test('custom reporter with options from CLI', async () => {
+    const reporterPath = resolve(reportersDir, './custom-reporter.ts')
+    const { stdout } = await runVitestCli(
+      'run',
+      'fixtures/reporters/basic',
+      `--reporter=${reporterPath}`,
+      `--reporterOption.[${reporterPath}].some.custom=option from CLI`,
+    )
+
+    expect(stdout).includes('hello from custom reporter')
+    expect(stdout).includes('custom reporter options {"some":{"custom":"option from CLI"}}')
   })
 })

@@ -174,6 +174,31 @@ function resolveInlineWorkerOption(value: string | number): number {
 // that's why it's on a module-level
 let warnedTypeCheck = false
 
+function normalizeReporterOptionValue(value: unknown): unknown {
+  if (value === 'true') {
+    return true
+  }
+  if (value === 'false') {
+    return false
+  }
+  if (Array.isArray(value)) {
+    return value.map(normalizeReporterOptionValue)
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [
+        key,
+        normalizeReporterOptionValue(nestedValue),
+      ]),
+    )
+  }
+  return value
+}
+
+function normalizeReporterName(reporter: string): string {
+  return /^\.\.?\//.test(reporter) ? resolve(process.cwd(), reporter) : reporter
+}
+
 /**
  * Resolve Vitest's test config for a single Vite resolved config (root or a single project).
  *
@@ -729,13 +754,7 @@ export function resolveTestConfig(
   const reportersFromCLI = options.reporter
 
   const cliReporters = toArray(reportersFromCLI || []).map(
-    (reporter: string) => {
-      // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
-      if (/^\.\.?\//.test(reporter)) {
-        return resolve(process.cwd(), reporter)
-      }
-      return reporter
-    },
+    (reporter: string) => normalizeReporterName(reporter),
   )
 
   if (cliReporters.length) {
@@ -747,7 +766,7 @@ export function resolveTestConfig(
       if (Array.isArray(reporter)) {
         const [reporterName, reporterOptions] = reporter
         if (typeof reporterName === 'string') {
-          configReportersMap.set(reporterName, reporterOptions as Record<string, unknown>)
+          configReportersMap.set(normalizeReporterName(reporterName), reporterOptions as Record<string, unknown>)
         }
       }
     }
@@ -755,6 +774,28 @@ export function resolveTestConfig(
     resolved.reporters = Array.from(new Set(toArray(cliReporters)))
       .filter(Boolean)
       .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
+  }
+
+  const reporterOptionsFromCLI = new Map(
+    Object.entries(options.reporterOption || {}).map(([reporter, reporterOptions]) => [
+      normalizeReporterName(reporter),
+      reporterOptions,
+    ]),
+  )
+
+  for (const reporter of resolved.reporters) {
+    if (!Array.isArray(reporter) || typeof reporter[0] !== 'string') {
+      continue
+    }
+    const reporterName = normalizeReporterName(reporter[0])
+    const reporterOptions = reporterOptionsFromCLI.get(reporterName)
+    if (reporterOptions) {
+      reporter[1] = deepMerge(
+        {},
+        reporter[1] || {},
+        normalizeReporterOptionValue(reporterOptions),
+      )
+    }
   }
 
   resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL

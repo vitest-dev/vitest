@@ -1,3 +1,4 @@
+import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import {
   createCLI,
@@ -185,6 +186,165 @@ test('array options', () => {
       ],
     }
   `)
+})
+
+test('reporter options are passed down from CLI', () => {
+  expect(getCLIOptions(`
+    --reporter junit
+    --reporterOption.junit.includeConsoleOutput=false
+    --reporterOption.default.summary=false
+    --reporterOption.blob.label=123
+    --reporterOption.json.outputFile=001
+    --reporterOption.github-actions.jobSummary.enabled=false
+  `)).toEqual({
+    reporter: ['junit'],
+    reporterOption: {
+      'junit': { includeConsoleOutput: false },
+      'default': { summary: false },
+      'blob': { label: '123' },
+      'json': { outputFile: '001' },
+      'github-actions': { jobSummary: { enabled: false } },
+    },
+  })
+})
+
+test('reporter options support custom reporter paths', () => {
+  expect(getCLIOptions(`
+    --reporter ./custom-reporter.ts
+    --reporterOption.[./custom-reporter.ts].some.custom=first
+    --reporterOption.[./custom-reporter.ts].some.custom=option
+    --reporterOption.[./custom-reporter.ts].enabled=false
+  `)).toEqual({
+    reporter: ['./custom-reporter.ts'],
+    reporterOption: {
+      './custom-reporter.ts': {
+        some: { custom: 'option' },
+        enabled: false,
+      },
+    },
+  })
+})
+
+test('reporter option keys cannot mutate object prototypes', () => {
+  for (const key of ['__proto__', 'prototype', 'constructor']) {
+    expect(() => getCLIOptions(`--reporterOption.junit.${key}.polluted=value`))
+      .toThrowError(`Reporter option keys cannot include "${key}"`)
+    expect(() => getCLIOptions(`--reporterOption.[./custom-reporter.ts].${key}.polluted=value`))
+      .toThrowError(`Reporter option keys cannot include "${key}"`)
+    expect((Object.prototype as any).polluted).toBeUndefined()
+  }
+})
+
+test('reporter option keys cannot traverse inherited object properties', () => {
+  const toString = Object.prototype.toString as typeof Object.prototype.toString & { polluted?: string }
+  try {
+    expect(() => getCLIOptions('--reporterOption.junit.toString.polluted=value'))
+      .toThrowError('Reporter option keys cannot include "toString"')
+    expect(() => getCLIOptions('--reporterOption.[./custom-reporter.ts].toString.polluted=value'))
+      .toThrowError('Reporter option keys cannot include "toString"')
+    expect(toString.polluted).toBeUndefined()
+  }
+  finally {
+    delete toString.polluted
+  }
+})
+
+test('repeated reporter options use the last value', () => {
+  expect(getCLIOptions(`
+    --reporterOption.junit.includeConsoleOutput=true
+    --reporterOption.junit.includeConsoleOutput=false
+    --reporterOption.json.outputFile=first.json
+    --reporterOption.json.outputFile=second.json
+  `)).toEqual({
+    reporterOption: {
+      junit: { includeConsoleOutput: false },
+      json: { outputFile: 'second.json' },
+    },
+  })
+})
+
+test('reporter options override active reporters without selecting inactive reporters', async (ctx) => {
+  // skip vm since rolldown native modules break due to RegExp instance
+  // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957
+  ctx.skip(!!rolldownVersion && ctx.task.file.projectName === 'vmThreads')
+
+  function options(): Parameters<typeof resolveConfig>[0] {
+    return {
+      config: false,
+      reporters: [
+        ['junit', { suiteName: 'config-suite', includeConsoleOutput: true }],
+        ['default', { summary: true, isTTY: true }],
+        ['blob', { label: 'config' }],
+        ['json', { outputFile: 'config.json' }],
+        ['github-actions', {
+          jobSummary: {
+            enabled: true,
+            outputPath: 'summary.md',
+            fileLinks: { repository: 'vitest-dev/vitest' },
+          },
+        }],
+      ],
+      reporterOption: {
+        'junit': { includeConsoleOutput: 'false' },
+        'default': { summary: 'false' },
+        'blob': { label: 'linux' },
+        'json': { outputFile: 'cli.json' },
+        'github-actions': { jobSummary: { enabled: 'false' } },
+        'inactive': { value: 'unused' },
+      },
+    }
+  }
+
+  const configOnly = await resolveConfig(options())
+  expect(configOnly.test.reporters).toEqual([
+    ['junit', { suiteName: 'config-suite', includeConsoleOutput: false }],
+    ['default', { summary: false, isTTY: true }],
+    ['blob', { label: 'linux' }],
+    ['json', { outputFile: 'cli.json' }],
+    ['github-actions', {
+      jobSummary: {
+        enabled: false,
+        outputPath: 'summary.md',
+        fileLinks: { repository: 'vitest-dev/vitest' },
+      },
+    }],
+  ])
+
+  const cliSelected = await resolveConfig({
+    ...options(),
+    reporter: ['junit', 'default'],
+  })
+  expect(cliSelected.test.reporters).toEqual([
+    ['junit', { suiteName: 'config-suite', includeConsoleOutput: false }],
+    ['default', { summary: false, isTTY: true }],
+  ])
+})
+
+test('reporter options preserve config options for custom reporter paths', async (ctx) => {
+  // skip vm since rolldown native modules break due to RegExp instance
+  // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957
+  ctx.skip(!!rolldownVersion && ctx.task.file.projectName === 'vmThreads')
+
+  const reporter = './custom-reporter.ts'
+  function options(): Parameters<typeof resolveConfig>[0] {
+    return {
+      config: false,
+      reporters: [[reporter, { some: { preserved: true, value: 'config' } }]],
+      reporterOption: {
+        [reporter]: { some: { value: 'cli' } },
+      },
+    }
+  }
+
+  const configOnly = await resolveConfig(options())
+  expect(configOnly.test.reporters).toEqual([
+    [reporter, { some: { preserved: true, value: 'cli' } }],
+  ])
+
+  const cliSelected = await resolveConfig({ ...options(), reporter })
+  expect(cliSelected.test.reporters).toEqual([
+    [resolve(process.cwd(), reporter), { some: { preserved: true, value: 'cli' } }],
+  ])
 })
 
 test('hookTimeout is parsed correctly', () => {
