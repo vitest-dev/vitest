@@ -24,7 +24,6 @@ import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { NON_INHERITED_OPTIONS, NON_INHERITED_PROGRAMMATIC_OPTIONS, NON_INHERITED_ROOT_OPTIONS, PROJECT_CLI_OVERRIDES, REPLACED_OPTIONS } from '../config/propagation'
 import { isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
 import { CliOverride } from '../plugins/cliOverride'
@@ -38,6 +37,36 @@ import { globProjectTestFiles } from './globProjectFiles'
 // vite.unit.config.*
 // vitest.unit-test.config.*
 const CONFIG_REGEXP = /^vite(?:st)?(?:\.[\w-]+)?\.config\./
+
+// CLI options that can override per-project test config.
+// Not all options are allowed to be overridden.
+const PROJECT_CLI_OVERRIDES = [
+  'logHeapUsage',
+  'detectAsyncLeaks',
+  'allowOnly',
+  'sequence',
+  'testTimeout',
+  'pool',
+  'update',
+  'globals',
+  'expandSnapshotDiff',
+  'disableConsoleIntercept',
+  'retry',
+  'repeats',
+  'testNamePattern',
+  'passWithNoTests',
+  'bail',
+  'isolate',
+  'printConsoleTrace',
+  'inspect',
+  'inspectBrk',
+  'fileParallelism',
+  'tagsFilter',
+  'browser',
+  'experimental',
+  'fsModuleCache',
+  'fsModuleCachePath',
+] as const
 
 /**
  * Resolve the full list of project entries for the current Vitest run.
@@ -322,6 +351,13 @@ async function resolveDeclaredProjectEntries(
   return entries
 }
 
+// `name` must stay unique per project, `projects` would redefine the whole workspace
+const NON_INHERITED_OPTIONS = ['name', 'projects'] as const
+
+// the root `globalSetup` already runs once per test run; a non-root
+// config keeps it because nothing else runs it
+const NON_INHERITED_ROOT_OPTIONS = [...NON_INHERITED_OPTIONS, 'globalSetup'] as const
+
 function ProjectInheritancePlugin(options: ViteInlineConfig, extendsRootConfig: boolean): VitePlugin {
   const nonInheritedOptions = extendsRootConfig
     ? NON_INHERITED_ROOT_OPTIONS
@@ -335,11 +371,9 @@ function ProjectInheritancePlugin(options: ViteInlineConfig, extendsRootConfig: 
       order: 'pre',
       handler(config) {
         config.test ??= {}
-        // the project's own value replaces the inherited array so it can be overridden
-        for (const option of REPLACED_OPTIONS) {
-          if (options.test?.[option]) {
-            (config.test as any)[option] = options.test[option]
-          }
+        // the project's own `tags` replace the inherited array so tags can be overridden
+        if (options.test?.tags) {
+          config.test.tags = options.test.tags
         }
         for (const key of nonInheritedOptions) {
           if (options.test?.[key] !== undefined) {
@@ -363,9 +397,12 @@ function ProjectInheritancePlugin(options: ViteInlineConfig, extendsRootConfig: 
  * Merges the programmatic config passed to `createVitest` into an extending
  * project's options. The programmatic config is part of the effective root
  * config, so a project inherits it even when the root config file doesn't
- * exist. `plugins` never transfer to a project: they are live instances owned
- * by the root server. See `NON_INHERITED_PROGRAMMATIC_OPTIONS` for the `test`
- * options that never transfer.
+ * exist. Some options never transfer to a project:
+ * - `plugins` are live instances owned by the root server
+ * - `tagsFilter` is CLI-only; `PROJECT_CLI_OVERRIDES` applies it per project
+ * - `browser` describes the instances of a single project; inheriting it
+ *   would create duplicate instance names (the `--browser` flags have the
+ *   same guard in `CliOverride`)
  */
 function inheritRootViteOverrides(
   globalConfig: ResolvedConfig,
@@ -375,9 +412,8 @@ function inheritRootViteOverrides(
   // cloned so plugins that mutate inherited arrays in place don't share
   // them between the root and every project
   const inherited = deepClone(rootViteOverrides)
-  for (const option of NON_INHERITED_PROGRAMMATIC_OPTIONS) {
-    delete (inherited.test as UserConfig | undefined)?.[option]
-  }
+  delete (inherited.test as UserConfig | undefined)?.tagsFilter
+  delete (inherited.test as UserConfig | undefined)?.browser
   return mergeConfig(inherited, options)
 }
 
