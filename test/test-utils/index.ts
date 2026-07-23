@@ -212,7 +212,11 @@ export async function runVitest(
       },
       // override cache config with the one that was used to run `vitest` from the CLI
       fsModuleCache: rest.fsModuleCache ?? currentConfig.fsModuleCache,
-      ...(cliOptions?.experimental ? { experimental: cliOptions.experimental } : {}),
+      experimental: {
+        // keep performance hints out of captured test output unless a test opts in
+        diagnostics: rest.experimental?.diagnostics ?? false,
+        ...cliOptions?.experimental,
+      },
     }, {
       ...viteConfig,
       plugins: [

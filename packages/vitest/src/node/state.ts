@@ -34,18 +34,45 @@ export class StateManager implements TransformClock {
    * of magnitude.
    */
   transformTime = 0
+  /**
+   * Transform busy time split by project name, measured the same way as
+   * `transformTime`. Used by performance diagnostics to relate a project's
+   * transform cost to the rest of its tracked time.
+   */
+  transformTimes: Map<string, number> = new Map()
+  /**
+   * Total time spent starting test workers (spawning the process/thread, loading
+   * the worker bundle and setting up the test environment). Used to surface the
+   * cost of `isolate: true`, which spawns a fresh worker per test file.
+   */
+  startupTime = 0
+  /** Number of test workers that were started during the run. */
+  workersSpawned = 0
   private _transformsInflight = 0
   private _transformsBusyStart = 0
+  private _projectTransformsInflight: Map<string, number> = new Map()
+  private _projectTransformsBusyStart: Map<string, number> = new Map()
 
-  transformStarted(): void {
+  transformStarted(projectName: string): void {
     if (this._transformsInflight++ === 0) {
       this._transformsBusyStart = performance.now()
     }
+    const inflight = this._projectTransformsInflight.get(projectName) || 0
+    this._projectTransformsInflight.set(projectName, inflight + 1)
+    if (inflight === 0) {
+      this._projectTransformsBusyStart.set(projectName, performance.now())
+    }
   }
 
-  transformFinished(): void {
+  transformFinished(projectName: string): void {
     if (--this._transformsInflight === 0) {
       this.transformTime += performance.now() - this._transformsBusyStart
+    }
+    const inflight = (this._projectTransformsInflight.get(projectName) || 1) - 1
+    this._projectTransformsInflight.set(projectName, inflight)
+    if (inflight === 0) {
+      const busy = performance.now() - this._projectTransformsBusyStart.get(projectName)!
+      this.transformTimes.set(projectName, (this.transformTimes.get(projectName) || 0) + busy)
     }
   }
 
