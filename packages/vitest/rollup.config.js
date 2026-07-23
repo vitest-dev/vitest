@@ -52,29 +52,9 @@ const dtsEntries = {
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
 
-// Dependencies inlined into the chunks that use them (instead of staying external
-// npm modules) so a spawned worker loads fewer modules at boot — per-module ESM
-// overhead (resolve + read + compile) dominates over bytes. Kept external:
-//   - chai: users `import 'chai'` to register plugins → must be one shared instance
-//   - @vitest/mocker: mock registry identity
-//   - vite/module-runner, #module-evaluator, @opentelemetry: runtime-provided
-// These are stateless or only consumed through `vitest`, so inlining them is
-// identity-safe (rollup still emits ONE shared chunk for each — no duplication).
-// TODO: remove them from dependencies, this is a prototype
-const inlineDeps = new Set([
-  '@vitest/expect',
-  '@vitest/snapshot',
-  '@vitest/spy',
-  '@vitest/pretty-format',
-  '@vitest/utils',
-  'expect-type',
-  'tinybench',
-  'tinyrainbow',
-  'pathe',
-])
 const external = [
   ...builtinModules,
-  ...Object.keys(pkg.dependencies).filter(d => !inlineDeps.has(d)),
+  ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
   'node:worker_threads',
