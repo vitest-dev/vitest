@@ -101,6 +101,7 @@ export class TestProject {
       this._resolver,
       this.config,
       this.vitest._fsCache,
+      this.vitest.state,
       this.vitest._traces,
       this.tmpDir,
     )

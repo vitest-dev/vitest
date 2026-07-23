@@ -255,6 +255,7 @@ export class Vitest {
       this._resolver,
       resolved,
       this._fsCache,
+      this.state,
       this._traces,
       this._tmpDir,
     )

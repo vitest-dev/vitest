@@ -19,6 +19,13 @@ export interface RuntimeRPC {
    * paying a `fetch` round-trip per module.
    */
   fetchWarmModules: (environment: string, files: string[]) => Promise<Record<string, FetchResult | FetchCachedFileSystemResult>>
+  /**
+   * Transforms the import graphs of the given test files ahead of the
+   * worker's own fetches. Fired by vm pool workers before their environment
+   * setup, so the server transforms modules while the worker is busy
+   * importing its environment package.
+   */
+  prewarmModuleGraph: (environment: string, files: string[]) => Promise<void>
   transform: (id: string) => Promise<{ code?: string }>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
