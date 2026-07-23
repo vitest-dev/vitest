@@ -307,6 +307,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/globals',
               },
               {
+                text: 'injectCjsGlobals',
+                link: '/config/injectcjsglobals',
+              },
+              {
                 text: 'environment',
                 link: '/config/environment',
               },
@@ -465,6 +469,14 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'cache',
                 link: '/config/cache',
+              },
+              {
+                text: 'fsModuleCache',
+                link: '/config/fsmodulecache',
+              },
+              {
+                text: 'fsModuleCachePath',
+                link: '/config/fsmodulecachepath',
               },
               {
                 text: 'sequence',
@@ -649,6 +661,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'browser.screenshotFailures',
                 link: '/config/browser/screenshotfailures',
+              },
+              {
+                text: 'browser.dependencySourcemaps',
+                link: '/config/browser/dependencysourcemaps',
               },
               {
                 text: 'browser.orchestratorScripts',
@@ -1067,6 +1083,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Custom Pool',
                 link: '/guide/advanced/pool',
+              },
+              {
+                text: 'Benchmark Provider',
+                link: '/guide/advanced/benchmark-provider',
               },
             ],
           },

@@ -373,6 +373,12 @@ class BrowserPool {
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
 
+    // warm the transform cache while the iframe is booting so the test
+    // file import doesn't wait for the transform; mirrors the URL the
+    // tester will request (see `importFile` in the browser runner)
+    const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(/\/+/g, '/')
+    void this.project.vite.transformRequest(fileUrl).catch(() => {})
+
     this.setBreakpoint(sessionId, file.filepath).then(() => {
       // this starts running tests inside the orchestrator
       const testersPromise = this._traces.$(

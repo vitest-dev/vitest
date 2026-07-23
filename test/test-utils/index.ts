@@ -212,10 +212,8 @@ export async function runVitest(
         ...cliOptions?.env,
       },
       // override cache config with the one that was used to run `vitest` from the CLI
-      experimental: {
-        fsModuleCache: rest.experimental?.fsModuleCache ?? currentConfig.experimental.fsModuleCache,
-        ...cliOptions?.experimental,
-      },
+      fsModuleCache: rest.fsModuleCache ?? currentConfig.fsModuleCache,
+      ...(cliOptions?.experimental ? { experimental: cliOptions.experimental } : {}),
     }, {
       ...viteConfig,
       plugins: [
@@ -266,14 +264,20 @@ export async function runVitest(
     exitCode = process.exitCode
     process.exitCode = 0
 
+    // tests emulating CLI shortcuts (`q`, double CTRL+C) trigger `vitest.exit()`,
+    // which arms an unref'd force-exit watchdog; it must be disarmed before the
+    // real `process.exit` is restored, or it would kill this worker
+    // `teardownTimeout` later, in the middle of a subsequent test file
     if (TestRunner.getCurrentTest()) {
       onTestFinished(async () => {
+        clearTimeout(ctx?._exitTimeout)
         await ctx?.close()
         process.exit = exit
       })
     }
     else {
       afterEach(async () => {
+        clearTimeout(ctx?._exitTimeout)
         await ctx?.close()
         process.exit = exit
       })

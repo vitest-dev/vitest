@@ -42,6 +42,7 @@ export interface SerializedConfig {
   _diffOptions?: DiffOptions
   color?: LabelColor
   globals: boolean
+  injectCjsGlobals: boolean
   base: string | undefined
   snapshotEnvironment?: string
   disableConsoleIntercept: boolean | undefined
@@ -142,12 +143,13 @@ export interface SerializedConfig {
   benchmark: {
     enabled: boolean
     retainSamples: boolean
+    provider: string | undefined
     suppressExportGetterWarnings: boolean
     projectName: string
   }
   serializedDefines: string
+  fsModuleCache: boolean
   experimental: {
-    fsModuleCache: boolean
     importDurations: {
       print: boolean | 'on-warn'
       limit: number
@@ -173,6 +175,8 @@ export interface SerializedConfig {
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
+  /** Directory where workers write raw coverage results, shard-aware */
+  coverageFilesDirectory: string
   htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined

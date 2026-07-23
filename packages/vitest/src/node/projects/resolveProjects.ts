@@ -202,14 +202,15 @@ async function applyBrowserOptimizeDeps(
   harness: PluginHarness,
   entries: ResolvedProjectEntry[],
 ): Promise<void> {
-  const groups = new Map<ResolvedViteConfig, ResolvedConfig[]>()
-  for (const { viteConfig, projectConfig } of entries) {
+  const groups = new Map<ResolvedViteConfig, ResolvedProjectEntry[]>()
+  for (const entry of entries) {
+    const { viteConfig } = entry
     let group = groups.get(viteConfig)
     if (!group) {
       group = []
       groups.set(viteConfig, group)
     }
-    group.push(projectConfig)
+    group.push(entry)
   }
 
   // Most projects in a group share identical glob inputs (the `dir`/`root` is
@@ -228,12 +229,16 @@ async function applyBrowserOptimizeDeps(
   }
 
   await Promise.all(
-    Array.from(groups, async ([viteConfig, projectConfigs]) => {
+    Array.from(groups, async ([viteConfig, projectEntries]) => {
+      const projectConfigs = projectEntries.map(entry => entry.projectConfig)
       const contribution = projectConfigs.find(config => config._browserContribution)?._browserContribution
       if (!contribution) {
         return
       }
       const fileLists = await Promise.all(projectConfigs.map(globTestFiles))
+      projectEntries.forEach((entry, index) => {
+        entry.hasTestFiles = fileLists[index].length > 0
+      })
       const testFiles = [...new Set(fileLists.flat())]
       const optimizeDeps = await contribution.resolveOptimizeDeps(projectConfigs, testFiles, harness)
       // the browser runs in the `client` environment, but Vite's dep scanner
@@ -381,7 +386,7 @@ async function resolveSingleProjectEntry(
         },
         api: {
           vitest: {
-            experimental: { ignoreFsModuleCache: true },
+            ignoreFsModuleCache: true,
           },
         },
       },
@@ -453,9 +458,9 @@ function expandBrowserInstancesInEntries(
 
   for (const entry of browserEntries) {
     const { projectConfig, viteConfig } = entry
-    const instances = projectConfig.browser.instances ?? []
     const parentName = projectConfig.name
 
+    const instances = projectConfig.browser.instances ?? []
     if (instances.length === 0 || isExcludedByProjectFilter(globalConfig.project, parentName)) {
       continue
     }
@@ -916,6 +921,12 @@ export async function attachProjectsFromEntries(
   // provider). Siblings (browser instance variants, benchmark variants) share
   // these resources by linking to the primary via `_parent`.
   const primaryByViteConfig = new Map<ResolvedViteConfig, TestProject>()
+  const childrenByViteConfig = new Map<ResolvedViteConfig, ResolvedProjectEntry[]>()
+  for (const entry of entries) {
+    const children = childrenByViteConfig.get(entry.viteConfig) ?? []
+    children.push(entry)
+    childrenByViteConfig.set(entry.viteConfig, children)
+  }
 
   // The root Vite config can also serve as a project's `viteConfig` — either
   // the default no-`projects` case or browser/benchmark variants of it.
@@ -963,7 +974,8 @@ export async function attachProjectsFromEntries(
     // Workspace project with its own `viteConfig`: own a fresh Vite server. For
     // a browser cluster this is the single server shared by `project.vite` and
     // `project.browser.vite`.
-    const { server, parent } = await createClusterServer(vitest, viteConfig, projectConfig)
+    const children = childrenByViteConfig.get(viteConfig) ?? []
+    const { server, parent } = await createClusterServer(vitest, viteConfig, projectConfig, children)
     const project = new TestProject(vitest, server, viteConfig, projectConfig)
     project._initializeRunners(server)
     if (parent) {

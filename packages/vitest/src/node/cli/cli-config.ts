@@ -345,6 +345,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   globals: {
     description: 'Inject apis globally',
   },
+  injectCjsGlobals: {
+    description: 'Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)',
+  },
   dom: {
     description: 'Mock browser API with happy-dom',
   },
@@ -393,6 +396,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       connectTimeout: {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
         argument: '<timeout>',
+      },
+      dependencySourcemaps: {
+        description: 'Serve sourcemaps of dependencies to the browser in headless runs, used by devtools when debugging into `node_modules`. Reported test errors are source-mapped either way. Use `--browser.dependencySourcemaps=false` to speed up test runs if you don\'t step into dependency code (default: `true`)',
       },
       trackUnhandledErrors: {
         description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
@@ -774,6 +780,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Maximum number of concurrent tests and suites during test file execution (default: `5`)',
     argument: '<number>',
   },
+  fsModuleCache: {
+    description: 'Cache transformed modules on the file system and reuse them between reruns (default: `false`)',
+  },
+  fsModuleCachePath: {
+    description: 'Directory where the `fsModuleCache` is stored (default: `node_modules/.vitest-cache`)',
+    argument: '<path>',
+  },
   expect: {
     description: 'Configuration options for `expect()` matches',
     argument: '', // no displayed
@@ -863,7 +876,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[type]',
   },
   clearCache: {
-    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+    description: 'Delete all Vitest caches, including the `fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
   },
   tagsFilter: {
     description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](https://vitest.dev/guide/test-tags#syntax) for more information.',
@@ -878,10 +891,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Experimental features.',
     argument: '<features>',
     subcommands: {
-      fsModuleCache: {
-        description: 'Enable caching of modules on the file system between reruns.',
-      },
-      fsModuleCachePath: null,
       openTelemetry: null,
       importDurations: {
         description: 'Configure import duration collection and CLI display. Note that UI\'s "Module Graph" tab can always show import breakdown regardless of the `print` setting.',
