@@ -186,6 +186,10 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .command('init <project>', undefined, options)
     .action(init)
 
+  cli
+    .command('doctor [...filters]', undefined, options)
+    .action(doctorCommand)
+
   addCliOptions(
     cli
       .command('list [...filters]', undefined, options)
@@ -317,6 +321,23 @@ async function start(cliFilters: string[], options: CliOptions): Promise<void> {
 
     process.exitCode ??= 1
 
+    process.exit()
+  }
+}
+
+async function doctorCommand(cliFilters: string[], options: CliOptions): Promise<void> {
+  try {
+    const { doctor } = await import('./doctor')
+    await doctor(cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
+    process.exit()
+  }
+  catch (e) {
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Doctor Error')}`)
+    console.error(e)
+    console.error('\n\n')
+
+    process.exitCode ??= 1
     process.exit()
   }
 }
