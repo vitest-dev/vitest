@@ -23,6 +23,7 @@ import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { limitConcurrency } from '../../utils/limit-concurrency'
+import { PROJECT_CLI_OVERRIDES, REPLACED_OPTIONS } from '../config/propagation'
 import { isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
 import { CliOverride } from '../plugins/cliOverride'
@@ -36,33 +37,6 @@ import { globProjectTestFiles } from './globProjectFiles'
 // vite.unit.config.*
 // vitest.unit-test.config.*
 const CONFIG_REGEXP = /^vite(?:st)?(?:\.[\w-]+)?\.config\./
-
-// CLI options that can override per-project test config.
-// Not all options are allowed to be overridden.
-const PROJECT_CLI_OVERRIDES = [
-  'logHeapUsage',
-  'detectAsyncLeaks',
-  'allowOnly',
-  'sequence',
-  'testTimeout',
-  'pool',
-  'update',
-  'globals',
-  'expandSnapshotDiff',
-  'disableConsoleIntercept',
-  'retry',
-  'repeats',
-  'testNamePattern',
-  'passWithNoTests',
-  'bail',
-  'isolate',
-  'printConsoleTrace',
-  'inspect',
-  'inspectBrk',
-  'fileParallelism',
-  'tagsFilter',
-  'browser',
-] as const
 
 /**
  * Resolve the full list of project entries for the current Vitest run.
@@ -374,14 +348,15 @@ async function resolveSingleProjectEntry(
       ),
       ...BrowserLoaderPlugin(browserHolder, harness),
       {
-        name: 'vitest:tags',
+        name: 'vitest:project-config',
         config(config) {
-          // We need to keep the `tags` array untouched if `extends` is `true`,
-          // Otherwise it gets merged with the top level tags and we don't want that because tags could be overridden
-          // Setting it to `options.test?.tags` overrides the merged value
-          if (options.test?.tags) {
-            config.test ??= {}
-            config.test.tags = options.test?.tags
+          config.test ??= {}
+          // the project's own value replaces the value merged from an
+          // extended config, so these options can be overridden
+          for (const option of REPLACED_OPTIONS) {
+            if (options.test?.[option]) {
+              (config.test as any)[option] = options.test[option]
+            }
           }
         },
         api: {
@@ -412,7 +387,6 @@ async function resolveSingleProjectEntry(
     projectViteConfig,
     globalConfig,
   )
-  projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel
 
   projectViteConfig.test = projectConfig
 
