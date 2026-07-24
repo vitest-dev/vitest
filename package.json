@@ -56,7 +56,7 @@
     "@vitest/ui": "workspace:*",
     "bumpp": "^10.4.1",
     "changelogithub": "^14.0.0",
-    "esbuild": "^0.27.3",
+    "esbuild": "^0.28.0",
     "eslint": "^10.7.0",
     "magic-string": "^1.0.0",
     "pathe": "^2.0.3",
