@@ -1,5 +1,5 @@
 import type { RunnerTask } from 'vitest/node'
-import { runVitest, runVitestCli, StableTestFileOrderSorter } from '#test-utils'
+import { runInlineTests, runVitest, runVitestCli, StableTestFileOrderSorter } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/node'
 import { trimReporterOutput } from './utils'
@@ -18,30 +18,38 @@ describe('default reporter', async () => {
 
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "❯ b1.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b1 passed (6)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms
+         ❯ b1 failed (7)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
            × b failed test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms
        ❯ b2.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b2 passed (6)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms
+         ❯ b2 failed (7)
            ✓ b1 test [...]ms
            ✓ b2 test [...]ms
            ✓ b3 test [...]ms
            × b failed test [...]ms
+           ✓ nested b (3)
              ✓ nested b1 test [...]ms
              ✓ nested b2 test [...]ms
              ✓ nested b3 test [...]ms"
@@ -63,6 +71,83 @@ describe('default reporter', async () => {
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "✓ b1.test.ts (13 tests | 7 skipped) [...]ms
        ✓ b2.test.ts (13 tests | 7 skipped) [...]ms"
+    `)
+  })
+
+  // https://github.com/vitest-dev/vitest/issues/10606
+  // With renderSucceed off (non-TTY / multi-file), slow tests and tests with
+  // inline benchmarks are still logged. Their describe suites must be printed
+  // above them so the nesting is not lost.
+  test('prints parent describe suites for slow tests when renderSucceed is off', async () => {
+    const { stdout, stderr } = await runInlineTests(
+      {
+        'slow.test.ts': /* ts */`
+          import { describe, test } from 'vitest'
+
+          describe('outer', () => {
+            describe('inner', () => {
+              test('slow', async () => {
+                await new Promise(resolve => setTimeout(resolve, 50))
+              })
+            })
+          })
+        `,
+      },
+      {
+        reporters: [['default', { isTTY: false, summary: false }]],
+        slowTestThreshold: 1,
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ slow.test.ts (1 test) [...]ms
+         ✓ outer (1)
+           ✓ inner (1)
+             ✓ slow [...]ms"
+    `)
+  })
+
+  test('prints parent describe suites for inline benchmarks when renderSucceed is off', async () => {
+    const { stdout, stderr } = await runInlineTests(
+      {
+        'suite.bench.ts': /* ts */`
+          import { describe, inject, test } from 'vitest'
+
+          describe('my first suite', () => {
+            test('foo', async ({ bench }) => {
+              await bench('foo', () => {}).run(inject('options'))
+            })
+          })
+
+          describe('my second suite', () => {
+            test('foo', async ({ bench }) => {
+              await bench('foo', () => {}).run(inject('options'))
+            })
+          })
+        `,
+      },
+      {
+        benchmark: { enabled: true },
+        reporters: [['default', { isTTY: false, summary: false }]],
+        provide: { options: { time: 0, iterations: 1, warmupTime: 0, warmupIterations: 0 } },
+      },
+    )
+
+    expect(stderr).toBe('')
+
+    // benchmark table rows carry runtime-specific numbers, so keep only the
+    // reporter tree lines when asserting the nesting
+    const tree = trimReporterOutput(stdout)
+      .split('\n')
+      .filter(line => /[✓❯×↓]/.test(line))
+      .join('\n')
+    expect(tree).toMatchInlineSnapshot(`
+      "✓ |bench| suite.bench.ts (2 tests) [...]ms
+         ✓ my first suite (1)
+           ✓ foo [...]ms
+         ✓ my second suite (1)
+           ✓ foo [...]ms"
     `)
   })
 
