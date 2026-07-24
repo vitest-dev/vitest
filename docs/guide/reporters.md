@@ -93,6 +93,18 @@ export default defineConfig({
 })
 ```
 
+Reporter options can be overridden from the CLI with `--reporterOption.<name>.<option>=<value>`. CLI values are deeply merged into the matching active reporter's options and take precedence over values from the configuration file. `true` and `false` are converted to booleans; all other values are preserved as strings.
+
+Reporter names containing dots, such as custom reporter paths, can be wrapped in brackets. Quote the whole argument to prevent your shell from expanding the brackets.
+
+For example:
+
+```bash
+npx vitest --reporter=junit --reporterOption.junit.includeConsoleOutput=false
+npx vitest --reporter=json --reporterOption.json.outputFile=./test-output.json
+npx vitest --reporter=./path/to/reporter.ts '--reporterOption.[./path/to/reporter.ts].foo=bar'
+```
+
 To print the report to the terminal instead of writing it to a file, set the `stdout` option on the `json` or `junit` reporter. This is ignored when `outputFile` is set:
 
 ```ts [vitest.config.ts]
@@ -856,6 +868,13 @@ Additionally, you can define your own [custom reporters](/guide/advanced/reporte
 
 ```bash
 npx vitest --reporter=./path/to/reporter.ts
+```
+
+Options can be passed to custom reporters from the CLI. Package names without dots use the regular syntax, while file paths use brackets:
+
+```bash
+npx vitest --reporter=some-published-vitest-reporter --reporterOption.some-published-vitest-reporter.foo=bar
+npx vitest --reporter=./path/to/reporter.ts '--reporterOption.[./path/to/reporter.ts].foo=bar'
 ```
 
 Custom reporters should implement the [Reporter interface](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/types/reporter.ts).

@@ -6,6 +6,7 @@ export default defineConfig({
       ['junit', {
         suiteName: 'custom-suite-name',
         addFileAttribute: true,
+        includeConsoleOutput: true,
       }],
     ],
   },

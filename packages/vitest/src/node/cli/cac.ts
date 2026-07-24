@@ -65,6 +65,115 @@ export interface CliParseOptions {
   allowUnknownOptions?: boolean
 }
 
+const reporterOptionValuePrefix = '__VITEST_REPORTER_OPTION_VALUE__:'
+const forbiddenReporterOptionKeys = new Set(['__proto__', 'constructor', 'prototype'])
+
+function prepareCLIArguments(argv: readonly string[]): {
+  args: string[]
+  reporterOptionNames: Map<string, string>
+} {
+  const args = [...argv]
+  const prefixes = ['--reporterOption.', '--reporter-option.']
+  const reporterOptionNames = new Map<string, string>()
+  const reporterOptionPlaceholders = new Map<string, string>()
+
+  for (let index = 0; index < args.length; index++) {
+    const argument = args[index]
+    if (argument === '--') {
+      break
+    }
+    const prefix = prefixes.find(prefix => argument.startsWith(prefix))
+    if (!prefix) {
+      continue
+    }
+
+    const separator = argument.indexOf('=')
+    let key = argument.slice(prefix.length, separator === -1 ? undefined : separator)
+    if (key.startsWith('[')) {
+      const closingBracket = key.indexOf('].')
+      if (closingBracket <= 1) {
+        throw new Error('Reporter options must use --reporterOption.<reporter>.<option>=<value>')
+      }
+      const reporterName = key.slice(1, closingBracket)
+      const optionName = key.slice(closingBracket + 2)
+      let placeholder = reporterOptionPlaceholders.get(reporterName)
+      if (!placeholder) {
+        placeholder = `__VITEST_REPORTER_OPTION_${reporterOptionPlaceholders.size}__`
+        reporterOptionPlaceholders.set(reporterName, placeholder)
+        reporterOptionNames.set(placeholder, reporterName)
+      }
+      key = `${placeholder}.${optionName}`
+    }
+
+    const keys = key.split('.')
+    if (keys.length < 2 || keys.some(key => key.length === 0)) {
+      throw new Error('Reporter options must use --reporterOption.<reporter>.<option>=<value>')
+    }
+    for (const key of keys) {
+      if (
+        forbiddenReporterOptionKeys.has(key)
+        || Object.hasOwn(Object.prototype, key)
+      ) {
+        throw new Error(`Reporter option keys cannot include "${key}"`)
+      }
+    }
+
+    if (separator !== -1) {
+      args[index] = `${prefix}${key}=${reporterOptionValuePrefix}${argument.slice(separator + 1)}`
+      continue
+    }
+
+    args[index] = `${prefix}${key}`
+
+    const value = args[index + 1]
+    if (value == null || value.startsWith('-')) {
+      throw new Error(`Expected a value for option "${argument}"`)
+    }
+    args[index + 1] = `${reporterOptionValuePrefix}${value}`
+    index += 1
+  }
+
+  return { args, reporterOptionNames }
+}
+
+function normalizeReporterOptionValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return normalizeReporterOptionValue(value.at(-1))
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]) => [key, normalizeReporterOptionValue(value)]),
+    )
+  }
+  if (typeof value === 'string' && value.startsWith(reporterOptionValuePrefix)) {
+    const rawValue = value.slice(reporterOptionValuePrefix.length)
+    if (rawValue === 'true') {
+      return true
+    }
+    if (rawValue === 'false') {
+      return false
+    }
+    return rawValue
+  }
+  return value
+}
+
+function normalizeReporterOptions(
+  argv: CliOptions,
+  reporterOptionNames: Map<string, string>,
+): CliOptions {
+  if (argv.reporterOption) {
+    const reporterOptions = normalizeReporterOptionValue(argv.reporterOption) as NonNullable<CliOptions['reporterOption']>
+    argv.reporterOption = Object.fromEntries(
+      Object.entries(reporterOptions).map(([key, value]) => [
+        reporterOptionNames.get(key) || key,
+        value,
+      ]),
+    )
+  }
+  return argv
+}
+
 function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   for (const [optionName, option] of Object.entries(options)) {
     if (option) {
@@ -198,6 +307,18 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .action((filters, options) => start(filters, options))
 
   setupTabCompletions(cli)
+
+  const internalCli = cli as unknown as {
+    mri: (argv: string[], command?: Command) => { args: string[]; options: CliOptions }
+  }
+  const parseArguments = internalCli.mri.bind(internalCli)
+  internalCli.mri = (argv, command) => {
+    const prepared = prepareCLIArguments(argv)
+    const parsed = parseArguments(prepared.args, command)
+    parsed.options = normalizeReporterOptions(parsed.options, prepared.reporterOptionNames)
+    return parsed
+  }
+
   return cli
 }
 

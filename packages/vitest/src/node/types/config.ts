@@ -1163,6 +1163,11 @@ export interface UserConfig extends InlineConfig {
    * The `--reporter` argument from the CLI
    */
   reporter?: string | string[]
+
+  /**
+   * The `--reporterOption` arguments from the CLI
+   */
+  reporterOption?: Record<string, Record<string, unknown>>
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1197,6 +1202,7 @@ export interface ResolvedConfig
     | 'fileParallelism'
     | 'tagsFilter'
     | 'reporter'
+    | 'reporterOption'
   > {
   name: ProjectName['label']
   color?: ProjectName['color']
