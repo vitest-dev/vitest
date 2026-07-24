@@ -117,11 +117,11 @@ Note that this will only affect projects injected with [`injectTestProjects`](#i
 :::
 
 ::: tip Referencing the Current Config
-If you want to keep the user configuration, you can specify the `extends` property. All other properties will be merged with the user defined config.
+Inline configurations inherit the root config by default. If you want to inherit a specific configuration file instead, set the `extends` property to its path. All other properties will be merged with the user defined config.
 
 The project's `configFile` can be accessed in Vite's config: `project.vite.config.configFile`.
 
-Note that this will also inherit the `name` - Vitest doesn't allow multiple projects with the same name, so this will throw an error. Make sure you specified a different name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
+Note that the `name` is never inherited because Vitest doesn't allow multiple projects with the same name. Make sure every project has a unique name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
 :::
 
 ### defineCacheKeyGenerator <Version>5.0.0</Version> {#definecachekeygenerator}

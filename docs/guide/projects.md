@@ -126,8 +126,8 @@ export default defineConfig({
       // matches every folder and file inside the `packages` folder
       'packages/*',
       {
-        // add "extends: true" to inherit the options from the root config
-        extends: true,
+        // inline projects inherit the options
+        // from this config file by default
         test: {
           include: ['tests/**/*.{browser}.test.{ts,js}'],
           // it is recommended to define a name when using inline configs
@@ -136,6 +136,9 @@ export default defineConfig({
         }
       },
       {
+        // add "extends: false" to ignore
+        // the options defined in this config file
+        extends: false,
         test: {
           include: ['tests/**/*.{node}.test.{ts,js}'],
           // color of the name label can be changed
@@ -234,7 +237,67 @@ bun run test --project e2e --project unit
 
 ## Configuration
 
-None of the configuration options are inherited from the root-level config file. You can create a shared config file and merge it with the project config yourself:
+Projects defined with an inline configuration inherit all options from the root-level configuration. This is controlled by the `extends` option, which is enabled by default since Vitest 5.0:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    pool: 'threads',
+    projects: [
+      {
+        // inherits options from this config like plugins and pool
+        // (`extends: true` is the default)
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+      {
+        // won't inherit any options from this config
+        extends: false,
+        test: {
+          name: 'integration',
+          include: ['**/*.integration.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+The `extends` option also accepts a path to another config file if you want to inherit options from a config file other than the root config:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        extends: './vitest.shared.ts',
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+All options from the extended config are merged with the project's own options. Note that arrays like `setupFiles` are concatenated, not overridden. A few options are treated specially:
+
+- `name` and `projects` are never inherited.
+- `globalSetup` is not inherited from the root config: the root-level `globalSetup` already runs once per test run, so inheriting it would run the same files again for every project. It is still inherited when extending a non-root config file.
+- The project's own `tags` replace the inherited array instead of being merged with it.
+
+If you run Vitest through the [advanced API](/guide/advanced/), see [Project Configuration Resolution](/guide/advanced/#project-configuration-resolution) for how the programmatic configuration participates in inheritance.
+
+Projects referenced as config files or directories do not inherit any options from the root config. You can create a shared config file and merge it with the project config yourself:
 
 ```ts [packages/a/vitest.config.ts]
 import { defineProject, mergeConfig } from 'vitest/config'
@@ -248,39 +311,6 @@ export default mergeConfig(
     }
   })
 )
-```
-
-Additionally, you can use the `extends` option to inherit from your root-level configuration. All options will be merged.
-
-```ts [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    pool: 'threads',
-    projects: [
-      {
-        // will inherit options from this config like plugins and pool
-        extends: true,
-        test: {
-          name: 'unit',
-          include: ['**/*.unit.test.ts'],
-        },
-      },
-      {
-        // won't inherit any options from this config
-        // this is the default behaviour
-        extends: false,
-        test: {
-          name: 'integration',
-          include: ['**/*.integration.test.ts'],
-        },
-      },
-    ],
-  },
-})
 ```
 
 ::: danger Unsupported Options
