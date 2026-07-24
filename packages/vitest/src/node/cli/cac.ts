@@ -239,7 +239,6 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   let { args, options } = createCLI(config).parse(arrayArgs, {
     run: false,
   })
-  removeShorthandAliases(options)
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
@@ -282,18 +281,7 @@ async function benchmark(cliFilters: string[], options: CliOptions): Promise<voi
   await start(cliFilters, options)
 }
 
-// cac copies the raw value of every aliased option to its shorthand key
-function removeShorthandAliases(argv: CliOptions): CliOptions {
-  for (const option of Object.values(cliOptionsConfig)) {
-    if (option?.shorthand) {
-      delete (argv as Record<string, unknown>)[option.shorthand]
-    }
-  }
-  return argv
-}
-
 function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions {
-  removeShorthandAliases(argv)
   if (argv.exclude) {
     argv.cliExclude = toArray(argv.exclude)
     delete argv.exclude
