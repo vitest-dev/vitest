@@ -252,6 +252,10 @@ export interface UserEvent {
    */
   wheel(element: Element | Locator, options: UserEventWheelOptions): Promise<void>
   /**
+   * @todo
+   */
+  pointer(options: readonly UserEventPointerOptions[]): Promise<void>
+  /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
    * @example
@@ -440,6 +444,56 @@ export interface UserEventWheelDirectionOptions extends UserEventWheelBaseOption
  * @since 4.1.0
  */
 export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelDirectionOptions
+
+/**
+ * Options for triggering pointer events.
+ *
+ * Specify pointer position using either `coordinates` for precise pixel values, or `target` for element-based interaction. These are mutually exclusive.
+ *
+ * @since 5.0.0
+ */
+export type UserEventPointerOptions = {
+  /**
+  * The keys to press while interacting with the pointer.
+  *
+  * @default undefined
+  */
+  keys?: string
+  /**
+  * The button to use for the pointer event.
+  *
+  * @default 'left'
+  */
+  button?: 'left' | 'right' | 'middle'
+} & ({
+  /**
+  * The action to perform with the pointer event.
+  *
+  * @default undefined
+  */
+  action?: 'down' | 'up'
+  times?: undefined
+} | {
+  action: 'click'
+  times?: number
+}) & ({
+  /**
+  * The coordinates to interact with.
+  */
+  coordinates: { x: number; y: number }
+  offset?: undefined
+  target?: undefined
+} | {
+  coordinates?: undefined
+  /**
+   * A point to use relative to the top-left corner of the element's padding box. If not specified, uses some visible point of the element.
+   */
+  offset?: { x: number; y: number }
+  /**
+  * The target element to interact with.
+  */
+  target: Element | Locator
+})
 
 export interface LocatorOptions {
   /**
