@@ -1,5 +1,6 @@
 import type { File, FileSpecification, Task, TaskResultPack } from '../runtime/runner/types'
 import type { AsyncLeak, UserConsoleLog } from '../types/general'
+import type { TransformClock } from './environments/fetchModule'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
@@ -15,7 +16,7 @@ function isAggregateError(err: unknown): err is AggregateError {
   return err instanceof Error && 'errors' in err
 }
 
-export class StateManager {
+export class StateManager implements TransformClock {
   filesMap: Map<string, File[]> = new Map()
   pathsSet: Set<string> = new Set()
   idMap: Map<string, Task> = new Map()
@@ -24,7 +25,29 @@ export class StateManager {
   leakSet: Set<AsyncLeak> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
+  /**
+   * Wall time during which the server's module transform pipeline was busy,
+   * measured as the union of in-flight fetch intervals. Individual fetch
+   * durations cannot be summed instead: concurrent fetches (parallel workers,
+   * the vm pool graph prewarm) all wait on the same deduplicated in-flight
+   * transforms, so per-caller wall times overcount the actual work by orders
+   * of magnitude.
+   */
   transformTime = 0
+  private _transformsInflight = 0
+  private _transformsBusyStart = 0
+
+  transformStarted(): void {
+    if (this._transformsInflight++ === 0) {
+      this._transformsBusyStart = performance.now()
+    }
+  }
+
+  transformFinished(): void {
+    if (--this._transformsInflight === 0) {
+      this.transformTime += performance.now() - this._transformsBusyStart
+    }
+  }
 
   metadata: Record<string, {
     externalized: Record<string, string>

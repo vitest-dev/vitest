@@ -390,11 +390,14 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/basic.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/sub/format.ts",
               "<root>/util.ts"
             ]
           },
-          "externalized": [],
+          "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>"
+          ],
           "inlined": [
             "<root>/basic.test.ts",
             "<root>/sub/format.ts",
@@ -409,11 +412,13 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/second.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/util.ts",
               "<optimized-deps>/obug.js"
             ]
           },
           "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>",
             "<optimized-deps>/obug.js?v=<hash>"
           ],
           "inlined": [

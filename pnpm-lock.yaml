@@ -103,8 +103,8 @@ catalogs:
       specifier: ^3.2.1
       version: 3.2.1
     magic-string:
-      specifier: ^0.30.21
-      version: 0.30.21
+      specifier: ^1.0.0
+      version: 1.0.0
     magicast:
       specifier: ^0.5.2
       version: 0.5.2
@@ -251,8 +251,8 @@ importers:
         specifier: ^10.7.0
         version: 10.7.0(jiti@2.6.1)
       magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
+        specifier: ^1.0.0
+        version: 1.0.0
       pathe:
         specifier: ^2.0.3
         version: 2.0.3
@@ -545,7 +545,7 @@ importers:
         version: link:../utils
       magic-string:
         specifier: 'catalog:'
-        version: 0.30.21
+        version: 1.0.0
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0
@@ -781,7 +781,7 @@ importers:
         version: 3.0.3
       magic-string:
         specifier: 'catalog:'
-        version: 0.30.21
+        version: 1.0.0
     devDependencies:
       '@types/estree':
         specifier: 'catalog:'
@@ -834,7 +834,7 @@ importers:
         version: link:../utils
       magic-string:
         specifier: 'catalog:'
-        version: 0.30.21
+        version: 1.0.0
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -1040,7 +1040,7 @@ importers:
         version: 1.3.0
       magic-string:
         specifier: 'catalog:'
-        version: 0.30.21
+        version: 1.0.0
       obug:
         specifier: 'catalog:'
         version: 2.1.1
@@ -1275,8 +1275,8 @@ importers:
         specifier: 'catalog:'
         version: 3.0.1
       magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
+        specifier: ^1.0.0
+        version: 1.0.0
       magicast:
         specifier: ^0.5.2
         version: 0.5.2
@@ -8432,6 +8432,9 @@ packages:
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
+
+  magic-string@1.0.0:
+    resolution: {integrity: sha512-CGvjzMN08iv6w1mm4/x3Gh1hLb4VnyRUA15FFpl6CsCIGGoe36k7kY5KNz9QDbSBN5I/fWHM6ZlIkUTa5xdUEA==}
 
   magicast@0.5.2:
     resolution: {integrity: sha512-E3ZJh4J3S9KfwdjZhe2afj6R9lGIN5Pher1pF39UGrXRqq/VDaGVIGN13BjHd2u8B61hArAGOnso7nBOouW3TQ==}
@@ -17645,6 +17648,10 @@ snapshots:
       sourcemap-codec: 1.4.8
 
   magic-string@0.30.21:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.5
+
+  magic-string@1.0.0:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 

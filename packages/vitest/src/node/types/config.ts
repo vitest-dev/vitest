@@ -20,13 +20,13 @@ import type { TestCase, TestModule, TestSuite } from '../reporters/reported-task
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
-import type { BenchmarkUserOptions } from './benchmark'
+import type { BenchmarkUserOptions, ResolvedBenchmarkOptions } from './benchmark'
 import type { BrowserConfigOptions, BrowserServerContribution, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Reporter } from './reporter'
 
 export type { CoverageOptions, ResolvedCoverageOptions }
-export type { BenchmarkUserOptions }
+export type { BenchmarkUserOptions, ResolvedBenchmarkOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
 export type { SequenceHooks, SequenceSetupFiles } from '../../runtime/runner/types'
 export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
@@ -1227,7 +1227,7 @@ export interface ResolvedConfig
   cliExclude?: string[]
 
   project: string[]
-  benchmark: Required<BenchmarkUserOptions>
+  benchmark: ResolvedBenchmarkOptions
   shard?: {
     index: number
     count: number
@@ -1298,6 +1298,14 @@ export interface ResolvedConfig
 export interface ResolvedProjectEntry {
   viteConfig: ResolvedViteConfig
   projectConfig: ResolvedConfig
+  /**
+   * Whether test files were found while resolving browser dependencies. This
+   * early result is used only to decide whether prewarming is useful; runtime
+   * discovery still globs after plugins have configured the server.
+   *
+   * @internal
+   */
+  hasTestFiles?: boolean
   /**
    * When set, this entry exists only so browser-instance siblings can attach
    * to a parent that owns the Vite server and (later) the browser provider.
