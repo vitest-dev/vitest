@@ -52,6 +52,9 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror,
     UNSAFE_allowUnprotectedRebuild: true,
+    // opt into mirroring the user-action pseudo-classes we track, so their
+    // snapshot-time styles paint (rrweb-io/rrweb#1896, replaces our local patch)
+    hackCssPseudoClasses: Object.keys(pseudoClassIds) as any,
   })
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {

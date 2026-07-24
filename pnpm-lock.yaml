@@ -186,6 +186,7 @@ overrides:
   rollup: ^4.59.0
   vite: 8.0.11
   vitest: workspace:*
+  rrweb-snapshot: file:./rrweb-snapshot-2.1.0.tgz
 
 patchedDependencies:
   '@sinonjs/fake-timers@15.4.0': 8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb
@@ -193,7 +194,6 @@ patchedDependencies:
   cac@6.7.14: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
   istanbul-lib-instrument: fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11
   istanbul-lib-source-maps: be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e
-  rrweb-snapshot@2.0.1: 9e976b2c55a5c2ed589c41b8f46cc44b6fe6f528ebb4d3780a44b1ca8cbb17a4
 
 importers:
 
@@ -590,8 +590,8 @@ importers:
         specifier: 'catalog:'
         version: 2.0.3
       rrweb-snapshot:
-        specifier: 2.0.1
-        version: 2.0.1(patch_hash=9e976b2c55a5c2ed589c41b8f46cc44b6fe6f528ebb4d3780a44b1ca8cbb17a4)
+        specifier: file:../../rrweb-snapshot-2.1.0.tgz
+        version: file:rrweb-snapshot-2.1.0.tgz
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -939,8 +939,8 @@ importers:
         specifier: ^4.59.0
         version: 4.59.0
       rrweb-snapshot:
-        specifier: 2.0.1
-        version: 2.0.1(patch_hash=9e976b2c55a5c2ed589c41b8f46cc44b6fe6f528ebb4d3780a44b1ca8cbb17a4)
+        specifier: file:../../rrweb-snapshot-2.1.0.tgz
+        version: file:rrweb-snapshot-2.1.0.tgz
       splitpanes:
         specifier: ^4.0.4
         version: 4.0.4(vue@3.5.29(typescript@5.9.3))
@@ -9453,8 +9453,9 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  rrweb-snapshot@2.0.1:
-    resolution: {integrity: sha512-H8TA29ct2tpYtr5oaB0N+ksRY9bhEErfAYcKbce4+w8lqEUQChpKZd41HpBJLkp04b5QUfWUg4v6r9Okf8r7vA==}
+  rrweb-snapshot@file:rrweb-snapshot-2.1.0.tgz:
+    resolution: {integrity: sha512-8PAHthBm1fUAM/6zZWPAzVk2Rz0YpZ7RTAcdlbilqoa1fOpkQy8p76t2uOrrspH4rMfJMAIavj0xa6u6oQvGTg==, tarball: file:rrweb-snapshot-2.1.0.tgz}
+    version: 2.1.0
 
   run-applescript@7.0.0:
     resolution: {integrity: sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A==}
@@ -19110,7 +19111,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.62.2
       fsevents: 2.3.3
 
-  rrweb-snapshot@2.0.1(patch_hash=9e976b2c55a5c2ed589c41b8f46cc44b6fe6f528ebb4d3780a44b1ca8cbb17a4):
+  rrweb-snapshot@file:rrweb-snapshot-2.1.0.tgz:
     dependencies:
       postcss: 8.5.14
 

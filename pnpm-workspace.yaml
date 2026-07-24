@@ -37,13 +37,14 @@ overrides:
   rollup: 'catalog:'
   vite: 'catalog:'
   vitest: workspace:*
+  # local tarball of rrweb-snapshot built from rrweb-io/rrweb#1896 (hackCssPseudoClasses)
+  rrweb-snapshot: file:./rrweb-snapshot-2.1.0.tgz
 patchedDependencies:
   '@sinonjs/fake-timers@15.4.0': patches/@sinonjs__fake-timers@15.4.0.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
   istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
-  rrweb-snapshot@2.0.1: patches/rrweb-snapshot@2.0.1.patch
 catalog:
   '@babel/core': ^7.29.0
   '@babel/plugin-proposal-decorators': ^7.29.0
