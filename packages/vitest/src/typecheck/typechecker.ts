@@ -286,6 +286,14 @@ export class Typechecker {
     return this.process?.exitCode != null && this.process.exitCode
   }
 
+  public getSignal(): NodeJS.Signals | null {
+    return this.process?.signalCode ?? null
+  }
+
+  public getChecker(): string {
+    return this.project.config.typecheck.checker
+  }
+
   public getOutput(): string {
     return this._output
   }
