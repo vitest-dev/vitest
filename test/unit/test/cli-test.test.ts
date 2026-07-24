@@ -215,6 +215,19 @@ test('maxConcurrency is parsed correctly', () => {
   expect(getCLIOptions('--max-concurrency=1000')).toEqual({ maxConcurrency: 1000 })
 })
 
+test('project is parsed correctly', () => {
+  const expected = { 'project': ['space_1'], '--': [], 'color': true }
+  expect(parseCLI('vitest --project space_1').options).toEqual(expected)
+  expect(parseCLI('vitest --project=space_1').options).toEqual(expected)
+  expect(parseCLI('vitest -p space_1').options).toEqual(expected)
+  expect(parseCLI('vitest -p=space_1').options).toEqual(expected)
+  expect(parseCLI('vitest -p space_1 -p space_2').options).toEqual({
+    'project': ['space_1', 'space_2'],
+    '--': [],
+    'color': true,
+  })
+})
+
 test('injectCjsGlobals is parsed correctly', () => {
   expect(getCLIOptions('--injectCjsGlobals')).toEqual({ injectCjsGlobals: true })
   expect(getCLIOptions('--inject-cjs-globals')).toEqual({ injectCjsGlobals: true })
@@ -394,7 +407,6 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'watch': true,
-      'w': true,
       '--': [],
       'color': true,
     },
@@ -443,6 +455,15 @@ test('public parseCLI works correctly', () => {
   }).toThrow(`Expected "vitest" as the first argument, received "node"`)
 
   expect(parseCLI('vitest --project=space_1 --project=space_2')).toEqual({
+    filter: [],
+    options: {
+      'project': ['space_1', 'space_2'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest -p space_1 -p space_2')).toEqual({
     filter: [],
     options: {
       'project': ['space_1', 'space_2'],
