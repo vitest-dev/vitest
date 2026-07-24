@@ -1,23 +1,23 @@
 import type { SerializedLocator } from '@vitest/browser'
-
 // Note: this augments `screenshotOptions` types
 import type {} from '@vitest/browser-playwright'
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { platform } from 'node:os'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, extname, join, relative, resolve } from 'pathe'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
+import { assertBrowserApiWrite, assertBrowserFileAccess } from '../../utils'
+
+type ToMatchScreenshotGlobals = NonNullable<NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']>
 
 type GlobalOptions = Required<Omit<
-  NonNullable<
-    NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']
-    & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
-  >,
-  'comparators' | 'screenshotDirectory'
+  ToMatchScreenshotGlobals & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>,
+  'comparators' | 'screenshotDirectory' | 'io'
 >>
 
 const defaultOptions = {
@@ -67,6 +67,24 @@ const defaultOptions = {
   ),
 } satisfies GlobalOptions
 
+export type IO = NonNullable<ToMatchScreenshotGlobals['io']>
+
+const globalIO = {
+  read: async ({ path }) => readFile(path).catch(() => null),
+  write: async ({ path, data, project }) => {
+    try {
+      assertBrowserApiWrite(project, path)
+      assertBrowserFileAccess(project, path)
+
+      await mkdir(dirname(path), { recursive: true })
+      await writeFile(path, data)
+    }
+    catch (cause) {
+      throw new Error('Couldn\'t write file to fs', { cause })
+    }
+  },
+} satisfies IO
+
 type SupportedCodecs = Parameters<typeof getCodec>[0]
 
 const supportedExtensions = ['png'] satisfies SupportedCodecs[]
@@ -74,6 +92,7 @@ const supportedExtensions = ['png'] satisfies SupportedCodecs[]
 export interface ResolvedOptions {
   codec: ReturnType<typeof getCodec>
   comparator: ReturnType<typeof getComparator>
+  io: IO
   resolvedOptions: GlobalOptions
   paths: {
     reference: string
@@ -147,6 +166,12 @@ export function resolveOptions(
   return {
     codec: getCodec(extension),
     comparator: getComparator(resolvedOptions.comparatorName, context),
+    io: context.project.config.browser.expect?.toMatchScreenshot?.io
+      ? {
+          ...globalIO,
+          ...context.project.config.browser.expect.toMatchScreenshot.io,
+        }
+      : globalIO,
     resolvedOptions,
     paths: {
       reference: resolvedOptions.resolveScreenshotPath(resolvePathData),
