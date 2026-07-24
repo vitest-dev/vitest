@@ -261,7 +261,30 @@ export class Vitest {
     )
   }
 
-  private async _restart(reason?: string) {
+  private _restartPromise?: Promise<void>
+  private _restartQueued = false
+
+  // Restarts must not overlap: chokidar regularly delivers several change
+  // events for one edit, and a restart that starts while another is still
+  // re-creating the servers reports `onServerRestart` to reporters that were
+  // re-instantiated but not yet initialized.
+  private _restart(reason?: string): Promise<void> {
+    if (this._restartPromise) {
+      this._restartQueued = true
+      return this._restartPromise
+    }
+    this._restartPromise = (async () => {
+      do {
+        this._restartQueued = false
+        await this._restartNow(reason)
+      } while (this._restartQueued)
+    })().finally(() => {
+      this._restartPromise = undefined
+    })
+    return this._restartPromise
+  }
+
+  private async _restartNow(reason?: string) {
     await Promise.all(this._onRestartListeners.map(fn => fn(reason)))
     this.report('onServerRestart', reason)
     await this.close()

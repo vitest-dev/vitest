@@ -1017,18 +1017,9 @@ importers:
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../mocker
-      '@vitest/pretty-format':
-        specifier: workspace:*
-        version: link:../pretty-format
-      '@vitest/spy':
-        specifier: workspace:*
-        version: link:../spy
       '@vitest/ui':
         specifier: workspace:*
         version: link:../ui
-      '@vitest/utils':
-        specifier: workspace:*
-        version: link:../utils
       chai:
         specifier: 'catalog:'
         version: 6.2.2
@@ -1044,9 +1035,6 @@ importers:
       obug:
         specifier: 'catalog:'
         version: 2.1.1
-      pathe:
-        specifier: 'catalog:'
-        version: 2.0.3
       picomatch:
         specifier: ^4.0.3
         version: 4.0.3
@@ -1062,9 +1050,6 @@ importers:
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.15
-      tinyrainbow:
-        specifier: 'catalog:'
-        version: 3.1.0
       why-is-node-running:
         specifier: ^2.3.0
         version: 2.3.0
@@ -1111,9 +1096,18 @@ importers:
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
+      '@vitest/pretty-format':
+        specifier: workspace:*
+        version: link:../pretty-format
       '@vitest/snapshot':
         specifier: workspace:*
         version: link:../snapshot
+      '@vitest/spy':
+        specifier: workspace:*
+        version: link:../spy
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       acorn:
         specifier: 8.11.3
         version: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
@@ -1141,6 +1135,9 @@ importers:
       mime:
         specifier: ^4.1.0
         version: 4.1.0
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
@@ -1150,6 +1147,9 @@ importers:
       tinyhighlight:
         specifier: 'catalog:'
         version: 0.3.2(picocolors@1.1.1)
+      tinyrainbow:
+        specifier: 'catalog:'
+        version: 3.1.0
       vite:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -1468,9 +1468,6 @@ importers:
       tinyexec:
         specifier: ^1.0.2
         version: 1.0.2
-      tinyrainbow:
-        specifier: 'catalog:'
-        version: 3.1.0
       vite:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.48.0)(tsx@4.21.0)(yaml@2.8.2)
