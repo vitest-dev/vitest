@@ -262,6 +262,23 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
+  test('vi.spyOn() exposes mockImplementation class prototype methods', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+    const object = { Class: OriginalClass }
+
+    vi.spyOn(object, 'Class').mockImplementation(class MockClass extends OriginalClass {
+      method() {
+        return 'mocked'
+      }
+    })
+
+    expect(new object.Class().method()).toBe('mocked')
+  })
+
   test('vi.spyOn() spies and tracks overridden async calls', async () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'async')
