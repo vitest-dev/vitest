@@ -35,8 +35,16 @@ const traces = new Traces({
 let rootTesterSpan: ReturnType<Traces['startContextSpan']> | undefined
 getBrowserState().traces = traces
 
+// a tester opened as a top-level window (e.g. a test clicking <a target="_blank">
+// at the tester URL) would echo `ack:`/`response:` events back recursively
+const isEmbedded = window.self !== window.top
+
 channel.addEventListener('message', async (e) => {
   const data = e.data
+
+  if (!isEmbedded) {
+    return
+  }
 
   if (!isEvent(data)) {
     await client.waitForConnection()
@@ -140,10 +148,12 @@ getBrowserState().iframeId = iframeId
 
 registerPageMarkHandler((name, options) => page.mark(name, options))
 
-channel.postMessage({
-  event: 'ready',
-  iframeId,
-})
+if (isEmbedded) {
+  channel.postMessage({
+    event: 'ready',
+    iframeId,
+  })
+}
 
 let contextSwitched = false
 
