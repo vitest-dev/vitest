@@ -862,7 +862,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   mergeReports: {
     description:
-      'Path to a blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
+      'Path to a blob reports directory or glob pattern. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {

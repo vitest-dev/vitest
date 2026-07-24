@@ -9,7 +9,8 @@ import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { sanitizeFilePath } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
+import { glob, isDynamicPattern } from 'tinyglobby'
 import { getOutputFile } from '../../utils/config-helpers'
 
 export interface BlobOptions {
@@ -117,10 +118,24 @@ export async function readBlobs(
   projectsArray: TestProject[],
 ): Promise<MergedBlobs> {
   // using process.cwd() because --merge-reports can only be used in CLI
-  const resolvedDir = resolve(process.cwd(), blobsDirectory)
-  const blobsFiles = await readdir(resolvedDir)
-  const promises = blobsFiles.map(async (filename) => {
-    const fullPath = resolve(resolvedDir, filename)
+  const cwd = process.cwd()
+  const resolvedDir = resolve(cwd, blobsDirectory)
+  const blobsFiles = isDynamicPattern(blobsDirectory)
+    ? (await glob(blobsDirectory, {
+        absolute: true,
+        cwd,
+        dot: true,
+        expandDirectories: false,
+        onlyFiles: true,
+      })).map(fullPath => ({
+        fullPath,
+        filename: relative(cwd, fullPath),
+      }))
+    : (await readdir(resolvedDir)).map(filename => ({
+        fullPath: resolve(resolvedDir, filename),
+        filename,
+      }))
+  const promises = blobsFiles.map(async ({ fullPath, filename }) => {
     const stats = await stat(fullPath)
     if (!stats.isFile()) {
       throw new TypeError(
@@ -142,7 +157,7 @@ export async function readBlobs(
 
   if (!blobs.length) {
     throw new Error(
-      `vitest.mergeReports() requires at least one blob file in "${blobsDirectory}" directory, but none were found`,
+      `vitest.mergeReports() requires at least one blob file in "${blobsDirectory}", but none were found`,
     )
   }
 

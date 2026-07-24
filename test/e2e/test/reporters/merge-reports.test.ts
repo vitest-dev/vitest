@@ -254,6 +254,32 @@ test('merge reports', async () => {
   `)
 })
 
+test('merge reports from glob pattern', async () => {
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['first.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest/blob/first-run.json' }]],
+  })
+
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['second.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest/blob/second-run.json' }]],
+  })
+
+  await writeFile(resolve(reportsDir, 'ignored.json'), '{"not":"a blob report"}')
+
+  const { stdout, exitCode } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: `${reportsDir}/*-run.json`,
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(exitCode).toBe(1)
+  expect(stdout).toContain('first.test.ts')
+  expect(stdout).toContain('second.test.ts')
+})
+
 test('total and merged execution times are shown', async () => {
   for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
     const index = 1 + _index
