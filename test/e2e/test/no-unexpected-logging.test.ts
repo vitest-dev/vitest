@@ -33,23 +33,27 @@ describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool
  Test Files  12 passed (12)
       Tests  12 passed (12)
    Start at  [...]
-   Duration  [...]ms (transform [...]ms, setup [...]ms, import [...]ms, tests [...]ms, environment [...]ms)
+   Duration  [...]ms (<breakdown>)
 
    `.trim())
   })
 })
 
 function normalizeOutput(stdtout: string) {
-  const rows = stdtout.replace(/\d?\.?\d+m?s/g, '[...]ms').split('\n').map((row) => {
-    if (row.includes('RUN  v')) {
-      return `${row.split('RUN  v')[0]}RUN  v[...]`
-    }
+  const rows = stdtout
+    .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
+    .replace(/\d?\.?\d+m?s/g, '[...]ms')
+    .split('\n')
+    .map((row) => {
+      if (row.includes('RUN  v')) {
+        return `${row.split('RUN  v')[0]}RUN  v[...]`
+      }
 
-    if (row.includes('Start at')) {
-      return row.replace(/\d+:\d+:\d+/, '[...]')
-    }
-    return row
-  })
+      if (row.includes('Start at')) {
+        return row.replace(/\d+:\d+:\d+/, '[...]')
+      }
+      return row
+    })
 
   return rows.join('\n').trim()
 }

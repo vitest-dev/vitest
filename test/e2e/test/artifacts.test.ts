@@ -371,6 +371,7 @@ describe('reporters', () => {
         .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
@@ -382,7 +383,7 @@ describe('reporters', () => {
        Test Files  1 passed (1)
             Tests  2 passed (2)
          Start at  <time>
-         Duration  <duration> (transform <duration>, setup <duration>, import <duration>, tests <duration>, environment <duration>)
+         Duration  <duration> (<breakdown>)
 
       "
     `)
@@ -403,6 +404,7 @@ describe('reporters', () => {
         .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
@@ -413,7 +415,7 @@ describe('reporters', () => {
        Test Files  1 passed (1)
             Tests  2 passed (2)
          Start at  <time>
-         Duration  <duration> (transform <duration>, setup <duration>, import <duration>, tests <duration>, environment <duration>)
+         Duration  <duration> (<breakdown>)
 
       "
     `)

@@ -15,6 +15,7 @@ import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
 import { getSuites, getTestName, getTests, hasFailed, hasFailedSnapshot } from '../../utils/tasks'
 import { generateCodeFrame, printStack } from '../printError'
+import { computeDurationBreakdown, formatDurationBreakdown } from './durationBreakdown'
 import { BENCH_TABLE_HEAD, computeBenchColumnWidths, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
@@ -638,20 +639,16 @@ export abstract class BaseReporter implements Reporter {
       // Execution time is either sum of all runs of `--merge-reports` or the current run's time
       const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
 
-      const environmentTime = sum(files, file => file.environmentLoad)
-      const transformTime = this.ctx.state.transformTime
-      const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
+      const breakdown = computeDurationBreakdown({
+        files,
+        transformTime: this.ctx.state.transformTime,
+        typecheckTime: sum(this.ctx.projects, project => project.typechecker?.getResult().time),
+      })
 
-      const timers = [
-        `transform ${formatTime(transformTime)}`,
-        `setup ${formatTime(setupTime)}`,
-        `import ${formatTime(collectTime)}`,
-        `tests ${formatTime(testsTime)}`,
-        `environment ${formatTime(environmentTime)}`,
-        typecheck && `typecheck ${formatTime(typecheck)}`,
-      ].filter(Boolean).join(', ')
-
-      this.log(padSummaryTitle('Duration'), formatTime(executionTime) + c.dim(` (${timers})`))
+      // percentages are relative to the sum of all tracked phases: phases run
+      // in parallel workers, so their sum is not comparable to the wall time
+      const timers = breakdown.total > 0 ? formatDurationBreakdown(breakdown) : ''
+      this.log(padSummaryTitle('Duration'), formatTime(executionTime) + (timers ? c.dim(` (${timers})`) : ''))
 
       if (blobs?.executionTimes) {
         this.log(padSummaryTitle('Per blob') + blobs.executionTimes.map(time => ` ${formatTime(time)}`).join(''))
