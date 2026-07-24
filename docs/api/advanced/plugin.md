@@ -117,7 +117,7 @@ Note that this will only affect projects injected with [`injectTestProjects`](#i
 :::
 
 ::: tip Referencing the Current Config
-Inline configurations inherit the root config by default. If you want to inherit the configuration of a specific project instead, set the `extends` property to its config file. All other properties will be merged with the user defined config.
+Inline configurations inherit the root config by default. If you want to inherit a specific configuration file instead, set the `extends` property to its path. All other properties will be merged with the user defined config.
 
 The project's `configFile` can be accessed in Vite's config: `project.vite.config.configFile`.
 
