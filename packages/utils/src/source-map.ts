@@ -130,7 +130,7 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   }
 
   return {
-    file: url,
+    file: safeDecodeURI(url),
     method: functionName || '',
     line: Number.parseInt(lineNumber),
     column: Number.parseInt(columnNumber),
@@ -193,6 +193,8 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   if (file.startsWith('file://')) {
     file = file.slice(7)
   }
+
+  file = safeDecodeURI(file)
 
   // normalize Windows path (\ -> /)
   file = file.startsWith('node:') || file.startsWith('internal:')
@@ -415,4 +417,13 @@ export function getOriginalPosition(
     return null
   }
   return result
+}
+
+function safeDecodeURI(value: string): string {
+  try {
+    return decodeURI(value)
+  }
+  catch {
+    return value
+  }
 }
