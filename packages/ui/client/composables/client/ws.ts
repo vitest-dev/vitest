@@ -74,6 +74,12 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
       ctx.state.updateTasks(packs)
       handlers.onTaskUpdate?.(packs, events)
     },
+    onTestRemoved(id) {
+      if (id) {
+        ctx.state.removeFiles([id])
+      }
+      handlers.onTestRemoved?.(id)
+    },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)
       handlers.onUserConsoleLog?.(log)

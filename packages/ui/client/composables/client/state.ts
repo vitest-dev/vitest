@@ -70,6 +70,26 @@ export class StateManager {
     })
   }
 
+  // drop every file collected under the given paths, e.g. when a test file is
+  // deleted or renamed on disk, so it is not resurrected on the next collect
+  removeFiles(paths: string[]): void {
+    paths.forEach((path) => {
+      const files = this.filesMap.get(path)
+      if (!files) {
+        return
+      }
+      files.forEach(file => this.removeId(file))
+      this.filesMap.delete(path)
+    })
+  }
+
+  private removeId(task: RunnerTask): void {
+    this.idMap.delete(task.id)
+    if (task.type === 'suite') {
+      task.tasks.forEach(child => this.removeId(child))
+    }
+  }
+
   // this file is reused by ws-client, and should not rely on heavy dependencies like workspace
   clearFiles(
     _project: { config: { name: string | undefined; root: string } },
