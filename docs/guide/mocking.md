@@ -171,7 +171,7 @@ Don't forget that this only [mocks _external_ access](/guide/mocking/modules#moc
 
 ### Mock the current date
 
-To mock `Date`'s time, you can use `vi.setSystemTime` helper function. This value will **not** automatically reset between different tests.
+To mock `Date` and `Temporal`'s time, you can use `vi.setSystemTime` helper function. This value will **not** automatically reset between different tests.
 
 Beware that using `vi.useFakeTimers` also changes the `Date`'s time.
 
@@ -180,6 +180,8 @@ const mockDate = new Date(2022, 0, 1)
 vi.setSystemTime(mockDate)
 const now = new Date()
 expect(now.valueOf()).toBe(mockDate.valueOf())
+const nowInstant = Temporal.Now.instant()
+expect(nowInstant.epochMilliseconds).toBe(mockDate.valueOf())
 // reset mocked time
 vi.useRealTimers()
 ```

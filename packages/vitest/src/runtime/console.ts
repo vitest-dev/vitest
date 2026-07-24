@@ -4,8 +4,9 @@ import { relative } from 'node:path'
 import { Writable } from 'node:stream'
 import { getSafeTimers } from '@vitest/utils/timers'
 import c from 'tinyrainbow'
-import { RealDate } from '../integrations/mock/date'
 import { getWorkerState } from './utils'
+
+const RealDate = globalThis.Date
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
