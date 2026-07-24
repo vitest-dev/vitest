@@ -56,6 +56,62 @@ async function config(options?: TestUserConfig & { $viteConfig?: ViteUserConfig;
   return resolvedProjects.filter(p => !p.hidden)
 }
 
+async function observePreTransformRequests(options: TestUserConfig = {}) {
+  let serverPreTransformRequests: unknown = 'unresolved'
+  let clientPreTransformRequests: unknown = 'unresolved'
+  const browserEnabled = !!options.browser?.enabled
+
+  await config({
+    ...options,
+    $viteConfig: {
+      plugins: [
+        {
+          name: 'observe-pre-transform-requests',
+          enforce: 'post',
+          config: {
+            order: 'post',
+            handler(config) {
+              if (!!config.test?.browser?.enabled === browserEnabled) {
+                serverPreTransformRequests = config.server?.preTransformRequests
+                clientPreTransformRequests = config.environments?.client?.dev?.preTransformRequests
+              }
+            },
+          },
+        },
+      ],
+    },
+  })
+
+  return {
+    client: clientPreTransformRequests,
+    server: serverPreTransformRequests,
+  }
+}
+
+test('does not disable pre-transform requests in browser mode', async () => {
+  const result = await observePreTransformRequests({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+
+  expect(result).toEqual({
+    client: undefined,
+    server: undefined,
+  })
+})
+
+test('disables pre-transform requests in node mode', async () => {
+  expect(await observePreTransformRequests()).toEqual({
+    client: false,
+    server: false,
+  })
+})
+
 test('assigns names as browsers', async () => {
   const projects = await config({
     browser: {

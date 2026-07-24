@@ -123,48 +123,76 @@ describe.each([
   })
 })
 
-it('experimental fsModuleCache is inherited in a project', async () => {
-  const v = await config({
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/custom-cache-path',
-    },
-    projects: [
-      {
-        test: {
-          name: 'project',
-        },
-      },
-    ],
-  })
-  expect(v.experimental.fsModuleCache).toBe(true)
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCache).toBe(true)
-
-  expect(v.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-})
-
-it('project overrides experimental fsModuleCache', async () => {
-  const v = await config({
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/custom-cache-path',
-    },
-    projects: [
-      {
-        test: {
-          name: 'project',
-          experimental: {
-            fsModuleCache: false,
-            fsModuleCachePath: './node_modules/project-cache-path',
+it('disables server.hmr before plugins read it in their own config hook', async () => {
+  // `@vitejs/plugin-react` (and others) turn features like React Fast Refresh
+  // off only when they observe `server.hmr === false` inside their `config`
+  // hook. Vitest must disable HMR early enough for such plugins — which often
+  // run as `enforce: 'post'` — to see it, otherwise Fast Refresh stays on and
+  // injects `$RefreshSig$`, which is undefined outside a browser preamble.
+  let observedHmr: unknown = 'unset'
+  await resolveTestConfig({
+    $viteConfig: {
+      plugins: [
+        {
+          name: 'test:observe-hmr',
+          enforce: 'post',
+          config(userConfig) {
+            observedHmr = userConfig.server?.hmr
           },
         },
+      ],
+    },
+  })
+  expect(observedHmr).toBe(false)
+})
+
+it('fsModuleCache is inherited in a project', async () => {
+  const v = await config({
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/custom-cache-path',
+    projects: [
+      {
+        test: {
+          name: 'project',
+        },
       },
     ],
   })
-  expect(v.experimental.fsModuleCache).toBe(true)
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCache).toBe(false)
+  expect(v.fsModuleCache).toBe(true)
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCache).toBe(true)
 
-  expect(v.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.resolvedProjects[0].projectConfig.experimental.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
+  expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+})
+
+it('project overrides fsModuleCache', async () => {
+  const v = await config({
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/custom-cache-path',
+    projects: [
+      {
+        test: {
+          name: 'project',
+          fsModuleCache: false,
+          fsModuleCachePath: './node_modules/project-cache-path',
+        },
+      },
+    ],
+  })
+  expect(v.fsModuleCache).toBe(true)
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCache).toBe(false)
+
+  expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
+})
+
+it('migrates the deprecated `experimental.fsModuleCache*` options to the top level', async () => {
+  const v = await config({
+    experimental: {
+      fsModuleCache: true,
+      fsModuleCachePath: './node_modules/custom-cache-path',
+    },
+  } as any)
+  expect(v.fsModuleCache).toBe(true)
+  expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
 })

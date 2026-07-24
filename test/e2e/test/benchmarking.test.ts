@@ -1131,7 +1131,7 @@ test('benchmark warns when module export getters are accessed too many times', a
   expect(stderr).toMatchInlineSnapshot(`
     "stderr | getter-warning.bench.ts > getter warning
     Benchmark Warning
-    Benchmark "getter warning 1" accessed module export getters too many times.
+    Benchmark "getter warning" accessed module export getters too many times.
 
     This can make results unreliable because export getters add overhead.
     See https://vitest.dev/guide/benchmarking#module-runner-overhead
@@ -1320,6 +1320,112 @@ test('bench matchers reject non-benchmark-result values with a TypeError', () =>
     .toThrow(TypeError)
   expect(() => expect({ foo: 'bar' }).toBeSlowerThan(fakeResult(1.0)))
     .toThrow(TypeError)
+})
+
+test('`benchmark.provider` runs a custom provider whose returned results are authoritative', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const { stderr } = await runInlineTests(
+    {
+      // A provider that never runs the benchmark functions. It returns
+      // fabricated statistics keyed by registration name so the assertions
+      // below can only pass if Vitest reports exactly what the provider
+      // returned, not anything measured off tinybench.
+      'my-provider.ts': /* ts */`
+        function stats(mean) {
+          return {
+            aad: 0, critical: 0, df: 0, mad: 0, max: mean, samples: undefined,
+            mean, min: mean, moe: 0, p50: mean, p75: mean, p99: mean,
+            p995: mean, p999: mean, rme: 0, samplesCount: 1, sd: 0, sem: 0, variance: 0,
+          }
+        }
+        export default {
+          async run({ registrations }) {
+            return registrations.map((reg, i) => ({
+              name: reg.name,
+              state: 'completed',
+              latency: stats((i + 1) * 100),
+              throughput: stats(1 / ((i + 1) * 100)),
+              period: (i + 1) * 100,
+              totalTime: (i + 1) * 1000,
+            }))
+          },
+        }
+      `,
+      'custom.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('custom provider', async ({ bench }) => {
+          await bench.compare(
+            bench('first', () => { throw new Error('provider must not call fn') }),
+            bench('second', () => { throw new Error('provider must not call fn') }),
+          )
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true, provider: './my-provider.ts' },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+    },
+  )
+
+  expect(stderr).toBe('')
+  // the benchmark fns throw — a passing run proves the provider never invoked
+  // them, and the reported numbers are the provider's fabricated values
+  const byName = Object.fromEntries(tasks.map(t => [t.name, t.latency.mean]))
+  expect(byName).toEqual({ first: 100, second: 200 })
+  // ranking is applied by Vitest over the provider's results
+  expect(tasks.map(t => ({ name: t.name, rank: t.rank })).sort((a, b) => a.rank - b.rank))
+    .toEqual([{ name: 'first', rank: 1 }, { name: 'second', rank: 2 }])
+})
+
+test('`benchmark.provider` receives the registrations with raw fn and fnOpts', async () => {
+  // A provider that actually runs each fn once, so we can prove the raw
+  // benchmark function and its lifecycle hooks reach the provider untouched.
+  const { stderr, results } = await runInlineTests(
+    {
+      'runner-provider.ts': /* ts */`
+        function stats(mean) {
+          return {
+            aad: 0, critical: 0, df: 0, mad: 0, max: mean, samples: undefined,
+            mean, min: mean, moe: 0, p50: mean, p75: mean, p99: mean,
+            p995: mean, p999: mean, rme: 0, samplesCount: 1, sd: 0, sem: 0, variance: 0,
+          }
+        }
+        export default {
+          async run({ registrations }) {
+            const out = []
+            for (const reg of registrations) {
+              await reg.fnOpts?.beforeAll?.()
+              await reg.fn()
+              await reg.fnOpts?.afterAll?.()
+              out.push({
+                name: reg.name, state: 'completed',
+                latency: stats(1), throughput: stats(1), period: 1, totalTime: 1,
+              })
+            }
+            return out
+          },
+        }
+      `,
+      'raw.bench.ts': /* ts */`
+        import { test, expect } from 'vitest'
+        test('raw registration', async ({ bench }) => {
+          const calls = []
+          await bench('x', {
+            beforeAll: () => { calls.push('beforeAll') },
+            afterAll: () => { calls.push('afterAll') },
+          }, () => { calls.push('fn') }).run()
+          expect(calls).toEqual(['beforeAll', 'fn', 'afterAll'])
+        })
+`,
+    },
+    { benchmark: { enabled: true, provider: './runner-provider.ts' } },
+  )
+  expect(stderr).toBe('')
+  expect([...(results[0]?.children.allTests() ?? [])][0]?.result()?.state).toBe('passed')
 })
 
 declare module 'vitest' {

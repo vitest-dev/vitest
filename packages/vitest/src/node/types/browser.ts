@@ -24,6 +24,16 @@ export interface BrowserProviderOption<Options extends object = object> {
   name: string
   supportedBrowser?: ReadonlyArray<string>
   options: Options
+  /**
+   * Called once for every resolved browser project right before its shared
+   * Vite server is created, so the provider can start preparing the browser
+   * (e.g. launching it) concurrently. Optional, fire-and-forget: errors must
+   * surface through the normal provider flow.
+   */
+  prewarm?: (ctx: {
+    config: ResolvedConfig
+    vitest: Vitest
+  }) => void
   providerFactory: (project: TestProject) => BrowserProvider
   serverFactory: BrowserServerFactory
 }
@@ -269,6 +279,28 @@ export interface BrowserConfigOptions {
    * @default !browser.ui
    */
   screenshotFailures?: boolean
+
+  /**
+   * Serve sourcemaps of your dependencies (files in `node_modules`) to the
+   * browser during headless test runs.
+   *
+   * These sourcemaps are used by browser devtools: when disabled, pausing
+   * inside dependency code shows the compiled code the browser actually
+   * runs instead of the dependency's original sources. If you don't debug
+   * into your dependencies this way, disabling them makes test runs faster:
+   * the server doesn't generate and inline the maps, and every browser tab
+   * downloads several times fewer bytes.
+   *
+   * Reported test errors are not affected: stack frames pointing into a
+   * pre-bundled dependency are mapped using the sourcemaps stored on disk
+   * even when this option is disabled.
+   *
+   * Vitest never serves sourcemaps of its own pre-built modules in headless
+   * runs (unless `--inspect` is used) — their frames are hidden from stack
+   * traces anyway. Sourcemaps of your own source files are always served.
+   * @default true
+   */
+  dependencySourcemaps?: boolean
 
   /**
    * Path to the index.html file that will be used to run tests.

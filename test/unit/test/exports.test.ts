@@ -110,6 +110,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "createViteLogger": "function",
         "createViteServer": "function",
         "createVitest": "function",
+        "disableDefaultColors": "function",
         "distDir": "string",
         "esbuildVersion": "string",
         "escapeTestName": "function",

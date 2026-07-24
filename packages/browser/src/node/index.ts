@@ -6,11 +6,11 @@ import { createRequire } from 'node:module'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
-import { toArray } from '@vitest/utils/helpers'
+import { cleanUrl, toArray } from '@vitest/utils/helpers'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
-import { isFileServingAllowed, isValidApiRequest, rolldownVersion, distDir as vitestDist } from 'vitest/node'
+import { isCSSRequest, isFileServingAllowed, isValidApiRequest, rolldownVersion, distDir as vitestDist } from 'vitest/node'
 import { version } from '../../package.json'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
@@ -368,9 +368,62 @@ body {
     ...BrowserPlugin(contribution),
     // this plugin's `configureServer` is ignored since it's added through `applyToEnvironment`
     interceptorPlugin({ registry: mockerRegistry }),
+    {
+      name: 'vitest:browser:framework-sourcemaps',
+      enforce: 'post',
+      transform(code, id) {
+        const parentServer = contribution.parent as ParentBrowserProject | undefined
+        // In a headless run nothing can open devtools, so sourcemaps of
+        // Vitest's own pre-built modules are never consumed: their stack
+        // frames are filtered by stackIgnorePatterns. Generating and
+        // inlining these maps costs server CPU and multiplies the bytes
+        // the browser downloads by ~5 for every fresh browser context.
+        // Sourcemaps of user files and (by default) their dependencies are
+        // kept — they point error stacks and devtools at original sources.
+        if (
+          !parentServer
+          || !isHeadlessServer(parentServer)
+          || parentServer.vitest.config.inspector.enabled
+        ) {
+          return null
+        }
+        if (isCSSRequest(id)) {
+          return null
+        }
+        const path = cleanUrl(id)
+        if (path.startsWith(distRoot) || path.startsWith(vitestDist)) {
+          return { code, map: { mappings: '' } as any }
+        }
+        // users that never debug into node_modules can drop dependency
+        // sourcemaps entirely; `server.sourcemapIgnoreList` (default:
+        // node_modules) can opt paths back in even then, e.g. with
+        // `preserveSymlinks` where workspace code keeps its node_modules
+        // path and would be wrongly treated as a dependency
+        if (
+          parentServer.config.browser.dependencySourcemaps === false
+          && path.includes('/node_modules/')
+          && (parentServer.vite.config.server.sourcemapIgnoreList(path, path) ?? true)
+        ) {
+          return { code, map: { mappings: '' } as any }
+        }
+        return null
+      },
+    },
   ]
 
   return contribution
+}
+
+function isHeadlessServer(parentServer: ParentBrowserProject): boolean {
+  if (!parentServer.config.browser.headless) {
+    return false
+  }
+  // sibling instances share this server (and its module graph cache, so a
+  // late-spawned instance would receive already-cached transforms) and can
+  // override `headless` — check the static instance options instead of the
+  // lazily populated `children` to stay deterministic across runs
+  const instances = parentServer.config.browser.instances ?? []
+  return instances.every(instance => instance.headless !== false)
 }
 
 function resolveBrowserOptimizeDeps(
@@ -399,23 +452,17 @@ function resolveBrowserOptimizeDeps(
     ...(testConfig.snapshotSerializers || []),
   ]
 
+  // Keep these external (never pre-bundle by optimizer):
+  // - vitest/browser, @vitest/browser/context, @vitest/browser/utils are
+  //   VIRTUAL modules generated per-server (see pluginContext.ts) — optimizer
+  //   cannot resolve/run their `load`, it would freeze stale/empty content.
+  // - vite/module-runner is small enough to not need pre-bundling.
+  // - msw is a large, side-effectful service-worker library.
   const exclude = [
-    'vitest',
     'vitest/browser',
-    'vitest/internal/browser',
     'vite/module-runner',
     '@vitest/browser/utils',
     '@vitest/browser/context',
-    '@vitest/browser/client',
-    '@vitest/utils',
-    '@vitest/utils/source-map',
-    '@vitest/spy',
-    '@vitest/utils/error',
-    'std-env',
-    'tinybench',
-    'tinyspy',
-    'tinyrainbow',
-    'pathe',
     'msw',
     'msw/browser',
   ]
@@ -445,10 +492,21 @@ function resolveBrowserOptimizeDeps(
     }
   }
 
+  // Pre-bundle the vitest runtime so the browser fetches a few optimized
+  // chunks instead of ~20 separately-served dist chunks (faster startup).
+  // `vitest`, `vitest/internal/browser` and `@vitest/browser/client` are
+  // optimized together in a single pass, so esbuild dedupes their shared
+  // stateful chunks (the test collector, the runner, the RPC client) to a
+  // single instance — preserving module identity between the test files'
+  // `import 'vitest'` and the tester. Their transitive deps (@vitest/utils,
+  // @vitest/spy, pathe, tinyrainbow, …) are inlined into these bundles.
   const include = [
     'vitest > expect-type',
     'vitest > magic-string',
     'vitest > chai',
+    'vitest',
+    'vitest/internal/browser',
+    '@vitest/browser/client',
   ]
 
   const provider = testConfig.browser?.provider

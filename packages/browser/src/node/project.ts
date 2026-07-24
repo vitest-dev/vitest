@@ -22,6 +22,10 @@ import { getBrowserProvider } from './utils'
 export class ProjectBrowser implements IProjectBrowser {
   public testerHtml: Promise<string> | string
   public testerFilepath: string
+  // the tester template is read once per server, so the transformed HTML
+  // is stable too — computing it for every iframe request pays the whole
+  // transformIndexHtml plugin pipeline each time
+  public testerHtmlTransformed: Promise<string> | undefined
 
   public provider!: BrowserProvider
   public vitest: Vitest
