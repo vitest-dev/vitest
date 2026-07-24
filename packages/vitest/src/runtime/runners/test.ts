@@ -57,11 +57,9 @@ export class TestRunner implements VitestTestRunner {
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
-    if (source === 'setup') {
-      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
-      if (moduleNode) {
-        this.workerState.evaluatedModules.invalidateModule(moduleNode)
-      }
+    const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+    if (moduleNode && (source === 'setup' || moduleNode.evaluated)) {
+      this.workerState.evaluatedModules.invalidateModule(moduleNode)
     }
     return this._otel.$(
       `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
