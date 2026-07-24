@@ -208,11 +208,13 @@ export function resolveTestConfig(
   const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
   resolved.root = viteConfig.root
 
-  // Coverage is collected once for the whole run using the root config, so projects
-  // share its resolved coverage. Each project's setup/test/config files are then
+  // These options are resolved once for the whole run using the root config.
+  // Coverage is shared by reference: each project's setup/test/config files are
   // appended to the same exclude list below, keeping them out of the report.
   if (globalConfig) {
     resolved.coverage = globalConfig.coverage
+    resolved.attachmentsDir = globalConfig.attachmentsDir
+    resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
   }
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
@@ -757,12 +759,15 @@ export function resolveTestConfig(
       .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
   }
 
-  resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
-  for (const reporter of resolved.reporters) {
-    if (Array.isArray(reporter) && reporter[0] === 'blob') {
-      const options = reporter[1] as any
-      if (options && typeof options.label === 'string') {
-        resolved.mergeReportsLabel = options.label
+  // only the root resolves the label; projects receive the root's value above
+  if (!globalConfig) {
+    resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
+    for (const reporter of resolved.reporters) {
+      if (Array.isArray(reporter) && reporter[0] === 'blob') {
+        const options = reporter[1] as any
+        if (options && typeof options.label === 'string') {
+          resolved.mergeReportsLabel = options.label
+        }
       }
     }
   }

@@ -412,7 +412,6 @@ async function resolveSingleProjectEntry(
     projectViteConfig,
     globalConfig,
   )
-  projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel
 
   projectViteConfig.test = projectConfig
 
