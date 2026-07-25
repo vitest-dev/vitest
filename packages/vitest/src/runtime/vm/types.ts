@@ -34,13 +34,6 @@ export declare class VMModule {
   status: ModuleStatus
   evaluate(options?: ModuleEvaluateOptions): Promise<void>
   link(linker: ModuleLinker): Promise<void>
-  // synchronous module graph APIs, only available on Node 24.9+
-  // (see `supportsSyncEsmEvaluate` in ./utils.ts)
-  hasAsyncGraph?: () => boolean
-  hasTopLevelAwait?: () => boolean
-  moduleRequests?: readonly VMModuleRequest[]
-  linkRequests?: (modules: readonly VMModule[]) => void
-  instantiate?: () => void
 }
 interface SyntheticModuleOptions {
   /**
@@ -105,4 +98,12 @@ export declare class VMSourceTextModule extends VMModule {
    * has been evaluated.
    */
   createCachedData(): Buffer
+  // The synchronous module graph APIs below only exist on Node 24.9+.
+  // All call sites run behind the `supportsSyncEsmEvaluate` gate
+  // (see ./utils.ts), so they are typed as always present.
+  hasAsyncGraph(): boolean
+  hasTopLevelAwait(): boolean
+  readonly moduleRequests: readonly VMModuleRequest[]
+  linkRequests(modules: readonly VMModule[]): void
+  instantiate(): void
 }

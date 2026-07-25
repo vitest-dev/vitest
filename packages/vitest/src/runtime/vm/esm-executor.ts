@@ -14,6 +14,21 @@ interface EsmExecutorOptions {
   context: vm.Context
 }
 
+// One entry per module collected by the require(esm) graph walker. `deps`
+// (dependency identifiers, one per module request) discriminates source-text
+// modules built by the walk from complete modules (cache hits, synthetic
+// modules); `commit` marks modules the walk owns and should commit to the
+// cache — false for cache hits and modules owned by the CJS executor.
+type ScratchEntry
+  = | { module: VMModule; deps?: undefined; commit: boolean }
+    | { module: VMSourceTextModule; deps: string[]; commit: true }
+
+// `hasAsyncGraph` only exists on SourceTextModule — a SyntheticModule is
+// synchronous by definition (its evaluation callback is sync)
+function moduleHasAsyncGraph(module: VMModule): boolean {
+  return module instanceof SourceTextModule && module.hasAsyncGraph()
+}
+
 const dataURIRegex
   = /^data:(?<mime>text\/javascript|application\/json|application\/wasm)(?:;(?<encoding>charset=utf-8|base64))?,(?<code>.*)$/
 
@@ -160,16 +175,6 @@ export class EsmExecutor {
       return this.reuseSyncModule(rootIdentifier, cachedRoot)
     }
 
-    interface ScratchEntry {
-      module: VMModule
-      // dependency identifiers, one per module request; only present on
-      // source-text modules built by this walk
-      deps?: string[]
-      // whether this walk owns the module and should commit it to the cache
-      // (false for cache hits and modules owned by the CJS executor)
-      commit: boolean
-    }
-
     const scratch = new Map<string, ScratchEntry>()
     const worklist: string[] = [rootIdentifier]
 
@@ -209,22 +214,10 @@ export class EsmExecutor {
       }
 
       const module = this.createSourceTextModule(identifier, disposition.code)
-      if (
-        typeof module.hasTopLevelAwait === 'function'
-        && module.hasTopLevelAwait()
-      ) {
+      if (module.hasTopLevelAwait()) {
         throw createRequireAsyncModuleError(
           identifier,
           'the module uses top-level await',
-        )
-      }
-      if (
-        module.moduleRequests == null
-        || typeof module.linkRequests !== 'function'
-      ) {
-        throw createRequireAsyncModuleError(
-          identifier,
-          'this version of Node.js cannot load ES modules synchronously',
         )
       }
       const deps: string[] = []
@@ -243,29 +236,23 @@ export class EsmExecutor {
 
     for (const entry of scratch.values()) {
       if (entry.deps) {
-        entry.module.linkRequests!(
+        entry.module.linkRequests(
           entry.deps.map(dep => scratch.get(dep)!.module),
         )
       }
     }
 
     const root = scratch.get(rootIdentifier)!
-    if (root.deps && typeof root.module.instantiate === 'function') {
+    if (root.deps) {
       root.module.instantiate()
     }
 
-    if (
-      typeof root.module.hasAsyncGraph === 'function'
-      && root.module.hasAsyncGraph()
-    ) {
+    if (moduleHasAsyncGraph(root.module)) {
       // top-level await is rejected per module during the walk, so this is a
       // defensive check that an async graph never reaches the sync evaluate
       let culprit = rootIdentifier
       for (const [identifier, entry] of scratch) {
-        if (
-          typeof entry.module.hasTopLevelAwait === 'function'
-          && entry.module.hasTopLevelAwait()
-        ) {
+        if (entry.deps && entry.module.hasTopLevelAwait()) {
           culprit = identifier
           break
         }
@@ -319,7 +306,7 @@ export class EsmExecutor {
     // a module with top-level await reports 'evaluated' as soon as evaluate()
     // is called, while its async evaluation may still be pending — and even a
     // settled async graph is never allowed in require() (Node parity)
-    if (typeof cached.hasAsyncGraph === 'function' && cached.hasAsyncGraph()) {
+    if (moduleHasAsyncGraph(cached)) {
       throw createRequireAsyncModuleError(
         identifier,
         'the module uses top-level await',

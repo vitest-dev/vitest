@@ -65,7 +65,7 @@ export const SourceTextModule: typeof VMSourceTextModule = (vm as any)
 // `instantiate`, synchronously-completing `evaluate`) — the same APIs Node
 // itself uses for require(esm)
 export const supportsSyncEsmEvaluate: boolean
-  = typeof (SourceTextModule as any)?.prototype?.hasAsyncGraph === 'function'
+  = typeof SourceTextModule?.prototype.hasAsyncGraph === 'function'
 
 let lexerInitialized = false
 

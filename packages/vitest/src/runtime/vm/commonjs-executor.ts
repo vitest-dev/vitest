@@ -18,8 +18,8 @@ interface CommonjsExecutorOptions {
   importModuleDynamically: ImportModuleDynamically
   // resolves to `true` for files that are explicitly marked as ESM;
   // require() of those dispatches to `requireEsm` (Node 24.9+)
-  shouldRequireAsEsm?: (resolvedPath: string) => boolean
-  requireEsm?: (resolvedPath: string) => unknown
+  shouldRequireAsEsm: (resolvedPath: string) => boolean
+  requireEsm: (resolvedPath: string) => unknown
 }
 
 const _require = createRequire(import.meta.url)
@@ -57,8 +57,8 @@ export class CommonjsExecutor {
   private codeCache: CodeCache | undefined
   private Module: typeof _Module
   private interopDefault: boolean | undefined
-  private shouldRequireAsEsm: ((resolvedPath: string) => boolean) | undefined
-  private requireEsm: ((resolvedPath: string) => unknown) | undefined
+  private shouldRequireAsEsm: (resolvedPath: string) => boolean
+  private requireEsm: (resolvedPath: string) => unknown
   // .js files that the ESM-syntax fallback already loaded as ES modules,
   // so later require() calls skip the guaranteed-to-fail CJS parse
   private esmSyntaxFallbackFiles = new Set<string>()
@@ -279,8 +279,8 @@ export class CommonjsExecutor {
       if (ext === '.node' || isBuiltin(resolved)) {
         return this.requireCoreModule(resolved)
       }
-      if (this.shouldRequireAsEsm?.(resolved)) {
-        return this.requireEsm!(resolved)
+      if (this.shouldRequireAsEsm(resolved)) {
+        return this.requireEsm(resolved)
       }
       const module = new this.Module(resolved)
       return this.loadCommonJSModule(module, resolved)
@@ -325,7 +325,7 @@ export class CommonjsExecutor {
     }
 
     if (this.esmSyntaxFallbackFiles.has(filename)) {
-      return this.requireEsm!(filename) as Record<string, unknown>
+      return this.requireEsm(filename) as Record<string, unknown>
     }
 
     const extension = this.findLongestRegisteredExtension(filename)
@@ -346,7 +346,6 @@ export class CommonjsExecutor {
   private canFallbackToEsm(filename: string): boolean {
     return (
       supportsSyncEsmEvaluate
-      && this.requireEsm != null
       // mirrors Node's ESM-syntax detection scope: explicit extensions
       // (.mjs/.cjs) already picked their loader
       && extname(filename) === '.js'
@@ -359,7 +358,7 @@ export class CommonjsExecutor {
   ): Record<string, unknown> {
     let exports: unknown
     try {
-      exports = this.requireEsm!(filename)
+      exports = this.requireEsm(filename)
     }
     catch (esmError) {
       // both parsers rejected the file — surface the original CJS error
@@ -484,8 +483,8 @@ export class CommonjsExecutor {
     if (ext === '.node' || isBuiltin(identifier)) {
       return this.requireCoreModule(identifier)
     }
-    if (this.shouldRequireAsEsm?.(identifier)) {
-      return this.requireEsm!(identifier)
+    if (this.shouldRequireAsEsm(identifier)) {
+      return this.requireEsm(identifier)
     }
     const module = new this.Module(identifier)
     return this.loadCommonJSModule(module, identifier)
