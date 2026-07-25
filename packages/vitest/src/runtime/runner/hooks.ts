@@ -33,7 +33,8 @@ const AROUND_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_TIMEOUT')
 const AROUND_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
-  if (typeof result === 'function') {
+  const cleanup = getCleanupFunction(result)
+  if (typeof cleanup === 'function') {
     const timeout
       = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
         ? hook[CLEANUP_TIMEOUT_KEY]
@@ -43,7 +44,7 @@ export function getBeforeHookCleanupCallback(hook: Function, result: any, contex
         ? hook[CLEANUP_STACK_TRACE_KEY]
         : undefined
     return withTimeout(
-      result,
+      cleanup,
       timeout,
       true,
       stackTraceError,
@@ -53,6 +54,21 @@ export function getBeforeHookCleanupCallback(hook: Function, result: any, contex
         }
       },
     )
+  }
+}
+
+function getCleanupFunction(result: any): ((...args: any[]) => any) | undefined {
+  if (typeof result === 'function') {
+    return result
+  }
+  if (typeof result !== 'object' || result === null) {
+    return undefined
+  }
+  if (Symbol.asyncDispose && typeof result[Symbol.asyncDispose] === 'function') {
+    return () => result[Symbol.asyncDispose]()
+  }
+  if (Symbol.dispose && typeof result[Symbol.dispose] === 'function') {
+    return () => result[Symbol.dispose]()
   }
 }
 

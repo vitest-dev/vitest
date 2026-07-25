@@ -50,6 +50,21 @@ beforeEach(async () => {
 })
 ```
 
+Instead of a function, the hook can return a [disposable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Resource_management) object. Vitest calls its `[Symbol.asyncDispose]` or `[Symbol.dispose]` method at the same point where a returned cleanup function would run. This works well with `AsyncDisposableStack`:
+
+```ts
+import { beforeEach } from 'vitest'
+
+beforeEach(async () => {
+  await using stack = new AsyncDisposableStack()
+
+  const resource = stack.use(await prepareSomething())
+  const other = stack.use(await someOtherThing())
+
+  return stack.move()
+})
+```
+
 ## afterEach
 
 ```ts
@@ -117,6 +132,8 @@ beforeAll(async () => {
   }
 })
 ```
+
+Like `beforeEach`, the hook can also return a disposable object instead of a function. Its `[Symbol.asyncDispose]` or `[Symbol.dispose]` method is called where the cleanup function would run.
 
 ## afterAll
 

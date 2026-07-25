@@ -183,3 +183,74 @@ suite('hooks are called for dynamically skipped tests', () => {
     ])
   })
 })
+
+suite.runIf(Symbol.dispose && Symbol.asyncDispose)('hooks cleanup with disposables', () => {
+  let cleanUpCount = 0
+  suite('run', () => {
+    beforeAll(() => {
+      cleanUpCount += 10
+      return {
+        [Symbol.dispose]() {
+          cleanUpCount -= 10
+        },
+      }
+    })
+    beforeEach(() => {
+      cleanUpCount += 1
+      return {
+        async [Symbol.asyncDispose]() {
+          cleanUpCount -= 1
+        },
+      }
+    })
+
+    it('one', () => {
+      expect(cleanUpCount).toBe(11)
+    })
+    it('two', () => {
+      expect(cleanUpCount).toBe(11)
+    })
+  })
+  it('end', () => {
+    expect(cleanUpCount).toBe(0)
+  })
+
+  suite('asyncDispose takes precedence over dispose', () => {
+    beforeEach(() => {
+      cleanUpCount += 1
+      return {
+        [Symbol.dispose]() {
+          cleanUpCount -= 100
+        },
+        async [Symbol.asyncDispose]() {
+          cleanUpCount -= 1
+        },
+      }
+    })
+
+    it('one', () => {
+      expect(cleanUpCount).toBe(1)
+    })
+  })
+  it('end', () => {
+    expect(cleanUpCount).toBe(0)
+  })
+
+  suite('disposable stack', () => {
+    beforeEach(() => {
+      const stack = new AsyncDisposableStack()
+      cleanUpCount += 1
+      stack.defer(() => {
+        cleanUpCount -= 1
+      })
+      return stack.move()
+    })
+
+    it('one', () => {
+      expect(cleanUpCount).toBe(1)
+    })
+  })
+  it('end', () => {
+    expect(cleanUpCount).toBe(0)
+  })
+})
