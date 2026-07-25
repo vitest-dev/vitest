@@ -25,6 +25,8 @@ Run tests using [VM context](https://nodejs.org/api/vm.html) (inside a sandboxed
 
 This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`vmMemoryLimit`](/config/vmmemorylimit) value.
 
+On Node.js 24.9 and later, `require()` of an ES module is supported inside vm pools, mirroring [Node's own `require(esm)`](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require). Calling `require()` on an ES module whose graph contains top-level `await` throws `ERR_REQUIRE_ASYNC_MODULE` - use `await import()` for those files.
+
 ::: warning
 Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
 

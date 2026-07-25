@@ -104,7 +104,11 @@ test('vm pools report errors from modules covered by the graph prewarm', async (
 // was unflagged. The fix uses the _resolveFilename conditions option which
 // is only available on Node 22.12+. Node 20 is unfixable and reaches EOL
 // April 2026.
-const nodeMajor = Number(process.versions.node.split('.')[0])
+// On Node 24.9+ the vm pools support require(esm), so the condition resolves
+// to the ESM entry there — matching Node's own require() behaviour.
+const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number)
+const supportsRequireEsm = nodeMajor > 24 || (nodeMajor === 24 && nodeMinor >= 9)
+const moduleSyncEntry = supportsRequireEsm ? 'esm' : 'cjs'
 test.skipIf(nodeMajor < 22)('can require package with module-sync exports condition', async () => {
   const { stderr, exitCode } = await runInlineTests({
     // .mjs module-sync entry
@@ -138,14 +142,14 @@ test.skipIf(nodeMajor < 22)('can require package with module-sync exports condit
 
       const require = createRequire(import.meta.url)
 
-      test('require loads cjs entry for module-sync package (.mjs)', () => {
+      test('require loads the right entry for module-sync package (.mjs)', () => {
         const mod = require('module-sync-mjs')
-        expect(mod.value).toBe('cjs')
+        expect(mod.value).toBe('${moduleSyncEntry}')
       })
 
-      test('require loads cjs entry for module-sync package (.js with type: module)', () => {
+      test('require loads the right entry for module-sync package (.js with type: module)', () => {
         const mod = require('module-sync-js')
-        expect(mod.value).toBe('cjs')
+        expect(mod.value).toBe('${moduleSyncEntry}')
       })
     `,
   }, {
@@ -155,3 +159,171 @@ test.skipIf(nodeMajor < 22)('can require package with module-sync exports condit
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
+
+// https://nodejs.org/api/esm.html#commonjs-namespaces
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s provides the "module.exports" export on CommonJS namespaces',
+  async (pool) => {
+    const { stderr, exitCode } = await runVitest({
+      root: './fixtures/vm-cjs-namespace',
+      pool,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+// require(esm) needs the synchronous module graph APIs added in Node 24.9
+// (SourceTextModule#hasAsyncGraph/linkRequests/instantiate)
+test.skipIf(!supportsRequireEsm).for(['vmThreads', 'vmForks'] as const)(
+  '%s supports require() of ES modules on Node 24.9+',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests({
+      'package.json': '{}',
+      'esm-scope/package.json': JSON.stringify({ type: 'module' }),
+      'esm-scope/dep.mjs': 'export const dep = "dep"',
+      'esm-scope/dep.cjs': 'module.exports = { fromCjs: "cjs" }',
+      'esm-scope/entry.mjs': [
+        'import { sep } from "node:path"',
+        'import { dep } from "./dep.mjs"',
+        'import cjs from "./dep.cjs"',
+        'export const value = ["entry", dep, cjs.fromCjs].join(":")',
+        'export const hasBuiltin = typeof sep === "string"',
+        'export default "default-export"',
+      ].join('\n'),
+      'esm-scope/scoped.js': 'export const value = "js-in-esm-scope"',
+      'esm-scope/tla.mjs': 'export const value = await Promise.resolve("tla")',
+      'esm-scope/tla-dep.mjs': [
+        'import { value } from "./tla.mjs"',
+        'export const wrapped = value',
+      ].join('\n'),
+      'esm-scope/module-exports.mjs': [
+        'const answer = 42',
+        'export { answer as "module.exports" }',
+      ].join('\n'),
+      'esm-scope/cjs-wrapper.mjs': 'export * from "./dep.cjs"',
+      'esm-scope/cycle-a.mjs': [
+        'import { b } from "./cycle-b.mjs"',
+        'export const a = "a"',
+        'export const seenB = b',
+      ].join('\n'),
+      'esm-scope/cycle-b.mjs': [
+        'import { a } from "./cycle-a.mjs"',
+        'export const b = "b"',
+        'export function readA() { return a }',
+      ].join('\n'),
+      'esm-scope/data.json': '{"answer": 42}',
+      'esm-scope/imports-json.mjs': [
+        'import data from "./data.json" with { type: "json" }',
+        'export const answer = data.answer',
+      ].join('\n'),
+      'cjs-scope/package.json': '{}',
+      'cjs-scope/esm-syntax.js': 'export const value = "detected"',
+      'node_modules/esm-pkg/package.json': JSON.stringify({
+        name: 'esm-pkg',
+        exports: './index.mjs',
+      }),
+      'node_modules/esm-pkg/index.mjs': 'export const state = { name: "esm-pkg" }',
+      'node_modules/esm-pkg-2/package.json': JSON.stringify({
+        name: 'esm-pkg-2',
+        exports: './index.mjs',
+      }),
+      'node_modules/esm-pkg-2/index.mjs': 'export const state = { name: "esm-pkg-2" }',
+      'require-esm.test.js': `
+        import { createRequire } from 'node:module'
+        import { expect, test } from 'vitest'
+
+        const require = createRequire(import.meta.url)
+
+        test('loads an ES module graph with esm, cjs and builtin dependencies', () => {
+          const ns = require('./esm-scope/entry.mjs')
+          expect(ns.value).toBe('entry:dep:cjs')
+          expect(ns.hasBuiltin).toBe(true)
+          expect(ns.default).toBe('default-export')
+        })
+
+        test('require() of the same module is cached', () => {
+          expect(require('./esm-scope/entry.mjs')).toBe(require('./esm-scope/entry.mjs'))
+        })
+
+        test('loads a .js file from a "type": "module" scope', () => {
+          expect(require('./esm-scope/scoped.js').value).toBe('js-in-esm-scope')
+        })
+
+        test('supports circular imports', () => {
+          const ns = require('./esm-scope/cycle-a.mjs')
+          expect(ns.a).toBe('a')
+          expect(ns.seenB).toBe('b')
+        })
+
+        test('an export named "module.exports" defines the require() result', () => {
+          expect(require('./esm-scope/module-exports.mjs')).toBe(42)
+        })
+
+        test('export * from a cjs file carries "module.exports" through require()', () => {
+          // the cjs namespace exposes its raw exports as a "module.exports"
+          // named export, which export * re-exports (unlike default) - so
+          // requiring the ESM wrapper returns the raw cjs exports object
+          expect(require('./esm-scope/cjs-wrapper.mjs')).toBe(require('./esm-scope/dep.cjs'))
+        })
+
+        test('require() of json keeps returning the plain object', () => {
+          expect(require('./esm-scope/data.json')).toEqual({ answer: 42 })
+        })
+
+        test('static json imports work inside a required ES module', () => {
+          expect(require('./esm-scope/imports-json.mjs').answer).toBe(42)
+        })
+
+        test('top-level await throws ERR_REQUIRE_ASYNC_MODULE', () => {
+          let error
+          try {
+            require('./esm-scope/tla.mjs')
+          }
+          catch (caught) {
+            error = caught
+          }
+          expect(error).toBeDefined()
+          expect(error.code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+          expect(error.message).toContain('top-level await')
+        })
+
+        test('top-level await in a dependency throws ERR_REQUIRE_ASYNC_MODULE', () => {
+          let error
+          try {
+            require('./esm-scope/tla-dep.mjs')
+          }
+          catch (caught) {
+            error = caught
+          }
+          expect(error).toBeDefined()
+          expect(error.code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+        })
+
+        test('falls back to ESM for a .js file with ESM syntax in a CJS scope', () => {
+          const ns = require('./cjs-scope/esm-syntax.js')
+          expect(ns.value).toBe('detected')
+          expect(require('./cjs-scope/esm-syntax.js')).toBe(ns)
+        })
+
+        test('import() after require() reuses the same module', async () => {
+          const required = require('esm-pkg')
+          const imported = await import('esm-pkg')
+          expect(imported.state).toBe(required.state)
+        })
+
+        test('require() after import() reuses the same module', async () => {
+          const imported = await import('esm-pkg-2')
+          const required = require('esm-pkg-2')
+          expect(required.state).toBe(imported.state)
+        })
+      `,
+    }, {
+      pool,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)

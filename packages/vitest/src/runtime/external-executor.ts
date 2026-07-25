@@ -11,6 +11,11 @@ import { lookupPackageScopeType } from '@vitest/utils/resolver'
 import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
+import {
+  createRequireAsyncModuleError,
+  hasEsmSyntax,
+  supportsSyncEsmEvaluate,
+} from './vm/utils'
 import { ViteExecutor } from './vm/vite-executor'
 
 const { existsSync } = fs
@@ -51,6 +56,14 @@ export interface ModuleInformation {
   exists?: boolean
 }
 
+// how the sync require(esm) graph walker should treat a resolved module:
+// 'ready' modules are complete synthetic modules (builtins, CJS files),
+// 'source'/'json' carry the raw content for the walker to build itself
+export type SyncModuleDisposition
+  = | { kind: 'ready'; module: VMModule }
+    | { kind: 'json'; code: string }
+    | { kind: 'source'; code: string }
+
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
   private cjs: CommonjsExecutor
@@ -78,6 +91,8 @@ export class ExternalModulesExecutor {
       fileMap: options.fileMap,
       codeCache: options.codeCache,
       interopDefault: options.interopDefault,
+      shouldRequireAsEsm: this.shouldRequireAsEsm,
+      requireEsm: this.requireEsm,
     })
     this.vite = new ViteExecutor({
       esmExecutor: this.esm,
@@ -100,6 +115,122 @@ export class ExternalModulesExecutor {
 
   createRequire(identifier: string): NodeJS.Require {
     return this.cjs.createRequire(identifier)
+  }
+
+  #esmSyntaxCache = new Map<string, boolean>()
+
+  // require() dispatches to the sync ESM loader only for files that are
+  // explicitly marked as ESM (.mjs or a "type": "module" package scope).
+  // JSON files keep the CJS json loader for Node require() parity — the
+  // extension wins over the package scope.
+  private shouldRequireAsEsm = (resolvedPath: string): boolean => {
+    if (!supportsSyncEsmEvaluate) {
+      return false
+    }
+    const information = this.getModuleInformation(resolvedPath)
+    if (information.type !== 'module' || information.path.endsWith('.json')) {
+      return false
+    }
+    if (information.path.endsWith('.mjs')) {
+      return true
+    }
+    // A .js file in an ESM package scope may still contain plain CJS code —
+    // Node evaluates it as ESM with injected CJS module variables (module,
+    // require, __filename), which a vm SourceTextModule cannot emulate.
+    // Files without ESM syntax keep loading through the CJS executor; a
+    // false negative here is corrected by its ESM-syntax fallback.
+    let syntax = this.#esmSyntaxCache.get(information.path)
+    if (syntax == null) {
+      syntax = hasEsmSyntax(this.fs.readFile(information.path))
+      this.#esmSyntaxCache.set(information.path, syntax)
+    }
+    return syntax
+  }
+
+  private requireEsm = (resolvedPath: string): unknown => {
+    const { url } = this.getModuleInformation(resolvedPath)
+    const module = this.esm.requireEsModuleSync(url)
+    const namespace = module.namespace as Record<string, unknown>
+    // Node parity: an ES module can define its own require() result with an
+    // export named "module.exports"
+    return 'module.exports' in namespace
+      ? namespace['module.exports']
+      : namespace
+  }
+
+  public resolveSyncSpecifier = (
+    specifier: string,
+    referencer: string,
+  ): string => {
+    const resolved = this.resolve(specifier, referencer) as
+      | string
+      | Promise<string>
+    if (resolved instanceof Promise) {
+      throw createRequireAsyncModuleError(
+        referencer,
+        `"${specifier}" cannot be resolved synchronously`,
+      )
+    }
+    return resolved
+  }
+
+  // the sync counterpart of `createModule`, used by the require(esm) graph
+  // walker. `forceEsmSource` loads a 'commonjs'-typed file as ES module
+  // source — the CJS executor requests this after its parser rejected a .js
+  // file that contains ESM syntax.
+  public materializeSyncModule = (
+    identifier: string,
+    forceEsmSource: boolean,
+  ): SyncModuleDisposition => {
+    const information = this.getModuleInformation(identifier)
+    const { type, path } = information
+    this.assertModuleExists(information)
+
+    switch (type) {
+      case 'builtin':
+        return {
+          kind: 'ready',
+          module: this.cjs.getCoreSyntheticModule(identifier),
+        }
+      case 'module':
+      case 'commonjs': {
+        if (type === 'commonjs' && !forceEsmSource) {
+          return {
+            kind: 'ready',
+            module: this.cjs.getCjsSyntheticModule(path, identifier),
+          }
+        }
+        if (path.endsWith('.json')) {
+          return { kind: 'json', code: this.fs.readFile(path) }
+        }
+        return { kind: 'source', code: this.fs.readFile(path) }
+      }
+      case 'data':
+        // data: URIs are materialized by the ESM executor before it consults
+        // the external executor
+        throw new Error(
+          `[vitest] Unexpected data: module ${identifier} in the sync module walker. This is a bug in Vitest.`,
+        )
+      case 'vite':
+        throw createRequireAsyncModuleError(
+          identifier,
+          'the module is transformed by Vite, which is asynchronous',
+        )
+      case 'wasm':
+        throw createRequireAsyncModuleError(
+          identifier,
+          'WebAssembly modules cannot be loaded synchronously',
+        )
+      case 'network':
+        throw createRequireAsyncModuleError(
+          identifier,
+          'network modules cannot be loaded synchronously',
+        )
+      default: {
+        const _deadend: never = type
+        return _deadend
+      }
+    }
   }
 
   // dynamic import can be used in both ESM and CJS, so we have it in the executor
@@ -212,12 +343,10 @@ export class ExternalModulesExecutor {
     return { type, path: pathUrl, url: fileUrl }
   }
 
-  private createModule(identifier: string): VMModule | Promise<VMModule> {
-    const information = this.getModuleInformation(identifier)
-    const { type, url, path } = information
-
-    // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
-    // https://github.com/nodejs/node/pull/49038
+  // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
+  // https://github.com/nodejs/node/pull/49038
+  private assertModuleExists(information: ModuleInformation): void {
+    const { type, path } = information
     if (type === 'module' || type === 'commonjs' || type === 'wasm') {
       information.exists ??= existsSync(path)
     }
@@ -226,6 +355,13 @@ export class ExternalModulesExecutor {
       (error as any).code = 'ERR_MODULE_NOT_FOUND'
       throw error
     }
+  }
+
+  private createModule(identifier: string): VMModule | Promise<VMModule> {
+    const information = this.getModuleInformation(identifier)
+    const { type, url, path } = information
+
+    this.assertModuleExists(information)
 
     switch (type) {
       case 'data':

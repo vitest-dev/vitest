@@ -20,6 +20,11 @@ type ModuleStatus
     | 'evaluating'
     | 'evaluated'
     | 'errored'
+export interface VMModuleRequest {
+  specifier: string
+  attributes: Record<string, string>
+  phase?: string
+}
 export declare class VMModule {
   dependencySpecifiers: readonly string[]
   error: any
@@ -29,6 +34,13 @@ export declare class VMModule {
   status: ModuleStatus
   evaluate(options?: ModuleEvaluateOptions): Promise<void>
   link(linker: ModuleLinker): Promise<void>
+  // synchronous module graph APIs, only available on Node 24.9+
+  // (see `supportsSyncEsmEvaluate` in ./utils.ts)
+  hasAsyncGraph?: () => boolean
+  hasTopLevelAwait?: () => boolean
+  moduleRequests?: readonly VMModuleRequest[]
+  linkRequests?: (modules: readonly VMModule[]) => void
+  instantiate?: () => void
 }
 interface SyntheticModuleOptions {
   /**
