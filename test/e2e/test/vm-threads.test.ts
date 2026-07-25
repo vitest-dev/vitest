@@ -327,3 +327,178 @@ test.skipIf(!supportsRequireEsm).for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+// error handling, cache interplay with import(), and edges that cannot be
+// loaded synchronously. esm-scope/cjs-scope are externalized so that both
+// require() and import() of the same files go through the vm executors.
+test.skipIf(!supportsRequireEsm).for(['vmThreads', 'vmForks'] as const)(
+  '%s handles require(esm) edge cases',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests({
+      'package.json': '{}',
+      'esm-scope/package.json': JSON.stringify({ type: 'module' }),
+      'esm-scope/throws.mjs': 'throw new Error("boom")',
+      'esm-scope/tla.mjs': 'export const value = await Promise.resolve("tla")',
+      'esm-scope/tla-imported.mjs': 'export const done = await Promise.resolve(true)',
+      'esm-scope/shared.mjs': 'export const state = { name: "shared" }',
+      'esm-scope/uses-shared.mjs': 'export { state } from "./shared.mjs"',
+      'esm-scope/dynamic.mjs': 'export function load() { return import("./shared.mjs") }',
+      'esm-scope/meta.mjs': [
+        'export const url = import.meta.url',
+        'export const filename = import.meta.filename',
+        'export const resolved = import.meta.resolve("./shared.mjs")',
+      ].join('\n'),
+      'esm-scope/imports-data.mjs': [
+        'import { fromData } from "data:text/javascript,export%20const%20fromData%20=%20%22data-js%22"',
+        'import json from "data:application/json,%7B%22a%22:1%7D" with { type: "json" }',
+        'export const combined = fromData + ":" + json.a',
+      ].join('\n'),
+      'esm-scope/imports-data-wasm.mjs': 'import "data:application/wasm;base64,AGFzbQEAAAA="',
+      'esm-scope/imports-wasm.mjs': 'import "./empty.wasm"',
+      'esm-scope/empty.wasm': '',
+      'esm-scope/imports-css.mjs': 'import "./style.css"\nexport const x = 1',
+      'esm-scope/style.css': 'body {}',
+      'esm-scope/imports-missing.mjs': 'import { x } from "./missing.mjs"\nexport const y = x',
+      'esm-scope/plain-cjs.js': 'module.exports = { value: "stays-cjs" }',
+      'esm-scope/leaf.mjs': 'export const leaf = "leaf"',
+      'esm-scope/bridge.cjs': 'module.exports = require("./leaf.mjs")',
+      'esm-scope/host.mjs': [
+        'import bridge from "./bridge.cjs"',
+        'export const value = bridge.leaf',
+      ].join('\n'),
+      'cjs-scope/package.json': '{}',
+      'cjs-scope/broken.js': 'const x = {',
+      'cjs-scope/esm-tla.js': 'export const x = await Promise.resolve(1)',
+      'cjs-scope/wrong.cjs': 'export const x = 1',
+      'cjs-scope/esm-syntax.js': 'export const value = "detected"',
+      'require-esm-edge.test.js': `
+        import { createRequire } from 'node:module'
+        import { expect, test } from 'vitest'
+
+        const require = createRequire(import.meta.url)
+
+        function requireError(id) {
+          try {
+            require(id)
+          }
+          catch (error) {
+            return error
+          }
+          throw new Error('expected require to throw for ' + id)
+        }
+
+        test('an evaluation error is thrown and cached', async () => {
+          expect(() => require('./esm-scope/throws.mjs')).toThrow('boom')
+          // second require rethrows from the errored cache entry
+          expect(() => require('./esm-scope/throws.mjs')).toThrow('boom')
+          // import() shares the same errored module
+          await expect(import('./esm-scope/throws.mjs')).rejects.toThrow('boom')
+        })
+
+        test('require() of a TLA module already evaluated by import() still throws', async () => {
+          const ns = await import('./esm-scope/tla-imported.mjs')
+          expect(ns.done).toBe(true)
+          // a settled async graph is still not require()-able (Node parity)
+          const error = requireError('./esm-scope/tla-imported.mjs')
+          expect(error.code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+        })
+
+        test('a failed require() does not poison the import() cache', async () => {
+          expect(requireError('./esm-scope/tla.mjs').code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+          const ns = await import('./esm-scope/tla.mjs')
+          expect(ns.value).toBe('tla')
+        })
+
+        test('require() reuses modules already evaluated by import()', async () => {
+          const imported = await import('./esm-scope/shared.mjs')
+          const required = require('./esm-scope/uses-shared.mjs')
+          expect(required.state).toBe(imported.state)
+        })
+
+        test('data: javascript and json dependencies load synchronously', () => {
+          expect(require('./esm-scope/imports-data.mjs').combined).toBe('data-js:1')
+        })
+
+        test('data: wasm dependencies throw ERR_REQUIRE_ASYNC_MODULE', () => {
+          const error = requireError('./esm-scope/imports-data-wasm.mjs')
+          expect(error.code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+          expect(error.message).toContain('WebAssembly')
+        })
+
+        test('wasm file dependencies throw ERR_REQUIRE_ASYNC_MODULE', () => {
+          const error = requireError('./esm-scope/imports-wasm.mjs')
+          expect(error.code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+          expect(error.message).toContain('WebAssembly')
+        })
+
+        test('vite-transformed dependencies throw ERR_REQUIRE_ASYNC_MODULE', () => {
+          const error = requireError('./esm-scope/imports-css.mjs')
+          expect(error.code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+          expect(error.message).toContain('Vite')
+        })
+
+        test('a missing dependency throws ERR_MODULE_NOT_FOUND', () => {
+          const error = requireError('./esm-scope/imports-missing.mjs')
+          expect(error.code).toBe('ERR_MODULE_NOT_FOUND')
+        })
+
+        test('a .js file without ESM syntax keeps loading as CJS in an ESM scope', () => {
+          const exports = require('./esm-scope/plain-cjs.js')
+          expect(exports.value).toBe('stays-cjs')
+          expect('default' in exports).toBe(false)
+        })
+
+        test('a CJS dependency can require() ES modules during the graph walk', () => {
+          expect(require('./esm-scope/host.mjs').value).toBe('leaf')
+        })
+
+        test('import.meta is populated inside required ES modules', () => {
+          const ns = require('./esm-scope/meta.mjs')
+          expect(ns.url.startsWith('file://')).toBe(true)
+          expect(ns.url.endsWith('meta.mjs')).toBe(true)
+          expect(ns.filename.endsWith('meta.mjs')).toBe(true)
+          expect(ns.resolved.endsWith('shared.mjs')).toBe(true)
+        })
+
+        test('dynamic import() works inside a required ES module', async () => {
+          const ns = require('./esm-scope/dynamic.mjs')
+          const dep = await ns.load()
+          const imported = await import('./esm-scope/shared.mjs')
+          expect(dep.state).toBe(imported.state)
+        })
+
+        test('a syntax error in a CJS-scope .js file surfaces the original error', () => {
+          const error = requireError('./cjs-scope/broken.js')
+          expect(error.name).toBe('SyntaxError')
+          expect(error.code).toBeUndefined()
+        })
+
+        test('the ESM-syntax fallback surfaces non-syntax ESM errors', () => {
+          const error = requireError('./cjs-scope/esm-tla.js')
+          expect(error.code).toBe('ERR_REQUIRE_ASYNC_MODULE')
+        })
+
+        test('.cjs files never fall back to ESM', () => {
+          const error = requireError('./cjs-scope/wrong.cjs')
+          expect(error.name).toBe('SyntaxError')
+          expect(error.code).toBeUndefined()
+        })
+
+        test('import() of a CJS-scope .js file with ESM syntax works', async () => {
+          const ns = await import('./cjs-scope/esm-syntax.js')
+          expect(ns.value).toBe('detected')
+        })
+      `,
+    }, {
+      pool,
+      server: {
+        deps: {
+          external: [/esm-scope/, /cjs-scope/],
+        },
+      },
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
