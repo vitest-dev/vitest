@@ -61,6 +61,11 @@ export class EsmExecutor {
   }
 
   public async evaluateModule<T extends VMModule>(m: T): Promise<T> {
+    // a module that failed to evaluate keeps living in the cache — rethrow
+    // its error instead of silently returning an unusable namespace
+    if (m.status === 'errored') {
+      throw m.error
+    }
     if (m.status === 'unlinked') {
       this.esmLinkMap.set(
         m,
@@ -310,6 +315,15 @@ export class EsmExecutor {
     }
     if (cached.status !== 'evaluated') {
       throw createConcurrentRequireError(identifier)
+    }
+    // a module with top-level await reports 'evaluated' as soon as evaluate()
+    // is called, while its async evaluation may still be pending — and even a
+    // settled async graph is never allowed in require() (Node parity)
+    if (typeof cached.hasAsyncGraph === 'function' && cached.hasAsyncGraph()) {
+      throw createRequireAsyncModuleError(
+        identifier,
+        'the module uses top-level await',
+      )
     }
     return cached
   }
