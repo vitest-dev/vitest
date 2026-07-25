@@ -146,6 +146,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
     subcommands: null, // don't support custom objects
     array: true,
   },
+  reporterOption: {
+    description: 'Specify options for built-in reporters using dot notation (example: `--reporterOption.junit.includeConsoleOutput=false`)',
+    argument: '<reporter.option=value>',
+    subcommands: null,
+  },
   outputFile: {
     argument: '<filename/-s>',
     description:

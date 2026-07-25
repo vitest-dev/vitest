@@ -34,6 +34,7 @@ import { VitestCorePlugin } from '../plugins/index'
 import { VitestConfigServer } from '../plugins/server'
 import { resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
+import { ReportersMap } from '../reporters'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
@@ -173,6 +174,33 @@ function resolveInlineWorkerOption(value: string | number): number {
 // warn only once, check one PER PROCESS, not per instance,
 // that's why it's on a module-level
 let warnedTypeCheck = false
+
+function normalizeReporterOptionValue(value: unknown): unknown {
+  if (value === 'true') {
+    return true
+  }
+  if (value === 'false') {
+    return false
+  }
+  if (Array.isArray(value)) {
+    return value.map(normalizeReporterOptionValue)
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [
+        key,
+        normalizeReporterOptionValue(nestedValue),
+      ]),
+    )
+  }
+  return value
+}
+
+function isBuiltinReporterName(
+  reporterName: string,
+): reporterName is keyof NonNullable<UserConfig['reporterOption']> {
+  return reporterName === 'html' || Object.hasOwn(ReportersMap, reporterName)
+}
 
 /**
  * Resolve Vitest's test config for a single Vite resolved config (root or a single project).
@@ -757,6 +785,24 @@ export function resolveTestConfig(
     resolved.reporters = Array.from(new Set(toArray(cliReporters)))
       .filter(Boolean)
       .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
+  }
+
+  for (const reporter of resolved.reporters) {
+    if (!Array.isArray(reporter) || typeof reporter[0] !== 'string') {
+      continue
+    }
+    const reporterName = reporter[0]
+    if (!isBuiltinReporterName(reporterName)) {
+      continue
+    }
+    const reporterOptions = options.reporterOption?.[reporterName]
+    if (reporterOptions) {
+      reporter[1] = deepMerge(
+        {},
+        reporter[1] || {},
+        normalizeReporterOptionValue(reporterOptions),
+      )
+    }
   }
 
   // only the root resolves the label; projects receive the root's value above

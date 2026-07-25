@@ -1,5 +1,5 @@
 import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite, RunnerTask as Task } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { runVitest, runVitestCli } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test, TestRunner } from 'vitest'
@@ -218,6 +218,65 @@ test('CLI reporter option preserves config file options', async () => {
 
   // Verify that addFileAttribute from config is preserved
   expect(xml).toContain('file="')
+
+  // Verify that includeConsoleOutput from config is preserved
+  expect(xml.includes('<system-out>')).toMatchInlineSnapshot(`true`)
+})
+
+test('CLI reporter options override config file options', async () => {
+  const cliOptionsRoot = resolve(import.meta.dirname, '../../fixtures/reporters/junit-cli-options')
+  await runVitestCli(
+    'run',
+    '--reporter=junit',
+    '--reporterOption.junit.includeConsoleOutput=false',
+    '--root',
+    cliOptionsRoot,
+  )
+
+  const xml = stabilizeReport(readJunitReport(cliOptionsRoot))
+
+  expect({
+    hasConfigSuiteName: xml.includes('<testsuites name="custom-suite-name"'),
+    hasFileAttribute: xml.includes('file="'),
+    hasSystemOut: xml.includes('<system-out>'),
+  }).toMatchInlineSnapshot(`
+    {
+      "hasConfigSuiteName": true,
+      "hasFileAttribute": true,
+      "hasSystemOut": false,
+    }
+  `)
+})
+
+test('CLI reporter outputFile takes precedence over top-level outputFile', async () => {
+  const cliOptionsRoot = resolve(import.meta.dirname, '../../fixtures/reporters/junit-cli-options')
+  const topLevelOutput = resolve(cliOptionsRoot, 'top-level-output.xml')
+  const reporterOutput = resolve(cliOptionsRoot, 'reporter-output.xml')
+
+  try {
+    await runVitestCli(
+      'run',
+      '--reporter=junit',
+      `--outputFile=${topLevelOutput}`,
+      `--reporterOption.junit.outputFile=${reporterOutput}`,
+      '--root',
+      cliOptionsRoot,
+    )
+
+    expect({
+      reporterOutput: existsSync(reporterOutput),
+      topLevelOutput: existsSync(topLevelOutput),
+    }).toMatchInlineSnapshot(`
+      {
+        "reporterOutput": true,
+        "topLevelOutput": false,
+      }
+    `)
+  }
+  finally {
+    rmSync(reporterOutput, { force: true })
+    rmSync(topLevelOutput, { force: true })
+  }
 })
 
 test('suiteNameTemplate string uses {title} (first top-level describe)', async () => {

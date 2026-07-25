@@ -93,6 +93,15 @@ export default defineConfig({
 })
 ```
 
+Built-in reporter options can be overridden from the CLI with `--reporterOption.<name>.<option>=<value>`. CLI values are deeply merged into the matching active built-in reporter's options and take precedence over values from the configuration file. `true` and `false` are converted to booleans; all other values are preserved as strings.
+
+For example:
+
+```bash
+npx vitest --reporter=junit --reporterOption.junit.includeConsoleOutput=false
+npx vitest --reporter=json --reporterOption.json.outputFile=./test-output.json
+```
+
 To print the report to the terminal instead of writing it to a file, set the `stdout` option on the `json` or `junit` reporter. This is ignored when `outputFile` is set:
 
 ```ts [vitest.config.ts]
