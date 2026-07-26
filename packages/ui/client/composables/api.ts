@@ -16,6 +16,28 @@ export const ui: BrowserUI = {
     if (browserState?.provider === 'webdriverio') {
       updateBrowserPanel()
     }
-    await new Promise(r => requestAnimationFrame(r))
+    await waitForAnimationFrame()
   },
+}
+
+const VIEWPORT_SETTLE_TIMEOUT = 250
+
+function waitForAnimationFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false
+    let animationFrameId = 0
+    const timeoutId = window.setTimeout(done, VIEWPORT_SETTLE_TIMEOUT)
+
+    function done() {
+      if (settled) {
+        return
+      }
+      settled = true
+      window.clearTimeout(timeoutId)
+      window.cancelAnimationFrame(animationFrameId)
+      resolve()
+    }
+
+    animationFrameId = window.requestAnimationFrame(done)
+  })
 }
