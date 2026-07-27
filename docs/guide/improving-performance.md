@@ -5,14 +5,14 @@
 The `Duration` line of the summary breaks the run down into phases, as percentages of all tracked time:
 
 ```
-Duration  3.76s (environment 79%, import 14%, transform 6%, tests 1%)
+Duration  3.76s (environment 79%, setup 1%, import 13%, transform 6%, tests 1%)
 ```
 
 The percentages are relative to the sum of all tracked phases, not to the wall-clock time: phases run in parallel workers, so their sum is usually larger than the run itself. In a multi-project setup the percentages aggregate over all [projects](/guide/projects), so a phase that dominates one project can be diluted by the others.
 
 The phases map to configuration options:
 
-- `environment` - creating the test environment (`jsdom`, `happy-dom`) for test files.
+- `environment` - creating the test environment (for example `jsdom`, `happy-dom`) for test files.
 - `transform` - transforming files with Vite. See [Caching Between Reruns](#caching-between-reruns).
 - `import` - importing test files and their modules. When files import mostly the same modules (typical for barrel-file imports), isolation re-evaluates that shared graph for every file. See [Test Isolation](#test-isolation).
 - `setup` - running [`setupFiles`](/config/setupfiles).
