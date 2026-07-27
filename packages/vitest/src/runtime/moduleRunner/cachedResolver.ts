@@ -9,6 +9,27 @@ const normalizedDistDir = normalize(distDir)
 const relativeIds: Record<string, string> = {}
 const externalizeMap = new Map<string, string>()
 
+const fileUrlDriveRegexp = /^(file:\/\/\/)([a-z])(?=:)/i
+const distDirDrive = /^([a-z])(?=:)/i.exec(distDir)?.[1]
+
+// Windows keeps the drive letter of a path in the case it was written in, so
+// Vitest can be loaded through `c:\…` (the working directory the process was
+// started from) while Vite normalizes module ids to `C:/…`. Node keys its
+// module registry on the URL, so externalizing a test file's `vitest` import
+// to the other spelling evaluates a second copy of the runtime. That copy
+// never goes through `clearCollectorContext`, so its `runner` is undefined and
+// the first `describe()` in the file throws. Always hand back the drive letter
+// Vitest itself was loaded with.
+function withLoadedVitestDrive(externalize: string): string {
+  if (!distDirDrive) {
+    return externalize
+  }
+  return externalize.replace(fileUrlDriveRegexp, (match, prefix: string, drive: string) =>
+    drive.toLowerCase() === distDirDrive.toLowerCase()
+      ? `${prefix}${distDirDrive}`
+      : match)
+}
+
 // all Vitest imports always need to be externalized
 export function getCachedVitestImport(
   id: string,
@@ -27,9 +48,9 @@ export function getCachedVitestImport(
   const relativeRoot = relativeIds[root] ?? (relativeIds[root] = normalizedDistDir.slice(root.length))
   if (id.includes(distDir) || id.includes(normalizedDistDir)) {
     const { file, postfix } = splitFileAndPostfix(id)
-    const externalize = id.startsWith('file://')
+    const externalize = withLoadedVitestDrive(id.startsWith('file://')
       ? id
-      : `${pathToFileURL(file)}${postfix}`
+      : `${pathToFileURL(file)}${postfix}`)
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
@@ -40,7 +61,7 @@ export function getCachedVitestImport(
   ) {
     const { file, postfix } = splitFileAndPostfix(id)
     const path = join(root, file)
-    const externalize = `${pathToFileURL(path)}${postfix}`
+    const externalize = withLoadedVitestDrive(`${pathToFileURL(path)}${postfix}`)
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
