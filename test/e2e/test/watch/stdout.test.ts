@@ -1,12 +1,13 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, statSync, writeFileSync } from 'node:fs'
 import { afterEach, test } from 'vitest'
-import { runVitest } from '#test-utils'
+import { restoreFile, runVitest } from '#test-utils'
 
 const testFile = 'fixtures/watch/math.test.ts'
 const testFileContent = readFileSync(testFile, 'utf-8')
+const testFileStat = statSync(testFile)
 
 afterEach(() => {
-  writeFileSync(testFile, testFileContent, 'utf8')
+  restoreFile(testFile, testFileContent, testFileStat)
 })
 
 test('console.log is visible on test re-run', async () => {

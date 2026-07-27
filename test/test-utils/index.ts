@@ -532,6 +532,7 @@ export function getInternalState(): WorkerGlobalState {
 }
 
 const originalFiles = new Map<string, string>()
+const originalFileStats = new Map<string, fs.Stats>()
 
 export function createFile(file: string, content: string) {
   fs.mkdirSync(dirname(file), { recursive: true })
@@ -547,15 +548,29 @@ export function editFile(file: string, callback: (content: string) => string) {
   const content = fs.readFileSync(file, 'utf-8')
   if (!originalFiles.has(file)) {
     originalFiles.set(file, content)
+    originalFileStats.set(file, fs.statSync(file))
   }
   fs.writeFileSync(file, callback(content), 'utf-8')
   onTestFinished(() => {
     const original = originalFiles.get(file)
     if (original !== undefined) {
-      fs.writeFileSync(file, original, 'utf-8')
+      restoreFile(file, original, originalFileStats.get(file))
       originalFiles.delete(file)
+      originalFileStats.delete(file)
     }
   })
+}
+
+// Restore the original mtime along with the content: a restore with a fresh
+// mtime is indistinguishable from a real edit to any watcher whose stat
+// baseline predates it, and the phantom change event then reruns tests in the
+// NEXT test's instance. With content, size and mtime all matching the
+// pre-test state, no stat comparison can report the file as changed.
+export function restoreFile(file: string, content: string, stat?: fs.Stats) {
+  fs.writeFileSync(file, content, 'utf-8')
+  if (stat) {
+    fs.utimesSync(file, stat.atime, stat.mtime)
+  }
 }
 
 export function resolvePath(baseUrl: string, path: string) {

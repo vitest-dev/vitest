@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { playwright } from '@vitest/browser-playwright'
 
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest'
@@ -6,15 +6,19 @@ import * as testUtils from '#test-utils'
 
 const sourceFile = 'fixtures/watch/math.ts'
 const sourceFileContent = readFileSync(sourceFile, 'utf-8')
+const sourceFileStat = statSync(sourceFile)
 
 const testFile = 'fixtures/watch/math.test.ts'
 const testFileContent = readFileSync(testFile, 'utf-8')
+const testFileStat = statSync(testFile)
 
 const configFile = 'fixtures/watch/vitest.config.ts'
 const configFileContent = readFileSync(configFile, 'utf-8')
+const configFileStat = statSync(configFile)
 
 const forceTriggerFile = 'fixtures/watch/force-watch/trigger.js'
 const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
+const forceTriggerFileStat = statSync(forceTriggerFile)
 
 const options = { root: 'fixtures/watch', watch: true }
 
@@ -25,20 +29,21 @@ console.log("New code running"); // This is used to check that edited changes ar
   `
 }
 
-// Only restore files the test actually modified: rewriting an unchanged file
-// still bumps its mtime, and a stale `vitest.config.ts` change event delivered
-// to the next test's freshly scanned watcher restarts that instance mid-test,
+// Only restore files the test actually modified, and restore their mtime with
+// the content: a restore that changes the stat of a fixture file is
+// indistinguishable from a real edit for the next test's watcher, and a stale
+// `vitest.config.ts` change event even restarts that instance mid-test,
 // leaving it deaf to further file edits.
 afterEach(() => {
-  const files: [file: string, content: string][] = [
-    [sourceFile, sourceFileContent],
-    [testFile, testFileContent],
-    [configFile, configFileContent],
-    [forceTriggerFile, forceTriggerFileContent],
-  ]
-  for (const [file, content] of files) {
+  const files = [
+    [sourceFile, sourceFileContent, sourceFileStat],
+    [testFile, testFileContent, testFileStat],
+    [configFile, configFileContent, configFileStat],
+    [forceTriggerFile, forceTriggerFileContent, forceTriggerFileStat],
+  ] as const
+  for (const [file, content, stat] of files) {
     if (readFileSync(file, 'utf-8') !== content) {
-      writeFileSync(file, content, 'utf8')
+      testUtils.restoreFile(file, content, stat)
     }
   }
 })
