@@ -5,7 +5,7 @@
 The `Duration` line of the summary breaks the run down into phases, as percentages of all tracked time:
 
 ```
-Duration  3.76s (environment 79%, setup 1%, import 13%, transform 6%, tests 1%)
+Duration  3.76s (environment 79%, import 13%, transform 6%, tests 1%, setup 1%)
 ```
 
 The percentages are relative to the sum of all tracked phases, not to the wall-clock time: phases run in parallel workers, so their sum is usually larger than the run itself. In a multi-project setup the percentages aggregate over all [projects](/guide/projects), so a phase that dominates one project can be diluted by the others.
