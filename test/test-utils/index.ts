@@ -44,6 +44,12 @@ export interface RunVitestConfig extends TestUserConfig {
 
 const process_ = process
 
+// Polling interval of the file watcher in spawned watch-mode instances. The
+// watcher-ready probe derives its timing from it: each probe state must
+// outlive a full poll cycle, or the poller can keep sampling the state that
+// matches its baseline and never observe a difference.
+const WATCH_POLL_INTERVAL = 100
+
 export function createConsole({ tty, std }: { tty?: boolean; std?: 'inherit' } = {}) {
   const stdout = new Writable({
     write(chunk, __, callback) {
@@ -239,7 +245,7 @@ export async function runVitest(
           // misses change events, so enforce polling for consistency
           // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
           usePolling: true,
-          interval: 100,
+          interval: WATCH_POLL_INTERVAL,
           ...viteConfig.server?.watch,
         },
         ...viteConfig?.server,
@@ -336,9 +342,12 @@ export async function runVitest(
 // verify end-to-end: keep cycling a probe file in the root until the watcher
 // reports it. The probe is recreated rather than rewritten because a creation
 // folded into the initial scan of the file AND its directory leaves nothing to
-// rescan; deleting and recreating it bumps the directory mtime every cycle, so
-// a live directory poller always sees a difference, and any probe event
-// (`add`, `change` or `unlink`) proves delivery.
+// rescan; alternating present/absent guarantees the current state differs from
+// whichever state the poller's baseline captured, and any probe event (`add`,
+// `change` or `unlink`) proves delivery. Each state is held for multiple poll
+// intervals: on a loaded runner, a cycle as fast as the poll interval aliases
+// with it — every rescan can land when the probe is back in the state matching
+// the poller's baseline, and no event ever fires.
 //
 // The scan can also surface writes made by the PREVIOUS test (an `afterEach`
 // restoring a fixture right before this instance started) as fresh change
@@ -392,6 +401,15 @@ async function waitForWatcherReady(ctx: Vitest): Promise<void> {
   }
   watcher.on('all', onWatcherEvent)
   try {
+    const holdProbeState = async () => {
+      const stateEnd = Date.now() + WATCH_POLL_INTERVAL * 2.5
+      while (Date.now() < stateEnd) {
+        if (probeSeen) {
+          return
+        }
+        await new Promise(resolve => setTimeout(resolve, 25))
+      }
+    }
     while (true) {
       if (probeSeen) {
         break
@@ -403,12 +421,12 @@ async function waitForWatcherReady(ctx: Vitest): Promise<void> {
         )
       }
       fs.writeFileSync(probe, `${Date.now()}`, 'utf-8')
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await holdProbeState()
       if (probeSeen) {
         break
       }
       fs.rmSync(probe, { force: true })
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await holdProbeState()
     }
 
     while (Date.now() - lastEventAt < 200 && Date.now() < deadline) {
