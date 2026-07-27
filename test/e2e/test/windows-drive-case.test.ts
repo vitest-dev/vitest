@@ -21,21 +21,33 @@ test.runIf(process.platform === 'win32')(`works on windows with a lowercase driv
   expect(stdout).toContain('1 passed')
 })
 
-// Running the CLI through a lowercase drive is what happens with a local
-// install: `npx vitest` resolves the binary through the working directory, so
-// Vitest is loaded from `c:\…` while Vite normalizes module ids to `C:/…`.
-// Node treats the two URLs as different modules, and the test file used to end
-// up importing a second copy of the runtime with no collector state.
-test.runIf(process.platform === 'win32')('loads a single Vitest instance when the CLI is resolved through a lowercase drive', async () => {
-  const lowercaseCli = cli.replace(/^[A-Z]:\\/i, r => r.toLowerCase())
-  // Guard the premise: on a UNC path there is no drive letter to lowercase and
-  // the test would pass without exercising anything.
-  expect(lowercaseCli).toMatch(/^[a-z]:\\/)
+// The case that breaks is Vitest being *loaded* through a differently spelled
+// path, which is what a local install does: `npx vitest` resolves the binary
+// through the working directory, so Vitest comes from `c:\…` while Vite
+// normalizes module ids to `C:/…`. Node treats the two URLs as different
+// modules, and the test file used to end up importing a second copy of the
+// runtime with no collector state. Depending on where the file's first call
+// lands, that surfaces as "failed to find the current suite" or as
+// "Cannot read properties of undefined (reading 'config')".
+const spellings = {
+  'a lowercase drive letter': (path: string) => path.replace(/^[A-Z]:\\/i, r => r.toLowerCase()),
+  'an entirely lowercase path': (path: string) => path.toLowerCase(),
+}
 
-  const { stdout, stderr } = await x('node', [lowercaseCli, 'run', '--no-watch', '--maxWorkers=1'], {
-    nodeOptions: { cwd, env: { ...process.env, AI_AGENT: '' } },
+for (const [name, spell] of Object.entries(spellings)) {
+  test.runIf(process.platform === 'win32')(`loads a single Vitest instance when the CLI is resolved through ${name}`, async () => {
+    const spelledCli = spell(cli)
+    // Guard the premise: on a UNC path there is no drive letter to respell and
+    // the test would pass without exercising anything.
+    expect(spelledCli).toMatch(/^[a-z]:\\/)
+
+    const { stdout, stderr, exitCode } = await x('node', [spelledCli, 'run', '--no-watch', '--maxWorkers=1'], {
+      nodeOptions: { cwd, env: { ...process.env, AI_AGENT: '' } },
+    })
+
+    expect(stderr).not.toContain('failed to find the current suite')
+    expect(stderr).not.toContain('reading \'config\'')
+    expect(stdout).toContain('1 passed')
+    expect(exitCode).toBe(0)
   })
-
-  expect(stderr).not.toContain('failed to find the current suite')
-  expect(stdout).toContain('1 passed')
-})
+}

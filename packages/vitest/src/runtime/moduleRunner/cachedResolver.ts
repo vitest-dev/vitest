@@ -9,25 +9,46 @@ const normalizedDistDir = normalize(distDir)
 const relativeIds: Record<string, string> = {}
 const externalizeMap = new Map<string, string>()
 
-const fileUrlDriveRegexp = /^(file:\/\/\/)([a-z])(?=:)/i
-const distDirDrive = /^([a-z])(?=:)/i.exec(distDir)?.[1]
+// Windows paths are case-insensitive, so the same file can be spelled several
+// ways. `distDir` comes from `import.meta.url` and keeps the case the CLI was
+// invoked with, while ids come from Vite and carry the case of `process.cwd()`
+// with an uppercase drive. Node keys its module registry on the URL, so
+// externalizing a test file's `vitest` import to a different spelling of the
+// same file evaluates a second copy of the runtime. That copy never goes
+// through `clearCollectorContext`, so its `runner` is undefined and the first
+// `describe()` in the file throws. Match Vitest's own dist directory
+// regardless of case, and always hand back the spelling Vitest was loaded
+// with. Only on Windows: elsewhere two spellings really are two files.
+const isWindows = process.platform === 'win32'
+const distDirUrl = pathToFileURL(distDir).href
+const lowerDistDir = distDir.toLowerCase()
+const lowerNormalizedDistDir = normalizedDistDir.toLowerCase()
+const lowerDistDirUrl = distDirUrl.toLowerCase()
 
-// Windows keeps the drive letter of a path in the case it was written in, so
-// Vitest can be loaded through `c:\…` (the working directory the process was
-// started from) while Vite normalizes module ids to `C:/…`. Node keys its
-// module registry on the URL, so externalizing a test file's `vitest` import
-// to the other spelling evaluates a second copy of the runtime. That copy
-// never goes through `clearCollectorContext`, so its `runner` is undefined and
-// the first `describe()` in the file throws. Always hand back the drive letter
-// Vitest itself was loaded with.
-function withLoadedVitestDrive(externalize: string): string {
-  if (!distDirDrive) {
+function isVitestDistId(id: string): boolean {
+  if (id.includes(distDir) || id.includes(normalizedDistDir)) {
+    return true
+  }
+  if (!isWindows) {
+    return false
+  }
+  const lowerId = id.toLowerCase()
+  return lowerId.includes(lowerDistDir)
+    || lowerId.includes(lowerNormalizedDistDir)
+    || lowerId.includes(lowerDistDirUrl)
+}
+
+function withLoadedVitestCasing(externalize: string): string {
+  if (!isWindows) {
     return externalize
   }
-  return externalize.replace(fileUrlDriveRegexp, (match, prefix: string, drive: string) =>
-    drive.toLowerCase() === distDirDrive.toLowerCase()
-      ? `${prefix}${distDirDrive}`
-      : match)
+  const index = externalize.toLowerCase().indexOf(lowerDistDirUrl)
+  if (index === -1) {
+    return externalize
+  }
+  return externalize.slice(0, index)
+    + distDirUrl
+    + externalize.slice(index + distDirUrl.length)
 }
 
 // all Vitest imports always need to be externalized
@@ -46,11 +67,11 @@ export function getCachedVitestImport(
   // so we already have it cached by Node.js
   const root = state().config.root
   const relativeRoot = relativeIds[root] ?? (relativeIds[root] = normalizedDistDir.slice(root.length))
-  if (id.includes(distDir) || id.includes(normalizedDistDir)) {
+  if (isVitestDistId(id)) {
     const { file, postfix } = splitFileAndPostfix(id)
-    const externalize = withLoadedVitestDrive(id.startsWith('file://')
-      ? id
-      : `${pathToFileURL(file)}${postfix}`)
+    const externalize = id.startsWith('file://')
+      ? withLoadedVitestCasing(id)
+      : `${withLoadedVitestCasing(pathToFileURL(file).href)}${postfix}`
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
@@ -61,7 +82,7 @@ export function getCachedVitestImport(
   ) {
     const { file, postfix } = splitFileAndPostfix(id)
     const path = join(root, file)
-    const externalize = withLoadedVitestDrive(`${pathToFileURL(path)}${postfix}`)
+    const externalize = `${withLoadedVitestCasing(pathToFileURL(path).href)}${postfix}`
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
