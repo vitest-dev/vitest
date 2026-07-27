@@ -10,7 +10,14 @@ import { runInlineTests } from '../../test-utils'
 //          <- *
 //     <------
 
-const deadlockSource = `
+// In the deadlocking variant "c" resolves the deadlock only after "b" reported
+// its timeout: whether a deadlocked test is reported as timed out depends on
+// its own elapsed time the moment the deadlock resolves, and "b" starts its
+// clock a few event-loop turns after "a", so an unconditional resolve can
+// release "b" while it is still within its own budget. The passing variant
+// must not gate: nothing fails there, so the gate would never open.
+function deadlockSource(gateOnTimeout: boolean) {
+  return `
 import { describe, expect, test } from 'vitest'
 import { createDefer } from '@vitest/utils/helpers'
 
@@ -20,6 +27,7 @@ describe.concurrent('wrapper', () => {
     createDefer<void>(),
     createDefer<void>(),
   ]
+  const bTimedOut = createDefer<void>()
 
   test('a', async () => {
     expect(1).toBe(1)
@@ -27,7 +35,10 @@ describe.concurrent('wrapper', () => {
     await defers[2]
   })
 
-  test('b', async () => {
+  test('b', async ({ onTestFailed }) => {
+    onTestFailed(() => {
+      bTimedOut.resolve()
+    })
     expect(1).toBe(1)
     await defers[0]
     defers[1].resolve()
@@ -37,14 +48,16 @@ describe.concurrent('wrapper', () => {
   test('c', async () => {
     expect(1).toBe(1)
     await defers[1]
+    ${gateOnTimeout ? 'await bTimedOut' : ''}
     defers[2].resolve()
   })
 })
 `
+}
 
 test('deadlocks with insufficient maxConcurrency', async () => {
   const { errorTree } = await runInlineTests({
-    'basic.test.ts': deadlockSource,
+    'basic.test.ts': deadlockSource(true),
   }, {
     maxConcurrency: 2,
     testTimeout: 500,
@@ -74,7 +87,7 @@ test('deadlocks with insufficient maxConcurrency', async () => {
 
 test('passes when maxConcurrency is high enough', async () => {
   const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': deadlockSource,
+    'basic.test.ts': deadlockSource(false),
   }, {
     maxConcurrency: 3,
   })
@@ -93,7 +106,8 @@ test('passes when maxConcurrency is high enough', async () => {
   `)
 })
 
-const suiteDeadlockSource = `
+function suiteDeadlockSource(gateOnTimeout: boolean) {
+  return `
 import { describe, expect, test } from 'vitest'
 import { createDefer } from '@vitest/utils/helpers'
 
@@ -103,6 +117,7 @@ describe.concurrent('wrapper', () => {
     createDefer<void>(),
     createDefer<void>(),
   ]
+  const bTimedOut = createDefer<void>()
 
   describe('1st suite', () => {
     test('a', async () => {
@@ -111,7 +126,10 @@ describe.concurrent('wrapper', () => {
       await defers[2]
     })
 
-    test('b', async () => {
+    test('b', async ({ onTestFailed }) => {
+      onTestFailed(() => {
+        bTimedOut.resolve()
+      })
       expect(1).toBe(1)
       await defers[0]
       defers[1].resolve()
@@ -123,15 +141,17 @@ describe.concurrent('wrapper', () => {
     test('c', async () => {
       expect(1).toBe(1)
       await defers[1]
+      ${gateOnTimeout ? 'await bTimedOut' : ''}
       defers[2].resolve()
     })
   })
 })
 `
+}
 
 test('suite deadlocks with insufficient maxConcurrency', async () => {
   const { errorTree } = await runInlineTests({
-    'basic.test.ts': suiteDeadlockSource,
+    'basic.test.ts': suiteDeadlockSource(true),
   }, {
     maxConcurrency: 2,
     testTimeout: 500,
@@ -162,7 +182,7 @@ test('suite deadlocks with insufficient maxConcurrency', async () => {
 
 test('suite passes when maxConcurrency is high enough', async () => {
   const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': suiteDeadlockSource,
+    'basic.test.ts': suiteDeadlockSource(false),
   }, {
     maxConcurrency: 3,
   })
