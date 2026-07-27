@@ -25,11 +25,22 @@ console.log("New code running"); // This is used to check that edited changes ar
   `
 }
 
+// Only restore files the test actually modified: rewriting an unchanged file
+// still bumps its mtime, and a stale `vitest.config.ts` change event delivered
+// to the next test's freshly scanned watcher restarts that instance mid-test,
+// leaving it deaf to further file edits.
 afterEach(() => {
-  writeFileSync(sourceFile, sourceFileContent, 'utf8')
-  writeFileSync(testFile, testFileContent, 'utf8')
-  writeFileSync(configFile, configFileContent, 'utf8')
-  writeFileSync(forceTriggerFile, forceTriggerFileContent, 'utf8')
+  const files: [file: string, content: string][] = [
+    [sourceFile, sourceFileContent],
+    [testFile, testFileContent],
+    [configFile, configFileContent],
+    [forceTriggerFile, forceTriggerFileContent],
+  ]
+  for (const [file, content] of files) {
+    if (readFileSync(file, 'utf-8') !== content) {
+      writeFileSync(file, content, 'utf8')
+    }
+  }
 })
 
 test('editing source file triggers re-run', async () => {

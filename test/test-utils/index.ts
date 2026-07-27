@@ -329,22 +329,75 @@ export async function runVitest(
 
 // In watch mode `startVitest` can resolve before the file watcher has finished
 // establishing itself. chokidar's `ready`/`_readyEmitted` fires after the
-// initial scan, but with polling the root directory isn't fully watched for new
-// children until its parent shows up in `getWatched()`. A test file created
-// before that point gets folded into the watcher's baseline and never emits an
-// `add` event, so newly added files wouldn't trigger a rerun. Wait for both
-// signals (with a timeout safety net) before handing control back.
+// initial scan, but with polling a file only gets a per-file stat poller some
+// time after it is discovered, and an edit made before the poller exists is
+// folded into its baseline stat and never emits an event. No amount of chokidar
+// bookkeeping (`_readyEmitted`, `getWatched()`) proves the pollers are live, so
+// verify end-to-end: keep touching a probe file in the root until the watcher
+// reports it. Once a probe event arrives, the initial scan is complete and
+// every pre-existing file has a poller, so subsequent edits are guaranteed to
+// fire. The probe produces no output: it matches no test glob and no fixture's
+// rerun triggers, so `VitestWatcher` ignores it without scheduling a rerun.
+//
+// Only instances with an explicit small root (a fixture or an inline-test dir)
+// get the probe: tests that assert on watch reruns always use one. Instances
+// rooted at the whole test package (config-introspection tests passing
+// `watch: true` without a root) never wait for file events, and polling their
+// huge tree can take longer than any reasonable deadline, so for them only the
+// cheap bookkeeping check runs, as before.
 async function waitForWatcherReady(watcher: FSWatcher, root: string): Promise<void> {
   const slash = (p: string) => p.replace(/\\/g, '/')
   const parent = slash(dirname(root))
-  const deadline = Date.now() + 2000
-  while (Date.now() < deadline) {
+  const bookkeepingDeadline = Date.now() + 2000
+
+  while (Date.now() < bookkeepingDeadline) {
     const isReady = (watcher as { _readyEmitted?: boolean })._readyEmitted
     const watchesParent = Object.keys(watcher.getWatched()).some(dir => slash(dir) === parent)
     if (isReady && watchesParent) {
-      return
+      break
     }
     await new Promise(resolve => setTimeout(resolve, 10))
+  }
+
+  if (slash(root) === slash(process.cwd())) {
+    return
+  }
+
+  const deadline = Date.now() + 10_000
+  const probe = resolve(root, '.vitest-watcher-ready-probe')
+  let onProbeSeen!: () => void
+  const probeSeen = new Promise<void>(resolve => (onProbeSeen = resolve))
+  const onProbeEvent = (file: string) => {
+    if (slash(file) === probe) {
+      onProbeSeen()
+    }
+  }
+  watcher.on('add', onProbeEvent)
+  watcher.on('change', onProbeEvent)
+  try {
+    while (true) {
+      // rewrite instead of writing once: if the initial scan captured a probe
+      // write without emitting `add`, the next mtime bump still fires `change`
+      fs.writeFileSync(probe, `${Date.now()}`, 'utf-8')
+      const seen = await Promise.race([
+        probeSeen.then(() => true),
+        new Promise<boolean>(resolve => setTimeout(resolve, 50, false)),
+      ])
+      if (seen) {
+        break
+      }
+      if (Date.now() > deadline) {
+        throw new Error(
+          `The watcher of ${root} did not report the probe file within 10s. Watched files:\n${
+            JSON.stringify(watcher.getWatched(), null, 2)}`,
+        )
+      }
+    }
+  }
+  finally {
+    watcher.off('add', onProbeEvent)
+    watcher.off('change', onProbeEvent)
+    fs.rmSync(probe, { force: true })
   }
 }
 
