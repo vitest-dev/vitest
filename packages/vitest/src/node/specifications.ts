@@ -134,7 +134,7 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers, { dot: true }) : undefined
     if (matcher && related.some(file => matcher(file))) {
       return specs
     }

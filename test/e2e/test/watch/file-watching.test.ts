@@ -1,7 +1,10 @@
+import crypto from 'node:crypto'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import * as testUtils from '#test-utils'
+import { tmpdir } from 'node:os'
 
+import * as testUtils from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
+import { join } from 'pathe'
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest'
 
 const sourceFile = 'fixtures/watch/math.ts'
@@ -63,6 +66,33 @@ test('editing force rerun trigger reruns all tests', async () => {
   await vitest.waitForStdout('RERUN  ../../force-watch/trigger.js')
   await vitest.waitForStdout('example.test.ts')
   await vitest.waitForStdout('math.test.ts')
+  await vitest.waitForStdout('2 passed')
+})
+
+test('editing a force rerun trigger in a dot-prefixed project path reruns all tests', async () => {
+  const root = join(tmpdir(), '.worktrees', crypto.randomUUID())
+  const fs = testUtils.useFS(root, {
+    'trigger.js': '',
+    'first.test.ts': `
+      import { test } from 'vitest'
+      test('first', () => {})
+    `,
+    'second.test.ts': `
+      import { test } from 'vitest'
+      test('second', () => {})
+    `,
+  }, false)
+  const { vitest } = await testUtils.runVitest({
+    root,
+    watch: true,
+    forceRerunTriggers: ['**/trigger.js'],
+  })
+
+  fs.editFile('trigger.js', content => `${content}\n`)
+
+  await vitest.waitForStdout('RERUN')
+  await vitest.waitForStdout('first.test.ts')
+  await vitest.waitForStdout('second.test.ts')
   await vitest.waitForStdout('2 passed')
 })
 

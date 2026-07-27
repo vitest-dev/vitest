@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { createFile, editFile, resolvePath, runVitest } from '../../test-utils'
+import { createFile, editFile, resolvePath, runInlineTests, runVitest } from '../../test-utils'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
@@ -32,6 +32,37 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   })
+})
+
+it('matches a trigger path with a dot-prefixed directory', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'vitest.config.js': `
+      import path from 'node:path'
+      export default {
+        test: {
+          forceRerunTriggers: ['**/package.json'],
+          experimental: {
+            vcsProvider: {
+              async findChangedFiles({ root }) {
+                return [path.resolve(root, '.worktrees', 'project', 'package.json')]
+              },
+            },
+          },
+        },
+      }
+    `,
+    '.worktrees/project/package.json': '{}',
+    'trigger.test.js': `
+      import { test } from 'vitest'
+      test('trigger', () => {})
+    `,
+  }, {
+    changed: true,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('1 passed')
+  expect(stdout).not.toContain('No test files found')
 })
 
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {
