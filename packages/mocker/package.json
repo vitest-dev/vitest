@@ -101,6 +101,6 @@
     "es-module-lexer": "^2.0.0",
     "msw": "catalog:",
     "pathe": "catalog:",
-    "vite": "^6.3.5"
+    "vite": "catalog:"
   }
 }

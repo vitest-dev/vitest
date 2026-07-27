@@ -1,5 +1,6 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
+import { version as viteVersion } from 'vite'
 import { describe, expect, it } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { runInlineTests, runVitest } from '../../test-utils'
@@ -7,12 +8,19 @@ import { runInlineTests, runVitest } from '../../test-utils'
 // To prevent the warning coming up in snapshots
 process.setMaxListeners(20)
 
+const isVite7 = viteVersion.startsWith('7.')
+const vite8StacktraceFiles = new Set([
+  'error-in-deps.test.js',
+  'error-in-package.test.js',
+  'require-assertions.test.js',
+])
+
 describe('stacktraces should respect sourcemaps', async () => {
   const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const files = await glob(['*.test.*'], { cwd: root, expandDirectories: false })
 
   for (const file of files) {
-    it(file, async () => {
+    it.skipIf(isVite7 && vite8StacktraceFiles.has(file))(file, async () => {
       const { stderr } = await runVitest({ root }, [file])
 
       expect(stderr).toBeTruthy()
@@ -45,7 +53,7 @@ describe('stacktrace should print error frame source file correctly', async () =
   const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-deps.test.js')
 
-  it('error-in-deps', async () => {
+  it.skipIf(isVite7)('error-in-deps', async () => {
     const { stderr } = await runVitest({ root }, [testFile])
 
     // expect to print framestack of foo.js
@@ -71,14 +79,14 @@ describe('stacktrace in dependency package', () => {
   const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-package.test.js')
 
-  it('external', async () => {
+  it.skipIf(isVite7)('external', async () => {
     const { stderr } = await runVitest({
       root,
     }, [testFile])
     expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
   })
 
-  it('inline', async () => {
+  it.skipIf(isVite7)('inline', async () => {
     const { stderr } = await runVitest({
       root,
       server: {

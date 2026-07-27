@@ -31,7 +31,7 @@
     "https-localhost": "^4.7.1",
     "tinyglobby": "catalog:",
     "unocss": "catalog:",
-    "vite": "^6.3.5",
+    "vite": "catalog:",
     "vite-plugin-pwa": "^1.2.0",
     "vitepress": "2.0.0-alpha.16",
     "vitepress-plugin-group-icons": "^1.7.1",
