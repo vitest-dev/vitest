@@ -46,27 +46,6 @@ export function WorkspaceVitestPlugin(
           },
         }
 
-        // always inherit the global `fsModuleCache` values even without `extends: true`
-        if (testConfig.fsModuleCache == null && globalConfig.fsModuleCache != null) {
-          testConfig.fsModuleCache = globalConfig.fsModuleCache
-        }
-        if (testConfig.fsModuleCachePath == null && globalConfig.fsModuleCachePath != null) {
-          testConfig.fsModuleCachePath = globalConfig.fsModuleCachePath
-        }
-
-        // TODO: remove this after "extends: false" is flipped
-        testConfig.experimental ??= {}
-
-        if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
-          testConfig.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
-        }
-        if (testConfig.experimental?.nodeLoader == null && globalConfig.experimental?.nodeLoader != null) {
-          testConfig.experimental.nodeLoader = globalConfig.experimental.nodeLoader
-        }
-        if (testConfig.experimental?.importDurations == null && globalConfig.experimental?.importDurations != null) {
-          testConfig.experimental.importDurations = globalConfig.experimental.importDurations
-        }
-
         return config
       },
       configResolved(config) {

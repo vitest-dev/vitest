@@ -56,6 +56,60 @@ export default defineConfig({
 })
 ```
 
+### Inline Projects Inherit the Root Config by Default
+
+The [`extends`](/guide/projects#configuration) option now defaults to `true`: every project defined as an inline configuration in [`test.projects`](/guide/projects) inherits all options from the root configuration, including Vite options like `plugins` or `resolve.alias`. The options are merged with the same rules that applied to an explicit `extends: true` in Vitest 4:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    projects: [
+      {
+        // v4: this project didn't apply the react plugin
+        // v5: the plugin is inherited from the root config
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+A few options are excluded because they are always scoped to a single project or to the whole test run:
+
+- `name` and `projects` are never inherited.
+- `globalSetup` is not inherited from the root config: the root-level `globalSetup` already runs once per test run, so inheriting it would run the same files again for every project. It is still inherited when extending a non-root config file.
+- The project's own `tags` replace the inherited array instead of being merged with it.
+
+Projects referenced as config files or directories are not affected; they still don't inherit any options from the root config.
+
+Keep in mind that arrays are merged, not overridden. For example, if the root config defines `setupFiles`, the project's own `setupFiles` are appended to the inherited ones. If you need the previous behavior, set `extends: false` in the project configuration:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    setupFiles: ['./setup.global.ts'],
+    projects: [
+      {
+        extends: false, // [!code ++]
+        test: {
+          name: 'unit',
+          setupFiles: ['./setup.unit.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
 ### Hoisted Mocking Calls Must Be at the Top Level
 
 [`vi.mock`](/api/vi#vi-mock), [`vi.unmock`](/api/vi#vi-unmock), and [`vi.hoisted`](/api/vi#vi-hoisted) are hoisted to the top of the file and run before any surrounding code. Calling them inside a function, block, or `describe`/`test` callback previously only logged a warning. Vitest 5.0 now throws, because the call does not execute where it is written:
