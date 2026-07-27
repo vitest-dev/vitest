@@ -290,7 +290,7 @@ export async function runVitest(
   // watcher's baseline and ignored, so newly added files wouldn't trigger a
   // rerun. Wait for the watcher to be ready before handing control back.
   if (watch && ctx) {
-    await waitForWatcherReady(ctx.vite.watcher, ctx.config.root)
+    await waitForWatcherReady(ctx)
   }
 
   return {
@@ -333,11 +333,19 @@ export async function runVitest(
 // time after it is discovered, and an edit made before the poller exists is
 // folded into its baseline stat and never emits an event. No amount of chokidar
 // bookkeeping (`_readyEmitted`, `getWatched()`) proves the pollers are live, so
-// verify end-to-end: keep touching a probe file in the root until the watcher
-// reports it. Once a probe event arrives, the initial scan is complete and
-// every pre-existing file has a poller, so subsequent edits are guaranteed to
-// fire. The probe produces no output: it matches no test glob and no fixture's
-// rerun triggers, so `VitestWatcher` ignores it without scheduling a rerun.
+// verify end-to-end: keep cycling a probe file in the root until the watcher
+// reports it. The probe is recreated rather than rewritten because a creation
+// folded into the initial scan of the file AND its directory leaves nothing to
+// rescan; deleting and recreating it bumps the directory mtime every cycle, so
+// a live directory poller always sees a difference, and any probe event
+// (`add`, `change` or `unlink`) proves delivery.
+//
+// The scan can also surface writes made by the PREVIOUS test (an `afterEach`
+// restoring a fixture right before this instance started) as fresh change
+// events, triggering a rerun the test never asked for. While waiting, neuter
+// every rerun attempt by clearing the watcher state (the rerun debounce
+// returns silently when `changedTests` is empty) and only hand control back
+// after the event backlog has been quiet for a couple of poll intervals.
 //
 // Only instances with an explicit small root (a fixture or an inline-test dir)
 // get the probe: tests that assert on watch reruns always use one. Instances
@@ -345,7 +353,9 @@ export async function runVitest(
 // `watch: true` without a root) never wait for file events, and polling their
 // huge tree can take longer than any reasonable deadline, so for them only the
 // cheap bookkeeping check runs, as before.
-async function waitForWatcherReady(watcher: FSWatcher, root: string): Promise<void> {
+async function waitForWatcherReady(ctx: Vitest): Promise<void> {
+  const watcher: FSWatcher = ctx.vite.watcher
+  const root = ctx.config.root
   const slash = (p: string) => p.replace(/\\/g, '/')
   const parent = slash(dirname(root))
   const bookkeepingDeadline = Date.now() + 2000
@@ -365,25 +375,25 @@ async function waitForWatcherReady(watcher: FSWatcher, root: string): Promise<vo
 
   const deadline = Date.now() + 10_000
   const probe = resolve(root, '.vitest-watcher-ready-probe')
-  let onProbeSeen!: () => void
-  const probeSeen = new Promise<void>(resolve => (onProbeSeen = resolve))
-  const onProbeEvent = (file: string) => {
+  const suppressRerun = () => {
+    ctx.watcher.changedTests.clear()
+    ctx.watcher.invalidates.clear()
+  }
+  let probeSeen = false
+  let lastEventAt = Date.now()
+  const onWatcherEvent = (_event: string, file: string) => {
+    suppressRerun()
     if (slash(file) === probe) {
-      onProbeSeen()
+      probeSeen = true
+    }
+    else {
+      lastEventAt = Date.now()
     }
   }
-  watcher.on('add', onProbeEvent)
-  watcher.on('change', onProbeEvent)
+  watcher.on('all', onWatcherEvent)
   try {
     while (true) {
-      // rewrite instead of writing once: if the initial scan captured a probe
-      // write without emitting `add`, the next mtime bump still fires `change`
-      fs.writeFileSync(probe, `${Date.now()}`, 'utf-8')
-      const seen = await Promise.race([
-        probeSeen.then(() => true),
-        new Promise<boolean>(resolve => setTimeout(resolve, 50, false)),
-      ])
-      if (seen) {
+      if (probeSeen) {
         break
       }
       if (Date.now() > deadline) {
@@ -392,12 +402,23 @@ async function waitForWatcherReady(watcher: FSWatcher, root: string): Promise<vo
             JSON.stringify(watcher.getWatched(), null, 2)}`,
         )
       }
+      fs.writeFileSync(probe, `${Date.now()}`, 'utf-8')
+      await new Promise(resolve => setTimeout(resolve, 50))
+      if (probeSeen) {
+        break
+      }
+      fs.rmSync(probe, { force: true })
+      await new Promise(resolve => setTimeout(resolve, 50))
+    }
+
+    while (Date.now() - lastEventAt < 200 && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 50))
     }
   }
   finally {
-    watcher.off('add', onProbeEvent)
-    watcher.off('change', onProbeEvent)
+    watcher.off('all', onWatcherEvent)
     fs.rmSync(probe, { force: true })
+    suppressRerun()
   }
 }
 
