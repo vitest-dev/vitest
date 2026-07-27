@@ -2,7 +2,7 @@ import type { Stats } from 'node:fs'
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestFsStructure } from '../../test-utils'
 import { platform } from 'node:os'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 import { extractToMatchScreenshotPaths } from '../fixtures/expect-dom/utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
@@ -11,6 +11,10 @@ import { instances, provider } from '../settings'
 const testFilename = 'basic.test.ts'
 const testName = 'screenshot-snapshot'
 const bgColor = '#fff'
+
+const comparators = {
+  failing: () => ({ pass: false, diff: null, message: null })
+}
 
 const testContent = /* ts */`
 import { page, server } from 'vitest/browser'
@@ -155,6 +159,7 @@ describe('--watch', () => {
             expect: {
               toMatchScreenshot: {
                 screenshotDirectory: customDir,
+                comparators,
               },
             },
           },
@@ -168,6 +173,102 @@ describe('--watch', () => {
 
       for (const referencePath of references) {
         expect(referencePath).toContain(`/${customDir}/`)
+      }
+    },
+  )
+
+  test(
+    'uses custom `io.read` and `io.write` instead of the filesystem',
+    async () => {
+      const store = new Map<
+        string,
+        {
+          data: Buffer<ArrayBufferLike> | Uint8Array<ArrayBufferLike> | null
+          path: string
+          kind: 'reference' | 'actual' | 'diff'
+        }
+      >()
+      const read = vi.fn(async ({ path }) => store.get(path)?.data ?? null)
+      const write = vi.fn(async ({ path, data, kind }) => {
+        store.set(path, { data: kind === 'reference' ? data : null, kind, path })
+      })
+
+      const { fs, stderr, vitest } = await runBrowserTests(
+        {
+          [testFilename]: testContent,
+          'utils.ts': utilsContent,
+        },
+        {
+          browser: {
+            enabled: true,
+            screenshotFailures: false,
+            provider,
+            headless: true,
+            instances,
+            viewport: {
+              width: 400,
+              height: 200,
+            },
+            expect: {
+              toMatchScreenshot: {
+                io: {
+                  read,
+                  write,
+                },
+                comparators,
+              },
+            },
+          },
+          update: 'new',
+        },
+      )
+
+      const references = extractToMatchScreenshotPaths(stderr, testName)
+
+      // reference saved in memory via `io.write`
+      expect(references).toHaveLength(instances.length)
+      expect(read).toHaveBeenCalledTimes(instances.length)
+      expect(write).toHaveBeenCalledTimes(instances.length)
+
+      for (const referencePath of references) {
+        expect(store.get(referencePath)?.kind).toBe('reference')
+        expect(() => fs.statFile(referencePath)).toThrow()
+      }
+
+      read.mockClear()
+      write.mockClear()
+
+      fs.editFile(testFilename, content => content.replace(bgColor, '#0ff'))
+
+      vitest.resetOutput()
+      await vitest.waitForStdout(`Test Files  ${instances.length} failed`)
+
+      for (const instance of instances) {
+        expect(vitest.stdout).toContain(`× |${instance.browser}| basic.test.ts > screenshot-snapshot`)
+      }
+
+      expect(vitest.stdout).toContain('Screenshot does not match the stored reference.')
+
+      expect(read).toHaveBeenCalledTimes(instances.length)
+      expect(write).toHaveBeenCalledTimes(2 * instances.length)
+
+      // artifacts saved in memory via `io.write`
+      const files = Array.from(store.values())
+
+      expect(files).toHaveLength(instances.length * 3)
+
+      const actuals = files.filter(({ kind }) => kind === 'actual')
+
+      expect(actuals).toHaveLength(instances.length)
+      for (const file of actuals) {
+        expect(() => fs.statFile(file.path)).toThrow()
+      }
+
+      const diffs = files.filter(({ kind }) => kind === 'diff')
+
+      expect(diffs).toHaveLength(instances.length)
+      for (const file of diffs) {
+        expect(() => fs.statFile(file.path)).toThrow()
       }
     },
   )

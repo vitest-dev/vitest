@@ -34,7 +34,7 @@ export default defineConfig({
             allowedMismatchedPixels: 100,
           },
           resolveScreenshotPath: ({ arg, browserName, ext, testFileName }) =>
-            `custom-screenshots/${testFileName}/${arg}-${browserName}${ext}`,
+            path.resolve('custom-screenshots', testFileName, `${arg}-${browserName}${ext}`),
         },
       },
     },
@@ -42,9 +42,7 @@ export default defineConfig({
 })
 ```
 
-[All options available in the `toMatchScreenshot` assertion](/api/browser/assertions#options)
-can be configured here. Additionally, two path resolution functions are
-available: `resolveScreenshotPath` and `resolveDiffPath`.
+[All options available in the `toMatchScreenshot` assertion](/api/browser/assertions#options) can be configured here. Additionally, [`screenshotDirectory`][screenshotDirectory], [`resolveScreenshotPath`][resolveScreenshotPath], [`resolveDiffPath`][resolveDiffPath], and [`io`](#browser-expect-toMatchScreenshot-io) let you customize where and how screenshots are stored.
 
 ## browser.expect.toMatchScreenshot.screenshotDirectory
 
@@ -53,7 +51,7 @@ available: `resolveScreenshotPath` and `resolveDiffPath`.
 
 The directory name used for storing reference screenshots.
 
-This value is passed as `screenshotDirectory` to [`browser.expect.toMatchScreenshot.resolveScreenshotPath`](#browserexpecttomatchscreenshotresolvescreenshotpath) and [`browser.expect.toMatchScreenshot.resolveDiffPath`](#browserexpecttomatchscreenshotresolvediffpath), and used in the default path resolution of `resolveScreenshotPath`.
+This value is passed as `screenshotDirectory` to [`resolveScreenshotPath`][resolveScreenshotPath] and [`resolveDiffPath`][resolveDiffPath], and used in the default path resolution of [`resolveScreenshotPath`][resolveScreenshotPath].
 
 ## browser.expect.toMatchScreenshot.resolveScreenshotPath
 
@@ -101,7 +99,7 @@ receives an object with the following properties:
 
 - `screenshotDirectory: string`
 
-  The value provided to [`browser.expect.toMatchScreenshot.screenshotDirectory`](#browserexpecttomatchscreenshotscreenshotdirectory), if none is provided, its default value (`__screenshots__`).
+  The value provided to [`screenshotDirectory`][screenshotDirectory], if none is provided, its default value (`__screenshots__`).
 
 - `root: string`
 
@@ -133,7 +131,7 @@ For example, to group screenshots by browser:
 
 ```ts
 resolveScreenshotPath: ({ arg, browserName, ext, root, testFileName }) =>
-  `${root}/screenshots/${browserName}/${testFileName}/${arg}${ext}`
+  path.resolve(root, 'screenshots', browserName, testFileName, `${arg}${ext}`)
 ```
 
 ## browser.expect.toMatchScreenshot.resolveDiffPath
@@ -141,16 +139,63 @@ resolveScreenshotPath: ({ arg, browserName, ext, root, testFileName }) =>
 - **Type:** `(data: PathResolveData) => string`
 - **Default output:** ``path.resolve(root, attachmentsDir, testFileDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)``
 
-A function to customize where diff images are stored when screenshot comparisons
-fail. Receives the same data object as
-[`resolveScreenshotPath`](#browser-expect-tomatchscreenshot-resolvescreenshotpath).
+A function to customize where diff images are stored when screenshot comparisons fail. Receives the same data object as [`resolveScreenshotPath`][resolveScreenshotPath].
 
 For example, to store diffs in a subdirectory of attachments:
 
 ```ts
 resolveDiffPath: ({ arg, attachmentsDir, browserName, ext, root, testFileName }) =>
-  `${root}/${attachmentsDir}/screenshot-diffs/${testFileName}/${arg}-${browserName}${ext}`
+  path.resolve(root, attachmentsDir, 'screenshot-diffs', testFileName, `${arg}-${browserName}${ext}`)
 ```
+
+## browser.expect.toMatchScreenshot.io <Version type="experimental">5.0.0</Version> <Experimental /> {#browser-expect-toMatchScreenshot-io}
+
+- **Type:** `{ read: Read; write: Write }`
+- **Default:** Node's `fs` module, reading/writing at the paths resolved by [`resolveScreenshotPath`][resolveScreenshotPath] and [`resolveDiffPath`][resolveDiffPath].
+
+Overrides the filesystem access used to read and write screenshots, letting you redirect reference, actual, and diff images to a different storage backend (e.g. object storage or a remote service) instead of the local filesystem.
+
+### io.read
+
+- **Type:** `(data: ReadData) => Promise<TypedArray | null>`
+
+Reads image data from `path`. Should return `null` if no data exists at `path` (e.g. no reference screenshot has been captured yet). The function receives an object with the following properties:
+
+- `path: string`
+
+  The path resolved by [`resolveScreenshotPath`][resolveScreenshotPath].
+
+- `project: TestProject`
+
+  The [`TestProject`](/api/advanced/test-project) the test belongs to.
+
+### io.write
+
+- **Type:** `(data: WriteData) => Promise<void>`
+
+Writes image `data` to `path`. The function receives an object with the following properties:
+
+- `path: string`
+
+  The path resolved by [`resolveScreenshotPath`][resolveScreenshotPath] or [`resolveDiffPath`][resolveDiffPath].
+
+- `data: TypedArray`
+
+  The image data to write, as a `Buffer` or `Uint8Array`.
+
+- `kind: 'reference' | 'actual' | 'diff'`
+
+  Indicates which type of image is being written, so implementations can apply different handling (e.g. retention policies) for reference, actual, and diff images.
+
+- `project: TestProject`
+
+  The [`TestProject`](/api/advanced/test-project) the test belongs to.
+
+::: tip
+`path` here is whatever [`resolveScreenshotPath`][resolveScreenshotPath] or [`resolveDiffPath`][resolveDiffPath] resolved to. It doesn't have to be a filesystem path.
+
+If you're writing to a non-filesystem backend, you can use those functions to return a key (e.g. an S3 object key) instead of an absolute path.
+:::
 
 ## browser.expect.toMatchScreenshot.comparators
 
@@ -264,3 +309,7 @@ myCustomComparator: (
 }
 ```
 :::
+
+[resolveDiffPath]: #browser-expect-toMatchScreenshot-resolveDiffPath
+[resolveScreenshotPath]: #browser-expect-toMatchScreenshot-resolveScreenshotPath
+[screenshotDirectory]: #browser-expect-toMatchScreenshot-screenshotDirectory

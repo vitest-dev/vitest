@@ -91,12 +91,13 @@ export default async function toMatchScreenshot(
     }
 
     if (attachments.length > 0) {
-      await recordArtifact(this.task, {
-        type: 'internal:toMatchScreenshot',
-        kind: 'visual-regression',
-        message: result.message,
-        attachments,
-      })
+      // @todo understand how to handled this
+      // await recordArtifact(this.task, {
+      //   type: 'internal:toMatchScreenshot',
+      //   kind: 'visual-regression',
+      //   message: result.message,
+      //   attachments,
+      // })
     }
   }
 
