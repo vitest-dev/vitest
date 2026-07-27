@@ -13,9 +13,10 @@ The percentages are relative to the sum of all tracked phases, not to the wall-c
 The phases map to configuration options:
 
 - `environment` - creating the test environment (for example `jsdom`, `happy-dom`) for test files.
-- `transform` - transforming files with Vite. See [Caching Between Reruns](#caching-between-reruns).
-- `import` - importing test files and their modules. When files import mostly the same modules (typical for barrel-file imports), isolation re-evaluates that shared graph for every file. See [Test Isolation](#test-isolation).
+- `transform` - waiting for Vite to resolve and transform imported modules. See [Caching Between Reruns](#caching-between-reruns).
+- `import` - evaluating test files and their modules, excluding the transform wait tracked above. When files import mostly the same modules (typical for barrel-file imports), isolation re-evaluates that shared graph for every file. See [Test Isolation](#test-isolation).
 - `setup` - running [`setupFiles`](/config/setupfiles).
+- `worker` - preparing the test runner in each worker. Isolation pays this cost for every test file. See [Test Isolation](#test-isolation).
 - `tests` - running the tests themselves. A run dominated by this phase has little to gain from configuration changes.
 
 ## Test Isolation

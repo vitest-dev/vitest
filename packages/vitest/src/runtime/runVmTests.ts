@@ -84,8 +84,11 @@ export async function run(
     testRunner.cancel?.(reason)
   })
 
+  // unlike other pools, the vm pool creates the environment inside the
+  // prepare window; subtract it so `prepare` excludes the environment
+  // load time in every pool
   workerState.durations.prepare
-    = performance.now() - workerState.durations.prepare
+    = performance.now() - workerState.durations.prepare - workerState.durations.environment
 
   const { vi } = VitestIndex
 

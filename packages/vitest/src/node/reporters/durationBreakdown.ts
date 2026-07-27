@@ -16,8 +16,6 @@ export interface DurationBreakdown {
 
 export interface DurationBreakdownInput {
   files: File[]
-  /** Total transform time across all projects. */
-  transformTime: number
   /** Total typecheck time across all projects. */
   typecheckTime: number
 }
@@ -26,18 +24,26 @@ export function computeDurationBreakdown(
   input: DurationBreakdownInput,
 ): DurationBreakdown {
   const sums = {
-    transform: input.transformTime,
+    transform: 0,
     setup: 0,
     import: 0,
     tests: 0,
     environment: 0,
+    worker: 0,
     typecheck: input.typecheckTime,
   }
   for (const file of input.files) {
-    sums.setup += file.setupDuration || 0
-    sums.import += file.collectDuration || 0
+    // setup and collect wall times include the time the worker spent waiting
+    // for module transforms; report that wait as its own "transform" phase so
+    // every phase is a disjoint sum of per-worker time
+    const setupFetch = file.setupFetchDuration || 0
+    const collectFetch = file.collectFetchDuration || 0
+    sums.transform += setupFetch + collectFetch
+    sums.setup += Math.max((file.setupDuration || 0) - setupFetch, 0)
+    sums.import += Math.max((file.collectDuration || 0) - collectFetch, 0)
     sums.tests += file.result?.duration || 0
     sums.environment += file.environmentLoad || 0
+    sums.worker += file.prepareDuration || 0
   }
 
   const entries = Object.entries(sums)

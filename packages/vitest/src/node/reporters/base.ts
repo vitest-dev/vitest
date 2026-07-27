@@ -641,7 +641,6 @@ export abstract class BaseReporter implements Reporter {
 
       const breakdown = computeDurationBreakdown({
         files,
-        transformTime: this.ctx.state.transformTime,
         typecheckTime: sum(this.ctx.projects, project => project.typechecker?.getResult().time),
       })
 
