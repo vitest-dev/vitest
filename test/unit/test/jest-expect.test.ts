@@ -376,6 +376,20 @@ describe('jest-expect', () => {
       expect(complex).toHaveProperty('a-b', false)
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false]`)
 
+    // nullish subjects throw a matcher error instead of an internal TypeError (#10735)
+    expect(() => {
+      expect(null).toHaveProperty('a')
+    }).toThrowErrorMatchingInlineSnapshot(`[TypeError: toHaveProperty() expected to receive a valid object, instead got null]`)
+
+    expect(() => {
+      // .not does not make a nullish subject pass — it throws the same matcher error
+      expect(null).not.toHaveProperty('a')
+    }).toThrowErrorMatchingInlineSnapshot(`[TypeError: toHaveProperty() expected to receive a valid object, instead got null]`)
+
+    expect(() => {
+      expect(undefined).toHaveProperty('a')
+    }).toThrowErrorMatchingInlineSnapshot(`[TypeError: toHaveProperty() expected to receive a valid object, instead got undefined]`)
+
     expect(() => {
       const x = { a: { b: { c: 1 } } }
       const y = { a: { b: { c: 2 } } }

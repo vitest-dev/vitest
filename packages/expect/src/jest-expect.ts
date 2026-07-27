@@ -467,6 +467,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       }
 
       const actual = this._obj as any
+      if (actual == null) {
+        throw new TypeError(
+          `toHaveProperty() expected to receive a valid object, instead got ${inspect(actual)}`,
+        )
+      }
       const [propertyName, expected] = args
       const getValue = () => {
         const hasOwn = Object.hasOwn(
