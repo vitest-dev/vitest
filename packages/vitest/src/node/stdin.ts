@@ -85,14 +85,18 @@ export function registerConsoleShortcuts(
       || str === '\x1B'
       || (key && key.ctrl && key.name === 'c')
     ) {
-      if (!ctx.isCancelling) {
-        ctx.logger.log(
-          c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
-        )
-        process.exitCode = 130
-
-        await ctx.cancelCurrentRun('keyboard-input')
+      // Already cancelling: this is the second press. Exit forcefully and
+      // unconditionally, without waiting for teardown to finish.
+      if (ctx.isCancelling) {
+        process.exit(130)
       }
+
+      ctx.logger.log(
+        c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
+      )
+      process.exitCode = 130
+
+      await ctx.cancelCurrentRun('keyboard-input')
       return ctx.exit(true)
     }
 
