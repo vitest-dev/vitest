@@ -351,8 +351,8 @@ export class ExternalModulesExecutor {
       information.exists ??= existsSync(path)
     }
     if (information.exists === false) {
-      const error = new Error(`Cannot find ${isBareImport(path) ? 'package' : 'module'} '${path}'`);
-      (error as any).code = 'ERR_MODULE_NOT_FOUND'
+      const error: NodeJS.ErrnoException = new Error(`Cannot find ${isBareImport(path) ? 'package' : 'module'} '${path}'`)
+      error.code = 'ERR_MODULE_NOT_FOUND'
       throw error
     }
   }
@@ -371,11 +371,9 @@ export class ExternalModulesExecutor {
       case 'vite':
         return this.vite.createViteModule(url)
       case 'wasm':
-        return this.esm.createWebAssemblyModule(url, () =>
-          this.fs.readBuffer(path))
+        return this.esm.createWebAssemblyModule(url, () => this.fs.readBuffer(path))
       case 'module':
-        return this.esm.createEsModule(url, () =>
-          this.fs.readFileAsync(path))
+        return this.esm.createEsModule(url, () => this.fs.readFile(path))
       case 'commonjs':
         return this.cjs.getCjsSyntheticModule(path, identifier)
       case 'network':

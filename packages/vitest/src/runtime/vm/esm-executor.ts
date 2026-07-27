@@ -112,23 +112,23 @@ export class EsmExecutor {
     return promise
   }
 
-  private async loadEsModule(
+  private loadEsModule(
     fileURL: string,
     getCode: () => string | Promise<string>,
   ) {
-    const code = await getCode()
-    // TODO: should not be allowed in strict mode, implement in #2854
-    if (fileURL.endsWith('.json')) {
-      const m = new SyntheticModule(['default'], function () {
-        const result = JSON.parse(code)
-        this.setExport('default', result)
-      })
-      this.moduleCache.set(fileURL, m)
-      return m
+    const code = getCode()
+    if (code instanceof Promise) {
+      return code.then(content => this.createModule(fileURL, content))
     }
-    const m = this.createSourceTextModule(fileURL, code)
-    this.moduleCache.set(fileURL, m)
-    return m
+    return this.createModule(fileURL, code)
+  }
+
+  private createModule(fileURL: string, code: string): VMSyntheticModule | VMSourceTextModule {
+    const module = fileURL.endsWith('.json')
+      ? this.createJsonModule(fileURL, code)
+      : this.createSourceTextModule(fileURL, code)
+    this.moduleCache.set(fileURL, module)
+    return module
   }
 
   private createSourceTextModule(
@@ -329,7 +329,7 @@ export class EsmExecutor {
     return { kind: 'source', code: code as string }
   }
 
-  private createJsonModule(identifier: string, code: string): VMModule {
+  private createJsonModule(identifier: string, code: string): VMSyntheticModule {
     return new SyntheticModule(
       ['default'],
       function (this: VMSyntheticModule) {

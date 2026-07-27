@@ -92,17 +92,17 @@ export function createRequireAsyncModuleError(
   identifier: string,
   detail: string,
 ): Error {
-  const error = new Error(
+  const error: NodeJS.ErrnoException = new Error(
     `require() cannot be used to load ES Module ${identifier}: ${detail}. Use import() instead.`,
-  ) as Error & { code: string }
+  )
   error.code = 'ERR_REQUIRE_ASYNC_MODULE'
   return error
 }
 
 export function createConcurrentRequireError(identifier: string): Error {
-  const error = new Error(
+  const error: NodeJS.ErrnoException = new Error(
     `Cannot require() ES Module ${identifier} synchronously: it is currently being loaded by a concurrent import(). Await that import before calling require(), or import this module instead of requiring it.`,
-  ) as Error & { code: string }
+  )
   error.code = 'ERR_REQUIRE_ESM'
   return error
 }

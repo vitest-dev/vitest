@@ -95,7 +95,7 @@ export class CommonjsExecutor {
       paths: string[] = []
 
       constructor(id = '', parent?: Module) {
-        this.exports = primitives.Object.create(Object.prototype)
+        this.exports = primitives.Object.create(primitives.Object.prototype)
         // in our case the path should always be resolved already
         this.path = dirname(id)
         this.id = id
