@@ -1,17 +1,23 @@
-import { readFileSync, statSync, writeFileSync } from 'node:fs'
-import { afterEach, test } from 'vitest'
-import { restoreFile, runVitest } from '#test-utils'
-
-const testFile = 'fixtures/watch/math.test.ts'
-const testFileContent = readFileSync(testFile, 'utf-8')
-const testFileStat = statSync(testFile)
-
-afterEach(() => {
-  restoreFile(testFile, testFileContent, testFileStat)
-})
+import { test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 test('console.log is visible on test re-run', async () => {
-  const { vitest } = await runVitest({ root: 'fixtures/watch', watch: true })
+  const { vitest, fs } = await runInlineTests({
+    'math.ts': /* ts */ `
+export function sum(a: number, b: number) {
+  return a + b
+}
+`,
+    'math.test.ts': /* ts */ `
+import { expect, test } from 'vitest'
+
+import { sum } from './math'
+
+test('sum', () => {
+  expect(sum(1, 2)).toBe(3)
+})
+`,
+  }, { watch: true })
 
   const testCase = `
 test('test with logging', () => {
@@ -22,7 +28,7 @@ test('test with logging', () => {
 })
 `
 
-  writeFileSync(testFile, `${testFileContent}${testCase}`, 'utf8')
+  fs.editFile('math.test.ts', content => `${content}${testCase}`)
 
   await vitest.waitForStdout('stdout | math.test.ts > test with logging')
   await vitest.waitForStdout('First')
