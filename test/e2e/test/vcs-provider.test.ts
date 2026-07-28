@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
-import { runInlineTests, useFS } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
+import { runInlineTests, useFS } from '#test-utils'
 
 test('custom vcsProvider that returns specific files runs only matching tests', async () => {
   const { testTree, stderr } = await runInlineTests({

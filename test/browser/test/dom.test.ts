@@ -1,6 +1,6 @@
-import { createNode } from '#src/createNode'
 import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import { page } from 'vitest/browser'
+import { createNode } from '#src/createNode'
 import '../src/button.css'
 
 afterAll(() => {

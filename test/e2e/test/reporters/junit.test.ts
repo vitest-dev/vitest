@@ -1,9 +1,9 @@
 import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite, RunnerTask as Task } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { runVitest, runVitestCli } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test, TestRunner } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
+import { runVitest, runVitestCli } from '#test-utils'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 

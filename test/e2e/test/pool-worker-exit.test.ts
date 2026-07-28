@@ -1,7 +1,7 @@
 import { sep } from 'node:path'
-import { runInlineTests, runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { runInlineTests, runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { readCoverageMap } from '../../coverage-test/utils'
 
 test('worker death on a shared runner does not skip coverage finalization', async () => {

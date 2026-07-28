@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { describe, expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 describe.each([true, false])('{ isTTY: %s }', (isTTY) => {
   test('renders successful tests', async () => {

@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
+import { runVitest } from '#test-utils'
 
 /**
  * Extract import durations section and normalize variable values for snapshot testing.

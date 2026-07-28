@@ -1,6 +1,6 @@
-import { runInlineTests, runVitest, ts } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
+import { runInlineTests, runVitest, ts } from '#test-utils'
 
 it('runs the workspace if there are several vitest config files', async () => {
   const { stderr, stdout } = await runVitest({

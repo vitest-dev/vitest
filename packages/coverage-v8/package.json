@@ -55,7 +55,6 @@
   },
   "dependencies": {
     "@bcoe/v8-coverage": "^1.0.2",
-    "@vitest/utils": "workspace:*",
     "ast-v8-to-istanbul": "^1.0.5",
     "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",

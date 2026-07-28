@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
-
 import { describe, expect, it } from 'vitest'
+
+import { runVitest } from '#test-utils'
 
 describe('json reporter', async () => {
   const root = resolve(import.meta.dirname, '..', '..', 'fixtures', 'reporters')

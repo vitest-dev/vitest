@@ -116,7 +116,7 @@ export function expandNodesOnEndRun(
   }
 }
 
-export function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
+function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
   for (const node of nodes) {
     if (isParentNode(node)) {
       node.expanded = true
