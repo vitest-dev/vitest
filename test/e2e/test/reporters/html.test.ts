@@ -1,6 +1,6 @@
-import { runInlineTests } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { expect, it } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 it('basic', async () => {
   const result = await runInlineTests({

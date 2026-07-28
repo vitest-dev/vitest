@@ -1,6 +1,6 @@
 import type { InlineConfig } from 'vitest/node'
-import { runInlineTests, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests, runVitest } from '#test-utils'
 
 function run(sequence: InlineConfig['sequence']) {
   return runVitest({

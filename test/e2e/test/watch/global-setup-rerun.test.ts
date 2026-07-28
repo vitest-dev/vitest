@@ -1,5 +1,5 @@
-import { editFile, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { editFile, runVitest } from '#test-utils'
 
 const testFile = 'fixtures/watch/math.test.ts'
 

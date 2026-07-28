@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('cursor is hidden during test run in TTY', async () => {
   const { stdout } = await runVitest({
