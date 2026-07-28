@@ -27,7 +27,7 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
 
       - name: Install
-        run: pnpm install --filter @vitest/monorepo --filter './packages/**'
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm run build
