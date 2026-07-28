@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import { join } from 'pathe'
 import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
-import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 const TEST_COUNTS = {
   pass: 18,
@@ -305,7 +305,7 @@ async function testCoverage(page: Page) {
 
 async function testAnnotationsInReport(page: Page) {
   await test.step('annotated test', async () => {
-    await getExplorerItem(page, 'annotated test').click()
+    await openExplorerItem(page, 'annotated test')
 
     const annotations = page.getByRole('note')
     await expect(annotations).toHaveCount(2)
@@ -320,7 +320,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated typed test', async () => {
-    await getExplorerItem(page, 'annotated typed test').click()
+    await openExplorerItem(page, 'annotated typed test')
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -331,7 +331,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated file test', async () => {
-    await getExplorerItem(page, 'annotated file test').click()
+    await openExplorerItem(page, 'annotated file test')
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -347,7 +347,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated image test', async () => {
-    await getExplorerItem(page, 'annotated image test').click()
+    await openExplorerItem(page, 'annotated image test')
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -361,7 +361,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated with body base64', async () => {
-    await getExplorerItem(page, 'annotated with body base64').click()
+    await openExplorerItem(page, 'annotated with body base64')
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -377,7 +377,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated with body utf-8', async () => {
-    await getExplorerItem(page, 'annotated with body utf-8').click()
+    await openExplorerItem(page, 'annotated with body utf-8')
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
