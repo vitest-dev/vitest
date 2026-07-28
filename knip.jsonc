@@ -1,0 +1,91 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "ignoreWorkspaces": [
+    "docs",
+    "examples/*",
+    "test/*",
+    "test/e2e/dts/*",
+    "test/e2e/fixtures/conditions-pkg"
+  ],
+  "ignoreBinaries": ["yq"],
+  "rules": {
+    "catalog": "off",
+    "duplicates": "off",
+    "exports": "off",
+    "nsExports": "off",
+    "nsTypes": "off",
+    "optionalPeerDependencies": "off",
+    "types": "off"
+  },
+  "workspaces": {
+    ".": {
+      "entry": [
+        "scripts/*.{js,ts}",
+        "shims.d.ts"
+      ],
+      "ignoreDependencies": [
+        "@antfu/ni",
+        "@vitest/browser",
+        "@vitest/coverage-istanbul",
+        "@vitest/coverage-v8",
+        "@vitest/ui",
+        "magic-string",
+        "vitest"
+      ]
+    },
+    "packages/browser": {
+      "entry": [
+        "*.d.ts",
+        "src/client/orchestrator.ts",
+        "src/client/public/*.js",
+        "src/client/tester/tester.ts",
+        "src/node/index.ts"
+      ],
+      "vite": {
+        "config": "src/client/vite.config.ts"
+      }
+    },
+    "packages/browser-preview": {
+      "entry": ["src/{index,locators}.ts"],
+      "ignoreDependencies": [
+        "@testing-library/dom",
+        "@testing-library/user-event"
+      ]
+    },
+    "packages/coverage-istanbul": {
+      "entry": ["src/{browser,index,provider}.ts"],
+      "ignoreDependencies": ["@babel/core"]
+    },
+    "packages/coverage-v8": {
+      "entry": ["src/{browser,index,provider}.ts"],
+      "ignoreDependencies": ["@vitest/browser"]
+    },
+    "packages/mocker": {
+      "entry": [
+        "src/browser/{auto-register,index,register}.ts",
+        "src/node/{automock,index,redirect,transforms}.ts"
+      ]
+    },
+    "packages/snapshot": {
+      "entry": ["*.d.ts"]
+    },
+    "packages/utils": {
+      "entry": ["*.{d.ts,ts}"]
+    },
+    "packages/ui": {
+      "ignoreDependencies": [
+        "@iconify-json/carbon",
+        "@iconify-json/logos",
+        "uno.css"
+      ]
+    },
+    "packages/vitest": {
+      "entry": ["*.{cjs,d.cts,d.ts,mjs}"],
+      "ignoreDependencies": [
+        "@types/chai",
+        "chai",
+        "why-is-node-running"
+      ]
+    }
+  }
+}

@@ -188,7 +188,6 @@
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.1",
     "@sinonjs/fake-timers": "15.4.0",
-    "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^27.0.0",
