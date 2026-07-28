@@ -1,0 +1,39 @@
+packages/pretty-format/src/plugins/AsymmetricMatcher.ts
+  s_48c4967263aa91::t_54e528e5551ba1 17,92
+packages/pretty-format/src/plugins/DOMCollection.ts
+  s_48c4967263aa91::t_f08e5fdcfc042d 20,30
+packages/pretty-format/src/plugins/DOMElement.ts
+  s_48c4967263aa91::t_d502e4fecc6cca 51,159
+packages/pretty-format/src/plugins/Immutable.ts
+  s_48c4967263aa91::t_951e641b1b206a 132,196
+packages/pretty-format/src/plugins/ReactElement.ts
+  s_48c4967263aa91::t_beece8d4dfb23e 107,140
+packages/pretty-format/src/plugins/ReactTestComponent.ts
+  s_48c4967263aa91::t_9d1080632cf069 16,41,78
+packages/snapshot/src/client.ts
+  s_48c4967263aa91::t_737a5149cc11a0 68
+packages/snapshot/src/port/mockSerializer.ts
+  s_48c4967263aa91::t_0e58c03052c61a 12,47
+packages/snapshot/src/port/utils.ts
+  s_48c4967263aa91::t_2c823922f2650a 112
+packages/spy/src/types.ts
+  s_48c4967263aa91::t_d682cbf547d2e5 176
+packages/utils/src/diff/normalizeDiffOptions.ts
+  s_48c4967263aa91::t_8d745bd4eedd16 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2ad30805c6a4de0658a7d093625b8d7da3b91620",
+  "prompts": {},
+  "sessions": {
+    "s_48c4967263aa91": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05772ca11ffe4My6tYXRsDU4Yx",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
