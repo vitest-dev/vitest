@@ -288,6 +288,25 @@ test('inherits browser options', async () => {
   ])
 })
 
+test.each([true, false])('browser instance headless overrides root headless: $0', async (headless) => {
+  const projects = await config({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      headless,
+      instances: [
+        { browser: 'chromium', name: 'inherits-root' },
+        { browser: 'firefox', name: 'overrides-root', headless: !headless },
+      ],
+    },
+  })
+
+  expect(projects.map(project => project.projectConfig.browser.headless)).toEqual([
+    headless,
+    !headless,
+  ])
+})
+
 test('coverage provider v8 works correctly in browser mode if instances are filtered', async () => {
   const projects = await config(
     {
