@@ -335,11 +335,18 @@ export class Vitest {
         await this._restart()
       }
 
+      // container configs have no Vite server (and might be outside the root),
+      // so their files are watched explicitly
+      if (resolved._containerConfigFiles?.length) {
+        server.watcher.add(resolved._containerConfigFiles)
+      }
+
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
           || this.projects.some(p => p.vite.config.configFile === file)
+          || this.config._containerConfigFiles?.includes(file)
         if (isConfig) {
           await this._restart('config')
         }
