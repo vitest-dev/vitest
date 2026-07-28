@@ -93,7 +93,7 @@ catalog:
   std-env: ^4.2.0
   strip-literal: ^3.1.0
   tinybench: 6.0.1
-  tinyexec: ^1.2.4
+  tinyexec: 1.0.2
   tinyglobby: ^0.2.17
   tinyhighlight: ^0.3.2
   tinyrainbow: ^3.1.0

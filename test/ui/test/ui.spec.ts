@@ -457,7 +457,7 @@ async function testTagsFilter(page: Page) {
 
   // only one test with the tag "db"
   await expect(page.getByText('PASS (1)')).toBeVisible()
-  await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
+  await expect(getExplorerItem(page, 'has tags')).toBeVisible()
 
   await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
   await expect(page.getByText('No matched test')).toBeVisible()
