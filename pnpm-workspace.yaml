@@ -6,6 +6,7 @@ shellEmulator: true
 strictPeerDependencies: false
 trustPolicy: no-downgrade
 trustPolicyExclude:
+  - '@trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1'
   - semver@6.3.1
   - chokidar@4.0.3
   - webdriverio@9.29.1
@@ -43,7 +44,7 @@ patchedDependencies:
   cac@6.7.14: patches/cac@6.7.14.patch
   istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
-  rrweb-snapshot@2.0.1: patches/rrweb-snapshot@2.0.1.patch
+  rrweb-snapshot@2.1.1: patches/rrweb-snapshot@2.1.1.patch
 catalog:
   '@babel/core': ^7.29.0
   '@babel/plugin-proposal-decorators': ^7.29.7
