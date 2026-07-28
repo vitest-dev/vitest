@@ -1,12 +1,12 @@
-import type { TestFsStructure } from '#test-utils'
 import type { ViteUserConfig } from 'vitest/config'
 import type { CliOptions, TestUserConfig, VitestOptions } from 'vitest/node'
-import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
+import type { TestFsStructure } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFailed, onTestFinished, test, vi } from 'vitest'
 import { createVitest, Logger, PluginHarness, resolveConfig } from 'vitest/node'
+import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
 import { Cli } from '../../../test-utils/cli'
 
 const vitest = vi.defineHelper(async (options: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions }, vitestOptions: VitestOptions = {}) => {
