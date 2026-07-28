@@ -1,36 +1,48 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignoreWorkspaces": [
-    "docs",
     "examples/*",
-    "test/*",
     "test/e2e/dts/*",
     "test/e2e/fixtures/conditions-pkg"
   ],
   "ignoreBinaries": ["yq"],
-  "rules": {
-    "catalog": "off",
-    "duplicates": "off",
-    "exports": "off",
-    "nsExports": "off",
-    "nsTypes": "off",
-    "optionalPeerDependencies": "off",
-    "types": "off"
+  "ignoreIssues": {
+    "docs/.vitepress/blog.data.ts": ["files"],
+    "docs/.vitepress/components/*.vue": ["files"],
+    "docs/.vitepress/contributors.ts": ["types"],
+    "docs/.vitepress/meta.ts": ["exports"],
+    "docs/.vitepress/sponsors.ts": ["files"],
+    "docs/.vitepress/theme/*.vue": ["files"],
+    // Test workspaces are package API consumers, not Knip lint targets; many
+    // intentionally contain dead, virtual, and unresolved fixture modules.
+    "test/**": [
+      "files",
+      "devDependencies",
+      "unlisted",
+      "binaries",
+      "unresolved",
+      "exports"
+    ],
+    "packages/vitest/src/integrations/vi.ts": ["duplicates"],
+    "packages/vitest/src/runtime/runner/suite.ts": ["duplicates"]
   },
   "workspaces": {
     ".": {
       "entry": [
         "scripts/*.{js,ts}",
         "shims.d.ts"
-      ],
+      ]
+    },
+    "docs": {
+      // VitePress resolves these build integrations dynamically.
       "ignoreDependencies": [
-        "@antfu/ni",
-        "@vitest/browser",
-        "@vitest/coverage-istanbul",
-        "@vitest/coverage-v8",
-        "@vitest/ui",
-        "magic-string",
-        "vitest"
+        "@iconify-json/carbon",
+        "@iconify-json/logos",
+        "@unocss/reset",
+        "@vitejs/plugin-vue",
+        "@vueuse/core",
+        "tinyglobby",
+        "unocss"
       ]
     },
     "packages/browser": {
@@ -82,6 +94,11 @@
     "packages/vitest": {
       "entry": ["*.{cjs,d.cts,d.ts,mjs}"],
       "ignoreDependencies": [
+        // Dynamically imported providers remain optional for Vitest users.
+        "@vitest/browser-playwright",
+        "@vitest/browser-preview",
+        "@vitest/browser-webdriverio",
+        "@vitest/ui",
         "@types/chai",
         "chai",
         "why-is-node-running"

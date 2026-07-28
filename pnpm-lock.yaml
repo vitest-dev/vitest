@@ -205,9 +205,6 @@ importers:
       '@antfu/eslint-config':
         specifier: ^7.7.3
         version: 7.7.3(@typescript-eslint/rule-tester@8.56.1(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.62.0(supports-color@8.1.1)(typescript@5.9.3))(@typescript-eslint/utils@8.62.0(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(@vue/compiler-sfc@3.5.40)(eslint@10.7.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)(vitest@packages+vitest)
-      '@antfu/ni':
-        specifier: ^28.3.0
-        version: 28.3.0
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.62.0
@@ -311,6 +308,9 @@ importers:
         specifier: 'catalog:'
         version: 3.5.40(typescript@5.9.3)
     devDependencies:
+      '@antfu/ni':
+        specifier: ^28.3.0
+        version: 28.3.0
       '@iconify-json/carbon':
         specifier: 'catalog:'
         version: 1.2.24
