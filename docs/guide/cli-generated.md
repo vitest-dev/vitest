@@ -972,6 +972,13 @@ Danger threshold - imports exceeding this are shown in red (default: 500).
 
 Control whether Vitest uses Vite's module runner to run the code or fallback to the native `import`. (default: `true`)
 
+### experimental.sharedViteServer
+
+- **CLI:** `--experimental.sharedViteServer`
+- **Config:** [experimental.sharedViteServer](/config/experimental#experimental-sharedviteserver)
+
+Reuse the Vite server of the config that declares them for inline projects that don't modify the Vite config. (default: `false`)
+
 ### experimental.nodeLoader
 
 - **CLI:** `--experimental.nodeLoader`

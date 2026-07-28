@@ -1,6 +1,7 @@
 import type {
   InlineConfig,
   ResolvedConfig as ResolvedViteConfig,
+  Plugin as VitePlugin,
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { Logger } from '../logger'
@@ -13,7 +14,7 @@ import type {
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { deepMerge, slash, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -969,6 +970,7 @@ export function resolveTestConfig(
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
   resolved.experimental ??= {} as any
+  resolved.experimental.sharedViteServer ??= false
   if (resolved.experimental.openTelemetry?.sdkPath) {
     const sdkPath = resolve(
       resolved.root,
@@ -1026,6 +1028,35 @@ export function resolveTestConfig(
   return resolved
 }
 
+export interface RawTestConfigHolder {
+  test?: UserConfig
+}
+
+/**
+ * Capture the `test` options as they are right after Vite merges the config
+ * file with the inline configuration, before any Vitest plugin (CLI overrides,
+ * server defaults) modifies them. The captured value is the merge base for
+ * inline projects that reuse this config's Vite server instead of re-resolving
+ * the config file (`experimental.sharedViteServer`).
+ *
+ * The plugin must be the first inline plugin so every other `config` hook
+ * with the `pre` order runs after it.
+ */
+export function CaptureRawTestConfig(holder: RawTestConfigHolder): VitePlugin {
+  return {
+    name: 'vitest:capture-raw-test-config',
+    enforce: 'pre',
+    config: {
+      order: 'pre',
+      handler(config) {
+        // cloned so mutations from later hooks and from the test-config
+        // resolution never reach the captured value
+        holder.test = config.test ? deepClone(config.test) as UserConfig : {}
+      },
+    },
+  }
+}
+
 function resolveConfigPath(root: string, options: UserConfig) {
   if (options.config === false) {
     return false
@@ -1050,12 +1081,14 @@ export async function resolveConfig(
   options.root = root
 
   const rootBrowserHolder: BrowserContributionHolder = {}
+  const rawTestHolder: RawTestConfigHolder = {}
   const inlineConfig: InlineConfig = mergeConfig(
     {
       configFile: configPath,
       configLoader: options.configLoader,
       mode: options.mode || 'test',
       plugins: [
+        CaptureRawTestConfig(rawTestHolder),
         CliOverride(cliOptionsCopy),
         ...VitestConfigServer(pluginsHarness),
         ...VitestConfig(pluginsHarness),
@@ -1114,6 +1147,7 @@ export async function resolveConfig(
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
   rootConfig._browserContribution = rootBrowserHolder.contribution
+  rootConfig._rawTestConfig = rawTestHolder.test
 
   rootConfig.resolvedProjects = await resolveProjectEntries(
     pluginsHarness,

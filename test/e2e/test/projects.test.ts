@@ -745,6 +745,148 @@ describe('nested projects', () => {
   })
 })
 
+describe('experimental.sharedViteServer', () => {
+  const basicTest = ts`
+    import { test } from 'vitest'
+    test('runs', () => {})
+  `
+
+  it('projects without vite-affecting options share the server of the declaring config', async () => {
+    const { stderr, ctx, results } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          experimental: { sharedViteServer: true },
+          projects: [
+            { test: { name: 'shared-a' } },
+            { test: { name: 'shared-b', env: { FROM_B: '1' }, testTimeout: 1234 } },
+            { test: { name: 'own-alias', alias: { x: './y.js' } } },
+            { test: { name: 'own-optimizer', deps: { optimizer: { ssr: { enabled: false } } } } },
+            { extends: false, test: { name: 'own-isolated' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(results.every(module => module.ok())).toBe(true)
+
+    const root = ctx!.getRootProject()
+    const shared = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.vite === root.vite]),
+    )
+    expect(shared).toEqual({
+      'shared-a': true,
+      'shared-b': true,
+      'own-alias': false,
+      'own-optimizer': false,
+      'own-isolated': false,
+    })
+    // the shared projects still resolve their own test options
+    const sharedB = ctx!.projects.find(project => project.name === 'shared-b')!
+    expect(sharedB.config.testTimeout).toBe(1234)
+    expect(sharedB.config.env).toMatchObject({ FROM_B: '1' })
+  })
+
+  it('resolves the same project config as a full resolution', async () => {
+    const structure = (sharedViteServer: boolean) => ({
+      'globalSetup.js': ts`
+        import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+        import { resolve } from 'node:path'
+
+        export default function setup(project) {
+          const file = resolve(project.config.root, 'setup-runs.txt')
+          const runs = existsSync(file) ? Number(readFileSync(file, 'utf-8')) : 0
+          writeFileSync(file, String(runs + 1))
+        }
+      `,
+      'setup.root.js': '',
+      'setup.child.js': '',
+      'vitest.config.js': {
+        test: {
+          experimental: { sharedViteServer },
+          testTimeout: 4321,
+          globalSetup: './globalSetup.js',
+          setupFiles: ['./setup.root.js'],
+          env: { FROM_ROOT: '1' },
+          tags: [{ name: 'shared', retry: 2 }],
+          projects: [
+            { test: { name: 'first', setupFiles: ['./setup.child.js'] } },
+            { test: { name: 'second', tags: [{ name: 'shared', retry: 5 }], env: { FROM_ROOT: '2' } } },
+            { test: {} },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    } satisfies Parameters<typeof runInlineTests>[0])
+
+    const project = (ctx: NonNullable<Awaited<ReturnType<typeof runInlineTests>>['ctx']>) =>
+      ctx.projects.map(project => ({
+        name: project.name,
+        testTimeout: project.config.testTimeout,
+        setupFiles: project.config.setupFiles.map(file => file.split('/').pop()),
+        env: project.config.env,
+        tags: project.config.tags,
+        globalSetup: project.config.globalSetup,
+      }))
+
+    const full = await runInlineTests(structure(false))
+    const shared = await runInlineTests(structure(true))
+    expect(full.stderr).toBe('')
+    expect(shared.stderr).toBe('')
+    expect(project(shared.ctx!)).toEqual(project(full.ctx!))
+    // the root globalSetup runs once and is not inherited in both modes
+    expect(full.fs.readFile('setup-runs.txt')).toBe('1')
+    expect(shared.fs.readFile('setup-runs.txt')).toBe('1')
+    // the fast path was actually taken
+    const root = shared.ctx!.getRootProject()
+    expect(shared.ctx!.projects.every(project => project.vite === root.vite)).toBe(true)
+    expect(full.ctx!.projects.every(project => project.vite !== root.vite)).toBe(true)
+  })
+
+  it('cli overrides apply to shared-server projects', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          experimental: { sharedViteServer: true },
+          testTimeout: 4321,
+          projects: [
+            { test: { name: 'unit' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    }, { $cliOptions: { testTimeout: 999 } })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.config.testTimeout)).toEqual([999])
+  })
+
+  it('projects of a container share the container server', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          experimental: { sharedViteServer: true },
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { test: { name: 'unit' } },
+            { test: { name: 'e2e' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const [unit, e2e] = ctx!.projects
+    expect(ctx!.projects.map(project => project.name)).toEqual(['app (unit)', 'app (e2e)'])
+    expect(unit.vite).toBe(e2e.vite)
+    expect(unit.vite).not.toBe(ctx!.getRootProject().vite)
+  })
+})
+
 describe('project filtering', () => {
   const allProjects = ['project_1', 'project_2', 'space_1']
 

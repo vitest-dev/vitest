@@ -990,6 +990,25 @@ export interface InlineConfig {
      */
     viteModuleRunner?: boolean
     /**
+     * Reuse the Vite server of the config that declares them for inline
+     * projects that don't modify the Vite config. Instead of resolving a new
+     * Vite config and creating a new server per project, such projects share
+     * the server and its transform cache.
+     *
+     * A project still gets its own server when it defines Vite-level options
+     * (`plugins`, `resolve`, `define`, ...) or test options that affect the
+     * Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, `root`,
+     * or when `extends` doesn't point to the declaring config.
+     *
+     * Note that the declaring config file is executed once instead of once per
+     * project, so its plugins are instantiated once and their `config` hooks
+     * cannot observe per-project test options.
+     *
+     * This option is only respected in the root configuration.
+     * @default false
+     */
+    sharedViteServer?: boolean
+    /**
      * If module runner is disabled, Vitest uses a module loader to transform files to support
      * `import.meta.vitest` and `vi.mock`.
      *
@@ -1293,6 +1312,18 @@ export interface ResolvedConfig
    */
   _containerConfigFiles?: string[]
   /**
+   * The `test` options of this config as they were before any Vitest plugin
+   * (CLI overrides, defaults) touched them: the config file's options merged
+   * with the inline configuration. Captured during Vite config resolution and
+   * used as the merge base when an inline project shares this config's Vite
+   * server instead of re-resolving the config file
+   * (`experimental.sharedViteServer`). Set on the root config and on container
+   * configs.
+   *
+   * @internal
+   */
+  _rawTestConfig?: UserConfig
+  /**
    * Browser server contribution captured by the `vitest:browser:loader` plugin
    * during this config's resolution (set only when `browser.enabled`). Used by
    * server creation to build the single Vite server shared by `project.vite` and
@@ -1340,6 +1371,16 @@ export interface ResolvedProjectEntry {
    * @internal
    */
   ancestors?: string[]
+  /**
+   * The project reuses the Vite server of the config that declares it
+   * (`experimental.sharedViteServer`). Unlike browser-instance and benchmark
+   * siblings, which share the primary project's evaluation state, such a
+   * project gets its own resolver, fetcher, and module runner on top of the
+   * shared server.
+   *
+   * @internal
+   */
+  sharedServer?: boolean
 }
 
 type NonProjectOptions
