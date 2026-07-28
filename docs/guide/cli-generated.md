@@ -104,6 +104,12 @@ Hide logs for skipped tests
 
 Specify reporters (default, agent, minimal, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
 
+### reporterOption
+
+- **CLI:** `--reporterOption.<reporter>.<option>=<value>`
+
+Specify options for built-in reporters using dot notation (example: `--reporterOption.junit.includeConsoleOutput=false`)
+
 ### outputFile
 
 - **CLI:** `--outputFile <filename/-s>`

@@ -33,6 +33,7 @@ const skipConfig = new Set([
   'color',
   'run',
   'hideSkippedTests',
+  'reporterOption',
   'dom',
   'inspect',
   'inspectBrk',
@@ -62,8 +63,10 @@ function resolveCommand(name: string, config: CLIOption<any> | null): any {
   if (config.shorthand) {
     title += `-${config.shorthand}, `
   }
-  title += `--${config.alias || name}`
-  if ('argument' in config) {
+  title += name === 'reporterOption'
+    ? '--reporterOption.<reporter>.<option>=<value>'
+    : `--${config.alias || name}`
+  if ('argument' in config && name !== 'reporterOption') {
     title += ` ${config.argument}`
   }
   title += '`'
