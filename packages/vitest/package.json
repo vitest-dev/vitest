@@ -190,7 +190,7 @@
     "@sinonjs/fake-timers": "15.4.0",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/jsdom": "^27.0.0",
+    "@types/jsdom": "^28.0.3",
     "@types/node": "^24.13.3",
     "@types/picomatch": "^4.0.3",
     "@types/prompts": "^2.4.9",
