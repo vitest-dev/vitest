@@ -5,11 +5,10 @@ import type {
   Plugin as VitePlugin,
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
-import type { RawTestConfigHolder } from '../config/resolveConfig'
 import type { Vitest } from '../core'
-import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   BrowserInstanceOption,
+  ConfigResolutionCaptures,
   ProjectName,
   ResolvedApiConfig,
   ResolvedConfig,
@@ -552,7 +551,7 @@ const VITE_AFFECTING_TEST_OPTIONS = ['alias', 'browser', 'css', 'mode', 'root'] 
 
 /**
  * An inline project can reuse the declaring config's Vite server
- * (`experimental.sharedViteServer`) when resolving it through Vite would
+ * (`sharedViteServer`) when resolving it through Vite would
  * produce the same Vite config: it extends the declaring config and doesn't
  * define Vite-level options or test options that feed into the Vite config.
  * Values inherited from the declaring config are always safe — the shared
@@ -563,7 +562,7 @@ function canShareParentServer(
   options: UserWorkspaceConfig & { extends?: boolean | string },
 ): boolean {
   const rawParentTest = context.parentConfig._rawTestConfig
-  if (!context.rootConfig.experimental.sharedViteServer || rawParentTest === undefined) {
+  if (!context.rootConfig.sharedViteServer || rawParentTest === undefined) {
     return false
   }
   if (options.extends !== undefined && options.extends !== true) {
@@ -677,8 +676,7 @@ async function resolveSingleProjectEntry(
   const { harness, rootViteConfig, rootConfig, parentViteConfig, parentConfig, cliOverrides } = context
   const { configFile, ...restOptions } = options
 
-  const browserHolder: BrowserContributionHolder = {}
-  const rawTestHolder: RawTestConfigHolder = {}
+  const captures: ConfigResolutionCaptures = {}
 
   // only inline entries (keyed by their index) extend another config;
   // file-based projects own all of their values
@@ -706,7 +704,7 @@ async function resolveSingleProjectEntry(
     // this will make "mode": "test" inside defineConfig
     mode: options.test?.mode || options.mode || parentConfig.mode,
     plugins: [
-      CaptureRawTestConfig(rawTestHolder, rootConfig.experimental.sharedViteServer),
+      CaptureRawTestConfig(captures, rootConfig.sharedViteServer),
       CliOverride(cliOverrides),
       ...(options.plugins || []),
       ...WorkspaceVitestPlugin(
@@ -715,7 +713,7 @@ async function resolveSingleProjectEntry(
         rootConfig,
         options,
       ),
-      ...BrowserLoaderPlugin(browserHolder, harness),
+      ...BrowserLoaderPlugin(captures, harness),
       ...(isInlineEntry
         ? [ProjectInheritancePlugin(options, extendsTrueRootConfig)]
         : []),
@@ -751,15 +749,15 @@ async function resolveSingleProjectEntry(
   // The browser provider's contribution (captured during this resolution by the
   // `vitest:browser:loader` plugin) is carried on the resolved config + entry so
   // server creation can build the single shared Vite server.
-  projectConfig._browserContribution = browserHolder.contribution
+  projectConfig._browserContribution = captures.browserContribution
 
   // containers pass their raw `test` options down as the merge base for
   // projects that share their Vite server; the holder is cleared because the
   // plugin closure is retained by the resolved config
   if (projectConfig.projects !== undefined) {
-    projectConfig._rawTestConfig = rawTestHolder.test
+    projectConfig._rawTestConfig = captures.rawTestConfig
   }
-  rawTestHolder.test = undefined
+  captures.rawTestConfig = undefined
 
   return {
     viteConfig: projectViteConfig,
@@ -1314,18 +1312,21 @@ export async function attachProjectsFromEntries(
     childrenByViteConfig.set(entry.viteConfig, children)
   }
 
-  // The root Vite config can also serve as a project's `viteConfig` — either
-  // the default no-`projects` case or browser/benchmark variants of it.
-  // `coreWorkspaceProject` is the stable "parent" for that cluster, owning
-  // any browser provider that gets initialized. Set it up unconditionally
-  // here so siblings can attach to it.
-  if (!vitest.coreWorkspaceProject && vitest.vite) {
-    vitest.coreWorkspaceProject = TestProject._createBasicProject(vitest)
-    // If the root server is itself a browser server (no `projects`, browser
-    // enabled at the root), it owns the cluster's parent browser project so
-    // instance siblings can attach to it.
-    if (vitest._rootBrowserParent) {
-      vitest.coreWorkspaceProject._parentBrowser = vitest._rootBrowserParent
+  // The root Vite config can also serve as a project's `viteConfig` — the
+  // default no-`projects` case, browser/benchmark variants of it, or
+  // shared-server projects. `coreWorkspaceProject` is the stable "parent" for
+  // that cluster, owning any browser provider that gets initialized. The map
+  // is seeded on every call so projects injected at runtime (when the core
+  // project already exists) never try to create a second root server.
+  if (vitest.vite) {
+    if (!vitest.coreWorkspaceProject) {
+      vitest.coreWorkspaceProject = TestProject._createBasicProject(vitest)
+      // If the root server is itself a browser server (no `projects`, browser
+      // enabled at the root), it owns the cluster's parent browser project so
+      // instance siblings can attach to it.
+      if (vitest._rootBrowserParent) {
+        vitest.coreWorkspaceProject._parentBrowser = vitest._rootBrowserParent
+      }
     }
     primaryByViteConfig.set(vitest.vite.config, vitest.coreWorkspaceProject)
   }
@@ -1347,17 +1348,21 @@ export async function attachProjectsFromEntries(
         projects.push(vitest.coreWorkspaceProject)
         continue
       }
+      // A shared-server project reuses the primary's Vite server, but its own
+      // config decides module externalization and evaluation, so it is a full
+      // project with its own resolver, fetcher, and module runner on top of
+      // that server — not a sibling with a `_parent` link.
+      if (entry.sharedServer) {
+        const project = new TestProject(vitest, primary.vite, viteConfig, projectConfig)
+        project._initializeRunners(primary.vite)
+        projects.push(project)
+        continue
+      }
       const sibling = TestProject._spawnSibling(primary, projectConfig)
       // Browser-instance siblings share the primary's single (browser) Vite
       // server; each gets its own `ProjectBrowser` view onto it.
       if (primary._parentBrowser) {
         sibling.browser = primary._parentBrowser.spawn(sibling)
-      }
-      // A shared-server project reuses the primary's Vite server, but its own
-      // config decides module externalization and evaluation, so it needs its
-      // own resolver, fetcher, and module runner on top of that server.
-      if (entry.sharedServer) {
-        sibling._initializeRunners(primary.vite)
       }
       projects.push(sibling)
       continue

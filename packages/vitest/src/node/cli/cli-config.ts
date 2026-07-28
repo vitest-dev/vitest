@@ -887,6 +887,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   strictTags: {
     description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
+  sharedViteServer: {
+    description: 'Reuse the Vite server of the config that declares them for inline projects that don\'t modify the Vite config. (default: `true`)',
+  },
 
   experimental: {
     description: 'Experimental features.',
@@ -938,9 +941,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       viteModuleRunner: {
         description: 'Control whether Vitest uses Vite\'s module runner to run the code or fallback to the native `import`. (default: `true`)',
-      },
-      sharedViteServer: {
-        description: 'Reuse the Vite server of the config that declares them for inline projects that don\'t modify the Vite config. (default: `false`)',
       },
       nodeLoader: {
         description: 'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',

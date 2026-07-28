@@ -381,47 +381,6 @@ If module runner is disabled, Vitest uses a native [Node.js module loader](https
 
 If you don't use these features, you can disable this to improve performance.
 
-## experimental.sharedViteServer <Version type="experimental">5.0.0</Version> {#experimental-sharedviteserver}
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Reuse the Vite server of the config that declares them for inline [projects](/guide/projects) that don't modify the Vite config. Instead of resolving a new Vite config and creating a new server for every project, such projects share the declaring config's server and its transform cache, so shared source files are transformed once instead of once per project.
-
-A project still gets its own Vite server when it defines Vite-level options (`plugins`, `resolve`, `define`, and so on), when its `extends` doesn't point to the declaring config, or when it defines test options that affect the Vite config:
-
-- `alias`
-- `browser`
-- `css`
-- `deps.optimizer`
-- `mode`
-- `root`
-
-Options like `env`, `setupFiles`, `server.deps`, or `environment` don't prevent sharing: every project keeps its own module resolution rules, module runner, and module instances on top of the shared server.
-
-```ts [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    experimental: { sharedViteServer: true },
-    projects: [
-      // these projects share the root Vite server
-      { test: { name: 'unit', include: ['**/*.unit.test.ts'] } },
-      { test: { name: 'integration', include: ['**/*.integration.test.ts'] } },
-      // this project resolves its own Vite config because of `alias`
-      { test: { name: 'aliased', alias: { lib: './src/lib' } } },
-    ],
-  },
-})
-```
-
-This option is only respected in the root configuration and applies to every level: inline projects of a [nested projects container](/guide/projects#nested-projects) share the container's server the same way.
-
-::: warning
-When projects share a server, the declaring config file is executed once instead of once per project. Plugins are instantiated once, and their `config` hooks cannot observe per-project test options. If a plugin needs to behave differently per project, that project should not share the server (for example, set `extends: false` or define the project in its own config file).
-:::
-
 ## experimental.preParse <Version type="experimental">4.1.3</Version> {#experimental-preparse}
 
 - **Type:** `boolean`

@@ -930,6 +930,13 @@ Run only tests with the specified tags. You can use logical operators `&&` (and)
 
 Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)
 
+### sharedViteServer
+
+- **CLI:** `--sharedViteServer`
+- **Config:** [sharedViteServer](/config/sharedviteserver)
+
+Reuse the Vite server of the config that declares them for inline projects that don't modify the Vite config. (default: `true`)
+
 ### experimental.importDurations.print
 
 - **CLI:** `--experimental.importDurations.print <boolean|on-warn>`
@@ -971,13 +978,6 @@ Danger threshold - imports exceeding this are shown in red (default: 500).
 - **Config:** [experimental.viteModuleRunner](/config/experimental#experimental-vitemodulerunner)
 
 Control whether Vitest uses Vite's module runner to run the code or fallback to the native `import`. (default: `true`)
-
-### experimental.sharedViteServer
-
-- **CLI:** `--experimental.sharedViteServer`
-- **Config:** [experimental.sharedViteServer](/config/experimental#experimental-sharedviteserver)
-
-Reuse the Vite server of the config that declares them for inline projects that don't modify the Vite config. (default: `false`)
 
 ### experimental.nodeLoader
 

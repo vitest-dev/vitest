@@ -406,6 +406,27 @@ export interface InlineConfig {
   projects?: TestProjectConfiguration[]
 
   /**
+   * Reuse the Vite server of the config that declares them for inline
+   * projects that don't modify the Vite config. Instead of resolving a new
+   * Vite config and creating a new server per project, such projects share
+   * the server and its transform cache.
+   *
+   * A project still gets its own server when it defines Vite-level options
+   * (`plugins`, `resolve`, `define`, ...) or test options that affect the
+   * Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, `root`,
+   * or when `extends` doesn't point to the declaring config.
+   *
+   * Note that when the server is shared, the declaring config file is
+   * executed once instead of once per project, so its plugins are
+   * instantiated once and their `config` hooks cannot observe per-project
+   * test options.
+   *
+   * This option is only respected in the root configuration.
+   * @default true
+   */
+  sharedViteServer?: boolean
+
+  /**
    * Update snapshot
    *
    * @default false
@@ -990,25 +1011,6 @@ export interface InlineConfig {
      */
     viteModuleRunner?: boolean
     /**
-     * Reuse the Vite server of the config that declares them for inline
-     * projects that don't modify the Vite config. Instead of resolving a new
-     * Vite config and creating a new server per project, such projects share
-     * the server and its transform cache.
-     *
-     * A project still gets its own server when it defines Vite-level options
-     * (`plugins`, `resolve`, `define`, ...) or test options that affect the
-     * Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, `root`,
-     * or when `extends` doesn't point to the declaring config.
-     *
-     * Note that the declaring config file is executed once instead of once per
-     * project, so its plugins are instantiated once and their `config` hooks
-     * cannot observe per-project test options.
-     *
-     * This option is only respected in the root configuration.
-     * @default false
-     */
-    sharedViteServer?: boolean
-    /**
      * If module runner is disabled, Vitest uses a module loader to transform files to support
      * `import.meta.vitest` and `vi.mock`.
      *
@@ -1317,7 +1319,7 @@ export interface ResolvedConfig
    * with the inline configuration, minus the never-inherited `projects`.
    * Captured during Vite config resolution and used as the merge base when an
    * inline project shares this config's Vite server instead of re-resolving
-   * the config file (`experimental.sharedViteServer`).
+   * the config file (`sharedViteServer`).
    *
    * Only captured when the feature is enabled. The root keeps it for the
    * whole session so `injectTestProjects` can resolve shared-server projects
@@ -1336,6 +1338,20 @@ export interface ResolvedConfig
    * @internal
    */
   _browserContribution?: BrowserServerContribution
+}
+
+/**
+ * Values captured by Vitest's own plugins while Vite resolves a config,
+ * handed back to the resolution caller.
+ *
+ * The resolved config retains the plugins (and this object with them) for
+ * the server's lifetime: `browserContribution` is also read by the browser
+ * loader's server hooks and stays for as long as the server lives, while
+ * `rawTestConfig` must be cleared by the consumer once it is stored.
+ */
+export interface ConfigResolutionCaptures {
+  browserContribution?: BrowserServerContribution
+  rawTestConfig?: UserConfig
 }
 
 /**
@@ -1377,7 +1393,7 @@ export interface ResolvedProjectEntry {
   ancestors?: string[]
   /**
    * The project reuses the Vite server of the config that declares it
-   * (`experimental.sharedViteServer`). Unlike browser-instance and benchmark
+   * (`sharedViteServer`). Unlike browser-instance and benchmark
    * siblings, which share the primary project's evaluation state, such a
    * project gets its own resolver, fetcher, and module runner on top of the
    * shared server.
@@ -1415,6 +1431,7 @@ type NonProjectOptions
     | 'coverage'
     | 'watchTriggerPatterns'
     | 'tagsFilter' // CLI option only
+    | 'sharedViteServer'
 
 export interface ServerDepsOptions {
   /**

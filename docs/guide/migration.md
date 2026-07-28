@@ -138,6 +138,28 @@ Since the inherited `projects` paths resolve relative to the referenced config, 
 
 Inline configurations continue to ignore the `projects` field at runtime, but it is now also excluded from their `ProjectConfig` type.
 
+### Inline Projects Share the Vite Server by Default
+
+Inline projects that don't modify the Vite config now reuse the Vite server of the config that declares them instead of resolving a new Vite config and creating a new server per project. Shared source files are transformed once instead of once per project. This is controlled by the new [`sharedViteServer`](/config/sharedviteserver) option, which is enabled by default.
+
+A project still gets its own Vite server when it defines Vite-level options (`plugins`, `resolve`, `define`, and so on), a non-default `extends`, or test options that affect the Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, or `root`. Every project keeps its own module resolution rules, module runner, and module instances, so options like `env`, `setupFiles`, `server.deps`, or `environment` resolve per project exactly as before.
+
+The observable change: when the server is shared, the declaring config file is executed once instead of once per project, so its plugins are instantiated once and their `config` hooks no longer run for every project. If a plugin relies on being re-instantiated per project, disable the sharing:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    sharedViteServer: false, // [!code ++]
+    projects: [
+      { test: { name: 'unit' } },
+      { test: { name: 'integration' } },
+    ],
+  },
+})
+```
+
 ### Hoisted Mocking Calls Must Be at the Top Level
 
 [`vi.mock`](/api/vi#vi-mock), [`vi.unmock`](/api/vi#vi-unmock), and [`vi.hoisted`](/api/vi#vi-hoisted) are hoisted to the top of the file and run before any surrounding code. Calling them inside a function, block, or `describe`/`test` callback previously only logged a warning. Vitest 5.0 now throws, because the call does not execute where it is written:

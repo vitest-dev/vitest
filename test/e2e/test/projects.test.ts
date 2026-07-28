@@ -745,7 +745,7 @@ describe('nested projects', () => {
   })
 })
 
-describe('experimental.sharedViteServer', () => {
+describe('sharedViteServer', () => {
   const basicTest = ts`
     import { test } from 'vitest'
     test('runs', () => {})
@@ -755,7 +755,6 @@ describe('experimental.sharedViteServer', () => {
     const { stderr, ctx, results } = await runInlineTests({
       'vitest.config.js': {
         test: {
-          experimental: { sharedViteServer: true },
           projects: [
             { test: { name: 'shared-a' } },
             { test: { name: 'shared-b', env: { FROM_B: '1' }, testTimeout: 1234 } },
@@ -803,7 +802,7 @@ describe('experimental.sharedViteServer', () => {
       'setup.child.js': '',
       'vitest.config.js': {
         test: {
-          experimental: { sharedViteServer },
+          sharedViteServer,
           testTimeout: 4321,
           globalSetup: './globalSetup.js',
           setupFiles: ['./setup.root.js'],
@@ -852,7 +851,6 @@ describe('experimental.sharedViteServer', () => {
     const { stderr, ctx } = await runInlineTests({
       'vitest.config.js': {
         test: {
-          experimental: { sharedViteServer: true },
           testTimeout: 4321,
           projects: [
             { test: { name: 'unit' } },
@@ -869,7 +867,6 @@ describe('experimental.sharedViteServer', () => {
     const { stderr, ctx } = await runInlineTests({
       'vitest.config.js': {
         test: {
-          experimental: { sharedViteServer: true },
           projects: ['./app/vitest.config.js'],
         },
       },
