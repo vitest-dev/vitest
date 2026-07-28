@@ -1,9 +1,11 @@
 import { expect, test } from 'vitest'
-import jsdom from '../../../../packages/vitest/src/integrations/env/jsdom'
+import { getWorkerState } from '../../../../packages/vitest/src/runtime/utils'
 
 const userAgent = 'Vitest jsdom environment'
+const isThreads = getWorkerState().config.pool === 'threads'
 
-test('sets userAgent during global setup', async () => {
+test.runIf(isThreads)('sets userAgent during global setup', async () => {
+  const { default: jsdom } = await import('../../../../packages/vitest/src/integrations/env/jsdom')
   const global = {} as typeof globalThis
   const environment = await jsdom.setup(global, {
     jsdom: { userAgent },
@@ -17,7 +19,8 @@ test('sets userAgent during global setup', async () => {
   }
 })
 
-test('sets userAgent during VM setup', async () => {
+test.runIf(isThreads)('sets userAgent during VM setup', async () => {
+  const { default: jsdom } = await import('../../../../packages/vitest/src/integrations/env/jsdom')
   const environment = await jsdom.setupVM!({
     jsdom: { userAgent },
   })
