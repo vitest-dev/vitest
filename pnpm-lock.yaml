@@ -84,9 +84,6 @@ catalogs:
     chai:
       specifier: ^6.2.2
       version: 6.2.2
-    fastify:
-      specifier: ^5.8.5
-      version: 5.8.5
     flatted:
       specifier: ^3.4.3
       version: 3.4.3
