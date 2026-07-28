@@ -52,7 +52,6 @@
     "./optional-runtime-types.js": {
       "types": "./optional-runtime-types.d.ts"
     },
-    "./src/*": "./src/*",
     "./globals": {
       "types": "./globals.d.ts"
     },
@@ -77,6 +76,10 @@
     "./internal/traces": {
       "__vitest_source__": "./src/utils/traces.ts",
       "default": "./dist/traces.js"
+    },
+    "./internal/src/*": {
+      "__vitest_source__": "./src/*",
+      "default": null
     },
     "./config": {
       "types": "./config.d.ts",

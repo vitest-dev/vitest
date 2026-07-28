@@ -1,6 +1,6 @@
 import * as testUtils from '#test-utils'
 import { describe, expect, test, vi } from 'vitest'
-import { getWorkersCountByPercentage } from 'vitest/src/utils/workers.js'
+import { getWorkersCountByPercentage } from 'vitest/internal/src/utils/workers.js'
 
 vi.mock(import('node:os'), async importOriginal => ({
   ...(await importOriginal()),
