@@ -1,15 +1,9 @@
 import type { Debugger } from 'obug'
-import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import { createDebug } from 'obug'
 
 export const debug: Debugger = createDebug('vitest:web-worker')
-
-export function getWorkerState(): WorkerGlobalState {
-  // @ts-expect-error untyped global
-  return globalThis.__vitest_worker__
-}
 
 export function assertGlobalExists(name: string): void {
   if (!(name in globalThis)) {

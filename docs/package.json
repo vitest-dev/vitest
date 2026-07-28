@@ -18,6 +18,7 @@
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@antfu/ni": "^28.3.0",
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
     "@iconify/vue": "catalog:",

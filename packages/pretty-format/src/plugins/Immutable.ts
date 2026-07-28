@@ -129,7 +129,7 @@ function printImmutableValues(val: any, config: Config, indentation: string, dep
     )}]`
 }
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   val: any,
   config: Config,
   indentation: string,
@@ -193,7 +193,7 @@ export const serialize: NewPlugin['serialize'] = (
 
 // Explicitly comparing sentinel properties to true avoids false positive
 // when mock identity-obj-proxy returns the key as the value for any key.
-export const test: NewPlugin['test'] = (val: any) =>
+const test: NewPlugin['test'] = (val: any) =>
   val
   && (val[IS_ITERABLE_SENTINEL] === true || val[IS_RECORD_SENTINEL] === true)
 
