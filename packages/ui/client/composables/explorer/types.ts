@@ -42,6 +42,10 @@ export interface UITaskTreeNode extends TaskTreeNode {
   state?: TaskState
   duration?: number
   slow?: boolean
+  typecheck?: boolean
+  label?: string
+  projectName?: string
+  projectNameColor?: string
 }
 
 export interface TestTreeNode extends UITaskTreeNode {
