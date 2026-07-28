@@ -1,0 +1,131 @@
+packages/vitest/src/node/environments/serverRunner.ts
+  s_e9306ccc329d3f::t_69626d884b15ce 7
+test/browser/test/dom.test.ts
+  s_e9306ccc329d3f::t_c62a0eb92cfe14 3
+test/e2e/test/config/bail.test.ts
+  s_e9306ccc329d3f::t_e39a86feed3f64 4
+test/e2e/test/config/browser-configs.test.ts
+  s_e9306ccc329d3f::t_ed851d63337c8a 3,9
+test/e2e/test/config/injectCjsGlobals.test.ts
+  s_e9306ccc329d3f::t_ad1c82cb94cb8f 2
+test/e2e/test/config/sequence-shuffle.test.ts
+  s_e9306ccc329d3f::t_6b493c0e62ec89 3
+test/e2e/test/config/watchTriggerPattern.test.ts
+  s_e9306ccc329d3f::t_2b8edf004c6fa4 3
+test/e2e/test/each-non-ascii-placeholders.test.ts
+  s_e9306ccc329d3f::t_8301564e04afcb 2
+test/e2e/test/fs-cached-check.test.ts
+  s_e9306ccc329d3f::t_526edc999692af 2
+test/e2e/test/get-state.test.ts
+  s_e9306ccc329d3f::t_d79d982f1d99fe 3
+test/e2e/test/list-changed.test.ts
+  s_e9306ccc329d3f::t_872a77eeaf5509 2
+test/e2e/test/no-module-runner.test.ts
+  s_e9306ccc329d3f::t_427c8833c52568 5
+test/e2e/test/node-builtins.test.ts
+  s_e9306ccc329d3f::t_a224f5a6df7d74 2
+test/e2e/test/override.test.ts
+  s_e9306ccc329d3f::t_8b2595dd9beaf2 6
+test/e2e/test/pool-worker-exit.test.ts
+  s_e9306ccc329d3f::t_8a5110d88cfa55 4
+test/e2e/test/projects.test.ts
+  s_e9306ccc329d3f::t_ac881ea30cf06f 3
+test/e2e/test/reporters/agent.test.ts
+  s_e9306ccc329d3f::t_0bde40a8d44017 3
+test/e2e/test/reporters/code-frame-line-limit.test.ts
+  s_e9306ccc329d3f::t_b5c0ddd2b68f42 3
+test/e2e/test/reporters/console.test.ts
+  s_e9306ccc329d3f::t_1c6142b1aad3fb 6
+test/e2e/test/reporters/custom-diff-config.test.ts
+  s_e9306ccc329d3f::t_3a46a0b9f02eb3 3
+test/e2e/test/reporters/custom-reporter.test.ts
+  s_e9306ccc329d3f::t_8b604bca3c0386 3
+test/e2e/test/reporters/default.test.ts
+  s_e9306ccc329d3f::t_86cf1e0559813d 4
+test/e2e/test/reporters/dot.test.ts
+  s_e9306ccc329d3f::t_cc110445bc0d3d 2
+test/e2e/test/reporters/error-to-json.test.ts
+  s_e9306ccc329d3f::t_40f63d21807c39 2
+test/e2e/test/reporters/function-as-name.test.ts
+  s_e9306ccc329d3f::t_e6480432d25493 3
+test/e2e/test/reporters/github-actions.test.ts
+  s_e9306ccc329d3f::t_a5b040b458f991 8
+test/e2e/test/reporters/html.test.ts
+  s_e9306ccc329d3f::t_59fa71b918c143 3
+test/e2e/test/reporters/import-durations.test.ts
+  s_e9306ccc329d3f::t_fc038bb8a1aac1 4
+test/e2e/test/reporters/indicator-position.test.ts
+  s_e9306ccc329d3f::t_9d8ec1a89cfab2 4
+test/e2e/test/reporters/json.test.ts
+  s_e9306ccc329d3f::t_a446ad3efe22ec 5-6
+test/e2e/test/reporters/junit.test.ts
+  s_e9306ccc329d3f::t_b762f3f4bfd78c 6
+test/e2e/test/reporters/logger.test.ts
+  s_e9306ccc329d3f::t_57bc325e7d979f 2
+test/e2e/test/reporters/merge-reports.test.ts
+  s_e9306ccc329d3f::t_a1e8b88986658e 4,14
+test/e2e/test/reporters/reporter-error.test.ts
+  s_e9306ccc329d3f::t_97e7e0ee6a0382 4
+test/e2e/test/reporters/silent.test.ts
+  s_e9306ccc329d3f::t_7d0522893edb24 3
+test/e2e/test/reporters/summary.test.ts
+  s_e9306ccc329d3f::t_8b9b395c5e98a9 5
+test/e2e/test/reporters/tap.test.ts
+  s_e9306ccc329d3f::t_4a7a05d262f6d9 2
+test/e2e/test/reporters/test-run.test.ts
+  s_e9306ccc329d3f::t_d572a5215d059e 17
+test/e2e/test/reporters/tree.test.ts
+  s_e9306ccc329d3f::t_9e53b016ec56eb 2
+test/e2e/test/reporters/verbose.test.ts
+  s_e9306ccc329d3f::t_20244141066a6f 3
+test/e2e/test/retry-condition.test.ts
+  s_e9306ccc329d3f::t_8d2e3d1877af42 4
+test/e2e/test/rollup-error.test.ts
+  s_e9306ccc329d3f::t_6d0c7d1920c7a7 3
+test/e2e/test/static-collect.test.ts
+  s_e9306ccc329d3f::t_1428f4598ff135 5
+test/e2e/test/test-meta.test.ts
+  s_e9306ccc329d3f::t_9cdca5e2a7e02d 3
+test/e2e/test/test-tags.test.ts
+  s_e9306ccc329d3f::t_33a47c275816d2 3
+test/e2e/test/unhandled-rejections.test.ts
+  s_e9306ccc329d3f::t_fe7fcf983a2c6b 3
+test/e2e/test/vcs-provider.test.ts
+  s_e9306ccc329d3f::t_c59579d134e2a0 5
+test/e2e/test/watch/change-project.test.ts
+  s_e9306ccc329d3f::t_f35b2c933d6f37 2
+test/e2e/test/watch/file-watching.test.ts
+  s_e9306ccc329d3f::t_53d83102f2538d 3,5
+test/e2e/test/watch/global-setup-rerun.test.ts
+  s_e9306ccc329d3f::t_17435bb5a1047e 2
+test/e2e/test/watch/related.test.ts
+  s_e9306ccc329d3f::t_c6077a0702579e 3
+test/e2e/test/watch/reporter-failed.test.ts
+  s_e9306ccc329d3f::t_273b2a530af421 2
+test/e2e/test/watch/restart-coalescing.test.ts
+  s_e9306ccc329d3f::t_c033e4db0007a9 2
+test/e2e/test/watch/stdin.test.ts
+  s_e9306ccc329d3f::t_9f605fb37b4224 2
+test/e2e/test/watch/stdout.test.ts
+  s_e9306ccc329d3f::t_b8523db187c94d 3
+test/e2e/test/watch/workspaces.test.ts
+  s_e9306ccc329d3f::t_542b60a3ba28fa 2
+test/e2e/test/workers-option.test.ts
+  s_e9306ccc329d3f::t_b7fa7ddc030061 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3e3dd1c97812c56b52b31a25d4c3d4956a0badfb",
+  "prompts": {},
+  "sessions": {
+    "s_e9306ccc329d3f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_057309e80ffeiTsgYFPydxqHRs",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
