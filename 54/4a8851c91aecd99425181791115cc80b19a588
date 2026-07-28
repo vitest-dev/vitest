@@ -1,0 +1,19 @@
+pnpm-lock.yaml
+  s_f59a8141f40a01::t_71881d7752cfda 145-146,1216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "544a8851c91aecd99425181791115cc80b19a588",
+  "prompts": {},
+  "sessions": {
+    "s_f59a8141f40a01": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_05829d5c0ffePU0DjjmCSB85Si",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
