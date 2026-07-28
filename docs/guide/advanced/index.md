@@ -130,17 +130,20 @@ The root configuration is resolved from three inputs, in ascending priority:
 Every project then resolves its own Vite config independently:
 
 - A project referenced as a config file or a directory resolves only its own file. It does not inherit any options from the root configuration.
-- An inline project with the [`extends`](/guide/projects#configuration) option re-executes the extended config file and merges the project's own options on top. Only the config **file** participates in this: `viteOverrides` and CLI options are not part of the file, so `extends` does not carry them into projects.
+- An inline project inherits the root configuration by default (see [`extends`](/guide/projects#configuration)): the root config file is re-executed for the project, `viteOverrides` are merged on top of it, and the project's own options are merged last. Inheritance works even when there is no root config file, because `viteOverrides` are part of the effective root configuration.
+- With `extends: false`, an inline project resolves only its own options. With `extends: './path'`, the referenced file is re-executed instead of the root config file, and `viteOverrides` are not merged.
 
-Independently of `extends`, several groups of options reach every project:
+A few options are excluded from inheritance:
+
+- `plugins` from `viteOverrides` are never inherited. A config file is re-executed for every project, which creates fresh plugin instances, but plugin instances passed in `viteOverrides` belong to the root Vite server and cannot be shared with project servers.
+- `test.browser` and `test.tagsFilter` from `viteOverrides` are never inherited: `browser` describes the instances of a single project, and `tagsFilter` applies to the whole run.
+- `name` and `projects` are never inherited; the root `globalSetup` is not inherited because it already runs once per test run.
+- The project's own `tags` always replace the `tags` array merged from an extended config instead of being concatenated with it, so the same tag names can be redefined.
+
+Independently of `extends`, two groups of options reach every project:
 
 - A fixed subset of CLI options that configure how tests run (`--testTimeout`, `--retry`, `--pool`, and similar) is applied to every project at the highest priority, mirroring the root resolution.
 - Run-level options only make sense for the test run as a whole: every project receives the root's resolved `coverage`, `attachmentsDir`, and `mergeReportsLabel` values.
-- The root's `fsModuleCache`, `fsModuleCachePath`, `experimental.viteModuleRunner`, `experimental.nodeLoader`, and `experimental.importDurations` values are applied as defaults to every project that doesn't define them.
-
-The project's own `tags` always replace the `tags` array merged from an extended config instead of being concatenated with it, so the same tag names can be redefined.
-
-Note that `plugins` reach a project only through a config file: the file is re-executed for every project, which creates fresh plugin instances. Plugin instances passed in `viteOverrides` belong to the root Vite server and are never shared with project servers.
 
 ## parseCLI
 

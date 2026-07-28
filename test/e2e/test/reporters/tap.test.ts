@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('handle custom error without name', async () => {
   let { stdout, stderr } = await runVitest({ reporters: 'tap', root: './fixtures/reporters/custom-error' })

@@ -481,7 +481,7 @@ function cloneByOwnProperties(value: any) {
  * Replacer function for serialization methods such as JS.stringify() or
  * flatted.stringify().
  */
-export function stringifyReplace(key: string, value: any): any {
+function stringifyReplace(key: string, value: any): any {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {
