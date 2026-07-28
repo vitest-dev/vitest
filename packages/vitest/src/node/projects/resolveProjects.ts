@@ -455,6 +455,10 @@ async function flattenContainerEntries(
       chain,
     }
     const children = await resolveDeclaredProjectEntries(childContext, definitions)
+    // the raw config was only needed to resolve this container's projects;
+    // the container config itself can stay alive for the whole session as the
+    // `test` config of a shared server
+    entry.projectConfig._rawTestConfig = undefined
     if (!children.length) {
       throw new Error(
         `No projects were found in "${relativeFile}". Make sure your configuration is correct.`,
@@ -702,7 +706,7 @@ async function resolveSingleProjectEntry(
     // this will make "mode": "test" inside defineConfig
     mode: options.test?.mode || options.mode || parentConfig.mode,
     plugins: [
-      CaptureRawTestConfig(rawTestHolder),
+      CaptureRawTestConfig(rawTestHolder, rootConfig.experimental.sharedViteServer),
       CliOverride(cliOverrides),
       ...(options.plugins || []),
       ...WorkspaceVitestPlugin(
@@ -750,10 +754,12 @@ async function resolveSingleProjectEntry(
   projectConfig._browserContribution = browserHolder.contribution
 
   // containers pass their raw `test` options down as the merge base for
-  // projects that share their Vite server
+  // projects that share their Vite server; the holder is cleared because the
+  // plugin closure is retained by the resolved config
   if (projectConfig.projects !== undefined) {
     projectConfig._rawTestConfig = rawTestHolder.test
   }
+  rawTestHolder.test = undefined
 
   return {
     viteConfig: projectViteConfig,

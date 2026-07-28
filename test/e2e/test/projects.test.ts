@@ -841,6 +841,11 @@ describe('experimental.sharedViteServer', () => {
     const root = shared.ctx!.getRootProject()
     expect(shared.ctx!.projects.every(project => project.vite === root.vite)).toBe(true)
     expect(full.ctx!.projects.every(project => project.vite !== root.vite)).toBe(true)
+    // the raw config is captured only when the feature is enabled; the root
+    // keeps it for `injectTestProjects`
+    expect(shared.ctx!.config._rawTestConfig).toBeDefined()
+    expect(shared.ctx!.config._rawTestConfig!.projects).toBeUndefined()
+    expect(full.ctx!.config._rawTestConfig).toBeUndefined()
   })
 
   it('cli overrides apply to shared-server projects', async () => {

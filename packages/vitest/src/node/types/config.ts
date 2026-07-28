@@ -1314,11 +1314,15 @@ export interface ResolvedConfig
   /**
    * The `test` options of this config as they were before any Vitest plugin
    * (CLI overrides, defaults) touched them: the config file's options merged
-   * with the inline configuration. Captured during Vite config resolution and
-   * used as the merge base when an inline project shares this config's Vite
-   * server instead of re-resolving the config file
-   * (`experimental.sharedViteServer`). Set on the root config and on container
-   * configs.
+   * with the inline configuration, minus the never-inherited `projects`.
+   * Captured during Vite config resolution and used as the merge base when an
+   * inline project shares this config's Vite server instead of re-resolving
+   * the config file (`experimental.sharedViteServer`).
+   *
+   * Only captured when the feature is enabled. The root keeps it for the
+   * whole session so `injectTestProjects` can resolve shared-server projects
+   * at any point; container configs release it as soon as their projects are
+   * resolved.
    *
    * @internal
    */
