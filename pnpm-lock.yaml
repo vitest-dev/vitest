@@ -120,9 +120,6 @@ catalogs:
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
-    picomatch:
-      specifier: ^4.0.4
-      version: 4.0.4
     playwright:
       specifier: ^1.62.0
       version: 1.62.0
