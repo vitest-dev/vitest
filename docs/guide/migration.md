@@ -140,9 +140,13 @@ Inline configurations continue to ignore the `projects` field at runtime, but it
 
 ### Inline Projects Share the Vite Server by Default
 
-Inline projects that don't modify the Vite config now reuse the Vite server of the config that declares them instead of resolving a new Vite config and creating a new server per project. Shared source files are transformed once instead of once per project. This is controlled by the new [`sharedViteServer`](/config/sharedviteserver) option, which is enabled by default.
+Inline projects that don't modify the Vite config now reuse the Vite server of the config that declares them instead of resolving a new Vite config and creating a new server per project. This is controlled by the new [`sharedViteServer`](/config/sharedviteserver) option, which is enabled by default.
 
-A project still gets its own Vite server when it defines Vite-level options (`plugins`, `resolve`, `define`, and so on), a non-default `extends`, or test options that affect the Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, or `root`. Every project keeps its own module resolution rules, module runner, and module instances, so options like `env`, `setupFiles`, `server.deps`, or `environment` resolve per project exactly as before.
+Sharing the server means files are transformed once instead of once per project, so tests should now run faster. The performance improvement varies depending on the number of inline projects and how many source files they have in common: a config with several inline projects over the same codebase benefits the most, while a config with a single project won't see a difference.
+
+Note that this _only_ applies to inline projects. Projects referenced as config files or directories always resolve their own Vite config and create their own server, exactly as before.
+
+An inline project also still gets its own Vite server when it defines Vite-level options (`plugins`, `resolve`, `define`, and so on), a non-default `extends`, or test options that affect the Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, or `root`. Every project keeps its own module resolution rules, module runner, and module instances, so options like `env`, `setupFiles`, `server.deps`, or `environment` resolve per project exactly as before.
 
 The observable change: when the server is shared, the declaring config file is executed once instead of once per project, so its plugins are instantiated once and their `config` hooks no longer run for every project. If a plugin relies on being re-instantiated per project, disable the sharing:
 
