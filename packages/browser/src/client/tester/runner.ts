@@ -49,7 +49,7 @@ interface BrowserVitestRunner extends VitestRunner {
   setMethod: (method: TestExecutionMethod) => void
 }
 
-export function createBrowserRunner(
+function createBrowserRunner(
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler,

@@ -1,5 +1,5 @@
-import { replaceRoot, runInlineTests, ts } from '#test-utils'
 import { expect, test } from 'vitest'
+import { replaceRoot, runInlineTests, ts } from '#test-utils'
 
 const pools = ['forks', 'vmThreads'] as const
 

@@ -1,6 +1,6 @@
 // Disable automatic exports.
 
-import { ARIARole } from './aria-role.ts'
+import { ARIARole } from './aria-role.js'
 import { Locator, ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
 export interface TestingLibraryMatchers<E, R> {

@@ -94,7 +94,6 @@
   },
   "devDependencies": {
     "@types/estree": "catalog:",
-    "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn-walk": "catalog:",
     "cjs-module-lexer": "^2.2.0",

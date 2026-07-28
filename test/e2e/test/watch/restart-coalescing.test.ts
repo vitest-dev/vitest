@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 // chokidar regularly delivers several change events for one config edit, each
 // triggering a restart. A restart that begins while another is still

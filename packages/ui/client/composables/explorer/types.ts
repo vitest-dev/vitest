@@ -21,7 +21,7 @@ export interface CollectFilteredTests extends FilteredTests {
   slow: number
 }
 
-export interface TaskTreeNode {
+interface TaskTreeNode {
   id: string
   expandable: boolean
   expanded: boolean
@@ -84,15 +84,10 @@ export interface Filter {
   onlyTests: boolean
 }
 
-export type ProjectSortType = 'asc' | 'desc'
-export type DurationSortType = 'duration-asc' | 'duration-desc'
-export type SortType = ProjectSortType | DurationSortType
+type ProjectSortType = 'asc' | 'desc'
+type DurationSortType = 'duration-asc' | 'duration-desc'
+type SortType = ProjectSortType | DurationSortType
 export type SortUIType = SortType | 'default'
-
-/**
- * @deprecated Use `SortUIType` instead
- */
-export type ProjectSortUIType = SortUIType
 
 export interface TreeFilterState extends Filter {
   search: string

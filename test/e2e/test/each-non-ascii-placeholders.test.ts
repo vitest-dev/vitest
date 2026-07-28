@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 test('formatting of non-ascii placeholders in test.each', async () => {
   const { stderr, ctx } = await runInlineTests({
