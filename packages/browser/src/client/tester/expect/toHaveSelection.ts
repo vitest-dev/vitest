@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { arrayAsSetComparison, getElementFromUserInput, getMessage, getTag } from './utils'
 
@@ -21,7 +21,7 @@ export default function toHaveSelection(
   this: MatcherState,
   element: HTMLElement | SVGElement | Locator,
   expectedSelection: string,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(element, toHaveSelection, this)
 
   const expectsSelection = expectedSelection !== undefined

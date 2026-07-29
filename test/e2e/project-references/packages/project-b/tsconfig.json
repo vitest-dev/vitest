@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "esnext",
+    "lib": ["DOM", "ESNext"],
+    "module": "nodenext",
+    "types": [],
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "sourceMap": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": false
+  },
+  "references": [
+    { "path": "../project-a" }
+  ],
+  "files": ["src/b.test-d.ts"],
+  "exclude": ["node_modules"]
+}

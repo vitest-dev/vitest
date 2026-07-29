@@ -1,20 +1,37 @@
-import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Test, TestAnnotation, VitestRunner } from '@vitest/runner'
-import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+import type {
+  CancelReason,
+  RunnerTestFile as File,
+  SerializedConfig,
+  RunnerTestSuite as Suite,
+  RunnerTask as Task,
+  RunnerTaskEventPack as TaskEventPack,
+  RunnerTaskResultPack as TaskResultPack,
+  RunnerTestCase as Test,
+  TestAnnotation,
+  TestArtifact,
+  TestExecutionMethod,
+  TestTryOptions,
+  VitestTestRunner as VitestRunner,
+  WorkerGlobalState,
+} from 'vitest'
 import type { VitestBrowserClientMocker } from './mocker'
+import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
-import { page, userEvent } from '@vitest/browser/context'
+import { recordArtifact, TestRunner } from 'vitest'
+import { page, userEvent } from 'vitest/browser'
 import {
+  DecodedMap,
+  getOriginalPosition,
   loadDiffConfig,
   loadSnapshotSerializers,
-  originalPositionFor,
   takeCoverageInsideWorker,
-  TraceMap,
 } from 'vitest/internal/browser'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { executor, getWorkerState } from '../utils'
+import { getTestName } from '../../../../vitest/src/utils/tasks'
+import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
+import { recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -32,35 +49,126 @@ interface BrowserVitestRunner extends VitestRunner {
   setMethod: (method: TestExecutionMethod) => void
 }
 
-export function createBrowserRunner(
-  runnerClass: { new (config: SerializedConfig): VitestRunner },
+function createBrowserRunner(
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
-  coverageModule: CoverageHandler | null,
+  coverageModule: CoverageHandler,
 ): { new (options: BrowserRunnerOptions): BrowserVitestRunner } {
-  return class BrowserTestRunner extends runnerClass implements VitestRunner {
+  return class BrowserTestRunner extends TestRunner implements VitestRunner {
     public config: SerializedConfig
-    hashMap = browserHashMap
+    public hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
+    private sourceMapPrefetches = new Map<string, Promise<any>>()
     public method = 'run' as TestExecutionMethod
+    private commands: CommandsManager
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
+      this.commands = getBrowserState().commands
+      this.viteEnvironment = 'client'
+      this._otel = getBrowserState().traces
     }
 
     setMethod(method: TestExecutionMethod) {
       this.method = method
     }
 
-    onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
+    private traces = new Map<string, string[]>()
+
+    async onBeforeTryTask(test: Test, options: TestTryOptions) {
       await userEvent.cleanup()
-      await super.onBeforeTryTask?.(...args)
+      super.onBeforeTryTask?.(test, options)
+      const trace = this.config.browser.trace
+      const { retry, repeats } = options
+      const shouldTrace = trace !== 'off'
+        && !(trace === 'on-all-retries' && retry === 0)
+        && !(trace === 'on-first-retry' && retry !== 1)
+      const shouldTraceView = this.config.browser.traceView.enabled
+      if (!shouldTraceView && !shouldTrace) {
+        getBrowserState().activeTraceTaskIds.delete(test.id)
+        getBrowserState().browserTraceAttempts.delete(test.id)
+        return
+      }
+      if (shouldTraceView) {
+        getBrowserState().browserTraceDomSnapshot = await import('rrweb-snapshot')
+        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
+      }
+      else {
+        getBrowserState().browserTraceAttempts.delete(test.id)
+      }
+      if (!shouldTrace) {
+        getBrowserState().activeTraceTaskIds.delete(test.id)
+        return
+      }
+      getBrowserState().activeTraceTaskIds.add(test.id)
+      let title = getTestName(test)
+      if (retry) {
+        title += ` (retry x${retry})`
+      }
+      if (repeats) {
+        title += ` (repeat x${repeats})`
+      }
+
+      const name = getTraceName(test, retry, repeats)
+      await this.commands.triggerCommand(
+        '__vitest_startChunkTrace',
+        [{ name, title }],
+      )
+    }
+
+    onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
+      const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
+      if (hasActiveTraceView) {
+        const status = test.result?.state
+        const stack = status === 'fail' ? test.result?.errors?.[0].stack : undefined
+        const location = test.location ? { ...test.location, file: test.file.filepath } : undefined
+        await recordBrowserTraceEntry(test, {
+          name: `vitest:onAfterRetryTask`,
+          kind: 'lifecycle',
+          ...(status === 'pass' || status === 'fail' ? { status } : {}),
+          ...(stack ? { stack } : location ? { location } : {}),
+        })
+        getBrowserState().browserTraceAttempts.delete(test.id)
+      }
+      const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
+      if (!hasActiveTrace) {
+        return
+      }
+      await this.commands.triggerCommand('__vitest_markTrace', [{
+        name: `onAfterRetryTask [${test.result?.state}]`,
+        stack: test.result?.errors?.[0].stack,
+      }])
+      const name = getTraceName(test, retry, repeats)
+      if (!this.traces.has(test.id)) {
+        this.traces.set(test.id, [])
+      }
+      const traces = this.traces.get(test.id)!
+      const { tracePath } = await this.commands.triggerCommand(
+        '__vitest_stopChunkTrace',
+        [{ name }],
+      ) as { tracePath: string }
+      traces.push(tracePath)
     }
 
     onAfterRunTask = async (task: Test) => {
-      await super.onAfterRunTask?.(task)
-
+      super.onAfterRunTask?.(task)
+      const trace = this.config.browser.trace
+      const traces = this.traces.get(task.id) || []
+      if (traces.length) {
+        if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
+          await this.commands.triggerCommand(
+            '__vitest_deleteTracing',
+            [{ traces }],
+          )
+        }
+        else {
+          await this.commands.triggerCommand(
+            '__vitest_annotateTraces',
+            [{ testId: task.id, traces }],
+          )
+        }
+      }
       if (this.config.bail && task.result?.state === 'fail') {
         const previousFailures = await rpc().getCountOfFailedTests()
         const currentFailures = 1 + previousFailures
@@ -73,14 +181,28 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
+      // check custom matcher metadata in JestExtendError
+      const lastErrorContext = task.result?.errors?.at(-1)?.__vitest_error_context__
+      if (
+        this.config.browser.screenshotFailures
+        && document.body.clientHeight > 0
+        && task.result?.state === 'fail'
+        && task.type === 'test'
+        && !(
+          lastErrorContext
+          && Reflect.get(lastErrorContext, 'assertionName') === 'toMatchScreenshot'
+          && Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot')
+      ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
         } as any /** TODO */).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
-          task.meta.failScreenshotPath = screenshot
+          await recordArtifact(task, {
+            type: 'internal:failureScreenshot',
+            attachments: [{ contentType: 'image/png', path: screenshot, originalPath: screenshot }],
+          } as const)
         }
       }
     }
@@ -94,30 +216,38 @@ export function createBrowserRunner(
       await Promise.all([
         super.onBeforeRunSuite?.(suite),
         (async () => {
-          if ('filepath' in suite) {
-            const map = await rpc().getBrowserFileSourceMap(suite.filepath)
-            this.sourceMapCache.set(suite.filepath, map)
-            const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
-            if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
-              snapshotEnvironment.addSourceMap(suite.filepath, map)
-            }
+          if (!('filepath' in suite)) {
+            return
+          }
+          // usually resolved already: the request is fired as soon as the
+          // file finishes importing, while collection is still running
+          const map = await (
+            this.sourceMapPrefetches.get(suite.filepath)
+            ?? rpc().getBrowserFileSourceMap(suite.filepath)
+          )
+          this.sourceMapPrefetches.delete(suite.filepath)
+          this.sourceMapCache.set(suite.filepath, map)
+          const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
+          if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
+            snapshotEnvironment.addSourceMap(suite.filepath, map)
           }
         })(),
       ])
     }
 
     onAfterRunFiles = async (files: File[]) => {
+      super.onAfterRunFiles(files)
+
       const [coverage] = await Promise.all([
-        coverageModule?.takeCoverage?.(),
+        coverageModule.takeCoverage(),
         mocker.invalidate(),
-        super.onAfterRunFiles?.(files),
       ])
 
       if (coverage) {
         await rpc().onAfterSuiteRun({
           coverage,
           testFiles: files.map(file => file.name),
-          transformMode: 'browser',
+          environment: 'client',
           projectName: this.config.name,
         })
       }
@@ -146,46 +276,52 @@ export function createBrowserRunner(
     }
 
     onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<TestAnnotation> => {
-      if (annotation.location) {
+      const artifact: TestArtifact = { type: 'internal:annotation', annotation, location: annotation.location }
+
+      return this.onTestArtifactRecord(test, artifact).then(({ annotation }) => annotation)
+    }
+
+    onTestArtifactRecord = <Artifact extends TestArtifact>(test: Test, artifact: Artifact): Promise<Artifact> => {
+      if (artifact.location) {
         // the file should be the test file
         // tests from other files are not supported
-        const map = this.sourceMapCache.get(annotation.location.file)
+        const map = this.sourceMapCache.get(artifact.location.file)
+
         if (!map) {
-          return rpc().onTaskAnnotate(test.id, annotation)
+          return rpc().onTaskArtifactRecord(test.id, artifact)
         }
 
-        const traceMap = new TraceMap(map as any)
-        const { line, column, source } = originalPositionFor(traceMap, annotation.location)
-        if (line != null && column != null && source != null) {
-          let file: string = annotation.location.file
-          if (source) {
-            const fileUrl = annotation.location.file.startsWith('file://')
-              ? annotation.location.file
-              : `file://${annotation.location.file}`
-            const sourceRootUrl = map.sourceRoot
-              ? new URL(map.sourceRoot, fileUrl)
-              : fileUrl
-            file = new URL(source, sourceRootUrl).pathname
-          }
+        const traceMap = new DecodedMap(map as any, artifact.location.file)
+        const position = getOriginalPosition(traceMap, artifact.location)
 
-          annotation.location = {
+        if (position) {
+          const { source, column, line } = position
+          const file = source || artifact.location.file
+          artifact.location = {
             line,
             column: column + 1,
             // if the file path is on windows, we need to remove the starting slash
-            file: file.match(/\/\w:\//) ? file.slice(1) : file,
+            file: /\/\w:\//.test(file) ? file.slice(1) : file,
+          }
+
+          if (artifact.type === 'internal:annotation') {
+            artifact.annotation.location = artifact.location
           }
         }
       }
-      return rpc().onTaskAnnotate(test.id, annotation)
+
+      return rpc().onTaskArtifactRecord(test.id, artifact)
     }
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
       return rpc().onTaskUpdate(this.method, task, events)
     }
 
-    importFile = async (filepath: string) => {
+    importFile = async (filepath: string, mode: 'collect' | 'setup') => {
       let hash = this.hashMap.get(filepath)
-      if (!hash) {
+
+      // if the mode is setup, we need to re-evaluate the setup file on each test run
+      if (mode === 'setup' || !hash) {
         hash = Date.now().toString()
         this.hashMap.set(filepath, hash)
       }
@@ -194,12 +330,31 @@ export function createBrowserRunner(
       const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
       const query = `browserv=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
+      // start tracing before the test file is imported
+      const trace = this.config.browser.trace
+      if (mode === 'collect' && trace !== 'off') {
+        await this.commands.triggerCommand('__vitest_startTracing', [])
+      }
       try {
         await import(/* @vite-ignore */ importpath)
       }
       catch (err) {
         throw new Error(`Failed to import test file ${filepath}`, { cause: err })
       }
+
+      if (mode === 'collect' && !this.sourceMapPrefetches.has(filepath)) {
+        // the file is transformed now, so the server can hand out its map;
+        // request it early so onBeforeRunSuite doesn't have to wait
+        this.sourceMapPrefetches.set(
+          filepath,
+          rpc().getBrowserFileSourceMap(filepath).catch(() => undefined),
+        )
+      }
+    }
+
+    trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+      const options: import('@opentelemetry/api').SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+      return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
     }
   }
 }
@@ -218,12 +373,9 @@ export async function initiateRunner(
   if (cachedRunner) {
     return cachedRunner
   }
-  const runnerClass
-    = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
-
-  const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
+  const BrowserRunner = createBrowserRunner(mocker, state, {
     takeCoverage: () =>
-      takeCoverageInsideWorker(config.coverage, executor),
+      takeCoverageInsideWorker(config.coverage, moduleRunner),
   })
   if (!config.snapshotOptions.snapshotEnvironment) {
     config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
@@ -233,15 +385,15 @@ export async function initiateRunner(
   })
   cachedRunner = runner
 
-  onCancel.then((reason) => {
+  onCancel((reason) => {
     runner.cancel?.(reason)
   })
 
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, executor as any),
-    loadSnapshotSerializers(config, executor as any),
+    loadDiffConfig(config, moduleRunner),
+    loadSnapshotSerializers(config, moduleRunner),
   ])
-  runner.config.diffOptions = diffOptions
+  runner.config._diffOptions = diffOptions
   getWorkerState().onFilterStackTrace = (stack: string) => {
     const stacks = parseStacktrace(stack, {
       getSourceMap(file) {
@@ -261,7 +413,7 @@ async function getTraceMap(file: string, sourceMaps: Map<string, any>) {
   if (!result) {
     return null
   }
-  return new TraceMap(result as any)
+  return new DecodedMap(result, file)
 }
 
 async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, any>) {
@@ -272,8 +424,9 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
     }
     const updateLocation = (task: Task) => {
       if (task.location) {
-        const { line, column } = originalPositionFor(traceMap, task.location)
-        if (line != null && column != null) {
+        const position = getOriginalPosition(traceMap, task.location)
+        if (position) {
+          const { line, column } = position
           task.location = { line, column: task.each ? column : column + 1 }
         }
       }
@@ -286,4 +439,9 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   })
 
   await Promise.all(promises)
+}
+
+function getTraceName(task: Task, retryCount: number, repeatsCount: number) {
+  const name = getTestName(task, '-').replace(/[^a-z0-9]/gi, '-')
+  return `${name}-${repeatsCount}-${retryCount}`
 }

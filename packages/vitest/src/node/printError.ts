@@ -7,11 +7,13 @@ import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
-import { inspect, isPrimitive } from '@vitest/utils'
+import { inspect } from '@vitest/utils/display'
+import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
 import {
+  defaultStackIgnorePatterns,
   lineSplitRE,
   parseErrorStacktrace,
   positionToOffset,
@@ -34,12 +36,17 @@ interface PrintErrorResult {
   nearest?: ParsedStack
 }
 
+export interface CapturePrintErrorResult {
+  nearest: ParsedStack | undefined
+  output: string
+}
+
 // use Logger with custom Console to capture entire error printing
 export function capturePrintError(
   error: unknown,
   ctx: Vitest,
   options: ErrorOptions,
-): { nearest: ParsedStack | undefined; output: string } {
+): CapturePrintErrorResult {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
@@ -75,10 +82,22 @@ export function printError(
     screenshotPaths: options.screenshotPaths,
     printProperties: options.verbose,
     parseErrorStacktrace(error) {
+      if (error.stacks) {
+        if (options.fullStack) {
+          return error.stacks
+        }
+        else {
+          return error.stacks.filter((stack) => {
+            return !defaultStackIgnorePatterns.some(p => stack.file.match(p))
+          })
+        }
+      }
+
       // browser stack trace needs to be processed differently,
       // so there is a separate method for that
-      if (options.task?.file.pool === 'browser' && project.browser) {
+      if (project.browser) {
         return project.browser.parseErrorStacktrace(error, {
+          frameFilter: project.config.onStackTrace,
           ignoreStackEntries: options.fullStack ? [] : undefined,
         })
       }
@@ -128,12 +147,14 @@ function printErrorInner(
     = error instanceof TypeCheckError
       ? error.stacks[0]
       : stacks.find((stack) => {
+          // we are checking that this module was processed by us at one point
           try {
-            return (
-              project._vite
-              && project.getModuleById(stack.file)
-              && existsSync(stack.file)
-            )
+            const environments = Object.values(project.vite.environments || {})
+            const hasResult = environments.some((environment) => {
+              const modules = environment.moduleGraph.getModulesByFile(stack.file)
+              return [...modules?.values() || []].some(module => !!module.transformResult)
+            })
+            return hasResult && existsSync(stack.file)
           }
           catch {
             return false
@@ -145,9 +166,10 @@ function printErrorInner(
   }
   printErrorMessage(e, logger)
   if (options.screenshotPaths?.length) {
-    const length = options.screenshotPaths.length
+    const uniqueScreenshots = Array.from(new Set(options.screenshotPaths))
+    const length = uniqueScreenshots.length
     logger.error(`\nFailure screenshot${length > 1 ? 's' : ''}:`)
-    logger.error(options.screenshotPaths.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
+    logger.error(uniqueScreenshots.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
     if (!e.diff) {
       logger.error()
     }
@@ -199,7 +221,6 @@ function printErrorInner(
 
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
-  const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath) {
     logger.error(
@@ -213,20 +234,11 @@ function printErrorInner(
   if (testName) {
     logger.error(
       c.red(
-        `The latest test that might've caused the error is "${c.bold(
+        `The last test to run before this error was "${c.bold(
           testName,
-        )}". It might mean one of the following:`
-        + '\n- The error was thrown, while Vitest was running this test.'
-        + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.',
-      ),
-    )
-  }
-  if (afterEnvTeardown) {
-    logger.error(
-      c.red(
-        'This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
-        + '\n- cancel timeouts using clearTimeout and clearInterval'
-        + '\n- wait for promises to resolve using the await keyword',
+        )}". This means either:`
+        + '\n- the error was thrown while Vitest was running this test, or'
+        + '\n- the error was thrown after the test completed, and this was the most recent test at that point.',
       ),
     )
   }
@@ -261,6 +273,7 @@ const skipErrorProperties = new Set([
   'actual',
   'expected',
   'diffOptions',
+  'runnerError',
   // webkit props
   'sourceURL',
   'column',
@@ -271,8 +284,9 @@ const skipErrorProperties = new Set([
   'columnNumber',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
-  'VITEST_AFTER_ENV_TEARDOWN',
   '__vitest_rollup_error__',
+  '__vitest_error_context__',
+  '__vitest_test_syntax_error__',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
@@ -308,7 +322,7 @@ function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
 
   const path = normalize(stack.split('\n')[0].trim())
   let name = path.split('/node_modules/').pop() || ''
-  if (name?.startsWith('@')) {
+  if (name[0] === '@') {
     name = name.split('/').slice(0, 2).join('/')
   }
   else {
@@ -379,14 +393,14 @@ function printErrorMessage(error: TestError, logger: ErrorLogger) {
   }
 }
 
-function printStack(
+export function printStack(
   logger: ErrorLogger,
   project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
   onStack?: (stack: ParsedStack) => void,
-) {
+): void {
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
     const path = relative(project.config.root, frame.file)
@@ -448,16 +462,19 @@ export function generateCodeFrame(
         }
 
         const lineLength = lines[j].length
+        const strippedContent = stripVTControlCharacters(lines[j])
+
+        if (strippedContent.startsWith('//# sourceMappingURL')) {
+          continue
+        }
 
         // too long, maybe it's a minified file, skip for codeframe
-        if (stripVTControlCharacters(lines[j]).length > 200) {
+        if (strippedContent.length > 200) {
           return ''
         }
 
-        res.push(
-          lineNo(j + 1)
-          + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
-        )
+        const truncatedLine = truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent).trimEnd()
+        res.push(lineNo(j + 1) + (truncatedLine ? ' ' + truncatedLine : truncatedLine))
 
         if (j === i) {
           // push underline
@@ -466,12 +483,12 @@ export function generateCodeFrame(
             1,
             end > count ? lineLength - pad : end - start,
           )
-          res.push(lineNo() + ' '.repeat(pad) + c.red('^'.repeat(length)))
+          res.push(lineNo() + ' '.repeat(pad + 1) + c.red('^'.repeat(length)))
         }
         else if (j > i) {
           if (end > count) {
             const length = Math.max(1, Math.min(end - count, lineLength))
-            res.push(lineNo() + c.red('^'.repeat(length)))
+            res.push(lineNo() + ' ' + c.red('^'.repeat(length)))
           }
           count += lineLength + 1
         }
@@ -488,5 +505,5 @@ export function generateCodeFrame(
 }
 
 function lineNo(no: number | string = '') {
-  return c.gray(`${String(no).padStart(3, ' ')}| `)
+  return c.gray(`${String(no).padStart(3, ' ')}|`)
 }

@@ -20,24 +20,13 @@ defineProps<{
     This error originated in <span font-bold>{{ error.VITEST_TEST_PATH }}</span> test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
   </p>
   <div v-if="error.VITEST_TEST_NAME" text="sm" mb-2>
-    The latest test that might've caused the error is <span font-bold>{{ error.VITEST_TEST_NAME }}</span>. It might mean one of the following:<br>
+    The last test to run before this error was "<span font-bold>{{ error.VITEST_TEST_NAME }}</span>. This means either:<br>
     <ul>
       <li>
-        The error was thrown, while Vitest was running this test.
+        The error was thrown while Vitest was running this test
       </li>
       <li>
-        If the error occurred after the test had been completed, this was the last documented test before it was thrown.
-      </li>
-    </ul>
-  </div>
-  <div v-if="error.VITEST_AFTER_ENV_TEARDOWN" text="sm" font-thin>
-    This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:<br>
-    <ul>
-      <li>
-        Cancel timeouts using clearTimeout and clearInterval.
-      </li>
-      <li>
-        Wait for promises to resolve using the await keyword.
+        The error was thrown after the test completed, and this was the most recent test at that point
       </li>
     </ul>
   </div>

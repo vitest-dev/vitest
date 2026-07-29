@@ -1,5 +1,5 @@
 import type { Vite } from 'vitest/node'
-import remapping from '@ampproject/remapping'
+import remapping from '@jridgewell/remapping'
 import MagicString from 'magic-string'
 import { defineConfig } from 'vitest/config'
 import { cwdPlugin } from './cwdPlugin.js'
@@ -52,7 +52,6 @@ export default defineConfig({
           name: 'Threads pool',
           include: [
             './space-pools/threads.test.ts',
-            './space-pools/multi-worker.test.ts',
             './space-pools/isolate.test.ts',
           ],
           pool: 'threads',
@@ -60,29 +59,17 @@ export default defineConfig({
       },
       {
         test: {
-          name: 'Single thread pool',
+          name: 'Non-parallel thread pool',
           include: [
             './space-pools/threads.test.ts',
-            './space-pools/single-worker.test.ts',
           ],
           pool: 'threads',
-          poolOptions: { threads: { singleThread: true } },
+          fileParallelism: false,
         },
       },
       {
         test: {
-          name: 'Non-isolated thread pool #1',
-          include: [
-            './space-pools/threads.test.ts',
-            './space-pools/no-isolate.test.ts',
-          ],
-          pool: 'threads',
-          poolOptions: { threads: { isolate: false } },
-        },
-      },
-      {
-        test: {
-          name: 'Non-isolated thread pool #2',
+          name: 'Non-isolated thread pool',
           include: [
             './space-pools/threads.test.ts',
             './space-pools/no-isolate.test.ts',
@@ -96,7 +83,6 @@ export default defineConfig({
           name: 'Forks pool',
           include: [
             './space-pools/forks.test.ts',
-            './space-pools/multi-worker.test.ts',
             './space-pools/isolate.test.ts',
           ],
           pool: 'forks',
@@ -104,29 +90,17 @@ export default defineConfig({
       },
       {
         test: {
-          name: 'Single fork pool',
+          name: 'Non-parallel fork pool',
           include: [
             './space-pools/forks.test.ts',
-            './space-pools/single-worker.test.ts',
           ],
           pool: 'forks',
-          poolOptions: { forks: { singleFork: true } },
+          fileParallelism: false,
         },
       },
       {
         test: {
-          name: 'Non-isolated fork pool #1',
-          include: [
-            './space-pools/forks.test.ts',
-            './space-pools/no-isolate.test.ts',
-          ],
-          pool: 'forks',
-          poolOptions: { forks: { isolate: false } },
-        },
-      },
-      {
-        test: {
-          name: 'Non-isolated fork pool #2',
+          name: 'Non-isolated fork pool',
           include: [
             './space-pools/forks.test.ts',
             './space-pools/no-isolate.test.ts',

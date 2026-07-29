@@ -35,12 +35,12 @@ export function math(a: number, b: number, operator: '*' | '+') {
     return multiply(a, b)
   }
 
-  /* v8 ignore start */
+  /* istanbul ignore start */
   if (operator === '+') {
   // This line should be excluded
     return add(a, b)
   }
-  /* v8 ignore stop */
+  /* istanbul ignore stop */
 
   // This line should NOT be covered
   throw new Error('Unsupported operator')

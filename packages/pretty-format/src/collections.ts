@@ -21,7 +21,7 @@ function getKeysOfEnumerableProperties(object: Record<string, unknown>, compareK
     }
   }
 
-  return keys as Array<string>
+  return keys
 }
 
 /**
@@ -37,6 +37,7 @@ export function printIteratorEntries(
   refs: Refs,
   printer: Printer,
   separator = ': ',
+  length?: number,
 ): string {
   let result = ''
   let width = 0
@@ -51,7 +52,7 @@ export function printIteratorEntries(
       result += indentationNext
 
       if (width++ === config.maxWidth) {
-        result += '…'
+        result += typeof length === 'number' ? `…(${length - width + 1})` : '…'
         break
       }
 
@@ -100,6 +101,7 @@ export function printIteratorValues(
   depth: number,
   refs: Refs,
   printer: Printer,
+  length?: number,
 ): string {
   let result = ''
   let width = 0
@@ -114,7 +116,7 @@ export function printIteratorValues(
       result += indentationNext
 
       if (width++ === config.maxWidth) {
-        result += '…'
+        result += typeof length === 'number' ? `…(${length - width + 1})` : '…'
         break
       }
 
@@ -163,7 +165,7 @@ export function printListItems(
       result += indentationNext
 
       if (i === config.maxWidth) {
-        result += '…'
+        result += `…(${length - i})`
         break
       }
 
@@ -197,15 +199,16 @@ export function printListItems(
  * without surrounding punctuation (for example, braces)
  */
 export function printObjectProperties(
-  val: Record<string, unknown>,
+  val: Record<string | symbol, unknown>,
   config: Config,
   indentation: string,
   depth: number,
   refs: Refs,
   printer: Printer,
+  compareKeysOverride: CompareKeys = config.compareKeys,
 ): string {
   let result = ''
-  const keys = getKeysOfEnumerableProperties(val, config.compareKeys)
+  const keys = getKeysOfEnumerableProperties(val, compareKeysOverride)
 
   if (keys.length > 0) {
     result += config.spacingOuter
@@ -213,11 +216,20 @@ export function printObjectProperties(
     const indentationNext = indentation + config.indent
 
     for (let i = 0; i < keys.length; i++) {
+      result += indentationNext
+
+      if (i === config.maxWidth) {
+        result += `…(${keys.length - i})`
+        break
+      }
+
       const key = keys[i]
-      const name = printer(key, config, indentationNext, depth, refs)
+      const name = !config.quoteKeys && isUnquotableKey(key)
+        ? key as string
+        : printer(key, config, indentationNext, depth, refs)
       const value = printer(val[key], config, indentationNext, depth, refs)
 
-      result += `${indentationNext + name}: ${value}`
+      result += `${name}: ${value}`
 
       if (i < keys.length - 1) {
         result += `,${config.spacingInner}`
@@ -231,4 +243,12 @@ export function printObjectProperties(
   }
 
   return result
+}
+
+// https://github.com/nodejs/node/blob/61102cdbb3d59155ad5bb4fc9419627a31e63f7a/lib/internal/util/inspect.js#L249
+// /^[a-zA-Z_][a-zA-Z_0-9]*$/
+const keyStrRegExp = /^[a-z_]\w*$/i
+
+function isUnquotableKey(key: string | symbol): boolean {
+  return typeof key === 'string' && key !== '__proto__' && keyStrRegExp.test(key)
 }

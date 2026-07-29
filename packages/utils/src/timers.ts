@@ -72,3 +72,21 @@ export function setSafeTimers(): void {
 
   (globalThis as any)[SAFE_TIMERS_SYMBOL] = timers
 }
+
+/**
+ * Returns a promise that resolves after the specified duration.
+ *
+ * @param timeout - Delay in milliseconds
+ * @param scheduler - Timer function to use, defaults to `setTimeout`. Useful for mocked timers.
+ *
+ * @example
+ * await delay(100)
+ *
+ * @example
+ * // With mocked timers
+ * const { setTimeout } = getSafeTimers()
+ * await delay(100, setTimeout)
+ */
+export function delay(timeout: number, scheduler: typeof setTimeout = setTimeout): Promise<void> {
+  return new Promise(resolve => scheduler(resolve, timeout))
+}

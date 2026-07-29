@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { unhandledErrors } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
+import ErrorEntry from './ErrorEntry.vue'
 </script>
 
 <template>
@@ -29,12 +30,22 @@ import { explorerTree } from '~/composables/explorer'
       </div>
     </template>
 
+    <template v-if="explorerTree.summary.filesSkipped">
+      <div i-carbon:redo rotate-90 />
+      <div>
+        Skip
+      </div>
+      <div class="number" text-purple-700 dark:text-purple-400>
+        {{ explorerTree.summary.filesSkipped }}
+      </div>
+    </template>
+
     <template v-if="explorerTree.summary.filesFailed">
       <div i-carbon-close />
       <div>
         Fail
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ explorerTree.summary.filesFailed }}
       </div>
     </template>
@@ -44,7 +55,7 @@ import { explorerTree } from '~/composables/explorer'
       <div>
         Snapshot Fail
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ explorerTree.summary.filesSnapshotFailed }}
       </div>
     </template>
@@ -54,7 +65,7 @@ import { explorerTree } from '~/composables/explorer'
       <div>
         Errors
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ unhandledErrors.length }}
       </div>
     </template>

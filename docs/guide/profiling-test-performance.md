@@ -11,18 +11,17 @@ When you run Vitest it reports multiple time metrics of your tests:
 > Test Files  1 passed (1)
 >      Tests  1 passed (1)
 >   Start at  09:32:53
->   Duration  4.80s (transform 44ms, setup 0ms, collect 35ms, tests 4.52s, environment 0ms, prepare 81ms)
+>   Duration  4.80s (transform 44ms, setup 0ms, import 35ms, tests 4.52s, environment 0ms)
 >   # Time metrics ^^
 > ```
 
 - Transform: How much time was spent transforming the files. See [File Transform](#file-transform).
-- Setup: Time spent for running the [`setupFiles`](/config/#setupfiles) files.
-- Collect: Time spent for collecting all tests in the test files. This includes the time it took to import all file dependencies.
+- Setup: Time spent for running the [`setupFiles`](/config/setupfiles) files.
+- Import: Time it took to import your test files and their dependencies. This also includes the time spent collecting all tests. Note that this doesn't include dynamic imports inside of tests.
 - Tests: Time spent for actually running the test cases.
-- Environment: Time spent for setting up the test [`environment`](/config/#environment), for example JSDOM.
-- Prepare: Time Vitest uses to prepare the test runner. When running tests in Node, this is the time to import and execute all internal utilities inside the worker. When running tests in the browser, this also includes the time to initiate the iframe.
+- Environment: Time spent for setting up the test [`environment`](/config/environment), for example JSDOM.
 
-## Test runner
+## Test Runner
 
 In cases where your test execution time is high, you can generate a profile of the test runner. See NodeJS documentation for following options:
 
@@ -34,62 +33,31 @@ In cases where your test execution time is high, you can generate a profile of t
 The `--prof` option does not work with `pool: 'threads'` due to `node:worker_threads` limitations.
 :::
 
-To pass these options to Vitest's test runner, define `poolOptions.<pool>.execArgv` in your Vitest configuration:
+To pass these options to Vitest's test runner, define `execArgv` in your Vitest configuration:
 
-::: code-group
-```ts [Forks]
+```ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        execArgv: [
-          '--cpu-prof',
-          '--cpu-prof-dir=test-runner-profile',
-          '--heap-prof',
-          '--heap-prof-dir=test-runner-profile'
-        ],
-
-        // To generate a single profile
-        singleFork: true,
-      },
-    },
+    fileParallelism: false,
+    execArgv: [
+      '--cpu-prof',
+      '--cpu-prof-dir=test-runner-profile',
+      '--heap-prof',
+      '--heap-prof-dir=test-runner-profile'
+    ],
   },
 })
 ```
-```ts [Threads]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        execArgv: [
-          '--cpu-prof',
-          '--cpu-prof-dir=test-runner-profile',
-          '--heap-prof',
-          '--heap-prof-dir=test-runner-profile'
-        ],
-
-        // To generate a single profile
-        singleThread: true,
-      },
-    },
-  },
-})
-```
-:::
 
 After the tests have run there should be a `test-runner-profile/*.cpuprofile` and `test-runner-profile/*.heapprofile` files generated. See [Inspecting profiling records](#inspecting-profiling-records) for instructions how to analyze these files.
 
 See [Profiling | Examples](https://github.com/vitest-dev/vitest/tree/main/examples/profiling) for example.
 
-## Main thread
+## Main Thread
 
-Profiling main thread is useful for debugging Vitest's Vite usage and [`globalSetup`](/config/#globalsetup) files.
+Profiling main thread is useful for debugging Vitest's Vite usage and [`globalSetup`](/config/globalsetup) files.
 This is also where your Vite plugins are running.
 
 :::tip
@@ -108,25 +76,7 @@ $ node --cpu-prof --cpu-prof-dir=main-profile ./node_modules/vitest/vitest.mjs -
 
 After the tests have run there should be a `main-profile/*.cpuprofile` file generated. See [Inspecting profiling records](#inspecting-profiling-records) for instructions how to analyze these files.
 
-## File transform
-
-In cases where your test transform and collection time is high, you can use `DEBUG=vite-node:*` environment variable to see which files are being transformed and executed by `vite-node`.
-
-```bash
-$ DEBUG=vite-node:* vitest --run
-
- RUN  v2.1.1 /x/vitest/examples/profiling
-
-  vite-node:server:request /x/vitest/examples/profiling/global-setup.ts +0ms
-  vite-node:client:execute /x/vitest/examples/profiling/global-setup.ts +0ms
-  vite-node:server:request /x/vitest/examples/profiling/test/prime-number.test.ts +45ms
-  vite-node:client:execute /x/vitest/examples/profiling/test/prime-number.test.ts +26ms
-  vite-node:server:request /src/prime-number.ts +9ms
-  vite-node:client:execute /x/vitest/examples/profiling/src/prime-number.ts +9ms
-  vite-node:server:request /src/unnecessary-file.ts +6ms
-  vite-node:client:execute /x/vitest/examples/profiling/src/unnecessary-file.ts +4ms
-...
-```
+## File Transform
 
 This profiling strategy is a good way to identify unnecessary transforms caused by [barrel files](https://vitejs.dev/guide/performance.html#avoid-barrel-files).
 If these logs contain files that should not be loaded when your test is run, you might have barrel files that are importing files unnecessarily.
@@ -162,23 +112,102 @@ test('formatter works', () => {
 
 <img src="/module-graph-barrel-file.png" alt="Vitest UI demonstrating barrel file issues" />
 
-To see how files are transformed, you can use `VITE_NODE_DEBUG_DUMP` environment variable to write transformed files in the file system:
+To see how files are transformed, you can open the "Module Info" view in the UI:
 
-```bash
-$ VITE_NODE_DEBUG_DUMP=true vitest --run
+<img alt="The module info view for an inlined module" img-light src="/ui/light-module-info.png">
+<img alt="The module info view for an inlined module" img-dark src="/ui/dark-module-info.png">
 
-[vite-node] [debug] dump modules to /x/examples/profiling/.vite-node/dump
+## File Import
 
- RUN  v2.1.1 /x/vitest/examples/profiling
-...
+Some modules just take a long time to load. To identify which modules are the slowest, enable [`experimental.importDurations`](/config/experimental#experimental-importdurations) in your configuration:
 
-$ ls .vite-node/dump/
-_x_examples_profiling_global-setup_ts-1292904907.js
-_x_examples_profiling_test_prime-number_test_ts-1413378098.js
-_src_prime-number_ts-525172412.js
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      importDurations: {
+        print: true,
+      },
+    },
+  },
+})
 ```
 
-## Code coverage
+This will print a breakdown of the slowest imports after your tests finish:
+
+```bash
+Import Duration Breakdown (Top 10)
+
+Module                      Self     Total
+my-test.test.ts              5ms    620ms [████████████████████]
+date-fns/index.js          500ms    500ms [████████████████░░░░] # [!code error]
+src/utils/helpers.ts        10ms    120ms [████████░░░░░░░░░░░░]
+```
+
+You can also use `--experimental.importDurations.print` from the CLI without changing your configuration:
+
+```bash
+vitest --experimental.importDurations.print
+```
+
+Once you've identified the slow modules, there are several strategies to speed up imports:
+
+### Use Specific Entry Points
+
+Many libraries ship multiple entry points. Importing the main entry point (which is often a [barrel file](https://vitejs.dev/guide/performance.html#avoid-barrel-files)) can pull in far more code than you need.
+
+For example, `date-fns` re-exports hundreds of functions from its main entry point. Instead of importing from the top-level module, import directly from the specific function:
+
+```ts
+import { format } from 'date-fns' // [!code --]
+import { format } from 'date-fns/format' // [!code ++]
+```
+
+### Use `resolve.alias` to Redirect Imports
+
+If a dependency doesn't provide granular entry points, or if third-party code imports the heavy entry point, you can use [`resolve.alias`](https://vite.dev/config/shared-options#resolve-alias) to redirect imports to a lighter alternative:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  resolve: {
+    alias: [
+      {
+        find: /^date-fns$/,
+        replacement: join(dirname(require.resolve('date-fns/package.json')), 'index.cjs'),
+      },
+    ]
+  },
+})
+```
+
+### Use the Dependency Optimizer
+
+Vitest can bundle external libraries into a single file using [`deps.optimizer`](/config/deps#deps-optimizer), which reduces the overhead of importing packages with many internal modules:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    deps: {
+      optimizer: {
+        ssr: {
+          enabled: true,
+          include: ['date-fns'],
+        },
+      },
+    },
+  },
+})
+```
+
+This is especially effective for UI libraries and packages with deep import trees. Use `optimizer.ssr` for `node`/`edge` environments and `optimizer.client` for `jsdom`/`happy-dom` environments.
+
+## Code Coverage
 
 If code coverage generation is slow on your project you can use `DEBUG=vitest:coverage` environment variable to enable performance logging.
 
@@ -202,9 +231,9 @@ $ DEBUG=vitest:coverage vitest --run --coverage
 
 This profiling approach is great for detecting large files that are accidentally picked by coverage providers.
 For example if your configuration is accidentally including large built minified Javascript files in code coverage, they should appear in logs.
-In these cases you might want to adjust your [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude) options.
+In these cases you might want to adjust your [`coverage.include`](/config/coverage#coverage-include) and [`coverage.exclude`](/config/coverage#coverage-exclude) options.
 
-## Inspecting profiling records
+## Inspecting Profiling Records
 
 You can inspect the contents of `*.cpuprofile` and `*.heapprofile` with various tools. See list below for examples.
 

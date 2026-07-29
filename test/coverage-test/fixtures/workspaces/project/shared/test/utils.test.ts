@@ -3,5 +3,5 @@ import { raise } from '../src/utils'
 
 test('raise throws error', () => {
   const message = 'Value cannot be undefined'
-  expect(() => raise(message)).toThrowError(message)
+  expect(() => raise(message)).toThrow(message)
 })

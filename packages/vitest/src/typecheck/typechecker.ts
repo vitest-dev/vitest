@@ -1,24 +1,22 @@
-import type { RawSourceMap } from '@ampproject/remapping'
-import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
-import type { ParsedStack, TestError } from '@vitest/utils'
-import type { EachMapping } from '@vitest/utils/source-map'
+import type { EachMapping } from '@jridgewell/trace-mapping'
+import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { ChildProcess } from 'node:child_process'
 import type { Result } from 'tinyexec'
+import type { FileInformation } from '../node/ast-collect'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
-import type { Awaitable } from '../types/general'
-import type { FileInformation } from './collect'
+import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '../runtime/runner/types'
 import type { TscErrorInfo } from './types'
 import os from 'node:os'
 import { performance } from 'node:perf_hooks'
-import { eachMapping, generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
+import { eachMapping, generatedPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { basename, join, resolve } from 'pathe'
 import { x } from 'tinyexec'
+import { astCollectFileInformation } from '../node/ast-collect'
 import { distDir } from '../paths'
+import { createLocationsIndexMap } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
-import { collectTests } from './collect'
 import { getRawErrsMapFromTsCompile } from './parse'
-import { createIndexMap } from './utils'
 
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
@@ -55,7 +53,7 @@ export class Typechecker {
 
   protected files: string[] = []
 
-  constructor(protected project: TestProject) {}
+  constructor(protected project: TestProject) { }
 
   public setFiles(files: string[]): void {
     this.files = files
@@ -76,7 +74,7 @@ export class Typechecker {
   protected async collectFileTests(
     filepath: string,
   ): Promise<FileInformation | null> {
-    return collectTests(this.project, filepath)
+    return astCollectFileInformation(this.project, filepath, { pool: 'typescript' })
   }
 
   protected getFiles(): string[] {
@@ -125,6 +123,22 @@ export class Typechecker {
     sourceErrors: TestError[]
     time: number
   }> {
+    // Detect if tsc output is help text instead of error output
+    // This happens when tsconfig.json is missing and tsc can't find any config
+    if (output.includes('The TypeScript Compiler - Version') || output.includes('COMMON COMMANDS')) {
+      const { typecheck } = this.project.config
+      const tsconfigPath = typecheck.tsconfig || 'tsconfig.json'
+      const msg = `TypeScript compiler returned help text instead of type checking results.\n`
+        + `This usually means the tsconfig file was not found.\n\n`
+        + `Possible solutions:\n`
+        + `  1. Ensure '${tsconfigPath}' exists in your project root\n`
+        + `  2. If using a custom tsconfig, verify the path in your Vitest config:\n`
+        + `     test: { typecheck: { tsconfig: 'path/to/tsconfig.json' } }\n`
+        + `  3. Check that the tsconfig file is valid JSON`
+
+      throw new Error(msg)
+    }
+
     const typeErrors = await this.parseTscLikeOutput(output)
     const testFiles = new Set(this.getFiles())
 
@@ -147,8 +161,8 @@ export class Typechecker {
         ...definitions.sort((a, b) => b.start - a.start),
       ]
       // has no map for ".js" files that use // @ts-check
-      const traceMap = (map && new TraceMap(map as unknown as RawSourceMap))
-      const indexMap = createIndexMap(parsed)
+      const traceMap = (map && new TraceMap(map as any))
+      const indexMap = createLocationsIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
           state:
@@ -272,6 +286,14 @@ export class Typechecker {
     return this.process?.exitCode != null && this.process.exitCode
   }
 
+  public getSignal(): NodeJS.Signals | null {
+    return this.process?.signalCode ?? null
+  }
+
+  public getChecker(): string {
+    return this.project.config.typecheck.checker
+  }
+
   public getOutput(): string {
     return this._output
   }
@@ -280,16 +302,25 @@ export class Typechecker {
     const { root, watch, typecheck } = this.project.config
 
     const args = [
-      '--noEmit',
       '--pretty',
       'false',
-      '--incremental',
-      '--tsBuildInfoFile',
-      join(
-        process.versions.pnp ? join(os.tmpdir(), this.project.hash) : distDir,
-        'tsconfig.tmp.tsbuildinfo',
-      ),
     ]
+
+    if (typecheck.build) {
+      args.unshift('--build')
+    }
+    else {
+      args.push(
+        '--noEmit',
+        '--incremental',
+        '--tsBuildInfoFile',
+        join(
+          process.versions.pnp ? join(os.tmpdir(), this.project.hash) : distDir,
+          'tsconfig.tmp.tsbuildinfo',
+        ),
+      )
+    }
+
     // use builtin watcher because it's faster
     if (watch) {
       args.push('--watch')
@@ -298,7 +329,11 @@ export class Typechecker {
       args.push('--allowJs', '--checkJs')
     }
     if (typecheck.tsconfig) {
-      args.push('-p', resolve(root, typecheck.tsconfig))
+      if (!typecheck.build) {
+        args.push('-p')
+      }
+
+      args.push(resolve(root, typecheck.tsconfig))
     }
     this._output = ''
     this._startTime = performance.now()
@@ -320,6 +355,8 @@ export class Typechecker {
         reject(new Error(`Failed to initialize ${typecheck.checker}. This is a bug in Vitest - please, open an issue with reproduction.`))
         return
       }
+
+      let resolved = false
 
       child.process.stdout.on('data', (chunk) => {
         dataReceived = true
@@ -345,13 +382,25 @@ export class Typechecker {
         }
       })
 
+      // Also capture stderr for configuration errors like missing tsconfig
+      child.process.stderr?.on('data', (chunk) => {
+        this._output += chunk
+      })
+
       const timeout = setTimeout(
         () => reject(new Error(`${typecheck.checker} spawn timed out`)),
         this.project.config.typecheck.spawnTimeout,
       )
 
+      let winTimeout: NodeJS.Timeout | undefined
+
       function onError(cause: Error) {
+        if (resolved) {
+          return
+        }
         clearTimeout(timeout)
+        clearTimeout(winTimeout)
+        resolved = true
         reject(new Error('Spawning typechecker failed - is typescript installed?', { cause }))
       }
 
@@ -360,14 +409,19 @@ export class Typechecker {
         child.process?.off('error', onError)
         clearTimeout(timeout)
         if (process.platform === 'win32') {
-          // on Windows, the process might be spawned but fail to start
-          // we wait for a potential error here. if "close" event didn't trigger,
-          // we resolve the promise
-          setTimeout(() => {
-            resolve({ result: child })
-          }, 200)
+          // on Windows, the process might be spawned but fail to start,
+          // so we wait for the "close" event instead of resolving right away.
+          // `start` awaits the process anyway; the watch process never exits,
+          // so resolve it after a grace period
+          if (watch) {
+            winTimeout = setTimeout(() => {
+              resolved = true
+              resolve({ result: child })
+            }, 200)
+          }
         }
         else {
+          resolved = true
           resolve({ result: child })
         }
       })
@@ -376,6 +430,11 @@ export class Typechecker {
         child.process.once('close', (code) => {
           if (code != null && code !== 0 && !dataReceived) {
             onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+          }
+          else if (!resolved) {
+            clearTimeout(winTimeout)
+            resolved = true
+            resolve({ result: child })
           }
         })
       }

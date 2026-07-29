@@ -9,8 +9,8 @@ import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-form
 import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
 import { format as prettyFormat } from '@vitest/pretty-format'
+import { isObject } from '@vitest/utils/helpers'
 import naturalCompare from 'natural-compare'
-import { isObject } from '../../../utils/src/index'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
@@ -72,7 +72,7 @@ export function addExtraLineBreaks(string: string): string {
 // Instead of trim, which can remove additional newlines or spaces
 // at beginning or end of the content from a custom serializer.
 export function removeExtraLineBreaks(string: string): string {
-  return string.length > 2 && string.startsWith('\n') && string.endsWith('\n')
+  return string.length > 2 && string[0] === '\n' && string.endsWith('\n')
     ? string.slice(1, -1)
     : string
 }
@@ -109,21 +109,7 @@ export function serialize(
   )
 }
 
-export function minify(val: unknown): string {
-  return prettyFormat(val, {
-    escapeRegex,
-    min: true,
-    plugins: getSerializers(),
-    printFunctionName,
-  })
-}
-
-// Remove double quote marks and unescape double quotes and backslashes.
-export function deserializeString(stringified: string): string {
-  return stringified.slice(1, -1).replace(/\\("|\\)/g, '$1')
-}
-
-export function escapeBacktickString(str: string): string {
+function escapeBacktickString(str: string): string {
   return str.replace(/`|\\|\$\{/g, '\\$&')
 }
 
@@ -150,21 +136,6 @@ export async function saveSnapshotFile(
     )
 
   const content = `${environment.getHeader()}\n\n${snapshots.join('\n\n')}\n`
-  const oldContent = await environment.readSnapshotFile(snapshotPath)
-  const skipWriting = oldContent != null && oldContent === content
-
-  if (skipWriting) {
-    return
-  }
-
-  await environment.saveSnapshotFile(snapshotPath, content)
-}
-
-export async function saveSnapshotFileRaw(
-  environment: SnapshotEnvironment,
-  content: string,
-  snapshotPath: string,
-): Promise<void> {
   const oldContent = await environment.readSnapshotFile(snapshotPath)
   const skipWriting = oldContent != null && oldContent === content
 
@@ -284,5 +255,16 @@ export class CounterMap<K> extends DefaultMap<K, number> {
       total += x
     }
     return total
+  }
+}
+
+/* @__NO_SIDE_EFFECTS__ */
+export function memo<T, U>(fn: (arg: T) => U): (arg: T) => U {
+  const cache = new Map<T, U>()
+  return (arg: T) => {
+    if (!cache.has(arg)) {
+      cache.set(arg, fn(arg))
+    }
+    return cache.get(arg)!
   }
 }

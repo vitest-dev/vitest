@@ -59,12 +59,9 @@ export class ServerMockResolver {
   }
 
   public async resolveId(id: string, importer?: string): Promise<ServerIdResolution | null> {
-    const resolved = await this.server.pluginContainer.resolveId(
+    const resolved = await this.server.environments.client.pluginContainer.resolveId(
       id,
       importer,
-      {
-        ssr: false,
-      },
     )
     if (!resolved) {
       return null
@@ -176,7 +173,7 @@ function getDepsCacheDir(config: ViteConfig): string {
 }
 
 function withTrailingSlash(path: string): string {
-  if (path[path.length - 1] !== '/') {
+  if (path.at(-1) !== '/') {
     return `${path}/`
   }
 

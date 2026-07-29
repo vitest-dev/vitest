@@ -2,31 +2,33 @@
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
  *
  * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of https://github.com/facebook/jest.
+ * LICENSE file in the root directory of https://github.com/jestjs/jest.
  */
 
 import type {
-  FakeTimerInstallOpts,
-  FakeTimerWithContext,
-  InstalledClock,
+  Clock,
+  FakeMethod,
+  Config as FakeTimersConfig,
+  FakeTimers as FakeTimersContext,
 } from '@sinonjs/fake-timers'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
-import { mockDate, RealDate, resetDate } from './date'
+
+const RealDate = globalThis.Date
 
 export class FakeTimers {
   private _global: typeof globalThis
-  private _clock!: InstalledClock
+  private _clock!: Clock
   // | _fakingTime | _fakingDate |
   // +-------------+-------------+
   // | false       | falsy       | initial
-  // | false       | truthy     | vi.setSystemTime called first (for mocking only Date without fake timers)
+  // | false       | truthy      | vi.setSystemTime called first (for mocking only Date without fake timers)
   // | true        | falsy       | vi.useFakeTimers called first
-  // | true        | truthy     | unreachable
+  // | true        | truthy      | unreachable
   private _fakingTime: boolean
   private _fakingDate: Date | null
-  private _fakeTimers: FakeTimerWithContext
-  private _userConfig?: FakeTimerInstallOpts
+  private _fakeTimers: FakeTimersContext
+  private _userConfig?: FakeTimersConfig
   private _now = RealDate.now
 
   constructor({
@@ -34,7 +36,7 @@ export class FakeTimers {
     config,
   }: {
     global: typeof globalThis
-    config: FakeTimerInstallOpts
+    config: FakeTimersConfig
   }) {
     this._userConfig = config
 
@@ -127,14 +129,13 @@ export class FakeTimers {
 
   runAllTicks(): void {
     if (this._checkFakeTimers()) {
-      // @ts-expect-error method not exposed
       this._clock.runMicrotasks()
     }
   }
 
   useRealTimers(): void {
     if (this._fakingDate) {
-      resetDate()
+      this._clock.uninstall()
       this._fakingDate = null
     }
 
@@ -145,34 +146,42 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
+    const fakeDate = this._fakingDate || Date.now()
     if (this._fakingDate) {
+      this._clock.uninstall()
+      this._fakingDate = null
+    }
+
+    if (this._fakingTime) {
+      this._clock.uninstall()
+    }
+
+    let toFake = this._userConfig?.toFake
+    if (isChildProcess() && toFake?.includes('nextTick')) {
       throw new Error(
-        '"setSystemTime" was called already and date was mocked. Reset timers using `vi.useRealTimers()` if you want to use fake timers again.',
+        'process.nextTick cannot be mocked inside child_process',
       )
     }
 
-    if (!this._fakingTime) {
-      const toFake = Object.keys(this._fakeTimers.timers)
-        // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
-        .filter(
-          timer => timer !== 'nextTick' && timer !== 'queueMicrotask',
-        ) as (keyof FakeTimerWithContext['timers'])[]
-
-      if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
-        throw new Error(
-          'process.nextTick cannot be mocked inside child_process',
-        )
-      }
-
-      this._clock = this._fakeTimers.install({
-        now: Date.now(),
-        ...this._userConfig,
-        toFake: this._userConfig?.toFake || toFake,
-        ignoreMissingTimers: true,
-      })
-
-      this._fakingTime = true
+    let toNotFake = this._userConfig?.toNotFake
+    if (toFake === undefined && toNotFake === undefined) {
+      // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
+      toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])
+        .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
     }
+    if (isChildProcess() && toNotFake && !toNotFake.includes('nextTick')) {
+      toNotFake = [...toNotFake, 'nextTick']
+    }
+
+    this._clock = this._fakeTimers.install({
+      now: fakeDate,
+      ...this._userConfig,
+      ...(toFake && { toFake }),
+      ...(toNotFake && { toNotFake }),
+      ignoreMissingTimers: true,
+    })
+
+    this._fakingTime = true
   }
 
   reset(): void {
@@ -189,8 +198,19 @@ export class FakeTimers {
       this._clock.setSystemTime(date)
     }
     else {
-      this._fakingDate = date ?? new Date(this.getRealSystemTime())
-      mockDate(this._fakingDate)
+      const newFakingDate = date ?? new Date(this.getRealSystemTime())
+      if (this._fakingDate) {
+        this._fakingDate = newFakingDate
+        this._clock.setSystemTime(newFakingDate)
+      }
+      else {
+        this._fakingDate = newFakingDate
+        this._clock = this._fakeTimers.install({
+          now: newFakingDate,
+          toFake: ['Date', 'Temporal'],
+          ignoreMissingTimers: true,
+        })
+      }
     }
   }
 
@@ -210,7 +230,24 @@ export class FakeTimers {
     return 0
   }
 
-  configure(config: FakeTimerInstallOpts): void {
+  setTimerTickMode(mode: 'manual' | 'nextTimerAsync' | 'interval', interval?: number): void {
+    if (this._checkFakeTimers()) {
+      if (mode === 'manual') {
+        this._clock.setTickMode({ mode: 'manual' })
+      }
+      else if (mode === 'nextTimerAsync') {
+        this._clock.setTickMode({ mode: 'nextAsync' })
+      }
+      else if (mode === 'interval') {
+        this._clock.setTickMode({ mode: 'interval', delta: interval })
+      }
+      else {
+        throw new Error(`Invalid tick mode: ${mode}`)
+      }
+    }
+  }
+
+  configure(config: FakeTimersConfig): void {
     this._userConfig = config
   }
 
@@ -221,7 +258,8 @@ export class FakeTimers {
   private _checkFakeTimers() {
     if (!this._fakingTime) {
       throw new Error(
-        'Timers are not mocked. Try calling "vi.useFakeTimers()" first.',
+        'A function to advance timers was called but the timers APIs are not mocked. '
+        + 'Call `vi.useFakeTimers()` in the test file first.',
       )
     }
 

@@ -2,36 +2,83 @@ name: Publish Package
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+      - 'v[0-9]*'
 
-permissions:
-  contents: write
-  id-token: write
+permissions: {}
 
 env:
-  VITEST_GENERATE_UI_TOKEN: 'true'
   VITE_TEST_WATCHER_DEBUG: 'false'
 
 jobs:
-  publish:
+  # Keep detection outside the Release environment. Environment approval is job-level,
+  # so the publish job is only created after a release commit is detected.
+  detect:
     if: github.repository == 'vitest-dev/vitest'
-    runs-on: ubuntu-latest
-    environment: Release
+    name: Detect release commit
+    runs-on: ubuntu-slim
+    outputs:
+      release: ${{ steps.detect.outputs.release }}
+      version: ${{ steps.detect.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect release
+        id: detect
+        run: |
+          SUBJECT="$(git log -1 --format=%s)"
+          VERSION="$(jq -r .version package.json)"
+          EXPECTED="chore: release v$VERSION"
+          # use prefix match since commit has PR number trailer.
+          if [[ "$SUBJECT" == "$EXPECTED"* ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "Detected release v$VERSION"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "No release commit found at HEAD"
+          fi
+
+  publish:
+    if: needs.detect.outputs.release == 'true'
+    needs: detect
+    name: Publish Vitest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # trusted publishing and changelog requirement
+      id-token: write # trusted publishing requirement
+    environment: Release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check release tag
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+        run: |
+          TAG="v$VERSION"
+
+          if git rev-parse --verify --quiet "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists"
+            exit 1
+          fi
 
       - name: Install pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
-      - name: Set node version to 20
-        uses: actions/setup-node@v4
+      - name: Set node version to 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://registry.npmjs.org/
-          cache: pnpm
+          # disable cache to avoid cache poisoning
+          package-manager-cache: false
 
       - name: Install
         run: pnpm install --frozen-lockfile --prefer-offline
@@ -41,12 +88,43 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Publish to npm
-        run: pnpm run publish-ci ${{ github.ref_name }}
+      - name: Stage publish to npm (dry run)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ needs.detect.outputs.version }}
+          PUBLISH_BRANCH: ${{ github.ref_name }}
+          PUBLISH_DRY_RUN: 'true'
+        run: pnpm run publish-ci "$VERSION"
+
+      - name: Stage publish to npm
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+          PUBLISH_BRANCH: ${{ github.ref_name }}
+        run: pnpm run publish-ci "$VERSION"
+
+      - id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.RELEASE_GITHUB_APP_ID }}
+          private-key: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
+      - name: Push release tag
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          TAG="v$VERSION"
+          git config user.name "vitest-release-bot[bot]"
+          git config user.email "292707936+vitest-release-bot[bot]@users.noreply.github.com"
+          git tag "$TAG" "$GITHUB_SHA"
+          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$TAG"
 
       - name: Generate Changelog
-        run: npx changelogithub
         env:
+          VERSION: ${{ needs.detect.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v$VERSION"
+          npx changelogithub --to "$TAG" --name "$TAG"

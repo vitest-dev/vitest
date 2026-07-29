@@ -1,38 +1,63 @@
-import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
-import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { DiffOptions, SerializedDiffOptions } from '@vitest/utils/diff'
+import type { LabelColor } from '../types/general'
+import type {
+  SequenceHooks,
+  SequenceSetupFiles,
+  SerializableRetry,
+  TestTagDefinition,
+} from './runner/types'
 
 /**
  * Config that tests have access to.
  */
 export interface SerializedConfig {
+  root: string
+  setupFiles: string[]
   name: string | undefined
+  passWithNoTests: boolean
+  testNamePattern: RegExp | undefined
+  allowOnly: boolean
+  sequence: {
+    shuffle?: boolean
+    concurrent?: boolean
+    seed: number
+    hooks: SequenceHooks
+    setupFiles: SequenceSetupFiles
+  }
+  maxConcurrency: number
+  testTimeout: number
+  hookTimeout: number
+  retry: SerializableRetry
+  repeats?: number
+  includeTaskLocation: boolean | undefined
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
+  /**
+   * @internal
+   */
+  _diffOptions?: DiffOptions
+  color?: LabelColor
   globals: boolean
+  injectCjsGlobals: boolean
   base: string | undefined
   snapshotEnvironment?: string
   disableConsoleIntercept: boolean | undefined
   runner: string | undefined
   isolate: boolean
-  mode: 'test' | 'benchmark'
+  maxWorkers: number
   bail: number | undefined
   environmentOptions?: Record<string, any>
-  root: string
-  setupFiles: string[]
-  passWithNoTests: boolean
-  testNamePattern: RegExp | undefined
-  allowOnly: boolean
-  testTimeout: number
-  hookTimeout: number
   clearMocks: boolean
   mockReset: boolean
   restoreMocks: boolean
   unstubGlobals: boolean
   unstubEnvs: boolean
   // TODO: make optional
-  fakeTimers: FakeTimerInstallOpts
-  maxConcurrency: number
+  fakeTimers: FakeTimersConfig
   defines: Record<string, any>
   expect: {
     requireAssertions?: boolean
@@ -42,43 +67,13 @@ export interface SerializedConfig {
     }
   }
   printConsoleTrace: boolean | undefined
-  sequence: {
-    shuffle?: boolean
-    concurrent?: boolean
-    seed: number
-    hooks: SequenceHooks
-    setupFiles: SequenceSetupFiles
-  }
-  poolOptions: {
-    forks: {
-      singleFork: boolean
-      isolate: boolean
-    }
-    threads: {
-      singleThread: boolean
-      isolate: boolean
-    }
-    vmThreads: {
-      singleThread: boolean
-    }
-    vmForks: {
-      singleFork: boolean
-    }
-  }
   deps: {
     web: {
       transformAssets?: boolean
       transformCss?: boolean
       transformGlobPattern?: RegExp | RegExp[]
     }
-    optimizer: {
-      web: {
-        enabled: boolean
-      }
-      ssr: {
-        enabled: boolean
-      }
-    }
+    optimizer: Record<string, { enabled: boolean }>
     interopDefault: boolean | undefined
     moduleDirectories: string[] | undefined
   }
@@ -98,9 +93,12 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  taskTitleValueFormatTruncate: number
+  api: {
+    allowExec: boolean | undefined
+    allowWrite: boolean | undefined
+  }
   diff: string | SerializedDiffOptions | undefined
-  retry: number
-  includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
   inspector: {
@@ -114,8 +112,6 @@ export interface SerializedConfig {
   browser: {
     name: string
     headless: boolean
-    isolate: boolean
-    fileParallelism: boolean
     ui: boolean
     viewport: {
       width: number
@@ -123,29 +119,72 @@ export interface SerializedConfig {
     }
     locators: {
       testIdAttribute: string
+      exact: boolean
+      errorFormat: 'html' | 'aria' | 'all'
     }
     screenshotFailures: boolean
     providerOptions: {
       // for playwright
       actionTimeout?: number
     }
+    trace: BrowserTraceViewMode
+    traceView: {
+      enabled: boolean
+      recordCanvas: boolean
+      inlineImages: boolean
+    }
+    trackUnhandledErrors: boolean
+    detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
+  detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
-    includeSamples: boolean
-  } | undefined
+    enabled: boolean
+    retainSamples: boolean
+    provider: string | undefined
+    suppressExportGetterWarnings: boolean
+    projectName: string
+  }
+  serializedDefines: string
+  fsModuleCache: boolean
+  experimental: {
+    importDurations: {
+      print: boolean | 'on-warn'
+      limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
+    }
+    viteModuleRunner: boolean
+    nodeLoader: boolean
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
+  }
+  mergeReportsLabel: string | undefined
+  slowTestThreshold: number | undefined
+  disableColors: boolean
 }
 
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
-  htmlReporter: {
-    subdir: string | undefined
-  } | undefined
+  /** Directory where workers write raw coverage results, shard-aware */
+  coverageFilesDirectory: string
+  htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
+  autoAttachSubprocess: boolean
+}
+
+export interface SerializedRootConfig extends SerializedConfig {
+  projects: SerializedConfig[]
 }
 
 export type RuntimeConfig = Pick<
@@ -167,3 +206,4 @@ export type RuntimeConfig = Pick<
 }
 
 export type RuntimeOptions = Partial<RuntimeConfig>
+export type BrowserTraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'

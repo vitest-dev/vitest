@@ -1,15 +1,14 @@
-import type { Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
+import type { CapturePrintErrorResult } from './printError'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './printError'
+import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
-import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
   type?: string
@@ -17,7 +16,6 @@ export interface ErrorOptions {
   project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
-  task?: Task
   showCodeFrame?: boolean
 }
 
@@ -38,20 +36,25 @@ export class Logger {
   private _highlights = new Map<string, string>()
   private cleanupListeners: Listener[] = []
   public console: Console
+  private ctx!: Vitest
 
   constructor(
-    public ctx: Vitest,
     public outputStream: NodeJS.WriteStream | Writable = process.stdout,
     public errorStream: NodeJS.WriteStream | Writable = process.stderr,
   ) {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
     this._highlights.clear()
-    this.addCleanupListeners()
-    this.registerUnhandledRejection()
 
     if ((this.outputStream as typeof process.stdout).isTTY) {
       (this.outputStream as Writable).write(HIDE_CURSOR)
     }
+  }
+
+  setVitest(vitest: Vitest): this {
+    this.ctx = vitest
+    this.addCleanupListeners()
+    this.registerUnhandledRejection()
+    return this
   }
 
   log(...args: any[]): void {
@@ -109,6 +112,10 @@ export class Logger {
     printError(err, this.ctx, this, options)
   }
 
+  formatError(err: unknown, options: ErrorOptions = {}): CapturePrintErrorResult {
+    return capturePrintError(err, this.ctx, options)
+  }
+
   deprecate(message: string): void {
     this.error(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
   }
@@ -131,24 +138,55 @@ export class Logger {
     return code
   }
 
+  printNoTestTagsFound(): void {
+    this.error(c.bgRed(' ERROR '), c.red('No test tags found in any project. Exiting with code 1.'))
+  }
+
+  printTags(): void {
+    const vitest = this.ctx
+    const rootProject = vitest.getRootProject()
+    const projects = [
+      rootProject,
+      ...vitest.projects.filter(p => p !== rootProject),
+    ]
+
+    const hasTags = projects.some(p => p.config.tags && p.config.tags.length > 0)
+
+    if (!hasTags) {
+      process.exitCode = 1
+      return this.printNoTestTagsFound()
+    }
+
+    for (const project of projects) {
+      const name = project.name
+      if (name) {
+        this.log(formatProjectName(project, ''))
+      }
+      project.config.tags.forEach((tag) => {
+        const tagLog = `${tag.name}${tag.description ? `: ${tag.description}` : ''}`
+        this.log(`  ${tagLog}`)
+      })
+    }
+  }
+
   printNoTestFound(filters?: string[]): void {
     const config = this.ctx.config
 
     if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected ${config.mode} files found\n`)
+      this.log(`No affected test files found\n`)
     }
     else if (config.watch) {
       this.log(
-        c.red(`No ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+        c.red(`No test files found. You can change the file name pattern by pressing "p"\n`),
       )
     }
     else {
       if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+        this.log(`No test files found, exiting with code 0\n`)
       }
       else {
         this.error(
-          c.red(`No ${config.mode} files found, exiting with code 1\n`),
+          c.red(`No test files found, exiting with code 1\n`),
         )
       }
     }
@@ -201,19 +239,21 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    if (this.ctx.config.sequence.sequencer === RandomSequencer) {
-      this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
+    const seed = this.ctx.getSeed()
+    if (seed != null) {
+      this.log(PAD + c.gray(`Running tests with seed "${seed}"`))
     }
 
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
-      const port = this.ctx.server.config.server.port
-      const base = this.ctx.config.uiBase
+      const port = this.ctx.vite.config.server.port
+      const url = new URL(this.ctx.config.uiBase, `http://${host}:${port}`)
+      url.searchParams.set('token', this.ctx.config.api.token)
 
-      this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
+      this.log(PAD + c.dim(c.green(`UI started at ${url}`)))
     }
     else if (this.ctx.config.api?.port) {
-      const resolvedUrls = this.ctx.server.resolvedUrls
+      const resolvedUrls = this.ctx.vite.resolvedUrls
       // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
       const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
@@ -226,37 +266,14 @@ export class Logger {
     }
 
     if (this.ctx.config.standalone) {
-      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.\n`))
     }
     else {
       this.log()
     }
   }
 
-  printBrowserBanner(project: TestProject): void {
-    if (!project.browser) {
-      return
-    }
-
-    const resolvedUrls = project.browser.vite.resolvedUrls
-    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-    if (!origin) {
-      return
-    }
-
-    const output = project.isRootProject()
-      ? ''
-      : formatProjectName(project)
-    const provider = project.browser.provider.name
-    const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
-    this.log(
-      c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
-      ),
-    )
-  }
-
-  printUnhandledErrors(errors: unknown[]): void {
+  printUnhandledErrors(errors: ReadonlyArray<unknown>): void {
     const errorMessage = c.red(
       c.bold(
         `\nVitest caught ${errors.length} unhandled error${
@@ -269,7 +286,7 @@ export class Logger {
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
-        fullStack: true,
+        fullStack: (err as any).name !== 'EnvironmentTeardownError',
         type: (err as any).type || 'Unhandled Error',
       })
     })
@@ -318,7 +335,8 @@ export class Logger {
         process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
       }
 
-      process.exit()
+      // Timeout to flush stderr
+      setTimeout(() => process.exit(), 1)
     }
 
     process.once('SIGINT', onExit)

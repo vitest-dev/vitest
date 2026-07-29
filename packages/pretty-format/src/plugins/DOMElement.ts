@@ -12,6 +12,7 @@ import {
   printElement,
   printElementAsLeaf,
   printProps,
+  printShadowRoot,
   printText,
 } from './lib/markup'
 
@@ -47,7 +48,7 @@ function testNode(val: any) {
   )
 }
 
-export const test: NewPlugin['test'] = (val: any) =>
+const test: NewPlugin['test'] = (val: any) =>
   val?.constructor?.name && testNode(val)
 
 type HandledType = Element | Text | Comment | DocumentFragment
@@ -64,14 +65,36 @@ function nodeIsFragment(node: HandledType): node is DocumentFragment {
   return node.nodeType === FRAGMENT_NODE
 }
 
-export const serialize: NewPlugin['serialize'] = (
+function filterChildren(children: any[], filterNode?: (node: any) => boolean): any[] {
+  // Filter out text nodes that only contain whitespace to prevent empty lines
+  // This is done regardless of whether a filterNode is provided
+  let filtered = children.filter((node) => {
+    // Filter out text nodes that are only whitespace
+    if (node.nodeType === TEXT_NODE) {
+      const text = node.data || ''
+      // Keep text nodes that have non-whitespace content
+      return text.trim().length > 0
+    }
+    return true
+  })
+
+  // Apply additional user-provided filter if specified
+  if (filterNode) {
+    filtered = filtered.filter(filterNode)
+  }
+
+  return filtered
+}
+
+function serializeDOM(
   node: HandledType,
   config: Config,
   indentation: string,
   depth: number,
   refs: Refs,
   printer: Printer,
-) => {
+  filterNode?: (node: any) => boolean,
+) {
   if (nodeIsText(node)) {
     return printText(node.data, config)
   }
@@ -87,6 +110,14 @@ export const serialize: NewPlugin['serialize'] = (
   if (++depth > config.maxDepth) {
     return printElementAsLeaf(type, config)
   }
+
+  const children = Array.prototype.slice.call(node.childNodes || node.children)
+  const shadowChildren = (nodeIsFragment(node) || !node.shadowRoot)
+    ? []
+    : Array.prototype.slice.call(node.shadowRoot.children)
+
+  const resolvedChildren = filterNode ? filterChildren(children, filterNode) : children
+  const resolvedShadowChildren = filterNode ? filterChildren(shadowChildren, filterNode) : shadowChildren
 
   return printElement(
     type,
@@ -109,8 +140,11 @@ export const serialize: NewPlugin['serialize'] = (
       refs,
       printer,
     ),
-    printChildren(
-      Array.prototype.slice.call(node.childNodes || node.children),
+    (resolvedShadowChildren.length > 0
+      ? printShadowRoot(resolvedShadowChildren, config, indentation + config.indent, depth, refs, printer)
+      : '')
+    + printChildren(
+      resolvedChildren,
       config,
       indentation + config.indent,
       depth,
@@ -120,6 +154,29 @@ export const serialize: NewPlugin['serialize'] = (
     config,
     indentation,
   )
+}
+
+const serialize: NewPlugin['serialize'] = (
+  node: HandledType,
+  config: Config,
+  indentation: string,
+  depth: number,
+  refs: Refs,
+  printer: Printer,
+) => serializeDOM(node, config, indentation, depth, refs, printer)
+
+export function createDOMElementFilter(filterNode?: (node: any) => boolean): NewPlugin {
+  return {
+    test,
+    serialize: (
+      node: HandledType,
+      config: Config,
+      indentation: string,
+      depth: number,
+      refs: Refs,
+      printer: Printer,
+    ) => serializeDOM(node, config, indentation, depth, refs, printer, filterNode),
+  }
 }
 
 const plugin: NewPlugin = { serialize, test }

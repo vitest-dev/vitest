@@ -5,6 +5,7 @@ import type {
   Identifier,
   ImportExpression,
   Literal,
+  MetaProperty,
   Pattern,
   Property,
   VariableDeclaration,
@@ -41,18 +42,18 @@ interface Visitors {
   onIdentifier?: (
     node: Positioned<Identifier>,
     info: IdentifierInfo,
-    parentStack: Node[]
+    parentStack: Node[],
   ) => void
-  onImportMeta?: (node: Node) => void
+  onImportMeta?: (node: Positioned<MetaProperty>) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void
   onCallExpression?: (node: Positioned<CallExpression>) => void
 }
 
 const isNodeInPatternWeakSet = new WeakSet<_Node>()
-export function setIsNodeInPattern(node: Property): WeakSet<_Node> {
+function setIsNodeInPattern(node: Property): WeakSet<_Node> {
   return isNodeInPatternWeakSet.add(node)
 }
-export function isNodeInPattern(node: _Node): node is Property {
+function isNodeInPattern(node: _Node): node is Property {
   return isNodeInPatternWeakSet.has(node)
 }
 
@@ -142,7 +143,7 @@ export function esmWalker(
       }
 
       if (node.type === 'MetaProperty' && node.meta.name === 'import') {
-        onImportMeta?.(node as Node)
+        onImportMeta?.(node as Positioned<MetaProperty>)
       }
       else if (node.type === 'ImportExpression') {
         onDynamicImport?.(node as Positioned<ImportExpression>)
@@ -156,6 +157,17 @@ export function esmWalker(
           // record the identifier, for DFS -> BFS
           identifiers.push([node, parentStack.slice(0)])
         }
+      }
+      else if (node.type === 'ClassDeclaration' && node.id) {
+        // A class declaration name could shadow an import, so add its name to the parent scope
+        const parentScope = findParentScope(parentStack)
+        if (parentScope) {
+          setScope(parentScope, node.id.name)
+        }
+      }
+      else if (node.type === 'ClassExpression' && node.id) {
+        // A class expression name could shadow an import, so add its name to the scope
+        setScope(node, node.id.name)
       }
       else if (isFunctionNode(node)) {
         // If it is a function declaration, it could be shadowing an import
@@ -243,17 +255,13 @@ export function esmWalker(
   identifiers.forEach(([node, stack]) => {
     if (!isInScope(node.name, stack)) {
       const parent = stack[0]
-      const grandparent = stack[1]
       const hasBindingShortcut
         = isStaticProperty(parent)
           && parent.shorthand
           && (!isNodeInPattern(parent)
             || isInDestructuringAssignment(parent, parentStack))
 
-      const classDeclaration
-        = (parent.type === 'PropertyDefinition'
-          && grandparent?.type === 'ClassBody')
-        || (parent.type === 'ClassDeclaration' && node === parent.superClass)
+      const classDeclaration = (parent.type === 'ClassDeclaration' && node === parent.superClass)
 
       const classExpression
         = parent.type === 'ClassExpression' && node === parent.id
@@ -299,6 +307,12 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
     return false
   }
 
+  // class property
+  if (parent.type === 'PropertyDefinition' && !parent.computed) {
+    // Default values can still reference identifiers
+    return id === parent.value
+  }
+
   // property key
   if (isStaticPropertyKey(id, parent)) {
     return false
@@ -338,16 +352,16 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   return true
 }
 
-export function isStaticProperty(node: _Node): node is Property {
+function isStaticProperty(node: _Node): node is Property {
   return node && node.type === 'Property' && !node.computed
 }
 
-export function isStaticPropertyKey(node: _Node, parent: _Node): boolean {
+function isStaticPropertyKey(node: _Node, parent: _Node): boolean {
   return isStaticProperty(parent) && parent.key === node
 }
 
 const functionNodeTypeRE = /Function(?:Expression|Declaration)$|Method$/
-export function isFunctionNode(node: _Node): node is FunctionNode {
+function isFunctionNode(node: _Node): node is FunctionNode {
   return functionNodeTypeRE.test(node.type)
 }
 
@@ -363,7 +377,7 @@ function findParentScope(
   return parentStack.find(isVar ? isFunctionNode : isBlock)
 }
 
-export function isInDestructuringAssignment(
+function isInDestructuringAssignment(
   parent: _Node,
   parentStack: _Node[],
 ): boolean {

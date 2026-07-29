@@ -1,5 +1,4 @@
 import type { DefaultTheme } from 'vitepress'
-import contributorNames from './contributor-names.json'
 
 export interface Contributor {
   name: string
@@ -15,17 +14,9 @@ export interface CoreTeam extends DefaultTheme.TeamMember {
   youtube?: string
 }
 
-const contributorsAvatars: Record<string, string> = {}
-
 function getAvatarUrl(name: string) {
   return import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
 }
-
-export const contributors = (contributorNames).reduce<Contributor[]>((acc, name) => {
-  contributorsAvatars[name] = getAvatarUrl(name)
-  acc.push({ name, avatar: contributorsAvatars[name] })
-  return acc
-}, [])
 
 function createLinks(tm: CoreTeam): CoreTeam {
   tm.links = [{ icon: 'github', link: `https://github.com/${tm.github}` }]
@@ -50,7 +41,7 @@ function createLinks(tm: CoreTeam): CoreTeam {
 
 const plainTeamMembers: CoreTeam[] = [
   {
-    avatar: contributorsAvatars['sheremet-va'],
+    avatar: getAvatarUrl('sheremet-va'),
     name: 'Vladimir',
     github: 'sheremet-va',
     bluesky: 'https://bsky.app/profile/erus.dev',
@@ -62,7 +53,7 @@ const plainTeamMembers: CoreTeam[] = [
     orgLink: 'https://voidzero.dev/',
   },
   {
-    avatar: contributorsAvatars.antfu,
+    avatar: getAvatarUrl('antfu'),
     name: 'Anthony Fu',
     github: 'antfu',
     bluesky: 'https://bsky.app/profile/antfu.me',
@@ -71,24 +62,12 @@ const plainTeamMembers: CoreTeam[] = [
     youtube: 'antfu',
     sponsor: 'https://github.com/sponsors/antfu',
     title: 'A fanatical open sourceror',
-    org: 'NuxtLabs',
-    orgLink: 'https://nuxtlabs.com/',
+    org: 'Vercel',
+    orgLink: 'https://vercel.com/',
     desc: 'Core team member of Vite & Vue',
   },
   {
-    avatar: contributorsAvatars.AriPerkkio,
-    name: 'Ari Perkkiö',
-    github: 'AriPerkkio',
-    bluesky: 'https://bsky.app/profile/ariperkkio.dev',
-    mastodon: 'https://elk.zone/m.webtoo.ls/@AriPerkkio',
-    sponsor: 'https://github.com/sponsors/AriPerkkio',
-    title: 'Open source engineer',
-    desc: 'Core team member of Vitest',
-    org: 'StackBlitz',
-    orgLink: 'https://stackblitz.com/',
-  },
-  {
-    avatar: contributorsAvatars['hi-ogawa'],
+    avatar: getAvatarUrl('hi-ogawa'),
     name: 'Hiroshi Ogawa',
     github: 'hi-ogawa',
     bluesky: 'https://bsky.app/profile/hiogawa.bsky.social',
@@ -99,19 +78,18 @@ const plainTeamMembers: CoreTeam[] = [
     orgLink: 'https://voidzero.dev/',
   },
   {
-    avatar: contributorsAvatars['patak-dev'],
-    name: 'Patak',
-    github: 'patak-dev',
-    bluesky: 'https://bsky.app/profile/patak.dev',
-    mastodon: 'https://elk.zone/m.webtoo.ls/@patak',
-    sponsor: 'https://github.com/sponsors/patak-dev',
-    title: 'A collaborative being',
-    org: 'StackBlitz',
-    orgLink: 'https://stackblitz.com/',
-    desc: 'Core team member of Vite & Vue',
+    avatar: getAvatarUrl('AriPerkkio'),
+    name: 'Ari Perkkiö',
+    github: 'AriPerkkio',
+    bluesky: 'https://bsky.app/profile/ariperkkio.dev',
+    sponsor: 'https://github.com/sponsors/AriPerkkio',
+    title: 'Open source engineer',
+    desc: 'Core team member of Vitest',
+    org: 'Chromatic',
+    orgLink: 'https://www.chromatic.com/',
   },
   {
-    avatar: contributorsAvatars.userquin,
+    avatar: getAvatarUrl('userquin'),
     name: 'Joaquín Sánchez',
     github: 'userquin',
     bluesky: 'https://bsky.app/profile/userquin.bsky.social',
@@ -119,18 +97,37 @@ const plainTeamMembers: CoreTeam[] = [
     title: 'A fullstack and android developer',
     desc: 'Vite\'s fanatical follower',
   },
+  {
+    avatar: getAvatarUrl('patak-cat'),
+    name: 'Patak',
+    github: 'patak-cat',
+    bluesky: 'https://bsky.app/profile/patak.cat',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@patak',
+    sponsor: 'https://github.com/sponsors/patak-cat',
+    title: 'Independent Open Source Adventurer',
+    desc: 'Core team member of Vite & Vue',
+  },
+  {
+    avatar: getAvatarUrl('macarie'),
+    name: 'Raul Macarie',
+    github: 'macarie',
+    bluesky: 'https://bsky.app/profile/macarie.blue',
+    sponsor: 'https://github.com/sponsors/macarie',
+    title: 'Open source developer',
+    desc: 'Building things with code, one slice of pizza at a time',
+  },
 ]
 
 const plainTeamEmeritiMembers: CoreTeam[] = [
   {
-    avatar: contributorsAvatars.Dunqing,
+    avatar: getAvatarUrl('Dunqing'),
     name: 'Dunqing',
     github: 'Dunqing',
     title: 'A passionate enthusiast of open source contributions',
     desc: 'Team member of oxc & UnoCSS',
   },
   {
-    avatar: contributorsAvatars.Aslemammad,
+    avatar: getAvatarUrl('Aslemammad'),
     name: 'Mohammad Bagher',
     github: 'Aslemammad',
     bluesky: 'https://bsky.app/profile/aslemammad.bsky.social',
@@ -139,7 +136,7 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     desc: 'Team member of Poimandres & Vike',
   },
   {
-    avatar: contributorsAvatars.Demivan,
+    avatar: getAvatarUrl('Demivan'),
     name: 'Ivan Demchuk',
     github: 'Demivan',
     mastodon: 'https://elk.zone/fosstodon.org/@demivan',
@@ -147,14 +144,14 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     desc: 'Author of fluent-vue',
   },
   {
-    avatar: contributorsAvatars.poyoho,
+    avatar: getAvatarUrl('poyoho'),
     name: 'Yoho Po',
     github: 'poyoho',
     title: 'It\'s no problem in my locall',
     desc: 'Core team member of Vite & Team member of Vitest',
   },
   {
-    avatar: contributorsAvatars.zxch3n,
+    avatar: getAvatarUrl('zxch3n'),
     name: 'Zixuan Chen',
     github: 'zxch3n',
     bluesky: 'https://bsky.app/profile/zxch3n.bsky.social',

@@ -1,11 +1,11 @@
 {
   "name": "@vitest/pretty-format",
   "type": "module",
-  "version": "4.0.0-beta.2",
+  "version": "5.0.0-beta.7",
   "description": "Fork of pretty-format with support for ESM",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/utils#readme",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/pretty-format",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,12 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "pretty",
+    "pretty-format"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
@@ -30,15 +36,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch"
   },
   "dependencies": {
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@types/react-is": "^19.0.0",
-    "react-is": "^19.1.0",
+    "@types/react-is": "^19.2.0",
+    "react-is": "^19.2.8",
     "react-is-18": "npm:react-is@18.3.1"
   }
 }

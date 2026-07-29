@@ -1,39 +1,52 @@
-import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
-import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
+import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
+import type { BaselineData, CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '../runtime/runner/types'
+import type { OTELCarrier } from '../utils/traces'
+import type { AfterSuiteRunMeta, AsyncLeak, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
   fetch: (
     id: string,
-    transformMode: TransformMode
-  ) => Promise<{
-    externalize?: string
-    id?: string
-  }>
-  transform: (id: string, transformMode: TransformMode) => Promise<{
-    code?: string
-  }>
-  resolveId: (
-    id: string,
     importer: string | undefined,
-    transformMode: TransformMode
-  ) => Promise<{
-    external?: boolean | 'absolute' | 'relative'
-    id: string
-  } | null>
+    environment: string,
+    options?: FetchFunctionOptions,
+    otelCarrier?: OTELCarrier,
+  ) => Promise<FetchResult | FetchCachedFileSystemResult>
+  resolve: (id: string, importer: string | undefined, environment: string) => Promise<ResolveFunctionResult | null>
+  /**
+   * Returns the modules of the given test files' import graphs that the server
+   * has already processed, so a fresh worker can load them from disk without
+   * paying a `fetch` round-trip per module.
+   */
+  fetchWarmModules: (environment: string, files: string[]) => Promise<Record<string, FetchResult | FetchCachedFileSystemResult>>
+  /**
+   * Transforms the import graphs of the given test files ahead of the
+   * worker's own fetches. Fired by vm pool workers before their environment
+   * setup, so the server transforms modules while the worker is busy
+   * importing its environment package.
+   */
+  prewarmModuleGraph: (environment: string, files: string[]) => Promise<void>
+  transform: (id: string) => Promise<{ code?: string }>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
+  onAsyncLeaks: (leak: AsyncLeak[]) => void
   onQueued: (file: File) => void
   onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onTaskAnnotate: (testId: string, annotation: TestAnnotation) => Promise<TestAnnotation>
+  onTestBenchmark: (testId: string, bench: TestBenchmark) => void
+  onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
   onTaskUpdate: (pack: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
+
+  readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
+  writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
+
+  ensureModuleGraphEntry: (id: string, importer: string) => void
 }
 
 export interface RunnerRPC {

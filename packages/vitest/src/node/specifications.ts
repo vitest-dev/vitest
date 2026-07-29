@@ -1,12 +1,12 @@
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import { existsSync } from 'node:fs'
 import { join, relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { isWindows } from '../utils/env'
 import { groupFilters, parseFilter } from './cli/filter'
-import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
+import { IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
@@ -121,15 +121,10 @@ export class VitestSpecifications {
 
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
     if (this.vitest.config.changed && !this.vitest.config.related) {
-      const { VitestGit } = await import('./git')
-      const vitestGit = new VitestGit(this.vitest.config.root)
-      const related = await vitestGit.findChangedFiles({
+      const related = await this.vitest.vcs.findChangedFiles({
+        root: this.vitest.config.root,
         changedSince: this.vitest.config.changed,
       })
-      if (!related) {
-        process.exitCode = 1
-        throw new GitNotFoundError()
-      }
       this.vitest.config.related = Array.from(new Set(related))
     }
 
@@ -176,8 +171,8 @@ export class VitestSpecifications {
       }
       deps.add(filepath)
 
-      const mod = project.vite.moduleGraph.getModuleById(filepath)
-      const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
+      const mod = project.vite.environments.ssr.moduleGraph.getModuleById(filepath)
+      const transformed = mod?.transformResult || await project.vite.environments.ssr.transformRequest(filepath)
       if (!transformed) {
         return
       }

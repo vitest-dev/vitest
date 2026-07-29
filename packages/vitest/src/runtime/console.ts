@@ -2,10 +2,11 @@ import type { WorkerGlobalState } from '../types/worker'
 import { Console } from 'node:console'
 import { relative } from 'node:path'
 import { Writable } from 'node:stream'
-import { getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils/timers'
 import c from 'tinyrainbow'
-import { RealDate } from '../integrations/mock/date'
 import { getWorkerState } from './utils'
+
+const RealDate = globalThis.Date
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
@@ -139,7 +140,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
       else {
         timer = {
           stdoutTime: RealDate.now(),
-          stderrTime: RealDate.now(),
+          stderrTime: 0,
         }
         timers.set(id, timer)
       }
@@ -178,7 +179,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
       else {
         timer = {
           stderrTime: RealDate.now(),
-          stdoutTime: RealDate.now(),
+          stdoutTime: 0,
         }
         timers.set(id, timer)
       }

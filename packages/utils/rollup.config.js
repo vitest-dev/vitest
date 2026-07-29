@@ -15,7 +15,14 @@ const entries = {
   'diff': 'src/diff/index.ts',
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
+  'source-map/node': 'src/source-map/node.ts',
   'types': 'src/types.ts',
+  'constants': 'src/constants.ts',
+  'offset': 'src/offset.ts',
+  'timers': 'src/timers.ts',
+  'display': 'src/display.ts',
+  'resolver': 'src/resolver.ts',
+  'serialize': 'src/serialize.ts',
 }
 
 const external = [
@@ -33,7 +40,7 @@ const plugins = [
   }),
   json(),
   oxc({
-    transform: { target: 'node14' },
+    transform: { target: 'node20' },
   }),
   commonjs(),
 ]
@@ -41,6 +48,14 @@ const plugins = [
 export default defineConfig([
   {
     input: entries,
+    treeshake: {
+      moduleSideEffects: [
+        {
+          external: true,
+          sideEffects: false,
+        },
+      ],
+    },
     output: {
       dir: 'dist',
       format: 'esm',

@@ -1,5 +1,5 @@
 import type { SourceMap } from 'magic-string'
-import type { Plugin, Rollup } from 'vite'
+import type { Environment, Plugin, Rollup } from 'vite'
 import type { Expression, Positioned } from './esmWalker'
 import MagicString from 'magic-string'
 import { esmWalker } from './esmWalker'
@@ -11,22 +11,25 @@ export interface DynamicImportPluginOptions {
    * @default `"__vitest_mocker__"`
    */
   globalThisAccessor?: string
-  filter?: (id: string) => boolean
+  filter?: (id: string, environment: Environment) => boolean
 }
 
 export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): Plugin {
   return {
     name: 'vitest:browser:esm-injector',
     enforce: 'post',
-    transform(source, id) {
+    transform: {
+      order: 'post',
+      handler(source, id) {
       // TODO: test is not called for static imports
-      if (!regexDynamicImport.test(source)) {
-        return
-      }
-      if (options.filter && !options.filter(id)) {
-        return
-      }
-      return injectDynamicImport(source, id, this.parse, options)
+        if (!regexDynamicImport.test(source)) {
+          return
+        }
+        if (options.filter && !options.filter(id, this.environment)) {
+          return
+        }
+        return injectDynamicImport(source, id, this.parse, options)
+      },
     },
   }
 }
@@ -42,6 +45,10 @@ export function injectDynamicImport(
   parse: Rollup.PluginContext['parse'],
   options: DynamicImportPluginOptions = {},
 ): DynamicImportInjectorResult | undefined {
+  if (code.includes('wrapDynamicImport')) {
+    return
+  }
+
   const s = new MagicString(code)
 
   let ast: ReturnType<Rollup.PluginContext['parse']>
@@ -61,7 +68,7 @@ export function injectDynamicImport(
     },
     onDynamicImport(node) {
       const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
-      const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(() => import(`
+      const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(async () => import(`
       const importSubstring = code.substring(node.start, node.end)
       const hasIgnore = importSubstring.includes('/* @vite-ignore */')
       s.overwrite(

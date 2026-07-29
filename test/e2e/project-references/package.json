@@ -1,0 +1,14 @@
+{
+  "name": "@vitest/test-integration-project-references",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "(rm -rf packages/*/dist || true) && vitest run"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

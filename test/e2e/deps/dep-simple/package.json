@@ -1,0 +1,6 @@
+{
+  "name": "test-dep-simple",
+  "type": "module",
+  "private": true,
+  "exports": "./index.js"
+}

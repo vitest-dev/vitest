@@ -1,4 +1,4 @@
-import type { RunMode, TaskState } from '@vitest/runner'
+import type { RunMode, RunnerTask as Task, TaskState } from 'vitest'
 
 export type FilterResult = [match: boolean, node: UITaskTreeNode]
 
@@ -9,13 +9,19 @@ export interface FilteredTests {
   running: number
 }
 
+export interface SearchMatcher {
+  (task: Task): boolean
+}
+
 export interface CollectFilteredTests extends FilteredTests {
   total: number
   ignored: number
   todo: number
+  expectedFail: number
+  slow: number
 }
 
-export interface TaskTreeNode {
+interface TaskTreeNode {
   id: string
   expandable: boolean
   expanded: boolean
@@ -35,6 +41,11 @@ export interface UITaskTreeNode extends TaskTreeNode {
   indent: number
   state?: TaskState
   duration?: number
+  slow?: boolean
+  typecheck?: boolean
+  label?: string
+  projectName?: string
+  projectNameColor?: string
 }
 
 export interface TestTreeNode extends UITaskTreeNode {
@@ -56,6 +67,7 @@ export interface FileTreeNode extends ParentTreeNode {
   type: 'file'
   filepath: string
   typecheck: boolean | undefined
+  label?: string
   projectName?: string
   projectNameColor: string
   collectDuration?: number
@@ -68,12 +80,20 @@ export interface Filter {
   failed: boolean
   success: boolean
   skipped: boolean
+  slow: boolean
   onlyTests: boolean
 }
+
+type ProjectSortType = 'asc' | 'desc'
+type DurationSortType = 'duration-asc' | 'duration-desc'
+type SortType = ProjectSortType | DurationSortType
+export type SortUIType = SortType | 'default'
 
 export interface TreeFilterState extends Filter {
   search: string
   expandAll?: boolean
+  project?: string
+  projectSort?: SortType
 }
 
 export interface CollectorInfo {
@@ -91,6 +111,8 @@ export interface CollectorInfo {
   testsIgnore: number
   testsSkipped: number
   testsTodo: number
+  testsExpectedFail: number
+  testsSlow: number
   totalTests: number
   failedSnapshot: boolean
   failedSnapshotEnabled: boolean

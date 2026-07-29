@@ -57,9 +57,9 @@ class ChangeBuffer {
     this.lines.push(
       this.line.length !== 1
         ? new Diff(
-          this.op,
-          concatenateRelevantDiffs(this.op, this.line, this.changeColor),
-        )
+            this.op,
+            concatenateRelevantDiffs(this.op, this.line, this.changeColor),
+          )
         : this.line[0][0] === this.op
           ? this.line[0] // can use instance
           : new Diff(this.op, this.line[0][1]), // was common diff

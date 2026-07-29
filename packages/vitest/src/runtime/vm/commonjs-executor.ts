@@ -1,13 +1,14 @@
+import type { CodeCache } from './code-cache'
 import type { FileMap } from './file-map'
 import type { ImportModuleDynamically, VMSyntheticModule } from './types'
-import { Module as _Module, createRequire } from 'node:module'
+import { Module as _Module, createRequire, isBuiltin } from 'node:module'
 import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
-import { isNodeBuiltin } from 'vite-node/utils'
 import { interopCommonJsModule, SyntheticModule } from './utils'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap
+  codeCache?: CodeCache
   interopDefault?: boolean
   context: vm.Context
   importModuleDynamically: ImportModuleDynamically
@@ -34,12 +35,14 @@ export class CommonjsExecutor {
   > = Object.create(null)
 
   private fs: FileMap
+  private codeCache: CodeCache | undefined
   private Module: typeof _Module
   private interopDefault: boolean | undefined
 
   constructor(options: CommonjsExecutorOptions) {
     this.context = options.context
     this.fs = options.fileMap
+    this.codeCache = options.codeCache
     this.interopDefault = options.interopDefault
 
     const primitives = vm.runInContext(
@@ -110,10 +113,16 @@ export class CommonjsExecutor {
 
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
+        const codeCache = executor.codeCache
+        const cachedData = codeCache?.get(filename, cjsModule)
         const script = new vm.Script(cjsModule, {
           filename,
+          cachedData,
           importModuleDynamically: options.importModuleDynamically,
         } as any)
+        if (cachedData && script.cachedDataRejected) {
+          codeCache!.delete(filename)
+        }
         // @ts-expect-error mark script with current identifier
         script.identifier = filename
         const fn = script.runInContext(executor.context)
@@ -125,6 +134,9 @@ export class CommonjsExecutor {
         }
         finally {
           this.loaded = true
+          // store after execution so the code cache carries the compiled
+          // module body, not only the lazily-parsed wrapper
+          codeCache?.store(filename, cjsModule, () => script.createCachedData())
         }
       }
 
@@ -201,18 +213,38 @@ export class CommonjsExecutor {
     m.exports = JSON.parse(code)
   }
 
+  private static cjsConditions: Set<string> | undefined
+  private static getCjsConditions(): Set<string> {
+    if (!CommonjsExecutor.cjsConditions) {
+      CommonjsExecutor.cjsConditions = parseCjsConditions(
+        process.execArgv,
+        process.env.NODE_OPTIONS,
+      )
+    }
+    return CommonjsExecutor.cjsConditions
+  }
+
   public createRequire = (filename: string | URL): NodeJS.Require => {
     const _require = createRequire(filename)
+    const resolve = (id: string, options?: { paths?: string[] }) => {
+      return _require.resolve(id, {
+        ...options,
+        // Works on Node 22.12+ where _resolveFilename supports conditions.
+        // Silently ignored on older Node versions.
+        conditions: CommonjsExecutor.getCjsConditions(),
+      } as any)
+    }
     const require = ((id: string) => {
-      const resolved = _require.resolve(id)
+      const resolved = resolve(id)
       const ext = extname(resolved)
-      if (ext === '.node' || isNodeBuiltin(resolved)) {
+      if (ext === '.node' || isBuiltin(resolved)) {
         return this.requireCoreModule(resolved)
       }
       const module = new this.Module(resolved)
       return this.loadCommonJSModule(module, resolved)
     }) as NodeJS.Require
-    require.resolve = _require.resolve
+    require.resolve = resolve as NodeJS.RequireResolve
+    require.resolve.paths = _require.resolve.paths
     Object.defineProperty(require, 'extensions', {
       get: () => this.extensions,
       set: () => {},
@@ -358,7 +390,7 @@ export class CommonjsExecutor {
 
   public require(identifier: string): any {
     const ext = extname(identifier)
-    if (ext === '.node' || isNodeBuiltin(identifier)) {
+    if (ext === '.node' || isBuiltin(identifier)) {
       return this.requireCoreModule(identifier)
     }
     const module = new this.Module(identifier)
@@ -381,4 +413,32 @@ export class CommonjsExecutor {
     // TODO: should we wrap module to rethrow context errors?
     return moduleExports
   }
+}
+
+// The "module-sync" exports condition (added in Node 22.12/20.19 when
+// require(esm) was unflagged) can resolve to ESM files that our CJS
+// vm.Script executor cannot handle. We exclude it by passing explicit
+// CJS conditions to require.resolve (Node 22.12+).
+// Must be a Set because Node's internal resolver calls conditions.has().
+// User-specified --conditions/-C flags are respected, except module-sync.
+export function parseCjsConditions(
+  execArgv: string[],
+  nodeOptions?: string,
+): Set<string> {
+  const conditions = ['node', 'require', 'node-addons']
+  const args = [
+    ...execArgv,
+    ...(nodeOptions?.split(/\s+/) ?? []),
+  ]
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    const eqMatch = arg.match(/^(?:--conditions|-C)=(.+)$/)
+    if (eqMatch) {
+      conditions.push(eqMatch[1])
+    }
+    else if ((arg === '--conditions' || arg === '-C') && i + 1 < args.length) {
+      conditions.push(args[++i])
+    }
+  }
+  return new Set(conditions.filter(c => c !== 'module-sync'))
 }

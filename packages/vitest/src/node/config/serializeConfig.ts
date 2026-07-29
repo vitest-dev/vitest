@@ -1,28 +1,27 @@
-import type { ResolvedConfig as ViteConfig } from 'vite'
-import type { ResolvedConfig, SerializedConfig } from '../types/config'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { SerializedConfig } from '../../runtime/config'
+import type { TestProject } from '../project'
+import { resolve } from 'node:path'
+import { configDefaults } from '../../defaults'
+import { getCoverageFilesDirectory } from '../../utils/coverage'
+import { isAgent, isForceColor } from '../../utils/env'
 
-export function serializeConfig(
-  config: ResolvedConfig,
-  coreConfig: ResolvedConfig,
-  viteConfig: ViteConfig | undefined,
-): SerializedConfig {
-  const optimizer = config.deps?.optimizer
-  const poolOptions = config.poolOptions
-
-  // Resolve from server.config to avoid comparing against default value
-  const isolate = viteConfig?.test?.isolate
+export function serializeConfig(project: TestProject): SerializedConfig {
+  const { config, globalConfig, viteConfig } = project
+  const optimizer = config.deps?.optimizer || {}
 
   return {
     // TODO: remove functions from environmentOptions
     environmentOptions: config.environmentOptions,
-    mode: config.mode,
     isolate: config.isolate,
+    maxWorkers: config.maxWorkers,
     base: config.base,
     logHeapUsage: config.logHeapUsage,
     runner: config.runner,
     bail: config.bail,
     defines: config.defines,
     chaiConfig: config.chaiConfig,
+    taskTitleValueFormatTruncate: config.taskTitleValueFormatTruncate,
     setupFiles: config.setupFiles,
     allowOnly: config.allowOnly,
     testTimeout: config.testTimeout,
@@ -37,136 +36,170 @@ export function serializeConfig(
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
-    // TODO: non serializable function?
-    diff: config.diff,
+    api: {
+      allowExec: config.api.allowExec,
+      allowWrite: config.api.allowWrite,
+    },
+    diff: serializeDiffOptions(config.diff),
     retry: config.retry,
+    repeats: config.repeats,
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,
+    color: config.color,
     globals: config.globals,
+    injectCjsGlobals: config.injectCjsGlobals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
-      const htmlReporter = coverage.reporter.find(([reporterName]) => reporterName === 'html') as [
-        'html',
-        { subdir?: string },
-      ] | undefined
-      const subdir = htmlReporter && htmlReporter[1]?.subdir
+      const reportsDirectory = resolve(globalConfig.root, coverage.reportsDirectory)
       return {
-        reportsDirectory: coverage.reportsDirectory,
+        reportsDirectory,
+        coverageFilesDirectory: getCoverageFilesDirectory(reportsDirectory, globalConfig.shard),
         provider: coverage.provider,
         enabled: coverage.enabled,
-        htmlReporter: htmlReporter
-          ? { subdir }
-          : undefined,
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule
           : undefined,
+        htmlDir: coverage.htmlDir,
+        autoAttachSubprocess: coverage.autoAttachSubprocess ?? false,
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,
-    poolOptions: {
-      forks: {
-        singleFork:
-          poolOptions?.forks?.singleFork
-          ?? coreConfig.poolOptions?.forks?.singleFork
-          ?? false,
-        isolate:
-          poolOptions?.forks?.isolate
-          ?? isolate
-          ?? coreConfig.poolOptions?.forks?.isolate
-          ?? true,
-      },
-      threads: {
-        singleThread:
-          poolOptions?.threads?.singleThread
-          ?? coreConfig.poolOptions?.threads?.singleThread
-          ?? false,
-        isolate:
-          poolOptions?.threads?.isolate
-          ?? isolate
-          ?? coreConfig.poolOptions?.threads?.isolate
-          ?? true,
-      },
-      vmThreads: {
-        singleThread:
-          poolOptions?.vmThreads?.singleThread
-          ?? coreConfig.poolOptions?.vmThreads?.singleThread
-          ?? false,
-      },
-      vmForks: {
-        singleFork:
-          poolOptions?.vmForks?.singleFork
-          ?? coreConfig.poolOptions?.vmForks?.singleFork
-          ?? false,
-      },
-    },
     deps: {
       web: config.deps.web || {},
-      optimizer: {
-        web: {
-          enabled: optimizer?.web?.enabled ?? true,
-        },
-        ssr: {
-          enabled: optimizer?.ssr?.enabled ?? true,
-        },
-      },
+      optimizer: Object.entries(optimizer).reduce((acc, [name, option]) => {
+        acc[name] = { enabled: option?.enabled ?? false }
+        return acc
+      }, {} as Record<string, { enabled: boolean }>),
       interopDefault: config.deps.interopDefault,
       moduleDirectories: config.deps.moduleDirectories,
     },
     snapshotOptions: {
       // TODO: store it differently, not on the config
       snapshotEnvironment: undefined!,
-      updateSnapshot: coreConfig.snapshotOptions.updateSnapshot,
+      updateSnapshot: globalConfig.snapshotOptions.updateSnapshot,
       snapshotFormat: {
-        ...coreConfig.snapshotOptions.snapshotFormat,
+        ...globalConfig.snapshotOptions.snapshotFormat,
       },
       expand:
         config.snapshotOptions.expand
-        ?? coreConfig.snapshotOptions.expand,
+        ?? globalConfig.snapshotOptions.expand,
     },
     sequence: {
-      shuffle: coreConfig.sequence.shuffle,
-      concurrent: coreConfig.sequence.concurrent,
-      seed: coreConfig.sequence.seed,
-      hooks: coreConfig.sequence.hooks,
-      setupFiles: coreConfig.sequence.setupFiles,
+      shuffle: config.sequence.shuffle,
+      concurrent: config.sequence.concurrent,
+      // `seed` and `sequencer` drive cross-project file ordering, so they are
+      // resolved from the root config and shared across all projects.
+      seed: globalConfig.sequence.seed,
+      hooks: config.sequence.hooks,
+      setupFiles: config.sequence.setupFiles,
     },
-    inspect: coreConfig.inspect,
-    inspectBrk: coreConfig.inspectBrk,
-    inspector: coreConfig.inspector,
+    inspect: globalConfig.inspect,
+    inspectBrk: globalConfig.inspectBrk,
+    inspector: globalConfig.inspector,
+    detectAsyncLeaks: globalConfig.detectAsyncLeaks,
     watch: config.watch,
     includeTaskLocation:
       config.includeTaskLocation
-      ?? coreConfig.includeTaskLocation,
+      ?? globalConfig.includeTaskLocation,
     env: {
       ...viteConfig?.env,
       ...config.env,
     },
     browser: ((browser) => {
+      const provider = project.browser?.provider
       return {
         name: browser.name,
         headless: browser.headless,
-        isolate: browser.isolate,
-        fileParallelism: browser.fileParallelism,
         ui: browser.ui,
+        detailsPanelPosition: browser.detailsPanelPosition ?? 'right',
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
+          exact: browser.locators.exact,
+          errorFormat: browser.locators.errorFormat,
         },
-        providerOptions: browser.provider === 'playwright'
+        providerOptions: provider?.name === 'playwright'
           ? {
-              actionTimeout: (browser.providerOptions as any)?.context?.actionTimeout,
+              actionTimeout: (provider as any)?.options?.actionTimeout,
             }
           : {},
+        trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
+        trace: browser.trace.mode,
+        traceView: browser.traceView,
       }
     })(config.browser),
     standalone: config.standalone,
     printConsoleTrace:
-      config.printConsoleTrace ?? coreConfig.printConsoleTrace,
-    benchmark: config.benchmark && {
-      includeSamples: config.benchmark.includeSamples,
+      config.printConsoleTrace ?? globalConfig.printConsoleTrace,
+    benchmark: {
+      enabled: config.benchmark.enabled,
+      retainSamples: config.benchmark.retainSamples,
+      provider: config.benchmark.provider,
+      suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
+      projectName: config.benchmark.projectName,
     },
+    // the browser initialized them via `@vite/env` import
+    serializedDefines: config.browser.enabled
+      ? ''
+      : project._serializedDefines || '',
+    fsModuleCache: config.fsModuleCache ?? false,
+    experimental: {
+      importDurations: config.experimental.importDurations,
+      viteModuleRunner: config.experimental.viteModuleRunner ?? true,
+      nodeLoader: config.experimental.nodeLoader ?? true,
+      openTelemetry: config.experimental.openTelemetry,
+    },
+    tags: config.tags || [],
+    tagsFilter: config.tagsFilter,
+    strictTags: config.strictTags ?? true,
+    mergeReportsLabel: config.mergeReportsLabel,
+    slowTestThreshold:
+      config.slowTestThreshold
+      ?? globalConfig.slowTestThreshold
+      ?? configDefaults.slowTestThreshold,
+    disableColors: isAgent && !isForceColor(),
   }
+}
+
+const serializableDiffKeys = [
+  'aAnnotation',
+  'aIndicator',
+  'bAnnotation',
+  'bIndicator',
+  'commonIndicator',
+  'contextLines',
+  'emptyFirstOrLastLinePlaceholder',
+  'expand',
+  'includeChangeCounts',
+  'omitAnnotationLines',
+  'printBasicPrototype',
+  'maxDepth',
+  'truncateThreshold',
+  'truncateAnnotation',
+] satisfies (keyof SerializedDiffOptions)[]
+
+// `diff` can be an inline object containing color/compareKeys functions
+// (`DiffOptions`). Those functions are not structured-cloneable (threads pool)
+// and are silently dropped over `child_process` IPC (forks pool), so passing
+// the raw object to workers throws `DataCloneError`. Forward only the
+// serializable fields declared by `SerializedDiffOptions`, and only the ones
+// actually set — explicit `undefined` values would override the diff defaults
+// when the worker merges the options. The function-based options still
+// require the file-path form, which workers import locally.
+function serializeDiffOptions(
+  diff: string | SerializedDiffOptions | undefined,
+): string | SerializedDiffOptions | undefined {
+  if (diff == null || typeof diff === 'string') {
+    return diff
+  }
+  const result: SerializedDiffOptions = {}
+  for (const key of serializableDiffKeys) {
+    if (diff[key] !== undefined) {
+      (result as Record<string, unknown>)[key] = diff[key]
+    }
+  }
+  return result
 }

@@ -1,17 +1,8 @@
-import type { SourceMapInput } from '@jridgewell/trace-mapping'
+import type { OriginalMapping } from '@jridgewell/trace-mapping'
 import type { ParsedStack, TestError } from './types'
-import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
+import { originalPositionFor } from '@jridgewell/trace-mapping'
 import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
-
-export {
-  eachMapping,
-  type EachMapping,
-  generatedPositionFor,
-  originalPositionFor,
-  TraceMap,
-} from '@jridgewell/trace-mapping'
-export type { SourceMapInput } from '@jridgewell/trace-mapping'
 
 export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
@@ -23,27 +14,38 @@ export interface StackTraceParserOptions {
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
 const SAFARI_NATIVE_CODE_REGEXP = /^(?:eval@)?(?:\[native code\])?$/
 
-const stackIgnorePatterns = [
+const stackIgnorePatterns: (string | RegExp)[] = [
   'node:internal',
   /\/packages\/\w+\/dist\//,
   /\/@vitest\/\w+\/dist\//,
   '/vitest/dist/',
   '/vitest/src/',
-  '/vite-node/dist/',
-  '/vite-node/src/',
+  '/packages/expect/src/',
+  '/packages/snapshot/src/',
   '/node_modules/chai/',
-  '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
+  '/vite/dist/node/module-runner',
+  '/rolldown-vite/dist/node/module-runner',
   // browser related deps
   '/deps/chunk-',
   '/deps/@vitest',
   '/deps/loupe',
   '/deps/chai',
+  '/browser-playwright/dist/locators.js',
+  '/browser-webdriverio/dist/locators.js',
+  '/browser-preview/dist/locators.js',
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
+  '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
+  '/deps/vitest.js',
 ]
+
+export { stackIgnorePatterns as defaultStackIgnorePatterns }
+
+const NOW_LENGTH = Date.now().toString().length
+const REGEXP_VITEST = new RegExp(`vitest=\\d{${NOW_LENGTH}}`)
 
 function extractLocation(urlLike: string) {
   // Fail-fast but return locations like "(native)"
@@ -70,6 +72,9 @@ function extractLocation(urlLike: string) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
     url = url.slice(isWindows ? 5 : 4)
   }
+  if (url.includes('vitest=')) {
+    url = url.replace(REGEXP_VITEST, '').replace(/[?&]$/, '')
+  }
   return [url, parts[2] || undefined, parts[3] || undefined]
 }
 
@@ -87,17 +92,38 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     )
   }
 
-  if (!line.includes('@') && !line.includes(':')) {
+  // Early return for lines that don't look like Firefox/Safari stack traces
+  // Firefox/Safari stack traces must contain '@' and should have location info after it
+  if (!line.includes('@')) {
     return null
   }
 
-  // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
-  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(@)/
-  const matches = line.match(functionNameRegex)
-  const functionName = matches && matches[1] ? matches[1] : undefined
-  const [url, lineNumber, columnNumber] = extractLocation(
-    line.replace(functionNameRegex, ''),
-  )
+  // Find the correct @ that separates function name from location
+  // For cases like '@https://@fs/path' or 'functionName@https://@fs/path'
+  // we need to find the first @ that precedes a valid location (containing :)
+  let atIndex = -1
+  let locationPart = ''
+  let functionName: string | undefined
+
+  // Try each @ from left to right to find the one that gives us a valid location
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '@') {
+      const candidateLocation = line.slice(i + 1)
+      // Minimum length 3 for valid location: 1 for filename + 1 for colon + 1 for line number (e.g., "a:1")
+      if (candidateLocation.includes(':') && candidateLocation.length >= 3) {
+        atIndex = i
+        locationPart = candidateLocation
+        functionName = i > 0 ? line.slice(0, i) : undefined
+        break
+      }
+    }
+  }
+
+  // Validate we found a valid location with minimum length (filename:line format)
+  if (atIndex === -1 || !locationPart.includes(':') || locationPart.length < 3) {
+    return null
+  }
+  const [url, lineNumber, columnNumber] = extractLocation(locationPart)
 
   if (!url || !lineNumber || !columnNumber) {
     return null
@@ -174,7 +200,12 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
     : resolve(file)
 
   if (method) {
-    method = method.replace(/__vite_ssr_import_\d+__\./g, '')
+    method = method
+    // vite 7+
+      .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+    // vite <7
+      .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
+      .replace(/(Object\.)?__vite_ssr_export_default__\s?/g, '')
   }
 
   return {
@@ -200,9 +231,22 @@ export function parseStacktrace(
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
-  const stacks = !CHROME_IE_STACK_REGEXP.test(stack)
+  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
+
+  // remove vi.defineHelper's internal stacks
+  const helperIndex = stacks.findLastIndex(s =>
+    // this covers cases such as
+    //   "__VITEST_HELPER__"
+    //   "__VITEST_HELPER__ [as <object method name>]"
+    //   "async*__VITEST_HELPER__" (firefox)
+    //   "async __VITEST_HELPER__" (webkit)
+    s.method.includes('__VITEST_HELPER__'),
+  )
+  if (helperIndex >= 0) {
+    stacks = stacks.slice(helperIndex + 1)
+  }
 
   return stacks.map((stack) => {
     if (options.getUrlId) {
@@ -210,29 +254,30 @@ export function parseStacktrace(
     }
 
     const map = options.getSourceMap?.(stack.file) as
-      | SourceMapInput
+      | SourceMapLike
       | null
       | undefined
     if (!map || typeof map !== 'object' || !map.version) {
       return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
     }
 
-    const traceMap = new TraceMap(map)
-    const { line, column, source, name } = originalPositionFor(traceMap, stack)
+    const traceMap = new DecodedMap(map, stack.file)
+    if (stack.line <= 0 || stack.column <= 0) {
+      return stack
+    }
+    const position = getOriginalPosition(traceMap, {
+      line: stack.line,
+      // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
+      column: stack.column - 1,
+    })
+    if (!position) {
+      return stack
+    }
 
-    let file: string = stack.file
-    if (source) {
-      const fileUrl = stack.file.startsWith('file://')
-        ? stack.file
-        : `file://${stack.file}`
-      const sourceRootUrl = map.sourceRoot
-        ? new URL(map.sourceRoot, fileUrl)
-        : fileUrl
-      file = new URL(source, sourceRootUrl).pathname
-      // if the file path is on windows, we need to remove the leading slash
-      if (file.match(/\/\w:\//)) {
-        file = file.slice(1)
-      }
+    const { line, column, source, name } = position
+    let file = source || stack.file
+    if (/\/\w:\//.test(file)) {
+      file = file.slice(1)
     }
 
     if (shouldFilter(ignoreStackEntries, file)) {
@@ -242,7 +287,7 @@ export function parseStacktrace(
     if (line != null && column != null) {
       return {
         line,
-        column,
+        column: column + 1,
         file,
         method: name || stack.method,
       }
@@ -306,4 +351,68 @@ export function parseErrorStacktrace(
 
   ;(e as TestError).stacks = stackFrames
   return stackFrames
+}
+
+interface SourceMapLike {
+  version: number
+  mappings?: string
+  names?: string[]
+  sources?: string[]
+  sourcesContent?: string[]
+  sourceRoot?: string
+}
+
+interface Needle {
+  line: number
+  column: number
+}
+
+export class DecodedMap {
+  _encoded: string
+  _decoded: undefined | number[][][]
+  _decodedMemo: Stats
+  url: string
+  version: number
+  names: string[] = []
+  resolvedSources: string[]
+
+  constructor(
+    public map: SourceMapLike,
+    from: string,
+  ) {
+    const { mappings, names, sources } = map
+    this.version = map.version
+    this.names = names || []
+    this._encoded = mappings || ''
+    this._decodedMemo = memoizedState()
+    this.url = from
+    this.resolvedSources = (sources || []).map(s =>
+      resolve(from, '..', s || ''),
+    )
+  }
+}
+
+interface Stats {
+  lastKey: number
+  lastNeedle: number
+  lastIndex: number
+}
+
+function memoizedState(): Stats {
+  return {
+    lastKey: -1,
+    lastNeedle: -1,
+    lastIndex: -1,
+  }
+}
+
+export function getOriginalPosition(
+  map: DecodedMap,
+  needle: Needle,
+): OriginalMapping | null {
+  const result = originalPositionFor(map as any, needle)
+  if (result.column == null) {
+    return null
+  }
+  return result
 }

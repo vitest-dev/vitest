@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`suite name > snapshot 1`] = `
+{
+  "foo": "bar",
+}
+`;

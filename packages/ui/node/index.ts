@@ -1,46 +1,44 @@
-import type { Plugin } from 'vite'
-import type { Vitest } from 'vitest/node'
+import type { PluginHarness, Vite } from 'vitest/node'
 import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { toArray } from '@vitest/utils'
-import { basename, resolve } from 'pathe'
+import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
-import { coverageConfigDefaults } from 'vitest/config'
 import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
+import { distClientRoot } from './paths'
 
-export default (ctx: Vitest): Plugin => {
-  if (ctx.version !== version) {
-    ctx.logger.warn(
+export { distClientRoot }
+
+const UI_TOKEN_COOKIE = 'vitest-ui-token'
+
+export default (harness: PluginHarness): Vite.Plugin => {
+  if (harness.version !== version) {
+    harness.logger.warn(
       c.yellow(
-        `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
+        `Loaded ${c.inverse(c.yellow(` vitest@${harness.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
         + '\nRunning mixed versions is not supported and may lead into bugs'
         + '\nUpdate your dependencies and make sure the versions match.',
       ),
     )
   }
 
-  return <Plugin>{
+  return <Vite.Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
     configureServer: {
       order: 'post',
       handler(server) {
+        const ctx = harness.getVitest()
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
-        const coverageFolder = resolveCoverageFolder(ctx)
-        const coveragePath = coverageFolder ? coverageFolder[1] : undefined
-        if (coveragePath && base === coveragePath) {
-          throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`,
-          )
-        }
 
-        if (coverageFolder) {
+        // Serve coverage HTML at ./coverage if configured
+        const coverageHtmlDir = ctx.config.coverage?.htmlDir
+        if (coverageHtmlDir) {
           server.middlewares.use(
-            coveragePath!,
-            sirv(coverageFolder[0], {
+            join(base, 'coverage'),
+            sirv(coverageHtmlDir, {
               single: true,
               dev: true,
               setHeaders: (res) => {
@@ -53,8 +51,7 @@ export default (ctx: Vitest): Plugin => {
           )
         }
 
-        const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
-        const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
+        const clientIndexHtml = fs.readFileSync(resolve(distClientRoot, 'index.html'), 'utf-8')
 
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestAttachment(req, res, next) {
@@ -74,7 +71,7 @@ export default (ctx: Vitest): Plugin => {
 
             const fsPath = decodeURIComponent(path)
 
-            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
+            if (!isFileServingAllowed(ctx.viteConfig, fsPath)) {
               return next()
             }
 
@@ -101,11 +98,29 @@ export default (ctx: Vitest): Plugin => {
           if (req.url) {
             const url = new URL(req.url, 'http://localhost')
             if (url.pathname === base) {
+              if (isValidApiRequest(ctx.config, req)) {
+                res.statusCode = 302
+                res.setHeader('Set-Cookie', serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
+                  path: base,
+                  httpOnly: true,
+                  sameSite: 'strict',
+                }))
+                res.setHeader('Location', base)
+                res.end()
+                return
+              }
+              const cookieToken = parseCookie(req.headers.cookie ?? '')[UI_TOKEN_COOKIE]
+              if (cookieToken !== ctx.config.api.token) {
+                res.statusCode = 403
+                res.end('Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...')
+                return
+              }
               const html = clientIndexHtml.replace(
                 '<!-- !LOAD_METADATA! -->',
                 `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
               )
               res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+              res.setHeader('Referrer-Policy', 'no-referrer')
               res.setHeader('Content-Type', 'text/html; charset=utf-8')
               res.write(html)
               res.end()
@@ -117,7 +132,7 @@ export default (ctx: Vitest): Plugin => {
 
         server.middlewares.use(
           base,
-          sirv(clientDist, {
+          sirv(distClientRoot, {
             single: true,
             dev: true,
           }),
@@ -125,41 +140,4 @@ export default (ctx: Vitest): Plugin => {
       },
     },
   }
-}
-
-function resolveCoverageFolder(ctx: Vitest) {
-  const options = ctx.config
-  const htmlReporter
-    = options.api?.port && options.coverage?.enabled
-      ? toArray(options.coverage.reporter).find((reporter) => {
-          if (typeof reporter === 'string') {
-            return reporter === 'html'
-          }
-
-          return reporter[0] === 'html'
-        })
-      : undefined
-
-  if (!htmlReporter) {
-    return undefined
-  }
-
-  // reportsDirectory not resolved yet
-  const root = resolve(
-    ctx.config?.root || options.root || process.cwd(),
-    options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
-  )
-
-  const subdir
-    = Array.isArray(htmlReporter)
-      && htmlReporter.length > 1
-      && 'subdir' in htmlReporter[1]
-      ? htmlReporter[1].subdir
-      : undefined
-
-  if (!subdir || typeof subdir !== 'string') {
-    return [root, `/${basename(root)}/`]
-  }
-
-  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
 }

@@ -21,44 +21,35 @@ const entries = {
   'cli': 'src/node/cli.ts',
   'config': 'src/public/config.ts',
   'node': 'src/public/node.ts',
-  'suite': 'src/public/suite.ts',
   'browser': 'src/public/browser.ts',
-  'runners': 'src/public/runners.ts',
-  'environments': 'src/public/environments.ts',
-  'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
-  'coverage': 'src/public/coverage.ts',
-  'execute': 'src/public/execute.ts',
-  'reporters': 'src/public/reporters.ts',
-  // TODO: advanced docs
-  'workers': 'src/public/workers.ts',
+  'runtime': 'src/public/runtime.ts',
+  'worker': 'src/public/worker.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
+  'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
+  'traces': 'src/utils/traces.ts',
+
+  // just so that we have a separate chunk, this is not a public api
+  'task-utils': 'src/utils/tasks.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
-  'worker': 'src/runtime/worker.ts',
+  // 'worker': 'src/runtime/worker.ts',
   'workers/forks': 'src/runtime/workers/forks.ts',
   'workers/threads': 'src/runtime/workers/threads.ts',
   'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
-
-  'snapshot': 'src/public/snapshot.ts',
 }
 
 const dtsEntries = {
-  index: 'src/public/index.ts',
-  node: 'src/public/node.ts',
-  environments: 'src/public/environments.ts',
-  browser: 'src/public/browser.ts',
-  runners: 'src/public/runners.ts',
-  suite: 'src/public/suite.ts',
-  config: 'src/public/config.ts',
-  coverage: 'src/public/coverage.ts',
-  execute: 'src/public/execute.ts',
-  reporters: 'src/public/reporters.ts',
-  mocker: 'src/public/mocker.ts',
-  workers: 'src/public/workers.ts',
-  snapshot: 'src/public/snapshot.ts',
+  'index': 'src/public/index.ts',
+  'node': 'src/public/node.ts',
+  'browser': 'src/public/browser.ts',
+  'runtime': 'src/public/runtime.ts',
+  'config': 'src/public/config.ts',
+  'worker': 'src/public/worker.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
 
 const external = [
@@ -68,28 +59,22 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'node:fs/promises',
   'node:os',
   'node:stream',
   'node:vm',
   'node:http',
   'node:console',
+  'node:events',
   'inspector',
+  'vitest/optional-runtime-types.js',
   'vitest/optional-types.js',
-  'vite-node/source-map',
-  'vite-node/client',
-  'vite-node/server',
-  'vite-node/constants',
-  'vite-node/utils',
-  '@vitest/mocker',
-  '@vitest/mocker/node',
-  '@vitest/utils/diff',
-  '@vitest/utils/ast',
-  '@vitest/utils/error',
-  '@vitest/utils/source-map',
-  '@vitest/runner/utils',
-  '@vitest/runner/types',
-  '@vitest/snapshot/environment',
-  '@vitest/snapshot/manager',
+  'vitest/browser',
+  'vite/module-runner',
+  /@vitest\/mocker\/\w+/,
+
+  '#module-evaluator',
+  '@opentelemetry/api',
 ]
 
 const dir = dirname(fileURLToPath(import.meta.url))
@@ -99,16 +84,14 @@ const dtsUtils = createDtsUtils()
 const plugins = [
   nodeResolve({
     preferBuiltins: true,
+    exportConditions: ['__vitest_source__'],
   }),
   json(),
   commonjs(),
   oxc({
     transform: {
-      target: 'node18',
+      target: 'node20',
       define: {
-        // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
-        // in the release version the "if" with this condition should not be present
-        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
         ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
           ? {
               'process.env.VITE_TEST_WATCHER_DEBUG': 'false',
@@ -129,6 +112,17 @@ export default ({ watch }) =>
         dir: 'dist',
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].js',
+        manualChunks(id) {
+          // `tinyrainbow`'s default export is a single mutable color object whose
+          // `isColorSupported` flag and formatters are toggled at runtime (e.g.
+          // `disableDefaultColors()`). If it is inlined into several chunks each
+          // copy has its own object, so disabling colors on one no longer affects
+          // the others. Pin it to ONE shared chunk so every consumer in a process
+          // mutates the same instance.
+          if (/[\\/]tinyrainbow[\\/]/.test(id)) {
+            return 'tinyrainbow'
+          }
+        },
       },
       external,
       moduleContext: (id) => {
@@ -166,7 +160,17 @@ export default ({ watch }) =>
       },
       watch: false,
       external,
-      plugins: dtsUtils.dts(),
+      plugins: [
+        ...dtsUtils.dts(),
+        {
+          name: 'vitest-bundle-optional-types',
+          resolveId(source) {
+            if (source === '@vitest/spy/optional-types.js') {
+              return 'vitest/optional-runtime-types.js'
+            }
+          },
+        },
+      ],
     },
   ])
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { finished } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
+import TestFilesEntry from './TestFilesEntry.vue'
+import TestsEntry from './TestsEntry.vue'
 </script>
 
 <template>

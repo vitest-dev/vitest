@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "nodenext",
+    "moduleResolution": "node16",
+    "types": ["vitest/importMeta", "@types/node"],
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true,
+    "sourceMap": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "test"],
+  "exclude": ["node_modules"]
+}

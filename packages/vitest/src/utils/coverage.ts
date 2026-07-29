@@ -1,10 +1,17 @@
-import type { ModuleExecutionInfo } from 'vite-node/client'
 import type { SerializedCoverageConfig } from '../runtime/config'
+import { resolve } from 'pathe'
+
+export function getCoverageFilesDirectory(
+  reportsDirectory: string,
+  shard: { index: number; count: number } | undefined,
+): string {
+  return resolve(reportsDirectory, `.tmp${shard ? `-${shard.index}-${shard.count}` : ''}`)
+}
 
 export interface RuntimeCoverageModuleLoader {
-  executeId: (id: string) => Promise<{ default: RuntimeCoverageProviderModule }>
+  import: (id: string) => Promise<{ default: RuntimeCoverageProviderModule }>
   isBrowser?: boolean
-  moduleExecutionInfo?: ModuleExecutionInfo
+  moduleExecutionInfo?: Map<string, { startOffset: number }>
 }
 
 export interface RuntimeCoverageProviderModule {
@@ -16,12 +23,21 @@ export interface RuntimeCoverageProviderModule {
   /**
    * Executed before tests are run in the worker thread.
    */
-  startCoverage?: (runtimeOptions: { isolate: boolean }) => unknown | Promise<unknown>
+  startCoverage?: (runtimeOptions: {
+    isolate: boolean
+    /** @internal */
+    autoAttachSubprocess: boolean
+    /** @internal */
+    reportsDirectory: string
+  }) => unknown | Promise<unknown>
 
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
    */
-  takeCoverage?: (runtimeOptions?: { moduleExecutionInfo?: ModuleExecutionInfo }) => unknown | Promise<unknown>
+  takeCoverage?: (runtimeOptions?: {
+    moduleExecutionInfo?: Map<string, { startOffset: number }>
+    coverageFilesDirectory: string
+  }) => unknown | Promise<unknown>
 
   /**
    * Executed after all tests have been run in the worker thread.
@@ -47,11 +63,14 @@ export async function resolveCoverageProviderModule(
   if (provider === 'v8' || provider === 'istanbul') {
     let builtInModule = CoverageProviderMap[provider]
 
-    if (provider === 'v8' && loader.isBrowser) {
+    if (loader.isBrowser) {
       builtInModule += '/browser'
     }
 
-    const { default: coverageModule } = await loader.executeId(builtInModule)
+    const { default: coverageModule }
+      = loader.isBrowser
+        ? await loader.import(builtInModule)
+        : await import(/* @vite-ignore */ builtInModule)
 
     if (!coverageModule) {
       throw new Error(
@@ -65,7 +84,7 @@ export async function resolveCoverageProviderModule(
   let customProviderModule
 
   try {
-    customProviderModule = await loader.executeId(options.customProviderModule!)
+    customProviderModule = await loader.import(options.customProviderModule!)
   }
   catch (error) {
     throw new Error(

@@ -11,10 +11,11 @@ import type {
   Vitest,
 } from 'vitest/node'
 import type { BrowserServerState } from './state'
-import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
+import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
-import { dirname, join, resolve } from 'pathe'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
+import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
 import { distRoot } from './constants'
@@ -23,7 +24,6 @@ import { slash } from './utils'
 
 export class ParentBrowserProject {
   public orchestratorScripts: string | undefined
-  public testerScripts: HtmlTagDescriptor[] | undefined
 
   public faviconUrl: string
   public prefixOrchestratorUrl: string
@@ -39,6 +39,8 @@ export class ParentBrowserProject {
   public matchersUrl: string
   public stateJs: Promise<string> | string
 
+  public initScripts: string[] = []
+
   public commands: Record<string, BrowserCommand<any>> = {}
   public children: Set<ProjectBrowser> = new Set()
   public vitest: Vitest
@@ -49,45 +51,56 @@ export class ParentBrowserProject {
   private sourceMapCache = new Map<string, any>()
 
   constructor(
-    public project: TestProject,
+    ctx: { config: ResolvedConfig; vitest: Vitest },
     public base: string,
   ) {
-    this.vitest = project.vitest
-    this.config = project.config
+    this.vitest = ctx.vitest
+    this.config = ctx.config
     this.stackTraceOptions = {
-      frameFilter: project.config.onStackTrace,
+      frameFilter: this.config.onStackTrace,
       getSourceMap: (id) => {
         if (this.sourceMapCache.has(id)) {
           return this.sourceMapCache.get(id)
         }
+
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
-        // this can happen for bundled dependencies in node_modules/.vite
-        if (result && !result.map) {
-          const sourceMapUrl = this.retrieveSourceMapURL(result.code)
-          if (!sourceMapUrl) {
-            return null
-          }
-          const filepathDir = dirname(id)
-          const sourceMapPath = resolve(filepathDir, sourceMapUrl)
-          const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
-          this.sourceMapCache.set(id, map)
-          return map
+        const filePath = id.split('?')[0]
+        // prefer the map stored on disk when the transform pipeline can't
+        // provide a usable one:
+        // - pre-bundled deps: the pipeline map resolves back into the
+        //   optimizer cache, while the map esbuild wrote next to the file
+        //   points at the real package sources
+        // - an empty `mappings` means the map was intentionally not served
+        //   to the browser (`vitest:browser:framework-sourcemaps`), but disk
+        //   is still the source of truth for error stack traces
+        if (
+          result && (
+            !result.map
+            || result.map.mappings === ''
+            || filePath.startsWith(this.vite.config.cacheDir)
+          )
+        ) {
+          const extracted = extractSourcemapFromFile(result.code, filePath)
+          this.sourceMapCache.set(id, extracted?.map)
+          return extracted?.map
         }
+
         return result?.map
       },
       getUrlId: (id) => {
-        const mod = this.vite.moduleGraph.getModuleById(id)
+        const moduleGraph = this.vite.environments.client.moduleGraph
+        const mod = moduleGraph.getModuleById(id)
         if (mod) {
           return id
         }
         const resolvedPath = resolve(this.vite.config.root, id.slice(1))
-        const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
+        const modUrl = moduleGraph.getModuleById(resolvedPath)
         if (modUrl) {
           return resolvedPath
         }
         // some browsers (looking at you, safari) don't report queries in stack traces
         // the next best thing is to try the first id that this file resolves to
-        const files = this.vite.moduleGraph.getModulesByFile(resolvedPath)
+        const files = moduleGraph.getModulesByFile(resolvedPath)
         if (files && files.size) {
           return files.values().next().value!.id!
         }
@@ -100,13 +113,13 @@ export class ParentBrowserProject {
     }
 
     // validate names because they can't be used as identifiers
-    for (const command in project.config.browser.commands) {
+    for (const command in this.config.browser.commands) {
       if (!/^[a-z_$][\w$]*$/i.test(command)) {
         throw new Error(
           `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
         )
       }
-      this.commands[command] = project.config.browser.commands[command]
+      this.commands[command] = this.config.browser.commands[command]
     }
 
     this.prefixTesterUrl = `${base || '/'}`
@@ -119,8 +132,8 @@ export class ParentBrowserProject {
       )
     })().then(manifest => (this.manifest = manifest))
 
-    this.orchestratorHtml = (project.config.browser.ui
-      ? readFile(resolve(distRoot, 'client/__vitest__/index.html'), 'utf8')
+    this.orchestratorHtml = (this.config.browser.ui
+      ? readFile(resolve(uiClientRoot, 'index.html'), 'utf8')
       : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8'))
       .then(html => (this.orchestratorHtml = html))
     this.injectorJs = readFile(
@@ -129,11 +142,6 @@ export class ParentBrowserProject {
     ).then(js => (this.injectorJs = js))
     this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
 
-    const builtinProviders = ['playwright', 'webdriverio', 'preview']
-    const providerName = project.config.browser.provider || 'preview'
-    if (builtinProviders.includes(providerName)) {
-      this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
-    }
     this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
@@ -150,10 +158,10 @@ export class ParentBrowserProject {
       throw new Error(`Cannot spawn child server without a parent dev server.`)
     }
     const clone = new ProjectBrowser(
+      this,
       project,
       '/',
     )
-    clone.parent = this
     this.children.add(clone)
     return clone
   }
@@ -236,9 +244,9 @@ export class ParentBrowserProject {
         const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
         const contentProcessed
-            = content && type === 'module'
-              ? (await server.pluginContainer.transform(content, transformId)).code
-              : content
+          = content && type === 'module'
+            ? (await server.pluginContainer.transform(content, transformId)).code
+            : content
         return {
           tag: 'script',
           attrs: {
@@ -264,21 +272,5 @@ export class ParentBrowserProject {
       .split('/')
     const decodedTestFile = decodeURIComponent(testFile)
     return { sessionId, testFile: decodedTestFile }
-  }
-
-  private retrieveSourceMapURL(source: string): string | null {
-    const re
-      = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
-    // Keep executing the search to find the *last* sourceMappingURL to avoid
-    // picking up sourceMappingURLs from comments, strings, etc.
-    let lastMatch, match
-    // eslint-disable-next-line no-cond-assign
-    while ((match = re.exec(source))) {
-      lastMatch = match
-    }
-    if (!lastMatch) {
-      return null
-    }
-    return lastMatch[1]
   }
 }

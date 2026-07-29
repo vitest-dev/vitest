@@ -1,5 +1,5 @@
 import type { defineConfig } from 'vitest/config'
-import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest/node'
+import type { CoverageInstrumenter, CoverageProviderModule, InstrumenterOptions, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
@@ -43,6 +43,7 @@ test('provider options, generic', () => {
         branches: 12,
         functions: 12,
         statements: 12,
+        perFile: true,
       },
     },
   })
@@ -70,24 +71,83 @@ test('provider options, generic', () => {
       },
     },
   })
-})
 
-test('provider specific options, custom', () => {
   assertType<Coverage>({
-    provider: 'custom',
-    customProviderModule: 'custom-provider-module.ts',
-    enabled: true,
+    provider: 'v8',
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+      perFile: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    },
   })
 
-  // @ts-expect-error --  customProviderModule is required
-  assertType<Coverage>({ provider: 'custom' })
+  // Glob patterns accept their own `perFile` (boolean or object).
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: true,
+      },
+      '**/other-file.ts': {
+        perFile: {
+          lines: 50,
+        },
+      },
+      '**/strict.ts': {
+        perFile: {
+          100: true,
+        },
+      },
+    },
+  })
 
   assertType<Coverage>({
-    provider: 'custom',
-    customProviderModule: 'some-module',
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: {
+          // @ts-expect-error -- per-file threshold values must be numbers
+          lines: '50',
+        },
+      },
+    },
+  })
 
-    // @ts-expect-error --  typings of BaseCoverageOptions still apply
-    enabled: 'not boolean',
+  assertType<Coverage>({
+    provider: 'istanbul',
+    thresholds: {
+      lines: 80,
+      perFile: {
+        100: true,
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- per-file threshold values must be numbers
+        lines: '50',
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- `autoUpdate` is not a per-file option
+        autoUpdate: true,
+      },
+    },
   })
 })
 
@@ -100,6 +160,7 @@ test('provider module', () => {
         generateCoverage() {},
         resolveOptions(): ResolvedCoverageOptions {
           return {
+            provider: 'v8',
             clean: true,
             cleanOnRerun: true,
             enabled: true,
@@ -109,6 +170,16 @@ test('provider module', () => {
             reportOnFailure: true,
             allowExternal: true,
             processingConcurrency: 1,
+            excludeAfterRemap: false,
+            ignoreClassMethods: [],
+            skipFull: true,
+            watermarks: {
+              statements: [80, 95],
+              functions: [80, 95],
+              branches: [80, 95],
+              lines: [80, 95],
+            },
+            autoAttachSubprocess: false,
           }
         },
         clean(_?: boolean) {},
@@ -214,5 +285,41 @@ test('reporters, mixed variations', () => {
       ['html', { verbose: true, subdir: 'string' }],
       ['custom-reporter-4', { some: 'option', width: 123 }],
     ],
+  })
+})
+
+test('custom instrumenter', () => {
+  // Custom instrumenter factory function
+  assertType<Coverage>({
+    provider: 'istanbul',
+    instrumenter: _options => ({
+      instrumentSync: (code, _filename, _sourceMap?) => code,
+      lastSourceMap: () => ({}),
+      lastFileCoverage: () => ({}),
+    }),
+  })
+
+  // Without instrumenter (default behavior)
+  assertType<Coverage>({
+    provider: 'istanbul',
+  })
+
+  // Verify CoverageInstrumenter type can be used as return type
+  const factory: (opts: InstrumenterOptions) => CoverageInstrumenter = _opts => ({
+    instrumentSync: code => code,
+    lastSourceMap: () => null,
+    lastFileCoverage: () => ({}),
+  })
+
+  assertType<InstrumenterOptions>({
+    coverageVariable: '__VITEST_COVERAGE__',
+    coverageGlobalScope: 'globalThis',
+    coverageGlobalScopeFunc: false,
+    ignoreClassMethods: ['test-method'],
+  })
+
+  assertType<Coverage>({
+    provider: 'istanbul',
+    instrumenter: factory,
   })
 })

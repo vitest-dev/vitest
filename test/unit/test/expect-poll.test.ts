@@ -1,0 +1,176 @@
+import { expect, test, vi } from 'vitest'
+
+test('simple usage', async () => {
+  await expect.poll(() => false).toBe(false)
+  await expect.poll(() => false).not.toBe(true)
+  // .resolves allowed after .poll
+  await expect(Promise.resolve(1)).resolves.toBe(1)
+
+  await expect(async () => {
+    await expect.poll(() => Promise.resolve(1)).resolves.toBe(1)
+  }).rejects.toThrow('expect.poll() is not supported in combination with .resolves')
+  await expect(async () => {
+    await expect.poll(() => Promise.reject(new Error('empty'))).rejects.toThrow('empty')
+  }).rejects.toThrow('expect.poll() is not supported in combination with .rejects')
+
+  const unsupported = [
+    'matchSnapshot',
+    'toMatchSnapshot',
+    'toMatchInlineSnapshot',
+    'throws',
+    'Throw',
+    'throw',
+    'toThrow',
+    'toThrowError',
+    'toThrowErrorMatchingSnapshot',
+    'toThrowErrorMatchingInlineSnapshot',
+  ] as const
+
+  for (const key of unsupported) {
+    await expect(async () => {
+      await expect.poll(() => Promise.resolve(1))[key as 'matchSnapshot']()
+    }).rejects.toThrow(`expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`)
+  }
+})
+
+test('timeout', async () => {
+  await expect(async () => {
+    await expect.poll(() => false, { timeout: 100, interval: 10 }).toBe(true)
+  }).rejects.toThrow(expect.objectContaining({
+    message: 'expected false to be true // Object.is equality',
+    stack: expect.stringContaining('expect-poll.test.ts:38:68'),
+    cause: expect.objectContaining({
+      message: 'Matcher did not succeed in time.',
+    }),
+  }))
+})
+
+test('interval', async () => {
+  const fn = vi.fn(() => true)
+  await expect(async () => {
+    // using big values because CI can be slow
+    await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
+  }).rejects.toThrow()
+  // CI can be unstable, but there should be always at least 5 calls
+  expect(fn.mock.calls.length >= 4).toBe(true)
+})
+
+test('fake timers don\'t break it', async () => {
+  const now = Date.now()
+  vi.useFakeTimers()
+  await expect(async () => {
+    await expect.poll(() => false, { timeout: 100 }).toBe(true)
+  }).rejects.toThrow('expected false to be true // Object.is equality')
+  vi.useRealTimers()
+  const diff = Date.now() - now
+  expect(diff >= 100).toBe(true)
+})
+
+test('fake timers are advanced on each poll interval', async ({ onTestFinished }) => {
+  vi.useFakeTimers()
+  onTestFinished(() => {
+    vi.useRealTimers()
+  })
+
+  let didAdvance = false
+
+  setTimeout(() => {
+    didAdvance = true
+  }, 50)
+
+  await expect.poll(() => didAdvance, { interval: 100 }).toBe(true)
+})
+
+test('custom matcher works correctly', async () => {
+  const fn = vi.fn()
+  let idx = 0
+  expect.extend({
+    toBeJestCompatible() {
+      idx++
+      fn({ poll: this.poll })
+      return {
+        pass: idx > 2,
+        message: () => 'ok',
+      }
+    },
+  })
+  await expect.poll(() => 1, { interval: 10 }).toBeJestCompatible()
+  expect(fn).toHaveBeenCalledTimes(3)
+  expect(fn).toHaveBeenCalledWith({ poll: true })
+})
+
+test('toBeDefined', async () => {
+  await expect.poll(() => 1).toBeDefined()
+  await expect.poll(() => undefined).not.toBeDefined()
+
+  await expect(() =>
+    expect.poll(() => 1, { timeout: 100, interval: 10 }).not.toBeDefined(),
+  ).rejects.toThrow(expect.objectContaining({
+    message: 'expected 1 to be undefined',
+    cause: expect.objectContaining({
+      message: 'Matcher did not succeed in time.',
+    }),
+  }))
+
+  await expect(() =>
+    expect.poll(() => undefined, { timeout: 100, interval: 10 }).toBeDefined(),
+  ).rejects.toThrow(expect.objectContaining({
+    message: 'expected undefined to be defined',
+    cause: expect.objectContaining({
+      message: 'Matcher did not succeed in time.',
+    }),
+  }))
+})
+
+test('custom message', async () => {
+  await expect(() =>
+    expect.poll(() => 1, { timeout: 100, interval: 10, message: 'custom' }).toBe(2),
+  ).rejects.toMatchInlineSnapshot(`[AssertionError: custom: expected 1 to be 2 // Object.is equality]`)
+})
+
+test('unresolved function', async () => {
+  let aborted = false
+  await expect(
+    expect
+      .poll(
+        async ({ signal }) => {
+          signal.addEventListener('abort', () => {
+            aborted = true
+          })
+          await new Promise(resolve => setTimeout(resolve, 500))
+          return 'ok'
+        },
+        { timeout: 50 },
+      )
+      .toBe('ok'),
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() function didn't resolve in time.]`)
+  expect(aborted).toBe(true)
+})
+
+test('unresolved assertion', async () => {
+  expect.extend({
+    toTestSlow: async () => {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      return {
+        pass: true,
+        message: () => 'ok',
+      }
+    },
+  })
+
+  let aborted = false
+  await expect(
+    (
+      expect.poll(
+        async ({ signal }) => {
+          signal.addEventListener('abort', () => {
+            aborted = true
+          })
+          return 'ok'
+        },
+        { timeout: 50 },
+      ) as any
+    ).toTestSlow(),
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() assertion didn't resolve in time.]`)
+  expect(aborted).toBe(true)
+})

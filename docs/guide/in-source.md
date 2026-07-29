@@ -72,23 +72,24 @@ export default defineConfig({
 
 ### Other Bundlers
 
-::: details unbuild
-```ts [build.config.ts]
-import { defineBuildConfig } from 'unbuild'
+::: details Rolldown
+```js [rolldown.config.js]
+import { defineConfig } from 'rolldown/config'
 
-export default defineBuildConfig({
-  replace: { // [!code ++]
-    'import.meta.vitest': 'undefined', // [!code ++]
-  }, // [!code ++]
-  // other options
+export default defineConfig({
+  transform: {
+    define: { // [!code ++]
+      'import.meta.vitest': 'undefined', // [!code ++]
+    }, // [!code ++]
+  },
 })
 ```
 
-Learn more: [unbuild](https://github.com/unjs/unbuild)
+Learn more: [Rolldown](https://rolldown.rs/)
 :::
 
 ::: details Rollup
-```ts [rollup.config.js]
+```js [rollup.config.js]
 import replace from '@rollup/plugin-replace' // [!code ++]
 
 export default {
@@ -102,6 +103,37 @@ export default {
 ```
 
 Learn more: [Rollup](https://rollupjs.org/)
+:::
+
+::: details unbuild
+```js [build.config.js]
+import { defineBuildConfig } from 'unbuild'
+
+export default defineBuildConfig({
+  replace: { // [!code ++]
+    'import.meta.vitest': 'undefined', // [!code ++]
+  }, // [!code ++]
+  // other options
+})
+```
+
+Learn more: [unbuild](https://github.com/unjs/unbuild)
+:::
+
+::: details webpack
+```js [webpack.config.js]
+const webpack = require('webpack')
+
+module.exports = {
+  plugins: [
+    new webpack.DefinePlugin({ // [!code ++]
+      'import.meta.vitest': 'undefined', // [!code ++]
+    })// [!code ++]
+  ],
+}
+```
+
+Learn more: [webpack](https://webpack.js.org/plugins/define-plugin/)
 :::
 
 ## TypeScript
@@ -119,6 +151,10 @@ To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to y
 ```
 
 Reference to [`examples/in-source-test`](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) for the full example.
+
+::: warning
+There is a limitation when using [assertion functions](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#assertion-functions) such as `assert` in in-source tests. See [`assert`](/api/assert#in-source-testing) for details and workarounds.
+:::
 
 ## Notes
 

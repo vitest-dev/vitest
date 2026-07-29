@@ -5,7 +5,7 @@ outline: deep
 
 # Test Annotations
 
-Vitest supports annotating your tests with custom messages and files via the [`context.annotate`](/guide/test-context#annotate) API. These annotations will be attached to the test case and passed down to reporters in the [`onTestAnnotate`](/advanced/api/reporters#ontestannotate) hook.
+Vitest supports annotating your tests with custom messages and files via the [`context.annotate`](/guide/test-context#annotate) API. These annotations will be attached to the test case and passed down to reporters in the [`onTestAnnotate`](/api/advanced/reporters#ontestannotate) hook.
 
 ```ts
 test('hello world', async ({ annotate }) => {
@@ -17,6 +17,12 @@ test('hello world', async ({ annotate }) => {
 
   const file = createTestSpecificFile()
   await annotate('creates a file', { body: file })
+
+  await annotate('creates a file with text', {
+    contentType: 'text/markdown',
+    body: 'Hello **markdown**',
+    bodyEncoding: 'utf-8',
+  })
 })
 ```
 
@@ -53,7 +59,7 @@ Error: thrown error
 
 ### verbose
 
-In a TTY terminal, the `verbose` reporter works similarly to the `default` reporter. However, in a non-TTY environment, the `verbose` reporter will also print annotations after every test.
+The `verbose` reporter is the only terminal reporter that reports annotations when the test doesn't fail.
 
 ```
 ✓ example.test.js > an example of a test with annotation

@@ -2,14 +2,13 @@ import type { DiffOptions } from '@vitest/expect'
 import type { SnapshotSerializer } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from './config'
-import type { VitestExecutor } from './execute'
+import type { PublicModuleRunner } from './moduleRunner/types'
 import { addSerializer } from '@vitest/snapshot'
-import { setSafeTimers } from '@vitest/utils'
+import { setSafeTimers } from '@vitest/utils/timers'
 
 let globalSetup = false
 export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
-  setupDefines(config.defines)
-  setupEnv(config.env)
+  setupDefines(config)
 
   if (globalSetup) {
     return
@@ -23,28 +22,21 @@ export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
   }
 }
 
-function setupDefines(defines: Record<string, any>) {
-  for (const key in defines) {
-    (globalThis as any)[key] = defines[key]
+function setupDefines(config: SerializedConfig) {
+  for (const key in config.defines) {
+    (globalThis as any)[key] = config.defines[key]
   }
 }
 
-function setupEnv(env: Record<string, any>) {
-  if (typeof process === 'undefined') {
-    return
-  }
-  // same boolean-to-string assignment as VitestPlugin.configResolved
-  const { PROD, DEV, ...restEnvs } = env
-  process.env.PROD = PROD ? '1' : ''
-  process.env.DEV = DEV ? '1' : ''
-  for (const key in restEnvs) {
-    process.env[key] = env[key]
+export function setupEnv(env: Record<string, any>, metaEnv: Record<string, any>): void {
+  for (const key in env) {
+    metaEnv[key] = env[key]
   }
 }
 
 export async function loadDiffConfig(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: PublicModuleRunner,
 ): Promise<SerializedDiffOptions | undefined> {
   if (typeof config.diff === 'object') {
     return config.diff
@@ -53,7 +45,7 @@ export async function loadDiffConfig(
     return
   }
 
-  const diffModule = await executor.executeId(config.diff)
+  const diffModule = await moduleRunner.import(config.diff)
 
   if (
     diffModule
@@ -71,13 +63,13 @@ export async function loadDiffConfig(
 
 export async function loadSnapshotSerializers(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: PublicModuleRunner,
 ): Promise<void> {
   const files = config.snapshotSerializers
 
   const snapshotSerializers = await Promise.all(
     files.map(async (file) => {
-      const mo = await executor.executeId(file)
+      const mo = await moduleRunner.import(file)
       if (!mo || typeof mo.default !== 'object' || mo.default === null) {
         throw new Error(
           `invalid snapshot serializer file ${file}. Must export a default object`,

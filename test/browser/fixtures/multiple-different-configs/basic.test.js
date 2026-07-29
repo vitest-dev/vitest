@@ -1,5 +1,5 @@
 import { test as baseTest, expect, inject } from 'vitest';
-import { server } from '@vitest/browser/context'
+import { server } from 'vitest/browser'
 
 const test = baseTest.extend({
   // chromium should inject the value as "true"

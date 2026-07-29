@@ -4,7 +4,7 @@ import { populateGlobal } from './utils'
 
 export default <Environment>{
   name: 'edge-runtime',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   async setupVM() {
     const { EdgeVM } = await import('@edge-runtime/vm')
     const vm = new EdgeVM({
@@ -43,7 +43,7 @@ export default <Environment>{
     return {
       teardown(global) {
         keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => (global[k] = v))
+        originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }
   },

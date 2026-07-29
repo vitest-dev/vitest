@@ -1,25 +1,22 @@
-import type { RenderOptions } from '@testing-library/vue'
+import type { ComponentRenderOptions, RenderResult } from 'vitest-browser-vue'
+import { vTooltip } from 'floating-vue'
+import { vi } from 'vitest'
 import {
   render as _render,
-  cleanup,
+} from 'vitest-browser-vue'
 
-} from '@testing-library/vue'
-import { vTooltip } from 'floating-vue'
-import { afterEach } from 'vitest'
+export { page } from 'vitest/browser'
 
-export function render<C>(component: C, options?: RenderOptions<C>) {
-  return _render(component, {
+export const render = vi.defineHelper(<C>(
+  component: C,
+  options?: ComponentRenderOptions<C, any>,
+): Promise<RenderResult<any>> => {
+  return Promise.resolve(_render(component, {
     ...options,
     global: {
       directives: {
         tooltip: vTooltip,
       },
     },
-  })
-}
-
-afterEach(() => {
-  cleanup()
+  }))
 })
-
-export { screen, within } from '@testing-library/vue'

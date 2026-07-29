@@ -1,21 +1,27 @@
-import type { File } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
+import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
+import type { File } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { sanitizeFilePath } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
 
 export interface BlobOptions {
   outputFile?: string
+  label?: string
 }
 
 export class BlobReporter implements Reporter {
   start = 0
   ctx!: Vitest
   options: BlobOptions
+  coverage: unknown | undefined
 
   constructor(options: BlobOptions) {
     this.options = options
@@ -28,63 +34,81 @@ export class BlobReporter implements Reporter {
 
     this.ctx = ctx
     this.start = performance.now()
+    this.coverage = undefined
   }
 
-  async onFinished(
-    files: File[] = [],
-    errors: unknown[] = [],
-    coverage: unknown,
-  ): Promise<void> {
+  onCoverage(coverage: unknown): void {
+    this.coverage = coverage
+  }
+
+  async onTestRunEnd(testModules: ReadonlyArray<TestModule>, unhandledErrors: ReadonlyArray<SerializedError>): Promise<void> {
     const executionTime = performance.now() - this.start
 
-    let outputFile
-      = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
-    if (!outputFile) {
-      const shard = this.ctx.config.shard
-      outputFile = shard
-        ? `.vitest-reports/blob-${shard.index}-${shard.count}.json`
-        : '.vitest-reports/blob.json'
-    }
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+    const coverage = this.coverage
 
-    const modules = this.ctx.projects.map<MergeReportModuleKeys>(
-      (project) => {
-        return [
-          project.name,
-          [...project.vite.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
-            if (!mod[1].file) {
-              return null
-            }
-            return [mod[0], mod[1].file, mod[1].url]
-          }).filter(x => x != null),
-        ]
-      },
-    )
+    const environmentModules: MergeReportEnvironmentModules = {}
+    this.ctx.projects.forEach((project) => {
+      const serializedProject: MergeReportEnvironmentModules[string] = {
+        environments: {},
+        external: [],
+      }
+      Object.entries(project.vite.environments).forEach(([environmentName, environment]) => {
+        serializedProject.environments[environmentName] = serializeEnvironmentModuleGraph(
+          environment,
+        )
+      })
 
-    const report = [
+      for (const [id, value] of project._resolver.externalizeCache.entries()) {
+        if (typeof value === 'string') {
+          serializedProject.external.push([id, value])
+        }
+      }
+
+      environmentModules[project.name] = serializedProject
+    })
+
+    const content = stringify([
       this.ctx.version,
       files,
       errors,
-      modules,
       coverage,
       executionTime,
-    ] satisfies MergeReport
+      environmentModules,
+      this.ctx.state.transformTime,
+    ] satisfies MergeReport)
 
-    const reportFile = resolve(this.ctx.config.root, outputFile)
-    await writeBlob(report, reportFile)
+    let outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
 
-    this.ctx.logger.log('blob report written to', reportFile)
+    if (outputFile) {
+      outputFile = resolve(this.ctx.config.root, outputFile)
+
+      const dir = dirname(outputFile)
+      if (!existsSync(dir)) {
+        await mkdir(dir, { recursive: true })
+      }
+
+      await writeFile(outputFile, content, 'utf-8')
+    }
+    else {
+      const report = this.ctx.createReport('blob')
+
+      const shard = this.ctx.config.shard
+      outputFile = [
+        'blob',
+        this.ctx.config.mergeReportsLabel,
+        shard ? `${shard.index}-${shard.count}` : '',
+      ].filter(Boolean).join('-')
+
+      outputFile = `${sanitizeFilePath(outputFile)}.json`
+
+      await report.writeFile(outputFile, content, 'utf-8')
+      outputFile = resolve(report.root, outputFile)
+    }
+
+    this.ctx.logger.log('blob report written to', outputFile)
   }
-}
-
-export async function writeBlob(content: MergeReport, filename: string): Promise<void> {
-  const report = stringify(content)
-
-  const dir = dirname(filename)
-  if (!existsSync(dir)) {
-    await mkdir(dir, { recursive: true })
-  }
-
-  await writeFile(filename, report, 'utf-8')
 }
 
 export async function readBlobs(
@@ -104,7 +128,7 @@ export async function readBlobs(
       )
     }
     const content = await readFile(fullPath, 'utf-8')
-    const [version, files, errors, moduleKeys, coverage, executionTime] = parse(
+    const [version, files, errors, coverage, executionTime, environmentModules, transformTime] = parse(
       content,
     ) as MergeReport
     if (!version) {
@@ -112,7 +136,7 @@ export async function readBlobs(
         `vitest.mergeReports() expects all paths in "${blobsDirectory}" to be files generated by the blob reporter, but "${filename}" is not a valid blob file`,
       )
     }
-    return { version, files, errors, moduleKeys, coverage, file: filename, executionTime }
+    return { version, files, errors, coverage, file: filename, executionTime, environmentModules, transformTime }
   })
   const blobs = await Promise.all(promises)
 
@@ -135,22 +159,25 @@ export async function readBlobs(
     )
   }
 
-  // fake module graph - it is used to check if module is imported, but we don't use values inside
+  // Restore module graph
   const projects = Object.fromEntries(
     projectsArray.map(p => [p.name, p]),
   )
 
   blobs.forEach((blob) => {
-    blob.moduleKeys.forEach(([projectName, moduleIds]) => {
+    Object.entries(blob.environmentModules).forEach(([projectName, modulesByProject]) => {
       const project = projects[projectName]
       if (!project) {
         return
       }
-      moduleIds.forEach(([moduleId, file, url]) => {
-        const moduleNode = project.vite.moduleGraph.createFileOnlyEntry(file)
-        moduleNode.url = url
-        moduleNode.id = moduleId
-        project.vite.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
+
+      modulesByProject.external.forEach(([id, externalized]) => {
+        project._resolver.externalizeCache.set(id, externalized)
+      })
+
+      Object.entries(modulesByProject.environments).forEach(([environmentName, moduleGraph]) => {
+        const environment = project.vite.environments[environmentName]
+        deserializeEnvironmentModuleGraph(environment, moduleGraph)
       })
     })
   })
@@ -165,12 +192,14 @@ export async function readBlobs(
   const errors = blobs.flatMap(blob => blob.errors)
   const coverages = blobs.map(blob => blob.coverage)
   const executionTimes = blobs.map(blob => blob.executionTime)
+  const transformTimes = blobs.map(blob => blob.transformTime)
 
   return {
     files,
     errors,
     coverages,
     executionTimes,
+    transformTimes,
   }
 }
 
@@ -179,24 +208,120 @@ export interface MergedBlobs {
   errors: unknown[]
   coverages: unknown[]
   executionTimes: number[]
+  transformTimes: number[]
 }
 
-type MergeReport = [
+export type MergeReport = [
   vitestVersion: string,
   files: File[],
   errors: unknown[],
-  modules: MergeReportModuleKeys[],
   coverage: unknown,
   executionTime: number,
+  environmentModules: MergeReportEnvironmentModules,
+  transformTime: number,
 ]
 
-type SerializedModuleNode = [
-  id: string,
-  file: string,
-  url: string,
+interface MergeReportEnvironmentModules {
+  [projectName: string]: {
+    environments: {
+      [environmentName: string]: SerializedEnvironmentModuleGraph
+    }
+    external: [id: string, externalized: string][]
+  }
+}
+
+type SerializedEnvironmentModuleNode = [
+  id: number,
+  file: number,
+  url: number,
+  importedIds: number[],
 ]
 
-type MergeReportModuleKeys = [
-  projectName: string,
-  modules: SerializedModuleNode[],
-]
+interface SerializedEnvironmentModuleGraph {
+  idTable: string[]
+  modules: SerializedEnvironmentModuleNode[]
+}
+
+function serializeEnvironmentModuleGraph(
+  environment: DevEnvironment,
+): SerializedEnvironmentModuleGraph {
+  const idTable: string[] = []
+  const idMap = new Map<string, number>()
+
+  const getIdIndex = (id: string) => {
+    const existing = idMap.get(id)
+    if (existing != null) {
+      return existing
+    }
+    const next = idTable.length
+    idMap.set(id, next)
+    idTable.push(id)
+    return next
+  }
+
+  const modules: SerializedEnvironmentModuleNode[] = []
+  for (const [id, mod] of environment.moduleGraph.idToModuleMap.entries()) {
+    // Vite can generate module with `file = ""` for module id "#..."
+    // when the actual module doesn't exist (e.g. resolve failure or mocked module)
+    if (mod.file == null) {
+      continue
+    }
+
+    const importedIds: number[] = []
+    for (const importedNode of mod.importedModules) {
+      if (importedNode.id !== null) {
+        importedIds.push(getIdIndex(importedNode.id))
+      }
+    }
+
+    modules.push([
+      getIdIndex(id),
+      getIdIndex(mod.file),
+      getIdIndex(mod.url),
+      importedIds,
+    ])
+  }
+
+  return {
+    idTable,
+    modules,
+  }
+}
+
+function deserializeEnvironmentModuleGraph(
+  environment: DevEnvironment,
+  serialized: SerializedEnvironmentModuleGraph,
+): void {
+  const nodesById = new Map<string, EnvironmentModuleNode>()
+
+  serialized.modules.forEach(([id, file, url]) => {
+    const moduleId = serialized.idTable[id]
+    const filePath = serialized.idTable[file]
+    const urlPath = serialized.idTable[url]
+    // `createFileOnlyEntry('')` normalizes the file to ".". This keeps
+    // the graph usable, but doesn't perfectly round-trip Vite's `file = ""`
+    // nodes for ids like "#...".
+    // We may just do moduleNode.file = filePath in the future.
+    const moduleNode = environment.moduleGraph.createFileOnlyEntry(filePath)
+    moduleNode.url = urlPath
+    moduleNode.id = moduleId
+    moduleNode.transformResult = {
+      // print error checks that transformResult is set
+      code: ' ',
+      map: null,
+    }
+    environment.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
+    nodesById.set(moduleId, moduleNode)
+  })
+
+  serialized.modules.forEach(([id, _file, _url, importedIds]) => {
+    const moduleId = serialized.idTable[id]
+    const moduleNode = nodesById.get(moduleId)!
+    importedIds.forEach((importedIdIndex) => {
+      const importedId = serialized.idTable[importedIdIndex]
+      const importedNode = nodesById.get(importedId)!
+      moduleNode.importedModules.add(importedNode)
+      importedNode.importers.add(moduleNode)
+    })
+  })
+}

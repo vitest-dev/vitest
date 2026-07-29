@@ -3,15 +3,33 @@ name: Issue Close Require
 on:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions: {}
 
 jobs:
-  close-issues:
-    runs-on: ubuntu-latest
+  close-stale:
+    runs-on: ubuntu-slim
+    name: Close Marked Issues and PRs
+    permissions:
+      contents: read # to check out the repo for local actions
+      issues: write # to close issues
+      pull-requests: write # to close pull requests
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: needs reproduction
-        uses: actions-cool/issues-helper@a610082f8ac0cf03e357eb8dd0d5e2ba075e017e # v3.6.0
+        uses: ./.github/actions/issues-helper
         with:
           actions: close-issues
           token: ${{ secrets.GITHUB_TOKEN }}
           labels: needs reproduction
+          inactive-day: 3
+      - name: maybe automated
+        uses: ./.github/actions/issues-helper
+        with:
+          actions: close-issues
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: maybe automated
           inactive-day: 3

@@ -1,7 +1,8 @@
 import type { Writable } from 'node:stream'
+import type { File, Task } from '../runtime/runner/types'
 import type { Vitest } from './core'
+import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { getTests } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -17,7 +18,6 @@ const keys = [
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
-  ['b', 'start the browser server if not started yet'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
@@ -36,6 +36,38 @@ ${keys
   .join('\n')}
 `,
   )
+}
+
+function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterObject> {
+  if (t.type === 'test') {
+    if (t.name.match(filter)) {
+      const displayName = `${parentName} > ${t.name}`
+      yield { key: t.name, toString: () => displayName }
+    }
+  }
+  else {
+    parentName = parentName.length ? `${parentName} > ${t.name}` : t.name
+    for (const task of t.tasks) {
+      yield* traverseFilteredTestNames(parentName, filter, task)
+    }
+  }
+}
+
+function* getFilteredTestNames(pattern: string, suite: File[]): Generator<FilterObject> {
+  try {
+    const reg = new RegExp(pattern)
+    // TODO: we cannot run tests per workspace yet: filtering files
+    const files = new Set<string>()
+    for (const file of suite) {
+      if (!files.has(file.name)) {
+        files.add(file.name)
+        yield* traverseFilteredTestNames('', reg, file)
+      }
+    }
+  }
+  catch {
+    // `new RegExp` may throw error when input is invalid regexp
+  }
 }
 
 export function registerConsoleShortcuts(
@@ -118,14 +150,6 @@ export function registerConsoleShortcuts(
     if (name === 'p') {
       return inputFilePattern()
     }
-    if (name === 'b') {
-      await ctx._initBrowserServers()
-      ctx.projects.forEach((project) => {
-        ctx.logger.log()
-        ctx.logger.printBrowserBanner(project)
-      })
-      return null
-    }
   }
 
   async function keypressHandler(str: string, key: any) {
@@ -134,24 +158,13 @@ export function registerConsoleShortcuts(
 
   async function inputNamePattern() {
     off()
-    const watchFilter = new WatchFilter(
+    const watchFilter = new WatchFilter<'object'>(
       'Input test name pattern (RegExp)',
       stdin,
       stdout,
     )
     const filter = await watchFilter.filter((str: string) => {
-      const files = ctx.state.getFiles()
-      const tests = getTests(files)
-      try {
-        const reg = new RegExp(str)
-        return tests
-          .map(test => test.name)
-          .filter(testName => testName.match(reg))
-      }
-      catch {
-        // `new RegExp` may throw error when input is invalid regexp
-        return []
-      }
+      return [...getFilteredTestNames(str, ctx.state.getFiles())]
     })
 
     on()
@@ -198,10 +211,10 @@ export function registerConsoleShortcuts(
     )
 
     const filter = await watchFilter.filter(async (str: string) => {
-      const files = await ctx.globTestFiles([str])
+      const specifications = await ctx.globTestSpecifications([str])
 
-      return files
-        .map(file => relative(ctx.config.root, file[1]))
+      return specifications
+        .map(specification => relative(ctx.config.root, specification.moduleId))
         .filter((file, index, all) => all.indexOf(file) === index)
     })
 

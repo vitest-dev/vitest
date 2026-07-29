@@ -2,6 +2,34 @@
 
 Vitest reexports the `assert` method from [`chai`](https://www.chaijs.com/api/assert/) for verifying invariants.
 
+::: warning In-Source Testing {#in-source-testing}
+When using [assertion functions](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#assertion-functions) such as `assert` from `import.meta.vitest` in [in-source tests](/guide/in-source), TypeScript reports error `TS2775` because they must be called via an explicitly annotated name. Annotate the variable with `Chai.Assert` or call it directly:
+
+::: code-group
+```ts [Annotated variable]
+if (import.meta.vitest) {
+  const { test, assert } = import.meta.vitest // [!code --]
+  const { test } = import.meta.vitest // [!code ++]
+  const assert: Chai.Assert = import.meta.vitest.assert // [!code ++]
+
+  test('assert', () => {
+    assert('foo' !== 'bar', 'foo should not be equal to bar')
+  })
+}
+```
+```ts [Direct call]
+if (import.meta.vitest) {
+  const { test, assert } = import.meta.vitest // [!code --]
+  const { test } = import.meta.vitest // [!code ++]
+
+  test('assert', () => {
+    assert('foo' !== 'bar', 'foo should not be equal to bar') // [!code --]
+    import.meta.vitest!.assert('foo' !== 'bar', 'foo should not be equal to bar') // [!code ++]
+  })
+}
+```
+:::
+
 ## assert
 
 - **Type:** `(expression: any, message?: string) => asserts expression`
@@ -35,8 +63,8 @@ test('assert.fail', () => {
 
 ## isOk
 
-- **Type:** `<T>(value: T, message?: string) => void`
-- **Alias** `ok`
+- **Type:** `<T>(value: T, message?: string) => asserts value`
+- **Alias:** `ok`
 
 Assert that the given `value` is truthy.
 
@@ -52,7 +80,7 @@ test('assert.isOk', () => {
 ## isNotOk
 
 - **Type:** `<T>(value: T, message?: string) => void`
-- **Alias** `notOk`
+- **Alias:** `notOk`
 
 Assert that the given `value` is falsy.
 
@@ -195,7 +223,7 @@ test('assert.isAtMost', () => {
 
 ## isTrue
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is true`
 
 Asserts that `value` is true.
 
@@ -211,7 +239,7 @@ test('assert.isTrue', () => {
 
 ## isNotTrue
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, true>`
 
 Asserts that `value` is not true.
 
@@ -227,7 +255,7 @@ test('assert.isNotTrue', () => {
 
 ## isFalse
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is false`
 
 Asserts that `value` is false.
 
@@ -243,7 +271,7 @@ test('assert.isFalse', () => {
 
 ## isNotFalse
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, false>`
 
 Asserts that `value` is not false.
 
@@ -259,7 +287,7 @@ test('assert.isNotFalse', () => {
 
 ## isNull
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is null`
 
 Asserts that `value` is null.
 
@@ -275,7 +303,7 @@ test('assert.isNull', () => {
 
 ## isNotNull
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, null>`
 
 Asserts that `value` is not null.
 
@@ -323,7 +351,7 @@ test('assert.isNotNaN', () => {
 
 ## exists
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is NonNullable<T>`
 
 Asserts that `value` is neither null nor undefined.
 
@@ -339,7 +367,7 @@ test('assert.exists', () => {
 
 ## notExists
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is null | undefined`
 
 Asserts that `value` is either null nor undefined.
 
@@ -357,7 +385,7 @@ test('assert.notExists', () => {
 
 ## isUndefined
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is undefined`
 
 Asserts that `value` is undefined.
 
@@ -373,7 +401,7 @@ test('assert.isUndefined', () => {
 
 ## isDefined
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, undefined>`
 
 Asserts that `value` is not undefined.
 
@@ -631,7 +659,7 @@ test('assert.notTypeOf', () => {
 
 ## instanceOf
 
-- **Type:** `<T>(value: T, constructor: Function, message?: string) => void`
+- **Type:** `<T>(value: T, constructor: Function, message?: string) => asserts value is T`
 
 Asserts that `value` is an instance of `constructor`.
 
@@ -656,7 +684,7 @@ test('assert.instanceOf', () => {
 
 ## notInstanceOf
 
-- **Type:** `<T>(value: T, constructor: Function, message?: string) => void`
+- **Type:** `<T>(value: T, constructor: Function, message?: string) => asserts value is Exclude<T, U>`
 
 Asserts that `value` is not an instance of `constructor`.
 

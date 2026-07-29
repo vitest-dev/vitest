@@ -3,6 +3,11 @@ import { defineConfig } from 'vitest/config'
 import { instances, provider } from '../../settings'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '~': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   optimizeDeps: {
     include: ['@vitest/cjs-lib'],
     needsInterop: ['@vitest/cjs-lib'],

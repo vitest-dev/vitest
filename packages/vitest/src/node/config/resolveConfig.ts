@@ -1,39 +1,68 @@
-import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { Vitest } from '../core'
-import type { BenchmarkBuiltinReporters } from '../reporters'
-import type { ResolvedBrowserOptions } from '../types/browser'
+import type {
+  InlineConfig,
+  ResolvedConfig as ResolvedViteConfig,
+  UserConfig as ViteUserConfig,
+} from 'vite'
+import type { Logger } from '../logger'
+import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   ApiConfig,
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
-import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
-import crypto from 'node:crypto'
-import { slash, toArray } from '@vitest/utils'
+import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import { existsSync, statSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
+import { deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
-import { normalize, relative, resolve } from 'pathe'
+import { join, normalize, relative, resolve } from 'pathe'
+import { isDynamicPattern } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { mergeConfig } from 'vite'
+import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import {
   configFiles,
-  defaultBrowserPort,
   defaultInspectPort,
-  defaultPort,
-  extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { isCI, stdProvider } from '../../utils/env'
+import { wildcardPatternToRegExp } from '../../utils/base'
+import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
-import { builtinPools } from '../pool'
+import { BrowserLoaderPlugin } from '../plugins/browserLoader'
+import { CliOverride } from '../plugins/cliOverride'
+import { VitestConfig } from '../plugins/config'
+import { VitestCorePlugin } from '../plugins/index'
+import { VitestConfigServer } from '../plugins/server'
+import { resolveFsAllow } from '../plugins/utils'
+import { resolveProjectEntries } from '../projects/resolveProjects'
+import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { API_TOKEN_FILE, resolveApiToken } from './apiToken'
+import { PluginHarness } from './pluginHarness'
 
 function resolvePath(path: string, root: string) {
+  // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
+  // /some/file
+  // /some/file.js
+  // /some/root/file
+  // /some/root/file.js
+  // etc.
+  // but we don't want to resolve files from parent directories,
+  // so we ensure passing "/" suffix such as "/some/root/"
+  // https://github.com/unjs/mlly/blob/401d42983f6f3a9112658d67b0a92ba4fb1d7efa/src/resolve.ts#L104-L110
   return normalize(
-    /* @__PURE__ */ resolveModule(path, { paths: [root] })
+    /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
     ?? resolve(root, path),
   )
+}
+
+export function findConfigFile(root: string): string | undefined {
+  for (const configFile of configFiles) {
+    const configPath = resolve(root, configFile)
+    if (existsSync(configPath)) {
+      return configPath
+    }
+  }
 }
 
 function parseInspector(inspect: string | undefined | boolean | number) {
@@ -44,7 +73,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
     return { port: inspect }
   }
 
-  if (inspect.match(/https?:\//)) {
+  if (/https?:\//.test(inspect)) {
     throw new Error(
       `Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`,
     )
@@ -57,36 +86,39 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
-export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
-  options: Options,
+export function resolveApiServerConfig(
+  config: UserConfig,
   defaultPort: number,
-): ApiConfig | undefined {
+  logger: Logger,
+): ApiConfig {
+  const isBrowserEnabled = !!config.browser?.enabled
+
   let api: ApiConfig | undefined
 
-  if (options.ui && !options.api) {
+  if (config.ui && !config.api) {
     api = { port: defaultPort }
   }
-  else if (options.api === true) {
+  else if (config.api === true) {
     api = { port: defaultPort }
   }
-  else if (typeof options.api === 'number') {
-    api = { port: options.api }
+  else if (typeof config.api === 'number') {
+    api = { port: config.api }
   }
 
-  if (typeof options.api === 'object') {
+  if (typeof config.api === 'object') {
     if (api) {
-      if (options.api.port) {
-        api.port = options.api.port
+      if (config.api.port) {
+        api.port = config.api.port
       }
-      if (options.api.strictPort) {
-        api.strictPort = options.api.strictPort
+      if (config.api.strictPort) {
+        api.strictPort = config.api.strictPort
       }
-      if (options.api.host) {
-        api.host = options.api.host
+      if (config.api.host) {
+        api.host = config.api.host
       }
     }
     else {
-      api = { ...options.api }
+      api = { ...config.api }
     }
   }
 
@@ -97,6 +129,33 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   }
   else {
     api = { middlewareMode: true }
+  }
+
+  if (api && isBrowserEnabled) {
+    // Always force middlewareMode to false in browser mode
+    api.middlewareMode = false
+    // The browser server is standalone, so it always needs a port even when the
+    // user didn't configure `api`/`ui` (in which case `api` defaulted above)
+    if (!api.port) {
+      api.port = defaultPort
+    }
+  }
+
+  // if the API server is exposed to network, disable write operations by default
+  if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
+    if (api.allowWrite == null && api.allowExec == null) {
+      logger.error(
+        c.yellow(
+          `${c.bgYellow(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/api for more details.`,
+        ),
+      )
+    }
+    api.allowWrite ??= false
+    api.allowExec ??= false
+  }
+  else {
+    api.allowWrite ??= true
+    api.allowExec ??= true
   }
 
   return api
@@ -111,25 +170,34 @@ function resolveInlineWorkerOption(value: string | number): number {
   }
 }
 
-export function resolveConfig(
-  vitest: Vitest,
+// warn only once, check one PER PROCESS, not per instance,
+// that's why it's on a module-level
+let warnedTypeCheck = false
+
+/**
+ * Resolve Vitest's test config for a single Vite resolved config (root or a single project).
+ *
+ * This is the internal single-config resolver. The top-level `resolveConfig`
+ * orchestrates the full pipeline (root + projects + browser/benchmark expansion).
+ *
+ * `globalConfig` is the resolved root config, passed when resolving a project.
+ */
+export function resolveTestConfig(
+  logger: Logger,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
+  globalConfig?: ResolvedConfig,
 ): ResolvedConfig {
-  const mode = vitest.mode
-  const logger = vitest.logger
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
-            viteConfig.test.environment
-          }") conflicts with --dom flag ("happy-dom"), ignoring "${
-            viteConfig.test.environment
-          }"`,
+      logger.warn(
+        withLabel(
+          'yellow',
+          'Vitest',
+          `Your config.test.environment ("${viteConfig.test.environment}") conflicts with --dom flag ("happy-dom"), ignoring "${viteConfig.test.environment}"`,
         ),
       )
     }
@@ -137,21 +205,103 @@ export function resolveConfig(
     options.environment = 'happy-dom'
   }
 
-  const resolved = {
-    ...configDefaults,
-    ...options,
-    root: viteConfig.root,
-    mode,
-  } as any as ResolvedConfig
+  const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
+  resolved.root = viteConfig.root
+
+  // These options are resolved once for the whole run using the root config.
+  // Coverage is shared by reference: each project's setup/test/config files are
+  // appended to the same exclude list below, keeping them out of the report.
+  if (globalConfig) {
+    resolved.coverage = globalConfig.coverage
+    resolved.attachmentsDir = globalConfig.attachmentsDir
+    resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
+  }
+
+  const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
+  if (!rootStats?.isDirectory()) {
+    throw new Error(`Root path does not exist or is not a directory: ${resolved.root}`)
+  }
+
+  resolved.mode ??= viteConfig.mode ?? 'test'
+
+  if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
+    logger.warn(
+      c.yellow('Warning: retry.condition function cannot be used inside a config file. '
+        + 'Use a RegExp pattern instead, or define the function in your test file.'),
+    )
+
+    resolved.retry = {
+      ...resolved.retry,
+      condition: undefined,
+    }
+  }
+
+  if (options.pool && typeof options.pool !== 'string') {
+    resolved.pool = options.pool.name
+    resolved.poolRunner = options.pool
+  }
+
+  if ('poolOptions' in resolved) {
+    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://v4.vitest.dev/guide/migration#pool-rework')
+  }
+
+  if ('workspace' in resolved) {
+    throw new Error('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
+  }
+
+  resolved.pool ??= 'forks'
 
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
+
+  // shallow copy tags array to avoid mutating user config
+  resolved.tags = [...resolved.tags || []]
+  const definedTags = new Set<string>()
+  resolved.tags.forEach((tag) => {
+    if (!tag.name || typeof tag.name !== 'string') {
+      throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)
+    }
+    if (definedTags.has(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
+    }
+    if (/\s/.test(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
+    }
+    if (/[!()*|&]/.test(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
+    }
+    if (/^\s*(?:and|or|not)\s*$/i.test(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
+    }
+    if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
+      throw new TypeError(`Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`)
+    }
+    if (tag.priority != null && (typeof tag.priority !== 'number' || tag.priority < 0)) {
+      throw new TypeError(`Tag "${tag.name}": priority must be a non-negative number.`)
+    }
+    definedTags.add(tag.name)
+  })
 
   resolved.name = typeof options.name === 'string'
     ? options.name
     : (options.name?.label || '')
 
   resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
+
+  if (resolved.environment === 'browser') {
+    throw new Error(`Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`)
+  }
+
+  resolved.benchmark = {
+    ...benchmarkConfigDefaults,
+    ...resolved.benchmark,
+  }
+  if (resolved.benchmark.provider) {
+    resolved.benchmark.provider = resolvePath(
+      resolved.benchmark.provider,
+      resolved.root,
+    )
+  }
 
   const inspector = resolved.inspect || resolved.inspectBrk
 
@@ -203,17 +353,20 @@ export function resolveConfig(
     resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
-  if (resolved.minWorkers) {
-    resolved.minWorkers = resolveInlineWorkerOption(resolved.minWorkers)
+  // `browser.fileParallelism` was replaced by the top-level `fileParallelism`. Map
+  // it (only when browser is enabled, since it was a browser-only option) so
+  // existing configs keep working instead of being silently ignored.
+  const browserOptions = options.browser as { enabled?: boolean; fileParallelism?: boolean } | undefined
+  const browserFileParallelism = browserOptions?.enabled ? browserOptions.fileParallelism : undefined
+  if (browserFileParallelism !== undefined) {
+    logger.deprecate('`browser.fileParallelism` is deprecated. Use the top-level `fileParallelism` option instead.')
   }
 
-  // run benchmark sequentially by default
-  resolved.fileParallelism ??= mode !== 'benchmark'
+  const fileParallelism = options.fileParallelism ?? browserFileParallelism ?? true
 
-  if (!resolved.fileParallelism) {
+  if (!fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
     resolved.maxWorkers = 1
-    resolved.minWorkers = 1
   }
 
   if (resolved.maxConcurrency === 0) {
@@ -224,87 +377,100 @@ export function resolveConfig(
   }
 
   if (resolved.inspect || resolved.inspectBrk) {
-    const isSingleThread
-      = resolved.pool === 'threads'
-        && resolved.poolOptions?.threads?.singleThread
-    const isSingleFork
-      = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
-
-    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
+    if (resolved.maxWorkers !== 1) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(
-        `You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`,
+        `You cannot use ${inspectOption} without "--no-file-parallelism"`,
       )
     }
-  }
-
-  // apply browser CLI options only if the config already has the browser config and not disabled manually
-  if (
-    vitest._cliOptions.browser
-    && resolved.browser
-    // if enabled is set to `false`, but CLI overrides it, then always override it
-    && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
-  ) {
-    resolved.browser = mergeConfig(
-      resolved.browser,
-      vitest._cliOptions.browser,
-    ) as ResolvedBrowserOptions
   }
 
   resolved.browser ??= {} as any
   const browser = resolved.browser
 
   if (browser.enabled) {
-    if (!browser.name && !browser.instances) {
-      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
+    const instances = browser.instances
+    if (!browser.instances) {
+      browser.instances = []
     }
 
-    const instances = browser.instances
-    if (browser.name && browser.instances) {
+    // The whole project shares a single browser Vite server, so every instance
+    // must use the same provider. Validate that here and hoist the provider to
+    // the project level so the cluster resolves one even when it is only set per
+    // instance (e.g. connect mode). Because the provider is uniform, any
+    // instance's server factory represents the whole project.
+    const providerNames = new Set<string>()
+    // It's possible to provide the same name and sneak in a different factory
+    const providerFactories = new Set()
+    if (browser.provider?.name) {
+      providerNames.add(browser.provider.name)
+      providerFactories.add(browser.provider.serverFactory)
+    }
+    for (const instance of browser.instances) {
+      if (instance.provider?.name) {
+        providerNames.add(instance.provider.name)
+        providerFactories.add(instance.provider.serverFactory)
+      }
+    }
+    if (providerNames.size > 1 || providerFactories.size > 1) {
+      throw new Error(
+        `All browser instances within a project must use the same provider, but found: ${[...providerNames].join(', ')}. `
+        + `Use a single provider for the project, or move the instances into separate projects.`,
+      )
+    }
+    browser.provider ??= browser.instances.find(instance => instance.provider)?.provider
+
+    // use `chromium` by default when the preview provider is specified
+    // for a smoother experience. if chromium is not available, it will
+    // open the default browser anyway
+    if (!browser.instances.length && browser.provider?.name === 'preview') {
+      browser.instances = [{ browser: 'chromium' }]
+    }
+
+    if (browser.name && instances?.length) {
       // --browser=chromium filters configs to a single one
       browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
+
+      // if `instances` were defined, but now they are empty,
+      // let's throw an error because the filter is invalid
+      if (!browser.instances.length) {
+        throw new Error([
+          `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+          ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?`,
+        ].join(''))
+      }
     }
 
-    if (browser.instances && !browser.instances.length) {
-      throw new Error([
-        `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
-        browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
-      ].join(''))
-    }
+    browser.instances.forEach((instance) => {
+      instance.name ??= resolved.name
+        ? `${resolved.name} (${instance.browser})`
+        : instance.browser
+    })
   }
 
-  const playwrightChromiumOnly = isPlaywrightChromiumOnly(vitest, resolved)
+  if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {
+    throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
+  }
 
-  // Browser-mode "Playwright + Chromium" only features:
-  if (browser.enabled && !playwrightChromiumOnly) {
-    const browserConfig = {
-      browser: {
-        provider: browser.provider,
-        name: browser.name,
-        instances: browser.instances?.map(i => ({ browser: i.browser })),
-      },
-    }
-
-    if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
-      throw new Error(
-        `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
-        + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
-      )
-    }
-
-    if (resolved.inspect || resolved.inspectBrk) {
-      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-
-      throw new Error(
-        `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
-        + `\n\n...or disable ${inspectOption}\n`,
-      )
-    }
+  if (browser.enabled && resolved.detectAsyncLeaks) {
+    logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
+  if (isAgent) {
+    // default to `skipFull` and add `text-summary` reporter when `text` reporter is used on agents
+    const text = resolved.coverage.reporter.find(([name]) => name === 'text')
+    const textSummary = resolved.coverage.reporter.find(([name]) => name === 'text-summary')
+    if (text) {
+      (text as any)[1] = { skipFull: true, ...text[1] as any }
+      if (!textSummary) {
+        resolved.coverage.reporter.push(['text-summary', {}])
+      }
+    }
+  }
+  if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
+    resolved.coverage.changed = resolved.changed
+  }
 
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
     const reportsDirectory = resolve(
@@ -320,6 +486,31 @@ export function resolveConfig(
         `You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`,
       )
     }
+
+    if (resolved.coverage.htmlDir) {
+      resolved.coverage.htmlDir = resolve(
+        resolved.root,
+        resolved.coverage.htmlDir,
+      )
+    }
+
+    // infer default htmlDir based on builtin reporter's html output location
+    if (!resolved.coverage.htmlDir) {
+      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html' || name === 'html-spa')
+      if (htmlReporter) {
+        const [, options] = htmlReporter
+        const subdir = options && typeof options === 'object' && 'subdir' in options && typeof options.subdir === 'string'
+          ? options.subdir
+          : undefined
+        resolved.coverage.htmlDir = resolve(reportsDirectory, subdir || '.')
+      }
+      else {
+        const lcovReporter = resolved.coverage.reporter.find(([name]) => name === 'lcov')
+        if (lcovReporter) {
+          resolved.coverage.htmlDir = resolve(reportsDirectory, 'lcov-report')
+        }
+      }
+    }
   }
 
   if (resolved.coverage.enabled && resolved.coverage.provider === 'custom' && resolved.coverage.customProviderModule) {
@@ -333,26 +524,12 @@ export function resolveConfig(
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
-  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
-    (dir) => {
-      if (!dir.startsWith('/')) {
-        dir = `/${dir}`
-      }
-      if (!dir.endsWith('/')) {
-        dir += '/'
-      }
-      return normalize(dir)
-    },
-  )
-  if (!resolved.deps.moduleDirectories.includes('/node_modules/')) {
-    resolved.deps.moduleDirectories.push('/node_modules/')
-  }
 
   resolved.deps.optimizer ??= {}
   resolved.deps.optimizer.ssr ??= {}
-  resolved.deps.optimizer.ssr.enabled ??= true
-  resolved.deps.optimizer.web ??= {}
-  resolved.deps.optimizer.web.enabled ??= true
+  resolved.deps.optimizer.ssr.enabled ??= false
+  resolved.deps.optimizer.client ??= {}
+  resolved.deps.optimizer.client.enabled ??= false
 
   resolved.deps.web ??= {}
   resolved.deps.web.transformAssets ??= true
@@ -366,7 +543,18 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
-  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  if (resolved.coverage.include) {
+    resolved.coverage.include = resolved.coverage.include.map((pattern) => {
+      if (isDynamicPattern(pattern)) {
+        return pattern
+      }
+
+      // Convert patterns like ["src", "packages/server"] to ["src/**", "packages/server/**"]
+      return pattern.endsWith('/') ? `${pattern}**` : `${pattern}/**`
+    })
+  }
+
+  // Add hard-coded default coverage exclusions. These cannot be overridden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
     ...resolved.coverage.exclude,
@@ -381,7 +569,7 @@ export function resolveConfig(
     ),
 
     // Exclude test files
-    ...resolved.include,
+    ...resolved.include.filter(pattern => !pattern.startsWith('!')),
 
     // Configs
     resolved.config && slash(resolved.config),
@@ -392,78 +580,16 @@ export function resolveConfig(
     '**\/__x00__*',
 
     '**/node_modules/**',
-  ].filter(pattern => pattern != null)
+  ].filter(pattern => typeof pattern === 'string')
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
     ...resolved.setupFiles,
   ]
 
-  resolved.server ??= {}
-  resolved.server.deps ??= {}
-
-  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
-  deprecatedDepsOptions.forEach((option) => {
-    if (resolved.deps[option] === undefined) {
-      return
-    }
-
-    if (option === 'fallbackCJS') {
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`,
-        ),
-      )
-    }
-    else {
-      const transformMode
-        = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom'
-          ? 'web'
-          : 'ssr'
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${
-            option === 'external' ? 'exclude' : 'include'
-          }"`,
-        ),
-      )
-    }
-
-    if (resolved.server.deps![option] === undefined) {
-      resolved.server.deps![option] = resolved.deps[option] as any
-    }
-  })
-
   if (resolved.cliExclude) {
     resolved.exclude.push(...resolved.cliExclude)
   }
-
-  // vitenode will try to import such file with native node,
-  // but then our mocker will not work properly
-  if (resolved.server.deps.inline !== true) {
-    const ssrOptions = viteConfig.ssr
-    if (
-      ssrOptions?.noExternal === true
-      && resolved.server.deps.inline == null
-    ) {
-      resolved.server.deps.inline = true
-    }
-    else {
-      resolved.server.deps.inline ??= []
-      resolved.server.deps.inline.push(...extraInlineDeps)
-    }
-  }
-
-  resolved.server.deps.inlineFiles ??= []
-  resolved.server.deps.inlineFiles.push(...resolved.setupFiles)
-  resolved.server.deps.moduleDirectories ??= []
-  resolved.server.deps.moduleDirectories.push(
-    ...resolved.deps.moduleDirectories,
-  )
 
   if (resolved.runner) {
     resolved.runner = resolvePath(resolved.runner, resolved.root)
@@ -471,7 +597,7 @@ export function resolveConfig(
 
   resolved.attachmentsDir = resolve(
     resolved.root,
-    resolved.attachmentsDir ?? '.vitest-attachments',
+    resolved.attachmentsDir ?? '.vitest/attachments',
   )
 
   if (resolved.snapshotEnvironment) {
@@ -500,7 +626,9 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new' || UPDATE_SNAPSHOT === 'none'
+        ? UPDATE_SNAPSHOT
+        : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
     // resolved inside the worker
     snapshotEnvironment: null as any,
@@ -516,140 +644,37 @@ export function resolveConfig(
     delete (resolved as any).resolveSnapshotPath
   }
 
+  resolved.execArgv ??= []
   resolved.pool ??= 'threads'
 
-  if (process.env.VITEST_MAX_THREADS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      threads: {
-        ...resolved.poolOptions?.threads,
-        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
-      },
-      vmThreads: {
-        ...resolved.poolOptions?.vmThreads,
-        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
-      },
+  if (
+    resolved.pool === 'vmForks'
+    || resolved.pool === 'vmThreads'
+    || resolved.pool === 'typescript'
+  ) {
+    resolved.isolate = false
+  }
+
+  // `browser.isolate` was replaced by the top-level `isolate` option. Map it
+  // (only when browser is enabled, since it was a browser-only option) so
+  // existing configs keep working instead of silently falling back to the
+  // isolated default (which is much slower).
+  const browserIsolate = browser.enabled ? (browser as { isolate?: boolean }).isolate : undefined
+  if (browserIsolate !== undefined) {
+    logger.deprecate('`browser.isolate` is deprecated. Use the top-level `isolate` option instead.')
+    if (options.isolate === undefined) {
+      resolved.isolate = browserIsolate
     }
   }
 
-  if (process.env.VITEST_MIN_THREADS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      threads: {
-        ...resolved.poolOptions?.threads,
-        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
-      },
-      vmThreads: {
-        ...resolved.poolOptions?.vmThreads,
-        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
-      },
-    }
-  }
-
-  if (process.env.VITEST_MAX_FORKS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      forks: {
-        ...resolved.poolOptions?.forks,
-        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
-      },
-      vmForks: {
-        ...resolved.poolOptions?.vmForks,
-        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
-      },
-    }
-  }
-
-  if (process.env.VITEST_MIN_FORKS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      forks: {
-        ...resolved.poolOptions?.forks,
-        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
-      },
-      vmForks: {
-        ...resolved.poolOptions?.vmForks,
-        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
-      },
-    }
-  }
-
-  const poolThreadsOptions = [
-    ['threads', 'minThreads'],
-    ['threads', 'maxThreads'],
-    ['vmThreads', 'minThreads'],
-    ['vmThreads', 'maxThreads'],
-  ] as const satisfies [keyof PoolOptions, keyof ThreadsOptions][]
-
-  for (const [poolOptionKey, workerOptionKey] of poolThreadsOptions) {
-    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
-      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
-    }
-  }
-
-  const poolForksOptions = [
-    ['forks', 'minForks'],
-    ['forks', 'maxForks'],
-    ['vmForks', 'minForks'],
-    ['vmForks', 'maxForks'],
-  ] as const satisfies [keyof PoolOptions, keyof ForksOptions][]
-
-  for (const [poolOptionKey, workerOptionKey] of poolForksOptions) {
-    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
-      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
-    }
-  }
-
-  if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
-    resolved.pool = resolvePath(resolved.pool, resolved.root)
-  }
-
-  if (mode === 'benchmark') {
-    resolved.benchmark = {
-      ...benchmarkConfigDefaults,
-      ...resolved.benchmark,
-    }
-    // override test config
-    resolved.coverage.enabled = false
-    resolved.typecheck.enabled = false
-    resolved.include = resolved.benchmark.include
-    resolved.exclude = resolved.benchmark.exclude
-    resolved.includeSource = resolved.benchmark.includeSource
-    const reporters = Array.from(
-      new Set<BenchmarkBuiltinReporters>([
-        ...toArray(resolved.benchmark.reporters),
-        // @ts-expect-error reporter is CLI flag
-        ...toArray(options.reporter),
-      ]),
-    ).filter(Boolean)
-    if (reporters.length) {
-      resolved.benchmark.reporters = reporters
-    }
-    else {
-      resolved.benchmark.reporters = ['default']
-    }
-
-    if (options.outputFile) {
-      resolved.benchmark.outputFile = options.outputFile
-    }
-
-    // --compare from cli
-    if (options.compare) {
-      resolved.benchmark.compare = options.compare
-    }
-    if (options.outputJson) {
-      resolved.benchmark.outputJson = options.outputJson
-    }
+  if (process.env.VITEST_MAX_WORKERS) {
+    resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
   }
 
   if (typeof resolved.diff === 'string') {
     resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }
-
-  // the server has been created, we don't need to override vite.server options
-  const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: __VITEST_GENERATE_UI_TOKEN__ ? crypto.randomUUID() : '0' }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -666,22 +691,23 @@ export function resolveConfig(
    * { reporter: [[ 'json' ], 'html'] }
    * { reporter: [[ 'json', { outputFile: 'test.json' } ], 'html'] }
    */
-  if (options.reporters) {
-    if (!Array.isArray(options.reporters)) {
+  if (resolved.reporters) {
+    if (!Array.isArray(resolved.reporters)) {
       // Reporter name, e.g. { reporters: 'json' }
-      if (typeof options.reporters === 'string') {
-        resolved.reporters = [[options.reporters, {}]]
+      if (typeof resolved.reporters === 'string') {
+        resolved.reporters = [[resolved.reporters, {}]]
       }
       // Inline reporter e.g. { reporters: { onFinish() { method() } } }
       else {
-        resolved.reporters = [options.reporters]
+        resolved.reporters = [resolved.reporters]
       }
     }
     // It's an array of reporters
     else {
+      const reporters = resolved.reporters
       resolved.reporters = []
 
-      for (const reporter of options.reporters) {
+      for (const reporter of reporters) {
         if (Array.isArray(reporter)) {
           // Reporter with options, e.g. { reporters: [ [ 'json', { outputFile: 'test.json' } ] ] }
           resolved.reporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
@@ -697,35 +723,52 @@ export function resolveConfig(
       }
     }
   }
-
-  if (mode !== 'benchmark') {
-    // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
-    // it is passed down as "vitest --reporter ../reporter.js"
-    const reportersFromCLI = resolved.reporter
-
-    const cliReporters = toArray(reportersFromCLI || []).map(
-      (reporter: string) => {
-        // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
-        if (/^\.\.?\//.test(reporter)) {
-          return resolve(process.cwd(), reporter)
-        }
-        return reporter
-      },
-    )
-
-    if (cliReporters.length) {
-      resolved.reporters = Array.from(new Set(toArray(cliReporters)))
-        .filter(Boolean)
-        .map(reporter => [reporter, {}])
-    }
+  else {
+    resolved.reporters = []
   }
 
-  if (!resolved.reporters.length) {
-    resolved.reporters.push(['default', {}])
+  // it is passed down as "vitest --reporter ../reporter.js"
+  const reportersFromCLI = options.reporter
 
-    // also enable github-actions reporter as a default
-    if (process.env.GITHUB_ACTIONS === 'true') {
-      resolved.reporters.push(['github-actions', {}])
+  const cliReporters = toArray(reportersFromCLI || []).map(
+    (reporter: string) => {
+      // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
+      if (/^\.\.?\//.test(reporter)) {
+        return resolve(process.cwd(), reporter)
+      }
+      return reporter
+    },
+  )
+
+  if (cliReporters.length) {
+    // When CLI reporters are specified, preserve options from config file
+    const configReportersMap = new Map<string, Record<string, unknown>>()
+
+    // Build a map of reporter names to their options from the config
+    for (const reporter of resolved.reporters) {
+      if (Array.isArray(reporter)) {
+        const [reporterName, reporterOptions] = reporter
+        if (typeof reporterName === 'string') {
+          configReportersMap.set(reporterName, reporterOptions as Record<string, unknown>)
+        }
+      }
+    }
+
+    resolved.reporters = Array.from(new Set(toArray(cliReporters)))
+      .filter(Boolean)
+      .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
+  }
+
+  // only the root resolves the label; projects receive the root's value above
+  if (!globalConfig) {
+    resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
+    for (const reporter of resolved.reporters) {
+      if (Array.isArray(reporter) && reporter[0] === 'blob') {
+        const options = reporter[1] as any
+        if (options && typeof options.label === 'string') {
+          resolved.mergeReportsLabel = options.label
+        }
+      }
     }
   }
 
@@ -733,6 +776,10 @@ export function resolveConfig(
     resolved.passWithNoTests ??= true
   }
 
+  if (resolved.browser.enabled) {
+    // browser mode renders real CSS in the page
+    resolved.css = true
+  }
   resolved.css ??= {}
   if (typeof resolved.css === 'object') {
     resolved.css.modules ??= {}
@@ -741,7 +788,7 @@ export function resolveConfig(
 
   if (resolved.cache !== false) {
     if (resolved.cache && typeof resolved.cache.dir === 'string') {
-      vitest.logger.deprecate(
+      logger.deprecate(
         `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
       )
     }
@@ -766,9 +813,7 @@ export function resolveConfig(
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
-  if (resolved.sequence.sequencer === RandomSequencer) {
-    resolved.sequence.seed ??= Date.now()
-  }
+  resolved.sequence.seed ??= Date.now()
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
@@ -778,7 +823,8 @@ export function resolveConfig(
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
 
-  if (resolved.typecheck.enabled) {
+  if (resolved.typecheck.enabled && !warnedTypeCheck) {
+    warnedTypeCheck = true
     logger.console.warn(
       c.yellow(
         'Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.',
@@ -788,18 +834,43 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.isolate ??= true
-  resolved.browser.fileParallelism
-    ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
+  resolved.browser.commands ??= {}
+  resolved.browser.detailsPanelPosition ??= 'right'
   if (resolved.browser.screenshotDirectory) {
     resolved.browser.screenshotDirectory = resolve(
       resolved.root,
       resolved.browser.screenshotDirectory,
     )
   }
-  const isPreview = resolved.browser.provider === 'preview'
+
+  if (resolved.inspector.enabled) {
+    resolved.browser.trackUnhandledErrors ??= false
+  }
+
+  resolved.browser.viewport ??= {} as any
+  resolved.browser.viewport.width ??= 414
+  resolved.browser.viewport.height ??= 896
+
+  resolved.browser.locators ??= {} as any
+  resolved.browser.locators.testIdAttribute ??= 'data-testid'
+  resolved.browser.locators.exact ??= true
+  resolved.browser.locators.errorFormat ??= 'all'
+
+  if (typeof resolved.browser.provider === 'string') {
+    const source = `@vitest/browser-${resolved.browser.provider}`
+    throw new TypeError(
+      'The `browser.provider` configuration was changed to accept a factory instead of a string. '
+      + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/config/browser/provider`,
+    )
+  }
+
+  const isPreview = resolved.browser.provider?.name === 'preview'
+
+  if (!isPreview && resolved.browser.enabled && stdProvider === 'stackblitz') {
+    throw new Error(`stackblitz environment does not support the ${resolved.browser.provider?.name} provider. Please, use "@vitest/browser-preview" instead.`)
+  }
   if (isPreview && resolved.browser.screenshotFailures === true) {
     console.warn(c.yellow(
       [
@@ -813,23 +884,12 @@ export function resolveConfig(
   else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
   }
-
-  resolved.browser.viewport ??= {} as any
-  resolved.browser.viewport.width ??= 414
-  resolved.browser.viewport.height ??= 896
-
-  resolved.browser.locators ??= {} as any
-  resolved.browser.locators.testIdAttribute ??= 'data-testid'
-
-  if (resolved.browser.enabled && stdProvider === 'stackblitz') {
-    resolved.browser.provider = 'preview'
+  if (resolved.browser.provider && resolved.browser.provider.options == null) {
+    resolved.browser.provider.options = {}
   }
 
-  resolved.browser.api = resolveApiServerConfig(
-    resolved.browser,
-    defaultBrowserPort,
-  ) || {
-    port: defaultBrowserPort,
+  if ('api' in resolved.browser) {
+    logger.deprecate('`test.browser.api` was deprecated in Vitest 5. Use `test.api` instead.')
   }
 
   // enable includeTaskLocation by default in UI mode
@@ -840,6 +900,32 @@ export function resolveConfig(
   }
   else if (resolved.ui) {
     resolved.includeTaskLocation ??= true
+  }
+
+  if (typeof resolved.browser.trace === 'string' || !resolved.browser.trace) {
+    resolved.browser.trace = { mode: resolved.browser.trace || 'off' }
+  }
+
+  const traceView = resolved.browser.traceView
+  resolved.browser.traceView = typeof traceView === 'object'
+    ? {
+        enabled: traceView.enabled ?? false,
+        recordCanvas: traceView.recordCanvas ?? false,
+        inlineImages: traceView.inlineImages ?? false,
+      }
+    : {
+        enabled: traceView ?? false,
+        recordCanvas: false,
+        inlineImages: false,
+      }
+  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
+    resolved.browser.detailsPanelPosition = 'bottom'
+  }
+  if (resolved.browser.trace.tracesDir != null) {
+    resolved.browser.trace.tracesDir = resolvePath(
+      resolved.browser.trace.tracesDir,
+      resolved.root,
+    )
   }
 
   const htmlReporter = toArray(resolved.reporters).some((reporter) => {
@@ -853,20 +939,193 @@ export function resolveConfig(
   if (htmlReporter) {
     resolved.includeTaskLocation ??= true
   }
+  else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
+    logger.console.warn(
+      c.yellow(
+        withLabel(
+          'yellow',
+          'Vitest',
+          '--browser.traceView is enabled without the HTML reporter.',
+        ),
+      ),
+    )
+  }
 
-  resolved.testTransformMode ??= {}
+  resolved.server ??= {}
+  resolved.server.deps ??= {}
 
-  resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
-  resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000
+  if (resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP) {
+    const userFolder = resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP
+    resolved.dumpDir = resolve(
+      resolved.root,
+      typeof userFolder === 'string' && userFolder !== 'true'
+        ? userFolder
+        : '.vitest-dump',
+      resolved.name || 'root',
+    )
+  }
+
+  resolved.testTimeout ??= resolved.browser.enabled ? 15_000 : 5_000
+  resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
+
+  resolved.experimental ??= {} as any
+  if (resolved.experimental.openTelemetry?.sdkPath) {
+    const sdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.sdkPath,
+    )
+    resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
+  }
+  if (resolved.experimental.openTelemetry?.browserSdkPath) {
+    const browserSdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.browserSdkPath,
+    )
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
+  }
+  resolved.experimental.importDurations ??= {} as any
+  resolved.experimental.importDurations.print ??= false
+  resolved.experimental.importDurations.failOnDanger ??= false
+  if (resolved.experimental.importDurations.limit == null) {
+    const shouldCollect
+      = resolved.experimental.importDurations.print
+        || resolved.experimental.importDurations.failOnDanger
+        || resolved.ui
+    resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
+  }
+  resolved.experimental.importDurations.thresholds ??= {} as any
+  resolved.experimental.importDurations.thresholds.warn ??= 100
+  resolved.experimental.importDurations.thresholds.danger ??= 500
+
+  if (typeof resolved.experimental.vcsProvider === 'string' && resolved.experimental.vcsProvider !== 'git') {
+    resolved.experimental.vcsProvider = resolvePath(resolved.experimental.vcsProvider, resolved.root)
+  }
+
+  // `experimental.fsModuleCache` / `experimental.fsModuleCachePath` were promoted to
+  // the top-level `fsModuleCache` / `fsModuleCachePath` options.
+  const legacyExperimental = options.experimental as
+    | { fsModuleCache?: boolean; fsModuleCachePath?: string }
+    | undefined
+  if (legacyExperimental?.fsModuleCache != null) {
+    logger.deprecate('`experimental.fsModuleCache` is deprecated. Use the top-level `fsModuleCache` option instead.')
+    if (options.fsModuleCache === undefined) {
+      resolved.fsModuleCache = legacyExperimental.fsModuleCache
+    }
+  }
+  if (legacyExperimental?.fsModuleCachePath != null) {
+    logger.deprecate('`experimental.fsModuleCachePath` is deprecated. Use the top-level `fsModuleCachePath` option instead.')
+    if (options.fsModuleCachePath === undefined) {
+      resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
+    }
+  }
+  resolved.fsModuleCache ??= false
+  if (resolved.fsModuleCachePath) {
+    resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
+  }
 
   return resolved
 }
 
-export function isBrowserEnabled(config: ResolvedConfig): boolean {
-  return Boolean(config.browser?.enabled)
+function resolveConfigPath(root: string, options: UserConfig) {
+  if (options.config === false) {
+    return false
+  }
+  if (options.config) {
+    return resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config)
+  }
+  return findConfigFile(root)
 }
 
-export function resolveCoverageReporters(configReporters: NonNullable<BaseCoverageOptions['reporter']>): CoverageReporterWithOptions[] {
+export async function resolveConfig(
+  options: UserConfig = {},
+  viteOverrides: ViteUserConfig = {},
+  pluginsHarness: PluginHarness = new PluginHarness(),
+): Promise<ResolvedViteConfig> {
+  // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
+  const cliOptionsCopy = deepMerge({}, options)
+  const viteOverridesCopy = deepMerge({}, viteOverrides)
+  const root = resolve(options.root || process.cwd())
+  const configPath = resolveConfigPath(root, options)
+  options.config = configPath
+  options.root = root
+
+  const rootBrowserHolder: BrowserContributionHolder = {}
+  const inlineConfig: InlineConfig = mergeConfig(
+    {
+      configFile: configPath,
+      configLoader: options.configLoader,
+      mode: options.mode || 'test',
+      plugins: [
+        CliOverride(cliOptionsCopy),
+        ...VitestConfigServer(pluginsHarness),
+        ...VitestConfig(pluginsHarness),
+        ...VitestCorePlugin(pluginsHarness, options),
+        ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
+      ],
+    } satisfies InlineConfig,
+    mergeConfig(viteOverrides, { root }),
+  )
+
+  const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
+
+  const rootConfig = resolveTestConfig(
+    pluginsHarness.logger,
+    (rootViteConfig.test as UserConfig | undefined) || {},
+    rootViteConfig,
+  )
+  rootViteConfig.test = rootConfig
+
+  rootViteConfig.server.fs.allow.push(
+    ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
+  )
+  rootViteConfig.server.fs.deny.push(API_TOKEN_FILE)
+
+  // the server has been created, we don't need to override vite.server options
+  const { token, tokenCreated } = resolveApiToken(rootViteConfig.root)
+  rootConfig.api.token = token
+  rootConfig.api.tokenCreated = tokenCreated
+
+  if (rootConfig.ui && rootConfig.open) {
+    // Note: `tokenCreated` is only an approximation of "the browser is not
+    // authenticated yet". If the user clears cookies while the token file
+    // persists, the clean URL will block until they re-open the `?token=`
+    // URL printed in the terminal.
+    if (rootConfig.api.tokenCreated) {
+      // First run that generated the token: no browser holds the auth
+      // cookie yet, so open the authenticated URL to set it. A new tab
+      // here is fine since no clean-URL tab exists to reuse.
+      const url = new URL(rootConfig.uiBase, 'http://localhost')
+      url.searchParams.set('token', rootConfig.api.token)
+      rootViteConfig.server.open = `${url.pathname}${url.search}`
+    }
+    else {
+      // Subsequent runs: open the clean UI base URL (without `?token=`)
+      // rather than the authenticated URL printed by the logger. On macOS,
+      // `openBrowser` reuses an existing tab whose URL matches via substring
+      // and reloads it (Vite's `bin/openChrome.js`). Since the 302 redirect
+      // strips the token, an already-authenticated tab lives at the clean
+      // URL, so opening the clean URL matches and reloads it; opening the
+      // token URL would never match and would spawn a new tab on every
+      // restart.
+      rootViteConfig.server.open = rootConfig.uiBase
+    }
+  }
+
+  rootConfig.cliOptions = cliOptionsCopy
+  rootConfig.viteOverrides = viteOverridesCopy
+  rootConfig._browserContribution = rootBrowserHolder.contribution
+
+  rootConfig.resolvedProjects = await resolveProjectEntries(
+    pluginsHarness,
+    rootViteConfig,
+    rootConfig,
+    rootConfig.projects,
+  )
+
+  return rootViteConfig
+}
+
+export function resolveCoverageReporters(configReporters: NonNullable<CoverageOptions['reporter']>): CoverageReporterWithOptions[] {
   // E.g. { reporter: "html" }
   if (!Array.isArray(configReporters)) {
     return [[configReporters, {}]]
@@ -888,26 +1147,27 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
   return resolvedReporters
 }
 
-function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
-  const browser = config.browser
-  if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
+export function matchesProjectFilter(projects: string[], name: string): boolean {
+  // no filters applied, any project can be included
+  if (!projects.length) {
+    return true
+  }
+  return projects.some((project) => {
+    const regexp = wildcardPatternToRegExp(project)
+    return regexp.test(name)
+  })
+}
+
+export function isExcludedByProjectFilter(projects: string[], name: string): boolean {
+  if (!projects.length) {
     return false
   }
-  if (browser.name) {
-    return browser.name === 'chromium'
-  }
-  if (!browser.instances) {
-    return false
-  }
-  for (const instance of browser.instances) {
-    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
-    // browser config is filtered out
-    if (!vitest.matchesProjectFilter(name)) {
-      continue
-    }
-    if (instance.browser !== 'chromium') {
+
+  return projects.some((project) => {
+    if (!project.startsWith('!')) {
       return false
     }
-  }
-  return true
+    const positivePattern = project.slice(1)
+    return wildcardPatternToRegExp(positivePattern).test(name)
+  })
 }

@@ -13,18 +13,18 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
-import { getElementFromUserInput } from './utils'
+import { queryElementFromUserInput } from './utils'
 
 export default function toBeInTheDocument(
   this: MatcherState,
   actual: Element | Locator | null,
-): ExpectationResult {
+): MatcherResult {
   let htmlElement: null | HTMLElement | SVGElement = null
 
   if (actual !== null || !this.isNot) {
-    htmlElement = getElementFromUserInput(actual, toBeInTheDocument, this)
+    htmlElement = queryElementFromUserInput(actual, toBeInTheDocument, this)
   }
 
   const pass

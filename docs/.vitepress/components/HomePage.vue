@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VPHomeSponsors } from 'vitepress/theme'
+import { VPHomeSponsors } from '@voidzero-dev/vitepress-theme'
 import { sponsors } from '../sponsors'
 </script>
 

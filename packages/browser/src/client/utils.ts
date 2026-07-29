@@ -1,28 +1,34 @@
-import type { VitestRunner } from '@vitest/runner'
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { Ivya } from 'ivya'
+import type { SerializedConfig, VitestTestRunner, WorkerGlobalState } from 'vitest'
+import type { OTELCarrier, Traces } from 'vitest/internal/traces'
 import type { IframeOrchestrator } from './orchestrator'
-import type { CommandsManager } from './tester/utils'
+import type { CommandsManager } from './tester/tester-utils'
+import type { BrowserTraceAttempt } from './tester/trace'
 
-export async function importId(id: string): Promise<any> {
+async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export async function importFs(id: string): Promise<any> {
+async function importFs(id: string): Promise<any> {
   const name = `/@fs/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export const executor = {
+export const moduleRunner = {
   isBrowser: true,
 
-  executeId: (id: string): Promise<any> => {
+  import: (id: string): Promise<any> => {
     if (id[0] === '/' || id[1] === ':') {
       return importFs(id)
     }
     return importId(id)
   },
 }
+
+export const now: () => number = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
 
 export function getConfig(): SerializedConfig {
   return getBrowserState().config
@@ -53,34 +59,47 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
       return (promiseResult ||= promise(sourceError)).then(onFulfilled, onRejected)
     },
     catch(onRejected) {
+      awaited = true
       return (promiseResult ||= promise(sourceError)).catch(onRejected)
     },
     finally(onFinally) {
+      awaited = true
       return (promiseResult ||= promise(sourceError)).finally(onFinally)
     },
     [Symbol.toStringTag]: 'Promise',
   } satisfies Promise<T>
 }
 
+// This object is the shared runtime bus for browser artifacts loaded into the
+// same page. Some browser code is built and served as independent bundles, so
+// getBrowserState() is the API they use to share runtime state instead of
+// relying on imports resolving to the same module instance.
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
-  moduleCache: Map<string, any>
   config: SerializedConfig
   provider: string
-  runner: VitestRunner
+  runner: VitestTestRunner
   viteConfig: {
     root: string
   }
   providedContext: string
   type: 'tester' | 'orchestrator'
+  disposeExceptionTracker: () => void
   wrapModule: <T>(module: () => T) => T
   iframeId?: string
   sessionId: string
   testerId: string
+  otelCarrier?: OTELCarrier
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  activeTraceTaskIds: Set<string>
+  browserTraceAttempts: Map<string, BrowserTraceAttempt>
+  // lazily loaded only when traceView is enabled
+  browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
+  selectorEngine: Ivya
+  traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
@@ -89,6 +108,7 @@ export interface BrowserRunnerState {
     send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
     emit: (event: string, payload: unknown) => void
   }
+  aria: typeof import('ivya/aria')
 }
 
 /* @__NO_SIDE_EFFECTS__ */

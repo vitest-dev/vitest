@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementAccessibleErrorMessage } from 'ivya/utils'
 import { getElementFromUserInput, getMessage, redent } from './utils'
@@ -22,9 +22,10 @@ export default function toHaveAccessibleErrorMessage(
   this: MatcherState,
   actual: Element | Locator,
   expectedAccessibleErrorMessage?: string | RegExp,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveAccessibleErrorMessage, this)
   const actualAccessibleErrorMessage = getElementAccessibleErrorMessage(htmlElement) ?? ''
+  const defaultView = htmlElement.ownerDocument.defaultView || window
 
   const missingExpectedValue = arguments.length === 1
 
@@ -36,7 +37,7 @@ export default function toHaveAccessibleErrorMessage(
   }
   else {
     pass
-      = expectedAccessibleErrorMessage instanceof RegExp
+      = expectedAccessibleErrorMessage instanceof defaultView.RegExp
         ? expectedAccessibleErrorMessage.test(actualAccessibleErrorMessage)
         : this.equals(
             actualAccessibleErrorMessage,

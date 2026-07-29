@@ -4,14 +4,25 @@ export function cleanUrl(url: string): string {
 }
 
 export function createManualModuleSource(moduleUrl: string, exports: string[], globalAccessor = '"__vitest_mocker__"'): string {
-  const source = `const module = globalThis[${globalAccessor}].getFactoryModule("${moduleUrl}");`
+  const source = `
+const __factoryModule__ = await globalThis[${globalAccessor}].getFactoryModule("${moduleUrl}");
+`
   const keys = exports
-    .map((name) => {
-      if (name === 'default') {
-        return `export default module["default"];`
-      }
-      return `export const ${name} = module["${name}"];`
+    .map((name, index) => {
+      return `let __${index} = __factoryModule__["${name}"]
+export { __${index} as "${name}" }`
     })
     .join('\n')
-  return `${source}\n${keys}`
+  let code = `${source}\n${keys}`
+  // this prevents recursion
+  code += `
+if (__factoryModule__.__factoryPromise != null) {
+  __factoryModule__.__factoryPromise.then((resolvedModule) => {
+    ${exports.map((name, index) => {
+      return `__${index} = resolvedModule["${name}"];`
+    }).join('\n')}
+  })
+}
+  `
+  return code
 }

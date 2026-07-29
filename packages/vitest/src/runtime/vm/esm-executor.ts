@@ -73,9 +73,12 @@ export class EsmExecutor {
       this.moduleCache.set(fileURL, m)
       return m
     }
+    const codeCache = this.executor.codeCache
+    const cachedData = codeCache?.get(fileURL, code)
     const m = new SourceTextModule(code, {
       identifier: fileURL,
       context: this.context,
+      cachedData,
       importModuleDynamically: this.executor.importModuleDynamically,
       initializeImportMeta: (meta, mod) => {
         meta.url = mod.identifier
@@ -92,11 +95,15 @@ export class EsmExecutor {
         }
       },
     })
+    // the code cache of a SourceTextModule must be created before evaluation
+    if (!cachedData) {
+      codeCache?.store(fileURL, code, () => m.createCachedData())
+    }
     this.moduleCache.set(fileURL, m)
     return m
   }
 
-  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer): Promise<VMModule> {
+  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer<ArrayBuffer>): Promise<VMModule> {
     const cached = this.moduleCache.get(fileUrl)
     if (cached) {
       return cached
@@ -127,7 +134,7 @@ export class EsmExecutor {
       fetch(fileUrl).then(r => r.text()))
   }
 
-  public async loadWebAssemblyModule(source: Buffer, identifier: string): Promise<VMModule> {
+  public async loadWebAssemblyModule(source: Buffer<ArrayBuffer>, identifier: string): Promise<VMModule> {
     const cached = this.moduleCache.get(identifier)
     if (cached) {
       return cached

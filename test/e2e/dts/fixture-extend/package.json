@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-integration-dts-fixture-extend",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "premove dist && tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.check.json",
+    "test": "pnpm build && pnpm check"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

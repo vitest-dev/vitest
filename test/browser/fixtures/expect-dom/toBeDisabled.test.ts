@@ -43,7 +43,7 @@ test('.toBeDisabled', () => {
   expect(queryByTestId('button-element')).toBeDisabled()
   expect(() =>
     expect(queryByTestId('button-element')).not.toBeDisabled(),
-  ).toThrowError()
+  ).toThrow()
   expect(queryByTestId('textarea-element')).toBeDisabled()
   expect(queryByTestId('input-element')).toBeDisabled()
 
@@ -65,10 +65,10 @@ test('.toBeDisabled', () => {
 
   expect(queryByTestId('a-element')).not.toBeDisabled()
   expect(queryByTestId('deep-a-element')).not.toBeDisabled()
-  expect(() => expect(queryByTestId('a-element')).toBeDisabled()).toThrowError()
+  expect(() => expect(queryByTestId('a-element')).toBeDisabled()).toThrow()
   expect(() =>
     expect(queryByTestId('deep-a-element')).toBeDisabled(),
-  ).toThrowError()
+  ).toThrow()
 })
 
 test('.toBeDisabled fieldset>legend', () => {
@@ -131,12 +131,12 @@ test('.toBeDisabled custom element', () => {
   expect(queryByTestId('disabled-custom-element')).toBeDisabled()
   expect(() => {
     expect(queryByTestId('disabled-custom-element')).not.toBeDisabled()
-  }).toThrowError('element is disabled')
+  }).toThrow('element is disabled')
 
   expect(queryByTestId('enabled-custom-element')).not.toBeDisabled()
   expect(() => {
     expect(queryByTestId('enabled-custom-element')).toBeDisabled()
-  }).toThrowError('element is not disabled')
+  }).toThrow('element is not disabled')
 })
 
 test('.toBeEnabled', () => {
@@ -173,47 +173,47 @@ test('.toBeEnabled', () => {
 
   expect(() => {
     expect(queryByTestId('button-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
   expect(queryByTestId('button-element')).not.toBeEnabled()
   expect(() => {
     expect(queryByTestId('textarea-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
   expect(() => {
     expect(queryByTestId('input-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
 
   expect(() => {
     // fieldset elements can't be considered disabled, only their children
     expect(queryByTestId('fieldset-element')).toBeDisabled()
-  }).toThrowError()
+  }).toThrow()
   expect(() => {
     expect(queryByTestId('fieldset-child-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
 
   expect(queryByTestId('div-element')).toBeEnabled()
   expect(queryByTestId('div-child-element')).toBeEnabled()
 
   expect(() => {
     expect(queryByTestId('nested-form-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
   expect(() => {
     expect(queryByTestId('deep-select-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
   expect(() => {
     expect(queryByTestId('deep-optgroup-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
   expect(() => {
     expect(queryByTestId('deep-option-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
 
   expect(queryByTestId('a-element')).toBeEnabled()
   expect(() =>
     expect(queryByTestId('a-element')).not.toBeEnabled(),
-  ).toThrowError()
+  ).toThrow()
   expect(queryByTestId('deep-a-element')).toBeEnabled()
   expect(() =>
     expect(queryByTestId('deep-a-element')).not.toBeEnabled(),
-  ).toThrowError()
+  ).toThrow()
 })
 
 test('.toBeEnabled fieldset>legend', () => {
@@ -259,18 +259,18 @@ test('.toBeEnabled fieldset>legend', () => {
 
   expect(() => {
     expect(queryByTestId('inherited-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
   expect(queryByTestId('inside-legend-element')).toBeEnabled()
   expect(queryByTestId('nested-inside-legend-element')).toBeEnabled()
 
   expect(queryByTestId('first-legend-element')).toBeEnabled()
   expect(() => {
     expect(queryByTestId('second-legend-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
 
   expect(() => {
     expect(queryByTestId('outer-fieldset-element')).toBeEnabled()
-  }).toThrowError()
+  }).toThrow()
 })
 
 test('.toBeEnabled custom element', () => {
@@ -282,10 +282,10 @@ test('.toBeEnabled custom element', () => {
   expect(queryByTestId('disabled-custom-element')).not.toBeEnabled()
   expect(() => {
     expect(queryByTestId('disabled-custom-element')).toBeEnabled()
-  }).toThrowError('element is not enabled')
+  }).toThrow('element is not enabled')
 
   expect(queryByTestId('enabled-custom-element')).toBeEnabled()
   expect(() => {
     expect(queryByTestId('enabled-custom-element')).not.toBeEnabled()
-  }).toThrowError('element is enabled')
+  }).toThrow('element is enabled')
 })

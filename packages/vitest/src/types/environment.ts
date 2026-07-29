@@ -1,4 +1,4 @@
-import type { Awaitable } from './general'
+import type { Awaitable } from '@vitest/utils'
 
 export interface EnvironmentReturn {
   teardown: (global: any) => Awaitable<void>
@@ -11,11 +11,21 @@ export interface VmEnvironmentReturn {
 
 export interface Environment {
   name: string
-  transformMode: 'web' | 'ssr'
+  /**
+   * @deprecated use `viteEnvironment` instead. Uses `name` by default
+   */
+  transformMode?: 'web' | 'ssr'
+  /**
+   * Environment initiated by the Vite server. It is usually available
+   * as `vite.server.environments.${name}`.
+   *
+   * By default, fallbacks to `name`.
+   */
+  viteEnvironment?: 'client' | 'ssr' | ({} & string)
   setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
   setup: (
     global: any,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) => Awaitable<EnvironmentReturn>
 }
 

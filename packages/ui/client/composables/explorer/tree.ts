@@ -1,23 +1,26 @@
-import type { File, TaskResultPack, TestAnnotation } from '@vitest/runner'
-import type { RunnerTaskEventPack } from 'vitest'
+import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
+import { useRafFn } from '@vueuse/core'
+import { reactive } from 'vue'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { annotateTest, collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { collectTestsTotalData, preparePendingTasks, recordTestArtifact, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
   filter,
-  search,
+  searchMatcher,
 } from '~/composables/explorer/state'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
+  public startTime: number = 0
+  public executionTime: number = 0
   constructor(
     public projects: string[] = [],
     public colors = new Map<string, string | undefined>(),
@@ -46,6 +49,8 @@ export class ExplorerTree {
       testsIgnore: 0,
       testsSkipped: 0,
       testsTodo: 0,
+      testsExpectedFail: 0,
+      testsSlow: 0,
       totalTests: 0,
       failedSnapshot: false,
       failedSnapshotEnabled: false,
@@ -63,23 +68,25 @@ export class ExplorerTree {
     runLoadFiles(
       remoteFiles,
       true,
-      search.value.trim(),
+      searchMatcher.value.matcher,
       {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       },
     )
   }
 
   startRun() {
+    this.startTime = performance.now()
     this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
   }
 
-  annotateTest(testId: string, annotation: TestAnnotation) {
-    annotateTest(testId, annotation)
+  recordTestArtifact(testId: string, artifact: TestArtifact) {
+    recordTestArtifact(testId, artifact)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
@@ -98,7 +105,8 @@ export class ExplorerTree {
     }
   }
 
-  endRun() {
+  endRun(executionTime = performance.now() - this.startTime) {
+    this.executionTime = executionTime
     this.rafCollector.pause()
     this.onTaskUpdateCalled = false
     this.collect(false, true)
@@ -115,13 +123,15 @@ export class ExplorerTree {
           start,
           end,
           this.summary,
-          search.value.trim(),
+          searchMatcher.value.matcher,
           {
             failed: filter.failed,
             success: filter.success,
             skipped: filter.skipped,
+            slow: filter.slow,
             onlyTests: filter.onlyTests,
           },
+          end ? this.executionTime : performance.now() - this.startTime,
         )
       })
     }
@@ -130,13 +140,15 @@ export class ExplorerTree {
         start,
         end,
         this.summary,
-        search.value.trim(),
+        searchMatcher.value.matcher,
         {
           failed: filter.failed,
           success: filter.success,
           skipped: filter.skipped,
+          slow: filter.slow,
           onlyTests: filter.onlyTests,
         },
+        end ? this.executionTime : performance.now() - this.startTime,
       )
     }
   }
@@ -147,10 +159,11 @@ export class ExplorerTree {
     tests: File[],
     filesSummary: FilteredTests,
   ) {
-    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, search.value.trim(), {
+    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, searchMatcher.value.matcher, {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
+      slow: filter.slow,
       onlyTests: filter.onlyTests,
     })
   }
@@ -163,10 +176,11 @@ export class ExplorerTree {
 
   expandNode(id: string) {
     queueMicrotask(() => {
-      runExpandNode(id, search.value.trim(), {
+      runExpandNode(id, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -180,10 +194,11 @@ export class ExplorerTree {
 
   expandAllNodes() {
     queueMicrotask(() => {
-      runExpandAll(search.value.trim(), {
+      runExpandAll(searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -191,10 +206,11 @@ export class ExplorerTree {
 
   filterNodes() {
     queueMicrotask(() => {
-      runFilter(search.value.trim(), {
+      runFilter(searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })

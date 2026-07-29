@@ -1,0 +1,167 @@
+import type {
+  UserEventClearOptions,
+  UserEventClickOptions,
+  UserEventDragAndDropOptions,
+  UserEventFillOptions,
+  UserEventHoverOptions,
+  UserEventSelectOptions,
+  UserEventUploadOptions,
+} from 'vitest/browser'
+import {
+  getByAltTextSelector,
+  getByLabelSelector,
+  getByPlaceholderSelector,
+  getByRoleSelector,
+  getByTestIdSelector,
+  getByTextSelector,
+  getByTitleSelector,
+  getIframeScale,
+  Locator,
+  processTimeoutOptions,
+  selectorEngine,
+} from '@vitest/browser/locators'
+import { page, server } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
+
+class PlaywrightLocator extends Locator {
+  constructor(public selector: string, protected _container?: Element) {
+    super()
+  }
+
+  public override click(options?: UserEventClickOptions) {
+    return super.click(processTimeoutOptions(processClickOptions(options)))
+  }
+
+  public override dblClick(options?: UserEventClickOptions): Promise<void> {
+    return super.dblClick(processTimeoutOptions(processClickOptions(options)))
+  }
+
+  public override tripleClick(options?: UserEventClickOptions): Promise<void> {
+    return super.tripleClick(processTimeoutOptions(processClickOptions(options)))
+  }
+
+  public override selectOptions(
+    value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
+    options?: UserEventSelectOptions,
+  ): Promise<void> {
+    return super.selectOptions(value, processTimeoutOptions(options))
+  }
+
+  public override clear(options?: UserEventClearOptions): Promise<void> {
+    return super.clear(processTimeoutOptions(options))
+  }
+
+  public override hover(options?: UserEventHoverOptions): Promise<void> {
+    return super.hover(processTimeoutOptions(processHoverOptions(options)))
+  }
+
+  public override upload(
+    files: string | string[] | File | File[],
+    options?: UserEventUploadOptions,
+  ): Promise<void> {
+    return super.upload(files, processTimeoutOptions(options))
+  }
+
+  public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
+    return super.fill(text, processTimeoutOptions(options))
+  }
+
+  public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
+    return super.dropTo(target, processTimeoutOptions(
+      processDragAndDropOptions(options),
+    ))
+  }
+
+  protected locator(selector: string) {
+    return new PlaywrightLocator(`${this.selector} >> ${selector}`, this._container)
+  }
+
+  protected elementLocator(element: Element) {
+    return new PlaywrightLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
+  }
+}
+
+page.extend({
+  getByLabelText(text, options) {
+    return new PlaywrightLocator(getByLabelSelector(text, options))
+  },
+  getByRole(role, options) {
+    return new PlaywrightLocator(getByRoleSelector(role, options))
+  },
+  getByTestId(testId) {
+    return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
+  },
+  getByAltText(text, options) {
+    return new PlaywrightLocator(getByAltTextSelector(text, options))
+  },
+  getByPlaceholder(text, options) {
+    return new PlaywrightLocator(getByPlaceholderSelector(text, options))
+  },
+  getByText(text, options) {
+    return new PlaywrightLocator(getByTextSelector(text, options))
+  },
+  getByTitle(title, options) {
+    return new PlaywrightLocator(getByTitleSelector(title, options))
+  },
+
+  elementLocator(element: Element) {
+    return new PlaywrightLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
+  },
+  frameLocator(locator: Locator) {
+    return new PlaywrightLocator(
+      `${locator.selector} >> internal:control=enter-frame`,
+    )
+  },
+})
+
+__INTERNAL._createLocator = selector => new PlaywrightLocator(selector)
+
+function processDragAndDropOptions(options?: UserEventDragAndDropOptions) {
+  if (!options) {
+    return options
+  }
+  if (options.sourcePosition) {
+    options.sourcePosition = processPlaywrightPosition(options.sourcePosition)
+  }
+  if (options.targetPosition) {
+    options.targetPosition = processPlaywrightPosition(options.targetPosition)
+  }
+  return options
+}
+
+function processHoverOptions(options?: UserEventHoverOptions) {
+  if (!options) {
+    return options
+  }
+  if (options.position) {
+    options.position = processPlaywrightPosition(options.position)
+  }
+  return options
+}
+
+function processClickOptions(options?: UserEventClickOptions) {
+  if (!options) {
+    return options
+  }
+  if (options.position) {
+    options.position = processPlaywrightPosition(options.position)
+  }
+  return options
+}
+
+function processPlaywrightPosition(position: { x: number; y: number }) {
+  const scale = getIframeScale()
+  if (position.x != null) {
+    position.x *= scale
+  }
+  if (position.y != null) {
+    position.y *= scale
+  }
+  return position
+}

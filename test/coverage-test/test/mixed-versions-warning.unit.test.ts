@@ -15,6 +15,8 @@ test('v8 provider logs warning if versions do not match', async () => {
     version: '1.0.0',
     logger: { warn },
     config: configDefaults,
+    _coverageOptions: configDefaults.coverage,
+    projects: [],
   } as any)
 
   expect(warn).toHaveBeenCalled()
@@ -36,6 +38,8 @@ test('istanbul provider logs warning if versions do not match', async () => {
     version: '1.0.0',
     logger: { warn },
     config: configDefaults,
+    _coverageOptions: configDefaults.coverage,
+    projects: [],
   } as any)
 
   expect(warn).toHaveBeenCalled()

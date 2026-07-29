@@ -1,0 +1,19 @@
+ [31mFAIL[39m src/user.test.js [2m>[22m createUser [2m>[22m sets the default role
+[31mAssertionError: expected { name: 'Alice', role: 'viewer' } to deeply equal { name: 'Alice', role: 'member' }[39m
+
+[31m- Expected[39m
+[32m+ Received[39m
+
+  {
+    "name": "Alice",
+[31m-   "role": "member",[39m
+[32m+   "role": "viewer",[39m
+  }
+
+ [2m❯[22m [36msrc/user.test.js[39m[2m:8:22[22m
+[2m      6|[22m   [34mtest[39m([32m'sets the default role'[39m, () => {
+[2m      7|[22m     [35mconst[39m user = [34mcreateUser[39m([32m'Alice'[39m)
+[2m      8|[22m     [34mexpect[39m(user).[34mtoEqual[39m({ name: [32m'Alice'[39m, role: [32m'member'[39m })
+                          [31m^[39m
+[2m      9|[22m   })
+[2m     10|[22m })

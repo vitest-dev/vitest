@@ -1,46 +1,63 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
-import type { EncodedSourceMap, FetchResult } from 'vite-node'
-import type { AfterSuiteRunMeta } from 'vitest'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
-import { promises as fs } from 'node:fs'
+import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
+import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
-import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import { mergeScriptCovs } from '@bcoe/v8-coverage'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
-import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
-import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
+import { createDebug } from 'obug'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
 import c from 'tinyrainbow'
-import { cleanUrl } from 'vite-node/utils'
-
-import { BaseCoverageProvider } from 'vitest/coverage'
-import { parseAstAsync } from 'vitest/node'
+import { BaseCoverageProvider, parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
+import { commands } from './commands'
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
+
+  /** Whether script ran outside Vite, e.g. in sub-processes or worker threads */
+  isExtendedContext?: boolean
 }
 
-type TransformResults = Map<string, FetchResult>
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
 
-export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
+export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'v8' as const
   version: string = version
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
+
+    for (const project of ctx.projects) {
+      if (project.isBrowserEnabled() && project.browser) {
+        for (const [name, command] of Object.entries(commands)) {
+          project.browser.registerCommand(`__vitest_${name}` as any, command)
+        }
+      }
+    }
+
+    if (this.options.autoAttachSubprocess) {
+      const isAnyThreadsPools = ctx.projects.some(p => p.config.pool === 'threads' || p.config.pool === 'vmThreads')
+
+      if (isAnyThreadsPools) {
+        // Work-around for https://github.com/nodejs/node/issues/46378
+        // Node never does anything with this directory, it's just required so that
+        // the next Workers read **their** env.NODE_V8_COVERAGE.
+        // Node never creates this .unused directory at all.
+        process.env.NODE_V8_COVERAGE = `${this.coverageFilesDirectory}/.unused`
+      }
+    }
   }
 
   createCoverageMap(): CoverageMap {
@@ -51,33 +68,40 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let merged: RawCoverage = { result: [] }
+
+    const mergedScripts = new Map<ScriptCoverageWithOffset['url'], ScriptCoverageWithOffset>()
+    const autoAttachSubprocess = this.options.autoAttachSubprocess
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
-        merged = mergeProcessCovs([merged, coverage])
+        for (const script of coverage.result) {
+          const previous = mergedScripts.get(script.url)
+          const merged: typeof script = mergeScriptCovs(previous ? [previous, script] : [script])
 
-        // mergeProcessCovs sometimes loses startOffset, e.g. in vue
-        merged.result.forEach((result) => {
-          if (!result.startOffset) {
-            const original = coverage.result.find(r => r.url === result.url)
-            result.startOffset = original?.startOffset || 0
+          const startOffset = previous?.startOffset || script.startOffset || 0
+          const isExtendedContext = previous?.isExtendedContext || script.isExtendedContext
+
+          merged.startOffset ||= startOffset
+
+          if (autoAttachSubprocess && isExtendedContext) {
+            merged.isExtendedContext = true
           }
-        })
-      },
-      onFinished: async (project, transformMode) => {
-        const converted = await this.convertCoverage(
-          merged,
-          project,
-          transformMode,
-        )
 
+          mergedScripts.set(merged.url, merged)
+        }
+      },
+      onFinished: async (project, environment) => {
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
-        const transformedCoverage = await transformCoverage(converted)
-        coverageMap.merge(transformedCoverage)
+        const converted = await this.convertCoverage(
+          { result: Array.from(mergedScripts.values()) },
+          project,
+          environment,
+        )
 
-        merged = { result: [] }
+        coverageMap.merge(converted)
+
+        mergedScripts.clear()
       },
       onDebug: debug,
     })
@@ -88,12 +112,18 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       const coveredFiles = coverageMap.files()
       const untestedCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
-      coverageMap.merge(await transformCoverage(untestedCoverage))
+      coverageMap.merge(untestedCoverage)
     }
 
-    if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.isIncluded(filename))
-    }
+    coverageMap.filter((filename) => {
+      const exists = existsSync(filename)
+
+      if (this.options.excludeAfterRemap) {
+        return exists && this.isIncluded(filename)
+      }
+
+      return exists
+    })
 
     if (debug.enabled) {
       debug(`Generate coverage total time ${(performance.now() - start!).toFixed()} ms`)
@@ -141,15 +171,12 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
-    return parseModule(
-      await fs.readFile(configFilePath, 'utf8'),
-    )
+    const contents = await fs.readFile(configFilePath, 'utf8')
+
+    return parseModule(`${contents}${this.autoUpdateMarker}`)
   }
 
   private async getCoverageMapForUncoveredFiles(testedFiles: string[]): Promise<CoverageMap> {
-    const transformResults = normalizeTransformResults(
-      this.ctx.vitenode.fetchCache,
-    )
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
     const uncoveredFiles = await this.getUntestedFiles(testedFiles)
@@ -174,11 +201,10 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
 
         // Do not use pathToFileURL to avoid encoding filename parts
-        const url = `file://${filename.startsWith('/') ? '' : '/'}${filename}`
+        const url = `file://${filename[0] === '/' ? '' : '/'}${filename}`
 
         const sources = await this.getSources(
           url,
-          transformResults,
           transform,
         )
 
@@ -253,6 +279,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           return true
         }
 
+        // CJS imports as ternaries - e.g.
+        // const React = __vite__cjsImport0_react.__esModule ? __vite__cjsImport0_react.default : __vite__cjsImport0_react;
+        if (
+          type === 'branch'
+          && node.type === 'ConditionalExpression'
+          && node.test.type === 'MemberExpression'
+          && node.test.object.type === 'Identifier'
+          && node.test.object.name.startsWith('__vite__cjsImport')
+          && node.test.property.type === 'Identifier'
+          && node.test.property.name === '__esModule'
+        ) {
+          return true
+        }
+
         // in-source test with "if (import.meta.vitest)"
         if (
           (type === 'branch' || type === 'statement')
@@ -289,7 +329,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           && node.expression.left.object.meta.name === 'import'
           && node.expression.left.object.property.name === 'meta'
           && node.expression.left.property.type === 'Identifier'
-          && node.expression.left.property.name === 'env') {
+          && node.expression.left.property.name === 'env'
+        ) {
+          return true
+        }
+
+        // SSR mode's "import.meta.env ="
+        if (
+          type === 'statement'
+          && node.type === 'ExpressionStatement'
+          && node.expression.type === 'AssignmentExpression'
+          && node.expression.left.type === 'MemberExpression'
+          && node.expression.left.object.type === 'Identifier'
+          && node.expression.left.object.name === '__vite_ssr_import_meta__'
+        ) {
           return true
         }
 
@@ -299,7 +352,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           && node.type === 'ExpressionStatement'
           && node.expression.type === 'CallExpression'
           && node.expression.callee.type === 'Identifier'
-          && node.expression.callee.name === '_ts_decorate') {
+          && node.expression.callee.name === '_ts_decorate'
+        ) {
           return 'ignore-this-and-nested-nodes'
         }
       },
@@ -307,27 +361,28 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     )
   }
 
-  private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
+  private async getSources(
     url: string,
-    transformResults: TransformResults,
-    onTransform: (filepath: string) => Promise<TransformResult>,
+    onTransform: (filepath: string, isExtendedContext?: ScriptCoverageWithOffset['isExtendedContext']) => Promise<Vite.TransformResult | undefined | null>,
     functions: Profiler.FunctionCoverage[] = [],
+    isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false,
   ): Promise<{
     code: string
-    map?: EncodedSourceMap
+    map?: Vite.Rollup.SourceMap
   }> {
-    const filePath = normalize(fileURLToPath(url))
+    // TODO: need to standardize file urls before this call somehow, this is messy
+    const filepath = /^file:\/\/\/\w:\//.test(url)
+      ? url.slice(8)
+      : removeStartsWith(url, FILE_PROTOCOL)
+    // TODO: do we still need to "catch" here? why would it fail?
+    const transformResult = await onTransform(filepath, isExtendedContext).catch(() => null)
 
-    let transformResult: FetchResult | TransformResult | undefined = transformResults.get(filePath)
-
-    if (!transformResult) {
-      transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
-    }
-
-    const map = transformResult?.map as EncodedSourceMap | undefined
+    const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code
 
-    if (!code) {
+    if (code == null) {
+      const filePath = normalize(fileURLToPath(url))
+
       const original = await fs.readFile(filePath, 'utf-8').catch(() => {
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
@@ -357,31 +412,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   private async convertCoverage(
     coverage: RawCoverage,
     project: TestProject = this.ctx.getRootProject(),
-    transformMode?: AfterSuiteRunMeta['transformMode'],
+    environment: string,
   ): Promise<CoverageMap> {
-    let fetchCache = project.vitenode.fetchCache
-
-    if (transformMode) {
-      fetchCache = transformMode === 'browser' ? new Map() : project.vitenode.fetchCaches[transformMode]
-    }
-
-    const transformResults = normalizeTransformResults(fetchCache)
-
-    async function onTransform(filepath: string) {
-      if (transformMode === 'browser' && project.browser) {
-        const result = await project.browser.vite.transformRequest(removeStartsWith(filepath, project.config.root))
-
-        if (result) {
-          return { ...result, code: `${result.code}// <inline-source-map>` }
-        }
+    const onTransform = async (filepath: string, isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false) => {
+      const result = await this.transformFile(filepath, project, environment, !isExtendedContext)
+      if (result && project.isBrowserEnabled()) {
+        return { ...result, code: `${result.code}// <inline-source-map>` }
       }
-      return project.vitenode.transformRequest(filepath)
+      return result
     }
 
     const scriptCoverages = []
 
     for (const result of coverage.result) {
-      if (transformMode === 'browser') {
+      if (environment === 'client' && project.isBrowserEnabled()) {
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
         }
@@ -394,7 +438,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       }
 
       if (this.isIncluded(fileURLToPath(result.url))) {
-        scriptCoverages.push(result)
+        scriptCoverages.push({ ...result, url: decodeURIComponent(result.url) })
       }
     }
 
@@ -408,7 +452,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       }
 
       await Promise.all(
-        chunk.map(async ({ url, functions, startOffset }) => {
+        chunk.map(async ({ url, functions, startOffset, isExtendedContext }) => {
           let timeout: ReturnType<typeof setTimeout> | undefined
           let start: number | undefined
 
@@ -419,9 +463,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
           const sources = await this.getSources(
             url,
-            transformResults,
             onTransform,
             functions,
+            isExtendedContext,
           )
 
           coverageMap.merge(await this.remapCoverage(
@@ -446,11 +490,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 }
 
-async function transformCoverage(coverageMap: CoverageMap) {
-  const sourceMapStore = libSourceMaps.createSourceMapStore()
-  return await sourceMapStore.transformCoverage(coverageMap)
-}
-
 /**
  * Find the function with highest `endOffset` to determine the length of the file
  */
@@ -463,22 +502,6 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
 
     return Math.max(previous, maxEndOffset)
   }, 0)
-}
-
-function normalizeTransformResults(
-  fetchCache: Map<string, { result: FetchResult }>,
-) {
-  const normalized: TransformResults = new Map()
-
-  for (const [key, value] of fetchCache.entries()) {
-    const cleanEntry = cleanUrl(key)
-
-    if (!normalized.has(cleanEntry)) {
-      normalized.set(cleanEntry, value.result)
-    }
-  }
-
-  return normalized
 }
 
 function removeStartsWith(filepath: string, start: string) {

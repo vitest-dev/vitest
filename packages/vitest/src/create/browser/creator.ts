@@ -4,11 +4,10 @@ import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
-import { findUp } from 'find-up'
 import prompt from 'prompts'
 import { x } from 'tinyexec'
 import c from 'tinyrainbow'
-import { configFiles } from '../../constants'
+import { findConfigFile } from '../../node/config/resolveConfig'
 import { generateExampleFiles } from './examples'
 
 // eslint-disable-next-line no-console
@@ -39,27 +38,6 @@ function getBrowserNames(provider: BrowserBuiltinProvider) {
     case 'preview':
       return ['chrome', 'firefox', 'safari']
   }
-}
-
-function getProviderPackageNames(provider: BrowserBuiltinProvider) {
-  switch (provider) {
-    case 'webdriverio':
-      return {
-        types: '@vitest/browser/providers/webdriverio',
-        pkg: 'webdriverio',
-      }
-    case 'playwright':
-      return {
-        types: '@vitest/browser/providers/playwright',
-        pkg: 'playwright',
-      }
-    case 'preview':
-      return {
-        types: '@vitest/browser/matchers',
-        pkg: null,
-      }
-  }
-  throw new Error(`Unsupported provider: ${provider}`)
 }
 
 function getFramework(): prompt.Choice[] {
@@ -104,6 +82,11 @@ function getFramework(): prompt.Choice[] {
       value: 'marko',
       description: '"A declarative, HTML-based language that makes building web apps fun"',
     },
+    {
+      title: 'qwik',
+      value: 'qwik',
+      description: '"Instantly interactive web apps at scale"',
+    },
   ]
 }
 
@@ -125,6 +108,8 @@ function getFrameworkTestPackage(framework: string) {
       return '@solidjs/testing-library'
     case 'marko':
       return '@marko/testing-library'
+    case 'qwik':
+      return 'vitest-browser-qwik'
   }
   throw new Error(`Unsupported framework: ${framework}`)
 }
@@ -143,17 +128,10 @@ function getFrameworkPluginPackage(framework: string) {
       return 'vite-plugin-solid'
     case 'marko':
       return '@marko/vite'
+    case 'qwik':
+      return '@builder.io/qwik/optimizer'
   }
   return null
-}
-
-async function updateTsConfig(type: string | undefined | null) {
-  if (type == null) {
-    return
-  }
-  const msg = `Add "${c.bold(type)}" to your tsconfig.json "${c.bold('compilerOptions.types')}" field to have better intellisense support.`
-  log()
-  log(c.yellow('◼'), c.yellow(msg))
 }
 
 function getLanguageOptions(): prompt.Choice[] {
@@ -224,6 +202,9 @@ function getPossibleFramework(dependencies: Record<string, string>) {
   if (dependencies.marko) {
     return 'marko'
   }
+  if (dependencies['@builder.io/qwik'] || dependencies['@qwik.dev/core']) {
+    return 'qwik'
+  }
   return 'vanilla'
 }
 
@@ -238,9 +219,9 @@ function getPossibleProvider(dependencies: Record<string, string>) {
 function getProviderDocsLink(provider: string) {
   switch (provider) {
     case 'playwright':
-      return 'https://vitest.dev/guide/browser/playwright'
+      return 'https://vitest.dev/config/browser/playwright'
     case 'webdriverio':
-      return 'https://vitest.dev/guide/browser/webdriverio'
+      return 'https://vitest.dev/config/browser/webdriverio'
   }
 }
 
@@ -257,6 +238,17 @@ function fail() {
   process.exitCode = 1
 }
 
+function getFrameworkImportInfo(framework: string) {
+  switch (framework) {
+    case 'svelte':
+      return { importName: 'svelte', isNamedExport: true }
+    case 'qwik':
+      return { importName: 'qwikVite', isNamedExport: true }
+    default:
+      return { importName: framework, isNamedExport: false }
+  }
+}
+
 async function generateFrameworkConfigFile(options: {
   configPath: string
   framework: string
@@ -264,22 +256,26 @@ async function generateFrameworkConfigFile(options: {
   provider: string
   browsers: string[]
 }) {
-  const frameworkImport = options.framework === 'svelte'
-    ? `import { svelte } from '${options.frameworkPlugin}'`
-    : `import ${options.framework} from '${options.frameworkPlugin}'`
+  const { importName, isNamedExport } = getFrameworkImportInfo(options.framework)
+
+  const frameworkImport = isNamedExport
+    ? `import { ${importName} } from '${options.frameworkPlugin}'`
+    : `import ${importName} from '${options.frameworkPlugin}'`
+
   const configContent = [
     `import { defineConfig } from 'vitest/config'`,
+    `import { ${options.provider} } from '@vitest/browser-${options.provider}'`,
     options.frameworkPlugin ? frameworkImport : null,
     ``,
     'export default defineConfig({',
-    options.frameworkPlugin ? `  plugins: [${options.framework}()],` : null,
+    options.frameworkPlugin ? `  plugins: [${importName}()],` : null,
     `  test: {`,
     `    browser: {`,
     `      enabled: true,`,
-    `      provider: '${options.provider}',`,
+    `      provider: ${options.provider}(),`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
     `      instances: [`,
-    ...options.browsers.map(browser => `      { browser: '${browser}' },`),
+    ...options.browsers.map(browser => `        { browser: '${browser}' },`),
     `      ],`,
     `    },`,
     `  },`,
@@ -406,7 +402,7 @@ export async function create(): Promise<void> {
   }
 
   const dependenciesToInstall = [
-    '@vitest/browser',
+    `@vitest/browser-${provider}`,
   ]
 
   const frameworkPackage = getFrameworkTestPackage(framework)
@@ -414,10 +410,6 @@ export async function create(): Promise<void> {
     dependenciesToInstall.push(frameworkPackage)
   }
 
-  const providerPkg = getProviderPackageNames(provider)
-  if (providerPkg.pkg) {
-    dependenciesToInstall.push(providerPkg.pkg)
-  }
   const frameworkPlugin = getFrameworkPluginPackage(framework)
   if (frameworkPlugin) {
     dependenciesToInstall.push(frameworkPlugin)
@@ -431,9 +423,7 @@ export async function create(): Promise<void> {
     dependenciesToInstall.filter(pkg => !dependencies[pkg]),
   )
 
-  const rootConfig = await findUp(configFiles, {
-    cwd: process.cwd(),
-  })
+  const rootConfig = findConfigFile(process.cwd())
 
   let scriptCommand = 'vitest'
 
@@ -485,11 +475,6 @@ export async function create(): Promise<void> {
         stdio: ['pipe', 'inherit', 'inherit'],
       },
     })
-  }
-
-  // TODO: can we do this ourselves?
-  if (lang === 'ts') {
-    await updateTsConfig(providerPkg?.types)
   }
 
   log()

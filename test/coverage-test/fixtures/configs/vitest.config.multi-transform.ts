@@ -1,6 +1,6 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
 import MagicString from 'magic-string'
-import remapping from '@ampproject/remapping'
+import remapping from '@jridgewell/remapping'
 import type { Plugin } from 'vite'
 
 import base from './vitest.config'

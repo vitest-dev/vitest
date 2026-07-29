@@ -1,5 +1,5 @@
 import { expect, onTestFinished, test } from 'vitest'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 
 test('cleanup retry', { retry: 1 }, async (ctx) => {
   let logs: any[] = [];

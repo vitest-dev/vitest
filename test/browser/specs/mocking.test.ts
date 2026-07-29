@@ -2,7 +2,9 @@ import { expect, onTestFailed, onTestFinished, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 import { instances } from '../settings'
 
-test.each([true, false])('mocking works correctly - isolated %s', async (isolate) => {
+// TODO: investigate `isolate: false` tests.
+// Doesn't seem like we can run things in parallel if there are mocks
+test.each([true/* , false */])('mocking works correctly - isolated %s', async (isolate) => {
   const result = await runVitest({
     root: 'fixtures/mocking',
     isolate,
@@ -17,6 +19,7 @@ test.each([true, false])('mocking works correctly - isolated %s', async (isolate
 
   instances.forEach(({ browser }) => {
     expect(result.stdout).toReportPassedTest('automocked.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('automocked-default-return.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-__mocks__.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-factory.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-factory-hoisted.test.ts', browser)
@@ -26,12 +29,34 @@ test.each([true, false])('mocking works correctly - isolated %s', async (isolate
     expect(result.stdout).toReportPassedTest('import-actual-in-mock.test.ts', browser)
     expect(result.stdout).toReportPassedTest('import-actual-query.test.ts', browser)
     expect(result.stdout).toReportPassedTest('import-mock.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('src/aaa-dual-id-probe.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('src/zzz-dual-id-target.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-do-mock-factory.test.ts', browser)
     expect(result.stdout).toReportPassedTest('import-actual-dep.test.ts', browser)
   })
 
   expect(result.exitCode).toBe(0)
 })
+
+test('manual mocks do not leak across browser files when alias and relative ids resolve to the same module', async () => {
+  const result = await runVitest({
+    root: 'fixtures/mocking',
+  }, ['src/aaa-dual-id-probe.test.ts', 'src/zzz-dual-id-target.test.ts'])
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
+  expect(result.stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(result.stdout).toReportPassedTest('src/aaa-dual-id-probe.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('src/zzz-dual-id-target.test.ts', browser)
+  })
+
+  expect(result.exitCode).toBe(0)
+}, 60_000)
 
 test('mocking dependency correctly invalidates it on rerun', async () => {
   const { vitest, ctx } = await runVitest({

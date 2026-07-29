@@ -28,7 +28,7 @@ beforeAll(() => {
   }
 })
 
-test('{ changed: "HEAD" }', async () => {
+test('{ changed: "HEAD" }', { skip: SKIP }, async () => {
   await runVitest({
     include: ['fixtures/test/**'],
     exclude: ['**/custom-1-syntax**'],
@@ -67,4 +67,100 @@ test('{ changed: "HEAD" }', async () => {
       },
     }
   `)
-}, SKIP)
+})
+
+test('{ coverage.changed: "HEAD" }', async () => {
+  await runVitest({
+    include: [
+      'fixtures/test/file-to-change.test.ts',
+      'fixtures/test/math.test.ts',
+    ],
+    coverage: {
+      include: [
+        'fixtures/src/file-to-change.ts',
+        'fixtures/src/new-uncovered-file.ts',
+
+        // Should not show up
+        'fixtures/src/untested-file.ts',
+        'fixtures/src/math.ts',
+      ],
+      reporter: 'json',
+      changed: 'HEAD',
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/file-to-change.ts",
+      "<process-cwd>/fixtures/src/new-uncovered-file.ts",
+    ]
+  `)
+})
+
+test('{ coverage.changed: "HEAD", excludeAfterRemap: true }', async () => {
+  await runVitest({
+    include: [
+      'fixtures/test/file-to-change.test.ts',
+      'fixtures/test/math.test.ts',
+    ],
+    coverage: {
+      include: [
+        'fixtures/src/file-to-change.ts',
+        'fixtures/src/new-uncovered-file.ts',
+
+        // Should not show up
+        'fixtures/src/untested-file.ts',
+        'fixtures/src/math.ts',
+      ],
+      reporter: 'json',
+      changed: 'HEAD',
+      excludeAfterRemap: true,
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/file-to-change.ts",
+      "<process-cwd>/fixtures/src/new-uncovered-file.ts",
+    ]
+  `)
+})
+
+test('{ changed: "v0.0.1", coverage.changed: "HEAD" }', async () => {
+  await runVitest({
+    include: [
+      'fixtures/test/file-to-change.test.ts',
+      'fixtures/test/math.test.ts',
+    ],
+
+    // v0.0.1 is an actual git tag in Vitest repository
+    changed: 'v0.0.1',
+
+    coverage: {
+      include: [
+        'fixtures/src/file-to-change.ts',
+        'fixtures/src/new-uncovered-file.ts',
+
+        // Should not show up
+        'fixtures/src/untested-file.ts',
+        'fixtures/src/math.ts',
+      ],
+      reporter: 'json',
+      changed: 'HEAD',
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+
+  // Should show changes since HEAD, not v0.0.1
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/file-to-change.ts",
+      "<process-cwd>/fixtures/src/new-uncovered-file.ts",
+    ]
+  `)
+})

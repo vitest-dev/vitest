@@ -1,23 +1,18 @@
 import type { MockedModule } from '@vitest/mocker'
-import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { ViteDevServer } from 'vite'
+import type { IndexHtmlTransformContext, IndexHtmlTransformResult, Plugin, ViteDevServer, UserConfig as ViteUserConfig } from 'vite'
+import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
+import type { BrowserTraceViewMode } from '../../runtime/config'
+import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
+import type { OTELCarrier } from '../../utils/traces'
+import type { PluginHarness } from '../config/pluginHarness'
+import type { Vitest } from '../core'
 import type { TestProject } from '../project'
-import type { ApiConfig, ProjectConfig } from './config'
+import type { ProjectConfig, ResolvedConfig } from './config'
 
-export interface BrowserProviderInitializationOptions {
-  browser: string
-  options?: BrowserProviderOptions
-}
-
-export interface CDPSession {
-  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
-  on: (event: string, listener: (...args: unknown[]) => void) => void
-  once: (event: string, listener: (...args: unknown[]) => void) => void
-  off: (event: string, listener: (...args: unknown[]) => void) => void
-}
+export type { CDPSession }
 
 export interface BrowserModuleMocker {
   register: (sessionId: string, module: MockedModule) => Promise<void>
@@ -25,32 +20,78 @@ export interface BrowserModuleMocker {
   clear: (sessionId: string) => Promise<void>
 }
 
+export interface BrowserProviderOption<Options extends object = object> {
+  name: string
+  supportedBrowser?: ReadonlyArray<string>
+  options: Options
+  /**
+   * Called once for every resolved browser project right before its shared
+   * Vite server is created, so the provider can start preparing the browser
+   * (e.g. launching it) concurrently. Optional, fire-and-forget: errors must
+   * surface through the normal provider flow.
+   */
+  prewarm?: (ctx: {
+    config: ResolvedConfig
+    vitest: Vitest
+  }) => void
+  providerFactory: (project: TestProject) => BrowserProvider
+  serverFactory: BrowserServerFactory
+}
+
+export interface BrowserServerFactory {
+  (): Promise<BrowserServerContribution>
+}
+
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
+  readonly initScripts?: string[]
   /**
    * @experimental opt-in into file parallelisation
    */
   supportsParallelism: boolean
-  getSupportedBrowsers: () => readonly string[]
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
+  openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
-  // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
-  initialize(
-    ctx: TestProject,
-    options: BrowserProviderInitializationOptions
-  ): Awaitable<void>
 }
-
-export interface BrowserProviderModule {
-  new (): BrowserProvider
-}
-
-export interface BrowserProviderOptions {}
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
+export interface _BrowserNames {}
+
+export interface BrowserTraceViewOptions {
+  /**
+   * Enable Vitest trace view artifacts collection.
+   *
+   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
+   *
+   * @default false
+   * @experimental
+   */
+  enabled?: boolean
+
+  /**
+   * Capture canvas pixels in trace view snapshots.
+   *
+   * This uses rrweb's canvas snapshot support and can increase trace artifact size.
+   * In the trace viewer, this enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
+   *
+   * @default false
+   * @experimental
+   */
+  recordCanvas?: boolean
+
+  /**
+   * Inline loaded `<img>` element pixels in trace view snapshots.
+   *
+   * This uses rrweb's image inlining support. It improves offline replay for still images,
+   * but can increase trace artifact size and does not preserve original image resource bytes.
+   *
+   * @default false
+   * @experimental
+   */
+  inlineImages?: boolean
+}
 
 type UnsupportedProperties
   = | 'browser'
@@ -59,20 +100,18 @@ type UnsupportedProperties
     | 'sequence'
     | 'root'
     | 'pool'
-    | 'poolOptions'
   // browser mode doesn't support a custom runner
     | 'runner'
   // non-browser options
     | 'api'
     | 'deps'
-    | 'testTransformMode'
     | 'environment'
     | 'environmentOptions'
     | 'server'
     | 'benchmark'
     | 'name'
 
-export interface BrowserInstanceOption extends BrowserProviderOptions,
+export interface BrowserInstanceOption extends
   Omit<ProjectConfig, UnsupportedProperties>,
   Pick<
     BrowserConfigOptions,
@@ -86,9 +125,12 @@ export interface BrowserInstanceOption extends BrowserProviderOptions,
   /**
    * Name of the browser
    */
-  browser: string
+  browser: keyof _BrowserNames extends never
+    ? string
+    : _BrowserNames[keyof _BrowserNames]
 
   name?: string
+  provider?: BrowserProviderOption
 }
 
 export interface BrowserConfigOptions {
@@ -102,6 +144,7 @@ export interface BrowserConfigOptions {
   /**
    * Name of the browser
    * @deprecated use `instances` instead. if both are defined, this will filter `instances` by name.
+   * @internal
    */
   name?: string
 
@@ -112,23 +155,19 @@ export interface BrowserConfigOptions {
 
   /**
    * Browser provider
-   *
-   * @default 'preview'
-   */
-  provider?: BrowserBuiltinProvider | (string & {})
-
-  /**
-   * Options that are passed down to a browser provider.
-   * To support type hinting, add one of the types to your tsconfig.json "compilerOptions.types" field:
-   *
-   * - for webdriverio: `@vitest/browser/providers/webdriverio`
-   * - for playwright: `@vitest/browser/providers/playwright`
-   *
    * @example
-   * { playwright: { launch: { devtools: true } }
-   * @deprecated use `instances` instead
+   * ```ts
+   * import { playwright } from '@vitest/browser-playwright'
+   * export default defineConfig({
+   *   test: {
+   *     browser: {
+   *       provider: playwright(),
+   *     },
+   *   },
+   * })
+   * ```
    */
-  providerOptions?: BrowserProviderOptions
+  provider?: BrowserProviderOption
 
   /**
    * enable headless mode
@@ -138,33 +177,19 @@ export interface BrowserConfigOptions {
   headless?: boolean
 
   /**
-   * Serve API options.
-   *
-   * The default port is 63315.
-   */
-  api?: ApiConfig | number
-
-  /**
-   * Isolate test environment after each test
-   *
-   * @default true
-   */
-  isolate?: boolean
-
-  /**
-   * Run test files in parallel if provider supports this option
-   * This option only has effect in headless mode (enabled in CI by default)
-   *
-   * @default // Same as "test.fileParallelism"
-   */
-  fileParallelism?: boolean
-
-  /**
    * Show Vitest UI
    *
    * @default !process.env.CI
    */
   ui?: boolean
+
+  /**
+   * Default position for the details panel in browser mode
+   * 'right' shows the details panel on the right side (horizontal split)
+   * 'bottom' shows the details panel at the bottom (vertical split)
+   * @default 'right'
+   */
+  detailsPanelPosition?: 'right' | 'bottom'
 
   /**
    * Default viewport size
@@ -191,7 +216,55 @@ export interface BrowserConfigOptions {
      * @default 'data-testid'
      */
     testIdAttribute?: string
+    /**
+     * Should locators match the text exactly by default
+     * @default false
+     */
+    exact?: boolean
+    /**
+     * Format used for locator "Cannot find element" error details.
+     *
+     * @default 'all'
+     */
+    errorFormat?: 'html' | 'aria' | 'all'
   }
+
+  /**
+   * Generate traces that can be viewed on https://trace.playwright.dev/
+   *
+   * This option is supported only by **playwright** provider.
+   */
+  trace?: BrowserTraceViewMode | {
+    mode: BrowserTraceViewMode
+    /**
+     * The directory where all traces will be stored. By default, Vitest
+     * stores all traces in `__traces__` folder close to the test file.
+     */
+    tracesDir?: string
+    /**
+     * Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
+     * @default true
+     */
+    screenshots?: boolean
+    /**
+     * If this option is true tracing will
+     * - capture DOM snapshot on every action
+     * - record network activity
+     * @default true
+     */
+    snapshots?: boolean
+  }
+
+  /**
+   *
+   * Enable Vitest trace view artifacts collection.
+   *
+   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
+   *
+   * @default false
+   * @experimental
+   */
+  traceView?: boolean | BrowserTraceViewOptions
 
   /**
    * Directory where screenshots will be saved when page.screenshot() is called
@@ -208,10 +281,27 @@ export interface BrowserConfigOptions {
   screenshotFailures?: boolean
 
   /**
-   * Scripts injected into the tester iframe.
-   * @deprecated Will be removed in the future, use `testerHtmlPath` instead.
+   * Serve sourcemaps of your dependencies (files in `node_modules`) to the
+   * browser during headless test runs.
+   *
+   * These sourcemaps are used by browser devtools: when disabled, pausing
+   * inside dependency code shows the compiled code the browser actually
+   * runs instead of the dependency's original sources. If you don't debug
+   * into your dependencies this way, disabling them makes test runs faster:
+   * the server doesn't generate and inline the maps, and every browser tab
+   * downloads several times fewer bytes.
+   *
+   * Reported test errors are not affected: stack frames pointing into a
+   * pre-bundled dependency are mapped using the sourcemaps stored on disk
+   * even when this option is disabled.
+   *
+   * Vitest never serves sourcemaps of its own pre-built modules in headless
+   * runs (unless `--inspect` is used) — their frames are hidden from stack
+   * traces anyway. Sourcemaps of your own source files are always served.
+   * @default true
    */
-  testerScripts?: BrowserScript[]
+  dependencySourcemaps?: boolean
+
   /**
    * Path to the index.html file that will be used to run tests.
    */
@@ -224,8 +314,8 @@ export interface BrowserConfigOptions {
 
   /**
    * Commands that will be executed on the server
-   * via the browser `import("@vitest/browser/context").commands` API.
-   * @see {@link https://vitest.dev/guide/browser/commands}
+   * via the browser `import("vitest/browser").commands` API.
+   * @see {@link https://vitest.dev/api/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
 
@@ -234,6 +324,31 @@ export interface BrowserConfigOptions {
    * @default 30000
    */
   connectTimeout?: number
+
+  expect?: {
+    toMatchScreenshot?: {
+      [ComparatorName in keyof ToMatchScreenshotComparators]:
+      {
+        /**
+         * The name of the comparator to use for visual diffing.
+         *
+         * @defaultValue `'pixelmatch'`
+         */
+        comparatorName?: ComparatorName
+        comparatorOptions?: ToMatchScreenshotComparators[ComparatorName]
+      }
+    }[keyof ToMatchScreenshotComparators] & ToMatchScreenshotOptions
+  }
+
+  /**
+   * Enables tracking uncaught errors and exceptions so they can be reported by Vitest.
+   *
+   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/onunhandlederror) option instead.
+   *
+   * Disabling this will completely remove all Vitest error handlers, which can help debugging with the "Pause on exceptions" checkbox turned on.
+   * @default true
+   */
+  trackUnhandledErrors?: boolean
 }
 
 export interface BrowserCommandContext {
@@ -241,11 +356,31 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: TestProject
   sessionId: string
+  mark: (name: string, options?: MarkOptions) => Promise<void>
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
+  /**
+   * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   * This works similar to client `cdp()` API.
+   *
+   * Unlike `provider.getCDPSession`, this preserves CDP session state across
+   * multiple command calls from the same browser tester. This matters for
+   * stateful CDP domains such as `Profiler`, where `startPreciseCoverage` and
+   * `takePreciseCoverage` must run on the same CDP session.
+   *
+   * @internal
+   */
+  __ensureCDPHandler: () => Promise<any> // use `any` since type is messy
 }
 
 export interface BrowserServerStateSession {
   project: TestProject
+  otelCarrier?: OTELCarrier
+  concurrencyId: number
   connected: () => void
+  ready: () => void
   fail: (v: Error) => void
 }
 
@@ -262,6 +397,50 @@ export interface BrowserServerState {
 
 export interface ParentProjectBrowser {
   spawn: (project: TestProject) => ProjectBrowser
+  vite: ViteDevServer
+  vitest: Vitest
+  config: ResolvedConfig
+}
+
+export interface BrowserServerContribution {
+  transformIndexHtml: (ctx: IndexHtmlTransformContext) => Awaitable<IndexHtmlTransformResult | undefined>
+  configureServer: (server: ViteDevServer) => Awaitable<void>
+  /**
+   * Browser-specific Vite config (`resolve.alias`, `define`, esbuild). Applied
+   * by the core loader plugin's `config` hook during the single project
+   * resolution, so other plugins observe it (e.g. alias must be baked at
+   * resolution time). The loader always forces `server.middlewareMode = false`
+   * on top. `harness` provides the package installer's `isPackageExists` (no
+   * `Vitest` instance is available during resolution).
+   */
+  config: (config: ViteUserConfig, harness: PluginHarness) => Awaitable<ViteUserConfig>
+  /**
+   * Browser `optimizeDeps`, aggregated across every project that shares the
+   * single browser Vite server (instance and benchmark variants). Called by core
+   * after all projects are resolved and before the server is created; the result
+   * is merged into the resolved Vite config's `client` environment
+   * `optimizeDeps`. `testFiles` is the aggregated, already-globbed set of test
+   * files for the server (globbing lives in the core package).
+   */
+  resolveOptimizeDeps: (projectConfigs: ResolvedConfig[], testFiles: string[], harness: PluginHarness) => Awaitable<NonNullable<ViteUserConfig['optimizeDeps']>>
+  /**
+   * Runtime plugins. Injected into the browser (`client`) environment by the
+   * loader's `applyToEnvironment`; their `configureServer`/`transformIndexHtml`
+   * are run by the loader. MUST NOT define `config`/`configResolved` hooks.
+   */
+  plugins: Plugin[]
+  /**
+   * Constructs the `ParentBrowserProject`. Called by core at server creation,
+   * when the `Vitest` instance exists.
+   */
+  createParent: (ctx: { config: ResolvedConfig; vitest: Vitest }) => ParentProjectBrowser
+  /** Called by core after `server.listen()` to wire up the browser RPC. */
+  setupRpc: (parent: ParentProjectBrowser) => void
+  /**
+   * Mutable. Filled by core at server creation; the pushed `BrowserPlugin`
+   * closes over this same object and reads `.parent` in `configureServer`.
+   */
+  parent?: ParentProjectBrowser
 }
 
 export interface ProjectBrowser {
@@ -272,10 +451,22 @@ export interface ProjectBrowser {
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
+  registerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    cb: BrowserCommand<
+      Parameters<BrowserCommands[K]>,
+      ReturnType<BrowserCommands[K]>
+    >,
+  ) => void
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    context: BrowserCommandContext,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
-export interface BrowserCommand<Payload extends unknown[]> {
-  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
+export interface BrowserCommand<Payload extends unknown[] = [], ReturnValue = any> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<ReturnValue>
 }
 
 export interface BrowserScript {
@@ -309,12 +500,8 @@ export interface BrowserScript {
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   name: string
-  providerOptions?: BrowserProviderOptions
   enabled: boolean
   headless: boolean
-  isolate: boolean
-  fileParallelism: boolean
-  api: ApiConfig
   ui: boolean
   viewport: {
     width: number
@@ -323,5 +510,114 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   screenshotFailures: boolean
   locators: {
     testIdAttribute: string
+    exact: boolean
+    errorFormat: 'html' | 'aria' | 'all'
   }
+  trace: {
+    mode: BrowserTraceViewMode
+    tracesDir?: string
+    screenshots?: boolean
+    snapshots?: boolean
+    sources?: boolean
+  }
+  traceView: Required<BrowserTraceViewOptions>
 }
+
+type ToMatchScreenshotResolvePath = (data: {
+  /**
+   * Path **without** extension, sanitized and relative to the test file.
+   *
+   * This comes from the arguments passed to `toMatchScreenshot`; if called
+   * without arguments this will be the auto-generated name.
+   *
+   * @example
+   * test('calls `onClick`', () => {
+   *   expect(locator).toMatchScreenshot()
+   *   // arg = "calls-onclick-1"
+   * })
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('../foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   */
+  arg: string
+  /**
+   * Screenshot extension, with leading dot.
+   *
+   * This can be set through the arguments passed to `toMatchScreenshot`, but
+   * the value will fall back to `'.png'` if an unsupported extension is used.
+   */
+  ext: string
+  /**
+   * The instance's browser name.
+   */
+  browserName: string
+  /**
+   * The value of {@linkcode process.platform}.
+   */
+  platform: NodeJS.Platform
+  /**
+   * The value provided to {@linkcode ToMatchScreenshotOptions.screenshotDirectory|browser.expect.toMatchScreenshot.screenshotDirectory}, if none is provided, its default value (`__screenshots__`).
+   */
+  screenshotDirectory: string
+  /**
+   * Absolute path to the project's
+   * {@linkcode https://vitest.dev/config/root|root}.
+   */
+  root: string
+  /**
+   * Path to the test file, relative to the project's
+   * {@linkcode https://vitest.dev/config/root|root}.
+   */
+  testFileDirectory: string
+  /**
+   * The test's filename.
+   */
+  testFileName: string
+  /**
+   * The {@linkcode https://vitest.dev/api/#test|test}'s name, including
+   * parent {@linkcode https://vitest.dev/api/#describe|describe}, sanitized.
+   */
+  testName: string
+  /**
+   * The value provided to
+   * {@linkcode https://vitest.dev/config/attachmentsdir|attachmentsDir},
+   * if none is provided, its default value.
+   */
+  attachmentsDir: string
+  /**
+   * The {@linkcode https://vitest.dev/api/advanced/test-project|TestProject} the test belongs to.
+   *
+   * @experimental
+   */
+  project: TestProject
+}) => string
+
+export interface ToMatchScreenshotOptions {
+  /**
+   * The directory name used for storing reference screenshots.
+   *
+   * This value is passed as `screenshotDirectory` to {@linkcode resolveScreenshotPath|browser.expect.toMatchScreenshot.resolveScreenshotPath} and {@linkcode resolveDiffPath|browser.expect.toMatchScreenshot.resolveDiffPath}, and used in the default path resolution of `resolveScreenshotPath`.
+   *
+   * @default `__screenshots__`.
+   */
+  screenshotDirectory?: string
+  /**
+   * Overrides default reference screenshot path.
+   *
+   * @default path.resolve(root, testFileDirectory, screenshotDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)
+   */
+  resolveScreenshotPath?: ToMatchScreenshotResolvePath
+  /**
+   * Overrides default screenshot path used for diffs.
+   *
+   * @default path.resolve(root, attachmentsDir, testFileDirectory, testFileName, `${arg}-${browserName}-${platform}${ext}`)
+   */
+  resolveDiffPath?: ToMatchScreenshotResolvePath
+}
+
+export interface ToMatchScreenshotComparators {}

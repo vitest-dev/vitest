@@ -11,7 +11,7 @@ interface ModuleEvaluateOptions {
 type ModuleLinker = (
   specifier: string,
   referencingModule: VMModule,
-  extra: { assert: object }
+  extra: { assert: object },
 ) => VMModule | Promise<VMModule>
 type ModuleStatus
   = | 'unlinked'
@@ -87,4 +87,10 @@ export declare class VMSourceTextModule extends VMModule {
    * @param code JavaScript Module code to parse
    */
   constructor(code: string, options?: SourceTextModuleOptions)
+  /**
+   * Creates a code cache that can be used with the `SourceTextModule`
+   * constructor's `cachedData` option. Must be called before the module
+   * has been evaluated.
+   */
+  createCachedData(): Buffer
 }

@@ -1,7 +1,8 @@
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
-import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
+import type { Options as WindowRendererOptions } from './renderers/windowedRenderer'
+import type { ReportedHookContext, TestCase, TestModule, TestSuite } from './reported-tasks'
 import c from 'tinyrainbow'
 import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
 import { formatProjectName, formatTime, formatTimeString, padSummaryTitle } from './renderers/utils'
@@ -12,6 +13,12 @@ const FINISHED_TEST_CLEANUP_TIME_MS = 1_000
 
 interface Options {
   verbose?: boolean
+
+  /** @internal */
+  interval?: WindowRendererOptions['interval']
+
+  /** @internal */
+  threshold?: WindowRendererOptions['threshold']
 }
 
 interface Counter {
@@ -21,6 +28,7 @@ interface Counter {
   failed: number
   skipped: number
   todo: number
+  expectedFail: number
 }
 
 interface SlowTask {
@@ -28,16 +36,16 @@ interface SlowTask {
   visible: boolean
   startTime: number
   onFinish: () => void
-  hook?: Omit<SlowTask, 'hook'>
+  step?: Omit<SlowTask, 'step'>
 }
 
 interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   filename: TestModule['task']['name']
   projectName: TestModule['project']['name']
   projectColor: TestModule['project']['color']
-  hook?: Omit<SlowTask, 'hook'>
+  step?: Omit<SlowTask, 'step'>
   tests: Map<TestCase['id'], SlowTask>
-  typecheck: boolean
+  meta: TestModule['task']['meta']
 }
 
 /**
@@ -75,6 +83,8 @@ export class SummaryReporter implements Reporter {
     this.renderer = new WindowRenderer({
       logger: ctx.logger,
       getWindow: () => this.createSummary(),
+      interval: this.options.interval,
+      threshold: this.options.threshold,
     })
 
     this.ctx.onClose(() => {
@@ -129,38 +139,44 @@ export class SummaryReporter implements Reporter {
     this.renderer.schedule()
   }
 
-  onHookStart(options: ReportedHookContext): void {
-    const stats = this.getHookStats(options)
-
-    if (!stats) {
-      return
-    }
-
-    const hook = {
-      name: options.name,
+  private startStep(stats: RunningModule | SlowTask, name: string) {
+    const step = {
+      name,
       visible: false,
       startTime: performance.now(),
       onFinish: () => {},
     }
-    stats.hook?.onFinish?.()
-    stats.hook = hook
+    stats.step?.onFinish?.()
+    stats.step = step
 
-    const timeout = setTimeout(() => {
-      hook.visible = true
-    }, this.ctx.config.slowTestThreshold).unref()
-
-    hook.onFinish = () => clearTimeout(timeout)
-  }
-
-  onHookEnd(options: ReportedHookContext): void {
-    const stats = this.getHookStats(options)
-
-    if (stats?.hook?.name !== options.name) {
+    if (!Number.isFinite(this.ctx.config.slowTestThreshold)) {
       return
     }
 
-    stats.hook.onFinish()
-    stats.hook.visible = false
+    const timeout = setTimeout(() => {
+      step.visible = true
+    }, this.ctx.config.slowTestThreshold).unref()
+
+    step.onFinish = () => clearTimeout(timeout)
+  }
+
+  onHookStart(options: ReportedHookContext): void {
+    const stats = this.getStepStats(options.entity)
+
+    if (stats) {
+      this.startStep(stats, options.name)
+    }
+  }
+
+  onHookEnd(options: ReportedHookContext): void {
+    const stats = this.getStepStats(options.entity)
+
+    if (stats?.step?.name !== options.name) {
+      return
+    }
+
+    stats.step.onFinish()
+    stats.step.visible = false
   }
 
   onTestCaseReady(test: TestCase): void {
@@ -182,12 +198,14 @@ export class SummaryReporter implements Reporter {
       onFinish: () => {},
     }
 
-    const timeout = setTimeout(() => {
-      slowTest.visible = true
-    }, this.ctx.config.slowTestThreshold).unref()
+    const timeout = Number.isFinite(this.ctx.config.slowTestThreshold)
+      ? setTimeout(() => {
+          slowTest.visible = true
+        }, this.ctx.config.slowTestThreshold).unref()
+      : undefined
 
     slowTest.onFinish = () => {
-      slowTest.hook?.onFinish()
+      slowTest.step?.onFinish()
       clearTimeout(timeout)
     }
 
@@ -208,13 +226,24 @@ export class SummaryReporter implements Reporter {
     const result = test.result()
 
     if (result?.state === 'passed') {
-      this.tests.passed++
+      // Check if this is an expected failure (test.fails && passed)
+      if (test.options.fails) {
+        this.tests.expectedFail++
+      }
+      else {
+        this.tests.passed++
+      }
     }
     else if (result?.state === 'failed') {
       this.tests.failed++
     }
     else if (!result?.state || result?.state === 'skipped') {
-      this.tests.skipped++
+      if (test.options.mode === 'todo') {
+        this.tests.todo++
+      }
+      else {
+        this.tests.skipped++
+      }
     }
 
     this.renderer.schedule()
@@ -256,7 +285,7 @@ export class SummaryReporter implements Reporter {
     this.renderer.schedule()
   }
 
-  private getHookStats({ entity }: ReportedHookContext) {
+  private getStepStats(entity: TestSuite | TestModule | TestCase) {
     // Track slow running hooks only on verbose mode
     if (!this.options.verbose) {
       return
@@ -276,11 +305,13 @@ export class SummaryReporter implements Reporter {
     const summary = ['']
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
-      const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
+      const typecheck = testFile.meta.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
+      const label = this.ctx.state.blobs && testFile.meta.__vitest_label__ ? `${c.bgCyan(c.bold(` ${testFile.meta.__vitest_label__} `))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
         + typecheck
+        + label
         + testFile.filename
         + c.dim(!testFile.completed && !testFile.total
           ? ' [queued]'
@@ -288,8 +319,8 @@ export class SummaryReporter implements Reporter {
       )
 
       const slowTasks = [
-        testFile.hook,
-        ...Array.from(testFile.tests.values()),
+        testFile.step,
+        ...testFile.tests.values(),
       ].filter((t): t is SlowTask => t != null && t.visible)
 
       for (const [index, task] of slowTasks.entries()) {
@@ -302,8 +333,8 @@ export class SummaryReporter implements Reporter {
           + c.bold(c.yellow(` ${formatTime(Math.max(0, elapsed))}`)),
         )
 
-        if (task.hook?.visible) {
-          summary.push(c.bold(c.yellow(`      ${F_TREE_NODE_END} `)) + task.hook.name)
+        if (task.step?.visible) {
+          summary.push(c.bold(c.yellow(`      ${F_TREE_NODE_END} `)) + task.step.name)
         }
       }
     }
@@ -338,7 +369,7 @@ export class SummaryReporter implements Reporter {
     }
 
     const testFile = this.runningModules.get(id)
-    testFile?.hook?.onFinish()
+    testFile?.step?.onFinish()
     testFile?.tests?.forEach(test => test.onFinish())
 
     this.runningModules.delete(id)
@@ -349,7 +380,7 @@ export class SummaryReporter implements Reporter {
 }
 
 function emptyCounters(): Counter {
-  return { completed: 0, passed: 0, failed: 0, skipped: 0, todo: 0, total: 0 }
+  return { completed: 0, passed: 0, failed: 0, skipped: 0, todo: 0, expectedFail: 0, total: 0 }
 }
 
 function getStateString(entry: Counter) {
@@ -357,6 +388,7 @@ function getStateString(entry: Counter) {
     [
       entry.failed ? c.bold(c.red(`${entry.failed} failed`)) : null,
       c.bold(c.green(`${entry.passed} passed`)),
+      entry.expectedFail ? c.cyan(`${entry.expectedFail} expected fail`) : null,
       entry.skipped ? c.yellow(`${entry.skipped} skipped`) : null,
       entry.todo ? c.gray(`${entry.todo} todo`) : null,
     ]
@@ -385,6 +417,6 @@ function initializeStats(module: TestModule): RunningModule {
     projectName: module.project.name,
     projectColor: module.project.color,
     tests: new Map(),
-    typecheck: !!module.task.meta.typecheck,
+    meta: module.task.meta,
   }
 }

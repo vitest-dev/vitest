@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { beginAriaCaches, endAriaCaches, getAriaRole } from 'ivya/utils'
 import { getElementFromUserInput, getMessage } from './utils'
@@ -22,7 +22,7 @@ export default function toHaveRole(
   this: MatcherState,
   actual: Element | Locator,
   expectedRole: string,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveRole, this)
   beginAriaCaches()
   const actualRole = getAriaRole(htmlElement)

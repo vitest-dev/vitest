@@ -3,18 +3,16 @@ import type {
   DefineWorkerOptions,
   Procedure,
 } from './types'
-import { InlineWorkerRunner } from './runner'
+import { startWebWorkerModuleRunner } from './runner'
 import {
   createMessageEvent,
   debug,
   getFileIdFromUrl,
-  getRunnerOptions,
 } from './utils'
 
 export function createWorkerConstructor(
   options?: DefineWorkerOptions,
 ): typeof Worker {
-  const runnerOptions = getRunnerOptions()
   const cloneType = () =>
     (options?.clone
       ?? process.env.VITEST_WEB_WORKER_CLONE
@@ -58,11 +56,6 @@ export function createWorkerConstructor(
         onrtctransform: null,
         onunhandledrejection: null,
         origin: typeof location !== 'undefined' ? location.origin : 'http://localhost:3000',
-        importScripts: () => {
-          throw new Error(
-            '[vitest] `importScripts` is not supported in Vite workers. Please, consider using `import` instead.',
-          )
-        },
         crossOriginIsolated: false,
         name: options?.name || '',
         close: () => this.terminate(),
@@ -119,47 +112,41 @@ export function createWorkerConstructor(
         this.onmessageerror?.(e)
       })
 
-      const runner = new InlineWorkerRunner(runnerOptions, context)
+      const fileId = getFileIdFromUrl(url)
 
-      const id = getFileIdFromUrl(url)
+      this._vw_name = fileId
 
-      this._vw_name = id
+      const runner = startWebWorkerModuleRunner(context)
+      runner.mocker.resolveId(fileId).then(({ url, id: resolvedId }) => {
+        this._vw_name = options?.name ?? url
+        debug('initialize worker %s', this._vw_name)
 
-      runner
-        .resolveUrl(id)
-        .then(([, fsPath]) => {
-          this._vw_name = options?.name ?? fsPath
-
-          debug('initialize worker %s', this._vw_name)
-
-          return runner.executeFile(fsPath).then(() => {
-            // worker should be new every time, invalidate its sub dependency
-            runnerOptions.moduleCache.invalidateSubDepTree([
-              fsPath,
-              runner.mocker.getMockPath(fsPath),
-            ])
-            const q = this._vw_messageQueue
-            this._vw_messageQueue = null
-            if (q) {
-              q.forEach(
-                ([data, transfer]) => this.postMessage(data, transfer),
-                this,
-              )
-            }
-            debug('worker %s successfully initialized', this._vw_name)
-          })
+        return runner.import(url).then(() => {
+          runner._invalidateSubTreeById([
+            resolvedId,
+            runner.mocker.getMockPath(resolvedId),
+          ])
+          const q = this._vw_messageQueue
+          this._vw_messageQueue = null
+          if (q) {
+            q.forEach(
+              ([data, transfer]) => this.postMessage(data, transfer),
+              this,
+            )
+          }
+          debug('worker %s successfully initialized', this._vw_name)
         })
-        .catch((e) => {
-          debug('worker %s failed to initialize: %o', this._vw_name, e)
-          const EventConstructor = globalThis.ErrorEvent || globalThis.Event
-          const error = new EventConstructor('error', {
-            error: e,
-            message: e.message,
-          })
-          this.dispatchEvent(error)
-          this.onerror?.(error)
-          console.error(e)
+      }).catch((e) => {
+        debug('worker %s failed to initialize: %o', this._vw_name, e)
+        const EventConstructor = globalThis.ErrorEvent || globalThis.Event
+        const error = new EventConstructor('error', {
+          error: e,
+          message: e.message,
         })
+        this.dispatchEvent(error)
+        this.onerror?.(error)
+        console.error(e)
+      })
     }
 
     addEventListener(

@@ -1,19 +1,24 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap, CoverageSummary } from 'istanbul-lib-coverage'
 import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
-import type { BaseCoverageOptions, CoverageModuleLoader, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
+import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
+import type { TestProject } from './project'
+import { createHash } from 'node:crypto'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
+import module from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { cleanUrl, slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { cleanUrl, slash } from 'vite-node/utils'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
-import { resolveCoverageProviderModule } from '../utils/coverage'
+import { getCoverageFilesDirectory, resolveCoverageProviderModule } from '../utils/coverage'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -21,6 +26,10 @@ interface ResolvedThreshold {
   coverageMap: CoverageMap
   name: string
   thresholds: Partial<Record<Threshold, number | undefined>>
+  /** When `true`, check `thresholds` against each file instead of the aggregate. */
+  perFile: boolean
+  /** Additional per-file-only minimums (object form of `perFile`), or `null`. */
+  perFileThresholds: Partial<Record<Threshold, number | undefined>> | null
 }
 
 /**
@@ -42,7 +51,7 @@ interface ResolvedThreshold {
 type CoverageFiles = Map<
   NonNullable<AfterSuiteRunMeta['projectName']> | symbol,
   Record<
-    AfterSuiteRunMeta['transformMode'],
+    AfterSuiteRunMeta['environment'],
     { [TestFilenames: string]: string }
   >
 >
@@ -56,7 +65,6 @@ const THRESHOLD_KEYS: Readonly<Threshold[]> = [
 ]
 const GLOBAL_THRESHOLDS_KEY = 'global'
 const DEFAULT_PROJECT: unique symbol = Symbol.for('default-project')
-let uniqueId = 0
 
 export async function getCoverageProvider(
   options: SerializedCoverageConfig | undefined,
@@ -71,17 +79,20 @@ export async function getCoverageProvider(
   return null
 }
 
-export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istanbul' | 'v8'>> {
+export class BaseCoverageProvider {
   ctx!: Vitest
   readonly name!: 'v8' | 'istanbul'
   version!: string
-  options!: Options
+  options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
+  autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
+  globMatchers?: { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean }
 
   coverageFiles: CoverageFiles = new Map()
-  pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  reportsDirectoryLock!: ReportsDirectoryLock
   roots: string[] = []
+  changedFiles?: string[]
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -96,7 +107,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       )
     }
 
-    const config = ctx.config.coverage as Options
+    const config = ctx._coverageOptions
+
+    this.globMatchers = undefined
 
     this.options = {
       ...coverageConfigDefaults,
@@ -122,15 +135,11 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       },
     }
 
-    const shard = this.ctx.config.shard
-    const tempDirectory = `.tmp${
-      shard ? `-${shard.index}-${shard.count}` : ''
-    }`
-
-    this.coverageFilesDirectory = resolve(
+    this.coverageFilesDirectory = getCoverageFilesDirectory(
       this.options.reportsDirectory,
-      tempDirectory,
+      this.ctx.config.shard,
     )
+    this.reportsDirectoryLock = new ReportsDirectoryLock(resolve(this.options.reportsDirectory))
 
     // If --project filter is set pick only roots of resolved projects
     this.roots = ctx.config.project?.length
@@ -144,39 +153,60 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   isIncluded(_filename: string, root?: string): boolean {
     const roots = root ? [root] : this.roots
 
-    const filename = slash(_filename)
+    const filename = slash(cleanUrl(_filename))
     const cacheHit = this.globCache.get(filename)
 
     if (cacheHit !== undefined) {
       return cacheHit
     }
 
+    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
+
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
+    if (this.options.allowExternal === false && !matchingRoot) {
       this.globCache.set(filename, false)
 
       return false
     }
 
+    const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
+
+    const { matchExclude, matchInclude } = this.getGlobMatchers()
+
+    if (matchExclude(relativeFilename)) {
+      this.globCache.set(filename, false)
+      return false
+    }
+
     // By default `coverage.include` matches all files, except "coverage.exclude"
-    const glob = this.options.include || '**'
+    let included = matchInclude(relativeFilename)
 
-    let included = roots.some((root) => {
-      const options: pm.PicomatchOptions = {
-        contains: true,
-        dot: true,
-        cwd: root,
-        ignore: this.options.exclude,
-      }
-
-      return pm.isMatch(filename, glob, options)
-    })
-
-    included &&= existsSync(cleanUrl(filename))
+    if (included && this.changedFiles) {
+      included = this.changedFiles.includes(filename)
+    }
 
     this.globCache.set(filename, included)
 
     return included
+  }
+
+  /**
+   * Compile `coverage.include`/`coverage.exclude` into reusable matchers once.
+   * `picomatch.isMatch(file, patterns, options)` recompiles the patterns on
+   * every call, which dominates the filtering step on large test suites.
+   */
+  private getGlobMatchers(): { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean } {
+    if (!this.globMatchers) {
+      const exclude = this.options.exclude
+      const include = this.options.include
+
+      this.globMatchers = {
+        matchExclude: exclude.length ? pm(exclude, { dot: true }) : () => false,
+        matchInclude: include ? pm(include, { dot: true, ignore: exclude }) : () => true,
+      }
+    }
+
+    return this.globMatchers
   }
 
   private async getUntestedFilesByRoot(
@@ -195,8 +225,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
     includedFiles = includedFiles.filter(file => this.isIncluded(file, root))
 
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+    if (this.changedFiles) {
+      includedFiles = this.changedFiles.filter(file => includedFiles.includes(file))
     }
 
     return includedFiles.map(file => slash(path.resolve(root, file)))
@@ -226,11 +256,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     throw new Error('BaseReporter\'s parseConfigModule was not overwritten')
   }
 
-  resolveOptions(): Options {
+  resolveOptions(): ResolvedCoverageOptions {
     return this.options
   }
 
   async clean(clean = true): Promise<void> {
+    await this.reportsDirectoryLock.acquire()
+
     if (clean && existsSync(this.options.reportsDirectory)) {
       await fs.rm(this.options.reportsDirectory, {
         recursive: true,
@@ -250,53 +282,43 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     await fs.mkdir(this.coverageFilesDirectory, { recursive: true })
 
     this.coverageFiles = new Map()
-    this.pendingPromises = []
   }
 
-  onAfterSuiteRun({ coverage, transformMode, projectName, testFiles }: AfterSuiteRunMeta): void {
+  onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
     }
 
-    if (transformMode !== 'web' && transformMode !== 'ssr' && transformMode !== 'browser') {
-      throw new Error(`Invalid transform mode: ${transformMode}`)
+    if (typeof coverage !== 'string') {
+      throw new TypeError(`Expected string coverage payload, received ${typeof coverage}, ${JSON.stringify(coverage)}`)
     }
+    const filename = coverage
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: {}, ssr: {}, browser: {} }
+      entry = {}
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
     const testFilenames = testFiles.join()
-    const filename = resolve(
-      this.coverageFilesDirectory,
-      `coverage-${uniqueId++}.json`,
-    )
-
+    entry[environment] ??= {}
     // If there's a result from previous run, overwrite it
-    entry[transformMode][testFilenames] = filename
-
-    const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
-    this.pendingPromises.push(promise)
+    entry[environment][testFilenames] = filename
   }
 
   async readCoverageFiles<CoverageType>({ onFileRead, onFinished, onDebug }: {
     /** Callback invoked with a single coverage result */
     onFileRead: (data: CoverageType) => void
     /** Callback invoked once all results of a project for specific transform mode are read */
-    onFinished: (project: Vitest['projects'][number], transformMode: AfterSuiteRunMeta['transformMode']) => Promise<void>
+    onFinished: (project: Vitest['projects'][number], environment: string) => Promise<void>
     onDebug: ((...logs: any[]) => void) & { enabled: boolean }
   }): Promise<void> {
     let index = 0
-    const total = this.pendingPromises.length
-
-    await Promise.all(this.pendingPromises)
-    this.pendingPromises = []
+    const total = this.coverageFiles.size
 
     for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
-      for (const [transformMode, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
+      for (const [environment, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
         const filenames = Object.values(coverageByTestfiles)
         const project = this.ctx.getProjectByName(projectName as string)
 
@@ -315,18 +337,46 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
           )
         }
 
-        await onFinished(project, transformMode)
+        await onFinished(project, environment)
       }
     }
   }
 
   async cleanAfterRun(): Promise<void> {
-    this.coverageFiles = new Map()
-    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    try {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
 
-    // Remove empty reports directory, e.g. when only text-reporter is used
-    if (readdirSync(this.options.reportsDirectory).length === 0) {
-      await fs.rm(this.options.reportsDirectory, { recursive: true })
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0) {
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      }
+    }
+    finally {
+      await this.reportsDirectoryLock.release()
+    }
+  }
+
+  async onTestRunStart(): Promise<void> {
+    if (this.options.changed) {
+      try {
+        const changedFiles = await this.ctx.vcs.findChangedFiles({
+          root: this.ctx.config.root,
+          changedSince: this.options.changed,
+        })
+
+        this.changedFiles = changedFiles
+      }
+      catch {
+        this.changedFiles = undefined
+      }
+    }
+    else if (this.ctx.config.changed) {
+      this.changedFiles = this.ctx.config.related
+    }
+
+    if (this.changedFiles) {
+      this.globCache.clear()
     }
   }
 
@@ -355,13 +405,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     this.checkThresholds(resolvedThresholds)
 
     if (this.options.thresholds?.autoUpdate && allTestsRun) {
-      if (!this.ctx.server.config.configFile) {
+      if (!this.ctx.vite.config.configFile) {
         throw new Error(
           'Missing configurationFile. The "coverage.thresholds.autoUpdate" can only be enabled when configuration file is used.',
         )
       }
 
-      const configFilePath = this.ctx.server.config.configFile
+      const configFilePath = this.ctx.vite.config.configFile
       const configModule = await this.parseConfigModule(configFilePath)
 
       await this.updateThresholds({
@@ -370,7 +420,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         onUpdate: () =>
           writeFileSync(
             configFilePath,
-            configModule.generate().code,
+            configModule.generate().code.replace(this.autoUpdateMarker, ''),
             'utf-8',
           ),
 
@@ -399,7 +449,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       }
 
       const glob = key
-      const globThresholds = resolveGlobThresholds(this.options.thresholds![glob])
+      const globEntry = this.options.thresholds![glob]
+      const globThresholds = resolveGlobThresholds(globEntry)
       const globCoverageMap = this.createCoverageMap()
 
       const matcher = pm(glob)
@@ -416,6 +467,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         name: glob,
         coverageMap: globCoverageMap,
         thresholds: globThresholds,
+        ...resolvePerFile(globEntry),
       })
     }
 
@@ -434,6 +486,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         lines: this.options.thresholds?.lines,
         statements: this.options.thresholds?.statements,
       },
+      ...resolvePerFile(this.options.thresholds),
     })
 
     return resolvedThresholds
@@ -443,80 +496,106 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
    * Check collected coverage against configured thresholds. Sets exit code to 1 when thresholds not reached.
    */
   private checkThresholds(allThresholds: ResolvedThreshold[]) {
-    for (const { coverageMap, thresholds, name } of allThresholds) {
-      if (
-        thresholds.branches === undefined
-        && thresholds.functions === undefined
-        && thresholds.lines === undefined
-        && thresholds.statements === undefined
-      ) {
+    for (const { coverageMap, thresholds, perFile, perFileThresholds, name } of allThresholds) {
+      const groups: {
+        file: string | null
+        thresholds: ResolvedThreshold['thresholds']
+        summary: CoverageSummary
+        name: string
+      }[] = []
+
+      if (!perFile) {
+        groups.push({
+          file: null,
+          thresholds,
+          summary: coverageMap.getCoverageSummary(),
+          name: name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`,
+        })
+      }
+
+      if (perFile) {
+        for (const file of coverageMap.files().sort()) {
+          groups.push({
+            file,
+            thresholds,
+            summary: coverageMap.fileCoverageFor(file).toSummary(),
+            name: name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`,
+          })
+        }
+      }
+
+      if (perFileThresholds) {
+        for (const file of coverageMap.files().sort()) {
+          groups.push({
+            file,
+            thresholds: perFileThresholds,
+            summary: coverageMap.fileCoverageFor(file).toSummary(),
+            name: 'per-file',
+          })
+        }
+      }
+
+      for (const group of groups) {
+        if (
+          group.thresholds.branches === undefined
+          && group.thresholds.functions === undefined
+          && group.thresholds.lines === undefined
+          && group.thresholds.statements === undefined
+        ) {
+          continue
+        }
+
+        this.reportThresholdViolations(group.thresholds, group.summary, group.file, group.name)
+      }
+    }
+  }
+
+  private reportThresholdViolations(
+    thresholds: ResolvedThreshold['thresholds'],
+    summary: CoverageSummary,
+    file: string | null,
+    label: string,
+  ) {
+    for (const thresholdKey of THRESHOLD_KEYS) {
+      const threshold = thresholds[thresholdKey]
+
+      if (threshold === undefined) {
         continue
       }
 
-      // Construct list of coverage summaries where thresholds are compared against
-      const summaries = this.options.thresholds?.perFile
-        ? coverageMap.files().map((file: string) => ({
-            file,
-            summary: coverageMap.fileCoverageFor(file).toSummary(),
-          }))
-        : [{ file: null, summary: coverageMap.getCoverageSummary() }]
+      /**
+       * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
+       * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
+       */
+      if (threshold >= 0) {
+        const coverage = summary.data[thresholdKey].pct
 
-      // Check thresholds of each summary
-      for (const { summary, file } of summaries) {
-        for (const thresholdKey of THRESHOLD_KEYS) {
-          const threshold = thresholds[thresholdKey]
+        if (coverage < threshold) {
+          process.exitCode = 1
 
-          if (threshold === undefined) {
-            continue
+          let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${label} threshold (${threshold}%)`
+
+          if (file) {
+            errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
           }
 
-          /**
-           * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
-           * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
-           */
-          if (threshold >= 0) {
-            const coverage = summary.data[thresholdKey].pct
+          this.ctx.logger.error(errorMessage)
+        }
+      }
+      else {
+        const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
+        const absoluteThreshold = threshold * -1
 
-            if (coverage < threshold) {
-              process.exitCode = 1
+        if (uncovered > absoluteThreshold) {
+          process.exitCode = 1
 
-              /**
-               * Generate error message based on perFile flag:
-               * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
-               * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
-               */
-              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-              } threshold (${threshold}%)`
+          let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${label} threshold (${absoluteThreshold})`
 
-              if (this.options.thresholds?.perFile && file) {
-                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-              }
-
-              this.ctx.logger.error(errorMessage)
-            }
+          if (file) {
+            errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
           }
-          else {
-            const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
-            const absoluteThreshold = threshold * -1
 
-            if (uncovered > absoluteThreshold) {
-              process.exitCode = 1
-
-              /**
-               * Generate error message based on perFile flag:
-               * - ERROR: Uncovered statements (33) exceed threshold (30) for src/math.ts
-               * - ERROR: Uncovered statements (33) exceed global threshold (30)
-               */
-              let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-              } threshold (${absoluteThreshold})`
-
-              if (this.options.thresholds?.perFile && file) {
-                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-              }
-
-              this.ctx.logger.error(errorMessage)
-            }
-          }
+          this.ctx.logger.error(errorMessage)
         }
       }
     }
@@ -535,8 +614,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     const config = resolveConfig(configurationFile)
     assertConfigurationModule(config)
 
-    for (const { coverageMap, thresholds, name } of allThresholds) {
-      const summaries = this.options.thresholds?.perFile
+    for (const { coverageMap, thresholds, name, perFile } of allThresholds) {
+      const summaries = perFile
         ? coverageMap
             .files()
             .map((file: string) =>
@@ -544,7 +623,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
             )
         : [coverageMap.getCoverageSummary()]
 
-      const thresholdsToUpdate: [Threshold, number][] = []
+      // A `perFile` glob may match no files; skip it instead of writing
+      // Infinity thresholds from `Math.min(...[])`.
+      if (summaries.length === 0) {
+        continue
+      }
+
+      const thresholdsToUpdate: [Threshold, number, number][] = []
 
       for (const key of THRESHOLD_KEYS) {
         const threshold = thresholds[key] ?? 100
@@ -558,7 +643,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
           )
 
           if (actual > threshold) {
-            thresholdsToUpdate.push([key, actual])
+            thresholdsToUpdate.push([key, actual, threshold])
           }
         }
         else {
@@ -570,7 +655,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
           if (actual < absoluteThreshold) {
             // If everything was covered, set new threshold to 100% (since a threshold of 0 would be considered as 0%)
             const updatedThreshold = actual === 0 ? 100 : actual * -1
-            thresholdsToUpdate.push([key, updatedThreshold])
+            thresholdsToUpdate.push([key, updatedThreshold, threshold])
           }
         }
       }
@@ -581,13 +666,16 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
       updatedThresholds = true
 
-      for (const [threshold, newValue] of thresholdsToUpdate) {
+      const thresholdFormatter = typeof this.options.thresholds?.autoUpdate === 'function' ? this.options.thresholds?.autoUpdate : (value: number) => value
+
+      for (const [threshold, newValue, previousValue] of thresholdsToUpdate) {
+        const formattedValue = thresholdFormatter(newValue, previousValue)
         if (name === GLOBAL_THRESHOLDS_KEY) {
-          config.test.coverage.thresholds[threshold] = newValue
+          config.test.coverage.thresholds[threshold] = formattedValue
         }
         else {
           const glob = config.test.coverage.thresholds[name as Threshold] as ResolvedThreshold['thresholds']
-          glob[threshold] = newValue
+          glob[threshold] = formattedValue
         }
       }
     }
@@ -635,46 +723,93 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }, [])
   }
 
-  createUncoveredFileTransformer(ctx: Vitest) {
-    const servers = [
-      ...ctx.projects.map(project => ({
-        root: project.config.root,
-        isBrowserEnabled: project.isBrowserEnabled(),
-        vitenode: project.vitenode,
-      })),
-      // Check core last as it will match all files anyway
-      { root: ctx.config.root, vitenode: ctx.vitenode, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
-    ]
+  // TODO: should this be abstracted in `project`/`vitest` instead?
+  // if we decide to keep `viteModuleRunner: false`, we will need to abstract transformation in both main thread and tests
+  // custom --import=module.registerHooks need to be transformed as well somehow
+  async transformFile(url: string, project: TestProject, viteEnvironment: string, isTransformedByVite = true): Promise<TransformResult | null | undefined> {
+    const config = project.config
 
-    return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
+    // vite is disabled, should transform manually if possible
+    if (config.experimental.viteModuleRunner === false || !isTransformedByVite) {
+      const pathname = url.split('?')[0]
+      const filename = pathname.startsWith('file://') ? fileURLToPath(pathname) : pathname
+      const extension = path.extname(filename)
+      const isTypeScript = extension === '.ts' || extension === '.mts' || extension === '.cts'
+      if (!isTypeScript) {
+        const code = await fs.readFile(filename, 'utf-8')
+        return { code, map: null }
+      }
+      if (!module.stripTypeScriptTypes) {
+        throw new Error(`Cannot parse '${url}' because "module.stripTypeScriptTypes" is not supported. TypeScript coverage requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`)
+      }
+      const isTransform = process.execArgv.includes('--experimental-transform-types')
+        || config.execArgv.includes('--experimental-transform-types')
+        || process.env.NODE_OPTIONS?.includes('--experimental-transform-types')
+        || config.env?.NODE_OPTIONS?.includes('--experimental-transform-types')
+      const code = await fs.readFile(filename, 'utf-8')
+      return {
+        // `transform` mode will inject source maps comment at the end
+        code: module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' }),
+        map: null,
+      }
+    }
+
+    return project.vite.environments[viteEnvironment].transformRequest(url)
+  }
+
+  createUncoveredFileTransformer(ctx: Vitest) {
+    const projects = new Set([
+      ...ctx.projects,
+      // Check core last as it will match all files anyway
+      ctx.getRootProject(),
+    ])
+
+    return async (filename: string): Promise<TransformResult | null | undefined> => {
       let lastError
 
-      for (const { root, vitenode, isBrowserEnabled } of servers) {
+      for (const project of projects) {
+        const root = project.config.root
+
         // On Windows root doesn't start with "/" while filenames do
         if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
         }
 
-        if (isBrowserEnabled) {
-          const result = await vitenode.transformRequest(filename, undefined, 'web').catch(() => null)
-
-          if (result) {
-            return result
-          }
-        }
-
         try {
-          return await vitenode.transformRequest(filename)
+          const environment = project.config.environment
+          const viteEnvironment = environment === 'jsdom' || environment === 'happy-dom' || project.isBrowserEnabled() ? 'client' : 'ssr'
+          return await this.transformFile(filename, project, viteEnvironment)
         }
-        catch (error) {
-          lastError = error
+        catch (err) {
+          lastError = err
         }
       }
 
-      // All vite-node servers failed to transform the file
+      // All vite servers failed to transform the file
       throw lastError
     }
   }
+}
+
+function resolvePerFile(thresholds: unknown): {
+  perFile: boolean
+  perFileThresholds: ResolvedThreshold['thresholds'] | null
+} {
+  if (!thresholds || typeof thresholds !== 'object' || !('perFile' in thresholds)) {
+    return { perFile: false, perFileThresholds: null }
+  }
+
+  const { perFile } = thresholds
+
+  if (perFile === true) {
+    return { perFile: true, perFileThresholds: null }
+  }
+
+  if (perFile && typeof perFile === 'object') {
+    return { perFile: false, perFileThresholds: resolveGlobThresholds(perFile) }
+  }
+
+  return { perFile: false, perFileThresholds: null }
 }
 
 /**
@@ -718,7 +853,7 @@ function resolveGlobThresholds(
 
 function assertConfigurationModule(config: unknown): asserts config is {
   test: {
-    coverage: { thresholds: NonNullable<BaseCoverageOptions['thresholds']> }
+    coverage: { thresholds: NonNullable<CoverageOptions['thresholds']> }
   }
 } {
   try {
@@ -800,5 +935,114 @@ function resolveMergeConfig(mod: any): any {
         return config
       }
     }
+  }
+}
+
+/**
+ * Cross-process lock on a coverage `reportsDirectory`.
+ *
+ * Two `vitest run --coverage` runs pointed at the same reports directory delete
+ * each other's reports, so the second one to start fails fast instead. The lock
+ * file lives in the OS temp directory so it survives the cleanup it guards, and a
+ * lock left behind by a process that no longer exists is reclaimed on the next run.
+ */
+interface LockOwner {
+  pid: number
+  reportsDirectory: string
+}
+
+class ReportsDirectoryLock {
+  readonly lockFile: string
+
+  constructor(private readonly reportsDirectory: string) {
+    const hash = createHash('sha256')
+      .update(reportsDirectory)
+      .digest('hex')
+      .slice(0, 16)
+
+    this.lockFile = resolve(tmpdir(), `vitest-coverage-${hash}.lock`)
+  }
+
+  async acquire(): Promise<void> {
+    if (await this.tryWrite()) {
+      return
+    }
+
+    const owner = await this.readOwner()
+
+    // We already hold the lock for this directory (e.g. watch-mode reruns).
+    if (owner?.pid === process.pid) {
+      return
+    }
+
+    // Another running Vitest owns this directory.
+    if (owner && isProcessAlive(owner.pid)) {
+      throw this.inUseError(owner)
+    }
+
+    // The lock was left behind by a process that no longer exists. Reclaim it.
+    await fs.rm(this.lockFile, { force: true })
+
+    if (!(await this.tryWrite())) {
+      throw this.inUseError(await this.readOwner())
+    }
+  }
+
+  async release(): Promise<void> {
+    const owner = await this.readOwner()
+
+    if (owner?.pid === process.pid) {
+      await fs.rm(this.lockFile, { force: true })
+    }
+  }
+
+  private async tryWrite(): Promise<boolean> {
+    const payload = JSON.stringify({ pid: process.pid, reportsDirectory: this.reportsDirectory })
+
+    try {
+      // `wx` fails with EEXIST if the file already exists, so only one process wins.
+      await fs.writeFile(this.lockFile, payload, { flag: 'wx' })
+      return true
+    }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        return false
+      }
+      throw error
+    }
+  }
+
+  private async readOwner(): Promise<LockOwner | null> {
+    try {
+      const owner = JSON.parse(await fs.readFile(this.lockFile, 'utf-8'))
+      return typeof owner?.pid === 'number' ? owner : null
+    }
+    catch {
+      return null
+    }
+  }
+
+  private inUseError(owner: LockOwner | null): Error {
+    return new Error(
+      `The coverage report directory "${this.reportsDirectory}" is already in use by `
+      + `another Vitest process${owner ? ` (pid ${owner.pid})` : ''}. Running coverage for multiple `
+      + `Vitest processes in the same directory at the same time is not supported, because they would `
+      + `delete each other's reports.\nGive each run its own "coverage.reportsDirectory" `
+      + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
+    )
+  }
+}
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    // Sending signal 0 checks if the process exists without actually killing it:
+    // https://nodejs.org/api/process.html#processkillpid-signal
+    process.kill(pid, 0)
+    return true
+  }
+  catch (error) {
+    // ESRCH means the process is gone. Treat anything else (e.g. EPERM) as alive
+    // so we never reclaim a lock from a process that is still running.
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
   }
 }

@@ -1,23 +1,49 @@
 import type { Context } from 'node:vm'
-import type { ModuleCacheMap } from 'vite-node'
-import type { WorkerGlobalState } from '../../types/worker'
+import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
+import type { ModuleInformation } from '../external-executor'
 import { pathToFileURL } from 'node:url'
-import { isContext } from 'node:vm'
+import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
+import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
-import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { ExternalModulesExecutor } from '../external-executor'
+import { emitModuleRunner } from '../listeners'
+import { listenForErrors } from '../moduleRunner/errorCatcher'
+import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
+import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
+import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
+import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
+import { CodeCache } from '../vm/code-cache'
 import { FileMap } from '../vm/file-map'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
+const codeCache = new CodeCache()
+const resolveCache = new Map<string, string>()
+const moduleInfoCache = new Map<string, ModuleInformation>()
 
-export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
-  const { environment, ctx, rpc } = state
+export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
+  const { ctx, rpc } = state
+
+  const beforeEnvironmentTime = performance.now()
+  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces, true)
+  state.environment = environment
+
+  // let the server transform this file's import graph while this worker is
+  // busy importing the environment package (jsdom takes ~0.5s per worker) —
+  // the server is otherwise idle during that window on a cold start. The
+  // transforms also land in the `fetchWarmModules` snapshot, so the worker's
+  // own fetches short-circuit to disk reads. Failures are ignored: the
+  // worker's own fetch reports them with the proper import context.
+  rpc.prewarmModuleGraph(
+    environment.viteEnvironment || environment.name,
+    ctx.files.map(file => file.filepath),
+  ).catch(() => {})
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
@@ -29,11 +55,18 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     )
   }
 
-  const vm = await environment.setupVM(
-    ctx.environment.options || ctx.config.environmentOptions || {},
+  const vm = await traces.$(
+    'vitest.runtime.environment.setup',
+    {
+      attributes: {
+        'vitest.environment': environment.name,
+        'vitest.environment.vite_environment': environment.viteEnvironment || environment.name,
+      },
+    },
+    () => environment.setupVM!(ctx.environment.options || ctx.config.environmentOptions || {}),
   )
 
-  state.durations.environment = performance.now() - state.durations.environment
+  state.durations.environment = performance.now() - beforeEnvironmentTime
 
   process.env.VITEST_VM_POOL = '1'
 
@@ -70,40 +103,79 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const externalModulesExecutor = new ExternalModulesExecutor({
     context,
     fileMap,
+    codeCache,
+    resolveCache,
+    moduleInfoCache,
     packageCache,
     transform: rpc.transform,
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const executor = await startVitestExecutor({
+  process.exit = (code = process.exitCode || 0): never => {
+    throw new Error(`process.exit unexpectedly called with "${code}"`)
+  }
+
+  listenForErrors(() => state)
+
+  const moduleRunner = startVitestModuleRunner({
     context,
-    moduleCache: state.moduleCache as ModuleCacheMap,
+    evaluatedModules: state.evaluatedModules,
     state,
     externalModulesExecutor,
-    requestStubs: stubs,
+    createImportMeta: createNodeImportMeta,
+    traces,
   })
 
-  context.__vitest_mocker__ = executor.mocker
+  emitModuleRunner(moduleRunner as any)
 
-  const { run } = (await executor.importExternalModule(
+  Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
+    value: {
+      context,
+      externalModulesExecutor,
+    },
+    configurable: true,
+    enumerable: false,
+    writable: false,
+  })
+  context.__vitest_mocker__ = moduleRunner.mocker
+
+  setupEnv(ctx.config.env, state.metaEnv)
+
+  if (ctx.config.serializedDefines) {
+    try {
+      runInContext(ctx.config.serializedDefines, context, {
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
+  await moduleRunner.mocker.initializeSpyModule()
+
+  const { run } = (await moduleRunner.import(
     entryFile,
   )) as typeof import('../runVmTests')
-  const fileSpecs = ctx.files.map(f =>
-    typeof f === 'string'
-      ? { filepath: f, testLocations: undefined }
-      : f,
-  )
 
   try {
     await run(
       method,
-      fileSpecs,
+      ctx.files,
       ctx.config,
-      executor,
+      moduleRunner,
+      traces,
     )
   }
   finally {
-    await vm.teardown?.()
-    state.environmentTeardownRun = true
+    await traces.$(
+      'vitest.runtime.environment.teardown',
+      () => vm.teardown?.(),
+    )
+  }
+}
+
+export function setupVmWorker(context: WorkerSetupContext): void {
+  if (context.config.experimental.viteModuleRunner === false) {
+    throw new Error(`Pool "${context.pool}" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   }
 }

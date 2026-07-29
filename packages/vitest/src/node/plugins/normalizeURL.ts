@@ -12,10 +12,9 @@ export function NormalizeURLPlugin(): Plugin {
   return {
     name: 'vitest:normalize-url',
     enforce: 'post',
-    transform(code, id, options) {
-      const ssr = options?.ssr === true
+    transform(code) {
       if (
-        ssr
+        this.environment.name !== 'client'
         || !code.includes('new URL')
         || !code.includes('import.meta.url')
       ) {

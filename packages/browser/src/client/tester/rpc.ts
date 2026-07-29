@@ -24,14 +24,6 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export async function rpcDone(): Promise<unknown[] | undefined> {
-  if (!promises.size) {
-    return
-  }
-  const awaitable = Array.from(promises)
-  return Promise.all(awaitable)
-}
-
 export function createSafeRpc(
   client: VitestBrowserClient,
 ): VitestBrowserClient['rpc'] {

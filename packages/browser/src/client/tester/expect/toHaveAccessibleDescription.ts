@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementAccessibleDescription } from 'ivya/utils'
 import { getElementFromUserInput, getMessage } from './utils'
@@ -22,9 +22,10 @@ export default function toHaveAccessibleDescription(
   this: MatcherState,
   actual: Element | Locator,
   expectedAccessibleDescription?: string | RegExp,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveAccessibleDescription, this)
   const actualAccessibleDescription = getElementAccessibleDescription(htmlElement, false)
+  const defaultView = htmlElement.ownerDocument.defaultView || window
 
   const missingExpectedValue = arguments.length === 1
 
@@ -36,7 +37,7 @@ export default function toHaveAccessibleDescription(
   }
   else {
     pass
-      = expectedAccessibleDescription instanceof RegExp
+      = expectedAccessibleDescription instanceof defaultView.RegExp
         ? expectedAccessibleDescription.test(actualAccessibleDescription)
         : this.equals(
             actualAccessibleDescription,

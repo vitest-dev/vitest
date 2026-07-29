@@ -1,10 +1,12 @@
-import { server } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
+import { server } from 'vitest/browser'
 
 const { readFile, writeFile, removeFile, myCustomCommand } = server.commands
 
 it('can manipulate files', async () => {
-  const file = './test.txt'
+  // all browser instances run this file against the same cwd in parallel,
+  // so the file name must be unique per instance to avoid races
+  const file = `./test-${server.browser}.txt`
 
   try {
     await readFile(file)
@@ -13,10 +15,10 @@ it('can manipulate files', async () => {
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
-      expect(err.message).toMatch('test\\browser\\test.txt')
+      expect(err.message).toMatch(`test\\browser\\test-${server.browser}.txt`)
     }
     else {
-      expect(err.message).toMatch('test/browser/test.txt')
+      expect(err.message).toMatch(`test/browser/test-${server.browser}.txt`)
     }
   }
 
@@ -34,10 +36,10 @@ it('can manipulate files', async () => {
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
-      expect(err.message).toMatch('test\\browser\\test.txt')
+      expect(err.message).toMatch(`test\\browser\\test-${server.browser}.txt`)
     }
     else {
-      expect(err.message).toMatch('test/browser/test.txt')
+      expect(err.message).toMatch(`test/browser/test-${server.browser}.txt`)
     }
   }
 })
@@ -51,7 +53,7 @@ it('can run custom commands', async () => {
   })
 })
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     myCustomCommand: (arg1: string, arg2: string) => Promise<{
       testPath: string

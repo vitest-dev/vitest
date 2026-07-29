@@ -1,0 +1,137 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`multiline 1`] = `
+"
+  Hello
+    World
+"
+`;
+
+exports[`multiline strings  1`] = `
+"
+export default function () {
+  function Foo() {
+  }
+
+  return Foo;
+}
+"
+`;
+
+exports[`object 1`] = `
+{
+  "this": {
+    "is": Set {
+      "of",
+      "snapshot",
+    },
+  },
+}
+`;
+
+exports[`properties snapshot 1`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<Number>,
+  "name": StringContaining "LeBron",
+}
+`;
+
+exports[`renders mock snapshot 1`] = `[MockFunction]`;
+
+exports[`renders mock snapshot 2`] = `
+[MockFunction] {
+  "calls": [
+    [
+      "hello",
+      "world",
+      2,
+    ],
+  ],
+  "results": [
+    {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`single line snapshot 1`] = `"some string"`;
+
+exports[`single line snapshot 2`] = `"some "string""`;
+
+exports[`single line snapshot 3`] = `"some "string"`;
+
+exports[`single line snapshot 4`] = `"som\`e\` string"`;
+
+exports[`single line snapshot 5`] = `"some string\`"`;
+
+exports[`single line snapshot 6`] = `"some string'"`;
+
+exports[`single line snapshot 7`] = `"some 'string'"`;
+
+exports[`throwing 1`] = `[Error: omega]`;
+
+exports[`throwing 2`] = `"omega"`;
+
+exports[`throwing 3`] = `
+{
+  "error": "omega",
+}
+`;
+
+exports[`throwing 4`] = `[Error: omega]`;
+
+exports[`with big array 1`] = `
+{
+  "this": {
+    "is": Set {
+      "one",
+      [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+      ],
+    },
+  },
+}
+`;
+
+exports[`with big string 1`] = `
+{
+  "this": {
+    "is": Set {
+      "one",
+      "zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo",
+    },
+  },
+}
+`;

@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getAriaDisabled } from 'ivya/utils'
 import { getElementFromUserInput, getTag } from './utils'
@@ -21,7 +21,7 @@ import { getElementFromUserInput, getTag } from './utils'
 export function toBeDisabled(
   this: MatcherState,
   actual: Element | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeDisabled, this)
   const isDisabled = isElementDisabled(htmlElement)
   return {
@@ -45,7 +45,7 @@ export function toBeDisabled(
 export function toBeEnabled(
   this: MatcherState,
   actual: Element | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeEnabled, this)
   const isDisabled = isElementDisabled(htmlElement)
   return {

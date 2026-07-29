@@ -3,6 +3,7 @@ import url from 'node:url'
 import { isPackageExists } from 'local-pkg'
 import c from 'tinyrainbow'
 import { isTTY } from '../utils/env'
+import { withLabel } from './reporters/renderers/utils'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -32,11 +33,7 @@ export class VitestPackageInstaller {
     }
 
     process.stderr.write(
-      c.red(
-        `${c.inverse(
-          c.red(' MISSING DEPENDENCY '),
-        )} Cannot find dependency '${dependency}'\n\n`,
-      ),
+      withLabel('red', 'MISSING DEPENDENCY', `Cannot find dependency '${dependency}'\n\n`),
     )
 
     if (!isTTY) {
