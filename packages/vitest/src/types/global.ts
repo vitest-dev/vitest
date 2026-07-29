@@ -4,7 +4,7 @@ import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchResult } from '../runtime/benchmark'
 import type { Test } from '../runtime/runner/types'
 
-interface SnapshotMatcher<T, R = void> {
+interface SnapshotMatcher<R extends void | Promise<void>, T = unknown> {
   <U extends { [P in keyof T]: any }>(
     snapshot: Partial<U>,
     hint?: string
@@ -12,7 +12,7 @@ interface SnapshotMatcher<T, R = void> {
   (hint?: string): R
 }
 
-interface InlineSnapshotMatcher<T, R = void> {
+interface InlineSnapshotMatcher<R extends void | Promise<void>, T = unknown> {
   <U extends { [P in keyof T]: any }>(
     properties: Partial<U>,
     snapshot?: string,
@@ -37,7 +37,7 @@ declare module 'vitest' {
   interface ExpectStatic {
     assert: Chai.AssertStatic
     unreachable: (message?: string) => never
-    soft: <T>(actual: T, message?: string) => Assertion<T>
+    soft: <T>(actual: T, message?: string) => Assertion<void, T>
     poll: <T>(
       actual: (options: { signal: AbortSignal }) => T,
       options?: ExpectPollOptions,
@@ -48,11 +48,11 @@ declare module 'vitest' {
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 
-  interface Assertion<T, R = void> {
+  interface Assertion<R, T> {
     // Snapshots are extended in @vitest/snapshot and are not part of @vitest/expect
-    matchSnapshot: SnapshotMatcher<T, R>
-    toMatchSnapshot: SnapshotMatcher<T, R>
-    toMatchInlineSnapshot: InlineSnapshotMatcher<T, R>
+    matchSnapshot: SnapshotMatcher<R, T>
+    toMatchSnapshot: SnapshotMatcher<R, T>
+    toMatchInlineSnapshot: InlineSnapshotMatcher<R, T>
 
     /**
      * Checks that an error thrown by a function matches a previously recorded snapshot.

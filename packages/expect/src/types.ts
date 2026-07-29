@@ -109,20 +109,20 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
 // Allow unused type parameters to preserve their names for extensions.
 // Type parameter names must be identical when extending those types.
 // eslint-disable-next-line
-export interface Matchers<R = any, T = any> {}
+export interface Matchers<R extends void | Promise<void> = void | Promise<void>, T = unknown> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
 > & ThisType<T> & {
-  [K in keyof Matchers]?: RawMatcherFn<T, Parameters<Matchers[K]>>
+  [K in keyof Matchers<any>]?: RawMatcherFn<T, Parameters<Matchers<any>[K]>>
 }
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
-  Matchers,
+  Matchers<any>,
   AsymmetricMatchersContaining {
-  <T>(actual: T, message?: string): Assertion<T>
+  <T>(actual: T, message?: string): Assertion<void, T>
   extend: (expects: MatchersObject) => void
   anything: () => any
   any: (constructor: unknown) => any
@@ -155,7 +155,7 @@ interface CustomMatcher<R = any> {
   toBeOneOf: <T>(sample: ReadonlyArray<T> | ReadonlySet<T>) => R
 }
 
-export interface AsymmetricMatchersContaining extends CustomMatcher {
+export interface AsymmetricMatchersContaining extends Matchers<any>, CustomMatcher {
   /**
    * Matches if the received string contains the expected substring.
    *
@@ -219,7 +219,8 @@ export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
     ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
     : WithAsymmetricMatcher<T>
 
-export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, CustomMatcher<R> {
+// eslint-disable-next-line unused-imports/no-unused-vars
+export interface JestAssertion<R extends void | Promise<void>, T = unknown> extends CustomMatcher<R> {
   /**
    * Used when you want to check that two objects have the same value.
    * This matcher recursively checks the equality of all fields, rather than checking for object identity.
@@ -626,13 +627,13 @@ export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, C
   toHaveNthReturnedWith: <E>(nthCall: number, value: E) => R
 }
 
-type VitestAssertion<A, T, R = void> = {
+type VitestAssertion<A, R extends void | Promise<void>, T = unknown> = {
   [K in keyof A]: A[K] extends Chai.Assertion
-    ? Assertion<T, R>
+    ? Assertion<R, T>
     : A[K] extends (...args: any[]) => any
       ? R extends Promise<void> ? PromisifyFunction<A[K]> : A[K]
-      : VitestAssertion<A[K], T, R>;
-} & ((type: string, message?: string) => Assertion<T, R>)
+      : VitestAssertion<A[K], R, T>;
+} & ((type: string, message?: string) => Assertion<R, T>)
 
 type Promisify<O> = {
   [K in keyof O]: PromisifyFunction<O[K]>
@@ -642,12 +643,12 @@ type PromisifyFunction<T> = T extends (...args: infer A) => infer R
   ? Promisify<T> & ((...args: A) => R extends Promise<any> ? R : Promise<R>)
   : T
 
-export type PromisifyAssertion<T> = Assertion<Awaited<T>, Promise<void>>
+export type PromisifyAssertion<T> = Assertion<Promise<void>, Awaited<T>>
 
-export interface Assertion<T = any, R = void>
-  extends VitestAssertion<Chai.Assertion, T, R>,
-  JestAssertion<T, R>,
-  ChaiMockAssertion<T, R>,
+export interface Assertion<R extends void | Promise<void> = void | Promise<void>, T = unknown>
+  extends VitestAssertion<Chai.Assertion, R, T>,
+  JestAssertion<R, T>,
+  ChaiMockAssertion<R, T>,
   Matchers<R, T> {
   /**
    * Ensures a value is of a specific type.
@@ -778,7 +779,7 @@ export interface Assertion<T = any, R = void>
  * Chai-style assertions for spy/mock testing.
  * These provide sinon-chai compatible assertion names that delegate to Jest-style implementations.
  */
-export interface ChaiMockAssertion<T = any, R = void> {
+export interface ChaiMockAssertion<R extends void | Promise<void>, T = unknown> {
   /**
    * Checks that a spy was called at least once.
    * Chai-style equivalent of `toHaveBeenCalled`.
@@ -786,7 +787,7 @@ export interface ChaiMockAssertion<T = any, R = void> {
    * @example
    * expect(spy).to.have.been.called
    */
-  readonly called: Assertion<T, R>
+  readonly called: Assertion<R, T>
 
   /**
    * Checks that a spy was called a specific number of times.
@@ -813,7 +814,7 @@ export interface ChaiMockAssertion<T = any, R = void> {
    * @example
    * expect(spy).to.have.been.calledOnce
    */
-  readonly calledOnce: Assertion<T, R>
+  readonly calledOnce: Assertion<R, T>
 
   /**
    * Checks that a spy was called exactly once with specific arguments.
@@ -912,7 +913,7 @@ export interface ChaiMockAssertion<T = any, R = void> {
    * @example
    * expect(spy).to.have.been.calledTwice
    */
-  readonly calledTwice: Assertion<T, R>
+  readonly calledTwice: Assertion<R, T>
 
   /**
    * Checks that a spy was called exactly three times.
@@ -921,16 +922,7 @@ export interface ChaiMockAssertion<T = any, R = void> {
    * @example
    * expect(spy).to.have.been.calledThrice
    */
-  readonly calledThrice: Assertion<T, R>
-}
-
-declare global {
-  // support augmenting jest.Matchers by other libraries
-  // eslint-disable-next-line ts/no-namespace
-  namespace jest {
-    // eslint-disable-next-line unused-imports/no-unused-vars, ts/no-empty-object-type
-    interface Matchers<R, T = {}> {}
-  }
+  readonly calledThrice: Assertion<R, T>
 }
 
 export {}

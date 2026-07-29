@@ -323,10 +323,10 @@ For TypeScript, extend the `Assertion` interface:
 import 'vitest'
 
 declare module 'vitest' {
-  interface Assertion<T = any> {
-    toMatchTrimmedSnapshot: (length: number) => T
-    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => T
-    toMatchTrimmedFileSnapshot: (file: string) => Promise<T>
+  interface Assertion<R = void, T = any> {
+    toMatchTrimmedSnapshot: (length: number) => R
+    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => R
+    toMatchTrimmedFileSnapshot: (file: string) => Promise<void>
   }
 }
 ```

@@ -16,17 +16,7 @@ interface CustomMatchers<R = unknown> {
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
-}
-
-declare global {
-  // eslint-disable-next-line ts/no-namespace
-  namespace jest {
-    interface Matchers<R> {
-      toBeJestCompatible: () => R
-    }
-  }
+  interface Matchers<R> extends CustomMatchers<R> {}
 }
 
 describe('jest-expect', () => {
@@ -308,9 +298,6 @@ describe('jest-expect', () => {
     expect(() => expect(null).toBeTestedSync()).toThrow('toBeTestedSync')
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrow('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow('toBeTestedPromise')
-
-    expect(expect).toBeJestCompatible()
-    await (expect(Promise.resolve(expect)).resolves.toBeJestCompatible() satisfies Promise<void>)
   })
 
   it('object', () => {

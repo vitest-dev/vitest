@@ -7,7 +7,7 @@ interface CustomMatchers<R = unknown, T = unknown> {
 }
 
 declare module 'vitest' {
-  interface Matchers<R = any, T = any> extends CustomMatchers<R, T> {}
+  interface Matchers<R, T> extends CustomMatchers<R, T> {}
 }
 
 test('infers matcher declaration type from a custom matcher type', async () => {
