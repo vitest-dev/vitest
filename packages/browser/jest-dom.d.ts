@@ -3,7 +3,7 @@
 import { ARIARole } from './aria-role.js'
 import { Locator, ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
-export interface TestingLibraryMatchers<E, R> {
+export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unknown> {
   /**
    * @description
    * Assert whether an element is present in the document or not.
@@ -488,7 +488,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.getByTestId('logo')).toHaveAccessibleDescription('The logo of Our Company')
    * @see https://vitest.dev/api/browser/assertions#tohaveaccessibledescription
    */
-  toHaveAccessibleDescription(text?: string | RegExp | E): R
+  toHaveAccessibleDescription(text?: string | RegExp | T): R
 
   /**
    * @description
@@ -527,7 +527,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * @see https://vitest.dev/api/browser/assertions#tohaveaccessibleerrormessage
    */
-  toHaveAccessibleErrorMessage(text?: string | RegExp | E): R
+  toHaveAccessibleErrorMessage(text?: string | RegExp | T): R
 
   /**
    * @description
@@ -558,7 +558,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.getByTestId('input-title')).toHaveAccessibleName()
    * @see https://vitest.dev/api/browser/assertions#tohaveaccessiblename
    */
-  toHaveAccessibleName(text?: string | RegExp | E): R
+  toHaveAccessibleName(text?: string | RegExp | T): R
   /**
    * @description
    * This allows you to assert that an element has the expected

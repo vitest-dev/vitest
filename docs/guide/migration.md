@@ -225,6 +225,43 @@ To assert that a thrown error has an empty message, match the pattern explicitly
 expect(() => { throw new Error('boom') }).not.toThrow(/^$/)
 ```
 
+### Assertion Types Expose Return and Received Types
+
+Assertion interfaces now use two type parameters: `R` is the matcher return type and `T` is the received value type. Synchronous assertions use `void`, while assertions accessed through `.resolves`, `.rejects`, [`expect.poll`](/api/expect#poll), or [`expect.element`](/api/browser/assertions) use `Promise<void>`.
+
+If you declare custom matchers, augment the `Matchers<R, T>` interface. It adds the matcher to instance assertions, asymmetric matchers, and the type accepted by `expect.extend`:
+
+```ts [vitest.d.ts]
+import 'vitest'
+
+interface CustomMatchers<R = unknown, T = unknown> {
+  toBeFoo: () => R
+  toEqualTyped: (expected: T) => R
+}
+
+declare module 'vitest' {
+  interface Matchers<R, T> extends CustomMatchers<R, T> {}
+}
+```
+
+This makes custom matcher return types reflect how the matcher is used:
+
+```ts
+const syncResult = expect('value').toEqualTyped('other') // void
+const asyncResult = expect(Promise.resolve('value')).resolves.toEqualTyped('other') // Promise<void>
+await asyncResult
+```
+
+Code that refers to assertion types directly must also provide the return type first:
+
+```ts
+Assertion<string> // [!code --]
+Assertion<void, string> // [!code ++]
+Assertion<Promise<void>, string> // asynchronous assertion
+```
+
+Vitest no longer reads custom matcher declarations from the global `jest.Matchers` interface. Libraries that support both Jest and Vitest should augment `jest.Matchers` and `vitest.Matchers` separately. This only affects TypeScript declarations; registering matchers with `expect.extend` works as before.
+
 ### `expect.poll` Fails When It Times Out
 
 [`expect.poll`](/api/expect#poll) now rejects when its callback, or the polled assertion, does not settle within `timeout`. Previously a callback that resolved after the deadline, or an assertion that only passed on a late attempt, could still succeed. The callback now also receives an `AbortSignal` that aborts when the timeout elapses, so you can cancel in-flight work:
