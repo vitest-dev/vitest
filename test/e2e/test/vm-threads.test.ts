@@ -16,6 +16,42 @@ test('importing files in restricted fs works correctly', async () => {
   expect(exitCode).toBe(0)
 })
 
+// compiled scripts of inlined modules are shared between vm contexts within
+// a worker — module state must still be re-evaluated per test file. With 4
+// files on 2 workers, at least one worker runs several files, so a leak of
+// evaluated state through the shared script would fail the second file.
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s re-evaluates inlined modules in every context',
+  async (pool) => {
+    const testFile = `
+      import { expect, test } from 'vitest'
+      import { increment } from './counter.js'
+
+      test('module state is fresh for this file', () => {
+        expect(increment()).toBe(1)
+      })
+    `
+    const { stderr, exitCode } = await runInlineTests({
+      'counter.js': `
+        let count = 0
+        export function increment() {
+          return ++count
+        }
+      `,
+      'a.test.js': testFile,
+      'b.test.js': testFile,
+      'c.test.js': testFile,
+      'd.test.js': testFile,
+    }, {
+      pool,
+      maxWorkers: 2,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // vm pools resolve `isolate` to false (isolation comes from a fresh VM
 // context per run request), which used to trigger the "single non-isolated
 // worker receives all files at once" batching with `maxWorkers: 1` — all
@@ -45,6 +81,24 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+// the graph prewarm triggered by vm workers swallows its own transform
+// errors — the worker's fetch must still report them with the import context
+test('vm pools report errors from modules covered by the graph prewarm', async () => {
+  const { stderr, exitCode } = await runInlineTests({
+    'a.test.js': `
+      import './does-not-exist.js'
+      import { test } from 'vitest'
+
+      test('never runs', () => {})
+    `,
+  }, {
+    pool: 'vmThreads',
+  })
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('does-not-exist.js')
+})
 
 // The module-sync condition was added in Node 22.12/20.19 when require(esm)
 // was unflagged. The fix uses the _resolveFilename conditions option which

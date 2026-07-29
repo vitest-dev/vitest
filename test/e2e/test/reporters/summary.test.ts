@@ -1,8 +1,8 @@
 import type { Renderer } from 'ansivision'
-import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { renderString } from 'ansivision'
 import { normalize } from 'pathe'
 import { expect, test } from 'vitest'
+import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 
 test('states of running tests are reported', async () => {
   const { stdout } = await runVitest({

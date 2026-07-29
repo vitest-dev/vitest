@@ -79,7 +79,7 @@ You can limit the working directory when Vitest searches for files using [`test.
 
 ## Caching Between Reruns
 
-In watch mode, Vitest caches all transformed files in memory, which makes reruns fast. However, this cache is discarded once the test run finishes. By enabling [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache), Vitest persists this cache to the file system so it can be reused across reruns.
+In watch mode, Vitest caches all transformed files in memory, which makes reruns fast. However, this cache is discarded once the test run finishes. By enabling [`fsModuleCache`](/config/fsmodulecache), Vitest persists this cache to the file system so it can be reused across reruns.
 
 This improvement is most noticeable when rerunning a small number of tests that depend on a large module graph. For full test suites, parallelization already mitigates the cost because other tests populate the in-memory cache while earlier tests are still running. For example, running one test file with a huge module graph (>900 modules):
 

@@ -19,13 +19,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { inspect, stripVTControlCharacters } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
-import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished, TestRunner } from 'vitest'
-import { Logger, PluginHarness, resolveConfig, startVitest } from 'vitest/node'
+import { disableDefaultColors, Logger, PluginHarness, resolveConfig, startVitest } from 'vitest/node'
 import { Cli } from './cli'
 
-// override default colors to disable them in tests
-Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
+// Vitest bundles its own `tinyrainbow` instance (see rollup `manualChunks`), which
+// is a different object than the one imported above. Disable colors on it too so
+// reporter output captured in tests is deterministic regardless of `CI`/`FORCE_COLOR`.
+disableDefaultColors()
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -211,10 +212,8 @@ export async function runVitest(
         ...cliOptions?.env,
       },
       // override cache config with the one that was used to run `vitest` from the CLI
-      experimental: {
-        fsModuleCache: rest.experimental?.fsModuleCache ?? currentConfig.experimental.fsModuleCache,
-        ...cliOptions?.experimental,
-      },
+      fsModuleCache: rest.fsModuleCache ?? currentConfig.fsModuleCache,
+      ...(cliOptions?.experimental ? { experimental: cliOptions.experimental } : {}),
     }, {
       ...viteConfig,
       plugins: [

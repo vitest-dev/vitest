@@ -11,7 +11,7 @@
     "@types/codemirror": "^5.60.17",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
-    "happy-dom": "^20.10.6",
+    "happy-dom": "^20.11.1",
     "vitest": "workspace:*"
   }
 }

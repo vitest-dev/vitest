@@ -17,6 +17,7 @@ import { provider } from 'std-env'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider, parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
+import { commands } from './commands'
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
@@ -37,6 +38,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
+
+    for (const project of ctx.projects) {
+      if (project.isBrowserEnabled() && project.browser) {
+        for (const [name, command] of Object.entries(commands)) {
+          project.browser.registerCommand(`__vitest_${name}` as any, command)
+        }
+      }
+    }
 
     if (this.options.autoAttachSubprocess) {
       const isAnyThreadsPools = ctx.projects.some(p => p.config.pool === 'threads' || p.config.pool === 'vmThreads')

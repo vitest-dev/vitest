@@ -7,7 +7,6 @@ import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
-import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { Traces } from '../../utils/traces'
 import { emitModuleRunner } from '../listeners'
 import { listenForErrors } from '../moduleRunner/errorCatcher'
@@ -55,6 +54,9 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
         spyModule,
       })
     }
+    // imported lazily (pulls in `local-pkg`) so it stays out of the default
+    // worker startup graph; only the `viteModuleRunner: false` path needs it
+    const { NativeModuleRunner } = await import('../../utils/nativeModuleRunner')
     _moduleRunner = new NativeModuleRunner(
       root,
       mocker,

@@ -226,6 +226,14 @@ ${{ val: 3 }}   | ${'b'} | ${'3b'}
 })
 
 test.each`
+  ω    | Σ
+  ${1} | ${5}
+  ${2} | ${10}
+`('returns true when $ω is < $Σ', ({ ω, Σ }) => {
+  expect(Σ).toBeGreaterThan(ω)
+})
+
+test.each`
 a       | b       | expected
 ${true} | ${true} | ${true}
 `('($a && $b) -> $expected', ({ a, b, expected }) => {

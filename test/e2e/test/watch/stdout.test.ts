@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { runVitest } from '#test-utils'
 import { afterEach, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 const testFile = 'fixtures/watch/math.test.ts'
 const testFileContent = readFileSync(testFile, 'utf-8')

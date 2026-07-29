@@ -16,17 +16,7 @@ interface CustomMatchers<R = unknown> {
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
-}
-
-declare global {
-  // eslint-disable-next-line ts/no-namespace
-  namespace jest {
-    interface Matchers<R> {
-      toBeJestCompatible: () => R
-    }
-  }
+  interface Matchers<R> extends CustomMatchers<R> {}
 }
 
 describe('jest-expect', () => {
@@ -280,12 +270,6 @@ describe('jest-expect', () => {
           message: () => 'toBeTestedPromise',
         })
       },
-      toBeJestCompatible() {
-        return {
-          pass: true,
-          message: () => '',
-        }
-      },
       toBeTestedMatcherContext<T>(received: unknown, expected: T) {
         if (typeof this.utils?.stringify !== 'function') {
           throw new TypeError('this.utils.stringify is not available.')
@@ -308,8 +292,6 @@ describe('jest-expect', () => {
     expect(() => expect(null).toBeTestedSync()).toThrow('toBeTestedSync')
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrow('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow('toBeTestedPromise')
-
-    expect(expect).toBeJestCompatible()
   })
 
   it('object', () => {
@@ -814,6 +796,10 @@ describe('toSatisfy()', () => {
     snapshotError(() => expect(2).toSatisfy(isOdd, 'ODD'))
     snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd) }))
     snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'ODD') }))
+  })
+
+  it('supports a promise return type', async () => {
+    await (expect(Promise.resolve(1)).resolves.toSatisfy(isOdd) satisfies Promise<void>)
   })
 })
 

@@ -56,6 +56,60 @@ export default defineConfig({
 })
 ```
 
+### Inline Projects Inherit the Root Config by Default
+
+The [`extends`](/guide/projects#configuration) option now defaults to `true`: every project defined as an inline configuration in [`test.projects`](/guide/projects) inherits all options from the root configuration, including Vite options like `plugins` or `resolve.alias`. The options are merged with the same rules that applied to an explicit `extends: true` in Vitest 4:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    projects: [
+      {
+        // v4: this project didn't apply the react plugin
+        // v5: the plugin is inherited from the root config
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+A few options are excluded because they are always scoped to a single project or to the whole test run:
+
+- `name` and `projects` are never inherited.
+- `globalSetup` is not inherited from the root config: the root-level `globalSetup` already runs once per test run, so inheriting it would run the same files again for every project. It is still inherited when extending a non-root config file.
+- The project's own `tags` replace the inherited array instead of being merged with it.
+
+Projects referenced as config files or directories are not affected; they still don't inherit any options from the root config.
+
+Keep in mind that arrays are merged, not overridden. For example, if the root config defines `setupFiles`, the project's own `setupFiles` are appended to the inherited ones. If you need the previous behavior, set `extends: false` in the project configuration:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    setupFiles: ['./setup.global.ts'],
+    projects: [
+      {
+        extends: false, // [!code ++]
+        test: {
+          name: 'unit',
+          setupFiles: ['./setup.unit.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
 ### Hoisted Mocking Calls Must Be at the Top Level
 
 [`vi.mock`](/api/vi#vi-mock), [`vi.unmock`](/api/vi#vi-unmock), and [`vi.hoisted`](/api/vi#vi-hoisted) are hoisted to the top of the file and run before any surrounding code. Calling them inside a function, block, or `describe`/`test` callback previously only logged a warning. Vitest 5.0 now throws, because the call does not execute where it is written:
@@ -147,6 +201,15 @@ Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 vi.useFakeTimers({ toNotFake: ['Temporal'] })
 ```
 
+### `setSystemTime` Now Mocks Temporal
+
+Previously `vi.setSystemTime` mocked only `Date` without fake timers, but now it also mocks methods of `Temporal.Now`.
+
+```ts
+vi.setSystemTime(0)
+Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
+```
+
 ### `toThrow("")` Matches Any Error Message
 
 [`toThrow`](/api/expect#tothrow) (and its alias `toThrowError`) treats a string argument as a substring of the error message. In Vitest 4 an empty string was special-cased to the `/^$/` pattern, so it matched only an error whose message was empty. It now behaves like any other substring, and an empty string is contained in every message:
@@ -161,6 +224,43 @@ To assert that a thrown error has an empty message, match the pattern explicitly
 ```ts
 expect(() => { throw new Error('boom') }).not.toThrow(/^$/)
 ```
+
+### Assertion Types Expose Return and Received Types
+
+Assertion interfaces now use two type parameters: `R` is the matcher return type and `T` is the received value type. Synchronous assertions use `void`, while assertions accessed through `.resolves`, `.rejects`, [`expect.poll`](/api/expect#poll), or [`expect.element`](/api/browser/assertions) use `Promise<void>`.
+
+If you declare custom matchers, augment the `Matchers<R, T>` interface. It adds the matcher to instance assertions, asymmetric matchers, and the type accepted by `expect.extend`:
+
+```ts [vitest.d.ts]
+import 'vitest'
+
+interface CustomMatchers<R = unknown, T = unknown> {
+  toBeFoo: () => R
+  toEqualTyped: (expected: T) => R
+}
+
+declare module 'vitest' {
+  interface Matchers<R, T> extends CustomMatchers<R, T> {}
+}
+```
+
+This makes custom matcher return types reflect how the matcher is used:
+
+```ts
+const syncResult = expect('value').toEqualTyped('other') // void
+const asyncResult = expect(Promise.resolve('value')).resolves.toEqualTyped('other') // Promise<void>
+await asyncResult
+```
+
+Code that refers to assertion types directly must also provide the return type first:
+
+```ts
+Assertion<string> // [!code --]
+Assertion<void, string> // [!code ++]
+Assertion<Promise<void>, string> // asynchronous assertion
+```
+
+Vitest no longer reads custom matcher declarations from the global `jest.Matchers` interface. Libraries that support both Jest and Vitest should augment `jest.Matchers` and `vitest.Matchers` separately. This only affects TypeScript declarations; registering matchers with `expect.extend` works as before.
 
 ### `expect.poll` Fails When It Times Out
 

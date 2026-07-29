@@ -19,16 +19,20 @@ const cacheCommentLength = cacheComment.length
 
 const METADATA_FILE = '_metadata.json'
 
+// Default location of the module cache. It lives inside `node_modules` at the
+// workspace root so it's shared by every project and is naturally invalidated
+// whenever dependencies are reinstalled.
+const DEFAULT_CACHE_DIRNAME = '.vitest-cache'
+
 const parallelFsCacheRead = new Map<string, Promise<{ code: string; meta: CachedInlineModuleMeta } | undefined>>()
 
-/**
- * @experimental
- */
 export class FileSystemModuleCache {
   /**
-   * Even though it's possible to override the folder of project's caches
-   * We still keep a single metadata file for all projects because
-   * - they can reference files between each other
+   * Each project can point its module cache at a different directory with
+   * `fsModuleCachePath`; projects that don't override it fall back to the root
+   * cache. We still keep a single metadata file (in the root cache) for the whole
+   * workspace because
+   * - projects can reference files between each other
    * - lockfile changes are reflected for the whole workspace, not just for a single project
    */
   private rootCache: string
@@ -38,6 +42,7 @@ export class FileSystemModuleCache {
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
+  private warnedDeprecatedIgnore = new Set<string>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // surprisingly, on some machines this has negligible effect
   private fsCacheKeys = new WeakMap<
@@ -47,9 +52,8 @@ export class FileSystemModuleCache {
   >()
 
   constructor(private vitest: Vitest) {
-    const workspaceRoot = searchForWorkspaceRoot(vitest.viteConfig.root)
-    this.rootCache = vitest.config.experimental.fsModuleCachePath
-      || join(workspaceRoot, 'node_modules', '.experimental-vitest-cache')
+    this.rootCache = vitest.config.fsModuleCachePath
+      || join(searchForWorkspaceRoot(vitest.viteConfig.root), 'node_modules', DEFAULT_CACHE_DIRNAME)
     this.metadataFilePath = join(this.rootCache, METADATA_FILE)
   }
 
@@ -57,10 +61,30 @@ export class FileSystemModuleCache {
     this.fsCacheKeyGenerators.add(callback)
   }
 
+  // A plugin can exclude itself from the cache key via `api.vitest.ignoreFsModuleCache`.
+  private ignoresFsModuleCache(plugin: { name: string; api?: any }): boolean {
+    const api = plugin.api?.vitest
+    if (api?.ignoreFsModuleCache === true) {
+      return true
+    }
+    if (api?.experimental?.ignoreFsModuleCache === true) {
+      if (!this.warnedDeprecatedIgnore.has(plugin.name)) {
+        this.warnedDeprecatedIgnore.add(plugin.name)
+        this.vitest.logger.deprecate(
+          `The plugin "${plugin.name}" sets \`api.vitest.experimental.ignoreFsModuleCache\`, which is deprecated. Use \`api.vitest.ignoreFsModuleCache\` instead.`,
+        )
+      }
+      return true
+    }
+    return false
+  }
+
   async clearCache(log = true): Promise<void> {
-    const fsCachePaths = this.vitest.projects.map((r) => {
-      return r.config.experimental.fsModuleCachePath || this.rootCache
-    })
+    const fsCachePaths = [
+      // the root cache also holds the shared metadata file
+      this.rootCache,
+      ...this.vitest.projects.map(r => r.config.fsModuleCachePath || this.rootCache),
+    ]
     const uniquePaths = Array.from(new Set(fsCachePaths))
     await Promise.all(
       uniquePaths.map(directory => rm(directory, { force: true, recursive: true })),
@@ -218,7 +242,7 @@ export class FileSystemModuleCache {
           // plugins can have different options, so this is not the best key,
           // but we cannot access the options because there is no standard API for it
           plugins: config.plugins
-            .filter(p => p.api?.vitest?.experimental?.ignoreFsModuleCache !== true)
+            .filter(p => !this.ignoresFsModuleCache(p))
             .map(p => p.name),
           // in case local plugins change
           // configFileDependencies also includes configFile
@@ -248,7 +272,7 @@ export class FileSystemModuleCache {
 
     let cacheRoot = this.fsCacheRoots.get(vitestConfig)
     if (cacheRoot == null) {
-      cacheRoot = vitestConfig.experimental.fsModuleCachePath || this.rootCache
+      cacheRoot = vitestConfig.fsModuleCachePath || this.rootCache
       this.fsCacheRoots.set(vitestConfig, cacheRoot)
       if (!existsSync(cacheRoot)) {
         mkdirSync(cacheRoot, { recursive: true })
@@ -271,7 +295,7 @@ export class FileSystemModuleCache {
   }
 
   private async readMetadata(): Promise<{ lockfileHash: string } | undefined> {
-    // metadata is shared between every projects in the workspace, so we ignore project's fsModuleCachePath
+    // metadata is shared between every project in the workspace, so we always read it from the root cache
     if (!existsSync(this.metadataFilePath)) {
       return undefined
     }
@@ -290,7 +314,7 @@ export class FileSystemModuleCache {
     const enabled = [
       this.vitest.getRootProject(),
       ...this.vitest.projects,
-    ].some(p => p.config.experimental.fsModuleCache)
+    ].some(p => p.config.fsModuleCache)
     if (!enabled) {
       return
     }
@@ -377,15 +401,11 @@ export interface CachedInlineModuleMeta {
  * Generate a unique cache identifier.
  *
  * Return `false` to disable caching of the file.
- * @experimental
  */
 export interface CacheKeyIdGenerator {
   (context: CacheKeyIdGeneratorContext): string | undefined | null | false
 }
 
-/**
- * @experimental
- */
 export interface CacheKeyIdGeneratorContext {
   environment: DevEnvironment
   id: string

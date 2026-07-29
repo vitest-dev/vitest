@@ -25,6 +25,27 @@ import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
 
+// Compiled scripts of inlined modules, shared across vm contexts: vm pools
+// evaluate every module again in each fresh context, but the compiled script
+// holds no per-context state (Vite rewrites dynamic imports to
+// `__vite_ssr_dynamic_import__`, so no per-context import callback is baked
+// in) — only its evaluation has to happen per context. Keyed by module id
+// (`mock:` ids stay distinct from their originals).
+const vmInlineScriptCache = new Map<string, vm.Script>()
+
+function getVmInlineScript(
+  id: string,
+  wrappedCode: string,
+  options: vm.ScriptOptions,
+): vm.Script {
+  let script = vmInlineScriptCache.get(id)
+  if (!script) {
+    script = new vm.Script(wrappedCode, options)
+    vmInlineScriptCache.set(id, script)
+  }
+  return script
+}
+
 export interface VitestModuleEvaluatorOptions {
   evaluatedModules?: VitestEvaluatedModules
   metaEnv?: ModuleRunnerImportMeta['env']
@@ -391,7 +412,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     try {
       const initModule = this.vm
-        ? vm.runInContext(wrappedCode, this.vm.context, options)
+        ? getVmInlineScript(module.id, wrappedCode, options).runInContext(this.vm.context)
         : vm.runInThisContext(wrappedCode, options)
 
       await initModule(...argumentsValues)

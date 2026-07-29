@@ -46,32 +46,9 @@ export function WorkspaceVitestPlugin(
           },
         }
 
-        // TODO: remove this after "extends: false" is flipped
-        testConfig.experimental ??= {}
-
-        // always inherit the global `fsModuleCache` value even without `extends: true`
-        if (testConfig.experimental?.fsModuleCache == null && globalConfig.experimental?.fsModuleCache != null) {
-          testConfig.experimental.fsModuleCache = globalConfig.experimental.fsModuleCache
-        }
-        if (testConfig.experimental?.fsModuleCachePath == null && globalConfig.experimental?.fsModuleCachePath != null) {
-          testConfig.experimental.fsModuleCachePath = globalConfig.experimental.fsModuleCachePath
-        }
-        if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
-          testConfig.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
-        }
-        if (testConfig.experimental?.nodeLoader == null && globalConfig.experimental?.nodeLoader != null) {
-          testConfig.experimental.nodeLoader = globalConfig.experimental.nodeLoader
-        }
-        if (testConfig.experimental?.importDurations == null && globalConfig.experimental?.importDurations != null) {
-          testConfig.experimental.importDurations = globalConfig.experimental.importDurations
-        }
-
         return config
       },
       configResolved(config) {
-        // Projects always inherit non-project config options
-        config.test.coverage = globalConfig.coverage
-        config.test.attachmentsDir = globalConfig.attachmentsDir
         // project servers never watch; the top-level server owns the watcher
         config.server.watch = null
       },

@@ -1,12 +1,12 @@
-import type { TestFsStructure } from '#test-utils'
 import type { ViteUserConfig } from 'vitest/config'
 import type { CliOptions, TestUserConfig, VitestOptions } from 'vitest/node'
-import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
+import type { TestFsStructure } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFailed, onTestFinished, test, vi } from 'vitest'
 import { createVitest, Logger, PluginHarness, resolveConfig } from 'vitest/node'
+import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
 import { Cli } from '../../../test-utils/cli'
 
 const vitest = vi.defineHelper(async (options: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions }, vitestOptions: VitestOptions = {}) => {
@@ -285,6 +285,25 @@ test('inherits browser options', async () => {
         testerHtmlPath: fs.resolveFile('./custom-overridden-path.html'),
       },
     },
+  ])
+})
+
+test.each([true, false])('browser instance headless overrides root headless: $0', async (headless) => {
+  const projects = await config({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      headless,
+      instances: [
+        { browser: 'chromium', name: 'inherits-root' },
+        { browser: 'firefox', name: 'overrides-root', headless: !headless },
+      ],
+    },
+  })
+
+  expect(projects.map(project => project.projectConfig.browser.headless)).toEqual([
+    headless,
+    !headless,
   ])
 })
 

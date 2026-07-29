@@ -1019,7 +1019,7 @@ function formatTitle(template: string, items: any[], idx: number) {
 
   const isObjectItem = isObject(items[0])
   function formatAttribute(s: string) {
-    return s.replace(/\$([$\w.]+)/g, (_, key: string) => {
+    return s.replace(/\$([$\p{ID_Continue}.]+)/gu, (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
       if (!isObjectItem && !isArrayKey) {
         return `$${key}`

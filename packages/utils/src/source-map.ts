@@ -39,6 +39,7 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /__vitest_browser__/,
   '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
+  '/deps/vitest.js',
 ]
 
 export { stackIgnorePatterns as defaultStackIgnorePatterns }
