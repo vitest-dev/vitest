@@ -132,6 +132,21 @@ test('assigns names as browsers', async () => {
   ])
 })
 
+test('applies programmatic browser options without existing browser config', async () => {
+  const v = await vitest({
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: preview(),
+        instances: [{ browser: 'chromium' }],
+      },
+    },
+  })
+
+  expect(v.projects.map(project => project.name)).toEqual(['chromium'])
+})
+
 test('filters projects', async () => {
   const projects = await config({
     project: 'chromium',

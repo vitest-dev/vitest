@@ -1056,7 +1056,7 @@ export async function resolveConfig(
       configLoader: options.configLoader,
       mode: options.mode || 'test',
       plugins: [
-        CliOverride(cliOptionsCopy),
+        CliOverride(cliOptionsCopy, true),
         ...VitestConfigServer(pluginsHarness),
         ...VitestConfig(pluginsHarness),
         ...VitestCorePlugin(pluginsHarness, options),
