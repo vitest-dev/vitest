@@ -645,7 +645,7 @@ type PromisifyFunction<T> = T extends (...args: infer A) => infer R
 
 export type PromisifyAssertion<T> = Assertion<Promise<void>, Awaited<T>>
 
-export interface Assertion<R extends void | Promise<void> = void | Promise<void>, T = unknown>
+export interface Assertion<R extends void | Promise<void> = void, T = unknown>
   extends VitestAssertion<Chai.Assertion, R, T>,
   JestAssertion<R, T>,
   ChaiMockAssertion<R, T>,

@@ -270,12 +270,6 @@ describe('jest-expect', () => {
           message: () => 'toBeTestedPromise',
         })
       },
-      toBeJestCompatible() {
-        return {
-          pass: true,
-          message: () => '',
-        }
-      },
       toBeTestedMatcherContext<T>(received: unknown, expected: T) {
         if (typeof this.utils?.stringify !== 'function') {
           throw new TypeError('this.utils.stringify is not available.')
