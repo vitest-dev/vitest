@@ -14,19 +14,17 @@ describe.for([
     expect(vitest.stdout).toContain('1 failed')
     expect(vitest.stdout).toContain('1 passed')
 
-    vitest.resetOutput()
-
     fs.editFile('./basic.test.js', code => `${code}\n`)
 
+    vitest.resetOutput()
     await vitest.waitForStdout('RERUN  ../basic.test.js')
     await vitest.waitForStdout('Waiting for file changes...')
-    const rerunOutput = vitest.stdout.slice(vitest.stdout.lastIndexOf('RERUN  ../basic.test.js'))
 
-    expect(rerunOutput).not.toContain('log fail')
-    expect(rerunOutput).toContain('❯ failed.test.js')
-    expect(rerunOutput).toContain('× fails')
-    expect(rerunOutput).toContain('1 failed')
-    expect(rerunOutput).toContain('1 passed')
+    expect(vitest.stdout).not.toContain('log fail')
+    expect(vitest.stdout).toContain('❯ failed.test.js')
+    expect(vitest.stdout).toContain('× fails')
+    expect(vitest.stdout).toContain('1 failed')
+    expect(vitest.stdout).toContain('1 passed')
   })
 
   it('prints tests once if changed test is the same', async () => {
@@ -37,18 +35,16 @@ describe.for([
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
 
-    vitest.resetOutput()
-
     fs.editFile('./failed.test.js', code => `${code}\n`)
 
+    vitest.resetOutput()
     await vitest.waitForStdout('RERUN  ../failed.test.js')
     await vitest.waitForStdout('Watching for file changes...')
-    const rerunOutput = vitest.stdout.slice(vitest.stdout.lastIndexOf('RERUN  ../failed.test.js'))
 
-    expect(rerunOutput).toContain('❯ failed.test.js')
-    expect(rerunOutput).toContain('× fails')
-    expect(rerunOutput).toContain('1 failed')
-    expect(rerunOutput).not.toContain('1 passed')
+    expect(vitest.stdout).toContain('❯ failed.test.js')
+    expect(vitest.stdout).toContain('× fails')
+    expect(vitest.stdout).toContain('1 failed')
+    expect(vitest.stdout).not.toContain('1 passed')
   })
 })
 
