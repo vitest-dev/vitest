@@ -818,7 +818,7 @@ describe('toSatisfy()', () => {
   })
 
   it('supports a promise return type', async () => {
-    await (expect(Promise.resolve(1)).resolves.toSatisfy(isOdd) satisfies Promise<number>)
+    await (expect(Promise.resolve(1)).resolves.toSatisfy(isOdd) satisfies Promise<void>)
   })
 })
 

@@ -29,11 +29,13 @@ If you are using TypeScript, you can extend default `Matchers` interface in an a
 import 'vitest'
 
 declare module 'vitest' {
-  interface Matchers<T = any> {
+  interface Matchers<R = any, T = any> {
     toBeFoo: () => R
   }
 }
 ```
+
+`R` is the assertion return type, and `T` is the type of the received value.
 
 ::: tip
 Importing `vitest` makes TypeScript think this is an ES module file, type declaration won't work without it.

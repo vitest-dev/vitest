@@ -106,16 +106,16 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
   (this: T, received: any, ...expected: E): ExpectationResult
 }
 
-// Allow unused `T` to preserve its name for extensions.
+// Allow unused type parameters to preserve their names for extensions.
 // Type parameter names must be identical when extending those types.
 // eslint-disable-next-line
-export interface Matchers<T = any> {}
+export interface Matchers<R = any, T = any> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
 > & ThisType<T> & {
-  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
+  [K in keyof Matchers]?: RawMatcherFn<T, Parameters<Matchers[K]>>
 }
 
 export interface ExpectStatic
@@ -219,7 +219,7 @@ export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
     ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
     : WithAsymmetricMatcher<T>
 
-export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, CustomMatcher<MaybePromisify<T, R>> {
+export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, CustomMatcher<R> {
   /**
    * Used when you want to check that two objects have the same value.
    * This matcher recursively checks the equality of all fields, rather than checking for object identity.
@@ -628,7 +628,7 @@ export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, C
 
 type VitestAssertion<A, T, R = void> = {
   [K in keyof A]: A[K] extends Chai.Assertion
-    ? R extends Promise<void> ? Promisify<Assertion<T, R>> : Assertion<T, R>
+    ? Assertion<T, R>
     : A[K] extends (...args: any[]) => any
       ? R extends Promise<void> ? PromisifyFunction<A[K]> : A[K]
       : VitestAssertion<A[K], T, R>;
@@ -644,13 +644,11 @@ type PromisifyFunction<T> = T extends (...args: infer A) => infer R
 
 export type PromisifyAssertion<T> = Assertion<Awaited<T>, Promise<void>>
 
-type MaybePromisify<T, R> = R extends Promise<void> ? Promise<T> : T
-
 export interface Assertion<T = any, R = void>
   extends VitestAssertion<Chai.Assertion, T, R>,
   JestAssertion<T, R>,
   ChaiMockAssertion<T, R>,
-  Matchers<MaybePromisify<T, R>> {
+  Matchers<R, T> {
   /**
    * Ensures a value is of a specific type.
    *
@@ -773,7 +771,7 @@ export interface Assertion<T = any, R = void>
    * @example
    * await expect(someAsyncFunc).rejects.toThrow('error');
    */
-  rejects: PromisifyAssertion<T>
+  rejects: PromisifyAssertion<unknown>
 }
 
 /**

@@ -1,12 +1,13 @@
 import { expect, expectTypeOf, test } from 'vitest'
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = unknown, T = unknown> {
   toMatchSchema: (schema: { a: string }) => R
   toEqualMultiple: (a: string, b: number) => R
+  toEqualTyped: (expected: T) => R
 }
 
 declare module 'vitest' {
-  interface Matchers<T = any> extends CustomMatchers<T> {}
+  interface Matchers<R = any, T = any> extends CustomMatchers<R, T> {}
 }
 
 test('infers matcher declaration type from a custom matcher type', async () => {
@@ -24,11 +25,24 @@ test('infers matcher declaration type from a custom matcher type', async () => {
 
       return { pass: true, message: () => '' }
     },
+    toEqualTyped(received, expected) {
+      expectTypeOf(received).toBeAny()
+      expectTypeOf(expected).toBeAny()
+
+      return { pass: true, message: () => '' }
+    },
   })
 
-  expect({ a: 1, b: '2' }).toMatchSchema({ a: '1' })
-  await (expect(Promise.resolve({ a: '1' })).resolves.toMatchSchema({ a: '1' }) satisfies Promise<{ a: string }>)
+  expectTypeOf(expect({ a: 1, b: '2' }).toMatchSchema({ a: '1' })).toEqualTypeOf<void>()
+  await (expect(Promise.resolve({ a: '1' })).resolves.toMatchSchema({ a: '1' }) satisfies Promise<void>)
   expect('a').toEqualMultiple('a', 1)
+  expect('a').toEqualTyped('b')
+  // @ts-expect-error Expected value must match the received type.
+  expect('a').toEqualTyped(1)
+  await (expect(Promise.resolve('a')).resolves.not.toEqualTyped('b') satisfies Promise<void>)
+  // @ts-expect-error Expected value must match the resolved type.
+  await expect(Promise.resolve('a')).resolves.toEqualTyped(1)
+  await (expect(Promise.reject(new Error('error'))).rejects.toEqualTyped(new Error('error')) satisfies Promise<void>)
 })
 
 test('automatically extends asymmetric matchers', () => {
