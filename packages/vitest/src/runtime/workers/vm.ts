@@ -3,6 +3,7 @@ import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { ModuleInformation } from '../external-executor'
 import { pathToFileURL } from 'node:url'
+import v8 from 'node:v8'
 import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
 import { loadEnvironment } from '../../integrations/env/loader'
@@ -196,4 +197,11 @@ export function setupVmWorker(context: WorkerSetupContext): void {
   if (context.config.experimental.viteModuleRunner === false) {
     throw new Error(`Pool "${context.pool}" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   }
+  // V8's isolate-level compilation cache keeps evaluated `vm.SourceTextModule`s
+  // (and everything their module state references) alive until a
+  // memory-pressure GC clears the cache, which in practice means every test
+  // file's world accumulates until the worker hits `vmMemoryLimit`. The
+  // compiled-code caching the flag disables is already covered by the
+  // worker's own script and code caches.
+  v8.setFlagsFromString('--no-compilation-cache')
 }
