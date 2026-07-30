@@ -36,6 +36,8 @@ export async function run(
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
+    configurable: true,
+    writable: true,
   })
 
   const viteEnvironment = workerState.environment.viteEnvironment || workerState.environment.name

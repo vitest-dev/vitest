@@ -174,6 +174,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       'vitest.runtime.environment.teardown',
       () => vm.teardown?.(),
     )
+    // unregisters the runner from Vite's `Error.prepareStackTrace` interceptor:
+    // its module-level cache holds `evaluatedModules` of every runner it has
+    // seen, which would otherwise keep each test file's entire module graph
+    // (and with it the vm context) alive for the lifetime of the worker
+    await moduleRunner.close()
     stripDisposedContext(context, initialContextKeys)
   }
 }
