@@ -1400,7 +1400,7 @@ export type ProjectConfig = Omit<
   InlineConfig,
   NonProjectOptions
   // `projects` is only respected in config files; a container config is
-  // root-like and should be authored with `defineConfig`
+  // root-like and should be authored with `defineConfig`/`defineProject`
   | 'projects'
   | 'sequence'
   | 'deps'
@@ -1421,10 +1421,9 @@ export type ResolvedProjectConfig = Omit<
 >
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
-  test?: ProjectConfig
+  test?: ProjectConfig & { projects?: TestProjectConfiguration[] }
 }
 
-// TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
   env: ConfigEnv,
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>

@@ -340,9 +340,9 @@ export default defineConfig({
 ```
 
 ```ts [packages/app/vitest.config.ts]
-import { defineConfig } from 'vitest/config'
+import { defineProject } from 'vitest/config'
 
-export default defineConfig({
+export default defineProject({
   test: {
     name: 'app',
     projects: [
@@ -370,9 +370,9 @@ The names of nested projects are prefixed with the name of the config that decla
 To also run the tests of the config that declares `projects`, reference its own config file:
 
 ```ts [packages/app/vitest.config.ts]
-import { defineConfig } from 'vitest/config'
+import { defineProject } from 'vitest/config'
 
-export default defineConfig({
+export default defineProject({
   test: {
     name: 'app',
     include: ['**/*.test.ts'],
