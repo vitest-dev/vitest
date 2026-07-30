@@ -72,9 +72,18 @@ export class ExternalModulesExecutor {
     this.esm = new EsmExecutor(this, {
       context: this.context,
     })
+    // a WeakRef so that Node's per-script dynamic import registry, which can
+    // outlive this executor, does not keep the whole test file's world alive
+    const executorRef = new WeakRef(this)
     this.cjs = new CommonjsExecutor({
       context: this.context,
-      importModuleDynamically: this.importModuleDynamically,
+      importModuleDynamically: async (specifier, referencer) => {
+        const executor = executorRef.deref()
+        if (!executor) {
+          throw new Error(`Cannot import "${specifier}": the test context was torn down.`)
+        }
+        return executor.importModuleDynamically(specifier, referencer)
+      },
       fileMap: options.fileMap,
       codeCache: options.codeCache,
       interopDefault: options.interopDefault,

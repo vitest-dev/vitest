@@ -9,7 +9,7 @@ import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
-import { emitModuleRunner } from '../listeners'
+import { cleanup, emitModuleRunner } from '../listeners'
 import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
@@ -85,6 +85,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     )
   }
 
+  // captured before vitest installs its own globals (worker state, console,
+  // mocker, executor symbol): they reference the test file's module graph, so
+  // the teardown strip must treat them as removable, not as pristine
+  const initialContextKeys = captureContextKeys(context)
+
   provideWorkerState(context, state)
 
   // this is unfortunately needed for our own dependencies
@@ -142,8 +147,6 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
 
   setupEnv(ctx.config.env, state.metaEnv)
 
-  const initialContextKeys = captureContextKeys(context)
-
   if (ctx.config.serializedDefines) {
     try {
       runInContext(ctx.config.serializedDefines, context, {
@@ -170,6 +173,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     )
   }
   finally {
+    // worker-scoped fixture contexts belong to this file's vm context and
+    // cannot survive it: run their cleanup now instead of at worker teardown,
+    // where the accumulated in-context closures would pin every finished
+    // file's module graph for the lifetime of the worker
+    await cleanup().catch(() => {})
     await traces.$(
       'vitest.runtime.environment.teardown',
       () => vm.teardown?.(),
