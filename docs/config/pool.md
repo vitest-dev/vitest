@@ -28,7 +28,7 @@ This makes tests run faster, but the VM module is unstable when running [ESM cod
 ::: warning Worker recycling is expensive in `vmThreads`
 Restarting a worker thread is not free: Node.js runs a full garbage collection over everything the worker accumulated before the thread can exit, and that work runs on a small pool of background threads shared by every worker in the process. When a large test suite hits [`vmMemoryLimit`](/config/vmmemorylimit) repeatedly, these teardowns pile up and also slow down the workers that are still running tests.
 
-The `vmForks` pool recycles workers by letting the child process exit, and the operating system reclaims the memory. If your test suite is large enough to recycle workers, `vmForks` is usually noticeably faster than `vmThreads`, even though its communication with the main process is slower. This is also why small benchmarks tend to favor `vmThreads`: they never run long enough to recycle a worker.
+The `vmForks` pool recycles workers by letting the child process exit, and the operating system reclaims the memory. If your test suite is large enough to recycle workers, `vmForks` is usually noticeably faster than `vmThreads`, even though its communication with the main process is slower.
 :::
 
 ::: warning
