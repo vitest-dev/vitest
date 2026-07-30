@@ -81,9 +81,13 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = file
   }
 
-  onCleanupWorkerContext(listener: () => unknown): void {
-    this.workerState.onCleanup(listener)
-  }
+  // vm pools downgrade worker-scoped fixtures to file scope, so the hook has
+  // nothing to tear down there; registering it anyway would keep the listener,
+  // an in-context closure, alive in the worker for the lifetime of the pool
+  onCleanupWorkerContext: ((listener: () => unknown) => void) | undefined
+    = this.pool === 'vmThreads' || this.pool === 'vmForks'
+      ? undefined
+      : listener => this.workerState.onCleanup(listener)
 
   onAfterRunFiles(_files: File[]): void {
     this.snapshotClient.clear()
