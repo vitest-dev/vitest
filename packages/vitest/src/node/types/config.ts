@@ -396,7 +396,12 @@ export interface InlineConfig {
   fileParallelism?: boolean
 
   /**
-   * Options for projects
+   * Options for projects.
+   *
+   * When a project is referenced as a config file (or a directory with one) and
+   * that config declares `projects` itself, it becomes a container: it doesn't
+   * run tests, only provides the projects it declares. Inline configurations
+   * cannot declare `projects`.
    */
   projects?: TestProjectConfiguration[]
 
@@ -1280,6 +1285,14 @@ export interface ResolvedConfig
   viteOverrides: ViteUserConfig
   resolvedProjects: ResolvedProjectEntry[]
   /**
+   * Config files that declared `projects` and act as containers (the file
+   * itself doesn't run tests). Set only on the root config; used to restart
+   * on change since containers have no Vite server of their own.
+   *
+   * @internal
+   */
+  _containerConfigFiles?: string[]
+  /**
    * Browser server contribution captured by the `vitest:browser:loader` plugin
    * during this config's resolution (set only when `browser.enabled`). Used by
    * server creation to build the single Vite server shared by `project.vite` and
@@ -1319,6 +1332,14 @@ export interface ResolvedProjectEntry {
    * by default), not a file of its own.
    */
   inline?: boolean
+  /**
+   * Names of the container configs this project is nested under, outermost
+   * first. The `--project` filter matches these in addition to the project's
+   * own name, so a container name selects its whole subtree.
+   *
+   * @internal
+   */
+  ancestors?: string[]
 }
 
 type NonProjectOptions
@@ -1378,6 +1399,9 @@ export interface ServerDepsOptions {
 export type ProjectConfig = Omit<
   InlineConfig,
   NonProjectOptions
+  // `projects` is only respected in config files; a container config is
+  // root-like and should be authored with `defineConfig`/`defineProject`
+  | 'projects'
   | 'sequence'
   | 'deps'
 > & {
@@ -1397,10 +1421,9 @@ export type ResolvedProjectConfig = Omit<
 >
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
-  test?: ProjectConfig
+  test?: ProjectConfig & { projects?: TestProjectConfiguration[] }
 }
 
-// TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
   env: ConfigEnv,
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>

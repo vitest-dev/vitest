@@ -324,3 +324,70 @@ Some of the configuration options are not allowed in a project config. Most nota
 
 All configuration options that are not supported inside a project configuration are marked with a <CRoot /> icon next to their name. They can only be defined once in the root config file.
 :::
+
+## Nested Projects
+
+A project referenced as a config file (or a directory containing one) can declare `projects` itself. Such a config behaves like the root config: it doesn't run any tests on its own, it only provides the projects that do. This makes it possible to reference a workspace that already defines its own projects:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: ['./packages/app/vitest.config.ts'],
+  },
+})
+```
+
+```ts [packages/app/vitest.config.ts]
+import { defineProject } from 'vitest/config'
+
+export default defineProject({
+  test: {
+    name: 'app',
+    projects: [
+      {
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'e2e',
+          include: ['**/*.e2e.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+Nested projects work the same way as projects defined in the root config: inline configurations extend the config that declares them (the `app` config here, not the root one), `extends` paths are resolved relative to it, and its own `globalSetup` is inherited by the extending projects [like any other non-root config](#configuration).
+
+The names of nested projects are prefixed with the name of the config that declares them, so the example above creates the `app (unit)` and `app (e2e)` projects. The `--project` filter matches the prefix as well: `--project app` runs every project of the `app` config, while `--project "app (unit)"` runs only one of them.
+
+To also run the tests of the config that declares `projects`, reference its own config file:
+
+```ts [packages/app/vitest.config.ts]
+import { defineProject } from 'vitest/config'
+
+export default defineProject({
+  test: {
+    name: 'app',
+    include: ['**/*.test.ts'],
+    projects: [
+      // the "app" project runs its own "include" alongside "app (unit)"
+      './vitest.config.ts',
+      {
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+Note that only config files can define nested projects. The `projects` option inside an inline configuration is not supported.

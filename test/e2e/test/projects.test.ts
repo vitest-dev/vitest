@@ -342,6 +342,409 @@ describe('the config file names', () => {
   })
 })
 
+describe('nested projects', () => {
+  const basicTest = ts`
+    import { test } from 'vitest'
+    test('runs', () => {})
+  `
+
+  it('a file-based project with `projects` becomes a container and only its projects run', async () => {
+    const { stderr, ctx, results } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { test: { name: 'unit', include: ['**/*.unit.test.js'] } },
+            { test: { name: 'e2e', include: ['**/*.e2e.test.js'] } },
+          ],
+        },
+      },
+      'app/basic.unit.test.js': basicTest,
+      'app/basic.e2e.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.name)).toEqual([
+      'app (unit)',
+      'app (e2e)',
+    ])
+    // the container's own include doesn't run anything
+    expect(results).toHaveLength(2)
+  })
+
+  it('a directory reference with a config declaring `projects` becomes a container', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { test: { name: 'unit' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.name)).toEqual(['app (unit)'])
+  })
+
+  it('file-based projects of a container are namespaced with derived names', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: ['./unit/vitest.config.js'],
+        },
+      },
+      'app/unit/vitest.config.js': {},
+      'app/unit/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.name)).toEqual(['app (unit)'])
+  })
+
+  it('nested containers namespace their projects recursively', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: ['./sub/vitest.config.js'],
+        },
+      },
+      'app/sub/vitest.config.js': {
+        test: {
+          name: 'sub',
+          projects: [
+            { test: { name: 'leaf' } },
+          ],
+        },
+      },
+      'app/sub/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.name)).toEqual(['app (sub) (leaf)'])
+  })
+
+  it('inline projects ignore the `projects` field', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: [
+            {
+              test: {
+                name: 'main',
+                // inline projects cannot spawn other projects
+                projects: [{ test: { name: 'ignored' } }],
+              } as import('vitest/node').ProjectConfig,
+            },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.name)).toEqual(['main'])
+  })
+
+  it('a container can list its own config file to also run its tests', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          include: ['self.test.js'],
+          projects: [
+            './vitest.config.js',
+            { test: { name: 'unit', include: ['unit.test.js'] } },
+          ],
+        },
+      },
+      'app/self.test.js': basicTest,
+      'app/unit.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    // inline projects always come before file-based projects
+    expect(ctx!.projects.map(project => project.name)).toEqual([
+      'app (unit)',
+      'app',
+    ])
+  })
+
+  it('fails on a circular projects definition', async () => {
+    const { stderr } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./vitest.a.config.js'],
+        },
+      },
+      'vitest.a.config.js': {
+        test: { name: 'a', projects: ['./vitest.b.config.js'] },
+      },
+      'vitest.b.config.js': {
+        test: { name: 'b', projects: ['./vitest.a.config.js'] },
+      },
+    }, {}, { fails: true })
+    expect(stderr).toContain(
+      'Found a circular "projects" definition: "vitest.config.js" -> "vitest.a.config.js" -> "vitest.b.config.js" -> "vitest.a.config.js". Make sure your configuration is correct.',
+    )
+  })
+
+  it('fails when a container has no projects', async () => {
+    const { stderr } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: { name: 'app', projects: [] },
+      },
+    }, {}, { fails: true })
+    expect(stderr).toContain('No projects were found in "app/vitest.config.js". Make sure your configuration is correct.')
+  })
+
+  it('fails when nested project names collide', async () => {
+    const { stderr } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { test: { name: 'unit' } },
+            { test: { name: 'unit' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    }, {}, { fails: true })
+    expect(stderr).toContain('Project name "app (unit)" is not unique.')
+  })
+
+  describe('the --project filter', () => {
+    const structure = {
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { test: { name: 'main', include: ['main.test.js'] } },
+            './app/vitest.config.js',
+          ],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { test: { name: 'unit', include: ['**/*.unit.test.js'] } },
+            { test: { name: 'e2e', include: ['**/*.e2e.test.js'] } },
+          ],
+        },
+      },
+      'main.test.js': basicTest,
+      'app/basic.unit.test.js': basicTest,
+      'app/basic.e2e.test.js': basicTest,
+    } satisfies Parameters<typeof runInlineTests>[0]
+
+    it('the container name selects the whole subtree', async () => {
+      const { stderr, ctx } = await runInlineTests(structure, { project: 'app' })
+      expect(stderr).toBe('')
+      expect(ctx!.projects.map(project => project.name)).toEqual([
+        'app (unit)',
+        'app (e2e)',
+      ])
+    })
+
+    it('the qualified name selects a single project', async () => {
+      const { stderr, ctx } = await runInlineTests(structure, { project: 'app (unit)' })
+      expect(stderr).toBe('')
+      expect(ctx!.projects.map(project => project.name)).toEqual(['app (unit)'])
+    })
+
+    it('excluding the container name excludes the whole subtree', async () => {
+      const { stderr, ctx } = await runInlineTests(structure, { project: '!app' })
+      expect(stderr).toBe('')
+      expect(ctx!.projects.map(project => project.name)).toEqual(['main'])
+    })
+  })
+
+  it('projects extend the container config by default, not the root', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          testTimeout: 1111,
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          testTimeout: 2222,
+          projects: [
+            { test: { name: 'inherited' } },
+            { extends: false, test: { name: 'isolated' } },
+            { extends: './vitest.shared.js', test: { name: 'shared' } },
+          ],
+        },
+      },
+      'app/vitest.shared.js': {
+        test: { testTimeout: 3333 },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const timeouts = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.config.testTimeout]),
+    )
+    expect(timeouts).toEqual({
+      'app (inherited)': 2222,
+      'app (isolated)': 5000,
+      'app (shared)': 3333,
+    })
+  })
+
+  it('the container globalSetup runs for every project extending it', async () => {
+    const { stderr, fs } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/globalSetup.js': ts`
+        import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+        import { resolve } from 'node:path'
+
+        export default function setup(project) {
+          const file = resolve(project.config.root, 'setup-runs.txt')
+          const runs = existsSync(file) ? Number(readFileSync(file, 'utf-8')) : 0
+          writeFileSync(file, String(runs + 1))
+        }
+      `,
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          globalSetup: './globalSetup.js',
+          projects: [
+            { test: { name: 'a' } },
+            { test: { name: 'b' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(fs.readFile('app/setup-runs.txt')).toBe('2')
+  })
+
+  it('cli overrides reach nested projects', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          testTimeout: 2222,
+          projects: [
+            { test: { name: 'unit' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    }, { $cliOptions: { testTimeout: 999 } })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.config.testTimeout)).toEqual([999])
+  })
+
+  it('benchmark projects are created for nested projects', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          passWithNoTests: true,
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { test: { name: 'unit', benchmark: { enabled: true } } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.name)).toEqual([
+      'app (unit)',
+      'app (unit) (bench)',
+    ])
+  })
+
+  it('editing a container config restarts and picks up new projects', async () => {
+    const { vitest, fs } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': ts`
+        export default {
+          test: {
+            name: 'app',
+            projects: [
+              { test: { name: 'one', include: ['one.test.js'] } },
+              // extra
+            ],
+          },
+        }
+      `,
+      'app/one.test.js': basicTest,
+      'app/two.test.js': basicTest,
+    }, { watch: true })
+
+    await vitest.waitForStdout('Waiting for file changes')
+    expect(vitest.stdout).toContain('app (one)')
+    expect(vitest.stdout).not.toContain('app (two)')
+    vitest.resetOutput()
+
+    fs.editFile('app/vitest.config.js', content => content.replace(
+      '// extra',
+      `{ test: { name: 'two', include: ['two.test.js'] } },`,
+    ))
+
+    await vitest.waitForStdout('Waiting for file changes')
+    expect(vitest.stdout).toContain('app (two)')
+  })
+})
+
 describe('project filtering', () => {
   const allProjects = ['project_1', 'project_2', 'space_1']
 

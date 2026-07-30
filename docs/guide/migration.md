@@ -110,6 +110,34 @@ export default defineConfig({
 })
 ```
 
+### Referenced Config Files Can Define Their Own Projects
+
+A config file referenced in [`test.projects`](/guide/projects) that declares `projects` itself is now treated like the root config: it doesn't run tests on its own, it only provides the [nested projects](/guide/projects#nested-projects) it declares. Their names are prefixed with the name of the declaring config, e.g. `app (unit)`.
+
+In Vitest 4 the `projects` field of a referenced config was silently ignored and the config ran as a single project. Check that your project configs don't carry a `projects` field unknowingly. The most common way to do that is merging a config that defines it:
+
+```ts [packages/app/vitest.config.ts]
+import { defineProject, mergeConfig } from 'vitest/config'
+import rootConfig from '../../vitest.config' // [!code --]
+import sharedConfig from '../../vitest.shared' // [!code ++]
+
+export default mergeConfig(
+  // the root config defines `test.projects`, so merging it
+  // would turn this project into a container for those projects
+  rootConfig, // [!code --]
+  sharedConfig, // [!code ++]
+  defineProject({
+    test: {
+      environment: 'jsdom',
+    },
+  }),
+)
+```
+
+Since the inherited `projects` paths resolve relative to the referenced config, this misconfiguration usually fails loudly at startup with `Projects definition references a non-existing file or a directory`, `No projects were found in "..."`, or a circular `projects` definition error.
+
+Inline configurations continue to ignore the `projects` field at runtime, but it is now also excluded from their `ProjectConfig` type.
+
 ### Hoisted Mocking Calls Must Be at the Top Level
 
 [`vi.mock`](/api/vi#vi-mock), [`vi.unmock`](/api/vi#vi-unmock), and [`vi.hoisted`](/api/vi#vi-hoisted) are hoisted to the top of the file and run before any surrounding code. Calling them inside a function, block, or `describe`/`test` callback previously only logged a warning. Vitest 5.0 now throws, because the call does not execute where it is written:
