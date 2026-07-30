@@ -1,17 +1,16 @@
 import type { CodeCache } from './code-cache'
 import type { FileMap } from './file-map'
-import type { ImportModuleDynamically, VMSyntheticModule } from './types'
+import type { VMSyntheticModule } from './types'
 import { Module as _Module, createRequire, isBuiltin } from 'node:module'
 import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
-import { interopCommonJsModule, SyntheticModule } from './utils'
+import { activeImportModuleDynamically, interopCommonJsModule, SyntheticModule } from './utils'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap
   codeCache?: CodeCache
   interopDefault?: boolean
   context: vm.Context
-  importModuleDynamically: ImportModuleDynamically
 }
 
 const _require = createRequire(import.meta.url)
@@ -21,6 +20,19 @@ interface PrivateNodeModule extends NodeJS.Module {
 }
 
 const requiresCache = new WeakMap<NodeJS.Module, NodeJS.Require>()
+
+// Compiled scripts of commonjs modules, shared across vm contexts: only the
+// evaluation has to happen per context. Guarded by the exact source so an
+// invalidated module replaces its entry.
+const cjsScriptCache = new Map<string, { source: string; script: vm.Script }>()
+
+function getCachedScript(filename: string, source: string): vm.Script | undefined {
+  const entry = cjsScriptCache.get(filename)
+  if (entry && entry.source === source) {
+    return entry.script
+  }
+  return undefined
+}
 
 export class CommonjsExecutor {
   private context: vm.Context
@@ -114,17 +126,24 @@ export class CommonjsExecutor {
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
         const codeCache = executor.codeCache
-        const cachedData = codeCache?.get(filename, cjsModule)
-        const script = new vm.Script(cjsModule, {
-          filename,
-          cachedData,
-          importModuleDynamically: options.importModuleDynamically,
-        } as any)
-        if (cachedData && script.cachedDataRejected) {
-          codeCache!.delete(filename)
+        let script = getCachedScript(filename, cjsModule)
+        if (!script) {
+          const cachedData = codeCache?.get(filename, cjsModule)
+          // the dynamic import callback is a static function (the executor is
+          // resolved when it is called), so the compiled script holds no
+          // per-context state and can be reused by every vm context
+          script = new vm.Script(cjsModule, {
+            filename,
+            cachedData,
+            importModuleDynamically: activeImportModuleDynamically,
+          } as any)
+          if (cachedData && script.cachedDataRejected) {
+            codeCache!.delete(filename)
+          }
+          // @ts-expect-error mark script with current identifier
+          script.identifier = filename
+          cjsScriptCache.set(filename, { source: cjsModule, script })
         }
-        // @ts-expect-error mark script with current identifier
-        script.identifier = filename
         const fn = script.runInContext(executor.context)
         const __dirname = dirname(filename)
         executor.requireCache.set(filename, this)

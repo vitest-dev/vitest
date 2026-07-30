@@ -18,7 +18,7 @@ import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
 import { CodeCache } from '../vm/code-cache'
 import { FileMap } from '../vm/file-map'
-import { captureContextKeys, stripDisposedContext } from '../vm/utils'
+import { captureContextKeys, setActiveVmExecutor, stripDisposedContext } from '../vm/utils'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
@@ -188,6 +188,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     // (and with it the vm context) alive for the lifetime of the worker
     await moduleRunner.close()
     stripDisposedContext(context, initialContextKeys)
+    setActiveVmExecutor(undefined)
   }
 }
 

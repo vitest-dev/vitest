@@ -1,4 +1,4 @@
-import type { VMSourceTextModule, VMSyntheticModule } from './types'
+import type { VMModule, VMSourceTextModule, VMSyntheticModule } from './types'
 import vm from 'node:vm'
 
 export function interopCommonJsModule(
@@ -53,6 +53,29 @@ export const SyntheticModule: typeof VMSyntheticModule = (vm as any)
   .SyntheticModule
 export const SourceTextModule: typeof VMSourceTextModule = (vm as any)
   .SourceTextModule
+
+// The active executor of this worker: vm pools run one test file (and so
+// one executor) at a time, which lets script-level dynamic import callbacks
+// be static functions instead of per-executor closures. Node registers the
+// callback for the lifetime of the compiled script, so a closure would both
+// pin the executor's test file world and make compiled scripts unshareable
+// between contexts.
+interface ActiveVmExecutor {
+  importModuleDynamically: (specifier: string, referencer: VMModule) => Promise<VMModule>
+}
+
+let activeVmExecutor: ActiveVmExecutor | undefined
+
+export function setActiveVmExecutor(executor: ActiveVmExecutor | undefined): void {
+  activeVmExecutor = executor
+}
+
+export async function activeImportModuleDynamically(specifier: string, referencer: VMModule): Promise<VMModule> {
+  if (!activeVmExecutor) {
+    throw new Error(`Cannot import "${specifier}": the test context was torn down.`)
+  }
+  return activeVmExecutor.importModuleDynamically(specifier, referencer)
+}
 
 // Node never collects a vm context in which multiple scripts installed
 // closures, and `vm.SourceTextModule`s are pinned by the realm's base object
