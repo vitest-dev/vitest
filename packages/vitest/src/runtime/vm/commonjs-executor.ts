@@ -22,17 +22,9 @@ interface PrivateNodeModule extends NodeJS.Module {
 const requiresCache = new WeakMap<NodeJS.Module, NodeJS.Require>()
 
 // Compiled scripts of commonjs modules, shared across vm contexts: only the
-// evaluation has to happen per context. Guarded by the exact source so an
-// invalidated module replaces its entry.
-const cjsScriptCache = new Map<string, { source: string; script: vm.Script }>()
-
-function getCachedScript(filename: string, source: string): vm.Script | undefined {
-  const entry = cjsScriptCache.get(filename)
-  if (entry && entry.source === source) {
-    return entry.script
-  }
-  return undefined
-}
+// evaluation has to happen per context. No invalidation is needed because
+// watch mode reruns destroy the worker.
+const cjsScriptCache = new Map<string, vm.Script>()
 
 export class CommonjsExecutor {
   private context: vm.Context
@@ -126,7 +118,7 @@ export class CommonjsExecutor {
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
         const codeCache = executor.codeCache
-        let script = getCachedScript(filename, cjsModule)
+        let script = cjsScriptCache.get(filename)
         if (!script) {
           const cachedData = codeCache?.get(filename, cjsModule)
           // the dynamic import callback is a static function (the executor is
@@ -142,7 +134,7 @@ export class CommonjsExecutor {
           }
           // @ts-expect-error mark script with current identifier
           script.identifier = filename
-          cjsScriptCache.set(filename, { source: cjsModule, script })
+          cjsScriptCache.set(filename, script)
         }
         const fn = script.runInContext(executor.context)
         const __dirname = dirname(filename)
