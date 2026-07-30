@@ -34,12 +34,14 @@ describe('resolveDoctorCandidates', () => {
 
   it('compares vm pools against reused workers with shared state', () => {
     expect(candidateIds([project({ pool: 'vmThreads', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
-      .toEqual(['threads-no-isolate'])
+      .toEqual(['vmForks', 'threads-no-isolate'])
   })
 
-  it('offers vmThreads but not vmForks to a vmForks suite', () => {
+  it('offers the other vm pool to a suite already on one', () => {
     expect(candidateIds([project({ pool: 'vmForks', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
       .toEqual(['vmThreads', 'threads-no-isolate'])
+    expect(candidateIds([project({ pool: 'vmThreads', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
+      .toEqual(['vmForks', 'threads-no-isolate'])
   })
 
   it('offers no-isolate to isolating browser projects', () => {

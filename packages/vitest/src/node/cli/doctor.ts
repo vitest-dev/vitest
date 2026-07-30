@@ -94,10 +94,10 @@ export function resolveDoctorCandidates(
       preservesIsolation: true,
     })
   }
-  // vmForks trades vmThreads' worker threads for child processes: usually
-  // slower, but it is the vm option for suites that cannot run in threads;
-  // never offered on top of vmThreads - that would only measure a downgrade
-  if (runsDom && !usesVmPool) {
+  // vmForks trades vmThreads' worker threads for child processes: each child
+  // gets its own heap and GC, which can beat vmThreads on GC-heavy suites, and
+  // it is the vm option for suites that cannot run in worker threads
+  if (runsDom && !pools.has('vmForks')) {
     candidates.push({
       id: 'vmForks',
       title: `pool: 'vmForks'`,
