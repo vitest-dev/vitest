@@ -23,9 +23,9 @@ describe('resolveDoctorCandidates', () => {
     expect(candidateIds([project({})])).toEqual(['threads', 'no-isolate', 'fs-cache'])
   })
 
-  it('adds vmThreads for DOM environments', () => {
+  it('adds the vm pools for DOM environments', () => {
     expect(candidateIds([project({ environment: 'jsdom' })]))
-      .toEqual(['threads', 'vmThreads', 'no-isolate', 'fs-cache'])
+      .toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
   })
 
   it('does not repeat what the config already uses', () => {
@@ -35,6 +35,11 @@ describe('resolveDoctorCandidates', () => {
   it('compares vm pools against reused workers with shared state', () => {
     expect(candidateIds([project({ pool: 'vmThreads', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
       .toEqual(['threads-no-isolate'])
+  })
+
+  it('offers vmThreads but not vmForks to a vmForks suite', () => {
+    expect(candidateIds([project({ pool: 'vmForks', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
+      .toEqual(['vmThreads', 'threads-no-isolate'])
   })
 
   it('offers no-isolate to isolating browser projects', () => {
@@ -49,12 +54,12 @@ describe('resolveDoctorCandidates', () => {
     expect(candidateIds([
       project({ pool: 'threads', isolate: false }),
       project({ environment: 'happy-dom' }),
-    ])).toEqual(['threads', 'vmThreads', 'no-isolate', 'fs-cache'])
+    ])).toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
   })
 
   it('offers happy-dom for a jsdom project when the package is available', () => {
     expect(candidateIds([project({ environment: 'jsdom' })], { happyDomAvailable: true }))
-      .toEqual(['threads', 'vmThreads', 'happy-dom', 'no-isolate', 'fs-cache'])
+      .toEqual(['threads', 'vmThreads', 'vmForks', 'happy-dom', 'no-isolate', 'fs-cache'])
   })
 
   it('does not offer happy-dom when the package cannot be resolved', () => {

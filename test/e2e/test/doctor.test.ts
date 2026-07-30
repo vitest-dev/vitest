@@ -21,6 +21,7 @@ test('doctor measures alternative configurations and reports a table', async () 
   expect(stdout).toContain('measuring fsModuleCache: true')
   // the DOM candidates are not: there is nothing to amortize or swap
   expect(stdout).not.toContain('vmThreads')
+  expect(stdout).not.toContain('vmForks')
   expect(stdout).not.toContain('happy-dom')
 
   expect(stdout).toContain('Results (min of 3 runs each)')
@@ -57,11 +58,12 @@ test('doctor reports the errors of failing candidates', async () => {
   expect(exitCode).toBe(0)
 
   const stdout = vitest.stdout
-  // the DOM environment makes vmThreads a candidate, and the fixture fails under it
+  // the DOM environment makes the vm pools candidates, and the fixture fails under both
   expect(stdout).toContain(`pool: 'vmThreads' failed with:`)
+  expect(stdout).toContain(`pool: 'vmForks' failed with:`)
   expect(stdout).toContain('FAIL  vm-hostile.test.ts > does not run under a vm pool')
-  // the failing candidate is never recommended
-  expect(stdout).not.toMatch(/Recommendation: pool: 'vmThreads'/)
+  // the failing candidates are never recommended
+  expect(stdout).not.toMatch(/Recommendation: pool: 'vm/)
   // an all-jsdom suite also measures the happy-dom swap
   expect(stdout).toContain(`measuring environment: 'happy-dom'`)
 }, 120_000)

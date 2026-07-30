@@ -94,6 +94,18 @@ export function resolveDoctorCandidates(
       preservesIsolation: true,
     })
   }
+  // vmForks trades vmThreads' worker threads for child processes: usually
+  // slower, but it is the vm option for suites that cannot run in threads;
+  // never offered on top of vmThreads - that would only measure a downgrade
+  if (runsDom && !usesVmPool) {
+    candidates.push({
+      id: 'vmForks',
+      title: `pool: 'vmForks'`,
+      overrides: { pool: 'vmForks' },
+      configLines: [`pool: 'vmForks'`],
+      preservesIsolation: true,
+    })
+  }
   // jsdom -> happy-dom is the only swap with a speed upside; it is applied per
   // project, so projects running other environments keep them
   if (options.happyDomAvailable && testProjects.some(project => project.environment === 'jsdom')) {
@@ -576,6 +588,7 @@ function logFailureExcerpt(title: string, stderr: string): void {
 function candidateNotes(result: MeasuredCandidate): string[] {
   switch (result.candidate.id) {
     case 'vmThreads':
+    case 'vmForks':
       return [
         `vm pools keep per-file isolation but run test code in a VM context: cross-realm`,
         `instanceof edge cases and higher memory usage are possible (see vmMemoryLimit).`,
