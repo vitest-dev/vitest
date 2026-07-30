@@ -18,6 +18,7 @@ import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
 import { CodeCache } from '../vm/code-cache'
 import { FileMap } from '../vm/file-map'
+import { captureContextKeys, stripDisposedContext } from '../vm/utils'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
@@ -141,6 +142,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
 
   setupEnv(ctx.config.env, state.metaEnv)
 
+  const initialContextKeys = captureContextKeys(context)
+
   if (ctx.config.serializedDefines) {
     try {
       runInContext(ctx.config.serializedDefines, context, {
@@ -171,6 +174,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       'vitest.runtime.environment.teardown',
       () => vm.teardown?.(),
     )
+    stripDisposedContext(context, initialContextKeys)
   }
 }
 
