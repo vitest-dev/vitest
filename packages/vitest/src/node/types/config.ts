@@ -413,7 +413,8 @@ export interface InlineConfig {
    *
    * A project still gets its own server when it defines Vite-level options
    * (`plugins`, `resolve`, `define`, ...) or test options that affect the
-   * Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, `root`,
+   * Vite config: `alias`, `browser`, `css`, `deps.moduleDirectories`,
+   * `deps.optimizer`, `mode`, `root`,
    * or when `extends` doesn't point to the declaring config.
    *
    * This option is only respected in the root configuration.
@@ -1315,6 +1316,12 @@ export interface ResolvedConfig
    */
   _rawTestConfig?: UserConfig
   /**
+   * The `server.deps` entries contributed by `vitest:test-config`, applied
+   * to inline projects that share this config's Vite server.
+   * @internal
+   */
+  _moduleRunnerOptions?: ModuleRunnerTestOptions
+  /**
    * Browser server contribution captured by the `vitest:browser:loader` plugin
    * during this config's resolution (set only when `browser.enabled`). Used by
    * server creation to build the single Vite server shared by `project.vite` and
@@ -1337,6 +1344,18 @@ export interface ResolvedConfig
 export interface ConfigResolutionCaptures {
   browserContribution?: BrowserServerContribution
   rawTestConfig?: UserConfig
+  moduleRunnerOptions?: ModuleRunnerTestOptions
+}
+
+/**
+ * The `server.deps` entries that `vitest:test-config` derives from the
+ * config's original `resolve` options while the Vite config resolves. They
+ * cannot be recomputed later: the resolution overwrites the `resolve` options.
+ */
+export interface ModuleRunnerTestOptions {
+  inlineAll: boolean
+  inline: (string | RegExp)[]
+  external: (string | RegExp)[]
 }
 
 /**
@@ -1454,7 +1473,7 @@ export type ProjectConfig = Omit<
     // from the root config only, so projects can only shuffle their own tests.
     shuffle?: boolean | { tests?: boolean }
   }
-  deps?: Omit<DepsOptions, 'moduleDirectories'>
+  deps?: DepsOptions
 }
 
 export type ResolvedProjectConfig = Omit<

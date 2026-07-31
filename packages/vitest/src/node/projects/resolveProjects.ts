@@ -2,7 +2,6 @@ import type { GlobOptions } from 'tinyglobby'
 import type {
   ResolvedConfig as ResolvedViteConfig,
   InlineConfig as ViteInlineConfig,
-  Plugin as VitePlugin,
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
@@ -10,7 +9,6 @@ import type {
   BrowserInstanceOption,
   ConfigResolutionCaptures,
   ProjectName,
-  ResolvedApiConfig,
   ResolvedConfig,
   ResolvedProjectEntry,
   TestProjectConfiguration,
@@ -24,12 +22,12 @@ import { deepClone } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
-import { configFiles as defaultConfigFiles, defaultPort } from '../../constants'
+import { configFiles as defaultConfigFiles } from '../../constants'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { CaptureRawTestConfig, isExcludedByProjectFilter, matchesProjectFilter, resolveApiServerConfig, resolveTestConfig } from '../config/resolveConfig'
+import { CaptureRawTestConfig, isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
-import { applyCliOverrides, CliOverride } from '../plugins/cliOverride'
+import { resolveTestOptions, TestConfigPlugin } from '../plugins/testConfig'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
 import { globProjectTestFiles } from './globProjectFiles'
@@ -478,56 +476,6 @@ function safeRealpath(path: string): string {
   }
 }
 
-// `name` must stay unique per project, `projects` would redefine the whole workspace
-const NON_INHERITED_OPTIONS = ['name', 'projects'] as const
-
-// the root `globalSetup` already runs once per test run; a non-root
-// config (a shared config or a container) keeps it because nothing else runs it
-const NON_INHERITED_ROOT_OPTIONS = [...NON_INHERITED_OPTIONS, 'globalSetup'] as const
-
-function applyProjectInheritance(
-  test: UserConfig,
-  inlineTest: UserConfig | undefined,
-  extendsTrueRootConfig: boolean,
-): void {
-  // the project's own `tags` replace the inherited array so tags can be overridden
-  if (inlineTest?.tags) {
-    test.tags = inlineTest.tags
-  }
-  const nonInheritedOptions = extendsTrueRootConfig
-    ? NON_INHERITED_ROOT_OPTIONS
-    : NON_INHERITED_OPTIONS
-  for (const key of nonInheritedOptions) {
-    if (inlineTest?.[key] !== undefined) {
-      (test as any)[key] = inlineTest[key]
-    }
-    else {
-      delete test[key]
-    }
-  }
-}
-
-function ProjectInheritancePlugin(options: ViteInlineConfig, extendsTrueRootConfig: boolean): VitePlugin {
-  return {
-    name: 'vitest:project-inheritance',
-    enforce: 'pre',
-    config: {
-      // run before other `config` hooks so only the values merged from the
-      // extended config file are removed, not the values set by plugins
-      order: 'pre',
-      handler(config) {
-        config.test ??= {}
-        applyProjectInheritance(config.test as UserConfig, options.test, extendsTrueRootConfig)
-      },
-    },
-    api: {
-      vitest: {
-        ignoreFsModuleCache: true,
-      },
-    },
-  }
-}
-
 /**
  * Merges the programmatic config passed to `createVitest` into an extending
  * project's options. The programmatic config is part of the effective root
@@ -537,7 +485,7 @@ function ProjectInheritancePlugin(options: ViteInlineConfig, extendsTrueRootConf
  * - `tagsFilter` is CLI-only; `PROJECT_CLI_OVERRIDES` applies it per project
  * - `browser` describes the instances of a single project; inheriting it
  *   would create duplicate instance names (the `--browser` flags have the
- *   same guard in `CliOverride`)
+ *   same guard in `vitest:config:cli`)
  */
 function inheritRootViteOverrides(
   rootConfig: ResolvedConfig,
@@ -594,8 +542,10 @@ function canShareParentServer(
     return false
   }
   // the dependency optimizer state (scanned deps, rewritten import URLs)
-  // belongs to the server
-  if (test.deps?.optimizer !== undefined) {
+  // belongs to the server, and `deps.moduleDirectories` configures the
+  // server's `resolve` options
+  const deps = test.deps
+  if (deps?.optimizer !== undefined || deps?.moduleDirectories !== undefined) {
     return false
   }
   return true
@@ -604,9 +554,8 @@ function canShareParentServer(
 /**
  * Resolve an inline project that shares the declaring config's Vite server.
  * Instead of re-executing the config file through Vite, the project's options
- * are merged onto the declaring config's raw `test` options with the same
- * steps the plugin pipeline applies during a full resolution: the Vite-style
- * config merge, CLI overrides, the inheritance rules and the api config.
+ * are merged onto the declaring config's raw `test` options and run through
+ * the same `TestConfigPlugin` hooks a full resolution applies.
  */
 function resolveSharedServerEntry(
   context: ProjectsResolutionContext,
@@ -615,26 +564,25 @@ function resolveSharedServerEntry(
 ): ResolvedProjectEntry {
   const { harness, rootConfig, parentViteConfig, parentConfig, cliOverrides } = context
 
-  const inlineTestOptions: UserConfig = options.test ?? {}
   // the base is cloned so children never share mutable values with each other
   // or with the captured config; `mergeConfig` applies the same rules Vite
   // uses when the extending project is resolved with `configFile` (inline
   // values win, arrays are concatenated)
   const merged = mergeConfig(
     { test: deepClone(parentConfig._rawTestConfig) },
-    { test: inlineTestOptions },
+    { test: options.test ?? {} },
   ).test as UserConfig
 
-  const mergedOptions = applyCliOverrides(merged, cliOverrides)
-  applyProjectInheritance(mergedOptions, inlineTestOptions, parentConfig === rootConfig)
-
-  // what `vitest:config` and `vitest:config:server` contribute during a full
-  // resolution: the defines of the shared server and the project's api config
-  ;(mergedOptions as ResolvedConfig).defines = parentConfig.defines
-  const api = resolveApiServerConfig(mergedOptions, defaultPort, harness.logger) as ResolvedApiConfig
-  api.token = rootConfig.api.token
-  api.tokenCreated = rootConfig.api.tokenCreated
-  mergedOptions.api = api
+  const mergedOptions = resolveTestOptions(merged, {
+    harness,
+    cliOptions: cliOverrides,
+    globalConfig: rootConfig,
+    project: { options, extendsTrueRootConfig: parentConfig === rootConfig },
+    sharedServer: {
+      defines: parentConfig.defines,
+      moduleRunnerOptions: parentConfig._moduleRunnerOptions,
+    },
+  })
 
   mergedOptions.name = resolveProjectName(
     mergedOptions.name,
@@ -695,7 +643,13 @@ async function resolveSingleProjectEntry(
     mode: options.test?.mode || options.mode || parentConfig.mode,
     plugins: [
       CaptureRawTestConfig(captures, rootConfig.sharedViteServer),
-      CliOverride(cliOverrides),
+      ...TestConfigPlugin(
+        harness,
+        captures,
+        cliOverrides,
+        rootConfig,
+        isInlineEntry ? { options, extendsTrueRootConfig } : undefined,
+      ),
       ...(options.plugins || []),
       ...WorkspaceVitestPlugin(
         harness,
@@ -704,9 +658,6 @@ async function resolveSingleProjectEntry(
         options,
       ),
       ...BrowserLoaderPlugin(captures, harness),
-      ...(isInlineEntry
-        ? [ProjectInheritancePlugin(options, extendsTrueRootConfig)]
-        : []),
     ],
   }
 
@@ -742,6 +693,7 @@ async function resolveSingleProjectEntry(
   projectConfig._browserContribution = captures.browserContribution
 
   projectConfig._rawTestConfig = captures.rawTestConfig
+  projectConfig._moduleRunnerOptions = captures.moduleRunnerOptions
   // `captures` lives as long as the server that keeps its plugins,
   // so it should not hold onto the config
   captures.rawTestConfig = undefined

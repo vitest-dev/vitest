@@ -1,17 +1,36 @@
-import type { Plugin, UserConfig as ViteConfig } from 'vite'
+import type { Plugin, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
-import type { ResolvedConfig } from '../types/config'
+import type { ResolvedApiConfig } from '../types/config'
 import { relative } from 'pathe'
 import * as vite from 'vite'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { VitestOptimizer } from './optimizer'
 import { ModuleRunnerTransform } from './runnerTransform'
-import { deleteDefineConfig, getDefaultResolveOptions } from './utils'
+import { getDefaultResolveOptions } from './utils'
 
-export function VitestConfig(harness: PluginHarness): Plugin[] {
+export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
   let root: string
   return [
+    {
+      name: 'vitest:config:server-defaults',
+      config: {
+        // These static server toggles must be visible to other plugins that
+        // read `server.hmr` in their own `config` hook — e.g.
+        // `@vitejs/plugin-react` turns React Fast Refresh off only when it sees
+        // HMR disabled. A `post` hook (in `vitest:config:server`) runs after
+        // such plugins, so set them here in a `pre` hook instead.
+        order: 'pre',
+        handler() {
+          return {
+            server: {
+              hmr: false,
+              open: false,
+            },
+          }
+        },
+      },
+    },
     {
       name: 'vitest:config',
       enforce: 'pre',
@@ -23,26 +42,15 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
         const resolveOptions = getDefaultResolveOptions()
         const browserEnabled = !!testConfig.browser?.enabled
 
-        if (viteConfig.define) {
-          delete viteConfig.define['import.meta.vitest']
-        }
-
         // move `test.alias` to Vite's `resolve.alias`
         const alias = testConfig.alias
         delete testConfig.alias
 
-        // We inject the defines string in non-browser tests,
-        // But keep the original behaviour in the browser mode
-        const defines = browserEnabled
-          ? viteConfig.define
-          : deleteDefineConfig(viteConfig)
-
-        const config: ViteConfig = browserEnabled
+        const config: ViteUserConfig = browserEnabled
           ? {
               resolve: {
                 alias,
               },
-              test: {},
             }
           : {
               define: {
@@ -53,7 +61,6 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
                 ...resolveOptions,
                 alias,
               },
-              test: {},
             }
 
         config.environments = {
@@ -65,8 +72,6 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
             resolve: resolveOptions,
           },
         }
-
-        ;(config.test as ResolvedConfig).defines = defines || {}
 
         if ('rolldownVersion' in vite) {
           // eslint-disable-next-line ts/ban-ts-comment
@@ -123,6 +128,39 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
+      },
+    },
+    {
+      name: 'vitest:config:server',
+      enforce: 'post',
+      config: {
+        order: 'post',
+        handler(viteConfig) {
+          // `vitest:test-config` has resolved `test.api` by now: both hooks
+          // have the same order and `TestConfigPlugin` always comes earlier
+          const testConfig = viteConfig.test ?? {}
+          const isBrowserEnabled = !!testConfig.browser?.enabled
+          const api = testConfig.api as ResolvedApiConfig
+
+          const server: ServerOptions = {
+            ...api,
+          }
+          if (!isBrowserEnabled) {
+            server.preTransformRequests = false
+          }
+
+          // Always disable the websocket server in middlewareMode
+          if (!isBrowserEnabled && api.middlewareMode) {
+            server.ws = false
+          }
+          else if (viteConfig.server && 'ws' in viteConfig.server) {
+            viteConfig.server.ws = undefined
+          }
+
+          return {
+            server,
+          }
+        },
       },
     },
     VitestOptimizer(),

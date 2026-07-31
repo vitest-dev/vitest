@@ -1,8 +1,8 @@
-import type { TestFsStructure } from '#test-utils'
 import type { Vitest } from 'vitest/node'
-import { runInlineTests, runVitest, ts } from '#test-utils'
+import type { TestFsStructure } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
+import { runInlineTests, runVitest, ts } from '#test-utils'
 
 it('runs the workspace if there are several vitest config files', async () => {
   const { stderr, stdout } = await runVitest({
@@ -828,6 +828,9 @@ describe('sharedViteServer', () => {
         env: project.config.env,
         tags: project.config.tags,
         globalSetup: project.config.globalSetup,
+        moduleDirectories: project.config.deps.moduleDirectories,
+        serverDeps: project.config.server.deps,
+        defines: project.config.defines,
       }))
 
     const full = await runInlineTests(structure(false))

@@ -29,10 +29,9 @@ import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
-import { CliOverride } from '../plugins/cliOverride'
-import { VitestConfig } from '../plugins/config'
+import { ViteConfigPlugin } from '../plugins/config'
 import { VitestCorePlugin } from '../plugins/index'
-import { VitestConfigServer } from '../plugins/server'
+import { TestConfigPlugin } from '../plugins/testConfig'
 import { resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
@@ -1078,8 +1077,8 @@ export async function resolveConfig(
   pluginsHarness: PluginHarness = new PluginHarness(),
 ): Promise<ResolvedViteConfig> {
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
-  const cliOptionsCopy = deepMerge({}, options)
-  const viteOverridesCopy = deepMerge({}, viteOverrides)
+  const cliOptionsCopy = deepMerge({}, options) as UserConfig
+  const viteOverridesCopy = deepMerge({}, viteOverrides) as ViteUserConfig
   const root = resolve(options.root || process.cwd())
   const configPath = resolveConfigPath(root, options)
   options.config = configPath
@@ -1092,12 +1091,11 @@ export async function resolveConfig(
       configLoader: options.configLoader,
       mode: options.mode || 'test',
       plugins: [
-        // the capture hook runs before `CliOverride`, so `--sharedViteServer`
+        // the capture hook runs before `vitest:config:cli`, so `--sharedViteServer`
         // has to be passed directly instead of being read from `config.test`
-        CaptureRawTestConfig(captures, (cliOptionsCopy as UserConfig).sharedViteServer),
-        CliOverride(cliOptionsCopy),
-        ...VitestConfigServer(pluginsHarness),
-        ...VitestConfig(pluginsHarness),
+        CaptureRawTestConfig(captures, cliOptionsCopy.sharedViteServer),
+        ...TestConfigPlugin(pluginsHarness, captures, cliOptionsCopy),
+        ...ViteConfigPlugin(pluginsHarness),
         ...VitestCorePlugin(pluginsHarness, options),
         ...BrowserLoaderPlugin(captures, pluginsHarness),
       ],
@@ -1167,6 +1165,7 @@ export async function resolveConfig(
   // the root keeps the config for the whole session so `injectTestProjects`
   // can resolve shared-server projects at any point
   rootConfig._rawTestConfig = captures.rawTestConfig
+  rootConfig._moduleRunnerOptions = captures.moduleRunnerOptions
   // `captures` lives as long as the server that keeps its plugins,
   // so it should not hold onto the config
   captures.rawTestConfig = undefined

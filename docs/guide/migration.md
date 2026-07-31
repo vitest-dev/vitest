@@ -146,7 +146,7 @@ Sharing the server means files are transformed once instead of once per project,
 
 Note that this _only_ applies to inline projects. Projects referenced as config files or directories always resolve their own Vite config and create their own server, exactly as before.
 
-An inline project also still gets its own Vite server when it defines Vite-level options (`plugins`, `resolve`, `define`, and so on), a non-default `extends`, or test options that affect the Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, or `root`. Every project keeps its own module resolution rules, module runner, and module instances, so options like `env`, `setupFiles`, `server.deps`, or `environment` resolve per project exactly as before.
+An inline project also still gets its own Vite server when it defines Vite-level options (`plugins`, `resolve`, `define`, and so on), a non-default `extends`, or test options that affect the Vite config: `alias`, `browser`, `css`, `deps.moduleDirectories`, `deps.optimizer`, `mode`, or `root`. Every project keeps its own module resolution rules, module runner, and module instances, so options like `env`, `setupFiles`, `server.deps`, or `environment` resolve per project exactly as before.
 
 The observable change: when the server is shared, the declaring config file is executed once instead of once per project, so its plugins are instantiated once and their `config` hooks no longer run for every project. If a plugin relies on being re-instantiated per project, disable the sharing:
 

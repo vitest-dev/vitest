@@ -18,6 +18,7 @@ A project still gets its own Vite server when it defines Vite-level options (`pl
 - [`alias`](/config/alias)
 - [`browser`](/config/browser/enabled)
 - [`css`](/config/css)
+- [`deps.moduleDirectories`](/config/deps#deps-moduledirectories)
 - [`deps.optimizer`](/config/deps#deps-optimizer)
 - `mode`
 - [`root`](/config/root)
