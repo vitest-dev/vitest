@@ -16,7 +16,7 @@ This option _only_ applies to inline projects. Projects referenced as config fil
 A project still gets its own Vite server when it defines Vite-level options (`plugins`, `resolve`, `define`, and so on), when its `extends` doesn't point to the declaring config, or when it defines test options that affect the Vite config:
 
 - [`alias`](/config/alias)
-- [`browser`](/guide/browser/config)
+- [`browser`](/config/browser/enabled)
 - [`css`](/config/css)
 - [`deps.optimizer`](/config/deps#deps-optimizer)
 - `mode`
