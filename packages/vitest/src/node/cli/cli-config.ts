@@ -888,7 +888,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
   sharedViteServer: {
-    description: 'Reuse the Vite server of the config that declares them for inline projects that don\'t modify the Vite config. (default: `true`)',
+    description: 'Let inline projects that don\'t modify the Vite config reuse the Vite server of the config that declares them. (default: `true`)',
   },
 
   experimental: {

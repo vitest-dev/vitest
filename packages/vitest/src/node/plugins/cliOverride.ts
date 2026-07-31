@@ -4,6 +4,23 @@ import type { UserConfig } from '../types/config'
 import { deepMerge } from '@vitest/utils/helpers'
 import { mergeConfig } from 'vite'
 
+export function applyCliOverrides(test: UserConfig, cliOptions: UserConfig): UserConfig {
+  const { browser, ...options } = cliOptions
+
+  // We don't want to use Vite's merge because we want to OVERRIDE options
+  // By default, Vite extends arrays, for example, but CLI options should have the priority
+  const merged = deepMerge({}, test, options) as UserConfig
+
+  // apply browser CLI options only if the config already has the browser config and not disabled manually
+  if (merged.browser && browser && (merged.browser.enabled !== false || browser.enabled)) {
+    merged.browser = mergeConfig(
+      merged.browser,
+      browser,
+    ) as ResolvedBrowserOptions
+  }
+  return merged
+}
+
 export function CliOverride(cliOptions: UserConfig): Plugin {
   return {
     // The CLI plugin overwrites config values with CLI options, making them
@@ -13,20 +30,7 @@ export function CliOverride(cliOptions: UserConfig): Plugin {
     config: {
       order: 'pre',
       handler(config) {
-        const { browser, ...options } = cliOptions
-
-        config.test ??= {}
-        // We don't want to use Vite's merge because we want to OVERRIDE options
-        // By default, Vite extends arrays, for example, but CLI options should have the priority
-        config.test = deepMerge({}, config.test, options)
-
-        // apply browser CLI options only if the config already has the browser config and not disabled manually
-        if (config.test.browser && browser && (config.test.browser.enabled !== false || browser.enabled)) {
-          config.test.browser = mergeConfig(
-            config.test.browser,
-            browser,
-          ) as ResolvedBrowserOptions
-        }
+        config.test = applyCliOverrides(config.test ?? {}, cliOptions)
       },
     },
   }

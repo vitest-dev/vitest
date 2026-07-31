@@ -406,8 +406,8 @@ export interface InlineConfig {
   projects?: TestProjectConfiguration[]
 
   /**
-   * Reuse the Vite server of the config that declares them for inline
-   * projects that don't modify the Vite config. Instead of resolving a new
+   * Let inline projects that don't modify the Vite config reuse the Vite
+   * server of the config that declares them. Instead of resolving a new
    * Vite config and creating a new server per project, such projects share
    * the server and its transform cache.
    *
@@ -415,11 +415,6 @@ export interface InlineConfig {
    * (`plugins`, `resolve`, `define`, ...) or test options that affect the
    * Vite config: `alias`, `browser`, `css`, `deps.optimizer`, `mode`, `root`,
    * or when `extends` doesn't point to the declaring config.
-   *
-   * Note that when the server is shared, the declaring config file is
-   * executed once instead of once per project, so its plugins are
-   * instantiated once and their `config` hooks cannot observe per-project
-   * test options.
    *
    * This option is only respected in the root configuration.
    * @default true
@@ -1314,18 +1309,8 @@ export interface ResolvedConfig
    */
   _containerConfigFiles?: string[]
   /**
-   * The `test` options of this config as they were before any Vitest plugin
-   * (CLI overrides, defaults) touched them: the config file's options merged
-   * with the inline configuration, minus the never-inherited `projects`.
-   * Captured during Vite config resolution and used as the merge base when an
-   * inline project shares this config's Vite server instead of re-resolving
-   * the config file (`sharedViteServer`).
-   *
-   * Only captured when the feature is enabled. The root keeps it for the
-   * whole session so `injectTestProjects` can resolve shared-server projects
-   * at any point; container configs release it as soon as their projects are
-   * resolved.
-   *
+   * The raw `test` options captured by `CaptureRawTestConfig`, used to
+   * resolve inline projects that share this config's Vite server.
    * @internal
    */
   _rawTestConfig?: UserConfig
@@ -1393,11 +1378,7 @@ export interface ResolvedProjectEntry {
   ancestors?: string[]
   /**
    * The project reuses the Vite server of the config that declares it
-   * (`sharedViteServer`). Unlike browser-instance and benchmark
-   * siblings, which share the primary project's evaluation state, such a
-   * project gets its own resolver, fetcher, and module runner on top of the
-   * shared server.
-   *
+   * (`sharedViteServer`).
    * @internal
    */
   sharedServer?: boolean

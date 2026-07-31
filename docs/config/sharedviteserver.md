@@ -9,7 +9,7 @@ outline: deep
 - **Default:** `true`
 - **CLI:** `--sharedViteServer=false`
 
-Reuse the Vite server of the config that declares them for inline [projects](/guide/projects) that don't modify the Vite config. Instead of resolving a new Vite config and creating a new server for every project, such projects share the declaring config's server and its transform cache, so shared source files are transformed once instead of once per project and tests run faster. The performance improvement varies depending on the number of inline projects and how many source files they have in common.
+Inline [projects](/guide/projects) that don't modify the Vite config reuse the Vite server of the config that declares them. Instead of resolving a new Vite config and creating a new server for every project, such projects share the declaring config's server and its transform cache, so shared source files are transformed once instead of once per project and tests run faster. The performance improvement varies depending on the number of inline projects and how many source files they have in common.
 
 This option _only_ applies to inline projects. Projects referenced as config files or directories always resolve their own Vite config and create their own server.
 
