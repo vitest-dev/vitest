@@ -34,6 +34,29 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
   })
 })
 
+// fixes #10835
+describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger with a dot-prefixed path segment', () => {
+  const dottedFileName = 'fixtures/git-changed/related/.dotted-trigger/rerun.temp'
+
+  async function run() {
+    return runVitest({
+      root: join(process.cwd(), 'fixtures/git-changed/related'),
+      include: ['related.test.ts'],
+      forceRerunTriggers: ['**/rerun.temp/**'],
+      changed: true,
+    })
+  }
+
+  it('should still run the whole test suite if the trigger file is inside a dot-prefixed directory', async () => {
+    createFile(dottedFileName, '')
+    const { stdout, stderr } = await run()
+    expect(stderr).toBe('')
+    expect(stdout).toContain('1 passed')
+    expect(stdout).toContain('related.test.ts')
+    expect(stdout).not.toContain('not-related.test.ts')
+  })
+})
+
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {
   const { stdout, stderr } = await runVitest({
     related: 'src/sourceA.ts',
