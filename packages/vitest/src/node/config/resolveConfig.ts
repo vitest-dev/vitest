@@ -1034,7 +1034,7 @@ export function resolveTestConfig(
  * instead of re-executing the config file (`sharedViteServer`).
  *
  * Must be the first inline plugin. The consumer must clear
- * `captures.rawTestConfig` after storing it — the server retains the plugin.
+ * `captures.rawTestConfig` after storing it because the server retains the plugin.
  */
 export function CaptureRawTestConfig(captures: ConfigResolutionCaptures, capture: boolean | undefined): VitePlugin {
   return {

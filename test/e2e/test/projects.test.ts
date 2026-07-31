@@ -1,6 +1,8 @@
+import type { TestFsStructure } from '#test-utils'
+import type { Vitest } from 'vitest/node'
+import { runInlineTests, runVitest, ts } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { runInlineTests, runVitest, ts } from '#test-utils'
 
 it('runs the workspace if there are several vitest config files', async () => {
   const { stderr, stdout } = await runVitest({
@@ -816,9 +818,9 @@ describe('sharedViteServer', () => {
         },
       },
       'basic.test.js': basicTest,
-    } satisfies Parameters<typeof runInlineTests>[0])
+    } satisfies TestFsStructure)
 
-    const project = (ctx: NonNullable<Awaited<ReturnType<typeof runInlineTests>>['ctx']>) =>
+    const project = (ctx: Vitest) =>
       ctx.projects.map(project => ({
         name: project.name,
         testTimeout: project.config.testTimeout,
