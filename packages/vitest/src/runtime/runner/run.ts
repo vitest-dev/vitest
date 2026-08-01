@@ -538,7 +538,7 @@ function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): v
   sendTasksUpdateThrottled(runner)
 }
 
-async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[], chainKey?: object) {
   const sequence = runner.config.sequence.hooks
 
   if (sequence === 'stack') {
@@ -551,7 +551,8 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
         if (typeof fn !== 'function') {
           return
         }
-        await limitMaxConcurrency(() => fn())
+        const chain = getAsyncContextChain(chainKey)
+        await limitMaxConcurrency(() => chain ? chain(() => fn()) : fn())
       }),
     )
   }
@@ -560,7 +561,8 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
       if (typeof fn !== 'function') {
         continue
       }
-      await limitMaxConcurrency(() => fn())
+      const chain = getAsyncContextChain(chainKey)
+      await limitMaxConcurrency(() => chain ? chain(() => fn()) : fn())
     }
   }
 }
@@ -688,7 +690,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
             suite,
           ]))
           if (beforeEachCleanups.length) {
-            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups, test.context))
           }
           // Only clean up fixtures created inside runTest (after the checkpoint)
           // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
