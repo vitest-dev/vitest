@@ -104,6 +104,39 @@ test('a dependent fixture runs inside the store of its dependency', async () => 
   `)
 })
 
+test('aroundEach store and fixture store are both visible', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'around-interplay.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { aroundEach, test as base } from 'vitest'
+
+      const alsFixture = new AsyncLocalStorage()
+      const alsAround = new AsyncLocalStorage()
+
+      const test = base.extend({
+        db: async ({}, use) => alsFixture.run('from-fixture', () => use('db')),
+      })
+
+      aroundEach(async (runTest, { db }) => {
+        console.log('>> around sees fixture store: ' + alsFixture.getStore())
+        await alsAround.run('from-around', runTest)
+      })
+
+      test('test 1', ({ db }) => {
+        console.log('>> test fixture store: ' + alsFixture.getStore())
+        console.log('>> test around store: ' + alsAround.getStore())
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> around sees fixture store: from-fixture
+    >> test fixture store: from-fixture
+    >> test around store: from-around"
+  `)
+})
+
 test('concurrent tests keep isolated fixture stores', async () => {
   const { stdout, stderr } = await runInlineTests({
     'concurrent.test.ts': `
@@ -314,6 +347,35 @@ test('static and injected fixtures mixed with a store fixture keep the chain', a
   expect(stderr).toBe('')
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
     ">> store: alpha / static: 42"
+  `)
+})
+
+test('stacked aroundEach stores and a fixture store all accumulate', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'stacked.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { aroundEach, test as base } from 'vitest'
+
+      const als1 = new AsyncLocalStorage()
+      const als2 = new AsyncLocalStorage()
+      const alsF = new AsyncLocalStorage()
+
+      const test = base.extend({
+        store: [async ({}, use) => alsF.run('F', () => use('store')), { auto: true }],
+      })
+
+      aroundEach(async (runTest) => als1.run('A1', runTest))
+      aroundEach(async (runTest) => als2.run('A2', runTest))
+
+      test('test 1', () => {
+        console.log('>> ' + als1.getStore() + ' ' + als2.getStore() + ' ' + alsF.getStore())
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> A1 A2 F"
   `)
 })
 
