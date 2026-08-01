@@ -25,7 +25,7 @@ import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
-import { refreshAsyncContextChain } from './async-context'
+import { getAsyncContextChain, refreshAsyncContextChain } from './async-context'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -145,7 +145,8 @@ async function callTestHooks(
 
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map(fn => limitMaxConcurrency(() => fn(test.context))))
+      const chain = getAsyncContextChain(test.context)
+      await Promise.all(hooks.map(fn => limitMaxConcurrency(() => chain ? chain(() => fn(test.context)) : fn(test.context))))
     }
     catch (e) {
       failTask(test.result!, e, runner.config._diffOptions)
@@ -154,7 +155,8 @@ async function callTestHooks(
   else {
     for (const fn of hooks) {
       try {
-        await limitMaxConcurrency(() => fn(test.context))
+        const chain = getAsyncContextChain(test.context)
+        await limitMaxConcurrency(() => chain ? chain(() => fn(test.context)) : fn(test.context))
       }
       catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)

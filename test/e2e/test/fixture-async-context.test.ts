@@ -325,6 +325,37 @@ test('request-context pattern: auto fixture with per-suite override', async () =
   `)
 })
 
+test('onTestFinished and onTestFailed see the fixture store', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'finished.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { onTestFinished, test as base } from 'vitest'
+
+      const als = new AsyncLocalStorage()
+
+      const test = base.extend({
+        store: [
+          async ({}, use) => als.run({ app: 'alpha' }, () => use('store')),
+          { auto: true },
+        ],
+      })
+
+      test('test 1', () => {
+        onTestFinished(() => {
+          console.log('>> finished: ' + als.getStore()?.app)
+        })
+        console.log('>> test: ' + als.getStore()?.app)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> test: alpha
+    >> finished: alpha"
+  `)
+})
+
 test('static and injected fixtures mixed with a store fixture keep the chain', async () => {
   const { stdout, stderr } = await runInlineTests({
     'mixed.test.ts': `
