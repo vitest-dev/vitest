@@ -278,6 +278,40 @@ test('aroundAll store stays visible when file-scoped fixtures are used', async (
   `)
 })
 
+test('beforeEach-returned cleanup sees the fixture store', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'cleanup.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { beforeEach, test as base } from 'vitest'
+
+      const als = new AsyncLocalStorage()
+
+      const test = base.extend({
+        store: [
+          async ({}, use) => als.run({ app: 'alpha' }, () => use('store')),
+          { auto: true },
+        ],
+      })
+
+      beforeEach(() => {
+        return () => {
+          console.log('>> cleanup: ' + als.getStore()?.app)
+        }
+      })
+
+      test('test 1', () => {
+        console.log('>> test: ' + als.getStore()?.app)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> test: alpha
+    >> cleanup: alpha"
+  `)
+})
+
 test('request-context pattern: auto fixture with per-suite override', async () => {
   const { stdout, stderr } = await runInlineTests({
     'request-context.test.ts': `
