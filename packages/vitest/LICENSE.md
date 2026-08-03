@@ -31,7 +31,7 @@ BSD-3-Clause, ISC, MIT
 ## @antfu/install-pkg
 License: MIT
 By: Anthony Fu
-Repository: git+https://github.com/antfu/install-pkg.git
+Repository: git+https://github.com/antfu-collective/install-pkg.git
 
 > MIT License
 >
