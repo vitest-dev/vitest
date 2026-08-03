@@ -1,0 +1,19 @@
+packages/vitest/LICENSE.md
+  s_297171e8e08f25::t_e4dcd06ce588ba 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e923d61153fff2afb93926dca7b984c9a027d6f1",
+  "prompts": {},
+  "sessions": {
+    "s_297171e8e08f25": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0388f27e8ffer0AXFm4BoNN5tZ",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
