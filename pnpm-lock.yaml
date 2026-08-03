@@ -142,11 +142,11 @@ catalogs:
       specifier: ^3.1.0
       version: 3.1.0
     tinybench:
-      specifier: 6.1.2
-      version: 6.1.2
+      specifier: 6.0.1
+      version: 6.0.1
     tinyexec:
-      specifier: 1.3.0
-      version: 1.3.0
+      specifier: 1.0.2
+      version: 1.0.2
     tinyglobby:
       specifier: ^0.2.17
       version: 0.2.17
@@ -337,7 +337,7 @@ importers:
         version: 6.0.8(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))(vue@3.5.40(typescript@5.9.3))
       '@voidzero-dev/vitepress-theme':
         specifier: ^4.8.4
-        version: 4.8.4(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@8.2.2)(typescript@5.9.3)(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))(vitepress@2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3))
+        version: 4.8.4(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@7.8.0)(typescript@5.9.3)(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))(vitepress@2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1(supports-color@8.1.1)
@@ -354,8 +354,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(@vite-pwa/assets-generator@1.0.2)(supports-color@8.1.1)(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))(workbox-build@7.4.1(@types/babel__core@7.20.5)(supports-color@8.1.1))(workbox-window@7.4.1)
       vitepress:
-        specifier: 2.0.0-alpha.19
-        version: 2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0)
+        specifier: 2.0.0-alpha.16
+        version: 2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0)
       vitepress-plugin-group-icons:
         specifier: ^1.7.6
         version: 1.7.6(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))
@@ -364,7 +364,7 @@ importers:
         version: 1.13.4(supports-color@8.1.1)
       vitepress-plugin-tabs:
         specifier: ^0.9.1
-        version: 0.9.1(vitepress@2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3))
+        version: 0.9.1(vitepress@2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3))
       workbox-window:
         specifier: ^7.4.1
         version: 7.4.1
@@ -1031,10 +1031,10 @@ importers:
         version: 4.2.0
       tinybench:
         specifier: 'catalog:'
-        version: 6.1.2
+        version: 6.0.1
       tinyexec:
-        specifier: 1.3.0
-        version: 1.3.0
+        specifier: 1.0.2
+        version: 1.0.2
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.17
@@ -1198,7 +1198,7 @@ importers:
         version: file:test/browser/deps/test-dep-error
       tinyexec:
         specifier: 'catalog:'
-        version: 1.3.0
+        version: 1.0.2
       url:
         specifier: ^0.11.4
         version: 0.11.4
@@ -1377,8 +1377,8 @@ importers:
         specifier: file:./deps/dep-simple2
         version: file:test/e2e/deps/dep-simple2
       tinyexec:
-        specifier: 1.3.0
-        version: 1.3.0
+        specifier: 1.0.2
+        version: 1.0.2
       tinyspy:
         specifier: 'catalog:'
         version: 4.0.4
@@ -1451,8 +1451,8 @@ importers:
   test/test-utils:
     devDependencies:
       tinyexec:
-        specifier: 1.3.0
-        version: 1.3.0
+        specifier: 1.0.2
+        version: 1.0.2
       vite:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2)
@@ -4676,17 +4676,29 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
+  '@shikijs/core@3.23.0':
+    resolution: {integrity: sha512-NSWQz0riNb67xthdm5br6lAkvpDJRTgB36fxlo37ZzM2yq0PQFFzbd8psqC2XMPgCzo1fW6cVi18+ArJ44wqgA==}
+
   '@shikijs/core@4.4.1':
     resolution: {integrity: sha512-VeR2CY6Nn9/WbisoYLOQZ7HZOnwTrpBuOw4wExjqLnBCi62BNWynBUO6K2uPIASPFJwAv7cX1fUu+LrPlSstcw==}
     engines: {node: '>=20'}
+
+  '@shikijs/engine-javascript@3.23.0':
+    resolution: {integrity: sha512-aHt9eiGFobmWR5uqJUViySI1bHMqrAgamWE1TYSUoftkAeCCAiGawPMwM+VCadylQtF4V3VNOZ5LmfItH5f3yA==}
 
   '@shikijs/engine-javascript@4.4.1':
     resolution: {integrity: sha512-6U4lJBh8LTvIkEVqRHv/rr3ruwtO6IweFQt1ME1ntHJMGHS+6N86vfYGO1o8c/DtOCTia2lfhdQBtBrps1sDfQ==}
     engines: {node: '>=20'}
 
+  '@shikijs/engine-oniguruma@3.23.0':
+    resolution: {integrity: sha512-1nWINwKXxKKLqPibT5f4pAFLej9oZzQTsby8942OTlsJzOBZ0MWKiwzMsd+jhzu8YPCHAswGnnN1YtQfirL35g==}
+
   '@shikijs/engine-oniguruma@4.4.1':
     resolution: {integrity: sha512-p23RugMKss0r5DAtRJW1yAXUDl60JvhQYV20yuxei//26JyDSJefV3umyWzzwep2weblMnJGDYahuti6XkcMgA==}
     engines: {node: '>=20'}
+
+  '@shikijs/langs@3.23.0':
+    resolution: {integrity: sha512-2Ep4W3Re5aB1/62RSYQInK9mM3HsLeB91cHqznAJMuylqjzNVAVCMnNWRHFtcNHXsoNRayP9z1qj4Sq3nMqYXg==}
 
   '@shikijs/langs@4.4.1':
     resolution: {integrity: sha512-xb2kCMloBCIraIy2fS5MW0t/BxVY3q2nDyQKBoeSeq6KNrQbShHetCFlw2n35fGIJ6t3+hXDLQogP5ir9O9bvA==}
@@ -4696,9 +4708,15 @@ packages:
     resolution: {integrity: sha512-ko2OfDoG89YuQ7xL5LtcQiWKb7NIv1Ephb7g48TVU198OzAMLC8lXVEwaJGHK4sUMYrfAGJDqYmNLOLiW/Kz8w==}
     engines: {node: '>=20'}
 
+  '@shikijs/themes@3.23.0':
+    resolution: {integrity: sha512-5qySYa1ZgAT18HR/ypENL9cUSGOeI2x+4IvYJu4JgVJdizn6kG4ia5Q1jDEOi7gTbN4RbuYtmHh0W3eccOrjMA==}
+
   '@shikijs/themes@4.4.1':
     resolution: {integrity: sha512-wudOaoFro+/Zl9gQv2W1Ur5XlVduqvTuYLI483Xi0wgc1A+cy1hfB2r6ac6ufBgF+ID7KJEW7L41MHrzQ4wH+w==}
     engines: {node: '>=20'}
+
+  '@shikijs/transformers@3.23.0':
+    resolution: {integrity: sha512-F9msZVxdF+krQNSdQ4V+Ja5QemeAoTQ2jxt7nJCwhDsdF1JWS3KxIQXA3lQbyKwS3J61oHRUSv4jYWv3CkaKTQ==}
 
   '@shikijs/transformers@4.4.1':
     resolution: {integrity: sha512-Sb9Eehas+5EhClpFgNuklwY3aWf354FLaKRCiAWmjdNbHAjoQUpv6WmSj+N19eTXO6GLIWh1dIOH9dxyauhVWw==}
@@ -4709,6 +4727,9 @@ packages:
     engines: {node: '>=20'}
     peerDependencies:
       typescript: '>=5.5.0'
+
+  '@shikijs/types@3.23.0':
+    resolution: {integrity: sha512-3JZ5HXOZfYjsYSk0yPwBrkupyYSLpAE26Qc0HLghhZNGTZg/SKxXIIgoxOpmmeQP0RRSDJTk1/vPfw9tbw+jSQ==}
 
   '@shikijs/types@4.4.1':
     resolution: {integrity: sha512-GOwCLQDHM5EjGUWNPrhzJbr6JP8V/Dx/CDVkWvbZ1Avw5JFnNUckrgbLmE07qtg4WlW7Q7QFndhjIkeU9XMPvw==}
@@ -7040,6 +7061,9 @@ packages:
       '@nuxt/kit':
         optional: true
 
+  focus-trap@7.8.0:
+    resolution: {integrity: sha512-/yNdlIkpWbM0ptxno3ONTuf+2g318kh2ez3KSeZN5dZ8YC6AAmgeWz+GasYYiBJPFaYcSAPeu4GfhUaChzIJXA==}
+
   focus-trap@8.2.2:
     resolution: {integrity: sha512-qV0g8hRYBqgACcFOH3f9wXc4zPKhr/0z9RI2a6ZijZ72EeBi4g8oBy8zAWuUR1TsMpOzwpUMFvjdasrC41Joug==}
 
@@ -9358,6 +9382,9 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
+  shiki@3.23.0:
+    resolution: {integrity: sha512-55Dj73uq9ZXL5zyeRPzHQsK7Nbyt6Y10k5s7OjuFZGMhpp4r/rsLBH0o/0fstIzX1Lep9VxefWljK/SKCzygIA==}
+
   shiki@4.4.1:
     resolution: {integrity: sha512-rFP+iYKzjLEIqiMiKANhARqiAbk4deDhWnBtnUO/K0D0dPxMGDH4N0FVfBY/VeI+lPrV4wNGCHQZp7EOr7NNBw==}
     engines: {node: '>=20'}
@@ -9726,12 +9753,16 @@ packages:
     resolution: {integrity: sha512-75voc/9G4rDIJleOo4jPvN4/YC4GRZrY8yy1uU4lwrB3XEQbWve8zXoO5No4eFrGcTAMYyoY67p8jRQdtA1HbA==}
     engines: {node: '>=12'}
 
-  tinybench@6.1.2:
-    resolution: {integrity: sha512-REdMxUreK3VSUeWcLd5+ijUGNKFyHT8s1trKmYEE/tlYE6ggdOkFOlKba/vI/l1fIqh/NTEEr1Cyw4AwttOicA==}
+  tinybench@6.0.1:
+    resolution: {integrity: sha512-cMdWsxmysdg8mNWf1pujiWl3TW0cU6m8QuNw55QlnP3I6N96Grb0wnu5N0syHIu3LbiVZCNqlfWzWDq84HZphA==}
     engines: {node: '>=20.0.0'}
 
   tinyexec@0.3.2:
     resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
+
+  tinyexec@1.0.2:
+    resolution: {integrity: sha512-W/KYk+NFhkmsYpuHq5JykngiOCnxeVL8v8dFnqxSD8qEEdRfXk1SDM6JzNqcERbcGYj9tMrDQBYV9cjgnunFIg==}
+    engines: {node: '>=18'}
 
   tinyexec@1.3.0:
     resolution: {integrity: sha512-QKAl9m8gWWGHV8jZcPeym6j+XULi6tOf1mT83WYJ4Lk2ytW/uwAWkrP0uFsdoYMdueVJ0qs26wZ+23xeB4ibNQ==}
@@ -10223,14 +10254,17 @@ packages:
       vitepress: ^1.0.0 || ^2.0.0-alpha.17
       vue: ^3.5.0
 
-  vitepress@2.0.0-alpha.19:
-    resolution: {integrity: sha512-WnBsb0Bwr43kXKyiis+lld/7ri3hnMbthS8N3hpFtjjwsdLO4IRmiAE08D7aud4q6oMDf9uwRowxzNqRFe/amw==}
+  vitepress@2.0.0-alpha.16:
+    resolution: {integrity: sha512-w1nwsefDVIsje7BZr2tsKxkZutDGjG0YoQ2yxO7+a9tvYVqfljYbwj5LMYkPy8Tb7YbPwa22HtIhk62jbrvuEQ==}
     hasBin: true
     peerDependencies:
       markdown-it-mathjax3: ^4
+      oxc-minify: '*'
       postcss: ^8
     peerDependenciesMeta:
       markdown-it-mathjax3:
+        optional: true
+      oxc-minify:
         optional: true
       postcss:
         optional: true
@@ -10659,7 +10693,7 @@ snapshots:
   '@antfu/install-pkg@1.1.0':
     dependencies:
       package-manager-detector: 1.3.0
-      tinyexec: 1.3.0
+      tinyexec: 1.0.2
 
   '@antfu/ni@28.3.0':
     dependencies:
@@ -13189,6 +13223,13 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
+  '@shikijs/core@3.23.0':
+    dependencies:
+      '@shikijs/types': 3.23.0
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.5
+      hast-util-to-html: 9.0.5
+
   '@shikijs/core@4.4.1':
     dependencies:
       '@shikijs/primitive': 4.4.1
@@ -13197,16 +13238,31 @@ snapshots:
       '@types/hast': 3.0.5
       hast-util-to-html: 9.0.5
 
+  '@shikijs/engine-javascript@3.23.0':
+    dependencies:
+      '@shikijs/types': 3.23.0
+      '@shikijs/vscode-textmate': 10.0.2
+      oniguruma-to-es: 4.3.6
+
   '@shikijs/engine-javascript@4.4.1':
     dependencies:
       '@shikijs/types': 4.4.1
       '@shikijs/vscode-textmate': 10.0.2
       oniguruma-to-es: 4.3.6
 
+  '@shikijs/engine-oniguruma@3.23.0':
+    dependencies:
+      '@shikijs/types': 3.23.0
+      '@shikijs/vscode-textmate': 10.0.2
+
   '@shikijs/engine-oniguruma@4.4.1':
     dependencies:
       '@shikijs/types': 4.4.1
       '@shikijs/vscode-textmate': 10.0.2
+
+  '@shikijs/langs@3.23.0':
+    dependencies:
+      '@shikijs/types': 3.23.0
 
   '@shikijs/langs@4.4.1':
     dependencies:
@@ -13218,9 +13274,18 @@ snapshots:
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.5
 
+  '@shikijs/themes@3.23.0':
+    dependencies:
+      '@shikijs/types': 3.23.0
+
   '@shikijs/themes@4.4.1':
     dependencies:
       '@shikijs/types': 4.4.1
+
+  '@shikijs/transformers@3.23.0':
+    dependencies:
+      '@shikijs/core': 3.23.0
+      '@shikijs/types': 3.23.0
 
   '@shikijs/transformers@4.4.1':
     dependencies:
@@ -13235,6 +13300,11 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
+
+  '@shikijs/types@3.23.0':
+    dependencies:
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.5
 
   '@shikijs/types@4.4.1':
     dependencies:
@@ -13761,7 +13831,7 @@ snapshots:
       '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/visitor-keys': 8.65.0
       debug: 4.4.3(supports-color@8.1.1)
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       semver: 7.8.5
       tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@5.9.3)
@@ -14020,7 +14090,7 @@ snapshots:
 
   '@vitest/test-fn@file:test/unit/deps/dep-fn': {}
 
-  '@voidzero-dev/vitepress-theme@4.8.4(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@8.2.2)(typescript@5.9.3)(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))(vitepress@2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3))':
+  '@voidzero-dev/vitepress-theme@4.8.4(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@7.8.0)(typescript@5.9.3)(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))(vitepress@2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3))':
     dependencies:
       '@docsearch/css': 4.6.0
       '@docsearch/js': 4.6.0
@@ -14031,13 +14101,13 @@ snapshots:
       '@tailwindcss/vite': 4.1.18(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))
       '@vue/shared': 3.5.29
       '@vueuse/core': 14.4.0(vue@3.5.40(typescript@5.9.3))
-      '@vueuse/integrations': 14.2.1(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@8.2.2)(vue@3.5.40(typescript@5.9.3))
+      '@vueuse/integrations': 14.2.1(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.40(typescript@5.9.3))
       '@vueuse/shared': 14.2.1(vue@3.5.40(typescript@5.9.3))
       mark.js: 8.11.1
       minisearch: 7.2.0
       reka-ui: 2.7.0(typescript@5.9.3)(vue@3.5.40(typescript@5.9.3))
       tailwindcss: 4.1.18
-      vitepress: 2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0)
+      vitepress: 2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0)
       vue: 3.5.40(typescript@5.9.3)
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -14238,7 +14308,7 @@ snapshots:
       '@vueuse/shared': 14.4.0(vue@3.5.40(typescript@5.9.3))
       vue: 3.5.40(typescript@5.9.3)
 
-  '@vueuse/integrations@14.2.1(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@8.2.2)(vue@3.5.40(typescript@5.9.3))':
+  '@vueuse/integrations@14.2.1(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.40(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 14.2.1(vue@3.5.40(typescript@5.9.3))
       '@vueuse/shared': 14.2.1(vue@3.5.40(typescript@5.9.3))
@@ -14246,7 +14316,17 @@ snapshots:
     optionalDependencies:
       axios: 1.13.4(debug@4.4.3(supports-color@8.1.1))
       change-case: 5.4.4
-      focus-trap: 8.2.2
+      focus-trap: 7.8.0
+
+  '@vueuse/integrations@14.4.0(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.40(typescript@5.9.3))':
+    dependencies:
+      '@vueuse/core': 14.4.0(vue@3.5.40(typescript@5.9.3))
+      '@vueuse/shared': 14.4.0(vue@3.5.40(typescript@5.9.3))
+      vue: 3.5.40(typescript@5.9.3)
+    optionalDependencies:
+      axios: 1.13.4(debug@4.4.3(supports-color@8.1.1))
+      change-case: 5.4.4
+      focus-trap: 7.8.0
 
   '@vueuse/integrations@14.4.0(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@8.2.2)(vue@3.5.40(typescript@5.9.3))':
     dependencies:
@@ -15976,9 +16056,14 @@ snapshots:
       vue: 3.5.40(typescript@5.9.3)
       vue-resize: 2.0.0-alpha.1(vue@3.5.40(typescript@5.9.3))
 
+  focus-trap@7.8.0:
+    dependencies:
+      tabbable: 6.5.0
+
   focus-trap@8.2.2:
     dependencies:
       tabbable: 6.5.0
+    optional: true
 
   follow-redirects@1.15.11(debug@4.4.3(supports-color@8.1.1)):
     optionalDependencies:
@@ -16171,7 +16256,7 @@ snapshots:
     dependencies:
       foreground-child: 3.3.1
       jackspeak: 4.2.3
-      minimatch: 10.2.5
+      minimatch: 10.2.6
       minipass: 7.1.2
       package-json-from-dist: 1.0.1
       path-scurry: 2.0.2
@@ -16258,7 +16343,7 @@ snapshots:
 
   hast-util-whitespace@3.0.0:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
 
   headers-polyfill@5.0.1:
     dependencies:
@@ -18706,6 +18791,17 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
+  shiki@3.23.0:
+    dependencies:
+      '@shikijs/core': 3.23.0
+      '@shikijs/engine-javascript': 3.23.0
+      '@shikijs/engine-oniguruma': 3.23.0
+      '@shikijs/langs': 3.23.0
+      '@shikijs/themes': 3.23.0
+      '@shikijs/types': 3.23.0
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.5
+
   shiki@4.4.1:
     dependencies:
       '@shikijs/core': 4.4.1
@@ -19167,9 +19263,11 @@ snapshots:
     dependencies:
       convert-hrtime: 5.0.0
 
-  tinybench@6.1.2: {}
+  tinybench@6.0.1: {}
 
   tinyexec@0.3.2: {}
+
+  tinyexec@1.0.2: {}
 
   tinyexec@1.3.0: {}
 
@@ -19664,33 +19762,34 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vitepress-plugin-tabs@0.9.1(vitepress@2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3)):
+  vitepress-plugin-tabs@0.9.1(vitepress@2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0))(vue@3.5.40(typescript@5.9.3)):
     dependencies:
-      vitepress: 2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0)
+      vitepress: 2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0)
       vue: 3.5.40(typescript@5.9.3)
 
-  vitepress@2.0.0-alpha.19(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0):
+  vitepress@2.0.0-alpha.16(@types/node@24.13.3)(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(oxc-minify@0.141.0)(postcss@8.5.23)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(typescript@5.9.3)(yaml@2.9.0):
     dependencies:
       '@docsearch/css': 4.7.0
       '@docsearch/js': 4.7.0
       '@docsearch/sidepanel-js': 4.7.0
       '@iconify-json/simple-icons': 1.2.92
-      '@shikijs/core': 4.4.1
-      '@shikijs/transformers': 4.4.1
-      '@shikijs/types': 4.4.1
+      '@shikijs/core': 3.23.0
+      '@shikijs/transformers': 3.23.0
+      '@shikijs/types': 3.23.0
       '@types/markdown-it': 14.1.2
       '@vitejs/plugin-vue': 6.0.8(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.8.2))(vue@3.5.40(typescript@5.9.3))
       '@vue/devtools-api': 8.2.1
       '@vue/shared': 3.5.40
       '@vueuse/core': 14.4.0(vue@3.5.40(typescript@5.9.3))
-      '@vueuse/integrations': 14.4.0(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@8.2.2)(vue@3.5.40(typescript@5.9.3))
-      focus-trap: 8.2.2
+      '@vueuse/integrations': 14.4.0(axios@1.13.4(debug@4.4.3(supports-color@8.1.1)))(change-case@5.4.4)(focus-trap@7.8.0)(vue@3.5.40(typescript@5.9.3))
+      focus-trap: 7.8.0
       mark.js: 8.11.1
       minisearch: 7.2.0
-      shiki: 4.4.1
+      shiki: 3.23.0
       vite: 8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.1)(yaml@2.9.0)
       vue: 3.5.40(typescript@5.9.3)
     optionalDependencies:
+      oxc-minify: 0.141.0
       postcss: 8.5.23
     transitivePeerDependencies:
       - '@types/node'

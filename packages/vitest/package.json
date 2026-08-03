@@ -177,7 +177,7 @@
     "picomatch": "^4.0.5",
     "std-env": "catalog:",
     "tinybench": "catalog:",
-    "tinyexec": "1.3.0",
+    "tinyexec": "1.0.2",
     "tinyglobby": "catalog:",
     "why-is-node-running": "^2.3.0"
   },

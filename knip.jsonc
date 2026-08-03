@@ -99,7 +99,6 @@
         "@vitest/browser-preview",
         "@vitest/browser-webdriverio",
         "@vitest/ui",
-        "@types/chai",
         "chai",
         "why-is-node-running"
       ]
