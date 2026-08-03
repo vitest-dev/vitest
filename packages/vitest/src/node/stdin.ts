@@ -91,8 +91,12 @@ export function registerConsoleShortcuts(
         )
         process.exitCode = 130
 
+        // Unregister raw mode so that second CTRL+c is handled by Node.js as SIGINT
+        off()
+
         await ctx.cancelCurrentRun('keyboard-input')
       }
+
       return ctx.exit(true)
     }
 
