@@ -174,10 +174,10 @@
     "expect-type": "^1.4.0",
     "magic-string": "catalog:",
     "obug": "catalog:",
-    "picomatch": "^4.0.3",
+    "picomatch": "^4.0.5",
     "std-env": "catalog:",
     "tinybench": "catalog:",
-    "tinyexec": "1.0.2",
+    "tinyexec": "1.3.0",
     "tinyglobby": "catalog:",
     "why-is-node-running": "^2.3.0"
   },
