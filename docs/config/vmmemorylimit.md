@@ -10,7 +10,11 @@ outline: deep
 
 This option affects only `vmForks` and `vmThreads` pools.
 
-Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default. By default, the total system memory is split evenly between workers, so increasing [`maxWorkers`](/config/maxworkers) also makes every worker recycle more often.
+Specifies the memory limit for workers before they are recycled.
+
+By default, the total system memory is split evenly between workers. By increasing [`maxWorkers`](/config/maxworkers), workers have less memory available, so they're recycled more often.
+
+This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default. 
 
 Recycling exists because VM contexts [leak memory](https://github.com/nodejs/node/issues/33439): a worker's memory usage grows with every test file it runs, so a worker cannot live forever. The limit is a trade-off:
 
