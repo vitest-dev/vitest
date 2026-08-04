@@ -14,7 +14,9 @@ afterEach(() => {
   restore.splice(0).forEach(fn => fn())
 })
 
-test('a cache directory that cannot be written to does not fail the run', async () => {
+// Windows ignores the POSIX mode bits `chmodSync` sets on a directory, so there
+// the cache stays writable and this scenario cannot be staged at all.
+test.skipIf(process.platform === 'win32')('a cache directory that cannot be written to does not fail the run', async () => {
   const cachePath = join(
     import.meta.dirname,
     '../fixtures/.tmp-readonly-module-cache',
