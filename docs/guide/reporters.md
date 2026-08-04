@@ -248,10 +248,10 @@ Example output:
 An example with `--includeTaskLocation`:
 
 ```bash
-✓ __tests__/file1.test.ts:2:1 > first test file > 2 + 2 should equal 4 1ms
-✓ __tests__/file1.test.ts:3:1 > first test file > 4 - 2 should equal 2 1ms
-✓ __tests__/file2.test.ts:2:1 > second test file > 1 + 1 should equal 2 1ms
-✓ __tests__/file2.test.ts:3:1 > second test file > 2 - 1 should equal 1 1ms
+✓ __tests__/file1.test.ts:2 > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts:3 > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts:2 > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts:3 > second test file > 2 - 1 should equal 1 1ms
 
  Test Files  2 passed (2)
       Tests  4 passed (4)

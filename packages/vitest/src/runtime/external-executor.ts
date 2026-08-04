@@ -1,12 +1,13 @@
 import type vm from 'node:vm'
 import type { RuntimeRPC } from '../types/rpc'
+import type { CodeCache } from './vm/code-cache'
 import type { FileMap } from './vm/file-map'
 import type { VMModule } from './vm/types'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isBareImport, splitFileAndPostfix } from '@vitest/utils/helpers'
-import { findNearestPackageData } from '@vitest/utils/resolver'
+import { lookupPackageScopeType } from '@vitest/utils/resolver'
 import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
@@ -17,16 +18,26 @@ const { existsSync } = fs
 // always defined when we use vm pool
 const nativeResolve = import.meta.resolve!
 
+// a relative ESM specifier resolves by plain URL join — Node's resolver adds
+// no information for these (it does not check existence and relative
+// specifiers never consult package.json), but it re-derives the package
+// scope on every uncached call, re-parsing large `exports` maps. Restricted
+// to a conservative charset so anything URL-special falls back to Node.
+const SIMPLE_RELATIVE_SPECIFIER_RE = /^\.{1,2}\/[\w\-./]+$/
+
 export interface ExternalModulesExecutorOptions {
   context: vm.Context
   fileMap: FileMap
+  codeCache?: CodeCache
+  resolveCache?: Map<string, string>
+  moduleInfoCache?: Map<string, ModuleInformation>
   packageCache: Map<string, any>
   transform: RuntimeRPC['transform']
   interopDefault?: boolean
   viteClientModule: Record<string, unknown>
 }
 
-interface ModuleInformation {
+export interface ModuleInformation {
   type:
     | 'data'
     | 'builtin'
@@ -37,6 +48,7 @@ interface ModuleInformation {
     | 'network'
   url: string
   path: string
+  exists?: boolean
 }
 
 // TODO: improve Node.js strict mode support in #2854
@@ -46,6 +58,7 @@ export class ExternalModulesExecutor {
   private vite: ViteExecutor
   private context: vm.Context
   private fs: FileMap
+  public readonly codeCache: CodeCache | undefined
   private resolvers: ((id: string, parent: string) => string | undefined)[]
     = []
 
@@ -55,6 +68,7 @@ export class ExternalModulesExecutor {
     this.context = options.context
 
     this.fs = options.fileMap
+    this.codeCache = options.codeCache
     this.esm = new EsmExecutor(this, {
       context: this.context,
     })
@@ -62,6 +76,7 @@ export class ExternalModulesExecutor {
       context: this.context,
       importModuleDynamically: this.importModuleDynamically,
       fileMap: options.fileMap,
+      codeCache: options.codeCache,
       interopDefault: options.interopDefault,
     })
     this.vite = new ViteExecutor({
@@ -116,11 +131,44 @@ export class ExternalModulesExecutor {
       }
     }
 
+    if (
+      SIMPLE_RELATIVE_SPECIFIER_RE.test(specifier)
+      && parent.startsWith('file://')
+    ) {
+      return new URL(specifier, parent).href
+    }
+
+    // resolution of externalized modules is stable for the lifetime of the
+    // worker (like fileMap/packageCache), while fresh vm contexts re-resolve
+    // every import edge
+    const cache = this.options.resolveCache
+    const key = cache ? `${parent}\n${specifier}` : undefined
+    if (cache) {
+      const cached = cache.get(key!)
+      if (cached !== undefined) {
+        return cached
+      }
+    }
+
     // import.meta.resolve can be asynchronous in older +18 Node versions
-    return nativeResolve(specifier, parent)
+    const resolved = nativeResolve(specifier, parent)
+    if (cache && typeof resolved === 'string') {
+      cache.set(key!, resolved)
+    }
+    return resolved
   }
 
   private getModuleInformation(identifier: string): ModuleInformation {
+    const cached = this.options.moduleInfoCache?.get(identifier)
+    if (cached) {
+      return cached
+    }
+    const info = this.resolveModuleInformation(identifier)
+    this.options.moduleInfoCache?.set(identifier, info)
+    return info
+  }
+
+  private resolveModuleInformation(identifier: string): ModuleInformation {
     if (identifier.startsWith('data:')) {
       return { type: 'data', url: identifier, path: identifier }
     }
@@ -158,22 +206,22 @@ export class ExternalModulesExecutor {
       type = 'wasm'
     }
     else {
-      const pkgData = findNearestPackageData(normalize(pathUrl))
-      type = pkgData.type === 'module' ? 'module' : 'commonjs'
+      type = lookupPackageScopeType(normalize(pathUrl)) === 'esm' ? 'module' : 'commonjs'
     }
 
     return { type, path: pathUrl, url: fileUrl }
   }
 
   private createModule(identifier: string): VMModule | Promise<VMModule> {
-    const { type, url, path } = this.getModuleInformation(identifier)
+    const information = this.getModuleInformation(identifier)
+    const { type, url, path } = information
 
     // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
     // https://github.com/nodejs/node/pull/49038
-    if (
-      (type === 'module' || type === 'commonjs' || type === 'wasm')
-      && !existsSync(path)
-    ) {
+    if (type === 'module' || type === 'commonjs' || type === 'wasm') {
+      information.exists ??= existsSync(path)
+    }
+    if (information.exists === false) {
       const error = new Error(`Cannot find ${isBareImport(path) ? 'package' : 'module'} '${path}'`);
       (error as any).code = 'ERR_MODULE_NOT_FOUND'
       throw error

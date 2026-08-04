@@ -47,7 +47,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       onFilterStackTrace(stack) {
         return createStackString(parseStacktrace(stack))
       },
-      metaEnv: createImportMetaEnvProxy(),
+      metaEnv: ctx.metaEnv,
       getterTracker: ctx.config.benchmark.enabled && !ctx.config.benchmark.suppressExportGetterWarnings
         ? new GetterTracker()
         : undefined,
@@ -79,36 +79,4 @@ export function collect(ctx: ContextRPC, worker: VitestWorker, traces: Traces): 
 
 export async function teardown(): Promise<void> {
   await listeners.cleanup()
-}
-
-const env = process.env
-
-function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
-  // packages/vitest/src/node/plugins/index.ts:146
-  const booleanKeys = ['DEV', 'PROD', 'SSR']
-  return new Proxy(env, {
-    get(_, key) {
-      if (typeof key !== 'string') {
-        return undefined
-      }
-      if (booleanKeys.includes(key)) {
-        return !!process.env[key]
-      }
-      return process.env[key]
-    },
-    set(_, key, value) {
-      if (typeof key !== 'string') {
-        return true
-      }
-
-      if (booleanKeys.includes(key)) {
-        process.env[key] = value ? '1' : ''
-      }
-      else {
-        process.env[key] = value
-      }
-
-      return true
-    },
-  }) as WorkerGlobalState['metaEnv']
 }

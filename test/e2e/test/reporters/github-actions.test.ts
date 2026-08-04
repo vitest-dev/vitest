@@ -2,10 +2,10 @@ import { randomUUID } from 'node:crypto'
 import { access, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { sep } from 'node:path'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { GithubActionsReporter } from 'vitest/node'
+import { runVitest } from '#test-utils'
 
 describe(GithubActionsReporter, () => {
   it('uses absolute path by default', async () => {

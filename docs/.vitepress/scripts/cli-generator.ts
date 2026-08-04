@@ -39,7 +39,6 @@ const skipConfig = new Set([
   'project',
   'ui',
   'browser.name',
-  'browser.fileParallelism',
   'clearCache',
   'tagsFilter',
   'listTags',

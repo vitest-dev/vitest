@@ -10,7 +10,7 @@ test('excludes Vite transforms done for CJS dependency', async () => {
     },
   }, undefined, {
     cacheDir: fileURLToPath(new URL('./node_modules/.vite', import.meta.url)),
-    optimizeDeps: { include: ['@vitest/cjs-lib', '/Users/ari/Git/vitest/test/browser/cjs-lib'] },
+    optimizeDeps: { include: ['@vitest/cjs-lib'] },
   })
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()

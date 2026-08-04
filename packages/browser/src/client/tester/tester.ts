@@ -6,6 +6,7 @@ import { page, server, userEvent } from 'vitest/browser'
 import {
   collectTests,
   setupCommonEnv,
+  setupEnv,
   SpyModule,
   startCoverageInsideWorker,
   startTests,
@@ -34,8 +35,16 @@ const traces = new Traces({
 let rootTesterSpan: ReturnType<Traces['startContextSpan']> | undefined
 getBrowserState().traces = traces
 
+// a tester opened as a top-level window (e.g. a test clicking <a target="_blank">
+// at the tester URL) would echo `ack:`/`response:` events back recursively
+const isEmbedded = window.self !== window.top
+
 channel.addEventListener('message', async (e) => {
   const data = e.data
+
+  if (!isEmbedded) {
+    return
+  }
 
   if (!isEvent(data)) {
     await client.waitForConnection()
@@ -139,10 +148,12 @@ getBrowserState().iframeId = iframeId
 
 registerPageMarkHandler((name, options) => page.mark(name, options))
 
-channel.postMessage({
-  event: 'ready',
-  iframeId,
-})
+if (isEmbedded) {
+  channel.postMessage({
+    event: 'ready',
+    iframeId,
+  })
+}
 
 let contextSwitched = false
 
@@ -269,9 +280,11 @@ async function prepare(options: PrepareOptions) {
 
   debug?.('prepare time', state.durations.prepare, 'ms')
 
+  setupEnv(config.env, state.metaEnv)
+
   await Promise.all([
     setupCommonEnv(config),
-    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }),
+    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
     (async () => {
       const VitestIndex = await import('vitest')
       Object.defineProperty(window, '__vitest_index__', {
@@ -316,7 +329,7 @@ async function cleanup() {
     await rpc.wdioSwitchContext('parent')
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
-  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
+  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })
 }

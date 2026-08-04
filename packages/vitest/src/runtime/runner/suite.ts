@@ -436,8 +436,7 @@ function createSuiteCollector(
     }
 
     if (runner.config.includeTaskLocation) {
-      const error = stackTraceError.stack!
-      const stack = findTestFileStackTrace(currentTestFilepath, error)
+      const stack = findTestFileStackTrace(currentTestFilepath, stackTraceError)
       if (stack) {
         task.location = {
           line: stack.line,
@@ -523,7 +522,7 @@ function createSuiteCollector(
     if (runner && includeLocation && runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
       Error.stackTraceLimit = 15
-      const error = new Error('stacktrace').stack!
+      const error = new Error('stacktrace')
       Error.stackTraceLimit = limit
       const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
@@ -1030,7 +1029,7 @@ function formatTitle(template: string, items: any[], idx: number) {
 
   const isObjectItem = isObject(items[0])
   function formatAttribute(s: string) {
-    return s.replace(/\$([$\w.]+)/g, (_, key: string) => {
+    return s.replace(/\$([$\p{ID_Continue}.]+)/gu, (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
       if (!isObjectItem && !isArrayKey) {
         return `$${key}`

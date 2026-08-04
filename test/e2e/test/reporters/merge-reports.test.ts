@@ -1,17 +1,17 @@
-import type { RunVitestConfig } from '#test-utils'
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
+import type { RunVitestConfig } from '#test-utils'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
 import { getModuleGraph } from 'vitest/src/utils/graph.js'
+import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -351,24 +351,28 @@ test.for([
   const reportsDir = resolve(root, '.vitest/blob')
   rmSync(reportsDir, { force: true, recursive: true })
 
-  const baseConfig: TestUserConfig = {
-    root,
-  }
-  if (mode === 'browser') {
-    baseConfig.browser = {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-        },
-      ],
-      headless: true,
+  const baseConfig = () => {
+    const baseConfig: TestUserConfig = {
+      root,
     }
+
+    if (mode === 'browser') {
+      baseConfig.browser = {
+        enabled: true,
+        provider: playwright(),
+        instances: [
+          {
+            browser: 'chromium',
+          },
+        ],
+        headless: true,
+      }
+    }
+    return baseConfig
   }
 
   const result = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: ['blob'],
   })
   expect.assert(result.ctx)
@@ -386,11 +390,14 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/basic.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/sub/format.ts",
               "<root>/util.ts"
             ]
           },
-          "externalized": [],
+          "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>"
+          ],
           "inlined": [
             "<root>/basic.test.ts",
             "<root>/sub/format.ts",
@@ -405,11 +412,13 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/second.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/util.ts",
               "<optimized-deps>/obug.js"
             ]
           },
           "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>",
             "<optimized-deps>/obug.js?v=<hash>"
           ],
           "inlined": [
@@ -471,7 +480,7 @@ test.for([
   }
 
   const result2 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: reportsDir,
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
@@ -480,7 +489,7 @@ test.for([
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
   const result3 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: resolve(root, '.vitest/blob'),
     reporters: ['html'],
   })
@@ -502,6 +511,7 @@ async function getSerializedModuleGraph(ctx: Vitest) {
           ctx,
           projectName,
           file.filepath,
+          file.viteEnvironment,
         )
         return [file.filepath, graph] as const
       }),
@@ -755,8 +765,7 @@ test("macos only", () => {})
 })
 
 test('merge reports with projects and labels', async () => {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  useFS(root, {
+  const { root } = useTmpFS({
     'basic.test.ts': `
 import { test, expect } from "vitest";
 
@@ -771,11 +780,11 @@ test("works on browser", () => {
 })
 `,
   })
-  const baseConfig: RunVitestConfig = {
+  const baseConfig = (): RunVitestConfig => ({
+    config: false,
     root,
     projects: [
       {
-        extends: true,
         test: {
           name: 'node',
           sequence: {
@@ -784,7 +793,6 @@ test("works on browser", () => {
         },
       },
       {
-        extends: true,
         test: {
           name: 'browser',
           sequence: {
@@ -804,9 +812,9 @@ test("works on browser", () => {
         },
       },
     ],
-  }
+  })
   const result1 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: [['blob', { label: 'linux' }]],
   })
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
@@ -833,7 +841,7 @@ test("works on browser", () => {
     }
   `)
   const result2 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: [['blob', { label: 'macos' }]],
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
@@ -860,7 +868,7 @@ test("works on browser", () => {
     }
   `)
   const result = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: resolve(root, '.vitest/blob'),
   })
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
@@ -909,11 +917,11 @@ test("works on browser", () => {
     Expected: "undefined"
     Received: "object"
 
-     ❯ basic.test.ts:7:24
+     ❯ basic.test.ts:7:25
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
-           |                        ^
+           |                         ^
           8| })
           9|
 
@@ -925,11 +933,11 @@ test("works on browser", () => {
     Expected: "undefined"
     Received: "object"
 
-     ❯ basic.test.ts:7:24
+     ❯ basic.test.ts:7:25
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
-           |                        ^
+           |                         ^
           8| })
           9|
 

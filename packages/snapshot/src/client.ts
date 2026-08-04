@@ -27,12 +27,6 @@ function createMismatchError(
   return error
 }
 
-export interface Context {
-  file: string
-  title?: string
-  fullTitle?: string
-}
-
 interface AssertOptions {
   received: unknown
   filepath: string
@@ -71,7 +65,7 @@ export interface MatchResult {
   expected?: unknown
 }
 
-export interface SnapshotClientOptions {
+interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
 }
 

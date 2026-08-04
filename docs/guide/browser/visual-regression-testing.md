@@ -82,14 +82,12 @@ export default defineConfig({
     // ...other configurations
     projects: [
       {
-        extends: true,
         test: {
           name: 'unit',
           exclude: [vrtPattern, ...defaultExclude],
         },
       },
       {
-        extends: true,
         test: {
           name: 'vrt',
           browser: {
@@ -675,7 +673,6 @@ export default defineConfig({
     // ...other configurations
     projects: [
       {
-        extends: true,
         test: {
           name: 'vrt',
           browser: {

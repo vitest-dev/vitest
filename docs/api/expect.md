@@ -9,8 +9,11 @@ type Awaitable<T> = T | PromiseLike<T>
 `expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides Chai-style assertions (e.g., [`expect(spy).to.have.been.called()`](#called)) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
 
 ```ts
-export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
-  <T>(actual: T, message?: string): Assertion<T>
+export interface ExpectStatic
+  extends Chai.ExpectStatic,
+  Matchers<any>,
+  AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<void, T>
   extend: (expects: MatchersObject) => void
   anything: () => any
   any: (constructor: unknown) => any
@@ -2242,12 +2245,11 @@ import { expect, test } from 'vitest'
 
 test('custom matchers', () => {
   expect.extend({
-    toBeFoo: (received, expected) => {
-      if (received !== 'foo') {
-        return {
-          message: () => `expected ${received} to be foo`,
-          pass: false,
-        }
+    toBeFoo(received) {
+      const { isNot } = this
+      return {
+        message: () => `expected ${received} is${isNot ? ' not' : ''} foo`,
+        pass: received === 'foo',
       }
     },
   })
@@ -2263,18 +2265,19 @@ If you want your matchers to appear in every test, you should call this method i
 
 This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
 
-If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
+If you are using TypeScript, you can extend the default `Matchers` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
 ```ts
-interface CustomMatchers<R = unknown> {
-  toBeFoo: () => R
-}
+import 'vitest'
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
+  interface Matchers<R, T> {
+    toBeFoo: () => R
+  }
 }
 ```
+
+`R` is the assertion return type, and `T` is the type of the received value.
 
 ::: warning
 Don't forget to include the ambient declaration file in your `tsconfig.json`.

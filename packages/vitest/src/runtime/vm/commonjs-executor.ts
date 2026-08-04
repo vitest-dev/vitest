@@ -1,3 +1,4 @@
+import type { CodeCache } from './code-cache'
 import type { FileMap } from './file-map'
 import type { ImportModuleDynamically, VMSyntheticModule } from './types'
 import { Module as _Module, createRequire, isBuiltin } from 'node:module'
@@ -7,6 +8,7 @@ import { interopCommonJsModule, SyntheticModule } from './utils'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap
+  codeCache?: CodeCache
   interopDefault?: boolean
   context: vm.Context
   importModuleDynamically: ImportModuleDynamically
@@ -33,12 +35,14 @@ export class CommonjsExecutor {
   > = Object.create(null)
 
   private fs: FileMap
+  private codeCache: CodeCache | undefined
   private Module: typeof _Module
   private interopDefault: boolean | undefined
 
   constructor(options: CommonjsExecutorOptions) {
     this.context = options.context
     this.fs = options.fileMap
+    this.codeCache = options.codeCache
     this.interopDefault = options.interopDefault
 
     const primitives = vm.runInContext(
@@ -109,10 +113,16 @@ export class CommonjsExecutor {
 
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
+        const codeCache = executor.codeCache
+        const cachedData = codeCache?.get(filename, cjsModule)
         const script = new vm.Script(cjsModule, {
           filename,
+          cachedData,
           importModuleDynamically: options.importModuleDynamically,
         } as any)
+        if (cachedData && script.cachedDataRejected) {
+          codeCache!.delete(filename)
+        }
         // @ts-expect-error mark script with current identifier
         script.identifier = filename
         const fn = script.runInContext(executor.context)
@@ -124,6 +134,9 @@ export class CommonjsExecutor {
         }
         finally {
           this.loaded = true
+          // store after execution so the code cache carries the compiled
+          // module body, not only the lazily-parsed wrapper
+          codeCache?.store(filename, cjsModule, () => script.createCachedData())
         }
       }
 

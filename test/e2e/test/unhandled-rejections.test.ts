@@ -1,6 +1,6 @@
 import type { RunVitestConfig } from '#test-utils'
-import { runInlineTests } from '#test-utils'
 import { describe, expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 describe('dangerouslyIgnoreUnhandledErrors', () => {
   test('{ dangerouslyIgnoreUnhandledErrors: true }', async () => {

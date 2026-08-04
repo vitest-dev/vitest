@@ -148,7 +148,6 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     const config = project.config.browser
     if (
       !config.headless
-      || !config.fileParallelism
       || !project.browser!.provider.supportsParallelism
     ) {
       return 1
@@ -350,7 +349,7 @@ class BrowserPool {
 
     if (!file) {
       debug?.('[%s] no more tests to run', sessionId)
-      const isolate = this.project.config.browser.isolate
+      const isolate = this.project.config.isolate
       // we don't need to cleanup testers if isolation is enabled,
       // because cleanup is done at the end of every test
       if (isolate) {
@@ -373,6 +372,12 @@ class BrowserPool {
 
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
+
+    // warm the transform cache while the iframe is booting so the test
+    // file import doesn't wait for the transform; mirrors the URL the
+    // tester will request (see `importFile` in the browser runner)
+    const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(/\/+/g, '/')
+    void this.project.vite.transformRequest(fileUrl).catch(() => {})
 
     this.setBreakpoint(sessionId, file.filepath).then(() => {
       // this starts running tests inside the orchestrator
