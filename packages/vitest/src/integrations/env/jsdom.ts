@@ -225,7 +225,7 @@ export default <Environment>{
         dom.window.close()
         delete global.jsdom
         keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => (global[k] = v))
+        originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }
   },
