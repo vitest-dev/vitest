@@ -324,16 +324,23 @@ export class FileSystemModuleCache {
 
     // no metadata found, just store a new one, don't reset the cache
     if (!metadata) {
-      if (!existsSync(this.rootCache)) {
-        mkdirSync(this.rootCache, { recursive: true })
-      }
       debugFs?.(`fs metadata file was created with hash ${currentLockfileHash}`)
 
-      await writeFile(
-        this.metadataFilePath,
-        JSON.stringify({ lockfileHash: currentLockfileHash }, null, 2),
-        'utf-8',
-      )
+      try {
+        if (!existsSync(this.rootCache)) {
+          mkdirSync(this.rootCache, { recursive: true })
+        }
+        await writeFile(
+          this.metadataFilePath,
+          JSON.stringify({ lockfileHash: currentLockfileHash }, null, 2),
+          'utf-8',
+        )
+      }
+      catch (error) {
+        // Recording the metadata is best-effort and losing the file shouldn't
+        // abort the entire execution
+        debugFs?.(`failed to write fs cache metadata: ${error}`)
+      }
       return
     }
 
