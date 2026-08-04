@@ -459,6 +459,9 @@ function createFileTask(
         }
         definition.task = task
         latestSuite.tasks.push(task)
+        if (mode === 'only') {
+          markAncestorsContainOnly(latestSuite)
+        }
         lastSuite = task
         return
       }
@@ -488,6 +491,9 @@ function createFileTask(
       }
       definition.task = task
       latestSuite.tasks.push(task)
+      if (mode === 'only') {
+        markAncestorsContainOnly(latestSuite)
+      }
     })
   calculateSuiteHash(file)
   markDynamicTests(file.tasks)
@@ -567,6 +573,17 @@ async function transformSSR(project: TestProject, filepath: string) {
   const transformResult = await env.transformRequest(filepath)
 
   return transformResult ? { ...transformResult, fileTags } : null
+}
+
+// Walk up from the suite a task was added to, marking each ancestor as
+// containing an `only` task. Stops at the first already-marked ancestor (its
+// own ancestors are already marked), keeping the total work linear.
+function markAncestorsContainOnly(suite: Suite) {
+  let current: Suite | undefined = suite
+  while (current && !current.containsOnly) {
+    current.containsOnly = true
+    current = current.suite
+  }
 }
 
 function markDynamicTests(tasks: Task[]) {

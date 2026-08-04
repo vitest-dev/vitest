@@ -289,6 +289,18 @@ export interface Suite extends TaskBase {
    * An array of tasks that are part of the suite.
    */
   tasks: Task[]
+  /**
+   * Whether this suite's subtree contains a task in `only` mode. Computed during
+   * collection and consumed when resolving test modes (`interpretTaskModes`).
+   * @internal
+   */
+  containsOnly?: boolean
+  /**
+   * Whether this suite's subtree contains at least one test. Computed during
+   * collection and consumed to detect empty suites at run time.
+   * @internal
+   */
+  containsTest?: boolean
 }
 
 export interface File extends Suite {
