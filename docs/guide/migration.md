@@ -303,6 +303,21 @@ await expect.poll(async ({ signal }) => {
 
 A poll that legitimately needs more time should raise its `timeout`. Otherwise it fails with `expect.poll() function didn't resolve in time.` (or `expect.poll() assertion didn't resolve in time.`).
 
+### Unawaited Asynchronous Assertions Fail the Test
+
+Asynchronous assertions, like `resolves`, `rejects` and `toMatchFileSnapshot`, now fail the test if they are not awaited. Previously, Vitest auto-awaited them at the end of the test and printed a warning:
+
+```ts
+test('unawaited assertion', async () => {
+  // v4: prints a warning, the test passes // [!code --]
+  // v5: the test fails // [!code ++]
+  expect(promise).resolves.toBe(1) // [!code --]
+  await expect(promise).resolves.toBe(1) // [!code ++]
+})
+```
+
+The reported error points to the assertion that was not awaited.
+
 ### Test Titles and Inspected Values Use `pretty-format`
 
 Vitest now formats values with [`pretty-format`](https://www.npmjs.com/package/pretty-format) instead of `loupe` when it inspects them, including the values interpolated into [`test.each`](/api/test#test-each) and [`test.for`](/api/test#test-for) titles. The rendering of some values changes, so snapshots or assertions that capture inspected output may need updating.
