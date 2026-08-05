@@ -722,7 +722,7 @@ export interface Assertion<R extends void | Promise<void> = void, T = unknown>
    * Checks that at least one of the mock function's calls has resolved.
    *
    * @example
-   * await expect(mockAsyncFunc).toHaveResolved();
+   * expect(mockAsyncFunc).toHaveResolved();
    */
   toHaveResolved: () => R
 
@@ -730,7 +730,7 @@ export interface Assertion<R extends void | Promise<void> = void, T = unknown>
    * Checks that at least one of the mock function's calls has resolved to a specific value.
    *
    * @example
-   * await expect(mockAsyncFunc).toHaveResolvedWith('success');
+   * expect(mockAsyncFunc).toHaveResolvedWith('success');
    */
   toHaveResolvedWith: <E>(value: E) => R
 
