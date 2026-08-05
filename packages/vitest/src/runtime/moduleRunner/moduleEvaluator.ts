@@ -131,7 +131,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
   async runExternalModule(id: string): Promise<any> {
     if (id in this.stubs) {
-      return this.stubs[id]
+      return this._interopNamespace(this.stubs[id])
     }
 
     const file = this.convertIdToImportUrl(id)
@@ -164,10 +164,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       return namespace
     }
 
+    return this._interopNamespace(namespace)
+  }
+
+  private _interopNamespace(namespace: any) {
     const { mod, defaultExport } = interopModule(namespace)
     const { Proxy, Reflect } = this.primitives
 
-    const proxy = new Proxy(mod, {
+    return new Proxy(mod, {
       get(mod, prop) {
         if (prop === 'default') {
           return defaultExport
@@ -194,7 +198,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         }
       },
     })
-    return proxy
   }
 
   async runInlinedModule(
@@ -529,6 +532,14 @@ const defaultClientStub = {
   removeStyle: () => {},
 }
 
+function getNodeTimersStubs(): Record<string, any> {
+  const require = createRequire(import.meta.url)
+  return {
+    'node:timers': require('node:timers'),
+    'node:timers/promises': require('node:timers/promises'),
+  }
+}
+
 export function getDefaultRequestStubs(context?: vm.Context): Record<string, any> {
   if (!context) {
     const clientStub = {
@@ -538,6 +549,7 @@ export function getDefaultRequestStubs(context?: vm.Context): Record<string, any
     }
     return {
       '/@vite/client': clientStub,
+      ...getNodeTimersStubs(),
     }
   }
   const clientStub = vm.runInContext(
@@ -546,6 +558,7 @@ export function getDefaultRequestStubs(context?: vm.Context): Record<string, any
   )(defaultClientStub)
   return {
     '/@vite/client': clientStub,
+    ...getNodeTimersStubs(),
   }
 }
 
