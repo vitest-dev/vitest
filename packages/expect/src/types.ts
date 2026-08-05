@@ -719,42 +719,65 @@ export interface Assertion<R extends void | Promise<void> = void, T = unknown>
   toHaveBeenCalledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => R
 
   /**
-   * Checks that a promise resolves successfully at least once.
+   * Checks that a mock function resolved successfully at least once.
+   * Requires a spy function to be passed to `expect`.
    *
    * @example
-   * await expect(promise).toHaveResolved();
+   * const mockAsyncFunc = vi.fn(async () => 'success');
+   * await mockAsyncFunc();
+   *
+   * expect(mockAsyncFunc).toHaveResolved();
    */
   toHaveResolved: () => R
 
   /**
-   * Checks that a promise resolves to a specific value.
+   * Checks that a mock function resolved to a specific value at least once.
+   * Requires a spy function to be passed to `expect`.
    *
    * @example
-   * await expect(promise).toHaveResolvedWith('success');
+   * const mockAsyncFunc = vi.fn(async () => 'success');
+   * await mockAsyncFunc();
+   *
+   * expect(mockAsyncFunc).toHaveResolvedWith('success');
    */
   toHaveResolvedWith: <E>(value: E) => R
 
   /**
-   * Ensures a promise resolves a specific number of times.
+   * Ensures a mock function resolved a specific number of times.
+   * Requires a spy function to be passed to `expect`.
    *
    * @example
+   * const mockAsyncFunc = vi.fn(async () => 'success');
+   * await mockAsyncFunc();
+   * await mockAsyncFunc();
+   * await mockAsyncFunc();
+   *
    * expect(mockAsyncFunc).toHaveResolvedTimes(3);
    */
   toHaveResolvedTimes: (times: number) => R
 
   /**
-   * Asserts that the last resolved value of a promise matches an expected value.
+   * Asserts that the value a mock function resolved to when it was last called
+   * matches an expected value. Requires a spy function to be passed to `expect`.
    *
    * @example
-   * await expect(mockAsyncFunc).toHaveLastResolvedWith('finalResult');
+   * const mockAsyncFunc = vi.fn(async () => 'finalResult');
+   * await mockAsyncFunc();
+   *
+   * expect(mockAsyncFunc).toHaveLastResolvedWith('finalResult');
    */
   toHaveLastResolvedWith: <E>(value: E) => R
 
   /**
-   * Ensures a specific value was returned by a promise on the nth resolution.
+   * Ensures a mock function resolved to a specific value on its nth call.
+   * Requires a spy function to be passed to `expect`.
    *
    * @example
-   * await expect(mockAsyncFunc).toHaveNthResolvedWith(2, 'secondResult');
+   * const mockAsyncFunc = vi.fn(async (result: string) => result);
+   * await mockAsyncFunc('firstResult');
+   * await mockAsyncFunc('secondResult');
+   *
+   * expect(mockAsyncFunc).toHaveNthResolvedWith(2, 'secondResult');
    */
   toHaveNthResolvedWith: <E>(nthCall: number, value: E) => R
 
