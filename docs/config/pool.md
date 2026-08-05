@@ -23,7 +23,13 @@ Similar as `threads` pool but uses `child_process` instead of `worker_threads`. 
 
 Run tests using [VM context](https://nodejs.org/api/vm.html) (inside a sandboxed environment) in a `threads` pool.
 
-This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`vmMemoryLimit`](/config/vmmemorylimit) value.
+This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, workers are restarted when they exceed [`vmMemoryLimit`](/config/vmmemorylimit).
+
+::: warning Worker recycling is expensive in `vmThreads`
+Restarting a worker thread is not free: Node.js runs a full garbage collection over everything the worker accumulated before the thread can exit, and that work runs on a small pool of background threads shared by every worker in the process. When a large test suite hits [`vmMemoryLimit`](/config/vmmemorylimit) repeatedly, these teardowns pile up and also slow down the workers that are still running tests.
+
+The `vmForks` pool recycles workers by letting the child process exit, and the operating system reclaims the memory. If your test suite is large enough to recycle workers, `vmForks` is usually noticeably faster than `vmThreads`, even though its communication with the main process is slower.
+:::
 
 ::: warning
 Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
@@ -48,3 +54,5 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 ## vmForks
 
 Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads`. Communication between tests and the main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
+
+Unlike `vmThreads`, recycling a worker that exceeded [`vmMemoryLimit`](/config/vmmemorylimit) only requires the child process to exit, so it is much cheaper. On large test suites that recycle workers regularly, prefer `vmForks` over `vmThreads`.

@@ -9,7 +9,7 @@
 
 import type { NewPlugin } from '@vitest/pretty-format'
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   val,
   config,
   indentation,
@@ -44,7 +44,7 @@ export const serialize: NewPlugin['serialize'] = (
   return `[MockFunction${nameString}]${callsString}`
 }
 
-export const test: NewPlugin['test'] = val => val && !!val._isMockFunction
+const test: NewPlugin['test'] = val => val && !!val._isMockFunction
 
 const plugin: NewPlugin = { serialize, test }
 

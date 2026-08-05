@@ -96,10 +96,134 @@ export function playwright(options: PlaywrightProviderOptions = {}): BrowserProv
     name: 'playwright',
     supportedBrowser: playwrightBrowsers,
     options,
+    prewarm(ctx) {
+      prewarmBrowser(ctx, options)
+    },
     providerFactory(project) {
       return new PlaywrightBrowserProvider(project, options)
     },
   })
+}
+
+interface WarmBrowser {
+  promise: Promise<Browser>
+  launchOptionsJson: string
+  pending: Set<WarmBrowser>
+}
+
+// the subset of `TestProject` the launch-option resolution needs; `prewarm`
+// runs before the project exists and receives the same shape
+interface LaunchContext {
+  config: TestProject['config']
+  vitest: TestProject['vitest']
+}
+
+// The resolved config object is passed unchanged to the eventual TestProject,
+// so it identifies the browser this project can adopt.
+const warmBrowsers = new WeakMap<LaunchContext['config'], WarmBrowser>()
+const pendingWarmBrowsers = new WeakMap<LaunchContext['vitest'], Set<WarmBrowser>>()
+
+// starts importing playwright and launching the browser while the node side
+// is still creating the vite server, so the launch latency overlaps it. The
+// launch options are resolved by the same code as the real launch — if they
+// still differ by the time the provider opens the browser, the warm instance
+// is discarded, so this is always safe
+function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptions): void {
+  const browserName = project.config.browser.name
+  if (
+    options.connectOptions
+    || options.persistentContext
+    // don't speculate on debugging flows
+    || project.vitest.config.inspector.enabled
+  ) {
+    return
+  }
+  if (!browserName || !(playwrightBrowsers as readonly string[]).includes(browserName)) {
+    return
+  }
+  if (warmBrowsers.has(project.config)) {
+    return
+  }
+  let pending = pendingWarmBrowsers.get(project.vitest)
+  if (!pending) {
+    const pendingBrowsers = new Set<WarmBrowser>()
+    pending = pendingBrowsers
+    pendingWarmBrowsers.set(project.vitest, pendingBrowsers)
+    // Browsers whose projects never initialize a provider (they have no test
+    // files to run) are cleaned up when Vitest closes.
+    project.vitest.onClose(() => closeWarmBrowsers(pendingBrowsers))
+  }
+  const launchOptions = resolveLaunchOptions(project.config.browser, project.vitest.config.inspector, options, browserName)
+  const entry: WarmBrowser = {
+    launchOptionsJson: JSON.stringify(launchOptions),
+    pending,
+    promise: (async () => {
+      debug?.('[%s] prewarming the browser', browserName)
+      const playwright = await import('playwright')
+      return playwright[browserName as PlaywrightBrowser].launch(launchOptions)
+    })(),
+  }
+  // if the warm launch fails, drop it so the real launch retries
+  // and surfaces the error through the normal path
+  entry.promise.catch(() => {
+    if (warmBrowsers.get(project.config) === entry) {
+      warmBrowsers.delete(project.config)
+      entry.pending.delete(entry)
+    }
+  })
+  pending.add(entry)
+  warmBrowsers.set(project.config, entry)
+}
+
+function takeWarmBrowser(config: LaunchContext['config']): WarmBrowser | undefined {
+  const warm = warmBrowsers.get(config)
+  if (warm) {
+    warmBrowsers.delete(config)
+    warm.pending.delete(warm)
+  }
+  return warm
+}
+
+async function closeWarmBrowsers(pending: Set<WarmBrowser>): Promise<void> {
+  const closing = Array.from(pending, warm => warm.promise.then(browser => browser.close()).catch(() => {}))
+  pending.clear()
+  await Promise.all(closing)
+}
+
+function resolveLaunchOptions(
+  browser: TestProject['config']['browser'],
+  inspector: TestProject['vitest']['config']['inspector'],
+  providerOptions: PlaywrightProviderOptions,
+  browserName: string,
+): LaunchOptions {
+  const launchOptions: LaunchOptions = {
+    ...providerOptions.launchOptions,
+    headless: browser.headless,
+  }
+
+  if (typeof browser.trace === 'object' && browser.trace.tracesDir) {
+    launchOptions.tracesDir = browser.trace.tracesDir
+  }
+
+  if (inspector.enabled) {
+    // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
+    const port = inspector.port || 9229
+
+    launchOptions.args ||= []
+    launchOptions.args.push(`--remote-debugging-port=${port}`)
+  }
+
+  // start Vitest UI maximized only on supported browsers
+  if (browser.ui && browserName === 'chromium') {
+    if (!launchOptions.args) {
+      launchOptions.args = []
+    }
+    if (!launchOptions.args.includes('--start-maximized') && !launchOptions.args.includes('--start-fullscreen')) {
+      launchOptions.args.push('--start-maximized')
+    }
+  }
+
+  return launchOptions
 }
 
 export class PlaywrightBrowserProvider implements BrowserProvider {
@@ -167,42 +291,24 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     this.browserPromise = (async () => {
-      const options = this.project.config.browser
-
       const playwright = await import('playwright')
 
-      const launchOptions: LaunchOptions = {
-        ...this.options.launchOptions,
-        headless: options.headless,
-      }
-
-      if (typeof options.trace === 'object' && options.trace.tracesDir) {
-        launchOptions.tracesDir = options.trace?.tracesDir
-      }
+      const launchOptions = resolveLaunchOptions(
+        this.project.config.browser,
+        this.project.vitest.config.inspector,
+        this.options,
+        this.browserName,
+      )
 
       const inspector = this.project.vitest.config.inspector
       if (inspector.enabled) {
-        // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
         const port = inspector.port || 9229
         const host = inspector.host || '127.0.0.1'
-
-        launchOptions.args ||= []
-        launchOptions.args.push(`--remote-debugging-port=${port}`)
 
         if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
           this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chromium only allows remote debugging on localhost.`)
         }
         this.project.vitest.logger.log(`Debugger listening on ws://127.0.0.1:${port}`)
-      }
-
-      // start Vitest UI maximized only on supported browsers
-      if (this.project.config.browser.ui && this.browserName === 'chromium') {
-        if (!launchOptions.args) {
-          launchOptions.args = []
-        }
-        if (!launchOptions.args.includes('--start-maximized') && !launchOptions.args.includes('--start-fullscreen')) {
-          launchOptions.args.push('--start-maximized')
-        }
       }
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
@@ -250,6 +356,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         this.browser = this.persistentContext.browser()!
       }
       else {
+        const warm = takeWarmBrowser(this.project.config)
+        if (warm && warm.launchOptionsJson === JSON.stringify(launchOptions)) {
+          const browser = await warm.promise.catch(() => null)
+          if (browser?.isConnected()) {
+            debug?.('[%s] adopting the prewarmed browser', this.browserName)
+            this.browser = browser
+            this.browserPromise = null
+            return this.browser
+          }
+        }
+        else if (warm) {
+          debug?.('[%s] discarding the prewarmed browser, launch options changed', this.browserName)
+          void warm.promise.then(browser => browser.close()).catch(() => {})
+        }
         this.browser = await playwright[this.browserName].launch(launchOptions)
       }
       this.browserPromise = null
@@ -553,6 +673,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
+    // a prewarmed browser that was never adopted must not outlive the provider
+    const warm = takeWarmBrowser(this.project.config)
+    if (warm) {
+      void warm.promise.then(browser => browser.close()).catch(() => {})
+    }
     if (this.browserPromise) {
       await this.browserPromise
       this.browserPromise = null

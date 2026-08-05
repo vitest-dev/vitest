@@ -7,7 +7,6 @@ import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
-import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { Traces } from '../../utils/traces'
 import { emitModuleRunner } from '../listeners'
 import { listenForErrors } from '../moduleRunner/errorCatcher'
@@ -15,6 +14,7 @@ import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startVitestModuleRunner'
 import { run } from '../runBaseTests'
+import { setupEnv } from '../setup-common'
 import { getSafeWorkerState, provideWorkerState } from '../utils'
 
 let _moduleRunner: TestModuleRunner
@@ -54,6 +54,9 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
         spyModule,
       })
     }
+    // imported lazily (pulls in `local-pkg`) so it stays out of the default
+    // worker startup graph; only the `viteModuleRunner: false` path needs it
+    const { NativeModuleRunner } = await import('../../utils/nativeModuleRunner')
     _moduleRunner = new NativeModuleRunner(
       root,
       mocker,
@@ -81,6 +84,8 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
     rpc,
     config,
   } = context
+
+  setupEnv(config.env, context.metaEnv)
 
   // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
   if (context.config.serializedDefines) {

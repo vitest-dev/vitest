@@ -1,6 +1,5 @@
 import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
-import type { Bench as Tinybench, Task as TinybenchTask } from 'tinybench'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
 import type { Bench } from '../benchmark'
@@ -58,11 +57,9 @@ export class TestRunner implements VitestTestRunner {
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
-    if (source === 'setup') {
-      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
-      if (moduleNode) {
-        this.workerState.evaluatedModules.invalidateModule(moduleNode)
-      }
+    const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+    if (moduleNode && (source === 'setup' || moduleNode.evaluated)) {
+      this.workerState.evaluatedModules.invalidateModule(moduleNode)
     }
     return this._otel.$(
       `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
@@ -240,10 +237,11 @@ export class TestRunner implements VitestTestRunner {
     let _bench: Bench | undefined
     const runnerConfig = this.config
     const benchInstances = this.benchInstances
+    const moduleRunner = this.moduleRunner
     Object.defineProperty(context, 'bench', {
       get() {
         if (!_bench) {
-          _bench = createBench(context.task, runnerConfig)
+          _bench = createBench(context.task, runnerConfig, moduleRunner)
           benchInstances.set(context.task, _bench)
         }
         return _bench
@@ -298,15 +296,6 @@ export class TestRunner implements VitestTestRunner {
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
   static createFileTask: typeof createFileTask = createFileTask
-
-  /**
-   * @experimental
-   * A function that runs tinybench tasks.
-   * Can be overriden to run tasks in a special environment.
-   */
-  static async runBenchmarks(tinybench: Tinybench): Promise<TinybenchTask[]> {
-    return await tinybench.run()
-  }
 }
 
 function clearModuleMocks(config: SerializedConfig) {

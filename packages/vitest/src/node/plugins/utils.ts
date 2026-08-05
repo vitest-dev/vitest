@@ -9,10 +9,10 @@ import * as vite from 'vite'
 import { rootDir } from '../../paths'
 
 export function resolveOptimizerConfig(
-  _testOptions: DepsOptimizationOptions | undefined,
+  testOptions_: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
 ): DepOptimizationOptions {
-  const testOptions = _testOptions || {}
+  const testOptions = testOptions_ || {}
   let optimizeDeps: DepOptimizationOptions
   if (testOptions.enabled !== true) {
     testOptions.enabled ??= false
@@ -66,7 +66,6 @@ export function resolveOptimizerConfig(
 export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> {
   const defines: Record<string, any> = {}
   if (viteConfig.define) {
-    delete viteConfig.define['import.meta.vitest']
     delete viteConfig.define['process.env']
     delete viteConfig.define.process
     delete viteConfig.define.global

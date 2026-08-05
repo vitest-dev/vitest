@@ -149,10 +149,7 @@ function printErrorInner(
       : stacks.find((stack) => {
           // we are checking that this module was processed by us at one point
           try {
-            const environments = [
-              ...Object.values(project._vite?.environments || {}),
-              ...Object.values(project.browser?.vite.environments || {}),
-            ]
+            const environments = Object.values(project.vite.environments || {})
             const hasResult = environments.some((environment) => {
               const modules = environment.moduleGraph.getModulesByFile(stack.file)
               return [...modules?.values() || []].some(module => !!module.transformResult)

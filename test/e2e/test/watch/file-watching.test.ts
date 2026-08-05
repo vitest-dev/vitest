@@ -1,8 +1,8 @@
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import * as testUtils from '#test-utils'
-
 import { playwright } from '@vitest/browser-playwright'
+
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest'
+import * as testUtils from '#test-utils'
 
 const sourceFile = 'fixtures/watch/math.ts'
 const sourceFileContent = readFileSync(sourceFile, 'utf-8')

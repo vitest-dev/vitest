@@ -1,7 +1,7 @@
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { runVitest } from '#test-utils'
 import { beforeEach, describe, expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 const root = './fixtures/reporters/reporter-error'
 const reportsDir = resolve(root, '.vitest/blob')

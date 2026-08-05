@@ -73,9 +73,12 @@ export class EsmExecutor {
       this.moduleCache.set(fileURL, m)
       return m
     }
+    const codeCache = this.executor.codeCache
+    const cachedData = codeCache?.get(fileURL, code)
     const m = new SourceTextModule(code, {
       identifier: fileURL,
       context: this.context,
+      cachedData,
       importModuleDynamically: this.executor.importModuleDynamically,
       initializeImportMeta: (meta, mod) => {
         meta.url = mod.identifier
@@ -92,6 +95,10 @@ export class EsmExecutor {
         }
       },
     })
+    // the code cache of a SourceTextModule must be created before evaluation
+    if (!cachedData) {
+      codeCache?.store(fileURL, code, () => m.createCachedData())
+    }
     this.moduleCache.set(fileURL, m)
     return m
   }

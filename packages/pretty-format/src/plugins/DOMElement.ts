@@ -48,7 +48,7 @@ function testNode(val: any) {
   )
 }
 
-export const test: NewPlugin['test'] = (val: any) =>
+const test: NewPlugin['test'] = (val: any) =>
   val?.constructor?.name && testNode(val)
 
 type HandledType = Element | Text | Comment | DocumentFragment
@@ -63,10 +63,6 @@ function nodeIsComment(node: HandledType): node is Comment {
 
 function nodeIsFragment(node: HandledType): node is DocumentFragment {
   return node.nodeType === FRAGMENT_NODE
-}
-
-export interface FilterConfig extends Config {
-  filterNode?: (node: any) => boolean
 }
 
 function filterChildren(children: any[], filterNode?: (node: any) => boolean): any[] {
@@ -160,7 +156,7 @@ function serializeDOM(
   )
 }
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   node: HandledType,
   config: Config,
   indentation: string,

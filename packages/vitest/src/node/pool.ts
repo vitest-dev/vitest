@@ -6,6 +6,7 @@ import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
+import process from 'node:process'
 import { isatty } from 'node:tty'
 import { resolve } from 'pathe'
 import { version as viteVersion } from 'vite'
@@ -125,6 +126,17 @@ export function createPool(ctx: Vitest): ProcessPool {
             ...options.env,
             ...ctx.config.env,
             ...project.config.env,
+          }
+
+          // V8 serializes compile-cached scripts without the source positions
+          // that precise coverage relies on, so the compile cache must stay off
+          // for the v8 provider (and custom providers, whose mechanism we can't
+          // assume) in workers and any process they spawn. istanbul instruments
+          // the source at transform time, so the cache is harmless there and the
+          // boot speedup is kept.
+          if (ctx.config.coverage.enabled && ctx.config.coverage.provider !== 'istanbul') {
+            delete env.NODE_COMPILE_CACHE
+            env.NODE_DISABLE_COMPILE_CACHE = '1'
           }
 
           // env are case-insensitive on Windows, but spawned processes don't support it
@@ -324,7 +336,7 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
     return null
   }
 
-  const memory = nodeos.totalmem()
+  const memory = process.constrainedMemory?.() || nodeos.totalmem()
   const limit = getWorkerMemoryLimit(config)
 
   if (typeof memory === 'number') {
@@ -420,8 +432,12 @@ function groupSpecs(specs: TestSpecification[], environments: WeakMap<TestSpecif
       throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`)
     }
 
-    // Non-isolated single worker can receive all files at once
-    if (isolate === false && maxWorkers === 1) {
+    // Non-isolated single worker can receive all files at once.
+    // vm pools are excluded: their `isolate: false` comes from config
+    // resolution rather than the user, because their isolation is a fresh VM
+    // context per run request — batching files into a single run request
+    // would share one context across all of them.
+    if (isolate === false && maxWorkers === 1 && spec.pool !== 'vmThreads' && spec.pool !== 'vmForks') {
       const previous = groups[order].specs[0]?.[0]
 
       if (previous && previous.project.name === spec.project.name && isEqualEnvironments(spec, previous)) {

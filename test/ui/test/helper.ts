@@ -65,11 +65,12 @@ export async function assertTestCounts(page: Page, { pass, fail }: { pass: numbe
 }
 
 export function getExplorerItem(page: Page, name: string) {
-  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
+  return page.locator('[data-testid="explorer-item"]:visible').and(page.getByLabel(name, { exact: true }))
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  await getExplorerItem(page, name).click()
+  await getExplorerItem(page, name).scrollIntoViewIfNeeded()
+  await getExplorerItem(page, name).dispatchEvent('click')
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {

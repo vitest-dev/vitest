@@ -1,0 +1,107 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "ignoreWorkspaces": [
+    "examples/*",
+    "test/e2e/dts/*",
+    "test/e2e/fixtures/conditions-pkg"
+  ],
+  "ignoreBinaries": ["yq"],
+  "ignoreIssues": {
+    "docs/.vitepress/blog.data.ts": ["files"],
+    "docs/.vitepress/components/*.vue": ["files"],
+    "docs/.vitepress/contributors.ts": ["types"],
+    "docs/.vitepress/meta.ts": ["exports"],
+    "docs/.vitepress/sponsors.ts": ["files"],
+    "docs/.vitepress/theme/*.vue": ["files"],
+    // Test workspaces are package API consumers, not Knip lint targets; many
+    // intentionally contain dead, virtual, and unresolved fixture modules.
+    "test/**": [
+      "files",
+      "devDependencies",
+      "unlisted",
+      "binaries",
+      "unresolved",
+      "exports"
+    ],
+    "packages/vitest/src/integrations/vi.ts": ["duplicates"],
+    "packages/vitest/src/runtime/runner/suite.ts": ["duplicates"]
+  },
+  "workspaces": {
+    ".": {
+      "entry": [
+        "scripts/*.{js,ts}",
+        "shims.d.ts"
+      ]
+    },
+    "docs": {
+      // VitePress resolves these build integrations dynamically.
+      "ignoreDependencies": [
+        "@iconify-json/carbon",
+        "@iconify-json/logos",
+        "@unocss/reset",
+        "@vitejs/plugin-vue",
+        "@vueuse/core",
+        "tinyglobby",
+        "unocss"
+      ]
+    },
+    "packages/browser": {
+      "entry": [
+        "*.d.ts",
+        "src/client/orchestrator.ts",
+        "src/client/public/*.js",
+        "src/client/tester/tester.ts",
+        "src/node/index.ts"
+      ],
+      "vite": {
+        "config": "src/client/vite.config.ts"
+      }
+    },
+    "packages/browser-preview": {
+      "entry": ["src/{index,locators}.ts"],
+      "ignoreDependencies": [
+        "@testing-library/dom",
+        "@testing-library/user-event"
+      ]
+    },
+    "packages/coverage-istanbul": {
+      "entry": ["src/{browser,index,provider}.ts"],
+      "ignoreDependencies": ["@babel/core"]
+    },
+    "packages/coverage-v8": {
+      "entry": ["src/{browser,index,provider}.ts"],
+      "ignoreDependencies": ["@vitest/browser"]
+    },
+    "packages/mocker": {
+      "entry": [
+        "src/browser/{auto-register,index,register}.ts",
+        "src/node/{automock,index,redirect,transforms}.ts"
+      ]
+    },
+    "packages/snapshot": {
+      "entry": ["*.d.ts"]
+    },
+    "packages/utils": {
+      "entry": ["*.{d.ts,ts}"]
+    },
+    "packages/ui": {
+      "ignoreDependencies": [
+        "@iconify-json/carbon",
+        "@iconify-json/logos",
+        "uno.css"
+      ]
+    },
+    "packages/vitest": {
+      "entry": ["*.{cjs,d.cts,d.ts,mjs}"],
+      "ignoreDependencies": [
+        // Dynamically imported providers remain optional for Vitest users.
+        "@vitest/browser-playwright",
+        "@vitest/browser-preview",
+        "@vitest/browser-webdriverio",
+        "@vitest/ui",
+        "chai",
+        "why-is-node-running"
+      ]
+    }
+  }
+}

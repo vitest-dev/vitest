@@ -56,6 +56,107 @@ export default defineConfig({
 })
 ```
 
+### `testNamePattern` Matches the `>`-Joined Full Name
+
+[`testNamePattern`](/config/testnamepattern) (the `-t` CLI flag) now matches against the test's full name with the suite chain and test name joined by `' > '`, the same string shown in the reporter output. Previously the segments were joined with a single space, mirroring Jest.
+
+This only affects patterns that span the boundary between a suite and a test (or between nested suites). Patterns that match within a single name segment, and patterns that use `.`/`.*` between segments, are unaffected.
+
+```ts
+describe('math', () => {
+  test('adds', () => {})
+})
+```
+
+```bash
+vitest -t 'math adds' # [!code --]
+vitest -t 'math > adds' # [!code ++]
+```
+
+To keep a pattern working regardless of the separator, match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
+### Inline Projects Inherit the Root Config by Default
+
+The [`extends`](/guide/projects#configuration) option now defaults to `true`: every project defined as an inline configuration in [`test.projects`](/guide/projects) inherits all options from the root configuration, including Vite options like `plugins` or `resolve.alias`. The options are merged with the same rules that applied to an explicit `extends: true` in Vitest 4:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    projects: [
+      {
+        // v4: this project didn't apply the react plugin
+        // v5: the plugin is inherited from the root config
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+A few options are excluded because they are always scoped to a single project or to the whole test run:
+
+- `name` and `projects` are never inherited.
+- `globalSetup` is not inherited from the root config: the root-level `globalSetup` already runs once per test run, so inheriting it would run the same files again for every project. It is still inherited when extending a non-root config file.
+- The project's own `tags` replace the inherited array instead of being merged with it.
+
+Projects referenced as config files or directories are not affected; they still don't inherit any options from the root config.
+
+Keep in mind that arrays are merged, not overridden. For example, if the root config defines `setupFiles`, the project's own `setupFiles` are appended to the inherited ones. If you need the previous behavior, set `extends: false` in the project configuration:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    setupFiles: ['./setup.global.ts'],
+    projects: [
+      {
+        extends: false, // [!code ++]
+        test: {
+          name: 'unit',
+          setupFiles: ['./setup.unit.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
+### Referenced Config Files Can Define Their Own Projects
+
+A config file referenced in [`test.projects`](/guide/projects) that declares `projects` itself is now treated like the root config: it doesn't run tests on its own, it only provides the [nested projects](/guide/projects#nested-projects) it declares. Their names are prefixed with the name of the declaring config, e.g. `app (unit)`.
+
+In Vitest 4 the `projects` field of a referenced config was silently ignored and the config ran as a single project. Check that your project configs don't carry a `projects` field unknowingly. The most common way to do that is merging a config that defines it:
+
+```ts [packages/app/vitest.config.ts]
+import { defineProject, mergeConfig } from 'vitest/config'
+import rootConfig from '../../vitest.config' // [!code --]
+import sharedConfig from '../../vitest.shared' // [!code ++]
+
+export default mergeConfig(
+  // the root config defines `test.projects`, so merging it
+  // would turn this project into a container for those projects
+  rootConfig, // [!code --]
+  sharedConfig, // [!code ++]
+  defineProject({
+    test: {
+      environment: 'jsdom',
+    },
+  }),
+)
+```
+
+Since the inherited `projects` paths resolve relative to the referenced config, this misconfiguration usually fails loudly at startup with `Projects definition references a non-existing file or a directory`, `No projects were found in "..."`, or a circular `projects` definition error.
+
+Inline configurations continue to ignore the `projects` field at runtime, but it is now also excluded from their `ProjectConfig` type.
+
 ### Hoisted Mocking Calls Must Be at the Top Level
 
 [`vi.mock`](/api/vi#vi-mock), [`vi.unmock`](/api/vi#vi-unmock), and [`vi.hoisted`](/api/vi#vi-hoisted) are hoisted to the top of the file and run before any surrounding code. Calling them inside a function, block, or `describe`/`test` callback previously only logged a warning. Vitest 5.0 now throws, because the call does not execute where it is written:
@@ -147,6 +248,15 @@ Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 vi.useFakeTimers({ toNotFake: ['Temporal'] })
 ```
 
+### `setSystemTime` Now Mocks Temporal
+
+Previously `vi.setSystemTime` mocked only `Date` without fake timers, but now it also mocks methods of `Temporal.Now`.
+
+```ts
+vi.setSystemTime(0)
+Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
+```
+
 ### `toThrow("")` Matches Any Error Message
 
 [`toThrow`](/api/expect#tothrow) (and its alias `toThrowError`) treats a string argument as a substring of the error message. In Vitest 4 an empty string was special-cased to the `/^$/` pattern, so it matched only an error whose message was empty. It now behaves like any other substring, and an empty string is contained in every message:
@@ -162,6 +272,43 @@ To assert that a thrown error has an empty message, match the pattern explicitly
 expect(() => { throw new Error('boom') }).not.toThrow(/^$/)
 ```
 
+### Assertion Types Expose Return and Received Types
+
+Assertion interfaces now use two type parameters: `R` is the matcher return type and `T` is the received value type. Synchronous assertions use `void`, while assertions accessed through `.resolves`, `.rejects`, [`expect.poll`](/api/expect#poll), or [`expect.element`](/api/browser/assertions) use `Promise<void>`.
+
+If you declare custom matchers, augment the `Matchers<R, T>` interface. It adds the matcher to instance assertions, asymmetric matchers, and the type accepted by `expect.extend`:
+
+```ts [vitest.d.ts]
+import 'vitest'
+
+interface CustomMatchers<R = unknown, T = unknown> {
+  toBeFoo: () => R
+  toEqualTyped: (expected: T) => R
+}
+
+declare module 'vitest' {
+  interface Matchers<R, T> extends CustomMatchers<R, T> {}
+}
+```
+
+This makes custom matcher return types reflect how the matcher is used:
+
+```ts
+const syncResult = expect('value').toEqualTyped('other') // void
+const asyncResult = expect(Promise.resolve('value')).resolves.toEqualTyped('other') // Promise<void>
+await asyncResult
+```
+
+Code that refers to assertion types directly must also provide the return type first:
+
+```ts
+Assertion<string> // [!code --]
+Assertion<void, string> // [!code ++]
+Assertion<Promise<void>, string> // asynchronous assertion
+```
+
+Vitest no longer reads custom matcher declarations from the global `jest.Matchers` interface. Libraries that support both Jest and Vitest should augment `jest.Matchers` and `vitest.Matchers` separately. This only affects TypeScript declarations; registering matchers with `expect.extend` works as before.
+
 ### `expect.poll` Fails When It Times Out
 
 [`expect.poll`](/api/expect#poll) now rejects when its callback, or the polled assertion, does not settle within `timeout`. Previously a callback that resolved after the deadline, or an assertion that only passed on a late attempt, could still succeed. The callback now also receives an `AbortSignal` that aborts when the timeout elapses, so you can cancel in-flight work:
@@ -174,6 +321,21 @@ await expect.poll(async ({ signal }) => {
 ```
 
 A poll that legitimately needs more time should raise its `timeout`. Otherwise it fails with `expect.poll() function didn't resolve in time.` (or `expect.poll() assertion didn't resolve in time.`).
+
+### Unawaited Asynchronous Assertions Fail the Test
+
+Asynchronous assertions, like `resolves`, `rejects` and `toMatchFileSnapshot`, now fail the test if they are not awaited. Previously, Vitest auto-awaited them at the end of the test and printed a warning:
+
+```ts
+test('unawaited assertion', async () => {
+  // v4: prints a warning, the test passes // [!code --]
+  // v5: the test fails // [!code ++]
+  expect(promise).resolves.toBe(1) // [!code --]
+  await expect(promise).resolves.toBe(1) // [!code ++]
+})
+```
+
+The reported error points to the assertion that was not awaited.
 
 ### Test Titles and Inspected Values Use `pretty-format`
 
@@ -494,6 +656,13 @@ Vitest's `test` names are joined with a `>` symbol to make it easier to distingu
 ```diff
 - `${describeTitle} ${testTitle}`
 + `${describeTitle} > ${testTitle}`
+```
+
+The same applies to [`testNamePattern`](/config/testnamepattern) (the `-t` flag): Vitest matches against the `>`-joined full name, while Jest matches the space-joined name. Update patterns that span a suite and a test accordingly, or match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
+```diff
+- vitest -t 'math adds'
++ vitest -t 'math > adds'
 ```
 
 ### Envs

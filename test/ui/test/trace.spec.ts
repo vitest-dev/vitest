@@ -154,7 +154,7 @@ async function testBasic(page: Page) {
 
   // verify editor cursor position
   const getEditorCursor = () => evaluateEditor(page, editor => editor.getCursor())
-  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 32 })
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 33 })
 
   // markers ordered by 'test finished' > 'Render simple' > 'Render another'
   const traceEditorMarkers = page.getByTestId('editor').getByTestId('trace-editor-marker')
@@ -172,7 +172,7 @@ async function testBasic(page: Page) {
   // selecting 2nd trace step and verify again
   await traceStepNames.getByText('Render another').click()
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
-  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 32 })
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 33 })
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')

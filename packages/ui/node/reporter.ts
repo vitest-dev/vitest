@@ -182,6 +182,7 @@ async function serializeReportMetadata(
         ctx,
         projectName,
         testModule.moduleId,
+        testModule.viteEnvironment?.name,
       )
     })())
   }

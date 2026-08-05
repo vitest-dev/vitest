@@ -49,8 +49,8 @@ it('should not report coverage when "coverage.reportOnFailure" has default value
   expect(stdout).not.toMatch('Coverage report from istanbul')
 })
 
-it('prints a warning if the assertion is not awaited', async () => {
-  const { stderr, root, errorTree } = await runInlineTests({
+it('fails if the assertion is not awaited', async () => {
+  const { errorTree } = await runInlineTests({
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -79,41 +79,53 @@ it('prints a warning if the assertion is not awaited', async () => {
   }, {
     update: true,
   })
-  expect(errorTree()).toMatchInlineSnapshot(`
+  expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
     {
       "base.test.js": {
         "not awaited and failed": [
-          "expected 1 to be 2 // Object.is equality",
+          "expected 1 to be 2 // Object.is equality
+        at base.test.js:15:17",
+          "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+    await expect(actual).resolves.toBe(expected)
+
+        at base.test.js:14:33",
         ],
-        "several not awaited": "passed",
-        "single not awaited": "passed",
-        "soft + toMatchFileSnapshot not awaited": "passed",
-        "toMatchFileSnapshot not awaited": "passed",
+        "several not awaited": [
+          "Promise returned by \`expect(actual).rejects.toBe(expected)\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+    await expect(actual).rejects.toBe(expected)
+
+        at base.test.js:10:32",
+          "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+    await expect(actual).resolves.toBe(expected)
+
+        at base.test.js:9:33",
+        ],
+        "single not awaited": [
+          "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+    await expect(actual).resolves.toBe(expected)
+
+        at base.test.js:5:33",
+        ],
+        "soft + toMatchFileSnapshot not awaited": [
+          "Promise returned by \`expect.soft(actual).toMatchFileSnapshot(expected)\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+    await expect.soft(actual).toMatchFileSnapshot(expected)
+
+        at base.test.js:23:22",
+        ],
+        "toMatchFileSnapshot not awaited": [
+          "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+    await expect(actual).toMatchFileSnapshot(expected)
+
+        at base.test.js:19:17",
+        ],
       },
     }
-  `)
-  const warnings: string[] = []
-  const lines = stderr.split('\n')
-  lines.forEach((line, index) => {
-    if (line.includes('Promise returned by')) {
-      warnings.push(lines.slice(index, index + 2).join('\n').replace(`${root}/`, '<rootDir>/'))
-    }
-  })
-  expect(warnings).toMatchInlineSnapshot(`
-    [
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
-        at <rootDir>/base.test.js:5:33",
-      "Promise returned by \`expect(actual).rejects.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
-        at <rootDir>/base.test.js:10:32",
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
-        at <rootDir>/base.test.js:9:33",
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
-        at <rootDir>/base.test.js:14:33",
-      "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
-        at <rootDir>/base.test.js:19:17",
-      "Promise returned by \`expect.soft(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
-        at <rootDir>/base.test.js:23:22",
-    ]
   `)
 })
 
@@ -230,8 +242,8 @@ it('no async tracking after then/catch/finally', async () => {
   `)
 })
 
-it('prints a warning if the assertion is not awaited in the browser mode', async () => {
-  const { stderr } = await runInlineTests({
+it('fails if the assertion is not awaited in the browser mode', async () => {
+  const { errorTree } = await runInlineTests({
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -247,8 +259,19 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       headless: true,
     },
   })
-  expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
-  expect(stderr).toContain('base.test.js:5:33')
+  expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+    {
+      "base.test.js": {
+        "single not awaited": [
+          "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+    await expect(actual).resolves.toBe(expected)
+
+        at base.test.js:5:33",
+        ],
+      },
+    }
+  `)
 })
 
 it('reports test file if it failed to load', async () => {

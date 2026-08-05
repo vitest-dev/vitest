@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { page } from 'vitest/browser'
 
-test('.toBeInTheDocument', () => {
+test('.toBeInTheDocument', async () => {
   const window = document.defaultView
 
   window.customElements.define(
@@ -29,12 +29,14 @@ test('.toBeInTheDocument', () => {
   const fakeElement = {thisIsNot: 'an html element'}
   const undefinedElement = undefined
   const nullElement = null
+  const promiseValue = Promise.resolve(null)
 
   expect(htmlElement).toBeInTheDocument()
   expect(svgElement).toBeInTheDocument()
   expect(customElementChild).toBeInTheDocument()
   expect(detachedElement).not.toBeInTheDocument()
   expect(nullElement).not.toBeInTheDocument()
+  await (expect(promiseValue).resolves.not.toBeInTheDocument() satisfies Promise<void>)
 
   expect(page.getByTestId('non-existing')).not.toBeInTheDocument()
 

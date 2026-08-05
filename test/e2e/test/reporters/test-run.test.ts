@@ -13,8 +13,8 @@ import type {
 } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
-import { runInlineTests, ts } from '#test-utils'
 import { describe, expect, onTestFinished, test } from 'vitest'
+import { runInlineTests, ts } from '#test-utils'
 
 describe('TestRun', () => {
   test('pass test run without files (no-watch)', async () => {

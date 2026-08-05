@@ -1,4 +1,4 @@
-import type { Vite, Vitest } from 'vitest/node'
+import type { PluginHarness, Vite } from 'vitest/node'
 import fs from 'node:fs'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { join, resolve } from 'pathe'
@@ -12,11 +12,11 @@ export { distClientRoot }
 
 const UI_TOKEN_COOKIE = 'vitest-ui-token'
 
-export default (ctx: Vitest): Vite.Plugin => {
-  if (ctx.version !== version) {
-    ctx.logger.warn(
+export default (harness: PluginHarness): Vite.Plugin => {
+  if (harness.version !== version) {
+    harness.logger.warn(
       c.yellow(
-        `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
+        `Loaded ${c.inverse(c.yellow(` vitest@${harness.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
         + '\nRunning mixed versions is not supported and may lead into bugs'
         + '\nUpdate your dependencies and make sure the versions match.',
       ),
@@ -29,6 +29,7 @@ export default (ctx: Vitest): Vite.Plugin => {
     configureServer: {
       order: 'post',
       handler(server) {
+        const ctx = harness.getVitest()
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
 
@@ -70,7 +71,7 @@ export default (ctx: Vitest): Vite.Plugin => {
 
             const fsPath = decodeURIComponent(path)
 
-            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
+            if (!isFileServingAllowed(ctx.viteConfig, fsPath)) {
               return next()
             }
 

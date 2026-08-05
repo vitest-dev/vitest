@@ -31,12 +31,22 @@ export interface WorkerExecuteContext {
   workerId: number
 }
 
+export interface MetaEnv {
+  [key: string]: any
+  BASE_URL: string
+  MODE: string
+  DEV: boolean
+  PROD: boolean
+  SSR: boolean
+}
+
 export interface ContextRPC {
   pool: string
   config: SerializedConfig
   projectName: string
   environment: WorkerTestEnvironment
   rpc: WorkerRPC
+  metaEnv: MetaEnv
   files: FileSpecification[]
   providedContext: Record<string, any>
   invalidates?: string[]
@@ -52,6 +62,7 @@ export interface WorkerSetupContext {
   config: SerializedConfig
   projectName: string
   rpc: WorkerRPC
+  metaEnv: MetaEnv
   /**
    * @internal
    */
@@ -64,14 +75,7 @@ export interface WorkerGlobalState {
   rpc: WorkerRPC
   current?: Task
   filepath?: string
-  metaEnv: {
-    [key: string]: any
-    BASE_URL: string
-    MODE: string
-    DEV: boolean
-    PROD: boolean
-    SSR: boolean
-  }
+  metaEnv: MetaEnv
   environment: Environment
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>

@@ -307,6 +307,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/globals',
               },
               {
+                text: 'injectCjsGlobals',
+                link: '/config/injectcjsglobals',
+              },
+              {
                 text: 'environment',
                 link: '/config/environment',
               },
@@ -467,6 +471,14 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/cache',
               },
               {
+                text: 'fsModuleCache',
+                link: '/config/fsmodulecache',
+              },
+              {
+                text: 'fsModuleCachePath',
+                link: '/config/fsmodulecachepath',
+              },
+              {
                 text: 'sequence',
                 link: '/config/sequence',
               },
@@ -619,16 +631,8 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/browser/headless',
               },
               {
-                text: 'browser.isolate',
-                link: '/config/browser/isolate',
-              },
-              {
                 text: 'browser.testerHtmlPath',
                 link: '/config/browser/testerhtmlpath',
-              },
-              {
-                text: 'browser.api',
-                link: '/config/browser/api',
               },
               {
                 text: 'browser.provider',
@@ -657,6 +661,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'browser.screenshotFailures',
                 link: '/config/browser/screenshotfailures',
+              },
+              {
+                text: 'browser.dependencySourcemaps',
+                link: '/config/browser/dependencysourcemaps',
               },
               {
                 text: 'browser.orchestratorScripts',
@@ -1075,6 +1083,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Custom Pool',
                 link: '/guide/advanced/pool',
+              },
+              {
+                text: 'Benchmark Provider',
+                link: '/guide/advanced/benchmark-provider',
               },
             ],
           },
