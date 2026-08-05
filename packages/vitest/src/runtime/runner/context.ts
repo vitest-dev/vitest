@@ -259,7 +259,7 @@ function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Er
   }".`
   const error = new Error(message)
   if (stackTraceError?.stack) {
-    error.stack = stackTraceError.stack.replace(error.message, stackTraceError.message)
+    error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
   }
   return error
 }
