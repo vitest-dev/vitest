@@ -126,7 +126,11 @@ test('correctly normalizes methods to be an array', async () => {
 
 test('fails when an array is passed down for a single value', async () => {
   expect(() => getCLIOptions('--coverage.provider v8 --coverage.provider istanbul'))
-    .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
+    .toThrowErrorMatchingInlineSnapshot(`
+      Error {
+        "message": "Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]",
+      }
+    `)
 })
 
 test('coverage autoUpdate accepts boolean values from CLI', async () => {
@@ -346,8 +350,16 @@ test('merge-reports', () => {
 })
 
 test('configure expect', () => {
-  expect(() => getCLIOptions('vitest --expect.poll=1000')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value for --expect.poll: true. If you need to configure timeout, use --expect.poll.timeout=<timeout>]`)
-  expect(() => getCLIOptions('vitest --expect=1000')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value for --expect: true. If you need to configure expect options, use --expect.{name}=<value> syntax]`)
+  expect(() => getCLIOptions('vitest --expect.poll=1000')).toThrowErrorMatchingInlineSnapshot(`
+    TypeError {
+      "message": "Unexpected value for --expect.poll: true. If you need to configure timeout, use --expect.poll.timeout=<timeout>",
+    }
+  `)
+  expect(() => getCLIOptions('vitest --expect=1000')).toThrowErrorMatchingInlineSnapshot(`
+    TypeError {
+      "message": "Unexpected value for --expect: true. If you need to configure expect options, use --expect.{name}=<value> syntax",
+    }
+  `)
   expect(getCLIOptions('vitest --expect.poll.interval=100 --expect.poll.timeout=300')).toEqual({
     expect: {
       poll: {
@@ -374,7 +386,11 @@ test('silent', () => {
   expect(getCLIOptions('--silent=passed-only')).toEqual({ silent: 'passed-only' })
   expect(getCLIOptions('--silent=true example.test.ts')).toEqual({ silent: true })
 
-  expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.]`)
+  expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(`
+    TypeError {
+      "message": "Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.",
+    }
+  `)
 })
 
 test('public parseCLI works correctly', () => {

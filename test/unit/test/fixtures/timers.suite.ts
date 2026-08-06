@@ -216,7 +216,11 @@ describe('FakeTimers', () => {
       })
       expect(() => timers.useFakeTimers())
         .toThrowErrorMatchingInlineSnapshot(
-          `[TypeError: config.toFake and config.toNotFake cannot be used together]`
+          `
+          TypeError {
+            "message": "config.toFake and config.toNotFake cannot be used together",
+          }
+        `
         )
     })
   })

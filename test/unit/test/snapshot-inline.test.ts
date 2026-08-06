@@ -62,7 +62,11 @@ test('template literal', () => {
 test('throwing inline snapshots', async () => {
   expect(() => {
     throw new Error('omega')
-  }).toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)
+  }).toThrowErrorMatchingInlineSnapshot(`
+    Error {
+      "message": "omega",
+    }
+  `)
 
   expect(() => {
     // eslint-disable-next-line no-throw-literal
@@ -103,22 +107,30 @@ test('throwing inline snapshots', async () => {
   expect(() => {
     throw new Error(['Inline', 'snapshot', 'with', 'newlines'].join('\n'))
   }).toThrowErrorMatchingInlineSnapshot(`
-    [Error: Inline
+    Error {
+      "message": "Inline
     snapshot
     with
-    newlines]
+    newlines",
+    }
   `)
 
   expect(new Error(['Inline', 'snapshot', 'with', 'newlines'].join('\n'))).toMatchInlineSnapshot(`
-    [Error: Inline
+    Error {
+      "message": "Inline
     snapshot
     with
-    newlines]
+    newlines",
+    }
   `)
 
   await expect(async () => {
     throw new Error('omega')
-  }).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)
+  }).rejects.toThrowErrorMatchingInlineSnapshot(`
+    Error {
+      "message": "omega",
+    }
+  `)
 })
 
 test('throwing expect should be a function', async () => {
@@ -174,5 +186,9 @@ test('rejects', async () => {
   const getText = async () => {
     throw new Error('error')
   }
-  await expect(getText()).rejects.toMatchInlineSnapshot('[Error: error]')
+  await expect(getText()).rejects.toMatchInlineSnapshot(`
+    Error {
+      "message": "error",
+    }
+  `)
 })

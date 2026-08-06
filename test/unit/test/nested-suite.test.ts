@@ -29,5 +29,9 @@ it('visited', () => {
 it('suite inside test should throw', () => {
   expect(() => {
     describe('inside test', () => {})
-  }).toThrowErrorMatchingInlineSnapshot(`[Error: Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.]`)
+  }).toThrowErrorMatchingInlineSnapshot(`
+    Error {
+      "message": "Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.",
+    }
+  `)
 })

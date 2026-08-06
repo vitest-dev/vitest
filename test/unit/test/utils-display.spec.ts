@@ -78,7 +78,11 @@ describe('format', () => {
   })
 
   test('cannot serialize some values', () => {
-    expect(() => format(['%j', 100n])).toThrowErrorMatchingInlineSnapshot(`[TypeError: Do not know how to serialize a BigInt]`)
+    expect(() => format(['%j', 100n])).toThrowErrorMatchingInlineSnapshot(`
+      TypeError {
+        "message": "Do not know how to serialize a BigInt",
+      }
+    `)
   })
 
   test.each(

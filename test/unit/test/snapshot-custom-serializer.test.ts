@@ -60,10 +60,20 @@ test('throwing snapshot', () => {
   const error = new ErrorWithDetails('some-error', {
     details: 'some-detail',
   })
-  expect(error).toMatchInlineSnapshot(`[Error: some-error]`)
+  expect(error).toMatchInlineSnapshot(`
+    ErrorWithDetails {
+      "message": "some-error",
+      "details": "some-detail",
+    }
+  `)
   expect(() => {
     throw error
-  }).toThrowErrorMatchingInlineSnapshot(`[Error: some-error]`)
+  }).toThrowErrorMatchingInlineSnapshot(`
+    ErrorWithDetails {
+      "message": "some-error",
+      "details": "some-detail",
+    }
+  `)
 
   // with custom serializer
   expect.addSnapshotSerializer({
