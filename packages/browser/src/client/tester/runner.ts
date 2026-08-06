@@ -329,7 +329,8 @@ function createBrowserRunner(
       // on Windows we need the unit to resolve the test file
       const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
       const query = `browserv=${hash}`
-      const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
+      // Encode filepath to preserve + (becomes %2B, not a space)
+      const importpath = `${prefix}${encodeURIComponent(filepath)}?${query}`.replace(/\\/+/g, '/')
       // start tracing before the test file is imported
       const trace = this.config.browser.trace
       if (mode === 'collect' && trace !== 'off') {
