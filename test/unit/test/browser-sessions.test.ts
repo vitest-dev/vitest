@@ -2,8 +2,12 @@ import type { TestProject } from 'vitest/node'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { BrowserSessions } from '../../../packages/vitest/src/node/browser/sessions'
 
-function createProject(connectTimeout = 100) {
-  return { name: 'browser', vitest: { config: { browser: { connectTimeout } } } } as TestProject
+function createProject(connectTimeout = 100, rootConnectTimeout = connectTimeout) {
+  return {
+    name: 'browser',
+    config: { browser: { connectTimeout } },
+    vitest: { config: { browser: { connectTimeout: rootConnectTimeout } } },
+  } as TestProject
 }
 
 describe('BrowserSessions', () => {
@@ -50,6 +54,22 @@ describe('BrowserSessions', () => {
       await vi.advanceTimersByTimeAsync(101)
 
       await timeoutError
+    })
+
+    test('times out with the project connect timeout instead of the root one', async () => {
+      const sessions = new BrowserSessions()
+      const promise = sessions.createSession('session-id', createProject(100, 10), { reject() {} })
+
+      let rejected = false
+      promise.catch(() => {
+        rejected = true
+      })
+
+      await vi.advanceTimersByTimeAsync(11)
+      expect(rejected).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(90)
+      expect(rejected).toBe(true)
     })
 
     test('fails the pool without waiting for the connect timeout', async () => {
