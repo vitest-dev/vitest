@@ -60,6 +60,10 @@ describe('BrowserSessions', () => {
       const sessions = new BrowserSessions()
       const promise = sessions.createSession('session-id', createProject(100, 10), { reject() {} })
 
+      const timeoutError = expect(promise).rejects.toThrowError(
+        'Failed to connect to the browser session "session-id" [browser] within the timeout.',
+      )
+
       let rejected = false
       promise.catch(() => {
         rejected = true
@@ -70,6 +74,8 @@ describe('BrowserSessions', () => {
 
       await vi.advanceTimersByTimeAsync(90)
       expect(rejected).toBe(true)
+
+      await timeoutError
     })
 
     test('fails the pool without waiting for the connect timeout', async () => {

@@ -321,7 +321,7 @@ export interface BrowserConfigOptions {
 
   /**
    * Timeout for connecting to the browser
-   * @default 30000
+   * @default 60000
    */
   connectTimeout?: number
 
