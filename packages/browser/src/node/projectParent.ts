@@ -216,8 +216,9 @@ export class ParentBrowserProject {
     return handler
   }
 
-  removeCDPHandler(sessionId: string): void {
-    this.cdps.delete(sessionId)
+  removeCDPHandler(rpcId: string): void {
+    this.cdps.get(rpcId)?.dispose()
+    this.cdps.delete(rpcId)
   }
 
   async formatScripts(scripts: BrowserScript[] | undefined): Promise<HtmlTagDescriptor[]> {

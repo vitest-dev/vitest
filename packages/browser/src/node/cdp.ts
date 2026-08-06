@@ -51,4 +51,12 @@ export class BrowserServerCDPHandler {
   once(event: string, listener: string): void {
     this.on(event, listener, true)
   }
+
+  dispose(): void {
+    for (const [event, listener] of Object.entries(this.listeners)) {
+      this.session.off(event as any, listener)
+    }
+    this.listenerIds = {}
+    this.listeners = {}
+  }
 }
