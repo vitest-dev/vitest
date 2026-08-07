@@ -30,15 +30,32 @@ test.each([
 test('isolates browser mocks between files while listing tests serially', async () => {
   const { stderr, stdout, exitCode } = await runVitestCli(
     'list',
-    '-r=./fixtures/list-mock-isolation',
+    '-r=./fixtures/list-mock-isolation-20540c',
     '--no-file-parallelism',
   )
 
   expect(stderr).toBe('')
-  expect(stdout).toMatchInlineSnapshot(`
-    "[chromium] mocker.test.ts > sees the mock
-    [chromium] victim.test.ts > sees the real module
-    "
+  expect(stdout.trim().split('\n').sort()).toMatchInlineSnapshot(`
+    [
+      "[chromium] mocker-25e757.test.ts > sees the mock",
+      "[chromium] victim-25e757.test.ts > sees the real module",
+    ]
+  `)
+  expect(exitCode).toBe(0)
+})
+
+test('isolates browser mocks between files while listing tests in default mode', async () => {
+  const { stderr, stdout, exitCode } = await runVitestCli(
+    'list',
+    '-r=./fixtures/list-mock-isolation-20540c',
+  )
+
+  expect(stderr).toBe('')
+  expect(stdout.trim().split('\n').sort()).toMatchInlineSnapshot(`
+    [
+      "[chromium] mocker-25e757.test.ts > sees the mock",
+      "[chromium] victim-25e757.test.ts > sees the real module",
+    ]
   `)
   expect(exitCode).toBe(0)
 })
