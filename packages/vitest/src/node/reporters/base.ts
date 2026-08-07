@@ -643,7 +643,6 @@ export abstract class BaseReporter implements Reporter {
 
       const breakdown = computeDurationBreakdown({
         files,
-        transformTime: this.ctx.state.transformTime,
         typecheckTime: sum(this.ctx.projects, project => project.typechecker?.getResult().time),
       })
 
@@ -689,30 +688,24 @@ export abstract class BaseReporter implements Reporter {
    */
   private reportEnvironmentDiagnostic(files: File[]): boolean {
     // merged blob reports replay durations of past runs: no environments were
-    // created by this process, and the per-project transform split needed for
-    // an accurate share is not part of the blob format
+    // created by this process
     if (this.ctx.config.watch || this.ctx.state.blobs || !this.ctx.config.experimental.diagnostics.environment) {
       return false
     }
 
     const executionTime = this.end - this.start
     const maxWorkers = this.getEffectiveMaxWorkers()
-    const transformTimes = this.ctx.state.transformTimes
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter(file => (file.projectName || '') === project.name)
       let environmentTime = 0
       let environmentCount = 0
-      let trackedTime = transformTimes.get(project.name) || 0
+      let trackedTime = 0
       for (const file of projectFiles) {
         if (file.environmentLoad) {
           environmentTime += file.environmentLoad
           environmentCount++
         }
-        trackedTime
-          += (file.environmentLoad || 0)
-            + (file.setupDuration || 0)
-            + (file.collectDuration || 0)
-            + (file.result?.duration || 0)
+        trackedTime += trackedFileTime(file)
       }
       return {
         name: project.name,
@@ -776,18 +769,15 @@ export abstract class BaseReporter implements Reporter {
 
     const executionTime = this.end - this.start
     const maxWorkers = this.getEffectiveMaxWorkers()
-    const transformTimes = this.ctx.state.transformTimes
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter(file => (file.projectName || '') === project.name)
       let importTime = 0
-      let trackedTime = transformTimes.get(project.name) || 0
+      let trackedTime = 0
       for (const file of projectFiles) {
-        importTime += file.collectDuration || 0
-        trackedTime
-          += (file.environmentLoad || 0)
-            + (file.setupDuration || 0)
-            + (file.collectDuration || 0)
-            + (file.result?.duration || 0)
+        // the transform wait is subtracted because `isolate: false` only avoids
+        // re-evaluating modules, the server transforms each of them once either way
+        importTime += Math.max((file.collectDuration || 0) - (file.collectFetchDuration || 0), 0)
+        trackedTime += trackedFileTime(file)
       }
       const durations = this.ctx.state.metadata[project.name]?.duration
       return {
@@ -845,17 +835,13 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const transformTimes = this.ctx.state.transformTimes
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter(file => (file.projectName || '') === project.name)
-      const transformTime = transformTimes.get(project.name) || 0
-      let trackedTime = transformTime
+      let transformTime = 0
+      let trackedTime = 0
       for (const file of projectFiles) {
-        trackedTime
-          += (file.environmentLoad || 0)
-            + (file.setupDuration || 0)
-            + (file.collectDuration || 0)
-            + (file.result?.duration || 0)
+        transformTime += (file.setupFetchDuration || 0) + (file.collectFetchDuration || 0)
+        trackedTime += trackedFileTime(file)
       }
       return {
         name: project.name,
@@ -1430,6 +1416,18 @@ function sum<T>(items: T[], cb: (_next: T) => number | undefined) {
   return items.reduce((total, next) => {
     return total + Math.max(cb(next) || 0, 0)
   }, 0)
+}
+
+/**
+ * Summed time of all tracked phases of a file. The transform wait is part of
+ * `setupDuration`/`collectDuration`, so it is not added separately.
+ */
+function trackedFileTime(file: File): number {
+  return (file.environmentLoad || 0)
+    + (file.setupDuration || 0)
+    + (file.collectDuration || 0)
+    + (file.prepareDuration || 0)
+    + (file.result?.duration || 0)
 }
 
 function getIndentation(suite: Task, level = 1): number {

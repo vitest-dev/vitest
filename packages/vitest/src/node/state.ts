@@ -1,6 +1,5 @@
 import type { File, FileSpecification, Task, TaskResultPack } from '../runtime/runner/types'
 import type { AsyncLeak, UserConsoleLog } from '../types/general'
-import type { TransformClock } from './environments/fetchModule'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
@@ -16,7 +15,7 @@ function isAggregateError(err: unknown): err is AggregateError {
   return err instanceof Error && 'errors' in err
 }
 
-export class StateManager implements TransformClock {
+export class StateManager {
   filesMap: Map<string, File[]> = new Map()
   pathsSet: Set<string> = new Set()
   idMap: Map<string, Task> = new Map()
@@ -26,21 +25,6 @@ export class StateManager implements TransformClock {
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
   /**
-   * Wall time during which the server's module transform pipeline was busy,
-   * measured as the union of in-flight fetch intervals. Individual fetch
-   * durations cannot be summed instead: concurrent fetches (parallel workers,
-   * the vm pool graph prewarm) all wait on the same deduplicated in-flight
-   * transforms, so per-caller wall times overcount the actual work by orders
-   * of magnitude.
-   */
-  transformTime = 0
-  /**
-   * Transform busy time split by project name, measured the same way as
-   * `transformTime`. Used by performance diagnostics to relate a project's
-   * transform cost to the rest of its tracked time.
-   */
-  transformTimes: Map<string, number> = new Map()
-  /**
    * Total time spent starting test workers (spawning the process/thread, loading
    * the worker bundle and setting up the test environment). Used to surface the
    * cost of `isolate: true`, which spawns a fresh worker per test file.
@@ -48,33 +32,6 @@ export class StateManager implements TransformClock {
   startupTime = 0
   /** Number of test workers that were started during the run. */
   workersSpawned = 0
-  private _transformsInflight = 0
-  private _transformsBusyStart = 0
-  private _projectTransformsInflight: Map<string, number> = new Map()
-  private _projectTransformsBusyStart: Map<string, number> = new Map()
-
-  transformStarted(projectName: string): void {
-    if (this._transformsInflight++ === 0) {
-      this._transformsBusyStart = performance.now()
-    }
-    const inflight = this._projectTransformsInflight.get(projectName) || 0
-    this._projectTransformsInflight.set(projectName, inflight + 1)
-    if (inflight === 0) {
-      this._projectTransformsBusyStart.set(projectName, performance.now())
-    }
-  }
-
-  transformFinished(projectName: string): void {
-    if (--this._transformsInflight === 0) {
-      this.transformTime += performance.now() - this._transformsBusyStart
-    }
-    const inflight = (this._projectTransformsInflight.get(projectName) || 1) - 1
-    this._projectTransformsInflight.set(projectName, inflight)
-    if (inflight === 0) {
-      const busy = performance.now() - this._projectTransformsBusyStart.get(projectName)!
-      this.transformTimes.set(projectName, (this.transformTimes.get(projectName) || 0) + busy)
-    }
-  }
 
   metadata: Record<string, {
     externalized: Record<string, string>
