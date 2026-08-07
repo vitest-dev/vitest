@@ -2,6 +2,7 @@ import type { GlobOptions } from 'tinyglobby'
 import type {
   ResolvedConfig as ResolvedViteConfig,
   InlineConfig as ViteInlineConfig,
+  Plugin as VitePlugin,
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
@@ -15,13 +16,14 @@ import type {
   UserConfig,
   UserWorkspaceConfig,
 } from '../types/config'
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import os from 'node:os'
 import { deepClone } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
@@ -62,6 +64,9 @@ const PROJECT_CLI_OVERRIDES = [
   'fileParallelism',
   'tagsFilter',
   'browser',
+  'experimental',
+  'fsModuleCache',
+  'fsModuleCachePath',
 ] as const
 
 /**
@@ -70,6 +75,9 @@ const PROJECT_CLI_OVERRIDES = [
  * - If the user declared `test.projects`, each declared project gets its own
  *   resolved Vite config plus per-project Vitest test config.
  * - Otherwise the root config is used as the single base entry.
+ * - A file-based project whose config declares `projects` itself is a
+ *   container: like the root, it doesn't run tests and is replaced by the
+ *   projects it declares (recursively).
  * - Browser instances expand each entry with `browser.enabled` into one entry
  *   per instance (sharing `viteConfig` with the parent).
  * - Benchmarks add a benchmark variant for each entry whose
@@ -92,12 +100,35 @@ export async function resolveProjectEntries(
   // falls through to the default root-project entry.
   let baseEntries: ResolvedProjectEntry[]
   if (definitions !== undefined) {
-    baseEntries = await resolveDeclaredProjectEntries(
+    const cliOverrides = PROJECT_CLI_OVERRIDES.reduce((acc, name) => {
+      if (name in globalConfig.cliOptions) {
+        acc[name] = globalConfig.cliOptions[name] as any
+      }
+      return acc
+    }, {} as UserConfig)
+    const containerConfigFiles: string[] = []
+    const context: ProjectsResolutionContext = {
       harness,
-      globalViteConfig,
-      globalConfig,
-      definitions,
-    )
+      rootViteConfig: globalViteConfig,
+      rootConfig: globalConfig,
+      parentViteConfig: globalViteConfig,
+      parentConfig: globalConfig,
+      cliOverrides,
+      ancestors: [],
+      chain: globalViteConfig.configFile
+        ? [safeRealpath(globalViteConfig.configFile)]
+        : [],
+      containerConfigFiles,
+    }
+    baseEntries = await resolveDeclaredProjectEntries(context, definitions)
+    if (containerConfigFiles.length) {
+      // appended rather than assigned so `injectTestProjects` containers
+      // are also watched
+      globalConfig._containerConfigFiles = [
+        ...(globalConfig._containerConfigFiles || []),
+        ...containerConfigFiles,
+      ]
+    }
   }
   else {
     baseEntries = [{ viteConfig: globalViteConfig, projectConfig: globalConfig }]
@@ -118,17 +149,19 @@ export async function resolveProjectEntries(
     }
     const existing = seenNames.get(name)
     if (existing) {
-      const entryFile = entry.viteConfig.configFile
+      // inline entries carry the configFile they extend, which doesn't say
+      // where the project is declared, so they are reported without a file
+      const entryFile = !entry.inline && entry.viteConfig.configFile
         ? relative(globalConfig.root, entry.viteConfig.configFile)
         : ''
-      const existingFile = existing.viteConfig.configFile
+      const existingFile = !existing.inline && existing.viteConfig.configFile
         ? relative(globalConfig.root, existing.viteConfig.configFile)
         : ''
       const filesError = baseEntries.length > 1 && (entryFile || existingFile)
         ? [
             '\n\nYour config matched these files:\n',
             baseEntries
-              .filter(e => e.viteConfig.configFile)
+              .filter(e => !e.inline && e.viteConfig.configFile)
               .map(e => ` - ${relative(globalConfig.root, e.viteConfig.configFile as string)}`)
               .join('\n'),
             '\n\n',
@@ -254,58 +287,80 @@ async function applyBrowserOptimizeDeps(
   )
 }
 
+/**
+ * The set of values threaded through (possibly recursive) project resolution.
+ *
+ * The `root*` pair is the true root config: it carries run-wide values (CLI
+ * options, the `--project` filter, the programmatic config). The `parent*`
+ * pair is the config the current `projects` array is declared in — the root
+ * itself or a container config — and provides the default `extends` target,
+ * env defaults and the base for resolving relative definitions.
+ */
+interface ProjectsResolutionContext {
+  harness: PluginHarness
+  rootViteConfig: ResolvedViteConfig
+  rootConfig: ResolvedConfig
+  parentViteConfig: ResolvedViteConfig
+  parentConfig: ResolvedConfig
+  /** CLI options projects may override, computed once from the root's `cliOptions` */
+  cliOverrides: UserConfig
+  /** names of the containers above this level, outermost first */
+  ancestors: string[]
+  /** realpaths of the config files above this level, the cycle guard */
+  chain: string[]
+  /** shared across levels; collects container config files for the watcher */
+  containerConfigFiles: string[]
+}
+
 async function resolveDeclaredProjectEntries(
-  harness: PluginHarness,
-  globalViteConfig: ResolvedViteConfig,
-  globalConfig: ResolvedConfig,
+  context: ProjectsResolutionContext,
   definitions: TestProjectConfiguration[],
 ): Promise<ResolvedProjectEntry[]> {
+  const { parentViteConfig, parentConfig } = context
   const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
-    globalViteConfig,
-    globalConfig,
+    parentViteConfig,
+    parentConfig,
     definitions,
   )
 
-  const cliOverrides = PROJECT_CLI_OVERRIDES.reduce((acc, name) => {
-    if (name in globalConfig.cliOptions) {
-      acc[name] = globalConfig.cliOptions[name] as any
-    }
-    return acc
-  }, {} as UserConfig)
   const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
   const fileProjects = [...configFiles, ...nonConfigDirectories]
 
   const promises: Promise<ResolvedProjectEntry>[] = []
 
   projectConfigs.forEach((options, index) => {
-    const configRoot = globalConfig.root
+    const configRoot = parentConfig.root
     // if extends a config file, resolve the file path
     const configFile = typeof options.extends === 'string'
       ? resolve(configRoot, options.extends)
-      : options.extends === true
-        ? (globalViteConfig.configFile || false)
+      : options.extends !== false
+        ? (parentViteConfig.configFile || false)
         : false
-    // if `root` is configured, resolve it relative to vite root (like other options)
-    // if `root` is not specified, inline configs use the same root as the root project
+    // if `root` is configured, resolve it relative to the declaring config's
+    // root (like other options); if `root` is not specified, inline configs
+    // use the same root as the declaring config
     const rawRoot = options.test?.root ?? options.root
     const root = rawRoot
       ? resolve(configRoot, rawRoot)
       : configRoot
 
-    promises.push(concurrent(() => resolveSingleProjectEntry(harness, globalViteConfig, globalConfig, {
+    promises.push(concurrent(() => resolveSingleProjectEntry(context, {
       ...options,
       root,
       configFile,
-    }, index, cliOverrides)))
+    }, index)))
   })
 
   for (const path of fileProjects) {
-    // if file leads to the root config, then we can just reuse it because we already initialized it
-    if (globalViteConfig.configFile === path) {
-      // The root viteConfig is already resolved; emit it as an entry directly.
+    // if the file leads to the declaring config itself, reuse the already
+    // resolved pair: the root (or the container) also runs as a regular project
+    if (parentViteConfig.configFile === path) {
       promises.push(Promise.resolve({
-        viteConfig: globalViteConfig,
-        projectConfig: globalConfig,
+        viteConfig: parentViteConfig,
+        projectConfig: parentConfig,
+        ancestors: context.ancestors.length > 1
+          ? context.ancestors.slice(0, -1)
+          : undefined,
       }))
       continue
     }
@@ -314,12 +369,9 @@ async function resolveDeclaredProjectEntries(
     const projectRoot = path.endsWith('/') ? path : dirname(path)
 
     promises.push(concurrent(() => resolveSingleProjectEntry(
-      harness,
-      globalViteConfig,
-      globalConfig,
+      context,
       { root: projectRoot, configFile },
       path,
-      cliOverrides,
     )))
   }
 
@@ -342,75 +394,216 @@ async function resolveDeclaredProjectEntries(
     )
   }
 
-  return entries
+  return flattenContainerEntries(context, entries)
+}
+
+/**
+ * Replace container entries (file-based configs that declare `projects`) with
+ * the projects they declare, recursively. A container behaves like the root
+ * config: it doesn't run tests and never gets a Vite server; its projects
+ * extend it by default and their names are prefixed with the container's name.
+ */
+async function flattenContainerEntries(
+  context: ProjectsResolutionContext,
+  entries: ResolvedProjectEntry[],
+): Promise<ResolvedProjectEntry[]> {
+  const result: ResolvedProjectEntry[] = []
+  for (const entry of entries) {
+    const definitions = entry.projectConfig.projects
+    // inline projects cannot declare `projects`; the declaring config's own
+    // entry (emitted when it references its own config file) is kept as-is —
+    // its `projects` are the definitions currently being resolved
+    if (entry.inline || definitions === undefined || entry.projectConfig === context.parentConfig) {
+      result.push(entry)
+      continue
+    }
+
+    const configFile = entry.viteConfig.configFile
+    const relativeFile = configFile
+      ? relative(context.rootConfig.root, configFile)
+      : entry.projectConfig.name
+    let chain = context.chain
+    if (configFile) {
+      const realConfigFile = safeRealpath(configFile)
+      if (chain.includes(realConfigFile)) {
+        throw new Error(
+          [
+            `Found a circular "projects" definition: `,
+            [...chain, realConfigFile].map(file => `"${relative(context.rootConfig.root, file)}"`).join(' -> '),
+            '. Make sure your configuration is correct.',
+          ].join(''),
+        )
+      }
+      chain = [...chain, realConfigFile]
+      context.containerConfigFiles.push(configFile)
+    }
+
+    const childContext: ProjectsResolutionContext = {
+      ...context,
+      parentViteConfig: entry.viteConfig,
+      parentConfig: entry.projectConfig,
+      ancestors: [...context.ancestors, entry.projectConfig.name],
+      chain,
+    }
+    const children = await resolveDeclaredProjectEntries(childContext, definitions)
+    if (!children.length) {
+      throw new Error(
+        `No projects were found in "${relativeFile}". Make sure your configuration is correct.`,
+      )
+    }
+    result.push(...children)
+  }
+  return result
+}
+
+function safeRealpath(path: string): string {
+  try {
+    return realpathSync(path)
+  }
+  catch {
+    return path
+  }
+}
+
+// `name` must stay unique per project, `projects` would redefine the whole workspace
+const NON_INHERITED_OPTIONS = ['name', 'projects'] as const
+
+// the root `globalSetup` already runs once per test run; a non-root
+// config (a shared config or a container) keeps it because nothing else runs it
+const NON_INHERITED_ROOT_OPTIONS = [...NON_INHERITED_OPTIONS, 'globalSetup'] as const
+
+function ProjectInheritancePlugin(options: ViteInlineConfig, extendsTrueRootConfig: boolean): VitePlugin {
+  const nonInheritedOptions = extendsTrueRootConfig
+    ? NON_INHERITED_ROOT_OPTIONS
+    : NON_INHERITED_OPTIONS
+  return {
+    name: 'vitest:project-inheritance',
+    enforce: 'pre',
+    config: {
+      // run before other `config` hooks so only the values merged from the
+      // extended config file are removed, not the values set by plugins
+      order: 'pre',
+      handler(config) {
+        config.test ??= {}
+        // the project's own `tags` replace the inherited array so tags can be overridden
+        if (options.test?.tags) {
+          config.test.tags = options.test.tags
+        }
+        for (const key of nonInheritedOptions) {
+          if (options.test?.[key] !== undefined) {
+            (config.test as any)[key] = options.test[key]
+          }
+          else {
+            delete config.test[key]
+          }
+        }
+      },
+    },
+    api: {
+      vitest: {
+        ignoreFsModuleCache: true,
+      },
+    },
+  }
+}
+
+/**
+ * Merges the programmatic config passed to `createVitest` into an extending
+ * project's options. The programmatic config is part of the effective root
+ * config, so a project inherits it even when the root config file doesn't
+ * exist. Some options never transfer to a project:
+ * - `plugins` are live instances owned by the root server
+ * - `tagsFilter` is CLI-only; `PROJECT_CLI_OVERRIDES` applies it per project
+ * - `browser` describes the instances of a single project; inheriting it
+ *   would create duplicate instance names (the `--browser` flags have the
+ *   same guard in `CliOverride`)
+ */
+function inheritRootViteOverrides(
+  rootConfig: ResolvedConfig,
+  options: ViteInlineConfig,
+): ViteInlineConfig {
+  const { plugins: _plugins, ...rootViteOverrides } = rootConfig.viteOverrides
+  // cloned so plugins that mutate inherited arrays in place don't share
+  // them between the root and every project
+  const inherited = deepClone(rootViteOverrides)
+  delete (inherited.test as UserConfig | undefined)?.tagsFilter
+  delete (inherited.test as UserConfig | undefined)?.browser
+  return mergeConfig(inherited, options)
 }
 
 async function resolveSingleProjectEntry(
-  harness: PluginHarness,
-  globalViteConfig: ResolvedViteConfig,
-  globalConfig: ResolvedConfig,
-  options: ViteInlineConfig,
+  context: ProjectsResolutionContext,
+  options: ViteInlineConfig & { extends?: string | boolean },
   workspacePath: string | number,
-  cliOverrides: UserConfig,
 ): Promise<ResolvedProjectEntry> {
+  const { harness, rootViteConfig, rootConfig, parentViteConfig, parentConfig, cliOverrides } = context
   const { configFile, ...restOptions } = options
 
   const browserHolder: BrowserContributionHolder = {}
 
+  // only inline entries (keyed by their index) extend another config;
+  // file-based projects own all of their values
+  const isInlineEntry = typeof workspacePath === 'number'
+  const inheritsParentConfig = isInlineEntry
+    && options.extends !== false
+    && typeof options.extends !== 'string'
+  // the root `globalSetup` runs once per test run, so it is stripped from
+  // projects extending the root config file (directly or via `extends: true`
+  // at the top level); a container's `globalSetup` stays inherited because
+  // nothing else runs it, like any other non-root extended config
+  const extendsTrueRootConfig = (inheritsParentConfig && parentConfig === rootConfig)
+    || (!!configFile && configFile === rootViteConfig.configFile)
+
+  // the programmatic config is part of the effective root config; a container
+  // is fully described by its file, so only root-level projects inherit it
+  const inlineOptions = inheritsParentConfig && parentConfig === rootConfig
+    ? inheritRootViteOverrides(rootConfig, restOptions)
+    : restOptions
+
   const projectInline: ViteInlineConfig = {
-    ...restOptions,
+    ...inlineOptions,
     configFile,
-    configLoader: globalViteConfig.inlineConfig.configLoader,
+    configLoader: parentViteConfig.inlineConfig.configLoader,
     // this will make "mode": "test" inside defineConfig
-    mode: options.test?.mode || options.mode || globalConfig.mode,
+    mode: options.test?.mode || options.mode || parentConfig.mode,
     plugins: [
       CliOverride(cliOverrides),
       ...(options.plugins || []),
       ...WorkspaceVitestPlugin(
         harness,
-        globalViteConfig,
-        globalConfig,
+        parentViteConfig,
+        rootConfig,
         options,
       ),
       ...BrowserLoaderPlugin(browserHolder, harness),
-      {
-        name: 'vitest:tags',
-        config(config) {
-          // We need to keep the `tags` array untouched if `extends` is `true`,
-          // Otherwise it gets merged with the top level tags and we don't want that because tags could be overridden
-          // Setting it to `options.test?.tags` overrides the merged value
-          if (options.test?.tags) {
-            config.test ??= {}
-            config.test.tags = options.test?.tags
-          }
-        },
-        api: {
-          vitest: {
-            ignoreFsModuleCache: true,
-          },
-        },
-      },
+      ...(isInlineEntry
+        ? [ProjectInheritancePlugin(options, extendsTrueRootConfig)]
+        : []),
     ],
   }
 
   const projectViteConfig = await viteResolveConfig(projectInline, 'serve')
 
-  // inherit the root's resolved env as defaults; a project's own env wins,
-  // like every other option a project can override
-  for (const key in globalViteConfig.env) {
-    projectViteConfig.env[key] ??= globalViteConfig.env[key]
+  // inherit the declaring config's resolved env as defaults; a project's own
+  // env wins, like every other option a project can override
+  for (const key in parentViteConfig.env) {
+    projectViteConfig.env[key] ??= parentViteConfig.env[key]
   }
 
   const mergedOptions = (projectViteConfig.test ?? {}) as UserConfig
 
   // resolved after `viteResolveConfig` so a plugin can still set `test.name`
-  mergedOptions.name = resolveProjectName(mergedOptions.name, workspacePath)
+  mergedOptions.name = resolveProjectName(
+    mergedOptions.name,
+    workspacePath,
+    context.ancestors.at(-1),
+  )
 
   const projectConfig = resolveTestConfig(
     harness.logger,
     mergedOptions,
     projectViteConfig,
-    globalConfig,
+    parentConfig,
   )
 
   projectViteConfig.test = projectConfig
@@ -423,6 +616,8 @@ async function resolveSingleProjectEntry(
   return {
     viteConfig: projectViteConfig,
     projectConfig,
+    inline: isInlineEntry,
+    ancestors: context.ancestors.length ? [...context.ancestors] : undefined,
   }
 }
 
@@ -460,11 +655,11 @@ function expandBrowserInstancesInEntries(
     const parentName = projectConfig.name
 
     const instances = projectConfig.browser.instances ?? []
-    if (instances.length === 0 || isExcludedByProjectFilter(globalConfig.project, parentName)) {
+    if (instances.length === 0 || isEntryExcludedByFilter(globalConfig.project, parentName, entry.ancestors)) {
       continue
     }
 
-    const keepAllInstances = matchesProjectFilter(globalConfig.project, parentName)
+    const keepAllInstances = matchesEntryFilter(globalConfig.project, parentName, entry.ancestors)
     const filteredInstances = keepAllInstances
       ? instances
       : instances.filter(instance => matchesProjectFilter(globalConfig.project, instance.name!))
@@ -568,6 +763,7 @@ function expandBrowserInstancesInEntries(
       result.push({
         viteConfig, // shared with parent
         projectConfig: clonedConfig,
+        ancestors: entry.ancestors,
       })
     })
   }
@@ -641,6 +837,7 @@ function expandBenchmarksInEntries(
     result.push({
       viteConfig: entry.viteConfig, // shared with non-benchmark counterpart
       projectConfig: benchmarkConfig,
+      ancestors: entry.ancestors,
     })
   }
 
@@ -674,7 +871,7 @@ function applyProjectFilter(
       // Browser instance: already filtered during expansion.
       return true
     }
-    return matchesProjectFilter(filter, entry.projectConfig.name)
+    return matchesEntryFilter(filter, entry.projectConfig.name, entry.ancestors)
   })
 }
 
@@ -726,13 +923,46 @@ function cloneProjectConfigForBrowserInstance(
   } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
 }
 
+/**
+ * Match an entry against the `--project` filter. In addition to the entry's
+ * own name, the names of the containers it is nested under are considered,
+ * so a container name selects (or excludes) its whole subtree.
+ */
+function matchesEntryFilter(
+  filter: string[],
+  name: string,
+  ancestors: string[] | undefined,
+): boolean {
+  if (!filter.length) {
+    return true
+  }
+  const names = [name, ...(ancestors || [])]
+  return filter.some((project) => {
+    const regexp = wildcardPatternToRegExp(project)
+    // a negated pattern compiles into a negative lookahead: the entry is kept
+    // only when neither its name nor any of its containers match the exclusion
+    return project.startsWith('!')
+      ? names.every(candidate => regexp.test(candidate))
+      : names.some(candidate => regexp.test(candidate))
+  })
+}
+
+function isEntryExcludedByFilter(
+  filter: string[],
+  name: string,
+  ancestors: string[] | undefined,
+): boolean {
+  return isExcludedByProjectFilter(filter, name)
+    || !!ancestors?.some(ancestor => isExcludedByProjectFilter(filter, ancestor))
+}
+
 async function resolveTestProjectConfigs(
-  globalViteConfig: ResolvedViteConfig,
-  globalConfig: ResolvedConfig,
+  parentViteConfig: ResolvedViteConfig,
+  parentConfig: ResolvedConfig,
   projectsDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
-  const projectsOptions: (UserWorkspaceConfig & { extends?: true | string })[] = []
+  const projectsOptions: (UserWorkspaceConfig & { extends?: boolean | string })[] = []
 
   // custom config files that were specified directly or resolved from a directory
   const projectsConfigFiles: string[] = []
@@ -745,11 +975,11 @@ async function resolveTestProjectConfigs(
 
   for (const definition of projectsDefinition) {
     if (typeof definition === 'string') {
-      const stringOption = definition.replace('<rootDir>', globalConfig.root)
+      const stringOption = definition.replace('<rootDir>', parentConfig.root)
       // if the string doesn't contain a glob, we can resolve it directly
       // ['./vitest.config.js']
       if (!isDynamicPattern(stringOption)) {
-        const file = resolve(globalConfig.root, stringOption)
+        const file = resolve(parentConfig.root, stringOption)
 
         if (!existsSync(file)) {
           throw new Error(`Projects definition references a non-existing file or a directory: ${file}`)
@@ -761,7 +991,7 @@ async function resolveTestProjectConfigs(
           const name = basename(file)
           if (!CONFIG_REGEXP.test(name)) {
             throw new Error(
-              `The file "${relative(globalConfig.root, file)}" must start with "vitest.config"/"vite.config" `
+              `The file "${relative(parentConfig.root, file)}" must start with "vitest.config"/"vite.config" `
               + `or match the pattern "(vitest|vite).*.config.*" to be a valid project config.`,
             )
           }
@@ -794,7 +1024,7 @@ async function resolveTestProjectConfigs(
     else if (typeof definition === 'function') {
       projectsOptions.push(await definition({
         command: 'serve',
-        mode: globalViteConfig.mode,
+        mode: parentViteConfig.mode,
         isPreview: false,
         isSsrBuild: false,
       }))
@@ -810,7 +1040,7 @@ async function resolveTestProjectConfigs(
       absolute: true,
       dot: true,
       onlyFiles: false,
-      cwd: globalConfig.root,
+      cwd: parentConfig.root,
       expandDirectories: false,
       ignore: [
         '**/node_modules/**',
@@ -839,7 +1069,7 @@ async function resolveTestProjectConfigs(
         const name = basename(path)
         if (!CONFIG_REGEXP.test(name)) {
           throw new Error(
-            `The projects glob matched a file "${relative(globalConfig.root, path)}", `
+            `The projects glob matched a file "${relative(parentConfig.root, path)}", `
             + `but it should also either start with "vitest.config"/"vite.config" `
             + `or match the pattern "(vitest|vite).*.config.*".`,
           )
@@ -872,33 +1102,41 @@ function resolveDirectoryConfig(directory: string) {
 /**
  * Resolve a project's name, falling back to the `package.json` name or the
  * directory/index when neither the config nor a plugin provided one.
+ *
+ * Projects declared by a container config are namespaced by the container's
+ * name: the "unit" project of an "app" container is named "app (unit)".
  */
 function resolveProjectName(
   name: string | ProjectName | undefined,
   workspacePath: string | number,
+  containerLabel: string | undefined,
 ): ProjectName {
   let { label, color }: ProjectName = typeof name === 'string'
     ? { label: name }
     : { label: '', ...name }
 
-  if (label) {
-    return { label, color }
+  if (!label) {
+    if (typeof workspacePath === 'number') {
+      label = workspacePath.toString()
+    }
+    else {
+      const dir = workspacePath.endsWith('/')
+        ? workspacePath.slice(0, -1)
+        : dirname(workspacePath)
+      const pkgJsonPath = resolve(dir, 'package.json')
+      if (existsSync(pkgJsonPath)) {
+        label = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')).name
+      }
+      if (typeof label !== 'string' || !label) {
+        label = basename(dir)
+      }
+    }
   }
 
-  if (typeof workspacePath === 'number') {
-    return { label: workspacePath.toString(), color }
+  if (containerLabel) {
+    label = `${containerLabel} (${label})`
   }
 
-  const dir = workspacePath.endsWith('/')
-    ? workspacePath.slice(0, -1)
-    : dirname(workspacePath)
-  const pkgJsonPath = resolve(dir, 'package.json')
-  if (existsSync(pkgJsonPath)) {
-    label = JSON.parse(readFileSync(pkgJsonPath, 'utf-8')).name
-  }
-  if (typeof label !== 'string' || !label) {
-    label = basename(dir)
-  }
   return { label, color }
 }
 

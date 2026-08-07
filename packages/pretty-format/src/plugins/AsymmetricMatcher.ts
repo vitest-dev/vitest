@@ -14,7 +14,7 @@ const asymmetricMatcher
     : 0x13_57_A5
 const SPACE = ' '
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   val: any,
   config: Config,
   indentation: string,
@@ -89,7 +89,7 @@ export const serialize: NewPlugin['serialize'] = (
   return val.toAsymmetricMatcher()
 }
 
-export const test: NewPlugin['test'] = (val: any) =>
+const test: NewPlugin['test'] = (val: any) =>
   val && val.$$typeof === asymmetricMatcher
 
 const plugin: NewPlugin = { serialize, test }

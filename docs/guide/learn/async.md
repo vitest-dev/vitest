@@ -46,7 +46,7 @@ test('rejects with an error', async () => {
 ```
 
 ::: warning
-Don't forget the `await` before `expect`. Vitest will detect unawaited assertions and print a warning at the end of the test, but it's best to always include `await` explicitly. Vitest will also wait for all pending promises in `Promise.all` before starting the next test, but relying on this behavior makes tests harder to understand.
+Don't forget the `await` before `expect`. Vitest will detect unawaited assertions and fail the test at the end of it.
 :::
 
 ## Assertion Counting

@@ -54,14 +54,18 @@ export class TestRunner implements VitestTestRunner {
     const environment = this.workerState.environment
     this.viteEnvironment = environment.viteEnvironment || environment.name
     this.viteModuleRunner = config.experimental.viteModuleRunner
+    // vm pools downgrade worker-scoped fixtures to file scope, so the hook has
+    // nothing to tear down there; registering it anyway would keep the
+    // listener, an in-context closure, alive for the lifetime of the worker
+    if (this.pool !== 'vmThreads' && this.pool !== 'vmForks') {
+      this.onCleanupWorkerContext = listener => this.workerState.onCleanup(listener)
+    }
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
-    if (source === 'setup') {
-      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
-      if (moduleNode) {
-        this.workerState.evaluatedModules.invalidateModule(moduleNode)
-      }
+    const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+    if (moduleNode && (source === 'setup' || moduleNode.evaluated)) {
+      this.workerState.evaluatedModules.invalidateModule(moduleNode)
     }
     return this._otel.$(
       `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
@@ -83,9 +87,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = file
   }
 
-  onCleanupWorkerContext(listener: () => unknown): void {
-    this.workerState.onCleanup(listener)
-  }
+  onCleanupWorkerContext?: (listener: () => unknown) => void
 
   onAfterRunFiles(_files: File[]): void {
     this.snapshotClient.clear()

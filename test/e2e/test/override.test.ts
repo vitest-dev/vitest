@@ -1,9 +1,9 @@
 import type { ResolvedConfig as ResolvedViteConfig, UserConfig as ViteUserConfig } from 'vite'
 import type { CliOptions, ResolvedConfig, TestUserConfig } from 'vitest/node'
-import { resolveTestConfig } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { parseCLI } from 'vitest/node'
+import { resolveTestConfig } from '#test-utils'
 
 async function config(options: TestUserConfig & { $cliOptions?: CliOptions; $viteConfig?: ViteUserConfig }) {
   const { config } = await resolveTestConfig(options) as any

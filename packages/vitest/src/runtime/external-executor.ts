@@ -14,6 +14,7 @@ import { EsmExecutor } from './vm/esm-executor'
 import {
   createRequireAsyncModuleError,
   hasEsmSyntax,
+  setActiveVmExecutor,
   supportsSyncEsmEvaluate,
 } from './vm/utils'
 import { ViteExecutor } from './vm/vite-executor'
@@ -85,9 +86,9 @@ export class ExternalModulesExecutor {
     this.esm = new EsmExecutor(this, {
       context: this.context,
     })
+    setActiveVmExecutor(this)
     this.cjs = new CommonjsExecutor({
       context: this.context,
-      importModuleDynamically: this.importModuleDynamically,
       fileMap: options.fileMap,
       codeCache: options.codeCache,
       interopDefault: options.interopDefault,

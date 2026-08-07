@@ -1,10 +1,11 @@
 import type { CodeCache } from './code-cache'
 import type { FileMap } from './file-map'
-import type { ImportModuleDynamically, VMSyntheticModule } from './types'
+import type { VMSyntheticModule } from './types'
 import { Module as _Module, createRequire, isBuiltin } from 'node:module'
 import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
 import {
+  activeImportModuleDynamically,
   interopCommonJsModule,
   supportsSyncEsmEvaluate,
   SyntheticModule,
@@ -15,7 +16,6 @@ interface CommonjsExecutorOptions {
   codeCache?: CodeCache
   interopDefault?: boolean
   context: vm.Context
-  importModuleDynamically: ImportModuleDynamically
   // resolves to `true` for files that are explicitly marked as ESM;
   // require() of those dispatches to `requireEsm` (Node 24.9+)
   shouldRequireAsEsm: (resolvedPath: string) => boolean
@@ -40,6 +40,11 @@ class CjsParseError extends SyntaxError {
 }
 
 const requiresCache = new WeakMap<NodeJS.Module, NodeJS.Require>()
+
+// Compiled scripts of commonjs modules, shared across vm contexts: only the
+// evaluation has to happen per context. No invalidation is needed because
+// watch mode reruns destroy the worker.
+const cjsScriptCache = new Map<string, vm.Script>()
 
 export class CommonjsExecutor {
   private context: vm.Context
@@ -140,29 +145,35 @@ export class CommonjsExecutor {
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
         const codeCache = executor.codeCache
-        const cachedData = codeCache?.get(filename, cjsModule)
-        let script: vm.Script
-        try {
-          script = new vm.Script(cjsModule, {
-            filename,
-            cachedData,
-            importModuleDynamically: options.importModuleDynamically,
-          } as any)
-        }
-        catch (error) {
-          if (
-            error instanceof SyntaxError
-            && executor.canFallbackToEsm(filename)
-          ) {
-            throw new CjsParseError(error)
+        let script = cjsScriptCache.get(filename)
+        if (!script) {
+          const cachedData = codeCache?.get(filename, cjsModule)
+          // the dynamic import callback is a static function (the executor is
+          // resolved when it is called), so the compiled script holds no
+          // per-context state and can be reused by every vm context
+          try {
+            script = new vm.Script(cjsModule, {
+              filename,
+              cachedData,
+              importModuleDynamically: activeImportModuleDynamically,
+            } as any)
           }
-          throw error
+          catch (error) {
+            if (
+              error instanceof SyntaxError
+              && executor.canFallbackToEsm(filename)
+            ) {
+              throw new CjsParseError(error)
+            }
+            throw error
+          }
+          if (cachedData && script.cachedDataRejected) {
+            codeCache!.delete(filename)
+          }
+          // @ts-expect-error mark script with current identifier
+          script.identifier = filename
+          cjsScriptCache.set(filename, script)
         }
-        if (cachedData && script.cachedDataRejected) {
-          codeCache!.delete(filename)
-        }
-        // @ts-expect-error mark script with current identifier
-        script.identifier = filename
         const fn = script.runInContext(executor.context)
         const __dirname = dirname(filename)
         executor.requireCache.set(filename, this)

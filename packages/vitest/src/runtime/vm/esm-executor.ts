@@ -3,6 +3,7 @@ import type { ExternalModulesExecutor, SyncModuleDisposition } from '../external
 import type { VMModule, VMSourceTextModule, VMSyntheticModule } from './types'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
 import {
   createConcurrentRequireError,
   createRequireAsyncModuleError,
@@ -58,6 +59,33 @@ function parseDataUri(identifier: string): { mime: string; code: string | Buffer
     throw new Error(`Invalid data URI encoding: ${encoding}`)
   }
   return { mime, code }
+}
+
+function getContextExecutor(mod: VMModule): ExternalModulesExecutor {
+  const vmContext = (mod.context as any)?.[VITEST_VM_CONTEXT_SYMBOL]
+  if (!vmContext) {
+    throw new Error(`Cannot import "${mod.identifier}": its vm context was torn down.`)
+  }
+  return vmContext.externalModulesExecutor
+}
+
+async function staticImportModuleDynamically(specifier: string, referencer: VMModule): Promise<VMModule> {
+  return getContextExecutor(referencer).importModuleDynamically(specifier, referencer)
+}
+
+function staticInitializeImportMeta(meta: ImportMeta, mod: VMModule): void {
+  meta.url = mod.identifier
+  if (mod.identifier.startsWith('file:')) {
+    const filename = fileURLToPath(mod.identifier)
+    meta.filename = filename
+    meta.dirname = dirname(filename)
+  }
+  meta.resolve = (specifier: string, importer?: string | URL) => {
+    return getContextExecutor(mod).resolve(
+      specifier,
+      importer != null ? importer.toString() : mod.identifier,
+    )
+  }
 }
 
 export class EsmExecutor {
@@ -141,21 +169,13 @@ export class EsmExecutor {
       identifier: fileURL,
       context: this.context,
       cachedData,
-      importModuleDynamically: this.executor.importModuleDynamically,
-      initializeImportMeta: (meta, mod) => {
-        meta.url = mod.identifier
-        if (mod.identifier.startsWith('file:')) {
-          const filename = fileURLToPath(mod.identifier)
-          meta.filename = filename
-          meta.dirname = dirname(filename)
-        }
-        meta.resolve = (specifier: string, importer?: string | URL) => {
-          return this.executor.resolve(
-            specifier,
-            importer != null ? importer.toString() : mod.identifier,
-          )
-        }
-      },
+      // static callbacks: Node keeps them registered for as long as the
+      // module's host-defined-options symbol is alive, so a closure here would
+      // retain this executor (and the whole test file's world) beyond the
+      // file's lifetime. The executor is recovered from the module's context
+      // at call time instead.
+      importModuleDynamically: staticImportModuleDynamically,
+      initializeImportMeta: staticInitializeImportMeta,
     })
     // the code cache of a SourceTextModule must be created before evaluation
     if (!cachedData) {

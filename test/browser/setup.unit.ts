@@ -54,15 +54,15 @@ expect.extend({
 })
 
 declare module 'vitest' {
-  interface Matchers {
+  interface Matchers<R> {
     // eslint-disable-next-line ts/method-signature-style
-    toReportPassedTest(testName: string, testProject?: string | BrowserInstanceOption[]): void
+    toReportPassedTest(testName: string, testProject?: string | BrowserInstanceOption[]): R
     // eslint-disable-next-line ts/method-signature-style
-    toReportSummaryTestFiles(options: SummaryOptions): void
+    toReportSummaryTestFiles(options: SummaryOptions): R
     // eslint-disable-next-line ts/method-signature-style
-    toReportSummaryTests(options: SummaryOptions): void
+    toReportSummaryTests(options: SummaryOptions): R
     // eslint-disable-next-line ts/method-signature-style
-    toReportNoErrors(): void
+    toReportNoErrors(): R
   }
 }
 

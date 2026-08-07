@@ -106,23 +106,23 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
   (this: T, received: any, ...expected: E): ExpectationResult
 }
 
-// Allow unused `T` to preserve its name for extensions.
+// Allow unused type parameters to preserve their names for extensions.
 // Type parameter names must be identical when extending those types.
 // eslint-disable-next-line
-export interface Matchers<T = any> {}
+export interface Matchers<R extends void | Promise<void> = void | Promise<void>, T = unknown> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
 > & ThisType<T> & {
-  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
+  [K in keyof Matchers]?: RawMatcherFn<T, Parameters<Matchers[K]>>
 }
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
-  Matchers,
+  Matchers<any>,
   AsymmetricMatchersContaining {
-  <T>(actual: T, message?: string): Assertion<T>
+  <T>(actual: T, message?: string): Assertion<void, T>
   extend: (expects: MatchersObject) => void
   anything: () => any
   any: (constructor: unknown) => any
@@ -131,7 +131,7 @@ export interface ExpectStatic
   not: AsymmetricMatchersContaining
 }
 
-interface CustomMatcher {
+interface CustomMatcher<R = any> {
   /**
    * Checks that a value satisfies a custom matcher function.
    *
@@ -142,7 +142,7 @@ interface CustomMatcher {
    * expect(age).toSatisfy(val => val >= 18, 'Age must be at least 18');
    * expect(age).toEqual(expect.toSatisfy(val => val >= 18, 'Age must be at least 18'));
    */
-  toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
+  toSatisfy: (matcher: (value: any) => boolean, message?: string) => R
 
   /**
    * Matches if the received value is one of the values in the expected array or set.
@@ -152,10 +152,10 @@ interface CustomMatcher {
    * expect('foo').toBeOneOf([expect.any(String)])
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
-  toBeOneOf: <T>(sample: ReadonlyArray<T> | ReadonlySet<T>) => any
+  toBeOneOf: <T>(sample: ReadonlyArray<T> | ReadonlySet<T>) => R
 }
 
-export interface AsymmetricMatchersContaining extends CustomMatcher {
+export interface AsymmetricMatchersContaining extends Matchers<any>, CustomMatcher {
   /**
    * Matches if the received string contains the expected substring.
    *
@@ -219,7 +219,8 @@ export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
     ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
     : WithAsymmetricMatcher<T>
 
-export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMatcher {
+// eslint-disable-next-line unused-imports/no-unused-vars
+export interface JestAssertion<R extends void | Promise<void>, T = unknown> extends CustomMatcher<R> {
   /**
    * Used when you want to check that two objects have the same value.
    * This matcher recursively checks the equality of all fields, rather than checking for object identity.
@@ -227,7 +228,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user).toEqual({ name: 'Alice', age: 30 });
    */
-  toEqual: <E>(expected: E) => void
+  toEqual: <E>(expected: E) => R
 
   /**
    * Use to test that objects have the same types as well as structure.
@@ -235,7 +236,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user).toStrictEqual({ name: 'Alice', age: 30 });
    */
-  toStrictEqual: <E>(expected: E) => void
+  toStrictEqual: <E>(expected: E) => R
 
   /**
    * Checks that a value is what you expect. It calls `Object.is` to compare values.
@@ -245,7 +246,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(result).toBe(42);
    * expect(status).toBe(true);
    */
-  toBe: <E>(expected: E) => void
+  toBe: <E>(expected: E) => R
 
   /**
    * Check that a string matches a regular expression.
@@ -254,7 +255,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(message).toMatch(/hello/);
    * expect(greeting).toMatch('world');
    */
-  toMatch: (expected: string | RegExp) => void
+  toMatch: (expected: string | RegExp) => R
 
   /**
    * Used to check that a JavaScript object matches a subset of the properties of an object
@@ -265,7 +266,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *   address: { city: 'Wonderland' }
    * });
    */
-  toMatchObject: <E extends object | any[]>(expected: E) => void
+  toMatchObject: <E extends object | any[]>(expected: E) => R
 
   /**
    * Used when you want to check that an item is in a list.
@@ -275,7 +276,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(items).toContain('apple');
    * expect(numbers).toContain(5);
    */
-  toContain: <E>(item: E) => void
+  toContain: <E>(item: E) => R
 
   /**
    * Used when you want to check that an item is in a list.
@@ -285,7 +286,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(items).toContainEqual({ name: 'apple', quantity: 1 });
    */
-  toContainEqual: <E>(item: E) => void
+  toContainEqual: <E>(item: E) => R
 
   /**
    * Use when you don't care what a value is, you just want to ensure a value
@@ -295,7 +296,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user.isActive).toBeTruthy();
    */
-  toBeTruthy: () => void
+  toBeTruthy: () => R
 
   /**
    * When you don't care what a value is, you just want to
@@ -304,7 +305,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user.isActive).toBeFalsy();
    */
-  toBeFalsy: () => void
+  toBeFalsy: () => R
 
   /**
    * For comparing floating point numbers.
@@ -312,7 +313,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(score).toBeGreaterThan(10);
    */
-  toBeGreaterThan: (num: number | bigint) => void
+  toBeGreaterThan: (num: number | bigint) => R
 
   /**
    * For comparing floating point numbers.
@@ -320,7 +321,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(score).toBeGreaterThanOrEqual(10);
    */
-  toBeGreaterThanOrEqual: (num: number | bigint) => void
+  toBeGreaterThanOrEqual: (num: number | bigint) => R
 
   /**
    * For comparing floating point numbers.
@@ -328,7 +329,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(score).toBeLessThan(10);
    */
-  toBeLessThan: (num: number | bigint) => void
+  toBeLessThan: (num: number | bigint) => R
 
   /**
    * For comparing floating point numbers.
@@ -336,7 +337,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(score).toBeLessThanOrEqual(10);
    */
-  toBeLessThanOrEqual: (num: number | bigint) => void
+  toBeLessThanOrEqual: (num: number | bigint) => R
 
   /**
    * Used to check that a variable is NaN.
@@ -344,7 +345,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(value).toBeNaN();
    */
-  toBeNaN: () => void
+  toBeNaN: () => R
 
   /**
    * Used to check that a variable is undefined.
@@ -352,7 +353,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(value).toBeUndefined();
    */
-  toBeUndefined: () => void
+  toBeUndefined: () => R
 
   /**
    * This is the same as `.toBe(null)` but the error messages are a bit nicer.
@@ -361,7 +362,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(value).toBeNull();
    */
-  toBeNull: () => void
+  toBeNull: () => R
 
   /**
    * Used to check that a variable is nullable (null or undefined).
@@ -369,7 +370,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(value).toBeNullable();
    */
-  toBeNullable: () => void
+  toBeNullable: () => R
 
   /**
    * Ensure that a variable is not undefined.
@@ -377,7 +378,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(value).toBeDefined();
    */
-  toBeDefined: () => void
+  toBeDefined: () => R
 
   /**
    * Ensure that an object is an instance of a class.
@@ -386,7 +387,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(new Date()).toBeInstanceOf(Date);
    */
-  toBeInstanceOf: <E>(expected: E) => void
+  toBeInstanceOf: <E>(expected: E) => R
 
   /**
    * Used to check that an object has a `.length` property
@@ -396,7 +397,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect([1, 2, 3]).toHaveLength(3);
    * expect('hello').toHaveLength(5);
    */
-  toHaveLength: (length: number) => void
+  toHaveLength: (length: number) => R
 
   /**
    * Use to check if a property at the specified path exists on an object.
@@ -414,7 +415,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toHaveProperty: <E>(
     property: string | (string | number)[],
     value?: E,
-  ) => void
+  ) => R
 
   /**
    * Using exact equality with floating point numbers is a bad idea.
@@ -424,7 +425,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(price).toBeCloseTo(9.99, 2);
    */
-  toBeCloseTo: (number: number, numDigits?: number) => void
+  toBeCloseTo: (number: number, numDigits?: number) => R
 
   /**
    * Ensures that a mock function is called an exact number of times.
@@ -434,7 +435,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveBeenCalledTimes(2);
    */
-  toHaveBeenCalledTimes: (times: number) => void
+  toHaveBeenCalledTimes: (times: number) => R
 
   /**
    * Ensures that a mock function is called an exact number of times.
@@ -445,7 +446,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toBeCalledTimes(2);
    * @deprecated Use `toHaveBeenCalledTimes` instead
    */
-  toBeCalledTimes: (times: number) => void
+  toBeCalledTimes: (times: number) => R
 
   /**
    * Ensures that a mock function is called.
@@ -456,7 +457,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toHaveBeenCalled();
    */
 
-  toHaveBeenCalled: () => void
+  toHaveBeenCalled: () => R
 
   /**
    * Ensures that a mock function is called.
@@ -467,7 +468,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toBeCalled();
    * @deprecated Use `toHaveBeenCalled` instead
    */
-  toBeCalled: () => void
+  toBeCalled: () => R
 
   /**
    * Ensure that a mock function is called with specific arguments.
@@ -477,7 +478,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveBeenCalledWith('arg1', 42);
    */
-  toHaveBeenCalledWith: <E extends any[]>(...args: E) => void
+  toHaveBeenCalledWith: <E extends any[]>(...args: E) => R
 
   /**
    * Ensure that a mock function is called with specific arguments.
@@ -488,7 +489,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toBeCalledWith('arg1', 42);
    * @deprecated Use `toHaveBeenCalledWith` instead
    */
-  toBeCalledWith: <E extends any[]>(...args: E) => void
+  toBeCalledWith: <E extends any[]>(...args: E) => R
 
   /**
    * Ensure that a mock function is called with specific arguments on an Nth call.
@@ -498,7 +499,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveBeenNthCalledWith(2, 'secondArg');
    */
-  toHaveBeenNthCalledWith: <E extends any[]>(n: number, ...args: E) => void
+  toHaveBeenNthCalledWith: <E extends any[]>(n: number, ...args: E) => R
 
   /**
    * If you have a mock function, you can use `.toHaveBeenLastCalledWith`
@@ -509,7 +510,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveBeenLastCalledWith('lastArg');
    */
-  toHaveBeenLastCalledWith: <E extends any[]>(...args: E) => void
+  toHaveBeenLastCalledWith: <E extends any[]>(...args: E) => R
 
   /**
    * Used to test that a function throws when it is called.
@@ -521,7 +522,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(() => parseJSON('invalid')).toThrow(SyntaxError);
    * expect(() => { throw 42 }).toThrow(42);
    */
-  toThrow: (expected?: any) => void
+  toThrow: (expected?: any) => R
 
   /**
    * Used to test that a function throws when it is called.
@@ -534,7 +535,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(() => { throw 42 }).toThrowError(42);
    * @deprecated Use `toThrow` instead
    */
-  toThrowError: (expected?: any) => void
+  toThrowError: (expected?: any) => R
 
   /**
    * Use to test that the mock function successfully returned (i.e., did not throw an error) at least one time
@@ -545,7 +546,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toReturn();
    * @deprecated Use `toHaveReturned` instead
    */
-  toReturn: () => void
+  toReturn: () => R
 
   /**
    * Use to test that the mock function successfully returned (i.e., did not throw an error) at least one time
@@ -555,7 +556,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveReturned();
    */
-  toHaveReturned: () => void
+  toHaveReturned: () => R
 
   /**
    * Use to ensure that a mock function returned successfully (i.e., did not throw an error) an exact number of times.
@@ -567,7 +568,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toReturnTimes(3);
    * @deprecated Use `toHaveReturnedTimes` instead
    */
-  toReturnTimes: (times: number) => void
+  toReturnTimes: (times: number) => R
 
   /**
    * Use to ensure that a mock function returned successfully (i.e., did not throw an error) an exact number of times.
@@ -578,7 +579,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveReturnedTimes(3);
    */
-  toHaveReturnedTimes: (times: number) => void
+  toHaveReturnedTimes: (times: number) => R
 
   /**
    * Use to ensure that a mock function returned a specific value.
@@ -589,7 +590,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toReturnWith('returnValue');
    * @deprecated Use `toHaveReturnedWith` instead
    */
-  toReturnWith: <E>(value: E) => void
+  toReturnWith: <E>(value: E) => R
 
   /**
    * Use to ensure that a mock function returned a specific value.
@@ -599,7 +600,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveReturnedWith('returnValue');
    */
-  toHaveReturnedWith: <E>(value: E) => void
+  toHaveReturnedWith: <E>(value: E) => R
 
   /**
    * Use to test the specific value that a mock function last returned.
@@ -611,7 +612,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveLastReturnedWith('lastValue');
    */
-  toHaveLastReturnedWith: <E>(value: E) => void
+  toHaveLastReturnedWith: <E>(value: E) => R
 
   /**
    * Use to test the specific value that a mock function returned for the nth call.
@@ -623,30 +624,32 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(mockFunc).toHaveNthReturnedWith(2, 'nthValue');
    */
-  toHaveNthReturnedWith: <E>(nthCall: number, value: E) => void
+  toHaveNthReturnedWith: <E>(nthCall: number, value: E) => R
 }
 
-type VitestAssertion<A, T> = {
+type VitestAssertion<A, R extends void | Promise<void>, T = unknown> = {
   [K in keyof A]: A[K] extends Chai.Assertion
-    ? Assertion<T>
+    ? Assertion<R, T>
     : A[K] extends (...args: any[]) => any
-      ? A[K] // not converting function since they may contain overload
-      : VitestAssertion<A[K], T>;
-} & ((type: string, message?: string) => Assertion)
+      ? R extends Promise<void> ? PromisifyFunction<A[K]> : A[K]
+      : VitestAssertion<A[K], R, T>;
+} & ((type: string, message?: string) => Assertion<R, T>)
 
 type Promisify<O> = {
-  [K in keyof O]: O[K] extends (...args: infer A) => infer R
-    ? Promisify<O[K]> & ((...args: A) => Promise<R>)
-    : O[K];
+  [K in keyof O]: PromisifyFunction<O[K]>
 }
 
-export type PromisifyAssertion<T> = Promisify<Assertion<T>>
+type PromisifyFunction<T> = T extends (...args: infer A) => infer R
+  ? Promisify<T> & ((...args: A) => R extends Promise<any> ? R : Promise<R>)
+  : T
 
-export interface Assertion<T = any>
-  extends VitestAssertion<Chai.Assertion, T>,
-  JestAssertion<T>,
-  ChaiMockAssertion,
-  Matchers<T> {
+export type PromisifyAssertion<T> = Assertion<Promise<void>, Awaited<T>>
+
+export interface Assertion<R extends void | Promise<void> = void, T = unknown>
+  extends VitestAssertion<Chai.Assertion, R, T>,
+  JestAssertion<R, T>,
+  ChaiMockAssertion<R, T>,
+  Matchers<R, T> {
   /**
    * Ensures a value is of a specific type.
    *
@@ -664,7 +667,7 @@ export interface Assertion<T = any>
       | 'string'
       | 'symbol'
       | 'undefined',
-  ) => void
+  ) => R
 
   /**
    * Asserts that a mock function was called exactly once.
@@ -672,7 +675,7 @@ export interface Assertion<T = any>
    * @example
    * expect(mockFunc).toHaveBeenCalledOnce();
    */
-  toHaveBeenCalledOnce: () => void
+  toHaveBeenCalledOnce: () => R
 
   /**
    * Ensure that a mock function is called with specific arguments and called
@@ -681,7 +684,7 @@ export interface Assertion<T = any>
    * @example
    * expect(mockFunc).toHaveBeenCalledExactlyOnceWith('arg1', 42);
    */
-  toHaveBeenCalledExactlyOnceWith: <E extends any[]>(...args: E) => void
+  toHaveBeenCalledExactlyOnceWith: <E extends any[]>(...args: E) => R
 
   /**
    * This assertion checks if a `Mock` was called before another `Mock`.
@@ -697,7 +700,7 @@ export interface Assertion<T = any>
    *
    * expect(mock1).toHaveBeenCalledBefore(mock2)
    */
-  toHaveBeenCalledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+  toHaveBeenCalledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => R
 
   /**
    * This assertion checks if a `Mock` was called after another `Mock`.
@@ -713,23 +716,23 @@ export interface Assertion<T = any>
    *
    * expect(mock1).toHaveBeenCalledAfter(mock2)
    */
-  toHaveBeenCalledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+  toHaveBeenCalledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => R
 
   /**
-   * Checks that a promise resolves successfully at least once.
+   * Checks that at least one of the mock function's calls has resolved.
    *
    * @example
-   * await expect(promise).toHaveResolved();
+   * expect(mockAsyncFunc).toHaveResolved();
    */
-  toHaveResolved: () => void
+  toHaveResolved: () => R
 
   /**
-   * Checks that a promise resolves to a specific value.
+   * Checks that at least one of the mock function's calls has resolved to a specific value.
    *
    * @example
-   * await expect(promise).toHaveResolvedWith('success');
+   * expect(mockAsyncFunc).toHaveResolvedWith('success');
    */
-  toHaveResolvedWith: <E>(value: E) => void
+  toHaveResolvedWith: <E>(value: E) => R
 
   /**
    * Ensures a promise resolves a specific number of times.
@@ -737,7 +740,7 @@ export interface Assertion<T = any>
    * @example
    * expect(mockAsyncFunc).toHaveResolvedTimes(3);
    */
-  toHaveResolvedTimes: (times: number) => void
+  toHaveResolvedTimes: (times: number) => R
 
   /**
    * Asserts that the last resolved value of a promise matches an expected value.
@@ -745,7 +748,7 @@ export interface Assertion<T = any>
    * @example
    * await expect(mockAsyncFunc).toHaveLastResolvedWith('finalResult');
    */
-  toHaveLastResolvedWith: <E>(value: E) => void
+  toHaveLastResolvedWith: <E>(value: E) => R
 
   /**
    * Ensures a specific value was returned by a promise on the nth resolution.
@@ -753,7 +756,7 @@ export interface Assertion<T = any>
    * @example
    * await expect(mockAsyncFunc).toHaveNthResolvedWith(2, 'secondResult');
    */
-  toHaveNthResolvedWith: <E>(nthCall: number, value: E) => void
+  toHaveNthResolvedWith: <E>(nthCall: number, value: E) => R
 
   /**
    * Verifies that a promise resolves.
@@ -769,14 +772,14 @@ export interface Assertion<T = any>
    * @example
    * await expect(someAsyncFunc).rejects.toThrow('error');
    */
-  rejects: PromisifyAssertion<T>
+  rejects: PromisifyAssertion<unknown>
 }
 
 /**
  * Chai-style assertions for spy/mock testing.
  * These provide sinon-chai compatible assertion names that delegate to Jest-style implementations.
  */
-export interface ChaiMockAssertion {
+export interface ChaiMockAssertion<R extends void | Promise<void>, T = unknown> {
   /**
    * Checks that a spy was called at least once.
    * Chai-style equivalent of `toHaveBeenCalled`.
@@ -784,7 +787,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.called
    */
-  readonly called: Assertion
+  readonly called: Assertion<R, T>
 
   /**
    * Checks that a spy was called a specific number of times.
@@ -793,7 +796,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.callCount(3)
    */
-  callCount: (count: number) => void
+  callCount: (count: number) => R
 
   /**
    * Checks that a spy was called with specific arguments at least once.
@@ -802,7 +805,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.calledWith('arg1', 'arg2')
    */
-  calledWith: <E extends any[]>(...args: E) => void
+  calledWith: <E extends any[]>(...args: E) => R
 
   /**
    * Checks that a spy was called exactly once.
@@ -811,7 +814,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.calledOnce
    */
-  readonly calledOnce: Assertion
+  readonly calledOnce: Assertion<R, T>
 
   /**
    * Checks that a spy was called exactly once with specific arguments.
@@ -820,7 +823,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.calledOnceWith('arg1', 'arg2')
    */
-  calledOnceWith: <E extends any[]>(...args: E) => void
+  calledOnceWith: <E extends any[]>(...args: E) => R
 
   /**
    * Checks that the last call to a spy was made with specific arguments.
@@ -829,7 +832,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.lastCalledWith('arg1', 'arg2')
    */
-  lastCalledWith: <E extends any[]>(...args: E) => void
+  lastCalledWith: <E extends any[]>(...args: E) => R
 
   /**
    * Checks that the nth call to a spy was made with specific arguments.
@@ -838,7 +841,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.nthCalledWith(2, 'arg1', 'arg2')
    */
-  nthCalledWith: <E extends any[]>(n: number, ...args: E) => void
+  nthCalledWith: <E extends any[]>(n: number, ...args: E) => R
 
   /**
    * Checks that a spy returned a specific value at least once.
@@ -847,7 +850,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.returned('value')
    */
-  returned: <E>(value: E) => void
+  returned: <E>(value: E) => R
 
   /**
    * Checks that a spy returned a specific value at least once.
@@ -856,7 +859,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.returnedWith('value')
    */
-  returnedWith: <E>(value: E) => void
+  returnedWith: <E>(value: E) => R
 
   /**
    * Checks that a spy returned successfully a specific number of times.
@@ -865,7 +868,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.returnedTimes(3)
    */
-  returnedTimes: (count: number) => void
+  returnedTimes: (count: number) => R
 
   /**
    * Checks that the last return value of a spy matches the expected value.
@@ -874,7 +877,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.lastReturnedWith('value')
    */
-  lastReturnedWith: <E>(value: E) => void
+  lastReturnedWith: <E>(value: E) => R
 
   /**
    * Checks that the nth return value of a spy matches the expected value.
@@ -883,7 +886,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.nthReturnedWith(2, 'value')
    */
-  nthReturnedWith: <E>(n: number, value: E) => void
+  nthReturnedWith: <E>(n: number, value: E) => R
 
   /**
    * Checks that a spy was called before another spy.
@@ -892,7 +895,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy1).to.have.been.calledBefore(spy2)
    */
-  calledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+  calledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => R
 
   /**
    * Checks that a spy was called after another spy.
@@ -901,7 +904,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy1).to.have.been.calledAfter(spy2)
    */
-  calledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+  calledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => R
 
   /**
    * Checks that a spy was called exactly twice.
@@ -910,7 +913,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.calledTwice
    */
-  readonly calledTwice: Assertion
+  readonly calledTwice: Assertion<R, T>
 
   /**
    * Checks that a spy was called exactly three times.
@@ -919,16 +922,7 @@ export interface ChaiMockAssertion {
    * @example
    * expect(spy).to.have.been.calledThrice
    */
-  readonly calledThrice: Assertion
-}
-
-declare global {
-  // support augmenting jest.Matchers by other libraries
-  // eslint-disable-next-line ts/no-namespace
-  namespace jest {
-    // eslint-disable-next-line unused-imports/no-unused-vars, ts/no-empty-object-type
-    interface Matchers<R, T = {}> {}
-  }
+  readonly calledThrice: Assertion<R, T>
 }
 
 export {}

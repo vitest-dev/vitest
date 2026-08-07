@@ -1,6 +1,6 @@
 import type { TestSpecification } from 'vitest/node'
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('duration', async () => {
   const { stdout } = await runVitest({

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { createFile, resolvePath, runInlineTests, runVitest } from '../../test-utils'
+import { createFile, resolvePath, runInlineTests, runVitest, runVitestCli } from '../../test-utils'
 
 test('importing files in restricted fs works correctly', async () => {
   createFile(
@@ -497,6 +497,33 @@ test.skipIf(!supportsRequireEsm).for(['vmThreads', 'vmForks'] as const)(
         },
       },
     })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+// vm pool workers must not accumulate finished test files: worker-lifetime
+// registries (cancel listeners, module runner caches, ESM callback
+// registrations, V8 compilation cache) each used to pin every file's vm
+// context until the worker hit vmMemoryLimit. The probe environment lives in
+// the worker realm, keeps a WeakRef to each file's context and asserts that
+// the number of surviving contexts stays bounded: a worker-lifetime
+// reference from any registry into every file grows the count file by file
+// (9 surviving worlds by the last file against the bound of 4) and fails the
+// run. The fixture spawns the real CLI because the in-process runVitest
+// harness serves the workspace's development-condition module graph, which
+// retains additional references of its own.
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s releases the vm contexts of finished test files',
+  async (pool) => {
+    const { stderr, exitCode } = await runVitestCli(
+      'run',
+      '--root',
+      'fixtures/leak-probe',
+      `--pool=${pool}`,
+      '--environment=./leak-probe-env.ts',
+    )
 
     expect(stderr).toBe('')
     expect(exitCode).toBe(0)
