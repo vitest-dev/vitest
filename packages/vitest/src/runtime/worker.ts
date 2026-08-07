@@ -39,6 +39,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       durations: {
         environment: 0,
         prepare: prepareStart,
+        fetch: 0,
       },
       rpc,
       onCancel,

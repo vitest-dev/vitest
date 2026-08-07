@@ -22,7 +22,7 @@ import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
@@ -255,7 +255,6 @@ export class Vitest {
       this._resolver,
       resolved,
       this._fsCache,
-      this.state,
       this._traces,
       this._tmpDir,
     )
@@ -677,9 +676,8 @@ export class Vitest {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
 
-      const { files, errors, coverages, executionTimes, transformTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
-      this.state.blobs = { files, errors, coverages, executionTimes, transformTimes }
-      this.state.transformTime = transformTimes.reduce((a, b) => a + b, 0)
+      const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+      this.state.blobs = { files, errors, coverages, executionTimes }
 
       await this.report('onInit', this)
 
@@ -1440,6 +1438,10 @@ export class Vitest {
     }
 
     this._rerunTimer = setTimeout(async () => {
+      if (this.closingPromise) {
+        return
+      }
+
       if (this.watcher.changedTests.size === 0) {
         this.watcher.invalidates.clear()
         return
@@ -1545,6 +1547,12 @@ export class Vitest {
   public async close(): Promise<void> {
     if (!this.closingPromise) {
       this.closingPromise = (async () => {
+        // let an in-flight (re)run settle instead of tearing down under it:
+        // its file stats and transforms would race the teardown and reject
+        // after the caller already cleaned up the test files
+        clearTimeout(this._rerunTimer)
+        await this.runningPromise?.catch(noop)
+
         const teardownProjects = [...this.projects]
         if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
           teardownProjects.push(this.coreWorkspaceProject)

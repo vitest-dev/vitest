@@ -31,6 +31,8 @@ Restarting a worker thread is not free: Node.js runs a full garbage collection o
 The `vmForks` pool recycles workers by letting the child process exit, and the operating system reclaims the memory. If your test suite is large enough to recycle workers, `vmForks` is usually noticeably faster than `vmThreads`, even though its communication with the main process is slower.
 :::
 
+On Node.js 24.9 and later, `require()` of an ES module is supported inside vm pools, mirroring [Node's own `require(esm)`](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require). Calling `require()` on an ES module whose graph contains top-level `await` throws `ERR_REQUIRE_ASYNC_MODULE` - use `await import()` for those files.
+
 ::: warning
 Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
 

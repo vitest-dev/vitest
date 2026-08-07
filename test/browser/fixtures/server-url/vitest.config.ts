@@ -23,7 +23,10 @@ export default defineConfig({
     !!process.env.TEST_HTTPS && basicSsl(),
   ],
   test: {
-    api: process.env.TEST_HTTPS ? 51122 : 51133,
+    // below the OS ephemeral port range (32768+ on Linux): a kernel-assigned
+    // outbound socket holding the fixed port would make Vite silently bind
+    // port+1 and fail the exact-port assertions
+    api: process.env.TEST_HTTPS ? 31122 : 31133,
     browser: {
       enabled: true,
       provider: configuredProvider,

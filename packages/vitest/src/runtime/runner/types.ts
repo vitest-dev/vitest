@@ -327,9 +327,19 @@ export interface File extends Suite {
    */
   collectDuration?: number
   /**
+   * The portion of `collectDuration` the worker spent waiting for the server
+   * to resolve and transform modules.
+   */
+  collectFetchDuration?: number
+  /**
    * The time it took to import the setup file.
    */
   setupDuration?: number
+  /**
+   * The portion of `setupDuration` the worker spent waiting for the server
+   * to resolve and transform modules.
+   */
+  setupFetchDuration?: number
   /**
    * Whether the file is initiated without running any tests.
    * This is done to populate state on the server side by Vitest.
@@ -1729,6 +1739,12 @@ export interface VitestRunner {
    * Gets the time spent importing each individual non-externalized file that Vitest collected.
    */
   getImportDurations?: () => Record<string, ImportDuration>
+  /**
+   * Gets the cumulative time the worker has spent waiting for the server to
+   * resolve and transform modules. Used to attribute the transform wait to the
+   * setup and collect phases.
+   */
+  getModuleFetchDuration?: () => number
   /**
    * Publicly available configuration.
    */

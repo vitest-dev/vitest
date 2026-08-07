@@ -64,6 +64,7 @@ export async function collectTests(
           clearCollectorContext(file, runner)
 
           const setupFiles = toArray(config.setupFiles)
+          const fetchBeforeSetup = runner.getModuleFetchDuration?.()
           if (setupFiles.length) {
             const setupStart = now()
             await runSetupFiles(config, setupFiles, runner)
@@ -72,6 +73,11 @@ export async function collectTests(
           }
           else {
             file.setupDuration = 0
+          }
+
+          const fetchBeforeCollect = runner.getModuleFetchDuration?.()
+          if (fetchBeforeSetup != null && fetchBeforeCollect != null) {
+            file.setupFetchDuration = fetchBeforeCollect - fetchBeforeSetup
           }
 
           const collectStart = now()
@@ -107,6 +113,10 @@ export async function collectTests(
 
           setHooks(file, fileHooks)
           file.collectDuration = now() - collectStart
+          const fetchAfterCollect = runner.getModuleFetchDuration?.()
+          if (fetchBeforeCollect != null && fetchAfterCollect != null) {
+            file.collectFetchDuration = fetchAfterCollect - fetchBeforeCollect
+          }
         }
         catch (e) {
           const errors = e instanceof AggregateError

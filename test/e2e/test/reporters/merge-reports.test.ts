@@ -113,7 +113,7 @@ test('merge reports', async () => {
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
 
@@ -263,9 +263,11 @@ test('total and merged execution times are shown', async () => {
       '',
     )
     file.tasks.push(createTest('some test', file))
+    file.collectDuration = 2000 * index
+    file.collectFetchDuration = 2000 * index
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}, 2000 * index],
+      [version, [file], [], undefined, 1500 * index, {}],
       resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
     )
   }
@@ -279,7 +281,7 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('✓ first.test.ts (1 test)')
   expect(stdout).toContain('✓ second.test.ts (1 test)')
 
-  expect(stdout).toContain('Duration  4.50s (transform 6.00s')
+  expect(stdout).toContain('Duration  4.50s (transform 100%')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
@@ -526,6 +528,7 @@ async function getSerializedModuleGraph(ctx: Vitest) {
 
 function trimReporterOutput(report: string) {
   const rows = report
+    .replace(/(?:[a-z]+ \d+%(?:, )?)+/g, '<breakdown>')
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(/blob report written to (.*)/g, 'blob report written to <path>')
@@ -623,7 +626,7 @@ test("macos only", () => {})
 
      Test Files  1 failed | 1 passed (2)
           Tests  1 failed | 3 passed (4)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
 
     blob report written to <path>"
   `)
@@ -691,7 +694,7 @@ test("macos only", () => {})
 
      Test Files  2 failed | 2 passed (4)
           Tests  2 failed | 6 passed (8)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -891,7 +894,7 @@ test("works on browser", () => {
 
      Test Files  4 failed (4)
           Tests  4 failed | 8 passed (12)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
   expect(result.stderr).toMatchInlineSnapshot(`
