@@ -184,6 +184,7 @@ export class PoolRunner {
     this._operationLock = createDefer()
 
     let startSpan: Span | undefined
+    const startedAt = performance.now()
     try {
       this._state = RunnerState.STARTING
 
@@ -233,6 +234,12 @@ export class PoolRunner {
       await startPromise
 
       this._state = RunnerState.STARTED
+
+      // record how long it took to spawn this worker, load its bundle and set up the
+      // environment, so the reporter can surface the cost of `isolate: true`
+      const { state } = this.project.vitest
+      state.startupTime += performance.now() - startedAt
+      state.workersSpawned += 1
     }
     catch (error: any) {
       this._state = RunnerState.START_FAILURE
