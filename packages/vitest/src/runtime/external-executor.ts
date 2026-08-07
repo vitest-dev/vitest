@@ -11,6 +11,7 @@ import { lookupPackageScopeType } from '@vitest/utils/resolver'
 import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
+import { setActiveVmExecutor } from './vm/utils'
 import { ViteExecutor } from './vm/vite-executor'
 
 const { existsSync } = fs
@@ -72,9 +73,9 @@ export class ExternalModulesExecutor {
     this.esm = new EsmExecutor(this, {
       context: this.context,
     })
+    setActiveVmExecutor(this)
     this.cjs = new CommonjsExecutor({
       context: this.context,
-      importModuleDynamically: this.importModuleDynamically,
       fileMap: options.fileMap,
       codeCache: options.codeCache,
       interopDefault: options.interopDefault,

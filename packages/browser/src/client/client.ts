@@ -23,8 +23,14 @@ export const ENTRY_URL: string = `${
 
 const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
 
-export function onCancel(callback: (reason: CancelReason) => void): void {
+export function onCancel(callback: (reason: CancelReason) => void): () => void {
   onCancelCallbacks.push(callback)
+  return () => {
+    const index = onCancelCallbacks.indexOf(callback)
+    if (index !== -1) {
+      onCancelCallbacks.splice(index, 1)
+    }
+  }
 }
 
 let pageMarkHandler: ((name: string, options?: MarkOptions) => Promise<void>) | null = null

@@ -81,7 +81,7 @@ export interface WorkerGlobalState {
   resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>
   getterTracker?: GetterTracker
-  onCancel: (listener: (reason: CancelReason) => unknown) => void
+  onCancel: (listener: (reason: CancelReason) => unknown) => () => void
   onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>
   durations: {
