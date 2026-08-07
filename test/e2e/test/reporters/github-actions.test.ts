@@ -207,5 +207,77 @@ describe(GithubActionsReporter, () => {
         "
       `)
     })
+
+    it('writes a report section for each project', async ({ onTestFinished }) => {
+      const outputPath = resolve(tmpdir(), randomUUID())
+
+      onTestFinished(async () => {
+        await rm(outputPath).catch(() => {
+          console.error(`Could not remove ${outputPath}`)
+        })
+      })
+
+      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
+
+      await runVitest({
+        reporters: new GithubActionsReporter({
+          jobSummary: {
+            outputPath,
+            fileLinks: {
+              commitHash: 'aaa',
+              repository: 'owner/repo',
+              workspacePath,
+            },
+          },
+        }),
+        root: './fixtures/reporters/github-actions',
+        projects: [
+          {
+            test: {
+              name: 'math',
+              include: ['flaky/math.spec.ts'],
+            },
+          },
+          {
+            test: {
+              name: 'network',
+              include: ['flaky/network.spec.ts'],
+            },
+          },
+        ],
+      })
+
+      const summary = await readFile(outputPath, 'utf8')
+
+      // @todo (?)
+      expect(summary).not.toMatchInlineSnapshot(`
+        "## Vitest Test Report
+
+        ### Summary
+
+        - **Test Files**: ❌ **1 failure** · ✅ **1 pass** · 2 total
+        - **Test Results**: ❌ **1 failure** · ✅ **9 passes** · 🔵 **1 expected failure** · 11 total
+        - **Other**: 1 skip · 1 todo · 2 total
+
+        ### Flaky Tests
+
+        These tests passed only after one or more retries, indicating potential instability.
+
+        ##### \`flaky/math.spec.ts\` (5 flaky tests)
+
+        - [\`should multiply numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 5 out of 5**)
+        - [\`should handle edge cases\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
+        - [\`should validate input properly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
+        - [\`should divide numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 2 out of 5)
+        - [\`should subtract numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 1 out of 5)
+
+        ##### \`flaky/network.spec.ts\` (3 flaky tests)
+
+        - [\`network > should handle network timeouts gracefully\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/network.spec.ts) (**passed on retry 4 out of 4**)
+        - [\`network > should fetch user data from API\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 2 out of 3)
+        - [\`network > should retry failed requests\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 1 out of 3)
+        "
+      `)
+    })
   })
 })
