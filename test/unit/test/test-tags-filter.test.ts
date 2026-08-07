@@ -489,23 +489,43 @@ describe('createTagsFilter', () => {
 
   describe('parser errors', () => {
     test('throws error for unclosed parenthesis', () => {
-      expect(() => createTagsFilter(['(foo and bar'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: missing closing ")" in "(foo and bar"]`)
+      expect(() => createTagsFilter(['(foo and bar'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "Invalid tags expression: missing closing ")" in "(foo and bar"",
+        }
+      `)
     })
 
     test('throws error for unexpected closing parenthesis', () => {
-      expect(() => createTagsFilter(['foo and bar)'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected ")" in "foo and bar)"]`)
+      expect(() => createTagsFilter(['foo and bar)'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "Invalid tags expression: unexpected ")" in "foo and bar)"",
+        }
+      `)
     })
 
     test('throws error for empty parentheses', () => {
-      expect(() => createTagsFilter(['()'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected ")" in "()"]`)
+      expect(() => createTagsFilter(['()'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "Invalid tags expression: unexpected ")" in "()"",
+        }
+      `)
     })
 
     test('throws error for operator without operand', () => {
-      expect(() => createTagsFilter(['foo and'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected end of expression in "foo and"]`)
+      expect(() => createTagsFilter(['foo and'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "Invalid tags expression: unexpected end of expression in "foo and"",
+        }
+      `)
     })
 
     test('throws error for leading operator', () => {
-      expect(() => createTagsFilter(['and foo'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected "and" in "and foo"]`)
+      expect(() => createTagsFilter(['and foo'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "Invalid tags expression: unexpected "and" in "and foo"",
+        }
+      `)
     })
   })
 

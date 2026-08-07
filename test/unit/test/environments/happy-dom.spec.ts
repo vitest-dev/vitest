@@ -61,6 +61,10 @@ test('readonly window assignment throws', ({ task }) => {
   expect(() => {
     Object.assign(window, { navigator: {} })
   }).toThrowErrorMatchingInlineSnapshot(
-    `[TypeError: Cannot set property navigator of #<GlobalWindow> which has only a getter]`,
+    `
+    TypeError {
+      "message": "Cannot set property navigator of #<GlobalWindow> which has only a getter",
+    }
+  `,
   )
 })

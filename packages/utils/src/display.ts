@@ -9,6 +9,7 @@ const {
   AsymmetricMatcher,
   DOMCollection,
   DOMElement,
+  Error: ErrorPlugin,
   Immutable,
   ReactElement,
   ReactTestComponent,
@@ -21,6 +22,7 @@ const PLUGINS = [
   DOMCollection,
   Immutable,
   AsymmetricMatcher,
+  ErrorPlugin,
 ]
 
 export interface StringifyOptions extends PrettyFormatOptions {
@@ -49,6 +51,7 @@ export function stringify(
         DOMCollection,
         Immutable,
         AsymmetricMatcher,
+        ErrorPlugin,
       ]
     : PLUGINS
 
