@@ -461,6 +461,8 @@ Environment  jsdom was created 40 times · 23.80s total, 79% of tracked time
 
 Hints never suggest changing an option that was set explicitly: if the config defines `pool`, other pools are not suggested, and an explicitly configured `isolate` is never suggested to be disabled. Hints are also printed in CI. Set the option to `false` to disable all hints, or disable them individually.
 
+To measure the impact of a configuration change instead of estimating it, run [`vitest doctor`](/guide/cli#vitest-doctor).
+
 ### experimental.diagnostics.isolate {#experimental-diagnostics-isolate}
 
 - **Type:** `boolean`
