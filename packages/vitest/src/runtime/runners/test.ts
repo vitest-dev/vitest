@@ -281,6 +281,10 @@ export class TestRunner implements VitestTestRunner {
     return importDurations
   }
 
+  getModuleFetchDuration(): number {
+    return this.workerState.durations.fetch
+  }
+
   trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
     const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
     return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)

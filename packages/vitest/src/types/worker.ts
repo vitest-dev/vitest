@@ -87,6 +87,11 @@ export interface WorkerGlobalState {
   durations: {
     environment: number
     prepare: number
+    /**
+     * Wall time the worker spent blocked on module fetch requests to the
+     * server, measured as the union of in-flight intervals.
+     */
+    fetch: number
   }
   onFilterStackTrace?: (trace: string) => string
 }
