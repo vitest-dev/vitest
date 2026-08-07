@@ -18,6 +18,12 @@ import { createLocationsIndexMap } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
 import { getRawErrsMapFromTsCompile } from './parse'
 
+const OOM_RE = /JavaScript heap out of memory|Reached heap limit|Allocation failed/i
+
+export function looksLikeOom(output: string, signal?: NodeJS.Signals | null): boolean {
+  return signal === 'SIGABRT' || OOM_RE.test(output)
+}
+
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
 
@@ -429,7 +435,20 @@ export class Typechecker {
       if (process.platform === 'win32') {
         child.process.once('close', (code) => {
           if (code != null && code !== 0 && !dataReceived) {
-            onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+            // the checker may have started and crashed without writing to
+            // stdout, e.g. an OOM abort that only writes to stderr. let
+            // onParseEnd report it as a Typecheck Error instead of treating
+            // it as a spawn failure
+            if (looksLikeOom(this._output, this.process?.signalCode)) {
+              if (!resolved) {
+                clearTimeout(winTimeout)
+                resolved = true
+                resolve({ result: child })
+              }
+            }
+            else {
+              onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+            }
           }
           else if (!resolved) {
             clearTimeout(winTimeout)
