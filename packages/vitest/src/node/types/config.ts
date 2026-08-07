@@ -406,6 +406,23 @@ export interface InlineConfig {
   projects?: TestProjectConfiguration[]
 
   /**
+   * Let inline projects that don't modify the Vite config reuse the Vite
+   * server of the config that declares them. Instead of resolving a new
+   * Vite config and creating a new server per project, such projects share
+   * the server and its transform cache.
+   *
+   * A project still gets its own server when it defines Vite-level options
+   * (`plugins`, `resolve`, `define`, ...) or test options that affect the
+   * Vite config: `alias`, `browser`, `css`, `deps.moduleDirectories`,
+   * `deps.optimizer`, `mode`, `root`,
+   * or when `extends` doesn't point to the declaring config.
+   *
+   * This option is only respected in the root configuration.
+   * @default true
+   */
+  sharedViteServer?: boolean
+
+  /**
    * Update snapshot
    *
    * @default false
@@ -1293,6 +1310,18 @@ export interface ResolvedConfig
    */
   _containerConfigFiles?: string[]
   /**
+   * The raw `test` options captured by `CaptureRawTestConfig`, used to
+   * resolve inline projects that share this config's Vite server.
+   * @internal
+   */
+  _rawTestConfig?: UserConfig
+  /**
+   * The `server.deps` entries contributed by `vitest:test-config`, applied
+   * to inline projects that share this config's Vite server.
+   * @internal
+   */
+  _moduleRunnerOptions?: ModuleRunnerTestOptions
+  /**
    * Browser server contribution captured by the `vitest:browser:loader` plugin
    * during this config's resolution (set only when `browser.enabled`). Used by
    * server creation to build the single Vite server shared by `project.vite` and
@@ -1301,6 +1330,32 @@ export interface ResolvedConfig
    * @internal
    */
   _browserContribution?: BrowserServerContribution
+}
+
+/**
+ * Values captured by Vitest's own plugins while Vite resolves a config,
+ * handed back to the resolution caller.
+ *
+ * The resolved config retains the plugins (and this object with them) for
+ * the server's lifetime: `browserContribution` is also read by the browser
+ * loader's server hooks and stays for as long as the server lives, while
+ * `rawTestConfig` must be cleared by the consumer once it is stored.
+ */
+export interface ConfigResolutionCaptures {
+  browserContribution?: BrowserServerContribution
+  rawTestConfig?: UserConfig
+  moduleRunnerOptions?: ModuleRunnerTestOptions
+}
+
+/**
+ * The `server.deps` entries that `vitest:test-config` derives from the
+ * config's original `resolve` options while the Vite config resolves. They
+ * cannot be recomputed later: the resolution overwrites the `resolve` options.
+ */
+export interface ModuleRunnerTestOptions {
+  inlineAll: boolean
+  inline: (string | RegExp)[]
+  external: (string | RegExp)[]
 }
 
 /**
@@ -1340,6 +1395,12 @@ export interface ResolvedProjectEntry {
    * @internal
    */
   ancestors?: string[]
+  /**
+   * The project reuses the Vite server of the config that declares it
+   * (`sharedViteServer`).
+   * @internal
+   */
+  sharedServer?: boolean
 }
 
 type NonProjectOptions
@@ -1370,6 +1431,7 @@ type NonProjectOptions
     | 'coverage'
     | 'watchTriggerPatterns'
     | 'tagsFilter' // CLI option only
+    | 'sharedViteServer'
 
 export interface ServerDepsOptions {
   /**
@@ -1411,7 +1473,7 @@ export type ProjectConfig = Omit<
     // from the root config only, so projects can only shuffle their own tests.
     shuffle?: boolean | { tests?: boolean }
   }
-  deps?: Omit<DepsOptions, 'moduleDirectories'>
+  deps?: DepsOptions
 }
 
 export type ResolvedProjectConfig = Omit<
