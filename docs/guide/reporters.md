@@ -713,6 +713,22 @@ The GitHub Actions reporter automatically generates a [Job Summary](https://gith
 <img alt="GitHub Actions Job Summary" img-dark src="/github-actions-job-summary-dark.png">
 <img alt="GitHub Actions Job Summary" img-light src="/github-actions-job-summary-light.png">
 
+The job summary title defaults to `Vitest Test Report`. You can use `jobSummary.title` to distinguish multiple Vitest invocations that append to the same job summary.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          title: 'My Test Report',
+        },
+      }],
+    ],
+  },
+})
+```
+
 The job summary is enabled by default and writes to the path specified by `$GITHUB_STEP_SUMMARY`. You can override it by using the `jobSummary.outputPath` option:
 
 ```ts

@@ -121,6 +121,30 @@ describe(GithubActionsReporter, () => {
       `)
     })
 
+    it('uses a custom title', async ({ onTestFinished }) => {
+      const outputPath = resolve(tmpdir(), randomUUID())
+
+      onTestFinished(async () => {
+        await rm(outputPath).catch(() => {
+          console.error(`Could not remove ${outputPath}`)
+        })
+      })
+
+      await runVitest({
+        reporters: new GithubActionsReporter({
+          jobSummary: {
+            title: 'Custom Test Report',
+            outputPath,
+          },
+        }),
+        root: './fixtures/reporters/github-actions',
+      })
+
+      const summary = await readFile(outputPath, 'utf8')
+
+      expect(summary.split('\n')[0]).toMatchInlineSnapshot(`"## Custom Test Report"`)
+    })
+
     it.for([{ enabled: false }, { outputPath: undefined }] as const)('does not write one when disabled or without `outputPath`', async (options) => {
       const outputPath = resolve(tmpdir(), randomUUID())
 
