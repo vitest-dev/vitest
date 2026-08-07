@@ -235,9 +235,9 @@ body {
       // vitest's own dist files only change with the vitest version and
       // browser contexts don't outlive the process, so there is no reason
       // to revalidate them in every tester iframe. Skipped for persistent
-      // contexts — their disk cache would survive a vitest upgrade
+      // contexts and preview providers — their disk cache would survive a vitest upgrade
       const persistentContext = (parentServer.config.browser.provider?.options as { persistentContext?: unknown } | undefined)?.persistentContext
-      const immutablePrefixes = persistentContext
+      const immutablePrefixes = persistentContext || parentServer.config.browser.provider?.name === 'preview'
         ? []
         : ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
 
