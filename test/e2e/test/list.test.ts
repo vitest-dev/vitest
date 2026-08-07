@@ -27,6 +27,22 @@ test.each([
   expect(exitCode).toBe(1)
 })
 
+test('isolates browser mocks between files while listing tests serially', async () => {
+  const { stderr, stdout, exitCode } = await runVitestCli(
+    'list',
+    '-r=./fixtures/list-mock-isolation',
+    '--no-file-parallelism',
+  )
+
+  expect(stderr).toBe('')
+  expect(stdout).toMatchInlineSnapshot(`
+    "[chromium] mocker.test.ts > sees the mock
+    [chromium] victim.test.ts > sees the real module
+    "
+  `)
+  expect(exitCode).toBe(0)
+})
+
 test('correctly outputs json', async () => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json')
   expect(relative(stdout)).toMatchInlineSnapshot(`
