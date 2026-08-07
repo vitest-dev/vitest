@@ -31,6 +31,7 @@ test('isolates browser mocks between files while listing tests serially', async 
   const { stderr, stdout, exitCode } = await runVitestCli(
     'list',
     '-r=./fixtures/list-mock-isolation-20540c',
+    '-c=./vitest-list-mock-25e757.config.ts',
     '--no-file-parallelism',
   )
 
@@ -48,6 +49,7 @@ test('isolates browser mocks between files while listing tests in default mode',
   const { stderr, stdout, exitCode } = await runVitestCli(
     'list',
     '-r=./fixtures/list-mock-isolation-20540c',
+    '-c=./vitest-list-mock-25e757.config.ts',
   )
 
   expect(stderr).toBe('')
