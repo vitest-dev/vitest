@@ -838,6 +838,9 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
+      strip-literal:
+        specifier: 'catalog:'
+        version: 3.1.0
     devDependencies:
       '@types/natural-compare':
         specifier: ^1.4.3
