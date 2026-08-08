@@ -1,0 +1,11 @@
+.git
+node_modules
+**/node_modules
+**/dist
+coverage
+.nyc_output
+.cache
+.tmp
+test-results
+playwright-report
+*.log

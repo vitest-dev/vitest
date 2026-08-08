@@ -27,6 +27,41 @@ test.each([
   expect(exitCode).toBe(1)
 })
 
+test('isolates browser mocks between files while listing tests serially', async () => {
+  const { stderr, stdout, exitCode } = await runVitestCli(
+    'list',
+    '-r=./fixtures/list-mock-isolation-20540c',
+    '-c=./vitest-list-mock-25e757.config.ts',
+    '--no-file-parallelism',
+  )
+
+  expect(stderr).toBe('')
+  expect(stdout.trim().split('\n').sort()).toMatchInlineSnapshot(`
+    [
+      "[chromium] mocker-25e757.test.ts > sees the mock",
+      "[chromium] victim-25e757.test.ts > sees the real module",
+    ]
+  `)
+  expect(exitCode).toBe(0)
+})
+
+test('isolates browser mocks between files while listing tests in default mode', async () => {
+  const { stderr, stdout, exitCode } = await runVitestCli(
+    'list',
+    '-r=./fixtures/list-mock-isolation-20540c',
+    '-c=./vitest-list-mock-25e757.config.ts',
+  )
+
+  expect(stderr).toBe('')
+  expect(stdout.trim().split('\n').sort()).toMatchInlineSnapshot(`
+    [
+      "[chromium] mocker-25e757.test.ts > sees the mock",
+      "[chromium] victim-25e757.test.ts > sees the real module",
+    ]
+  `)
+  expect(exitCode).toBe(0)
+})
+
 test('correctly outputs json', async () => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json')
   expect(relative(stdout)).toMatchInlineSnapshot(`

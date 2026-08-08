@@ -323,6 +323,9 @@ async function cleanup() {
     getBrowserState().cleanups.map(fn => fn()),
   ).catch(error => unhandledError(error, 'Cleanup Error'))
 
+  await rpc.clearMocks(getBrowserState().sessionId)
+    .catch(error => unhandledError(error, 'Cleanup Error'))
+
   // if isolation is disabled, Vitest reuses the same iframe and we
   // don't need to switch the context back at all
   if (contextSwitched) {
