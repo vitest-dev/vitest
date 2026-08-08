@@ -8,7 +8,7 @@ import type {
 import { useRafFn } from '@vueuse/core'
 import { reactive } from 'vue'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { collectTestsTotalData, preparePendingTasks, recordTestArtifact, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { collectTestsTotalData, preparePendingTasks, recordTestArtifact, runCollect, runLoadFiles, runRemoveFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
@@ -77,6 +77,11 @@ export class ExplorerTree {
         onlyTests: filter.onlyTests,
       },
     )
+  }
+
+  removeFiles(paths: string[]) {
+    runRemoveFiles(paths)
+    this.filterNodes()
   }
 
   startRun() {

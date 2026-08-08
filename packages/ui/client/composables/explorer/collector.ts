@@ -1,6 +1,6 @@
 import type { Arrayable } from '@vitest/utils'
 import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
+import type { CollectFilteredTests, CollectorInfo, FileTreeNode, Filter, FilteredTests, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
@@ -18,6 +18,7 @@ import {
   createOrUpdateFileNode,
   createOrUpdateNodeTask,
   createOrUpdateSuiteTask,
+  isParentNode,
   isRunningTestNode,
   isSlowTestTask,
 } from '~/composables/explorer/utils'
@@ -44,6 +45,49 @@ export function runLoadFiles(
     slow: filter.slow,
     onlyTests: filter.onlyTests,
   })
+}
+
+function dropNode(node: UITaskTreeNode) {
+  if (isParentNode(node)) {
+    for (let i = 0; i < node.tasks.length; i++) {
+      dropNode(node.tasks[i])
+    }
+  }
+  explorerTree.nodes.delete(node.id)
+}
+
+/**
+ * Drop the file nodes for test files that no longer exist.
+ *
+ * When a test file is deleted or renamed on disk, the watcher removes it from
+ * the run state and reports `onTestRemoved`, but the sidebar tree keeps file
+ * nodes at the root and never dropped them. A deleted file lingered and a
+ * rename left a stale duplicate until Vitest was fully restarted.
+ */
+export function runRemoveFiles(paths: string[]) {
+  const removed = new Set(paths)
+  const root = explorerTree.root
+  const kept: FileTreeNode[] = []
+  let changed = false
+
+  for (let i = 0; i < root.tasks.length; i++) {
+    const fileNode = root.tasks[i]
+    if (removed.has(fileNode.filepath)) {
+      dropNode(fileNode)
+      explorerTree.pendingTasks.delete(fileNode.id)
+      changed = true
+    }
+    else {
+      kept.push(fileNode)
+    }
+  }
+
+  if (!changed) {
+    return
+  }
+
+  root.tasks = kept
+  uiFiles.value = [...root.tasks]
 }
 
 export function preparePendingTasks(packs: TaskResultPack[]) {
