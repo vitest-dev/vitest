@@ -75,6 +75,7 @@ export default class SnapshotState {
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
   private _fileExists: boolean
+  private _fileIsSnapshotFormat: boolean
   expand: boolean
 
   // getter/setter for jest-image-snapshot compat
@@ -100,6 +101,8 @@ export default class SnapshotState {
   ) {
     const { data, dirty } = getSnapshotData(snapshotContent, options)
     this._fileExists = snapshotContent != null // TODO: update on watch?
+    this._fileIsSnapshotFormat = snapshotContent != null
+      && snapshotContent.startsWith(options.snapshotEnvironment.getHeader())
     this._initialData = { ...data }
     this._snapshotData = { ...data }
     this._dirty = dirty
@@ -419,7 +422,9 @@ export default class SnapshotState {
 
       status.saved = true
     }
-    else if (!hasExternalSnapshots && this._fileExists) {
+    // don't delete files that were not written by the snapshot client,
+    // e.g. when `toMatchFileSnapshot` targets the default snapshot path
+    else if (!hasExternalSnapshots && this._fileExists && this._fileIsSnapshotFormat) {
       if (this._updateSnapshot === 'all') {
         await this._environment.removeSnapshotFile(this.snapshotPath)
         this._fileExists = false
