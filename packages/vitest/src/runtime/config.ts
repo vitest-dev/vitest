@@ -130,6 +130,7 @@ export interface SerializedConfig {
     trace: BrowserTraceViewMode
     traceView: {
       enabled: boolean
+      snapshot: 'always' | 'on-failure'
       recordCanvas: boolean
       inlineImages: boolean
     }
