@@ -1,5 +1,6 @@
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
@@ -376,5 +377,21 @@ describe('parseSingleFFOrSafariStack', () => {
     }
 
     parseSingleFFOrSafariStack(new PrettyError(obj).stack!)
+  })
+})
+
+describe('extractSourcemapFromFile', () => {
+  test('should extract an inline source map', () => {
+    const map = { version: 3, sources: ['answer.ts'], mappings: '' }
+    const encoded = Buffer.from(JSON.stringify(map)).toString('base64')
+    const code = `const answer = 42\n//# sourceMappingURL=data:application/json;base64,${encoded}`
+
+    expect(extractSourcemapFromFile(code, '/answer.js')).toEqual({ map })
+  })
+
+  test('should return undefined when the inline source map is malformed (#10892)', () => {
+    const code = 'const sourceMapPrefix = `\n//# sourceMappingURL=data:application/json;base64,`, encode = map => btoa(JSON.stringify(map))'
+
+    expect(extractSourcemapFromFile(code, '/answer.js')).toBeUndefined()
   })
 })
