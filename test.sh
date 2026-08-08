@@ -72,7 +72,7 @@ case "$mode" in
     run_case "browser package typecheck" pnpm -C packages/browser typecheck
     ;;
   new)
-    run_case "browser list mock isolation" bash -lc 'pnpm --filter vitest build && pnpm --filter @vitest/browser build && CI=true pnpm -C test/e2e test list.test.ts -t "isolates browser mocks between files while listing"'
+    run_case "browser list mock isolation" bash -lc 'pnpm build && pnpm --filter @vitest/browser build && CI=true pnpm -C test/e2e test list.test.ts -t "isolates browser mocks between files while listing"'
     ;;
   *)
     echo "unknown mode: $mode" >&2
