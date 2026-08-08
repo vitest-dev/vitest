@@ -12,14 +12,21 @@ export function extractSourcemapFromFile(
   code: string,
   filePath: string,
 ): ExtractedSourceMap | undefined {
-  const map = (
-    convertSourceMap.fromSource(code)
-    || convertSourceMap.fromMapFileSource(
-      code,
-      createConvertSourceMapReadMap(filePath),
-    )
-  )?.toObject()
-  return map ? { map } : undefined
+  try {
+    const map = (
+      convertSourceMap.fromSource(code)
+      || convertSourceMap.fromMapFileSource(
+        code,
+        createConvertSourceMapReadMap(filePath),
+      )
+    )?.toObject()
+    return map ? { map } : undefined
+  }
+  catch {
+    // convertSourceMap can match a comment inside a string literal.
+    // fallback to no source map to avoid errors.
+    return undefined
+  }
 }
 
 function createConvertSourceMapReadMap(originalFileName: string) {
