@@ -23,6 +23,12 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
     return rpc().readSnapshotFile(filepath)
   }
 
+  // evaluate the snapshot file on the server: `new Function` is blocked in the
+  // browser under a no-unsafe-eval CSP, so the tester never evaluates it here
+  readSnapshotFileData(filepath: string): Promise<Record<string, string> | null> {
+    return rpc().readSnapshotFileData(filepath)
+  }
+
   saveSnapshotFile(filepath: string, snapshot: string): Promise<void> {
     return rpc().saveSnapshotFile(filepath, snapshot)
   }
