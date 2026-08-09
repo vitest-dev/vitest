@@ -1,26 +1,30 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd41680f2e 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..1891feeece613ca4894ad7cbb29984492d9418af 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
-@@ -2,14 +2,14 @@
+@@ -2,14 +2,18 @@
  
  const globalObject = require("@sinonjs/commons").global;
  let timersModule, timersPromisesModule;
 -if (typeof require === "function" && typeof module === "object") {
-+if (typeof __vitest_required__ !== 'undefined') {
++function resolveVitestRequiredTimers() {
++    if (typeof __vitest_required__ === 'undefined') {
++        return;
++    }
      try {
 -        timersModule = require("timers");
-+        timersModule = __vitest_required__.timers;
++        timersModule = timersModule || __vitest_required__.timers;
      } catch {
          // ignored
      }
      try {
 -        timersPromisesModule = require("timers/promises");
-+        timersPromisesModule = __vitest_required__.timersPromises;
++        timersPromisesModule =
++            timersPromisesModule || __vitest_required__.timersPromises;
      } catch {
          // ignored
      }
-@@ -537,7 +537,7 @@ function withGlobal(_global) {
+@@ -537,7 +541,7 @@ function withGlobal(_global) {
          isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
      isPresent.nextTick =
          _global.process && typeof _global.process.nextTick === "function";
@@ -29,3 +33,12 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
+@@ -2704,6 +2708,8 @@ function withGlobal(_global) {
+             );
+         }
+ 
++        resolveVitestRequiredTimers();
++
+         // eslint-disable-next-line no-param-reassign
+         config = typeof config !== "undefined" ? config : {};
+         config.shouldAdvanceTime = config.shouldAdvanceTime || false;
