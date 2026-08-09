@@ -323,6 +323,13 @@ async function cleanup() {
     getBrowserState().cleanups.map(fn => fn()),
   ).catch(error => unhandledError(error, 'Cleanup Error'))
 
+  // Clear all registered mocks between collection/run cycles so that a
+  // vi.mock() in one file does not leak into the collection of another file.
+  // invalidate() clears both the client-side mock registry and the
+  // server-side interceptor that intercepts module imports in the browser.
+  // @ts-expect-error not typed global API
+  globalThis.__vitest_mocker__?.invalidate().catch(() => {})
+
   await rpc.clearMocks(getBrowserState().sessionId)
     .catch(error => unhandledError(error, 'Cleanup Error'))
 
