@@ -801,7 +801,7 @@ describe('vi.fn() implementations', () => {
 
   test('vi.fn(class) constructs the main implementation with the mock prototype', () => {
     let target: unknown
-    class Implementation {
+    class ActualClass {
       field = () => 'field'
 
       constructor() {
@@ -813,27 +813,27 @@ describe('vi.fn() implementations', () => {
       }
     }
 
-    const actual = new Implementation()
-    expect(Object.getPrototypeOf(actual)).toBe(Implementation.prototype)
-    expect(actual).toBeInstanceOf(Implementation)
-    expect(target).toBe(Implementation)
+    const actual = new ActualClass()
+    expect(Object.getPrototypeOf(actual)).toBe(ActualClass.prototype)
+    expect(actual).toBeInstanceOf(ActualClass)
+    expect(target).toBe(ActualClass)
     expect(actual.field()).toBe('field')
     expect(actual.method()).toBe('prototype')
 
-    const Mock = vi.fn(Implementation)
-    const instance = new Mock()
+    const MockClass = vi.fn(ActualClass)
+    const mocked = new MockClass()
 
-    expect(Object.getPrototypeOf(instance)).toBe(Mock.prototype)
-    expect(instance).toBeInstanceOf(Mock)
-    expect(instance).not.toBeInstanceOf(Implementation)
-    expect(target).toBe(Mock)
-    expect(instance.field()).toBe('field')
-    expect(instance.method).toBeUndefined()
+    expect(Object.getPrototypeOf(mocked)).toBe(MockClass.prototype)
+    expect(mocked).toBeInstanceOf(MockClass)
+    expect(mocked).not.toBeInstanceOf(ActualClass)
+    expect(target).toBe(MockClass)
+    expect(mocked.field()).toBe('field')
+    expect(mocked.method).toBeUndefined()
   })
 
   test('vi.fn(class) preserves an object returned from the constructor', () => {
     const returned = { custom: true }
-    class Implementation {
+    class ActualClass {
       constructor() {
         return returned as any
       }
@@ -843,17 +843,17 @@ describe('vi.fn() implementations', () => {
       }
     }
 
-    const actual = new Implementation()
-    const Mock = vi.fn(Implementation)
-    const instance = new Mock()
+    const actual = new ActualClass()
+    const MockClass = vi.fn(ActualClass)
+    const mocked = new MockClass()
 
     expect(actual).toBe(returned)
-    expect(actual).not.toBeInstanceOf(Implementation)
+    expect(actual).not.toBeInstanceOf(ActualClass)
     expect(actual.method).toBeUndefined()
-    expect(instance).toBe(returned)
-    expect(instance).not.toBeInstanceOf(Mock)
-    expect(instance).not.toBeInstanceOf(Implementation)
-    expect(instance.method).toBeUndefined()
+    expect(mocked).toBe(returned)
+    expect(mocked).not.toBeInstanceOf(MockClass)
+    expect(mocked).not.toBeInstanceOf(ActualClass)
+    expect(mocked.method).toBeUndefined()
   })
 
   test('vi.fn(class) keeps a shared mock prototype across once implementations', () => {
@@ -863,14 +863,14 @@ describe('vi.fn() implementations', () => {
       secondField?: string
       secondMethod?: () => string
     }
-    class FirstImplementation {
+    class FirstActualClass {
       firstField = 'first'
 
       firstMethod() {
         return 'first prototype'
       }
     }
-    class SecondImplementation {
+    class SecondActualClass {
       secondField = 'second'
 
       secondMethod() {
@@ -878,23 +878,23 @@ describe('vi.fn() implementations', () => {
       }
     }
 
-    const actualFirst = new FirstImplementation()
-    const actualSecond = new SecondImplementation()
+    const actualFirst = new FirstActualClass()
+    const actualSecond = new SecondActualClass()
 
-    expect(Object.getPrototypeOf(actualFirst)).toBe(FirstImplementation.prototype)
-    expect(Object.getPrototypeOf(actualSecond)).toBe(SecondImplementation.prototype)
+    expect(Object.getPrototypeOf(actualFirst)).toBe(FirstActualClass.prototype)
+    expect(Object.getPrototypeOf(actualSecond)).toBe(SecondActualClass.prototype)
     expect(actualFirst.firstMethod()).toBe('first prototype')
     expect(actualSecond.secondMethod()).toBe('second prototype')
 
-    const Mock = vi.fn<new () => Instance>()
-      .mockImplementationOnce(FirstImplementation)
-      .mockImplementation(SecondImplementation)
+    const MockClass = vi.fn<new () => Instance>()
+      .mockImplementationOnce(FirstActualClass)
+      .mockImplementation(SecondActualClass)
 
-    const first = new Mock()
-    const second = new Mock()
+    const first = new MockClass()
+    const second = new MockClass()
 
-    expect(Object.getPrototypeOf(first)).toBe(Mock.prototype)
-    expect(Object.getPrototypeOf(second)).toBe(Mock.prototype)
+    expect(Object.getPrototypeOf(first)).toBe(MockClass.prototype)
+    expect(Object.getPrototypeOf(second)).toBe(MockClass.prototype)
     expect(first.firstField).toBe('first')
     expect(first.firstMethod).toBeUndefined()
     expect(first.secondField).toBeUndefined()
