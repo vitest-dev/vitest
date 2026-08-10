@@ -24,7 +24,7 @@ import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { hasFailed, hasTests } from '../../utils/tasks'
+import { hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -516,7 +516,7 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }
 
     // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
+    pendingCall ??= setTimeout(call.bind(this), ms, ...args)
   } as any
 }
 
@@ -562,15 +562,15 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
 function passesRetryCondition(test: Test, errors: TestError[] | undefined): boolean {
   const condition = getRetryCondition(test.retry)
 
-  if (!errors || errors.length === 0) {
+  const error = errors?.at(-1)
+
+  if (error == null) {
     return false
   }
 
   if (!condition) {
     return true
   }
-
-  const error = errors[errors.length - 1]
 
   if (condition instanceof RegExp) {
     return condition.test(error.message || '')
@@ -949,7 +949,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {
-      if (!runner.config.passWithNoTests && !hasTests(suite)) {
+      if (!runner.config.passWithNoTests && !suite.containsTest) {
         suite.result.state = 'fail'
         if (!suite.result.errors?.length) {
           const error = processError(
@@ -1061,7 +1061,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
       await Promise.all(
-        [...TestFixtures.getWorkerContexts()].map(context => callFixtureCleanup(context)),
+        Array.from(TestFixtures.getWorkerContexts(), context => callFixtureCleanup(context)),
       ).finally(() => {
         TestFixtures.clearDefinitions()
       })

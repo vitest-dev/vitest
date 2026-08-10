@@ -109,7 +109,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   api: {
     argument: '[port]',
-    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
+    description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort} or ${defaultBrowserPort} in browser mode`,
     subcommands: apiConfig(defaultPort),
     transform(portOrOptions) {
       if (typeof portOrOptions === 'number') {
@@ -138,6 +138,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
   },
+  reporter: null,
   reporters: {
     alias: 'reporter',
     description: `Specify reporters (default, agent, minimal, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
@@ -215,7 +216,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           perFile: {
             description:
-              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)',
+              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.',
+            subcommands: null,
+            argument: '<boolean>',
           },
           autoUpdate: {
             description:
@@ -342,6 +345,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   globals: {
     description: 'Inject apis globally',
   },
+  injectCjsGlobals: {
+    description: 'Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)',
+  },
   dom: {
     description: 'Mock browser API with happy-dom',
   },
@@ -378,16 +384,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: `process.env.CI`)',
       },
-      api: {
-        description:
-          'Specify options for the browser API server. Does not affect the --api option',
-        argument: '[port]',
-        subcommands: apiConfig(defaultBrowserPort),
-      },
-      isolate: {
-        description:
-          'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
-      },
       ui: {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
@@ -397,13 +393,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
         argument: '<position>',
       },
-      fileParallelism: {
-        description:
-          'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
-      },
       connectTimeout: {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
         argument: '<timeout>',
+      },
+      dependencySourcemaps: {
+        description: 'Serve sourcemaps of dependencies to the browser in headless runs, used by devtools when debugging into `node_modules`. Reported test errors are source-mapped either way. Use `--browser.dependencySourcemaps=false` to speed up test runs if you don\'t step into dependency code (default: `true`)',
       },
       trackUnhandledErrors: {
         description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
@@ -748,6 +743,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   project: {
+    shorthand: 'p',
     description:
       'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.',
     argument: '<name>',
@@ -784,6 +780,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
   maxConcurrency: {
     description: 'Maximum number of concurrent tests and suites during test file execution (default: `5`)',
     argument: '<number>',
+  },
+  fsModuleCache: {
+    description: 'Cache transformed modules on the file system and reuse them between reruns (default: `false`)',
+  },
+  fsModuleCachePath: {
+    description: 'Directory where the `fsModuleCache` is stored (default: `node_modules/.vitest-cache`)',
+    argument: '<path>',
   },
   expect: {
     description: 'Configuration options for `expect()` matches',
@@ -874,7 +877,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[type]',
   },
   clearCache: {
-    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+    description: 'Delete all Vitest caches, including the `fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
   },
   tagsFilter: {
     description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](https://vitest.dev/guide/test-tags#syntax) for more information.',
@@ -889,10 +892,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Experimental features.',
     argument: '<features>',
     subcommands: {
-      fsModuleCache: {
-        description: 'Enable caching of modules on the file system between reruns.',
-      },
-      fsModuleCachePath: null,
       openTelemetry: null,
       importDurations: {
         description: 'Configure import duration collection and CLI display. Note that UI\'s "Module Graph" tab can always show import breakdown regardless of the `print` setting.',
@@ -950,6 +949,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       preParse: {
         description: 'Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)',
+      },
+      diagnostics: {
+        description: 'Print performance hints after the run when a configuration change would make it significantly faster. Hints never suggest changing options that were set explicitly. (default: `true`)',
+        argument: '',
+        subcommands: {
+          isolate: {
+            description: 'Print a hint estimating how much time `isolate: false` would save when `isolate: true` spends a significant amount of time spawning a worker per test file. (default: `true`)',
+          },
+          environment: {
+            description: 'Print a hint when re-creating a DOM environment for every test file dominates the run and a `vm` pool would set it up once per worker. (default: `true`)',
+          },
+          import: {
+            description: 'Print a hint when test files repeatedly evaluate the same module graph (typical for barrel-file imports) and `isolate: false` would evaluate it once per worker. (default: `true`)',
+          },
+          transform: {
+            description: 'Print a hint when transforming modules dominates the run and `fsModuleCache` would persist the results across runs. (default: `true`)',
+          },
+        },
       },
     },
   },

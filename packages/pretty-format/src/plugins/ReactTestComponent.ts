@@ -13,7 +13,7 @@ import {
   printProps,
 } from './lib/markup'
 
-export interface ReactTestObject {
+interface ReactTestObject {
   $$typeof: symbol
   type: string
   props?: Record<string, unknown>
@@ -38,7 +38,7 @@ function getPropKeys(object: ReactTestObject) {
     : []
 }
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   object: ReactTestObject,
   config: Config,
   indentation: string,
@@ -75,7 +75,7 @@ export const serialize: NewPlugin['serialize'] = (
         indentation,
       )
 
-export const test: NewPlugin['test'] = val =>
+const test: NewPlugin['test'] = val =>
   val && val.$$typeof === testSymbol
 
 const plugin: NewPlugin = { serialize, test }

@@ -8,7 +8,7 @@ export function onCleanup(cb: () => unknown): void {
 }
 
 export async function cleanup(): Promise<void> {
-  await Promise.all([...cleanupListeners].map(l => l()))
+  await Promise.all(Array.from(cleanupListeners, l => l()))
 }
 
 export function onModuleRunner(cb: (runner: ModuleRunner) => unknown): void {

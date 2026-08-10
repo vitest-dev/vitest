@@ -43,6 +43,7 @@ test('provider options, generic', () => {
         branches: 12,
         functions: 12,
         statements: 12,
+        perFile: true,
       },
     },
   })
@@ -67,6 +68,84 @@ test('provider options, generic', () => {
         branches: 12,
         functions: 12,
         statements: 12,
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+      perFile: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    },
+  })
+
+  // Glob patterns accept their own `perFile` (boolean or object).
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: true,
+      },
+      '**/other-file.ts': {
+        perFile: {
+          lines: 50,
+        },
+      },
+      '**/strict.ts': {
+        perFile: {
+          100: true,
+        },
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: {
+          // @ts-expect-error -- per-file threshold values must be numbers
+          lines: '50',
+        },
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'istanbul',
+    thresholds: {
+      lines: 80,
+      perFile: {
+        100: true,
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- per-file threshold values must be numbers
+        lines: '50',
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- `autoUpdate` is not a per-file option
+        autoUpdate: true,
       },
     },
   })

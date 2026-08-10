@@ -90,7 +90,7 @@ test.each([
 ])('return a promise like result %#', async (a, b, expected) => {
   const promiseResolver = (first: number, second: number) => {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(first + second), 1)
+      setTimeout(resolve, 1, first + second)
     })
   }
 
@@ -112,7 +112,7 @@ test.each([
 ])('return a promise like result %$', async (a, b, expected) => {
   const promiseResolver = (first: number, second: number) => {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(first + second), 1)
+      setTimeout(resolve, 1, first + second)
     })
   }
 
@@ -223,6 +223,14 @@ ${{ val: 2 }}   | ${'b'} | ${'2b'}
 ${{ val: 3 }}   | ${'b'} | ${'3b'}
 `('returns $expected when $a.val is added $b', ({ a, b, expected }) => {
   expect(a.val + b).toBe(expected)
+})
+
+test.each`
+  ω    | Σ
+  ${1} | ${5}
+  ${2} | ${10}
+`('returns true when $ω is < $Σ', ({ ω, Σ }) => {
+  expect(Σ).toBeGreaterThan(ω)
 })
 
 test.each`

@@ -1,6 +1,7 @@
 import type { SerializedLocator } from '@vitest/browser'
 import type { UserEventUploadOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
+import { assertBrowserFileAccess } from '@vitest/browser'
 import { resolve } from 'pathe'
 import { getDescribedLocator } from './utils'
 
@@ -22,7 +23,9 @@ export const upload: UserEventCommand<(element: SerializedLocator, files: Array<
 
   const playwrightFiles = files.map((file) => {
     if (typeof file === 'string') {
-      return resolve(root, file)
+      const filepath = resolve(root, file)
+      assertBrowserFileAccess(context.project, filepath)
+      return filepath
     }
     return {
       name: file.name,

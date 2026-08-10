@@ -4,21 +4,21 @@ import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchResult } from '../runtime/benchmark'
 import type { Test } from '../runtime/runner/types'
 
-interface SnapshotMatcher<T> {
+interface SnapshotMatcher<R extends void | Promise<void>, T = unknown> {
   <U extends { [P in keyof T]: any }>(
     snapshot: Partial<U>,
     hint?: string
-  ): void
-  (hint?: string): void
+  ): R
+  (hint?: string): R
 }
 
-interface InlineSnapshotMatcher<T> {
+interface InlineSnapshotMatcher<R extends void | Promise<void>, T = unknown> {
   <U extends { [P in keyof T]: any }>(
     properties: Partial<U>,
     snapshot?: string,
     hint?: string
-  ): void
-  (hint?: string): void
+  ): R
+  (hint?: string): R
 }
 
 declare module 'vitest' {
@@ -37,7 +37,7 @@ declare module 'vitest' {
   interface ExpectStatic {
     assert: Chai.AssertStatic
     unreachable: (message?: string) => never
-    soft: <T>(actual: T, message?: string) => Assertion<T>
+    soft: <T>(actual: T, message?: string) => Assertion<void, T>
     poll: <T>(
       actual: (options: { signal: AbortSignal }) => T,
       options?: ExpectPollOptions,
@@ -48,11 +48,11 @@ declare module 'vitest' {
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 
-  interface Assertion<T> {
+  interface Assertion<R, T> {
     // Snapshots are extended in @vitest/snapshot and are not part of @vitest/expect
-    matchSnapshot: SnapshotMatcher<T>
-    toMatchSnapshot: SnapshotMatcher<T>
-    toMatchInlineSnapshot: InlineSnapshotMatcher<T>
+    matchSnapshot: SnapshotMatcher<R, T>
+    toMatchSnapshot: SnapshotMatcher<R, T>
+    toMatchInlineSnapshot: InlineSnapshotMatcher<R, T>
 
     /**
      * Checks that an error thrown by a function matches a previously recorded snapshot.
@@ -62,7 +62,7 @@ declare module 'vitest' {
      * @example
      * expect(functionWithError).toThrowErrorMatchingSnapshot();
      */
-    toThrowErrorMatchingSnapshot: (hint?: string) => void
+    toThrowErrorMatchingSnapshot: (hint?: string) => R
 
     /**
      * Checks that an error thrown by a function matches an inline snapshot within the test file.
@@ -78,7 +78,7 @@ declare module 'vitest' {
     toThrowErrorMatchingInlineSnapshot: (
       snapshot?: string,
       hint?: string,
-    ) => void
+    ) => R
 
     /**
      * Compares the received value to a snapshot saved in a specified file.
@@ -107,7 +107,7 @@ declare module 'vitest' {
     toBeFasterThan: (
       expected: BenchResult,
       options?: { delta?: number },
-    ) => void
+    ) => R
 
     /**
      * Asserts that a benchmark result is slower than another benchmark result.
@@ -124,6 +124,26 @@ declare module 'vitest' {
     toBeSlowerThan: (
       expected: BenchResult,
       options?: { delta?: number },
-    ) => void
+    ) => R
+
+    /**
+     * Ensures a `vi.when` chain has been exhausted.
+     *
+     * A chain is exhausted when at least one `calledWith` with an associated action (`then*`) has been registered
+     * and every registered behavior has been fully consumed. A chain with no registered
+     * behaviors, or with `calledWith` entries that have no associated `then*` actions, is never considered exhausted.
+     *
+     * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
+     *
+     * @example
+     * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+     *
+     * expect(w).not.toHaveBeenExhausted()
+     *
+     * expect(spy('hello')).toBe('HELLO')
+     *
+     * expect(w).toHaveBeenExhausted()
+     */
+    toHaveBeenExhausted: () => R
   }
 }

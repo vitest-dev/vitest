@@ -1,8 +1,8 @@
 import type { Renderer } from 'ansivision'
-import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { renderString } from 'ansivision'
 import { normalize } from 'pathe'
 import { expect, test } from 'vitest'
+import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 
 test('states of running tests are reported', async () => {
   const { stdout } = await runVitest({
@@ -175,7 +175,7 @@ test('states of running tests are reported', async () => {
      Test Files  2 passed (2)
           Tests  6 passed (6)
        Start at  <time>
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
 
     "
   `)
@@ -195,6 +195,7 @@ function trimFrames(frames: Renderer) {
 
 function trimReporterOutput(report: string) {
   return report
+    .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(normalize(process.cwd()), '<process-cwd>')

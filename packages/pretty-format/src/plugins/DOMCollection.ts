@@ -17,7 +17,7 @@ function testName(name: any) {
   return OBJECT_NAMES.has(name) || ARRAY_REGEXP.test(name)
 }
 
-export const test: NewPlugin['test'] = (val: object) =>
+const test: NewPlugin['test'] = (val: object) =>
   val
   && val.constructor
   && !!val.constructor.name
@@ -27,7 +27,7 @@ function isNamedNodeMap(collection: object): collection is NamedNodeMap {
   return collection.constructor.name === 'NamedNodeMap'
 }
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   collection: any | NamedNodeMap,
   config: Config,
   indentation: string,

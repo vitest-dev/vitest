@@ -80,7 +80,6 @@ export default defineConfig({
     },
     diff: './custom-diff-config.ts',
     outputFile: {
-      html: './html/index.html',
       json: './browser.json',
     },
     onConsoleLog(log) {

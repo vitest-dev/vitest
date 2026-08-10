@@ -1,43 +1,73 @@
-#!/usr/bin/env zx
-
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import * as semver from 'semver'
 import { $ } from 'zx'
 
-if (process.env.VITE_TEST_WATCHER_DEBUG !== 'false') {
-  throw new Error(`Cannot release Vitest without VITE_TEST_WATCHER_DEBUG=${process.env.VITE_TEST_WATCHER_DEBUG} environment variable. `)
+// How to test release script locally:
+// RELEASE_VERSION=5.0.0-beta.5 pnpm release
+// VITE_TEST_WATCHER_DEBUG=false PUBLISH_DRY_RUN=true PUBLISH_BRANCH=main pnpm publish-ci 5.0.0-beta.5
+
+const $$ = $({ stdio: 'inherit' })
+
+async function main() {
+  if (process.env.VITE_TEST_WATCHER_DEBUG !== 'false') {
+    throw new Error(`Cannot release Vitest without VITE_TEST_WATCHER_DEBUG=${process.env.VITE_TEST_WATCHER_DEBUG} environment variable. `)
+  }
+
+  const version = process.argv[2]
+  if (!version) {
+    throw new Error('Missing argument to specify version')
+  }
+
+  const pkgPath = fileURLToPath(new URL('../package.json', import.meta.url))
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+  if (pkg.version !== version) {
+    throw new Error(
+      `Input version "${version}" does not match package.json version "${pkg.version}"`,
+    )
+  }
+
+  const publishBranch = process.env.PUBLISH_BRANCH
+  if (!publishBranch) {
+    throw new Error('Missing PUBLISH_BRANCH environment variable')
+  }
+  const releaseTag = await getReleaseTag(version, publishBranch)
+
+  const dryRun = process.env.PUBLISH_DRY_RUN === 'true'
+  if (dryRun) {
+    console.log('== DRY RUN ==')
+  }
+  console.log(`Staging version '${version}' with tag '${releaseTag}'`)
+  await $$`pnpm -r stage publish --access public --no-git-checks --tag ${releaseTag} ${dryRun ? ['--dry-run'] : []}`
 }
 
-let version = process.argv[2]
+async function getReleaseTag(version: string, publishBranch: string) {
+  // Always specify the dist-tag explicitly since otherwise `latest` would be overwritten.
+  // Note that `main` branch doesn't always mean `latest` tag because of pre-release phase.
 
-if (!version) {
-  throw new Error('No tag specified')
+  // check prerelease e.g. beta, alpha, rc
+  const parsed = semver.parse(version, {}, true)
+  if (parsed.prerelease.length > 0) {
+    return parsed.prerelease[0]
+  }
+
+  // If the version is not a pre-release and is greater than the latest version on npm,
+  // then that should become the new latest version.
+  const npmView = await $`npm view vitest dist-tags --json`
+  const latestVersion = JSON.parse(npmView.stdout).latest
+  if (semver.gt(version, latestVersion)) {
+    return 'latest'
+  }
+
+  // Otherwise this is a backport release.
+  // Use the uppercase of the branch name to avoid npm dist-tag caveats
+  // https://docs.npmjs.com/cli/v11/commands/npm-dist-tag#caveats
+  // - v4 branch -> V4 dist tag
+  // - v4.1 branch -> V4.1 dist tag
+  return publishBranch.toUpperCase()
 }
 
-if (version.startsWith('v')) {
-  version = version.slice(1)
-}
-
-const pkgPath = fileURLToPath(new URL('../package.json', import.meta.url))
-const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
-
-if (pkg.version !== version) {
-  throw new Error(
-    `Package version from tag "${version}" mismatches with the current version "${pkg.version}"`,
-  )
-}
-
-const releaseTag = version.includes('beta')
-  ? 'beta'
-  : version.includes('alpha')
-    ? 'alpha'
-    : undefined
-
-console.log('Publishing version', version, 'with tag', releaseTag || 'latest')
-
-if (releaseTag) {
-  await $`pnpm -r publish --access public --no-git-checks --tag ${releaseTag}`
-}
-else {
-  await $`pnpm -r publish --access public --no-git-checks`
-}
+main().catch((error) => {
+  console.error('Error during publishing:', error)
+  process.exit(1)
+})

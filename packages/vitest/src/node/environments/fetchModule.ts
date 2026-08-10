@@ -1,7 +1,7 @@
 import type { Span } from '@opentelemetry/api'
-import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, TransformResult } from 'vite'
-import type { FetchFunctionOptions } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } from 'vite'
+import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
+import type { FetchCachedFileSystemResult, ModuleType, VitestFetchResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
 import type { FileSystemModuleCache } from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
@@ -11,15 +11,26 @@ import { readFile } from 'node:fs/promises'
 import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
 import { join } from 'pathe'
 import { fetchModule } from 'vite'
+import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
+import { detectModuleType } from '../resolver'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
-const saveCachePromises = new Map<string, Promise<FetchResult>>()
+const debugFs = createDebugger('vitest:cache:fs')
+
+const saveCachePromises = new Map<
+  string,
+  Promise<VitestFetchResult | FetchCachedFileSystemResult>
+>()
 const readFilePromises = new Map<string, Promise<string | null>>()
 
 class ModuleFetcher {
   private tmpDirectories = new Set<string>()
   private fsCacheEnabled: boolean
+  // the module type is only needed by the evaluator to decide if CJS
+  // variables should be provided to the module, so don't waste time
+  // on the detection when every module receives them
+  private detectModuleType: boolean
 
   constructor(
     private resolver: VitestResolver,
@@ -27,7 +38,8 @@ class ModuleFetcher {
     private fsCache: FileSystemModuleCache,
     private tmpProjectDir: string,
   ) {
-    this.fsCacheEnabled = config.experimental?.fsModuleCache === true
+    this.fsCacheEnabled = config.fsModuleCache === true
+    this.detectModuleType = config.injectCjsGlobals === false
   }
 
   async fetch(
@@ -96,7 +108,7 @@ class ModuleFetcher {
       }
 
       const transformResult = moduleGraphModule.transformResult
-      const tmpPath = transformResult && Reflect.get(transformResult, '_vitest_tmp')
+      const tmpPath = transformResult?.__vitestTmp
       if (typeof tmpPath === 'string') {
         return getCachedResult(result, tmpPath)
       }
@@ -112,7 +124,7 @@ class ModuleFetcher {
       const tmpFile = join(tmpDir, hash('sha1', result.id, 'hex'))
       return this.cacheResult(result, tmpFile).then((result) => {
         if (transformResult) {
-          Reflect.set(transformResult, '_vitest_tmp', tmpFile)
+          transformResult.__vitestTmp = tmpFile
         }
         return result
       })
@@ -136,7 +148,14 @@ class ModuleFetcher {
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    return this.cacheResult(result, cachePath, importedUrls, !!mappings)
+    const cachedResult = await this.cacheResult(result, cachePath, importedUrls, !!mappings)
+    // remember where the code is stored on disk so that repeat fetches and the
+    // `fetchWarmModules` snapshot can point at it in this session already, not
+    // only after the cache is read back in the next one
+    if ('code' in result && moduleGraphModule.transformResult) {
+      moduleGraphModule.transformResult.__vitestTmp = cachePath
+    }
+    return cachedResult
   }
 
   // we need this for UI to be able to show a module graph
@@ -226,6 +245,13 @@ class ModuleFetcher {
     importer: string | undefined,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
     if (moduleGraphModule.transformResult?.__vitestTmp) {
+      if (!existsSync(moduleGraphModule.transformResult.__vitestTmp)) {
+        debugFs?.(
+          `cached file ${moduleGraphModule.transformResult.__vitestTmp} disappeared, re-transforming`,
+        )
+        moduleGraphModule.transformResult.__vitestTmp = undefined
+        return undefined
+      }
       return {
         cached: true as const,
         file: moduleGraphModule.file,
@@ -233,6 +259,11 @@ class ModuleFetcher {
         tmp: moduleGraphModule.transformResult.__vitestTmp,
         url: moduleGraphModule.url,
         invalidate: false,
+        moduleType: await this.cachedModuleType(
+          moduleGraphModule.file,
+          moduleGraphModule.transformResult.code,
+          moduleGraphModule.transformResult,
+        ),
       }
     }
 
@@ -251,11 +282,13 @@ class ModuleFetcher {
     if (!map && cachedModule.mappings) {
       map = { mappings: '' }
     }
+    const moduleType = cachedModule.moduleType
     moduleGraphModule.transformResult = {
       code: cachedModule.code,
       map,
       ssr: true,
       __vitestTmp: cachePath,
+      __vitestModuleType: moduleType,
     }
 
     // we populate the module graph to make the watch mode work because it relies on importers
@@ -281,6 +314,7 @@ class ModuleFetcher {
       tmp: cachePath,
       url: cachedModule.url,
       invalidate: false,
+      moduleType,
     }
   }
 
@@ -290,7 +324,7 @@ class ModuleFetcher {
     importer: string | undefined,
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
-  ): Promise<FetchResult> {
+  ): Promise<VitestFetchResult> {
     const moduleRunnerModule = await fetchModule(
       environment,
       url,
@@ -301,7 +335,40 @@ class ModuleFetcher {
       },
     ).catch(handleRollupError)
 
-    return processResultSource(environment, moduleRunnerModule)
+    const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
+    if ('code' in result) {
+      result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
+    }
+    return result
+  }
+
+  private sourceLoader(file: string | null): (() => Promise<string | null>) | undefined {
+    if (!file || file.startsWith('\x00') || file.startsWith('virtual:')) {
+      return undefined
+    }
+    return () => this.readFileConcurrently(file)
+  }
+
+  // the module type is a pure function of the module, so detect it at most once
+  // and memoize the verdict on the transform result. repeat fetches, the on-disk
+  // cache (`cached`), and the `fetchWarmModules` snapshot all reuse it instead of
+  // re-detecting. a no-op unless `injectCjsGlobals` is disabled — otherwise every
+  // module receives the CJS globals and the type is irrelevant.
+  private async cachedModuleType(
+    file: string | null,
+    code: string,
+    transformResult: TransformResult | null | undefined,
+  ): Promise<ModuleType | undefined> {
+    if (!this.detectModuleType) {
+      return undefined
+    }
+    const moduleType
+      = transformResult?.__vitestModuleType
+        ?? await detectModuleType(file, code, this.sourceLoader(file))
+    if (transformResult) {
+      transformResult.__vitestModuleType = moduleType
+    }
+    return moduleType
   }
 
   private async cacheResult(
@@ -315,21 +382,23 @@ class ModuleFetcher {
       : result
 
     if (saveCachePromises.has(cachePath)) {
-      await saveCachePromises.get(cachePath)
-      return returnResult
+      return saveCachePromises.get(cachePath)!
     }
 
     const savePromise = this.fsCache
       .saveCachedModule(cachePath, result, importedUrls, mappings)
-      .then(() => result)
+      .then(() => returnResult)
+      .catch((error) => {
+        debugFs?.(`failed to cache ${cachePath}, serving it inline: ${error}`)
+        return result
+      })
       .finally(() => {
         saveCachePromises.delete(cachePath)
       })
 
     saveCachePromises.set(cachePath, savePromise)
-    await savePromise
 
-    return returnResult
+    return savePromise
   }
 
   private readFileConcurrently(file: string): Promise<string | null> {
@@ -452,7 +521,7 @@ function genSourceMapUrl(map: Rollup.SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-function getCachedResult(result: Extract<FetchResult, { code: string }>, tmp: string): FetchCachedFileSystemResult {
+function getCachedResult(result: Extract<VitestFetchResult, { code: string }>, tmp: string): FetchCachedFileSystemResult {
   return {
     cached: true as const,
     file: result.file,
@@ -460,6 +529,7 @@ function getCachedResult(result: Extract<FetchResult, { code: string }>, tmp: st
     tmp,
     url: result.url,
     invalidate: result.invalidate,
+    moduleType: result.moduleType,
   }
 }
 
@@ -514,6 +584,9 @@ export function handleRollupError(e: unknown): never {
 
 declare module 'vite' {
   export interface TransformResult {
+    // on-disk location of the transformed code, written by either the
+    // `experimental.fsModuleCache` store or the forks pool's tmp copies
     __vitestTmp?: string
+    __vitestModuleType?: ModuleType
   }
 }

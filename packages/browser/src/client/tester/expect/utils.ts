@@ -247,7 +247,7 @@ function getSelectValue({ multiple, options }: HTMLSelectElement) {
   const selectedOptions = [...options].filter(option => option.selected)
 
   if (multiple) {
-    return [...selectedOptions].map(opt => opt.value)
+    return Array.from(selectedOptions, opt => opt.value)
   }
   /* istanbul ignore if */
   if (selectedOptions.length === 0) {

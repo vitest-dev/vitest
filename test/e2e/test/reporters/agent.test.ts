@@ -1,6 +1,6 @@
-import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/node'
+import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { trimReporterOutput } from './utils'
 
 describe('agent reporter', async () => {

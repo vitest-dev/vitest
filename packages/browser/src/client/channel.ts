@@ -70,6 +70,8 @@ export type IframeChannelEvent
   = | IframeChannelIncomingEvent
     | IframeChannelOutgoingEvent
 
+export type IframeReceivedEvent = IframeChannelEvent & { messageId: number }
+
 export const channel: BroadcastChannel = new BroadcastChannel(
   `vitest:${getBrowserState().sessionId}`,
 )
