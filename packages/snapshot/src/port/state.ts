@@ -132,7 +132,7 @@ export default class SnapshotState {
     }
     else {
       const content = await environment.readSnapshotFile(snapshotPath)
-      fileData = content == null ? null : evaluateSnapshotFile(snapshotPath, content)
+      fileData = content != null ? evaluateSnapshotFile(snapshotPath, content) : null
     }
     return new SnapshotState(testFilePath, snapshotPath, fileData, options)
   }
