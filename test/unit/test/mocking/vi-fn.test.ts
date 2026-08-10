@@ -826,6 +826,8 @@ describe('vi.fn() implementations', () => {
     expect(mocked).toBeInstanceOf(MockClass)
     expect(mocked).not.toBeInstanceOf(ActualClass)
     expect(newTarget).toBe(MockClass)
+    // Copying prototype methods after construction would still leave them
+    // unavailable inside the constructor, resulting in partial class semantics.
     expect(constructorMembers).toEqual({ field: mocked.field, method: undefined })
     expect(mocked.field()).toBe('field')
     expect(mocked.method).toBeUndefined()
