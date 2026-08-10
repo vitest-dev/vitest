@@ -801,10 +801,14 @@ describe('vi.fn() implementations', () => {
 
   test('vi.fn(class) and prototype methods', () => {
     let newTarget: unknown
+    let constructorMembers!: { field: unknown; method: unknown }
     class ActualClass {
       constructor() {
         newTarget = new.target
-        // TODO: also this.field vs this.method availablility here
+        constructorMembers = {
+          field: this.field,
+          method: this.method,
+        }
       }
 
       field = () => 'field'
@@ -822,6 +826,7 @@ describe('vi.fn() implementations', () => {
     expect(mocked).toBeInstanceOf(MockClass)
     expect(mocked).not.toBeInstanceOf(ActualClass)
     expect(newTarget).toBe(MockClass)
+    expect(constructorMembers).toEqual({ field: mocked.field, method: undefined })
     expect(mocked.field()).toBe('field')
     expect(mocked.method).toBeUndefined()
 
@@ -830,6 +835,7 @@ describe('vi.fn() implementations', () => {
     expect(Object.getPrototypeOf(actual)).toBe(ActualClass.prototype)
     expect(actual).toBeInstanceOf(ActualClass)
     expect(newTarget).toBe(ActualClass)
+    expect(constructorMembers).toEqual({ field: actual.field, method: actual.method })
     expect(actual.field()).toBe('field')
     expect(actual.method()).toBe('prototype')
   })
@@ -843,14 +849,12 @@ describe('vi.fn() implementations', () => {
     }
     class FirstActualClass {
       firstField = 'first'
-
       firstMethod() {
         return 'first prototype'
       }
     }
     class SecondActualClass {
       secondField = 'second'
-
       secondMethod() {
         return 'second prototype'
       }
