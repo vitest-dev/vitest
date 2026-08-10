@@ -1,6 +1,6 @@
 import type { Environment } from '../types/environment'
 import type { SerializedConfig } from './config'
-import { createRequire } from 'node:module'
+import { createRequire, syncBuiltinESMExports } from 'node:module'
 import timers from 'node:timers'
 import timersPromises from 'node:timers/promises'
 import util from 'node:util'
@@ -54,6 +54,7 @@ export async function setupGlobalEnv(
     util,
     timers,
     timersPromises,
+    syncBuiltinESMExports,
   }
 
   if (!config.disableConsoleIntercept) {

@@ -1,8 +1,10 @@
 // @vitest-environment node
 
 import { createRequire } from 'node:module'
-import timers from 'node:timers'
-import timersPromises from 'node:timers/promises'
+import timers, { setTimeout as namedSetTimeout } from 'node:timers'
+import * as timersNamespace from 'node:timers'
+import timersPromises, { setTimeout as namedSetTimeoutPromise } from 'node:timers/promises'
+import * as timersPromisesNamespace from 'node:timers/promises'
 import { afterEach, expect, test, vi } from 'vitest'
 import './fixtures/timers.suite'
 
@@ -48,4 +50,38 @@ test('restores node timer imports', () => {
   vi.useRealTimers()
   expect(timers.setTimeout).toBe(originalSetTimeout)
   expect(timersPromises.setTimeout).toBe(originalSetTimeoutPromise)
+})
+
+test.skipIf(import.meta.env.VITEST_VM_POOL)('mocks named Node timer imports', async () => {
+  vi.useFakeTimers()
+  const called: string[] = []
+
+  namedSetTimeout(() => called.push('named'), 100)
+  timersNamespace.setTimeout(() => called.push('namespace'), 100)
+  const promises = [
+    namedSetTimeoutPromise(100).then(() => called.push('promises named')),
+    timersPromisesNamespace.setTimeout(100).then(() => called.push('promises namespace')),
+  ]
+
+  await vi.advanceTimersByTimeAsync(100)
+  await Promise.all(promises)
+  expect(called).toEqual([
+    'named',
+    'namespace',
+    'promises named',
+    'promises namespace',
+  ])
+})
+
+test.skipIf(import.meta.env.VITEST_VM_POOL)('restores named Node timer imports', () => {
+  const originalNamedSetTimeout = namedSetTimeout
+  const originalNamedSetTimeoutPromise = namedSetTimeoutPromise
+
+  vi.useFakeTimers()
+  expect(namedSetTimeout).not.toBe(originalNamedSetTimeout)
+  expect(namedSetTimeoutPromise).not.toBe(originalNamedSetTimeoutPromise)
+
+  vi.useRealTimers()
+  expect(namedSetTimeout).toBe(originalNamedSetTimeout)
+  expect(namedSetTimeoutPromise).toBe(originalNamedSetTimeoutPromise)
 })
