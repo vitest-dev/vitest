@@ -69,6 +69,14 @@ export function TestConfigPlugin(
         handler(config) {
           const { browser, ...options } = cliOptions
 
+          // an option the programmatic API left undefined was never specified,
+          // so it must not erase the value the config file declared
+          for (const key of Object.keys(options) as (keyof typeof options)[]) {
+            if (options[key] === undefined) {
+              delete options[key]
+            }
+          }
+
           // We don't want to use Vite's merge because we want to OVERRIDE options
           // By default, Vite extends arrays, for example, but CLI options should have the priority
           config.test = deepMerge({}, config.test ?? {}, options)

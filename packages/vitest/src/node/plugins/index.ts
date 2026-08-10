@@ -22,7 +22,7 @@ export function VitestCorePlugin(harness: PluginHarness, options: CliOptions = {
       config: {
         order: 'post',
         handler(viteConfig) {
-          const root = resolve(options.root || viteConfig.test?.root || viteConfig.root || process.cwd())
+          const root = resolve(viteConfig.test?.root || options.root || viteConfig.root || process.cwd())
 
           return {
             base: '/',
