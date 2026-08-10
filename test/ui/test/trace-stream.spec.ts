@@ -32,7 +32,7 @@ test.describe('trace stream', () => {
       },
     )
     vitest = server.vitest
-    baseURL = `${server.url}/__vitest__/`
+    baseURL = server.url
   })
 
   test.afterAll(async () => {

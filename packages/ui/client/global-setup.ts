@@ -21,7 +21,7 @@ export const directives: Record<string, Directive> = {
 FloatingVue.options.instantMove = true
 FloatingVue.options.distance = 10
 
-export function createRouter() {
+function createRouter() {
   return _createRouter({
     history: createWebHashHistory(),
     routes: [

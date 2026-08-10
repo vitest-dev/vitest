@@ -161,6 +161,43 @@ The release branches are also linked with the documentation site releases:
 - `release` points to the latest stable release line used for <https://vitest.dev/>. Release managers update it manually for non-beta releases from `main`; it is not moved for older-line backports.
 - `vN` branches are used for old major documentation sites. For example, <https://v3.vitest.dev/> uses `v3`.
 
+### Release process
+
+Releases — publishing the npm packages, creating the git release tag, and generating the associated GitHub release — are driven by a pull request and carried out by GitHub Actions, not from a maintainer's machine. The release PR holds the version bump, and merging it kicks off the actual publish.
+
+1. **Prepare the release PR.** Run the [`Prepare Publish`](./.github/workflows/prepare-publish.yml) workflow with two inputs:
+
+   - `target_branch` — the branch matching the [release branch](#release-branches) convention for the release line. The Actions menu's separate "Use workflow from" selector should point at the same branch, to keep the workflow definition and release target aligned.
+   - `release` or `version` — the version bump. The default `release: next` bumps to the next patch for stable releases (`4.1.2 -> 4.1.3`), or the next prerelease when already on one (`4.2.0-beta.2 -> 4.2.0-beta.3`). Otherwise set `release` to a specific bump type, or pass an exact `version` for pre-releases.
+
+   The workflow pushes the bump to a branch and opens the release PR. To preview what a `release` input resolves to, run `pnpm release` locally first — it lets you browse release types and versions interactively (cancel before confirming so nothing is committed).
+
+2. **Review and merge the PR.** Check the version bump, then merge so the `chore: release v*` commit lands on the release branch — that commit is what triggers publishing.
+
+3. **Approve the publish workflow.** Merging triggers the [`Publish Package`](./.github/workflows/publish.yml) workflow, which builds the packages and then pauses for `Release` environment approval. Open the workflow run in GitHub Actions and approve the `Release` environment deployment; the workflow then stages the packages on npm, pushes the release tag, and generates the GitHub release.
+
+4. **Approve the npm staged publish.** Review the staged packages on npm, then approve them with 2FA so the release becomes installable. Afterwards, confirm npm, the tag, and the GitHub release all look right.
+
+### Release Protections
+
+A few settings outside this repository guard the release process above: GitHub rulesets that keep release branches and tags from being changed by hand, a `Release` environment that requires a maintainer to approve each publish, and npm settings that decide how packages are published.
+
+- **Protect releases** — branch ruleset on `main` and the `v*` lines, so release branches only change through reviewed pull requests.
+  - required pull request with at least one approval, stale approvals dismissed on push; the reviewed PR merge is the single auditable entry point for changes to a release line.
+  - squash-only merges; keeps release-branch history to one commit per PR, so `chore: release v*` lands as a clean, identifiable trigger commit.
+  - force-push and branch deletion blocked; release history cannot be silently rewritten or dropped.
+  - code scanning must pass; workflow-security findings block the merge before they can reach a release branch.
+- **Protect tags** — tag ruleset on the `v*` release tags, so a tag always maps to a real publish run.
+  - manual creation, update, and deletion blocked; nobody can hand-craft or move a release tag.
+  - only the [`vitest-release-bot`](https://github.com/organizations/vitest-dev/settings/apps/vitest-release-bot) GitHub App may bypass; the publish workflow is the sole way a `v*` tag gets pushed.
+- **Release environment** — deployment gate on the [`Publish Package`](./.github/workflows/publish.yml) workflow, so a human approves each publish.
+  - required reviewer; publishing pauses until a maintainer approves the `Release` environment deployment.
+  - self-review disabled; the maintainer who triggered the release cannot approve their own publish.
+  - deployment restricted to `main` and the `v*` branches; a publish can only run from a real release branch, never from an arbitrary or feature branch.
+- **npm publishing** — npm settings control how packages are authenticated and released.
+  - trusted publishing (OIDC); each package's trusted publisher on npm pins the source repository (`vitest-dev/vitest`), workflow file (`publish.yml`), and environment (`Release`), so publishes use short-lived tokens from that workflow alone with no long-lived npm token to leak, and they carry provenance attestation automatically so users can trace a package back to the exact workflow run that produced it.
+  - staged publishing; a publish run only stages the packages, and they go live only after a maintainer reviews and approves them on npm with 2FA, so a bad or accidental publish can be discarded before it becomes installable.
+
 ### Issue Triaging Workflow
 
 ```mermaid

@@ -11,7 +11,6 @@ const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && 
 
 const skipCli = new Set([
   'mergeReports',
-  'changed',
   'shard',
 ])
 
@@ -40,7 +39,6 @@ const skipConfig = new Set([
   'project',
   'ui',
   'browser.name',
-  'browser.fileParallelism',
   'clearCache',
   'tagsFilter',
   'listTags',

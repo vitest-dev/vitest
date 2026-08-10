@@ -3,7 +3,7 @@ import nodeAssert, { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -16,17 +16,7 @@ interface CustomMatchers<R = unknown> {
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
-}
-
-declare global {
-  // eslint-disable-next-line ts/no-namespace
-  namespace jest {
-    interface Matchers<R> {
-      toBeJestCompatible: () => R
-    }
-  }
+  interface Matchers<R> extends CustomMatchers<R> {}
 }
 
 describe('jest-expect', () => {
@@ -280,12 +270,6 @@ describe('jest-expect', () => {
           message: () => 'toBeTestedPromise',
         })
       },
-      toBeJestCompatible() {
-        return {
-          pass: true,
-          message: () => '',
-        }
-      },
       toBeTestedMatcherContext<T>(received: unknown, expected: T) {
         if (typeof this.utils?.stringify !== 'function') {
           throw new TypeError('this.utils.stringify is not available.')
@@ -308,8 +292,6 @@ describe('jest-expect', () => {
     expect(() => expect(null).toBeTestedSync()).toThrow('toBeTestedSync')
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrow('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow('toBeTestedPromise')
-
-    expect(expect).toBeJestCompatible()
   })
 
   it('object', () => {
@@ -815,6 +797,10 @@ describe('toSatisfy()', () => {
     snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd) }))
     snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'ODD') }))
   })
+
+  it('supports a promise return type', async () => {
+    await (expect(Promise.resolve(1)).resolves.toSatisfy(isOdd) satisfies Promise<void>)
+  })
 })
 
 describe('toHaveBeenCalled', () => {
@@ -1246,12 +1232,6 @@ describe('async expect', () => {
   })
 
   describe('promise auto queuing', () => {
-    // silence warning
-    beforeAll(() => {
-      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      return () => spy.mockRestore()
-    })
-
     it.fails('fails', () => {
       expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
         .resolves
@@ -1260,7 +1240,7 @@ describe('async expect', () => {
 
     let value = 0
 
-    it('pass first', () => {
+    it.fails('not awaited fails', () => {
       expect((async () => {
         await new Promise(resolve => setTimeout(resolve, 500))
         value += 1
@@ -1270,8 +1250,7 @@ describe('async expect', () => {
         .toBe(1)
     })
 
-    it('pass second', () => {
-    // even if 'pass first' is sync, we will still wait the expect to resolve
+    it('not awaited assertion is still resolved', () => {
       expect(value).toBe(1)
     })
   })

@@ -1,6 +1,5 @@
 import path from 'pathe'
 import { expect, test } from 'vitest'
-import { rolldownVersion } from 'vitest/node'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
@@ -9,12 +8,12 @@ test('prints correct unhandled error stack', async () => {
     root: './fixtures/unhandled',
   })
 
-  expect(stderr).toContain('throw-unhandled-error.test.ts:9:10')
+  expect(stderr).toContain('throw-unhandled-error.test.ts:9:11')
   expect(stderr).toContain('This error originated in "throw-unhandled-error.test.ts" test file.')
   expect(stderr).toContain('The last test to run before this error was "unhandled exception".')
 
   if (instances.some(({ browser }) => browser === 'webkit')) {
-    expect(stderr).toContain('throw-unhandled-error.test.ts:9:20')
+    expect(stderr).toContain('throw-unhandled-error.test.ts:9:15')
   }
 })
 
@@ -110,11 +109,9 @@ test('cannot use fs commands if write is disabled', async () => {
       })
     `,
   }, {
-    browser: {
-      api: {
-        allowExec: false,
-        allowWrite: false,
-      },
+    api: {
+      allowExec: false,
+      allowWrite: false,
     },
     $cliOptions: {
       update: true,
@@ -147,8 +144,8 @@ test('prints source-mapped stack for optimized dependency', async () => {
 
   const projectTree = buildTestProjectTree(results, (testCase) => {
     const result = testCase.result()
-    return result.errors.map((e) => {
-      const stacks = e.stacks.map((s) => {
+    return result.errors?.map((e) => {
+      const stacks = e.stacks?.map((s) => {
         const normalizedFile = path
           .relative(ctx.config.root, s.file)
           .replace(
@@ -164,40 +161,21 @@ test('prints source-mapped stack for optimized dependency', async () => {
 
   for (const [name, tree] of Object.entries(projectTree)) {
     if (name === 'webkit') {
-      if (rolldownVersion) {
-        expect(tree).toMatchInlineSnapshot(`
-          {
-            "basic.test.ts": {
-              "fail": [
-                {
-                  "message": "this is test dependency error",
-                  "stacks": [
-                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
-                    " at basic.test.ts:5:2",
-                  ],
-                },
-              ],
-            },
-          }
-        `)
-      }
-      else {
-        expect(tree).toMatchInlineSnapshot(`
-          {
-            "basic.test.ts": {
-              "fail": [
-                {
-                  "message": "this is test dependency error",
-                  "stacks": [
-                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
-                    " at basic.test.ts:5:16",
-                  ],
-                },
-              ],
-            },
-          }
-        `)
-      }
+      expect(tree).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "fail": [
+              {
+                "message": "this is test dependency error",
+                "stacks": [
+                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:13",
+                  " at basic.test.ts:5:3",
+                ],
+              },
+            ],
+          },
+        }
+      `)
     }
     else {
       expect(tree).toMatchInlineSnapshot(`
@@ -207,8 +185,8 @@ test('prints source-mapped stack for optimized dependency', async () => {
               {
                 "message": "this is test dependency error",
                 "stacks": [
-                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:8",
-                  " at basic.test.ts:5:2",
+                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:9",
+                  " at basic.test.ts:5:3",
                 ],
               },
             ],
@@ -230,13 +208,13 @@ test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is d
       })
     `,
   }, {
+    api: {
+      allowExec: false,
+      allowWrite: false,
+    },
     browser: {
       instances: [{ browser: 'chromium' }],
       screenshotFailures: false,
-      api: {
-        allowExec: false,
-        allowWrite: false,
-      },
     },
   })
   expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
@@ -244,9 +222,57 @@ test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is d
       "chromium": {
         "cdp.test.ts": {
           "cdp throws an error": [
-            "Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.",
+            "Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/api.",
           ],
         },
+      },
+    }
+  `)
+})
+
+test('upload is blocked for files denied by server.fs.deny', async () => {
+  const result = await runBrowserTests({
+    root: './fixtures/command-permissions-upload-denied',
+    project: [instances[0].browser],
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "upload-denied.test.ts": {
+        "upload denied path": [
+          "Access denied to "<root>/my-secret.txt". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.",
+        ],
+      },
+    }
+  `)
+})
+
+test('takeScreenshot is blocked for files denied by server.fs.deny', async () => {
+  const result = await runBrowserTests({
+    root: './fixtures/command-permissions-screenshot-denied',
+    project: [instances[0].browser],
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "screenshot-denied.test.ts": {
+        "screenshot denied path": [
+          "Access denied to "<root>/my-secret.png". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.",
+        ],
+      },
+    }
+  `)
+})
+
+test('takeScreenshot is blocked when write is disabled', async () => {
+  const result = await runBrowserTests({
+    root: './fixtures/command-permissions-screenshot-no-write',
+    project: [instances[0].browser],
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "screenshot-write.test.ts": {
+        "screenshot blocked": [
+          "Cannot modify file "<root>/out.png". File writing is disabled because the server is exposed to the internet, see https://vitest.dev/config/browser/api.",
+        ],
       },
     }
   `)

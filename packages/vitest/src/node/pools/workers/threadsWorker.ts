@@ -2,6 +2,7 @@ import type { Writable } from 'node:stream'
 import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { resolve } from 'node:path'
 import { Worker } from 'node:worker_threads'
+import { streamFlushed } from './utils'
 
 /** @experimental */
 export class ThreadsPoolWorker implements PoolWorker {
@@ -25,11 +26,11 @@ export class ThreadsPoolWorker implements PoolWorker {
     this.entrypoint = resolve(options.distPath, 'workers/threads.js')
   }
 
-  on(event: string, callback: (arg: any) => void): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     this.thread.on(event, callback)
   }
 
-  off(event: string, callback: (arg: any) => void): void {
+  off(event: string, callback: (...args: any[]) => void): void {
     this.thread.off(event, callback)
   }
 
@@ -46,20 +47,31 @@ export class ThreadsPoolWorker implements PoolWorker {
       stderr: true,
     })
 
+    // `end: false`: the logger streams are shared by every worker, so one
+    // ending worker stream must not end them for everyone else
     this.stdout.setMaxListeners(1 + this.stdout.getMaxListeners())
-    this._thread.stdout.pipe(this.stdout)
+    this._thread.stdout.pipe(this.stdout, { end: false })
 
     this.stderr.setMaxListeners(1 + this.stderr.getMaxListeners())
-    this._thread.stderr.pipe(this.stderr)
+    this._thread.stderr.pipe(this.stderr, { end: false })
   }
 
   async stop(): Promise<void> {
-    await this.thread.terminate()
+    const thread = this.thread
+    // `terminate()` makes node drain the stdio still queued on the worker's
+    // message port into these readables; keep the pipes attached until the
+    // streams end so late output still reaches the logger streams
+    const flushed = Promise.all([
+      streamFlushed(thread.stdout),
+      streamFlushed(thread.stderr),
+    ])
+    await thread.terminate()
+    await flushed
 
-    this._thread?.stdout?.unpipe(this.stdout)
+    thread.stdout.unpipe(this.stdout)
     this.stdout.setMaxListeners(this.stdout.getMaxListeners() - 1)
 
-    this._thread?.stderr?.unpipe(this.stderr)
+    thread.stderr.unpipe(this.stderr)
     this.stderr.setMaxListeners(this.stderr.getMaxListeners() - 1)
 
     this._thread = undefined

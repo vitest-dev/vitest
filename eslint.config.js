@@ -63,8 +63,6 @@ export default antfu(
       'ts/no-unsafe-function-type': 'off',
 
       'markdown/fenced-code-language': 'off',
-      // it uses parser which is not compatible with vitepress
-      'markdown/no-missing-link-fragments': 'off',
 
       'no-restricted-imports': [
         'error',
@@ -74,6 +72,11 @@ export default antfu(
       ],
 
       'import/no-named-as-default': 'off',
+      // Has dangerous false positives
+      'e18e/prefer-array-fill': 'off',
+      // Doesn't actually matter, JS engines cache them
+      // Also has dangerous false positives (reports /g/)
+      'e18e/prefer-static-regex': 'off',
     },
   },
   {
@@ -112,6 +115,8 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      // it uses parser which is not compatible with vitepress
+      'markdown/no-missing-link-fragments': 'off',
       'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
