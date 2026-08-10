@@ -43,6 +43,25 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     getSafeWorkerState() || options.state
   const rpc = () => state().rpc
 
+  // Wall time the worker spends blocked on server round-trips, measured as the
+  // union of in-flight intervals: sibling imports await fetches concurrently,
+  // so summing individual call durations would overcount the blocked time.
+  let fetchesInflight = 0
+  let fetchesBusyStart = 0
+  async function trackFetchTime<T>(fetchPromise: Promise<T>): Promise<T> {
+    if (fetchesInflight++ === 0) {
+      fetchesBusyStart = performance.now()
+    }
+    try {
+      return await fetchPromise
+    }
+    finally {
+      if (--fetchesInflight === 0) {
+        state().durations.fetch += performance.now() - fetchesBusyStart
+      }
+    }
+  }
+
   const environment = () => {
     const environment = state().environment
     return environment.viteEnvironment || environment.name
@@ -173,7 +192,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           // its import graph is connected on the server, so the snapshot
           // actually covers the file's transitive dependencies
           if (importer != null) {
-            const warm = await fetchWarmModules()
+            const warm = await trackFetchTime(fetchWarmModules())
             // the null prototype is not preserved by the IPC serialization, so
             // ids like "constructor" must not fall through to Object.prototype
             const warmResult = warm && (
@@ -200,13 +219,13 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           }
 
           const otelCarrier = traces?.getContextCarrier()
-          const result = await rpc().fetch(
+          const result = await trackFetchTime(rpc().fetch(
             id,
             importer,
             environment(),
             options,
             otelCarrier,
-          )
+          ))
           if ('cached' in result) {
             const code = readFileSync(result.tmp, 'utf-8')
             return { code, ...result }

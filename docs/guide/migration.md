@@ -56,6 +56,25 @@ export default defineConfig({
 })
 ```
 
+### `testNamePattern` Matches the `>`-Joined Full Name
+
+[`testNamePattern`](/config/testnamepattern) (the `-t` CLI flag) now matches against the test's full name with the suite chain and test name joined by `' > '`, the same string shown in the reporter output. Previously the segments were joined with a single space, mirroring Jest.
+
+This only affects patterns that span the boundary between a suite and a test (or between nested suites). Patterns that match within a single name segment, and patterns that use `.`/`.*` between segments, are unaffected.
+
+```ts
+describe('math', () => {
+  test('adds', () => {})
+})
+```
+
+```bash
+vitest -t 'math adds' # [!code --]
+vitest -t 'math > adds' # [!code ++]
+```
+
+To keep a pattern working regardless of the separator, match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
 ### Inline Projects Inherit the Root Config by Default
 
 The [`extends`](/guide/projects#configuration) option now defaults to `true`: every project defined as an inline configuration in [`test.projects`](/guide/projects) inherits all options from the root configuration, including Vite options like `plugins` or `resolve.alias`. The options are merged with the same rules that applied to an explicit `extends: true` in Vitest 4:
@@ -302,6 +321,21 @@ await expect.poll(async ({ signal }) => {
 ```
 
 A poll that legitimately needs more time should raise its `timeout`. Otherwise it fails with `expect.poll() function didn't resolve in time.` (or `expect.poll() assertion didn't resolve in time.`).
+
+### Unawaited Asynchronous Assertions Fail the Test
+
+Asynchronous assertions, like `resolves`, `rejects` and `toMatchFileSnapshot`, now fail the test if they are not awaited. Previously, Vitest auto-awaited them at the end of the test and printed a warning:
+
+```ts
+test('unawaited assertion', async () => {
+  // v4: prints a warning, the test passes // [!code --]
+  // v5: the test fails // [!code ++]
+  expect(promise).resolves.toBe(1) // [!code --]
+  await expect(promise).resolves.toBe(1) // [!code ++]
+})
+```
+
+The reported error points to the assertion that was not awaited.
 
 ### Test Titles and Inspected Values Use `pretty-format`
 
@@ -622,6 +656,13 @@ Vitest's `test` names are joined with a `>` symbol to make it easier to distingu
 ```diff
 - `${describeTitle} ${testTitle}`
 + `${describeTitle} > ${testTitle}`
+```
+
+The same applies to [`testNamePattern`](/config/testnamepattern) (the `-t` flag): Vitest matches against the `>`-joined full name, while Jest matches the space-joined name. Update patterns that span a suite and a test accordingly, or match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
+```diff
+- vitest -t 'math adds'
++ vitest -t 'math > adds'
 ```
 
 ### Envs

@@ -9,13 +9,13 @@
     "test:run": "vitest run"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.2.17",
+    "@types/react": "^19.2.18",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/ui": "latest",
-    "fastify": "^5.7.2",
+    "fastify": "^5.11.0",
     "jsdom": "^29.1.1",
     "react": "^19.2.8",
     "supertest": "^7.2.2",

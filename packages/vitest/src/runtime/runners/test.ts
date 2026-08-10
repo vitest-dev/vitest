@@ -54,6 +54,12 @@ export class TestRunner implements VitestTestRunner {
     const environment = this.workerState.environment
     this.viteEnvironment = environment.viteEnvironment || environment.name
     this.viteModuleRunner = config.experimental.viteModuleRunner
+    // vm pools downgrade worker-scoped fixtures to file scope, so the hook has
+    // nothing to tear down there; registering it anyway would keep the
+    // listener, an in-context closure, alive for the lifetime of the worker
+    if (this.pool !== 'vmThreads' && this.pool !== 'vmForks') {
+      this.onCleanupWorkerContext = listener => this.workerState.onCleanup(listener)
+    }
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
@@ -81,9 +87,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = file
   }
 
-  onCleanupWorkerContext(listener: () => unknown): void {
-    this.workerState.onCleanup(listener)
-  }
+  onCleanupWorkerContext?: (listener: () => unknown) => void
 
   onAfterRunFiles(_files: File[]): void {
     this.snapshotClient.clear()
@@ -275,6 +279,10 @@ export class TestRunner implements VitestTestRunner {
     }
 
     return importDurations
+  }
+
+  getModuleFetchDuration(): number {
+    return this.workerState.durations.fetch
   }
 
   trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {

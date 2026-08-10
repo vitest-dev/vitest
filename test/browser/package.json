@@ -29,7 +29,7 @@
     "docker": "docker compose"
   },
   "devDependencies": {
-    "@types/react": "^19.2.17",
+    "@types/react": "^19.2.18",
     "@types/yauzl": "catalog:",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitest/browser": "workspace:*",

@@ -46,14 +46,14 @@ patchedDependencies:
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
   rrweb-snapshot@2.1.1: patches/rrweb-snapshot@2.1.1.patch
 catalog:
-  '@babel/core': ^7.29.0
+  '@babel/core': ^7.29.7
   '@babel/plugin-proposal-decorators': ^7.29.7
-  '@iconify-json/carbon': ^1.2.24
+  '@iconify-json/carbon': ^1.2.25
   '@iconify-json/logos': ^1.2.11
   '@iconify/vue': ^5.0.1
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
-  '@playwright/test': ^1.62.0
+  '@playwright/test': ^1.62.1
   '@rolldown/plugin-babel': ^0.2.3
   '@types/chai': ^5.2.2
   '@types/estree': ^1.0.9
@@ -62,31 +62,31 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/node': 24.13.3
-  '@types/semver': ^7.7.1
+  '@types/semver': ^7.8.0
   '@types/ws': ^8.18.1
   '@types/yauzl': ^2.10.3
   '@unocss/reset': ^66.7.5
   '@vitejs/plugin-vue': ^6.0.8
-  '@vueuse/core': ^14.3.0
+  '@vueuse/core': ^14.4.0
   acorn-walk: ^8.3.5
   ansivision: ^0.4.0
   birpc: ^4.0.0
   cac: ^6.7.14
   chai: ^6.2.2
-  flatted: ^3.4.3
+  flatted: ^3.4.4
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
   istanbul-lib-source-maps: ^5.0.6
   istanbul-reports: ^3.2.0
-  knip: ^6.29.0
+  knip: ^6.31.0
   loupe: ^3.2.1
   magic-string: ^1.1.0
-  magicast: ^0.5.3
+  magicast: ^0.5.4
   msw: ^2.15.0
   obug: ^2.1.4
   pathe: ^2.0.3
-  playwright: ^1.62.0
-  rollup: ^4.62.3
+  playwright: ^1.62.1
+  rollup: ^4.62.4
   semver: ^7.8.5
   sinon: ^22.1.0
   sinon-chai: ^4.0.1
@@ -97,7 +97,7 @@ catalog:
   tinyexec: 1.0.2
   tinyglobby: ^0.2.17
   tinyhighlight: ^0.3.2
-  tinyrainbow: ^3.1.0
+  tinyrainbow: ^3.1.1
   tinyspy: ^4.0.4
   typescript: ^5.9.3
   unocss: ^66.7.5

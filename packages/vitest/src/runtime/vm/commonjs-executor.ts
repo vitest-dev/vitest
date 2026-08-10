@@ -1,17 +1,25 @@
 import type { CodeCache } from './code-cache'
 import type { FileMap } from './file-map'
-import type { ImportModuleDynamically, VMSyntheticModule } from './types'
+import type { VMSyntheticModule } from './types'
 import { Module as _Module, createRequire, isBuiltin } from 'node:module'
 import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
-import { interopCommonJsModule, SyntheticModule } from './utils'
+import {
+  activeImportModuleDynamically,
+  interopCommonJsModule,
+  supportsSyncEsmEvaluate,
+  SyntheticModule,
+} from './utils'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap
   codeCache?: CodeCache
   interopDefault?: boolean
   context: vm.Context
-  importModuleDynamically: ImportModuleDynamically
+  // resolves to `true` for files that are explicitly marked as ESM;
+  // require() of those dispatches to `requireEsm` (Node 24.9+)
+  shouldRequireAsEsm: (resolvedPath: string) => boolean
+  requireEsm: (resolvedPath: string) => unknown
 }
 
 const _require = createRequire(import.meta.url)
@@ -20,7 +28,23 @@ interface PrivateNodeModule extends NodeJS.Module {
   _compile: (code: string, filename: string) => void
 }
 
+// Thrown when the CJS parser rejects a .js file that may contain ESM syntax.
+// `loadCommonJSModule` catches it and retries the file as an ES module,
+// mirroring Node's own require() ESM-syntax fallback for .js files without
+// an ESM package scope. The original error is in `cause`.
+class CjsParseError extends SyntaxError {
+  override name = 'CjsParseError'
+  constructor(cause: Error) {
+    super(cause.message, { cause })
+  }
+}
+
 const requiresCache = new WeakMap<NodeJS.Module, NodeJS.Require>()
+
+// Compiled scripts of commonjs modules, shared across vm contexts: only the
+// evaluation has to happen per context. No invalidation is needed because
+// watch mode reruns destroy the worker.
+const cjsScriptCache = new Map<string, vm.Script>()
 
 export class CommonjsExecutor {
   private context: vm.Context
@@ -38,12 +62,19 @@ export class CommonjsExecutor {
   private codeCache: CodeCache | undefined
   private Module: typeof _Module
   private interopDefault: boolean | undefined
+  private shouldRequireAsEsm: (resolvedPath: string) => boolean
+  private requireEsm: (resolvedPath: string) => unknown
+  // .js files that the ESM-syntax fallback already loaded as ES modules,
+  // so later require() calls skip the guaranteed-to-fail CJS parse
+  private esmSyntaxFallbackFiles = new Set<string>()
 
   constructor(options: CommonjsExecutorOptions) {
     this.context = options.context
     this.fs = options.fileMap
     this.codeCache = options.codeCache
     this.interopDefault = options.interopDefault
+    this.shouldRequireAsEsm = options.shouldRequireAsEsm
+    this.requireEsm = options.requireEsm
 
     const primitives = vm.runInContext(
       '({ Object, Array, Error })',
@@ -69,7 +100,7 @@ export class CommonjsExecutor {
       paths: string[] = []
 
       constructor(id = '', parent?: Module) {
-        this.exports = primitives.Object.create(Object.prototype)
+        this.exports = primitives.Object.create(primitives.Object.prototype)
         // in our case the path should always be resolved already
         this.path = dirname(id)
         this.id = id
@@ -114,17 +145,35 @@ export class CommonjsExecutor {
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
         const codeCache = executor.codeCache
-        const cachedData = codeCache?.get(filename, cjsModule)
-        const script = new vm.Script(cjsModule, {
-          filename,
-          cachedData,
-          importModuleDynamically: options.importModuleDynamically,
-        } as any)
-        if (cachedData && script.cachedDataRejected) {
-          codeCache!.delete(filename)
+        let script = cjsScriptCache.get(filename)
+        if (!script) {
+          const cachedData = codeCache?.get(filename, cjsModule)
+          // the dynamic import callback is a static function (the executor is
+          // resolved when it is called), so the compiled script holds no
+          // per-context state and can be reused by every vm context
+          try {
+            script = new vm.Script(cjsModule, {
+              filename,
+              cachedData,
+              importModuleDynamically: activeImportModuleDynamically,
+            } as any)
+          }
+          catch (error) {
+            if (
+              error instanceof SyntaxError
+              && executor.canFallbackToEsm(filename)
+            ) {
+              throw new CjsParseError(error)
+            }
+            throw error
+          }
+          if (cachedData && script.cachedDataRejected) {
+            codeCache!.delete(filename)
+          }
+          // @ts-expect-error mark script with current identifier
+          script.identifier = filename
+          cjsScriptCache.set(filename, script)
         }
-        // @ts-expect-error mark script with current identifier
-        script.identifier = filename
         const fn = script.runInContext(executor.context)
         const __dirname = dirname(filename)
         executor.requireCache.set(filename, this)
@@ -219,6 +268,7 @@ export class CommonjsExecutor {
       CommonjsExecutor.cjsConditions = parseCjsConditions(
         process.execArgv,
         process.env.NODE_OPTIONS,
+        supportsSyncEsmEvaluate,
       )
     }
     return CommonjsExecutor.cjsConditions
@@ -239,6 +289,9 @@ export class CommonjsExecutor {
       const ext = extname(resolved)
       if (ext === '.node' || isBuiltin(resolved)) {
         return this.requireCoreModule(resolved)
+      }
+      if (this.shouldRequireAsEsm(resolved)) {
+        return this.requireEsm(resolved)
       }
       const module = new this.Module(resolved)
       return this.loadCommonJSModule(module, resolved)
@@ -282,11 +335,51 @@ export class CommonjsExecutor {
       return cached.exports
     }
 
+    if (this.esmSyntaxFallbackFiles.has(filename)) {
+      return this.requireEsm(filename) as Record<string, unknown>
+    }
+
     const extension = this.findLongestRegisteredExtension(filename)
     const loader = this.extensions[extension] || this.extensions['.js']
-    loader(module, filename)
+    try {
+      loader(module, filename)
+    }
+    catch (error) {
+      if (error instanceof CjsParseError) {
+        return this.fallbackRequireEsm(filename, error)
+      }
+      throw error
+    }
 
     return module.exports
+  }
+
+  private canFallbackToEsm(filename: string): boolean {
+    return (
+      supportsSyncEsmEvaluate
+      // mirrors Node's ESM-syntax detection scope: explicit extensions
+      // (.mjs/.cjs) already picked their loader
+      && extname(filename) === '.js'
+    )
+  }
+
+  private fallbackRequireEsm(
+    filename: string,
+    parseError: CjsParseError,
+  ): Record<string, unknown> {
+    let exports: unknown
+    try {
+      exports = this.requireEsm(filename)
+    }
+    catch (esmError) {
+      // both parsers rejected the file — surface the original CJS error
+      if (esmError instanceof SyntaxError) {
+        throw parseError.cause
+      }
+      throw esmError
+    }
+    this.esmSyntaxFallbackFiles.add(filename)
+    return exports as Record<string, unknown>
   }
 
   private findLongestRegisteredExtension(filename: string) {
@@ -334,12 +427,20 @@ export class CommonjsExecutor {
       this.interopDefault,
       exports,
     )
-    const module = new SyntheticModule([...keys, 'default'], function () {
-      for (const key of keys) {
-        this.setExport(key, moduleExports[key])
-      }
-      this.setExport('default', defaultExport)
-    }, { context: this.context, identifier })
+    const module = new SyntheticModule(
+      [...keys, 'default', 'module.exports'],
+      function () {
+        for (const key of keys) {
+          this.setExport(key, moduleExports[key])
+        }
+        this.setExport('default', defaultExport)
+        // the raw module.exports value, mirroring the handling of the
+        // 'module.exports' export name in require(esm) interop:
+        // https://nodejs.org/api/esm.html#commonjs-namespaces
+        this.setExport('module.exports', exports)
+      },
+      { context: this.context, identifier },
+    )
     this.moduleCache.set(identifier, module)
     return module
   }
@@ -393,6 +494,9 @@ export class CommonjsExecutor {
     if (ext === '.node' || isBuiltin(identifier)) {
       return this.requireCoreModule(identifier)
     }
+    if (this.shouldRequireAsEsm(identifier)) {
+      return this.requireEsm(identifier)
+    }
     const module = new this.Module(identifier)
     return this.loadCommonJSModule(module, identifier)
   }
@@ -416,16 +520,21 @@ export class CommonjsExecutor {
 }
 
 // The "module-sync" exports condition (added in Node 22.12/20.19 when
-// require(esm) was unflagged) can resolve to ESM files that our CJS
-// vm.Script executor cannot handle. We exclude it by passing explicit
-// CJS conditions to require.resolve (Node 22.12+).
+// require(esm) was unflagged) can resolve to ESM files. When require(esm)
+// is supported (Node 24.9+), the condition is included, matching Node.
+// Otherwise our CJS vm.Script executor cannot handle the resolved ESM
+// files, so the condition is excluded by passing explicit CJS conditions
+// to require.resolve (Node 22.12+).
 // Must be a Set because Node's internal resolver calls conditions.has().
-// User-specified --conditions/-C flags are respected, except module-sync.
 export function parseCjsConditions(
   execArgv: string[],
   nodeOptions?: string,
+  requireEsmSupported = false,
 ): Set<string> {
   const conditions = ['node', 'require', 'node-addons']
+  if (requireEsmSupported) {
+    conditions.push('module-sync')
+  }
   const args = [
     ...execArgv,
     ...(nodeOptions?.split(/\s+/) ?? []),
@@ -440,5 +549,8 @@ export function parseCjsConditions(
       conditions.push(args[++i])
     }
   }
-  return new Set(conditions.filter(c => c !== 'module-sync'))
+  if (!requireEsmSupported) {
+    return new Set(conditions.filter(c => c !== 'module-sync'))
+  }
+  return new Set(conditions)
 }
