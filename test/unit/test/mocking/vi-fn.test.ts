@@ -799,61 +799,38 @@ describe('vi.fn() implementations', () => {
     expect(Mock.mock.calls).toEqual([['test', 42]])
   })
 
-  test('vi.fn(class) constructs the main implementation with the mock prototype', () => {
-    let target: unknown
+  test('vi.fn(class) and prototype methods', () => {
+    let newTarget: unknown
     class ActualClass {
-      field = () => 'field'
-
       constructor() {
-        target = new.target
+        newTarget = new.target
+        // also this.field vs this.method availablility here
       }
-
+      field = () => 'field'
       method() {
         return 'prototype'
       }
     }
 
-    const actual = new ActualClass()
-    expect(Object.getPrototypeOf(actual)).toBe(ActualClass.prototype)
-    expect(actual).toBeInstanceOf(ActualClass)
-    expect(target).toBe(ActualClass)
-    expect(actual.field()).toBe('field')
-    expect(actual.method()).toBe('prototype')
-
+    // mocked instance has MockClass as prototype and thus:
+    // - it's not an instance of ActualClass
+    // - it doesn't have ActualClass prototype methods
     const MockClass = vi.fn(ActualClass)
     const mocked = new MockClass()
-
     expect(Object.getPrototypeOf(mocked)).toBe(MockClass.prototype)
     expect(mocked).toBeInstanceOf(MockClass)
     expect(mocked).not.toBeInstanceOf(ActualClass)
-    expect(target).toBe(MockClass)
+    expect(newTarget).toBe(MockClass)
     expect(mocked.field()).toBe('field')
     expect(mocked.method).toBeUndefined()
-  })
 
-  test('vi.fn(class) preserves an object returned from the constructor', () => {
-    const returned = { custom: true }
-    class ActualClass {
-      constructor() {
-        return returned as any
-      }
-
-      method() {
-        return 'prototype'
-      }
-    }
-
+    // actual case for comparison
     const actual = new ActualClass()
-    const MockClass = vi.fn(ActualClass)
-    const mocked = new MockClass()
-
-    expect(actual).toBe(returned)
-    expect(actual).not.toBeInstanceOf(ActualClass)
-    expect(actual.method).toBeUndefined()
-    expect(mocked).toBe(returned)
-    expect(mocked).not.toBeInstanceOf(MockClass)
-    expect(mocked).not.toBeInstanceOf(ActualClass)
-    expect(mocked.method).toBeUndefined()
+    expect(Object.getPrototypeOf(actual)).toBe(ActualClass.prototype)
+    expect(actual).toBeInstanceOf(ActualClass)
+    expect(newTarget).toBe(ActualClass)
+    expect(actual.field()).toBe('field')
+    expect(actual.method()).toBe('prototype')
   })
 
   test('vi.fn(class) keeps a shared mock prototype across once implementations', () => {
@@ -901,6 +878,32 @@ describe('vi.fn() implementations', () => {
     expect(second.secondField).toBe('second')
     expect(second.secondMethod).toBeUndefined()
     expect(second.firstField).toBeUndefined()
+  })
+
+  test('vi.fn(class) preserves an object returned from the constructor', () => {
+    const returned = { custom: true }
+    class ActualClass {
+      constructor() {
+        return returned as any
+      }
+
+      method() {
+        return 'prototype'
+      }
+    }
+
+    const MockClass = vi.fn(ActualClass)
+    const mocked = new MockClass()
+    expect(mocked).toBe(returned)
+    expect(mocked).not.toBeInstanceOf(MockClass)
+    expect(mocked).not.toBeInstanceOf(ActualClass)
+    expect(mocked.method).toBeUndefined()
+
+    // actual case for comparison
+    const actual = new ActualClass()
+    expect(actual).toBe(returned)
+    expect(actual).not.toBeInstanceOf(ActualClass)
+    expect(actual.method).toBeUndefined()
   })
 
   test('vi.fn() with mockReturnValue throws when called with new', () => {
