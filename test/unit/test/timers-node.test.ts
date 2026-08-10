@@ -52,7 +52,7 @@ test('restores node timer imports', () => {
   expect(timersPromises.setTimeout).toBe(originalSetTimeoutPromise)
 })
 
-test.skipIf(import.meta.env.VITEST_VM_POOL)('mocks named Node timer imports', async () => {
+test('mocks named Node timer imports', async () => {
   vi.useFakeTimers()
   const called: string[] = []
 
@@ -73,7 +73,7 @@ test.skipIf(import.meta.env.VITEST_VM_POOL)('mocks named Node timer imports', as
   ])
 })
 
-test.skipIf(import.meta.env.VITEST_VM_POOL)('restores named Node timer imports', () => {
+test('restores named Node timer imports', () => {
   const originalNamedSetTimeout = namedSetTimeout
   const originalNamedSetTimeoutPromise = namedSetTimeoutPromise
 

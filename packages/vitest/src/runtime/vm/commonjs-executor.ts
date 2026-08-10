@@ -417,6 +417,22 @@ export class CommonjsExecutor {
     return module
   }
 
+  public syncBuiltinESMExports(): void {
+    _Module.syncBuiltinESMExports()
+
+    for (const [identifier, module] of this.moduleCache) {
+      if (!isBuiltin(identifier) || module.status !== 'evaluated') {
+        continue
+      }
+      const exports = this.require(identifier)
+      for (const key of Object.keys(module.namespace)) {
+        if (key !== 'default') {
+          module.setExport(key, exports[key])
+        }
+      }
+    }
+  }
+
   public getCjsSyntheticModule(path: string, identifier: string): VMSyntheticModule {
     if (this.moduleCache.has(identifier)) {
       return this.moduleCache.get(identifier)!
