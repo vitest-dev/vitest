@@ -848,6 +848,28 @@ describe('vi.fn() implementations', () => {
     expect(dog.fetch()).toBe('stick')
   })
 
+  test('vi.fn(class) tracks prototype mock calls from every instance', () => {
+    class Dog {
+      speak() {
+        return 'bark'
+      }
+    }
+
+    const MockDog = vi.fn(Dog)
+    MockDog.prototype.speak = vi.fn(() => 'woof')
+
+    const cooper = new MockDog()
+    const max = new MockDog()
+
+    expect(cooper.speak()).toBe('woof')
+    expect(max.speak()).toBe('woof')
+
+    const speak = vi.mocked(MockDog.prototype.speak)
+    expect(speak).toHaveBeenCalledTimes(2)
+    expect(speak.mock.contexts).toEqual([cooper, max])
+    expect(speak.mock.instances).toEqual([cooper, max])
+  })
+
   test('vi.fn(class) prototype follows the latest constructed implementation', () => {
     class First {
       first() {
