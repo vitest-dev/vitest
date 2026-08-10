@@ -47,7 +47,7 @@ const Dog = vi.fn(class {
 Prototype methods are not supported when a class is used as a mock implementation. They are unavailable both during and after construction, while instance methods defined as class fields are available:
 
 ```ts
-class MockDog {
+class OriginalDog {
   greet = () => 'greet mocked!'
 
   speak() {
@@ -55,11 +55,13 @@ class MockDog {
   }
 }
 
-const Dog = vi.fn(MockDog)
-const dog = new Dog()
+const MockedDog = vi.fn(OriginalDog)
+const mocked = new MockedDog()
 
-dog.greet() // greet mocked!
-dog.speak // undefined
+mocked instanceof MockedDog // true
+mocked instanceof OriginalDog // false
+mocked.greet() // greet mocked!
+mocked.speak // undefined
 ```
 :::
 
