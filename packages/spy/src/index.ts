@@ -462,6 +462,7 @@ function createMock(
   const original = config.mockOriginal // init with vi.spyOn(obj, 'Klass')
   const pseudoOriginal = mockImplementation // init with vi.fn(Klass)
   const name = (mockName || original?.name || 'Mock') as string
+  const noopImplementation = function () {}
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: (function (this: any, ...args: any[]) {
@@ -491,7 +492,7 @@ function createMock(
           || prototypeConfig?.onceMockImplementations.shift()
           || prototypeConfig?.mockImplementation
           || original
-          || function () {}
+          || noopImplementation
 
       let returnValue
       let thrownValue
@@ -499,6 +500,28 @@ function createMock(
 
       try {
         if (new.target) {
+          // put the implementation's prototype behind `mock.prototype` so the
+          // instance sees prototype methods both during and after construction,
+          // while properties assigned on `mock.prototype` still shadow them.
+          // Skip for automocked classes where methods are pre-mocked
+          // on `mock.prototype` and replaced per instance below
+          const implementationPrototype = (implementation as Constructable).prototype
+          // eslint-disable-next-line ts/no-use-before-define
+          const mockPrototype = mock.prototype
+          if (
+            prototypeMembers.length === 0
+            && implementation !== noopImplementation
+            && implementationPrototype != null
+            && typeof mockPrototype === 'object'
+            && mockPrototype !== null
+            && Object.getPrototypeOf(mockPrototype) !== implementationPrototype
+            // reassigning would create a prototype cycle if the implementation
+            // inherits from the mock itself
+            && mockPrototype !== implementationPrototype
+            && !Object.prototype.isPrototypeOf.call(mockPrototype, implementationPrototype)
+          ) {
+            Object.setPrototypeOf(mockPrototype, implementationPrototype)
+          }
           returnValue = Reflect.construct(implementation, args, new.target)
 
           // jest calls this before the implementation, but we have to resolve this _after_

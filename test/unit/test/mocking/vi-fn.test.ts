@@ -799,6 +799,85 @@ describe('vi.fn() implementations', () => {
     expect(Mock.mock.calls).toEqual([['test', 42]])
   })
 
+  test('vi.fn(class) keeps prototype methods on instances', () => {
+    let methodInConstructor!: unknown
+    class Dog {
+      name: string
+      constructor(name: string) {
+        this.name = name
+        methodInConstructor = this.speak
+      }
+
+      speak() {
+        return `${this.name} barks!`
+      }
+    }
+
+    const MockDog = vi.fn(Dog)
+    const dog = new MockDog('Rex')
+
+    expect(methodInConstructor).toBeTypeOf('function')
+    expect(dog.speak()).toBe('Rex barks!')
+    expect(dog).toBeInstanceOf(MockDog)
+    expect(dog).toBeInstanceOf(Dog)
+    expect(Object.getPrototypeOf(dog)).toBe(MockDog.prototype)
+    expect(MockDog.mock.calls).toEqual([['Rex']])
+    expect(MockDog.mock.instances).toEqual([dog])
+  })
+
+  test('vi.fn(class) allows overriding methods on the mock prototype', () => {
+    class Dog {
+      speak() {
+        return 'bark'
+      }
+
+      fetch() {
+        return 'ball'
+      }
+    }
+
+    const MockDog = vi.fn(Dog)
+    MockDog.prototype.speak = () => 'meow'
+
+    const dog = new MockDog()
+    expect(dog.speak()).toBe('meow')
+    expect(dog.fetch()).toBe('ball')
+
+    // overrides assigned after construction are visible on existing instances
+    MockDog.prototype.fetch = () => 'stick'
+    expect(dog.fetch()).toBe('stick')
+  })
+
+  test('vi.fn(class) prototype follows the latest constructed implementation', () => {
+    class First {
+      first() {
+        return 'first'
+      }
+    }
+    class Second {
+      second() {
+        return 'second'
+      }
+    }
+
+    const Mock = vi.fn<any>()
+      .mockImplementationOnce(First)
+      .mockImplementation(Second)
+
+    const first = new Mock()
+    expect(first.first()).toBe('first')
+    expect(first.second).toBeUndefined()
+
+    // `mock.prototype` is shared between instances, so constructing with
+    // another implementation points all instances at the new prototype
+    const second = new Mock()
+    expect(second.second()).toBe('second')
+    expect(first.second()).toBe('second')
+    expect(first.first).toBeUndefined()
+    expect(first).toBeInstanceOf(Mock)
+    expect(second).toBeInstanceOf(Mock)
+  })
+
   test('vi.fn() with mockReturnValue throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockReturnValue(42)

@@ -124,6 +124,41 @@ expect(Max.speak).not.toHaveBeenCalled()
 expect(Max.greet).not.toHaveBeenCalled()
 ```
 
+You don't have to redefine every method as a class field. Instances keep the prototype chain of the implementation class, so methods defined with the regular class syntax are available on instances, both during and after construction, and instances pass `instanceof` checks against the implementation class:
+
+```ts
+class OriginalDog {
+  constructor(name) {
+    this.name = name
+    this.greeting = this.speak() // methods are visible in the constructor
+  }
+
+  speak() {
+    return 'bark!'
+  }
+}
+
+const MockedDog = vi.fn(OriginalDog)
+const dog = new MockedDog('Cooper')
+
+dog.speak() // bark!
+dog instanceof MockedDog // true
+dog instanceof OriginalDog // true
+```
+
+Unlike class fields, prototype methods are shared between instances, so calls cannot be tracked on a single instance. However, you can override them on the mock's `prototype`, which affects every instance, including already created ones:
+
+```ts
+MockedDog.prototype.speak = vi.fn(() => 'woof!')
+
+dog.speak() // woof!
+expect(MockedDog.prototype.speak).toHaveBeenCalled()
+```
+
+::: warning
+The mock's `prototype` follows the implementation of the last `new` call. If a single mock is constructed with different class implementations, for example, via `mockImplementationOnce`, instances created by earlier implementations lose access to their prototype methods once a newer implementation is constructed. Own properties assigned in the constructor or via class fields are not affected.
+:::
+
 We can reassign the return value for a specific instance:
 
 ```ts

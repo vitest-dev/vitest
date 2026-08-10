@@ -295,6 +295,63 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
+  // reproduction of #10553
+  test('vi.spyOn() keeps prototype methods of a class implementation', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+
+    const spy = vi.spyOn(myObj, 'TestClass').mockImplementation(
+      class MockClass extends OriginalClass {
+        method() {
+          return 'mocked'
+        }
+      },
+    )
+
+    const instance = new myObj.TestClass()
+
+    expect(instance.method()).toBe('mocked')
+    expect(instance).toBeInstanceOf(myObj.TestClass)
+    expect(instance).toBeInstanceOf(OriginalClass)
+    expect(spy.mock.calls).toEqual([[]])
+    expect(spy.mock.instances).toEqual([instance])
+
+    spy.mockRestore()
+    expect(myObj.TestClass).toBe(OriginalClass)
+    expect(new myObj.TestClass().method()).toBe('original')
+  })
+
+  test('vi.spyOn() keeps prototype methods when constructing the original class', () => {
+    let methodInConstructor!: unknown
+    class OriginalClass {
+      constructor() {
+        methodInConstructor = this.method
+      }
+
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+    const spy = vi.spyOn(myObj, 'TestClass')
+
+    const instance = new myObj.TestClass()
+
+    expect(methodInConstructor).toBeTypeOf('function')
+    expect(instance.method()).toBe('original')
+    expect(instance).toBeInstanceOf(myObj.TestClass)
+    expect(instance).toBeInstanceOf(OriginalClass)
+    expect(spy.mock.calls).toEqual([[]])
+
+    spy.mockRestore()
+  })
+
   test('vi.spyOn() spies and tracks overridden async calls', async () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'async')
