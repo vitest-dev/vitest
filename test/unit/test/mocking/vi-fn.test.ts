@@ -804,7 +804,7 @@ describe('vi.fn() implementations', () => {
     class ActualClass {
       constructor() {
         newTarget = new.target
-        // also this.field vs this.method availablility here
+        // TODO: also this.field vs this.method availablility here
       }
       field = () => 'field'
       method() {
@@ -886,7 +886,7 @@ describe('vi.fn() implementations', () => {
       constructor() {
         return returned as any
       }
-
+      field = () => 'field'
       method() {
         return 'prototype'
       }
