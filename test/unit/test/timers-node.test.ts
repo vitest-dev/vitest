@@ -28,15 +28,27 @@ test('mocks node:timers default and require imports', () => {
 test('mocks node:timers/promises default and require imports', async () => {
   vi.useFakeTimers()
   const resolved: string[] = []
+  const controller = new AbortController()
 
   const promises = [
-    timersPromises.setTimeout(100).then(() => resolved.push('default')),
-    require('node:timers/promises').setTimeout(100).then(() => resolved.push('require')),
+    timersPromises.setTimeout(10_000, undefined, { signal: controller.signal }).then(
+      () => resolved.push('default'),
+      () => {},
+    ),
+    require('node:timers/promises').setTimeout(10_000, undefined, { signal: controller.signal }).then(
+      () => resolved.push('require'),
+      () => {},
+    ),
   ]
 
-  await vi.advanceTimersByTimeAsync(100)
-  await Promise.all(promises)
-  expect(resolved).toEqual(['default', 'require'])
+  try {
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(resolved).toEqual(['default', 'require'])
+  }
+  finally {
+    controller.abort()
+    await Promise.all(promises)
+  }
 })
 
 test('restores node timer imports', () => {
@@ -55,22 +67,34 @@ test('restores node timer imports', () => {
 test('mocks named Node timer imports', async () => {
   vi.useFakeTimers()
   const called: string[] = []
+  const controller = new AbortController()
 
   namedSetTimeout(() => called.push('named'), 100)
   timersNamespace.setTimeout(() => called.push('namespace'), 100)
   const promises = [
-    namedSetTimeoutPromise(100).then(() => called.push('promises named')),
-    timersPromisesNamespace.setTimeout(100).then(() => called.push('promises namespace')),
+    namedSetTimeoutPromise(10_000, undefined, { signal: controller.signal }).then(
+      () => called.push('promises named'),
+      () => {},
+    ),
+    timersPromisesNamespace.setTimeout(10_000, undefined, { signal: controller.signal }).then(
+      () => called.push('promises namespace'),
+      () => {},
+    ),
   ]
 
-  await vi.advanceTimersByTimeAsync(100)
-  await Promise.all(promises)
-  expect(called).toEqual([
-    'named',
-    'namespace',
-    'promises named',
-    'promises namespace',
-  ])
+  try {
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(called).toEqual([
+      'named',
+      'namespace',
+      'promises named',
+      'promises namespace',
+    ])
+  }
+  finally {
+    controller.abort()
+    await Promise.all(promises)
+  }
 })
 
 test('restores named Node timer imports', () => {
