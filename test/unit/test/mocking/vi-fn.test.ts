@@ -841,12 +841,6 @@ describe('vi.fn() implementations', () => {
   })
 
   test('vi.fn(class) keeps a shared mock prototype across once implementations', () => {
-    interface Instance {
-      firstField?: string
-      firstMethod?: () => string
-      secondField?: string
-      secondMethod?: () => string
-    }
     class FirstActualClass {
       firstField = 'first'
       firstMethod() {
@@ -860,15 +854,7 @@ describe('vi.fn() implementations', () => {
       }
     }
 
-    const actualFirst = new FirstActualClass()
-    const actualSecond = new SecondActualClass()
-
-    expect(Object.getPrototypeOf(actualFirst)).toBe(FirstActualClass.prototype)
-    expect(Object.getPrototypeOf(actualSecond)).toBe(SecondActualClass.prototype)
-    expect(actualFirst.firstMethod()).toBe('first prototype')
-    expect(actualSecond.secondMethod()).toBe('second prototype')
-
-    const MockClass = vi.fn<new () => Instance>()
+    const MockClass = vi.fn<any>()
       .mockImplementationOnce(FirstActualClass)
       .mockImplementation(SecondActualClass)
 
@@ -880,9 +866,11 @@ describe('vi.fn() implementations', () => {
     expect(first.firstField).toBe('first')
     expect(first.firstMethod).toBeUndefined()
     expect(first.secondField).toBeUndefined()
+    expect(first.secondMethod).toBeUndefined()
     expect(second.secondField).toBe('second')
     expect(second.secondMethod).toBeUndefined()
     expect(second.firstField).toBeUndefined()
+    expect(second.firstMethod).toBeUndefined()
   })
 
   test('vi.fn(class) preserves an object returned from the constructor', () => {
