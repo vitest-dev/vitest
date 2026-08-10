@@ -27,9 +27,7 @@ export function keyToTestName(key: string): string {
   return key.replace(/ \d+$/, '')
 }
 
-// Evaluate a snapshot file's content into its snapshot data.
-// Throws a hard error when the content cannot be evaluated, so corrupted
-// snapshot files surface immediately instead of being silently ignored.
+// Evaluate a snapshot file's content into its snapshot key/value pairs.
 export function evaluateSnapshotFile(
   filepath: string,
   content: string,
