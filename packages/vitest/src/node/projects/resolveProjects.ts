@@ -510,7 +510,7 @@ const VITE_AFFECTING_TEST_OPTIONS = ['alias', 'browser', 'css', 'mode', 'root'] 
  * An inline project can share the declaring config's Vite server when a full
  * resolution would produce the same Vite config: it extends the declaring
  * config and defines nothing that affects the Vite config. Only the
- * project's own options matter — the server was already resolved with the
+ * project's own options matter: the server was already resolved with the
  * inherited ones.
  */
 function canShareParentServer(

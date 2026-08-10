@@ -16,10 +16,10 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
       name: 'vitest:config:server-defaults',
       config: {
         // These static server toggles must be visible to other plugins that
-        // read `server.hmr` in their own `config` hook — e.g.
-        // `@vitejs/plugin-react` turns React Fast Refresh off only when it sees
-        // HMR disabled. A `post` hook (in `vitest:config:server`) runs after
-        // such plugins, so set them here in a `pre` hook instead.
+        // read `server.hmr` in their own `config` hook: `@vitejs/plugin-react`
+        // turns React Fast Refresh off only when it sees HMR disabled.
+        // A `post` hook (in `vitest:config:server`) runs after such plugins,
+        // so set them here in a `pre` hook instead.
         order: 'pre',
         handler() {
           return {
