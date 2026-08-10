@@ -118,17 +118,13 @@ function createButton() {
 test('expect.element is strict', async () => {
   createButton()
   createButton()
+  // Asserted on the message rather than the whole error: the polling matcher
+  // attaches a "Matcher did not succeed in time." cause in Chromium and Firefox
+  // but not in WebKit, and a single inline snapshot cannot cover both shapes.
   await expect(
     () => expect.element(page.getByRole('button'), { timeout: 50 }).toBeVisible(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    Error {
-      "message": "strict mode violation: getByRole('button') resolved to 2 elements:
-        1) <button></button> aka getByRole('button').first()
-        2) <button></button> aka getByRole('button').nth(1)
-    ",
-      "cause": Error {
-        "message": "Matcher did not succeed in time.",
-      },
-    }
-  `)
+  ).rejects.toThrowError(`strict mode violation: getByRole('button') resolved to 2 elements:
+    1) <button></button> aka getByRole('button').first()
+    2) <button></button> aka getByRole('button').nth(1)
+`)
 })
