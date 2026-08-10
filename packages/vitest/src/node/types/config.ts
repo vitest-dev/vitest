@@ -412,10 +412,15 @@ export interface InlineConfig {
    * the server and its transform cache.
    *
    * A project still gets its own server when it defines Vite-level options
-   * (`plugins`, `resolve`, `define`, ...) or test options that affect the
+   * (`plugins`, `resolve`, ...) or test options that affect the
    * Vite config: `alias`, `browser`, `css`, `deps.moduleDirectories`,
    * `deps.optimizer`, `mode`, `root`,
    * or when `extends` doesn't point to the declaring config.
+   *
+   * `define` entries prevent sharing only when they change the server's
+   * transforms: entries applied at runtime (`import.meta.env.*`,
+   * `process.env.*` and global identifiers with JSON values) and entries
+   * that repeat the declaring config's values are safe.
    *
    * This option is only respected in the root configuration.
    * @default true

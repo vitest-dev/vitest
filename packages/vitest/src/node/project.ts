@@ -63,6 +63,7 @@ export class TestProject {
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _serializedDefines?: string
+  /** @internal */ _sharedViteServer = false
   /** @internal */ testFilesList: string[] | null = null
   /** @internal */ _browserReadySessions = new Set<string>()
 
@@ -210,6 +211,15 @@ export class TestProject {
    */
   public isRootProject(): boolean {
     return this.vitest.getRootProject() === this
+  }
+
+  /**
+   * Whether the project reuses the Vite server of the config that declared it
+   * (see the `sharedViteServer` option). The project that owns the server
+   * reports `false` even when other projects reuse it.
+   */
+  public get sharedViteServer(): boolean {
+    return this._sharedViteServer
   }
 
   /** @internal */

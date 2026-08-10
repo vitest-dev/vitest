@@ -525,9 +525,20 @@ function canShareParentServer(
     return false
   }
   for (const key in options) {
-    if (key !== 'test' && key !== 'extends') {
-      return false
+    if (key === 'test' || key === 'extends') {
+      continue
     }
+    const value = options[key as keyof typeof options]
+    if (value === undefined) {
+      continue
+    }
+    if (key === 'plugins' && hasNoPlugins(value)) {
+      continue
+    }
+    if (key === 'define' && isShareableDefine(value as Record<string, any>, context.parentViteConfig.define)) {
+      continue
+    }
+    return false
   }
   // an inherited `browser` config makes the project a browser project, which
   // needs its own browser server; other inherited values are safe
@@ -549,6 +560,95 @@ function canShareParentServer(
     return false
   }
   return true
+}
+
+// covers `plugins: condition ? [plugin()] : []`
+function hasNoPlugins(plugins: unknown): boolean {
+  return Array.isArray(plugins)
+    && plugins.every(plugin => !plugin || (Array.isArray(plugin) && hasNoPlugins(plugin)))
+}
+
+// `deleteDefineConfig` always drops these
+const DROPPED_DEFINE_KEYS = ['process.env', 'process', 'global']
+
+function isShareableDefine(
+  define: Record<string, any>,
+  parentDefine: Record<string, any> | undefined,
+): boolean {
+  for (const key in define) {
+    if (DROPPED_DEFINE_KEYS.includes(key)) {
+      continue
+    }
+    // the parent server already applies this entry
+    if (parentDefine && key in parentDefine && isSameDefineValue(define[key], parentDefine[key])) {
+      continue
+    }
+    // `deleteDefineConfig` applies these at runtime, they never reach the server
+    if (
+      parseDefineValue(define[key]).parsed
+      && (!key.includes('.') || key.startsWith('import.meta.env.') || key.startsWith('process.env.'))
+    ) {
+      continue
+    }
+    return false
+  }
+  return true
+}
+
+function isSameDefineValue(a: unknown, b: unknown): boolean {
+  if (a === b) {
+    return true
+  }
+  return typeof a === 'object' && a !== null
+    && typeof b === 'object' && b !== null
+    && JSON.stringify(a) === JSON.stringify(b)
+}
+
+// mirrors `deleteDefineConfig`: a string is a code replacement unless it parses as JSON
+function parseDefineValue(value: unknown): { parsed: boolean; value?: any } {
+  if (typeof value !== 'string') {
+    return { parsed: true, value }
+  }
+  try {
+    return { parsed: true, value: JSON.parse(value) }
+  }
+  catch {
+    return { parsed: false }
+  }
+}
+
+// the runtime part of `deleteDefineConfig` for a project that shares the parent server
+function resolveSharedProjectDefines(
+  define: Record<string, any> | undefined,
+  parentConfig: ResolvedConfig,
+): ResolvedConfig['defines'] {
+  if (!define) {
+    return parentConfig.defines
+  }
+  let defines = parentConfig.defines
+  for (const key in define) {
+    if (DROPPED_DEFINE_KEYS.includes(key)) {
+      continue
+    }
+    const result = parseDefineValue(define[key])
+    // the parent server applies this entry, `isShareableDefine` checked the value
+    if (!result.parsed) {
+      continue
+    }
+    if (key.startsWith('import.meta.env.')) {
+      process.env[key.slice('import.meta.env.'.length)] = result.value
+    }
+    else if (key.startsWith('process.env.')) {
+      process.env[key.slice('process.env.'.length)] = result.value
+    }
+    else if (!key.includes('.')) {
+      if (defines === parentConfig.defines) {
+        defines = { ...parentConfig.defines }
+      }
+      defines[key] = result.value
+    }
+  }
+  return defines
 }
 
 /**
@@ -579,7 +679,7 @@ function resolveSharedServerEntry(
     globalConfig: rootConfig,
     project: { options, extendsTrueRootConfig: parentConfig === rootConfig },
     sharedServer: {
-      defines: parentConfig.defines,
+      defines: resolveSharedProjectDefines(options.define, parentConfig),
       moduleRunnerOptions: parentConfig._moduleRunnerOptions,
     },
   })
@@ -1288,6 +1388,7 @@ export async function attachProjectsFromEntries(
       // needs its own resolver, fetcher, and module runner
       if (entry.sharedServer) {
         const project = new TestProject(vitest, primary.vite, viteConfig, projectConfig)
+        project._sharedViteServer = true
         project._initializeRunners(primary.vite)
         projects.push(project)
         continue
@@ -1308,6 +1409,9 @@ export async function attachProjectsFromEntries(
     const children = childrenByViteConfig.get(viteConfig) ?? []
     const { server, parent } = await createClusterServer(vitest, viteConfig, projectConfig, children)
     const project = new TestProject(vitest, server, viteConfig, projectConfig)
+    // a shared entry can create the container's server on first use,
+    // but the server still belongs to the declaring config
+    project._sharedViteServer = !!entry.sharedServer
     project._initializeRunners(server)
     if (parent) {
       project._parentBrowser = parent

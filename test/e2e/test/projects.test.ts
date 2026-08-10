@@ -891,6 +891,105 @@ describe('sharedViteServer', () => {
     expect(ctx!.projects.map(project => project.name)).toEqual(['app (unit)', 'app (e2e)'])
     expect(unit.vite).toBe(e2e.vite)
     expect(unit.vite).not.toBe(ctx!.getRootProject().vite)
+    // the server belongs to the container config, including for the project
+    // that triggered its creation
+    expect(unit.sharedViteServer).toBe(true)
+    expect(e2e.sharedViteServer).toBe(true)
+  })
+
+  it('vite options that don\'t change the server don\'t prevent sharing', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': ts`
+        export default {
+          define: {
+            'import.meta.something': '"root"',
+            '__ROOT_CODE__': 'process.env.ROOT_CODE',
+            'import.meta.obj': { nested: ['a'] },
+          },
+          test: {
+            projects: [
+              { plugins: [], test: { name: 'empty-plugins' } },
+              { plugins: [false, [], [null]], test: { name: 'noop-plugins' } },
+              { plugins: undefined, resolve: undefined, test: { name: 'undefined-options' } },
+              { define: { __FLAG__: 'true' }, test: { name: 'global-define' } },
+              { define: { 'import.meta.env.FROM_DEFINE': '"1"' }, test: { name: 'env-define' } },
+              { define: { 'process.env': {}, 'process': {}, 'global': {} }, test: { name: 'dropped-define' } },
+              { define: { 'import.meta.something': '"root"' }, test: { name: 'repeated-define' } },
+              { define: { '__ROOT_CODE__': 'process.env.ROOT_CODE' }, test: { name: 'repeated-code-define' } },
+              { define: { 'import.meta.obj': { nested: ['a'] } }, test: { name: 'repeated-object-define' } },
+              { define: { 'import.meta.something': '"changed"' }, test: { name: 'changed-define' } },
+              { define: { 'import.meta.other': '"new"' }, test: { name: 'new-define' } },
+              { define: { '__CODE__': 'process.env.CODE' }, test: { name: 'code-define' } },
+              { plugins: [{ name: 'noop' }], test: { name: 'own-plugin' } },
+            ],
+          },
+        }
+      `,
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const root = ctx!.getRootProject()
+    const shared = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.vite === root.vite]),
+    )
+    expect(shared).toEqual({
+      'empty-plugins': true,
+      'noop-plugins': true,
+      'undefined-options': true,
+      'global-define': true,
+      'env-define': true,
+      'dropped-define': true,
+      'repeated-define': true,
+      'repeated-code-define': true,
+      'repeated-object-define': true,
+      'changed-define': false,
+      'new-define': false,
+      'code-define': false,
+      'own-plugin': false,
+    })
+    const flags = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.sharedViteServer]),
+    )
+    expect(flags).toEqual(shared)
+    expect(root.sharedViteServer).toBe(false)
+  })
+
+  it('runtime defines of a shared project apply to its tests', async () => {
+    const { stderr, ctx, results } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: [
+            {
+              define: {
+                '__PROJECT_FLAG__': '"from-project"',
+                'import.meta.env.SHARED_DEFINE_ENV': '"env-value"',
+                'process.env.SHARED_DEFINE_PROCESS': '"process-value"',
+              },
+              test: { name: 'runtime-defines', include: ['defines.test.js'] },
+            },
+            { test: { name: 'plain', include: ['plain.test.js'] } },
+          ],
+        },
+      },
+      'defines.test.js': ts`
+        import { expect, test } from 'vitest'
+        test('defines are applied', () => {
+          expect(__PROJECT_FLAG__).toBe('from-project')
+          expect(import.meta.env.SHARED_DEFINE_ENV).toBe('env-value')
+          expect(process.env.SHARED_DEFINE_PROCESS).toBe('process-value')
+        })
+      `,
+      'plain.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(results.every(module => module.ok())).toBe(true)
+    const root = ctx!.getRootProject()
+    const [runtimeDefines, plain] = ctx!.projects
+    expect(runtimeDefines.vite).toBe(root.vite)
+    expect(runtimeDefines.config.defines.__PROJECT_FLAG__).toBe('from-project')
+    // the project's global defines don't leak into the parent or siblings
+    expect(root.config.defines).not.toHaveProperty('__PROJECT_FLAG__')
+    expect(plain.config.defines).not.toHaveProperty('__PROJECT_FLAG__')
   })
 })
 
