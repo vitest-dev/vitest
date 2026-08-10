@@ -806,6 +806,7 @@ describe('vi.fn() implementations', () => {
         newTarget = new.target
         // TODO: also this.field vs this.method availablility here
       }
+
       field = () => 'field'
       method() {
         return 'prototype'
@@ -886,6 +887,7 @@ describe('vi.fn() implementations', () => {
       constructor() {
         return returned as any
       }
+
       field = () => 'field'
       method() {
         return 'prototype'
@@ -897,12 +899,14 @@ describe('vi.fn() implementations', () => {
     expect(mocked).toBe(returned)
     expect(mocked).not.toBeInstanceOf(MockClass)
     expect(mocked).not.toBeInstanceOf(ActualClass)
+    expect(mocked.field).toBeUndefined()
     expect(mocked.method).toBeUndefined()
 
     // actual case for comparison
     const actual = new ActualClass()
     expect(actual).toBe(returned)
     expect(actual).not.toBeInstanceOf(ActualClass)
+    expect(actual.field).toBeUndefined()
     expect(actual.method).toBeUndefined()
   })
 
