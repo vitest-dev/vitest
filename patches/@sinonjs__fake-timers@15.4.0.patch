@@ -1,26 +1,39 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd41680f2e 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..628a428f91b7e7ba4abc86771c0c363b409422c5 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
-@@ -2,14 +2,14 @@
+@@ -1,19 +1,6 @@
+ "use strict";
  
  const globalObject = require("@sinonjs/commons").global;
- let timersModule, timersPromisesModule;
+-let timersModule, timersPromisesModule;
 -if (typeof require === "function" && typeof module === "object") {
-+if (typeof __vitest_required__ !== 'undefined') {
-     try {
+-    try {
 -        timersModule = require("timers");
-+        timersModule = __vitest_required__.timers;
-     } catch {
-         // ignored
-     }
-     try {
+-    } catch {
+-        // ignored
+-    }
+-    try {
 -        timersPromisesModule = require("timers/promises");
-+        timersPromisesModule = __vitest_required__.timersPromises;
-     } catch {
-         // ignored
-     }
-@@ -537,7 +537,7 @@ function withGlobal(_global) {
+-    } catch {
+-        // ignored
+-    }
+-}
+ 
+ /**
+  * @typedef {"nextAsync" | "manual" | "interval"} TickMode
+@@ -440,8 +427,8 @@ if (typeof require === "function" && typeof module === "object") {
+  * @property {Uninstall} uninstall - restores native timers
+  * @property {string[]} methods - names of faked methods
+  * @property {boolean} [shouldClearNativeTimers] - inherited from config
+- * @property {{methodName:string, original:unknown}[] | undefined} timersModuleMethods - saved Node timers module methods
+- * @property {{methodName:string, original:unknown}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
++ * @property {{methodName:string, original:unknown, target:object}[] | undefined} timersModuleMethods - saved Node timers module methods
++ * @property {{methodName:string, original:unknown, target:object}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
+  * @property {Map<VoidVarArgsFunc, AbortSignal>} abortListenerMap - active abort listeners
+  * @property {SetTickMode} setTickMode - switches the auto-tick mode
+  * @property {Map<number, Timer>} [timers] - internal timer storage
+@@ -537,7 +524,7 @@ function withGlobal(_global) {
          isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
      isPresent.nextTick =
          _global.process && typeof _global.process.nextTick === "function";
@@ -29,3 +42,83 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
+@@ -2618,26 +2605,16 @@ function withGlobal(_global) {
+                             }
+                         }
+                     }
+-                    if (clock.timersModuleMethods !== undefined) {
+-                        for (
+-                            let j = 0;
+-                            j < clock.timersModuleMethods.length;
+-                            j++
+-                        ) {
+-                            const entry = clock.timersModuleMethods[j];
+-                            timersModule[entry.methodName] = entry.original;
+-                        }
++                }
++
++                if (clock.timersModuleMethods !== undefined) {
++                    for (const entry of clock.timersModuleMethods) {
++                        entry.target[entry.methodName] = entry.original;
+                     }
+-                    if (clock.timersPromisesModuleMethods !== undefined) {
+-                        for (
+-                            let j = 0;
+-                            j < clock.timersPromisesModuleMethods.length;
+-                            j++
+-                        ) {
+-                            const entry = clock.timersPromisesModuleMethods[j];
+-                            timersPromisesModule[entry.methodName] =
+-                                entry.original;
+-                        }
++                }
++                if (clock.timersPromisesModuleMethods !== undefined) {
++                    for (const entry of clock.timersPromisesModuleMethods) {
++                        entry.target[entry.methodName] = entry.original;
+                     }
+                 }
+ 
+@@ -2726,6 +2703,11 @@ function withGlobal(_global) {
+             );
+         }
+ 
++        const vitestRequired = _global.__vitest_required__;
++        const timersModule = vitestRequired && vitestRequired.timers;
++        const timersPromisesModule =
++            vitestRequired && vitestRequired.timersPromises;
++
+         if (config.target) {
+             throw new TypeError(
+                 "config.target is no longer supported. Use `withGlobal(target)` instead.",
+@@ -2849,6 +2831,7 @@ function withGlobal(_global) {
+                 clock.timersModuleMethods.push({
+                     methodName: nameOfMethodToReplace,
+                     original: original,
++                    target: timersModule,
+                 });
+                 timersModule[nameOfMethodToReplace] =
+                     _global[nameOfMethodToReplace];
+@@ -2858,6 +2841,7 @@ function withGlobal(_global) {
+                     clock.timersPromisesModuleMethods.push({
+                         methodName: "setTimeout",
+                         original: timersPromisesModule.setTimeout,
++                        target: timersPromisesModule,
+                     });
+ 
+                     timersPromisesModule.setTimeout = (
+@@ -2911,6 +2895,7 @@ function withGlobal(_global) {
+                     clock.timersPromisesModuleMethods.push({
+                         methodName: "setImmediate",
+                         original: timersPromisesModule.setImmediate,
++                        target: timersPromisesModule,
+                     });
+ 
+                     timersPromisesModule.setImmediate = (value, options = {}) =>
+@@ -2960,6 +2945,7 @@ function withGlobal(_global) {
+                     clock.timersPromisesModuleMethods.push({
+                         methodName: "setInterval",
+                         original: timersPromisesModule.setInterval,
++                        target: timersPromisesModule,
+                     });
+ 
+                     timersPromisesModule.setInterval = (
