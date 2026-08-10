@@ -128,12 +128,9 @@ export default class SnapshotState {
     const snapshotPath = await environment.resolvePath(testFilePath)
     let fileData: SnapshotData | null
     if (environment.readSnapshotFileData) {
-      // environment evaluates the snapshot file elsewhere (e.g. the browser
-      // delegates to the server to avoid `new Function` under a CSP)
       fileData = await environment.readSnapshotFileData(snapshotPath)
     }
     else {
-      // default: read the file and evaluate it in the current runtime
       const content = await environment.readSnapshotFile(snapshotPath)
       fileData = content == null ? null : evaluateSnapshotFile(snapshotPath, content)
     }
