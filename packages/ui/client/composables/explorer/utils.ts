@@ -1,4 +1,4 @@
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type {
   FileTreeNode,
   ParentTreeNode,
@@ -7,7 +7,6 @@ import type {
   TestTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { isTestCase } from '@vitest/runner/utils'
 import { client, config } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
@@ -23,10 +22,6 @@ export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode {
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
-}
-
-export function isSuiteNode(node: UITaskTreeNode): node is SuiteTreeNode {
-  return node.type === 'suite'
 }
 
 export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | SuiteTreeNode {
@@ -159,7 +154,7 @@ export function createOrUpdateNodeTask(id: string) {
 
   const task = client.state.idMap.get(id)
   // if it is not a test just return
-  if (!task || !isTestCase(task)) {
+  if (!task || task.type !== 'test') {
     return
   }
 
@@ -191,7 +186,7 @@ export function createOrUpdateNode(
       taskNode.state = task.result?.state
     }
     else {
-      if (isTestCase(task)) {
+      if (task.type === 'test') {
         taskNode = {
           id: task.id,
           fileId: task.file.id,

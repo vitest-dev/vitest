@@ -1,4 +1,4 @@
-import type { TaskMeta } from '@vitest/runner'
+import type { TaskMeta } from 'vitest'
 import type { TestModule, TestUserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
@@ -46,7 +46,7 @@ it.each([
 
   expect(stderr).toBe('')
 
-  expect(stdout).toContain('custom.spec.ts:14:1 > custom')
+  expect(stdout).toContain('custom.spec.ts:14 > custom')
 
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-handler' }

@@ -1,10 +1,12 @@
 import type { Context as OTELContext } from '@opentelemetry/api'
-import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
-import type { FileSpecification } from '@vitest/runner'
+import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelOutgoingEvent, IframeReceivedEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
+import type { FileSpecification } from 'vitest/internal/browser'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { relative } from 'pathe'
 import { Traces } from 'vitest/internal/traces'
+// This needs to be tree shaken properly to not include the whole runner by accident
+import { generateFileHash } from '../../../vitest/src/utils/tasks.js'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
@@ -14,6 +16,9 @@ export class IframeOrchestrator {
   private cancelled = false
   private recreateNonIsolatedIframe = false
   private iframes = new Map<string, HTMLIFrameElement>()
+  private readyIframes = new Set<string>()
+  private readyWaiters = new Map<string, { resolve: () => void; reject: (error: Error) => void }>()
+  private messageId = 0
 
   public eventTarget: EventTarget = new EventTarget()
 
@@ -81,7 +86,7 @@ export class IframeOrchestrator {
       }
     }
 
-    if (config.browser.isolate === false) {
+    if (config.isolate === false) {
       await this.runNonIsolatedTests(container, options, startTime, orchestratorSpan.context)
       await endSpan()
       return
@@ -89,6 +94,8 @@ export class IframeOrchestrator {
 
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
+    this.readyIframes.clear()
+    this.readyWaiters.clear()
 
     for (let i = 0; i < options.files.length; i++) {
       if (this.cancelled) {
@@ -112,7 +119,7 @@ export class IframeOrchestrator {
 
   public async cleanupTesters(): Promise<void> {
     const config = getConfig()
-    if (config.browser.isolate) {
+    if (config.isolate) {
       // isolated mode assigns filepaths as ids
       const files = Array.from(this.iframes.keys())
       // when the run is completed, show the last file in the UI
@@ -147,8 +154,7 @@ export class IframeOrchestrator {
       // because we called "cleanup" in the previous run
       // the iframe is not removed immediately to let the user see the last test
       this.recreateNonIsolatedIframe = false
-      this.iframes.get(ID_ALL)!.remove()
-      this.iframes.delete(ID_ALL)
+      this.removeIframe(ID_ALL)
       debug('recreate non-isolated iframe')
     }
 
@@ -168,6 +174,8 @@ export class IframeOrchestrator {
       files: options.files,
       method: options.method,
       context: options.providedContext,
+      concurrencyId: options.concurrencyId,
+      workerId: options.workerId,
     })
     debug('finished running tests', options.files.join(', '))
     // we don't cleanup here because in non-isolated mode
@@ -187,8 +195,7 @@ export class IframeOrchestrator {
     const file = spec.filepath
 
     if (this.iframes.has(file)) {
-      this.iframes.get(file)!.remove()
-      this.iframes.delete(file)
+      this.removeIframe(file)
     }
 
     await this.prepareIframe(
@@ -205,6 +212,8 @@ export class IframeOrchestrator {
       method: options.method,
       iframeId: file,
       context: options.providedContext,
+      concurrencyId: options.concurrencyId,
+      workerId: options.workerId,
     })
     // perform "cleanup" to cleanup resources and calculate the coverage
     await this.sendEventToIframe({
@@ -251,12 +260,14 @@ export class IframeOrchestrator {
         }
         else {
           this.iframes.set(iframeId, iframe)
-          this.sendEventToIframe({
-            event: 'prepare',
-            iframeId,
-            startTime,
-            otelCarrier: this.traces.getContextCarrier(otelContext),
-          }).then(resolve, error => reject(this.dispatchIframeError(error)))
+          this.waitForReady(iframeId)
+            .then(() => this.sendEventToIframe({
+              event: 'prepare',
+              iframeId,
+              startTime,
+              otelCarrier: this.traces.getContextCarrier(otelContext),
+            }))
+            .then(resolve, error => reject(this.dispatchIframeError(error)))
         }
       }
       iframe.onerror = (e) => {
@@ -272,6 +283,59 @@ export class IframeOrchestrator {
       }
     })
     return iframe
+  }
+
+  private markReady(iframeId: string) {
+    this.readyIframes.add(iframeId)
+
+    const waiter = this.readyWaiters.get(iframeId)
+    if (waiter) {
+      this.readyWaiters.delete(iframeId)
+      waiter.resolve()
+    }
+  }
+
+  private waitForReady(iframeId: string): Promise<void> {
+    if (this.readyIframes.has(iframeId)) {
+      return Promise.resolve()
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const timeout = getIframeTimeout()
+      // the tester reports readiness as soon as its module evaluates; if it
+      // never does (e.g. it threw during bootstrap), don't wait forever
+      const timer = setTimeout(() => {
+        this.readyWaiters.delete(iframeId)
+        reject(new Error(
+          `The iframe "${iframeId}" did not become ready within ${timeout}ms. `
+          + `The tester likely failed to initialize, check the browser console for errors.`,
+        ))
+      }, timeout)
+
+      this.readyWaiters.set(iframeId, {
+        resolve: () => {
+          clearTimeout(timer)
+          resolve()
+        },
+        reject: (error) => {
+          clearTimeout(timer)
+          reject(error)
+        },
+      })
+    })
+  }
+
+  private removeIframe(iframeId: string) {
+    const iframe = this.iframes.get(iframeId)
+    this.iframes.delete(iframeId)
+    this.readyIframes.delete(iframeId)
+    const waiter = this.readyWaiters.get(iframeId)
+    if (waiter) {
+      this.readyWaiters.delete(iframeId)
+      // surface an error instead of silently abandoning whoever awaits readiness
+      waiter.reject(new Error(`The iframe "${iframeId}" was removed before it became ready.`))
+    }
+    iframe?.remove()
   }
 
   private loggedIframe = new WeakSet<HTMLIFrameElement>()
@@ -315,7 +379,7 @@ export class IframeOrchestrator {
 
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
-    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${encodeURIComponent(iframeId)}`
     const config = getConfig()
 
     iframe.setAttribute('loading', 'eager')
@@ -363,9 +427,13 @@ export class IframeOrchestrator {
     }
   }
 
-  private async onIframeEvent(e: MessageEvent<IframeChannelIncomingEvent>) {
+  private async onIframeEvent(e: MessageEvent<IframeChannelEvent>) {
     debug('iframe event', JSON.stringify(e.data))
     switch (e.data.event) {
+      case 'ready': {
+        this.markReady(e.data.iframeId)
+        break
+      }
       case 'viewport': {
         const { width, height, iframeId: id } = e.data
         const iframe = this.iframes.get(id)
@@ -390,10 +458,11 @@ export class IframeOrchestrator {
         break
       }
       default: {
-        // ignore responses
+        // ignore acknowledgements and responses to events we sent
+        const event = e.data.event
         if (
-          typeof e.data.event === 'string'
-          && (e.data.event as string).startsWith('response:')
+          typeof event === 'string'
+          && (event.startsWith('response:') || event.startsWith('ack:'))
         ) {
           break
         }
@@ -423,25 +492,51 @@ export class IframeOrchestrator {
     }
     events.add(event.event)
 
-    channel.postMessage(event)
+    const messageId = this.messageId++
+    channel.postMessage({ ...event, messageId } satisfies IframeReceivedEvent)
+
     return new Promise<void>((resolve, reject) => {
+      let ackTimer: ReturnType<typeof setTimeout>
+
       const cleanupEvents = () => {
+        clearTimeout(ackTimer)
         channel.removeEventListener('message', onReceived)
         this.eventTarget.removeEventListener('iframeerror', onError)
+        events!.delete(event.event)
       }
 
+      // The tester acknowledges the message as soon as it receives it, then
+      // sends the actual response once the work is done. We only time out
+      // waiting for the acknowledgement: it proves the tester is alive, after
+      // which the work (e.g. running a whole test file) may take any amount of
+      // time, so there is intentionally no deadline on the response itself.
+      const timeout = getIframeTimeout()
+      ackTimer = setTimeout(() => {
+        cleanupEvents()
+        reject(new Error(
+          `The iframe "${event.iframeId}" did not acknowledge the "${event.event}" message within ${timeout}ms. `
+          + `The tester might have crashed, been removed, or be blocked by a long synchronous task.`,
+        ))
+      }, timeout)
+
       function onReceived(e: MessageEvent) {
-        if (e.data.iframeId === event.iframeId && e.data.event === `response:${event.event}`) {
-          resolve()
+        if (e.data.iframeId !== event.iframeId || e.data.messageId !== messageId) {
+          return
+        }
+        if (e.data.event === `ack:${event.event}`) {
+          // alive and processing: wait for the response without a deadline
+          clearTimeout(ackTimer)
+          return
+        }
+        if (e.data.event === `response:${event.event}`) {
           cleanupEvents()
-          events!.delete(event.event)
+          resolve()
         }
       }
 
       function onError(e: Event) {
-        reject((e as CustomEvent).detail)
         cleanupEvents()
-        events!.delete(event.event)
+        reject((e as CustomEvent).detail)
       }
 
       this.eventTarget.addEventListener('iframeerror', onError)
@@ -481,38 +576,7 @@ function generateFileId(file: string) {
   )
 }
 
-// TODO: copied from packages/runner/src/utils/collect.ts
-interface HashMeta {
-  typecheck?: boolean
-  __vitest_label__?: string
-}
-
-function generateFileHash(
-  file: string,
-  projectName: string | undefined,
-  meta?: HashMeta,
-): string {
-  const seed = [
-    file,
-    projectName || '',
-    meta?.typecheck ? '__typecheck__' : '',
-    meta?.__vitest_label__ || '',
-  ].join('\0')
-  return generateHash(seed)
-}
-
-function generateHash(str: string): string {
-  let hash = 0
-  if (str.length === 0) {
-    return `${hash}`
-  }
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return `${hash}`
-}
+let currentViewport: { width: number; height: number } | undefined
 
 async function setIframeViewport(
   width: number,
@@ -527,12 +591,26 @@ async function setIframeViewport(
     document.body.style.setProperty('--viewport-width', `${width}px`)
     document.body.style.setProperty('--viewport-height', `${height}px`)
 
+    // playwright emulates the viewport per page, so it keeps its size
+    // between test files and the command round trip is only needed when
+    // the size actually changes; other providers resize the window, which
+    // outside code can move under us, so they always re-pin
+    const cacheable = getBrowserState().provider === 'playwright'
+    if (
+      cacheable
+      && currentViewport?.width === width
+      && currentViewport?.height === height
+    ) {
+      return
+    }
+
     await client.rpc.triggerCommand(
       getBrowserState().sessionId,
       '__vitest_viewport',
       undefined,
       [{ width, height }],
     )
+    currentViewport = cacheable ? { width, height } : undefined
   }
 }
 
@@ -541,4 +619,11 @@ function debug(...args: unknown[]) {
   if (debug && debug !== 'false') {
     client.rpc.debug(...args.map(String))
   }
+}
+
+// Liveness timeout for tester iframes (readiness and message acknowledgement),
+// not a timeout for the test work itself. Overridable via the `VITEST_BROWSER_IFRAME_TIMEOUT`
+// env in case a tester legitimately needs longer to boot or acknowledge.
+function getIframeTimeout(): number {
+  return Number(getConfig().env.VITEST_BROWSER_IFRAME_TIMEOUT) || 60_000
 }

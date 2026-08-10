@@ -1,11 +1,11 @@
 import type { EachMapping } from '@jridgewell/trace-mapping'
-import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { ChildProcess } from 'node:child_process'
 import type { Result } from 'tinyexec'
 import type { FileInformation } from '../node/ast-collect'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
+import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '../runtime/runner/types'
 import type { TscErrorInfo } from './types'
 import os from 'node:os'
 import { performance } from 'node:perf_hooks'
@@ -286,6 +286,14 @@ export class Typechecker {
     return this.process?.exitCode != null && this.process.exitCode
   }
 
+  public getSignal(): NodeJS.Signals | null {
+    return this.process?.signalCode ?? null
+  }
+
+  public getChecker(): string {
+    return this.project.config.typecheck.checker
+  }
+
   public getOutput(): string {
     return this._output
   }
@@ -401,13 +409,16 @@ export class Typechecker {
         child.process?.off('error', onError)
         clearTimeout(timeout)
         if (process.platform === 'win32') {
-          // on Windows, the process might be spawned but fail to start
-          // we wait for a potential error here. if "close" event didn't trigger,
-          // we resolve the promise
-          winTimeout = setTimeout(() => {
-            resolved = true
-            resolve({ result: child })
-          }, 200)
+          // on Windows, the process might be spawned but fail to start,
+          // so we wait for the "close" event instead of resolving right away.
+          // `start` awaits the process anyway; the watch process never exits,
+          // so resolve it after a grace period
+          if (watch) {
+            winTimeout = setTimeout(() => {
+              resolved = true
+              resolve({ result: child })
+            }, 200)
+          }
         }
         else {
           resolved = true
@@ -419,6 +430,11 @@ export class Typechecker {
         child.process.once('close', (code) => {
           if (code != null && code !== 0 && !dataReceived) {
             onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+          }
+          else if (!resolved) {
+            clearTimeout(winTimeout)
+            resolved = true
+            resolve({ result: child })
           }
         })
       }

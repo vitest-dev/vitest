@@ -9,7 +9,6 @@
     "exactOptionalPropertyTypes": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "dist",
     "sourceMap": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": false

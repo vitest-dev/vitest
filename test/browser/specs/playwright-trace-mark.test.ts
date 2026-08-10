@@ -3,7 +3,6 @@ import path from 'node:path'
 import { stripVTControlCharacters } from 'node:util'
 import { resolve } from 'pathe'
 import { afterEach, describe, expect, test } from 'vitest'
-import { rolldownVersion } from 'vitest/node'
 import * as yauzl from 'yauzl'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, provider, runBrowserTests } from './utils'
@@ -106,12 +105,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const markerEvent = events.find(e => e.title === 'button rendered - locator')
           const formattedFrame = formatStack(markerEvent)
-          if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:38"`)
-          }
-          else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:33"`)
-          }
+          expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:34"`)
         }
 
         if (traceFile.includes('page-mark') && !traceFile.includes('custom-stack')) {
@@ -128,12 +122,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const markerEvent = events.find(e => e.title === 'button rendered - page')
           const formattedFrame = formatStack(markerEvent)
-          if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:18"`)
-          }
-          else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:13"`)
-          }
+          expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:14"`)
         }
 
         if (traceFile.includes('expect-element-pass')) {
@@ -153,12 +142,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const markerEvent = events.find(e => e.title === 'toHaveTextContent')
           const formattedFrame = formatStack(markerEvent)
-          if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:23"`)
-          }
-          else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:15"`)
-          }
+          expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:16"`)
         }
 
         if (traceFile.includes('expect-element-fail')) {
@@ -182,22 +166,17 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const markerEvent = events.find(e => e.title === 'toHaveTextContent [ERROR]')
           const formattedFrame = formatStack(markerEvent)
-          if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:23"`)
-          }
-          else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:15"`)
-          }
+          expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:16"`)
         }
 
         if (traceFile.includes('failure')) {
           const markerEvent = events.find(e => e.title === 'onAfterRetryTask [fail]')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:18"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:13"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:8"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:9"`)
           }
         }
 
@@ -220,17 +199,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const markerEvent = events.find(e => e.title === 'vitest:click')
           const formattedFrame = formatStack(markerEvent)
-          if (name === 'webkit') {
-            if (rolldownVersion) {
-              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
-            }
-            else {
-              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:39"`)
-            }
-          }
-          else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
-          }
+          expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:34"`)
         }
 
         if (traceFile.includes('helper')) {
@@ -243,12 +212,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const markerEvent = events.find(e => e.title === 'render helper')
           const formattedFrame = formatStack(markerEvent)
-          if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:17"`)
-          }
-          else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:8"`)
-          }
+          expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:9"`)
         }
 
         if (traceFile.includes('stack')) {
@@ -262,10 +226,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === 'button rendered - stack')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:26"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:21"`)
           }
           else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:16"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:17"`)
           }
         }
 
@@ -279,12 +243,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const markerEvent = events.find(e => e.title === 'render group')
           const formattedFrame = formatStack(markerEvent)
-          if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:18"`)
-          }
-          else {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:13"`)
-          }
+          expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:14"`)
         }
       }
     }

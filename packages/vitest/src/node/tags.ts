@@ -1,4 +1,4 @@
-import type { TestTagDefinition } from '@vitest/runner'
+import type { TestTagDefinition } from '../runtime/runner/types'
 import type { TestProject } from './project'
 
 export function populateProjectsTags(rootProject: TestProject, projects: TestProject[]): void {

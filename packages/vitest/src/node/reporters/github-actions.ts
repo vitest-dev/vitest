@@ -1,14 +1,14 @@
-import type { TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
+import type { TestAnnotation } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
 import { writeFileSync } from 'node:fs'
 import { stripVTControlCharacters } from 'node:util'
-import { getFullName, getTasks } from '@vitest/runner/utils'
 import { deepMerge } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
+import { getFullName, getTasks } from '../../utils/tasks'
 import { noun } from './renderers/utils'
 
 export interface GithubActionsReporterOptions {

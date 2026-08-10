@@ -1,0 +1,181 @@
+import type { File, FileSpecification, SuiteHooks, VitestRunner } from './types'
+import { processError } from '@vitest/utils/error' // TODO: load dynamically
+import { toArray } from '@vitest/utils/helpers'
+import {
+  calculateSuiteHash,
+  createFileTask,
+  interpretTaskModes,
+} from '../../utils/tasks'
+import { collectorContext } from './context'
+import { getHooks, setHooks } from './map'
+import { runSetupFiles } from './setup'
+import {
+  clearCollectorContext,
+  createSuiteHooks,
+  getDefaultSuite,
+} from './suite'
+import { createTagsFilter, validateTags } from './utils/tags'
+
+const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
+
+export async function collectTests(
+  specs: string[] | FileSpecification[],
+  runner: VitestRunner,
+): Promise<File[]> {
+  const files: File[] = []
+
+  const config = runner.config
+  const $ = runner.trace!
+  let defaultTagsFilter: ((testTags: string[]) => boolean) | undefined
+
+  for (const spec of specs) {
+    const filepath = typeof spec === 'string' ? spec : spec.filepath
+    await $(
+      'collect_spec',
+      { 'code.file.path': filepath },
+      async () => {
+        runner._currentSpecification = typeof spec === 'string' ? { filepath: spec } : spec
+
+        const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+        const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
+        const testIds = typeof spec === 'string' ? undefined : spec.testIds
+        const testTagsFilter = typeof spec === 'object' && spec.testTagsFilter
+          ? createTagsFilter(spec.testTagsFilter, config.tags)
+          : undefined
+
+        const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
+
+        const file = createFileTask(
+          filepath,
+          config.root,
+          config.name,
+          runner.pool,
+          runner.viteEnvironment,
+          { __vitest_label__: config.mergeReportsLabel },
+        )
+        file.tags = fileTags
+        file.shuffle = config.sequence.shuffle
+
+        try {
+          validateTags(runner.config, fileTags)
+
+          runner.onCollectStart?.(file)
+
+          clearCollectorContext(file, runner)
+
+          const setupFiles = toArray(config.setupFiles)
+          const fetchBeforeSetup = runner.getModuleFetchDuration?.()
+          if (setupFiles.length) {
+            const setupStart = now()
+            await runSetupFiles(config, setupFiles, runner)
+            const setupEnd = now()
+            file.setupDuration = setupEnd - setupStart
+          }
+          else {
+            file.setupDuration = 0
+          }
+
+          const fetchBeforeCollect = runner.getModuleFetchDuration?.()
+          if (fetchBeforeSetup != null && fetchBeforeCollect != null) {
+            file.setupFetchDuration = fetchBeforeCollect - fetchBeforeSetup
+          }
+
+          const collectStart = now()
+
+          await runner.importFile(filepath, 'collect')
+
+          const durations = runner.getImportDurations?.()
+          if (durations) {
+            file.importDurations = durations
+          }
+
+          const defaultTasks = await getDefaultSuite().collect(file)
+
+          const fileHooks = createSuiteHooks()
+          mergeHooks(fileHooks, getHooks(defaultTasks))
+
+          for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
+            if (c.type === 'test' || c.type === 'suite') {
+              file.tasks.push(c)
+            }
+            else if (c.type === 'collector') {
+              const suite = await c.collect(file)
+              if (suite.name || suite.tasks.length) {
+                mergeHooks(fileHooks, getHooks(suite))
+                file.tasks.push(suite)
+              }
+            }
+            else {
+              // check that types are exhausted
+              c satisfies never
+            }
+          }
+
+          setHooks(file, fileHooks)
+          file.collectDuration = now() - collectStart
+          const fetchAfterCollect = runner.getModuleFetchDuration?.()
+          if (fetchBeforeCollect != null && fetchAfterCollect != null) {
+            file.collectFetchDuration = fetchAfterCollect - fetchBeforeCollect
+          }
+        }
+        catch (e) {
+          const errors = e instanceof AggregateError
+            ? e.errors.map(e => processError(e, runner.config._diffOptions))
+            : [processError(e, runner.config._diffOptions)]
+          file.result = {
+            state: 'fail',
+            errors,
+          }
+
+          const durations = runner.getImportDurations?.()
+          if (durations) {
+            file.importDurations = durations
+          }
+        }
+
+        calculateSuiteHash(file)
+
+        // the file's children are assembled here (not in a suite collector), so
+        // roll up the collection-time flags for the file itself
+        file.containsOnly = file.tasks.some(
+          t => t.mode === 'only' || (t.type === 'suite' && t.containsOnly),
+        )
+        file.containsTest = file.tasks.some(
+          t => t.type === 'test' || (t.type === 'suite' && t.containsTest),
+        )
+
+        const hasOnlyTasks = file.containsOnly
+        if (!testTagsFilter && !defaultTagsFilter && config.tagsFilter) {
+          defaultTagsFilter = createTagsFilter(config.tagsFilter, config.tags)
+        }
+        interpretTaskModes(
+          file,
+          testNamePattern ?? config.testNamePattern,
+          testLocations,
+          testIds,
+          testTagsFilter ?? defaultTagsFilter,
+          hasOnlyTasks,
+          false,
+          config.allowOnly,
+        )
+
+        if (file.mode === 'queued') {
+          file.mode = 'run'
+        }
+
+        files.push(file)
+      },
+    )
+  }
+
+  return files
+}
+
+function mergeHooks(baseHooks: SuiteHooks, hooks: SuiteHooks): SuiteHooks {
+  for (const _key in hooks) {
+    const key = _key as keyof SuiteHooks
+    baseHooks[key].push(...(hooks[key] as any))
+  }
+
+  return baseHooks
+}

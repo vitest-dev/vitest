@@ -1,5 +1,4 @@
-import type { VisualRegressionArtifact } from '@vitest/runner'
-import type { AsyncMatcherResult, MatcherState } from 'vitest'
+import type { AsyncMatcherResult, MatcherState, VisualRegressionArtifact } from 'vitest'
 import type { BrowserPage, ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'

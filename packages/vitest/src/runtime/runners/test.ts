@@ -1,5 +1,9 @@
 import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
+import type { ModuleRunner } from 'vite/module-runner'
+import type { Traces } from '../../utils/traces'
+import type { Bench } from '../benchmark'
+import type { SerializedConfig } from '../config'
 import type {
   CancelReason,
   File,
@@ -11,29 +15,22 @@ import type {
   TestTryOptions,
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
-} from '@vitest/runner'
-import type { Bench as Tinybench, Task as TinybenchTask } from 'tinybench'
-import type { ModuleRunner } from 'vite/module-runner'
-import type { Traces } from '../../utils/traces'
-import type { Bench } from '../benchmark'
-import type { SerializedConfig } from '../config'
+} from '../runner/types'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
-import {
-  createTaskCollector,
-  getCurrentSuite,
-  getCurrentTest,
-  getFn,
-  getHooks,
-} from '@vitest/runner'
-import { createChainable, getNames, getTestName, getTests, matchesTags } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
+import { createFileTask, getNames, getTestName, getTests } from '../../utils/tasks'
 import { createBench, kFinalize } from '../benchmark'
 import { rpc } from '../rpc'
+import { getFn, getHooks } from '../runner/map'
+import { createTaskCollector, getCurrentSuite } from '../runner/suite'
+import { getCurrentTest } from '../runner/test-state'
+import { createChainable } from '../runner/utils/chain'
+import { matchesTags } from '../runner/utils/tags'
 import { getWorkerState } from '../utils'
 
 export class TestRunner implements VitestTestRunner {
@@ -57,14 +54,18 @@ export class TestRunner implements VitestTestRunner {
     const environment = this.workerState.environment
     this.viteEnvironment = environment.viteEnvironment || environment.name
     this.viteModuleRunner = config.experimental.viteModuleRunner
+    // vm pools downgrade worker-scoped fixtures to file scope, so the hook has
+    // nothing to tear down there; registering it anyway would keep the
+    // listener, an in-context closure, alive for the lifetime of the worker
+    if (this.pool !== 'vmThreads' && this.pool !== 'vmForks') {
+      this.onCleanupWorkerContext = listener => this.workerState.onCleanup(listener)
+    }
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
-    if (source === 'setup') {
-      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
-      if (moduleNode) {
-        this.workerState.evaluatedModules.invalidateModule(moduleNode)
-      }
+    const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+    if (moduleNode && (source === 'setup' || moduleNode.evaluated)) {
+      this.workerState.evaluatedModules.invalidateModule(moduleNode)
     }
     return this._otel.$(
       `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
@@ -86,9 +87,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = file
   }
 
-  onCleanupWorkerContext(listener: () => unknown): void {
-    this.workerState.onCleanup(listener)
-  }
+  onCleanupWorkerContext?: (listener: () => unknown) => void
 
   onAfterRunFiles(_files: File[]): void {
     this.snapshotClient.clear()
@@ -242,10 +241,11 @@ export class TestRunner implements VitestTestRunner {
     let _bench: Bench | undefined
     const runnerConfig = this.config
     const benchInstances = this.benchInstances
+    const moduleRunner = this.moduleRunner
     Object.defineProperty(context, 'bench', {
       get() {
         if (!_bench) {
-          _bench = createBench(context.task, runnerConfig)
+          _bench = createBench(context.task, runnerConfig, moduleRunner)
           benchInstances.set(context.task, _bench)
         }
         return _bench
@@ -281,6 +281,10 @@ export class TestRunner implements VitestTestRunner {
     return importDurations
   }
 
+  getModuleFetchDuration(): number {
+    return this.workerState.durations.fetch
+  }
+
   trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
     const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
     return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
@@ -299,15 +303,7 @@ export class TestRunner implements VitestTestRunner {
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
-
-  /**
-   * @experimental
-   * A function that runs tinybench tasks.
-   * Can be overriden to run tasks in a special environment.
-   */
-  static async runBenchmarks(tinybench: Tinybench): Promise<TinybenchTask[]> {
-    return await tinybench.run()
-  }
+  static createFileTask: typeof createFileTask = createFileTask
 }
 
 function clearModuleMocks(config: SerializedConfig) {

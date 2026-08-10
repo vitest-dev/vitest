@@ -1,6 +1,6 @@
 import type { Context, Span } from '@opentelemetry/api'
-import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
+import type { FileSpecification } from '../../runtime/runner/types'
 import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
@@ -88,7 +88,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    const initialisedPools = await Promise.all([...groupedFiles.entries()].map(async ([project, files]) => {
+    const initialisedPools = await Promise.all(Array.from(groupedFiles.entries(), async ([project, files]) => {
       await project._initBrowserProvider()
 
       if (!project.browser) {
@@ -148,7 +148,6 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     const config = project.config.browser
     if (
       !config.headless
-      || !config.fileParallelism
       || !project.browser!.provider.supportsParallelism
     ) {
       return 1
@@ -164,7 +163,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
   return {
     name: 'browser',
     async close() {
-      await Promise.all([...providers].map(provider => provider.close()))
+      await Promise.all(Array.from(providers, provider => provider.close()))
       vitest._browserSessions.sessionIds.clear()
       providers.clear()
       vitest.projects.forEach((project) => {
@@ -264,7 +263,7 @@ class BrowserPool {
       this.project.vitest._browserSessions.sessionIds.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
-      let page = this._traces.$(
+      const page = this._traces.$(
         `vitest.browser.open`,
         {
           context: this._otel.context,
@@ -273,8 +272,7 @@ class BrowserPool {
           },
         },
         () => this.openPage(sessionId, { parallel: workerCount > 1 }),
-      )
-      page = page.then(() => {
+      ).then(() => {
         // start running tests on the page when it's ready
         this.runNextTest(method, sessionId)
       })
@@ -290,6 +288,33 @@ class BrowserPool {
       reject: error => this.reject(error),
       parallel: options.parallel,
     })
+  }
+
+  // stable slot id (1..maxWorkers) assigned to each session/orchestrator on its
+  // first run, exposed to the test runner as both `concurrencyId` and `workerId`.
+  // the id lives on the session, so it is freed when the session disconnects, and
+  // the used set is derived from the live orchestrators, so it stays within maxWorkers
+  private getConcurrencyId(sessionId: string): number {
+    const sessions = this.project.vitest._browserSessions
+    const session = sessions.getSession(sessionId)
+    if (session?.concurrencyId) {
+      return session.concurrencyId
+    }
+    const used = new Set<number>()
+    for (const id of this.orchestrators.keys()) {
+      const concurrencyId = sessions.getSession(id)?.concurrencyId
+      if (concurrencyId) {
+        used.add(concurrencyId)
+      }
+    }
+    let concurrencyId = 1
+    while (used.has(concurrencyId)) {
+      concurrencyId++
+    }
+    if (session) {
+      session.concurrencyId = concurrencyId
+    }
+    return concurrencyId
   }
 
   private getOrchestrator(sessionId: string) {
@@ -324,7 +349,7 @@ class BrowserPool {
 
     if (!file) {
       debug?.('[%s] no more tests to run', sessionId)
-      const isolate = this.project.config.browser.isolate
+      const isolate = this.project.config.isolate
       // we don't need to cleanup testers if isolation is enabled,
       // because cleanup is done at the end of every test
       if (isolate) {
@@ -348,6 +373,12 @@ class BrowserPool {
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
 
+    // warm the transform cache while the iframe is booting so the test
+    // file import doesn't wait for the transform; mirrors the URL the
+    // tester will request (see `importFile` in the browser runner)
+    const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(/\/+/g, '/')
+    void this.project.vite.transformRequest(fileUrl).catch(() => {})
+
     this.setBreakpoint(sessionId, file.filepath).then(() => {
       // this starts running tests inside the orchestrator
       const testersPromise = this._traces.$(
@@ -359,6 +390,7 @@ class BrowserPool {
           },
         },
         async () => {
+          const concurrencyId = this.getConcurrencyId(sessionId)
           return orchestrator.createTesters(
             {
               method,
@@ -367,6 +399,10 @@ class BrowserPool {
               // so we need to stringify it first to avoid double serialization
               providedContext: this._providedContext || '[{}]',
               otelCarrier: this._traces.getContextCarrier(),
+              concurrencyId,
+              // in the browser there is a single tab per orchestrator,
+              // so the worker id matches the concurrency slot
+              workerId: concurrencyId,
             },
           )
         },

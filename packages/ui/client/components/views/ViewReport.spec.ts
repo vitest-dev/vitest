@@ -1,6 +1,5 @@
-import type { RunnerTestFile } from 'vitest'
 import { faker } from '@faker-js/faker'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, TestRunner } from 'vitest'
 import { config } from '~/composables/client'
 import { page, render } from '~/test'
 import ViewReport from './ViewReport.vue'
@@ -42,23 +41,16 @@ const error = {
   diff,
 }
 
-const fileWithTextStacks: RunnerTestFile = {
-  id: 'f-1',
-  name: 'test/plain-stack-trace.ts',
-  type: 'suite',
-  mode: 'run',
-  filepath: 'test/plain-stack-trace.ts',
-  fullName: 'test/plain-stack-trace.ts',
-  meta: {},
-  result: {
-    state: 'fail',
-    errors: [error],
-  },
-  tasks: [],
-  projectName: '',
-  file: null!,
+const fileWithTextStacks = TestRunner.createFileTask(
+  'test/plain-stack-trace.ts',
+  '',
+  '',
+)
+fileWithTextStacks.mode = 'run'
+fileWithTextStacks.result = {
+  state: 'fail',
+  errors: [error],
 }
-fileWithTextStacks.file = fileWithTextStacks
 
 describe.todo('ViewReport', () => {
   describe('RunnerTestFile where stacks are in text', () => {
@@ -93,31 +85,20 @@ describe.todo('ViewReport', () => {
   })
 
   it('test html stack trace without html message', async () => {
-    const file: RunnerTestFile = {
-      id: 'f-1',
-      name: 'test/plain-stack-trace.ts',
-      type: 'suite',
-      mode: 'run',
-      filepath: 'test/plain-stack-trace.ts',
-      fullName: 'test/plain-stack-trace.ts',
-      meta: {},
-      result: {
-        state: 'fail',
-        errors: [
-          {
-            name: 'Do some test',
-            stacks: [],
-            stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
-            message: 'Error: Transform failed with 1 error:',
-            diff,
-          },
-        ],
-      },
-      tasks: [],
-      projectName: '',
-      file: null!,
+    const file = TestRunner.createFileTask('test/plain-stack-trace.ts', '', '')
+    file.mode = 'run'
+    file.result = {
+      state: 'fail',
+      errors: [
+        {
+          name: 'Do some test',
+          stacks: [],
+          stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+          message: 'Error: Transform failed with 1 error:',
+          diff,
+        },
+      ],
     }
-    file.file = file
     const container = await render(ViewReport, {
       props: { file },
     })
@@ -153,31 +134,20 @@ describe.todo('ViewReport', () => {
   })
 
   it('test html stack trace and message', async () => {
-    const file: RunnerTestFile = {
-      id: 'f-1',
-      name: 'test/plain-stack-trace.ts',
-      type: 'suite',
-      mode: 'run',
-      filepath: 'test/plain-stack-trace.ts',
-      fullName: 'test/plain-stack-trace.ts',
-      meta: {},
-      result: {
-        state: 'fail',
-        errors: [
-          {
-            name: 'Do some test',
-            stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
-            stacks: [],
-            message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
-            diff,
-          },
-        ],
-      },
-      tasks: [],
-      projectName: '',
-      file: null!,
+    const file = TestRunner.createFileTask('test/plain-stack-trace.ts', '', '')
+    file.mode = 'run'
+    file.result = {
+      state: 'fail',
+      errors: [
+        {
+          name: 'Do some test',
+          stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+          stacks: [],
+          message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
+          diff,
+        },
+      ],
     }
-    file.file = file
     const container = await render(ViewReport, {
       props: { file },
     })

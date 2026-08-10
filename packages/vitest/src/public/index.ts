@@ -1,3 +1,4 @@
+import type { SerializedConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type {
   ModuleDefinitionDiagnostic,
@@ -37,10 +38,16 @@ export type { VitestUtils } from '../integrations/vi'
 export type {
   Bench,
   BenchCompareOptions,
+  BenchFn,
   BenchFnOptions,
   BenchFromSource,
+  BenchmarkGroup,
+  BenchmarkProvider,
+  BenchOptions,
   BenchRegistration,
+  BenchRegistrationInput,
   BenchResult,
+  BenchRunOptions,
   BenchStorage,
 } from '../runtime/benchmark'
 
@@ -51,53 +58,12 @@ export type {
   SerializedRootConfig,
 } from '../runtime/config'
 
+/** @deprecated use `SerializedConfig` instead */
+export type TestRunnerConfig = SerializedConfig
+
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
 
-export { TestRunner } from '../runtime/runners/test'
-export { assertType } from '../typecheck/assertType'
-
-export type { AssertType } from '../typecheck/assertType'
-export { expectTypeOf } from '../typecheck/expectTypeOf'
-export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
-
-export type { BrowserTesterOptions } from '../types/browser'
-export type {
-  AfterSuiteRunMeta,
-  LabelColor,
-  ModuleGraphData,
-  ParsedStack,
-  ProvidedContext,
-  TestError,
-  UserConsoleLog,
-} from '../types/general'
-
-export type {
-  RunnerRPC,
-  RuntimeRPC,
-} from '../types/rpc'
-
-export type { BrowserUI } from '../types/ui'
-
-export type {
-  ContextRPC,
-  ContextTestEnvironment,
-  TestExecutionMethod,
-  WorkerGlobalState,
-} from '../types/worker'
-export type {
-  Assertion,
-  AsymmetricMatchersContaining,
-  AsyncExpectationResult as AsyncMatcherResult,
-  DeeplyAllowMatchers,
-  ExpectStatic,
-  JestAssertion,
-  RawMatcherFn as Matcher,
-  ExpectationResult as MatcherResult,
-  Matchers,
-  MatchersObject,
-  MatcherState,
-  SyncExpectationResult as SyncMatcherResult,
-} from '@vitest/expect'
+export { recordArtifact } from '../runtime/runner/artifact'
 export {
   afterAll,
   afterEach,
@@ -105,16 +71,19 @@ export {
   aroundEach,
   beforeAll,
   beforeEach,
-  describe,
-  it,
   onTestFailed,
   onTestFinished,
-  recordArtifact,
+} from '../runtime/runner/hooks'
+export {
+  describe,
+  it,
   suite,
   test,
-} from '@vitest/runner'
+} from '../runtime/runner/suite'
 export type {
   BaselineData,
+  BrowserTraceArtifact,
+  FailureScreenshotArtifact,
   ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
@@ -147,14 +116,59 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
-  VitestRunnerConfig as TestRunnerConfig,
   TestTagDefinition,
-
   TestTags,
-  VitestRunner as VitestTestRunner,
-} from '@vitest/runner'
+  TestTryOptions,
 
-export type { CancelReason } from '@vitest/runner'
+  VisualRegressionArtifact,
+} from '../runtime/runner/types'
+
+export type { CancelReason, VitestRunner as VitestTestRunner } from '../runtime/runner/types'
+export { TestRunner } from '../runtime/runners/test'
+export { assertType } from '../typecheck/assertType'
+
+export type { AssertType } from '../typecheck/assertType'
+export { expectTypeOf } from '../typecheck/expectTypeOf'
+
+export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
+
+export type { BrowserTesterOptions } from '../types/browser'
+
+export type {
+  AfterSuiteRunMeta,
+  LabelColor,
+  ModuleGraphData,
+  ParsedStack,
+  ProvidedContext,
+  TestError,
+  UserConsoleLog,
+} from '../types/general'
+export type {
+  RunnerRPC,
+  RuntimeRPC,
+} from '../types/rpc'
+export type { BrowserUI } from '../types/ui'
+export type {
+  ContextRPC,
+  ContextTestEnvironment,
+  TestExecutionMethod,
+  WorkerGlobalState,
+} from '../types/worker'
+
+export type {
+  Assertion,
+  AsymmetricMatchersContaining,
+  AsyncExpectationResult as AsyncMatcherResult,
+  DeeplyAllowMatchers,
+  ExpectStatic,
+  JestAssertion,
+  RawMatcherFn as Matcher,
+  ExpectationResult as MatcherResult,
+  Matchers,
+  MatchersObject,
+  MatcherState,
+  SyncExpectationResult as SyncMatcherResult,
+} from '@vitest/expect'
 
 export type {
   DomainMatchResult,

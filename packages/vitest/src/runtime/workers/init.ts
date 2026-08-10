@@ -1,13 +1,45 @@
-import type { FileSpecification } from '@vitest/runner'
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
-import type { WorkerSetupContext } from '../../types/worker'
+import type { MetaEnv, WorkerSetupContext } from '../../types/worker'
+import type { FileSpecification } from '../runner/types'
 import type { VitestWorker } from './types'
+// default import: `flushCompileCache` only exists since Node 22.10, a named
+// import would fail to link on older versions
+import Module from 'node:module'
 import { serializeError } from '@vitest/utils/error'
 import { disableDefaultColors } from 'tinyrainbow'
 import { Traces } from '../../utils/traces'
 import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
+
+function createImportMetaEnvProxy(): MetaEnv {
+  const booleanKeys = ['DEV', 'PROD', 'SSR']
+  return new Proxy(process.env, {
+    get(_, key) {
+      if (typeof key !== 'string') {
+        return undefined
+      }
+      if (booleanKeys.includes(key)) {
+        return !!process.env[key]
+      }
+      return process.env[key]
+    },
+    set(_, key, value) {
+      if (typeof key !== 'string') {
+        return true
+      }
+      if (booleanKeys.includes(key)) {
+        process.env[key] = value ? '1' : ''
+      }
+      else {
+        process.env[key] = value
+      }
+      return true
+    },
+  }) as MetaEnv
+}
+
+const importMetaEnvProxy = createImportMetaEnvProxy()
 
 interface Options extends VitestWorker {
   teardown?: () => void
@@ -16,6 +48,27 @@ interface Options extends VitestWorker {
 const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
+
+// In worker threads stdio is proxied to the parent over a MessagePort with a
+// backpressure protocol: a chunk stays buffered inside the worker until the
+// parent acks the previous one. The pool starts `runner.stop()` as soon as it
+// receives `testfileFinished`, and `thread.terminate()` halts the worker before
+// buffered chunks are ever posted, losing output. An empty write's callback
+// only fires after every previously buffered chunk has been acked, so awaiting
+// it before signaling completion guarantees the output reached the parent.
+// A cheap no-op for forks, where stdio goes through OS pipes.
+function flushStdio(): Promise<unknown> {
+  const flush = (stream: NodeJS.WriteStream) =>
+    new Promise((resolve) => {
+      try {
+        stream.write('', () => resolve(undefined))
+      }
+      catch {
+        resolve(undefined)
+      }
+    })
+  return Promise.all([flush(process.stdout), flush(process.stderr)])
+}
 
 let traces!: Traces
 
@@ -30,6 +83,7 @@ export function init(worker: Options): void {
   let isRunning = false
   let workerTeardown: (() => Promise<unknown>) | undefined | void
   let setupContext!: WorkerSetupContext
+  let poolId!: number
 
   function send(response: WorkerResponse) {
     worker.post(worker.serialize ? worker.serialize(response) : response)
@@ -49,6 +103,7 @@ export function init(worker: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.workerId)
         reportMemory = message.options.reportMemory
+        poolId = message.poolId
 
         if (message.context.config.disableColors) {
           disableDefaultColors()
@@ -72,6 +127,7 @@ export function init(worker: Options): void {
             config,
             pool,
             rpc,
+            metaEnv: importMetaEnvProxy,
             projectName: config.name || '',
             traces,
           }
@@ -128,10 +184,12 @@ export function init(worker: Options): void {
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.run({ ...setupContext, ...message.context }, worker, traces)
+            () => entrypoint.run({ ...setupContext, ...message.context, concurrencyId: poolId }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
+
+          await flushStdio()
 
           send({
             type: 'testfileFinished',
@@ -186,10 +244,12 @@ export function init(worker: Options): void {
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.collect({ ...setupContext, ...message.context }, worker, traces)
+            () => entrypoint.collect({ ...setupContext, ...message.context, concurrencyId: poolId }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
+
+          await flushStdio()
 
           send({
             type: 'testfileFinished',
@@ -209,6 +269,20 @@ export function init(worker: Options): void {
       case 'stop': {
         await runPromise
 
+        // Persist this worker's compile cache before the parent tears the
+        // worker down — forks are SIGTERM'd and never reach Node's exit-time
+        // flush, so without this the cache stays write-only for them. Runs
+        // even when teardown throws (the compiled modules are still worth
+        // persisting). A no-op when the cache is disabled or was fully loaded
+        // from disk, and cheap (~tens of ms) otherwise, so every worker can
+        // afford it.
+        const persistCompileCache = () => {
+          try {
+            Module.flushCompileCache?.()
+          }
+          catch {}
+        }
+
         try {
           const context = traces.getContextFromCarrier(message.otelCarrier)
 
@@ -224,9 +298,17 @@ export function init(worker: Options): void {
 
           await traces.finish()
 
+          persistCompileCache()
+
+          await flushStdio()
+
           send({ type: 'stopped', error, __vitest_worker_response__ })
         }
         catch (error) {
+          persistCompileCache()
+
+          await flushStdio()
+
           send({ type: 'stopped', error: serializeError(error), __vitest_worker_response__ })
         }
 

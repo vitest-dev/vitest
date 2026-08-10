@@ -1,17 +1,16 @@
-import type { VitestRunner } from '@vitest/runner'
 import type { Ivya } from 'ivya'
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, VitestTestRunner, WorkerGlobalState } from 'vitest'
 import type { OTELCarrier, Traces } from 'vitest/internal/traces'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
 import type { BrowserTraceAttempt } from './tester/trace'
 
-export async function importId(id: string): Promise<any> {
+async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export async function importFs(id: string): Promise<any> {
+async function importFs(id: string): Promise<any> {
   const name = `/@fs/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
@@ -80,7 +79,7 @@ export interface BrowserRunnerState {
   runningFiles: string[]
   config: SerializedConfig
   provider: string
-  runner: VitestRunner
+  runner: VitestTestRunner
   viteConfig: {
     root: string
   }

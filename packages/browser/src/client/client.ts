@@ -1,6 +1,6 @@
 import type { ModuleMocker } from '@vitest/mocker/browser'
-import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
+import type { CancelReason } from 'vitest'
 import type { MarkOptions } from 'vitest/browser'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
@@ -23,8 +23,14 @@ export const ENTRY_URL: string = `${
 
 const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
 
-export function onCancel(callback: (reason: CancelReason) => void): void {
+export function onCancel(callback: (reason: CancelReason) => void): () => void {
   onCancelCallbacks.push(callback)
+  return () => {
+    const index = onCancelCallbacks.indexOf(callback)
+    if (index !== -1) {
+      onCancelCallbacks.splice(index, 1)
+    }
+  }
 }
 
 let pageMarkHandler: ((name: string, options?: MarkOptions) => Promise<void>) | null = null

@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import type { TaskPopulated, Test } from '@vitest/runner'
+import type { TaskPopulated, Test } from '../../runtime/runner/types'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
@@ -9,7 +9,7 @@ import {
   GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest } from '@vitest/runner'
+import { getCurrentTest } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
 import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'

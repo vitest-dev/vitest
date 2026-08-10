@@ -152,6 +152,10 @@ To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to y
 
 Reference to [`examples/in-source-test`](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) for the full example.
 
+::: warning
+There is a limitation when using [assertion functions](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#assertion-functions) such as `assert` in in-source tests. See [`assert`](/api/assert#in-source-testing) for details and workarounds.
+:::
+
 ## Notes
 
 This feature could be useful for:

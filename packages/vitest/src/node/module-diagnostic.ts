@@ -1,5 +1,5 @@
-import type { ImportDuration } from '@vitest/runner'
 import type { EnvironmentModuleGraph, TransformResult } from 'vite'
+import type { ImportDuration } from '../runtime/runner/types'
 import type {
   ModuleDefinitionDiagnostic,
   ModuleDefinitionDurationsDiagnostic,

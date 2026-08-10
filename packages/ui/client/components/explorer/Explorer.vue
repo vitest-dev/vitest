@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import { hideAllPoppers } from 'floating-vue'
 import { computed, ref } from 'vue'
 
-// @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
 import { availableProjects, config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'

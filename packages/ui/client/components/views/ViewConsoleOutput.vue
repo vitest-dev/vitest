@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { getNames } from '@vitest/runner/utils'
 import { computed } from 'vue'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
+import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import ViewConsoleOutputEntry from './ViewConsoleOutputEntry.vue'
 
 const formattedLogs = computed(() => {

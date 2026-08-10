@@ -1,6 +1,6 @@
-import type { File } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
+import type { File } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
@@ -59,12 +59,6 @@ export class BlobReporter implements Reporter {
           environment,
         )
       })
-
-      if (project.browser?.vite.environments.client) {
-        serializedProject.browser = serializeEnvironmentModuleGraph(
-          project.browser.vite.environments.client,
-        )
-      }
 
       for (const [id, value] of project._resolver.externalizeCache.entries()) {
         if (typeof value === 'string') {
@@ -169,12 +163,6 @@ export async function readBlobs(
     projectsArray.map(p => [p.name, p]),
   )
 
-  for (const project of projectsArray) {
-    if (project.isBrowserEnabled()) {
-      await project._initBrowserServer()
-    }
-  }
-
   blobs.forEach((blob) => {
     Object.entries(blob.environmentModules).forEach(([projectName, modulesByProject]) => {
       const project = projects[projectName]
@@ -190,12 +178,6 @@ export async function readBlobs(
         const environment = project.vite.environments[environmentName]
         deserializeEnvironmentModuleGraph(environment, moduleGraph)
       })
-
-      const browserModuleGraph = modulesByProject.browser
-      if (browserModuleGraph) {
-        const browserEnvironment = project.browser!.vite.environments.client
-        deserializeEnvironmentModuleGraph(browserEnvironment, browserModuleGraph)
-      }
     })
   })
 
@@ -239,7 +221,6 @@ interface MergeReportEnvironmentModules {
     environments: {
       [environmentName: string]: SerializedEnvironmentModuleGraph
     }
-    browser?: SerializedEnvironmentModuleGraph
     external: [id: string, externalized: string][]
   }
 }

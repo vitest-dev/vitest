@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { RunnerTask as Task } from 'vitest'
 import type { BrowserTraceEntryKind } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
@@ -15,10 +15,10 @@ export interface BrowserTraceData {
 }
 
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
-export type BrowserTraceEntryRangePhase = 'start' | 'end'
-export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
+type BrowserTraceEntryRangePhase = 'start' | 'end'
+type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
 
-export interface BrowserTraceEntryRange {
+interface BrowserTraceEntryRange {
   id: string
   phase: BrowserTraceEntryRangePhase
 }

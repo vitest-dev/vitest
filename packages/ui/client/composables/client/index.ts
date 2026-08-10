@@ -9,11 +9,11 @@ import type {
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
 import type { VitestClient } from './ws'
-import { createFileTask, getTasks } from '@vitest/runner/utils'
 import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 import { isSuite as isTaskSuite } from '~/utils/task'
+import { createFileTask, getTasks } from '../../../../vitest/src/utils/tasks'
 import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
@@ -22,7 +22,7 @@ import { testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
 
-export { ENTRY_URL, HOST, isReport, PORT } from '../../constants'
+export { isReport } from '../../constants'
 
 export const client: VitestClient = (function createVitestClient() {
   if (isReport) {
@@ -69,7 +69,7 @@ export const client: VitestClient = (function createVitestClient() {
 })()
 
 export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
-export const status = ref<WebSocketStatus>('CONNECTING')
+const status = ref<WebSocketStatus>('CONNECTING')
 export const availableProjects = shallowRef<string[]>([])
 
 export const current = computed(() => {
@@ -147,12 +147,6 @@ export function runTask(task: RunnerTask) {
   explorerTree.startRun()
 
   return client.rpc.rerunTask(task.id)
-}
-
-export function runCurrent() {
-  if (current.value) {
-    return runFiles([current.value])
-  }
 }
 
 // @ts-expect-error not typed global

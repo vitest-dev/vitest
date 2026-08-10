@@ -1,4 +1,4 @@
-import type { File } from '@vitest/runner/types'
+import type { RunnerTestFile } from 'vitest'
 import type { TestModule } from 'vitest/node'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
@@ -19,7 +19,7 @@ test('hello world')
   })
   const file = fs.resolveFile('./source.test.js')
 
-  const testFile = ctx!.state.filesMap.get(file) as File[] | undefined
+  const testFile = ctx!.state.filesMap.get(file) as RunnerTestFile[] | undefined
   const testModule = testFile?.length ? ctx!.state.getReportedEntity(testFile[0]) as TestModule : undefined
   const diagnostic = await ctx!.experimental_getSourceModuleDiagnostic(file, testModule)
   expect(diagnostic).toBeDefined()

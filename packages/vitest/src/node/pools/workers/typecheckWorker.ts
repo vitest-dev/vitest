@@ -1,14 +1,14 @@
-import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils'
+import type { FileSpecification } from '../../../runtime/runner/types'
 import type { TypecheckResults } from '../../../typecheck/typechecker'
 import type { Vitest } from '../../core'
 import type { TestProject } from '../../project'
 import type { TestRunEndReason } from '../../types/reporter'
 import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from '../types'
 import EventEmitter from 'node:events'
-import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils/helpers'
 import { Typechecker } from '../../../typecheck/typechecker'
+import { hasFailed } from '../../../utils/tasks'
 
 /** @experimental */
 export class TypecheckPoolWorker implements PoolWorker {
@@ -46,7 +46,7 @@ export class TypecheckPoolWorker implements PoolWorker {
   }
 
   off(event: string, callback: (arg: any) => any): void {
-    this._eventEmitter.on(event, callback)
+    this._eventEmitter.off(event, callback)
   }
 
   deserialize(data: unknown): unknown {
@@ -119,11 +119,44 @@ function createRunner(vitest: Vitest) {
       )
     }
 
-    const processError = !hasFailed(files) && !sourceErrors.length && checker.getExitCode()
-    if (processError) {
-      const error = new Error(checker.getOutput())
-      error.stack = ''
-      vitest.state.catchError(error, 'Typecheck Error')
+    // The typechecker child process (tsc/vue-tsc) can terminate without producing
+    // a complete set of diagnostics: a non-zero exit code, or being killed by a
+    // signal (e.g. SIGABRT from an out-of-memory abort, which surfaces as exit
+    // 134). We must not report the run as passing in that case, otherwise real
+    // type errors slip through as a false green.
+    if (!hasFailed(files) && !sourceErrors.length) {
+      const exitCode = checker.getExitCode()
+      const signal = checker.getSignal()
+
+      if (exitCode || signal) {
+        const output = checker.getOutput()
+        const looksLikeOom = signal === 'SIGABRT'
+          || /JavaScript heap out of memory|Reached heap limit|Allocation failed/i.test(output)
+
+        let message: string
+        if (signal || looksLikeOom) {
+          const reason = signal
+            ? `was terminated by signal ${signal}`
+            : `exited with code ${exitCode}`
+          message = `The ${checker.getChecker()} process ${reason} before type checking finished.`
+          if (looksLikeOom) {
+            message += ` This usually means it ran out of memory — try increasing the `
+              + `limit with NODE_OPTIONS=--max-old-space-size.`
+          }
+          if (output) {
+            message += `\n\n${output}`
+          }
+        }
+        else {
+          // a plain non-zero exit with diagnostics we couldn't attribute to a
+          // file (e.g. a tsconfig error) — surface the checker output as-is
+          message = output
+        }
+
+        const error = new Error(message)
+        error.stack = ''
+        vitest.state.catchError(error, 'Typecheck Error')
+      }
     }
 
     promisesMap.get(project)?.resolve()

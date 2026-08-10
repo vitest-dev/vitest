@@ -11,7 +11,7 @@
     "@jridgewell/remapping": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "istanbul-lib-coverage": "catalog:",
-    "jsdom": "latest",
+    "jsdom": "^29.1.1",
     "vitest": "workspace:*"
   }
 }

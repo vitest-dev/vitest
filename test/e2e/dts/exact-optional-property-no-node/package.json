@@ -6,7 +6,6 @@
     "test": "tsc -b"
   },
   "devDependencies": {
-    "@vitest/runner": "workspace:*",
     "vitest": "workspace:*"
   }
 }

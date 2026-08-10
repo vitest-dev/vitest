@@ -1,4 +1,4 @@
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type { Params } from './params'
 import { useLocalStorage, watchOnce } from '@vueuse/core'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
@@ -12,7 +12,7 @@ export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
 export const coverageVisible = ref(false)
 export const disableCoverage = ref(true)
-export const coverage = computed(() => config.value?.coverage)
+const coverage = computed(() => config.value?.coverage)
 export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
   return (

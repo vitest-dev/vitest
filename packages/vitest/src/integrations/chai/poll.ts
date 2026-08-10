@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
-import type { Test } from '@vitest/runner'
+import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
@@ -36,9 +36,7 @@ const unsupported = [
  * @throws Always throws the provided error with an amended stack trace
  */
 function throwWithCause(error: any, source: Error) {
-  if (error.cause == null) {
-    error.cause = new Error('Matcher did not succeed in time.')
-  }
+  error.cause ??= new Error('Matcher did not succeed in time.')
 
   throw copyStackTrace(
     error,

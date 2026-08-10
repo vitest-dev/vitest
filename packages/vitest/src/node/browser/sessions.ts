@@ -28,7 +28,7 @@ export class BrowserSessions {
     let isReady = false
     const timeout = setTimeout(() => {
       defer.reject(new Error(`Failed to connect to the browser session "${sessionId}" [${project.name}] within the timeout.`))
-    }, project.vitest.config.browser.connectTimeout ?? 60_000).unref()
+    }, project.config.browser.connectTimeout ?? 60_000).unref()
 
     const resolveIfReady = () => {
       if (!isConnected || !isReady) {
@@ -41,6 +41,8 @@ export class BrowserSessions {
     this.sessions.set(sessionId, {
       project,
       otelCarrier: options?.otelCarrier,
+      // assigned by the pool on the session's first run, freed when it disconnects
+      concurrencyId: 0,
       connected: () => {
         isConnected = true
         resolveIfReady()

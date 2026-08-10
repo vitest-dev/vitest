@@ -1,4 +1,4 @@
-import axios from 'axios'
+import httpClient from 'http-client'
 import { describe, expect, it, test, vi } from 'vitest'
 import * as example from '../../src/mocks/example'
 import logger from '../../src/mocks/log'
@@ -36,7 +36,7 @@ vi.mock('../../src/mocks/moduleB', async (importOriginal) => {
   }
 })
 
-vi.mock('axios', () => {
+vi.mock('http-client', () => {
   return {
     default: {
       get: vi.fn(),
@@ -89,10 +89,10 @@ describe('mocking with factory', () => {
     expect((moduleB as any).C).toBe('addedC')
   })
 
-  test('mocks node_modules', () => {
-    axios.get('./path')
+  test('mocks external package', () => {
+    httpClient.get('./path')
 
-    expect(axios.get).toHaveBeenCalledTimes(1)
+    expect(httpClient.get).toHaveBeenCalledTimes(1)
   })
 
   test('logger extended', () => {

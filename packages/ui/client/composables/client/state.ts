@@ -8,9 +8,9 @@ import type {
 } from 'vitest'
 import type { Ref } from 'vue'
 import type { RunState } from '../../../types'
-import { createFileTask } from '@vitest/runner/utils'
 import { computed, ref } from 'vue'
 import { config } from '.'
+import { createFileTask } from '../../../../vitest/src/utils/tasks'
 
 export const testRunState: Ref<RunState> = ref('idle')
 export const finished = computed(() => testRunState.value === 'idle')

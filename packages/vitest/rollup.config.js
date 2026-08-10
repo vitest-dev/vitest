@@ -29,6 +29,9 @@ const entries = {
   'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
   'traces': 'src/utils/traces.ts',
 
+  // just so that we have a separate chunk, this is not a public api
+  'task-utils': 'src/utils/tasks.ts',
+
   // for performance reasons we bundle them separately so we don't import everything at once
   // 'worker': 'src/runtime/worker.ts',
   'workers/forks': 'src/runtime/workers/forks.ts',
@@ -68,12 +71,6 @@ const external = [
   'vitest/optional-types.js',
   'vitest/browser',
   'vite/module-runner',
-  '@vitest/utils/diff',
-  '@vitest/utils/error',
-  '@vitest/utils/source-map',
-  '@vitest/runner/utils',
-  '@vitest/runner/types',
-  /@vitest\/utils\/\w+/,
   /@vitest\/mocker\/\w+/,
 
   '#module-evaluator',
@@ -115,6 +112,17 @@ export default ({ watch }) =>
         dir: 'dist',
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].js',
+        manualChunks(id) {
+          // `tinyrainbow`'s default export is a single mutable color object whose
+          // `isColorSupported` flag and formatters are toggled at runtime (e.g.
+          // `disableDefaultColors()`). If it is inlined into several chunks each
+          // copy has its own object, so disabling colors on one no longer affects
+          // the others. Pin it to ONE shared chunk so every consumer in a process
+          // mutates the same instance.
+          if (/[\\/]tinyrainbow[\\/]/.test(id)) {
+            return 'tinyrainbow'
+          }
+        },
       },
       external,
       moduleContext: (id) => {
@@ -152,7 +160,17 @@ export default ({ watch }) =>
       },
       watch: false,
       external,
-      plugins: dtsUtils.dts(),
+      plugins: [
+        ...dtsUtils.dts(),
+        {
+          name: 'vitest-bundle-optional-types',
+          resolveId(source) {
+            if (source === '@vitest/spy/optional-types.js') {
+              return 'vitest/optional-runtime-types.js'
+            }
+          },
+        },
+      ],
     },
   ])
 

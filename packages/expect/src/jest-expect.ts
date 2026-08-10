@@ -1,6 +1,6 @@
-import type { Test } from '@vitest/runner'
 import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
+import type { Test } from '../../vitest/src/runtime/runner/types'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'

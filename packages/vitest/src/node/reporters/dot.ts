@@ -1,6 +1,6 @@
-import type { Test } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { Writable } from 'node:stream'
+import type { Test } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { TestRunEndReason } from '../types/reporter'

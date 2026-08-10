@@ -1,6 +1,5 @@
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../types/worker'
-import { getSafeTimers } from '@vitest/utils/timers'
 
 const NAME_WORKER_STATE = '__vitest_worker__'
 
@@ -42,7 +41,7 @@ export function provideWorkerState(context: any, state: WorkerGlobalState): Work
 
 export function getCurrentEnvironment(): string {
   const state = getWorkerState()
-  return state?.environment.name
+  return state.environment.name
 }
 
 export function isChildProcess(): boolean {
@@ -70,26 +69,4 @@ export function resetModules(modules: EvaluatedModules, resetMocks = false): voi
     node.evaluated = false
     node.importers.clear()
   })
-}
-
-function waitNextTick() {
-  const { setTimeout } = getSafeTimers()
-  return new Promise(resolve => setTimeout(resolve, 0))
-}
-
-export async function waitForImportsToResolve(): Promise<void> {
-  await waitNextTick()
-  const state = getWorkerState()
-  const promises: Promise<unknown>[] = []
-  const resolvingCount = state.resolvingModules.size
-  for (const [_, mod] of state.evaluatedModules.idToModuleMap) {
-    if (mod.promise && !mod.evaluated) {
-      promises.push(mod.promise)
-    }
-  }
-  if (!promises.length && !resolvingCount) {
-    return
-  }
-  await Promise.allSettled(promises)
-  await waitForImportsToResolve()
 }

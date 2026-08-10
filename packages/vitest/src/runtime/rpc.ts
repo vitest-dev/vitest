@@ -1,7 +1,7 @@
-import type { CancelReason } from '@vitest/runner'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types/worker'
+import type { CancelReason } from './runner/types'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { createBirpc } from 'birpc'
 import { getWorkerState } from './utils'
@@ -63,8 +63,14 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
 
 const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
 
-export function onCancel(callback: (reason: CancelReason) => void): void {
+export function onCancel(callback: (reason: CancelReason) => void): () => void {
   onCancelCallbacks.push(callback)
+  return () => {
+    const index = onCancelCallbacks.indexOf(callback)
+    if (index !== -1) {
+      onCancelCallbacks.splice(index, 1)
+    }
+  }
 }
 
 export function createRuntimeRpc(

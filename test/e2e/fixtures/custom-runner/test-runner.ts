@@ -1,4 +1,4 @@
-import type { TestContext } from '@vitest/runner'
+import type { TestContext } from 'vitest'
 import { TestRunner } from 'vitest'
 import { getSuiteNames } from './utils';
 

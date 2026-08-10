@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { Task } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
-import type { RunnerTestFile, TestAnnotation, TestError } from 'vitest'
+import type { RunnerTestFile, RunnerTask as Task, TestAnnotation, TestError } from 'vitest'
 import { until, useResizeObserver, watchDebounced } from '@vueuse/core'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'

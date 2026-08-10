@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VisualRegressionArtifact } from '@vitest/runner'
+import type { VisualRegressionArtifact } from 'vitest'
 import { computed } from 'vue'
 import ArtifactTemplate from '../ArtifactTemplate.vue'
 import SmallTabs from './SmallTabs.vue'

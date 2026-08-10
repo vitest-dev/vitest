@@ -1,6 +1,6 @@
 import type { RunnerTestCase } from 'vitest'
 import type { PoolWorker, PoolRunnerInitializer, TestProject, Vitest, WorkerRequest, WorkerResponse, PoolOptions } from 'vitest/node'
-import { createFileTask } from '@vitest/runner/utils'
+import { createFileTask } from '../../../../../packages/vitest/src/utils/tasks'
 import { normalize } from 'pathe'
 import EventEmitter from 'node:events';
 

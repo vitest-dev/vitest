@@ -1,5 +1,4 @@
-import type { File, TaskResultPack, TestArtifact } from '@vitest/runner'
-import type { RunnerTaskEventPack } from 'vitest'
+import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,

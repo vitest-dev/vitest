@@ -1,10 +1,11 @@
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type { FileTreeNode, Filter, FilteredTests, SortUIType, TreeFilterState, UITaskTreeNode } from './types'
-import { createTagsFilter } from '@vitest/runner/utils'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, reactive, ref, shallowRef } from 'vue'
 import { availableProjects } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
+// importing from the source because we need to bundle it
+import { createTagsFilter } from '../../../../vitest/src/runtime/runner/utils/tags'
 import { config } from '../client'
 import { explorerTree } from './index'
 

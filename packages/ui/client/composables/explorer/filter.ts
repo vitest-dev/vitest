@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { RunnerTask as Task } from 'vitest'
 import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { client, config, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'

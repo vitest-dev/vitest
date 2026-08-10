@@ -1,5 +1,4 @@
-import type { Task, TestArtifactLocation } from '@vitest/runner'
-import type { RunnerTestCase } from 'vitest'
+import type { RunnerTestCase, RunnerTask as Task, TestArtifactLocation } from 'vitest'
 import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
 

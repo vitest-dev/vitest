@@ -1,9 +1,8 @@
-import { getCurrentTest } from '@vitest/runner'
-import { afterAll, expect, test } from 'vitest'
+import { afterAll, expect, test, TestRunner } from 'vitest'
 
 afterAll(() => {
   // verify "current test" resets after "skip"
-  expect(getCurrentTest()).toBeUndefined()
+  expect(TestRunner.getCurrentTest()).toBeUndefined()
 })
 
 test('single skipped test', ({ skip }) => {

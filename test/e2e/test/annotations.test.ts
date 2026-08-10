@@ -1,8 +1,8 @@
-import type { TestArtifact } from '@vitest/runner'
-import type { TestAnnotation } from 'vitest'
-import { readdirSync } from 'node:fs'
+import type { TestAnnotation, TestArtifact } from 'vitest'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
+import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
@@ -372,7 +372,7 @@ describe('reporters', () => {
   })
 
   test('junit reporter prints annotations', async () => {
-    const { stdout } = await runInlineTests(
+    const { root } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
         'test-3.js': test3Content,
@@ -381,7 +381,7 @@ describe('reporters', () => {
       { reporters: ['junit'] },
     )
 
-    const result = stdout
+    const result = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
       .replace(/time="[\d.]+"/g, 'time="0"')
       .replace(/timestamp="[\w\-:.]+"/g, 'timestamp="0"')
       .replace(/hostname="[\w.\-]+"/g, 'hostname="CI"')

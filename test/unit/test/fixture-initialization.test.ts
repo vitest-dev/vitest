@@ -1,4 +1,3 @@
-import type { Use } from '@vitest/runner'
 import { beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {
@@ -141,7 +140,7 @@ describe('fixture initialization', () => {
     const myTest = test
       .extend({ a: 1 })
       .extend({
-        b: async ({ a }, use: Use<number>) => {
+        b: async ({ a }, use: (v: number) => Promise<void>) => {
           expectTypeOf(a).toEqualTypeOf<number>()
           await use(a * 2)
         },
