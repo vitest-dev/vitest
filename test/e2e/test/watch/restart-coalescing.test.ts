@@ -26,4 +26,8 @@ test('basic', () => {
   // the restarted instance is functional: a rerun still works
   await ctx!.rerunFiles()
   expect(vitest.stdout).toContain('RERUN')
+
+  // stop watching before the inline test directory is torn down, otherwise the
+  // watcher stats the removed files and reports an unhandled ENOENT
+  await ctx?.close()
 })
