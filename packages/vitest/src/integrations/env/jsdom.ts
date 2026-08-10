@@ -1,4 +1,4 @@
-import type { DOMWindow, VirtualConsole as IVirtualConsole } from 'jsdom'
+import type { ConstructorOptions, DOMWindow, VirtualConsole as IVirtualConsole } from 'jsdom'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import { URL as NodeURL } from 'node:url'
@@ -40,6 +40,34 @@ let NodeFormData_!: typeof FormData
 let NodeBlob_!: typeof Blob
 let NodeRequest_!: typeof Request
 
+interface LegacyResourceLoader {
+  new (options?: { userAgent?: string }): NonNullable<ConstructorOptions['resources']>
+}
+
+function getResourceOptions(
+  jsdom: typeof import('jsdom'),
+  resources: JSDOMOptions['resources'],
+  userAgent: string | undefined,
+) {
+  const ResourceLoader = (jsdom as typeof jsdom & {
+    ResourceLoader?: LegacyResourceLoader
+  }).ResourceLoader
+
+  // jsdom 28 replaced ResourceLoader with a resources options object.
+  if (!ResourceLoader) {
+    return {
+      resources: userAgent ? { userAgent } : resources,
+    }
+  }
+
+  return {
+    resources:
+      resources
+      ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
+    userAgent,
+  }
+}
+
 export default <Environment>{
   name: 'jsdom',
   viteEnvironment: 'client',
@@ -49,9 +77,8 @@ export default <Environment>{
     NodeBlob_ = globalThis.Blob
     NodeRequest_ = globalThis.Request
 
-    const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
-      'jsdom',
-    )
+    const jsdomModule = await import('jsdom')
+    const { CookieJar, JSDOM, VirtualConsole } = jsdomModule
     const {
       html = '<!DOCTYPE html>',
       userAgent,
@@ -79,16 +106,13 @@ export default <Environment>{
     }
     let dom = new JSDOM(html, {
       pretendToBeVisual,
-      resources:
-        resources
-        ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
       runScripts,
       url,
       virtualConsole,
       cookieJar: cookieJar ? new CookieJar() : undefined,
       includeNodeLocations,
       contentType,
-      userAgent,
+      ...getResourceOptions(jsdomModule, resources, userAgent),
       ...restOptions,
     })
 
@@ -162,9 +186,8 @@ export default <Environment>{
     NodeBlob_ = globalThis.Blob
     NodeRequest_ = globalThis.Request
 
-    const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
-      'jsdom',
-    )
+    const jsdomModule = await import('jsdom')
+    const { CookieJar, JSDOM, VirtualConsole } = jsdomModule
     const {
       html = '<!DOCTYPE html>',
       userAgent,
@@ -192,16 +215,13 @@ export default <Environment>{
     }
     const dom = new JSDOM(html, {
       pretendToBeVisual,
-      resources:
-        resources
-        ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
       runScripts,
       url,
       virtualConsole,
       cookieJar: cookieJar ? new CookieJar() : undefined,
       includeNodeLocations,
       contentType,
-      userAgent,
+      ...getResourceOptions(jsdomModule, resources, userAgent),
       ...restOptions,
     })
 
@@ -225,7 +245,7 @@ export default <Environment>{
         dom.window.close()
         delete global.jsdom
         keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => (global[k] = v))
+        originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }
   },

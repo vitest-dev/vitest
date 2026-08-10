@@ -1,5 +1,11 @@
 import { expect, test, vi } from 'vitest'
 
+declare module 'vitest' {
+  interface Matchers<R> {
+    toBePollCompatible: () => R
+  }
+}
+
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
   await expect.poll(() => false).not.toBe(true)
@@ -38,7 +44,7 @@ test('timeout', async () => {
     await expect.poll(() => false, { timeout: 100, interval: 10 }).toBe(true)
   }).rejects.toThrow(expect.objectContaining({
     message: 'expected false to be true // Object.is equality',
-    stack: expect.stringContaining('expect-poll.test.ts:38:68'),
+    stack: expect.stringContaining('expect-poll.test.ts:44:68'),
     cause: expect.objectContaining({
       message: 'Matcher did not succeed in time.',
     }),
@@ -85,7 +91,7 @@ test('custom matcher works correctly', async () => {
   const fn = vi.fn()
   let idx = 0
   expect.extend({
-    toBeJestCompatible() {
+    toBePollCompatible() {
       idx++
       fn({ poll: this.poll })
       return {
@@ -94,7 +100,7 @@ test('custom matcher works correctly', async () => {
       }
     },
   })
-  await expect.poll(() => 1, { interval: 10 }).toBeJestCompatible()
+  await expect.poll(() => 1, { interval: 10 }).toBePollCompatible()
   expect(fn).toHaveBeenCalledTimes(3)
   expect(fn).toHaveBeenCalledWith({ poll: true })
 })

@@ -335,7 +335,7 @@ test('leak in project setup', async () => {
 })
 
 async function runInlineTests(...params: Parameters<typeof base>) {
-  const result = await base(params[0], { globals: true, detectAsyncLeaks: true, ...params[1] }, params[2])
+  const result = await base(params[0], { globals: true, detectAsyncLeaks: true, pool: 'forks', ...params[1] }, params[2])
 
   return { ...result, stderr: trimWhitespace(result.stderr) }
 }

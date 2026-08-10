@@ -96,21 +96,7 @@ export function serialize(
   )
 }
 
-export function minify(val: unknown): string {
-  return prettyFormat(val, {
-    escapeRegex,
-    min: true,
-    plugins: getSerializers(),
-    printFunctionName,
-  })
-}
-
-// Remove double quote marks and unescape double quotes and backslashes.
-export function deserializeString(stringified: string): string {
-  return stringified.slice(1, -1).replace(/\\("|\\)/g, '$1')
-}
-
-export function escapeBacktickString(str: string): string {
+function escapeBacktickString(str: string): string {
   return str.replace(/`|\\|\$\{/g, '\\$&')
 }
 
@@ -137,21 +123,6 @@ export async function saveSnapshotFile(
     )
 
   const content = `${environment.getHeader()}\n\n${snapshots.join('\n\n')}\n`
-  const oldContent = await environment.readSnapshotFile(snapshotPath)
-  const skipWriting = oldContent != null && oldContent === content
-
-  if (skipWriting) {
-    return
-  }
-
-  await environment.saveSnapshotFile(snapshotPath, content)
-}
-
-export async function saveSnapshotFileRaw(
-  environment: SnapshotEnvironment,
-  content: string,
-  snapshotPath: string,
-): Promise<void> {
   const oldContent = await environment.readSnapshotFile(snapshotPath)
   const skipWriting = oldContent != null && oldContent === content
 

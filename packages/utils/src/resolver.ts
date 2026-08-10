@@ -1,37 +1,54 @@
 import fs from 'node:fs'
-import { dirname, join } from 'pathe'
+import { basename, dirname, join } from 'pathe'
 
-const packageCache = new Map<string, { type?: 'module' | 'commonjs' }>()
+const packageScopeTypeCache = new Map<string, 'cjs' | 'esm' | 'none'>()
 
-export function findNearestPackageData(
-  basedir: string,
-): { type?: 'module' | 'commonjs' } {
-  const originalBasedir = basedir
-  while (basedir) {
-    const cached = getCachedData(packageCache, basedir, originalBasedir)
+// mirrors LOOKUP_PACKAGE_SCOPE from the ESM resolution algorithm:
+// the lookup stops at the first package.json and never crosses
+// the "node_modules" boundary, so typeless dependencies don't
+// inherit the `type` field of the user's project
+export function lookupPackageScopeType(
+  directory: string,
+): 'cjs' | 'esm' | 'none' {
+  const visited: string[] = []
+  let result: 'cjs' | 'esm' | 'none' = 'none'
+  let current = directory
+  while (current) {
+    const cached = packageScopeTypeCache.get(current)
     if (cached) {
-      return cached
-    }
-
-    const pkgPath = join(basedir, 'package.json')
-    if (tryStatSync(pkgPath)?.isFile()) {
-      const pkgData = JSON.parse(stripBomTag(fs.readFileSync(pkgPath, 'utf8')))
-
-      if (packageCache) {
-        setCacheData(packageCache, pkgData, basedir, originalBasedir)
-      }
-
-      return pkgData
-    }
-
-    const nextBasedir = dirname(basedir)
-    if (nextBasedir === basedir) {
+      result = cached
       break
     }
-    basedir = nextBasedir
+    if (basename(current) === 'node_modules') {
+      break
+    }
+    visited.push(current)
+    const packageJsonPath = join(current, 'package.json')
+    if (tryStatSync(packageJsonPath)?.isFile()) {
+      try {
+        const packageJson = JSON.parse(stripBomTag(fs.readFileSync(packageJsonPath, 'utf8')))
+        if (packageJson.type === 'module') {
+          result = 'esm'
+        }
+        else if (packageJson.type === 'commonjs') {
+          result = 'cjs'
+        }
+      }
+      catch {
+        // ignore malformed package.json and fall back to "none"
+      }
+      break
+    }
+
+    const parent = dirname(current)
+    if (parent === current) {
+      break
+    }
+    current = parent
   }
 
-  return {}
+  visited.forEach(dir => packageScopeTypeCache.set(dir, result))
+  return result
 }
 
 function stripBomTag(content: string): string {
@@ -49,51 +66,5 @@ function tryStatSync(file: string): fs.Stats | undefined {
   }
   catch {
     // Ignore errors
-  }
-}
-
-export function getCachedData<T>(
-  cache: Map<string, T>,
-  basedir: string,
-  originalBasedir: string,
-): NonNullable<T> | undefined {
-  const pkgData = cache.get(getFnpdCacheKey(basedir))
-  if (pkgData) {
-    traverseBetweenDirs(originalBasedir, basedir, (dir) => {
-      cache.set(getFnpdCacheKey(dir), pkgData)
-    })
-    return pkgData
-  }
-}
-
-export function setCacheData<T>(
-  cache: Map<string, T>,
-  data: T,
-  basedir: string,
-  originalBasedir: string,
-): void {
-  cache.set(getFnpdCacheKey(basedir), data)
-  traverseBetweenDirs(originalBasedir, basedir, (dir) => {
-    cache.set(getFnpdCacheKey(dir), data)
-  })
-}
-
-function getFnpdCacheKey(basedir: string) {
-  return `fnpd_${basedir}`
-}
-
-/**
- * Traverse between `longerDir` (inclusive) and `shorterDir` (exclusive) and call `cb` for each dir.
- * @param longerDir Longer dir path, e.g. `/User/foo/bar/baz`
- * @param shorterDir Shorter dir path, e.g. `/User/foo`
- */
-function traverseBetweenDirs(
-  longerDir: string,
-  shorterDir: string,
-  cb: (dir: string) => void,
-) {
-  while (longerDir !== shorterDir) {
-    cb(longerDir)
-    longerDir = dirname(longerDir)
   }
 }

@@ -9,7 +9,7 @@ import type { CompareKeys } from '@vitest/pretty-format'
 import type { DiffOptions, DiffOptionsNormalized } from './types'
 import c from 'tinyrainbow'
 
-export const noColor = (string: string): string => string
+const noColor = (string: string): string => string
 
 const DIFF_CONTEXT_DEFAULT = 5
 const DIFF_TRUNCATE_THRESHOLD_DEFAULT = 0 // not truncate

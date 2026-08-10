@@ -1,13 +1,13 @@
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
-import type { ApiConfig } from '../types/config'
 import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
+import { getCoverageFilesDirectory } from '../../utils/coverage'
 import { isAgent, isForceColor } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
-  const { config, globalConfig } = project
-  const viteConfig = project._vite?.config
+  const { config, globalConfig, viteConfig } = project
   const optimizer = config.deps?.optimizer || {}
 
   return {
@@ -36,14 +36,11 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
-    api: ((api: ApiConfig | undefined) => {
-      return {
-        allowExec: api?.allowExec,
-        allowWrite: api?.allowWrite,
-      }
-    })(project.isBrowserEnabled() ? config.browser.api : config.api),
-    // TODO: non serializable function?
-    diff: config.diff,
+    api: {
+      allowExec: config.api.allowExec,
+      allowWrite: config.api.allowWrite,
+    },
+    diff: serializeDiffOptions(config.diff),
     retry: config.retry,
     repeats: config.repeats,
     disableConsoleIntercept: config.disableConsoleIntercept,
@@ -51,11 +48,14 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     name: config.name,
     color: config.color,
     globals: config.globals,
+    injectCjsGlobals: config.injectCjsGlobals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
+      const reportsDirectory = resolve(globalConfig.root, coverage.reportsDirectory)
       return {
-        reportsDirectory: resolve(globalConfig.root, coverage.reportsDirectory),
+        reportsDirectory,
+        coverageFilesDirectory: getCoverageFilesDirectory(reportsDirectory, globalConfig.shard),
         provider: coverage.provider,
         enabled: coverage.enabled,
         customProviderModule: 'customProviderModule' in coverage
@@ -87,11 +87,13 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         ?? globalConfig.snapshotOptions.expand,
     },
     sequence: {
-      shuffle: globalConfig.sequence.shuffle,
-      concurrent: globalConfig.sequence.concurrent,
+      shuffle: config.sequence.shuffle,
+      concurrent: config.sequence.concurrent,
+      // `seed` and `sequencer` drive cross-project file ordering, so they are
+      // resolved from the root config and shared across all projects.
       seed: globalConfig.sequence.seed,
-      hooks: globalConfig.sequence.hooks,
-      setupFiles: globalConfig.sequence.setupFiles,
+      hooks: config.sequence.hooks,
+      setupFiles: config.sequence.setupFiles,
     },
     inspect: globalConfig.inspect,
     inspectBrk: globalConfig.inspectBrk,
@@ -110,8 +112,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       return {
         name: browser.name,
         headless: browser.headless,
-        isolate: browser.isolate,
-        fileParallelism: browser.fileParallelism,
         ui: browser.ui,
         detailsPanelPosition: browser.detailsPanelPosition ?? 'right',
         viewport: browser.viewport,
@@ -137,6 +137,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     benchmark: {
       enabled: config.benchmark.enabled,
       retainSamples: config.benchmark.retainSamples,
+      provider: config.benchmark.provider,
       suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
       projectName: config.benchmark.projectName,
     },
@@ -144,8 +145,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     serializedDefines: config.browser.enabled
       ? ''
       : project._serializedDefines || '',
+    fsModuleCache: config.fsModuleCache ?? false,
     experimental: {
-      fsModuleCache: config.experimental.fsModuleCache ?? false,
       importDurations: config.experimental.importDurations,
       viteModuleRunner: config.experimental.viteModuleRunner ?? true,
       nodeLoader: config.experimental.nodeLoader ?? true,
@@ -161,4 +162,44 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       ?? configDefaults.slowTestThreshold,
     disableColors: isAgent && !isForceColor(),
   }
+}
+
+const serializableDiffKeys = [
+  'aAnnotation',
+  'aIndicator',
+  'bAnnotation',
+  'bIndicator',
+  'commonIndicator',
+  'contextLines',
+  'emptyFirstOrLastLinePlaceholder',
+  'expand',
+  'includeChangeCounts',
+  'omitAnnotationLines',
+  'printBasicPrototype',
+  'maxDepth',
+  'truncateThreshold',
+  'truncateAnnotation',
+] satisfies (keyof SerializedDiffOptions)[]
+
+// `diff` can be an inline object containing color/compareKeys functions
+// (`DiffOptions`). Those functions are not structured-cloneable (threads pool)
+// and are silently dropped over `child_process` IPC (forks pool), so passing
+// the raw object to workers throws `DataCloneError`. Forward only the
+// serializable fields declared by `SerializedDiffOptions`, and only the ones
+// actually set — explicit `undefined` values would override the diff defaults
+// when the worker merges the options. The function-based options still
+// require the file-path form, which workers import locally.
+function serializeDiffOptions(
+  diff: string | SerializedDiffOptions | undefined,
+): string | SerializedDiffOptions | undefined {
+  if (diff == null || typeof diff === 'string') {
+    return diff
+  }
+  const result: SerializedDiffOptions = {}
+  for (const key of serializableDiffKeys) {
+    if (diff[key] !== undefined) {
+      (result as Record<string, unknown>)[key] = diff[key]
+    }
+  }
+  return result
 }

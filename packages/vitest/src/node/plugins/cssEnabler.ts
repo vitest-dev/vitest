@@ -1,5 +1,5 @@
-import type { Plugin as VitePlugin } from 'vite'
-import type { CSSModuleScopeStrategy, ResolvedConfig } from '../types/config'
+import type { Plugin as VitePlugin, ResolvedConfig as ViteResolvedConfig } from 'vite'
+import type { CSSModuleScopeStrategy } from '../types/config'
 import { toArray } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
 import { generateCssFilenameHash } from '../../integrations/css/css-modules'
@@ -34,11 +34,11 @@ function getCSSModuleProxyReturn(
   return `\`_\${style}_${hash}\``
 }
 
-export function CSSEnablerPlugin(ctx: {
-  config: ResolvedConfig
-}): VitePlugin[] {
+export function CSSEnablerPlugin(): VitePlugin[] {
+  let viteConfig: ViteResolvedConfig
+
   const shouldProcessCSS = (id: string) => {
-    const { css } = ctx.config
+    const { css } = viteConfig.test
     if (typeof css === 'boolean') {
       return css
     }
@@ -55,7 +55,7 @@ export function CSSEnablerPlugin(ctx: {
     {
       name: 'vitest:css-disable',
       enforce: 'pre',
-      transform(code, id) {
+      transform(_code, id) {
         if (!isCSS(id)) {
           return
         }
@@ -69,6 +69,9 @@ export function CSSEnablerPlugin(ctx: {
     {
       name: 'vitest:css-empty-post',
       enforce: 'post',
+      configResolved(config) {
+        viteConfig = config
+      },
       transform(_, id) {
         if (!isCSS(id) || shouldProcessCSS(id)) {
           return
@@ -79,12 +82,12 @@ export function CSSEnablerPlugin(ctx: {
           // styles.foo returns a "foo" instead of "undefined"
           // we don't use code content to generate hash for "scoped", because it's empty
           const scopeStrategy
-            = (typeof ctx.config.css !== 'boolean'
-              && ctx.config.css.modules?.classNameStrategy)
+            = (typeof viteConfig.test.css !== 'boolean'
+              && viteConfig.test.css.modules?.classNameStrategy)
             || 'stable'
           const proxyReturn = getCSSModuleProxyReturn(
             scopeStrategy,
-            relative(ctx.config.root, id),
+            relative(viteConfig.test.root, id),
           )
           const code = `export default new Proxy(Object.create(null), {
             get(_, style) {

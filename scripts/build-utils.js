@@ -12,7 +12,7 @@ export function createDtsUtils({
     /**
      * @returns {import('rollup').Plugin[]} plugins
      */
-    isolatedDecl() {
+    isolatedDecl(options = {}) {
       return [
         isolatedDecl({
           transformer: 'oxc',
@@ -20,6 +20,7 @@ export function createDtsUtils({
           // exclude direct imports to other package sources
           include: path.join(process.cwd(), '**/*.ts'),
           extraOutdir: isolatedDeclDir,
+          ...options,
         }),
         {
           name: 'isolated-decl-dts-extra',

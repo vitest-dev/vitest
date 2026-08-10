@@ -1,3 +1,5 @@
+import type { FetchResult } from 'vite/module-runner'
+
 export type { ParsedStack, TestError } from '@vitest/utils'
 
 export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
@@ -33,6 +35,10 @@ export interface ResolveFunctionResult {
   url: string
 }
 
+export type ModuleType = 'cjs' | 'esm'
+
+export type VitestFetchResult = FetchResult & { moduleType?: ModuleType }
+
 export interface FetchCachedFileSystemResult {
   cached: true
   tmp: string
@@ -40,6 +46,7 @@ export interface FetchCachedFileSystemResult {
   file: string | null
   url: string
   invalidate: boolean
+  moduleType?: ModuleType
 }
 
 // These need to be compatible with Tinyrainbow's bg-colors, and CSS's background-color

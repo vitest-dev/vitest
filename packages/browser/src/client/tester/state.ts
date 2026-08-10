@@ -14,6 +14,7 @@ const state: WorkerGlobalState = {
     concurrencyId: 1,
     config,
     projectName: config.name || '',
+    metaEnv: null as any,
     files: [],
     environment: {
       name: 'browser',
@@ -41,6 +42,7 @@ const state: WorkerGlobalState = {
   durations: {
     environment: 0,
     prepare: performance.now(),
+    fetch: 0,
   },
   providedContext: {},
 }

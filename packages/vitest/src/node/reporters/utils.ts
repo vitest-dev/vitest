@@ -53,7 +53,7 @@ function createReporters(
         else if (reporterName in ReportersMap) {
           const BuiltinReporter
             = ReportersMap[reporterName as BuiltinReporters]
-          return new BuiltinReporter(reporterOptions)
+          return new BuiltinReporter(reporterOptions as any)
         }
         else {
           const CustomReporter = await loadCustomReporterModule(

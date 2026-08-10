@@ -45,7 +45,7 @@ test.describe('html reporter', () => {
       },
       {
         root: linuxRoot,
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
 

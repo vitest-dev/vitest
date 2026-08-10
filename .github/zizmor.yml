@@ -6,3 +6,4 @@ rules:
       # the workflow runs on cron schedule
       - lock-closed-issues.yml
       - issue-close-require.yml
+      - semgrep.yml

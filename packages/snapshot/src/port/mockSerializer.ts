@@ -4,12 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * https://github.com/facebook/jest/blob/4eb4f6a59b6eae0e05b8e51dd8cd3fdca1c7aff1/packages/jest-snapshot/src/mockSerializer.ts#L4
+ * https://github.com/jestjs/jest/blob/4eb4f6a59b6eae0e05b8e51dd8cd3fdca1c7aff1/packages/jest-snapshot/src/mockSerializer.ts#L4
  */
 
 import type { NewPlugin } from '@vitest/pretty-format'
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   val,
   config,
   indentation,
@@ -44,7 +44,7 @@ export const serialize: NewPlugin['serialize'] = (
   return `[MockFunction${nameString}]${callsString}`
 }
 
-export const test: NewPlugin['test'] = val => val && !!val._isMockFunction
+const test: NewPlugin['test'] = val => val && !!val._isMockFunction
 
 const plugin: NewPlugin = { serialize, test }
 

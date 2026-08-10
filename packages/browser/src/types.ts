@@ -6,7 +6,6 @@ import type {
   BrowserTesterOptions,
   CancelReason,
   RunnerTestFile,
-  SerializedTestSpecification,
   SnapshotResult,
   RunnerTaskEventPack as TaskEventPack,
   RunnerTaskResultPack as TaskResultPack,
@@ -67,17 +66,6 @@ export interface WebSocketBrowserHandlers {
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown
   trackCdpEvent: (sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
-}
-
-export type Awaitable<T> = T | PromiseLike<T>
-
-export interface WebSocketEvents {
-  onCollected?: (files: RunnerTestFile[]) => Awaitable<void>
-  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
-  onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
-  onPathsCollected?: (paths?: string[]) => Awaitable<void>
-  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
-  onFinishedReportCoverage: () => void
 }
 
 export interface WebSocketBrowserEvents {

@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 const nodeMajor = Number(process.version.slice(1).split('.')[0])
 

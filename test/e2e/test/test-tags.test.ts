@@ -1,6 +1,6 @@
 import type { TestCase, TestSuite } from 'vitest/node'
-import { runInlineTests, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests, runVitest } from '#test-utils'
 
 test('vitest records tags', async () => {
   const { stderr, buildTree } = await runVitest({

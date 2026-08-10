@@ -16,6 +16,7 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
+import { isWhenChain, when } from './mock/when'
 import { waitFor, waitUntil } from './wait'
 
 type ESModuleExports = Record<string, unknown>
@@ -146,6 +147,9 @@ export interface VitestUtils {
    * ```
    */
   fn: typeof fn
+
+  when: typeof when
+  isWhenChain: typeof isWhenChain
 
   /**
    * Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
@@ -290,9 +294,9 @@ export interface VitestUtils {
    * @example
    * ```ts
    * vi.mock('./example.js', async () => {
-   *  const axios = await vi.importActual<typeof import('./example.js')>('./example.js')
+   *  const original = await vi.importActual<typeof import('./example.js')>('./example.js')
    *
-   *  return { ...axios, get: vi.fn() }
+   *  return { ...original, get: vi.fn() }
    * })
    * ```
    * @param path Path to the module. Can be aliased, if your config supports it
@@ -436,7 +440,7 @@ export interface VitestUtils {
    */
   stubEnv: <T extends string>(
     name: T,
-    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string | undefined,
+    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean | undefined : string | undefined,
   ) => VitestUtils
 
   /**
@@ -610,6 +614,8 @@ function createVitest(): VitestUtils {
 
     spyOn,
     fn,
+    when,
+    isWhenChain,
     waitFor,
     waitUntil,
     defineHelper: (fn) => {
@@ -773,11 +779,11 @@ function createVitest(): VitestUtils {
       if (!_stubsEnv.has(name)) {
         _stubsEnv.set(name, env[name])
       }
-      if (_envBooleans.includes(name)) {
-        env[name] = value ? '1' : ''
-      }
-      else if (value === undefined) {
+      if (value === undefined) {
         delete env[name]
+      }
+      else if (_envBooleans.includes(name)) {
+        env[name] = value ? '1' : ''
       }
       else {
         env[name] = String(value)
