@@ -2,7 +2,7 @@ name: CR
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'v[0-9]*']
   pull_request:
     types: [opened, synchronize, labeled]
   workflow_dispatch:
@@ -10,12 +10,12 @@ on:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   release:
-    if: github.repository == 'vitest-dev/vitest' && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
+    if: github.repository == 'vitest-dev/vitest' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
     runs-on: ubuntu-latest
     name: 'Release: pkg.pr.new'
 
