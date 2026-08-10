@@ -610,9 +610,9 @@ const spy = vi.spyOn(cart, 'Apples')
   })
 ```
 
-Define instance methods as class fields instead of prototype methods. See [Mocking Classes](/guide/mocking/classes) for details.
-
 If you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
+
+With a class implementation, only instance methods defined as class fields are available on the constructed mock, while prototype methods are not. See [Mocking Classes](/guide/mocking/classes) for details.
 
 ::: tip
 In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` instead of `const` to automatically call `mockRestore` on any mocked function when the containing block is exited. This is especially useful for spied methods:
