@@ -413,7 +413,11 @@ test('test.each/for', async () => {
     test.for(["hello", "world"])("toThrowErrorMatchingInlineSnapshot %s", (arg) => {
       expect(() => {
         throw new Error(\`length = \${arg.length}\`);
-      }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
+      }).toThrowErrorMatchingInlineSnapshot(\`
+        Error {
+          "message": "length = 5",
+        }
+      \`)
     });
     "
   `)
@@ -528,32 +532,44 @@ test('test.each/for', async () => {
      FAIL  each.test.ts > toThrowErrorMatchingInlineSnapshot hey
     Error: Snapshot \`toThrowErrorMatchingInlineSnapshot hey 1\` mismatched
 
-    Expected: "[Error: length = 5]"
-    Received: "[Error: length = 3]"
+    - Expected
+    + Received
+
+      Error {
+    -   "message": "length = 5",
+    +   "message": "length = 3",
+      }
 
      ❯ each.test.ts:16:6
          14|   expect(() => {
          15|     throw new Error(\`length = \${arg.length}\`);
-         16|   }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
+         16|   }).toThrowErrorMatchingInlineSnapshot(\`
            |      ^
-         17| });
-         18|
+         17|     Error {
+         18|       "message": "length = 5",
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
 
      FAIL  each.test.ts > toThrowErrorMatchingInlineSnapshot world
     Error: toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location
 
-    Expected: "[Error: length = 3]"
-    Received: "[Error: length = 5]"
+    - Expected
+    + Received
+
+
+      Error {
+    -   "message": "length = 3",
+    +   "message": "length = 5",
+      }
+
 
      ❯ each.test.ts:16:6
          14|   expect(() => {
          15|     throw new Error(\`length = \${arg.length}\`);
-         16|   }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
+         16|   }).toThrowErrorMatchingInlineSnapshot(\`
            |      ^
-         17| });
-         18|
+         17|     Error {
+         18|       "message": "length = 5",
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
 
@@ -647,16 +663,23 @@ test('test.each/for', async () => {
      FAIL  each.test.ts > toThrowErrorMatchingInlineSnapshot world
     Error: toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location
 
-    Expected: "[Error: length = 3]"
-    Received: "[Error: length = 5]"
+    - Expected
+    + Received
+
+
+      Error {
+    -   "message": "length = 3",
+    +   "message": "length = 5",
+      }
+
 
      ❯ each.test.ts:16:6
          14|   expect(() => {
          15|     throw new Error(\`length = \${arg.length}\`);
-         16|   }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
+         16|   }).toThrowErrorMatchingInlineSnapshot(\`
            |      ^
-         17| });
-         18|
+         17|     Error {
+         18|       "message": "length = 5",
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
@@ -700,7 +723,11 @@ test('test.each/for', async () => {
     test.for(["hey", "world"])("toThrowErrorMatchingInlineSnapshot %s", (arg) => {
       expect(() => {
         throw new Error(\`length = \${arg.length}\`);
-      }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
+      }).toThrowErrorMatchingInlineSnapshot(\`
+        Error {
+          "message": "length = 5",
+        }
+      \`)
     });
     "
   `)

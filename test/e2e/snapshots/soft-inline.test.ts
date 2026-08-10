@@ -24,8 +24,16 @@ test('soft inline', async () => {
     })
 
     test('toThrowErrorMatchingInlineSnapshot', () => {
-      expect.soft(() => { throw new Error('--error-1--') }).toThrowErrorMatchingInlineSnapshot(\`[Error: --error-1--]\`)
-      expect.soft(() => { throw new Error('--error-2--') }).toThrowErrorMatchingInlineSnapshot(\`[Error: --error-2--]\`)
+      expect.soft(() => { throw new Error('--error-1--') }).toThrowErrorMatchingInlineSnapshot(\`
+        Error {
+          "message": "--error-1--",
+        }
+      \`)
+      expect.soft(() => { throw new Error('--error-2--') }).toThrowErrorMatchingInlineSnapshot(\`
+        Error {
+          "message": "--error-2--",
+        }
+      \`)
     })
     "
   `)
@@ -73,8 +81,16 @@ test('soft inline', async () => {
     })
 
     test('toThrowErrorMatchingInlineSnapshot', () => {
-      expect.soft(() => { throw new Error('--error-1-edit--') }).toThrowErrorMatchingInlineSnapshot(\`[Error: --error-1-edit--]\`)
-      expect.soft(() => { throw new Error('--error-2-edit--') }).toThrowErrorMatchingInlineSnapshot(\`[Error: --error-2-edit--]\`)
+      expect.soft(() => { throw new Error('--error-1-edit--') }).toThrowErrorMatchingInlineSnapshot(\`
+        Error {
+          "message": "--error-1-edit--",
+        }
+      \`)
+      expect.soft(() => { throw new Error('--error-2-edit--') }).toThrowErrorMatchingInlineSnapshot(\`
+        Error {
+          "message": "--error-2-edit--",
+        }
+      \`)
     })
     "
   `)

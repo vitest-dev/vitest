@@ -23,9 +23,17 @@ test('soft', async () => {
 
     exports[\`toMatchSnapshot 2\`] = \`"--snap-2--"\`;
 
-    exports[\`toThrowErrorMatchingSnapshot 1\`] = \`[Error: --error-1--]\`;
+    exports[\`toThrowErrorMatchingSnapshot 1\`] = \`
+    Error {
+      "message": "--error-1--",
+    }
+    \`;
 
-    exports[\`toThrowErrorMatchingSnapshot 2\`] = \`[Error: --error-2--]\`;
+    exports[\`toThrowErrorMatchingSnapshot 2\`] = \`
+    Error {
+      "message": "--error-2--",
+    }
+    \`;
     "
   `)
   expect(readFileSync(customFile1, 'utf-8')).toMatchInlineSnapshot(`"--file-1--"`)
@@ -121,8 +129,13 @@ test('soft', async () => {
      FAIL  basic.test.ts > toThrowErrorMatchingSnapshot
     Error: Snapshot \`toThrowErrorMatchingSnapshot 1\` mismatched
 
-    Expected: "[Error: --error-1--]"
-    Received: "[Error: --error-1-edit--]"
+    - Expected
+    + Received
+
+      Error {
+    -   "message": "--error-1--",
+    +   "message": "--error-1-edit--",
+      }
 
      ❯ basic.test.ts:14:62
          12|
@@ -137,8 +150,13 @@ test('soft', async () => {
      FAIL  basic.test.ts > toThrowErrorMatchingSnapshot
     Error: Snapshot \`toThrowErrorMatchingSnapshot 2\` mismatched
 
-    Expected: "[Error: --error-2--]"
-    Received: "[Error: --error-2-edit--]"
+    - Expected
+    + Received
+
+      Error {
+    -   "message": "--error-2--",
+    +   "message": "--error-2-edit--",
+      }
 
      ❯ basic.test.ts:15:62
          13| test('toThrowErrorMatchingSnapshot', () => {
@@ -181,9 +199,17 @@ test('soft', async () => {
 
     exports[\`toMatchSnapshot 2\`] = \`"--snap-2-edit--"\`;
 
-    exports[\`toThrowErrorMatchingSnapshot 1\`] = \`[Error: --error-1-edit--]\`;
+    exports[\`toThrowErrorMatchingSnapshot 1\`] = \`
+    Error {
+      "message": "--error-1-edit--",
+    }
+    \`;
 
-    exports[\`toThrowErrorMatchingSnapshot 2\`] = \`[Error: --error-2-edit--]\`;
+    exports[\`toThrowErrorMatchingSnapshot 2\`] = \`
+    Error {
+      "message": "--error-2-edit--",
+    }
+    \`;
     "
   `)
   expect(readFileSync(customFile1, 'utf-8')).toMatchInlineSnapshot(`"--file-1-edit--"`)
