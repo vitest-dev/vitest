@@ -126,6 +126,9 @@ test('expect.element is strict', async () => {
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)
     ",
+      "cause": Error {
+        "message": "Matcher did not succeed in time.",
+      },
     }
   `)
 })
