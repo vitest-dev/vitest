@@ -11,6 +11,23 @@ interface FnData {
 
 type Fn = (...args: FnData['args']) => FnData['value']
 
+/**
+ * Returns the message of the error thrown by `fn`.
+ *
+ * The assertion message is stable across pools, whereas the `AssertionError`
+ * itself carries an `actual` property holding the mock wrapper, whose keys
+ * include a realm-specific `Symbol.dispose` that is absent under `vmThreads`.
+ */
+function getAssertionMessage(fn: () => void): string {
+  try {
+    fn()
+  }
+  catch (error) {
+    return (error as Error).message
+  }
+  throw new Error('expected function to throw')
+}
+
 describe('vi.when()', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -487,32 +504,15 @@ describe('vi.when()', () => {
       `)
 
       expect(w).not.toHaveBeenExhausted()
-      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        AssertionError {
-          "message": "expected all behaviors to have been exhausted, but some remain:
+      expect(getAssertionMessage(() => expect(w).toHaveBeenExhausted())).toMatchInlineSnapshot(`
+        "expected all behaviors to have been exhausted, but some remain:
 
           calledWith("a", 0)
             ✗ thenReturn(97)                never called
             ✗ thenReturn(97, { times: 1 })  1 remaining (out of 1)
 
           calledWith("b", 1)
-            ✗ thenReturn(99)  never called",
-          "actual": {
-            "_getDiagnostics": [Function],
-            "calledWith": [Function],
-            "thenReject": [Function],
-            "thenRejectOnce": [Function],
-            "thenResolve": [Function],
-            "thenResolveOnce": [Function],
-            "thenReturn": [Function],
-            "thenReturnOnce": [Function],
-            "thenThrow": [Function],
-            "thenThrowOnce": [Function],
-            Symbol(nodejs.dispose): [Function],
-          },
-          "expected": undefined,
-          "showDiff": false,
-        }
+            ✗ thenReturn(99)  never called"
       `)
 
       spy(...entries[0].args)
@@ -530,32 +530,15 @@ describe('vi.when()', () => {
       `)
 
       expect(w).not.toHaveBeenExhausted()
-      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        AssertionError {
-          "message": "expected all behaviors to have been exhausted, but some remain:
+      expect(getAssertionMessage(() => expect(w).toHaveBeenExhausted())).toMatchInlineSnapshot(`
+        "expected all behaviors to have been exhausted, but some remain:
 
           calledWith("a", 0)
             ✗ thenReturn(97)                never called
             ✓ thenReturn(97, { times: 1 })  exhausted (1 of 1)
 
           calledWith("b", 1)
-            ✗ thenReturn(99)  never called",
-          "actual": {
-            "_getDiagnostics": [Function],
-            "calledWith": [Function],
-            "thenReject": [Function],
-            "thenRejectOnce": [Function],
-            "thenResolve": [Function],
-            "thenResolveOnce": [Function],
-            "thenReturn": [Function],
-            "thenReturnOnce": [Function],
-            "thenThrow": [Function],
-            "thenThrowOnce": [Function],
-            Symbol(nodejs.dispose): [Function],
-          },
-          "expected": undefined,
-          "showDiff": false,
-        }
+            ✗ thenReturn(99)  never called"
       `)
 
       spy(...entries[0].args)
@@ -569,28 +552,11 @@ describe('vi.when()', () => {
       `)
 
       expect(w).not.toHaveBeenExhausted()
-      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        AssertionError {
-          "message": "expected all behaviors to have been exhausted, but some remain:
+      expect(getAssertionMessage(() => expect(w).toHaveBeenExhausted())).toMatchInlineSnapshot(`
+        "expected all behaviors to have been exhausted, but some remain:
 
           calledWith("b", 1)
-            ✗ thenReturn(99)  never called",
-          "actual": {
-            "_getDiagnostics": [Function],
-            "calledWith": [Function],
-            "thenReject": [Function],
-            "thenRejectOnce": [Function],
-            "thenResolve": [Function],
-            "thenResolveOnce": [Function],
-            "thenReturn": [Function],
-            "thenReturnOnce": [Function],
-            "thenThrow": [Function],
-            "thenThrowOnce": [Function],
-            Symbol(nodejs.dispose): [Function],
-          },
-          "expected": undefined,
-          "showDiff": false,
-        }
+            ✗ thenReturn(99)  never called"
       `)
 
       spy(...entries[1].args)
@@ -600,27 +566,7 @@ describe('vi.when()', () => {
       expect(d.isExhausted).toBe(true)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`""`)
 
-      expect(() => expect(w).not.toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        AssertionError {
-          "message": "expected at least one behavior to remain un-exhausted, but all were",
-          "actual": {
-            "_getDiagnostics": [Function],
-            "calledWith": [Function],
-            "thenReject": [Function],
-            "thenRejectOnce": [Function],
-            "thenResolve": [Function],
-            "thenResolveOnce": [Function],
-            "thenReturn": [Function],
-            "thenReturnOnce": [Function],
-            "thenThrow": [Function],
-            "thenThrowOnce": [Function],
-            Symbol(nodejs.dispose): [Function],
-          },
-          "expected": undefined,
-          "showDiff": false,
-          "operator": "strictEqual",
-        }
-      `)
+      expect(getAssertionMessage(() => expect(w).not.toHaveBeenExhausted())).toMatchInlineSnapshot(`"expected at least one behavior to remain un-exhausted, but all were"`)
       expect(w).toHaveBeenExhausted()
     })
 

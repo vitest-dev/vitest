@@ -287,7 +287,9 @@ function printComplexValue(
 }
 
 const ErrorPlugin: NewPlugin = {
-  test: val => val && val instanceof Error,
+  // `instanceof` is realm-bound, so it fails for errors created inside a VM
+  // context (the `vmThreads` pool). Fall back to the brand check used above.
+  test: val => val && (val instanceof Error || toString.call(val) === '[object Error]'),
   serialize(val: Error, config, indentation, depth, refs, printer) {
     if (refs.includes(val)) {
       return '[Circular]'
