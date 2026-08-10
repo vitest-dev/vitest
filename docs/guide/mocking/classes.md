@@ -130,7 +130,6 @@ You don't have to redefine every method as a class field. Instances keep the pro
 class OriginalDog {
   constructor(name) {
     this.name = name
-    this.greeting = this.speak() // methods are visible in the constructor
   }
 
   speak() {
@@ -146,13 +145,28 @@ dog instanceof MockedDog // true
 dog instanceof OriginalDog // true
 ```
 
-Unlike class fields, prototype methods are shared between instances, so calls cannot be tracked on a single instance. However, you can override them on the mock's `prototype`, which affects every instance, including already created ones:
+Note that nothing is mocked in this example. Unlike the `speak = vi.fn()` field in the `Dog` example above, `dog.speak` refers to the original class method, so per-instance assertions no longer work:
+
+```ts
+expect(dog.speak).toHaveBeenCalled()
+// TypeError: [Function speak] is not a spy or a call to a spy!
+```
+
+To track calls, override the method on the mock's `prototype`. The override affects every instance, including already created ones, but all instances now share a single mock: there is no separate call history per instance like with class fields. To find out which instance made a call, check [`mock.contexts`](/api/mock#mock-contexts):
 
 ```ts
 MockedDog.prototype.speak = vi.fn(() => 'woof!')
 
-dog.speak() // woof!
-expect(MockedDog.prototype.speak).toHaveBeenCalled()
+const cooper = new MockedDog('Cooper')
+const max = new MockedDog('Max')
+
+cooper.speak() // woof!
+max.speak() // woof!
+
+// calls from both instances are recorded by the same mock
+expect(MockedDog.prototype.speak).toHaveBeenCalledTimes(2)
+// `mock.contexts` keeps the instance of every call
+expect(vi.mocked(MockedDog.prototype.speak).mock.contexts).toEqual([cooper, max])
 ```
 
 ::: warning
