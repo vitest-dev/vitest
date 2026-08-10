@@ -1061,6 +1061,27 @@ describe('ErrorPlugin', () => {
       }"
     `)
   })
+
+  test('omits an enumerable stack', () => {
+    // `stack` is non-enumerable in V8 but enumerable in SpiderMonkey and
+    // JavaScriptCore, where it would otherwise be printed as a machine-specific
+    // list of absolute URLs.
+    const err = new Error('boom') as any
+    Object.defineProperty(err, 'stack', {
+      value: 'at http://localhost:5173/some/file.js:1:1',
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    })
+    err.custom = 'kept'
+    const result = format(err, { plugins: [plugins.Error] })
+    expect(result).toMatchInlineSnapshot(`
+      "Error {
+        "message": "boom",
+        "custom": "kept",
+      }"
+    `)
+  })
 })
 
 describe('plugins', () => {

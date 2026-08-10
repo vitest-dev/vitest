@@ -296,7 +296,10 @@ const ErrorPlugin: NewPlugin = {
     }
     refs = [...refs, val]
     const hitMaxDepth = ++depth > config.maxDepth
-    const { message, cause, ...rest } = val
+    // `stack` is a non-enumerable own property in V8, but an enumerable one in
+    // SpiderMonkey and JavaScriptCore, where it would otherwise be spread into
+    // the output as a machine-specific list of absolute URLs.
+    const { message, cause, stack: _stack, ...rest } = val
     const entries = {
       message,
       ...typeof cause !== 'undefined' ? { cause } : {},
