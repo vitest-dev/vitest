@@ -44,6 +44,27 @@ const Dog = vi.fn(class {
 ```
 
 ::: warning
+When Vitest constructs a class mock, the instance inherits from the mock function's `prototype` instead of the implementation class's `prototype`. This keeps the instance compatible with the mock function, but prototype methods from the implementation class are not available:
+
+```ts
+class MockDog {
+  speak() {
+    return 'loud bark!'
+  }
+}
+
+const Dog = vi.fn(MockDog)
+const dog = new Dog()
+
+dog instanceof Dog // true
+dog instanceof MockDog // false
+dog.speak // undefined
+```
+
+Define mocked instance methods as class fields, as shown in the example above, because class fields are assigned directly to the instance during construction.
+:::
+
+::: warning
 If a non-primitive is returned from the constructor function, that value will become the result of the new expression. In this case the `[[Prototype]]` may not be correctly bound:
 
 ```ts

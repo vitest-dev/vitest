@@ -799,6 +799,110 @@ describe('vi.fn() implementations', () => {
     expect(Mock.mock.calls).toEqual([['test', 42]])
   })
 
+  test('vi.fn(class) constructs the main implementation with the mock prototype', () => {
+    let target: unknown
+    class Implementation {
+      field = () => 'field'
+
+      constructor() {
+        target = new.target
+      }
+
+      method() {
+        return 'prototype'
+      }
+    }
+
+    const actual = new Implementation()
+    expect(Object.getPrototypeOf(actual)).toBe(Implementation.prototype)
+    expect(actual).toBeInstanceOf(Implementation)
+    expect(target).toBe(Implementation)
+    expect(actual.field()).toBe('field')
+    expect(actual.method()).toBe('prototype')
+
+    const Mock = vi.fn(Implementation)
+    const instance = new Mock()
+
+    expect(Object.getPrototypeOf(instance)).toBe(Mock.prototype)
+    expect(instance).toBeInstanceOf(Mock)
+    expect(instance).not.toBeInstanceOf(Implementation)
+    expect(target).toBe(Mock)
+    expect(instance.field()).toBe('field')
+    expect(instance.method).toBeUndefined()
+  })
+
+  test('vi.fn(class) preserves an object returned from the constructor', () => {
+    const returned = { custom: true }
+    class Implementation {
+      constructor() {
+        return returned as any
+      }
+
+      method() {
+        return 'prototype'
+      }
+    }
+
+    const actual = new Implementation()
+    const Mock = vi.fn(Implementation)
+    const instance = new Mock()
+
+    expect(actual).toBe(returned)
+    expect(actual).not.toBeInstanceOf(Implementation)
+    expect(actual.method).toBeUndefined()
+    expect(instance).toBe(returned)
+    expect(instance).not.toBeInstanceOf(Mock)
+    expect(instance).not.toBeInstanceOf(Implementation)
+    expect(instance.method).toBeUndefined()
+  })
+
+  test('vi.fn(class) keeps a shared mock prototype across once implementations', () => {
+    interface Instance {
+      firstField?: string
+      firstMethod?: () => string
+      secondField?: string
+      secondMethod?: () => string
+    }
+    class FirstImplementation {
+      firstField = 'first'
+
+      firstMethod() {
+        return 'first prototype'
+      }
+    }
+    class SecondImplementation {
+      secondField = 'second'
+
+      secondMethod() {
+        return 'second prototype'
+      }
+    }
+
+    const actualFirst = new FirstImplementation()
+    const actualSecond = new SecondImplementation()
+
+    expect(Object.getPrototypeOf(actualFirst)).toBe(FirstImplementation.prototype)
+    expect(Object.getPrototypeOf(actualSecond)).toBe(SecondImplementation.prototype)
+    expect(actualFirst.firstMethod()).toBe('first prototype')
+    expect(actualSecond.secondMethod()).toBe('second prototype')
+
+    const Mock = vi.fn<new () => Instance>()
+      .mockImplementationOnce(FirstImplementation)
+      .mockImplementation(SecondImplementation)
+
+    const first = new Mock()
+    const second = new Mock()
+
+    expect(Object.getPrototypeOf(first)).toBe(Mock.prototype)
+    expect(Object.getPrototypeOf(second)).toBe(Mock.prototype)
+    expect(first.firstField).toBe('first')
+    expect(first.firstMethod).toBeUndefined()
+    expect(first.secondField).toBeUndefined()
+    expect(second.secondField).toBe('second')
+    expect(second.secondMethod).toBeUndefined()
+    expect(second.firstField).toBeUndefined()
+  })
+
   test('vi.fn() with mockReturnValue throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockReturnValue(42)

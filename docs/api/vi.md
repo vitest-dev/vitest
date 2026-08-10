@@ -606,11 +606,11 @@ const spy = vi.spyOn(cart, 'Apples')
   })
   // with a custom class
   .mockImplementation(class MockApples {
-    getApples() {
-      return 0
-    }
+    getApples = () => 0
   })
 ```
+
+Define instance methods as class fields instead of prototype methods. See [Mocking Classes](/guide/mocking/classes) for details.
 
 If you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
 
