@@ -64,7 +64,7 @@ export default defineConfig({
 ```
 :::
 
-API consumers can check whether a project reuses the declaring config's server via [`project.sharedViteServer`](/api/advanced/test-project#sharedviteserver).
+To see the decision for every project, including why a project resolves its own server, run Vitest with `DEBUG=vitest:projects`. API consumers can check whether a project reuses the declaring config's server via [`project.sharedViteServer`](/api/advanced/test-project#sharedviteserver).
 
 The option applies to every level: inline projects of a [nested projects container](/guide/projects#nested-projects) share the container's server the same way.
 

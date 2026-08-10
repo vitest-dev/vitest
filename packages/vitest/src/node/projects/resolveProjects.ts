@@ -24,6 +24,7 @@ import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { wildcardPatternToRegExp } from '../../utils/base'
+import { createDebugger } from '../../utils/debugger'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { CaptureRawTestConfig, isExcludedByProjectFilter, matchesProjectFilter, resolveTestConfig } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
@@ -31,6 +32,8 @@ import { resolveTestOptions, TestConfigPlugin } from '../plugins/testConfig'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
 import { globProjectTestFiles } from './globProjectFiles'
+
+const debug = createDebugger('vitest:projects')
 
 // vitest.config.*
 // vite.config.*
@@ -329,11 +332,14 @@ async function resolveDeclaredProjectEntries(
   const promises: Promise<ResolvedProjectEntry>[] = []
 
   projectConfigs.forEach((options, index) => {
-    if (canShareParentServer(context, options)) {
+    const ownServerReason = getOwnServerReason(context, options)
+    if (ownServerReason === undefined) {
+      debug?.(`inline project ${inlineProjectLabel(options, index)} shares the Vite server of ${parentViteConfig.configFile ?? parentConfig.root}`)
       // no `concurrent()`: there is no Vite resolution to limit
       promises.push(Promise.resolve().then(() => resolveSharedServerEntry(context, options, index)))
       return
     }
+    debug?.(`inline project ${inlineProjectLabel(options, index)} resolves its own Vite config: ${ownServerReason}`)
 
     const configRoot = parentConfig.root
     // if extends a config file, resolve the file path
@@ -374,6 +380,7 @@ async function resolveDeclaredProjectEntries(
     const configFile = path.endsWith('/') ? false : path
     const projectRoot = path.endsWith('/') ? path : dirname(path)
 
+    debug?.(`project at ${path} resolves its own Vite config: file and directory projects never share the server`)
     promises.push(concurrent(() => resolveSingleProjectEntry(
       context,
       { root: projectRoot, configFile },
@@ -506,23 +513,35 @@ function inheritRootViteOverrides(
 // `root` anchors the server, and `browser` selects a browser server
 const VITE_AFFECTING_TEST_OPTIONS = ['alias', 'browser', 'css', 'mode', 'root'] as const
 
+function inlineProjectLabel(options: UserWorkspaceConfig, index: number): string {
+  const name = options.test?.name
+  const label = typeof name === 'string' ? name : name?.label
+  return label ? `"${label}"` : `at index ${index}`
+}
+
 /**
  * An inline project can share the declaring config's Vite server when a full
  * resolution would produce the same Vite config: it extends the declaring
  * config and defines nothing that affects the Vite config. Only the
  * project's own options matter: the server was already resolved with the
  * inherited ones.
+ *
+ * Returns the reason the project needs its own server, or `undefined` when
+ * it can share.
  */
-function canShareParentServer(
+function getOwnServerReason(
   context: ProjectsResolutionContext,
   options: UserWorkspaceConfig & { extends?: boolean | string },
-): boolean {
+): string | undefined {
+  if (!context.rootConfig.sharedViteServer) {
+    return '`sharedViteServer` is disabled'
+  }
   const rawParentTest = context.parentConfig._rawTestConfig
-  if (!context.rootConfig.sharedViteServer || rawParentTest === undefined) {
-    return false
+  if (rawParentTest === undefined) {
+    return 'the raw `test` options of the declaring config are not available'
   }
   if (options.extends !== undefined && options.extends !== true) {
-    return false
+    return '`extends` doesn\'t point to the declaring config'
   }
   for (const key in options) {
     if (key === 'test' || key === 'extends') {
@@ -535,31 +554,39 @@ function canShareParentServer(
     if (key === 'plugins' && hasNoPlugins(value)) {
       continue
     }
-    if (key === 'define' && isShareableDefine(value as Record<string, any>, context.parentViteConfig.define)) {
-      continue
+    if (key === 'define') {
+      const unshareable = findUnshareableDefine(value as Record<string, any>, context.parentViteConfig.define)
+      if (unshareable === undefined) {
+        continue
+      }
+      return `\`define['${unshareable}']\` changes the server's transforms`
     }
-    return false
+    return `\`${key}\` changes the Vite config`
   }
   // an inherited `browser` config makes the project a browser project, which
   // needs its own browser server; other inherited values are safe
   if (rawParentTest.browser) {
-    return false
+    return 'the inherited `browser` config needs a browser server'
   }
   const test = options.test
   if (!test) {
-    return true
+    return undefined
   }
-  if (VITE_AFFECTING_TEST_OPTIONS.some(option => test[option as keyof typeof test] !== undefined)) {
-    return false
+  const affecting = VITE_AFFECTING_TEST_OPTIONS.find(option => test[option as keyof typeof test] !== undefined)
+  if (affecting) {
+    return `\`test.${affecting}\` affects the Vite config`
   }
   // the dependency optimizer state (scanned deps, rewritten import URLs)
   // belongs to the server, and `deps.moduleDirectories` configures the
   // server's `resolve` options
   const deps = test.deps
-  if (deps?.optimizer !== undefined || deps?.moduleDirectories !== undefined) {
-    return false
+  if (deps?.optimizer !== undefined) {
+    return '`test.deps.optimizer` affects the Vite config'
   }
-  return true
+  if (deps?.moduleDirectories !== undefined) {
+    return '`test.deps.moduleDirectories` affects the Vite config'
+  }
+  return undefined
 }
 
 // covers `plugins: condition ? [plugin()] : []`
@@ -571,10 +598,11 @@ function hasNoPlugins(plugins: unknown): boolean {
 // `deleteDefineConfig` always drops these
 const DROPPED_DEFINE_KEYS = ['process.env', 'process', 'global']
 
-function isShareableDefine(
+// returns the first `define` entry that requires an own server, if any
+function findUnshareableDefine(
   define: Record<string, any>,
   parentDefine: Record<string, any> | undefined,
-): boolean {
+): string | undefined {
   for (const key in define) {
     if (DROPPED_DEFINE_KEYS.includes(key)) {
       continue
@@ -590,9 +618,9 @@ function isShareableDefine(
     ) {
       continue
     }
-    return false
+    return key
   }
-  return true
+  return undefined
 }
 
 function isSameDefineValue(a: unknown, b: unknown): boolean {
