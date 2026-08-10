@@ -917,9 +917,12 @@ describe('sharedViteServer', () => {
               { define: { 'import.meta.something': '"root"' }, test: { name: 'repeated-define' } },
               { define: { '__ROOT_CODE__': 'process.env.ROOT_CODE' }, test: { name: 'repeated-code-define' } },
               { define: { 'import.meta.obj': { nested: ['a'] } }, test: { name: 'repeated-object-define' } },
-              { define: { 'import.meta.something': '"changed"' }, test: { name: 'changed-define' } },
-              { define: { 'import.meta.other': '"new"' }, test: { name: 'new-define' } },
               { define: { '__CODE__': 'process.env.CODE' }, test: { name: 'code-define' } },
+              { define: { 'myLib.version': '"2"' }, test: { name: 'dotted-define' } },
+              { define: { 'import.meta.something': '"changed"' }, test: { name: 'changed-define' } },
+              { define: { '__ROOT_CODE__': 'process.env.OTHER' }, test: { name: 'changed-code-define' } },
+              { define: { 'import.meta.other': '"new"' }, test: { name: 'new-define' } },
+              { define: { 'import.meta.env.RAW': 'process.env.RAW' }, test: { name: 'code-env-define' } },
               { plugins: [{ name: 'noop' }], test: { name: 'own-plugin' } },
             ],
           },
@@ -942,9 +945,12 @@ describe('sharedViteServer', () => {
       'repeated-define': true,
       'repeated-code-define': true,
       'repeated-object-define': true,
-      'changed-define': false,
-      'new-define': false,
-      'code-define': false,
+      'code-define': true,
+      'dotted-define': true,
+      'changed-define': true,
+      'changed-code-define': true,
+      'new-define': true,
+      'code-env-define': true,
       'own-plugin': false,
     })
     const flags = Object.fromEntries(
@@ -957,6 +963,10 @@ describe('sharedViteServer', () => {
   it('runtime defines of a shared project apply to its tests', async () => {
     const { stderr, ctx, results } = await runInlineTests({
       'vitest.config.js': {
+        define: {
+          '__ROOT_FLAG__': '"root-value"',
+          'import.meta.mode': '"root-mode"',
+        },
         test: {
           projects: [
             {
@@ -964,6 +974,12 @@ describe('sharedViteServer', () => {
                 '__PROJECT_FLAG__': '"from-project"',
                 'import.meta.env.SHARED_DEFINE_ENV': '"env-value"',
                 'process.env.SHARED_DEFINE_PROCESS': '"process-value"',
+                '__CODE_REF__': 'process.version',
+                'myLib.version': '"lib-1"',
+                '__ROOT_FLAG__': 'process.platform',
+                'import.meta.custom': '"meta-value"',
+                'import.meta.nested.value': '"nested-meta"',
+                'import.meta.mode': '"project-mode"',
               },
               test: { name: 'runtime-defines', include: ['defines.test.js'] },
             },
@@ -977,9 +993,23 @@ describe('sharedViteServer', () => {
           expect(__PROJECT_FLAG__).toBe('from-project')
           expect(import.meta.env.SHARED_DEFINE_ENV).toBe('env-value')
           expect(process.env.SHARED_DEFINE_PROCESS).toBe('process-value')
+          expect(__CODE_REF__).toBe(process.version)
+          expect(myLib.version).toBe('lib-1')
+          expect(__ROOT_FLAG__).toBe(process.platform)
+          expect(import.meta.custom).toBe('meta-value')
+          expect(import.meta.nested.value).toBe('nested-meta')
+          const key = 'custom'
+          expect(import.meta[key]).toBe('meta-value')
+          expect(import.meta.mode).toBe('project-mode')
         })
       `,
-      'plain.test.js': basicTest,
+      'plain.test.js': ts`
+        import { expect, test } from 'vitest'
+        test('inherited defines are untouched', () => {
+          expect(__ROOT_FLAG__).toBe('root-value')
+          expect(import.meta.mode).toBe('root-mode')
+        })
+      `,
     })
     expect(stderr).toBe('')
     expect(results.every(module => module.ok())).toBe(true)
@@ -987,6 +1017,10 @@ describe('sharedViteServer', () => {
     const [runtimeDefines, plain] = ctx!.projects
     expect(runtimeDefines.vite).toBe(root.vite)
     expect(runtimeDefines.config.defines.__PROJECT_FLAG__).toBe('from-project')
+    // the overriding entry moved from the inherited runtime defines
+    // to the project's defines script
+    expect(runtimeDefines.config.defines).not.toHaveProperty('__ROOT_FLAG__')
+    expect(plain.config.defines.__ROOT_FLAG__).toBe('root-value')
     // the project's global defines don't leak into the parent or siblings
     expect(root.config.defines).not.toHaveProperty('__PROJECT_FLAG__')
     expect(plain.config.defines).not.toHaveProperty('__PROJECT_FLAG__')

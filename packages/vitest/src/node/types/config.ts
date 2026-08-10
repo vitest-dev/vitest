@@ -417,11 +417,6 @@ export interface InlineConfig {
    * `deps.optimizer`, `mode`, `root`,
    * or when `extends` doesn't point to the declaring config.
    *
-   * `define` entries prevent sharing only when they change the server's
-   * transforms: entries applied at runtime (`import.meta.env.*`,
-   * `process.env.*` and global identifiers with JSON values) and entries
-   * that repeat the declaring config's values are safe.
-   *
    * This option is only respected in the root configuration.
    * @default true
    */
@@ -1249,6 +1244,12 @@ export interface ResolvedConfig
   reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
+  /**
+   * `define` entries applied by the runtime defines script instead of the
+   * server's transforms.
+   * @internal
+   */
+  _scriptDefines?: Record<string, any>
 
   api: ResolvedApiConfig
   cliExclude?: string[]

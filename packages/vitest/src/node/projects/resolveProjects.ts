@@ -554,12 +554,9 @@ function getOwnServerReason(
     if (key === 'plugins' && hasNoPlugins(value)) {
       continue
     }
+    // `define` is applied at runtime and doesn't affect the server
     if (key === 'define') {
-      const unshareable = findUnshareableDefine(value as Record<string, any>, context.parentViteConfig.define)
-      if (unshareable === undefined) {
-        continue
-      }
-      return `\`define['${unshareable}']\` changes the server's transforms`
+      continue
     }
     return `\`${key}\` changes the Vite config`
   }
@@ -598,40 +595,6 @@ function hasNoPlugins(plugins: unknown): boolean {
 // `deleteDefineConfig` always drops these
 const DROPPED_DEFINE_KEYS = ['process.env', 'process', 'global']
 
-// returns the first `define` entry that requires an own server, if any
-function findUnshareableDefine(
-  define: Record<string, any>,
-  parentDefine: Record<string, any> | undefined,
-): string | undefined {
-  for (const key in define) {
-    if (DROPPED_DEFINE_KEYS.includes(key)) {
-      continue
-    }
-    // the parent server already applies this entry
-    if (parentDefine && key in parentDefine && isSameDefineValue(define[key], parentDefine[key])) {
-      continue
-    }
-    // `deleteDefineConfig` applies these at runtime, they never reach the server
-    if (
-      parseDefineValue(define[key]).parsed
-      && (!key.includes('.') || key.startsWith('import.meta.env.') || key.startsWith('process.env.'))
-    ) {
-      continue
-    }
-    return key
-  }
-  return undefined
-}
-
-function isSameDefineValue(a: unknown, b: unknown): boolean {
-  if (a === b) {
-    return true
-  }
-  return typeof a === 'object' && a !== null
-    && typeof b === 'object' && b !== null
-    && JSON.stringify(a) === JSON.stringify(b)
-}
-
 // mirrors `deleteDefineConfig`: a string is a code replacement unless it parses as JSON
 function parseDefineValue(value: unknown): { parsed: boolean; value?: any } {
   if (typeof value !== 'string') {
@@ -645,38 +608,55 @@ function parseDefineValue(value: unknown): { parsed: boolean; value?: any } {
   }
 }
 
+interface SharedProjectDefines {
+  defines: ResolvedConfig['defines']
+  scriptDefines: Record<string, any> | undefined
+}
+
 // the runtime part of `deleteDefineConfig` for a project that shares the parent server
 function resolveSharedProjectDefines(
   define: Record<string, any> | undefined,
   parentConfig: ResolvedConfig,
-): ResolvedConfig['defines'] {
+): SharedProjectDefines {
   if (!define) {
-    return parentConfig.defines
+    return { defines: parentConfig.defines, scriptDefines: parentConfig._scriptDefines }
   }
   let defines = parentConfig.defines
+  let scriptDefines = parentConfig._scriptDefines
+  const copyDefines = () => {
+    if (defines === parentConfig.defines) {
+      defines = { ...parentConfig.defines }
+    }
+    return defines
+  }
   for (const key in define) {
-    if (DROPPED_DEFINE_KEYS.includes(key)) {
+    // `import.meta.vitest` is injected per test file for in-source testing
+    if (DROPPED_DEFINE_KEYS.includes(key) || key === 'import.meta.vitest') {
       continue
     }
     const result = parseDefineValue(define[key])
-    // the parent server applies this entry, `isShareableDefine` checked the value
-    if (!result.parsed) {
-      continue
-    }
-    if (key.startsWith('import.meta.env.')) {
+    if (result.parsed && key.startsWith('import.meta.env.')) {
       process.env[key.slice('import.meta.env.'.length)] = result.value
     }
-    else if (key.startsWith('process.env.')) {
+    else if (result.parsed && key.startsWith('process.env.')) {
       process.env[key.slice('process.env.'.length)] = result.value
     }
-    else if (!key.includes('.')) {
-      if (defines === parentConfig.defines) {
-        defines = { ...parentConfig.defines }
+    else if (result.parsed && !key.includes('.')) {
+      copyDefines()[key] = result.value
+    }
+    else {
+      if (scriptDefines === undefined || scriptDefines === parentConfig._scriptDefines) {
+        scriptDefines = { ...parentConfig._scriptDefines }
       }
-      defines[key] = result.value
+      scriptDefines[key] = define[key]
+      if (key in defines) {
+        // the script runs before the runtime defines are assigned,
+        // an inherited value would override the entry
+        delete copyDefines()[key]
+      }
     }
   }
-  return defines
+  return { defines, scriptDefines }
 }
 
 /**
@@ -701,13 +681,16 @@ function resolveSharedServerEntry(
     { test: options.test ?? {} },
   ).test as UserConfig
 
+  const { defines, scriptDefines } = resolveSharedProjectDefines(options.define, parentConfig)
+
   const mergedOptions = resolveTestOptions(merged, {
     harness,
     cliOptions: cliOverrides,
     globalConfig: rootConfig,
     project: { options, extendsTrueRootConfig: parentConfig === rootConfig },
     sharedServer: {
-      defines: resolveSharedProjectDefines(options.define, parentConfig),
+      defines,
+      scriptDefines,
       moduleRunnerOptions: parentConfig._moduleRunnerOptions,
     },
   })

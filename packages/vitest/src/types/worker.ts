@@ -76,6 +76,7 @@ export interface WorkerGlobalState {
   current?: Task
   filepath?: string
   metaEnv: MetaEnv
+  metaDefines?: Record<string, any>
   environment: Environment
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>

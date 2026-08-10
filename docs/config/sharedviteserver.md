@@ -25,7 +25,7 @@ A project still gets its own Vite server when it defines Vite-level options that
 
 Options like `env`, `setupFiles`, `server.deps`, or `environment` don't prevent sharing: every project keeps its own module resolution rules, module runner, and module instances on top of the shared server.
 
-The same applies to Vite-level values that don't change the server: an empty `plugins` list (`plugins: isCI ? [ciPlugin()] : []`), `define` entries that Vitest applies at runtime (`import.meta.env.*`, `process.env.*` and global identifiers with JSON values), and `define` entries that repeat the declaring config's values. Dotted replacements like `'import.meta.dev'` and references to code like `'__DEV__': 'process.env.DEV'` are baked into the server's transforms, so a project that defines them gets its own server.
+The same applies to Vite-level values that don't change the server: an empty `plugins` list (`plugins: isCI ? [ciPlugin()] : []`) and `define`.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -36,7 +36,7 @@ export default defineConfig({
       // these projects share the root Vite server
       { test: { name: 'unit', include: ['**/*.unit.test.ts'] } },
       { test: { name: 'integration', include: ['**/*.integration.test.ts'] } },
-      // `__DEV__` is applied at runtime, so this project also shares the server
+      // `define` doesn't create a new server, so this project also shares it
       { define: { __DEV__: 'true' }, test: { name: 'dev' } },
       // this project resolves its own Vite config because of `alias`
       { test: { name: 'aliased', alias: { lib: './src/lib' } } },
@@ -46,14 +46,15 @@ export default defineConfig({
 ```
 
 ::: tip
-If every project repeats the same transform-affecting option, such as a dotted `define` or a plugin, move it to the declaring config. The projects inherit it from the shared server and keep sharing:
+If every project repeats the same `plugins` entry, move it to the declaring config. The projects inherit it from the shared server and keep sharing:
 
 ```ts [vitest.config.ts]
+import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  // hoisted: applied once on the shared server
-  define: { 'import.meta.dev': 'false' },
+  // hoisted: instantiated once on the shared server
+  plugins: [react()],
   test: {
     projects: [
       { test: { name: 'unit', include: ['**/*.unit.test.ts'] } },

@@ -96,7 +96,7 @@ export class TestProject {
 
   /** @internal */
   _initializeRunners(server: ViteDevServer) {
-    this._serializedDefines = createDefinesScript(server.config.define)
+    this._serializedDefines = createDefinesScript(this.config._scriptDefines)
     this._resolver = new VitestResolver(server.config.cacheDir, this.config)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
@@ -582,7 +582,7 @@ export class TestProject {
     project.runner = vitest.runner
     project._resolver = vitest._resolver
     project._fetcher = vitest._fetcher
-    project._serializedDefines = createDefinesScript(vitest.vite.config.define)
+    project._serializedDefines = createDefinesScript(vitest.config._scriptDefines)
     return project
   }
 

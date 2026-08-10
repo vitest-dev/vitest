@@ -31,6 +31,7 @@ interface TestConfigProjectContext {
 
 interface SharedServerOptions {
   defines: ResolvedConfig['defines']
+  scriptDefines: Record<string, any> | undefined
   moduleRunnerOptions: ModuleRunnerTestOptions | undefined
 }
 
@@ -144,11 +145,21 @@ export function TestConfigPlugin(
           if (config.define) {
             delete config.define['import.meta.vitest']
           }
-          // We inject the defines string in non-browser tests,
-          // But keep the original behaviour in the browser mode
-          ;(testConfig as ResolvedConfig).defines = sharedServer
-            ? sharedServer.defines
-            : (isBrowserEnabled ? config.define : deleteDefineConfig(config)) || {}
+          // We inject the defines at runtime in non-browser tests,
+          // but keep the original behaviour in the browser mode
+          const resolvedTestConfig = testConfig as ResolvedConfig
+          if (sharedServer) {
+            resolvedTestConfig.defines = sharedServer.defines
+            resolvedTestConfig._scriptDefines = sharedServer.scriptDefines
+          }
+          else if (isBrowserEnabled) {
+            resolvedTestConfig.defines = config.define || {}
+          }
+          else {
+            const { defines, scriptDefines } = deleteDefineConfig(config)
+            resolvedTestConfig.defines = defines
+            resolvedTestConfig._scriptDefines = scriptDefines
+          }
 
           const api = resolveApiServerConfig(
             testConfig,
