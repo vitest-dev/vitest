@@ -1,0 +1,1411 @@
+.github/actions/issues-helper/action.yml
+  s_1ef19d35864165::t_4018ee039a73e0 28,45,61
+.github/actions/send-ai-bot-comment/action.yml
+  s_1ef19d35864165::t_97e241fddeb12c 18
+.github/actions/setup-and-cache/action.yml
+  s_1ef19d35864165::t_90284963314acd 14,17
+.github/actions/setup-playwright/action.yml
+  s_1ef19d35864165::t_8b94cb8fd74205 4-9,34,38,40-55,57,59-60
+.github/renovate.json5
+  s_1ef19d35864165::t_4ee4c25e1a4a3d 6-8
+.github/workflows/ci.yml
+  s_1ef19d35864165::t_6f821f56246797 22-25,32-34,36,43,77,83,93,100-105,107,109,111-115,117-124,129,138,141-142,148-149,154,158,165,176,181-184,186-201,207,213,216,219-220,226-227,231-232,234,238-245,247,258-259,262-263,268-270,273-276,287,294,299,309,311-312,320,328,336
+.github/workflows/cr.yml
+  s_1ef19d35864165::t_5a18730b7d520f 22,28,31,48
+.github/workflows/ecosystem-ci-trigger.yml
+  s_1ef19d35864165::t_31325d0a0a8365 24,60,84
+.github/workflows/issue-close-require.yml
+  s_1ef19d35864165::t_5f13cd3a4bfff3 19
+.github/workflows/issue-labeled.yml
+  s_1ef19d35864165::t_27c48fae70b07f 27,48,78
+.github/workflows/knip.yml
+  s_1ef19d35864165::t_2e05fe973777b7 1-36
+.github/workflows/lock-closed-issues.yml
+  s_1ef19d35864165::t_5d9f4f4f514341 18
+.github/workflows/pr-labeled-automated.yml
+  s_1ef19d35864165::t_1a3a85b57d73d7 24,57,65
+.github/workflows/prepare-publish.yml
+  s_1ef19d35864165::t_0d8fef8e0276fa 1-101
+.github/workflows/publish.yml
+  s_1ef19d35864165::t_de7b64f994edec 5-7,15-17,19-48,56,61-71,73,76,91-122,126,128-130
+.github/workflows/semgrep.yml
+  s_1ef19d35864165::t_0ea7f1c9269ceb 1-34
+.github/workflows/zizmor.yml
+  s_1ef19d35864165::t_219d4fd1f2b3cb 25,29-30,32
+.github/zizmor.yml
+  s_1ef19d35864165::t_0a5579e0a76740 9
+.gitignore
+  s_1ef19d35864165::t_0eb630c4c00d1e 31
+AGENTS.md
+  s_1ef19d35864165::t_e1edd0b8e3acaa 36
+CONTRIBUTING.md
+  s_1ef19d35864165::t_ccb0b912c51ead 164-200
+SECURITY.md
+  s_1ef19d35864165::t_3824eb5062ea00 19,53,60
+docs/.vitepress/components/MoonPhase.vue
+  s_1ef19d35864165::t_d496f62d5a808e 1-20
+docs/.vitepress/config.ts
+  s_1ef19d35864165::t_8ad8759d8509b6 132-136,309-312,473-480,513-516,589-592,665-668,1053-1056,1087-1090,1103-1104
+docs/.vitepress/sponsors.ts
+  s_1ef19d35864165::t_f54ef8f7b796cc 34-38
+docs/.vitepress/theme/SupportedVersions.vue
+  s_1ef19d35864165::t_90400935ed701a 107
+docs/api/advanced/artifacts.md
+  s_1ef19d35864165::t_de05c0cce40f25 70
+docs/api/advanced/plugin.md
+  s_1ef19d35864165::t_f5dd3e276a057d 120,124,127,136,145,162-163
+docs/api/advanced/runner.md
+  s_1ef19d35864165::t_39be2050603d74 98
+docs/api/advanced/test-module.md
+  s_1ef19d35864165::t_329f23422a9af2 120-137,156
+docs/api/advanced/vitest.md
+  s_1ef19d35864165::t_fd3a75bb8536fe 30,606
+docs/api/assert.md
+  s_1ef19d35864165::t_6ebf69233e3ea9 5-32
+docs/api/browser/commands.md
+  s_1ef19d35864165::t_16b09475c76c8d 21,63,134
+docs/api/browser/context.md
+  s_1ef19d35864165::t_9af17c68004079 215
+docs/api/expect.md
+  s_1ef19d35864165::t_caa67179203c56 12-16,1459-1490,1875,1904,2244-2248,2264,2267,2270-2272,2276-2277
+docs/api/vi.md
+  s_1ef19d35864165::t_cb84d0f497a140 800-927,1162
+docs/blog/vitest-3-2.md
+  s_1ef19d35864165::t_a00eaaea11f1aa 242
+docs/config/api.md
+  s_1ef19d35864165::t_439f513266924a 12,21-22,34-35
+docs/config/benchmark.md
+  s_1ef19d35864165::t_65347e839f527e 49-56
+docs/config/browser/dependencysourcemaps.md
+  s_1ef19d35864165::t_3caec2178aea01 2,6,9,11,13,15,17,19-21
+docs/config/browser/expect.md
+  s_1ef19d35864165::t_f04bb4c0c852d3 49-57,61,104,142
+docs/config/browser/playwright.md
+  s_1ef19d35864165::t_984aa0e6fea980 115-116
+docs/config/browser/webdriverio.md
+  s_1ef19d35864165::t_136bc9faa696a2 3-4
+docs/config/changed.md
+  s_1ef19d35864165::t_b59c8142adc2d7 1-18
+docs/config/clearmocks.md
+  s_1ef19d35864165::t_46e4690f48ef69 9,20
+docs/config/coverage.md
+  s_1ef19d35864165::t_a3930fd98dba28 236,241-296,340,346-347,368-369
+docs/config/detectasyncleaks.md
+  s_1ef19d35864165::t_a82046af7f2931 37-38
+docs/config/experimental.md
+  s_1ef19d35864165::t_1856b548ee5a6c 416-498
+docs/config/faketimers.md
+  s_1ef19d35864165::t_e77c710c7a38fa 21,30
+docs/config/fsmodulecache.md
+  s_1ef19d35864165::t_5431f6deae16b8 1-88
+docs/config/fsmodulecachepath.md
+  s_1ef19d35864165::t_f92ccab44a9e38 1-27
+docs/config/injectcjsglobals.md
+  s_1ef19d35864165::t_62198e87c2b5b4 1-47
+docs/config/outputfile.md
+  s_1ef19d35864165::t_46d4b6642529ff 11
+docs/config/pool.md
+  s_1ef19d35864165::t_c0c5f121a0d918 26-34,59-60
+docs/config/projects.md
+  s_1ef19d35864165::t_abc19d1ef1d58f 6,12-13
+docs/config/repeats.md
+  s_1ef19d35864165::t_536402ed2c3eb6 2,6,8-10,12,14
+docs/config/sequence.md
+  s_1ef19d35864165::t_96eccbddd1ebf2 102,110-111
+docs/config/testnamepattern.md
+  s_1ef19d35864165::t_2f6d33b90564d0 27-42
+docs/config/vmmemorylimit.md
+  s_1ef19d35864165::t_5a91db751a7df1 9,13-22
+docs/guide/advanced/benchmark-provider.md
+  s_1ef19d35864165::t_bf0e7eedda9172 1-83
+docs/guide/advanced/index.md
+  s_1ef19d35864165::t_b017e05c0d94c2 88-89,92-94,99,110-111,115,117,120,122-146,173-221
+docs/guide/benchmarking.md
+  s_1ef19d35864165::t_8770e4651f334a 7,26,33,37,75-76,335
+docs/guide/browser/index.md
+  s_1ef19d35864165::t_707d95f69d1026 121,591
+docs/guide/browser/visual-regression-testing.md
+  s_1ef19d35864165::t_f04f37bcf42d5a 6-9,12,14,16,18,22,25,27,29,35-36,39,43-121,123,131,134,137,140,147,151,155-157,161,163,166,169,171-173,175,177,179-181,183,185-186,188-189,191-192,194-195,197-199,201-226,248,250-251,260,262,264,266,268-269,271,273-276,278-322,327,329,331-350,355,357,359,361-363,365-369,371,373,375-379,381-383,388,390-391,393-394,396,398-408,410,413,415,417,419,421,423,425,427,429,431,444-447,456,458,460,467,469,471,473,475-477,479,481-482,484,489,499,510,519,521-523,541,543,656,658,660,662,664,666,672-673,677,697-698,702,705,711,718-719,722,726,733,735,743,747-751,753,755,757,759,761,763-775
+docs/guide/cli-generated.md
+  s_1ef19d35864165::t_6bd9ea978598d3 200,203,330-336,384-390,510-516,613-619,797,822-835,918,995-1022
+docs/guide/cli.md
+  s_1ef19d35864165::t_a100932d2dd305 126-169
+docs/guide/coverage.md
+  s_1ef19d35864165::t_6e491447dc20ef 84,116
+docs/guide/environment.md
+  s_1ef19d35864165::t_9f7b1e7b70bc1b 99-101
+docs/guide/extending-matchers.md
+  s_1ef19d35864165::t_296fd246b8bd91 15,32,38-49,60,63,70,72-73,77,81-85,89-95,182
+docs/guide/filtering.md
+  s_1ef19d35864165::t_2e6cb556871139 47
+docs/guide/improving-performance.md
+  s_1ef19d35864165::t_45a55602e5a318 3-25,99-123,130,136,139,142-153
+docs/guide/in-source.md
+  s_1ef19d35864165::t_faca6e894bf7d0 155-158
+docs/guide/index.md
+  s_1ef19d35864165::t_222358b22de419 38-40
+docs/guide/learn/async.md
+  s_1ef19d35864165::t_d24d5ded1afbd3 49,93
+docs/guide/learn/mock-functions.md
+  s_1ef19d35864165::t_61e4e2d4654639 75-78
+docs/guide/learn/setup-teardown.md
+  s_1ef19d35864165::t_52e16dc55ff376 36-40,44-45,49
+docs/guide/learn/writing-tests-with-ai.md
+  s_1ef19d35864165::t_a7c920e5c0a945 48
+docs/guide/migration.md
+  s_1ef19d35864165::t_68c6c7cb3183c2 16-18,20,22,24,27,29,31-34,36-42,45,47,49-50,52-56,59,61-63,66-68,71-74,76,78,80,82-84,86-100,103,105-107,109-129,132,134,136,138-141,143-162,165-167,169,171-174,176,179,181,183-184,186,188,190,192,194,196,198,200,202-204,206-208,210-215,218-222,224,226,228-231,233,235,237,240,242,245,248-249,251-257,260,262,264-267,269,271-272,275,277,279,281-282,284-287,289-292,294,296-300,302,304-307,310-312,314,316-320,323,325,327-335,338,340,342,344,346,348-352,354,356,358,360-362,365-368,370,373-374,377-382,384,387-388,390-396,399,401,404-407,410-412,414-419,421-423,425,427,430-437,441,443,445,448-455,457,462-468,471-473,478-486,489-491,493,495,497,500-501,504-552,555-559,561,564,566,568,570-573,575-586,661-667
+docs/guide/mocking.md
+  s_1ef19d35864165::t_fe35ff842295c9 174,183-184
+docs/guide/mocking/functions.md
+  s_1ef19d35864165::t_5d2132c0e4c1f3 11-14,44
+docs/guide/projects.md
+  s_1ef19d35864165::t_3068a45888dfed 129-130,139-141,240,252-253,272-315,327-393
+docs/guide/recipes/conditional-mocking.md
+  s_1ef19d35864165::t_ea5147b2b6cbe9 1-270
+docs/guide/reporters.md
+  s_1ef19d35864165::t_a5fba8a72d5b2a 63-69,86-109,251-254,349,453,539
+docs/guide/snapshot.md
+  s_1ef19d35864165::t_cd856bcdab610b 249-250,301,320,326-329,394-401,405,408,504-510
+docs/guide/ui.md
+  s_1ef19d35864165::t_f49abe88539a33 21-24,54,57,70,83,121
+docs/package.json
+  s_1ef19d35864165::t_5477e052219761 21,25-26,31,36,38-41
+docs/public/latitude.svg
+  s_1ef19d35864165::t_1ccfa77c765ca1 1-14
+eslint.config.js
+  s_1ef19d35864165::t_bee6625f9e8a11 75-79,118-119
+examples/fastify/package.json
+  s_1ef19d35864165::t_f019ed2c785d7f 15,17
+examples/fastify/test/app.test.ts
+  s_1ef19d35864165::t_8de623d7624158 29
+examples/lit/package.json
+  s_1ef19d35864165::t_2402d42d0f39d2 17,21-22
+examples/opentelemetry/package.json
+  s_1ef19d35864165::t_86a514ecb41e67 11-16
+examples/projects/package.json
+  s_1ef19d35864165::t_e0599ed3ac00b9 15-16,18-20,22
+examples/projects/packages/client/tsconfig.json
+  s_1ef19d35864165::t_38ec350c5b91a9 4
+examples/projects/packages/client/vitest.config.ts
+  s_1ef19d35864165::t_0bff2dbd8193da 1,5
+examples/projects/packages/server/test/app.test.ts
+  s_1ef19d35864165::t_ad91abe8467c06 29
+examples/typecheck/package.json
+  s_1ef19d35864165::t_0476b87b74ce31 13
+knip.jsonc
+  s_1ef19d35864165::t_f98995c1360fd4 2-6,8-29,31-34,36-46,48-104
+package.json
+  s_1ef19d35864165::t_9aa09a2c36e199 4,6,12,22,24,30-32,45,47,50-51,59-61,64-67,69,71-73
+packages/browser-playwright/package.json
+  s_1ef19d35864165::t_a51b7453a2b3d0 4
+packages/browser-playwright/src/commands/screenshot.ts
+  s_1ef19d35864165::t_8103eb4b1a3013 5,54-56
+packages/browser-playwright/src/commands/trace.ts
+  s_1ef19d35864165::t_6916ad2767e3ed 6,56-57,169-172,194-195
+packages/browser-playwright/src/commands/upload.ts
+  s_1ef19d35864165::t_6500a3124bc1db 4,26-28
+packages/browser-playwright/src/playwright.ts
+  s_1ef19d35864165::t_a501812c421732 99-101,108-228,296-301,359-372,511,557-561,676-680,687,693
+packages/browser-preview/package.json
+  s_1ef19d35864165::t_d0121fa2501817 4
+packages/browser-preview/src/preview.ts
+  s_1ef19d35864165::t_ab4f275fe61810 48
+packages/browser/jest-dom.d.ts
+  s_1ef19d35864165::t_2fb985811695fe 3,6,491,530,561
+packages/browser/matchers.d.ts
+  s_1ef19d35864165::t_bde3d983e33f00 6,15-18
+packages/browser/package.json
+  s_1ef19d35864165::t_2737ba9c3ddc4a 4,79,90,100
+packages/browser/rollup.config.js
+  s_1ef19d35864165::t_5ab42bfd3ed22a 105
+packages/browser/src/client/channel.ts
+  s_1ef19d35864165::t_ecf7d4e5844f71 1-2,24-28,40-41,60,73-74
+packages/browser/src/client/client.ts
+  s_1ef19d35864165::t_f371a74b92719b 3,26,28-33
+packages/browser/src/client/orchestrator.ts
+  s_1ef19d35864165::t_de21c9c3ae6e4d 2,4,8-9,19-21,89,97-98,122,157,177-178,198,215-216,263-270,288-340,382,430,433-436,461-462,464-465,495-497,499-500,502,505,508-521,523-531,533,539,579,594-606,613,623-629
+packages/browser/src/client/tester/dialog.ts
+  s_1ef19d35864165::t_070fc7f99b49b8 24
+packages/browser/src/client/tester/expect-element.ts
+  s_1ef19d35864165::t_923b8c829645ac 1,14
+packages/browser/src/client/tester/expect/toMatchScreenshot.ts
+  s_1ef19d35864165::t_e34119fd196790 1
+packages/browser/src/client/tester/expect/utils.ts
+  s_1ef19d35864165::t_0ed0e2eafbf59d 250
+packages/browser/src/client/tester/mocker-interceptor.ts
+  s_1ef19d35864165::t_ac48bf9e0895fd 22
+packages/browser/src/client/tester/runner.ts
+  s_1ef19d35864165::t_170e6e1579290e 3-9,12,14-16,30,52,61,69,222-228,250,304,344-352
+packages/browser/src/client/tester/state.ts
+  s_1ef19d35864165::t_f51a74e92d0f98 14,17,45
+packages/browser/src/client/tester/tester-utils.ts
+  s_1ef19d35864165::t_311e9a849c5709 248-253
+packages/browser/src/client/tester/tester.ts
+  s_1ef19d35864165::t_28e6c06ac56d98 1-2,9,38-40,42,44-47,50,61-68,70-71,73-93,95-120,124-137,151-157,283-284,287,332,344
+packages/browser/src/client/tester/trace.ts
+  s_1ef19d35864165::t_75ba2eee7146c2 1,18-19,21
+packages/browser/src/client/utils.ts
+  s_1ef19d35864165::t_66da08f9a260c2 2,8,13,82
+packages/browser/src/node/commands/fs.ts
+  s_1ef19d35864165::t_dcb1554be4b88f 2,6,12,23,25,36,38,44
+packages/browser/src/node/commands/screenshotMatcher/index.ts
+  s_1ef19d35864165::t_2a0f8c25d93565 4,12,152,280,288,298,305,563,565-566
+packages/browser/src/node/commands/screenshotMatcher/types.ts
+  s_1ef19d35864165::t_502da01d9688e2 12
+packages/browser/src/node/commands/screenshotMatcher/utils.ts
+  s_1ef19d35864165::t_1f67178842e8c8 20,138,284
+packages/browser/src/node/index.ts
+  s_1ef19d35864165::t_d6a8c00c3a1367 1-5,8-11,13,16-17,36-48,50,52-59,61-69,71-73,75,77-82,84-108,110-166,168-204,206-248,250-330,332-567,569-577,579-586,588-593
+packages/browser/src/node/middlewares/orchestratorMiddleware.ts
+  s_1ef19d35864165::t_7cfe1e9dd3ea50 23,25-26
+packages/browser/src/node/plugin.ts
+  s_1ef19d35864165::t_b34c3952560576 2,6,10,13,15-19,22-24,27-28,31-32,43,51,54-55
+packages/browser/src/node/plugins/pluginContext.ts
+  s_1ef19d35864165::t_2a5740cf8c2c0e 3,14,18-22,24,27,40-53,98
+packages/browser/src/node/project.ts
+  s_1ef19d35864165::t_8fcd49e98d1490 25-28
+packages/browser/src/node/projectParent.ts
+  s_1ef19d35864165::t_4528733d05f0ac 54,57-58,60,67-82,116,122,135
+packages/browser/src/node/rpc.ts
+  s_1ef19d35864165::t_d981c6ef0ffe06 2,16,30,128,145,197,205,209-221,235,283,294,484
+packages/browser/src/node/serverOrchestrator.ts
+  s_1ef19d35864165::t_b480b7df39e5d3 12-14,18-19
+packages/browser/src/node/serverTester.ts
+  s_1ef19d35864165::t_9e4df809fcbbe2 25-26,63-70,78-79
+packages/browser/src/node/utils.ts
+  s_1ef19d35864165::t_2ac5949d1498a7 11,99-118
+packages/browser/src/types.ts
+  s_1ef19d35864165::t_0d99bbf6f3e58a 5,10-12
+packages/coverage-istanbul/package.json
+  s_1ef19d35864165::t_6b9b8a0a4a8541 4,31-34,51-52
+packages/coverage-istanbul/rollup.config.js
+  s_1ef19d35864165::t_012fba9e31e6f3 15
+packages/coverage-istanbul/src/base.ts
+  s_1ef19d35864165::t_5bd2f6f63a26e9 1-48
+packages/coverage-istanbul/src/browser.ts
+  s_1ef19d35864165::t_aa3fe7a3fca8b6 1-28
+packages/coverage-istanbul/src/commands.ts
+  s_1ef19d35864165::t_3d1267ed171b32 2-6,8-10,12-37
+packages/coverage-istanbul/src/index.ts
+  s_1ef19d35864165::t_37e043cfa6757b 2-4,7-8,10,14-15,17,20-22,24-25,28
+packages/coverage-istanbul/src/provider.ts
+  s_1ef19d35864165::t_a80a46082ccf47 20,35-42,232
+packages/coverage-v8/package.json
+  s_1ef19d35864165::t_f3ee4a149249fe 4,58
+packages/coverage-v8/src/browser.ts
+  s_1ef19d35864165::t_881e8e012546e7 22-23
+packages/coverage-v8/src/commands.ts
+  s_1ef19d35864165::t_18404410cf87af 1-7,9-15,23-95
+packages/coverage-v8/src/index.ts
+  s_1ef19d35864165::t_fec94efc2cb599 4,13,46,48,98-101
+packages/coverage-v8/src/provider.ts
+  s_1ef19d35864165::t_4a17712c499d51 8,20,42-49,72,77-79,81-82,84,86-87,89-91,97,104,374,419,428
+packages/expect/README.md
+  s_1ef19d35864165::t_f97ba4e1527c0e 3
+packages/expect/package.json
+  s_1ef19d35864165::t_749f898d2d9eae 4
+packages/expect/src/index.ts
+  s_1ef19d35864165::t_2c920f7902e613 23
+packages/expect/src/jest-expect.ts
+  s_1ef19d35864165::t_04414676851ffc 3
+packages/expect/src/jest-extend.ts
+  s_1ef19d35864165::t_2d3b3cb1346fb8 1,3,24,95
+packages/expect/src/jest-utils.ts
+  s_1ef19d35864165::t_b3e30b361c6c54 369
+packages/expect/src/state.ts
+  s_1ef19d35864165::t_a6d19778fb454f 14-16,18,30
+packages/expect/src/types.ts
+  s_1ef19d35864165::t_627db875234fc1 109,112,118,123,125,134,145,155,158,222-223,231,239,249,258,269,279,289,299,308,316,324,332,340,348,356,365,373,381,390,400,418,428,438,449,460,471,481,492,502,513,525,538,549,559,571,582,593,603,615,627,630,632,634-636,639,642-644,646-652,670,678,687,703,719,722,725,727,730,733,735,743,751,759,775,782,790,799,808,817,826,835,844,853,862,871,880,889,898,907,916,925
+packages/expect/src/utils.ts
+  s_1ef19d35864165::t_151732fba5e90e 1,57-63
+packages/mocker/package.json
+  s_1ef19d35864165::t_00893c55485fe8 4,100
+packages/mocker/src/node/dynamicImportPlugin.ts
+  s_1ef19d35864165::t_a4159feb6a1f4b 21-23,25-32,71
+packages/mocker/src/node/esmWalker.ts
+  s_1ef19d35864165::t_481de07c86bdb0 53,56,355,359,364,380
+packages/mocker/src/node/hoistMocks.ts
+  s_1ef19d35864165::t_a10a3356927cfe 514
+packages/mocker/src/node/resolver.ts
+  s_1ef19d35864165::t_3fa7fb7c7cab16 62
+packages/pretty-format/package.json
+  s_1ef19d35864165::t_ee7f7692a8af51 4,47
+packages/pretty-format/src/plugins/AsymmetricMatcher.ts
+  s_1ef19d35864165::t_f3dc0ea6ece46e 17,92
+packages/pretty-format/src/plugins/DOMCollection.ts
+  s_1ef19d35864165::t_f4c6cb73a2b0c4 20,30
+packages/pretty-format/src/plugins/DOMElement.ts
+  s_1ef19d35864165::t_29a762c29f69bf 51,159
+packages/pretty-format/src/plugins/Immutable.ts
+  s_1ef19d35864165::t_f2c77865bea215 11,132,196
+packages/pretty-format/src/plugins/ReactElement.ts
+  s_1ef19d35864165::t_68daf43ee707e9 107,140
+packages/pretty-format/src/plugins/ReactTestComponent.ts
+  s_1ef19d35864165::t_b82b186c330314 16,41,78
+packages/pretty-format/src/plugins/lib/markup.ts
+  s_1ef19d35864165::t_a0800af8beab3e 31
+packages/snapshot/package.json
+  s_1ef19d35864165::t_8804d9c4302ffd 4
+packages/snapshot/src/client.ts
+  s_1ef19d35864165::t_b266ecb778ee1f 68
+packages/snapshot/src/port/mockSerializer.ts
+  s_1ef19d35864165::t_725dcde03795df 7,12,47
+packages/snapshot/src/port/state.ts
+  s_1ef19d35864165::t_af985219490383 502-503
+packages/snapshot/src/port/utils.ts
+  s_1ef19d35864165::t_7108e49d244dac 112
+packages/spy/package.json
+  s_1ef19d35864165::t_384ee65a992a17 4
+packages/spy/src/index.ts
+  s_1ef19d35864165::t_46fc7799376059 413
+packages/spy/src/types.ts
+  s_1ef19d35864165::t_202833c39dbaff 176
+packages/ui/client/components/FileDetailsModuleGraph.vue
+  s_1ef19d35864165::t_3d0f8e610717c7 21
+packages/ui/client/components/ModuleTransformResultView.vue
+  s_1ef19d35864165::t_322badf3152998 48,242
+packages/ui/client/components/artifacts/visual-regression/VisualRegression.spec.ts
+  s_1ef19d35864165::t_4e54e69d8c72aa 1
+packages/ui/client/components/artifacts/visual-regression/VisualRegression.vue
+  s_1ef19d35864165::t_5a8f1af4ee7e4d 2
+packages/ui/client/components/artifacts/visual-regression/VisualRegressionImage.vue
+  s_1ef19d35864165::t_8e8b90d45db240 2
+packages/ui/client/components/artifacts/visual-regression/VisualRegressionSlider.vue
+  s_1ef19d35864165::t_9e74be08e2e0b1 2
+packages/ui/client/components/explorer/Explorer.vue
+  s_1ef19d35864165::t_4ddddd1e9e9068 2
+packages/ui/client/components/explorer/ExplorerItem.vue
+  s_1ef19d35864165::t_befa6985bbd2ad 2
+packages/ui/client/components/trace/TraceView.vue
+  s_1ef19d35864165::t_817bd5450c7a7b 2,10,48,53,93,115,126,136,153,155,159-163
+packages/ui/client/components/views/ViewConsoleOutput.vue
+  s_1ef19d35864165::t_3a975b18f77dc2 7
+packages/ui/client/components/views/ViewEditor.vue
+  s_1ef19d35864165::t_39732b76876689 3
+packages/ui/client/components/views/ViewReport.spec.ts
+  s_1ef19d35864165::t_0b69f7b600380c 2,44-52,88-100,137-149
+packages/ui/client/composables/attachments.ts
+  s_1ef19d35864165::t_c53e33dffabb23 1,10
+packages/ui/client/composables/client/index.ts
+  s_1ef19d35864165::t_f5e71b95e3ec97 16,25,72
+packages/ui/client/composables/client/state.ts
+  s_1ef19d35864165::t_9794e40263cdf9 13
+packages/ui/client/composables/client/static.ts
+  s_1ef19d35864165::t_8fced2ff8e4576 73,75-76
+packages/ui/client/composables/codemirror.ts
+  s_1ef19d35864165::t_0982dc37e705d0 1
+packages/ui/client/composables/explorer/collector.ts
+  s_1ef19d35864165::t_e9fa9041b4d1b2 2,283,504
+packages/ui/client/composables/explorer/expand.ts
+  s_1ef19d35864165::t_3ebf129705af1d 119
+packages/ui/client/composables/explorer/filter.ts
+  s_1ef19d35864165::t_bf270575a55998 1
+packages/ui/client/composables/explorer/state.ts
+  s_1ef19d35864165::t_f07b6f55a80999 1,7-8
+packages/ui/client/composables/explorer/tree.ts
+  s_1ef19d35864165::t_f93c5c0b043ecd 1
+packages/ui/client/composables/explorer/types.ts
+  s_1ef19d35864165::t_9a66e8f4207cb4 1,24,45-48,87-89
+packages/ui/client/composables/explorer/utils.ts
+  s_1ef19d35864165::t_86a1ee368daad3 1,157,189
+packages/ui/client/composables/module-graph.ts
+  s_1ef19d35864165::t_f2575dcdf197d9 34
+packages/ui/client/composables/navigation.ts
+  s_1ef19d35864165::t_3df601b171090c 1,15
+packages/ui/client/composables/params.ts
+  s_1ef19d35864165::t_2ff93a745116f5 11
+packages/ui/client/composables/trace-view.ts
+  s_1ef19d35864165::t_f00056c5261b22 22-29,36-37,39,44-47,53-57,61,65,78,84,96,102,108
+packages/ui/client/constants.ts
+  s_1ef19d35864165::t_81d843d3bc4dfa 1-2
+packages/ui/client/global-setup.ts
+  s_1ef19d35864165::t_8bb3a1787c8700 24
+packages/ui/node/index.ts
+  s_1ef19d35864165::t_37a52deb36c221 1,3,13-17,19,32,74,101-117,123
+packages/ui/node/reporter.ts
+  s_1ef19d35864165::t_0148f6e8e9c43f 1-2,27-30,51-85,106-107,185,212-215
+packages/ui/package.json
+  s_1ef19d35864165::t_d3d189edf35828 4,57,64,67,78-79,82-84,90-92
+packages/ui/vite.config.ts
+  s_1ef19d35864165::t_94fa5c20b66d81 9,101,105,133
+packages/ui/vitest.config.ts
+  s_1ef19d35864165::t_23414eadc42461 31,42-45
+packages/utils/display.d.ts
+  s_1ef19d35864165::t_e5e1eb63e6b004 1
+packages/utils/package.json
+  s_1ef19d35864165::t_420e266538b377 4,20,25,30,35,40,45,50,55,60,65,70,75,79
+packages/utils/src/diff/normalizeDiffOptions.ts
+  s_1ef19d35864165::t_2327edee2e86b7 12
+packages/utils/src/helpers.ts
+  s_1ef19d35864165::t_69484f00caf320 143
+packages/utils/src/resolver.ts
+  s_1ef19d35864165::t_a36de41c2e0a9e 2,4,6-17,19-20,22-35,37-40,43-44,47,50-51
+packages/utils/src/source-map.ts
+  s_1ef19d35864165::t_45c10f08cdab5b 42,265-272,279,290
+packages/utils/timers.d.ts
+  s_1ef19d35864165::t_cfbd590ae96b57 1
+packages/vitest/LICENSE.md
+  s_1ef19d35864165::t_fce325bf325fb4 34,319-377,408,581-657,858-885
+packages/vitest/package.json
+  s_1ef19d35864165::t_398de7bb5498c4 4,27,123,173-174,177,180,185-186,189-190,193-195,198,200-201,207-209,211,215
+packages/vitest/rollup.config.js
+  s_1ef19d35864165::t_901fe3a00b6128 32-34,115-125,163-173
+packages/vitest/src/api/setup.ts
+  s_1ef19d35864165::t_985a30d67a49ef 9,159-160
+packages/vitest/src/api/types.ts
+  s_1ef19d35864165::t_1786613795bb16 4,50
+packages/vitest/src/defaults.ts
+  s_1ef19d35864165::t_0099067b4d223d 3,17,71,111,113
+packages/vitest/src/integrations/chai/index.ts
+  s_1ef19d35864165::t_b3cf7dde552d8a 2,12
+packages/vitest/src/integrations/chai/poll.ts
+  s_1ef19d35864165::t_a97812b5fcad0e 2,39
+packages/vitest/src/integrations/chai/setup.ts
+  s_1ef19d35864165::t_5fe6afaf6ad0db 8,16
+packages/vitest/src/integrations/coverage.ts
+  s_1ef19d35864165::t_943cb8e535c840 30-33
+packages/vitest/src/integrations/env/edge-runtime.ts
+  s_1ef19d35864165::t_605d8c1dcf6521 46
+packages/vitest/src/integrations/env/happy-dom.ts
+  s_1ef19d35864165::t_9de5dc016a5b18 85
+packages/vitest/src/integrations/env/jsdom-keys.ts
+  s_1ef19d35864165::t_22c76030489967 212,245
+packages/vitest/src/integrations/env/jsdom.ts
+  s_1ef19d35864165::t_0566a8401efc30 1,43-70,80-81,115,189-190,224,248
+packages/vitest/src/integrations/env/utils.ts
+  s_1ef19d35864165::t_b0ea247b845ba6 48,53,66-71,86-89
+packages/vitest/src/integrations/mock/chai.ts
+  s_1ef19d35864165::t_fc9def73f5ed05 1-3,5-10,12-16,18,20-24
+packages/vitest/src/integrations/mock/timers.ts
+  s_1ef19d35864165::t_71e228eaab0ba7 5,16-17,138,151,201-213
+packages/vitest/src/integrations/mock/when.ts
+  s_1ef19d35864165::t_658d439b8236f6 1-10,13-23,25-30,32,34-39,42-44,47,49,51-53,55,58,60-71,73-77,79,82-86,88,91-95,97,100-104,106,109-113,115,118-122,124,127-131,133,136,138-140,142-143,145-155,157,159-174,176,178-202,204-213,215-231,233-398,400-403,405-409,411-548
+packages/vitest/src/integrations/snapshot/chai.ts
+  s_1ef19d35864165::t_f6835747f0e765 3,10,12
+packages/vitest/src/integrations/vi.ts
+  s_1ef19d35864165::t_c02b071af3397b 15-16,19,151-153,297,299,443,617-618,782,785-787,885-906
+packages/vitest/src/node/ast-collect.ts
+  s_1ef19d35864165::t_de6af199e73b9e 1,10,13,462-464,494-496,578-588
+packages/vitest/src/node/benchmark.ts
+  s_1ef19d35864165::t_cb00b36964ad58 1
+packages/vitest/src/node/browser/sessions.ts
+  s_1ef19d35864165::t_80a2702b7e04eb 31,44-45
+packages/vitest/src/node/cache/fsModuleCache.ts
+  s_1ef19d35864165::t_b06cf25d01e766 1-2,22-26,31-35,41,45,55-56,64-81,83-87,138,142,144,155,241,245,275,298,317,329-343,404
+packages/vitest/src/node/cache/results.ts
+  s_1ef19d35864165::t_917600cbaf502a 1
+packages/vitest/src/node/cli/cac.ts
+  s_1ef19d35864165::t_2cb2271cb356ba 189-192,322-338,340,395
+packages/vitest/src/node/cli/cli-config.ts
+  s_1ef19d35864165::t_f5119240369eb7 112,141,219-221,348-350,400-402,628-632,746,784-790,880,953-970
+packages/vitest/src/node/cli/doctor.ts
+  s_1ef19d35864165::t_a8e42d2306cb16 1-8,10-19,22-25,27-50,52-153,155-156,158-162,164-170,172-174,176-208,210-230,233-237,239-240,242-244,247-260,262-273,275-285,288-290,292-306,308-310,312-326,328-329,331,333-350,352-356,359-381,385-387,389-430,432-442,446-469,472-479,483-486,488-491,494-522,525-535,538-555,557-562,564-569,571-581,583-586,588-615,617,619-623,625-627,629-634
+packages/vitest/src/node/cli/filter.ts
+  s_1ef19d35864165::t_d9918cec48bc16 15,21
+packages/vitest/src/node/config/apiToken.ts
+  s_1ef19d35864165::t_5988f3a6f6d316 2-19,21-22,24-25,27-29,32-41,43-53,56
+packages/vitest/src/node/config/pluginHarness.ts
+  s_1ef19d35864165::t_dbbedd2cde25ac 1-5,7-8,10,12-20,22-24,27-32
+packages/vitest/src/node/config/resolveConfig.ts
+  s_1ef19d35864165::t_757936c5690573 1-5,7,16,21,27,30-36,40-41,76,89-90,92-95,98,101,104-105,108,110-111,113-114,116-117,121,134-143,146-151,153-154,157-158,173-190,195-204,207,214,226-246,256,273-277,295,298,301,327-332,384-393,425-450,471-476,686-697,754-756,759,790-798,807-810,819,844,919-920,1028-1038,1043-1064,1068-1164,1189-1192,1194-1196,1200-1201,1204-1207,1209-1210
+packages/vitest/src/node/config/serializeConfig.ts
+  s_1ef19d35864165::t_c10e8962fafb83 1,6,10,39-43,45,51,55,57-58,90-93,95-96,140,148,166-205
+packages/vitest/src/node/core.ts
+  s_1ef19d35864165::t_ddbb349c0a0afa 3,6,9,11-12,17-18,25,29,31-32,34,40,46,49,55,119-146,154-160,164,170-171,173,187-188,190-194,199-200,211,213-216,220,222,232,237-239,241,244-245,247,249,252-253,256,261-316,327-340,348,350,353-364,372,374-390,399,401,403-409,413,426,437-438,443,449-457,523-524,555-556,662,716-720,1130,1154,1236,1306,1309,1441-1444,1495-1496,1550-1555,1568-1582,1587,1593-1604,1617-1618,1623,1642-1643,1723-1724
+packages/vitest/src/node/coverage.ts
+  s_1ef19d35864165::t_feb79338f5fe0d 1,8,11,21,29-32,89,93,112-113,138,140,142,174-176,182,193-211,264-265,292-296,318,346-348,350-356,452-453,470,489,499-513,516-518,520,522-525,527-536,538-574,576-579,581-595,597-598,617-618,626-631,780,794-814,940-1048
+packages/vitest/src/node/create.ts
+  s_1ef19d35864165::t_938c3e7524686c 7-8,10-11,47-49,51-55,57-60,63,65-66,69,71-72,74
+packages/vitest/src/node/environments/fetchModule.ts
+  s_1ef19d35864165::t_c6f670d2da3cf7 2-4,14,16,19-24,30-33,41-42,111,127,151-158,248-254,262-266,285,291,317,327,338-371,385,390-394,401,524,532,587-588,590
+packages/vitest/src/node/environments/serverRunner.ts
+  s_1ef19d35864165::t_7d300a9916251c 1,5,7,63-81
+packages/vitest/src/node/logger.ts
+  s_1ef19d35864165::t_53bc9b4e6f25b4 39,53-59,242-244,250-251,253
+packages/vitest/src/node/module-diagnostic.ts
+  s_1ef19d35864165::t_c7a7444b5dfc45 2
+packages/vitest/src/node/plugins/browserLoader.ts
+  s_1ef19d35864165::t_3b26ca4f5a25c4 1-150
+packages/vitest/src/node/plugins/cliOverride.ts
+  s_1ef19d35864165::t_79f0a0ffa01ce2 1-33
+packages/vitest/src/node/plugins/config.ts
+  s_1ef19d35864165::t_779423512da8e5 1-28,30-67,69-80,83-91,94-114,116-130
+packages/vitest/src/node/plugins/coverageTransform.ts
+  s_1ef19d35864165::t_efd07996110f0a 2,4,9
+packages/vitest/src/node/plugins/cssEnabler.ts
+  s_1ef19d35864165::t_fcec37a4cca837 1-2,37-39,41,58,72-74,85-86,90
+packages/vitest/src/node/plugins/index.ts
+  s_1ef19d35864165::t_349d1aca1f5844 1-4,11,14,16-18,22-33,36,38-47,49-55,60,62-63,65-79
+packages/vitest/src/node/plugins/optimizer.ts
+  s_1ef19d35864165::t_c5662fe8c3808d 18
+packages/vitest/src/node/plugins/runnerTransform.ts
+  s_1ef19d35864165::t_72d14cef986d6f 21-27,77-79,83-85,96-101,120-122
+packages/vitest/src/node/plugins/server.ts
+  s_1ef19d35864165::t_4d5f2f109de56c 1-71
+packages/vitest/src/node/plugins/ssrRunnerFixer.ts
+  s_1ef19d35864165::t_86a13db68494e1 1-19
+packages/vitest/src/node/plugins/utils.ts
+  s_1ef19d35864165::t_455074824081a0 12,15
+packages/vitest/src/node/plugins/vitestResolver.ts
+  s_1ef19d35864165::t_114eafc645343b 2,6,22,33-34,46-48,51-62,67
+packages/vitest/src/node/plugins/workspace.ts
+  s_1ef19d35864165::t_01959e92304dca 1,3-6,12-13,21-23,25-26,29,35,37-38,43-44,51-53,56-57,59-61,63
+packages/vitest/src/node/pool.ts
+  s_1ef19d35864165::t_14e50f579590b7 9,88,131-141,339,435-440
+packages/vitest/src/node/pools/browser.ts
+  s_1ef19d35864165::t_69b47857c10665 3,91,166,266,275,293-319,352,376-381,393,402-405
+packages/vitest/src/node/pools/pool.ts
+  s_1ef19d35864165::t_a6851c64e1a758 78,104,109-114,116,153,267-268,271-272,277-281,356
+packages/vitest/src/node/pools/poolRunner.ts
+  s_1ef19d35864165::t_9c7535ee033c76 49,83,152-153,187,237-242,338,380-387,394-399,401,411-418,420
+packages/vitest/src/node/pools/rpc.ts
+  s_1ef19d35864165::t_97e6a6d55c2b69 1-3,5,21-33,46-95,104-106,112,114-122,124-130,132-238
+packages/vitest/src/node/pools/types.ts
+  s_1ef19d35864165::t_dee802b2380479 27-28
+packages/vitest/src/node/pools/workers/forksWorker.ts
+  s_1ef19d35864165::t_784d64b42632f8 6,33,37,53-54,57,62,93-94,99-100
+packages/vitest/src/node/pools/workers/threadsWorker.ts
+  s_1ef19d35864165::t_5df93ab72e5c82 5,29,33,50-51,53,56,60-71,74
+packages/vitest/src/node/pools/workers/typecheckWorker.ts
+  s_1ef19d35864165::t_d282b1f2b92e3e 2,11,49,122-159
+packages/vitest/src/node/pools/workers/utils.ts
+  s_1ef19d35864165::t_55eb52a0ab7587 1-14
+packages/vitest/src/node/printError.ts
+  s_1ef19d35864165::t_d274957830dda8 152
+packages/vitest/src/node/project.ts
+  s_1ef19d35864165::t_89213d0eda0eaa 1,16,30,57-61,80-82,86-93,96-115,316,324,355-356,379,415-422,434,459,544-547,552,567-569,578-595
+packages/vitest/src/node/projects/globProjectFiles.ts
+  s_1ef19d35864165::t_5692a8614a1431 1-51,54-58,61
+packages/vitest/src/node/projects/resolveProjects.ts
+  s_1ef19d35864165::t_f93be45defc286 2-7,9,12,14,19,24,26-33,42-319,321-323,327-329,332,336-337,339-351,355-364,369,371-375,378,380-381,386,397,400-418,421-438,441-446,448-452,454-457,459-499,501-504,506-507,510-637,639-642,644-646,648-649,651-655,657-665,667,670-678,682,684,688-746,759-760,762-767,769,771-842,844,847-881,896-897,900,902,905-907,909-915,926-958,960-961,965,978,982,985,994,1026-1027,1043,1072,1102-1133,1135-1137,1139-1140,1143-1165,1167-1181,1183-1264,1266
+packages/vitest/src/node/reporters/base.ts
+  s_1ef19d35864165::t_f301d8019835c5 2,9,16-17,19-20,313,644-647,649-652,661-671,675-990,1408,1421-1432
+packages/vitest/src/node/reporters/blob.ts
+  s_1ef19d35864165::t_e6ce3c544b8e28 3
+packages/vitest/src/node/reporters/diagnostics.ts
+  s_1ef19d35864165::t_406cd36d063dfd 1-288
+packages/vitest/src/node/reporters/dot.ts
+  s_1ef19d35864165::t_ddccc61ef652ff 3
+packages/vitest/src/node/reporters/durationBreakdown.ts
+  s_1ef19d35864165::t_3a6f0098e7e2e8 1-72
+packages/vitest/src/node/reporters/github-actions.ts
+  s_1ef19d35864165::t_4ef8b430ad6a4e 2,11
+packages/vitest/src/node/reporters/html.ts
+  s_1ef19d35864165::t_6ee0889342745b 3,5-9,11
+packages/vitest/src/node/reporters/json.ts
+  s_1ef19d35864165::t_0d8498a4c9c02a 3,10,78-83,229,241,244-246,248-250
+packages/vitest/src/node/reporters/junit.ts
+  s_1ef19d35864165::t_e6995631e3f58d 2,13,53-59,266-270,272
+packages/vitest/src/node/reporters/renderers/benchmark-table.ts
+  s_1ef19d35864165::t_fde44e38dd8e29 1
+packages/vitest/src/node/reporters/renderers/utils.ts
+  s_1ef19d35864165::t_cdc673437031ea 3
+packages/vitest/src/node/reporters/reported-tasks.ts
+  s_1ef19d35864165::t_edc9e7c4d3fce5 1-2,14,465,519,578-579,743-762
+packages/vitest/src/node/reporters/tap-flat.ts
+  s_1ef19d35864165::t_e2191da8685a98 1
+packages/vitest/src/node/reporters/tap.ts
+  s_1ef19d35864165::t_c5e450ec0e08a7 2
+packages/vitest/src/node/reporters/utils.ts
+  s_1ef19d35864165::t_1303735947ac6e 56
+packages/vitest/src/node/reporters/verbose.ts
+  s_1ef19d35864165::t_3344082c32e189 3,29
+packages/vitest/src/node/resolver.ts
+  s_1ef19d35864165::t_4d384511f9a78b 1,8,11-16,111,123,155,174-237
+packages/vitest/src/node/sequencers/BaseSequencer.ts
+  s_1ef19d35864165::t_b25638af05747d 20-27
+packages/vitest/src/node/specifications.ts
+  s_1ef19d35864165::t_358290a4c3b54e 5,149-168,170-183,185-199,203-211,213-216,219,221-223,232-233,235-240,244-259,261
+packages/vitest/src/node/state.ts
+  s_1ef19d35864165::t_2e4669ab7ceffe 1,7,27-34
+packages/vitest/src/node/stdin.ts
+  s_1ef19d35864165::t_3b93ffd8df9a6a 2,42,94-96,99
+packages/vitest/src/node/tags.ts
+  s_1ef19d35864165::t_7ba03cdf0de910 1
+packages/vitest/src/node/test-run.ts
+  s_1ef19d35864165::t_bdc9fcf5576d72 1,11
+packages/vitest/src/node/test-specification.ts
+  s_1ef19d35864165::t_abcea64bf1ee04 6
+packages/vitest/src/node/types/benchmark.ts
+  s_1ef19d35864165::t_0680d3c23ee0fb 31-40,56-59
+packages/vitest/src/node/types/browser.ts
+  s_1ef19d35864165::t_0f272c8936be98 4,7,10-11,13,27-36,42,283-304,324,381,401-443,564,601-608,612,618
+packages/vitest/src/node/types/config.ts
+  s_1ef19d35864165::t_f944ab9a8bba98 6,9,13,23-24,29,31,66-67,314-331,399-404,525,706-724,730-735,884-890,1016-1044,1059-1065,1178,1193-1199,1233,1260,1264,1301,1311-1329,1331-1390,1450-1453,1457-1461,1472,1487-1488,1491
+packages/vitest/src/node/types/coverage.ts
+  s_1ef19d35864165::t_b40e729daba32b 220,334-345
+packages/vitest/src/node/types/plugin.ts
+  s_1ef19d35864165::t_e6289245deea11 16-20
+packages/vitest/src/node/types/reporter.ts
+  s_1ef19d35864165::t_301b9a43859d04 2
+packages/vitest/src/node/types/vite.ts
+  s_1ef19d35864165::t_75b3001e872b1e 4,8,18-24
+packages/vitest/src/node/vite.ts
+  s_1ef19d35864165::t_7648bd723aa332 5
+packages/vitest/src/public/browser.ts
+  s_1ef19d35864165::t_a4dd8394297402 6-7,12
+packages/vitest/src/public/config.ts
+  s_1ef19d35864165::t_cd0b315562eabf 22
+packages/vitest/src/public/index.ts
+  s_1ef19d35864165::t_c02e01c221b924 1,41,44-46,48,50,61-62,64,66,76-79,82,85-86,121-128,130-171
+packages/vitest/src/public/node.ts
+  s_1ef19d35864165::t_82a08403a7e878 9,13,15,25,45,74,95,116,184,194-199
+packages/vitest/src/public/runtime.ts
+  s_1ef19d35864165::t_60fc35d590c7fc 15-17
+packages/vitest/src/runtime/benchmark.ts
+  s_1ef19d35864165::t_bbedfcc39e0712 10-11,14,28-137,146-147,149,171,176,181,186,190-191,210-211,228-232,263,272-273,276,284-285,289-297,306,312-313,317,333-338,343-349,362,377-379,383-386,388,390,392,409,419,459-460,462,516,518-521,524,533-534,538,545,569-571,583-584,586,591
+packages/vitest/src/runtime/benchmark/default-provider.ts
+  s_1ef19d35864165::t_12af16233f53bb 1-15,17-27,29,31-35,37-38,41-42,46-49,51-53
+packages/vitest/src/runtime/cleanup.ts
+  s_1ef19d35864165::t_5cd4e4afa3d9e1 12
+packages/vitest/src/runtime/config.ts
+  s_1ef19d35864165::t_32e3f7e75970a0 4,6-11,16-42,45,146,151,178-179
+packages/vitest/src/runtime/console.ts
+  s_1ef19d35864165::t_41e3a54f171ada 9-10
+packages/vitest/src/runtime/detect-async-leaks.ts
+  s_1ef19d35864165::t_bb050c44df998a 79
+packages/vitest/src/runtime/external-executor.ts
+  s_1ef19d35864165::t_acfc981545fc90 3,10,14-19,27-33,37-39,46,57,60-67,75,85,89,93,95-96,121-236,266-284,286-290,294-303,341,347-356,359-365,375,377
+packages/vitest/src/runtime/listeners.ts
+  s_1ef19d35864165::t_cbbabe497498b6 11
+packages/vitest/src/runtime/moduleRunner/cachedResolver.ts
+  s_1ef19d35864165::t_b708e5616dc830 3,29,32,41-43
+packages/vitest/src/runtime/moduleRunner/moduleEvaluator.ts
+  s_1ef19d35864165::t_7dc78d0fd44f80 8,28-48,51,53,67,91,316-328,339-373,379-382,399-407,415,418-422,424,611-644
+packages/vitest/src/runtime/moduleRunner/moduleRunner.ts
+  s_1ef19d35864165::t_100647a149de71 25,31,170,173-176,180-181,185-192
+packages/vitest/src/runtime/moduleRunner/startVitestModuleRunner.ts
+  s_1ef19d35864165::t_7659897dd94249 2-3,46-64,77-99,104,112-114,190-220,222,228
+packages/vitest/src/runtime/moduleRunner/utils.ts
+  s_1ef19d35864165::t_7bbbd53cc04a50 1-3,5,22-23
+packages/vitest/src/runtime/rpc.ts
+  s_1ef19d35864165::t_c5858672d33dfc 4,66,68-73
+packages/vitest/src/runtime/runBaseTests.ts
+  s_1ef19d35864165::t_3060b76461c163 5,15,43,49-57,59,61-62,64-68,70,72-81,84-94
+packages/vitest/src/runtime/runVmTests.ts
+  s_1ef19d35864165::t_ef1a814c25ebfb 4,20,39-40,84-87,92-94,96,100-105,107-108,110-114,116,118-127,130-140
+packages/vitest/src/runtime/runner/artifact.ts
+  s_1ef19d35864165::t_518f7745165c59 1,46
+packages/vitest/src/runtime/runner/collect.ts
+  s_1ef19d35864165::t_4bdc5450d976b6 1,4-8,67,78-82,116-119,138-147
+packages/vitest/src/runtime/runner/context.ts
+  s_1ef19d35864165::t_5f194a49b88c54 2,262
+packages/vitest/src/runtime/runner/errors.ts
+  s_1ef19d35864165::t_0d1160954ec31c 1,54
+packages/vitest/src/runtime/runner/fixture.ts
+  s_1ef19d35864165::t_ee80eab96dc3f7 1,584
+packages/vitest/src/runtime/runner/hooks.ts
+  s_1ef19d35864165::t_36ccf78449191c 18
+packages/vitest/src/runtime/runner/map.ts
+  s_1ef19d35864165::t_56dc903cf4f4c3 3
+packages/vitest/src/runtime/runner/run.ts
+  s_1ef19d35864165::t_b2ab541a2fd041 3,7,20,22,26-27,519,565-567,952,1064
+packages/vitest/src/runtime/runner/setup.ts
+  s_1ef19d35864165::t_546ba157ba183d 1-2,5
+packages/vitest/src/runtime/runner/suite.ts
+  s_1ef19d35864165::t_7e45ed3376c845 20-21,30,45,390,439,525,555-556,558-565,569-570,1032
+packages/vitest/src/runtime/runner/test-state.ts
+  s_1ef19d35864165::t_25a92e0301935c 1
+packages/vitest/src/runtime/runner/types.ts
+  s_1ef19d35864165::t_7ad9a7a1bfbbda 1,4-9,123,154-158,292-303,329-333,338-342,352-357,665-683,1339-1352,1427,1591-1774
+packages/vitest/src/runtime/runner/utils/chain.ts
+  s_1ef19d35864165::t_52ef58238a3190 1
+packages/vitest/src/runtime/runner/utils/collect.ts
+  s_1ef19d35864165::t_db40e53aead80e 4-7,9-12,14-15,18,20-22
+packages/vitest/src/runtime/runner/utils/suite.ts
+  s_1ef19d35864165::t_b927755325b5e0 1
+packages/vitest/src/runtime/runner/utils/tags.ts
+  s_1ef19d35864165::t_5e5655b1101fe1 1-2,24
+packages/vitest/src/runtime/runners/index.ts
+  s_1ef19d35864165::t_58c3918cc57961 4
+packages/vitest/src/runtime/runners/test.ts
+  s_1ef19d35864165::t_f4155828b75749 3-6,18,26,29-33,57-62,66-68,90,244,248,284-287,306
+packages/vitest/src/runtime/setup-common.ts
+  s_1ef19d35864165::t_aa94db670e5194 31-33
+packages/vitest/src/runtime/utils.ts
+  s_1ef19d35864165::t_c417866768786b 44
+packages/vitest/src/runtime/vm/code-cache.ts
+  s_1ef19d35864165::t_213570c6ead2b6 1-52
+packages/vitest/src/runtime/vm/commonjs-executor.ts
+  s_1ef19d35864165::t_0b2a71b1bfa33c 1,3,7-12,16,19-22,31-41,44-48,62,65-69,74,76-77,103,147-176,186-188,271,293-295,338-341,344-352,357-384,430-443,497-499,523-527,532,535-537,552-555
+packages/vitest/src/runtime/vm/esm-executor.ts
+  s_1ef19d35864165::t_5f4eec2b9c61eb 2-3,6-12,18-32,36-90,107-111,143,147-149,151-167,171-220,222-251,253-356,358-359,457,461,469,474
+packages/vitest/src/runtime/vm/types.ts
+  s_1ef19d35864165::t_98765de3d4e6b6 23-27,95-108
+packages/vitest/src/runtime/vm/utils.ts
+  s_1ef19d35864165::t_86e206b77b3cdc 1,3,30-32,45-47,62-178
+packages/vitest/src/runtime/worker.ts
+  s_1ef19d35864165::t_e73b005dd65642 42,51
+packages/vitest/src/runtime/workers/base.ts
+  s_1ef19d35864165::t_a8f1fbdef3bec0 17,57-59,88-89
+packages/vitest/src/runtime/workers/init.ts
+  s_1ef19d35864165::t_3ef15847b1d68d 2-3,5-7,15-43,52-72,86,106,130,187,192-193,247,252-253,272-285,301-304,308-311
+packages/vitest/src/runtime/workers/vm.ts
+  s_1ef19d35864165::t_119bc11a5d45c0 4,6,18,20,22,28-30,39-49,89-93,113-115,149-150,181-187,195-201
+packages/vitest/src/typecheck/typechecker.ts
+  s_1ef19d35864165::t_48d6149370f0b5 8,289-296,412-421,434-438
+packages/vitest/src/types/browser.ts
+  s_1ef19d35864165::t_8ba867fd9216b4 1,10-11
+packages/vitest/src/types/general.ts
+  s_1ef19d35864165::t_ad6d4db92b199d 1-2,38-41,49
+packages/vitest/src/types/global.ts
+  s_1ef19d35864165::t_cc3603177b34a0 1,4-5,7,11-12,15,20-21,40,51,53-55,65,81,110,127,130,132-145,147
+packages/vitest/src/types/rpc.ts
+  s_1ef19d35864165::t_929f507509368d 3,16-28
+packages/vitest/src/types/worker.ts
+  s_1ef19d35864165::t_9c8b5f56eafb4e 5,34-42,49,56,65,78,84,90-94
+packages/vitest/src/utils/coverage.ts
+  s_1ef19d35864165::t_73565b2151f9df 2-9,37-40,66
+packages/vitest/src/utils/environments.ts
+  s_1ef19d35864165::t_40dce5747da9bd 6
+packages/vitest/src/utils/graph.ts
+  s_1ef19d35864165::t_73d2e3711bb455 1,10,19-28
+packages/vitest/src/utils/memory-limit.ts
+  s_1ef19d35864165::t_cfc543950c46be 5
+packages/vitest/src/utils/tasks.ts
+  s_1ef19d35864165::t_046476d2bc1a48 1-4,6,8-52,54-58,62-96,107,146-392
+packages/web-worker/package.json
+  s_1ef19d35864165::t_86380c66fb2a62 4,48
+packages/web-worker/src/runner.ts
+  s_1ef19d35864165::t_e6ee8d6786937e 24
+patches/@sinonjs__fake-timers@15.4.0.patch
+  s_1ef19d35864165::t_0de79c4bf0cffa 2,23
+patches/rrweb-snapshot@2.1.1.patch
+  s_1ef19d35864165::t_7ddfc1d2a0918f 4
+pnpm-lock.yaml
+  s_1ef19d35864165::t_59b0dcf742f1c3 10-11,13-14,16-17,19-20,22-23,31-32,34-35,40-41,54-56,64-65,67-68,70-71,76-77,88-89,102-104,109-110,112-113,115-116,118-119,124-128,130-131,139-140,145,148,151-152,157-158,166-167,172-173,175-176,178-179,182,188-189,194,199,206-207,210,212-213,216,219,221-225,248-252,254-255,263-264,266-267,269-273,276,278-279,284-285,287-288,291,303,306,308-310,313,316,319,321-322,324-325,328,334,337,339-340,343,346,349,352,354-355,358,360-361,363-364,366-367,369-370,379,390-391,394,396-397,400,417-418,424,427-428,431,439-440,442-443,445-446,448-449,451-452,454-455,461,470,482,487-488,490-491,496-497,499-500,502-503,506,508-509,512,520-521,530,538-539,551,560,563,566-567,572-573,585,596-597,612,616,640-641,643-644,662,665,668,687,690,704-705,717,720,723,726,769,784,788,799-800,803,809,815,821-822,837,857-858,861,870,876-877,880,883,885-886,892,895,904,917-919,921-922,925,930-931,933-934,936-937,943,946,949,952,954-955,957-958,960-961,973,997-998,1015-1016,1018-1019,1022,1025,1027-1028,1031,1036,1040,1046-1047,1049-1050,1058-1059,1061-1062,1070-1071,1073-1074,1076-1077,1084-1086,1090-1095,1110,1112-1113,1115-1116,1118-1119,1123-1125,1135-1137,1140,1143,1149,1158-1159,1164-1165,1170-1171,1189,1191-1192,1194-1195,1209-1210,1213,1216,1230-1231,1251-1252,1254-1255,1263-1264,1266-1267,1269-1270,1273,1276,1282,1287-1288,1290-1291,1293-1294,1314-1315,1325,1327,1342,1345,1350-1351,1353-1354,1358-1360,1363,1376-1378,1380,1390,1393,1402,1454,1458,1473-1474,1482-1483,1491-1492,1501,1504,1507,1551-1555,1557-1558,1563-1564,1566-1567,1569-1570,1576,1579,1581-1582,1585,1603,1617,1634-1637,1648-1649,1655,1659,1661,1712-1714,1720-1721,1741-1742,1745-1746,1749-1750,1753-1754,1757-1759,1761-1762,1765-1766,1769-1770,1775-1776,1781-1782,1786-1787,1790-1791,1794-1795,1798-1799,1804-1805,1808-1809,1812-1813,1818-1819,1824-1825,1828-1829,1832-1834,1836-1837,1840-1845,1848-1849,1852-1853,1861-1862,1866-1878,1883-1884,1889-1890,1895-1896,1901-1902,1907-1908,1919-1920,1925-1926,1931-1932,1943-1944,1949-1950,1955-1956,1961-1962,1967-1968,1973-1974,1979-1980,1985-1986,1991-1992,1997-1998,2003-2004,2009-2010,2015-2016,2021-2022,2027-2028,2033-2034,2039-2040,2045-2046,2051-2052,2057-2058,2063-2064,2069-2070,2075-2076,2081-2082,2087-2088,2093-2094,2099-2100,2105-2106,2111-2112,2117-2118,2123-2124,2129-2130,2135-2136,2141-2142,2147-2148,2153-2154,2159-2160,2165-2166,2171-2172,2189-2190,2195-2196,2201-2202,2207-2208,2213-2214,2219-2220,2225-2226,2231-2232,2237-2238,2243-2244,2249-2250,2255-2256,2261-2262,2276-2281,2284-2285,2288-2289,2292-2295,2300-2301,2303-2304,2309,2328-2330,2332-2334,2375-2376,2381-2382,2387-2400,2412-2413,2418-2420,2427-2435,2442-2443,2448-2449,2454-2455,2460-2461,2466-2467,2472-2473,2478-2479,2484-2485,2490-2491,2496-2497,2499,2502-2503,2505,2508-2509,2511,2514-2515,2517,2520-2521,2523,2526-2527,2529,2532-2533,2535,2538-2539,2541,2544-2545,2550-2551,2556-2557,2562-2563,2568-2569,2574-2575,2580-2581,2586-2587,2592-2593,2598-2599,2602,2614-2615,2623-2624,2627-2628,2631-2632,2635-2636,2639-2640,2643-2645,2647-2648,2651-2652,2664-2665,2674-2675,2677-2678,2683-2684,2730-2731,2733-2734,2736-2737,2739-2740,2745-2746,2753-2757,2875-2877,2879-2881,2883,2888-2890,2892,2897-2899,2901-2903,2905,2920-2925,2986-2987,2992-2993,2998-2999,3004-3005,3010-3011,3016-3017,3022-3023,3028-3029,3080-3085,3093-3098,3103-3105,3112-3114,3121-3122,3129-3134,3139-3140,3145-3146,3152-3153,3156-3157,3162-3163,3168-3169,3174-3175,3180-3181,3186-3187,3192-3193,3198-3199,3204-3205,3210-3211,3216-3217,3222-3223,3228-3229,3234-3235,3240-3241,3246-3247,3252-3253,3258-3259,3264-3265,3270-3271,3276-3277,3282-3283,3288-3289,3294-3295,3300-3301,3306-3311,3320-3321,3326-3327,3332-3333,3338-3339,3344-3345,3350-3351,3356-3357,3362-3363,3369-3370,3376-3377,3383-3384,3390-3391,3397-3398,3404-3405,3411-3412,3418-3419,3424-3426,3429-3430,3435-3436,3441-3442,3447-3454,3459-3460,3465-3466,3471-3472,3477-3490,3495-3496,3501-3502,3507-3508,3513-3526,3531-3532,3537-3538,3543-3544,3549-3550,3555-3556,3561-3581,3587-3588,3594-3595,3601-3602,3608-3616,3622-3623,3629-3637,3643-3644,3650-3658,3664-3665,3671-3679,3685-3686,3692-3707,3713-3714,3720-3721,3727-3728,3734-3742,3747-3748,3753-3761,3764-3771,3774-3775,3780-3781,3786-3793,3798-3799,3804-3805,3807,3810-3811,3816-3820,3822-3826,3831-3839,3845-3849,3855-3859,3865-3869,3875-3879,3885-3889,3895-3899,3905-3909,3916-3921,3928-3933,3940-3945,3952-3957,3964-3969,3976-3981,3988-3993,4000-4005,4011-4015,4021-4025,4031-4035,4046-4049,4051-4052,4057-4058,4063-4064,4069-4070,4075-4076,4081-4082,4087-4088,4093-4094,4100-4101,4107-4108,4114-4115,4121-4122,4128-4129,4135-4136,4142-4143,4149-4150,4155-4156,4160-4161,4166-4167,4172-4173,4280-4282,4288-4289,4321-4322,4430-4431,4456-4458,4462,4466-4467,4469-4470,4473,4482,4487-4488,4491,4496-4497,4500,4505-4507,4509,4518,4527,4532-4542,4546-4547,4551-4552,4556-4557,4561-4562,4566-4567,4571-4572,4577-4578,4583-4584,4589-4590,4595-4596,4601-4602,4607-4608,4613-4614,4619-4620,4625-4626,4631-4632,4637-4638,4643-4644,4649-4650,4654-4655,4659-4660,4664-4665,4669-4670,4674-4675,4685-4687,4692-4694,4699-4701,4706-4712,4717-4720,4724-4730,4737-4743,4759-4760,4762-4763,4768-4769,4853-4854,4998-5001,5005-5007,5032-5033,5050-5051,5056-5058,5074-5078,5083-5085,5104-5105,5107-5108,5119-5123,5128-5133,5170-5171,5174,5176,5178-5179,5183,5185-5186,5189,5191-5192,5195,5197-5198,5201-5206,5209,5211-5218,5222-5226,5228-5229,5232-5233,5236-5249,5251-5252,5256,5258-5259,5262-5267,5271-5272,5274-5275,5278-5279,5281-5282,5284-5285,5287-5288,5290-5291,5293-5294,5296-5297,5299-5300,5302-5303,5305-5306,5308-5309,5311-5312,5314-5315,5317-5318,5320-5321,5323-5324,5326-5327,5329-5330,5332-5333,5335-5336,5338-5339,5357-5358,5363-5364,5369-5370,5379-5384,5388-5389,5392,5397-5398,5425-5426,5440-5441,5452-5453,5458-5459,5464-5465,5470-5471,5473-5474,5476-5477,5479-5480,5482-5483,5485-5486,5488-5489,5491-5492,5494-5495,5497-5498,5503-5505,5516-5525,5529-5530,5534-5535,5539-5540,5581-5582,5629-5631,5635-5636,5640-5641,5645-5646,5649-5650,5653-5654,5660-5661,5664-5665,5668-5669,5671-5673,5721-5722,5724-5725,5727-5728,5759-5764,5770-5772,5827-5828,5830-5831,5856-5857,5862-5868,5870-5871,5875-5876,5880-5881,5895-5914,5916-5917,5919-5931,5933-5934,5936-5937,5939-5941,5944-5945,5968-5969,5971-5973,5979-5980,5994-6000,6050-6053,6058-6059,6066-6067,6080-6081,6108-6110,6128-6129,6186-6189,6198-6201,6251-6254,6269-6270,6276-6277,6303-6304,6306-6307,6316-6317,6351-6352,6380-6381,6417-6418,6492-6495,6518-6519,6563-6565,6581-6582,6590-6591,6598-6599,6601-6602,6627-6632,6643-6644,6646-6647,6654-6655,6658-6659,6689-6690,6694-6695,6697-6698,6703,6713-6714,6718-6719,6731-6732,6735,6737-6739,6743-6744,6749-6751,6753-6760,6762-6763,6766-6767,6772-6773,6777-6778,6783-6784,6789-6791,6793,6804-6805,6811,6818-6819,6846-6847,6891-6894,6903-6909,6918-6919,6956-6957,6968-6984,6986-6987,6990-6991,6993-6994,6999-7001,7014-7015,7025-7026,7036-7037,7052-7056,7070-7072,7086-7087,7098-7101,7136-7141,7150-7152,7174-7175,7202-7203,7205-7206,7240-7242,7244,7250-7251,7274-7275,7285-7286,7316-7319,7326-7327,7351-7355,7402-7408,7420-7421,7427-7428,7455-7456,7463-7464,7502-7505,7519-7522,7547-7550,7636-7638,7664-7666,7695-7698,7704-7705,7708,7721-7724,7746-7747,7754-7760,7779-7780,7803-7804,7813-7816,7828-7832,7999-8000,8008-8009,8019-8024,8045-8046,8051-8052,8096-8104,8113-8114,8155-8157,8173-8175,8183-8184,8225-8227,8330-8331,8334-8335,8338-8339,8380-8385,8390-8392,8410-8411,8423-8425,8432-8436,8448-8449,8458-8460,8471-8473,8499-8500,8517-8519,8530-8532,8549-8550,8552-8553,8573-8578,8581-8582,8585-8586,8592-8593,8595-8596,8604-8607,8616-8619,8628-8630,8637-8639,8684-8686,8703-8706,8734-8735,8742-8747,8749-8750,8752-8753,8766-8768,8771-8773,8792-8793,8803-8804,8811-8812,8832-8833,8853-8856,8886-8887,8924-8926,8939-8940,8942,8950-8951,8961-8962,8972-8973,8976-8977,8995-8997,9023-9024,9045-9046,9090-9091,9102-9103,9105-9106,9120-9122,9124-9125,9127-9128,9131,9133-9134,9138-9139,9148-9149,9152-9153,9170-9172,9174-9175,9181-9182,9185-9186,9191-9192,9197-9198,9203-9204,9209-9210,9215-9216,9221-9222,9228-9229,9235-9236,9242-9243,9249-9250,9256-9257,9263-9264,9270-9271,9277-9278,9281-9282,9287-9288,9293-9294,9298-9300,9321-9322,9331-9332,9344-9346,9352-9356,9394-9397,9402-9405,9418-9421,9438-9439,9452-9458,9464-9465,9468-9469,9490-9491,9502-9503,9528-9529,9553-9554,9560-9561,9578-9579,9582-9583,9631-9634,9638-9639,9644-9647,9683-9684,9697-9698,9700-9701,9708-9710,9715-9716,9718-9719,9725-9726,9739-9741,9745-9746,9754-9760,9773-9775,9781-9784,9794-9795,9820-9822,9828-9829,9862-9863,9876-9877,9881-9882,9884-9885,9887,9889-9890,9892,9910-9912,9918-9919,9941-9942,9956-9958,9964-9967,9981-9985,9987-9988,10028-10030,10040-10041,10047-10048,10050-10052,10065-10067,10070,10077-10078,10095-10098,10107-10139,10160-10161,10163-10164,10181-10182,10190-10191,10196-10197,10207,10245-10246,10253-10255,10257-10258,10260,10278-10279,10327-10328,10338-10339,10342-10345,10353-10354,10356-10357,10362-10363,10365,10367-10368,10384-10387,10391-10392,10394-10395,10398-10399,10453-10454,10462-10464,10472-10473,10475-10476,10478-10480,10482-10483,10485-10486,10488-10489,10491-10492,10494-10495,10497-10498,10500-10501,10503-10504,10506-10507,10509-10510,10512-10513,10515-10516,10518-10519,10532-10533,10544-10545,10560-10563,10581-10584,10590-10594,10606-10607,10622-10624,10638-10641,10643,10649,10652-10683,10686-10687,10693,10695,10704-10708,10714-10715,10717,10719,10743,10745,10749,10751,10753-10761,10764,10771-10779,10781-10782,10785,10788,10790,10792,10794-10796,10800,10802-10808,10813,10815-10816,10820,10822-10825,10827,10831,10833,10835-10836,10840,10842-10843,10847,10849-10852,10856,10858,10860,10862,10864-10867,10871,10873-10876,10880,10882-10883,10887,10889,10891,10893,10895-10897,10899-10901,10905,10907-10908,10912-10916,10918,10920,10922,10924-10926,10930-10935,10937-10938,10940,10942-10946,10948,10950-10953,10957,10959-10961,10965,10967-10970,10974,10976,10978,10980-10981,10983,10985-10986,10988,10990-10991,10993,10995-10997,10999,11001-11002,11004,11006-11009,11013,11015-11018,11022,11024-11025,11027,11029-11030,11032,11034-11036,11040,11042-11044,11048,11050-11056,11060,11062-11064,11066,11068-11070,11074,11076-11078,11080,11082-11083,11085,11087-11089,11091,11093-11094,11096,11098-11100,11104,11106-11107,11109,11111-11112,11114,11116-11118,11122,11124-11127,11131,11133-11134,11136,11138-11139,11141,11143-11144,11146,11148-11149,11151,11153-11155,11159,11161-11163,11167,11169-11173,11177,11179-11181,11185,11187-11189,11191,11193-11194,11196,11198-11199,11201,11203-11204,11206,11208-11213,11217,11219-11221,11225,11227-11228,11230,11232-11234,11238,11240-11241,11243,11245-11247,11251,11253-11256,11260,11262-11263,11265,11267-11268,11270,11272-11273,11275,11277-11278,11280,11282-11284,11286,11288-11289,11291,11293-11294,11296,11298-11300,11304-11414,11419,11421-11423,11428-11430,11432-11434,11436,11438-11444,11448,11450-11456,11460,11462,11475,11477,11480,11482-11484,11513,11517,11521-11530,11543,11545,11554,11559,11564,11569,11574,11576-11578,11580,11582-11588,11590,11592,11595,11598,11601,11604,11607,11610,11613,11616,11619,11622,11625,11628,11631,11634,11637,11640,11643,11646,11649,11652,11655,11658,11661,11664,11667,11670,11673,11676,11678,11683,11685,11687,11689,11691-11693,11697,11699,11701,11703,11705,11709,11711-11712,11714,11716-11717,11719-11722,11725,11730,11732,11734,11741,11745-11747,11751,11753,11755,11761,11763-11764,11781,11785,11815,11819,11823,11827,11833,11837-11842,11844,11847,11924,11926,11928-11929,11931,11933,11935-11937,11939-11940,11943,11945,11947,11949,11968-11970,12022,12024-12025,12029,12031-12033,12037,12041,12043-12045,12048,12050-12051,12054,12056-12060,12065,12067,12071,12074,12140,12150-12170,12173-12174,12179-12180,12188,12194-12196,12198-12200,12202,12204,12206,12208,12211,12213,12218,12220,12223,12225-12229,12231,12233-12236,12238,12240-12243,12245,12247-12250,12252,12254-12259,12261,12263-12266,12268,12270-12273,12276,12278-12282,12284,12286-12289,12291,12293-12296,12298,12300-12303,12306,12308-12309,12311,12315,12317-12319,12321,12324-12327,12329,12331-12337,12339,12341-12342,12344,12346-12347,12349,12351-12352,12355,12357-12360,12363-12397,12402,12404-12407,12410,12412-12415,12417,12419-12428,12434,12437,12440,12443,12446,12449,12452,12455,12458,12461,12464,12467,12470,12473,12476,12479,12482,12484-12534,12537,12540,12543,12546,12549,12552,12555,12558,12561,12564,12567,12570,12573,12576,12579,12582,12585,12588,12591,12594,12597,12600,12603,12606,12609,12612,12615,12618,12621,12624,12627,12630,12633,12636,12639,12642,12644-12646,12649,12651-12653,12656-12660,12663,12666,12669,12672,12675,12678-12679,12681-12682,12684-12685,12687,12690-12698,12701,12704,12707,12710,12713,12716,12719,12722,12725,12728,12731,12734,12737,12740,12743,12746,12749,12752,12755,12758,12761,12764,12767,12770,12773,12776,12779,12782,12785,12788,12791,12794-12799,12802-12806,12809,12812,12815,12818,12821,12824,12827,12830,12833,12836,12839,12842,12845,12848,12851,12854,12857,12860,12863,12866,12869,12872-12876,12879,12882,12885,12960,12962,12966,12968,12993,12995-12996,12998-13000,13003-13005,13058,13067,13069-13070,13073-13074,13082,13084-13086,13089,13093,13095,13098,13101,13103,13105,13107,13109,13111,13113,13119,13121,13123-13126,13128,13130-13132,13134,13136,13138-13142,13144,13146,13148,13150,13152,13154,13156,13158,13160,13163,13166,13169,13172,13175,13178,13181,13184,13187,13190,13193,13196,13199,13202,13205,13208,13211,13214,13217,13220,13223,13226,13229,13232,13241,13244,13246-13247,13249-13250,13256,13258,13260,13262,13269,13271-13272,13278-13282,13284-13286,13292-13295,13301,13303-13310,13315,13318,13320,13323,13325,13327-13328,13330-13333,13336-13339,13355,13359,13366,13368-13370,13374,13409,13429,13437,13499,13504,13508,13511,13517-13518,13535,13539-13540,13542,13550-13556,13562-13566,13577-13578,13585,13589-13590,13594,13600,13616,13622-13625,13648,13650,13652-13655,13659-13660,13678,13680,13682,13686,13690,13695-13699,13701,13707-13712,13719,13737,13741,13743,13746-13751,13754,13759,13761-13766,13771,13773-13775,13780,13782-13785,13789-13799,13801-13805,13807,13809-13814,13816-13821,13823,13825-13833,13838-13851,13853,13855-13859,13864,13866-13870,13875-13880,13882-13883,13885,13887,13892,13894,13897-13902,13909,13912,13914,13919,13921,13923,13925,13927-13928,13933,13935,13937,13939-13940,13943,13945-13947,13949,13951,13953,13955-13956,13958,13960-13961,13963,13965,13968,13970-13972,13974,13976-13978,13980,13982-13983,13985,13987,13989,13992,13994-13996,13998,14000,14002,14004-14006,14008,14010,14012,14015-14017,14021,14023,14034,14036,14040-14044,14046,14048,14050-14052,14056,14060,14063-14064,14068-14073,14076,14078-14080,14082,14104,14109,14112,14114-14116,14119,14121-14122,14152,14154,14160,14162,14164-14165,14170,14172-14173,14183,14185-14186,14190,14197,14200,14202-14210,14217,14219-14220,14222,14224,14226,14228,14233-14235,14237-14243,14245,14248-14250,14253,14255,14257,14259,14261-14262,14264,14266-14268,14271,14273-14275,14277,14279,14281-14288,14290,14292,14294,14297,14304,14308,14311-14313,14315,14318-14320,14322,14324-14326,14328,14332,14334-14336,14338,14342-14350,14352,14356-14357,14360,14364,14366,14368,14370,14372,14374-14376,14379-14380,14382-14384,14387,14389-14390,14392,14395,14399,14401,14403,14405,14407-14410,14412-14416,14418,14420,14422-14424,14427,14429,14460,14462,14464,14471,14474,14478,14498-14500,14507-14509,14519,14521,14528-14530,14532-14535,14563,14565,14574,14581,14587,14589-14590,14607,14610,14612,14614,14619,14621,14623,14625-14627,14632,14634-14636,14640,14642-14643,14653,14655,14657-14664,14666,14668,14670,14672,14674-14686,14688,14690,14702,14706,14721,14725,14733,14735-14739,14747-14755,14767-14769,14790,14829-14830,14836,14848,14859,14876,14878,14891-14892,14905-14906,14911,14917-14918,14922,14947,14997-14998,15003-15004,15019,15025,15030,15056-15057,15066,15070,15072,15086,15096,15099,15104,15113,15138,15140,15146,15175,15202,15205-15206,15208,15211-15212,15214,15278-15279,15298,15341,15343-15345,15347-15350,15359,15367,15373,15377,15382,15401-15408,15413,15420,15422-15423,15432,15450,15455-15456,15461,15463,15469,15471,15480,15482,15484-15485,15490,15492-15517,15535,15537-15538,15540,15542-15543,15545,15547,15550,15552,15556,15558,15560,15562,15564,15566-15569,15571,15573,15575-15576,15578,15580,15582,15584,15587-15588,15590-15591,15594,15596-15597,15602,15604-15606,15609-15610,15617,15619,15621-15623,15627-15628,15630,15632,15634,15636-15637,15643,15645-15646,15649-15652,15654,15656,15659-15660,15665,15667-15668,15670-15671,15676,15678-15680,15682-15686,15688,15691,15693-15696,15698,15700,15702,15704,15706,15708-15709,15712-15715,15717-15718,15720,15722-15723,15727,15731,15733-15734,15739,15749,15751,15753-15756,15760-15761,15763,15778,15782,15814,15818-15819,15824-15831,15859,15861,15865,15870,15875,15887-15888,15905,15907,15925,15928-15931,15942-15959,15961,15963-15968,15970,15974-15975,15977-15979,15981,15984-15986,15988,15990,15996-15999,16008-16010,16012,16022,16024,16030,16032,16042,16046,16057,16060,16062-16064,16067-16068,16072-16077,16079-16082,16088,16098,16103,16105,16121,16136-16138,16140,16142-16143,16145-16146,16148,16154,16156-16161,16176,16181,16186,16191,16197,16212,16216,16218-16220,16260,16266,16268-16273,16277,16294,16302,16304,16307,16310,16337-16340,16357,16359-16362,16387,16392-16394,16406,16409,16413,16416,16418-16419,16424,16427,16449-16454,16461,16470,16487-16488,16490,16494,16498,16535-16538,16552-16555,16578-16582,16610,16617,16646,16650-16651,16673,16677,16679,16681,16683,16693,16696,16714-16717,16721,16724,16729,16738-16739,16758,16760,16764-16766,16798,16813-16814,16818,16833-16836,16845-16860,16878,16880,16980,16994,17004-17010,17014,17016-17018,17034,17038,17066,17076,17078,17080,17084,17086-17087,17090-17095,17098,17102,17106,17124,17131,17141,17146,17160,17164,17170,17173,17178,17183,17188,17192,17197,17199,17201-17204,17209-17220,17230,17235,17246,17255-17256,17261,17263-17270,17368-17377,17470,17473,17495,17520,17522,17524,17526,17528,17530,17534,17538,17561,17566-17568,17572-17573,17584,17586,17588,17590-17592,17597,17600-17601,17611,17615-17616,17623,17630,17638-17639,17671,17679,17682,17688,17700,17716,17718,17720-17721,17750,17752-17775,17777-17800,17802-17848,17866,17870-17872,17874,17876-17896,17898-17919,17922-17926,17936-17938,17942-17945,17947,17954-17956,17962-17963,18001,18014-18018,18037,18041-18043,18047,18049,18053-18055,18059-18061,18070,18076,18079,18081,18083,18095,18097,18106,18117,18119,18131,18149-18150,18174,18182,18185-18187,18189,18191,18197,18199,18228,18244,18246,18253,18261,18279,18282-18285,18287,18289,18293,18301-18302,18314,18316,18318,18335,18348,18360,18366,18370,18373,18376,18382,18387,18390,18396,18399,18411,18414,18424,18426,18441,18443-18444,18454,18456,18483,18485-18487,18489,18492,18494,18498,18502,18508,18510,18512-18537,18540,18542,18550,18552,18554,18575,18579,18583,18585,18588,18591,18594,18597,18600,18603,18606,18609,18612,18615,18618,18621,18624,18627,18630,18632,18635,18638,18641,18645,18651-18670,18672-18673,18698,18704,18706,18708,18728,18730,18735,18739-18741,18763,18779,18816-18827,18834-18838,18862-18869,18878,18881,18883,18886-18888,18900,18902-18904,18907-18908,18912,18914,18917,18936,18951,18970,18972,18981,18983,18987,18993,18995,19009,19016,19018,19020-19023,19041,19044,19046,19053,19055,19057,19061-19062,19064,19066,19068,19071,19075,19077,19118-19119,19124-19126,19130-19136,19140,19150,19154,19180,19188,19190-19191,19193-19198,19200,19202-19203,19205-19209,19220-19226,19229,19231,19233,19242,19257-19258,19261,19263-19265,19271,19273-19277,19285,19288-19292,19303,19324,19328,19332,19356,19362,19364,19368,19370,19374,19376,19378-19380,19385,19387-19388,19403,19407,19426,19435,19442,19444,19457-19458,19461-19462,19479,19486,19490-19492,19494,19533-19537,19553,19561-19579,19585,19587-19592,19595-19604,19606,19608-19610,19612-19614,19616,19618,19628-19633,19639,19645-19651,19653-19656,19662,19664,19677,19679,19689,19702,19704,19706-19709,19715,19721,19723-19724,19726-19730,19733,19735-19755,19757,19759,19761-19762,19764,19766,19769-19772,19774,19778,19780-19781,19783,19785-19789,19791,19793-19797,19801-19803,19805-19806,19833,19835-19836,19839,19841,19843,19845,19865,19867,19869,19871-19875,19877,19881,19883,19885,19887-19890,19893,19895,19897,19899,19901-19905,19907-19917,19919,19922,19925,19928,19930,19932-19936,19944,19948,19952-19953,19958,19960,19962,19964-19968,19970-19972,19974-19975,19977,19981,19983,19985-19987,19989-19990,19993-19994,20006-20007,20009-20010,20012,20057,20068,20077,20080,20091,20093,20100,20103,20105,20107,20109,20111-20120,20122,20125,20127,20133-20147,20152,20154,20156,20158,20161,20163,20165-20168,20170,20172,20174,20176-20178,20180,20182,20184,20186-20191,20193,20195,20197,20199,20201,20203-20204,20206,20208,20211,20227,20229,20233-20234,20245-20251,20255-20256,20274,20286-20288
+pnpm-workspace.yaml
+  s_1ef19d35864165::t_b3ca24f6b8b35b 9,12-14,16-19,31,37-39,42,47,49-53,56-57,59,64-65,68-70,72,76,81,83-86,88-91,94,96-98,100,103-104,106-108
+scripts/build-utils.js
+  s_1ef19d35864165::t_10a242fa579b92 15,23
+scripts/publish-ci.ts
+  s_1ef19d35864165::t_b747d568915738 3,6-8,10,12-15,17-20,22-28,30-41,44-46,48-52,54-67,69-73
+scripts/release.ts
+  s_1ef19d35864165::t_e189c61986a058 4-7,11-12,15,17-20,23-27
+test/browser/README.md
+  s_1ef19d35864165::t_728b78983e97d5 17
+test/browser/docker-compose.yaml
+  s_1ef19d35864165::t_dff2266cb42d0b 3-4,18-19
+test/browser/fixtures/command-permissions-screenshot-denied/screenshot-denied.test.ts
+  s_1ef19d35864165::t_55734108113a19 1-7
+test/browser/fixtures/command-permissions-screenshot-denied/vitest.config.ts
+  s_1ef19d35864165::t_0e15623c43059d 2-3,5-21
+test/browser/fixtures/command-permissions-screenshot-no-write/screenshot-write.test.ts
+  s_1ef19d35864165::t_30bc3f5113c04a 1-6
+test/browser/fixtures/command-permissions-screenshot-no-write/vitest.config.ts
+  s_1ef19d35864165::t_7f4fe54e04d92b 1,3,6,8-11,13-21
+test/browser/fixtures/command-permissions-upload-denied/my-secret.txt
+  s_1ef19d35864165::t_45839eff21bb73 1
+test/browser/fixtures/command-permissions-upload-denied/upload-denied.test.ts
+  s_1ef19d35864165::t_6e6d7f2cf8ac90 1-10
+test/browser/fixtures/command-permissions-upload-denied/vitest.config.ts
+  s_1ef19d35864165::t_d47714b6093175 1-21
+test/browser/fixtures/expect-dom/toBeInTheDocument.test.ts
+  s_1ef19d35864165::t_b2ef0c35ad08be 4,32,39,67
+test/browser/fixtures/expect-dom/vitest.config.js
+  s_1ef19d35864165::t_1d1dd3db11286c 8
+test/browser/fixtures/failing/vitest.config.ts
+  s_1ef19d35864165::t_01d8e222f25ace 8
+test/browser/fixtures/file-path-encoding/a+b.test.ts
+  s_1ef19d35864165::t_4e5661f66bc0e4 1-5
+test/browser/fixtures/file-path-encoding/vitest.config.ts
+  s_1ef19d35864165::t_3204c7bc6d92ad 1-8,10
+test/browser/fixtures/inspect/vitest.config.ts
+  s_1ef19d35864165::t_3626c52c1e581f 12
+test/browser/fixtures/inspect/vitest.config.with-workspace.ts
+  s_1ef19d35864165::t_a92b14bb833ae3 18
+test/browser/fixtures/isolate-and-setup-file/vitest.config.ts
+  s_1ef19d35864165::t_1f978a6c55aebd 8
+test/browser/fixtures/mocking-watch/vitest.config.ts
+  s_1ef19d35864165::t_505a0d7e9bd50d 11
+test/browser/fixtures/print-logs/test/dialog.test.ts
+  s_1ef19d35864165::t_3fd17a437eef1e 16-19
+test/browser/fixtures/print-logs/vitest.config.ts
+  s_1ef19d35864165::t_07908048ff36c6 8
+test/browser/fixtures/server-url/vitest.config.ts
+  s_1ef19d35864165::t_841039962a33d9 26-29
+test/browser/fixtures/timeout-hooks/hooks-timeout.test.ts
+  s_1ef19d35864165::t_0db38058c7abb8 7,11,16,24,32,40,49,55,63,71
+test/browser/fixtures/trace/vitest.config.ts
+  s_1ef19d35864165::t_01ae872d309b9e 8
+test/browser/fixtures/user-event/keyboard.test.ts
+  s_1ef19d35864165::t_b1ee2e8b67a1d5 33-34
+test/browser/fixtures/user-event/wheel.test.ts
+  s_1ef19d35864165::t_e7e74b453d743a 58-59
+test/browser/package.json
+  s_1ef19d35864165::t_0570899f01b6f1 6,32,34,41-42,47
+test/browser/settings.ts
+  s_1ef19d35864165::t_9a5d93296e758b 5,32,52
+test/browser/setup.unit.ts
+  s_1ef19d35864165::t_62803796bffb74 57,59,61,63,65
+test/browser/specs/aria-snapshot.test.ts
+  s_1ef19d35864165::t_ac3bfea699f810 118-147,149
+test/browser/specs/assertion-helper.test.ts
+  s_1ef19d35864165::t_1f38b4663ee70d 19,23,27,31,43,47,51,55,67,71,75,79
+test/browser/specs/concurrency-id.test.ts
+  s_1ef19d35864165::t_0a499a0a445923 1-61
+test/browser/specs/config-watching.test.ts
+  s_1ef19d35864165::t_f8847aa3a2c2a6 3
+test/browser/specs/duplicate-tester.test.ts
+  s_1ef19d35864165::t_0c354ad693cb2d 1-2,4-11,13-19,21-43,45,47-60
+test/browser/specs/error-watch.test.ts
+  s_1ef19d35864165::t_f61e5fc0ff6b9c 26,54
+test/browser/specs/errors.test.ts
+  s_1ef19d35864165::t_33c9533b552110 11,16,112-114,147-148,164-178,188-189,211-214,225,232-279
+test/browser/specs/file-path-encoding.test.ts
+  s_1ef19d35864165::t_052d7b5ff28420 1-20
+test/browser/specs/oxc.test.ts
+  s_1ef19d35864165::t_945618bbc524d8 2
+test/browser/specs/playwright-connect.test.ts
+  s_1ef19d35864165::t_bdbd2963b053e8 19
+test/browser/specs/playwright-trace-mark.test.ts
+  s_1ef19d35864165::t_1da7417f601583 108,125,145,169,176,179,202,215,229,232,246
+test/browser/specs/prewarm.test.ts
+  s_1ef19d35864165::t_2430c10d64b982 1-133
+test/browser/specs/readiness.test.ts
+  s_1ef19d35864165::t_1e7af6a60fb919 1-150
+test/browser/specs/runner.test.ts
+  s_1ef19d35864165::t_eea2d50c2ce713 68,77,184-186,235,239,242,248,279,299,301-302,305-324,327,337,434-437,439-441,443-445,447-449,451-453,455-457,459-461,463-465,467-469,471-473,475-477,479-481,483-485,487-489,491-493,495-497,499-501,503-505,507-509,511-513,515-517,519-521,523-525,527-529,531-533,535-537,539-542,548,551
+test/browser/specs/server-url.test.ts
+  s_1ef19d35864165::t_dc5cf7e3554e54 13,15-16,26-28
+test/browser/specs/to-match-screenshot.test.ts
+  s_1ef19d35864165::t_d94ad788e13617 134-174
+test/browser/specs/trace.test.ts
+  s_1ef19d35864165::t_d9e0cb6ba1d691 158,170,216,228,245,328,347,363
+test/browser/test/browser.bench.ts
+  s_1ef19d35864165::t_9854e2e4fb4952 14,17-18,21,39,41
+test/browser/test/commands.test.ts
+  s_1ef19d35864165::t_a6240fa3f857c9 7-9,18,21,39,42
+test/browser/test/dom.test.ts
+  s_1ef19d35864165::t_34af636dc0ef1a 2-3,40
+test/browser/test/mocking.test.ts
+  s_1ef19d35864165::t_a90523f221cf11 15
+test/browser/test/userEvent.test.ts
+  s_1ef19d35864165::t_2763b2b14a5b4f 930,973,988,1008,1021
+test/browser/test/viewport.test.ts
+  s_1ef19d35864165::t_7e2788638d10b8 8
+test/browser/vitest.config.unit.mts
+  s_1ef19d35864165::t_fb006662bd1925 3,16-20
+test/coverage-test/fixtures/configs/vitest.config.workspace.ts
+  s_1ef19d35864165::t_2b2fc4e1154ed7 13,20,27
+test/coverage-test/fixtures/src/slow-module-imported.ts
+  s_1ef19d35864165::t_b2b5169c1d7425 1-17
+test/coverage-test/fixtures/src/slow-module.ts
+  s_1ef19d35864165::t_6111731677ceee 1,3-6,8-9
+test/coverage-test/fixtures/test/slow-module-import-awaited.test.ts
+  s_1ef19d35864165::t_ba5b7796955055 1-6
+test/coverage-test/fixtures/test/slow-module-import-pending.test.ts
+  s_1ef19d35864165::t_a0c2de8a9d2225 1-11
+test/coverage-test/package.json
+  s_1ef19d35864165::t_0561766df4ebf3 12,19-20,23-25
+test/coverage-test/test/cjs-dependency.test.ts
+  s_1ef19d35864165::t_baa4c6582e7c78 13
+test/coverage-test/test/configuration-options.test-d.ts
+  s_1ef19d35864165::t_f08905ea09f5ef 46,74-151
+test/coverage-test/test/custom-provider.custom.test.ts
+  s_1ef19d35864165::t_2e0855bee469cd 8
+test/coverage-test/test/mixed-versions-warning.unit.test.ts
+  s_1ef19d35864165::t_8c53460bc7a3c3 19,42
+test/coverage-test/test/module-import-pending.v8.test.ts
+  s_1ef19d35864165::t_4247333f3f7436 1-35
+test/coverage-test/test/source-maps.test.ts
+  s_1ef19d35864165::t_ef08e0b8d1d31f 2,10
+test/coverage-test/test/temporary-files.unit.test.ts
+  s_1ef19d35864165::t_09ebfc68ddba55 1-5,8-9,11-28,30-50,52-83,85-102
+test/coverage-test/test/threshold-auto-update.unit.test.ts
+  s_1ef19d35864165::t_9d453efe6de6c7 159-239,261-262
+test/coverage-test/test/threshold-glob.test.ts
+  s_1ef19d35864165::t_e41ae28ea4392f 60-136
+test/coverage-test/test/threshold-per-file.test.ts
+  s_1ef19d35864165::t_e55df7e015bc58 1-203
+test/coverage-test/utils.ts
+  s_1ef19d35864165::t_1fd96525ffdc74 29,96
+test/coverage-test/vitest.config.ts
+  s_1ef19d35864165::t_6991f1acef7ddf 15-19
+test/e2e/deps/dep-simple2/index.js
+  s_1ef19d35864165::t_a8408d267deee0 1
+test/e2e/deps/dep-simple2/package.json
+  s_1ef19d35864165::t_294179e12591a5 2,4-5
+test/e2e/dts/exact-optional-property-no-node/src/runner.ts
+  s_1ef19d35864165::t_6990f8e63bcdf3 1,6
+test/e2e/dts/exact-optional-property-node/src/reporter.ts
+  s_1ef19d35864165::t_7d3be330d38493 1,5
+test/e2e/fixtures/caching/dynamic-cache-key/vitest.config.bails.js
+  s_1ef19d35864165::t_54a75e57323ac7 11
+test/e2e/fixtures/caching/dynamic-cache-key/vitest.config.passes.js
+  s_1ef19d35864165::t_ec2d1130b1b34b 11
+test/e2e/fixtures/compile-cache/basic.test.ts
+  s_1ef19d35864165::t_d5ed4293bd1cbb 1-16
+test/e2e/fixtures/compile-cache/vitest.config.ts
+  s_1ef19d35864165::t_eac1485cc0c8e3 1-9
+test/e2e/fixtures/console-color/vitest.config.ts
+  s_1ef19d35864165::t_751122a605b3bc 1-9
+test/e2e/fixtures/css/test/default-css.spec.ts
+  s_1ef19d35864165::t_db1a578550fe93 31
+test/e2e/fixtures/css/test/process-css.spec.ts
+  s_1ef19d35864165::t_e3070b1e788df6 30
+test/e2e/fixtures/css/test/scope-module.spec.ts
+  s_1ef19d35864165::t_c2e661b05ba4fa 12
+test/e2e/fixtures/custom-pool/pool/custom-pool.ts
+  s_1ef19d35864165::t_7cbf0814301a1a 3
+test/e2e/fixtures/custom-runner/test-runner.ts
+  s_1ef19d35864165::t_0395c326cd8376 1
+test/e2e/fixtures/custom-runner/utils.ts
+  s_1ef19d35864165::t_4e984630cb998a 1
+test/e2e/fixtures/doctor-failing/ok.test.ts
+  s_1ef19d35864165::t_5d74cdec99a124 1-5
+test/e2e/fixtures/doctor-failing/vitest.config.ts
+  s_1ef19d35864165::t_ca284ad2b55d12 1-8
+test/e2e/fixtures/doctor-failing/vm-hostile.test.ts
+  s_1ef19d35864165::t_e24dfc143708d2 1-6
+test/e2e/fixtures/doctor-projects/dom.test.ts
+  s_1ef19d35864165::t_47cdd3551437c5 1-5
+test/e2e/fixtures/doctor-projects/node.test.ts
+  s_1ef19d35864165::t_f557c1f003a84e 1-6
+test/e2e/fixtures/doctor-projects/vitest.config.ts
+  s_1ef19d35864165::t_0153ff431fb49f 1-28
+test/e2e/fixtures/doctor/basic-1.test.ts
+  s_1ef19d35864165::t_2173bececade55 1-5
+test/e2e/fixtures/doctor/basic-2.test.ts
+  s_1ef19d35864165::t_06440051d1ad03 1-5
+test/e2e/fixtures/doctor/vitest.config.ts
+  s_1ef19d35864165::t_e24a7f8311fa40 1-7
+test/e2e/fixtures/expect-soft/expects/soft.test.ts
+  s_1ef19d35864165::t_5e68df7952b58e 4,9
+test/e2e/fixtures/frozen-object-prototype/basic.test.ts
+  s_1ef19d35864165::t_3e490fc9840502 1-9
+test/e2e/fixtures/global-setup-teardown-fail/example.test.ts
+  s_1ef19d35864165::t_6ec73caede3e2f 1-5
+test/e2e/fixtures/global-setup-teardown-fail/globalSetup/error.ts
+  s_1ef19d35864165::t_b191215f01e274 1,3
+test/e2e/fixtures/global-setup-teardown-fail/vitest.config.ts
+  s_1ef19d35864165::t_afdce00f439701 1-2,6-8
+test/e2e/fixtures/leak-probe/a.test.js
+  s_1ef19d35864165::t_7328254ea9ca02 1-15
+test/e2e/fixtures/leak-probe/b.test.js
+  s_1ef19d35864165::t_dd923d1700c1cd 1-15
+test/e2e/fixtures/leak-probe/c.test.js
+  s_1ef19d35864165::t_624e7f32dbe4de 1-15
+test/e2e/fixtures/leak-probe/d.test.js
+  s_1ef19d35864165::t_390054bb5c63d0 1-15
+test/e2e/fixtures/leak-probe/e.test.js
+  s_1ef19d35864165::t_6053afda0793bc 1-15
+test/e2e/fixtures/leak-probe/f.test.js
+  s_1ef19d35864165::t_0d613ad946d68b 1-15
+test/e2e/fixtures/leak-probe/g.test.js
+  s_1ef19d35864165::t_23a4aa2f7148f6 1-15
+test/e2e/fixtures/leak-probe/h.test.js
+  s_1ef19d35864165::t_ec63c8f2e47dee 1-15
+test/e2e/fixtures/leak-probe/i.test.js
+  s_1ef19d35864165::t_037ac326ea4e5a 1-15
+test/e2e/fixtures/leak-probe/j.test.js
+  s_1ef19d35864165::t_165adf050e2ad8 1-15
+test/e2e/fixtures/leak-probe/leak-probe-env.ts
+  s_1ef19d35864165::t_c1a92b37814e8e 1-32,35-42
+test/e2e/fixtures/leak-probe/module-state.js
+  s_1ef19d35864165::t_f2a90742906586 1
+test/e2e/fixtures/list/vitest.config.ts
+  s_1ef19d35864165::t_948ec2beb1ead0 9
+test/e2e/fixtures/no-module-runner/package.json
+  s_1ef19d35864165::t_5fa9d2059948d4 13
+test/e2e/fixtures/no-module-runner/test/suite.test.ts
+  s_1ef19d35864165::t_10000d25394150 2
+test/e2e/fixtures/optimize-deps-mock/basic.test.ts
+  s_1ef19d35864165::t_76e5a0f6cc3b4e 1-40
+test/e2e/fixtures/optimize-deps-mock/vitest.config.ts
+  s_1ef19d35864165::t_6f01368c56daf5 1,3-7,10-16,19
+test/e2e/fixtures/pool-worker-exit/1-first.test.ts
+  s_1ef19d35864165::t_c0a3d28cadb511 1-6
+test/e2e/fixtures/pool-worker-exit/2-crash.test.ts
+  s_1ef19d35864165::t_6ffa2b804510d3 1-8
+test/e2e/fixtures/pool-worker-exit/3-crash.test.ts
+  s_1ef19d35864165::t_d902757028b5d7 1-8
+test/e2e/fixtures/pool-worker-exit/4-third.test.ts
+  s_1ef19d35864165::t_0dd1eb1b1b9a11 1-6
+test/e2e/fixtures/pool-worker-exit/5-exit.test.ts
+  s_1ef19d35864165::t_3000f076bdef31 1,3-7
+test/e2e/fixtures/pool-worker-exit/src.ts
+  s_1ef19d35864165::t_fc91776fd6232b 1-6
+test/e2e/fixtures/pool/write-to-stdout-and-stderr.test.ts
+  s_1ef19d35864165::t_9fecf47d7c2e01 4,8-11,13-14,25
+test/e2e/fixtures/related/vitest.config.ts
+  s_1ef19d35864165::t_8cf0438f9dcc66 1
+test/e2e/fixtures/repeats/repeats-config.test.ts
+  s_1ef19d35864165::t_277d33527c7293 3-4,7-8
+test/e2e/fixtures/reporters/merge-reports-module-graph/second.test.ts
+  s_1ef19d35864165::t_bffcbd6ed4d92d 3
+test/e2e/fixtures/vm-cjs-namespace/cjs-namespace.test.js
+  s_1ef19d35864165::t_f06204b123abc3 2-5,9-15,17-20,22-26,28-30
+test/e2e/fixtures/vm-cjs-namespace/src/external/collision-cjs.cjs
+  s_1ef19d35864165::t_cabee212e8b260 1-2
+test/e2e/fixtures/vm-cjs-namespace/src/external/raw-cjs.cjs
+  s_1ef19d35864165::t_da8b15b0ec7628 1
+test/e2e/fixtures/vm-cjs-namespace/vitest.config.ts
+  s_1ef19d35864165::t_dfb19fb8f2a503 1-12
+test/e2e/package.json
+  s_1ef19d35864165::t_5ee9c244c715e3 14-16,23,27,35-36,38,44-45
+test/e2e/snapshots/domain-aria-inline.test.ts
+  s_1ef19d35864165::t_e5ba0a6abaa3df 1-3,106,110,249,253,313,317
+test/e2e/snapshots/domain-aria.test.ts
+  s_1ef19d35864165::t_7b2cb323dd49cd 6,122,126
+test/e2e/snapshots/fixtures/custom-matcher/basic.test.ts
+  s_1ef19d35864165::t_636324456eb4e0 13-14,18
+test/e2e/snapshots/fixtures/domain/basic-extend.ts
+  s_1ef19d35864165::t_b58a89c88b6c98 11
+test/e2e/snapshots/fixtures/jest-image-snapshot/basic.test.ts
+  s_1ef19d35864165::t_c0c7fe7f1c883d 9-10
+test/e2e/snapshots/properties.test.ts
+  s_1ef19d35864165::t_7b327d27ad3177 9
+test/e2e/test/__snapshots__/fails.test.ts.snap
+  s_1ef19d35864165::t_1f2852412cde19 6-8,103-104
+test/e2e/test/__snapshots__/stacktraces.test.ts.snap
+  s_1ef19d35864165::t_cdf536079c56cf 59-60,73-74
+test/e2e/test/annotations.test.ts
+  s_1ef19d35864165::t_291950462581f1 1-2,5,375,384
+test/e2e/test/artifacts.test.ts
+  s_1ef19d35864165::t_794090614c6aed 2,5,316,325,374,386,407,418
+test/e2e/test/benchmarking.test.ts
+  s_1ef19d35864165::t_f94d0f2b3fba32 3-4,327,348-349,352-353,713,915,935,1134,1325-1430
+test/e2e/test/caching.test.ts
+  s_1ef19d35864165::t_8558d20703707d 15-16,38-39,57-58,82-83,103-104,128-129,147-148,172-173
+test/e2e/test/cancel-run.test.ts
+  s_1ef19d35864165::t_31e3af036f324d 24-30,34,51-55,58-60
+test/e2e/test/cli-config.test.ts
+  s_1ef19d35864165::t_462789fb8cd3e3 30,54
+test/e2e/test/compile-cache.test.ts
+  s_1ef19d35864165::t_9f7dc5aaec7ac7 1-76
+test/e2e/test/concurrent.test.ts
+  s_1ef19d35864165::t_1239d59dfe68f1 13-20,30,38-41,51,56,60,90,109-110,120,129-132,144,150,154,185
+test/e2e/test/config/bail.test.ts
+  s_1ef19d35864165::t_311df5db761bb1 4,16,27,59
+test/e2e/test/config/browser-configs.test.ts
+  s_1ef19d35864165::t_da778d55201b6e 2-3,7-10,12-47,49-56,59-114,116,128,136-137,148,154-155,166,172,192,201-205,215,239,245,264,285,291-309,311,329,335-336,358,364,374-385,391-392,396,399,404-405,408,412,417-418,422,425,431,445-446,450-451,475,481-482,505,511-512,536,544,564-571,574,580,583-584,588,597,603,612,616,624-634,636-637,646,654-664,666-667,684-690,692-706,715,732-734,738,747,751,761,765-769,780,783-784,792-804,836,841,855-858,1302-1309,1314-1318
+test/e2e/test/config/injectCjsGlobals.test.ts
+  s_1ef19d35864165::t_69d399396b13c2 1-251
+test/e2e/test/config/sequence-shuffle.test.ts
+  s_1ef19d35864165::t_635275907d2c38 3,151-167,169,180
+test/e2e/test/config/watchTriggerPattern.test.ts
+  s_1ef19d35864165::t_988d1e91132d7b 3
+test/e2e/test/detect-async-leaks.test.ts
+  s_1ef19d35864165::t_b8f66371a0c38d 338
+test/e2e/test/doctor.test.ts
+  s_1ef19d35864165::t_09ebc721a23ce8 1-69
+test/e2e/test/each-non-ascii-placeholders.test.ts
+  s_1ef19d35864165::t_568f00e5fbfa58 1-29
+test/e2e/test/fails.test.ts
+  s_1ef19d35864165::t_82dfe143b71649 52-53,82,86-125,245-246,262-274
+test/e2e/test/failures.test.ts
+  s_1ef19d35864165::t_112891fc1557bc 13,135,137,182,184,257,266-273,356,411
+test/e2e/test/frozen-object-prototype.test.ts
+  s_1ef19d35864165::t_47878bd7383c0a 2-3,5,7-11,13,15-22
+test/e2e/test/fs-cached-check.test.ts
+  s_1ef19d35864165::t_ee0270242495d2 2
+test/e2e/test/fs-module-cache-resiliency.test.ts
+  s_1ef19d35864165::t_8d305bdd61bf7b 1-149
+test/e2e/test/get-state.test.ts
+  s_1ef19d35864165::t_0bd7d062567d66 3
+test/e2e/test/global-setup.test.ts
+  s_1ef19d35864165::t_37ad01aedd7ad4 21-28
+test/e2e/test/hook-timeout.test.ts
+  s_1ef19d35864165::t_417397297cdae0 10-28
+test/e2e/test/in-source-collect.test.ts
+  s_1ef19d35864165::t_c35800db49d86e 1-112
+test/e2e/test/list-changed.test.ts
+  s_1ef19d35864165::t_19a5779a6bba89 2
+test/e2e/test/mocking.test.ts
+  s_1ef19d35864165::t_06559a459793ea 4,6,157-158,192-199,202,246-247,286-287,470,513-574
+test/e2e/test/no-module-runner.test.ts
+  s_1ef19d35864165::t_3d6a1033f47234 5,150,520,715
+test/e2e/test/no-unexpected-logging.test.ts
+  s_1ef19d35864165::t_f56cff775befa4 36,43-56
+test/e2e/test/node-builtins.test.ts
+  s_1ef19d35864165::t_ce55ad0f756868 2
+test/e2e/test/optimize-deps-mock.test.ts
+  s_1ef19d35864165::t_adc4e79a9bf4ca 1,4-21
+test/e2e/test/override.test.ts
+  s_1ef19d35864165::t_3d54414905cfdc 1-2,4-11,16-17,23-24,29,34-35,41-42,47,52,58,64,70,76,82,126-143,145-152,161-162,164-165,168-171,176-177,182-187,189-197
+test/e2e/test/pool-worker-exit.test.ts
+  s_1ef19d35864165::t_d4e4386159bd4b 1-176
+test/e2e/test/projects.test.ts
+  s_1ef19d35864165::t_f303b464219df0 3,120-237,345-747
+test/e2e/test/public-api.test.ts
+  s_1ef19d35864165::t_4c33f43f49011b 1,49
+test/e2e/test/public.test.ts
+  s_1ef19d35864165::t_9459c801fa471f 8,10,13-14,18,23-25,31,35-36,42,46-47,53,63-64,66-67,115,119-120,125,134
+test/e2e/test/repeats.test.ts
+  s_1ef19d35864165::t_187ad696d40bcf 1-26
+test/e2e/test/reported-tasks.test.ts
+  s_1ef19d35864165::t_31644652b545d9 102-103
+test/e2e/test/reporters/agent.test.ts
+  s_1ef19d35864165::t_f1b60442ad4eaa 3
+test/e2e/test/reporters/code-frame-line-limit.test.ts
+  s_1ef19d35864165::t_12d6b31879149c 3
+test/e2e/test/reporters/console.test.ts
+  s_1ef19d35864165::t_bbd63a8c767241 6
+test/e2e/test/reporters/custom-diff-config.test.ts
+  s_1ef19d35864165::t_fe399aa59bb7bc 3,24-51
+test/e2e/test/reporters/custom-reporter.test.ts
+  s_1ef19d35864165::t_3964881b4d569a 3
+test/e2e/test/reporters/default.test.ts
+  s_1ef19d35864165::t_0d7034a11b9d42 4
+test/e2e/test/reporters/dot.test.ts
+  s_1ef19d35864165::t_c5050ab40dea28 2
+test/e2e/test/reporters/error-to-json.test.ts
+  s_1ef19d35864165::t_13fe4ed0eb0cf0 2
+test/e2e/test/reporters/function-as-name.test.ts
+  s_1ef19d35864165::t_405584d952d5b7 3
+test/e2e/test/reporters/github-actions.test.ts
+  s_1ef19d35864165::t_826c82e53ad2d1 8
+test/e2e/test/reporters/html.test.ts
+  s_1ef19d35864165::t_e4d24037fb6d0f 3,21,43,71,89
+test/e2e/test/reporters/import-durations.test.ts
+  s_1ef19d35864165::t_be9627dd4d4d98 4,67,78-81,177,187-189
+test/e2e/test/reporters/indicator-position.test.ts
+  s_1ef19d35864165::t_becd69e50fda2e 4
+test/e2e/test/reporters/json.test.ts
+  s_1ef19d35864165::t_c46397c909570d 1,5-6,11-14,16,23,48,54,91,98,139,141,148,154,162,170,177-190
+test/e2e/test/reporters/junit.test.ts
+  s_1ef19d35864165::t_f9359b72577837 1-2,4,6,10-13,16,46,64,66,73,75,81,83,103-104,108,110,117,123,129-147,171,176,180,185,189,194,196-197,205-206,210,213,224,228,248,252,257,261,267,271,291,295,305,309,317,321,330,334,341,345,352,356,362,367,374,378,382,386
+test/e2e/test/reporters/logger.test.ts
+  s_1ef19d35864165::t_00c15db825ba83 2,19
+test/e2e/test/reporters/merge-reports.test.ts
+  s_1ef19d35864165::t_1bd6b202cb5f27 1,4-5,11,14,116,120,123,130,260,266-267,284,356-358,360-373,377,395,400-402,417,423,485,494,501,516,531,629,697,771,786-787,818,820,847,874,897,923,927,939,943
+test/e2e/test/reporters/reporter-error.test.ts
+  s_1ef19d35864165::t_c9f388decca5b9 4
+test/e2e/test/reporters/reporters.test.ts
+  s_1ef19d35864165::t_588642cfa4f12a 50,63,78,96,114,130,230,246
+test/e2e/test/reporters/silent.test.ts
+  s_1ef19d35864165::t_0db2b45d2686dc 3
+test/e2e/test/reporters/summary.test.ts
+  s_1ef19d35864165::t_751ecf8b99dd89 5,178,198
+test/e2e/test/reporters/tap.test.ts
+  s_1ef19d35864165::t_27a1e6d1fcbd5b 2
+test/e2e/test/reporters/test-run.test.ts
+  s_1ef19d35864165::t_8473c718df7948 17
+test/e2e/test/reporters/tree.test.ts
+  s_1ef19d35864165::t_ef5f0cc0eb49de 2
+test/e2e/test/reporters/utils.ts
+  s_1ef19d35864165::t_1b77f321a120aa 8,69,94
+test/e2e/test/reporters/verbose.test.ts
+  s_1ef19d35864165::t_762eae33b2db87 3,138-144,146-151
+test/e2e/test/retry-condition.test.ts
+  s_1ef19d35864165::t_ac8f8fc1b2a4fa 4
+test/e2e/test/rollup-error.test.ts
+  s_1ef19d35864165::t_6436b23f8ba75d 3,6,11-12,15-16,18,22,27-28,31,33-34
+test/e2e/test/scoped-fixtures.test.ts
+  s_1ef19d35864165::t_347fecccdf9350 1284
+test/e2e/test/sequence-concurrent.test.ts
+  s_1ef19d35864165::t_88097a32def68c 68-123
+test/e2e/test/server-url.test.ts
+  s_1ef19d35864165::t_5910ccecbe7d8d 6-10,12,20-21,26,37-38
+test/e2e/test/static-collect.test.ts
+  s_1ef19d35864165::t_dd53077b1a9cb0 5
+test/e2e/test/test-meta.test.ts
+  s_1ef19d35864165::t_7c92e63ccc98eb 3
+test/e2e/test/test-name-pattern.test.ts
+  s_1ef19d35864165::t_fcfff50da330f9 1-51
+test/e2e/test/test-tags.test.ts
+  s_1ef19d35864165::t_d3b3fa08741923 3
+test/e2e/test/unhandled-rejections.test.ts
+  s_1ef19d35864165::t_eb2c069dff99a0 3
+test/e2e/test/vcs-provider.test.ts
+  s_1ef19d35864165::t_cc0f7a3943c0f8 5
+test/e2e/test/vite-ssr-resolve.test.ts
+  s_1ef19d35864165::t_3e7f23b095c7d2 7
+test/e2e/test/vm-threads.test.ts
+  s_1ef19d35864165::t_2247148f676464 3,19-102,107-111,145,147,150,152,162-531
+test/e2e/test/watch/change-project.test.ts
+  s_1ef19d35864165::t_b25ca06d833e63 2
+test/e2e/test/watch/file-watching.test.ts
+  s_1ef19d35864165::t_3862ec87bef534 1-4,7-14,16-27,29-30,32,34-37,39-46,56,58,61,66-79,81,83,88-98,101-105,112,114,117,122-131,133-136,143-152,154,227-228,233-234,243,251,261,264
+test/e2e/test/watch/global-setup-rerun.test.ts
+  s_1ef19d35864165::t_b0c8cfbf31a930 2,4-36,39,42,50,61,64
+test/e2e/test/watch/related.test.ts
+  s_1ef19d35864165::t_ad6e038c82c1f7 3,5-8,11,19,24
+test/e2e/test/watch/reporter-failed.test.ts
+  s_1ef19d35864165::t_4fd71a5b02c087 2
+test/e2e/test/watch/restart-coalescing.test.ts
+  s_1ef19d35864165::t_c7ffeb44b2517a 1-29
+test/e2e/test/watch/stdin.test.ts
+  s_1ef19d35864165::t_b998a86da07afa 1-2,4,6-21,23-27,29,37,55-57,89,111,113-115,117-119,121-122,124-125,127-130,132,148,158
+test/e2e/test/watch/stdout.test.ts
+  s_1ef19d35864165::t_b83c73c1a9710a 1-2,4-12,14,16-20,31
+test/e2e/test/watch/workspaces.test.ts
+  s_1ef19d35864165::t_6a86e98c990d7f 1-2,4,13-28,30-31,33,35-36,40-77,79,81-83,87-112,114,116,125-150,152-153,155,158-159,164-165,168-196,198,201-202,207-208
+test/e2e/test/workers-option.test.ts
+  s_1ef19d35864165::t_770516cd0c3dd0 3
+test/e2e/vitest.config.ts
+  s_1ef19d35864165::t_b809b2602b635f 5-16,19,26,34-36,43,47-48,82-95
+test/test-utils/index.ts
+  s_1ef19d35864165::t_f7627a457dded3 2,23,26-29,47-109,145,182-186,221,223-224,229-245,252,277-280,283,290,297-305,340-446,539,555,561,563,568-579,636-640,659-663,666-668,721,723,728,790-792
+test/test-utils/package.json
+  s_1ef19d35864165::t_7cac90aac545e9 10
+test/tsconfig.json
+  s_1ef19d35864165::t_41b60e7c91a871 5-6
+test/typescript/fixtures/typecheck-crash/fake-tsc.mjs
+  s_1ef19d35864165::t_e5577f79510663 1-17
+test/typescript/fixtures/typecheck-crash/test/ok.test-d.ts
+  s_1ef19d35864165::t_31475f238be2b1 1-5
+test/typescript/fixtures/typecheck-crash/tsconfig.json
+  s_1ef19d35864165::t_647ac7b436eba6 3-4,7-8,10-11
+test/typescript/package.json
+  s_1ef19d35864165::t_27c1981209208e 14
+test/typescript/test-d/expect-extend.test-d.ts
+  s_1ef19d35864165::t_af1c22c1c5ea2c 3,6,10,13,26-31,36-37,39-45
+test/typescript/test/__snapshots__/runner.test.ts.snap
+  s_1ef19d35864165::t_6d225320d67471 15,26,37,48,59,70,81,92
+test/typescript/test/typechecker.test.ts
+  s_1ef19d35864165::t_ca9f092bd35ea7 18-39
+test/ui/README.md
+  s_1ef19d35864165::t_52370a700c7325 11-14
+test/ui/fixtures/single-file/vitest.config.ts
+  s_1ef19d35864165::t_7b35a0e3661907 4
+test/ui/fixtures/trace-stream/nested.test.ts
+  s_1ef19d35864165::t_2fe21c1f5e5421 1-34
+test/ui/fixtures/trace/nested.test.ts
+  s_1ef19d35864165::t_5b1ece33d790d0 1-22
+test/ui/package.json
+  s_1ef19d35864165::t_0a0fbfba6894b2 11,14
+test/ui/test/browser-preview.spec.ts
+  s_1ef19d35864165::t_a599f1e9fd134c 8,10,26-34
+test/ui/test/editor.spec.ts
+  s_1ef19d35864165::t_bde1e31e52a87f 24
+test/ui/test/helper.ts
+  s_1ef19d35864165::t_6bd53dbc4de1ea 32-34,37,68,72-73
+test/ui/test/merge-reports.spec.ts
+  s_1ef19d35864165::t_ab2b3bd2bc8be0 48
+test/ui/test/single-file.spec.ts
+  s_1ef19d35864165::t_953506132044fc 18
+test/ui/test/trace-stream.spec.ts
+  s_1ef19d35864165::t_7274e8ca0a9f90 35,161-221
+test/ui/test/trace.spec.ts
+  s_1ef19d35864165::t_ef026a1a45a48b 20,29,56-59,86,99,126-129,157,175,312-328
+test/ui/test/ui.spec.ts
+  s_1ef19d35864165::t_e9631972f7e168 4,6-16,32,47-95,180,308,323,334,350,364,380,460,673,716
+test/unit/package.json
+  s_1ef19d35864165::t_2c525638bdb6a1 34-36,38-40,44
+test/unit/projects/http-client/index.d.ts
+  s_1ef19d35864165::t_f9e2d9fb02ac6a 1-13
+test/unit/projects/http-client/index.js
+  s_1ef19d35864165::t_641845e84c7de4 1,3,5-7,9-13
+test/unit/projects/http-client/package.json
+  s_1ef19d35864165::t_2a57a226782d9d 1-6
+test/unit/src/cjs/prototype-cjs.js
+  s_1ef19d35864165::t_04bca999e5255c 2
+test/unit/src/mocks/external/external.mjs
+  s_1ef19d35864165::t_84b4f1e44fb6e7 3
+test/unit/test/browser-sessions.test.ts
+  s_1ef19d35864165::t_79558a43c83bb3 5-10,59-80
+test/unit/test/chainable.test.ts
+  s_1ef19d35864165::t_73a741b0eac218 2
+test/unit/test/cli-test.test.ts
+  s_1ef19d35864165::t_662a40c560c8e2 2-8,218-236,319,321-325,327,461-471,481,491,501,511,521
+test/unit/test/doctor-candidates.test.ts
+  s_1ef19d35864165::t_982a4cb4e603f9 1-104
+test/unit/test/duration-breakdown.test.ts
+  s_1ef19d35864165::t_714c1d8495e867 1-140
+test/unit/test/each.test.ts
+  s_1ef19d35864165::t_62bbc36718ba52 93,115,228-235
+test/unit/test/env-runtime.test.ts
+  s_1ef19d35864165::t_92267df49ea56d 12
+test/unit/test/environment-diagnostics.test.ts
+  s_1ef19d35864165::t_0bcd6726c4fc1b 1-184
+test/unit/test/environments/happy-dom.spec.ts
+  s_1ef19d35864165::t_43aedc441e6f5e 42-66
+test/unit/test/environments/jsdom-options.test.ts
+  s_1ef19d35864165::t_8bada2f4ad23c4 1-2,4-5,7-18,20,22-26,28-29,31-32,34
+test/unit/test/environments/jsdom.spec.ts
+  s_1ef19d35864165::t_400458c8ebec18 338-350
+test/unit/test/expect-poll.test.ts
+  s_1ef19d35864165::t_207424119a656e 3-8,47,94,103
+test/unit/test/expect.test-d.ts
+  s_1ef19d35864165::t_bd34170905d716 5,9,13,18,23,28,32,37,41,63-70,100-109,121-132,140,144,148,155,185-188
+test/unit/test/expect.test.ts
+  s_1ef19d35864165::t_1ae20b2fc7e980 6,37-38
+test/unit/test/exports.test.ts
+  s_1ef19d35864165::t_75762bf960d434 72,94,96,107,113
+test/unit/test/fixture-initialization.test.ts
+  s_1ef19d35864165::t_f5d94214e9ea81 143
+test/unit/test/import-diagnostics.test.ts
+  s_1ef19d35864165::t_8de0c8b6ef5159 1-208
+test/unit/test/injector-esm.test.ts
+  s_1ef19d35864165::t_e4b5054bdb1f1c 17-24
+test/unit/test/interop.test.ts
+  s_1ef19d35864165::t_7c44b2ce77fa2a 16-18
+test/unit/test/jest-expect.test.ts
+  s_1ef19d35864165::t_0aeac1a3cb2c05 6,19,800-803,1243,1253
+test/unit/test/lookup-package-scope-type.test.ts
+  s_1ef19d35864165::t_b3511db216a71b 1-39
+test/unit/test/mocked-no-mocks.test.ts
+  s_1ef19d35864165::t_7ed41c18c6af58 19
+test/unit/test/mocking/autospying.test.ts
+  s_1ef19d35864165::t_3eee9ac0f19d2b 1,8,22,24-26
+test/unit/test/mocking/external.test.ts
+  s_1ef19d35864165::t_277bcd4a7638a4 4,10-11
+test/unit/test/mocking/factory.test.ts
+  s_1ef19d35864165::t_c8cb9f195eb967 1,39,92-93,95
+test/unit/test/mocking/http-client-mocked.test.ts
+  s_1ef19d35864165::t_d1e34edc9aa6c9 1,4,6-7,9-10,13-14,16
+test/unit/test/mocking/http-client-not-mocked.test.ts
+  s_1ef19d35864165::t_5cae38a784e952 1,4-5,7,9,12-13
+test/unit/test/mocking/import-actual-query-target.ts
+  s_1ef19d35864165::t_da9137bbf0ee64 1
+test/unit/test/mocking/import-actual-query.test.ts
+  s_1ef19d35864165::t_10e22f9b63dd05 1-20
+test/unit/test/mocking/vi-spyOn.test.ts
+  s_1ef19d35864165::t_507bca47477732 22-54
+test/unit/test/mocking/vi-when.test.ts
+  s_1ef19d35864165::t_6cd6ed0fe514b4 1-700
+test/unit/test/module-diagnostic.test.ts
+  s_1ef19d35864165::t_da7208c34a55a2 1,22
+test/unit/test/parse-cjs-conditions.test.ts
+  s_1ef19d35864165::t_60541fa7669bd0 68-81
+test/unit/test/repeats.test.ts
+  s_1ef19d35864165::t_3d5a602d0d6ead 1,55
+test/unit/test/skip-reset-state.test.ts
+  s_1ef19d35864165::t_9662de2c1dd731 1,5
+test/unit/test/snapshot-async.test.ts
+  s_1ef19d35864165::t_4d3074b63bce55 11,15
+test/unit/test/snapshot-custom-serializer.test.ts
+  s_1ef19d35864165::t_7760301c542a22 35
+test/unit/test/stubs.test.ts
+  s_1ef19d35864165::t_6121e54c287bcb 124-131
+test/unit/test/test-extend.test.ts
+  s_1ef19d35864165::t_7e43b50547dd58 4,205,216,221,254,264-265,267-268,272-274,277-279,289-290,302-303,312-315,321,329-332,339,347,357
+test/unit/test/test-tags-filter.test.ts
+  s_1ef19d35864165::t_e971ba5c8eb799 1,3
+test/unit/test/timers-queueMicrotask.test.ts
+  s_1ef19d35864165::t_1143d6c24d9a5f 23
+test/unit/test/timers-temporal.test.ts
+  s_1ef19d35864165::t_cbb2a29e9de275 1-46
+test/unit/test/utils.spec.ts
+  s_1ef19d35864165::t_f1d951007e38b5 368
+test/unit/test/vi.spec.ts
+  s_1ef19d35864165::t_532ce8ea1c8bc8 267-269,272
+test/unit/test/vm-code-cache.test.ts
+  s_1ef19d35864165::t_77d4c43605faa9 1-63
+test/unit/vite.config.ts
+  s_1ef19d35864165::t_3f04c834533efc 136
+test/workspaces/package.json
+  s_1ef19d35864165::t_da28ac58963874 14
+test/workspaces/space_1/test/env-injected.spec.ts
+  s_1ef19d35864165::t_0250220b603f0c 13-16
+tsconfig.check.json
+  s_1ef19d35864165::t_e9aa8cd91ca4f6 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "231bfbc788d11bed22b488866b1a59febe55ab25",
+  "prompts": {},
+  "sessions": {
+    "s_1ef19d35864165": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_01646e037ffeU0S2Xfv7tNQfXM",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
