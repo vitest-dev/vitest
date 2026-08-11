@@ -75,6 +75,7 @@ export function BrowserLoaderPlugin(
                   || message.includes('dependencies optimized: ')
                   || message.includes('optimized dependencies changed. reloading')
               if (isOptimizerMessage) {
+                // escalate from `info` to `warn` so it shows up on Vitest's default logLevel `warn`
                 logger.warn(message, options)
               }
               else {
