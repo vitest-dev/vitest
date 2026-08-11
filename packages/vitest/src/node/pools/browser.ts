@@ -6,7 +6,7 @@ import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
-import type { BrowserProvider, CDPSession } from '../types/browser'
+import type { BrowserProvider } from '../types/browser'
 import crypto from 'node:crypto'
 import { readFile, statfs } from 'node:fs/promises'
 import * as nodeos from 'node:os'
@@ -498,7 +498,6 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     cdpDetachMs: undefined,
     forced: forceChromiumGC,
   }
-  let cdp: CDPSession | undefined
   try {
     // Playwright enables --disable-dev-shm-usage by default, which makes
     // Chromium use TMPDIR or /tmp for shared memory files.
@@ -519,12 +518,21 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     }
 
     operationStart = performance.now()
-    cdp = await provider.getCDPSession(sessionId)
+    const cdp = await provider.getCDPSession(sessionId)
     timings.cdpSessionMs = performance.now() - operationStart
 
-    operationStart = performance.now()
-    await cdp.send('HeapProfiler.collectGarbage')
-    timings.cdpSendMs = performance.now() - operationStart
+    try {
+      operationStart = performance.now()
+      await cdp.send('HeapProfiler.collectGarbage')
+      timings.cdpSendMs = performance.now() - operationStart
+    }
+    finally {
+      operationStart = performance.now()
+      await cdp.detach().catch((error) => {
+        debugGC?.('[%s] failed to detach Chromium CDP session: %s', sessionId, error)
+      })
+      timings.cdpDetachMs = performance.now() - operationStart
+    }
 
     const availableGiB = Number(available) / 1024 ** 3
     const thresholdGiB = Number(chromiumGCDiskThreshold) / 1024 ** 3
@@ -536,13 +544,6 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
   }
   finally {
-    if (cdp) {
-      const operationStart = performance.now()
-      await cdp.detach().catch((error) => {
-        debugGC?.('[%s] failed to detach Chromium CDP session: %s', sessionId, error)
-      })
-      timings.cdpDetachMs = performance.now() - operationStart
-    }
     timings.totalMs = performance.now() - start
     debugGC?.('[%s] Chromium garbage collection check: %O', sessionId, timings)
   }
