@@ -7,13 +7,14 @@ interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | '
   mask?: readonly SerializedLocator[]
   target?: 'element' | 'page'
   /**
+   * Marks this screenshot for internal use, changing how it's stored and handled.
+   *
+   * Allowed values:
+   * - `'failure-screenshot'`: taken automatically on test failure, stored in the attachments directory.
+   *
    * @internal
-   * Marks the screenshot as an internal failure screenshot (taken by
-   * `browser.screenshotFailures`). Failure screenshots are transient debug
-   * artifacts, so they are stored in the attachments directory instead of the
-   * `__screenshots__` visual regression reference directory.
    */
-  internal?: 'failure-screenshot'
+  reason?: 'failure-screenshot'
 }
 
 declare module 'vitest/browser' {
@@ -39,11 +40,13 @@ export const screenshot: BrowserCommand<[string, ScreenshotCommandOptions]> = as
     options.base64 = true
   }
 
-  if (options.internal === 'failure-screenshot') {
-    // Failure screenshots are transient debug artifacts, not visual regression
-    // references. Store them in the attachments directory (gitignorable) instead
-    // of mingling them with the committed `__screenshots__` reference set.
-    options.path = resolve(context.project.config.attachmentsDir, basename(name))
+  if (options.reason === 'failure-screenshot' && context.testPath) {
+    // Failure screenshots are transient debug artifacts
+    options.path = resolve(
+      context.project.config.attachmentsDir,
+      basename(context.testPath),
+      basename(name),
+    )
   }
 
   const { buffer, path } = await context.triggerCommand('__vitest_takeScreenshot', name, options)
