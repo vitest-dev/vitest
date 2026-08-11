@@ -112,6 +112,31 @@ test('disables pre-transform requests in node mode', async () => {
   })
 })
 
+test('warns when browser dependencies are re-optimized', async () => {
+  const { stderr, stdout, stdin } = createConsole()
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const cli = new Cli({ stderr, stdin, stdout })
+  const viteConfig = await resolveConfig({ config: false }, {
+    test: {
+      browser: {
+        enabled: true,
+        provider: preview(),
+        instances: [{ browser: 'chromium' }],
+      },
+    },
+  }, harness)
+
+  viteConfig.customLogger.info('optimized dependencies changed. reloading')
+
+  expect(cli.stderr).toMatchInlineSnapshot(`
+    "
+    [vitest] Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.
+    For a stable experience, add the newly optimized dependencies to your config's \`optimizeDeps.include\` field manually.
+
+    "
+  `)
+})
+
 test('assigns names as browsers', async () => {
   const projects = await config({
     browser: {
