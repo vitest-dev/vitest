@@ -930,6 +930,13 @@ Run only tests with the specified tags. You can use logical operators `&&` (and)
 
 Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)
 
+### sharedViteServer
+
+- **CLI:** `--sharedViteServer`
+- **Config:** [sharedViteServer](/config/sharedviteserver)
+
+Let inline projects that don't modify the Vite config reuse the Vite server of the config that declares them. (default: `true`)
+
 ### experimental.importDurations.print
 
 - **CLI:** `--experimental.importDurations.print <boolean|on-warn>`

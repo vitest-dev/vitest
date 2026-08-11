@@ -30,8 +30,17 @@ export function createDefinesScript(define: Record<string, any> | undefined): st
     return ''
   }
   return `
-const defines = ${serializeDefine(define)}
+const defines = ${serializedDefine}
+const metaDefines = {}
 Object.keys(defines).forEach((key) => {
+  if (key.startsWith('import.meta.env.')) {
+    process.env[key.slice('import.meta.env.'.length)] = defines[key]
+    return
+  }
+  if (key.startsWith('import.meta.')) {
+    metaDefines[key.slice('import.meta.'.length)] = defines[key]
+    return
+  }
   const segments = key.split('.')
   let target = globalThis
   for (let i = 0; i < segments.length; i++) {
@@ -43,6 +52,7 @@ Object.keys(defines).forEach((key) => {
     }
   }
 })
+globalThis.__vitest_worker__.metaDefines = metaDefines
   `
 }
 
@@ -58,10 +68,7 @@ function serializeDefine(define: Record<string, any>): string {
     if (key === 'process.env.NODE_ENV' && define[key] === 'process.env.NODE_ENV') {
       continue
     }
-    // import.meta.env.* is handled in `importAnalysis` plugin
-    if (!key.startsWith('import.meta.env.')) {
-      userDefine[key] = define[key]
-    }
+    userDefine[key] = define[key]
   }
   let res = `{`
   const keys = Object.keys(userDefine).sort()

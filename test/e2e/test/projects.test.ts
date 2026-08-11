@@ -1,3 +1,5 @@
+import type { Vitest } from 'vitest/node'
+import type { TestFsStructure } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { runInlineTests, runVitest, ts } from '#test-utils'
@@ -742,6 +744,286 @@ describe('nested projects', () => {
 
     await vitest.waitForStdout('Waiting for file changes')
     expect(vitest.stdout).toContain('app (two)')
+  })
+})
+
+describe('sharedViteServer', () => {
+  const basicTest = ts`
+    import { test } from 'vitest'
+    test('runs', () => {})
+  `
+
+  it('projects without vite-affecting options share the server of the declaring config', async () => {
+    const { stderr, ctx, results } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { test: { name: 'shared-a' } },
+            { test: { name: 'shared-b', env: { FROM_B: '1' }, testTimeout: 1234 } },
+            { test: { name: 'own-alias', alias: { x: './y.js' } } },
+            { test: { name: 'own-optimizer', deps: { optimizer: { ssr: { enabled: false } } } } },
+            { extends: false, test: { name: 'own-isolated' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    expect(results.every(module => module.ok())).toBe(true)
+
+    const root = ctx!.getRootProject()
+    const shared = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.vite === root.vite]),
+    )
+    expect(shared).toEqual({
+      'shared-a': true,
+      'shared-b': true,
+      'own-alias': false,
+      'own-optimizer': false,
+      'own-isolated': false,
+    })
+    // the shared projects still resolve their own test options
+    const sharedB = ctx!.projects.find(project => project.name === 'shared-b')!
+    expect(sharedB.config.testTimeout).toBe(1234)
+    expect(sharedB.config.env).toMatchObject({ FROM_B: '1' })
+  })
+
+  it('resolves the same project config as a full resolution', async () => {
+    const structure = (sharedViteServer: boolean) => ({
+      'globalSetup.js': ts`
+        import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+        import { resolve } from 'node:path'
+
+        export default function setup(project) {
+          const file = resolve(project.config.root, 'setup-runs.txt')
+          const runs = existsSync(file) ? Number(readFileSync(file, 'utf-8')) : 0
+          writeFileSync(file, String(runs + 1))
+        }
+      `,
+      'setup.root.js': '',
+      'setup.child.js': '',
+      'vitest.config.js': {
+        test: {
+          sharedViteServer,
+          testTimeout: 4321,
+          globalSetup: './globalSetup.js',
+          setupFiles: ['./setup.root.js'],
+          env: { FROM_ROOT: '1' },
+          tags: [{ name: 'shared', retry: 2 }],
+          projects: [
+            { test: { name: 'first', setupFiles: ['./setup.child.js'] } },
+            { test: { name: 'second', tags: [{ name: 'shared', retry: 5 }], env: { FROM_ROOT: '2' } } },
+            { test: {} },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    } satisfies TestFsStructure)
+
+    const project = (ctx: Vitest) =>
+      ctx.projects.map(project => ({
+        name: project.name,
+        testTimeout: project.config.testTimeout,
+        setupFiles: project.config.setupFiles.map(file => file.split('/').pop()),
+        env: project.config.env,
+        tags: project.config.tags,
+        globalSetup: project.config.globalSetup,
+        moduleDirectories: project.config.deps.moduleDirectories,
+        serverDeps: project.config.server.deps,
+        defines: project.config.defines,
+      }))
+
+    const full = await runInlineTests(structure(false))
+    const shared = await runInlineTests(structure(true))
+    expect(full.stderr).toBe('')
+    expect(shared.stderr).toBe('')
+    expect(project(shared.ctx!)).toEqual(project(full.ctx!))
+    // the root globalSetup runs once and is not inherited in both modes
+    expect(full.fs.readFile('setup-runs.txt')).toBe('1')
+    expect(shared.fs.readFile('setup-runs.txt')).toBe('1')
+    // the fast path was actually taken
+    const root = shared.ctx!.getRootProject()
+    expect(shared.ctx!.projects.every(project => project.vite === root.vite)).toBe(true)
+    expect(full.ctx!.projects.every(project => project.vite !== root.vite)).toBe(true)
+    // the raw config is captured only when the feature is enabled; the root
+    // keeps it for `injectTestProjects`
+    expect(shared.ctx!.config._rawTestConfig).toBeDefined()
+    expect(shared.ctx!.config._rawTestConfig!.projects).toBeUndefined()
+    expect(full.ctx!.config._rawTestConfig).toBeUndefined()
+  })
+
+  it('cli overrides apply to shared-server projects', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          testTimeout: 4321,
+          projects: [
+            { test: { name: 'unit' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    }, { $cliOptions: { testTimeout: 999 } })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.config.testTimeout)).toEqual([999])
+  })
+
+  it('projects of a container share the container server', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { test: { name: 'unit' } },
+            { test: { name: 'e2e' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const [unit, e2e] = ctx!.projects
+    expect(ctx!.projects.map(project => project.name)).toEqual(['app (unit)', 'app (e2e)'])
+    expect(unit.vite).toBe(e2e.vite)
+    expect(unit.vite).not.toBe(ctx!.getRootProject().vite)
+    // the server belongs to the container config, including for the project
+    // that triggered its creation
+    expect(unit.sharedViteServer).toBe(true)
+    expect(e2e.sharedViteServer).toBe(true)
+  })
+
+  it('vite options that don\'t change the server don\'t prevent sharing', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': ts`
+        export default {
+          define: {
+            'import.meta.something': '"root"',
+            '__ROOT_CODE__': 'process.env.ROOT_CODE',
+            'import.meta.obj': { nested: ['a'] },
+          },
+          test: {
+            projects: [
+              { plugins: [], test: { name: 'empty-plugins' } },
+              { plugins: [false, [], [null]], test: { name: 'noop-plugins' } },
+              { plugins: undefined, resolve: undefined, test: { name: 'undefined-options' } },
+              { define: { __FLAG__: 'true' }, test: { name: 'global-define' } },
+              { define: { 'import.meta.env.FROM_DEFINE': '"1"' }, test: { name: 'env-define' } },
+              { define: { 'process.env': {}, 'process': {}, 'global': {} }, test: { name: 'dropped-define' } },
+              { define: { 'import.meta.something': '"root"' }, test: { name: 'repeated-define' } },
+              { define: { '__ROOT_CODE__': 'process.env.ROOT_CODE' }, test: { name: 'repeated-code-define' } },
+              { define: { 'import.meta.obj': { nested: ['a'] } }, test: { name: 'repeated-object-define' } },
+              { define: { '__CODE__': 'process.env.CODE' }, test: { name: 'code-define' } },
+              { define: { 'myLib.version': '"2"' }, test: { name: 'dotted-define' } },
+              { define: { 'import.meta.something': '"changed"' }, test: { name: 'changed-define' } },
+              { define: { '__ROOT_CODE__': 'process.env.OTHER' }, test: { name: 'changed-code-define' } },
+              { define: { 'import.meta.other': '"new"' }, test: { name: 'new-define' } },
+              { define: { 'import.meta.env.RAW': 'process.env.RAW' }, test: { name: 'code-env-define' } },
+              { plugins: [{ name: 'noop' }], test: { name: 'own-plugin' } },
+            ],
+          },
+        }
+      `,
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const root = ctx!.getRootProject()
+    const shared = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.vite === root.vite]),
+    )
+    expect(shared).toEqual({
+      'empty-plugins': true,
+      'noop-plugins': true,
+      'undefined-options': true,
+      'global-define': true,
+      'env-define': true,
+      'dropped-define': true,
+      'repeated-define': true,
+      'repeated-code-define': true,
+      'repeated-object-define': true,
+      'code-define': true,
+      'dotted-define': true,
+      'changed-define': true,
+      'changed-code-define': true,
+      'new-define': true,
+      'code-env-define': true,
+      'own-plugin': false,
+    })
+    const flags = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.sharedViteServer]),
+    )
+    expect(flags).toEqual(shared)
+    expect(root.sharedViteServer).toBe(false)
+  })
+
+  it('runtime defines of a shared project apply to its tests', async () => {
+    const { stderr, ctx, results } = await runInlineTests({
+      'vitest.config.js': {
+        define: {
+          '__ROOT_FLAG__': '"root-value"',
+          'import.meta.mode': '"root-mode"',
+        },
+        test: {
+          projects: [
+            {
+              define: {
+                '__PROJECT_FLAG__': '"from-project"',
+                'import.meta.env.SHARED_DEFINE_ENV': '"env-value"',
+                'process.env.SHARED_DEFINE_PROCESS': '"process-value"',
+                '__CODE_REF__': 'process.version',
+                'myLib.version': '"lib-1"',
+                '__ROOT_FLAG__': 'process.platform',
+                'import.meta.custom': '"meta-value"',
+                'import.meta.nested.value': '"nested-meta"',
+                'import.meta.mode': '"project-mode"',
+              },
+              test: { name: 'runtime-defines', include: ['defines.test.js'] },
+            },
+            { test: { name: 'plain', include: ['plain.test.js'] } },
+          ],
+        },
+      },
+      'defines.test.js': ts`
+        import { expect, test } from 'vitest'
+        test('defines are applied', () => {
+          expect(__PROJECT_FLAG__).toBe('from-project')
+          expect(import.meta.env.SHARED_DEFINE_ENV).toBe('env-value')
+          expect(process.env.SHARED_DEFINE_PROCESS).toBe('process-value')
+          expect(__CODE_REF__).toBe(process.version)
+          expect(myLib.version).toBe('lib-1')
+          expect(__ROOT_FLAG__).toBe(process.platform)
+          expect(import.meta.custom).toBe('meta-value')
+          expect(import.meta.nested.value).toBe('nested-meta')
+          const key = 'custom'
+          expect(import.meta[key]).toBe('meta-value')
+          expect(import.meta.mode).toBe('project-mode')
+        })
+      `,
+      'plain.test.js': ts`
+        import { expect, test } from 'vitest'
+        test('inherited defines are untouched', () => {
+          expect(__ROOT_FLAG__).toBe('root-value')
+          expect(import.meta.mode).toBe('root-mode')
+        })
+      `,
+    })
+    expect(stderr).toBe('')
+    expect(results.every(module => module.ok())).toBe(true)
+    const root = ctx!.getRootProject()
+    const [runtimeDefines, plain] = ctx!.projects
+    expect(runtimeDefines.vite).toBe(root.vite)
+    expect(runtimeDefines.config.defines.__PROJECT_FLAG__).toBe('from-project')
+    // the overriding entry moved from the inherited runtime defines
+    // to the project's defines script
+    expect(runtimeDefines.config.defines).not.toHaveProperty('__ROOT_FLAG__')
+    expect(plain.config.defines.__ROOT_FLAG__).toBe('root-value')
+    // the project's global defines don't leak into the parent or siblings
+    expect(root.config.defines).not.toHaveProperty('__PROJECT_FLAG__')
+    expect(plain.config.defines).not.toHaveProperty('__PROJECT_FLAG__')
   })
 })
 
