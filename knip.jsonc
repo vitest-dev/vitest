@@ -23,6 +23,9 @@
       "unresolved",
       "exports"
     ],
+    // The "./src/*" package export used to make every src file a public entry
+    // point, hiding dead code from Knip. TODO(follow-up) Clean these up and drop the ignore.
+    "packages/vitest/src/**": ["files", "exports", "types"],
     "packages/vitest/src/integrations/vi.ts": ["duplicates"],
     "packages/vitest/src/runtime/runner/suite.ts": ["duplicates"]
   },
@@ -92,7 +95,20 @@
       ]
     },
     "packages/vitest": {
-      "entry": ["*.{cjs,d.cts,d.ts,mjs}"],
+      // Keep src entries in sync with rollup.config.js: Knip does not read
+      // rollup configs here (the rollup plugin is not enabled per-workspace),
+      // and package.json exports only point to dist.
+      "entry": [
+        "*.{cjs,d.cts,d.ts,mjs}",
+        "src/paths.ts",
+        "src/public/*.ts",
+        "src/node/cli.ts",
+        "src/integrations/spy.ts",
+        "src/runtime/nodejsWorkerLoader.ts",
+        "src/runtime/runVmTests.ts",
+        "src/runtime/workers/*.ts",
+        "src/utils/tasks.ts"
+      ],
       "ignoreDependencies": [
         // Dynamically imported providers remain optional for Vitest users.
         "@vitest/browser-playwright",
