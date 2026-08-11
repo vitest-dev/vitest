@@ -195,6 +195,7 @@ function createBrowserRunner(
       ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
+          internal: 'failure-screenshot',
         } as any /** TODO */).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
