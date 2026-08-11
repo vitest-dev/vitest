@@ -471,7 +471,7 @@ function shouldIgnoreDebugger(provider: string, browser: string) {
 // Best-effort workaround for chromium/playwright bug
 // https://issues.chromium.org/issues/530892387
 
-// Trigger gc on lower disk (default to 4g)
+// Trigger gc on lower disk (default to 4GB)
 const chromiumGCDiskThreshold = process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB
   ? BigInt(process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB) * 1024n ** 3n
   : 4n * 1024n ** 3n
