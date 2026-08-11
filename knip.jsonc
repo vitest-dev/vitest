@@ -23,9 +23,6 @@
       "unresolved",
       "exports"
     ],
-    // The "./src/*" package export used to make every src file a public entry
-    // point, hiding dead code from Knip. TODO(follow-up) Clean these up and drop the ignore.
-    "packages/vitest/src/**": ["files", "exports", "types"],
     "packages/vitest/src/integrations/vi.ts": ["duplicates"],
     "packages/vitest/src/runtime/runner/suite.ts": ["duplicates"]
   },

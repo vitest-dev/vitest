@@ -3,7 +3,7 @@ import type { RawErrsMap, TscErrorInfo } from './types'
 const newLineRegExp = /\r?\n/
 const errCodeRegExp = /error TS(?<errCode>\d+)/
 
-export async function makeTscErrorInfo(
+async function makeTscErrorInfo(
   errInfo: string,
 ): Promise<[string, TscErrorInfo | null]> {
   const [errFilePathPos = '', ...errMsgRawArr] = errInfo.split(':')

@@ -2,7 +2,7 @@ import { KEYS } from './jsdom-keys'
 
 const skipKeys = ['window', 'self', 'top', 'parent']
 
-export function getWindowKeys(
+function getWindowKeys(
   global: any,
   win: any,
   additionalKeys: string[] = [],

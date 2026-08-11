@@ -175,7 +175,7 @@ function resolveInlineWorkerOption(value: string | number): number {
  * the raw user config sources BEFORE `configDefaults` is merged in - the
  * merged object cannot distinguish a default from a user-provided value.
  */
-export function captureProvidedOptions(
+function captureProvidedOptions(
   ...sources: (UserConfig | undefined)[]
 ): ResolvedConfig['providedOptions'] {
   return {
