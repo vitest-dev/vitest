@@ -479,6 +479,7 @@ const forceChromiumGC = !!process.env.VITEST_CHROMIUM_GC_FORCE
 const debugGC = createDebugger('vitest:browser:gc')
 
 async function maybeCollectChromiumGarbage(project: TestProject, sessionId: string): Promise<void> {
+  // trigger only on linux/chromium/playwright
   const provider = project.browser!.provider
   if (
     (!forceChromiumGC && process.platform !== 'linux')
@@ -518,7 +519,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     }
 
     operationStart = performance.now()
-    // Playwright sessions are disposable, but the public CDPSession omits detach().
+    // `detach` is available only internally and not on CDPSession type
     const cdp = await provider.getCDPSession(sessionId) as CDPSession & { detach: () => Promise<void> }
     timings.cdpSessionMs = performance.now() - operationStart
 
@@ -542,6 +543,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     )
   }
   catch (error) {
+    // don't surface if fs or cdp fails
     debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
   }
   finally {
