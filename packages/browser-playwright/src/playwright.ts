@@ -665,6 +665,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       on: cdp.on.bind(cdp),
       off: cdp.off.bind(cdp),
       once: cdp.once.bind(cdp),
+      // Keep detach internal because browser-facing cdp() sessions are shared.
       detach: cdp.detach.bind(cdp),
     } as any // overloaded CDPSession type is too tricky in monorepo
   }

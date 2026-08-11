@@ -518,6 +518,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     }
 
     operationStart = performance.now()
+    // Playwright sessions are disposable, but the public CDPSession omits detach().
     const cdp = await provider.getCDPSession(sessionId) as CDPSession & { detach: () => Promise<void> }
     timings.cdpSessionMs = performance.now() - operationStart
 
