@@ -32,6 +32,20 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   })
+
+  // https://github.com/vitest-dev/vitest/issues/10835
+  // forceRerunTriggers are compiled with picomatch's default `dot: false`, so
+  // `**` does not cross a dot-prefixed path segment. When the project path
+  // contains one (e.g. `.worktrees`, `.claude`, `.cache`), every trigger
+  // silently matched nothing and `--changed` reported no test files.
+  it('should run the whole test suite if the trigger file is in a dot-prefixed directory', async () => {
+    createFile('fixtures/git-changed/related/.dotdir/rerun.temp', '')
+    const { stdout, stderr } = await run()
+    expect(stderr).toBe('')
+    expect(stdout).toContain('1 passed')
+    expect(stdout).toContain('related.test.ts')
+    expect(stdout).not.toContain('not-related.test.ts')
+  })
 })
 
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {

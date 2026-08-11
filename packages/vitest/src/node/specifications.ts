@@ -135,7 +135,12 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    // dot: true — trigger globs are opt-in paths a user explicitly named, so
+    // `**` should cross dot-prefixed path segments (e.g. a checkout under
+    // `.worktrees/` or `.cache/`). With picomatch's default `dot: false`, every
+    // trigger silently matched nothing when the project path contained one.
+    // https://github.com/vitest-dev/vitest/issues/10835
+    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers, { dot: true }) : undefined
     if (matcher && related.some(file => matcher(file))) {
       return specs
     }

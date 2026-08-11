@@ -173,7 +173,12 @@ export class VitestWatcher {
       return false
     }
 
-    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
+    // dot: true — trigger globs are opt-in paths a user explicitly named, so
+    // `**` should cross dot-prefixed path segments (e.g. a checkout under
+    // `.worktrees/` or `.cache/`). With picomatch's default `dot: false`, every
+    // trigger silently matched nothing when the project path contained one.
+    // https://github.com/vitest-dev/vitest/issues/10835
+    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers, { dot: true })) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
       return true
     }
