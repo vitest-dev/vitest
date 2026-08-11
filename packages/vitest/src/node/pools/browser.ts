@@ -538,10 +538,12 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
       diagnostics.cdpDetachMs = performance.now() - operationStart
     }
 
-    operationStart = performance.now()
-    const fsStatsAfter = statfsSync(tempDirectory)
-    diagnostics.statfsAfterMs = performance.now() - operationStart
-    diagnostics.availableBytesAfter = (fsStatsAfter.bavail * fsStatsAfter.bsize).toString()
+    if (debugGC?.enabled) {
+      operationStart = performance.now()
+      const fsStatsAfter = statfsSync(tempDirectory)
+      diagnostics.statfsAfterMs = performance.now() - operationStart
+      diagnostics.availableBytesAfter = (fsStatsAfter.bavail * fsStatsAfter.bsize).toString()
+    }
 
     const availableGiB = available / 1024 ** 3
     const thresholdGiB = chromiumGCDiskThreshold / 1024 ** 3
