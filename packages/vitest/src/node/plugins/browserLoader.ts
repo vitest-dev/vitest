@@ -9,7 +9,9 @@ import type {
   ParentProjectBrowser,
 } from '../types/browser'
 import type { ConfigResolutionCaptures, ResolvedConfig, ResolvedProjectEntry } from '../types/config'
+import c from 'tinyrainbow'
 import { createViteServer } from '../vite'
+import { createViteLogger } from '../viteLogger'
 
 function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
   const pre: VitePlugin[] = []
@@ -57,7 +59,39 @@ export function BrowserLoaderPlugin(
         const contribution = await provider.serverFactory()
         captures.browserContribution = contribution
         const browserConfig = await contribution.config(viteConfig, harness)
-        return browserConfig
+        const logLevel = viteConfig.logLevel ?? 'warn'
+        const logger = createViteLogger(harness.logger, logLevel, {
+          allowClearScreen: false,
+        })
+        return {
+          ...browserConfig,
+          customLogger: {
+            ...logger,
+            info(message, options) {
+              // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L76-L86
+              // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L483-L490
+              const isOptimizerMessage
+                = message.includes('dependency optimized: ')
+                  || message.includes('dependencies optimized: ')
+                  || message.includes('optimized dependencies changed. reloading')
+              if (isOptimizerMessage) {
+                // escalate from `info` to `warn` so it shows up on Vitest's default logLevel `warn`
+                logger.warn(message, options)
+              }
+              else {
+                logger.info(message, options)
+              }
+              if (message.includes('optimized dependencies changed. reloading')) {
+                logger.warn(
+                  [
+                    c.yellow(`\n${c.bold('[vitest]')} Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`),
+                    c.yellow(`For a stable experience, add the newly optimized dependencies to your config's ${c.bold('`optimizeDeps.include`')} field manually.\n`),
+                  ].join(''),
+                )
+              }
+            },
+          },
+        }
       },
       applyToEnvironment(environment) {
         const contribution = captures.browserContribution
