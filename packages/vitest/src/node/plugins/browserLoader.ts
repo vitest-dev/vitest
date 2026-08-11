@@ -69,7 +69,8 @@ export function BrowserLoaderPlugin(
             ...logger,
             info(message, options) {
               const isOptimizerMessage
-                = message.includes('dependencies optimized')
+                = message.includes('dependency optimized')
+                  || message.includes('dependencies optimized')
                   || message.includes('optimized dependencies changed. reloading')
               if (isOptimizerMessage) {
                 logger.warn(message, options)
