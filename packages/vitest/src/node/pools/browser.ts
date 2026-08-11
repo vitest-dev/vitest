@@ -491,7 +491,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
   }
 
   const start = performance.now()
-  const timings: Record<string, number | string | boolean | undefined> = {
+  const timings: Record<string, any> = {
     statfsMs: undefined,
     cdpSessionMs: undefined,
     cdpSendMs: undefined,
