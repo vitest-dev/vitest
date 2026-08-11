@@ -6,7 +6,7 @@ import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
-import type { BrowserProvider } from '../types/browser'
+import type { BrowserProvider, CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
 import { readFile, statfs } from 'node:fs/promises'
 import * as nodeos from 'node:os'
@@ -518,7 +518,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     }
 
     operationStart = performance.now()
-    const cdp = await provider.getCDPSession(sessionId)
+    const cdp = await provider.getCDPSession(sessionId) as CDPSession & { detach: () => Promise<void> }
     timings.cdpSessionMs = performance.now() - operationStart
 
     try {
