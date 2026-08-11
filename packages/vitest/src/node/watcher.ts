@@ -173,7 +173,7 @@ export class VitestWatcher {
       return false
     }
 
-    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
+    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers, { dot: true })) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
       return true
     }
