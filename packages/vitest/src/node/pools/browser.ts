@@ -492,7 +492,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
   }
 
   const start = performance.now()
-  const timings: Record<string, any> = {
+  const diagnostics: Record<string, any> = {
     statfsMs: undefined,
     cdpSessionMs: undefined,
     cdpSendMs: undefined,
@@ -506,14 +506,14 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     // https://source.chromium.org/chromium/chromium/src/+/main:base/files/file_util_posix.cc
     const tempDirectory = process.env.TMPDIR || '/tmp'
     let operationStart = performance.now()
-    const stats = await statfs(tempDirectory)
-    timings.statfsMs = performance.now() - operationStart
+    const fsStats = await statfs(tempDirectory)
+    diagnostics.statfsMs = performance.now() - operationStart
 
-    const available = stats.bavail * stats.bsize
-    timings.availableBytes = available.toString()
-    timings.thresholdBytes = chromiumGCDiskThreshold.toString()
-    timings.tempDirectory = tempDirectory
-    timings.triggered = available < chromiumGCDiskThreshold
+    const available = fsStats.bavail * fsStats.bsize
+    diagnostics.availableBytes = available.toString()
+    diagnostics.thresholdBytes = chromiumGCDiskThreshold.toString()
+    diagnostics.tempDirectory = tempDirectory
+    diagnostics.triggered = available < chromiumGCDiskThreshold
     if (available >= chromiumGCDiskThreshold) {
       return
     }
@@ -521,19 +521,19 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     operationStart = performance.now()
     // `detach` is available only internally and not on CDPSession type
     const cdp = await provider.getCDPSession(sessionId) as CDPSession & { detach: () => Promise<void> }
-    timings.cdpSessionMs = performance.now() - operationStart
+    diagnostics.cdpSessionMs = performance.now() - operationStart
 
     try {
       operationStart = performance.now()
       await cdp.send('HeapProfiler.collectGarbage')
-      timings.cdpSendMs = performance.now() - operationStart
+      diagnostics.cdpSendMs = performance.now() - operationStart
     }
     finally {
       operationStart = performance.now()
       await cdp.detach().catch((error) => {
         debugGC?.('[%s] failed to detach Chromium CDP session: %s', sessionId, error)
       })
-      timings.cdpDetachMs = performance.now() - operationStart
+      diagnostics.cdpDetachMs = performance.now() - operationStart
     }
 
     const availableGiB = available / 1024 ** 3
@@ -547,7 +547,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
   }
   finally {
-    timings.totalMs = performance.now() - start
-    debugGC?.('[%s] Chromium garbage collection check: %O', sessionId, timings)
+    diagnostics.totalMs = performance.now() - start
+    debugGC?.('[%s] Chromium garbage collection check: %O', sessionId, diagnostics)
   }
 }
