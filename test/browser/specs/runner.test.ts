@@ -292,7 +292,7 @@ test(`stack trace points to correct file in every browser when failed`, async ()
   // expect(stderr).toContain('Expected to be')
   // expect(stderr).toContain('But got')
   expect(stderr).toContain('Failure screenshot')
-  expect(stderr).toContain('__screenshots__/failing')
+  expect(stderr).toContain('.vitest/attachments/failing')
 
   expect(stderr).toContain('Access denied to "/inaccessible/path".')
 
