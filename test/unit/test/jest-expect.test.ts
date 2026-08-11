@@ -409,6 +409,21 @@ describe('jest-expect', () => {
     `)
   })
 
+  it('fails cleanly when toHaveProperty receives a nullish value', () => {
+    expect(() => expect(null).toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got null]`,
+    )
+    expect(() => expect(null).not.toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got null]`,
+    )
+    expect(() => expect(undefined).toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got undefined]`,
+    )
+    expect(() => expect(undefined).not.toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got undefined]`,
+    )
+  })
+
   it('assertions', () => {
     expect(1).toBe(1)
     expect(1).toBe(1)

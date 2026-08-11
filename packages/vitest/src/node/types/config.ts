@@ -25,12 +25,11 @@ import type { BrowserConfigOptions, BrowserServerContribution, ResolvedBrowserOp
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Reporter } from './reporter'
 
-export type { CoverageOptions, ResolvedCoverageOptions }
-export type { BenchmarkUserOptions, ResolvedBenchmarkOptions }
+export type { CoverageOptions }
+export type { ResolvedBenchmarkOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
 export type { SequenceHooks, SequenceSetupFiles } from '../../runtime/runner/types'
-export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
-export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
+export type { BrowserInstanceOption } from './browser'
 
 export type BuiltinEnvironment
   = | 'node'
@@ -73,8 +72,6 @@ export interface EnvironmentOptions {
   happyDOM?: HappyDOMOptions
   [x: string]: unknown
 }
-
-export type { HappyDOMOptions, JSDOMOptions }
 
 /**
  * @deprecated
@@ -226,7 +223,7 @@ export type ResolveSnapshotPathHandler = (
   context: ResolveSnapshotPathHandlerContext,
 ) => string
 
-export type BuiltinPool
+type BuiltinPool
   = | 'browser'
     | 'threads'
     | 'forks'

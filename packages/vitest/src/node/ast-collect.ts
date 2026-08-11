@@ -30,7 +30,7 @@ interface ParsedSuite extends Suite {
   dynamic: boolean
 }
 
-export interface LocalCallDefinition {
+interface LocalCallDefinition {
   start: number
   end: number
   name: string

@@ -461,6 +461,10 @@ function resolveBrowserOptimizeDeps(
     'vitest/browser',
     '@vitest/browser/utils',
     '@vitest/browser/context',
+    // this is a real module but cannot be specified in `optimizeDeps.include`
+    // because `@vitest/browser` is only installed as a transitive dependency of
+    // provider-specific packages such as `@vitest/browser-playwright`
+    '@vitest/browser/locators',
     'msw',
     'msw/browser',
   ]
@@ -505,6 +509,7 @@ function resolveBrowserOptimizeDeps(
     'vitest > vite/module-runner',
     'vitest',
     'vitest/internal/browser',
+    'vitest/internal/traces',
     '@vitest/browser/client',
   ]
 

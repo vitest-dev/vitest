@@ -217,6 +217,32 @@ In browser mode, mock metadata is serialized between Vitest and the test iframe.
 
 Automocks are now restored as automocks. If a browser test relied on the original implementation running through an automocked module, its exports now return `undefined` by default. Pass [`{ spy: true }`](/api/vi#vi-mock) to keep calling the real implementation while still tracking calls, or provide a factory with the behavior you need.
 
+### Class Mocks Keep Prototype Methods
+
+Instances created from a class mock previously inherited from the mock's own empty `prototype`. Methods defined with the regular class syntax were `undefined` on instances, even inside the constructor, and `instanceof` checks against the implementation class failed. This affected [`vi.fn(Dog)`](/api/vi#vi-fn), `vi.spyOn(obj, 'Dog')` with or without a mock implementation, and [`.mockImplementation(class ...)`](/api/mock#mockimplementation).
+
+The mock's `prototype` is now chained to the implementation's prototype as soon as the implementation is set, and kept in sync when it changes, so instances behave like instances of the implementation class:
+
+```ts
+class Dog {
+  speak() {
+    return 'bark!'
+  }
+}
+
+const MockedDog = vi.fn(Dog)
+const dog = new MockedDog()
+
+typeof dog.speak // was 'undefined', now 'function'
+dog instanceof Dog // was false, now true
+dog instanceof MockedDog // true, as before
+
+// the chain is visible on the mock itself
+Object.getPrototypeOf(MockedDog.prototype) // was Object.prototype, now Dog.prototype
+```
+
+Overriding methods on the mock's `prototype` still works and shadows the implementation. [`mockReset`](/api/mock#mockreset) reverts the chain together with the implementation: back to the original class for `vi.fn(Dog)` and `vi.spyOn()`, and to a plain object for `vi.fn()`. See [Mocking Classes](/guide/mocking/classes) for details.
+
 ### Benchmarking API Rewrite
 
 The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`; it is a [test-context fixture](/guide/test-context#bench) accessed from inside a regular `test()`. See the [Benchmarking guide](/guide/benchmarking) for the new API.

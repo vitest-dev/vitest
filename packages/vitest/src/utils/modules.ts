@@ -24,7 +24,7 @@ export function isBuiltin(id: string): boolean {
   return isNodeBuiltin(id)
 }
 
-export function isNodeBuiltin(id: string): boolean {
+function isNodeBuiltin(id: string): boolean {
   if (id.startsWith(NODE_BUILTIN_NAMESPACE)) {
     return true
   }

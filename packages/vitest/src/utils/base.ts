@@ -1,7 +1,5 @@
 import type { ModuleDefinitionLocation } from '../types/module-locations'
 
-export { getCallLastIndex, nanoid, notNullish } from '@vitest/utils/helpers'
-
 export function groupBy<T, K extends string | number | symbol>(
   collection: T[],
   iteratee: (item: T) => K,
