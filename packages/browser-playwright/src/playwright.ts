@@ -769,7 +769,7 @@ type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 // Must be re-aliased here or rollup-plugin-dts removes the import alias and you end up with a circular reference
-type PWCDPSession = Pick<PlaywrightCDPSession, 'send' | 'on' | 'off' | 'once' | 'detach'>
+type PWCDPSession = Pick<PlaywrightCDPSession, 'send' | 'on' | 'off' | 'once'>
 
 export { type PWCDPSession as CDPSession }
 
