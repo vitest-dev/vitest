@@ -783,8 +783,12 @@ export function getObjectSubset(
             })
           }
 
-          for (const key of getObjectKeys(object)) {
-            if (hasPropertyInObject(subset, key)) {
+          // Iterate subset's keys (not object's own enumerable keys) so that
+          // inherited/accessor properties -- e.g. DOM element properties
+          // like `tagName`, which live on the prototype chain -- are still
+          // picked up via the `in` operator. See #6939.
+          for (const key of getObjectKeys(subset)) {
+            if (key in object) {
               trimmed[key] = seenReferences.has(object[key])
                 ? seenReferences.get(object[key])
                 : getObjectSubsetWithContext(seenReferences)(
@@ -792,18 +796,20 @@ export function getObjectSubset(
                     subset[key],
                   )
             }
-            else {
-              if (!seenReferences.has(object[key])) {
-                stripped += 1
-                if (isObject(object[key])) {
-                  stripped += getObjectKeys(object[key]).length
-                }
+          }
 
-                getObjectSubsetWithContext(seenReferences)(
-                  object[key],
-                  subset[key],
-                )
+          // Preserve "N properties omitted from actual" messaging by still
+          // counting object's own extra keys not present in subset.
+          for (const key of getObjectKeys(object)) {
+            if (!hasPropertyInObject(subset, key) && !seenReferences.has(object[key])) {
+              stripped += 1
+              if (isObject(object[key])) {
+                stripped += getObjectKeys(object[key]).length
               }
+              getObjectSubsetWithContext(seenReferences)(
+                object[key],
+                subset[key],
+              )
             }
           }
 

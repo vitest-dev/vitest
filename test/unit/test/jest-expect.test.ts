@@ -1747,6 +1747,37 @@ it('toMatchObject error diff', () => {
       }",
     ]
   `)
+  // https://github.com/vitest-dev/vitest/issues/6939
+  // properties inherited via the prototype chain (e.g. DOM elements) should
+  // still be picked up when building the toMatchObject diff, instead of
+  // falling back to showing the raw object.
+  {
+    const proto = {
+      get tagName() {
+        return 'DIV'
+      },
+    }
+    const domLike = Object.create(proto)
+    domLike.id = 'root'
+
+    expect(domLike).toMatchObject({ tagName: 'DIV', id: 'root' })
+
+    expect(getError(() =>
+      expect(domLike).toMatchObject({ tagName: 'SPAN', id: 'root' }),
+    )).toMatchInlineSnapshot(`
+      [
+        "expected { id: 'root' } to match object { tagName: 'SPAN', id: 'root' }",
+        "- Expected
+      + Received
+
+        {
+          "id": "root",
+      -   "tagName": "SPAN",
+      +   "tagName": "DIV",
+        }",
+      ]
+    `)
+  }
 })
 
 it('toHaveProperty error diff', () => {
