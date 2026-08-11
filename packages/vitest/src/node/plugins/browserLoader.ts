@@ -11,6 +11,7 @@ import type {
 import type { ConfigResolutionCaptures, ResolvedConfig, ResolvedProjectEntry } from '../types/config'
 import c from 'tinyrainbow'
 import { createViteServer } from '../vite'
+import { createViteLogger } from '../viteLogger'
 
 function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
   const pre: VitePlugin[] = []
@@ -58,10 +59,13 @@ export function BrowserLoaderPlugin(
         const contribution = await provider.serverFactory()
         captures.browserContribution = contribution
         const browserConfig = await contribution.config(viteConfig, harness)
-        const logger = browserConfig.customLogger ?? viteConfig.customLogger
+        const logLevel = (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info'
+        const logger = createViteLogger(harness.logger, logLevel, {
+          allowClearScreen: false,
+        })
         return {
           ...browserConfig,
-          customLogger: logger && {
+          customLogger: {
             ...logger,
             info(message, options) {
               logger.info(message, options)
