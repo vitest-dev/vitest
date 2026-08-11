@@ -392,7 +392,7 @@ export interface TestBenchmark {
   tasks: TestBenchmarkTask[]
 }
 
-export type TestBenchmarkStatistics = Statistics
+type TestBenchmarkStatistics = Statistics
 
 export interface BaselineData {
   latency: TestBenchmarkStatistics
@@ -560,7 +560,7 @@ type TestCollectorOptions = Omit<TestOptions, 'shuffle'>
  * Retry configuration for tests.
  * Can be a number for simple retry count, or an object for advanced retry control.
  */
-export type Retry = number | {
+type Retry = number | {
   /**
    * The number of times to retry the test if it fails.
    * @default 0
@@ -931,7 +931,7 @@ export interface FixtureOptions {
  * Options for test-scoped fixtures.
  * Test fixtures are set up before each test and have access to all fixtures.
  */
-export interface TestScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
+interface TestScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
   /**
    * @default 'test'
    */
@@ -942,7 +942,7 @@ export interface TestScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
  * Options for file-scoped fixtures.
  * File fixtures are set up once per file and can only access other file fixtures and worker fixtures.
  */
-export interface FileScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
+interface FileScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
   /**
    * Must be 'file' for file-scoped fixtures.
    */
@@ -953,14 +953,14 @@ export interface FileScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
  * Options for worker-scoped fixtures.
  * Worker fixtures are set up once per worker and can only access other worker fixtures.
  */
-export interface WorkerScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
+interface WorkerScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
   /**
    * Must be 'worker' for worker-scoped fixtures.
    */
   scope: 'worker'
 }
 
-export type Use<T> = (value: T) => Promise<void>
+type Use<T> = (value: T) => Promise<void>
 
 /**
  * Cleanup registration function for builder pattern fixtures.
@@ -970,7 +970,7 @@ export type Use<T> = (value: T) => Promise<void>
  * cleanup operations, either combine them into a single cleanup function or split
  * your fixture into multiple smaller fixtures.
  */
-export type OnCleanup = (cleanup: () => Awaitable<void>) => void
+type OnCleanup = (cleanup: () => Awaitable<void>) => void
 
 /**
  * Builder pattern fixture function with automatic type inference.
@@ -982,12 +982,12 @@ export type OnCleanup = (cleanup: () => Awaitable<void>) => void
  * - `async ({ dep }) => value` - with dependencies, no cleanup
  * - `async ({ dep }, { onCleanup }) => value` - with dependencies and cleanup
  */
-export type BuilderFixtureFn<T, Context> = (
+type BuilderFixtureFn<T, Context> = (
   context: Context,
   fixture: { onCleanup: OnCleanup },
 ) => T | Promise<T>
 
-export type ExtractSuiteContext<C>
+type ExtractSuiteContext<C>
   = C extends { $__worker?: any } | { $__file?: any } | { $__test?: any }
     ? ExtractBuilderWorker<C> & ExtractBuilderFile<C>
     : C
@@ -995,28 +995,28 @@ export type ExtractSuiteContext<C>
 /**
  * Extracts worker-scoped fixtures from a context that includes scope info.
  */
-export type ExtractBuilderWorker<C> = C extends { $__worker?: infer W }
+type ExtractBuilderWorker<C> = C extends { $__worker?: infer W }
   ? W extends Record<string, any> ? W : object
   : object
 
 /**
  * Extracts file-scoped fixtures from a context that includes scope info.
  */
-export type ExtractBuilderFile<C> = C extends { $__file?: infer F }
+type ExtractBuilderFile<C> = C extends { $__file?: infer F }
   ? F extends Record<string, any> ? F : object
   : object
 
 /**
  * Extracts test-scoped fixtures from a context that includes scope info.
  */
-export type ExtractBuilderTest<C> = C extends { $__test?: infer T }
+type ExtractBuilderTest<C> = C extends { $__test?: infer T }
   ? T extends Record<string, any> ? T : object
   : object
 
 /**
  * Adds a worker fixture to the context with proper scope tracking.
  */
-export type AddBuilderWorker<C, K extends string, V> = Omit<C, '$__worker'> & Record<K, V> & {
+type AddBuilderWorker<C, K extends string, V> = Omit<C, '$__worker'> & Record<K, V> & {
   readonly $__worker?: ExtractBuilderWorker<C> & Record<K, V>
   readonly $__file?: ExtractBuilderFile<C>
   readonly $__test?: ExtractBuilderTest<C>
@@ -1025,7 +1025,7 @@ export type AddBuilderWorker<C, K extends string, V> = Omit<C, '$__worker'> & Re
 /**
  * Adds a file fixture to the context with proper scope tracking.
  */
-export type AddBuilderFile<C, K extends string, V> = Omit<C, '$__file'> & Record<K, V> & {
+type AddBuilderFile<C, K extends string, V> = Omit<C, '$__file'> & Record<K, V> & {
   readonly $__worker?: ExtractBuilderWorker<C>
   readonly $__file?: ExtractBuilderFile<C> & Record<K, V>
   readonly $__test?: ExtractBuilderTest<C>
@@ -1034,7 +1034,7 @@ export type AddBuilderFile<C, K extends string, V> = Omit<C, '$__file'> & Record
 /**
  * Adds a test fixture to the context with proper scope tracking.
  */
-export type AddBuilderTest<C, K extends string, V> = Omit<C, '$__test'> & Record<K, V> & {
+type AddBuilderTest<C, K extends string, V> = Omit<C, '$__test'> & Record<K, V> & {
   readonly $__worker?: ExtractBuilderWorker<C>
   readonly $__file?: ExtractBuilderFile<C>
   readonly $__test?: ExtractBuilderTest<C> & Record<K, V>
@@ -1046,7 +1046,7 @@ export type AddBuilderTest<C, K extends string, V> = Omit<C, '$__test'> & Record
  * They do NOT have access to test context (task, expect, onTestFailed, etc.)
  * since they run once per worker, outside of any specific test.
  */
-export type WorkerScopeContext<C> = ExtractBuilderWorker<C>
+type WorkerScopeContext<C> = ExtractBuilderWorker<C>
 
 /**
  * Context available to file-scoped fixtures.
@@ -1054,17 +1054,17 @@ export type WorkerScopeContext<C> = ExtractBuilderWorker<C>
  * They do NOT have access to test context (task, expect, onTestFailed, etc.)
  * since they run once per file, outside of any specific test.
  */
-export type FileScopeContext<C> = ExtractBuilderWorker<C> & ExtractBuilderFile<C>
+type FileScopeContext<C> = ExtractBuilderWorker<C> & ExtractBuilderFile<C>
 
 /**
  * Context available to test-scoped fixtures (all fixtures + test context).
  */
-export type TestScopeContext<C> = C & TestContext
+type TestScopeContext<C> = C & TestContext
 export type FixtureFn<T, K extends keyof T, ExtraContext> = (
   context: Omit<T, K> & ExtraContext,
   use: Use<T[K]>,
 ) => Promise<void>
-export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
+type Fixture<T, K extends keyof T, ExtraContext = object> = ((
   ...args: any
 ) => any) extends T[K]
   ? T[K] extends any
@@ -1078,7 +1078,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
 /**
  * Fixture function with explicit context type for scoped fixtures.
  */
-export type ScopedFixtureFn<Value, Context> = (
+type ScopedFixtureFn<Value, Context> = (
   context: Context,
   use: Use<Value>,
 ) => Promise<void>
@@ -1087,7 +1087,7 @@ export type ScopedFixtureFn<Value, Context> = (
  * Fixtures definition for backward compatibility.
  * All fixtures are in T and any scope is allowed.
  */
-export type Fixtures<T, ExtraContext = object> = {
+type Fixtures<T, ExtraContext = object> = {
   [K in keyof T]:
     | Fixture<T, K, ExtraContext & TestContext>
     | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?]
@@ -1107,7 +1107,7 @@ export type Fixtures<T, ExtraContext = object> = {
  * }>({ ... })
  * ```
  */
-export interface ScopedFixturesDef {
+interface ScopedFixturesDef {
   $test?: Record<string, any>
   $file?: Record<string, any>
   $worker?: Record<string, any>
@@ -1117,7 +1117,7 @@ export interface ScopedFixturesDef {
  * Extracts fixture types from a ScopedFixturesDef.
  * Handles optional properties by using Exclude to remove undefined.
  */
-export type ExtractScopedFixtures<T extends ScopedFixturesDef>
+type ExtractScopedFixtures<T extends ScopedFixturesDef>
   = ([Exclude<T['$test'], undefined>] extends [never] ? object : Exclude<T['$test'], undefined>)
     & ([Exclude<T['$file'], undefined>] extends [never] ? object : Exclude<T['$file'], undefined>)
     & ([Exclude<T['$worker'], undefined>] extends [never] ? object : Exclude<T['$worker'], undefined>)
@@ -1128,7 +1128,7 @@ export type ExtractScopedFixtures<T extends ScopedFixturesDef>
  * - File fixtures: MUST have { scope: 'file' }
  * - Worker fixtures: MUST have { scope: 'worker' }
  */
-export type ScopedFixturesObject<T extends ScopedFixturesDef, ExtraContext = object> = {
+type ScopedFixturesObject<T extends ScopedFixturesDef, ExtraContext = object> = {
   // Test fixtures - scope is optional, have access to all fixtures + TestContext
   [K in keyof NonNullable<T['$test']>]:
     | NonNullable<T['$test']>[K]
@@ -1219,7 +1219,7 @@ export interface AroundAllListener<ExtraContext = object> {
 }
 
 // Contexts are provided when registered, not when invoked
-export interface RegisteredAllListener {
+interface RegisteredAllListener {
   (suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
@@ -1394,14 +1394,14 @@ export interface TestAttachment {
   bodyEncoding?: 'base64' | 'utf-8'
 }
 
-export interface Location {
+interface Location {
   /** Line number in the source file (1-indexed) */
   line: number
   /** Column number in the line (1-indexed) */
   column: number
 }
 
-export interface FileLocation extends Location {
+interface FileLocation extends Location {
   /** Line number in the source file (1-indexed) */
   line: number
   /** Column number in the line (1-indexed) */
