@@ -26,6 +26,8 @@ import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 
+const MAX_FILENAME_BYTES = 255
+
 export class TestRun {
   constructor(private vitest: Vitest) {}
 
@@ -294,9 +296,22 @@ export class TestRun {
     if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
       const currentPath = resolve(project.config.root, path)
       const hash = createHash('sha1').update(currentPath).digest('hex')
+      const extension = extname(currentPath)
+      const attachmentHash = filename
+        ? createHash('sha1').update(currentPath).update('\0').update(filename).digest('hex')
+        : hash
+      const hashedFilename = `${attachmentHash}${extension}`
+      const readableFilename = filename
+        ? `${sanitizeFilePath(filename)}-${hashedFilename}`
+        : hashedFilename
+      const attachmentFilename = Buffer.byteLength(readableFilename) <= MAX_FILENAME_BYTES
+        ? readableFilename
+        : Buffer.byteLength(hashedFilename) <= MAX_FILENAME_BYTES
+          ? hashedFilename
+          : attachmentHash
       const newPath = resolve(
         project.config.attachmentsDir,
-        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
+        attachmentFilename,
       )
       if (!existsSync(project.config.attachmentsDir)) {
         await mkdir(project.config.attachmentsDir, { recursive: true })

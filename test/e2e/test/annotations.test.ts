@@ -38,6 +38,56 @@ describe('suite', () => {
 `
 
 describe('API', () => {
+  test('long trace annotation attachment names stay within filesystem limits', async () => {
+    const { root, stderr } = await runInlineTests({
+      'basic.test.ts': `
+        import { writeFile } from 'node:fs/promises'
+        import { dirname, resolve } from 'node:path'
+        import { test } from 'vitest'
+
+        test('annotation with a long message', async ({ annotate, task }) => {
+          const message = '__traces__/basic.test.ts/chromium-' + 'long-'.repeat(60) + 'trace.zip'
+          await annotate(message + '-first', { path: './trace.zip' })
+          await writeFile(resolve(dirname(task.file.filepath), 'trace.zip'), 'second trace content')
+          await annotate(message + '-second', { path: './trace.zip' })
+        })
+      `,
+      'trace.zip': 'trace content',
+    })
+
+    expect(stderr).toBe('')
+    const attachmentsDir = resolve(root, '.vitest/attachments')
+    const attachments = readdirSync(attachmentsDir)
+    expect(attachments).toHaveLength(2)
+    expect(attachments.every(attachment => Buffer.byteLength(attachment) <= 255)).toBe(true)
+    expect(attachments.every(attachment => /^[\da-f]{40}\.zip$/.test(attachment))).toBe(true)
+    expect(attachments.map(attachment => readFileSync(resolve(attachmentsDir, attachment), 'utf-8')).sort()).toEqual([
+      'second trace content',
+      'trace content',
+    ])
+  })
+
+  test('long attachment extensions preserve message uniqueness', async () => {
+    const longExtensionFile = `trace.${'x'.repeat(220)}`
+    const { root, stderr } = await runInlineTests({
+      'basic.test.ts': `
+        import { test } from 'vitest'
+
+        test('annotations with a long extension', async ({ annotate }) => {
+          const message = 'long-'.repeat(60)
+          await annotate(message + '-first', { path: './${longExtensionFile}' })
+          await annotate(message + '-second', { path: './${longExtensionFile}' })
+        })
+      `,
+      [longExtensionFile]: 'trace content',
+    })
+
+    expect(stderr).toBe('')
+    const attachments = readdirSync(resolve(root, '.vitest/attachments'))
+    expect(attachments).toHaveLength(2)
+    expect(attachments.every(attachment => /^[\da-f]{40}$/.test(attachment))).toBe(true)
+  })
+
   test.for([
     { name: 'forks', pool: 'forks' },
     { name: 'threads', pool: 'threads' },
