@@ -527,9 +527,9 @@ function createMock(
           // the prototype chain is already prepared when the implementation
           // is registered, but a consumed `mockImplementationOnce` can change
           // which implementation this construction uses
-          if (prototypeMembers.length === 0 && implementation !== noopImplementation) {
+          if (prototypeMembers.length === 0) {
             // eslint-disable-next-line ts/no-use-before-define
-            reparentMockPrototype(mock, implementation)
+            reparentMockPrototype(mock, implementation === noopImplementation ? undefined : implementation)
           }
           returnValue = Reflect.construct(implementation, args, new.target)
 
@@ -631,22 +631,16 @@ function reparentMockPrototype(
   mock: Mock<Procedure | Constructable>,
   implementation: Procedure | Constructable | undefined,
 ) {
-  if (typeof implementation !== 'function') {
+  const mockPrototype = mock.prototype
+  if (mockPrototype == null) {
     return
   }
-  const implementationPrototype = (implementation as Constructable).prototype
-  const mockPrototype = mock.prototype
-  if (
-    implementationPrototype != null
-    && typeof mockPrototype === 'object'
-    && mockPrototype !== null
-    && Object.getPrototypeOf(mockPrototype) !== implementationPrototype
-    // reassigning would create a prototype cycle if the implementation
-    // inherits from the mock itself
-    && mockPrototype !== implementationPrototype
-    && !Object.prototype.isPrototypeOf.call(mockPrototype, implementationPrototype)
-  ) {
-    Object.setPrototypeOf(mockPrototype, implementationPrototype)
+  // an implementation without a usable prototype (reset mock, arrow or bound
+  // function) reverts the chain to `Object.prototype`, the parent every mock
+  // is created with
+  const parent = (implementation as Constructable | undefined)?.prototype ?? Object.prototype
+  if (Object.getPrototypeOf(mockPrototype) !== parent) {
+    Object.setPrototypeOf(mockPrototype, parent)
   }
 }
 

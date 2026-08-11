@@ -893,6 +893,73 @@ describe('vi.fn() implementations', () => {
     expect(Object.getPrototypeOf(Mock.prototype)).toBe(ActualClass.prototype)
   })
 
+  test('vi.fn() prototype chain is reverted when the mock is reset', () => {
+    class Actual {
+      method() {
+        return 42
+      }
+    }
+
+    const Mock = vi.fn<any>()
+    Mock.mockImplementation(Actual)
+    expect(new Mock()).toBeInstanceOf(Actual)
+
+    Mock.mockReset()
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(Object.prototype)
+    expect(new Mock()).not.toBeInstanceOf(Actual)
+  })
+
+  test('vi.fn() prototype chain is reverted after a once implementation is consumed', () => {
+    class Actual {
+      method() {
+        return 42
+      }
+    }
+
+    const Mock = vi.fn<any>()
+    Mock.mockImplementationOnce(Actual)
+
+    const first = new Mock()
+    expect(first).toBeInstanceOf(Actual)
+
+    const second = new Mock()
+    expect(second).not.toBeInstanceOf(Actual)
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(Object.prototype)
+    // the prototype is shared, so the first instance loses the chain as well
+    expect(first).not.toBeInstanceOf(Actual)
+  })
+
+  test('vi.fn() rejects an implementation that inherits from the mock itself', () => {
+    const Mock: any = vi.fn()
+    // constructing such a mock would call the implementation, whose super()
+    // re-enters the mock, so it could never be constructed anyway
+    expect(() => Mock.mockImplementation(class extends Mock {}))
+      .toThrowErrorMatchingInlineSnapshot(`[TypeError: Cyclic __proto__ value]`)
+  })
+
+  test('vi.fn() implementation can inherit from another mock', () => {
+    const Mock1: any = vi.fn()
+    const Mock2: any = vi.fn()
+    class Impl extends Mock2 {
+      method() {
+        return 42
+      }
+    }
+    Mock1.mockImplementation(Impl)
+
+    const instance = new Mock1()
+    expect(instance.method()).toBe(42)
+    expect(instance).toBeInstanceOf(Mock1)
+    expect(instance).toBeInstanceOf(Impl)
+    expect(instance).toBeInstanceOf(Mock2)
+
+    // super() re-enters Mock2, so both mocks track the construction
+    expect(Mock1.mock.calls).toEqual([[]])
+    expect(Mock2.mock.calls).toEqual([[]])
+    expect(Mock1.mock.instances).toEqual([instance])
+    expect(Mock2.mock.instances).toEqual([instance])
+  })
+
   test('vi.fn(class) prototype follows the latest constructed implementation', () => {
     class First {
       first() {
