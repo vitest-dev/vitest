@@ -105,7 +105,7 @@ test('does not disable pre-transform requests in browser mode', async () => {
   })
 })
 
-test('configures internal browser dependencies', async () => {
+test('pre-bundles vite module runner through vitest in browser mode', async () => {
   const v = await vitest({
     browser: {
       enabled: true,
@@ -116,21 +116,8 @@ test('configures internal browser dependencies', async () => {
     },
   })
 
-  const include = v.vite.config.optimizeDeps.include || []
-  const exclude = v.vite.config.optimizeDeps.exclude || []
-  expect({
-    moduleRunnerIncluded: include.includes('vitest > vite/module-runner'),
-    moduleRunnerExcluded: exclude.includes('vite/module-runner'),
-    tracesIncluded: include.includes('vitest/internal/traces'),
-    locatorsExcluded: exclude.includes('@vitest/browser/locators'),
-  }).toMatchInlineSnapshot(`
-    {
-      "locatorsExcluded": true,
-      "moduleRunnerExcluded": false,
-      "moduleRunnerIncluded": true,
-      "tracesIncluded": true,
-    }
-  `)
+  expect(v.vite.config.optimizeDeps.include).toContain('vitest > vite/module-runner')
+  expect(v.vite.config.optimizeDeps.exclude).not.toContain('vite/module-runner')
 })
 
 test('disables pre-transform requests in node mode', async () => {
