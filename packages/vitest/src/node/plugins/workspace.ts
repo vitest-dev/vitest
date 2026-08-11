@@ -3,13 +3,12 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { API_TOKEN_FILE } from '../config/apiToken'
-import { VitestConfig } from './config'
+import { ViteConfigPlugin } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { VitestConfigServer } from './server'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
 import { VitestProjectResolver } from './vitestResolver'
 
@@ -53,12 +52,11 @@ export function WorkspaceVitestPlugin(
         config.server.watch = null
       },
     },
-    ...VitestConfigServer(harness, globalConfig),
     SsrRunnerFixerPlugin(harness),
     MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(),
     CoverageTransform(harness),
-    ...VitestConfig(harness),
+    ...ViteConfigPlugin(harness),
     ...MocksPlugins(),
     VitestProjectResolver(harness),
     NormalizeURLPlugin(),

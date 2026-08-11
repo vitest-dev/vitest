@@ -6,16 +6,11 @@ import type {
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
 import type {
-  BrowserServerContribution,
   ParentProjectBrowser,
 } from '../types/browser'
-import type { ResolvedConfig, ResolvedProjectEntry } from '../types/config'
+import type { ConfigResolutionCaptures, ResolvedConfig, ResolvedProjectEntry } from '../types/config'
 import c from 'tinyrainbow'
 import { createViteServer } from '../vite'
-
-export interface BrowserContributionHolder {
-  contribution?: BrowserServerContribution
-}
 
 function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
   const pre: VitePlugin[] = []
@@ -36,7 +31,7 @@ function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
 }
 
 export function BrowserLoaderPlugin(
-  holder: BrowserContributionHolder,
+  captures: ConfigResolutionCaptures,
   harness: PluginHarness,
 ): VitePlugin[] {
   return [
@@ -61,7 +56,7 @@ export function BrowserLoaderPlugin(
           throw new Error(`Browser Mode was enabled, but provider was not specified anywhere. See https://vitest.dev/guide/browser/#configuration`)
         }
         const contribution = await provider.serverFactory()
-        holder.contribution = contribution
+        captures.browserContribution = contribution
         const browserConfig = await contribution.config(viteConfig, harness)
         const logger = browserConfig.customLogger ?? viteConfig.customLogger
         return {
@@ -83,7 +78,7 @@ export function BrowserLoaderPlugin(
         }
       },
       applyToEnvironment(environment) {
-        const contribution = holder.contribution
+        const contribution = captures.browserContribution
         if (contribution && environment.name === 'client') {
           // `post` browser plugins are injected by `vitest:browser:loader:post`
           // instead, so they run after the `post` plugins of the main pipeline
@@ -99,13 +94,13 @@ export function BrowserLoaderPlugin(
       configureServer: {
         order: 'pre',
         async handler(server) {
-          await holder.contribution?.configureServer(server)
+          await captures.browserContribution?.configureServer(server)
         },
       },
       transformIndexHtml: {
         order: 'pre',
         async handler(html, ctx) {
-          return holder.contribution?.transformIndexHtml(ctx)
+          return captures.browserContribution?.transformIndexHtml(ctx)
         },
       },
     },
@@ -113,7 +108,7 @@ export function BrowserLoaderPlugin(
       name: 'vitest:browser:loader:post',
       enforce: 'post',
       applyToEnvironment(environment) {
-        const contribution = holder.contribution
+        const contribution = captures.browserContribution
         if (contribution && environment.name === 'client') {
           return sortPluginsByEnforce(
             contribution.plugins.filter(plugin => plugin.enforce === 'post'),
