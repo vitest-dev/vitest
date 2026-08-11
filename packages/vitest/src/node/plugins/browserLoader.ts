@@ -10,6 +10,7 @@ import type {
   ParentProjectBrowser,
 } from '../types/browser'
 import type { ResolvedConfig, ResolvedProjectEntry } from '../types/config'
+import c from 'tinyrainbow'
 import { createViteServer } from '../vite'
 
 export interface BrowserContributionHolder {
@@ -62,7 +63,24 @@ export function BrowserLoaderPlugin(
         const contribution = await provider.serverFactory()
         holder.contribution = contribution
         const browserConfig = await contribution.config(viteConfig, harness)
-        return browserConfig
+        const logger = browserConfig.customLogger ?? viteConfig.customLogger
+        return {
+          ...browserConfig,
+          customLogger: logger && {
+            ...logger,
+            info(message, options) {
+              logger.info(message, options)
+              if (message.includes('optimized dependencies changed. reloading')) {
+                logger.warn(
+                  [
+                    c.yellow(`\n${c.bold('[vitest]')} Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`),
+                    c.yellow(`For a stable experience, add the newly optimized dependencies to your config's ${c.bold('`optimizeDeps.include`')} field manually.\n`),
+                  ].join(''),
+                )
+              }
+            },
+          },
+        }
       },
       applyToEnvironment(environment) {
         const contribution = holder.contribution
