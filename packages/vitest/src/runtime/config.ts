@@ -170,6 +170,7 @@ export interface SerializedConfig {
   mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
   disableColors: boolean
+  attachmentsDir: string
 }
 
 export interface SerializedCoverageConfig {
