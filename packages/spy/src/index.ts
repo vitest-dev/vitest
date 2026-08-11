@@ -71,6 +71,21 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     return config.onceMockImplementations[0] || config.mockImplementation
   }
 
+  // keep the prototype chain in sync with the implementation the next
+  // construction will use, so it is correct before any `new` call.
+  // automocked classes are skipped: their methods are pre-mocked
+  // on `mock.prototype`
+  const updateMockPrototype = () => {
+    if (!options.prototypeMembers?.length) {
+      reparentMockPrototype(
+        mock,
+        config.onceMockImplementations[0]
+        || config.mockImplementation
+        || originalImplementation,
+      )
+    }
+  }
+
   Object.defineProperty(mock, 'mock', {
     configurable: false,
     enumerable: true,
@@ -80,11 +95,13 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 
   mock.mockImplementation = function mockImplementation(implementation) {
     config.mockImplementation = implementation
+    updateMockPrototype()
     return mock
   }
 
   mock.mockImplementationOnce = function mockImplementationOnce(implementation) {
     config.onceMockImplementations.push(implementation)
+    updateMockPrototype()
     return mock
   }
 
@@ -95,10 +112,12 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     const reset = () => {
       config.mockImplementation = previousImplementation
       config.onceMockImplementations = previousOnceImplementations
+      updateMockPrototype()
     }
 
     config.mockImplementation = implementation
     config.onceMockImplementations = []
+    updateMockPrototype()
 
     const returnValue = callback()
 
@@ -211,6 +230,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
       : undefined
     config.mockName = resetToMockName ? (mock.name || 'vi.fn()') : 'vi.fn()'
     config.onceMockImplementations = []
+    updateMockPrototype()
     return mock
   }
 
@@ -236,6 +256,10 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 
   if (mockImplementation) {
     mock.mockImplementation(mockImplementation)
+  }
+  else {
+    // vi.spyOn() has no mock implementation, chain the original one
+    updateMockPrototype()
   }
 
   return mock
@@ -500,27 +524,12 @@ function createMock(
 
       try {
         if (new.target) {
-          // put the implementation's prototype behind `mock.prototype` so the
-          // instance sees prototype methods both during and after construction,
-          // while properties assigned on `mock.prototype` still shadow them.
-          // Skip for automocked classes where methods are pre-mocked
-          // on `mock.prototype` and replaced per instance below
-          const implementationPrototype = (implementation as Constructable).prototype
-          // eslint-disable-next-line ts/no-use-before-define
-          const mockPrototype = mock.prototype
-          if (
-            prototypeMembers.length === 0
-            && implementation !== noopImplementation
-            && implementationPrototype != null
-            && typeof mockPrototype === 'object'
-            && mockPrototype !== null
-            && Object.getPrototypeOf(mockPrototype) !== implementationPrototype
-            // reassigning would create a prototype cycle if the implementation
-            // inherits from the mock itself
-            && mockPrototype !== implementationPrototype
-            && !Object.prototype.isPrototypeOf.call(mockPrototype, implementationPrototype)
-          ) {
-            Object.setPrototypeOf(mockPrototype, implementationPrototype)
+          // the prototype chain is already prepared when the implementation
+          // is registered, but a consumed `mockImplementationOnce` can change
+          // which implementation this construction uses
+          if (prototypeMembers.length === 0 && implementation !== noopImplementation) {
+            // eslint-disable-next-line ts/no-use-before-define
+            reparentMockPrototype(mock, implementation)
           }
           returnValue = Reflect.construct(implementation, args, new.target)
 
@@ -613,6 +622,32 @@ function createMock(
     copyOriginalStaticProperties(mock, copyPropertiesFrom)
   }
   return mock
+}
+
+// puts the implementation's prototype behind `mock.prototype` so instances
+// see prototype methods both during and after construction, while properties
+// assigned on `mock.prototype` still shadow them
+function reparentMockPrototype(
+  mock: Mock<Procedure | Constructable>,
+  implementation: Procedure | Constructable | undefined,
+) {
+  if (typeof implementation !== 'function') {
+    return
+  }
+  const implementationPrototype = (implementation as Constructable).prototype
+  const mockPrototype = mock.prototype
+  if (
+    implementationPrototype != null
+    && typeof mockPrototype === 'object'
+    && mockPrototype !== null
+    && Object.getPrototypeOf(mockPrototype) !== implementationPrototype
+    // reassigning would create a prototype cycle if the implementation
+    // inherits from the mock itself
+    && mockPrototype !== implementationPrototype
+    && !Object.prototype.isPrototypeOf.call(mockPrototype, implementationPrototype)
+  ) {
+    Object.setPrototypeOf(mockPrototype, implementationPrototype)
+  }
 }
 
 function registerCalls(args: unknown[], state: MockContext, prototypeState?: MockContext) {

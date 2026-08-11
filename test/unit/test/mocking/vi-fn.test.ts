@@ -870,6 +870,29 @@ describe('vi.fn() implementations', () => {
     expect(speak.mock.instances).toEqual([cooper, max])
   })
 
+  test('vi.fn(class) chains the prototype before the first construction', () => {
+    class ActualClass {
+      method() {
+        return 42
+      }
+    }
+    const Mock = vi.fn(ActualClass)
+
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(ActualClass.prototype)
+    expect(Object.create(Mock.prototype)).toBeInstanceOf(ActualClass)
+
+    class Another {
+      method() {
+        return 0
+      }
+    }
+    Mock.mockImplementation(Another)
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(Another.prototype)
+
+    Mock.mockReset()
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(ActualClass.prototype)
+  })
+
   test('vi.fn(class) prototype follows the latest constructed implementation', () => {
     class First {
       first() {

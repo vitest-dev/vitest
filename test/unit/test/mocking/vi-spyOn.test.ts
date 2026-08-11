@@ -326,6 +326,23 @@ describe('vi.spyOn() state', () => {
     expect(new myObj.TestClass().method()).toBe('original')
   })
 
+  test('vi.spyOn() chains the class prototype before the first construction', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+    const spy = vi.spyOn(myObj, 'TestClass')
+
+    expect(Object.getPrototypeOf(myObj.TestClass.prototype)).toBe(OriginalClass.prototype)
+    expect(Object.create(myObj.TestClass.prototype)).toBeInstanceOf(OriginalClass)
+    expect(Object.create(myObj.TestClass.prototype)).toBeInstanceOf(myObj.TestClass)
+
+    spy.mockRestore()
+  })
+
   test('vi.spyOn() keeps prototype methods when constructing the original class', () => {
     let methodInConstructor!: unknown
     class OriginalClass {
