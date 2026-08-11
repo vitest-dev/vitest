@@ -524,6 +524,12 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     operationStart = performance.now()
     await cdp.send('HeapProfiler.collectGarbage')
     timings.cdpSendMs = performance.now() - operationStart
+
+    const availableGiB = Number(available) / 1024 ** 3
+    const thresholdGiB = Number(chromiumGCDiskThreshold) / 1024 ** 3
+    project.vitest.logger.warn(
+      `Low disk space detected in ${tempDirectory} (${availableGiB.toFixed(1)} GiB available, ${thresholdGiB.toFixed(1)} GiB threshold). Vitest triggered Chromium garbage collection to prevent browser crashes. See https://github.com/vitest-dev/vitest/issues/9437`,
+    )
   }
   catch (error) {
     debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
