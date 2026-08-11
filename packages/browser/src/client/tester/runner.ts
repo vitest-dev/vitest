@@ -17,6 +17,7 @@ import type {
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
+import { basename, resolve } from 'pathe'
 import { recordArtifact, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
@@ -195,7 +196,13 @@ function createBrowserRunner(
       ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
-        } as any /** TODO */).catch((err) => {
+          path: resolve(
+            this.config.attachmentsDir,
+            'failure-screenshots',
+            basename(task.file.filepath),
+            `${task.fullTestName.replace(/\W/g, '-')}.png`,
+          ),
+        }).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
