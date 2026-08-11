@@ -59,7 +59,7 @@ export function BrowserLoaderPlugin(
         const contribution = await provider.serverFactory()
         captures.browserContribution = contribution
         const browserConfig = await contribution.config(viteConfig, harness)
-        const logLevel = (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info'
+        const logLevel = viteConfig.logLevel ?? 'warn'
         const logger = createViteLogger(harness.logger, logLevel, {
           allowClearScreen: false,
         })
@@ -68,7 +68,15 @@ export function BrowserLoaderPlugin(
           customLogger: {
             ...logger,
             info(message, options) {
-              logger.info(message, options)
+              const isOptimizerMessage
+                = message.includes('dependencies optimized')
+                  || message.includes('optimized dependencies changed. reloading')
+              if (isOptimizerMessage) {
+                logger.warn(message, options)
+              }
+              else {
+                logger.info(message, options)
+              }
               if (message.includes('optimized dependencies changed. reloading')) {
                 logger.warn(
                   [
