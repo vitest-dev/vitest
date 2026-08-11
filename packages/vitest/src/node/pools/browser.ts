@@ -473,8 +473,8 @@ function shouldIgnoreDebugger(provider: string, browser: string) {
 
 // Trigger gc on lower disk (default to 4GB)
 const chromiumGCDiskThreshold = process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB
-  ? BigInt(process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB) * 1024n ** 3n
-  : 4n * 1024n ** 3n
+  ? Number(process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB) * 1024 ** 3
+  : 4 * 1024 ** 3
 const forceChromiumGC = !!process.env.VITEST_CHROMIUM_GC_FORCE
 const debugGC = createDebugger('vitest:browser:gc')
 
@@ -506,7 +506,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     // https://source.chromium.org/chromium/chromium/src/+/main:base/files/file_util_posix.cc
     const tempDirectory = process.env.TMPDIR || '/tmp'
     let operationStart = performance.now()
-    const stats = await statfs(tempDirectory, { bigint: true })
+    const stats = await statfs(tempDirectory)
     timings.statfsMs = performance.now() - operationStart
 
     const available = stats.bavail * stats.bsize
@@ -536,8 +536,8 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
       timings.cdpDetachMs = performance.now() - operationStart
     }
 
-    const availableGiB = Number(available) / 1024 ** 3
-    const thresholdGiB = Number(chromiumGCDiskThreshold) / 1024 ** 3
+    const availableGiB = available / 1024 ** 3
+    const thresholdGiB = chromiumGCDiskThreshold / 1024 ** 3
     project.vitest.logger.warn(
       `Low disk space detected in ${tempDirectory} (${availableGiB.toFixed(1)} GiB available, ${thresholdGiB.toFixed(1)} GiB threshold). Vitest triggered Chromium garbage collection to prevent browser crashes. See https://github.com/vitest-dev/vitest/issues/9437`,
     )
