@@ -2,6 +2,8 @@ catalogMode: prefer
 
 cleanupUnusedCatalogs: true
 ignoreWorkspaceRootCheck: true
+minimumReleaseAgeExclude:
+  - tinybench@6.1.3
 shellEmulator: true
 strictPeerDependencies: false
 trustPolicy: no-downgrade
@@ -119,5 +121,3 @@ allowBuilds:
   protobufjs: true
   sharp: true
   vue-demi: true
-minimumReleaseAgeExclude:
-  - tinybench@6.1.3
