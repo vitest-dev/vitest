@@ -17,6 +17,7 @@ import { createDebug } from 'obug'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider, isCSSRequest } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
+import { commands } from './commands'
 import { COVERAGE_STORE_KEY } from './constants'
 
 const debug = createDebug('vitest:coverage')
@@ -30,6 +31,14 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
+
+    for (const project of ctx.projects) {
+      if (project.isBrowserEnabled() && project.browser) {
+        for (const [name, command] of Object.entries(commands)) {
+          project.browser.registerCommand(`__vitest_${name}` as any, command)
+        }
+      }
+    }
 
     if (this.options.instrumenter) {
       this.instrumenter = this.options.instrumenter({

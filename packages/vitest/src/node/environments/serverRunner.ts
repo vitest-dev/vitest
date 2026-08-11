@@ -2,9 +2,9 @@ import type { DevEnvironment, ViteDevServer } from 'vite'
 import type { ResolvedConfig } from '../types/config'
 import type { VitestFetchFunction } from './fetchModule'
 import { readFile } from 'node:fs/promises'
-import { VitestModuleEvaluator } from '#module-evaluator'
 import { isRunnableDevEnvironment } from 'vite'
 import { ModuleRunner } from 'vite/module-runner'
+import { VitestModuleEvaluator } from '#module-evaluator'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
 export class ServerModuleRunner extends ModuleRunner {

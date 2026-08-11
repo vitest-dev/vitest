@@ -2,8 +2,11 @@ import path from 'node:path'
 import { defineConfig } from 'vite'
 import { defaultExclude } from 'vitest/config'
 
-// Tests that drive git `--changed` against shared fixtures and cannot tolerate
-// other tests mutating the working tree concurrently. Run in a serial project.
+// Tests that drive git `--changed` against committed fixtures and cannot
+// tolerate other tests mutating the working tree concurrently. Run in a serial
+// project. Tests that only need a watched directory use `runInlineTests`
+// instead: a private tmp root needs no serialization, but it cannot back the
+// git-driven tests, which require tracked files.
 const serialTests = [
   'test/git-changed.test.ts',
   'test/list-changed.test.ts',
@@ -13,9 +16,7 @@ const serialTests = [
 
 export default defineConfig({
   test: {
-    experimental: {
-      fsModuleCache: true,
-    },
+    fsModuleCache: true,
     reporters: [
       process.env.CI ? 'minimal' : 'verbose',
       (process.env.VITEST_CI_BLOB_LABEL

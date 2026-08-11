@@ -191,6 +191,12 @@ export type {
   RunnerTestSuite,
 } from './index'
 export type { SerializedError } from '@vitest/utils'
+// Re-exported from Vitest's own bundled `tinyrainbow` instance. Vitest inlines
+// `tinyrainbow` into its dist, so importing the package directly gives a different
+// object than the one the reporters use; this export lets programmatic consumers
+// (e.g. the test suite) disable ANSI colors on the instance Vitest actually renders
+// with.
+export { disableDefaultColors } from 'tinyrainbow'
 
 export {
   esbuildVersion,

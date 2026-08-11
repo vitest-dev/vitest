@@ -7,8 +7,6 @@ import { resolve } from 'pathe'
 import { distRoot } from './constants'
 import BrowserContext from './plugins/pluginContext'
 
-export type { BrowserCommand } from 'vitest/node'
-
 export default (contribution: BrowserServerContribution): Plugin[] => {
   return [
     {

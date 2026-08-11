@@ -1,7 +1,7 @@
 import type { RunnerTask } from 'vitest/node'
-import { runInlineTests, runVitest, runVitestCli, StableTestFileOrderSorter } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/node'
+import { runInlineTests, runVitest, runVitestCli, StableTestFileOrderSorter } from '#test-utils'
 import { trimReporterOutput } from './utils'
 
 describe('default reporter', async () => {

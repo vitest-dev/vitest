@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { describe, expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 const ts = String.raw
 

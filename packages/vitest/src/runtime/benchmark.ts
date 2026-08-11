@@ -5,20 +5,15 @@ import type {
   TaskResultCompleted,
   TaskResultRuntimeInfo,
   TaskResultTimestampProviderInfo,
-  Task as TinybenchTask,
 } from 'tinybench'
 import type { SerializedConfig } from './config'
+import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import type { BaselineData, Test, TestBenchmark, TestBenchmarkTask } from './runner/types'
 import { isAbsolute, relative } from 'pathe'
-import { Bench as Tinybench } from 'tinybench'
 import c from 'tinyrainbow'
+import { createDefaultBenchmarkProvider } from './benchmark/default-provider'
 import { rpc } from './rpc'
-import { TestRunner } from './runners/test'
 import { getWorkerState } from './utils'
-
-const now = globalThis.performance
-  ? globalThis.performance.now.bind(globalThis.performance)
-  : Date.now
 
 const kRegistration: unique symbol = Symbol('registration')
 const kFromSource: unique symbol = Symbol('fromSource')
@@ -30,8 +25,116 @@ type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
   [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
 }[number], never>
 
-// We throw an error if benchmark did not complete, so it will always be TaskResultCompleted
-export type BenchResult = TaskResultCompleted & TaskResultRuntimeInfo & TaskResultTimestampProviderInfo
+/**
+ * A benchmarked function. Vitest-owned and engine-agnostic.
+ */
+export type BenchFn = Fn
+
+/**
+ * Per-benchmark initialization options passed to `bench(name, options, fn)`.
+ */
+export type BenchOptions = FnOptions
+
+/**
+ * Engine-neutral run options forwarded to a {@link BenchmarkProvider}. These
+ * come from the optional trailing options argument of `bench.compare()` and
+ * `registration.run()`.
+ */
+export type BenchRunOptions = BenchCompareOptions
+
+/**
+ * The result of a single benchmark, produced by a {@link BenchmarkProvider}.
+ * Structurally compatible with tinybench's task statistics so it flows
+ * unchanged into the reporter, `bench.from()` baselines and comparison tables.
+ * The `name` matches the corresponding {@link BenchRegistration}.
+ */
+export interface BenchResult extends TaskResultCompleted, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo {
+  /** The registered benchmark name this result belongs to. */
+  name: string
+}
+
+/**
+ * A benchmark defined by `bench()` (or `bench.from()`), as seen by a
+ * {@link BenchmarkProvider}. `fn`/`fnOpts` are absent for `bench.from()`
+ * registrations, which are resolved from a stored baseline instead of run.
+ */
+export interface BenchRegistrationInput {
+  name: string
+  fn: BenchFn
+  fnOpts?: BenchOptions
+}
+
+/**
+ * The set of benchmarks registered by a single test, handed to
+ * {@link BenchmarkProvider.run}.
+ */
+export interface BenchmarkGroup {
+  /** The test that registered these benchmarks. */
+  test: Test
+  /** The resolved benchmark configuration for the current project. */
+  config: SerializedConfig['benchmark']
+  /** The runnable registrations, in registration order. */
+  registrations: BenchRegistrationInput[]
+  /** Engine-neutral run options, when provided by the caller. */
+  options?: BenchRunOptions
+}
+
+/**
+ * Executes the benchmarks of a single test and returns their results.
+ *
+ * A custom provider module must default-export an object of this shape.
+ *
+ * The returned array is the sole source of results: it's what `bench().run()`
+ * resolves to and what the reporter serializes. Results are matched to
+ * registrations by `name`; return one {@link BenchResult} per registration.
+ *
+ * @experimental
+ */
+export interface BenchmarkProvider {
+  run: (group: BenchmarkGroup) => Promise<BenchResult[]>
+}
+
+let cachedProvider: Promise<BenchmarkProvider> | undefined
+
+async function loadProviderModule(
+  provider: string,
+  moduleRunner: TestModuleRunner,
+): Promise<BenchmarkProvider> {
+  let mod: Record<string, any>
+  try {
+    mod = await moduleRunner.import(provider)
+  }
+  catch (error) {
+    throw new Error(
+      `Failed to load benchmark provider from "${provider}".`,
+      { cause: error },
+    )
+  }
+  if (mod.default == null) {
+    throw new Error(
+      `Benchmark provider loaded from "${provider}" did not have a default export.`,
+    )
+  }
+  return mod.default
+}
+
+/**
+ * Resolves the benchmark provider for the current worker, importing a custom
+ * provider module on first use. The result is cached for the lifetime of the
+ * worker so a custom provider is imported at most once.
+ */
+export function resolveBenchmarkProvider(
+  config: SerializedConfig,
+  moduleRunner: TestModuleRunner,
+): Promise<BenchmarkProvider> {
+  if (!cachedProvider) {
+    const provider = config.benchmark.provider
+    cachedProvider = !provider
+      ? Promise.resolve(createDefaultBenchmarkProvider(config))
+      : loadProviderModule(provider, moduleRunner)
+  }
+  return cachedProvider
+}
 
 export interface BenchStorage<T extends string> {
   get: (name: T) => BenchResult
@@ -40,10 +143,10 @@ export interface BenchStorage<T extends string> {
 export type { BenchOptions as BenchCompareOptions } from 'tinybench'
 
 /**
- * Options accepted by `bench(name, options, fn)`. Extends tinybench's
- * `FnOptions` with Vitest-specific fields.
+ * Options accepted by `bench(name, options, fn)`. Extends the per-benchmark
+ * lifecycle hooks with Vitest-specific fields.
  */
-export interface BenchFnOptions extends FnOptions {
+export interface BenchFnOptions extends BenchOptions {
   /**
    * Path (relative to the project root) where the benchmark result is written
    * after a successful run. The string `${projectName}` is substituted with
@@ -65,27 +168,27 @@ export interface BenchRegistration<Name extends string> {
   /**
    * The benchmark function. Absent for registrations created via `bench.from()`.
    */
-  fn?: Fn
+  fn?: BenchFn
   /**
    * Per-benchmark options (`beforeEach`, `beforeAll`, etc.). Absent for
    * registrations created via `bench.from()`.
    */
-  fnOpts?: FnOptions
+  fnOpts?: BenchOptions
   /**
    * @internal
    */
   [kRegistration]: true
-  run: (options?: BenchCompareOptions) => Promise<BenchResult>
+  run: (options?: BenchRunOptions) => Promise<BenchResult>
 }
 
 interface BenchCompare {
   <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchStorage<ExtractBenchNames<Args>>>
-  <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchCompareOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
+  <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchRunOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
 }
 
 interface BenchFactory {
-  <Name extends string>(name: Name | Function, fn: Fn): BenchRegistration<Name>
-  <Name extends string>(name: Name | Function, options: BenchFnOptions, fn: Fn): BenchRegistration<Name>
+  <Name extends string>(name: Name | Function, fn: BenchFn): BenchRegistration<Name>
+  <Name extends string>(name: Name | Function, options: BenchFnOptions, fn: BenchFn): BenchRegistration<Name>
 }
 
 export interface BenchFromSource {
@@ -104,8 +207,8 @@ export interface Bench extends BenchFactory {
 }
 
 interface RunnableRegistration<Name extends string> extends BenchRegistration<Name> {
-  fn: Fn
-  fnOpts?: FnOptions
+  fn: BenchFn
+  fnOpts?: BenchOptions
   [kWriteResult]?: string
   [kPerProject]?: true
 }
@@ -122,19 +225,12 @@ function substitutePath(template: string, projectName: string | undefined): stri
   return template.replace(/\$\{projectName\}/g, projectName ?? '')
 }
 
-export function createBench(test: Test, config: SerializedConfig): Bench {
-  let benchIdx = 0
+export function createBench(
+  test: Test,
+  config: SerializedConfig,
+  moduleRunner: TestModuleRunner,
+): Bench {
   const pending = new Set<BenchRegistration<any>>()
-  const createTinybench = (options?: BenchCompareOptions) => {
-    const currentIndex = ++benchIdx
-    return new Tinybench({
-      signal: test.context.signal,
-      name: `${test.fullTestName} ${currentIndex}`,
-      retainSamples: config.benchmark.retainSamples,
-      ...options,
-      now,
-    })
-  }
 
   const resolveTemplate = (template: string) => substitutePath(template, config.benchmark.projectName)
 
@@ -164,7 +260,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
   })
 
   const createCompareStorage = <T extends string>(
-    bench: Tinybench,
+    results: Map<string, BenchResult>,
     fromResults?: Map<string, BaselineData>,
   ): BenchStorage<T> => {
     return {
@@ -173,11 +269,11 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
         if (stored) {
           return stored as BenchResult
         }
-        const task = bench.getTask(name)
-        if (!task) {
+        const result = results.get(name)
+        if (!result) {
           throw new Error(`task "${name}" was not defined`)
         }
-        return task.result as BenchResult
+        return result
       },
     }
   }
@@ -185,29 +281,20 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
   interface TaskMeta { perProject?: true }
 
   const serializeBenchmark = (
-    tinybenchTasks: TinybenchTask[],
-    name: string | undefined,
+    results: BenchResult[],
+    name: string,
     taskMeta?: Map<string, TaskMeta>,
     fromTasks?: TestBenchmarkTask[],
   ): TestBenchmark => {
-    const tasks: TestBenchmarkTask[] = tinybenchTasks.map((t) => {
-      const result = t.result
-      if (result.state === 'errored') {
-        throw result.error
-      }
-      if (result.state !== 'completed') {
-        throw new Error(`task "${t.name}" did not complete: received "${result.state}"`)
-      }
-      return {
-        name: t.name,
-        latency: result.latency,
-        throughput: result.throughput,
-        period: result.period,
-        totalTime: result.totalTime,
-        rank: 0,
-        ...taskMeta?.get(t.name),
-      }
-    })
+    const tasks: TestBenchmarkTask[] = results.map(result => ({
+      name: result.name,
+      latency: result.latency,
+      throughput: result.throughput,
+      period: result.period,
+      totalTime: result.totalTime,
+      rank: 0,
+      ...taskMeta?.get(result.name),
+    }))
     if (fromTasks) {
       tasks.push(...fromTasks)
     }
@@ -216,18 +303,18 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       task.rank = idx + 1
     })
     return {
-      name: name || test.fullTestName,
+      name,
       tasks,
     }
   }
 
   const recordBenchmark = async (
-    tinybenchTasks: TinybenchTask[],
-    name: string | undefined,
+    results: BenchResult[],
+    name: string,
     taskMeta?: Map<string, TaskMeta>,
     fromTasks?: TestBenchmarkTask[],
   ) => {
-    const serializedBenchmark = serializeBenchmark(tinybenchTasks, name, taskMeta, fromTasks)
+    const serializedBenchmark = serializeBenchmark(results, name, taskMeta, fromTasks)
     test.benchmarks.push(serializedBenchmark)
     await rpc().onTestBenchmark(test.id, serializedBenchmark)
   }
@@ -243,12 +330,23 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     await rpc().writeBenchmarkResult(resolved, data)
   }
 
-  const runBenchmarks = async (tinybench: Tinybench) => {
+  const groupName = (options: BenchRunOptions | undefined) => options?.name ?? test.fullTestName
+
+  const runGroup = async (
+    registrations: BenchRegistrationInput[],
+    options: BenchRunOptions | undefined,
+  ): Promise<Map<string, BenchResult>> => {
     const workerState = getWorkerState()
     const getterTracker = workerState.getterTracker
     getterTracker?.resetInvocations()
     try {
-      return await TestRunner.runBenchmarks(tinybench)
+      const provider = await resolveBenchmarkProvider(config, moduleRunner)
+      const results = await provider.run({ test, config: config.benchmark, registrations, options })
+      const byName = new Map<string, BenchResult>()
+      for (const result of results) {
+        byName.set(result.name, result)
+      }
+      return byName
     }
     finally {
       const excessiveInvocations = config.benchmark.suppressExportGetterWarnings
@@ -261,7 +359,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
         console.warn(
           [
             c.yellow(c.bold('Benchmark Warning')),
-            `Benchmark ${c.bold(`"${tinybench.name}"`)} accessed module export getters too many times.`,
+            `Benchmark ${c.bold(`"${groupName(options)}"`)} accessed module export getters too many times.`,
             '',
             'This can make results unreliable because export getters add overhead.',
             'See https://vitest.dev/guide/benchmarking#module-runner-overhead',
@@ -276,23 +374,22 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
 
   const runSingle = async (
     name: string,
-    fn: Fn,
-    fnOpts: FnOptions | undefined,
-    options: BenchCompareOptions | undefined,
+    fn: BenchFn,
+    fnOpts: BenchOptions | undefined,
+    options: BenchRunOptions | undefined,
     meta: TaskMeta | undefined,
     writeResult: string | undefined,
   ): Promise<BenchResult> => {
-    const tinybench = createTinybench(options).add(name, fn, fnOpts)
-    const tasks = await runBenchmarks(tinybench)
-    const task = tinybench.getTask(name)!
-    if (task.result.state === 'errored') {
-      throw task.result.error
+    const results = await runGroup([{ name, fn, fnOpts }], options)
+    const result = results.get(name)
+    if (!result) {
+      throw new Error(`benchmark provider did not return a result for "${name}"`)
     }
-    await recordBenchmark(tasks, tinybench.name, meta ? new Map([[name, meta]]) : undefined)
+    await recordBenchmark([result], groupName(options), meta ? new Map([[name, meta]]) : undefined)
     if (writeResult) {
-      await writeResultArtifact(writeResult, task.result as BenchResult)
+      await writeResultArtifact(writeResult, result)
     }
-    return task.result as BenchResult
+    return result
   }
 
   const runFrom = async (
@@ -309,7 +406,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     return data as BenchResult
   }
 
-  const bench: Bench = (nameOrFunction: string | Function, a: Fn | BenchFnOptions, b?: Fn | BenchFnOptions) => {
+  const bench: Bench = (nameOrFunction: string | Function, a: BenchFn | BenchFnOptions, b?: BenchFn | BenchFnOptions) => {
     validateBenchmarkProject(config)
     const { fn, fnOpts, writeResult, perProject } = normalizeBenchArgs(a, b)
     const name = typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction
@@ -319,7 +416,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       name,
       fn,
       fnOpts,
-      run: (options?: BenchCompareOptions) => {
+      run: (options?: BenchRunOptions) => {
         pending.delete(registration)
         return runSingle(name, fn, fnOpts, options, meta, writeResult)
       },
@@ -359,10 +456,10 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
   bench.compare = async (...args) => {
     validateBenchmarkProject(config)
 
-    // extract optional trailing BenchCompareOptions argument
+    // extract optional trailing BenchRunOptions argument
     const lastArg = args.at(-1)
     const isOptions = lastArg != null && typeof lastArg === 'object' && !(kRegistration in lastArg)
-    const benchOptions = isOptions ? args.pop() as BenchCompareOptions : undefined
+    const benchOptions = isOptions ? args.pop() as BenchRunOptions : undefined
     const registrations = args as BenchRegistration<any>[]
 
     // Mark every passed-in registration as consumed before validation so a
@@ -416,23 +513,15 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       }
     }
 
-    const tinybench = createTinybench(benchOptions)
-    runnable.forEach((reg) => {
-      tinybench.add(reg.name, reg.fn, reg.fnOpts)
-    })
-
-    let tasks: TinybenchTask[] = []
+    let results = new Map<string, BenchResult>()
     if (runnable.length > 0) {
-      tasks = await runBenchmarks(tinybench)
-      const errors = tinybench.tasks
-        .filter(task => task.result.state === 'errored')
-        .map(task => (task.result as any).error)
-      if (errors.length > 0) {
-        throw new AggregateError(errors, 'Some benchmarks failed')
-      }
+      results = await runGroup(
+        runnable.map(reg => ({ name: reg.name, fn: reg.fn, fnOpts: reg.fnOpts })),
+        benchOptions,
+      )
     }
 
-    await recordBenchmark(tasks, tinybench.name, taskMeta, fromTasks)
+    await recordBenchmark(Array.from(results.values()), groupName(benchOptions), taskMeta, fromTasks)
 
     // write artifacts for every runnable registration that requested it. We
     // do this after recording so a write failure can't be confused with a
@@ -441,12 +530,12 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       runnable
         .filter(reg => reg[kWriteResult] != null)
         .map((reg) => {
-          const task = tinybench.getTask(reg.name)!
-          return writeResultArtifact(reg[kWriteResult]!, task.result as BenchResult)
+          const result = results.get(reg.name)!
+          return writeResultArtifact(reg[kWriteResult]!, result)
         }),
     )
 
-    return createCompareStorage(tinybench, fromResults)
+    return createCompareStorage(results, fromResults)
   }
 
   bench[kFinalize] = () => {
@@ -477,9 +566,9 @@ function formatModuleId(moduleId: string, root: string): string {
 }
 
 function normalizeBenchArgs(
-  a: Fn | BenchFnOptions,
-  b: Fn | BenchFnOptions | undefined,
-): { fn: Fn; fnOpts: FnOptions | undefined; writeResult: string | undefined; perProject: boolean } {
+  a: BenchFn | BenchFnOptions,
+  b: BenchFn | BenchFnOptions | undefined,
+): { fn: BenchFn; fnOpts: BenchOptions | undefined; writeResult: string | undefined; perProject: boolean } {
   if (typeof a === 'function') {
     if (b !== undefined) {
       throw new TypeError('`bench()` does not accept options as the third argument. Pass options as the second argument instead: `bench(name, options, fn)`.')
@@ -491,15 +580,15 @@ function normalizeBenchArgs(
   }
   // Strip vitest-specific fields only when present so we don't allocate a new
   // object — preserving referential identity matters: users inspect
-  // `registration.fnOpts` and tinybench's `add` sees the same object the
-  // caller passed in.
+  // `registration.fnOpts` and the provider sees the same object the caller
+  // passed in.
   if (a.writeResult === undefined && a.perProject === undefined) {
-    return { fn: b, fnOpts: a as FnOptions, writeResult: undefined, perProject: false }
+    return { fn: b, fnOpts: a as BenchOptions, writeResult: undefined, perProject: false }
   }
   const { writeResult, perProject, ...fnOpts } = a
   return {
     fn: b,
-    fnOpts: Object.keys(fnOpts).length > 0 ? fnOpts as FnOptions : undefined,
+    fnOpts: Object.keys(fnOpts).length > 0 ? fnOpts as BenchOptions : undefined,
     writeResult,
     perProject: perProject ?? false,
   }

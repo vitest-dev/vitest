@@ -11,11 +11,17 @@ import { readFile } from 'node:fs/promises'
 import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
 import { join } from 'pathe'
 import { fetchModule } from 'vite'
+import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
 import { detectModuleType } from '../resolver'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
-const saveCachePromises = new Map<string, Promise<VitestFetchResult>>()
+const debugFs = createDebugger('vitest:cache:fs')
+
+const saveCachePromises = new Map<
+  string,
+  Promise<VitestFetchResult | FetchCachedFileSystemResult>
+>()
 const readFilePromises = new Map<string, Promise<string | null>>()
 
 class ModuleFetcher {
@@ -32,7 +38,7 @@ class ModuleFetcher {
     private fsCache: FileSystemModuleCache,
     private tmpProjectDir: string,
   ) {
-    this.fsCacheEnabled = config.experimental?.fsModuleCache === true
+    this.fsCacheEnabled = config.fsModuleCache === true
     this.detectModuleType = config.injectCjsGlobals === false
   }
 
@@ -239,6 +245,13 @@ class ModuleFetcher {
     importer: string | undefined,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
     if (moduleGraphModule.transformResult?.__vitestTmp) {
+      if (!existsSync(moduleGraphModule.transformResult.__vitestTmp)) {
+        debugFs?.(
+          `cached file ${moduleGraphModule.transformResult.__vitestTmp} disappeared, re-transforming`,
+        )
+        moduleGraphModule.transformResult.__vitestTmp = undefined
+        return undefined
+      }
       return {
         cached: true as const,
         file: moduleGraphModule.file,
@@ -369,21 +382,23 @@ class ModuleFetcher {
       : result
 
     if (saveCachePromises.has(cachePath)) {
-      await saveCachePromises.get(cachePath)
-      return returnResult
+      return saveCachePromises.get(cachePath)!
     }
 
     const savePromise = this.fsCache
       .saveCachedModule(cachePath, result, importedUrls, mappings)
-      .then(() => result)
+      .then(() => returnResult)
+      .catch((error) => {
+        debugFs?.(`failed to cache ${cachePath}, serving it inline: ${error}`)
+        return result
+      })
       .finally(() => {
         saveCachePromises.delete(cachePath)
       })
 
     saveCachePromises.set(cachePath, savePromise)
-    await savePromise
 
-    return returnResult
+    return savePromise
   }
 
   private readFileConcurrently(file: string): Promise<string | null> {

@@ -12,9 +12,11 @@ const FIXTURES = '**/fixtures/**'
 
 export default defineConfig({
   test: {
-    experimental: {
-      fsModuleCache: true,
-    },
+    fsModuleCache: true,
+    watchTriggerPatterns: [{
+      pattern: /test\/coverage-test\/fixtures/,
+      testsToRun: () => [],
+    }],
     reporters: process.env.CI ? 'minimal' : 'verbose',
     isolate: false,
     setupFiles: ['./setup.ts'],

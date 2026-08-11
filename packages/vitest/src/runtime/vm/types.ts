@@ -20,6 +20,11 @@ type ModuleStatus
     | 'evaluating'
     | 'evaluated'
     | 'errored'
+export interface VMModuleRequest {
+  specifier: string
+  attributes: Record<string, string>
+  phase?: string
+}
 export declare class VMModule {
   dependencySpecifiers: readonly string[]
   error: any
@@ -87,4 +92,18 @@ export declare class VMSourceTextModule extends VMModule {
    * @param code JavaScript Module code to parse
    */
   constructor(code: string, options?: SourceTextModuleOptions)
+  /**
+   * Creates a code cache that can be used with the `SourceTextModule`
+   * constructor's `cachedData` option. Must be called before the module
+   * has been evaluated.
+   */
+  createCachedData(): Buffer
+  // The synchronous module graph APIs below only exist on Node 24.9+.
+  // All call sites run behind the `supportsSyncEsmEvaluate` gate
+  // (see ./utils.ts), so they are typed as always present.
+  hasAsyncGraph(): boolean
+  hasTopLevelAwait(): boolean
+  readonly moduleRequests: readonly VMModuleRequest[]
+  linkRequests(modules: readonly VMModule[]): void
+  instantiate(): void
 }

@@ -1,6 +1,6 @@
-import { createNode } from '#src/createNode'
 import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import { page } from 'vitest/browser'
+import { createNode } from '#src/createNode'
 import '../src/button.css'
 
 afterAll(() => {
@@ -37,6 +37,7 @@ describe('dom related activity', () => {
 
     // test typing
     if (0) {
+      await (expect.element(div).toHaveClass('x', { exact: true }) satisfies Promise<void>)
       await expect.element(div).toHaveClass('x', { exact: true })
       await expect.element(div).toHaveClass('x', 'y')
       await expect.element(div).toHaveClass('x', /y/)

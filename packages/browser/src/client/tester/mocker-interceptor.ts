@@ -19,6 +19,6 @@ export function createModuleMockerInterceptor(): ModuleMockerInterceptor {
   }
 }
 
-export function rpc(): BrowserRPC {
+function rpc(): BrowserRPC {
   return getWorkerState().rpc as any as BrowserRPC
 }
