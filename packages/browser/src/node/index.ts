@@ -456,14 +456,15 @@ function resolveBrowserOptimizeDeps(
   // - vitest/browser, @vitest/browser/context, @vitest/browser/utils are
   //   VIRTUAL modules generated per-server (see pluginContext.ts) — optimizer
   //   cannot resolve/run their `load`, it would freeze stale/empty content.
-  // - @vitest/browser/locators is pre-built and loaded by provider init scripts.
-  //   It can be nested under the provider package and unavailable from the root.
   // - msw is a large, side-effectful service-worker library.
   const exclude = [
     'vitest/browser',
-    '@vitest/browser/locators',
     '@vitest/browser/utils',
     '@vitest/browser/context',
+    // this is a real module but cannot be specified in `optimizeDeps.include`
+    // because `@vitest/browser` is only installed as a transitive dependency of
+    // provider-specific packages such as `@vitest/browser-playwright`
+    '@vitest/browser/locators',
     'msw',
     'msw/browser',
   ]
