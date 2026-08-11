@@ -8,7 +8,7 @@ import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
 import type { BrowserProvider } from '../types/browser'
 import crypto from 'node:crypto'
-import { readFile } from 'node:fs/promises'
+import { readFile, statfs } from 'node:fs/promises'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
@@ -408,8 +408,9 @@ class BrowserPool {
         },
       )
       testersPromise
-        .then(() => {
+        .then(async () => {
           debug?.('[%s] test %s finished running', sessionId, file)
+          await maybeCollectChromiumGarbage(this.project, sessionId)
           this.runNextTest(method, sessionId)
         })
         .catch((error) => {
@@ -465,4 +466,70 @@ function shouldIgnoreDebugger(provider: string, browser: string) {
     return browser !== 'chrome' && browser !== 'edge'
   }
   return browser !== 'chromium'
+}
+
+// Best-effort workaround for chromium/playwright bug
+// https://issues.chromium.org/issues/530892387
+
+// Trigger gc if disk lower than 5GB
+const chromiumGCDiskThreshold = process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB
+  ? BigInt(process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB) * 1024n ** 3n
+  : 5n * 1024n ** 3n
+const forceChromiumGC = !!process.env.VITEST_CHROMIUM_GC_FORCE
+const debugGC = createDebugger('vitest:browser:gc')
+
+async function maybeCollectChromiumGarbage(project: TestProject, sessionId: string): Promise<void> {
+  const provider = project.browser!.provider
+  if (
+    (!forceChromiumGC && process.platform !== 'linux')
+    || provider.name !== 'playwright'
+    || project.config.browser.name !== 'chromium'
+    || !project.config.isolate
+    || !provider.getCDPSession
+  ) {
+    return
+  }
+
+  const start = performance.now()
+  const timings: Record<string, number | string | boolean | undefined> = {
+    statfsMs: undefined,
+    cdpSessionMs: undefined,
+    cdpSendMs: undefined,
+    forced: forceChromiumGC,
+  }
+  try {
+    // Playwright enables --disable-dev-shm-usage by default, which makes
+    // Chromium use TMPDIR or /tmp for shared memory files.
+    // https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/chromium/chromiumSwitches.ts
+    // https://source.chromium.org/chromium/chromium/src/+/main:base/files/file_util_posix.cc
+    const tempDirectory = process.env.TMPDIR || '/tmp'
+    let operationStart = performance.now()
+    const stats = await statfs(tempDirectory, { bigint: true })
+    timings.statfsMs = performance.now() - operationStart
+
+    const available = stats.bavail * stats.bsize
+    timings.availableBytes = available.toString()
+    timings.thresholdBytes = chromiumGCDiskThreshold.toString()
+    timings.tempDirectory = tempDirectory
+    timings.triggered = available < chromiumGCDiskThreshold
+    if (available >= chromiumGCDiskThreshold) {
+      return
+    }
+
+    operationStart = performance.now()
+    // TODO: does this dispose cdp session?
+    const cdp = await provider.getCDPSession(sessionId)
+    timings.cdpSessionMs = performance.now() - operationStart
+
+    operationStart = performance.now()
+    await cdp.send('HeapProfiler.collectGarbage')
+    timings.cdpSendMs = performance.now() - operationStart
+  }
+  catch (error) {
+    debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
+  }
+  finally {
+    timings.totalMs = performance.now() - start
+    debugGC?.('[%s] Chromium garbage collection check: %O', sessionId, timings)
+  }
 }
