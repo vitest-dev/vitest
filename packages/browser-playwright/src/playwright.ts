@@ -665,6 +665,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       on: cdp.on.bind(cdp),
       off: cdp.off.bind(cdp),
       once: cdp.once.bind(cdp),
+      detach: cdp.detach.bind(cdp),
     } as any // overloaded CDPSession type is too tricky in monorepo
   }
 
@@ -768,7 +769,7 @@ type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 // Must be re-aliased here or rollup-plugin-dts removes the import alias and you end up with a circular reference
-type PWCDPSession = Pick<PlaywrightCDPSession, 'send' | 'on' | 'off' | 'once'>
+type PWCDPSession = Pick<PlaywrightCDPSession, 'send' | 'on' | 'off' | 'once' | 'detach'>
 
 export { type PWCDPSession as CDPSession }
 

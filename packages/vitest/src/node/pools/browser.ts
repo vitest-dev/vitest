@@ -6,7 +6,7 @@ import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
-import type { BrowserProvider } from '../types/browser'
+import type { BrowserProvider, CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
 import { readFile, statfs } from 'node:fs/promises'
 import * as nodeos from 'node:os'
@@ -495,8 +495,10 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     statfsMs: undefined,
     cdpSessionMs: undefined,
     cdpSendMs: undefined,
+    cdpDetachMs: undefined,
     forced: forceChromiumGC,
   }
+  let cdp: CDPSession | undefined
   try {
     // Playwright enables --disable-dev-shm-usage by default, which makes
     // Chromium use TMPDIR or /tmp for shared memory files.
@@ -517,8 +519,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     }
 
     operationStart = performance.now()
-    // TODO: does this dispose cdp session?
-    const cdp = await provider.getCDPSession(sessionId)
+    cdp = await provider.getCDPSession(sessionId)
     timings.cdpSessionMs = performance.now() - operationStart
 
     operationStart = performance.now()
@@ -535,6 +536,13 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
   }
   finally {
+    if (cdp) {
+      const operationStart = performance.now()
+      await cdp.detach().catch((error) => {
+        debugGC?.('[%s] failed to detach Chromium CDP session: %s', sessionId, error)
+      })
+      timings.cdpDetachMs = performance.now() - operationStart
+    }
     timings.totalMs = performance.now() - start
     debugGC?.('[%s] Chromium garbage collection check: %O', sessionId, timings)
   }
