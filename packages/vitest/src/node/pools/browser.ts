@@ -8,7 +8,8 @@ import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
 import type { BrowserProvider, CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
-import { readFile, statfs } from 'node:fs/promises'
+import { statfsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
@@ -506,7 +507,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     // https://source.chromium.org/chromium/chromium/src/+/main:base/files/file_util_posix.cc
     const tempDirectory = process.env.TMPDIR || '/tmp'
     let operationStart = performance.now()
-    const fsStats = await statfs(tempDirectory)
+    const fsStats = statfsSync(tempDirectory)
     diagnostics.statfsMs = performance.now() - operationStart
 
     const available = fsStats.bavail * fsStats.bsize
