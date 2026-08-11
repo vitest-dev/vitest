@@ -178,7 +178,7 @@ expect(vi.mocked(MockedDog.prototype.speak).mock.contexts).toEqual([cooper, max]
 Assigning on `MockedDog.prototype` instead of `OriginalDog.prototype` keeps the original class untouched: the lookup order is `instance` → `MockedDog.prototype` → `OriginalDog.prototype`, so the assigned function shadows the original method. Because instances look the method up on every call rather than keeping a copy, the mock is visible to all of them, even those created before the assignment. The trade-off is that they also share a single call history, unlike class fields, which give every instance its own mock.
 
 ::: warning
-The mock's `prototype` always follows the current implementation: it is re-pointed when you set a new implementation and when a queued `mockImplementationOnce` class is constructed. If a single mock uses different class implementations, instances created by earlier implementations lose access to their prototype methods once a newer implementation takes over. Own properties assigned in the constructor or via class fields are not affected.
+The mock's `prototype` always follows the current implementation: it is re-pointed when you set a new implementation, when a queued `mockImplementationOnce` class is constructed, and when the mock is reset. If a single mock uses different class implementations, instances created by earlier implementations lose access to their prototype methods once a newer implementation takes over. Own properties assigned in the constructor or via class fields are not affected.
 :::
 
 If you want to mock the method of one instance only, use [`vi.spyOn`](/api/vi#vi-spyon). It defines the mock directly on that instance, shadowing the prototype method just for it:

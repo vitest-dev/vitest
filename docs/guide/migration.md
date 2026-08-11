@@ -221,7 +221,7 @@ Automocks are now restored as automocks. If a browser test relied on the origina
 
 Instances created from a class mock previously inherited from the mock's own empty `prototype`. Methods defined with the regular class syntax were `undefined` on instances, even inside the constructor, and `instanceof` checks against the implementation class failed. This affected [`vi.fn(Dog)`](/api/vi#vi-fn), `vi.spyOn(obj, 'Dog')` with or without a mock implementation, and [`.mockImplementation(class ...)`](/api/mock#mockimplementation).
 
-The mock's `prototype` is now chained to the implementation's prototype during construction, so instances behave like instances of the implementation class:
+The mock's `prototype` is now chained to the implementation's prototype as soon as the implementation is set, and kept in sync when it changes, so instances behave like instances of the implementation class:
 
 ```ts
 class Dog {
@@ -236,9 +236,12 @@ const dog = new MockedDog()
 typeof dog.speak // was 'undefined', now 'function'
 dog instanceof Dog // was false, now true
 dog instanceof MockedDog // true, as before
+
+// the chain is visible on the mock itself
+Object.getPrototypeOf(MockedDog.prototype) // was Object.prototype, now Dog.prototype
 ```
 
-Overriding methods on the mock's `prototype` still works and shadows the implementation. See [Mocking Classes](/guide/mocking/classes) for details.
+Overriding methods on the mock's `prototype` still works and shadows the implementation. [`mockReset`](/api/mock#mockreset) reverts the chain together with the implementation: back to the original class for `vi.fn(Dog)` and `vi.spyOn()`, and to a plain object for `vi.fn()`. See [Mocking Classes](/guide/mocking/classes) for details.
 
 ### Benchmarking API Rewrite
 
