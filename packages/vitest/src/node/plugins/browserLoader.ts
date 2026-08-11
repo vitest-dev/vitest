@@ -68,9 +68,11 @@ export function BrowserLoaderPlugin(
           customLogger: {
             ...logger,
             info(message, options) {
+              // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L76-L86
+              // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L483-L490
               const isOptimizerMessage
-                = message.includes('dependency optimized')
-                  || message.includes('dependencies optimized')
+                = message.includes('dependency optimized: ')
+                  || message.includes('dependencies optimized: ')
                   || message.includes('optimized dependencies changed. reloading')
               if (isOptimizerMessage) {
                 logger.warn(message, options)
