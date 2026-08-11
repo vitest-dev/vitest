@@ -142,7 +142,7 @@ describe(GithubActionsReporter, () => {
 
       const summary = await readFile(outputPath, 'utf8')
 
-      expect(summary.split('\n')[0]).toMatchInlineSnapshot(`"## Custom Test Report"`)
+      expect(summary.startsWith('## Custom Test Report\n\n')).toBe(true)
     })
 
     it.for([{ enabled: false }, { outputPath: undefined }] as const)('does not write one when disabled or without `outputPath`', async (options) => {

@@ -73,9 +73,7 @@ interface JobSummaryOptions {
   }
 }
 
-type ResolvedOptions = Required<Omit<GithubActionsReporterOptions, 'jobSummary'>> & {
-  jobSummary: JobSummaryOptions
-}
+type ResolvedOptions = Required<GithubActionsReporterOptions>
 
 const defaultOptions: ResolvedOptions = {
   onWritePath: defaultOnWritePath,
@@ -448,7 +446,7 @@ function renderStats({ fileStats, testsStats }: SummaryData): string {
   return output
 }
 
-function renderSummary(summaryData: SummaryData, title: string, fileLinks?: JobSummaryOptions['fileLinks']): string {
+function renderSummary(summaryData: SummaryData, title: string = defaultOptions.jobSummary.title!, fileLinks?: JobSummaryOptions['fileLinks']): string {
   const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
 
   let summary = `## ${title}\n${renderStats(summaryData)}`
