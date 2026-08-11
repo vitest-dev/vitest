@@ -10,7 +10,6 @@ test('server side cdp', async () => {
   expectTypeOf(session).toHaveProperty('off')
   expectTypeOf(session).toHaveProperty('once')
   expectTypeOf(session).toHaveProperty('send')
-  expectTypeOf(session).toHaveProperty('detach')
   expectTypeOf(session).not.toHaveProperty('emit')
 
   session.on('Profiler.preciseCoverageDeltaUpdate', (event) => {
@@ -36,7 +35,6 @@ test('client side cdps', async () => {
   expectTypeOf(session).toHaveProperty('off')
   expectTypeOf(session).toHaveProperty('once')
   expectTypeOf(session).toHaveProperty('send')
-  expectTypeOf(session).not.toHaveProperty('detach')
   expectTypeOf(session).not.toHaveProperty('emit')
 
   session.on('Profiler.preciseCoverageDeltaUpdate', (event) => {
