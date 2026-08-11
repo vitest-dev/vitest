@@ -494,7 +494,8 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
 
   const start = performance.now()
   const diagnostics: Record<string, any> = {
-    statfsMs: undefined,
+    statfsBeforeMs: undefined,
+    statfsAfterMs: undefined,
     cdpSessionMs: undefined,
     cdpSendMs: undefined,
     cdpDetachMs: undefined,
@@ -508,10 +509,10 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     const tempDirectory = process.env.TMPDIR || '/tmp'
     let operationStart = performance.now()
     const fsStats = statfsSync(tempDirectory)
-    diagnostics.statfsMs = performance.now() - operationStart
+    diagnostics.statfsBeforeMs = performance.now() - operationStart
 
     const available = fsStats.bavail * fsStats.bsize
-    diagnostics.availableBytes = available.toString()
+    diagnostics.availableBytesBefore = available.toString()
     diagnostics.thresholdBytes = chromiumGCDiskThreshold.toString()
     diagnostics.tempDirectory = tempDirectory
     diagnostics.triggered = available < chromiumGCDiskThreshold
@@ -537,10 +538,19 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
       diagnostics.cdpDetachMs = performance.now() - operationStart
     }
 
+    operationStart = performance.now()
+    const fsStatsAfter = statfsSync(tempDirectory)
+    diagnostics.statfsAfterMs = performance.now() - operationStart
+    diagnostics.availableBytesAfter = (fsStatsAfter.bavail * fsStatsAfter.bsize).toString()
+
     const availableGiB = available / 1024 ** 3
     const thresholdGiB = chromiumGCDiskThreshold / 1024 ** 3
-    project.vitest.logger.warn(
-      `Low disk space detected in ${tempDirectory} (${availableGiB.toFixed(1)} GiB available, ${thresholdGiB.toFixed(1)} GiB threshold). Vitest triggered Chromium garbage collection to prevent browser crashes. See https://github.com/vitest-dev/vitest/issues/9437`,
+    debugGC?.(
+      '[%s] Low disk space detected in %s (%s GiB available, %s GiB threshold). Vitest triggered Chromium garbage collection to prevent browser crashes.',
+      sessionId,
+      tempDirectory,
+      availableGiB.toFixed(1),
+      thresholdGiB.toFixed(1),
     )
   }
   catch (error) {
