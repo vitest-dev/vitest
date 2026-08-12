@@ -1,6 +1,6 @@
 import type { File } from '../../runtime/runner/types'
 
-export interface DurationPhase {
+interface DurationPhase {
   name: string
   time: number
   /** Share of the tracked time, in percent (0-100). */

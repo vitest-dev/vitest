@@ -18,6 +18,9 @@ import { createLocationsIndexMap } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
 import { getRawErrsMapFromTsCompile } from './parse'
 
+// the V8 fatal output of a checker that ran out of memory
+export const OOM_OUTPUT_PATTERN: RegExp = /JavaScript heap out of memory|Reached heap limit|Allocation failed/i
+
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
 
@@ -428,7 +431,9 @@ export class Typechecker {
 
       if (process.platform === 'win32') {
         child.process.once('close', (code) => {
-          if (code != null && code !== 0 && !dataReceived) {
+          // an OOM abort writes only to stderr, but the checker did start;
+          // `start` awaits the process and reports the crash from its output
+          if (code != null && code !== 0 && !dataReceived && !OOM_OUTPUT_PATTERN.test(this._output)) {
             onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
           }
           else if (!resolved) {

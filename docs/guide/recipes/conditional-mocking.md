@@ -152,8 +152,8 @@ By default, when the spy is called with arguments that match no registered behav
 There are three ways to handle this differently:
 
 1. [throwing an error](#onunmatched-throw);
-1. [running a custom function](#onunmatched-fn);
-1. [using asymmetric matchers as catch-all behaviors](#asymmetric-matcher-as-catch-all).
+2. [running a custom function](#onunmatched-fn);
+3. [using asymmetric matchers as catch-all behaviors](#asymmetric-matcher-as-catch-all).
 
 ### `onUnmatched: 'throw'`
 

@@ -39,11 +39,6 @@ export function provideWorkerState(context: any, state: WorkerGlobalState): Work
   return state
 }
 
-export function getCurrentEnvironment(): string {
-  const state = getWorkerState()
-  return state.environment.name
-}
-
 export function isChildProcess(): boolean {
   return typeof process !== 'undefined' && !!process.send
 }

@@ -22,7 +22,7 @@ const keys = [
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
 
-export function printShortcutsHelp(): void {
+function printShortcutsHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}

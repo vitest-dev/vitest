@@ -7,7 +7,7 @@ import type { TestRunEndReason } from '../../types/reporter'
 import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from '../types'
 import EventEmitter from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
-import { Typechecker } from '../../../typecheck/typechecker'
+import { OOM_OUTPUT_PATTERN, Typechecker } from '../../../typecheck/typechecker'
 import { hasFailed } from '../../../utils/tasks'
 
 /** @experimental */
@@ -130,8 +130,7 @@ function createRunner(vitest: Vitest) {
 
       if (exitCode || signal) {
         const output = checker.getOutput()
-        const looksLikeOom = signal === 'SIGABRT'
-          || /JavaScript heap out of memory|Reached heap limit|Allocation failed/i.test(output)
+        const looksLikeOom = signal === 'SIGABRT' || OOM_OUTPUT_PATTERN.test(output)
 
         let message: string
         if (signal || looksLikeOom) {
