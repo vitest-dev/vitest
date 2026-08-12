@@ -207,10 +207,6 @@ export function getDefaultSuite(): SuiteCollector<object> {
   return defaultSuite
 }
 
-export function getTestFilepath(): string {
-  return currentTestFilepath
-}
-
 export function getRunner(): VitestRunner {
   assert(runner, 'the runner')
   return runner

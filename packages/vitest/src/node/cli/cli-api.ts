@@ -343,14 +343,14 @@ function forEachSuite(modules: TestModule[], callback: (suite: TestSuite | TestM
   })
 }
 
-export interface TestCollectJSONResult {
+interface TestCollectJSONResult {
   name: string
   file: string
   projectName?: string
   location?: { line: number; column: number }
 }
 
-export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
+function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
   const results: TestCollectJSONResult[] = []
 
   files.forEach((file) => {
@@ -374,7 +374,7 @@ export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResul
   return results
 }
 
-export function formatCollectedAsString(testModules: TestModule[]): string[] {
+function formatCollectedAsString(testModules: TestModule[]): string[] {
   const results: string[] = []
 
   testModules.forEach((testModule) => {

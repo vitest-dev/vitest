@@ -19,7 +19,7 @@ function isBuiltinEnvironment(
 const isWindows = process.platform === 'win32'
 const _loaders = new Map<string, ModuleRunner>()
 
-export function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRunner {
+function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRunner {
   const cachedLoader = _loaders.get(root)
   if (!cachedLoader || cachedLoader.isClosed()) {
     _loaders.delete(root)
@@ -54,7 +54,7 @@ export function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRun
   return _loaders.get(root)!
 }
 
-export async function loadNativeEnvironment(
+async function loadNativeEnvironment(
   name: string,
   root: string,
   traces: Traces,
