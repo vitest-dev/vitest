@@ -934,7 +934,11 @@ describe('vi.fn() implementations', () => {
     // constructing such a mock would call the implementation, whose super()
     // re-enters the mock, so it could never be constructed anyway
     expect(() => Mock.mockImplementation(class extends Mock {}))
-      .toThrowErrorMatchingInlineSnapshot(`[TypeError: Cyclic __proto__ value]`)
+      .toThrowErrorMatchingInlineSnapshot(`
+        TypeError {
+          "message": "Cyclic __proto__ value",
+        }
+      `)
   })
 
   test('vi.fn() implementation can inherit from another mock', () => {
