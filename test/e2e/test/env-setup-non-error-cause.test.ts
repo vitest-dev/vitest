@@ -1,13 +1,6 @@
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-// https://github.com/vitest-dev/vitest/issues/10557 — when a test environment's
-// `setup()` rejects with a non-`Error` value (string, plain object, wasm-bindgen
-// JsValue, etc.), the pool wrapper still attaches the value via `{ cause }`, but
-// the reporter only renders causes that are `Error` instances. Without this
-// fix, the actual diagnostic is silently dropped and the user only sees the
-// generic `[vitest-pool]: Failed to start … worker for test files …` message.
-
 test('non-Error string thrown from env setup surfaces in stderr', async () => {
   const { stderr } = await runInlineTests({
     'throwing-env.js': `
@@ -63,8 +56,6 @@ test('noop', () => { expect(1).toBe(1) })
   })
 
   expect(stderr).toContain('Failed to start')
-  // The object's contents (or at least the keys) must surface — without the
-  // fix the entire object is dropped.
   expect(stderr).toMatch(/wasm-init-failed|reason/)
 })
 
