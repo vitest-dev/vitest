@@ -1133,6 +1133,12 @@ function matchesEntryFilter(
   if (!filter.length) {
     return true
   }
+  // a negated pattern is an exclusion: it wins over every other pattern,
+  // otherwise `!a !b` would keep `a` (it doesn't match `!a`, but it does
+  // match `!b`) and the two exclusions would cancel each other out
+  if (isEntryExcludedByFilter(filter, name, ancestors)) {
+    return false
+  }
   const names = [name, ...(ancestors || [])]
   return filter.some((project) => {
     const regexp = wildcardPatternToRegExp(project)

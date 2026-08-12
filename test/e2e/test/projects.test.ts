@@ -1039,6 +1039,9 @@ describe('project filtering', () => {
     { pattern: '!project_1', expected: ['project_2', 'space_1'] },
     { pattern: '!project*', expected: ['space_1'] },
     { pattern: '!project', expected: allProjects },
+    // every negated pattern excludes: they must not cancel each other out
+    { pattern: ['!project_1', '!project_2'], expected: ['space_1'] },
+    { pattern: ['!project_1', '!space*'], expected: ['project_2'] },
   ])('should match projects correctly: $pattern', async ({ pattern, expected }) => {
     const { ctx, stderr, stdout } = await runVitest({
       root: 'fixtures/project',
@@ -1059,5 +1062,12 @@ describe('project filtering', () => {
     }
 
     expect(ctx?.projects.map(p => p.name).sort()).toEqual(expected)
+
+    // the public `vitest.matchesProjectFilter` API must agree with the
+    // projects that were actually resolved
+    for (const project of allProjects) {
+      expect([project, ctx?.matchesProjectFilter(project)])
+        .toEqual([project, expected.includes(project)])
+    }
   })
 })

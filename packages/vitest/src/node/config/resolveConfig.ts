@@ -1246,6 +1246,12 @@ export function matchesProjectFilter(projects: string[], name: string): boolean 
   if (!projects.length) {
     return true
   }
+  // a negated pattern is an exclusion: it wins over every other pattern,
+  // otherwise `!a !b` would keep `a` (it doesn't match `!a`, but it does
+  // match `!b`) and the two exclusions would cancel each other out
+  if (isExcludedByProjectFilter(projects, name)) {
+    return false
+  }
   return projects.some((project) => {
     const regexp = wildcardPatternToRegExp(project)
     return regexp.test(name)
