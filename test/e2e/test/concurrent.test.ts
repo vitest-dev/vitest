@@ -1214,11 +1214,7 @@ describe.for(["a", "b"])("%s", { concurrent: true }, () => {
   `)
 })
 
-// we could enforce this by adding yet another limit globally at `runTest`
-// (like we originally had before https://github.com/vitest-dev/vitest/pull/9653)
-// but there's no way to achieve the same for deep suite-level hooks anyways,
-// so we don't do that (yet).
-test('non-sibling test sequential lifecycle non-guarantee', async () => {
+test('non-sibling test sequential lifecycle guarantee', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -1255,24 +1251,24 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     !> beforeEach a0 b0 test
     !> beforeEach a0 b1 test
     !< beforeEach a0 b0 test
-    !> beforeEach a1 b0 test
-    !< beforeEach a0 b1 test
-    !> beforeEach a1 b1 test
-    !< beforeEach a1 b0 test
     !> test a0 b0 test
-    !< beforeEach a1 b1 test
+    !< beforeEach a0 b1 test
     !> test a0 b1 test
     !< test a0 b0 test
-    !> test a1 b0 test
-    !< test a0 b1 test
-    !> test a1 b1 test
-    !< test a1 b0 test
     !> afterEach a0 b0 test
-    !< test a1 b1 test
+    !< test a0 b1 test
     !> afterEach a0 b1 test
     !< afterEach a0 b0 test
-    !> afterEach a1 b0 test
+    !> beforeEach a1 b0 test
     !< afterEach a0 b1 test
+    !> beforeEach a1 b1 test
+    !< beforeEach a1 b0 test
+    !> test a1 b0 test
+    !< beforeEach a1 b1 test
+    !> test a1 b1 test
+    !< test a1 b0 test
+    !> afterEach a1 b0 test
+    !< test a1 b1 test
     !> afterEach a1 b1 test
     !< afterEach a1 b0 test
     !< afterEach a1 b1 test
@@ -1350,12 +1346,12 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     !< test a0 b0 test
     !> test a1 b0 test
     !< test a0 b1 test
-    !> test a1 b1 test
-    !< test a1 b0 test
     !> afterAll a0 b0
-    !< test a1 b1 test
-    !> afterAll a0 b1
+    !< test a1 b0 test
+    !> test a1 b1 test
     !< afterAll a0 b0
+    !> afterAll a0 b1
+    !< test a1 b1 test
     !> afterAll a1 b0
     !< afterAll a0 b1
     !> afterAll a1 b1
