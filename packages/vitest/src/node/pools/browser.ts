@@ -6,8 +6,9 @@ import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
-import type { BrowserProvider } from '../types/browser'
+import type { BrowserProvider, CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
+import { statfsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
@@ -408,8 +409,9 @@ class BrowserPool {
         },
       )
       testersPromise
-        .then(() => {
+        .then(async () => {
           debug?.('[%s] test %s finished running', sessionId, file)
+          await maybeCollectChromiumGarbage(this.project, sessionId)
           this.runNextTest(method, sessionId)
         })
         .catch((error) => {
@@ -465,4 +467,100 @@ function shouldIgnoreDebugger(provider: string, browser: string) {
     return browser !== 'chrome' && browser !== 'edge'
   }
   return browser !== 'chromium'
+}
+
+// Best-effort workaround for chromium/playwright bug
+// https://issues.chromium.org/issues/530892387
+
+// Trigger gc on lower disk (default to 4GB)
+const chromiumGCDiskThreshold = process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB
+  ? Number(process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB) * 1024 ** 3
+  : 4 * 1024 ** 3
+const forceChromiumGC = !!process.env.VITEST_CHROMIUM_GC_FORCE
+const debugGC = createDebugger('vitest:browser:gc')
+
+async function maybeCollectChromiumGarbage(project: TestProject, sessionId: string): Promise<void> {
+  // trigger only on linux/chromium/playwright
+  const provider = project.browser!.provider
+  if (
+    (!forceChromiumGC && process.platform !== 'linux')
+    || provider.name !== 'playwright'
+    || project.config.browser.name !== 'chromium'
+    || !project.config.isolate
+    || !provider.getCDPSession
+  ) {
+    return
+  }
+
+  const start = performance.now()
+  const diagnostics: Record<string, any> = {
+    statfsBeforeMs: undefined,
+    statfsAfterMs: undefined,
+    cdpSessionMs: undefined,
+    cdpSendMs: undefined,
+    cdpDetachMs: undefined,
+    forced: forceChromiumGC,
+  }
+  try {
+    // Playwright enables --disable-dev-shm-usage by default, which makes
+    // Chromium use TMPDIR or /tmp for shared memory files.
+    // https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/chromium/chromiumSwitches.ts
+    // https://source.chromium.org/chromium/chromium/src/+/main:base/files/file_util_posix.cc
+    const tempDirectory = process.env.TMPDIR || '/tmp'
+    let operationStart = performance.now()
+    const fsStats = statfsSync(tempDirectory)
+    diagnostics.statfsBeforeMs = performance.now() - operationStart
+
+    const available = fsStats.bavail * fsStats.bsize
+    diagnostics.availableBytesBefore = available.toString()
+    diagnostics.thresholdBytes = chromiumGCDiskThreshold.toString()
+    diagnostics.tempDirectory = tempDirectory
+    diagnostics.triggered = available < chromiumGCDiskThreshold
+    if (available >= chromiumGCDiskThreshold) {
+      return
+    }
+
+    operationStart = performance.now()
+    // `detach` is available only internally and not on CDPSession type
+    const cdp = await provider.getCDPSession(sessionId) as CDPSession & { detach: () => Promise<void> }
+    diagnostics.cdpSessionMs = performance.now() - operationStart
+
+    try {
+      operationStart = performance.now()
+      await cdp.send('HeapProfiler.collectGarbage')
+      diagnostics.cdpSendMs = performance.now() - operationStart
+    }
+    finally {
+      operationStart = performance.now()
+      await cdp.detach().catch((error) => {
+        debugGC?.('[%s] failed to detach Chromium CDP session: %s', sessionId, error)
+      })
+      diagnostics.cdpDetachMs = performance.now() - operationStart
+    }
+
+    if (debugGC?.enabled) {
+      operationStart = performance.now()
+      const fsStatsAfter = statfsSync(tempDirectory)
+      diagnostics.statfsAfterMs = performance.now() - operationStart
+      diagnostics.availableBytesAfter = (fsStatsAfter.bavail * fsStatsAfter.bsize).toString()
+    }
+
+    const availableGiB = available / 1024 ** 3
+    const thresholdGiB = chromiumGCDiskThreshold / 1024 ** 3
+    debugGC?.(
+      '[%s] Low disk space detected in %s (%s GiB available, %s GiB threshold). Vitest triggered Chromium garbage collection to prevent browser crashes.',
+      sessionId,
+      tempDirectory,
+      availableGiB.toFixed(1),
+      thresholdGiB.toFixed(1),
+    )
+  }
+  catch (error) {
+    // don't surface if fs or cdp fails
+    debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
+  }
+  finally {
+    diagnostics.totalMs = performance.now() - start
+    debugGC?.('[%s] Chromium garbage collection check: %O', sessionId, diagnostics)
+  }
 }
