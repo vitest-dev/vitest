@@ -6,7 +6,7 @@ import { editFile, runVitest } from '../../test-utils'
 const INLINE_BLOCK_RE = /\/\/ -- TEST INLINE START --\n([\s\S]*?)\/\/ -- TEST INLINE END --/g
 
 function extractInlineBlocks(content: string): string {
-  return [...content.matchAll(INLINE_BLOCK_RE)].map(m => m[1].trim()).join('\n\n')
+  return Array.from(content.matchAll(INLINE_BLOCK_RE), m => m[1].trim()).join('\n\n')
 }
 
 test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {

@@ -33,7 +33,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - **Examples**: `CI=true pnpm test:examples`
 - **Specific test suite**: `CI=true cd test/<test-folder> && pnpm test <test-file>`
 - **Unit directory test**: `CI=true pnpm test <test-file>` (for `test/unit`)
-- **Browser tests**: `CI=true pnpm test:browser:playwright` or `CI=true pnpm test:browser:webdriverio`
+- **Browser tests**: `CI=true pnpm test:browser:playwright`
 
 **IMPORTANT: Do NOT use `--` when passing test filters to pnpm.**
 Using `--` causes pnpm to drop the filter, resulting in a full test run instead of a filtered one.

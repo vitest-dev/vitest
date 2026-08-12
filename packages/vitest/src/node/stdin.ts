@@ -18,12 +18,11 @@ const keys = [
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
-  ['b', 'start the browser server if not started yet'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
 
-export function printShortcutsHelp(): void {
+function printShortcutsHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
@@ -92,8 +91,12 @@ export function registerConsoleShortcuts(
         )
         process.exitCode = 130
 
+        // Unregister raw mode so that second CTRL+c is handled by Node.js as SIGINT
+        off()
+
         await ctx.cancelCurrentRun('keyboard-input')
       }
+
       return ctx.exit(true)
     }
 
@@ -150,14 +153,6 @@ export function registerConsoleShortcuts(
     // change fileNamePattern
     if (name === 'p') {
       return inputFilePattern()
-    }
-    if (name === 'b') {
-      await ctx._initBrowserServers()
-      ctx.projects.forEach((project) => {
-        ctx.logger.log()
-        ctx.logger.printBrowserBanner(project)
-      })
-      return null
     }
   }
 

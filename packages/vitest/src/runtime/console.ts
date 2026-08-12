@@ -4,10 +4,11 @@ import { relative } from 'node:path'
 import { Writable } from 'node:stream'
 import { getSafeTimers } from '@vitest/utils/timers'
 import c from 'tinyrainbow'
-import { RealDate } from '../integrations/mock/date'
 import { getWorkerState } from './utils'
 
-export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
+const RealDate = globalThis.Date
+
+const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
 function getTaskIdByStack(root: string) {
   const stack = new Error('STACK_TRACE_ERROR').stack?.split('\n')

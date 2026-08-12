@@ -63,15 +63,6 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
       ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
-      [
-        'script',
-        {
-          'src': 'https://cdn.usefathom.com/script.js',
-          'data-site': 'BEAFAKYG',
-          'data-spa': 'auto',
-          'defer': '',
-        },
-      ],
     ],
     lastUpdated: true,
     vite: {
@@ -138,11 +129,11 @@ export default ({ mode }: { mode: string }) => {
       }, */
       },
 
-      banner: {
-        id: 'viteplus-alpha',
-        text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
-        url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
-      },
+      // banner: {
+      //   id: 'viteplus-alpha',
+      //   text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
+      //   url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
+      // },
 
       carbonAds: {
         code: 'CW7DVKJE',
@@ -316,6 +307,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/globals',
               },
               {
+                text: 'injectCjsGlobals',
+                link: '/config/injectcjsglobals',
+              },
+              {
                 text: 'environment',
                 link: '/config/environment',
               },
@@ -476,6 +471,14 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/cache',
               },
               {
+                text: 'fsModuleCache',
+                link: '/config/fsmodulecache',
+              },
+              {
+                text: 'fsModuleCachePath',
+                link: '/config/fsmodulecachepath',
+              },
+              {
                 text: 'sequence',
                 link: '/config/sequence',
               },
@@ -540,6 +543,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/projects',
               },
               {
+                text: 'sharedViteServer',
+                link: '/config/sharedviteserver',
+              },
+              {
                 text: 'isolate',
                 link: '/config/isolate',
               },
@@ -584,6 +591,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/disableconsoleintercept',
               },
               {
+                text: 'changed',
+                link: '/config/changed',
+              },
+              {
                 text: 'experimental',
                 link: '/config/experimental',
               },
@@ -624,16 +635,8 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/browser/headless',
               },
               {
-                text: 'browser.isolate',
-                link: '/config/browser/isolate',
-              },
-              {
                 text: 'browser.testerHtmlPath',
                 link: '/config/browser/testerhtmlpath',
-              },
-              {
-                text: 'browser.api',
-                link: '/config/browser/api',
               },
               {
                 text: 'browser.provider',
@@ -662,6 +665,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'browser.screenshotFailures',
                 link: '/config/browser/screenshotfailures',
+              },
+              {
+                text: 'browser.dependencySourcemaps',
+                link: '/config/browser/dependencysourcemaps',
               },
               {
                 text: 'browser.orchestratorScripts',
@@ -1048,6 +1055,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/recipes/explicit-resources',
               },
               {
+                text: 'Conditional Mocking with `vi.when`',
+                link: '/guide/recipes/conditional-mocking',
+              },
+              {
                 text: 'Per-File Isolation Settings',
                 link: '/guide/recipes/disable-isolation',
               },
@@ -1077,6 +1088,10 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Custom Pool',
                 link: '/guide/advanced/pool',
               },
+              {
+                text: 'Benchmark Provider',
+                link: '/guide/advanced/benchmark-provider',
+              },
             ],
           },
           // Migration — one-time transitional content: cross-version
@@ -1089,8 +1104,8 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
-                text: 'Migrating to Vitest 4.0',
-                link: '/guide/migration#vitest-4',
+                text: 'Migrating to Vitest 5.0',
+                link: '/guide/migration#vitest-5',
               },
               {
                 text: 'Migrating from Jest',

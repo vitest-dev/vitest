@@ -16,17 +16,6 @@ const forceCrash: BrowserCommand<[]> = async (context) => {
 
     throw new Error(`Browser crash not supported for ${browser}`)
   }
-  if (context.provider.name === 'webdriverio') {
-    const browser = context.browser
-    const name = context.project.config.browser.name
-    if (name === 'chrome') {
-      await browser.url('chrome://crash')
-    }
-    if (name === 'firefox') {
-      await browser.url('about:crashcontent')
-    }
-    throw new Error(`Browser crash not supported for ${name}`)
-  }
 }
 
 export default defineConfig({

@@ -12,6 +12,7 @@ const pkg = require('./package.json')
 
 const entries = {
   index: 'src/index.ts',
+  browser: 'src/browser.ts',
   provider: 'src/provider.ts',
 }
 

@@ -9,10 +9,10 @@ import * as vite from 'vite'
 import { rootDir } from '../../paths'
 
 export function resolveOptimizerConfig(
-  _testOptions: DepsOptimizationOptions | undefined,
+  testOptions_: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
 ): DepOptimizationOptions {
-  const testOptions = _testOptions || {}
+  const testOptions = testOptions_ || {}
   let optimizeDeps: DepOptimizationOptions
   if (testOptions.enabled !== true) {
     testOptions.enabled ??= false
@@ -63,23 +63,37 @@ export function resolveOptimizerConfig(
   return optimizeDeps
 }
 
-export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> {
+export interface DefineConfigResult {
+  /** dot-less JSON values, assigned to `globalThis` before each test file */
+  defines: Record<string, any>
+  /** entries applied by the runtime defines script at worker start */
+  scriptDefines: Record<string, any>
+}
+
+export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
   const defines: Record<string, any> = {}
+  const scriptDefines: Record<string, any> = {}
   if (viteConfig.define) {
-    delete viteConfig.define['import.meta.vitest']
     delete viteConfig.define['process.env']
     delete viteConfig.define.process
     delete viteConfig.define.global
   }
   for (const key in viteConfig.define) {
     const val = viteConfig.define[key]
+    // vitest sets this identity replacement to defeat vite:client-inject,
+    // it has to stay in the config
+    if (key === 'process.env.NODE_ENV' && val === 'process.env.NODE_ENV') {
+      continue
+    }
     let replacement: any
     try {
       replacement = typeof val === 'string' ? JSON.parse(val) : val
     }
     catch {
-      // probably means it contains reference to some variable,
-      // like this: "__VAR__": "process.env.VAR"
+      // a reference to code, like "__VAR__": "process.env.VAR";
+      // the defines script evaluates the raw value at runtime
+      scriptDefines[key] = val
+      delete viteConfig.define[key]
       continue
     }
     if (key.startsWith('import.meta.env.')) {
@@ -96,8 +110,12 @@ export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> 
       defines[key] = replacement
       delete viteConfig.define[key]
     }
+    else {
+      scriptDefines[key] = val
+      delete viteConfig.define[key]
+    }
   }
-  return defines
+  return { defines, scriptDefines }
 }
 
 export function resolveFsAllow(

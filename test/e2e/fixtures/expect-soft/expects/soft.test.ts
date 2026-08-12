@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest'
 
 interface CustomMatchers<R = unknown> {
-  toBeAsync: (expected: unknown) => Promise<R>;
+  toBeAsync: (expected: unknown) => Promise<void>;
   toBeDividedBy(divisor: number): R
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface Matchers<R, T> extends CustomMatchers<R> {}
 }
 
 expect.extend({

@@ -93,8 +93,6 @@ export type CoverageReporterWithOptions<
     : [ReporterName, Partial<ReportOptions[ReporterName]>]
   : [ReporterName, Record<string, unknown>]
 
-export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
-
 /** Fields that have default values. Internally these will always be defined. */
 export type FieldsWithDefaultValues
   = | 'provider'
@@ -217,7 +215,7 @@ export interface CoverageOptions {
     | ({
       [glob: string]: Pick<
         Thresholds,
-          100 | 'statements' | 'functions' | 'branches' | 'lines'
+          100 | 'statements' | 'functions' | 'branches' | 'lines' | 'perFile'
       >
     } & Thresholds)
 
@@ -331,8 +329,18 @@ interface Thresholds {
   /** Set global thresholds to `100` */
   100?: boolean
 
-  /** Check thresholds per file. */
-  perFile?: boolean
+  /**
+   * Check thresholds per file. When set to an object, the top-level thresholds
+   * still apply to the aggregate and every file must additionally meet these
+   * per-file minimums.
+   *
+   * Can also be set per glob pattern via `thresholds['<glob>'].perFile`. Glob
+   * patterns do not inherit this top-level `perFile`; set it on each glob
+   * explicitly.
+   *
+   * @default false
+   */
+  perFile?: boolean | Pick<Thresholds, 100 | 'statements' | 'functions' | 'branches' | 'lines'>
 
   /**
    * Update threshold values automatically when current coverage is higher than earlier thresholds

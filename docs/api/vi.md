@@ -473,12 +473,17 @@ You can also pass down a class to `vi.fn`:
 
 ```ts
 const Cart = vi.fn(class {
-  get = () => 0
+  get() {
+    return 0
+  }
 })
 
 const cart = new Cart()
 expect(Cart).toHaveBeenCalled()
+expect(cart.get()).toBe(0)
 ```
+
+Instances keep the prototype chain of the implementation class, so its prototype methods are available on instances, and `instanceof` checks against the implementation class pass. See [Mocking Classes](/guide/mocking/classes) for details.
 
 ### vi.mockObject <Version>3.2.0</Version>
 
@@ -613,6 +618,8 @@ const spy = vi.spyOn(cart, 'Apples')
 ```
 
 If you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
+
+With a class implementation, instances keep the prototype chain of that class: prototype methods like `getApples` are available on instances, and `instanceof` checks against the implementation class pass. See [Mocking Classes](/guide/mocking/classes) for details.
 
 ::: tip
 In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` instead of `const` to automatically call `mockRestore` on any mocked function when the containing block is exited. This is especially useful for spied methods:
@@ -795,6 +802,134 @@ globalThis.IntersectionObserver === undefined
 'IntersectionObserver' in globalThis === false
 // throws ReferenceError, because it's not defined
 IntersectionObserver === undefined
+```
+
+### vi.when <Version>5.0.0</Version> {#vi-when}
+
+```ts
+interface WhenOptions {
+  onUnmatched?: 'throw' | 'passthrough' | ((...args: unknown[]) => unknown)
+}
+
+interface BehaviorOptions {
+  times?: number
+}
+
+function when(spy: Mock, options?: WhenOptions): When
+```
+
+Defines per-argument behaviors on a spy, replacing its implementation for the duration of the `when` chain.
+
+Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with deep equality and support asymmetric matchers such as `expect.any()`.
+
+```ts
+const spy = vi.fn()
+
+vi.when(spy)
+  .calledWith(1)
+  .thenReturn('one')
+  .calledWith(2)
+  .thenReturn('two')
+
+expect(spy(1)).toBe('one')
+expect(spy(2)).toBe('two')
+```
+
+Available `then*` methods:
+
+| Method | Description |
+|--------|-------------|
+| `thenReturn(value, options?)` | Returns `value`. |
+| `thenReturnOnce(value)` | Returns `value` once, then falls back. |
+| `thenThrow(error, options?)` | Throws `error`. |
+| `thenThrowOnce(error)` | Throws `error` once, then falls back. |
+| `thenResolve(value, options?)` | Returns a resolved `Promise` with `value`. |
+| `thenResolveOnce(value)` | Resolves once, then falls back. |
+| `thenReject(error, options?)` | Returns a rejected `Promise` with `error`. |
+| `thenRejectOnce(error)` | Rejects once, then falls back. |
+
+The optional `times` option limits how many times a behavior applies before being exhausted. Behaviors registered for the same arguments are consumed last-in-first-out: the most recently registered behavior is tried first, and once exhausted, earlier ones act as fallbacks.
+
+```ts
+const spy = vi.fn<(key: string) => string>()
+
+vi.when(spy)
+  .calledWith('theme')
+  .thenReturn('light') // fallback, applies indefinitely
+  .thenReturn('dark', { times: 2 }) // applied first for the next 2 calls
+
+expect(spy('theme')).toBe('dark')
+expect(spy('theme')).toBe('dark')
+expect(spy('theme')).toBe('light') // falls back
+```
+
+When called with arguments that match no registered behavior, the spy falls through to its original implementation by default. Use the `onUnmatched` option to change this:
+
+- `'passthrough'` (**default**): delegates to the spy's original implementation
+- `'throw'`: throws an error listing the unmatched arguments
+- a function: called with the unmatched arguments; its return value is used
+
+```ts
+const spy = vi.fn<(id: number) => string>()
+
+vi.when(spy, { onUnmatched: 'throw' })
+  .calledWith(1)
+  .thenReturn('Alice')
+
+expect(spy(1)).toBe('Alice')
+expect(() => spy(99)).toThrow() // no behavior defined for 99
+```
+
+The `When` object returned by `vi.when` supports the [`toHaveBeenExhausted` assertion](/api/expect#tohavebeenexhausted), which passes once every registered behavior has been consumed.
+
+```ts
+const spy = vi.fn()
+const w = vi.when(spy)
+  .calledWith(1)
+  .thenReturnOnce('once')
+  .calledWith(2)
+  .thenReturn('always')
+
+expect(w).not.toHaveBeenExhausted()
+
+spy(1) // consumes the `thenReturnOnce` behavior
+spy(2) // satisfies `thenReturn` (called at least once)
+
+expect(w).toHaveBeenExhausted()
+```
+
+::: tip
+In environments that support [Explicit Resource Management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Resource_management), you can use `using` instead of `const` to automatically restore the spy's original implementation when the containing block exits:
+
+```ts
+const spy = vi.fn(() => 'original')
+
+{
+  using w = vi.when(spy)
+    .calledWith('hello')
+    .thenReturn('mocked')
+
+  expect(spy('hello')).toBe('mocked')
+} // ← spy's original implementation is restored here
+
+expect(spy('hello')).toBe('original')
+```
+:::
+
+### vi.isWhenChain <Version>5.0.0</Version> {#vi-iswhenchain}
+
+```ts
+function isWhenChain(input: object): input is When
+```
+
+Returns `true` if the given value is a `When` chain created by [`vi.when`](#vi-when). If you are using TypeScript, it will also narrow down its type.
+
+```ts
+const spy = vi.fn()
+const w = vi.when(spy).calledWith(1).thenReturn(0)
+
+expect(vi.isWhenChain(w)).toBe(true)
+expect(vi.isWhenChain(spy)).toBe(false)
 ```
 
 ## Fake Timers
@@ -1031,7 +1166,7 @@ await vi.runOnlyPendingTimersAsync()
 function setSystemTime(date: string | number | Date): Vitest
 ```
 
-If fake timers are enabled, this method simulates a user changing the system clock (will affect date related API like `hrtime`, `performance.now` or `new Date()`) - however, it will not fire any timers. If fake timers are not enabled, this method will only mock `Date.*` calls.
+If fake timers are enabled, this method simulates a user changing the system clock (will affect date related API like `hrtime`, `performance.now` or `new Date()`) - however, it will not fire any timers. If fake timers are not enabled, this method will only mock `Date.*` and `Temporal.Now.*` calls.
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 

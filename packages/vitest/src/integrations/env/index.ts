@@ -15,5 +15,3 @@ export const environments: {
   'happy-dom': happy,
   'edge-runtime': edge,
 }
-
-export const envs: string[] = Object.keys(environments)

@@ -1,9 +1,8 @@
 import type { BrowserInstanceOption } from 'vitest/node'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
-import { webdriverio } from '@vitest/browser-webdriverio'
 
-const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'webdriverio' | 'preview'
+const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'preview'
 
 const wsEndpoint = process.env.BROWSER_WS_ENDPOINT === 'true' ? 'ws://127.0.0.1:6677/' : process.env.BROWSER_WS_ENDPOINT
 
@@ -18,41 +17,6 @@ export const providers = {
       }
     : options),
   preview,
-  webdriverio: (options?: Parameters<typeof webdriverio>[0]) => {
-    const capabilities = options?.capabilities || {}
-
-    return webdriverio({
-      ...options,
-      capabilities: {
-        ...capabilities,
-        // Explicit browser/driver binaries keep WebDriverIO from auto-downloading mismatched versions.
-        // https://webdriver.io/docs/driverbinaries
-        // https://webdriver.io/docs/capabilities#webdriverio-capabilities-to-manage-browser-driver-options
-        ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
-          ? {
-              'wdio:chromedriverOptions': {
-                ...(capabilities as any)['wdio:chromedriverOptions'],
-                binary: process.env.CHROMEDRIVER_PATH,
-              },
-              // https://developer.chrome.com/docs/chromedriver/capabilities#chromeoptions-object
-              'goog:chromeOptions': {
-                ...(capabilities as any)['goog:chromeOptions'],
-                binary: process.env.CHROME_BIN,
-              },
-            }
-          : {}),
-        ...(process.env.FIREFOX_BIN
-          ? {
-              // https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/Capabilities/firefoxOptions
-              'moz:firefoxOptions': {
-                ...(capabilities as any)['moz:firefoxOptions'],
-                binary: process.env.FIREFOX_BIN,
-              },
-            }
-          : {}),
-      },
-    })
-  },
 }
 
 export const provider = providers[providerName]()
@@ -65,7 +29,7 @@ const playwrightInstances: BrowserInstanceOption[] = [
   ...(process.env.BROWSER_NO_WEBKIT ? [] : [{ browser: 'webkit' as const }]),
 ]
 
-const webdriverioInstances: BrowserInstanceOption[] = [
+const previewInstances: BrowserInstanceOption[] = [
   { browser: 'chrome' },
   { browser: 'firefox' },
 ]
@@ -85,4 +49,4 @@ export const instances: BrowserInstanceOption[] = testBrowser
     ]
   : provider.name === 'playwright'
     ? playwrightInstances
-    : webdriverioInstances
+    : previewInstances

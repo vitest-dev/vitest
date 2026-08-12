@@ -24,7 +24,7 @@ import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { hasFailed, hasTests } from '../../utils/tasks'
+import { hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -165,7 +165,7 @@ async function callTestHooks(
   context.onTestFinished = onTestFinished
 }
 
-export async function callSuiteHook<T extends keyof SuiteHooks>(
+async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
   currentTask: Task,
   name: T,
@@ -516,14 +516,14 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }
 
     // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
+    pendingCall ??= setTimeout(call.bind(this), ms, ...args)
   } as any
 }
 
 // throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
-export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
+function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
   eventsPacks.push([task.id, event, undefined])
   packs.set(task.id, [task.result, task.meta])
   sendTasksUpdateThrottled(runner)
@@ -562,15 +562,15 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
 function passesRetryCondition(test: Test, errors: TestError[] | undefined): boolean {
   const condition = getRetryCondition(test.retry)
 
-  if (!errors || errors.length === 0) {
+  const error = errors?.at(-1)
+
+  if (error == null) {
     return false
   }
 
   if (!condition) {
     return true
   }
-
-  const error = errors[errors.length - 1]
 
   if (condition instanceof RegExp) {
     return condition.test(error.message || '')
@@ -582,7 +582,7 @@ function passesRetryCondition(test: Test, errors: TestError[] | undefined): bool
   return false
 }
 
-export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
+async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run' && test.mode !== 'queued') {
@@ -835,7 +835,7 @@ function markPendingTasksAsSkipped(suite: Suite, runner: VitestRunner, note?: st
   })
 }
 
-export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
+async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunSuite?.(suite)
 
   if (suite.result?.state === 'fail') {
@@ -949,7 +949,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {
-      if (!runner.config.passWithNoTests && !hasTests(suite)) {
+      if (!runner.config.passWithNoTests && !suite.containsTest) {
         suite.result.state = 'fail'
         if (!suite.result.errors?.length) {
           const error = processError(
@@ -1007,7 +1007,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
   }
 }
 
-export async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
+async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
   limitMaxConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
 
   for (const file of files) {
@@ -1061,7 +1061,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
       await Promise.all(
-        [...TestFixtures.getWorkerContexts()].map(context => callFixtureCleanup(context)),
+        Array.from(TestFixtures.getWorkerContexts(), context => callFixtureCleanup(context)),
       ).finally(() => {
         TestFixtures.clearDefinitions()
       })

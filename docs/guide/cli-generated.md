@@ -197,10 +197,10 @@ Shortcut to set all coverage thresholds to 100 (default: `false`)
 
 ### coverage.thresholds.perFile
 
-- **CLI:** `--coverage.thresholds.perFile`
+- **CLI:** `--coverage.thresholds.perFile <boolean>`
 - **Config:** [coverage.thresholds.perFile](/config/coverage#coverage-thresholds-perfile)
 
-Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)
+Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.
 
 ### coverage.thresholds.autoUpdate
 
@@ -327,6 +327,13 @@ Run every test file in isolation. To disable isolation, use `--no-isolate` (defa
 
 Inject apis globally
 
+### injectCjsGlobals
+
+- **CLI:** `--injectCjsGlobals`
+- **Config:** [injectCjsGlobals](/config/injectcjsglobals)
+
+Inject CommonJS variables (`module`, `exports`, `require`, `__filename`, `__dirname`) into every test module. To disable, use `--no-inject-cjs-globals` (default: `true`)
+
 ### dom
 
 - **CLI:** `--dom`
@@ -353,48 +360,6 @@ Run all tests in a specific browser. Some browsers are only available for specif
 
 Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: `process.env.CI`)
 
-### browser.api.port
-
-- **CLI:** `--browser.api.port [port]`
-- **Config:** [browser.api.port](/config/browser/api#api-port)
-
-Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to `63315`
-
-### browser.api.host
-
-- **CLI:** `--browser.api.host [host]`
-- **Config:** [browser.api.host](/config/browser/api#api-host)
-
-Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or `true` to listen on all addresses, including LAN and public addresses
-
-### browser.api.strictPort
-
-- **CLI:** `--browser.api.strictPort`
-- **Config:** [browser.api.strictPort](/config/browser/api#api-strictport)
-
-Set to true to exit if port is already in use, instead of automatically trying the next available port
-
-### browser.api.allowExec
-
-- **CLI:** `--browser.api.allowExec`
-- **Config:** [browser.api.allowExec](/config/browser/api#api-allowexec)
-
-Allow API to execute code. (Be careful when enabling this option in untrusted environments)
-
-### browser.api.allowWrite
-
-- **CLI:** `--browser.api.allowWrite`
-- **Config:** [browser.api.allowWrite](/config/browser/api#api-allowwrite)
-
-Allow API to edit files. (Be careful when enabling this option in untrusted environments)
-
-### browser.isolate
-
-- **CLI:** `--browser.isolate`
-- **Config:** [browser.isolate](/config/browser/isolate)
-
-Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)
-
 ### browser.ui
 
 - **CLI:** `--browser.ui`
@@ -409,18 +374,19 @@ Show Vitest UI when running tests (default: `!process.env.CI`)
 
 Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)
 
-### browser.fileParallelism
-
-- **CLI:** `--browser.fileParallelism`
-
-Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)
-
 ### browser.connectTimeout
 
 - **CLI:** `--browser.connectTimeout <timeout>`
 - **Config:** [browser.connectTimeout](/config/browser/connecttimeout)
 
 If connection to the browser takes longer, the test suite will fail (default: `60_000`)
+
+### browser.dependencySourcemaps
+
+- **CLI:** `--browser.dependencySourcemaps`
+- **Config:** [browser.dependencySourcemaps](/config/browser/dependencysourcemaps)
+
+Serve sourcemaps of dependencies to the browser in headless runs, used by devtools when debugging into `node_modules`. Reported test errors are source-mapped either way. Use `--browser.dependencySourcemaps=false` to speed up test runs if you don't step into dependency code (default: `true`)
 
 ### browser.trackUnhandledErrors
 
@@ -540,6 +506,13 @@ Allow tests and suites that are marked as only (default: `!process.env.CI`)
 - **Config:** [dangerouslyIgnoreUnhandledErrors](/config/dangerouslyignoreunhandlederrors)
 
 Ignore any unhandled errors that occur
+
+### changed
+
+- **CLI:** `--changed [since]`
+- **Config:** [changed](/config/changed)
+
+Run tests that are affected by the changed files (default: `false`)
 
 ### sequence.shuffle.files
 
@@ -821,7 +794,7 @@ Minimum time in milliseconds it takes to spawn the typechecker
 
 ### project
 
-- **CLI:** `--project <name>`
+- **CLI:** `-p, --project <name>`
 
 The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.
 
@@ -845,6 +818,20 @@ Default timeout of a teardown function in milliseconds (default: `10000`)
 - **Config:** [maxConcurrency](/config/maxconcurrency)
 
 Maximum number of concurrent tests and suites during test file execution (default: `5`)
+
+### fsModuleCache
+
+- **CLI:** `--fsModuleCache`
+- **Config:** [fsModuleCache](/config/fsmodulecache)
+
+Cache transformed modules on the file system and reuse them between reruns (default: `false`)
+
+### fsModuleCachePath
+
+- **CLI:** `--fsModuleCachePath <path>`
+- **Config:** [fsModuleCachePath](/config/fsmodulecachepath)
+
+Directory where the `fsModuleCache` is stored (default: `node_modules/.vitest-cache`)
 
 ### expect.requireAssertions
 
@@ -928,7 +915,7 @@ List all available tags instead of running tests. `--list-tags=json` will output
 
 - **CLI:** `--clearCache`
 
-Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
+Delete all Vitest caches, including the `fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
 
 ### tagsFilter
 
@@ -943,12 +930,12 @@ Run only tests with the specified tags. You can use logical operators `&&` (and)
 
 Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)
 
-### experimental.fsModuleCache
+### sharedViteServer
 
-- **CLI:** `--experimental.fsModuleCache`
-- **Config:** [experimental.fsModuleCache](/config/experimental#experimental-fsmodulecache)
+- **CLI:** `--sharedViteServer`
+- **Config:** [sharedViteServer](/config/sharedviteserver)
 
-Enable caching of modules on the file system between reruns.
+Let inline projects that don't modify the Vite config reuse the Vite server of the config that declares them. (default: `true`)
 
 ### experimental.importDurations.print
 
@@ -1012,3 +999,31 @@ Custom provider for detecting changed files. (default: `git`)
 - **Config:** [experimental.preParse](/config/experimental#experimental-preparse)
 
 Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)
+
+### experimental.diagnostics.isolate
+
+- **CLI:** `--experimental.diagnostics.isolate`
+- **Config:** [experimental.diagnostics.isolate](/config/experimental#experimental-diagnostics-isolate)
+
+Print a hint estimating how much time `isolate: false` would save when `isolate: true` spends a significant amount of time spawning a worker per test file. (default: `true`)
+
+### experimental.diagnostics.environment
+
+- **CLI:** `--experimental.diagnostics.environment`
+- **Config:** [experimental.diagnostics.environment](/config/experimental#experimental-diagnostics-environment)
+
+Print a hint when re-creating a DOM environment for every test file dominates the run and a `vm` pool would set it up once per worker. (default: `true`)
+
+### experimental.diagnostics.import
+
+- **CLI:** `--experimental.diagnostics.import`
+- **Config:** [experimental.diagnostics.import](/config/experimental#experimental-diagnostics-import)
+
+Print a hint when test files repeatedly evaluate the same module graph (typical for barrel-file imports) and `isolate: false` would evaluate it once per worker. (default: `true`)
+
+### experimental.diagnostics.transform
+
+- **CLI:** `--experimental.diagnostics.transform`
+- **Config:** [experimental.diagnostics.transform](/config/experimental#experimental-diagnostics-transform)
+
+Print a hint when transforming modules dominates the run and `fsModuleCache` would persist the results across runs. (default: `true`)

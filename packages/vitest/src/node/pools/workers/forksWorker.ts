@@ -3,6 +3,7 @@ import type { Writable } from 'node:stream'
 import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { fork } from 'node:child_process'
 import { resolve } from 'node:path'
+import { streamFlushed } from './utils'
 
 const SIGKILL_TIMEOUT = 500 /** jest does 500ms by default, let's follow it */
 
@@ -29,11 +30,11 @@ export class ForksPoolWorker implements PoolWorker {
     this.entrypoint = resolve(options.distPath, 'workers/forks.js')
   }
 
-  on(event: string, callback: (arg: any) => void): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     this.fork.on(event, callback)
   }
 
-  off(event: string, callback: (arg: any) => void): void {
+  off(event: string, callback: (...args: any[]) => void): void {
     this.fork.off(event, callback)
   }
 
@@ -49,14 +50,16 @@ export class ForksPoolWorker implements PoolWorker {
       serialization: 'advanced',
     })
 
+    // `end: false`: the logger streams are shared by every worker, so one
+    // ending worker stream must not end them for everyone else
     if (this._fork.stdout) {
       this.stdout.setMaxListeners(1 + this.stdout.getMaxListeners())
-      this._fork.stdout.pipe(this.stdout)
+      this._fork.stdout.pipe(this.stdout, { end: false })
     }
 
     if (this._fork.stderr) {
       this.stderr.setMaxListeners(1 + this.stderr.getMaxListeners())
-      this._fork.stderr.pipe(this.stderr)
+      this._fork.stderr.pipe(this.stderr, { end: false })
     }
   }
 
@@ -87,12 +90,14 @@ export class ForksPoolWorker implements PoolWorker {
     clearTimeout(sigkillTimeout)
 
     if (fork.stdout) {
-      fork.stdout?.unpipe(this.stdout)
+      await streamFlushed(fork.stdout)
+      fork.stdout.unpipe(this.stdout)
       this.stdout.setMaxListeners(this.stdout.getMaxListeners() - 1)
     }
 
     if (fork.stderr) {
-      fork.stderr?.unpipe(this.stderr)
+      await streamFlushed(fork.stderr)
+      fork.stderr.unpipe(this.stderr)
       this.stderr.setMaxListeners(this.stderr.getMaxListeners() - 1)
     }
 

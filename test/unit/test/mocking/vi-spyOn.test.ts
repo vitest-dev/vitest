@@ -19,6 +19,39 @@ describe('vi.spyOn() edge cases', () => {
     expect(fn3.length).toBe(3)
   })
 
+  test('spying on a non-configurable ESM namespace export points to the module mocking docs, not browser mode', () => {
+    // Fake an ES module namespace: `Symbol.toStringTag` is 'Module' and the
+    // export is non-configurable, so `Object.defineProperty` throws
+    // "Cannot redefine property" — the same guard the real ESM path hits.
+    const namespace: Record<string, unknown> = {}
+    Object.defineProperty(namespace, Symbol.toStringTag, { value: 'Module' })
+    Object.defineProperty(namespace, 'answer', {
+      value: () => 42,
+      enumerable: true,
+      configurable: false,
+      writable: false,
+    })
+    Object.preventExtensions(namespace)
+
+    const error = (() => {
+      try {
+        vi.spyOn(namespace as any, 'answer')
+        expect.unreachable()
+      }
+      catch (err) {
+        return err as Error
+      }
+    })()
+
+    expect(error).toBeInstanceOf(TypeError)
+    expect(error.message).toContain('Cannot spy on export "answer"')
+    // This error fires in Node too, so it must not send users to the
+    // browser-mode-only docs (issue #9467). It should point at the
+    // environment-agnostic module mocking guide instead.
+    expect(error.message).toContain('https://vitest.dev/guide/mocking/modules#mocking-a-module')
+    expect(error.message).not.toContain('/guide/browser')
+  })
+
   test('can spy on a proxy with undefined descriptor\'s value', () => {
     const obj = new Proxy<{ fn: () => number }>({} as any, {
       get(_, prop) {
@@ -260,6 +293,80 @@ describe('vi.spyOn() state', () => {
 
     vi.clearAllMocks()
     assertStateEmpty(state)
+  })
+
+  // reproduction of #10553
+  test('vi.spyOn() keeps prototype methods of a class implementation', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+
+    const spy = vi.spyOn(myObj, 'TestClass').mockImplementation(
+      class MockClass extends OriginalClass {
+        method() {
+          return 'mocked'
+        }
+      },
+    )
+
+    const instance = new myObj.TestClass()
+
+    expect(instance.method()).toBe('mocked')
+    expect(instance).toBeInstanceOf(myObj.TestClass)
+    expect(instance).toBeInstanceOf(OriginalClass)
+    expect(spy.mock.calls).toEqual([[]])
+    expect(spy.mock.instances).toEqual([instance])
+
+    spy.mockRestore()
+    expect(myObj.TestClass).toBe(OriginalClass)
+    expect(new myObj.TestClass().method()).toBe('original')
+  })
+
+  test('vi.spyOn() chains the class prototype before the first construction', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+    const spy = vi.spyOn(myObj, 'TestClass')
+
+    expect(Object.getPrototypeOf(myObj.TestClass.prototype)).toBe(OriginalClass.prototype)
+    expect(Object.create(myObj.TestClass.prototype)).toBeInstanceOf(OriginalClass)
+    expect(Object.create(myObj.TestClass.prototype)).toBeInstanceOf(myObj.TestClass)
+
+    spy.mockRestore()
+  })
+
+  test('vi.spyOn() keeps prototype methods when constructing the original class', () => {
+    let methodInConstructor!: unknown
+    class OriginalClass {
+      constructor() {
+        methodInConstructor = this.method
+      }
+
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+    const spy = vi.spyOn(myObj, 'TestClass')
+
+    const instance = new myObj.TestClass()
+
+    expect(methodInConstructor).toBeTypeOf('function')
+    expect(instance.method()).toBe('original')
+    expect(instance).toBeInstanceOf(myObj.TestClass)
+    expect(instance).toBeInstanceOf(OriginalClass)
+    expect(spy.mock.calls).toEqual([[]])
+
+    spy.mockRestore()
   })
 
   test('vi.spyOn() spies and tracks overridden async calls', async () => {
