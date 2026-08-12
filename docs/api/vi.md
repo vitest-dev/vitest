@@ -473,12 +473,17 @@ You can also pass down a class to `vi.fn`:
 
 ```ts
 const Cart = vi.fn(class {
-  get = () => 0
+  get() {
+    return 0
+  }
 })
 
 const cart = new Cart()
 expect(Cart).toHaveBeenCalled()
+expect(cart.get()).toBe(0)
 ```
+
+Instances keep the prototype chain of the implementation class, so its prototype methods are available on instances, and `instanceof` checks against the implementation class pass. See [Mocking Classes](/guide/mocking/classes) for details.
 
 ### vi.mockObject <Version>3.2.0</Version>
 
@@ -613,6 +618,8 @@ const spy = vi.spyOn(cart, 'Apples')
 ```
 
 If you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
+
+With a class implementation, instances keep the prototype chain of that class: prototype methods like `getApples` are available on instances, and `instanceof` checks against the implementation class pass. See [Mocking Classes](/guide/mocking/classes) for details.
 
 ::: tip
 In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` instead of `const` to automatically call `mockRestore` on any mocked function when the containing block is exited. This is especially useful for spied methods:

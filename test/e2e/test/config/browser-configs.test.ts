@@ -105,6 +105,21 @@ test('does not disable pre-transform requests in browser mode', async () => {
   })
 })
 
+test('pre-bundles vite module runner through vitest in browser mode', async () => {
+  const v = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+
+  expect(v.vite.config.optimizeDeps.include).toContain('vitest > vite/module-runner')
+  expect(v.vite.config.optimizeDeps.exclude).not.toContain('vite/module-runner')
+})
+
 test('disables pre-transform requests in node mode', async () => {
   expect(await observePreTransformRequests()).toEqual({
     client: false,
