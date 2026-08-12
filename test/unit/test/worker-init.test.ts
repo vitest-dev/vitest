@@ -1,4 +1,5 @@
 import type { WorkerRequest, WorkerResponse } from '../../../packages/vitest/src/node/pools/types'
+import type { VitestWorker } from '../../../packages/vitest/src/runtime/workers/types'
 import { expect, test } from 'vitest'
 import { init } from '../../../packages/vitest/src/runtime/workers/init'
 
@@ -21,13 +22,13 @@ test('start delivered synchronously while registering the listener', async () =>
   let delivered: unknown
 
   init({
-    on(callback) {
+    on(callback: (message: unknown) => unknown) {
       delivered ??= callback(start)
     },
-    post(response) {
+    post(response: unknown) {
       responses.push(response as WorkerResponse)
     },
-  } as any)
+  } as VitestWorker)
 
   await delivered
 
