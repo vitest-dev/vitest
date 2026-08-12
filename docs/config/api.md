@@ -31,5 +31,4 @@ If the host is set to anything other than `localhost` or `127.0.0.1`, Vitest wil
 - **Type:** `boolean`
 - **Default:** `true` if not exposed to the network, `false` otherwise
 
-Allows running any test file via the UI. This applies to the interactive elements (and the server code behind them) in the [UI](/guide/ui) that can run the code. This option also gates privileged browser APIs that can execute code indirectly, such as raw Chrome DevTools Protocol access through [`cdp()`](/api/browser/context#cdp).
-
+Allows running any test file via the UI. This applies to the interactive elements (and the server code behind them) in the [UI](/guide/ui) that can run the code. In Browser Mode, this option also gates indirect code execution, including evaluating external `.snap` files on the server and accessing raw Chrome DevTools Protocol through [`cdp()`](/api/browser/context#cdp).
