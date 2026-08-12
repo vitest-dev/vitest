@@ -541,6 +541,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       on: cdp.on.bind(cdp),
       off: cdp.off.bind(cdp),
       once: cdp.once.bind(cdp),
+      // For now this isn't typed as CDPSession but exposed only for `maybeCollectChromiumGarbage`
+      detach: cdp.detach.bind(cdp),
     } as any // overloaded CDPSession type is too tricky in monorepo
   }
 
