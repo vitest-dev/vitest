@@ -515,10 +515,12 @@ page.getByRole('button')
 ## filter
 
 ```ts
-function filter(options: LocatorOptions): Locator
+function filter(options: LocatorFilterOptions): Locator
 ```
 
 This methods narrows down the locator according to the options, such as filtering by text. It can be chained to apply multiple filters.
+
+Note that the options below are specific to `filter` and are not accepted by the `getBy*` methods. To narrow a query down by text, chain `filter` onto it: `page.getByRole('button').filter({ hasText: 'Submit' })`.
 
 ### has
 

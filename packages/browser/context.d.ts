@@ -447,9 +447,36 @@ export interface LocatorOptions {
    * regular expression. Note that exact match still trims whitespace.
    */
   exact?: boolean
+}
+
+/**
+ * Options to narrow down an existing locator with [`.filter()`](https://vitest.dev/api/browser/locators#filter).
+ *
+ * Note that these options are not accepted by the `getBy*` methods. To narrow a query down by
+ * inner text or a child element, chain `.filter()` onto it instead:
+ *
+ * ```ts
+ * page.getByRole('button').filter({ hasText: 'Submit' })
+ * ```
+ */
+export interface LocatorFilterOptions {
+  /**
+   * Matches elements containing the specified text somewhere inside, possibly in a child or a descendant element.
+   * When passed a string, matching is case-insensitive and searches for a substring.
+   */
   hasText?: string | RegExp
+  /**
+   * Matches elements that do _not_ contain the specified text somewhere inside, possibly in a child or a descendant
+   * element. When passed a string, matching is case-insensitive and searches for a substring.
+   */
   hasNotText?: string | RegExp
+  /**
+   * Matches elements containing an element that matches the provided locator.
+   */
   has?: Locator
+  /**
+   * Matches elements that do _not_ contain an element that matches the provided locator.
+   */
   hasNot?: Locator
 }
 
@@ -766,7 +793,7 @@ export interface Locator extends LocatorSelectors {
    * Narrows existing locator according to the options.
    * @see {@link https://vitest.dev/api/browser/locators#filter}
    */
-  filter(options: LocatorOptions): Locator
+  filter(options: LocatorFilterOptions): Locator
   /**
    * This method returns an element matching the locator.
    * Unlike [`.element()`](https://vitest.dev/api/browser/locators#element),
