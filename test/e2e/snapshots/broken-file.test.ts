@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { replaceRoot, runVitest } from '../../test-utils'
+import { runVitest } from '../../test-utils'
 
 test('reports a broken snapshot file', async () => {
   const root = join(import.meta.dirname, 'fixtures/broken-file')
@@ -15,7 +15,6 @@ test('reports a broken snapshot file', async () => {
   let result = await runVitest({ root, update: 'none' })
 
   const errorTree = result.errorTree()
-  errorTree.__unhandled_errors__ = errorTree.__unhandled_errors__.map(error => replaceRoot(error, root))
   expect(errorTree).toMatchInlineSnapshot(`
     {
       "__unhandled_errors__": [
@@ -29,7 +28,5 @@ test('reports a broken snapshot file', async () => {
 
   // re-run with update
   result = await runVitest({ root, update: 'all' })
-  const updateErrorTree = result.errorTree()
-  updateErrorTree.__unhandled_errors__ = updateErrorTree.__unhandled_errors__.map(error => replaceRoot(error, root))
-  expect(updateErrorTree).toEqual(errorTree)
+  expect(result.errorTree()).toEqual(errorTree)
 })
