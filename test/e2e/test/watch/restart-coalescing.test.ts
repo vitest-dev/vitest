@@ -27,7 +27,10 @@ test('basic', () => {
   await ctx!.rerunFiles()
   expect(vitest.stdout).toContain('RERUN')
 
-  // stop watching before the inline test directory is torn down, otherwise the
-  // watcher stats the removed files and reports an unhandled ENOENT
+  // Stop watching before the inline test directory is torn down. `close()`
+  // alone is not enough: the run started by the last restart can still be
+  // populating the file stats cache, and that `stat` lands after the files are
+  // gone. Wait for any in-flight run to settle first.
+  await ctx?.runningPromise
   await ctx?.close()
 })
