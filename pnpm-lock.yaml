@@ -577,6 +577,9 @@ importers:
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
+      '@vitest/snapshot':
+        specifier: workspace:*
+        version: link:../snapshot
       birpc:
         specifier: 'catalog:'
         version: 4.1.0
