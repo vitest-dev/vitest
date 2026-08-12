@@ -131,13 +131,15 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     )
   }
 
-  function isCdpAllowed(project: TestProject) {
+  function canExec(project: TestProject) {
     return (
       project.config.api.allowExec
       && project.vitest.config.api.allowExec
-      && project.config.api.allowWrite
-      && project.vitest.config.api.allowWrite
     )
+  }
+
+  function isCdpAllowed(project: TestProject) {
+    return canExec(project) && canWrite(project)
   }
 
   function assertCdpAllowed(project: TestProject) {
@@ -281,6 +283,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           checkFileAccess(snapshotPath)
           if (!existsSync(snapshotPath)) {
             return null
+          }
+          if (!canExec(project)) {
+            throw new Error(
+              `Cannot read snapshot file because browser API exec operations are disabled. See https://vitest.dev/config/api.`,
+            )
           }
           const content = await fs.readFile(snapshotPath, 'utf-8')
           return evaluateSnapshotFile(snapshotPath, content)

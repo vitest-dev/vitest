@@ -33,4 +33,22 @@ test('loads a snapshot without unsafe-eval', async () => {
       },
     }
   `)
+
+  // re-run with server-side execution disabled
+  result = await runVitest({
+    root,
+    update: 'none',
+    api: { allowExec: false },
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "__unhandled_errors__": [
+        "Cannot read snapshot file because browser API exec operations are disabled. See https://vitest.dev/config/api.",
+      ],
+      "basic.test.ts": {
+        "snapshot": "pending",
+        "unsafe eval is blocked": "pending",
+      },
+    }
+  `)
 })
