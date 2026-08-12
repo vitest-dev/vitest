@@ -43,11 +43,16 @@ export function setState<State extends MatcherState = MatcherState>(
   expect: ExpectStatic,
 ): void {
   const map = (globalThis as any)[MATCHERS_OBJECT]
-  const current = map.get(expect) || {}
-  // so it keeps getters from `testPath`
-  const results = Object.defineProperties(current, {
-    ...Object.getOwnPropertyDescriptors(current),
-    ...Object.getOwnPropertyDescriptors(state),
-  })
-  map.set(expect, results)
+  const current = map.get(expect)
+  // `defineProperties` rather than a spread so that accessors on `state`
+  // (e.g. the `testPath` getter) are copied as accessors, not invoked.
+  const descriptors = Object.getOwnPropertyDescriptors(state)
+  if (!current) {
+    map.set(expect, Object.defineProperties({}, descriptors))
+    return
+  }
+  // `defineProperties` mutates `current` in place, and `current` is already the
+  // value held in the map, so re-defining its own descriptors onto itself is a
+  // no-op. This runs once per `expect()` call, so skipping it matters.
+  Object.defineProperties(current, descriptors)
 }

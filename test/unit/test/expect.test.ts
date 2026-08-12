@@ -1,6 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
-import type { Tester } from '@vitest/expect'
+import type { ExpectStatic, Tester } from '@vitest/expect'
 import { stripVTControlCharacters } from 'node:util'
+import { getState, setState } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { Temporal } from 'temporal-polyfill'
 import { describe, expect, expectTypeOf, test, TestRunner, vi } from 'vitest'
@@ -793,5 +794,61 @@ describe('Standard Schema', () => {
       const stringSchemaFn = Object.assign(() => {}, stringSchema)
       expect('hello').toEqual(expect.schemaMatching(stringSchemaFn))
     })
+  })
+})
+
+describe('expect state', () => {
+  // `setState` is keyed by the `expect` instance, so a standalone key keeps
+  // these cases from touching the matcher state of the running test file.
+  const createStateKey = () => (() => {}) as unknown as ExpectStatic
+
+  test('merges partial updates into the existing state', () => {
+    const key = createStateKey()
+    setState({ assertionCalls: 0, currentTestName: 'example' }, key)
+    setState({ assertionCalls: 1 }, key)
+
+    expect(getState(key)).toMatchObject({
+      assertionCalls: 1,
+      currentTestName: 'example',
+    })
+  })
+
+  test('stores accessors as accessors instead of invoking them', () => {
+    const key = createStateKey()
+    let reads = 0
+
+    setState({
+      get testPath() {
+        reads++
+        return '/repo/example.test.ts'
+      },
+    }, key)
+
+    expect(reads).toBe(0)
+    expect(Object.getOwnPropertyDescriptor(getState(key), 'testPath')?.get).toBeTypeOf('function')
+    expect(getState(key).testPath).toBe('/repo/example.test.ts')
+    expect(reads).toBe(1)
+  })
+
+  test('keeps a stored accessor live across repeated updates', () => {
+    // `expect()` calls `setState` once per assertion, so the `testPath` getter
+    // added by the runner has to survive an unbounded number of updates.
+    const key = createStateKey()
+    let testPath = '/repo/first.test.ts'
+    setState({
+      assertionCalls: 0,
+      get testPath() {
+        return testPath
+      },
+    }, key)
+
+    for (let i = 1; i <= 100; i++) {
+      setState({ assertionCalls: i }, key)
+    }
+    testPath = '/repo/second.test.ts'
+
+    expect(Object.getOwnPropertyDescriptor(getState(key), 'testPath')?.get).toBeTypeOf('function')
+    expect(getState(key).testPath).toBe('/repo/second.test.ts')
+    expect(getState(key).assertionCalls).toBe(100)
   })
 })
