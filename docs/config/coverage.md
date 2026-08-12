@@ -45,6 +45,8 @@ List of files included in coverage as glob patterns. By default only files cover
 
 It is recommended to pass file extensions in the pattern.
 
+Patterns are matched against each file's path relative to the project root. A pattern with no glob wildcard is treated as a directory and matches everything inside it, so `include: ['src']` is equivalent to `include: ['src/**']`.
+
 See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.exclude
@@ -54,7 +56,7 @@ See [Including and excluding files from coverage report](/guide/coverage.html#in
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
-List of files excluded from coverage as glob patterns.
+List of files excluded from coverage as glob patterns. Patterns are matched the same way as [`coverage.include`](#coverage-include).
 
 See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
