@@ -1,6 +1,6 @@
 import type { RunVitestConfig } from '#test-utils'
 import { describe, expect, test } from 'vitest'
-import { runInlineTests } from '#test-utils'
+import { runInlineTests, runVitest } from '#test-utils'
 
 describe('dangerouslyIgnoreUnhandledErrors', () => {
   test('{ dangerouslyIgnoreUnhandledErrors: true }', async () => {
@@ -68,30 +68,9 @@ test('unhandled rejections of main thread are reported even when no reporter is 
 })
 
 test('a malformed inline source map does not swallow the original test error (#10892)', async () => {
-  // Split across a concat so this file's own transform doesn't treat it as
-  // its own (malformed) source map comment.
-  const malformedSourceMapComment = '//# source' + 'MappingURL=data:application/json;base64,bm90LWpzb24='
-
-  const { stderr, exitCode, buildTree } = await runInlineTests({
-    'malformed-source-map.js': `${malformedSourceMapComment}
-
-export default function testMalformedSourceMap() {
-  throw new Error('original module error')
-}
-`,
-    'some-test.spec.ts': /* ts */`
-      import { expect, test } from 'vitest'
-      import testMalformedSourceMap from './malformed-source-map.js'
-
-      test('passing test remains visible', () => {
-        expect(true).toBe(true)
-      })
-
-      test('reports the original module error', () => {
-        testMalformedSourceMap()
-      })
-    `,
-  }, {}, { fails: true })
+  const { stderr, exitCode, buildTree } = await runVitest({
+    root: './fixtures/malformed-source-map',
+  }, [], { fails: true })
 
   expect(exitCode).toBe(1)
   expect(stderr).not.toContain('Unhandled Errors')
