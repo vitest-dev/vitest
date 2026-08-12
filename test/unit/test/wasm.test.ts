@@ -39,13 +39,18 @@ test('supports imports from "data:application/wasm" URI with base64 encoding', a
   expect(importedWasmModule.add(0, 42)).toBe(42)
 })
 
-// TODO: error message is different on vm
+// the vm module runner rejects the data URI itself, so it throws a plain Error
+// rather than the CompileError produced when the buffer reaches WebAssembly
 const isVm = process.execArgv.includes('--experimental-vm-modules')
 
 test('imports from "data:application/wasm" URI without explicit encoding fail', async () => {
   const error = await getError(() => import(`data:application/wasm,${wasmFileBuffer.toString('base64')}`))
   if (isVm) {
-    expect(error).toMatchInlineSnapshot(`[Error: Missing data URI encoding]`)
+    expect(error).toMatchInlineSnapshot(`
+      Error {
+        "message": "Missing data URI encoding",
+      }
+    `)
   }
   else {
     expect(error).toMatchObject({ name: 'CompileError' })
@@ -56,7 +61,11 @@ test('imports from "data:application/wasm" URI with invalid encoding fail', asyn
   // @ts-expect-error import is not typed
   const error = await getError(() => import('data:application/wasm;charset=utf-8,oops'))
   if (isVm) {
-    expect(error).toMatchInlineSnapshot(`[Error: Invalid data URI encoding: charset=utf-8]`)
+    expect(error).toMatchInlineSnapshot(`
+      Error {
+        "message": "Invalid data URI encoding: charset=utf-8",
+      }
+    `)
   }
   else {
     expect(error).toMatchObject({ name: 'CompileError' })

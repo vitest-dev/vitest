@@ -26,4 +26,11 @@ test('basic', () => {
   // the restarted instance is functional: a rerun still works
   await ctx!.rerunFiles()
   expect(vitest.stdout).toContain('RERUN')
+
+  // Stop watching before the inline test directory is torn down. `close()`
+  // alone is not enough: the run started by the last restart can still be
+  // populating the file stats cache, and that `stat` lands after the files are
+  // gone. Wait for any in-flight run to settle first.
+  await ctx?.runningPromise
+  await ctx?.close()
 })

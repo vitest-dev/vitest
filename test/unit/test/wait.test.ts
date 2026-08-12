@@ -24,7 +24,11 @@ describe('waitFor', () => {
           timeout: 60,
           interval: 30,
         }),
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: interval error]`)
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "interval error",
+        }
+      `)
 
       expect(callback).toHaveBeenCalledTimes(2)
     })
@@ -79,7 +83,11 @@ describe('waitFor', () => {
       await vi.waitFor(check, 50)
     }
     catch (error) {
-      expect(error).toMatchInlineSnapshot('[Error: Timed out in waitFor!]')
+      expect(error).toMatchInlineSnapshot(`
+        Error {
+          "message": "Timed out in waitFor!",
+        }
+      `)
       expect((error as Error).stack?.split('\n')[1]).toMatch(/waitFor\s*\(.*/)
     }
   })
@@ -146,7 +154,11 @@ describe('waitUntil', () => {
           timeout: 500,
           interval: 400,
         }),
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Timed out in waitUntil!]`)
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "Timed out in waitUntil!",
+        }
+      `)
 
       expect(callback).toHaveBeenCalledTimes(2)
     })

@@ -405,6 +405,23 @@ test.for([{ id: 'a1' }])('case $id', ({ id }) => { /* ... */ })
 
 - The length limit for interpolated values is now controlled by the new [`taskTitleValueFormatTruncate`](/config/tasktitlevalueformattruncate) option (default `40`).
 
+### Inspected Errors Include Their Extra Properties
+
+`Error` instances (including subclasses like `AssertionError` and custom error classes) are now formatted with their own properties — `message`, `cause`, and any custom fields — instead of the bracketed `[Name: message]` form that only showed the message.
+
+```ts
+const err = Object.assign(new Error('boom'), { code: 123 })
+expect(err).toMatchInlineSnapshot(`[Error: boom]`) // v4 [!code --]
+expect(err).toMatchInlineSnapshot(`               // v5 [!code ++]
+  Error {                                         // v5 [!code ++]
+    "message": "boom",                            // v5 [!code ++]
+    "code": 123,                                  // v5 [!code ++]
+  }                                                // v5 [!code ++]
+`) // v5 [!code ++]
+```
+
+Custom properties on an error were previously lost when it was printed, so two errors with the same message but different extra properties looked identical in a diff. Snapshots or assertions on inspected errors (`toMatchInlineSnapshot`, `toThrowErrorMatchingInlineSnapshot`, etc.) may need updating to the new format, and — since `AssertionError` carries its own `actual`/`expected`/`operator` bookkeeping — assertions that throw an `AssertionError` now also show those fields.
+
 ### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
 
 Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.

@@ -44,10 +44,12 @@ test('locator.findElement fails if there are multiple elements by default', asyn
   await expect(
     () => page.getByRole('button').findElement(),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
+    Error {
+      "message": "strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)
-    ]
+    ",
+    }
   `)
 })
 
@@ -58,10 +60,12 @@ test('locator.findElement fails if there are multiple elements if strict mode is
   await expect(
     () => page.getByRole('button').findElement({ strict: true }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
+    Error {
+      "message": "strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)
-    ]
+    ",
+    }
   `)
 })
 
@@ -74,10 +78,12 @@ test('locator.findElement fails if multiple elements appear later with strict mo
   await expect(
     () => page.getByRole('button').findElement(),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
+    Error {
+      "message": "strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)
-    ]
+    ",
+    }
   `)
 })
 
@@ -112,12 +118,13 @@ function createButton() {
 test('expect.element is strict', async () => {
   createButton()
   createButton()
+  // Asserted on the message rather than the whole error: the polling matcher
+  // attaches a "Matcher did not succeed in time." cause in Chromium and Firefox
+  // but not in WebKit, and a single inline snapshot cannot cover both shapes.
   await expect(
     () => expect.element(page.getByRole('button'), { timeout: 50 }).toBeVisible(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
-        1) <button></button> aka getByRole('button').first()
-        2) <button></button> aka getByRole('button').nth(1)
-    ]
-  `)
+  ).rejects.toThrowError(`strict mode violation: getByRole('button') resolved to 2 elements:
+    1) <button></button> aka getByRole('button').first()
+    2) <button></button> aka getByRole('button').nth(1)
+`)
 })

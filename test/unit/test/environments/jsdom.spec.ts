@@ -272,14 +272,30 @@ test('toContain correctly handles DOM nodes', () => {
 
   expect(() => {
     expect(wrapper).toContain('some-element')
-  }).toThrowErrorMatchingInlineSnapshot(`[TypeError: toContain() expected a DOM node as the argument, but got string]`)
+  }).toThrowErrorMatchingInlineSnapshot(`
+    TypeError {
+      "message": "toContain() expected a DOM node as the argument, but got string",
+    }
+  `)
 
   expect(() => {
     expect(wrapper.classList).toContain('flex-row')
-  }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected "flex flex-col" to contain "flex-row"]`)
+  }).toThrowErrorMatchingInlineSnapshot(`
+    AssertionError {
+      "message": "expected "flex flex-col" to contain "flex-row"",
+      "actual": "flex flex-col",
+      "expected": "flex flex-col flex-row",
+      "showDiff": true,
+      "operator": "strictEqual",
+    }
+  `)
   expect(() => {
     expect(wrapper.classList).toContain(2)
-  }).toThrowErrorMatchingInlineSnapshot(`[TypeError: class name value must be string, received "number"]`)
+  }).toThrowErrorMatchingInlineSnapshot(`
+    TypeError {
+      "message": "class name value must be string, received "number"",
+    }
+  `)
 
   try {
     expect(wrapper.classList).toContain('flex-row')
@@ -345,6 +361,10 @@ test('readonly window assignment throws', () => {
   expect(() => {
     Object.assign(window, { navigator: {} })
   }).toThrowErrorMatchingInlineSnapshot(
-    `[TypeError: Cannot set property navigator of [object Window] which has only a getter]`,
+    `
+    TypeError {
+      "message": "Cannot set property navigator of [object Window] which has only a getter",
+    }
+  `,
   )
 })

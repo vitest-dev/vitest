@@ -16,6 +16,7 @@ import MockSerializer from './mockSerializer'
 const {
   DOMCollection,
   DOMElement,
+  Error: ErrorPlugin,
   Immutable,
   ReactElement,
   ReactTestComponent,
@@ -29,6 +30,7 @@ let PLUGINS: PrettyFormatPlugins = [
   DOMCollection,
   Immutable,
   AsymmetricMatcher,
+  ErrorPlugin,
   MockSerializer,
 ]
 

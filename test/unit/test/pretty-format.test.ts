@@ -780,7 +780,11 @@ describe('min option', () => {
 
   test('does not allow indent !== 0 with min', () => {
     expect(() => format(1, { indent: 1, min: true }))
-      .toThrowErrorMatchingInlineSnapshot(`[Error: pretty-format: Options "min" and "indent" cannot be used together.]`)
+      .toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "pretty-format: Options "min" and "indent" cannot be used together.",
+        }
+      `)
   })
 })
 
@@ -1057,6 +1061,27 @@ describe('ErrorPlugin', () => {
       }"
     `)
   })
+
+  test('omits an enumerable stack', () => {
+    // `stack` is non-enumerable in V8 but enumerable in SpiderMonkey and
+    // JavaScriptCore, where it would otherwise be printed as a machine-specific
+    // list of absolute URLs.
+    const err = new Error('boom') as any
+    Object.defineProperty(err, 'stack', {
+      value: 'at http://localhost:5173/some/file.js:1:1',
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    })
+    err.custom = 'kept'
+    const result = format(err, { plugins: [plugins.Error] })
+    expect(result).toMatchInlineSnapshot(`
+      "Error {
+        "message": "boom",
+        "custom": "kept",
+      }"
+    `)
+  })
 })
 
 describe('plugins', () => {
@@ -1099,7 +1124,11 @@ describe('plugins', () => {
         // @ts-expect-error testing runtime
         print: (val: unknown) => val,
       }],
-    })).toThrowErrorMatchingInlineSnapshot(`[TypeError: pretty-format: Plugin must return type "string" but instead returned "number".]`)
+    })).toThrowErrorMatchingInlineSnapshot(`
+      TypeError {
+        "message": "pretty-format: Plugin must return type "string" but instead returned "number".",
+      }
+    `)
   })
 })
 
@@ -1108,7 +1137,11 @@ describe('validation', () => {
     expect(() => {
       // @ts-expect-error testing runtime
       format({}, { badOption: true })
-    }).toThrowErrorMatchingInlineSnapshot(`[Error: pretty-format: Unknown option "badOption".]`)
+    }).toThrowErrorMatchingInlineSnapshot(`
+      Error {
+        "message": "pretty-format: Unknown option "badOption".",
+      }
+    `)
   })
 })
 
@@ -1165,6 +1198,28 @@ describe('prettyInspect', () => {
         b: 2,
       }"
     `)
+  })
+
+  test('includes extra Error properties, not just the message', () => {
+    // regression test for https://github.com/vitest-dev/vitest/issues/8697 —
+    // display.ts's PLUGINS list omitted the Error plugin, so two errors with
+    // the same message but different extra properties (e.g. a custom `code`)
+    // stringified identically, hiding the mismatch from toThrow()'s diff view.
+    const err = Object.assign(new Error('boom'), { code: 123 })
+    const result = prettyInspect(err)
+    expect(result).toContain('code')
+    expect(result).toContain('123')
+  })
+
+  test('distinguishes errors with the same message but different extra properties', () => {
+    const errA = Object.assign(new Error('boom'), { code: 123 })
+    const errB = Object.assign(new Error('boom'), { code: 456 })
+    expect(prettyInspect(errA)).not.toBe(prettyInspect(errB))
+  })
+
+  test('includes Error cause', () => {
+    const err = new Error('outer', { cause: 'inner' })
+    expect(prettyInspect(err)).toContain('inner')
   })
 })
 
@@ -1282,8 +1337,13 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
     expect(loupeInspect(genFn)).toMatchInlineSnapshot(`"[GeneratorFunction genFn]"`)
   })
 
-  test('Error — bracket format', () => {
-    expect(prettyInspect(new Error('boom'))).toMatchInlineSnapshot(`"[Error: boom]"`)
+  test('Error — object format with message property', () => {
+    // prettyInspect used to print errors in bracket format (`[Error: boom]`),
+    // matching node/loupe below. As of #8697 it uses ErrorPlugin, so extra
+    // Error properties (message, cause, custom fields) are no longer lost —
+    // see the 'includes extra Error properties' tests in the prettyInspect
+    // describe block above.
+    expect(prettyInspect(new Error('boom'))).toMatchInlineSnapshot(`"Error { message: 'boom' }"`)
     expect(nodeInspect(new Error('boom'))).toMatch('Error: boom\n')
     expect(loupeInspect(new Error('boom'))).toMatchInlineSnapshot(`"Error: boom"`)
   })

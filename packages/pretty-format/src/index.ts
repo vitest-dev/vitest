@@ -287,14 +287,19 @@ function printComplexValue(
 }
 
 const ErrorPlugin: NewPlugin = {
-  test: val => val && val instanceof Error,
+  // `instanceof` is realm-bound, so it fails for errors created inside a VM
+  // context (the `vmThreads` pool). Fall back to the brand check used above.
+  test: val => val && (val instanceof Error || toString.call(val) === '[object Error]'),
   serialize(val: Error, config, indentation, depth, refs, printer) {
     if (refs.includes(val)) {
       return '[Circular]'
     }
     refs = [...refs, val]
     const hitMaxDepth = ++depth > config.maxDepth
-    const { message, cause, ...rest } = val
+    // `stack` is a non-enumerable own property in V8, but an enumerable one in
+    // SpiderMonkey and JavaScriptCore, where it would otherwise be spread into
+    // the output as a machine-specific list of absolute URLs.
+    const { message, cause, stack: _stack, ...rest } = val
     const entries = {
       message,
       ...typeof cause !== 'undefined' ? { cause } : {},

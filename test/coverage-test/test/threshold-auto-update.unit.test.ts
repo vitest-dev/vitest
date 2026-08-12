@@ -127,7 +127,11 @@ import config from "./some-path"
 export default config
   `)
 
-  await expect(updateThresholds(config)).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Failed to update coverage thresholds. Configuration file is too complex.]`)
+  await expect(updateThresholds(config)).rejects.toThrowErrorMatchingInlineSnapshot(`
+    Error {
+      "message": "Failed to update coverage thresholds. Configuration file is too complex.",
+    }
+  `)
 })
 
 test('formats values with custom formatter', async () => {

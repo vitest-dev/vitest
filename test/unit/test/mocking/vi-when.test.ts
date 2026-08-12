@@ -11,6 +11,23 @@ interface FnData {
 
 type Fn = (...args: FnData['args']) => FnData['value']
 
+/**
+ * Returns the message of the error thrown by `fn`.
+ *
+ * The assertion message is stable across pools, whereas the `AssertionError`
+ * itself carries an `actual` property holding the mock wrapper, whose keys
+ * include a realm-specific `Symbol.dispose` that is absent under `vmThreads`.
+ */
+function getAssertionMessage(fn: () => void): string {
+  try {
+    fn()
+  }
+  catch (error) {
+    return (error as Error).message
+  }
+  throw new Error('expected function to throw')
+}
+
 describe('vi.when()', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -214,7 +231,11 @@ describe('vi.when()', () => {
         .thenReturn(value)
 
       expect(spy(...args)).toBe(value)
-      expect(() => spy('b', 1)).toThrowErrorMatchingInlineSnapshot(`[Error: vi.when: no behavior defined when called with ["b", 1]]`)
+      expect(() => spy('b', 1)).toThrowErrorMatchingInlineSnapshot(`
+        Error {
+          "message": "vi.when: no behavior defined when called with ["b", 1]",
+        }
+      `)
     })
 
     test('calls the provided function when `onUnmatched` is a function', () => {
@@ -483,15 +504,15 @@ describe('vi.when()', () => {
       `)
 
       expect(w).not.toHaveBeenExhausted()
-      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        [AssertionError: expected all behaviors to have been exhausted, but some remain:
+      expect(getAssertionMessage(() => expect(w).toHaveBeenExhausted())).toMatchInlineSnapshot(`
+        "expected all behaviors to have been exhausted, but some remain:
 
           calledWith("a", 0)
             ✗ thenReturn(97)                never called
             ✗ thenReturn(97, { times: 1 })  1 remaining (out of 1)
 
           calledWith("b", 1)
-            ✗ thenReturn(99)  never called]
+            ✗ thenReturn(99)  never called"
       `)
 
       spy(...entries[0].args)
@@ -509,15 +530,15 @@ describe('vi.when()', () => {
       `)
 
       expect(w).not.toHaveBeenExhausted()
-      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        [AssertionError: expected all behaviors to have been exhausted, but some remain:
+      expect(getAssertionMessage(() => expect(w).toHaveBeenExhausted())).toMatchInlineSnapshot(`
+        "expected all behaviors to have been exhausted, but some remain:
 
           calledWith("a", 0)
             ✗ thenReturn(97)                never called
             ✓ thenReturn(97, { times: 1 })  exhausted (1 of 1)
 
           calledWith("b", 1)
-            ✗ thenReturn(99)  never called]
+            ✗ thenReturn(99)  never called"
       `)
 
       spy(...entries[0].args)
@@ -531,11 +552,11 @@ describe('vi.when()', () => {
       `)
 
       expect(w).not.toHaveBeenExhausted()
-      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        [AssertionError: expected all behaviors to have been exhausted, but some remain:
+      expect(getAssertionMessage(() => expect(w).toHaveBeenExhausted())).toMatchInlineSnapshot(`
+        "expected all behaviors to have been exhausted, but some remain:
 
           calledWith("b", 1)
-            ✗ thenReturn(99)  never called]
+            ✗ thenReturn(99)  never called"
       `)
 
       spy(...entries[1].args)
@@ -545,9 +566,7 @@ describe('vi.when()', () => {
       expect(d.isExhausted).toBe(true)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`""`)
 
-      expect(() => expect(w).not.toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
-        [AssertionError: expected at least one behavior to remain un-exhausted, but all were]
-      `)
+      expect(getAssertionMessage(() => expect(w).not.toHaveBeenExhausted())).toMatchInlineSnapshot(`"expected at least one behavior to remain un-exhausted, but all were"`)
       expect(w).toHaveBeenExhausted()
     })
 
@@ -603,10 +622,14 @@ describe('vi.when()', () => {
 
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith("a", 0)
-          ✗ thenReturn(97, { times: 2 })                                         2 remaining (out of 2)
-          ✗ thenThrow([TypeError: Expected second argument > 0], { times: 2 })   2 remaining (out of 2)
-          ✗ thenResolve(97, { times: 2 })                                        2 remaining (out of 2)
-          ✗ thenReject([TypeError: Expected second argument > 0], { times: 2 })  2 remaining (out of 2)"
+          ✗ thenReturn(97, { times: 2 })                                                          2 remaining (out of 2)
+          ✗ thenThrow(TypeError {
+          "message": "Expected second argument > 0",
+        }, { times: 2 })   2 remaining (out of 2)
+          ✗ thenResolve(97, { times: 2 })                                                         2 remaining (out of 2)
+          ✗ thenReject(TypeError {
+          "message": "Expected second argument > 0",
+        }, { times: 2 })  2 remaining (out of 2)"
       `)
     })
 
@@ -670,17 +693,29 @@ describe('vi.when()', () => {
     test('throws when not used with a mock', () => {
       expect(() => {
         vi.when(() => {})
-      }).toThrowErrorMatchingInlineSnapshot(`[TypeError: vi.when: the argument must be a mock function created with \`vi.fn()\` or \`vi.spyOn()\`]`)
+      }).toThrowErrorMatchingInlineSnapshot(`
+        TypeError {
+          "message": "vi.when: the argument must be a mock function created with \`vi.fn()\` or \`vi.spyOn()\`",
+        }
+      `)
     })
 
     test('throws error when `times` option is not greater than 0', () => {
       expect(() => {
         vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: 0 })
-      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
+      }).toThrowErrorMatchingInlineSnapshot(`
+        RangeError {
+          "message": "vi.when: \`times\` option must be greater than 0",
+        }
+      `)
 
       expect(() => {
         vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: -1 })
-      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
+      }).toThrowErrorMatchingInlineSnapshot(`
+        RangeError {
+          "message": "vi.when: \`times\` option must be greater than 0",
+        }
+      `)
     })
   })
 })
