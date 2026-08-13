@@ -50,7 +50,7 @@ test.describe('explorer reconcile', () => {
     fs.writeFileSync(
       basicFile,
       basicContent.replace(
-        /test\('reconcile-remove-me'[\s\S]*?\}\)\n/,
+        /\/\/ TEST REMOVE START[\s\S]*?\/\/ TEST REMOVE END\n/,
         '',
       ),
       'utf-8',
