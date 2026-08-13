@@ -137,9 +137,22 @@ describe(GithubActionsReporter, () => {
     it.for([
       { title: 'Custom Test Report', expectedTitle: 'Custom Test Report' },
       { title: undefined, expectedTitle: 'Vitest Test Report' },
-    ] as const)('uses $expectedTitle when title is $title', async ({ title, expectedTitle }, ctx) => {
+    ] as const)('uses a custom title when providing one', async ({ title, expectedTitle }, ctx) => {
       const summary = await createSummary({
         summaryConfig: { title },
+        ctx,
+      })
+
+      expect(summary.startsWith(`## ${expectedTitle}\n\n`)).toBe(true)
+    })
+
+    it.for([
+      { title: 'Custom Test Report', expectedTitle: 'Custom Test Report' },
+      { title: undefined, expectedTitle: '(suite-name) Vitest Test Report' },
+    ] as const)('displays `test.name` when not using a custom title', async ({ title, expectedTitle }, ctx) => {
+      const summary = await createSummary({
+        summaryConfig: { title },
+        vitestConfig: { name: 'suite-name' },
         ctx,
       })
 
