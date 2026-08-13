@@ -1,7 +1,8 @@
 import type { SerializedRootConfig } from 'vitest'
 import { getBadgeNameColor, getBadgeTextColor } from './task'
 
-type ProjectConfigSource = Pick<Partial<SerializedRootConfig>, 'projects'>
+// TODO: config shouldn't be partial in valid app lifetime. rework later.
+type ProjectConfigSource = Partial<SerializedRootConfig>
 
 export function getProjectConfigByName(
   config: ProjectConfigSource,
@@ -16,7 +17,6 @@ export function getProjectBadgeStyle(
 ) {
   const backgroundColor = getProjectConfigByName(config, projectName)?.color
     ?? getBadgeNameColor(projectName)
-
   return {
     backgroundColor,
     color: getBadgeTextColor(backgroundColor),
