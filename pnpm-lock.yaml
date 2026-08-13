@@ -1304,6 +1304,9 @@ importers:
       '@test/test-dep-linked':
         specifier: link:./deps/linked
         version: link:deps/linked
+      '@test/test-dep-malformed-source-map':
+        specifier: file:./deps/malformed-source-map
+        version: file:test/e2e/deps/malformed-source-map
       '@test/test-dep-url':
         specifier: link:./deps/dep-url
         version: link:deps/dep-url
@@ -4962,6 +4965,9 @@ packages:
 
   '@test/test-dep-error@file:test/e2e/deps/error':
     resolution: {directory: test/e2e/deps/error, type: directory}
+
+  '@test/test-dep-malformed-source-map@file:test/e2e/deps/malformed-source-map':
+    resolution: {directory: test/e2e/deps/malformed-source-map, type: directory}
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -13511,6 +13517,8 @@ snapshots:
       vue: 3.5.40(typescript@5.9.3)
 
   '@test/test-dep-error@file:test/e2e/deps/error': {}
+
+  '@test/test-dep-malformed-source-map@file:test/e2e/deps/malformed-source-map': {}
 
   '@testing-library/dom@10.4.1':
     dependencies:

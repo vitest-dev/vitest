@@ -1,6 +1,6 @@
 import type { RunVitestConfig } from '#test-utils'
 import { describe, expect, test } from 'vitest'
-import { runInlineTests, runVitest } from '#test-utils'
+import { runInlineTests } from '#test-utils'
 
 describe('dangerouslyIgnoreUnhandledErrors', () => {
   test('{ dangerouslyIgnoreUnhandledErrors: true }', async () => {
@@ -65,26 +65,4 @@ test('unhandled rejections of main thread are reported even when no reporter is 
   expect(stderr).toContain('Unhandled Rejection')
   expect(stderr).toContain('Error: intentional unhandled rejection')
   expect(stderr).toContain('setup-unhandled-rejections.js:3:48')
-})
-
-test('a malformed inline source map does not swallow the original test error (#10892)', async () => {
-  const { stderr, exitCode, buildTree } = await runVitest({
-    root: './fixtures/malformed-source-map',
-  }, [], { fails: true })
-
-  expect(exitCode).toBe(1)
-  expect(stderr).not.toContain('Unhandled Errors')
-  expect(stderr).toContain('original module error')
-  expect(buildTree(t => ({ state: t.result().state }))).toMatchInlineSnapshot(`
-    {
-      "some-test.spec.ts": {
-        "passing test remains visible": {
-          "state": "passed",
-        },
-        "reports the original module error": {
-          "state": "failed",
-        },
-      },
-    }
-  `)
 })
