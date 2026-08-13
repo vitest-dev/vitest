@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import type { SortUIType } from '~/composables/explorer/types'
+import type { FilteredTests, SortUIType } from '~/composables/explorer/types'
 import { debouncedWatch } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
@@ -18,10 +18,32 @@ import {
   projectSort,
   search,
   searchMatcher,
-  testsTotal,
   treeFilter,
   uiEntries,
 } from './state'
+
+const testsTotal = computed<FilteredTests>(() => {
+  const filtered = isFiltered.value
+  const filteredByStatus = isFilteredByStatus.value
+  const project = currentProjectName.value
+  const onlyTests = filter.onlyTests
+  const failed = explorerTree.summary.filesFailed
+  const success = explorerTree.summary.filesSuccess
+  const skipped = explorerTree.summary.filesSkipped
+  const running = explorerTree.summary.filesRunning
+  const files = filteredFiles.value
+  return explorerTree.collectTestsTotal(
+    filtered || filteredByStatus || !!project,
+    onlyTests,
+    files,
+    {
+      failed,
+      success,
+      skipped,
+      running,
+    },
+  )
+})
 
 export function useSearch(
   searchBox: Ref<HTMLInputElement | undefined>,

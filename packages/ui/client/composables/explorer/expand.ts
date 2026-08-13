@@ -1,7 +1,5 @@
-import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
-import { findById } from '~/composables/client'
+import type { ExplorerOperationContext, Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { filterAll, filterNode } from '~/composables/explorer/filter'
-import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
 
@@ -19,16 +17,19 @@ import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode }
  * - remove opened tree items for the node and any children
  * - update uiEntries including child nodes
  *
+ * @param context The explorer operation context.
  * @param id The node id to expand.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runExpandNode(
+  context: ExplorerOperationContext,
   id: string,
   search: SearchMatcher,
   filter: Filter,
 ) {
   const entry = createOrUpdateSuiteTask(
+    context,
     id,
     false,
   )
@@ -40,7 +41,7 @@ export function runExpandNode(
 
   // create only direct children
   for (const subtask of task.tasks) {
-    createOrUpdateNode(node.id, subtask, false)
+    createOrUpdateNode(context, node.id, subtask, false)
   }
 
   // expand the node
@@ -51,6 +52,7 @@ export function runExpandNode(
   // collect children
   // the first node is itself only when it is a file
   const children = new Set(filterNode(
+    context,
     node,
     search,
     filter,
@@ -82,22 +84,25 @@ export function runExpandNode(
  * - update the filtered expandAll state to false
  * - update uiEntries with child nodes
  *
+ * @param context The explorer operation context.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runExpandAll(
+  context: ExplorerOperationContext,
   search: SearchMatcher,
   filter: Filter,
 ) {
-  expandAllNodes(explorerTree.root.tasks, false)
+  expandAllNodes(context.root.tasks, false)
   const entries = [...filterAll(
+    context,
     search,
     filter,
   )]
   treeFilter.value.expandAll = false
   openedTreeItems.value = []
   uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  filteredFiles.value = entries.filter(isFileNode).map(f => context.dataSource.getFile(f.id)!)
 }
 
 export function expandNodesOnEndRun(

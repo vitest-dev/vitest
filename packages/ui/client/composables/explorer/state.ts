@@ -1,13 +1,11 @@
 import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
-import type { FileTreeNode, Filter, FilteredTests, SortUIType, TreeFilterState, UITaskTreeNode } from './types'
+import type { FileTreeNode, Filter, SortUIType, TreeFilterState, UITaskTreeNode } from './types'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, reactive, ref, shallowRef } from 'vue'
-import { availableProjects } from '~/composables/client'
+import { availableProjects, config } from '~/composables/client/state'
 import { caseInsensitiveMatch } from '~/utils/task'
 // importing from the source because we need to bundle it
 import { createTagsFilter } from '../../../../vitest/src/runtime/runner/utils/tags'
-import { config } from '../client'
-import { explorerTree } from './index'
 
 export const uiFiles = shallowRef<FileTreeNode[]>([])
 export const uiEntries = shallowRef<UITaskTreeNode[]>([])
@@ -127,26 +125,4 @@ export const shouldShowExpandAll = computed(() => {
   }
 
   return expandAll !== false
-})
-export const testsTotal = computed<FilteredTests>(() => {
-  const filtered = isFiltered.value
-  const filteredByStatus = isFilteredByStatus.value
-  const project = currentProjectName.value
-  const onlyTests = filter.onlyTests
-  const failed = explorerTree.summary.filesFailed
-  const success = explorerTree.summary.filesSuccess
-  const skipped = explorerTree.summary.filesSkipped
-  const running = explorerTree.summary.filesRunning
-  const files = filteredFiles.value
-  return explorerTree.collectTestsTotal(
-    filtered || filteredByStatus || !!project,
-    onlyTests,
-    files,
-    {
-      failed,
-      success,
-      skipped,
-      running,
-    },
-  )
 })

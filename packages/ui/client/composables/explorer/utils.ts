@@ -1,5 +1,6 @@
 import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type {
+  ExplorerOperationContext,
   FileTreeNode,
   ParentTreeNode,
   SortUIType,
@@ -7,8 +8,6 @@ import type {
   TestTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { client, config } from '~/composables/client'
-import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
 import { getBadgeNameColor, isSuite as isTaskSuite } from '~/utils/task'
 
@@ -28,7 +27,7 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
   return node.type === 'file' || node.type === 'suite'
 }
 
-export function isSlowTestTask(task: Task) {
+export function isSlowTestTask(context: ExplorerOperationContext, task: Task) {
   if (task.type !== 'test') {
     return false
   }
@@ -38,11 +37,11 @@ export function isSlowTestTask(task: Task) {
     return false
   }
 
-  const threshold = config.value.slowTestThreshold
+  const threshold = context.dataSource.getSlowTestThreshold()
   return typeof threshold === 'number' && duration > threshold
 }
 
-export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.tasks) {
+export function getSortedRootTasks(sort: SortUIType, tasks: FileTreeNode[]) {
   const sorted = [...tasks]
 
   sorted.sort((a, b) => {
@@ -72,10 +71,11 @@ export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.t
 }
 
 export function createOrUpdateFileNode(
+  context: ExplorerOperationContext,
   file: File,
   collect = false,
 ) {
-  let fileNode = explorerTree.nodes.get(file.id) as FileTreeNode | undefined
+  let fileNode = context.nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
     fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
@@ -108,71 +108,73 @@ export function createOrUpdateFileNode(
       slow: false,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: explorerTree.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
+      projectNameColor: context.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
       prepareDuration: file.prepareDuration,
       state: file.result?.state,
     }
-    explorerTree.nodes.set(file.id, fileNode)
-    explorerTree.root.tasks.push(fileNode)
+    context.nodes.set(file.id, fileNode)
+    context.root.tasks.push(fileNode)
   }
   if (collect) {
     for (let i = 0; i < file.tasks.length; i++) {
-      createOrUpdateNode(file.id, file.tasks[i], true)
+      createOrUpdateNode(context, file.id, file.tasks[i], true)
     }
   }
 }
 
 export function createOrUpdateSuiteTask(
+  context: ExplorerOperationContext,
   id: string,
   all: boolean,
 ) {
-  const node = explorerTree.nodes.get(id)
+  const node = context.nodes.get(id)
   if (!node || !isParentNode(node)) {
     return
   }
 
-  const task = client.state.idMap.get(id)
+  const task = context.dataSource.getTask(id)
   // if no children just return
   if (!task || !isTaskSuite(task)) {
     return
   }
 
   // update the node
-  createOrUpdateNode(node.parentId, task, all && task.tasks.length > 0)
+  createOrUpdateNode(context, node.parentId, task, all && task.tasks.length > 0)
 
   return [node, task] as const
 }
 
-export function createOrUpdateNodeTask(id: string) {
-  const node = explorerTree.nodes.get(id)
+export function createOrUpdateNodeTask(context: ExplorerOperationContext, id: string) {
+  const node = context.nodes.get(id)
   if (!node) {
     return
   }
 
-  const task = client.state.idMap.get(id)
+  const task = context.dataSource.getTask(id)
   // if it is not a test just return
   if (!task || task.type !== 'test') {
     return
   }
 
-  createOrUpdateNode(node.parentId, task, false)
+  createOrUpdateNode(context, node.parentId, task, false)
 }
 
 export function createOrUpdateNode(
+  context: ExplorerOperationContext,
   parentId: string,
   task: Task,
   createAll: boolean,
 ) {
-  const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
+  const node = context.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
   const duration = typeof task.result?.duration === 'number'
     ? Math.round(task.result.duration)
     : undefined
   if (node) {
-    taskNode = explorerTree.nodes.get(task.id)
+    taskNode = context.nodes.get(task.id)
     if (taskNode) {
       if (!node.children.has(task.id)) {
         node.tasks.push(taskNode)
@@ -182,7 +184,7 @@ export function createOrUpdateNode(
       taskNode.name = task.name
       taskNode.mode = task.mode
       taskNode.duration = duration
-      taskNode.slow = isSlowTestTask(task)
+      taskNode.slow = isSlowTestTask(context, task)
       taskNode.state = task.result?.state
     }
     else {
@@ -198,7 +200,7 @@ export function createOrUpdateNode(
           expanded: false,
           indent: node.indent + 1,
           duration,
-          slow: isSlowTestTask(task),
+          slow: isSlowTestTask(context, task),
           state: task.result?.state,
         } as TestTreeNode
       }
@@ -221,14 +223,14 @@ export function createOrUpdateNode(
           state: task.result?.state,
         } as SuiteTreeNode
       }
-      explorerTree.nodes.set(task.id, taskNode)
+      context.nodes.set(task.id, taskNode)
       node.tasks.push(taskNode)
       node.children.add(task.id)
     }
 
     if (taskNode && createAll && isTaskSuite(task)) {
       for (let i = 0; i < task.tasks.length; i++) {
-        createOrUpdateNode(taskNode.id, task.tasks[i], createAll)
+        createOrUpdateNode(context, taskNode.id, task.tasks[i], createAll)
       }
     }
   }

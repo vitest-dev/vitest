@@ -3,16 +3,18 @@ import type {
   RunnerTask,
   RunnerTaskResultPack,
   RunnerTestFile,
+  SerializedRootConfig,
   TestTagDefinition,
   UserConsoleLog,
 } from 'vitest'
 import type { Ref } from 'vue'
 import type { RunState } from '../../../types'
-import { computed, ref } from 'vue'
-import { config } from '.'
+import { computed, ref, shallowRef } from 'vue'
 import { createFileTask } from '../../../../vitest/src/utils/tasks'
 
 export const testRunState: Ref<RunState> = ref('idle')
+export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
+export const availableProjects = shallowRef<string[]>([])
 export const finished = computed(() => testRunState.value === 'idle')
 export const unhandledErrors: Ref<TestError[]> = ref([])
 export const tagsDefinitions = computed(() => {
