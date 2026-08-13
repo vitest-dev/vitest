@@ -111,3 +111,26 @@ test('error with toJSON doesn\'t override nessage, stack and name if it\'s there
   expect(serialisedError.stack).toBe('custom stack')
   expect(serialisedError.message).toBe('custom message')
 })
+
+test.each([
+  {
+    thrown: ['foo', { code: 404 }],
+    message: `Non-Error value thrown: [
+  "foo",
+  {
+    "code": 404,
+  },
+]`,
+  },
+  {
+    thrown: { code: 500 },
+    message: `Non-Error value thrown: {
+  "code": 500,
+}`,
+  },
+])('non-Error objects have a message and retain their serialized value', ({ thrown, message }) => {
+  expect(processError(thrown)).toEqual({
+    message,
+    serializedValue: thrown,
+  })
+})

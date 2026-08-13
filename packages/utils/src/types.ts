@@ -30,6 +30,7 @@ export interface ParsedStack {
 
 export interface SerializedError {
   message: string
+  serializedValue?: unknown
   stacks?: ParsedStack[]
   stack?: string
   name?: string

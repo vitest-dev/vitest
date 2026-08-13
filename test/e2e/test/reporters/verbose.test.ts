@@ -1,6 +1,6 @@
 import type { TestSpecification } from 'vitest/node'
 import { expect, test } from 'vitest'
-import { runVitest } from '#test-utils'
+import { runInlineTests, runVitest } from '#test-utils'
 
 test('duration', async () => {
   const { stdout } = await runVitest({
@@ -23,6 +23,24 @@ test('prints error properties', async () => {
   })
 
   expect(result.stderr).toContain(`Serialized Error: { code: 404, status: 'not found' }`)
+})
+
+test('prints a message when an AggregateError contains a non-Error value', async () => {
+  const { stdout } = await runInlineTests({
+    'array-error.test.ts': `
+      import { test } from 'vitest'
+
+      test('array error', () => {
+        throw new AggregateError([['nested-array']], 'outer')
+      })
+    `,
+  }, {
+    reporters: [['verbose', { isTTY: false, summary: false }]],
+  })
+
+  expect(stdout).toContain('Non-Error value thrown: [')
+  expect(stdout).toContain('"nested-array"')
+  expect(stdout).not.toContain('→ undefined')
 })
 
 test('prints skipped tests by default', async () => {
