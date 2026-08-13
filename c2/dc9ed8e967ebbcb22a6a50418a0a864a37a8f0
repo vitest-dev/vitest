@@ -1,0 +1,29 @@
+packages/ui/client/composables/explorer/collector.ts
+  s_8425f4f8a747a6::t_bfd3c97a8d208d 3
+packages/ui/client/composables/explorer/tree.ts
+  s_4ed8232e38440d::t_ef3f6fe6730622 1,5,12,18,20,114,119-139,142-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c2dc9ed8e967ebbcb22a6a50418a0a864a37a8f0",
+  "prompts": {},
+  "sessions": {
+    "s_4ed8232e38440d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0063f4b73ffefVOo3yD3AeZPZp",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    },
+    "s_8425f4f8a747a6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_005af35c2ffeEqo1HAa0rqTGEn",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
