@@ -145,7 +145,7 @@ export function getBadgeNameColor(name: string | undefined, transparent = false)
   return (transparent ? transparentColors : colors)[index % colors.length]
 }
 
-export function getBadgeTextColor(color: string) {
+function getBadgeTextColor(color: string) {
   switch (color) {
     case 'blue':
     case 'green':
