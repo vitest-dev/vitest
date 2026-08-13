@@ -74,16 +74,16 @@ let traces!: Traces
 
 /** @experimental */
 export function init(worker: Options): void {
-  worker.on(onMessage)
-  if (worker.onModuleRunner) {
-    listeners.onModuleRunner(worker.onModuleRunner)
-  }
-
   let runPromise: Promise<unknown> | undefined
   let isRunning = false
   let workerTeardown: (() => Promise<unknown>) | undefined | void
   let setupContext!: WorkerSetupContext
   let poolId!: number
+
+  worker.on(onMessage)
+  if (worker.onModuleRunner) {
+    listeners.onModuleRunner(worker.onModuleRunner)
+  }
 
   function send(response: WorkerResponse) {
     worker.post(worker.serialize ? worker.serialize(response) : response)
