@@ -1,7 +1,7 @@
 import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { ref, watch, watchEffect } from 'vue'
-import { getProjectConfigByName } from '~/utils/project'
+import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
