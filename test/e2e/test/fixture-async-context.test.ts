@@ -75,7 +75,75 @@ test('fixture store is visible in beforeEach and afterEach hooks', async () => {
   `)
 })
 
-test('a dependent fixture runs inside the store of its dependency', async () => {
+test('non-auto fixture store becomes visible only after the fixture resolves', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'lazy.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { afterEach, beforeEach, test as base } from 'vitest'
+
+      const als = new AsyncLocalStorage()
+
+      const test = base.extend({
+        store: async ({}, use) => als.run({ app: 'alpha' }, () => use('store')),
+      })
+
+      beforeEach(() => {
+        console.log('>> beforeEach: ' + als.getStore()?.app)
+      })
+
+      afterEach(() => {
+        console.log('>> afterEach: ' + als.getStore()?.app)
+      })
+
+      test('test 1', ({ store }) => {
+        console.log('>> test: ' + als.getStore()?.app)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> beforeEach: undefined
+    >> test: alpha
+    >> afterEach: alpha"
+  `)
+})
+
+test('a beforeEach that uses the fixture makes the store visible to later hooks and the test', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'hook-trigger.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { beforeEach, test as base } from 'vitest'
+
+      const als = new AsyncLocalStorage()
+
+      const test = base.extend({
+        store: async ({}, use) => als.run({ app: 'alpha' }, () => use('store')),
+      })
+
+      beforeEach(({ store }) => {
+        console.log('>> first beforeEach: ' + als.getStore()?.app)
+      })
+
+      beforeEach(() => {
+        console.log('>> second beforeEach: ' + als.getStore()?.app)
+      })
+
+      test('test 1', () => {
+        console.log('>> test: ' + als.getStore()?.app)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> first beforeEach: alpha
+    >> second beforeEach: alpha
+    >> test: alpha"
+  `)
+})
+
+test('a dependent fixture runs inside the store of its dependency regardless of registration order', async () => {
   const { stdout, stderr } = await runInlineTests({
     'chained.test.ts': `
       import { AsyncLocalStorage } from 'node:async_hooks'
@@ -84,11 +152,11 @@ test('a dependent fixture runs inside the store of its dependency', async () => 
       const als = new AsyncLocalStorage()
 
       const test = base.extend({
-        store: async ({}, use) => als.run({ app: 'alpha' }, () => use('store')),
         service: async ({ store }, use) => {
           console.log('>> service setup sees: ' + als.getStore()?.app)
           await use('service')
         },
+        store: async ({}, use) => als.run({ app: 'alpha' }, () => use('store')),
       })
 
       test('test 1', ({ service }) => {
@@ -101,6 +169,40 @@ test('a dependent fixture runs inside the store of its dependency', async () => 
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
     ">> service setup sees: alpha
     >> test: alpha"
+  `)
+})
+
+test('independent fixtures chain their stores in registration order', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'independent.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { test as base } from 'vitest'
+
+      const als1 = new AsyncLocalStorage()
+      const als2 = new AsyncLocalStorage()
+
+      const test = base.extend({
+        first: async ({}, use) => {
+          console.log('>> first setup sees: ' + als2.getStore())
+          await als1.run('one', () => use('first'))
+        },
+        second: async ({}, use) => {
+          console.log('>> second setup sees: ' + als1.getStore())
+          await als2.run('two', () => use('second'))
+        },
+      })
+
+      test('test 1', ({ second, first }) => {
+        console.log('>> test: ' + als1.getStore() + ' ' + als2.getStore())
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> first setup sees: undefined
+    >> second setup sees: one
+    >> test: one two"
   `)
 })
 
@@ -278,6 +380,48 @@ test('aroundAll store stays visible when file-scoped fixtures are used', async (
   `)
 })
 
+test('aroundAll store does not leak past its suite via a file-scoped fixture', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'around-all-leak.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { aroundAll, describe, test as base } from 'vitest'
+
+      const alsSuite = new AsyncLocalStorage()
+
+      const test = base.extend({
+        shared: [
+          async ({}, use) => {
+            console.log('>> fixture resolves in: ' + alsSuite.getStore())
+            await use('shared-value')
+          },
+          { scope: 'file' },
+        ],
+      })
+
+      describe('wrapped suite', () => {
+        aroundAll(async (runSuite) => {
+          await alsSuite.run('from-around-all', runSuite)
+        })
+
+        test('inside', ({ shared }) => {
+          console.log('>> inside: ' + alsSuite.getStore())
+        })
+      })
+
+      test('after', ({ shared }) => {
+        console.log('>> after: ' + alsSuite.getStore())
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> fixture resolves in: from-around-all
+    >> inside: from-around-all
+    >> after: undefined"
+  `)
+})
+
 test('beforeEach-returned cleanup sees the fixture store', async () => {
   const { stdout, stderr } = await runInlineTests({
     'cleanup.test.ts': `
@@ -359,7 +503,7 @@ test('request-context pattern: auto fixture with per-suite override', async () =
   `)
 })
 
-test('onTestFinished and onTestFailed see the fixture store', async () => {
+test('onTestFinished sees the fixture store', async () => {
   const { stdout, stderr } = await runInlineTests({
     'finished.test.ts': `
       import { AsyncLocalStorage } from 'node:async_hooks'
@@ -387,6 +531,42 @@ test('onTestFinished and onTestFailed see the fixture store', async () => {
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
     ">> test: alpha
     >> finished: alpha"
+  `)
+})
+
+test('onTestFailed sees the fixture store', async () => {
+  const { stdout, errorTree } = await runInlineTests({
+    'failed.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { expect, onTestFailed, test as base } from 'vitest'
+
+      const als = new AsyncLocalStorage()
+
+      const test = base.extend({
+        store: [
+          async ({}, use) => als.run({ app: 'alpha' }, () => use('store')),
+          { auto: true },
+        ],
+      })
+
+      test('test 1', () => {
+        onTestFailed(() => {
+          console.log('>> failed: ' + als.getStore()?.app)
+        })
+        expect(1).toBe(2)
+      })
+    `,
+  })
+
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`">> failed: alpha"`)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "failed.test.ts": {
+        "test 1": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+      },
+    }
   `)
 })
 
@@ -501,7 +681,7 @@ test('detectAsyncLeaks does not report the context snapshots', async () => {
   `)
 })
 
-test('fixture teardown still runs in its own store after the test', async () => {
+test('fixture teardown resumes inside the store the fixture opened', async () => {
   const { stdout, stderr } = await runInlineTests({
     'teardown.test.ts': `
       import { AsyncLocalStorage } from 'node:async_hooks'
