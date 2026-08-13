@@ -799,6 +799,197 @@ describe('vi.fn() implementations', () => {
     expect(Mock.mock.calls).toEqual([['test', 42]])
   })
 
+  test('vi.fn(class) keeps prototype methods on instances', () => {
+    let methodInConstructor!: unknown
+    class Dog {
+      name: string
+      constructor(name: string) {
+        this.name = name
+        methodInConstructor = this.speak
+      }
+
+      speak() {
+        return `${this.name} barks!`
+      }
+    }
+
+    const MockDog = vi.fn(Dog)
+    const dog = new MockDog('Rex')
+
+    expect(methodInConstructor).toBeTypeOf('function')
+    expect(dog.speak()).toBe('Rex barks!')
+    expect(dog).toBeInstanceOf(MockDog)
+    expect(dog).toBeInstanceOf(Dog)
+    expect(Object.getPrototypeOf(dog)).toBe(MockDog.prototype)
+    expect(MockDog.mock.calls).toEqual([['Rex']])
+    expect(MockDog.mock.instances).toEqual([dog])
+  })
+
+  test('vi.fn(class) allows overriding methods on the mock prototype', () => {
+    class Dog {
+      speak() {
+        return 'bark'
+      }
+
+      fetch() {
+        return 'ball'
+      }
+    }
+
+    const MockDog = vi.fn(Dog)
+    MockDog.prototype.speak = () => 'meow'
+
+    const dog = new MockDog()
+    expect(dog.speak()).toBe('meow')
+    expect(dog.fetch()).toBe('ball')
+
+    // overrides assigned after construction are visible on existing instances
+    MockDog.prototype.fetch = () => 'stick'
+    expect(dog.fetch()).toBe('stick')
+  })
+
+  test('vi.fn(class) tracks prototype mock calls from every instance', () => {
+    class Dog {
+      speak() {
+        return 'bark'
+      }
+    }
+
+    const MockDog = vi.fn(Dog)
+    MockDog.prototype.speak = vi.fn(() => 'woof')
+
+    const cooper = new MockDog()
+    const max = new MockDog()
+
+    expect(cooper.speak()).toBe('woof')
+    expect(max.speak()).toBe('woof')
+
+    const speak = vi.mocked(MockDog.prototype.speak)
+    expect(speak).toHaveBeenCalledTimes(2)
+    expect(speak.mock.contexts).toEqual([cooper, max])
+    expect(speak.mock.instances).toEqual([cooper, max])
+  })
+
+  test('vi.fn(class) chains the prototype before the first construction', () => {
+    class ActualClass {
+      method() {
+        return 42
+      }
+    }
+    const Mock = vi.fn(ActualClass)
+
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(ActualClass.prototype)
+    expect(Object.create(Mock.prototype)).toBeInstanceOf(ActualClass)
+
+    class Another {
+      method() {
+        return 0
+      }
+    }
+    Mock.mockImplementation(Another)
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(Another.prototype)
+
+    Mock.mockReset()
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(ActualClass.prototype)
+  })
+
+  test('vi.fn() prototype chain is reverted when the mock is reset', () => {
+    class Actual {
+      method() {
+        return 42
+      }
+    }
+
+    const Mock = vi.fn<any>()
+    Mock.mockImplementation(Actual)
+    expect(new Mock()).toBeInstanceOf(Actual)
+
+    Mock.mockReset()
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(Object.prototype)
+    expect(new Mock()).not.toBeInstanceOf(Actual)
+  })
+
+  test('vi.fn() prototype chain is reverted after a once implementation is consumed', () => {
+    class Actual {
+      method() {
+        return 42
+      }
+    }
+
+    const Mock = vi.fn<any>()
+    Mock.mockImplementationOnce(Actual)
+
+    const first = new Mock()
+    expect(first).toBeInstanceOf(Actual)
+
+    const second = new Mock()
+    expect(second).not.toBeInstanceOf(Actual)
+    expect(Object.getPrototypeOf(Mock.prototype)).toBe(Object.prototype)
+    // the prototype is shared, so the first instance loses the chain as well
+    expect(first).not.toBeInstanceOf(Actual)
+  })
+
+  test('vi.fn() rejects an implementation that inherits from the mock itself', () => {
+    const Mock: any = vi.fn()
+    // constructing such a mock would call the implementation, whose super()
+    // re-enters the mock, so it could never be constructed anyway
+    expect(() => Mock.mockImplementation(class extends Mock {}))
+      .toThrowErrorMatchingInlineSnapshot(`[TypeError: Cyclic __proto__ value]`)
+  })
+
+  test('vi.fn() implementation can inherit from another mock', () => {
+    const Mock1: any = vi.fn()
+    const Mock2: any = vi.fn()
+    class Impl extends Mock2 {
+      method() {
+        return 42
+      }
+    }
+    Mock1.mockImplementation(Impl)
+
+    const instance = new Mock1()
+    expect(instance.method()).toBe(42)
+    expect(instance).toBeInstanceOf(Mock1)
+    expect(instance).toBeInstanceOf(Impl)
+    expect(instance).toBeInstanceOf(Mock2)
+
+    // super() re-enters Mock2, so both mocks track the construction
+    expect(Mock1.mock.calls).toEqual([[]])
+    expect(Mock2.mock.calls).toEqual([[]])
+    expect(Mock1.mock.instances).toEqual([instance])
+    expect(Mock2.mock.instances).toEqual([instance])
+  })
+
+  test('vi.fn(class) prototype follows the latest constructed implementation', () => {
+    class First {
+      first() {
+        return 'first'
+      }
+    }
+    class Second {
+      second() {
+        return 'second'
+      }
+    }
+
+    const Mock = vi.fn<any>()
+      .mockImplementationOnce(First)
+      .mockImplementation(Second)
+
+    const first = new Mock()
+    expect(first.first()).toBe('first')
+    expect(first.second).toBeUndefined()
+
+    // `mock.prototype` is shared between instances, so constructing with
+    // another implementation points all instances at the new prototype
+    const second = new Mock()
+    expect(second.second()).toBe('second')
+    expect(first.second()).toBe('second')
+    expect(first.first).toBeUndefined()
+    expect(first).toBeInstanceOf(Mock)
+    expect(second).toBeInstanceOf(Mock)
+  })
+
   test('vi.fn() with mockReturnValue throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockReturnValue(42)

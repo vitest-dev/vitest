@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { expect, it } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 const dynamicTestContent = `// Dynamic test added by test/watch/workspaces.test.ts
 import { expect, test } from "vitest";

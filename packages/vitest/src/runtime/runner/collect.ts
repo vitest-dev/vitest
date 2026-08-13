@@ -5,7 +5,6 @@ import {
   calculateSuiteHash,
   createFileTask,
   interpretTaskModes,
-  someTasksAreOnly,
 } from '../../utils/tasks'
 import { collectorContext } from './context'
 import { getHooks, setHooks } from './map'
@@ -65,6 +64,7 @@ export async function collectTests(
           clearCollectorContext(file, runner)
 
           const setupFiles = toArray(config.setupFiles)
+          const fetchBeforeSetup = runner.getModuleFetchDuration?.()
           if (setupFiles.length) {
             const setupStart = now()
             await runSetupFiles(config, setupFiles, runner)
@@ -73,6 +73,11 @@ export async function collectTests(
           }
           else {
             file.setupDuration = 0
+          }
+
+          const fetchBeforeCollect = runner.getModuleFetchDuration?.()
+          if (fetchBeforeSetup != null && fetchBeforeCollect != null) {
+            file.setupFetchDuration = fetchBeforeCollect - fetchBeforeSetup
           }
 
           const collectStart = now()
@@ -108,6 +113,10 @@ export async function collectTests(
 
           setHooks(file, fileHooks)
           file.collectDuration = now() - collectStart
+          const fetchAfterCollect = runner.getModuleFetchDuration?.()
+          if (fetchBeforeCollect != null && fetchAfterCollect != null) {
+            file.collectFetchDuration = fetchAfterCollect - fetchBeforeCollect
+          }
         }
         catch (e) {
           const errors = e instanceof AggregateError
@@ -126,7 +135,16 @@ export async function collectTests(
 
         calculateSuiteHash(file)
 
-        const hasOnlyTasks = someTasksAreOnly(file)
+        // the file's children are assembled here (not in a suite collector), so
+        // roll up the collection-time flags for the file itself
+        file.containsOnly = file.tasks.some(
+          t => t.mode === 'only' || (t.type === 'suite' && t.containsOnly),
+        )
+        file.containsTest = file.tasks.some(
+          t => t.type === 'test' || (t.type === 'suite' && t.containsTest),
+        )
+
+        const hasOnlyTasks = file.containsOnly
         if (!testTagsFilter && !defaultTagsFilter && config.tagsFilter) {
           defaultTagsFilter = createTagsFilter(config.tagsFilter, config.tags)
         }

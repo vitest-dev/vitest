@@ -71,7 +71,7 @@ export type {
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
 
-export type { JUnitOptions } from '../node/reporters/junit'
+export type { JUnitOptions, SuiteNameTemplateVariables } from '../node/reporters/junit'
 export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
@@ -85,6 +85,7 @@ export type {
   TestResult,
   TestResultFailed,
   TestResultPassed,
+  TestResultPending,
   TestResultSkipped,
   TestState,
   TestSuite,
@@ -117,6 +118,7 @@ export type {
   BrowserServerFactory,
   BrowserServerState,
   BrowserServerStateSession,
+  BrowserTraceViewOptions,
   CDPSession,
   ParentProjectBrowser,
   ProjectBrowser,
@@ -191,6 +193,12 @@ export type {
   RunnerTestSuite,
 } from './index'
 export type { SerializedError } from '@vitest/utils'
+// Re-exported from Vitest's own bundled `tinyrainbow` instance. Vitest inlines
+// `tinyrainbow` into its dist, so importing the package directly gives a different
+// object than the one the reporters use; this export lets programmatic consumers
+// (e.g. the test suite) disable ANSI colors on the instance Vitest actually renders
+// with.
+export { disableDefaultColors } from 'tinyrainbow'
 
 export {
   esbuildVersion,

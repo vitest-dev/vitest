@@ -215,6 +215,18 @@ test('maxConcurrency is parsed correctly', () => {
   expect(getCLIOptions('--max-concurrency=1000')).toEqual({ maxConcurrency: 1000 })
 })
 
+test('project is parsed correctly', () => {
+  // cac copies the raw value to the shorthand key, it is ignored by vitest
+  expect(getCLIOptions('--project space_1')).toEqual({ project: ['space_1'], p: 'space_1' })
+  expect(getCLIOptions('--project=space_1')).toEqual({ project: ['space_1'], p: 'space_1' })
+  expect(getCLIOptions('-p space_1')).toEqual({ project: ['space_1'], p: 'space_1' })
+  expect(getCLIOptions('-p=space_1')).toEqual({ project: ['space_1'], p: 'space_1' })
+  expect(getCLIOptions('-p space_1 -p space_2')).toEqual({
+    project: ['space_1', 'space_2'],
+    p: ['space_1', 'space_2'],
+  })
+})
+
 test('injectCjsGlobals is parsed correctly', () => {
   expect(getCLIOptions('--injectCjsGlobals')).toEqual({ injectCjsGlobals: true })
   expect(getCLIOptions('--inject-cjs-globals')).toEqual({ injectCjsGlobals: true })
@@ -446,6 +458,17 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'project': ['space_1', 'space_2'],
+      'p': ['space_1', 'space_2'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest -p space_1 -p space_2')).toEqual({
+    filter: [],
+    options: {
+      'project': ['space_1', 'space_2'],
+      'p': ['space_1', 'space_2'],
       '--': [],
       'color': true,
     },
@@ -455,6 +478,7 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'project': ['space 1'],
+      'p': '"space 1"',
       '--': [],
       'color': true,
     },
@@ -464,6 +488,7 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'project': ['space 1'],
+      'p': 'space 1',
       '--': [],
       'color': true,
     },
@@ -473,6 +498,7 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'project': ['space 1'],
+      'p': 'space 1',
       '--': [],
       'color': true,
     },
@@ -482,6 +508,7 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'project': ['space 1', 'space 2'],
+      'p': ['"space 1"', '"space 2"'],
       '--': [],
       'color': true,
     },
@@ -491,6 +518,7 @@ test('public parseCLI works correctly', () => {
     filter: ['./test-1.js', './test-2.js'],
     options: {
       'project': ['space 1', 'space 2', 'space 3'],
+      'p': ['"space 1"', '"space 2"', '"space 3"'],
       '--': [],
       'color': true,
     },

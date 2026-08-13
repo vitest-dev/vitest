@@ -1,8 +1,8 @@
 import type { RunVitestConfig, TestFsStructure, VitestRunnerCLIOptions } from '#test-utils'
 import { rmSync } from 'node:fs'
 import module from 'node:module'
-import { replaceRoot, runInlineTests, runVitest } from '#test-utils'
 import { describe, expect, onTestFinished, test } from 'vitest'
+import { replaceRoot, runInlineTests, runVitest } from '#test-utils'
 import { readCoverageJson } from '../../coverage-test/utils'
 
 describe.runIf(module.registerHooks)('supported', () => {

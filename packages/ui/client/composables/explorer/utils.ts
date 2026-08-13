@@ -24,10 +24,6 @@ export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
 }
 
-export function isSuiteNode(node: UITaskTreeNode): node is SuiteTreeNode {
-  return node.type === 'suite'
-}
-
 export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | SuiteTreeNode {
   return node.type === 'file' || node.type === 'suite'
 }

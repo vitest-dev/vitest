@@ -22,7 +22,7 @@ import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
@@ -31,7 +31,7 @@ import { distDir } from '../paths'
 import { createTagsFilter } from '../runtime/runner/utils/tags'
 import { limitConcurrency } from '../utils/limit-concurrency'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
-import { convertTasksToEvents, getTasks, hasFailed, interpretTaskModes, someTasksAreOnly } from '../utils/tasks'
+import { convertTasksToEvents, getTasks, hasFailed, interpretTaskModes } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
@@ -170,6 +170,7 @@ export class Vitest {
   /** @internal */ _harness: PluginHarness
   /** @internal */ _exitTimeout: ReturnType<typeof setTimeout> | undefined
 
+  private _warnedExperimentalCacheKeyGenerator = false
   private isFirstRun = true
   private restartsCount = 0
 
@@ -259,7 +260,30 @@ export class Vitest {
     )
   }
 
-  private async _restart(reason?: string) {
+  private _restartPromise?: Promise<void>
+  private _restartQueued = false
+
+  // Restarts must not overlap: chokidar regularly delivers several change
+  // events for one edit, and a restart that starts while another is still
+  // re-creating the servers reports `onServerRestart` to reporters that were
+  // re-instantiated but not yet initialized.
+  private _restart(reason?: string): Promise<void> {
+    if (this._restartPromise) {
+      this._restartQueued = true
+      return this._restartPromise
+    }
+    this._restartPromise = (async () => {
+      do {
+        this._restartQueued = false
+        await this._restartNow(reason)
+      } while (this._restartQueued)
+    })().finally(() => {
+      this._restartPromise = undefined
+    })
+    return this._restartPromise
+  }
+
+  private async _restartNow(reason?: string) {
     await Promise.all(this._onRestartListeners.map(fn => fn(reason)))
     this.report('onServerRestart', reason)
     await this.close()
@@ -282,9 +306,11 @@ export class Vitest {
    */
   async _attachRootServer(): Promise<void> {
     const resolved = this.config
+    const children = resolved.resolvedProjects
+      .filter(entry => entry.viteConfig === this.viteConfig)
     // For a root-level browser config (no `projects`) this builds the single
     // browser server; otherwise it just creates the Vite server.
-    const { server, parent } = await createClusterServer(this, this.viteConfig, resolved)
+    const { server, parent } = await createClusterServer(this, this.viteConfig, resolved, children)
     this.vite = server
     this._rootBrowserParent = parent
 
@@ -308,11 +334,18 @@ export class Vitest {
         await this._restart()
       }
 
+      // container configs have no Vite server (and might be outside the root),
+      // so their files are watched explicitly
+      if (resolved._containerConfigFiles?.length) {
+        server.watcher.add(resolved._containerConfigFiles)
+      }
+
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
           || this.projects.some(p => p.vite.config.configFile === file)
+          || this.config._containerConfigFiles?.includes(file)
         if (isConfig) {
           await this._restart('config')
         }
@@ -363,10 +396,17 @@ export class Vitest {
         project,
         vitest: this,
         injectTestProjects: this.injectTestProject,
+        defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
         /**
-         * @experimental
+         * @deprecated Use `defineCacheKeyGenerator` instead.
          */
-        experimental_defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
+        experimental_defineCacheKeyGenerator: (callback) => {
+          if (!this._warnedExperimentalCacheKeyGenerator) {
+            this._warnedExperimentalCacheKeyGenerator = true
+            this.logger.deprecate('`experimental_defineCacheKeyGenerator` is deprecated. Use `defineCacheKeyGenerator` instead.')
+          }
+          this._fsCache.defineCacheKeyGenerator(callback)
+        },
       }))
     }))
 
@@ -619,7 +659,7 @@ export class Vitest {
   }
 
   /**
-   * Deletes all Vitest caches, including `experimental.fsModuleCache`.
+   * Deletes all Vitest caches, including the `fsModuleCache`.
    * @experimental
    */
   public async experimental_clearCache(): Promise<void> {
@@ -636,9 +676,8 @@ export class Vitest {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
 
-      const { files, errors, coverages, executionTimes, transformTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
-      this.state.blobs = { files, errors, coverages, executionTimes, transformTimes }
-      this.state.transformTime = transformTimes.reduce((a, b) => a + b, 0)
+      const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+      this.state.blobs = { files, errors, coverages, executionTimes }
 
       await this.report('onInit', this)
 
@@ -1088,7 +1127,7 @@ export class Vitest {
       ? createTagsFilter(this.config.tagsFilter, this.config.tags)
       : undefined
     // Phase 2: cross-file .only resolution
-    const globalHasOnly = results.some(({ file }) => someTasksAreOnly(file))
+    const globalHasOnly = results.some(({ file }) => !!file.containsOnly)
     for (const { file, specification } of results) {
       const config = specification.project.config
       interpretTaskModes(
@@ -1112,7 +1151,7 @@ export class Vitest {
       return createFailedFileTask(specification.project, specification.moduleId, error)
     })
     const config = specification.project.config
-    const hasOnly = someTasksAreOnly(file)
+    const hasOnly = !!file.containsOnly
     const tagsFilter = this.config.tagsFilter
       ? createTagsFilter(this.config.tagsFilter, this.config.tags)
       : undefined
@@ -1399,6 +1438,10 @@ export class Vitest {
     }
 
     this._rerunTimer = setTimeout(async () => {
+      if (this.closingPromise) {
+        return
+      }
+
       if (this.watcher.changedTests.size === 0) {
         this.watcher.invalidates.clear()
         return
@@ -1504,6 +1547,12 @@ export class Vitest {
   public async close(): Promise<void> {
     if (!this.closingPromise) {
       this.closingPromise = (async () => {
+        // let an in-flight (re)run settle instead of tearing down under it:
+        // its file stats and transforms would race the teardown and reject
+        // after the caller already cleaned up the test files
+        clearTimeout(this._rerunTimer)
+        await this.runningPromise?.catch(noop)
+
         const teardownProjects = [...this.projects]
         if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
           teardownProjects.push(this.coreWorkspaceProject)
@@ -1541,11 +1590,18 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         await Promise.allSettled(closePromises).then((results) => {
-          [...results, ...teardownErrors.map(r => ({ status: 'rejected', reason: r }))].forEach((r) => {
-            if (r.status === 'rejected') {
-              this.logger.error('error during close', r.reason)
-            }
-          })
+          const errors = [
+            ...results
+              .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+              .map(r => r.reason),
+            ...teardownErrors,
+          ]
+
+          for (const error of errors) {
+            this.logger.error('error during close', error)
+          }
+
+          this._checkUnhandledErrors(errors)
         })
         await this._traces?.finish()
       })()

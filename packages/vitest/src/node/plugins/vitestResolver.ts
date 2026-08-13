@@ -48,6 +48,18 @@ export function VitestCoreResolver(): Plugin {
     },
     async resolveId(id) {
       if (id === 'vitest') {
+        // in environments that pre-bundle vitest (the browser `client`
+        // environment), the optimizer's copy must win: the tester and the
+        // test files have to share a single module instance, and returning
+        // the dist file directly would bypass the optimized dep resolution
+        if (this.environment?.config.optimizeDeps.include?.includes('vitest')) {
+          const resolved = await this.resolve(id, join(root, 'index.html'), {
+            skipSelf: true,
+          })
+          if (resolved) {
+            return resolved
+          }
+        }
         return resolve(distDir, 'index.js')
       }
       if (id.startsWith('@vitest/') || id.startsWith('vitest/')) {

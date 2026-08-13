@@ -93,8 +93,6 @@ export type CoverageReporterWithOptions<
     : [ReporterName, Partial<ReportOptions[ReporterName]>]
   : [ReporterName, Record<string, unknown>]
 
-export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
-
 /** Fields that have default values. Internally these will always be defined. */
 export type FieldsWithDefaultValues
   = | 'provider'

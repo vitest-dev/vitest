@@ -25,6 +25,27 @@ import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
 
+// Compiled scripts of inlined modules, shared across vm contexts: vm pools
+// evaluate every module again in each fresh context, but the compiled script
+// holds no per-context state (Vite rewrites dynamic imports to
+// `__vite_ssr_dynamic_import__`, so no per-context import callback is baked
+// in) — only its evaluation has to happen per context. Keyed by module id
+// (`mock:` ids stay distinct from their originals).
+const vmInlineScriptCache = new Map<string, vm.Script>()
+
+function getVmInlineScript(
+  id: string,
+  wrappedCode: string,
+  options: vm.ScriptOptions,
+): vm.Script {
+  let script = vmInlineScriptCache.get(id)
+  if (!script) {
+    script = new vm.Script(wrappedCode, options)
+    vmInlineScriptCache.set(id, script)
+  }
+  return script
+}
+
 export interface VitestModuleEvaluatorOptions {
   evaluatedModules?: VitestEvaluatedModules
   metaEnv?: ModuleRunnerImportMeta['env']
@@ -281,9 +302,23 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const meta = context[ssrImportMetaKey]
     meta.env = this.env
 
+    const globalNamespace = this.vm?.context || globalThis
+    // `import.meta` defines evaluated by the runtime defines script;
+    // `import.meta.env.*` entries are applied through `process.env` instead
+    const metaDefines = (globalNamespace as any).__vitest_worker__?.metaDefines
+    if (metaDefines) {
+      for (const key in metaDefines) {
+        const segments = key.split('.')
+        let target: any = meta
+        for (let i = 0; i < segments.length - 1; i++) {
+          target = target[segments[i]] || (target[segments[i]] = {})
+        }
+        target[segments[segments.length - 1]] = metaDefines[key]
+      }
+    }
+
     const testFilepath = this.options.getCurrentTestFilepath?.()
     if (testFilepath === module.file) {
-      const globalNamespace = this.vm?.context || globalThis
       Object.defineProperty(meta, 'vitest', {
         // @ts-expect-error injected untyped global
         get: () => globalNamespace.__vitest_index__,
@@ -391,7 +426,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     try {
       const initModule = this.vm
-        ? vm.runInContext(wrappedCode, this.vm.context, options)
+        ? getVmInlineScript(module.id, wrappedCode, options).runInContext(this.vm.context)
         : vm.runInThisContext(wrappedCode, options)
 
       await initModule(...argumentsValues)

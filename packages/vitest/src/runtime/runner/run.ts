@@ -24,7 +24,7 @@ import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { hasFailed, hasTests } from '../../utils/tasks'
+import { hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -165,7 +165,7 @@ async function callTestHooks(
   context.onTestFinished = onTestFinished
 }
 
-export async function callSuiteHook<T extends keyof SuiteHooks>(
+async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
   currentTask: Task,
   name: T,
@@ -523,7 +523,7 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 // throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
-export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
+function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
   eventsPacks.push([task.id, event, undefined])
   packs.set(task.id, [task.result, task.meta])
   sendTasksUpdateThrottled(runner)
@@ -582,7 +582,7 @@ function passesRetryCondition(test: Test, errors: TestError[] | undefined): bool
   return false
 }
 
-export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
+async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run' && test.mode !== 'queued') {
@@ -835,7 +835,7 @@ function markPendingTasksAsSkipped(suite: Suite, runner: VitestRunner, note?: st
   })
 }
 
-export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
+async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunSuite?.(suite)
 
   if (suite.result?.state === 'fail') {
@@ -949,7 +949,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {
-      if (!runner.config.passWithNoTests && !hasTests(suite)) {
+      if (!runner.config.passWithNoTests && !suite.containsTest) {
         suite.result.state = 'fail'
         if (!suite.result.errors?.length) {
           const error = processError(
@@ -1007,7 +1007,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
   }
 }
 
-export async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
+async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
   limitMaxConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
 
   for (const file of files) {

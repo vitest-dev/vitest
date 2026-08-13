@@ -30,6 +30,10 @@ async function runBrowserTests(
   })
 }
 
+function extractScreenshotPath(string: string): string | undefined {
+  return string.match(/- (vitest-test-.*?\.png)/)[1]
+}
+
 describe('failure screenshots', () => {
   describe('`toMatchScreenshot`', () => {
     test('usually does NOT produce a failure screenshot', async () => {
@@ -72,6 +76,10 @@ describe('failure screenshots', () => {
 
       expect(stderr).toContain('Could not capture a stable screenshot within 1ms.')
       expect(stderr).toContain('Failure screenshot:')
+
+      const screenshotPath = extractScreenshotPath(stderr)
+
+      expect(screenshotPath).toContain('.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-unstable.png')
     })
 
     test('`expect.soft` produces a failure screenshot', async () => {
@@ -95,6 +103,10 @@ describe('failure screenshots', () => {
       expect(stderr).toContain('No existing reference screenshot found; a new one was created.')
       expect(stderr).toContain('expected 1 to be 2')
       expect(stderr).toContain('Failure screenshot:')
+
+      const screenshotPath = extractScreenshotPath(stderr)
+
+      expect(screenshotPath).toContain('.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-soft-then-fail.png')
     })
   })
 })

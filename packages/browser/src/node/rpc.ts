@@ -10,6 +10,7 @@ import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -130,13 +131,15 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     )
   }
 
-  function isCdpAllowed(project: TestProject) {
+  function canExec(project: TestProject) {
     return (
       project.config.api.allowExec
       && project.vitest.config.api.allowExec
-      && project.config.api.allowWrite
-      && project.vitest.config.api.allowWrite
     )
+  }
+
+  function isCdpAllowed(project: TestProject) {
+    return canExec(project) && canWrite(project)
   }
 
   function assertCdpAllowed(project: TestProject) {
@@ -275,6 +278,19 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             return null
           }
           return fs.readFile(snapshotPath, 'utf-8')
+        },
+        async readSnapshotFileData(snapshotPath) {
+          checkFileAccess(snapshotPath)
+          if (!existsSync(snapshotPath)) {
+            return null
+          }
+          if (!canExec(project)) {
+            throw new Error(
+              `Cannot read snapshot file because browser API exec operations are disabled. See https://vitest.dev/config/api.`,
+            )
+          }
+          const content = await fs.readFile(snapshotPath, 'utf-8')
+          return evaluateSnapshotFile(snapshotPath, content)
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
@@ -481,7 +497,7 @@ function cloneByOwnProperties(value: any) {
  * Replacer function for serialization methods such as JS.stringify() or
  * flatted.stringify().
  */
-export function stringifyReplace(key: string, value: any): any {
+function stringifyReplace(key: string, value: any): any {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {

@@ -1,6 +1,6 @@
-import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/node'
+import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { trimReporterOutput } from './utils'
 
 describe('agent reporter', async () => {
@@ -18,8 +18,10 @@ describe('agent reporter', async () => {
     const output = trimReporterOutput(stdout)
     expect(output).toMatchInlineSnapshot(`
       "❯ b1.test.ts (13 tests | 1 failed) [...]ms
+         ❯ b1 failed (7)
            × b failed test [...]ms
        ❯ b2.test.ts (13 tests | 1 failed) [...]ms
+         ❯ b2 failed (7)
            × b failed test [...]ms"
     `)
 

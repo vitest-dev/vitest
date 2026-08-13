@@ -5,106 +5,6 @@ outline: deep
 
 # experimental
 
-## experimental.fsModuleCache <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecache}
-
-::: tip FEEDBACK
-Please leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9221).
-:::
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Enabling this option allows Vitest to keep cached modules on the file system, making tests run faster between reruns.
-
-You can delete the old cache by running [`vitest --clearCache`](/guide/cli#clearcache).
-
-::: warning BROWSER SUPPORT
-At the moment, this option does not affect [the browser](/guide/browser/).
-:::
-
-You can debug if your modules are cached by running vitest with a `DEBUG=vitest:cache:fs` environment variable:
-
-```shell
-DEBUG=vitest:cache:fs vitest --experimental.fsModuleCache
-```
-
-### Known Issues
-
-Vitest creates a persistent file hash based on file content, its id, Vite's environment configuration and coverage status. Vitest tries to use as much information as it has about the configuration, but it is still incomplete. At the moment, it is not possible to track your plugin options because there is no standard interface for it.
-
-If you have a plugin that relies on things outside the file content or the public configuration (like reading another file or a folder), it's possible that the cache will get stale. To work around that, you can define a [cache key generator](/api/advanced/plugin#definecachekeygenerator) to specify a dynamic option or to opt out of caching for that module:
-
-```js [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  plugins: [
-    {
-      name: 'vitest-cache',
-      configureVitest({ experimental_defineCacheKeyGenerator }) {
-        experimental_defineCacheKeyGenerator(({ id, sourceCode }) => {
-          // never cache this id
-          if (id.includes('do-not-cache')) {
-            return false
-          }
-
-          // cache this file based on the value of a dynamic variable
-          if (sourceCode.includes('myDynamicVar')) {
-            return process.env.DYNAMIC_VAR_VALUE
-          }
-        })
-      }
-    }
-  ],
-  test: {
-    experimental: {
-      fsModuleCache: true,
-    },
-  },
-})
-```
-
-If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) in your plugin if it can be registered with different options that affect the transform result.
-
-On the other hand, if your plugin should not affect the cache key, you can opt out by setting `api.vitest.experimental.ignoreFsModuleCache` to `true`:
-
-```js [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  plugins: [
-    {
-      name: 'vitest-cache',
-      api: {
-        vitest: {
-          experimental: {
-            ignoreFsModuleCache: true,
-          },
-        },
-      },
-    },
-  ],
-  test: {
-    experimental: {
-      fsModuleCache: true,
-    },
-  },
-})
-```
-
-Note that you can still define the cache key generator even if the plugin opts out of module caching.
-
-## experimental.fsModuleCachePath <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecachepath}
-
-- **Type:** `string`
-- **Default:** `'node_modules/.experimental-vitest-cache'`
-
-Directory where the file system cache is located.
-
-By default, Vitest will try to find the workspace root and store the cache inside the `node_modules` folder. The root is based on your package manager's lockfile (for example, `.package-lock.json`, `.yarn-state.yml`, `.pnpm/lock.yaml` and so on).
-
-At the moment, Vitest ignores the [test.cache.dir](/config/cache) or [cacheDir](https://vite.dev/config/shared-options#cachedir) options completely and creates a separate folder.
-
 ## experimental.openTelemetry <Version type="experimental">4.0.11</Version> {#experimental-opentelemetry}
 
 ::: tip FEEDBACK
@@ -513,3 +413,86 @@ const tags = getTags()
 test('my test', { tags }, () => {})
 ```
 :::
+
+## experimental.diagnostics <Version type="experimental">5.0.0</Version> {#experimental-diagnostics}
+
+- **Type:**
+
+```ts
+interface DiagnosticsOptions {
+  /**
+   * Hint when `isolate: true` spends a significant amount of time spawning
+   * a fresh worker (and re-creating the environment) for every test file,
+   * estimating how much `isolate: false` could save.
+   * @default true
+   */
+  isolate?: boolean
+  /**
+   * Hint when re-creating a DOM environment for every test file dominates
+   * the run and a `vm` pool would set it up once per worker.
+   * @default true
+   */
+  environment?: boolean
+  /**
+   * Hint when test files repeatedly evaluate the same module graph
+   * (typical for barrel-file imports) and `isolate: false` would
+   * evaluate it once per worker.
+   * @default true
+   */
+  import?: boolean
+  /**
+   * Hint when transforming modules dominates the run and
+   * `fsModuleCache` would persist the results across runs.
+   * @default true
+   */
+  transform?: boolean
+}
+```
+
+- **Default:** `true`
+
+Print performance hints after the run when the collected timings show that a configuration change would make the run significantly faster:
+
+```
+Environment  jsdom was created 40 times · 23.80s total, 79% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+```
+
+Hints never suggest changing an option that was set explicitly: if the config defines `pool`, other pools are not suggested, and an explicitly configured `isolate` is never suggested to be disabled. Hints are also printed in CI. Set the option to `false` to disable all hints, or disable them individually.
+
+To measure the impact of a configuration change instead of estimating it, run [`vitest doctor`](/guide/cli#vitest-doctor).
+
+### experimental.diagnostics.isolate {#experimental-diagnostics-isolate}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Hint when `isolate: true` spends a significant amount of time spawning a fresh worker (and re-creating the environment) for every test file, estimating how much `isolate: false` could save. Reused workers also keep evaluated modules alive, so files stop re-evaluating the module graph they share. Per-module evaluation times are only collected when [`experimental.importDurations`](#experimental-importdurations) is enabled; without it the estimate counts the worker startups alone and is reported as a lower bound ("at least").
+
+### experimental.diagnostics.environment {#experimental-diagnostics-environment}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Hint when re-creating a DOM environment for every test file dominates the run and a `vm` pool would set it up once per worker.
+
+### experimental.diagnostics.import {#experimental-diagnostics-import}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Hint when test files repeatedly evaluate the same module graph and `isolate: false` would evaluate it once per worker. This is typical for barrel-file imports: every test file imports a few symbols through an index file and evaluates the whole graph behind it. The duplication is measured from how often each module was served to the workers, so suites whose test files import mostly disjoint modules stay quiet: reusing workers would not reduce their import work.
+
+```
+Import  837 modules were evaluated 16740 times · 15.69s total, 64% of tracked time
+        ~850ms faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+        learn more: https://vitest.dev/guide/improving-performance#test-isolation
+```
+
+### experimental.diagnostics.transform {#experimental-diagnostics-transform}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Hint when transforming modules dominates the run. Without a persistent cache every `vitest run` transforms the whole module graph from scratch; [`fsModuleCache`](/config/fsmodulecache) stores the results on disk so repeated runs skip them. The hint estimates the time the next run would save. On CI the hint includes a note that the cache directory must be persisted between runs for the cache to take effect.

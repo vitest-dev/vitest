@@ -10,12 +10,12 @@ const {
 interface CustomMatchers<R = unknown> {
   toMatchCustomSnapshot: (properties?: object) => R
   toMatchCustomInlineSnapshot: (snapshot?: string) => R
-  toMatchCustomFileSnapshot: (filepath: string) => Promise<R>
-  toMatchCustomAsyncInlineSnapshot: (snapshot?: string) => Promise<R>
+  toMatchCustomFileSnapshot: (filepath: string) => Promise<void>
+  toMatchCustomAsyncInlineSnapshot: (snapshot?: string) => Promise<void>
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface Matchers<R> extends CustomMatchers<R> {}
 }
 
 function formatCustom(input: string) {

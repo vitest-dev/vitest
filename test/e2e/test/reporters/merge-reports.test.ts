@@ -1,17 +1,17 @@
-import type { RunVitestConfig } from '#test-utils'
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
-import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
+import type { RunVitestConfig } from '#test-utils'
+import type { MergeReport } from '../../../../packages/vitest/src/node/reporters/blob.js'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
-import { getModuleGraph } from 'vitest/src/utils/graph.js'
+import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
+import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -108,12 +108,13 @@ test('merge reports', async () => {
 
      ❯ second.test.ts (3 tests | 1 failed) <time>
        × test 2-1 <time>
+       ✓ group (2)
          ✓ test 2-2 <time>
          ✓ test 2-3 <time>
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
 
@@ -263,9 +264,11 @@ test('total and merged execution times are shown', async () => {
       '',
     )
     file.tasks.push(createTest('some test', file))
+    file.collectDuration = 2000 * index
+    file.collectFetchDuration = 2000 * index
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}, 2000 * index],
+      [version, [file], [], undefined, 1500 * index, {}],
       resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
     )
   }
@@ -279,7 +282,7 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('✓ first.test.ts (1 test)')
   expect(stdout).toContain('✓ second.test.ts (1 test)')
 
-  expect(stdout).toContain('Duration  4.50s (transform 6.00s')
+  expect(stdout).toContain('Duration  4.50s (transform 100%')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
@@ -390,11 +393,14 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/basic.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/sub/format.ts",
               "<root>/util.ts"
             ]
           },
-          "externalized": [],
+          "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>"
+          ],
           "inlined": [
             "<root>/basic.test.ts",
             "<root>/sub/format.ts",
@@ -409,11 +415,13 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/second.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/util.ts",
               "<optimized-deps>/obug.js"
             ]
           },
           "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>",
             "<optimized-deps>/obug.js?v=<hash>"
           ],
           "inlined": [
@@ -521,6 +529,7 @@ async function getSerializedModuleGraph(ctx: Vitest) {
 
 function trimReporterOutput(report: string) {
   const rows = report
+    .replace(/(?:[a-z]+ \d+%(?:, )?)+/g, '<breakdown>')
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(/blob report written to (.*)/g, 'blob report written to <path>')
@@ -618,7 +627,7 @@ test("macos only", () => {})
 
      Test Files  1 failed | 1 passed (2)
           Tests  1 failed | 3 passed (4)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
 
     blob report written to <path>"
   `)
@@ -686,7 +695,7 @@ test("macos only", () => {})
 
      Test Files  2 failed | 2 passed (4)
           Tests  2 failed | 6 passed (8)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -886,7 +895,7 @@ test("works on browser", () => {
 
      Test Files  4 failed (4)
           Tests  4 failed | 8 passed (12)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -912,11 +921,11 @@ test("works on browser", () => {
     Expected: "undefined"
     Received: "object"
 
-     ❯ basic.test.ts:7:24
+     ❯ basic.test.ts:7:25
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
-           |                        ^
+           |                         ^
           8| })
           9|
 
@@ -928,11 +937,11 @@ test("works on browser", () => {
     Expected: "undefined"
     Received: "object"
 
-     ❯ basic.test.ts:7:24
+     ❯ basic.test.ts:7:25
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
-           |                        ^
+           |                         ^
           8| })
           9|
 

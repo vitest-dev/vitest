@@ -576,6 +576,8 @@ function generateFileId(file: string) {
   )
 }
 
+let currentViewport: { width: number; height: number } | undefined
+
 async function setIframeViewport(
   width: number,
   height: number,
@@ -589,12 +591,26 @@ async function setIframeViewport(
     document.body.style.setProperty('--viewport-width', `${width}px`)
     document.body.style.setProperty('--viewport-height', `${height}px`)
 
+    // playwright emulates the viewport per page, so it keeps its size
+    // between test files and the command round trip is only needed when
+    // the size actually changes; other providers resize the window, which
+    // outside code can move under us, so they always re-pin
+    const cacheable = getBrowserState().provider === 'playwright'
+    if (
+      cacheable
+      && currentViewport?.width === width
+      && currentViewport?.height === height
+    ) {
+      return
+    }
+
     await client.rpc.triggerCommand(
       getBrowserState().sessionId,
       '__vitest_viewport',
       undefined,
       [{ width, height }],
     )
+    currentViewport = cacheable ? { width, height } : undefined
   }
 }
 
