@@ -66,7 +66,7 @@ export declare class VMSyntheticModule extends VMModule {
   setExport(name: string, value: any): void
 }
 
-export declare interface ImportModuleDynamically {
+declare interface ImportModuleDynamically {
   (specifier: string, script: VMModule, importAssertions: object):
     | VMModule
     | Promise<VMModule>

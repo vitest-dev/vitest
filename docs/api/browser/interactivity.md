@@ -281,7 +281,14 @@ function keyboard(text: string): Promise<void>
 
 The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input has a focus, it will type characters into that input. Otherwise, it will trigger keyboard events on the currently focused element (`document.body` if there are no focused elements).
 
-This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard). Common special keys that can be referenced inside the braces include:
+
+- **Modifiers:** `{Shift}`, `{Control}`, `{Alt}`, `{Meta}`
+- **Navigation:** `{ArrowUp}`, `{ArrowDown}`, `{ArrowLeft}`, `{ArrowRight}`, `{Home}`, `{End}`, `{PageUp}`, `{PageDown}`
+- **Editing:** `{Backspace}`, `{Delete}`, `{Insert}`, `{Tab}`, `{Enter}`, `{Escape}`
+- **Function keys:** `{F1}` through `{F12}`
+
+Note: The exact set of supported keys may vary depending on the underlying browser provider (Playwright vs WebdriverIO). If a key press doesn't trigger the expected behavior, consult your provider's documentation or file an issue.
 
 ```ts
 import { userEvent } from 'vitest/browser'

@@ -267,6 +267,7 @@ describe('API', () => {
   })
 })
 
+// verify artifacts don't affect reporter output
 describe('reporters', () => {
   test('tap', async () => {
     const { stdout } = await runInlineTests(
@@ -368,7 +369,7 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
         .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
@@ -401,7 +402,7 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
         .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')

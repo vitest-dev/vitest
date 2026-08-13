@@ -87,18 +87,6 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
 
   setupEnv(config.env, context.metaEnv)
 
-  // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
-  if (context.config.serializedDefines) {
-    try {
-      runInThisContext(`(() =>{\n${context.config.serializedDefines}})()`, {
-        lineOffset: 1,
-        filename: 'virtual:load-defines.js',
-      })
-    }
-    catch (error: any) {
-      throw new Error(`Failed to load custom "defines": ${error.message}`)
-    }
-  }
   const otel = context.traces
 
   const { environment, loader } = await loadEnvironment(
@@ -145,6 +133,19 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
   state.moduleExecutionInfo = moduleExecutionInfo
 
   provideWorkerState(globalThis, state)
+
+  // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
+  if (state.config.serializedDefines) {
+    try {
+      runInThisContext(`(() =>{\n${state.config.serializedDefines}})()`, {
+        lineOffset: 1,
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((filepath) => {

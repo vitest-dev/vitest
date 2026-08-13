@@ -1,19 +1,20 @@
 import type {
   InlineConfig,
   ResolvedConfig as ResolvedViteConfig,
+  Plugin as VitePlugin,
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { Logger } from '../logger'
-import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   ApiConfig,
+  ConfigResolutionCaptures,
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { deepMerge, slash, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -28,10 +29,9 @@ import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
-import { CliOverride } from '../plugins/cliOverride'
-import { VitestConfig } from '../plugins/config'
+import { ViteConfigPlugin } from '../plugins/config'
 import { VitestCorePlugin } from '../plugins/index'
-import { VitestConfigServer } from '../plugins/server'
+import { TestConfigPlugin } from '../plugins/testConfig'
 import { resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
@@ -175,7 +175,7 @@ function resolveInlineWorkerOption(value: string | number): number {
  * the raw user config sources BEFORE `configDefaults` is merged in - the
  * merged object cannot distinguish a default from a user-provided value.
  */
-export function captureProvidedOptions(
+function captureProvidedOptions(
   ...sources: (UserConfig | undefined)[]
 ): ResolvedConfig['providedOptions'] {
   return {
@@ -997,6 +997,7 @@ export function resolveTestConfig(
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
   resolved.experimental ??= {} as any
+  resolved.sharedViteServer ??= true
   if (resolved.experimental.openTelemetry?.sdkPath) {
     const sdkPath = resolve(
       resolved.root,
@@ -1065,6 +1066,40 @@ export function resolveTestConfig(
   return resolved
 }
 
+/**
+ * Captures `config.test` before any Vitest plugin modifies it. Inline projects
+ * that share this config's Vite server resolve against the captured value
+ * instead of re-executing the config file (`sharedViteServer`).
+ *
+ * Must be the first inline plugin. The consumer must clear
+ * `captures.rawTestConfig` after storing it because the server retains the plugin.
+ */
+export function CaptureRawTestConfig(captures: ConfigResolutionCaptures, capture: boolean | undefined): VitePlugin {
+  return {
+    name: 'vitest:capture-raw-test-config',
+    enforce: 'pre',
+    config: {
+      order: 'pre',
+      handler(config) {
+        if (!(capture ?? config.test?.sharedViteServer ?? true)) {
+          return
+        }
+        const { projects, ...test } = (config.test ?? {}) as UserConfig
+        // the captured config is only read when this config's inline
+        // projects are resolved; without `projects` there is nothing to
+        // read it (`injectTestProjects` then resolves through Vite instead)
+        if (projects === undefined) {
+          return
+        }
+        // cloned so mutations from later hooks and from the test-config
+        // resolution never reach the captured value; `projects` is left out
+        // because it is never inherited and can be the largest part of the config
+        captures.rawTestConfig = deepClone(test) as UserConfig
+      },
+    },
+  }
+}
+
 function resolveConfigPath(root: string, options: UserConfig) {
   if (options.config === false) {
     return false
@@ -1081,25 +1116,27 @@ export async function resolveConfig(
   pluginsHarness: PluginHarness = new PluginHarness(),
 ): Promise<ResolvedViteConfig> {
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
-  const cliOptionsCopy = deepMerge({}, options)
-  const viteOverridesCopy = deepMerge({}, viteOverrides)
+  const cliOptionsCopy = deepMerge({}, options) as UserConfig
+  const viteOverridesCopy = deepMerge({}, viteOverrides) as ViteUserConfig
   const root = resolve(options.root || process.cwd())
   const configPath = resolveConfigPath(root, options)
   options.config = configPath
   options.root = root
 
-  const rootBrowserHolder: BrowserContributionHolder = {}
+  const captures: ConfigResolutionCaptures = {}
   const inlineConfig: InlineConfig = mergeConfig(
     {
       configFile: configPath,
       configLoader: options.configLoader,
       mode: options.mode || 'test',
       plugins: [
-        CliOverride(cliOptionsCopy),
-        ...VitestConfigServer(pluginsHarness),
-        ...VitestConfig(pluginsHarness),
+        // the capture hook runs before `vitest:config:cli`, so `--sharedViteServer`
+        // has to be passed directly instead of being read from `config.test`
+        CaptureRawTestConfig(captures, cliOptionsCopy.sharedViteServer),
+        ...TestConfigPlugin(pluginsHarness, captures, cliOptionsCopy),
+        ...ViteConfigPlugin(pluginsHarness),
         ...VitestCorePlugin(pluginsHarness, options),
-        ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
+        ...BrowserLoaderPlugin(captures, pluginsHarness),
       ],
     } satisfies InlineConfig,
     mergeConfig(viteOverrides, { root }),
@@ -1152,7 +1189,25 @@ export async function resolveConfig(
 
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
-  rootConfig._browserContribution = rootBrowserHolder.contribution
+  rootConfig._browserContribution = captures.browserContribution
+  // projects never inherit `tagsFilter` and `browser` from the programmatic
+  // config (see `inheritRootViteOverrides`), so remove them from the base too
+  if (captures.rawTestConfig) {
+    const overridesTest = (viteOverridesCopy as ViteUserConfig).test as UserConfig | undefined
+    if (overridesTest?.tagsFilter !== undefined) {
+      delete captures.rawTestConfig.tagsFilter
+    }
+    if (overridesTest?.browser !== undefined) {
+      delete captures.rawTestConfig.browser
+    }
+  }
+  // the root keeps the config for the whole session so `injectTestProjects`
+  // can resolve shared-server projects at any point
+  rootConfig._rawTestConfig = captures.rawTestConfig
+  rootConfig._moduleRunnerOptions = captures.moduleRunnerOptions
+  // `captures` lives as long as the server that keeps its plugins,
+  // so it should not hold onto the config
+  captures.rawTestConfig = undefined
 
   rootConfig.resolvedProjects = await resolveProjectEntries(
     pluginsHarness,

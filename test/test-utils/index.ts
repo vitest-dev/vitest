@@ -319,8 +319,9 @@ export async function runVitest(
         ? buildErrorProjectTree(modules, options)
         : buildErrorTree(modules, options)
       const errors = ctx?.state.getUnhandledErrors()
-      if (errors && errors.length > 0) {
-        tree.__unhandled_errors__ = errors.map((e: any) => e.message)
+      const root = ctx?.config.root
+      if (errors && errors.length > 0 && root) {
+        tree.__unhandled_errors__ = errors.map((e: any) => replaceRoot(e.message, root))
       }
       return tree
     },
