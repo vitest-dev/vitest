@@ -624,6 +624,39 @@ test('stacked aroundEach stores and a fixture store all accumulate', async () =>
   `)
 })
 
+test('an aroundEach store overrides a fixture store on the same storage', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'override.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { aroundEach, test as base } from 'vitest'
+
+      const als = new AsyncLocalStorage()
+
+      const test = base.extend({
+        store: [
+          async ({}, use) => als.run('from-fixture', () => use('store')),
+          { auto: true },
+        ],
+      })
+
+      aroundEach(async (runTest) => {
+        console.log('>> aroundEach sees: ' + als.getStore())
+        await als.run('from-around', runTest)
+      })
+
+      test('test 1', () => {
+        console.log('>> test: ' + als.getStore())
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundEach sees: from-fixture
+    >> test: from-around"
+  `)
+})
+
 test('fixture snapshots do not preserve stores opened by a custom runTask', async () => {
   const { errorTree } = await runInlineTests({
     'vitest.config.ts': `
