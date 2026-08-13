@@ -23,8 +23,6 @@ export function extractSourcemapFromFile(
     return map ? { map } : undefined
   }
   catch {
-    // convertSourceMap can match a comment inside a string literal.
-    // fallback to no source map to avoid errors.
     return undefined
   }
 }
