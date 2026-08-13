@@ -4,7 +4,6 @@ import type {
   RunnerTaskEventPack,
   RunnerTaskResultPack,
   RunnerTestFile,
-  SerializedRootConfig,
   TestAnnotation,
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
@@ -16,11 +15,12 @@ import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
-import { testRunState, unhandledErrors } from './state'
+import { availableProjects, config, testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
 
 export { isReport } from '../../constants'
+export { availableProjects, config } from './state'
 
 export const client: VitestClient = (function createVitestClient() {
   if (isReport) {
@@ -66,9 +66,15 @@ export const client: VitestClient = (function createVitestClient() {
   }
 })()
 
-export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
+explorerTree.connect({
+  getTask: id => client.state.idMap.get(id),
+  getFile: id => client.state.idMap.get(id) as RunnerTestFile | undefined,
+  getFiles: () => client.state.getFiles(),
+  getSlowTestThreshold: () => config.value.slowTestThreshold,
+  setRunState: state => testRunState.value = state,
+})
+
 const status = ref<WebSocketStatus>('CONNECTING')
-export const availableProjects = shallowRef<string[]>([])
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value

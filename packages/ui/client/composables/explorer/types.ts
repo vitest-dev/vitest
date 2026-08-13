@@ -1,4 +1,5 @@
-import type { RunMode, RunnerTask as Task, TaskState } from 'vitest'
+import type { RunnerTestFile as File, RunMode, RunnerTask as Task, TaskState } from 'vitest'
+import type { RunState } from '../../../types'
 
 export type FilterResult = [match: boolean, node: UITaskTreeNode]
 
@@ -34,6 +35,20 @@ export interface RootTreeNode extends TaskTreeNode {
 export interface ExplorerTreeStructure {
   root: RootTreeNode
   nodes: Map<string, UITaskTreeNode>
+}
+
+export interface ExplorerDataSource {
+  getTask: (id: string) => Task | undefined
+  getFile: (id: string) => File | undefined
+  getFiles: () => File[]
+  getSlowTestThreshold: () => number | undefined
+  setRunState: (state: RunState) => void
+}
+
+export interface ExplorerOperationContext extends ExplorerTreeStructure {
+  colors: Map<string, string | undefined>
+  pendingTasks: Map<string, Set<string>>
+  dataSource: ExplorerDataSource
 }
 
 export type TaskTreeNodeType = 'file' | 'suite' | 'test'

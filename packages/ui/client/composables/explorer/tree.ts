@@ -1,6 +1,8 @@
 import type { RunnerTestFile as File, RunnerTask, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
 import type {
   CollectorInfo,
+  ExplorerDataSource,
+  ExplorerOperationContext,
   FilteredTests,
   RootTreeNode,
   UITaskTreeNode,
@@ -24,44 +26,67 @@ export class ExplorerTree {
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   private startTime: number = 0
   public executionTime: number = 0
+  public projects: string[] = []
+  public colors = new Map<string, string | undefined>()
+  private onTaskUpdateCalled: boolean = false
+  private root = <RootTreeNode>{
+    id: 'vitest-root-node',
+    expandable: true,
+    expanded: true,
+    tasks: [],
+  }
+
+  private pendingTasks = new Map<string, Set<string>>()
+  private nodes = new Map<string, UITaskTreeNode>()
+  public summary = reactive<CollectorInfo>({
+    files: 0,
+    time: '',
+    filesFailed: 0,
+    filesSuccess: 0,
+    filesIgnore: 0,
+    filesRunning: 0,
+    filesSkipped: 0,
+    filesSnapshotFailed: 0,
+    filesTodo: 0,
+    testsFailed: 0,
+    testsSuccess: 0,
+    testsIgnore: 0,
+    testsSkipped: 0,
+    testsTodo: 0,
+    testsExpectedFail: 0,
+    testsSlow: 0,
+    totalTests: 0,
+    failedSnapshot: false,
+    failedSnapshotEnabled: false,
+  })
+
   constructor(
-    public projects: string[] = [],
-    public colors = new Map<string, string | undefined>(),
-    private onTaskUpdateCalled: boolean = false,
+    private dataSource?: ExplorerDataSource,
     private resumeEndTimeout = 500,
-    public root = <RootTreeNode>{
-      id: 'vitest-root-node',
-      expandable: true,
-      expanded: true,
-      tasks: [],
-    },
-    public pendingTasks = new Map<string, Set<string>>(),
-    public nodes = new Map<string, UITaskTreeNode>(),
-    public summary = reactive<CollectorInfo>({
-      files: 0,
-      time: '',
-      filesFailed: 0,
-      filesSuccess: 0,
-      filesIgnore: 0,
-      filesRunning: 0,
-      filesSkipped: 0,
-      filesSnapshotFailed: 0,
-      filesTodo: 0,
-      testsFailed: 0,
-      testsSuccess: 0,
-      testsIgnore: 0,
-      testsSkipped: 0,
-      testsTodo: 0,
-      testsExpectedFail: 0,
-      testsSlow: 0,
-      totalTests: 0,
-      failedSnapshot: false,
-      failedSnapshotEnabled: false,
-    }),
   ) {
     // will run runCollect every ~100ms: 1000/10 = 100ms
     // (beware increasing fpsLimit, it can be too much for the browser)
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
+  }
+
+  connect(dataSource: ExplorerDataSource) {
+    if (this.dataSource) {
+      throw new Error('ExplorerTree data source is already configured')
+    }
+    this.dataSource = dataSource
+  }
+
+  private getContext(): ExplorerOperationContext {
+    if (!this.dataSource) {
+      throw new Error('ExplorerTree data source is not configured')
+    }
+    return {
+      root: this.root,
+      nodes: this.nodes,
+      colors: this.colors,
+      pendingTasks: this.pendingTasks,
+      dataSource: this.dataSource,
+    }
   }
 
   loadFiles(remoteFiles: File[], projects: { name: string; color?: string }[]) {
@@ -69,8 +94,7 @@ export class ExplorerTree {
     this.colors = new Map(projects.map(p => [p.name, p.color]))
 
     runLoadFiles(
-      this,
-      this.colors,
+      this.getContext(),
       remoteFiles,
       true,
       searchMatcher.value.matcher,
@@ -85,6 +109,7 @@ export class ExplorerTree {
   }
 
   startRun() {
+    this.getContext()
     this.startTime = performance.now()
     this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
@@ -135,7 +160,7 @@ export class ExplorerTree {
   }
 
   recordTestArtifact(testId: string, artifact: TestArtifact) {
-    recordTestArtifact(this.pendingTasks, testId, artifact)
+    recordTestArtifact(this.getContext(), testId, artifact)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
@@ -145,7 +170,7 @@ export class ExplorerTree {
   }
 
   resumeRun(packs: TaskResultPack[], _events: RunnerTaskEventPack[]) {
-    preparePendingTasks(this.pendingTasks, packs)
+    preparePendingTasks(this.getContext(), packs)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
@@ -166,12 +191,11 @@ export class ExplorerTree {
   }
 
   private collect(start: boolean, end: boolean, task = true) {
+    const context = this.getContext()
     if (task) {
       queueMicrotask(() => {
         runCollect(
-          this,
-          this.colors,
-          this.pendingTasks,
+          context,
           start,
           end,
           this.summary,
@@ -189,9 +213,7 @@ export class ExplorerTree {
     }
     else {
       runCollect(
-        this,
-        this.colors,
-        this.pendingTasks,
+        context,
         start,
         end,
         this.summary,
@@ -214,7 +236,7 @@ export class ExplorerTree {
     tests: File[],
     filesSummary: FilteredTests,
   ) {
-    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, searchMatcher.value.matcher, {
+    return collectTestsTotalData(this.getContext(), filtered, onlyTests, tests, filesSummary, searchMatcher.value.matcher, {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
@@ -224,14 +246,16 @@ export class ExplorerTree {
   }
 
   collapseNode(id: string) {
+    const context = this.getContext()
     queueMicrotask(() => {
-      runCollapseNode(this, id)
+      runCollapseNode(context, id)
     })
   }
 
   expandNode(id: string) {
+    const context = this.getContext()
     queueMicrotask(() => {
-      runExpandNode(this, id, searchMatcher.value.matcher, {
+      runExpandNode(context, id, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -242,14 +266,16 @@ export class ExplorerTree {
   }
 
   collapseAllNodes() {
+    const context = this.getContext()
     queueMicrotask(() => {
-      runCollapseAllTask(this)
+      runCollapseAllTask(context)
     })
   }
 
   expandAllNodes() {
+    const context = this.getContext()
     queueMicrotask(() => {
-      runExpandAll(this, searchMatcher.value.matcher, {
+      runExpandAll(context, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -260,8 +286,9 @@ export class ExplorerTree {
   }
 
   filterNodes() {
+    const context = this.getContext()
     queueMicrotask(() => {
-      runFilter(this, searchMatcher.value.matcher, {
+      runFilter(context, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,

@@ -1,9 +1,7 @@
 import type { Arrayable } from '@vitest/utils'
 import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
-import type { CollectFilteredTests, CollectorInfo, ExplorerTreeStructure, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
+import type { CollectFilteredTests, CollectorInfo, ExplorerOperationContext, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
 import { toArray } from '@vitest/utils/helpers'
-import { client, findById } from '~/composables/client'
-import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
 import {
@@ -26,8 +24,7 @@ import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
 export { hasFailedSnapshot }
 
 export function runLoadFiles(
-  tree: ExplorerTreeStructure,
-  colors: Map<string, string | undefined>,
+  context: ExplorerOperationContext,
   remoteFiles: File[],
   collect: boolean,
   search: SearchMatcher,
@@ -35,10 +32,10 @@ export function runLoadFiles(
 ) {
   remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, f]) => createOrUpdateFileNode(tree, colors, f, collect))
+    .map(([, f]) => createOrUpdateFileNode(context, f, collect))
 
-  uiFiles.value = [...tree.root.tasks]
-  runFilter(tree, search, {
+  uiFiles.value = [...context.root.tasks]
+  runFilter(context, search, {
     failed: filter.failed,
     success: filter.success,
     skipped: filter.skipped,
@@ -47,18 +44,17 @@ export function runLoadFiles(
   })
 }
 
-export function preparePendingTasks(pendingTasks: Map<string, Set<string>>, packs: TaskResultPack[]) {
+export function preparePendingTasks(context: ExplorerOperationContext, packs: TaskResultPack[]) {
   queueMicrotask(() => {
-    const idMap = client.state.idMap
     for (const pack of packs) {
       const result = pack[1]
       if (result) {
-        const task = idMap.get(pack[0])
+        const task = context.dataSource.getTask(pack[0])
         if (task) {
-          let file = pendingTasks.get(task.file.id)
+          let file = context.pendingTasks.get(task.file.id)
           if (!file) {
             file = new Set()
-            pendingTasks.set(task.file.id, file)
+            context.pendingTasks.set(task.file.id, file)
           }
           file.add(task.id)
         }
@@ -68,17 +64,16 @@ export function preparePendingTasks(pendingTasks: Map<string, Set<string>>, pack
 }
 
 export function recordTestArtifact(
-  pendingTasks: Map<string, Set<string>>,
+  context: ExplorerOperationContext,
   id: string,
   artifact: TestArtifact,
 ) {
-  const idMap = client.state.idMap
-  const test = idMap.get(id)
+  const test = context.dataSource.getTask(id)
   if (test?.type === 'test') {
-    let file = pendingTasks.get(test.file.id)
+    let file = context.pendingTasks.get(test.file.id)
     if (!file) {
       file = new Set()
-      pendingTasks.set(test.file.id, file)
+      context.pendingTasks.set(test.file.id, file)
     }
     file.add(test.id)
 
@@ -92,9 +87,7 @@ export function recordTestArtifact(
 }
 
 export function runCollect(
-  tree: ExplorerTreeStructure,
-  colors: Map<string, string | undefined>,
-  pendingTasks: Map<string, Set<string>>,
+  context: ExplorerOperationContext,
   start: boolean,
   end: boolean,
   summary: CollectorInfo,
@@ -109,28 +102,28 @@ export function runCollect(
   const collect = !start
   queueMicrotask(() => {
     if (end) {
-      traverseFiles(tree, colors, collect)
+      traverseFiles(context, collect)
     }
     else {
-      traverseReceivedFiles(tree, colors, pendingTasks, collect)
+      traverseReceivedFiles(context, collect)
     }
   })
 
   queueMicrotask(() => {
-    collectData(tree, summary, executionTime)
+    collectData(context, summary, executionTime)
   })
 
   queueMicrotask(() => {
     if (end) {
       summary.failedSnapshot = uiFiles.value && hasFailedSnapshot(
-        uiFiles.value.map(f => findById(f.id)!),
+        uiFiles.value.map(f => context.dataSource.getFile(f.id)!),
       )
       summary.failedSnapshotEnabled = true
     }
   })
 
   queueMicrotask(() => {
-    doRunFilter(tree, search, filter, end)
+    doRunFilter(context, search, filter, end)
   })
 }
 
@@ -138,14 +131,13 @@ function* collectRunningTodoTests() {
   yield* uiEntries.value.filter(isRunningTestNode)
 }
 
-function updateRunningTodoTests() {
-  const idMap = client.state.idMap
+function updateRunningTodoTests(context: ExplorerOperationContext) {
   let task: Task | undefined
   for (const test of collectRunningTodoTests()) {
     // lookup the parent
-    task = idMap.get(test.parentId)
+    task = context.dataSource.getTask(test.parentId)
     if (task && isSuite(task) && task.mode === 'todo') {
-      task = idMap.get(test.id)
+      task = context.dataSource.getTask(test.id)
       if (task) {
         task.mode = 'todo'
       }
@@ -153,68 +145,65 @@ function updateRunningTodoTests() {
   }
 }
 
-function traverseFiles(tree: ExplorerTreeStructure, colors: Map<string, string | undefined>, collect: boolean) {
+function traverseFiles(context: ExplorerOperationContext, collect: boolean) {
   // add missing files: now we have only files with running tests on the initial ws open event
-  const files = client.state.getFiles()
-  const currentFiles = tree.nodes
+  const files = context.dataSource.getFiles()
+  const currentFiles = context.nodes
   const missingFiles = files.filter(f => !currentFiles.has(f.id))
   for (let i = 0; i < missingFiles.length; i++) {
-    createOrUpdateFileNode(tree, colors, missingFiles[i], collect)
-    createOrUpdateEntry(tree, missingFiles[i].tasks)
+    createOrUpdateFileNode(context, missingFiles[i], collect)
+    createOrUpdateEntry(context, missingFiles[i].tasks)
   }
 
   // update pending tasks
-  const rootTasks = tree.root.tasks
+  const rootTasks = context.root.tasks
   // collect remote children
   for (let i = 0; i < rootTasks.length; i++) {
     const fileNode = rootTasks[i]
-    const file = findById(fileNode.id)
+    const file = context.dataSource.getFile(fileNode.id)
     if (!file) {
       continue
     }
 
-    createOrUpdateFileNode(tree, colors, file, collect)
+    createOrUpdateFileNode(context, file, collect)
     const tasks = file.tasks
     if (!tasks?.length) {
       continue
     }
 
-    createOrUpdateEntry(tree, file.tasks)
+    createOrUpdateEntry(context, file.tasks)
   }
 }
 
 function traverseReceivedFiles(
-  tree: ExplorerTreeStructure,
-  colors: Map<string, string | undefined>,
-  pendingTasks: Map<string, Set<string>>,
+  context: ExplorerOperationContext,
   collect: boolean,
 ) {
-  const updatedFiles = new Map(pendingTasks.entries())
-  pendingTasks.clear()
+  const updatedFiles = new Map(context.pendingTasks.entries())
+  context.pendingTasks.clear()
 
   // add missing files: now we have only files with running tests on the initial ws open event
-  const currentFiles = tree.nodes
+  const currentFiles = context.nodes
   const missingFiles = Array
     .from(updatedFiles.keys())
     .filter(id => !currentFiles.has(id))
-    .map(id => findById(id))
+    .map(id => context.dataSource.getFile(id))
     .filter(Boolean) as File[]
 
   let newFile: File
   for (let i = 0; i < missingFiles.length; i++) {
     newFile = missingFiles[i]
-    createOrUpdateFileNode(tree, colors, newFile, false)
-    createOrUpdateEntry(tree, newFile.tasks)
+    createOrUpdateFileNode(context, newFile, false)
+    createOrUpdateEntry(context, newFile.tasks)
     // remove the file from the updated files
     updatedFiles.delete(newFile.id)
   }
 
   // collect remote children
-  const idMap = client.state.idMap
-  const rootTasks = tree.root.tasks
+  const rootTasks = context.root.tasks
   for (let i = 0; i < rootTasks.length; i++) {
     const fileNode = rootTasks[i]
-    const file = findById(fileNode.id)
+    const file = context.dataSource.getFile(fileNode.id)
     if (!file) {
       continue
     }
@@ -222,13 +211,13 @@ function traverseReceivedFiles(
     if (!entries) {
       continue
     }
-    createOrUpdateFileNode(tree, colors, file, collect)
-    createOrUpdateEntry(tree, Array.from(entries, id => idMap.get(id)).filter(Boolean) as Task[])
+    createOrUpdateFileNode(context, file, collect)
+    createOrUpdateEntry(context, Array.from(entries, id => context.dataSource.getTask(id)).filter(Boolean) as Task[])
   }
 }
 
 function doRunFilter(
-  tree: ExplorerTreeStructure,
+  context: ExplorerOperationContext,
   search: SearchMatcher,
   filter: Filter,
   end = false,
@@ -240,7 +229,7 @@ function doRunFilter(
 
   // refresh explorer
   queueMicrotask(() => {
-    refreshExplorer(tree, search, filter, end)
+    refreshExplorer(context, search, filter, end)
   })
 
   // initialize the explorer
@@ -262,29 +251,29 @@ function doRunFilter(
     })
     // refresh explorer
     queueMicrotask(() => {
-      refreshExplorer(tree, search, filter, end)
+      refreshExplorer(context, search, filter, end)
     })
   }
 }
 
-function refreshExplorer(tree: ExplorerTreeStructure, search: SearchMatcher, filter: Filter, end: boolean) {
-  runFilter(tree, search, filter)
+function refreshExplorer(context: ExplorerOperationContext, search: SearchMatcher, filter: Filter, end: boolean) {
+  runFilter(context, search, filter)
   // update only at the end
   if (end) {
-    updateRunningTodoTests()
-    testRunState.value = 'idle'
+    updateRunningTodoTests(context)
+    context.dataSource.setRunState('idle')
   }
 }
 
-function createOrUpdateEntry(tree: ExplorerTreeStructure, tasks: Task[]) {
+function createOrUpdateEntry(context: ExplorerOperationContext, tasks: Task[]) {
   let task: Task
   for (let i = 0; i < tasks.length; i++) {
     task = tasks[i]
     if (isSuite(task)) {
-      createOrUpdateSuiteTask(tree, task.id, true)
+      createOrUpdateSuiteTask(context, task.id, true)
     }
     else {
-      createOrUpdateNodeTask(tree, task.id)
+      createOrUpdateNodeTask(context, task.id)
     }
   }
 }
@@ -310,13 +299,12 @@ function resetCollectorInfo(summary: CollectorInfo) {
 }
 
 function collectData(
-  tree: ExplorerTreeStructure,
+  context: ExplorerOperationContext,
   summary: CollectorInfo,
   time: number,
 ) {
-  const idMap = client.state.idMap
-  const filesMap = new Map(tree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
-  const useFiles = Array.from(filesMap.values(), file => [file.id, findById(file.id)] as const)
+  const filesMap = new Map(context.root.tasks.filter(f => context.dataSource.getFile(f.id)).map(f => [f.id, f]))
+  const useFiles = Array.from(filesMap.values(), file => [file.id, context.dataSource.getFile(file.id)] as const)
   const data = {
     files: filesMap.size,
     time: time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`,
@@ -370,7 +358,7 @@ function collectData(
       todo,
       expectedFail,
       slow,
-    } = collectTests(f)
+    } = collectTests(context, f)
 
     data.totalTests += total
     data.testsFailed += failed
@@ -400,7 +388,7 @@ function collectData(
   summary.totalTests = data.totalTests
 }
 
-function collectTests(file: File, search: SearchMatcher = () => true, filter?: Filter) {
+function collectTests(context: ExplorerOperationContext, file: File, search: SearchMatcher = () => true, filter?: Filter) {
   const data = {
     failed: 0,
     success: 0,
@@ -414,9 +402,9 @@ function collectTests(file: File, search: SearchMatcher = () => true, filter?: F
   } satisfies CollectFilteredTests
 
   for (const t of testsCollector(file)) {
-    if (!filter || testMatcher(t, search, filter)) {
+    if (!filter || testMatcher(context, t, search, filter)) {
       data.total++
-      if (isSlowTestTask(t)) {
+      if (isSlowTestTask(context, t)) {
         data.slow++
       }
       if (t.result?.state === 'fail') {
@@ -448,6 +436,7 @@ function collectTests(file: File, search: SearchMatcher = () => true, filter?: F
 }
 
 export function collectTestsTotalData(
+  context: ExplorerOperationContext,
   filtered: boolean,
   onlyTests: boolean,
   tests: File[],
@@ -458,7 +447,7 @@ export function collectTestsTotalData(
   if (onlyTests) {
     // todo: apply similar logic when filtered
     return tests
-      .map(file => collectTests(file, search, filter))
+      .map(file => collectTests(context, file, search, filter))
       .reduce((acc, {
         failed,
         success,
