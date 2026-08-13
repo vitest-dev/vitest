@@ -1,20 +1,23 @@
-import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
+import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
+  ParentTreeNode,
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
 import { useRafFn } from '@vueuse/core'
 import { reactive } from 'vue'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { collectTestsTotalData, preparePendingTasks, reconcileFile, recordTestArtifact, removeFileByPath, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { collectTestsTotalData, preparePendingTasks, recordTestArtifact, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
   filter,
   searchMatcher,
+  uiFiles,
 } from '~/composables/explorer/state'
+import { createOrUpdateFileNode, isParentNode, removeNodeSubtree } from '~/composables/explorer/utils'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
@@ -108,20 +111,39 @@ export class ExplorerTree {
   collectFiles(files: File[]) {
     queueMicrotask(() => {
       for (let i = 0; i < files.length; i++) {
-        reconcileFile(files[i])
+        this.reconcileFile(files[i])
       }
     })
   }
 
+  private reconcileFile(file: File) {
+    createOrUpdateFileNode(file, true)
+    const fileNode = this.nodes.get(file.id)
+    if (fileNode && isParentNode(fileNode)) {
+      this.pruneRemovedChildren(fileNode, file.tasks)
+    }
+  }
+
+  private pruneRemovedChildren(parentNode: ParentTreeNode, tasks: Task[]) {
+    const taskById = new Map(tasks.map(task => [task.id, task] as const))
+    for (const child of [...parentNode.tasks]) {
+      const task = taskById.get(child.id)
+      if (!task) {
+        removeNodeSubtree(this.nodes, child)
+      }
+      else if (isParentNode(child) && task.type === 'suite') {
+        this.pruneRemovedChildren(child, task.tasks)
+      }
+    }
+  }
+
   removeFile(filepath: string) {
     queueMicrotask(() => {
-      removeFileByPath(filepath, searchMatcher.value.matcher, {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      })
+      for (const fileNode of this.root.tasks.filter(file => file.filepath === filepath)) {
+        removeNodeSubtree(this.nodes, fileNode)
+        this.root.tasks.splice(this.root.tasks.indexOf(fileNode), 1)
+      }
+      uiFiles.value = [...this.root.tasks]
       this.collect(false, true)
     })
   }
