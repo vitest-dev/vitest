@@ -1,0 +1,25 @@
+test/e2e/deps/malformed-source-map/external-map.js
+  s_70e5da4f06eedf::t_167b4bbef0cbb7 4-5
+test/e2e/deps/malformed-source-map/external-map.js.map
+  s_70e5da4f06eedf::t_fac5eadc7fb5a6 1
+test/e2e/deps/malformed-source-map/index.js
+  s_70e5da4f06eedf::t_803306965e80c6 1-7
+test/e2e/deps/malformed-source-map/package.json
+  s_70e5da4f06eedf::t_81aaf6b653723a 5-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "bbe10be9dd02c668dd9030961a17f16ace0b38cb",
+  "prompts": {},
+  "sessions": {
+    "s_70e5da4f06eedf": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0078acc36ffepRug8BUv5UNTGj",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
