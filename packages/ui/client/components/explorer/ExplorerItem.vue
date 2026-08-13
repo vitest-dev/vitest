@@ -9,7 +9,7 @@ import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { coverageEnabled, disableCoverage } from '~/composables/navigation'
-import { getBadgeTextColor } from '~/utils/task'
+import { getBadgeNameColor, getBadgeTextColor } from '~/utils/task'
 import IconAction from '../IconAction.vue'
 import IconButton from '../IconButton.vue'
 import StatusIcon from '../StatusIcon.vue'
@@ -29,7 +29,7 @@ const {
   type,
   disableTaskLocation,
   onItemClick,
-  projectNameColor,
+  projectName,
   state,
 } = defineProps<{
   taskId: string
@@ -46,7 +46,6 @@ const {
   expandable: boolean
   search?: string
   projectName?: string
-  projectNameColor: string
   disableTaskLocation?: boolean
   onItemClick?: (task: Task) => void
 }>()
@@ -164,7 +163,10 @@ function showDetails() {
   }
 }
 
-const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor))
+const projectNameColor = computed(() => {
+  return config.value.projects?.find(project => project.name === projectName)?.color || getBadgeNameColor(projectName)
+})
+const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
 
 /**
 experiments trying to show tags compactly

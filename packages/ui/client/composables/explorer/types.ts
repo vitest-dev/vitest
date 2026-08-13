@@ -45,7 +45,6 @@ export interface UITaskTreeNode extends TaskTreeNode {
   typecheck?: boolean
   label?: string
   projectName?: string
-  projectNameColor?: string
 }
 
 export interface TestTreeNode extends UITaskTreeNode {
@@ -69,7 +68,6 @@ export interface FileTreeNode extends ParentTreeNode {
   typecheck: boolean | undefined
   label?: string
   projectName?: string
-  projectNameColor: string
   collectDuration?: number
   setupDuration?: number
   environmentLoad?: number

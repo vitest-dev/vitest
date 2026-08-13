@@ -6,12 +6,12 @@ import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
   browserState,
   client,
+  config,
   current,
   currentLogs,
   isReport,
 } from '~/composables/client'
 import { tagsDefinitions } from '~/composables/client/state'
-import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { selectedTest, viewMode } from '~/composables/params'
 import { getBadgeNameColor, getBadgeTextColor } from '~/utils/task'
@@ -62,7 +62,7 @@ function onDraft(value: boolean) {
 const projectName = computed(() => current.value?.file.projectName || '')
 const projectNameColor = computed(() => {
   const projectNameValue = projectName.value
-  return explorerTree.colors.get(projectNameValue) || getBadgeNameColor(projectNameValue)
+  return config.value.projects?.find(project => project.name === projectNameValue)?.color || getBadgeNameColor(projectNameValue)
 })
 
 const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
