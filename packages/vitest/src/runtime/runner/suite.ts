@@ -203,13 +203,15 @@ function assert(condition: any, message: string) {
 }
 
 export function getDefaultSuite(): SuiteCollector<object> {
-  assert(defaultSuite, 'the default suite')
-  return defaultSuite
+  const s = defaultSuite || (globalThis as any).__vitest_default_suite__
+  assert(s, 'the default suite')
+  return s
 }
 
 export function getRunner(): VitestRunner {
-  assert(runner, 'the runner')
-  return runner
+  const r = runner || (globalThis as any).__vitest_runner__
+  assert(r, 'the runner')
+  return r
 }
 
 function createDefaultSuite(runner: VitestRunner) {
@@ -230,8 +232,13 @@ export function clearCollectorContext(
 ): void {
   currentTestFilepath = file.filepath
   runner = currentRunner
-  if (!defaultSuite) {
+  ;(globalThis as any).__vitest_runner__ = currentRunner
+  if (!defaultSuite || !(globalThis as any).__vitest_default_suite__) {
     defaultSuite = createDefaultSuite(currentRunner)
+    ;(globalThis as any).__vitest_default_suite__ = defaultSuite
+  }
+  else {
+    defaultSuite = (globalThis as any).__vitest_default_suite__
   }
   defaultSuite.file = file
   collectorContext.tasks.length = 0

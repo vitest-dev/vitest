@@ -10,7 +10,7 @@ const now = globalThis.performance
   ? globalThis.performance.now.bind(globalThis.performance)
   : Date.now
 
-export const collectorContext: RuntimeContext = {
+export const collectorContext: RuntimeContext = (globalThis as any).__vitest_collector_context__ ??= {
   tasks: [],
   currentSuite: null,
 }
