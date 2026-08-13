@@ -624,6 +624,73 @@ test('stacked aroundEach stores and a fixture store all accumulate', async () =>
   `)
 })
 
+test('fixture snapshots do not preserve stores opened by a custom runTask', async () => {
+  const { errorTree } = await runInlineTests({
+    'vitest.config.ts': `
+      export default {
+        test: {
+          runner: './runner.ts',
+        },
+      }
+    `,
+    'storage.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+
+      const key = Symbol.for('vitest.custom-runner-storage')
+      export const runnerStorage: AsyncLocalStorage<string>
+        = (globalThis as any)[key] ??= new AsyncLocalStorage<string>()
+    `,
+    'runner.ts': `
+      import type { RunnerTask } from 'vitest'
+      import { TestRunner } from 'vitest'
+      import { runnerStorage } from './storage'
+
+      export default class CustomRunner extends TestRunner {
+        async runTask(test: RunnerTask): Promise<void> {
+          const fn = CustomRunner.getTestFn(test)
+          await runnerStorage.run('runner', () => fn())
+        }
+      }
+    `,
+    'custom-runner.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { beforeEach, expect, test as base } from 'vitest'
+      import { runnerStorage } from './storage'
+
+      const fixtureStorage = new AsyncLocalStorage<string>()
+      const test = base.extend({
+        fixture: [
+          async ({}, use) => fixtureStorage.run('fixture', () => use('fixture')),
+          { auto: true },
+        ],
+      })
+
+      // This causes the auto fixture snapshot to be captured before runTask.
+      beforeEach(() => {})
+
+      base('preserves the runner context without fixtures', () => {
+        expect(runnerStorage.getStore()).toBe('runner')
+      })
+
+      test('loses the runner context with fixtures', () => {
+        expect(fixtureStorage.getStore()).toBe('fixture')
+        expect(runnerStorage.getStore()).toBe('runner')
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "custom-runner.test.ts": {
+        "loses the runner context with fixtures": [
+          "expected undefined to be 'runner' // Object.is equality",
+        ],
+        "preserves the runner context without fixtures": "passed",
+      },
+    }
+  `)
+})
+
 test('use() called outside als.run does not leak a store', async () => {
   const { stdout, stderr } = await runInlineTests({
     'no-leak.test.ts': `
