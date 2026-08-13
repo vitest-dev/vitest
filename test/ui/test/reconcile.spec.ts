@@ -4,6 +4,8 @@ import path from 'node:path'
 import { expect, test } from '@playwright/test'
 import { assertTestCounts, getExplorerItem, startVitestUi } from './helper'
 
+// TODO: rename
+
 // Regression tests for explorer tree reconciliation on watch re-runs:
 // - removing a test from a file must drop the stale test node (no ghost node)
 // - deleting a test file must drop the stale file node (onTestRemoved forwarding)
