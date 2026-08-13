@@ -125,7 +125,7 @@ test('cannot use fs commands if write is disabled', async () => {
     `Cannot save snapshot file "${fs.resolveFile('./__snapshots__/fs-commands.test.ts.snap')}". File writing is disabled because server is exposed to the internet`,
   )
   expect(stderr).toContain(
-    `Cannot remove snapshot file "${fs.resolveFile('./__snapshots__/basic.test.js.snap')}". File writing is disabled because server is exposed to the internet`,
+    'Cannot read snapshot file because browser API exec operations are disabled',
   )
 
   // we don't throw an error if cannot write attachment, just warn
