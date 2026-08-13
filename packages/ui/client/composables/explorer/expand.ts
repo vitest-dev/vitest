@@ -1,7 +1,6 @@
-import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
+import type { ExplorerTreeStructure, Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { findById } from '~/composables/client'
 import { filterAll, filterNode } from '~/composables/explorer/filter'
-import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
 
@@ -19,16 +18,19 @@ import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode }
  * - remove opened tree items for the node and any children
  * - update uiEntries including child nodes
  *
+ * @param tree The explorer tree structure.
  * @param id The node id to expand.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runExpandNode(
+  tree: ExplorerTreeStructure,
   id: string,
   search: SearchMatcher,
   filter: Filter,
 ) {
   const entry = createOrUpdateSuiteTask(
+    tree,
     id,
     false,
   )
@@ -40,7 +42,7 @@ export function runExpandNode(
 
   // create only direct children
   for (const subtask of task.tasks) {
-    createOrUpdateNode(node.id, subtask, false)
+    createOrUpdateNode(tree, node.id, subtask, false)
   }
 
   // expand the node
@@ -51,6 +53,7 @@ export function runExpandNode(
   // collect children
   // the first node is itself only when it is a file
   const children = new Set(filterNode(
+    tree,
     node,
     search,
     filter,
@@ -82,15 +85,18 @@ export function runExpandNode(
  * - update the filtered expandAll state to false
  * - update uiEntries with child nodes
  *
+ * @param tree The explorer tree structure.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runExpandAll(
+  tree: ExplorerTreeStructure,
   search: SearchMatcher,
   filter: Filter,
 ) {
-  expandAllNodes(explorerTree.root.tasks, false)
+  expandAllNodes(tree.root.tasks, false)
   const entries = [...filterAll(
+    tree,
     search,
     filter,
   )]

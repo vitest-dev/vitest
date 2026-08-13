@@ -1,7 +1,6 @@
 import type { RunnerTask as Task } from 'vitest'
-import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
+import type { ExplorerTreeStructure, FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { client, config, findById } from '~/composables/client'
-import { explorerTree } from '~/composables/explorer/index'
 import { currentProjectName, filteredFiles, projectSort, uiEntries } from '~/composables/explorer/state'
 import {
   getSortedRootTasks,
@@ -16,14 +15,17 @@ export function testMatcher(task: Task, search: SearchMatcher, filter: Filter) {
 /**
  * Filter child nodes using search, filter and only tests.
  *
+ * @param tree The explorer tree structure.
  * @param search The search applied.
  * @param filter The filter applied.
  */
 export function runFilter(
+  tree: ExplorerTreeStructure,
   search: SearchMatcher,
   filter: Filter,
 ) {
   const entries = [...filterAll(
+    tree,
     search,
     filter,
   )]
@@ -32,21 +34,23 @@ export function runFilter(
 }
 
 export function* filterAll(
+  tree: ExplorerTreeStructure,
   search: SearchMatcher,
   filter: Filter,
 ) {
   const project = currentProjectName.value
-  const tasks = getSortedRootTasks(projectSort.value)
+  const tasks = getSortedRootTasks(projectSort.value, tree.root.tasks)
 
   for (const node of tasks) {
     if (project && node.projectName !== project) {
       continue
     }
-    yield* filterNode(node, search, filter)
+    yield* filterNode(tree, node, search, filter)
   }
 }
 
 export function* filterNode(
+  tree: ExplorerTreeStructure,
   node: UITaskTreeNode,
   search: SearchMatcher,
   filter: Filter,
@@ -60,6 +64,7 @@ export function* filterNode(
 
   if (filter.onlyTests) {
     for (const [match, child] of visitNode(
+      tree,
       node,
       treeNodes,
       n => matcher(n, search, filter),
@@ -69,6 +74,7 @@ export function* filterNode(
   }
   else {
     for (const [match, child] of visitNode(
+      tree,
       node,
       treeNodes,
       n => matcher(n, search, filter),
@@ -98,6 +104,7 @@ export function* filterNode(
   const filesToShow = new Set<string>()
 
   const entries = [...filterParents(
+    tree,
     list,
     filter.onlyTests,
     treeNodes,
@@ -111,7 +118,7 @@ export function* filterNode(
   // For example, if we have a suite with only one test, when collapsing the suite node,
   // we still need to show the suite, but the test must be removed from the list to render.
 
-  const map = explorerTree.nodes
+  const map = tree.nodes
 
   // When searching, expand parent nodes of matching tests so they are visible
   for (const id of treeNodes) {
@@ -134,6 +141,7 @@ export function* filterNode(
 }
 
 function expandCollapseNode(
+  tree: ExplorerTreeStructure,
   match: boolean,
   child: FileTreeNode | ParentTreeNode,
   treeNodes: Set<string>,
@@ -150,7 +158,7 @@ function expandCollapseNode(
     }
     // show the parent if at least one child matches the filter
     if (treeNodes.has(child.id)) {
-      const parent = explorerTree.nodes.get(child.parentId)
+      const parent = tree.nodes.get(child.parentId)
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
       }
@@ -161,7 +169,7 @@ function expandCollapseNode(
   else {
     // show the parent if matches the filter or at least one child matches the filter
     if (match || treeNodes.has(child.id) || filesToShow.has(child.id)) {
-      const parent = explorerTree.nodes.get(child.parentId)
+      const parent = tree.nodes.get(child.parentId)
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
       }
@@ -172,6 +180,7 @@ function expandCollapseNode(
 }
 
 function* filterParents(
+  tree: ExplorerTreeStructure,
   list: FilterResult[],
   collapseParents: boolean,
   treeNodes: Set<string>,
@@ -185,13 +194,13 @@ function* filterParents(
       if (isParent) {
         treeNodes.add(child.id)
       }
-      let parent = explorerTree.nodes.get(child.parentId)
+      let parent = tree.nodes.get(child.parentId)
       while (parent) {
         treeNodes.add(parent.id)
         if (isFileNode(parent)) {
           filesToShow.add(parent.id)
         }
-        parent = explorerTree.nodes.get(parent.parentId)
+        parent = tree.nodes.get(parent.parentId)
       }
       yield child
       continue
@@ -199,6 +208,7 @@ function* filterParents(
 
     if (isParent) {
       const node = expandCollapseNode(
+        tree,
         match,
         child,
         treeNodes,
@@ -210,7 +220,7 @@ function* filterParents(
       }
     }
     else if (match) {
-      const parent = explorerTree.nodes.get(child.parentId)
+      const parent = tree.nodes.get(child.parentId)
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
       }
@@ -269,6 +279,7 @@ function matchTask(
 }
 
 function* visitNode(
+  tree: ExplorerTreeStructure,
   node: UITaskTreeNode,
   treeNodes: Set<string>,
   matcher: (node: UITaskTreeNode) => boolean,
@@ -277,10 +288,10 @@ function* visitNode(
 
   if (match) {
     if (isTestNode(node)) {
-      let parent = explorerTree.nodes.get(node.parentId)
+      let parent = tree.nodes.get(node.parentId)
       while (parent) {
         treeNodes.add(parent.id)
-        parent = explorerTree.nodes.get(parent.parentId)
+        parent = tree.nodes.get(parent.parentId)
       }
     }
     else if (isFileNode(node)) {
@@ -288,10 +299,10 @@ function* visitNode(
     }
     else {
       treeNodes.add(node.id)
-      let parent = explorerTree.nodes.get(node.parentId)
+      let parent = tree.nodes.get(node.parentId)
       while (parent) {
         treeNodes.add(parent.id)
-        parent = explorerTree.nodes.get(parent.parentId)
+        parent = tree.nodes.get(parent.parentId)
       }
     }
   }
@@ -299,7 +310,7 @@ function* visitNode(
   yield [match, node]
   if (isParentNode(node)) {
     for (let i = 0; i < node.tasks.length; i++) {
-      yield* visitNode(node.tasks[i], treeNodes, matcher)
+      yield* visitNode(tree, node.tasks[i], treeNodes, matcher)
     }
   }
 }

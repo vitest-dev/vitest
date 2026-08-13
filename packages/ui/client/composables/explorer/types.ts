@@ -31,6 +31,11 @@ export interface RootTreeNode extends TaskTreeNode {
   tasks: FileTreeNode[]
 }
 
+export interface ExplorerTreeStructure {
+  root: RootTreeNode
+  nodes: Map<string, UITaskTreeNode>
+}
+
 export type TaskTreeNodeType = 'file' | 'suite' | 'test'
 
 export interface UITaskTreeNode extends TaskTreeNode {

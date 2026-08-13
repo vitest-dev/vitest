@@ -1,4 +1,4 @@
-import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
+import type { RunnerTestFile as File, RunnerTask, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
@@ -15,11 +15,14 @@ import {
   filter,
   searchMatcher,
 } from '~/composables/explorer/state'
+import { isFileNode } from '~/composables/explorer/utils'
+import { isSuite as isTaskSuite } from '~/utils/task'
+import { getTasks } from '../../../../vitest/src/utils/tasks'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
-  public startTime: number = 0
+  private startTime: number = 0
   public executionTime: number = 0
   constructor(
     public projects: string[] = [],
@@ -66,6 +69,8 @@ export class ExplorerTree {
     this.colors = new Map(projects.map(p => [p.name, p.color]))
 
     runLoadFiles(
+      this,
+      this.colors,
       remoteFiles,
       true,
       searchMatcher.value.matcher,
@@ -85,8 +90,52 @@ export class ExplorerTree {
     this.collect(true, false)
   }
 
+  setRunStartTime(startTime?: number) {
+    this.startTime = startTime || performance.now()
+  }
+
+  clearTaskResult(task: RunnerTask) {
+    delete task.result
+    const node = this.nodes.get(task.id)
+    if (node) {
+      node.state = undefined
+      // update task mode to allow change icon on skipped tests
+      task.mode = 'run'
+      node.duration = undefined
+      if (isTaskSuite(task)) {
+        for (const child of task.tasks) {
+          this.clearTaskResult(child)
+        }
+      }
+    }
+  }
+
+  clearResults(files: File[]) {
+    files.forEach((f) => {
+      delete f.result
+      getTasks(f).forEach((task) => {
+        delete task.result
+        const node = this.nodes.get(task.id)
+        if (node) {
+          node.state = undefined
+          node.mode = 'run'
+          node.duration = undefined
+        }
+      })
+      const file = this.nodes.get(f.id)
+      if (file) {
+        file.state = undefined
+        file.mode = 'run'
+        file.duration = undefined
+        if (isFileNode(file)) {
+          file.collectDuration = undefined
+        }
+      }
+    })
+  }
+
   recordTestArtifact(testId: string, artifact: TestArtifact) {
-    recordTestArtifact(testId, artifact)
+    recordTestArtifact(this.pendingTasks, testId, artifact)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
@@ -96,7 +145,7 @@ export class ExplorerTree {
   }
 
   resumeRun(packs: TaskResultPack[], _events: RunnerTaskEventPack[]) {
-    preparePendingTasks(packs)
+    preparePendingTasks(this.pendingTasks, packs)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
@@ -120,6 +169,9 @@ export class ExplorerTree {
     if (task) {
       queueMicrotask(() => {
         runCollect(
+          this,
+          this.colors,
+          this.pendingTasks,
           start,
           end,
           this.summary,
@@ -137,6 +189,9 @@ export class ExplorerTree {
     }
     else {
       runCollect(
+        this,
+        this.colors,
+        this.pendingTasks,
         start,
         end,
         this.summary,
@@ -170,13 +225,13 @@ export class ExplorerTree {
 
   collapseNode(id: string) {
     queueMicrotask(() => {
-      runCollapseNode(id)
+      runCollapseNode(this, id)
     })
   }
 
   expandNode(id: string) {
     queueMicrotask(() => {
-      runExpandNode(id, searchMatcher.value.matcher, {
+      runExpandNode(this, id, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -188,13 +243,13 @@ export class ExplorerTree {
 
   collapseAllNodes() {
     queueMicrotask(() => {
-      runCollapseAllTask()
+      runCollapseAllTask(this)
     })
   }
 
   expandAllNodes() {
     queueMicrotask(() => {
-      runExpandAll(searchMatcher.value.matcher, {
+      runExpandAll(this, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -206,7 +261,7 @@ export class ExplorerTree {
 
   filterNodes() {
     queueMicrotask(() => {
-      runFilter(searchMatcher.value.matcher, {
+      runFilter(this, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,

@@ -1,12 +1,11 @@
 import type { Arrayable } from '@vitest/utils'
 import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
+import type { CollectFilteredTests, CollectorInfo, ExplorerTreeStructure, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
 import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
-import { explorerTree } from '~/composables/explorer/index'
 import {
   initialized,
   openedTreeItems,
@@ -27,6 +26,8 @@ import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
 export { hasFailedSnapshot }
 
 export function runLoadFiles(
+  tree: ExplorerTreeStructure,
+  colors: Map<string, string | undefined>,
   remoteFiles: File[],
   collect: boolean,
   search: SearchMatcher,
@@ -34,10 +35,10 @@ export function runLoadFiles(
 ) {
   remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, f]) => createOrUpdateFileNode(f, collect))
+    .map(([, f]) => createOrUpdateFileNode(tree, colors, f, collect))
 
-  uiFiles.value = [...explorerTree.root.tasks]
-  runFilter(search, {
+  uiFiles.value = [...tree.root.tasks]
+  runFilter(tree, search, {
     failed: filter.failed,
     success: filter.success,
     skipped: filter.skipped,
@@ -46,19 +47,18 @@ export function runLoadFiles(
   })
 }
 
-export function preparePendingTasks(packs: TaskResultPack[]) {
+export function preparePendingTasks(pendingTasks: Map<string, Set<string>>, packs: TaskResultPack[]) {
   queueMicrotask(() => {
-    const pending = explorerTree.pendingTasks
     const idMap = client.state.idMap
     for (const pack of packs) {
       const result = pack[1]
       if (result) {
         const task = idMap.get(pack[0])
         if (task) {
-          let file = pending.get(task.file.id)
+          let file = pendingTasks.get(task.file.id)
           if (!file) {
             file = new Set()
-            pending.set(task.file.id, file)
+            pendingTasks.set(task.file.id, file)
           }
           file.add(task.id)
         }
@@ -68,17 +68,17 @@ export function preparePendingTasks(packs: TaskResultPack[]) {
 }
 
 export function recordTestArtifact(
+  pendingTasks: Map<string, Set<string>>,
   id: string,
   artifact: TestArtifact,
 ) {
-  const pending = explorerTree.pendingTasks
   const idMap = client.state.idMap
   const test = idMap.get(id)
   if (test?.type === 'test') {
-    let file = pending.get(test.file.id)
+    let file = pendingTasks.get(test.file.id)
     if (!file) {
       file = new Set()
-      pending.set(test.file.id, file)
+      pendingTasks.set(test.file.id, file)
     }
     file.add(test.id)
 
@@ -92,6 +92,9 @@ export function recordTestArtifact(
 }
 
 export function runCollect(
+  tree: ExplorerTreeStructure,
+  colors: Map<string, string | undefined>,
+  pendingTasks: Map<string, Set<string>>,
   start: boolean,
   end: boolean,
   summary: CollectorInfo,
@@ -106,15 +109,15 @@ export function runCollect(
   const collect = !start
   queueMicrotask(() => {
     if (end) {
-      traverseFiles(collect)
+      traverseFiles(tree, colors, collect)
     }
     else {
-      traverseReceivedFiles(collect)
+      traverseReceivedFiles(tree, colors, pendingTasks, collect)
     }
   })
 
   queueMicrotask(() => {
-    collectData(summary, executionTime)
+    collectData(tree, summary, executionTime)
   })
 
   queueMicrotask(() => {
@@ -127,7 +130,7 @@ export function runCollect(
   })
 
   queueMicrotask(() => {
-    doRunFilter(search, filter, end)
+    doRunFilter(tree, search, filter, end)
   })
 }
 
@@ -150,18 +153,18 @@ function updateRunningTodoTests() {
   }
 }
 
-function traverseFiles(collect: boolean) {
+function traverseFiles(tree: ExplorerTreeStructure, colors: Map<string, string | undefined>, collect: boolean) {
   // add missing files: now we have only files with running tests on the initial ws open event
   const files = client.state.getFiles()
-  const currentFiles = explorerTree.nodes
+  const currentFiles = tree.nodes
   const missingFiles = files.filter(f => !currentFiles.has(f.id))
   for (let i = 0; i < missingFiles.length; i++) {
-    createOrUpdateFileNode(missingFiles[i], collect)
-    createOrUpdateEntry(missingFiles[i].tasks)
+    createOrUpdateFileNode(tree, colors, missingFiles[i], collect)
+    createOrUpdateEntry(tree, missingFiles[i].tasks)
   }
 
   // update pending tasks
-  const rootTasks = explorerTree.root.tasks
+  const rootTasks = tree.root.tasks
   // collect remote children
   for (let i = 0; i < rootTasks.length; i++) {
     const fileNode = rootTasks[i]
@@ -170,22 +173,27 @@ function traverseFiles(collect: boolean) {
       continue
     }
 
-    createOrUpdateFileNode(file, collect)
+    createOrUpdateFileNode(tree, colors, file, collect)
     const tasks = file.tasks
     if (!tasks?.length) {
       continue
     }
 
-    createOrUpdateEntry(file.tasks)
+    createOrUpdateEntry(tree, file.tasks)
   }
 }
 
-function traverseReceivedFiles(collect: boolean) {
-  const updatedFiles = new Map(explorerTree.pendingTasks.entries())
-  explorerTree.pendingTasks.clear()
+function traverseReceivedFiles(
+  tree: ExplorerTreeStructure,
+  colors: Map<string, string | undefined>,
+  pendingTasks: Map<string, Set<string>>,
+  collect: boolean,
+) {
+  const updatedFiles = new Map(pendingTasks.entries())
+  pendingTasks.clear()
 
   // add missing files: now we have only files with running tests on the initial ws open event
-  const currentFiles = explorerTree.nodes
+  const currentFiles = tree.nodes
   const missingFiles = Array
     .from(updatedFiles.keys())
     .filter(id => !currentFiles.has(id))
@@ -195,15 +203,15 @@ function traverseReceivedFiles(collect: boolean) {
   let newFile: File
   for (let i = 0; i < missingFiles.length; i++) {
     newFile = missingFiles[i]
-    createOrUpdateFileNode(newFile, false)
-    createOrUpdateEntry(newFile.tasks)
+    createOrUpdateFileNode(tree, colors, newFile, false)
+    createOrUpdateEntry(tree, newFile.tasks)
     // remove the file from the updated files
     updatedFiles.delete(newFile.id)
   }
 
   // collect remote children
   const idMap = client.state.idMap
-  const rootTasks = explorerTree.root.tasks
+  const rootTasks = tree.root.tasks
   for (let i = 0; i < rootTasks.length; i++) {
     const fileNode = rootTasks[i]
     const file = findById(fileNode.id)
@@ -214,12 +222,13 @@ function traverseReceivedFiles(collect: boolean) {
     if (!entries) {
       continue
     }
-    createOrUpdateFileNode(file, collect)
-    createOrUpdateEntry(Array.from(entries, id => idMap.get(id)).filter(Boolean) as Task[])
+    createOrUpdateFileNode(tree, colors, file, collect)
+    createOrUpdateEntry(tree, Array.from(entries, id => idMap.get(id)).filter(Boolean) as Task[])
   }
 }
 
 function doRunFilter(
+  tree: ExplorerTreeStructure,
   search: SearchMatcher,
   filter: Filter,
   end = false,
@@ -231,7 +240,7 @@ function doRunFilter(
 
   // refresh explorer
   queueMicrotask(() => {
-    refreshExplorer(search, filter, end)
+    refreshExplorer(tree, search, filter, end)
   })
 
   // initialize the explorer
@@ -253,13 +262,13 @@ function doRunFilter(
     })
     // refresh explorer
     queueMicrotask(() => {
-      refreshExplorer(search, filter, end)
+      refreshExplorer(tree, search, filter, end)
     })
   }
 }
 
-function refreshExplorer(search: SearchMatcher, filter: Filter, end: boolean) {
-  runFilter(search, filter)
+function refreshExplorer(tree: ExplorerTreeStructure, search: SearchMatcher, filter: Filter, end: boolean) {
+  runFilter(tree, search, filter)
   // update only at the end
   if (end) {
     updateRunningTodoTests()
@@ -267,15 +276,15 @@ function refreshExplorer(search: SearchMatcher, filter: Filter, end: boolean) {
   }
 }
 
-function createOrUpdateEntry(tasks: Task[]) {
+function createOrUpdateEntry(tree: ExplorerTreeStructure, tasks: Task[]) {
   let task: Task
   for (let i = 0; i < tasks.length; i++) {
     task = tasks[i]
     if (isSuite(task)) {
-      createOrUpdateSuiteTask(task.id, true)
+      createOrUpdateSuiteTask(tree, task.id, true)
     }
     else {
-      createOrUpdateNodeTask(task.id)
+      createOrUpdateNodeTask(tree, task.id)
     }
   }
 }
@@ -301,11 +310,12 @@ function resetCollectorInfo(summary: CollectorInfo) {
 }
 
 function collectData(
+  tree: ExplorerTreeStructure,
   summary: CollectorInfo,
   time: number,
 ) {
   const idMap = client.state.idMap
-  const filesMap = new Map(explorerTree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
+  const filesMap = new Map(tree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
   const useFiles = Array.from(filesMap.values(), file => [file.id, findById(file.id)] as const)
   const data = {
     files: filesMap.size,
