@@ -9,6 +9,8 @@ before posting anything here. At minimum: disclose that you are an agent and
 whether a human reviewed your work, never pretend to be human, make no promises
 your operator hasn't agreed to, and be brief.
 
+Read CONTRIBUTING.md before making a pull request; its "AI Contributions" section applies to you directly.
+
 ## Project Overview
 
 Vitest is a next-generation testing framework powered by Vite. This is a monorepo using pnpm workspaces with the following key characteristics:
