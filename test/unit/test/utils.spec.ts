@@ -1,4 +1,5 @@
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
+import { offsetToLineNumber, positionToOffset } from '@vitest/utils/offset'
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
@@ -376,5 +377,34 @@ describe('parseSingleFFOrSafariStack', () => {
     }
 
     parseSingleFFOrSafariStack(new PrettyError(obj).stack!)
+  })
+})
+
+describe('positionToOffset', () => {
+  const lf = 'const a = 1;\nconst b = 2;\nconst c = 3;'
+  const crlf = 'const a = 1;\r\nconst b = 2;\r\nconst c = 3;'
+  const mixed = 'const a = 1;\nconst b = 2;\r\nconst c = 3;'
+
+  test.each([
+    ['lf', lf],
+    ['crlf', crlf],
+    ['mixed', mixed],
+  ])('points at the start of every line (%s)', (_, source) => {
+    expect(source.slice(positionToOffset(source, 1, 0), positionToOffset(source, 1, 12))).toBe('const a = 1;')
+    expect(source.slice(positionToOffset(source, 2, 0), positionToOffset(source, 2, 12))).toBe('const b = 2;')
+    expect(source.slice(positionToOffset(source, 3, 0), positionToOffset(source, 3, 12))).toBe('const c = 3;')
+  })
+
+  test('clamps to the end of the source past the last line', () => {
+    expect(positionToOffset(lf, 4, 0)).toBe(lf.length)
+    expect(positionToOffset(mixed, 9, 0)).toBe(mixed.length)
+  })
+
+  test('round trips with offsetToLineNumber', () => {
+    for (const source of [lf, crlf, mixed]) {
+      for (let line = 1; line <= 3; line++) {
+        expect(offsetToLineNumber(source, positionToOffset(source, line, 1))).toBe(line)
+      }
+    }
   })
 })

@@ -1,20 +1,25 @@
 export const lineSplitRE: RegExp = /\r?\n/
 
+// a single `\r\n` anywhere used to make every line count as two characters
+// wide, so walk the line breaks instead of assuming the file uses one style
+function lineEndOffset(source: string, from: number): number {
+  const newline = source.indexOf('\n', from)
+  return newline === -1 ? source.length : newline + 1
+}
+
 export function positionToOffset(
   source: string,
   lineNumber: number,
   columnNumber: number,
 ): number {
-  const lines = source.split(lineSplitRE)
-  const nl = /\r\n/.test(source) ? 2 : 1
   let start = 0
 
-  if (lineNumber > lines.length) {
-    return source.length
-  }
+  for (let line = 1; line < lineNumber; line++) {
+    if (start >= source.length) {
+      return source.length
+    }
 
-  for (let i = 0; i < lineNumber - 1; i++) {
-    start += lines[i].length + nl
+    start = lineEndOffset(source, start)
   }
 
   return start + columnNumber
@@ -26,17 +31,19 @@ export function offsetToLineNumber(source: string, offset: number): number {
       `offset is longer than source length! offset ${offset} > length ${source.length}`,
     )
   }
-  const lines = source.split(lineSplitRE)
-  const nl = /\r\n/.test(source) ? 2 : 1
-  let counted = 0
-  let line = 0
-  for (; line < lines.length; line++) {
-    const lineLength = lines[line].length + nl
-    if (counted + lineLength >= offset) {
+
+  let line = 1
+  let start = 0
+
+  while (start < source.length) {
+    const end = lineEndOffset(source, start)
+    if (end >= offset) {
       break
     }
 
-    counted += lineLength
+    start = end
+    line++
   }
-  return line + 1
+
+  return line
 }

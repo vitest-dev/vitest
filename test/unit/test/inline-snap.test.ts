@@ -1,3 +1,4 @@
+import { positionToOffset } from '@vitest/utils/offset'
 import MagicString from 'magic-string'
 import { describe, expect, it } from 'vitest'
 import { replaceInlineSnap } from '../../../packages/snapshot/src/port/inlineSnapshot'
@@ -20,6 +21,23 @@ expect('foo').toMatchInlineSnapshot(\`{
         "bar
         foo"
       \`)
+      "
+    `)
+  })
+
+  it('replaceInlineSnap in a file with mixed line endings', async () => {
+    // a single `\r\n` used to make every `\n` line count as two characters, so
+    // the offset drifted one character per preceding line and the replacement
+    // landed on the next assertion instead
+    const header = Array.from({ length: 40 }, (_, i) => `const v${i} = ${i}\n`).join('')
+    const code = `${header}expect('a').toMatchInlineSnapshot()\r\nexpect('b').toMatchInlineSnapshot()\n`
+
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, positionToOffset(code, 41, 0), '"a"')
+
+    expect(s.toString().slice(header.length)).toMatchInlineSnapshot(`
+      "expect('a').toMatchInlineSnapshot(\`"a"\`)
+      expect('b').toMatchInlineSnapshot()
       "
     `)
   })
