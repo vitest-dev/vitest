@@ -7,6 +7,7 @@ import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
+import { StateManager } from './state'
 
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
@@ -65,10 +66,13 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
 export function createStaticClient(): VitestClient {
   const ctx = reactive<VitestClient>({
     ws: new EventTarget() as WebSocket,
-    state: undefined!, // initialized in createVitestClient
+    state: new StateManager(),
     rpc: undefined!,
     reconnect: async () => {},
   }) as VitestClient
+
+  ctx.state.filesMap = reactive(ctx.state.filesMap) as any
+  ctx.state.idMap = reactive(ctx.state.idMap) as any
 
   async function registerMetadata() {
     const content = await window.HTML_REPORT_METADATA!

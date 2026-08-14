@@ -1,9 +1,9 @@
 import type { BirpcOptions, PromisifyFn } from 'birpc'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
-import type { StateManager } from './state'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { reactive } from 'vue'
+import { reactive, shallowRef } from 'vue'
+import { StateManager } from './state'
 
 export interface VitestClientOptions {
   handlers: WebSocketEvents
@@ -30,10 +30,16 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
   let tries = reconnectTries
   const ctx = reactive<VitestClient>({
     ws: new WebSocket(url),
-    state: undefined!, // initialized in createVitestClient
+    state: new StateManager(),
     rpc: undefined!,
     reconnect,
   }) as VitestClient
+
+  // TODO: This is effectively a no-op: `state` already exposes reactive Map proxies,
+  // and `shallowRef` wraps those same proxies. Revisit the intended optimization from
+  // https://github.com/vitest-dev/vitest/pull/5906.
+  ctx.state.filesMap = shallowRef(ctx.state.filesMap) as any
+  ctx.state.idMap = shallowRef(ctx.state.idMap) as any
 
   let onMessage: (data: any) => void
   const birpcHandlers = {

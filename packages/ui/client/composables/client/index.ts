@@ -9,7 +9,7 @@ import type {
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
 import type { VitestClient } from './ws'
-import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 import { isSuite as isTaskSuite } from '~/utils/task'
@@ -18,24 +18,11 @@ import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
-import { StateManager, testRunState, unhandledErrors } from './state'
+import { testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
 
 export { isReport } from '../../constants'
-
-const state = reactiveVue(new StateManager()) as StateManager
-// TODO: This switch is effectively a no-op: `state` already exposes reactive Map
-// proxies, and `shallowRef` wraps those same proxies. Revisit and remove it; it was
-// intended as an optimization in https://github.com/vitest-dev/vitest/pull/5906.
-if (isReport) {
-  state.filesMap = reactiveVue(state.filesMap) as any
-  state.idMap = reactiveVue(state.idMap) as any
-}
-else {
-  state.filesMap = shallowRef(state.filesMap) as any
-  state.idMap = shallowRef(state.idMap) as any
-}
 
 function createVitestClient(): VitestClient {
   let client: VitestClient
@@ -53,20 +40,20 @@ function createVitestClient(): VitestClient {
         },
         onSpecsCollected(specs, startTime) {
           specs?.forEach(([config, file]) => {
-            state.clearFiles({ config }, [file])
+            client.state.clearFiles({ config }, [file])
           })
           explorerTree.startTime = startTime || performance.now()
         },
         onCollected(files) {
-          state.collectFiles(files)
+          client.state.collectFiles(files)
         },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
-          state.updateTasks(packs)
+          client.state.updateTasks(packs)
           explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
         },
         onUserConsoleLog(log) {
-          state.updateUserLog(log)
+          client.state.updateUserLog(log)
         },
         onFinished(_files, errors, _coverage, executionTime) {
           explorerTree.endRun(executionTime)
@@ -87,7 +74,6 @@ function createVitestClient(): VitestClient {
       },
     })
   }
-  client.state = state
   return client
 }
 
