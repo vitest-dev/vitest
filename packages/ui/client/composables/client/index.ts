@@ -8,7 +8,7 @@ import type {
   TestAnnotation,
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
-import type { VitestClientTransport } from './ws'
+import type { VitestClient } from './ws'
 import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
@@ -24,14 +24,10 @@ import { createWsClient } from './ws'
 
 export { isReport } from '../../constants'
 
-export interface VitestClient extends VitestClientTransport {
-  state: StateManager
-}
-
-const state = reactiveVue(new StateManager())
+const state = reactiveVue(new StateManager()) as StateManager
 if (isReport) {
-  state.filesMap = reactiveVue(state.filesMap)
-  state.idMap = reactiveVue(state.idMap)
+  state.filesMap = reactiveVue(state.filesMap) as any
+  state.idMap = reactiveVue(state.idMap) as any
 }
 else {
   state.filesMap = shallowRef(state.filesMap) as any
@@ -39,7 +35,7 @@ else {
 }
 
 function createVitestClient(): VitestClient {
-  let transport: VitestClientTransport
+  let transport: VitestClient
   if (isReport) {
     transport = createStaticClient()
   }
@@ -89,7 +85,8 @@ function createVitestClient(): VitestClient {
       },
     })
   }
-  return Object.assign(transport, { state })
+  transport.state = state
+  return transport
 }
 
 export const client: VitestClient = createVitestClient()

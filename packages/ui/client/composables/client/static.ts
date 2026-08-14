@@ -3,7 +3,7 @@ import type {
   RunnerTestFile,
   SerializedRootConfig,
 } from 'vitest'
-import type { VitestClientRpc, VitestClientTransport } from './ws'
+import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
@@ -62,12 +62,14 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
   return rpc
 }
 
-export function createStaticClient(): VitestClientTransport {
-  const ctx = reactive<VitestClientTransport>({
+export function createStaticClient(): VitestClient {
+  const ctx = reactive<VitestClient>({
     ws: new EventTarget() as WebSocket,
     rpc: undefined!,
     reconnect: async () => {},
-  })
+    // Lazily initialized in createVitestClient.
+    state: undefined!,
+  }) as VitestClient
 
   async function registerMetadata() {
     const content = await window.HTML_REPORT_METADATA!

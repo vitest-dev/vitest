@@ -1,5 +1,6 @@
 import type { BirpcOptions, PromisifyFn } from 'birpc'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
+import type { StateManager } from './state'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 
@@ -12,13 +13,14 @@ export type VitestClientRpc = {
   [K in keyof WebSocketHandlers]: PromisifyFn<WebSocketHandlers[K]>
 }
 
-export interface VitestClientTransport {
+export interface VitestClient {
   ws: WebSocket
   rpc: VitestClientRpc
   reconnect: () => Promise<void>
+  state: StateManager
 }
 
-export function createWsClient(url: string, options: VitestClientOptions): VitestClientTransport {
+export function createWsClient(url: string, options: VitestClientOptions): VitestClient {
   const {
     handlers,
     reactive,
@@ -27,10 +29,12 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
   const reconnectInterval = 2000
   const reconnectTries = 10
   let tries = reconnectTries
-  const ctx = reactive<VitestClientTransport>({
+  const ctx = reactive<VitestClient>({
     ws: new WebSocket(url),
     rpc: undefined!,
     reconnect,
+    // Lazily initialized in createVitestClient.
+    state: undefined!,
   })
 
   let onMessage: (data: any) => void
