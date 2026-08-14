@@ -65,10 +65,9 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
 export function createStaticClient(): VitestClient {
   const ctx = reactive<VitestClient>({
     ws: new EventTarget() as WebSocket,
+    state: undefined!, // initialized in createVitestClient
     rpc: undefined!,
     reconnect: async () => {},
-    // Lazily initialized in createVitestClient.
-    state: undefined!,
   }) as VitestClient
 
   async function registerMetadata() {

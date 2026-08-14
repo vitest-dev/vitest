@@ -15,9 +15,9 @@ export type VitestClientRpc = {
 
 export interface VitestClient {
   ws: WebSocket
+  state: StateManager
   rpc: VitestClientRpc
   reconnect: () => Promise<void>
-  state: StateManager
 }
 
 export function createWsClient(url: string, options: VitestClientOptions): VitestClient {
@@ -31,10 +31,9 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
   let tries = reconnectTries
   const ctx = reactive<VitestClient>({
     ws: new WebSocket(url),
+    state: undefined!, // initialized in createVitestClient
     rpc: undefined!,
     reconnect,
-    // Lazily initialized in createVitestClient.
-    state: undefined!,
   })
 
   let onMessage: (data: any) => void
