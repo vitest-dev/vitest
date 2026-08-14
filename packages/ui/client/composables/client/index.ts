@@ -9,7 +9,7 @@ import type {
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
 import type { VitestClient } from './ws'
-import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 import { isSuite as isTaskSuite } from '~/utils/task'
@@ -24,15 +24,13 @@ import { createWsClient } from './ws'
 
 export { isReport } from '../../constants'
 
-export const client: VitestClient = (function createVitestClient() {
+function createVitestClient(): VitestClient {
+  let client: VitestClient
   if (isReport) {
-    return createStaticClient()
+    client = createStaticClient()
   }
   else {
-    return createWsClient(ENTRY_URL, {
-      reactive: (data, ctxKey) => {
-        return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
-      },
+    client = createWsClient(ENTRY_URL, {
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
           explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
@@ -40,12 +38,22 @@ export const client: VitestClient = (function createVitestClient() {
         onTestArtifactRecord(testId, artifact) {
           explorerTree.recordTestArtifact(testId, artifact)
         },
+        onSpecsCollected(specs, startTime) {
+          specs?.forEach(([config, file]) => {
+            client.state.clearFiles({ config }, [file])
+          })
+          explorerTree.startTime = startTime || performance.now()
+        },
+        onCollected(files) {
+          client.state.collectFiles(files)
+        },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
+          client.state.updateTasks(packs)
           explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
         },
-        onSpecsCollected(_specs, startTime) {
-          explorerTree.startTime = startTime || performance.now()
+        onUserConsoleLog(log) {
+          client.state.updateUserLog(log)
         },
         onFinished(_files, errors, _coverage, executionTime) {
           explorerTree.endRun(executionTime)
@@ -66,7 +74,10 @@ export const client: VitestClient = (function createVitestClient() {
       },
     })
   }
-})()
+  return client
+}
+
+export const client: VitestClient = createVitestClient()
 
 export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
 const status = ref<WebSocketStatus>('CONNECTING')
