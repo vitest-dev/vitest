@@ -8,7 +8,7 @@ import type {
   TestAnnotation,
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
-import type { VitestClientEvents, VitestClientTransport } from './ws'
+import type { VitestClientTransport } from './ws'
 import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
@@ -21,6 +21,7 @@ import { activeFileId } from '../params'
 import { StateManager, testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
+import { WebSocketEvents } from 'vitest'
 
 export { isReport } from '../../constants'
 
@@ -44,7 +45,7 @@ function createVitestClient(): VitestClient {
     transport = createStaticClient()
   }
   else {
-    const handlers: VitestClientEvents = {
+    const handlers: WebSocketEvents = {
       onTestAnnotate(testId: string, annotation: TestAnnotation) {
         explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
       },

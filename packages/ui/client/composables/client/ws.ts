@@ -3,10 +3,8 @@ import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 
-export type VitestClientEvents = Required<Omit<WebSocketEvents, 'onPathsCollected'>>
-
 export interface VitestClientOptions {
-  handlers: VitestClientEvents
+  handlers: WebSocketEvents
   reactive: <T extends object>(v: T) => T
 }
 
