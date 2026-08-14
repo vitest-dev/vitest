@@ -41,7 +41,6 @@ function createVitestClient(): VitestClient {
   }
   else {
     transport = createWsClient(ENTRY_URL, {
-      reactive: reactiveVue as any,
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
           explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })

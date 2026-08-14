@@ -3,10 +3,10 @@ import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import type { StateManager } from './state'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { reactive } from 'vue'
 
 export interface VitestClientOptions {
   handlers: WebSocketEvents
-  reactive: <T extends object>(v: T) => T
 }
 
 export type VitestClientRpc = {
@@ -23,7 +23,6 @@ export interface VitestClient {
 export function createWsClient(url: string, options: VitestClientOptions): VitestClient {
   const {
     handlers,
-    reactive,
   } = options
 
   const reconnectInterval = 2000
@@ -34,7 +33,7 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
     state: undefined!, // initialized in createVitestClient
     rpc: undefined!,
     reconnect,
-  })
+  }) as VitestClient
 
   let onMessage: (data: any) => void
   const birpcHandlers = {
