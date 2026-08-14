@@ -1,7 +1,15 @@
 import type { TestModule } from 'vitest/node'
 import MagicString from 'magic-string'
 import { describe, expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
+import { replaceRoot, runInlineTests } from '../../test-utils'
+
+const importDurationsConfig = {
+  experimental: {
+    importDurations: {
+      limit: 100,
+    },
+  },
+}
 
 async function getSourceModuleDiagnostic(
   source: string,
@@ -11,13 +19,7 @@ async function getSourceModuleDiagnostic(
   const { fs, root, ctx, stderr } = await runInlineTests({
     'source.test.js': source,
     ...dependencies,
-  }, {
-    experimental: {
-      importDurations: {
-        limit: 100,
-      },
-    },
-  })
+  }, importDurationsConfig)
 
   expect(stderr).toBe('')
   expect(ctx).toBeDefined()
@@ -47,8 +49,8 @@ function normalizeModules(
 ) {
   return modules.map(({ selfTime, totalTime, transformTime, ...module }) => ({
     ...module,
-    resolvedId: module.resolvedId.replace(root, '<root>'),
-    importer: module.importer?.replace(root, '<root>'),
+    resolvedId: replaceRoot(module.resolvedId, root),
+    importer: module.importer ? replaceRoot(module.importer, root) : undefined,
     timingTypes: {
       selfTime: typeof selfTime,
       totalTime: typeof totalTime,
@@ -65,8 +67,8 @@ function normalizeUntrackedModules(
     .sort((a, b) => a.resolvedUrl.localeCompare(b.resolvedUrl))
     .map(({ selfTime, totalTime, transformTime, ...module }) => ({
       ...module,
-      resolvedId: module.resolvedId.replace(root, '<root>'),
-      importer: module.importer?.replace(root, '<root>'),
+      resolvedId: replaceRoot(module.resolvedId, root),
+      importer: module.importer ? replaceRoot(module.importer, root) : undefined,
       timingTypes: {
         selfTime: typeof selfTime,
         totalTime: typeof totalTime,
@@ -268,13 +270,7 @@ import { expect, test } from 'vitest'
 import { shared } from './shared.js'
 test('second test', () => expect(shared).toBe(42))
 `,
-    }, {
-      experimental: {
-        importDurations: {
-          limit: 100,
-        },
-      },
-    })
+    }, importDurationsConfig)
 
     expect(stderr).toBe('')
     expect(ctx).toBeDefined()
@@ -344,7 +340,8 @@ test('second test', () => expect(shared).toBe(42))
     skip(task.file.pool !== 'threads', 'run only once inside threads')
 
     const originalImport = 'import \'./original.js\''
-    const source = `${originalImport}
+    const source = `
+${originalImport}
 import { test } from 'vitest'
 test('loads injected modules', () => {})
 `
@@ -353,11 +350,7 @@ test('loads injected modules', () => {})
       'original.js': '',
       'injected-first.js': '',
     }, {
-      experimental: {
-        importDurations: {
-          limit: 100,
-        },
-      },
+      ...importDurationsConfig,
       $viteConfig: {
         plugins: [
           {
@@ -369,6 +362,9 @@ test('loads injected modules', () => {})
               }
 
               const importIndex = code.indexOf(originalImport)
+              if (importIndex === -1) {
+                throw new Error(`Expected source.test.js to contain ${originalImport}`)
+              }
               const transformed = new MagicString(code)
               const injectedImports = [
                 'import \'./injected-first.js\'',
@@ -380,8 +376,6 @@ test('loads injected modules', () => {})
                 includeContent: true,
                 source: id,
               })
-              // Map both generated imports to the original import so the injected one is reported as untracked.
-              map.mappings = map.mappings.replace(/^AAAA/, 'AAAC')
 
               return {
                 code: transformed.toString(),
@@ -406,7 +400,8 @@ test('loads injected modules', () => {})
     const diagnostic = await ctx!.experimental_getSourceModuleDiagnostic(file, testModule)
     const originalModule = diagnostic.modules.find(module => module.rawUrl === './original.js')
 
-    expect(originalModule?.resolvedId).toBe(fs.resolveFile('./original.js'))
+    expect(originalModule).toBeDefined()
+    expect(replaceRoot(originalModule!.resolvedId, root)).toBe('<root>/original.js')
     expect(source.slice(originalModule!.startIndex, originalModule!.endIndex)).toBe('\'./original.js\'')
     expect(diagnostic.untrackedModules).toHaveLength(1)
     expect(normalizeUntrackedModules(diagnostic.untrackedModules, root)).toMatchInlineSnapshot(`
