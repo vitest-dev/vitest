@@ -21,7 +21,6 @@ import { activeFileId } from '../params'
 import { StateManager, testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
-import { WebSocketEvents } from 'vitest'
 
 export { isReport } from '../../constants'
 
@@ -45,50 +44,49 @@ function createVitestClient(): VitestClient {
     transport = createStaticClient()
   }
   else {
-    const handlers: WebSocketEvents = {
-      onTestAnnotate(testId: string, annotation: TestAnnotation) {
-        explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
-      },
-      onTestArtifactRecord(testId, artifact) {
-        explorerTree.recordTestArtifact(testId, artifact)
-      },
-      onSpecsCollected(specs, startTime) {
-        specs?.forEach(([config, file]) => {
-          state.clearFiles({ config }, [file])
-        })
-        explorerTree.startTime = startTime || performance.now()
-      },
-      onCollected(files) {
-        state.collectFiles(files)
-      },
-      onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
-        state.updateTasks(packs)
-        explorerTree.resumeRun(packs, events)
-        testRunState.value = 'running'
-      },
-      onUserConsoleLog(log) {
-        state.updateUserLog(log)
-      },
-      onFinished(_files, errors, _coverage, executionTime) {
-        explorerTree.endRun(executionTime)
-        // don't change the testRunState.value here:
-        // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
-        // - if we change here the state before the tasks states are updated, the cursor position will be lost
-        // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
-        // testRunState.value = 'idle'
-        unhandledErrors.value = (errors || []).map(parseError)
-      },
-      onFinishedReportCoverage() {
-        // reload coverage iframe
-        const iframe = document.querySelector('iframe#vitest-ui-coverage')
-        if (iframe instanceof HTMLIFrameElement && iframe.contentWindow) {
-          iframe.contentWindow.location.reload()
-        }
-      },
-    }
     transport = createWsClient(ENTRY_URL, {
       reactive: reactiveVue as any,
-      handlers,
+      handlers: {
+        onTestAnnotate(testId: string, annotation: TestAnnotation) {
+          explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
+        },
+        onTestArtifactRecord(testId, artifact) {
+          explorerTree.recordTestArtifact(testId, artifact)
+        },
+        onSpecsCollected(specs, startTime) {
+          specs?.forEach(([config, file]) => {
+            state.clearFiles({ config }, [file])
+          })
+          explorerTree.startTime = startTime || performance.now()
+        },
+        onCollected(files) {
+          state.collectFiles(files)
+        },
+        onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
+          state.updateTasks(packs)
+          explorerTree.resumeRun(packs, events)
+          testRunState.value = 'running'
+        },
+        onUserConsoleLog(log) {
+          state.updateUserLog(log)
+        },
+        onFinished(_files, errors, _coverage, executionTime) {
+          explorerTree.endRun(executionTime)
+          // don't change the testRunState.value here:
+          // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
+          // - if we change here the state before the tasks states are updated, the cursor position will be lost
+          // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
+          // testRunState.value = 'idle'
+          unhandledErrors.value = (errors || []).map(parseError)
+        },
+        onFinishedReportCoverage() {
+        // reload coverage iframe
+          const iframe = document.querySelector('iframe#vitest-ui-coverage')
+          if (iframe instanceof HTMLIFrameElement && iframe.contentWindow) {
+            iframe.contentWindow.location.reload()
+          }
+        },
+      },
     })
   }
   return Object.assign(transport, { state })
