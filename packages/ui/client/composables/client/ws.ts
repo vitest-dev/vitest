@@ -21,10 +21,6 @@ export interface VitestClient {
 }
 
 export function createWsClient(url: string, options: VitestClientOptions): VitestClient {
-  const {
-    handlers,
-  } = options
-
   const reconnectInterval = 2000
   const reconnectTries = 10
   let tries = reconnectTries
@@ -61,7 +57,7 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
   } satisfies BirpcOptions<WebSocketHandlers>
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
-    handlers,
+    options.handlers,
     birpcHandlers,
   )
 
