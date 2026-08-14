@@ -450,7 +450,7 @@ async function maybeCollectChromiumGarbage(project: TestProject, sessionId: stri
     (!forceChromiumGC && process.platform !== 'linux')
     || provider.name !== 'playwright'
     || project.config.browser.name !== 'chromium'
-    || !project.config.isolate
+    || !project.config.browser.isolate
     || !provider.getCDPSession
   ) {
     return
