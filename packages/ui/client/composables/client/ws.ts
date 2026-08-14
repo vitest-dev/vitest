@@ -35,7 +35,7 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
     reconnect,
   }) as VitestClient
 
-  // TODO: This is effectively a no-op: `state` already exposes reactive Map proxies,
+  // TODO: This seems effectively a no-op: `state` already exposes reactive Map proxies,
   // and `shallowRef` wraps those same proxies. Revisit the intended optimization from
   // https://github.com/vitest-dev/vitest/pull/5906.
   ctx.state.filesMap = shallowRef(ctx.state.filesMap) as any
