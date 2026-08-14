@@ -34,13 +34,12 @@ ${printReceived(actual)}`,
     let pass: boolean
 
     if (Array.isArray(expected)) {
-      pass = expected.length === 0
-        || expected.some(item =>
-          equals(item, actual, customTesters),
-        )
+      pass = expected.some(item =>
+        equals(item, actual, customTesters),
+      )
     }
     else if (expected instanceof Set) {
-      pass = expected.size === 0 || expected.has(actual) || [...expected].some(item => equals(item, actual, customTesters))
+      pass = expected.has(actual) || [...expected].some(item => equals(item, actual, customTesters))
     }
     else {
       throw new TypeError(

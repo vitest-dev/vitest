@@ -722,6 +722,14 @@ describe('toBeOneOf()', () => {
     expect(null).not.toBeOneOf([undefined])
   })
 
+  it('nothing is one of an empty array or set', () => {
+    expect(0).not.toBeOneOf([])
+    expect(0).not.toBeOneOf(new Set())
+    expect(undefined).not.toBeOneOf([])
+    expect(undefined).not.toBeOneOf(new Set())
+    expect({ a: 0 }).not.toEqual(expect.toBeOneOf([]))
+  })
+
   it.fails('fail with missing negotiation', () => {
     expect(3).toBeOneOf([0, 1, 2])
     expect(3).toBeOneOf([expect.any(String)])
