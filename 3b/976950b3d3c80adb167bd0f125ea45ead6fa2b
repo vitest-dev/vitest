@@ -1,0 +1,21 @@
+docs/architecture/ui-explorer/CALL_CHAIN.html
+  s_42fc0a68333b4e::t_5e0bf41965fc3c 1-561
+docs/architecture/ui-explorer/CALL_CHAIN.json
+  s_42fc0a68333b4e::t_99e8d264f52eb2 1-548
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3b976950b3d3c80adb167bd0f125ea45ead6fa2b",
+  "prompts": {},
+  "sessions": {
+    "s_42fc0a68333b4e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00073f20effef4ourovsan3M00",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
