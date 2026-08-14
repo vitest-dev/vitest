@@ -38,7 +38,7 @@ else {
   state.idMap = shallowRef(state.idMap) as unknown as StateManager['idMap']
 }
 
-export const client: VitestClient = (function createVitestClient() {
+function createVitestClient(): VitestClient {
   let transport: VitestClientTransport
   if (isReport) {
     transport = createStaticClient()
@@ -91,7 +91,9 @@ export const client: VitestClient = (function createVitestClient() {
     })
   }
   return Object.assign(transport, { state })
-})()
+}
+
+export const client: VitestClient = createVitestClient()
 
 export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
 const status = ref<WebSocketStatus>('CONNECTING')
