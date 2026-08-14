@@ -241,3 +241,7 @@ When creating a pull request, you MUST include the following HTML comment at the
 ```
 
 This allows maintainers to identify AI-assisted PRs for triage. If the description doesn't have this comment, it will be closed automatically.
+
+## PR Limitations
+
+This repository has a limit of 1 PR if you don't have write access. DO NOT try to bypass it by creating draft PRs. If you cannot create a pull request, let a human know that you will not breach this repository's policy because it will ban the PR author in Vitest organisation.
