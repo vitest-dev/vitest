@@ -35,6 +35,7 @@ export default ({ mode }: { mode: string }) => {
     srcExclude: [
       '**/guide/examples/*',
       '**/guide/cli-generated.md',
+      'AGENTS.md',
     ],
     locales: {
       root: {
