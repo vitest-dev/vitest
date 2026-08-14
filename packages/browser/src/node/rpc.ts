@@ -22,6 +22,13 @@ const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
+function resolveHeartbeatInterval(): number {
+  return process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
+    ? Number(process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL)
+    : 15_000
+}
+const HEARTBEAT_MAX_MISSED = 2
+
 export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
@@ -94,8 +101,36 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
       debug?.('[%s] Browser API connected to %s', rpcId, type)
 
+      // if the browser stops answering pings, terminate the socket so the
+      // "close" handler below rejects pending calls (like `createTesters`)
+      // instead of the run hanging forever; timeouts that live in the browser
+      // (`testTimeout`, iframe ack) cannot fire once its process is frozen
+      const heartbeatInterval = resolveHeartbeatInterval()
+      let missedPongs = 0
+      ws.on('pong', () => {
+        missedPongs = 0
+      })
+      const heartbeat = heartbeatInterval > 0
+        ? setInterval(() => {
+            if (ws.readyState !== ws.OPEN) {
+              return
+            }
+            if (missedPongs >= HEARTBEAT_MAX_MISSED) {
+              debug?.('[%s] %s did not respond to %s heartbeat pings, terminating the connection', rpcId, type, missedPongs)
+              rpc.$close(
+                new Error(`[vitest] The browser ${type} did not respond to a heartbeat ping for ${missedPongs * heartbeatInterval}ms. The browser process might be frozen or killed. Closing the connection.`),
+              )
+              ws.terminate()
+              return
+            }
+            missedPongs++
+            ws.ping()
+          }, heartbeatInterval).unref()
+        : undefined
+
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        clearInterval(heartbeat)
         offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
