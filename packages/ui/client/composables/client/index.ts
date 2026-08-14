@@ -25,6 +25,9 @@ import { createWsClient } from './ws'
 export { isReport } from '../../constants'
 
 const state = reactiveVue(new StateManager()) as StateManager
+// TODO: This switch is effectively a no-op: `state` already exposes reactive Map
+// proxies, and `shallowRef` wraps those same proxies. Revisit and remove it; it was
+// intended as an optimization in https://github.com/vitest-dev/vitest/pull/5906.
 if (isReport) {
   state.filesMap = reactiveVue(state.filesMap) as any
   state.idMap = reactiveVue(state.idMap) as any
