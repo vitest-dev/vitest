@@ -87,7 +87,7 @@ function createVitestClient(): VitestClient {
       },
     }
     transport = createWsClient(ENTRY_URL, {
-      reactive: data => reactiveVue(data) as unknown as typeof data,
+      reactive: reactiveVue as any,
       handlers,
     })
   }
