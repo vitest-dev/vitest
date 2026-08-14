@@ -371,14 +371,7 @@ export class Vitest {
     catch { }
   }
 
-  /**
-   * Phase B (projects) — instantiate `TestProject`s from the resolved entries
-   * and create their Vite servers, deduping by `viteConfig` identity. Run
-   * `configureVitest` hooks. Validate filters and project resolution. Set up
-   * the core workspace project, populate tags, build reporters.
-   *
-   * @internal
-   */
+  /** @internal */
   async _attachProjectServers(): Promise<void> {
     const resolved = this.config
     const entries = resolved.resolvedProjects || []
