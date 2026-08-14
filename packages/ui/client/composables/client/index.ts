@@ -28,14 +28,14 @@ export interface VitestClient extends VitestClientTransport {
   state: StateManager
 }
 
-const state = reactiveVue(new StateManager()) as StateManager
+const state = reactiveVue(new StateManager())
 if (isReport) {
-  state.filesMap = reactiveVue(state.filesMap) as StateManager['filesMap']
-  state.idMap = reactiveVue(state.idMap) as StateManager['idMap']
+  state.filesMap = reactiveVue(state.filesMap)
+  state.idMap = reactiveVue(state.idMap)
 }
 else {
-  state.filesMap = shallowRef(state.filesMap) as unknown as StateManager['filesMap']
-  state.idMap = shallowRef(state.idMap) as unknown as StateManager['idMap']
+  state.filesMap = shallowRef(state.filesMap) as any
+  state.idMap = shallowRef(state.idMap) as any
 }
 
 function createVitestClient(): VitestClient {
