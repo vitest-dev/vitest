@@ -294,6 +294,17 @@ describe('jest-expect', () => {
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow('toBeTestedPromise')
   })
 
+  it('ignores symbol keys with undefined values, like string keys', () => {
+    const a = Symbol('a')
+    const b = Symbol('b')
+
+    expect({ [a]: undefined }).toEqual({})
+    expect({}).toEqual({ [a]: undefined })
+    expect({ [a]: undefined, [b]: 2 }).toEqual({ [b]: 2 })
+    expect({ [a]: undefined }).not.toEqual({ [a]: 2 })
+    expect({ [a]: undefined }).toEqual({ [b]: undefined })
+  })
+
   it('object', () => {
     expect({}).toEqual({})
     expect({ apples: 13 }).toEqual({ apples: 13 })
@@ -578,6 +589,15 @@ describe('.toStrictEqual()', () => {
   it('does not ignore keys with undefined values', () => {
     expect({
       a: undefined,
+      b: 2,
+    }).not.toStrictEqual({ b: 2 })
+  })
+
+  it('does not ignore symbol keys with undefined values', () => {
+    const a = Symbol('a')
+
+    expect({
+      [a]: undefined,
       b: 2,
     }).not.toStrictEqual({ b: 2 })
   })

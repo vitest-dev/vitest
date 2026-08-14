@@ -289,7 +289,7 @@ function isErrorEqual(
   return result
 }
 
-function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
+function keys(obj: object, hasKey: (obj: object, key: string | symbol) => boolean) {
   const keys = []
 
   for (const key in obj) {
@@ -301,16 +301,17 @@ function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
     (Object.getOwnPropertySymbols(obj) as Array<any>).filter(
       symbol =>
         (Object.getOwnPropertyDescriptor(obj, symbol) as PropertyDescriptor)
-          .enumerable,
+          .enumerable
+          && hasKey(obj, symbol),
     ),
   )
 }
 
-function hasDefinedKey(obj: any, key: string) {
+function hasDefinedKey(obj: any, key: string | symbol) {
   return hasKey(obj, key) && obj[key] !== undefined
 }
 
-function hasKey(obj: any, key: string) {
+function hasKey(obj: any, key: string | symbol) {
   return Object.hasOwn(obj, key)
 }
 
