@@ -10,7 +10,6 @@ export interface VitestClientOptions {
   autoReconnect?: boolean
   reconnectInterval?: number
   reconnectTries?: number
-  connectTimeout?: number
   reactive?: <T extends object>(v: T) => T
   WebSocketConstructor?: typeof WebSocket
 }
@@ -22,8 +21,6 @@ export type VitestClientRpc = {
 export interface VitestClientTransport {
   ws: WebSocket
   rpc: VitestClientRpc
-  // TODO: unused
-  waitForConnection: () => Promise<void>
   reconnect: () => Promise<void>
 }
 
@@ -33,17 +30,14 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
     autoReconnect = true,
     reconnectInterval = 2000,
     reconnectTries = 10,
-    connectTimeout = 60000,
     reactive = v => v,
     WebSocketConstructor = globalThis.WebSocket,
   } = options
 
   let tries = reconnectTries
-  let openPromise: Promise<void>
   const ctx = reactive<VitestClientTransport>({
     ws: new WebSocketConstructor(url),
     rpc: undefined!,
-    waitForConnection: () => openPromise,
     reconnect,
   })
 
@@ -80,23 +74,8 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
   }
 
   function registerWS() {
-    openPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(
-          new Error(
-            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
-          ),
-        )
-      }, connectTimeout)
-      if (ctx.ws.OPEN === ctx.ws.readyState) {
-        resolve()
-      }
-      // still have a listener even if it's already open to update tries
-      ctx.ws.addEventListener('open', () => {
-        tries = reconnectTries
-        resolve()
-        clearTimeout(timeout)
-      })
+    ctx.ws.addEventListener('open', () => {
+      tries = reconnectTries
     })
     ctx.ws.addEventListener('message', (v) => {
       onMessage(v.data)

@@ -67,7 +67,6 @@ export function createStaticClient(): VitestClientTransport {
     ws: new EventTarget() as WebSocket,
     rpc: undefined!,
     reconnect: () => registerMetadata(),
-    waitForConnection: async () => {},
   }) as VitestClientTransport
 
   async function registerMetadata() {
