@@ -69,13 +69,6 @@ export function TestConfigPlugin(
         handler(config) {
           const { browser, ...options } = cliOptions
 
-          // undefined values should not override config values:
-          for (const key in options) {
-            if (options[key as keyof typeof options] === undefined) {
-              delete options[key as keyof typeof options]
-            }
-          }
-
           // We don't want to use Vite's merge because we want to OVERRIDE options
           // By default, Vite extends arrays, for example, but CLI options should have the priority
           config.test = deepMerge({}, config.test ?? {}, options)
