@@ -7,11 +7,7 @@ export type VitestClientEvents = Required<Omit<WebSocketEvents, 'onPathsCollecte
 
 export interface VitestClientOptions {
   handlers: VitestClientEvents
-  autoReconnect?: boolean
-  reconnectInterval?: number
-  reconnectTries?: number
-  reactive?: <T extends object>(v: T) => T
-  WebSocketConstructor?: typeof WebSocket
+  reactive: <T extends object>(v: T) => T
 }
 
 export type VitestClientRpc = {
@@ -27,16 +23,14 @@ export interface VitestClientTransport {
 export function createWsClient(url: string, options: VitestClientOptions): VitestClientTransport {
   const {
     handlers,
-    autoReconnect = true,
-    reconnectInterval = 2000,
-    reconnectTries = 10,
-    reactive = v => v,
-    WebSocketConstructor = globalThis.WebSocket,
+    reactive,
   } = options
 
+  const reconnectInterval = 2000
+  const reconnectTries = 10
   let tries = reconnectTries
   const ctx = reactive<VitestClientTransport>({
-    ws: new WebSocketConstructor(url),
+    ws: new WebSocket(url),
     rpc: undefined!,
     reconnect,
   })
@@ -65,11 +59,8 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
     birpcHandlers,
   )
 
-  async function reconnect(reset = false) {
-    if (reset) {
-      tries = reconnectTries
-    }
-    ctx.ws = new WebSocketConstructor(url)
+  async function reconnect() {
+    ctx.ws = new WebSocket(url)
     registerWS()
   }
 
@@ -82,7 +73,7 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
     })
     ctx.ws.addEventListener('close', () => {
       tries -= 1
-      if (autoReconnect && tries > 0) {
+      if (tries > 0) {
         setTimeout(reconnect, reconnectInterval)
       }
     })
