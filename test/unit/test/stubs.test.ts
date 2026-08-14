@@ -1,6 +1,6 @@
 /* eslint-disable vars-on-top */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 declare global {
 
@@ -142,5 +142,46 @@ describe('stubbing envs', () => {
     vi.unstubAllEnvs()
     expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBe('development')
     expect(process.env.VITE_TEST_UPDATE_ENV).toBe('development')
+  })
+})
+
+describe('stubbing envs after process.env was replaced', () => {
+  const originalEnv = process.env
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, VITE_TEST_UPDATE_ENV: 'development' }
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    process.env = originalEnv
+  })
+
+  it('stubs and restores env', () => {
+    vi.stubEnv('VITE_TEST_UPDATE_ENV', 'production')
+    expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBe('production')
+    expect(process.env.VITE_TEST_UPDATE_ENV).toBe('production')
+    vi.unstubAllEnvs()
+    expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBe('development')
+    expect(process.env.VITE_TEST_UPDATE_ENV).toBe('development')
+  })
+
+  it('stubs to undefined and restores env', () => {
+    vi.stubEnv('VITE_TEST_UPDATE_ENV', undefined)
+    expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBeUndefined()
+    expect(process.env.VITE_TEST_UPDATE_ENV).toBeUndefined()
+    vi.unstubAllEnvs()
+    expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBe('development')
+    expect(process.env.VITE_TEST_UPDATE_ENV).toBe('development')
+  })
+
+  it('lists the keys of the current process.env', () => {
+    process.env.VITE_TEST_LATE_ENV = 'late'
+    expect('VITE_TEST_LATE_ENV' in import.meta.env).toBe(true)
+    expect(Object.keys(import.meta.env)).toContain('VITE_TEST_LATE_ENV')
+
+    delete process.env.VITE_TEST_LATE_ENV
+    expect('VITE_TEST_LATE_ENV' in import.meta.env).toBe(false)
+    expect(Object.keys(import.meta.env)).not.toContain('VITE_TEST_LATE_ENV')
   })
 })

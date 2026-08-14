@@ -21,6 +21,7 @@ import {
   ssrModuleExportsKey,
 } from 'vite/module-runner'
 import { Traces } from '../../utils/traces'
+import { createImportMetaEnvProxy } from '../importMetaEnv'
 import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
@@ -465,36 +466,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     // TODO: should also skip for `.js` with `type="module"`
     return !path.endsWith('.mjs') && 'default' in mod
   }
-}
-
-export function createImportMetaEnvProxy(): ModuleRunnerImportMeta['env'] {
-  // packages/vitest/src/node/plugins/index.ts:146
-  const booleanKeys = ['DEV', 'PROD', 'SSR']
-  return new Proxy(process.env, {
-    get(_, key) {
-      if (typeof key !== 'string') {
-        return undefined
-      }
-      if (booleanKeys.includes(key)) {
-        return !!process.env[key]
-      }
-      return process.env[key]
-    },
-    set(_, key, value) {
-      if (typeof key !== 'string') {
-        return true
-      }
-
-      if (booleanKeys.includes(key)) {
-        process.env[key] = value ? '1' : ''
-      }
-      else {
-        process.env[key] = value
-      }
-
-      return true
-    },
-  }) as ModuleRunnerImportMeta['env']
 }
 
 function updateStyle(id: string, css: string) {
