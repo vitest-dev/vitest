@@ -66,8 +66,8 @@ export function createStaticClient(): VitestClientTransport {
   const ctx = reactive<VitestClientTransport>({
     ws: new EventTarget() as WebSocket,
     rpc: undefined!,
-    reconnect: () => registerMetadata(),
-  }) as VitestClientTransport
+    reconnect: async () => {}
+  })
 
   async function registerMetadata() {
     const content = await window.HTML_REPORT_METADATA!
