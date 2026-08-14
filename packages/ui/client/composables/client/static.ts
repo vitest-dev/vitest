@@ -71,9 +71,6 @@ export function createStaticClient(): VitestClient {
     reconnect: async () => {},
   }) as VitestClient
 
-  ctx.state.filesMap = reactive(ctx.state.filesMap) as any
-  ctx.state.idMap = reactive(ctx.state.idMap) as any
-
   async function registerMetadata() {
     const content = await window.HTML_REPORT_METADATA!
     let metadata: HTMLReportMetadata
