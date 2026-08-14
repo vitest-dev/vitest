@@ -1121,7 +1121,6 @@ export async function resolveConfig(
   const root = resolve(options.root || process.cwd())
   const configPath = resolveConfigPath(root, options)
   options.config = configPath
-  options.root = root
 
   const captures: ConfigResolutionCaptures = {}
   const inlineConfig: InlineConfig = mergeConfig(
@@ -1139,7 +1138,7 @@ export async function resolveConfig(
         ...BrowserLoaderPlugin(captures, pluginsHarness),
       ],
     } satisfies InlineConfig,
-    mergeConfig(viteOverrides, { root }),
+    mergeConfig(viteOverrides, options.root ? { root } : {}),
   )
 
   const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
