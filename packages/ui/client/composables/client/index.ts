@@ -35,12 +35,12 @@ else {
 }
 
 function createVitestClient(): VitestClient {
-  let transport: VitestClient
+  let client: VitestClient
   if (isReport) {
-    transport = createStaticClient()
+    client = createStaticClient()
   }
   else {
-    transport = createWsClient(ENTRY_URL, {
+    client = createWsClient(ENTRY_URL, {
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
           explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
@@ -84,8 +84,8 @@ function createVitestClient(): VitestClient {
       },
     })
   }
-  transport.state = state
-  return transport
+  client.state = state
+  return client
 }
 
 export const client: VitestClient = createVitestClient()
