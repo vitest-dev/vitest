@@ -332,7 +332,6 @@ const {
                 :typecheck="item.typecheck === true"
                 :label="item.label"
                 :project-name="item.projectName ?? ''"
-                :project-name-color="item.projectNameColor ?? ''"
                 :state="item.state"
                 :duration="item.duration"
                 :slow="item.slow === true"

@@ -70,7 +70,7 @@ export const client: VitestClient = (function createVitestClient() {
 
 export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
 const status = ref<WebSocketStatus>('CONNECTING')
-export const availableProjects = shallowRef<string[]>([])
+export const availableProjects = computed(() => config.value.projects?.map(project => project.name || '') || [])
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
@@ -170,10 +170,7 @@ watch(
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
       ])
-      const projects = _config.projects.map(project => ({
-        name: project.name || '',
-        color: project.color,
-      }))
+      config.value = _config
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
         files = filenames.map(([{ name, root }, filepath]) => {
@@ -182,12 +179,10 @@ watch(
           return file
         })
       }
-      availableProjects.value = projects.map(p => p.name)
-      explorerTree.loadFiles(files, projects)
+      explorerTree.loadFiles(files)
       client.state.collectFiles(files)
       explorerTree.startRun()
       unhandledErrors.value = (errors || []).map(parseError)
-      config.value = _config
     })
 
     ws.addEventListener('close', () => {
