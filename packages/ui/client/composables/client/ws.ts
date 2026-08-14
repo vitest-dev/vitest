@@ -2,16 +2,16 @@ import type { BirpcOptions, PromisifyFn } from 'birpc'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { StateManager } from './state'
+
+export type VitestClientEvents = Required<Omit<WebSocketEvents, 'onPathsCollected'>>
 
 export interface VitestClientOptions {
-  handlers?: Partial<WebSocketEvents>
+  handlers: VitestClientEvents
   autoReconnect?: boolean
   reconnectInterval?: number
   reconnectTries?: number
   connectTimeout?: number
-  reactive?: <T>(v: T, forKey: 'state' | 'idMap' | 'filesMap') => T
-  ref?: <T>(v: T) => { value: T }
+  reactive?: <T extends object>(v: T) => T
   WebSocketConstructor?: typeof WebSocket
 }
 
@@ -19,18 +19,17 @@ export type VitestClientRpc = {
   [K in keyof WebSocketHandlers]: PromisifyFn<WebSocketHandlers[K]>
 }
 
-export interface VitestClient {
+export interface VitestClientTransport {
   ws: WebSocket
-  state: StateManager
   rpc: VitestClientRpc
   // TODO: unused
   waitForConnection: () => Promise<void>
   reconnect: () => Promise<void>
 }
 
-export function createWsClient(url: string, options: VitestClientOptions = {}): VitestClient {
+export function createWsClient(url: string, options: VitestClientOptions): VitestClientTransport {
   const {
-    handlers = {},
+    handlers,
     autoReconnect = true,
     reconnectInterval = 2000,
     reconnectTries = 10,
@@ -41,51 +40,14 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
 
   let tries = reconnectTries
   let openPromise: Promise<void>
-  const ctx = reactive<VitestClient>({
+  const ctx = reactive<VitestClientTransport>({
     ws: new WebSocketConstructor(url),
-    state: new StateManager(),
     rpc: undefined!,
     waitForConnection: () => openPromise,
     reconnect,
-  }, 'state')
-
-  ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
-  ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
+  })
 
   let onMessage: (data: any) => void
-  const functions: WebSocketEvents = {
-    onTestAnnotate(testId, annotation) {
-      handlers.onTestAnnotate?.(testId, annotation)
-    },
-    onTestArtifactRecord(testId, artifact) {
-      handlers.onTestArtifactRecord?.(testId, artifact)
-    },
-    onSpecsCollected(specs, startTime) {
-      specs?.forEach(([config, file]) => {
-        ctx.state.clearFiles({ config }, [file])
-      })
-      handlers.onSpecsCollected?.(specs, startTime)
-    },
-    onCollected(files) {
-      ctx.state.collectFiles(files)
-      handlers.onCollected?.(files)
-    },
-    onTaskUpdate(packs, events) {
-      ctx.state.updateTasks(packs)
-      handlers.onTaskUpdate?.(packs, events)
-    },
-    onUserConsoleLog(log) {
-      ctx.state.updateUserLog(log)
-      handlers.onUserConsoleLog?.(log)
-    },
-    onFinished(files, errors, coverage, executionTime) {
-      handlers.onFinished?.(files, errors, coverage, executionTime)
-    },
-    onFinishedReportCoverage() {
-      handlers.onFinishedReportCoverage?.()
-    },
-  }
-
   const birpcHandlers = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
@@ -105,7 +67,7 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
   } satisfies BirpcOptions<WebSocketHandlers>
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
-    functions,
+    handlers,
     birpcHandlers,
   )
 

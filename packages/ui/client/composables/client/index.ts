@@ -8,7 +8,7 @@ import type {
   TestAnnotation,
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
-import type { VitestClient } from './ws'
+import type { VitestClientEvents, VitestClientTransport } from './ws'
 import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
@@ -18,54 +18,79 @@ import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
-import { testRunState, unhandledErrors } from './state'
+import { StateManager, testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
 
 export { isReport } from '../../constants'
 
+export interface VitestClient extends VitestClientTransport {
+  state: StateManager
+}
+
+const state = reactiveVue(new StateManager()) as StateManager
+if (isReport) {
+  state.filesMap = reactiveVue(state.filesMap) as StateManager['filesMap']
+  state.idMap = reactiveVue(state.idMap) as StateManager['idMap']
+}
+else {
+  state.filesMap = shallowRef(state.filesMap) as unknown as StateManager['filesMap']
+  state.idMap = shallowRef(state.idMap) as unknown as StateManager['idMap']
+}
+
 export const client: VitestClient = (function createVitestClient() {
+  let transport: VitestClientTransport
   if (isReport) {
-    return createStaticClient()
+    transport = createStaticClient()
   }
   else {
-    return createWsClient(ENTRY_URL, {
-      reactive: (data, ctxKey) => {
-        return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
+    const handlers: VitestClientEvents = {
+      onTestAnnotate(testId: string, annotation: TestAnnotation) {
+        explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
       },
-      handlers: {
-        onTestAnnotate(testId: string, annotation: TestAnnotation) {
-          explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
-        },
-        onTestArtifactRecord(testId, artifact) {
-          explorerTree.recordTestArtifact(testId, artifact)
-        },
-        onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
-          explorerTree.resumeRun(packs, events)
-          testRunState.value = 'running'
-        },
-        onSpecsCollected(_specs, startTime) {
-          explorerTree.startTime = startTime || performance.now()
-        },
-        onFinished(_files, errors, _coverage, executionTime) {
-          explorerTree.endRun(executionTime)
-          // don't change the testRunState.value here:
-          // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
-          // - if we change here the state before the tasks states are updated, the cursor position will be lost
-          // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
-          // testRunState.value = 'idle'
-          unhandledErrors.value = (errors || []).map(parseError)
-        },
-        onFinishedReportCoverage() {
-          // reload coverage iframe
-          const iframe = document.querySelector('iframe#vitest-ui-coverage')
-          if (iframe instanceof HTMLIFrameElement && iframe.contentWindow) {
-            iframe.contentWindow.location.reload()
-          }
-        },
+      onTestArtifactRecord(testId, artifact) {
+        explorerTree.recordTestArtifact(testId, artifact)
       },
+      onSpecsCollected(specs, startTime) {
+        specs?.forEach(([config, file]) => {
+          state.clearFiles({ config }, [file])
+        })
+        explorerTree.startTime = startTime || performance.now()
+      },
+      onCollected(files) {
+        state.collectFiles(files)
+      },
+      onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
+        state.updateTasks(packs)
+        explorerTree.resumeRun(packs, events)
+        testRunState.value = 'running'
+      },
+      onUserConsoleLog(log) {
+        state.updateUserLog(log)
+      },
+      onFinished(_files, errors, _coverage, executionTime) {
+        explorerTree.endRun(executionTime)
+        // don't change the testRunState.value here:
+        // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
+        // - if we change here the state before the tasks states are updated, the cursor position will be lost
+        // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
+        // testRunState.value = 'idle'
+        unhandledErrors.value = (errors || []).map(parseError)
+      },
+      onFinishedReportCoverage() {
+        // reload coverage iframe
+        const iframe = document.querySelector('iframe#vitest-ui-coverage')
+        if (iframe instanceof HTMLIFrameElement && iframe.contentWindow) {
+          iframe.contentWindow.location.reload()
+        }
+      },
+    }
+    transport = createWsClient(ENTRY_URL, {
+      reactive: data => reactiveVue(data) as unknown as typeof data,
+      handlers,
     })
   }
+  return Object.assign(transport, { state })
 })()
 
 export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
