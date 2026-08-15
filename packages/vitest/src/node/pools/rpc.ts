@@ -48,7 +48,10 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
   // `rejectionHandled` can retract the exact errors it added to the shared state.
   // Scoped to this RPC instance, which is created per worker, so the worker-local
   // rejection ids cannot collide with another worker's.
-  const reportedRejections = new Map<number, unknown[]>()
+  // Rejections that are never retracted stay here for the life of the worker, and
+  // the pool outlives a watch rerun while `clearErrors` empties the error set, so
+  // the errors are referenced weakly to avoid pinning them past that point.
+  const reportedRejections = new Map<number, WeakRef<object>[]>()
 
   function getEnvironment(environmentName: string): DevEnvironment {
     const environment = project.vite.environments[environmentName]
@@ -339,7 +342,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     onUnhandledError(err, type, rejectionId) {
       const collected = vitest.state.catchError(err, type)
       if (rejectionId != null && collected.length) {
-        reportedRejections.set(rejectionId, collected)
+        reportedRejections.set(rejectionId, collected.map(error => new WeakRef(error)))
       }
     },
     onUnhandledRejectionHandled(rejectionId) {
@@ -348,7 +351,12 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         return
       }
       reportedRejections.delete(rejectionId)
-      collected.forEach(error => vitest.state.removeUnhandledError(error))
+      collected.forEach((ref) => {
+        const error = ref.deref()
+        if (error) {
+          vitest.state.removeUnhandledError(error)
+        }
+      })
     },
     onAsyncLeaks(leaks) {
       vitest.state.catchLeaks(leaks)

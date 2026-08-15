@@ -63,21 +63,24 @@ export class StateManager {
    * Returns the errors that were actually collected, which callers can hold on to
    * in order to remove them again later via {@link removeUnhandledError}. An
    * `AggregateError` contributes one entry per inner error, and an error that was
-   * filtered out by `onUnhandledError` contributes none.
+   * filtered out by `onUnhandledError` contributes none. Primitive errors are
+   * wrapped, so every collected entry is an object.
    */
-  catchError(error: unknown, type: string): unknown[] {
+  catchError(error: unknown, type: string): object[] {
     if (isAggregateError(error)) {
       return error.errors.flatMap(error => this.catchError(error, type))
     }
 
+    let collected: object
     if (typeof error === 'object' && error !== null) {
       (error as Record<string, unknown>).type = type
+      collected = error
     }
     else {
-      error = { type, message: error }
+      collected = { type, message: error }
     }
 
-    const _error = error as Record<string, any>
+    const _error = collected as Record<string, any>
     if (_error && typeof _error === 'object' && _error.code === 'VITEST_PENDING') {
       const task = this.idMap.get(_error.taskId)
       if (task) {
@@ -89,9 +92,9 @@ export class StateManager {
       return []
     }
 
-    if (!this.onUnhandledError || this.onUnhandledError(error as any) !== false) {
-      this.errorsSet.add(error)
-      return [error]
+    if (!this.onUnhandledError || this.onUnhandledError(collected as any) !== false) {
+      this.errorsSet.add(collected)
+      return [collected]
     }
 
     return []
