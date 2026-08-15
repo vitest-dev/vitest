@@ -29,7 +29,13 @@ export interface RuntimeRPC {
   transform: (id: string) => Promise<{ code?: string }>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
-  onUnhandledError: (err: unknown, type: string) => void
+  /**
+   * `rejectionId` is set for unhandled rejections, and identifies the promise
+   * within the reporting worker so a later `onUnhandledRejectionHandled` can
+   * retract the error.
+   */
+  onUnhandledError: (err: unknown, type: string, rejectionId?: number) => void
+  onUnhandledRejectionHandled: (rejectionId: number) => void
   onAsyncLeaks: (leak: AsyncLeak[]) => void
   onQueued: (file: File) => void
   onCollected: (files: File[]) => Promise<void>

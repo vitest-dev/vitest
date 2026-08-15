@@ -59,9 +59,15 @@ export class StateManager {
     this.onUnhandledError = options.onUnhandledError
   }
 
-  catchError(error: unknown, type: string): void {
+  /**
+   * Returns the errors that were actually collected, which callers can hold on to
+   * in order to remove them again later via {@link removeUnhandledError}. An
+   * `AggregateError` contributes one entry per inner error, and an error that was
+   * filtered out by `onUnhandledError` contributes none.
+   */
+  catchError(error: unknown, type: string): unknown[] {
     if (isAggregateError(error)) {
-      return error.errors.forEach(error => this.catchError(error, type))
+      return error.errors.flatMap(error => this.catchError(error, type))
     }
 
     if (typeof error === 'object' && error !== null) {
@@ -80,12 +86,19 @@ export class StateManager {
         task.result.state = 'skip'
         task.result.note = _error.note
       }
-      return
+      return []
     }
 
     if (!this.onUnhandledError || this.onUnhandledError(error as any) !== false) {
       this.errorsSet.add(error)
+      return [error]
     }
+
+    return []
+  }
+
+  removeUnhandledError(error: unknown): void {
+    this.errorsSet.delete(error)
   }
 
   catchLeaks(leaks: AsyncLeak[]): void {

@@ -44,6 +44,12 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
   }
   project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
 
+  // unhandled rejections reported by this worker, kept so that a later
+  // `rejectionHandled` can retract the exact errors it added to the shared state.
+  // Scoped to this RPC instance, which is created per worker, so the worker-local
+  // rejection ids cannot collide with another worker's.
+  const reportedRejections = new Map<number, unknown[]>()
+
   function getEnvironment(environmentName: string): DevEnvironment {
     const environment = project.vite.environments[environmentName]
     if (!environment) {
@@ -330,8 +336,19 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         await vitest._testRun.log(log)
       }
     },
-    onUnhandledError(err, type) {
-      vitest.state.catchError(err, type)
+    onUnhandledError(err, type, rejectionId) {
+      const collected = vitest.state.catchError(err, type)
+      if (rejectionId != null && collected.length) {
+        reportedRejections.set(rejectionId, collected)
+      }
+    },
+    onUnhandledRejectionHandled(rejectionId) {
+      const collected = reportedRejections.get(rejectionId)
+      if (!collected) {
+        return
+      }
+      reportedRejections.delete(rejectionId)
+      collected.forEach(error => vitest.state.removeUnhandledError(error))
     },
     onAsyncLeaks(leaks) {
       vitest.state.catchLeaks(leaks)
