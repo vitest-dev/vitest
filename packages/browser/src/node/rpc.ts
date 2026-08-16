@@ -15,7 +15,7 @@ import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname, join, resolve } from 'pathe'
-import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
+import { BrowserConnectionError, createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
@@ -104,7 +104,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         }
         // this will reject any hanging methods if there are any
         rpc.$close(
-          new Error(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
+          new BrowserConnectionError(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
         )
       })
     })
