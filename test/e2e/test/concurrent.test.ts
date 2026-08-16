@@ -1096,7 +1096,7 @@ test('aroundAll enforces teardown timeout when inner error is caught', async () 
 })
 
 function extractLogs(log: string) {
-  const result = log.split('\n').filter(line => line.match(/^![<>]/)).join('\n')
+  const result = log.split('\n').filter(line => line.match(/^(?:![<>]|\d+ -> \d+)/)).join('\n')
   return `\n${result.trim()}\n`
 }
 
@@ -1214,33 +1214,33 @@ describe.for(["a", "b"])("%s", { concurrent: true }, () => {
   `)
 })
 
-// we could enforce this by adding yet another limit globally at `runTest`
-// (like we originally had before https://github.com/vitest-dev/vitest/pull/9653)
-// but there's no way to achieve the same for deep suite-level hooks anyways,
-// so we don't do that (yet).
-test('non-sibling test sequential lifecycle non-guarantee', async () => {
+test('non-sibling test sequential lifecycle guarantee', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+let inFlight = 0
+
+function logInFlight(change: number, ...names: string[]) {
+  const previous = inFlight
+  inFlight += change
+  console.log(previous, "->", inFlight, ...names)
+}
 
 describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
   describe.for(["b0", "b1"])("%s", { concurrent: true }, () => {
     beforeEach(async ({ task }) => {
-      console.log("!> beforeEach", task.suite.suite.name, task.suite.name, task.name)
+      logInFlight(1, "beforeEach", task.suite.suite.name, task.suite.name, task.name)
       await sleep(10)
-      console.log("!< beforeEach", task.suite.suite.name, task.suite.name, task.name)
     })
 
     afterEach(async ({ task }) => {
-      console.log("!> afterEach", task.suite.suite.name, task.suite.name, task.name)
       await sleep(10)
-      console.log("!< afterEach", task.suite.suite.name, task.suite.name, task.name)
+      logInFlight(-1, "afterEach", task.suite.suite.name, task.suite.name, task.name)
     })
 
     test("test", async ({ task }) => {
-      console.log("!> test", task.suite.suite.name,task.suite.name, task.name)
+      logInFlight(0, "test", task.suite.suite.name, task.suite.name, task.name)
       await sleep(10)
-      console.log("!< test", task.suite.suite.name,task.suite.name, task.name)
     })
   })
 })
@@ -1252,30 +1252,18 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
 
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "
-    !> beforeEach a0 b0 test
-    !> beforeEach a0 b1 test
-    !< beforeEach a0 b0 test
-    !> beforeEach a1 b0 test
-    !< beforeEach a0 b1 test
-    !> beforeEach a1 b1 test
-    !< beforeEach a1 b0 test
-    !> test a0 b0 test
-    !< beforeEach a1 b1 test
-    !> test a0 b1 test
-    !< test a0 b0 test
-    !> test a1 b0 test
-    !< test a0 b1 test
-    !> test a1 b1 test
-    !< test a1 b0 test
-    !> afterEach a0 b0 test
-    !< test a1 b1 test
-    !> afterEach a0 b1 test
-    !< afterEach a0 b0 test
-    !> afterEach a1 b0 test
-    !< afterEach a0 b1 test
-    !> afterEach a1 b1 test
-    !< afterEach a1 b0 test
-    !< afterEach a1 b1 test
+    0 -> 1 beforeEach a0 b0 test
+    1 -> 2 beforeEach a0 b1 test
+    2 -> 2 test a0 b0 test
+    2 -> 2 test a0 b1 test
+    2 -> 1 afterEach a0 b0 test
+    1 -> 2 beforeEach a1 b0 test
+    2 -> 1 afterEach a0 b1 test
+    1 -> 2 beforeEach a1 b1 test
+    2 -> 2 test a1 b0 test
+    2 -> 2 test a1 b1 test
+    2 -> 1 afterEach a1 b0 test
+    1 -> 0 afterEach a1 b1 test
     "
   `)
 
@@ -1307,25 +1295,29 @@ test('non-sibling suite sequential lifecycle non-guarantee', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+let inFlight = 0
+
+function logInFlight(change: number, ...names: string[]) {
+  const previous = inFlight
+  inFlight += change
+  console.log(previous, "->", inFlight, ...names)
+}
 
 describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
   describe.for(["b0", "b1"])("%s", { concurrent: true }, () => {
     beforeAll(async ({}, suite) => {
-      console.log("!> beforeAll", suite.suite.name, suite.name)
+      logInFlight(1, "beforeAll", suite.suite.name, suite.name)
       await sleep(10)
-      console.log("!< beforeAll", suite.suite.name, suite.name)
     })
 
     afterAll(async ({}, suite) => {
-      console.log("!> afterAll", suite.suite.name, suite.name)
       await sleep(10)
-      console.log("!< afterAll", suite.suite.name, suite.name)
+      logInFlight(-1, "afterAll", suite.suite.name, suite.name)
     })
 
     test("test", async ({ task }) => {
-      console.log("!> test", task.suite.suite.name, task.suite.name, task.name)
+      logInFlight(0, "test", task.suite.suite.name, task.suite.name, task.name)
       await sleep(10)
-      console.log("!< test", task.suite.suite.name, task.suite.name, task.name)
     })
   })
 })
@@ -1337,30 +1329,18 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
 
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "
-    !> beforeAll a0 b0
-    !> beforeAll a0 b1
-    !< beforeAll a0 b0
-    !> beforeAll a1 b0
-    !< beforeAll a0 b1
-    !> beforeAll a1 b1
-    !< beforeAll a1 b0
-    !> test a0 b0 test
-    !< beforeAll a1 b1
-    !> test a0 b1 test
-    !< test a0 b0 test
-    !> test a1 b0 test
-    !< test a0 b1 test
-    !> test a1 b1 test
-    !< test a1 b0 test
-    !> afterAll a0 b0
-    !< test a1 b1 test
-    !> afterAll a0 b1
-    !< afterAll a0 b0
-    !> afterAll a1 b0
-    !< afterAll a0 b1
-    !> afterAll a1 b1
-    !< afterAll a1 b0
-    !< afterAll a1 b1
+    0 -> 1 beforeAll a0 b0
+    1 -> 2 beforeAll a0 b1
+    2 -> 3 beforeAll a1 b0
+    3 -> 4 beforeAll a1 b1
+    4 -> 4 test a0 b0 test
+    4 -> 4 test a0 b1 test
+    4 -> 4 test a1 b0 test
+    4 -> 4 test a1 b1 test
+    4 -> 3 afterAll a0 b0
+    3 -> 2 afterAll a0 b1
+    2 -> 1 afterAll a1 b0
+    1 -> 0 afterAll a1 b1
     "
   `)
 

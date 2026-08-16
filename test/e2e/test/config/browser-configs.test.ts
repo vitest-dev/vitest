@@ -42,8 +42,12 @@ const vitest = vi.defineHelper(async (options: TestUserConfig & { $viteConfig?: 
     vitestOptions,
   )
   onTestFinished(async () => {
-    await vitest.vite.waitForRequestsIdle()
-    await vitest.close()
+    try {
+      await vitest.vite.waitForRequestsIdle()
+    }
+    finally {
+      await vitest.close()
+    }
   })
   return vitest
 })
