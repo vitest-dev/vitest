@@ -105,3 +105,31 @@ test.runIf(
     + `The browser process might be frozen or killed. Closing the connection.`,
   )
 })
+
+test('warns when VITEST_BROWSER_HEARTBEAT_INTERVAL is not a number and uses the default', async () => {
+  process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL = 'not-a-number'
+  onTestFinished(() => {
+    delete process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
+  })
+
+  const { ctx, stderr } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': `
+        import { test } from 'vitest'
+
+        test('works', () => {})
+      `,
+    },
+    {
+      browser: {
+        instances: [instances[0]],
+      },
+    },
+  )
+
+  expect(stderr).toContain(
+    'VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "not-a-number". '
+    + 'Using the default interval of 15000ms instead.',
+  )
+  expect(ctx!.state.getUnhandledErrors()).toEqual([])
+})

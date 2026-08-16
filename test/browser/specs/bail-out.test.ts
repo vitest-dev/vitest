@@ -7,7 +7,11 @@ test('fails gracefully when browser crashes', async () => {
     reporters: [['verbose', { isTTY: false }]],
   })
 
-  expect(stderr).toContain('Browser connection was closed while running tests. Was the page closed unexpectedly?')
+  // the crash is reported over CDP and as a websocket disconnect;
+  // whichever arrives first fails the run
+  expect(stderr).toMatch(
+    /page crashed while running tests|Browser connection was closed while running tests/,
+  )
 })
 
 test('vitest bails out when the iframe is no longer accessible', async () => {

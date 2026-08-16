@@ -2,7 +2,7 @@ import type { MockerRegistry } from '@vitest/mocker'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject, Vitest } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
@@ -22,12 +22,25 @@ const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-function resolveHeartbeatInterval(): number {
-  return process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
-    ? Number(process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL)
-    : 15_000
-}
+const DEFAULT_HEARTBEAT_INTERVAL = 15_000
 const HEARTBEAT_MAX_MISSED = 2
+let warnedInvalidHeartbeatInterval = false
+
+function resolveHeartbeatInterval(vitest: Vitest): number {
+  const rawInterval = process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
+  if (!rawInterval) {
+    return DEFAULT_HEARTBEAT_INTERVAL
+  }
+  const interval = Number(rawInterval)
+  if (Number.isNaN(interval)) {
+    if (!warnedInvalidHeartbeatInterval) {
+      warnedInvalidHeartbeatInterval = true
+      vitest.logger.warn(`VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "${rawInterval}". Using the default interval of ${DEFAULT_HEARTBEAT_INTERVAL}ms instead.`)
+    }
+    return DEFAULT_HEARTBEAT_INTERVAL
+  }
+  return interval
+}
 
 export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
   const vite = globalServer.vite
@@ -105,7 +118,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       // "close" handler below rejects pending calls (like `createTesters`)
       // instead of the run hanging forever; timeouts that live in the browser
       // (`testTimeout`, iframe ack) cannot fire once its process is frozen
-      const heartbeatInterval = resolveHeartbeatInterval()
+      const heartbeatInterval = resolveHeartbeatInterval(vitest)
       let missedPongs = 0
       ws.on('pong', () => {
         missedPongs = 0
