@@ -27,10 +27,12 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
     return _moduleRunner
   }
 
-  process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
-  }
   const state = () => getSafeWorkerState() || options.state
+
+  process.exit = (code = process.exitCode || 0): never => {
+    const filepath = state().filepath
+    throw new Error(`process.exit unexpectedly called with "${code}"${filepath ? ` (test file: ${filepath})` : ''}`)
+  }
 
   listenForErrors(state)
 

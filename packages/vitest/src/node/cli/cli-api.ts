@@ -129,12 +129,20 @@ export async function startVitest(
     stdinCleanup = registerConsoleShortcuts(ctx, stdin, stdout)
   }
 
-  ctx.onAfterSetServer(() => {
-    if (ctx.config.standalone) {
-      ctx.standalone()
+  ctx.onAfterSetServer(async () => {
+    if (ctx.closingPromise) {
+      return
     }
-    else {
-      ctx.start(cliFilters)
+    try {
+      if (ctx.config.standalone) {
+        await ctx.standalone()
+      }
+      else {
+        await ctx.start(cliFilters)
+      }
+    }
+    catch (error) {
+      reportStartError(ctx, error)
     }
   })
 
@@ -157,27 +165,7 @@ export async function startVitest(
     return ctx
   }
   catch (e) {
-    if (e instanceof FilesNotFoundError) {
-      return ctx
-    }
-
-    if (e instanceof GitNotFoundError) {
-      ctx.logger.error(e.message)
-      return ctx
-    }
-
-    if (
-      e instanceof IncludeTaskLocationDisabledError
-      || e instanceof RangeLocationFilterProvidedError
-      || e instanceof LocationFilterFileNotFoundError
-    ) {
-      ctx.logger.printError(e, { verbose: false })
-      return ctx
-    }
-
-    process.exitCode = 1
-    ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
-    ctx.logger.error('\n\n')
+    reportStartError(ctx, e)
     return ctx
   }
   finally {
@@ -186,6 +174,30 @@ export async function startVitest(
       await ctx.close()
     }
   }
+}
+
+function reportStartError(ctx: Vitest, error: unknown): void {
+  if (error instanceof FilesNotFoundError) {
+    return
+  }
+
+  if (error instanceof GitNotFoundError) {
+    ctx.logger.error(error.message)
+    return
+  }
+
+  if (
+    error instanceof IncludeTaskLocationDisabledError
+    || error instanceof RangeLocationFilterProvidedError
+    || error instanceof LocationFilterFileNotFoundError
+  ) {
+    ctx.logger.printError(error, { verbose: false })
+    return
+  }
+
+  process.exitCode = 1
+  ctx.logger.printError(error, { fullStack: true, type: 'Unhandled Error' })
+  ctx.logger.error('\n\n')
 }
 
 export async function prepareVitest(
