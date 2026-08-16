@@ -592,6 +592,43 @@ When using Vitest Browser, it's important to note that thread blocking dialogs l
 
 In such situations, Vitest provides default mocks with default returned values for these APIs. This ensures that if the user accidentally uses synchronous popup web APIs, the execution would not hang. However, it's still recommended for the user to mock these web APIs for a better experience. Read more in [Mocking](/guide/mocking).
 
+### Mocking Modules
+
+`vi.mock` works in Browser Mode, but the mock must be registered before the browser starts fetching modules.
+
+When Vitest sees `vi.mock` or `vi.hoisted` in a file, it rewrites that file's static imports into dynamic ones so modules load one by one after the mock is registered. If the test file only has static imports, the browser fetches them in parallel — and a mock defined elsewhere can register too late.
+
+Put `vi.mock` in the test file itself (or in a [setup file](/config/setupfiles) when the same mock should apply to every test):
+
+```ts
+import { expect, test, vi } from 'vitest'
+import { randomString } from './random.js'
+
+vi.mock('./random.js', () => {
+  return {
+    randomString: () => '__MOCK__',
+  }
+})
+
+test('randomString', () => {
+  expect(randomString()).toBe('__MOCK__')
+})
+```
+
+::: danger
+Do not put `vi.mock` in a separate helper and import it statically from the test:
+
+```ts
+// ❌ Does not work reliably in Browser Mode
+import './random.mock.js' // contains vi.mock('./random.js', ...)
+import { randomString } from './random.js'
+```
+
+The browser may fetch `./random.js` before the mock is registered. Move the `vi.mock` call into the test file or a setup file instead.
+:::
+
+See [Mocking Modules](/guide/mocking/modules) for factories, automocking, and how the transform works.
+
 ### Spying on Module Exports
 
 Browser Mode uses the browser's native ESM support to serve modules. The module namespace object is sealed and can't be reconfigured, unlike in Node.js tests where Vitest can patch the Module Runner. This means you can't call `vi.spyOn` on an imported object:
@@ -603,7 +640,7 @@ import * as module from './module.js'
 vi.spyOn(module, 'method') // ❌ throws an error
 ```
 
-To bypass this limitation, Vitest supports `{ spy: true }` option in `vi.mock('./module.js')`. This will automatically spy on every export in the module without replacing them with fake ones.
+To bypass this limitation, Vitest supports `{ spy: true }` option in `vi.mock('./module.js')`. This will automatically spy on every export in the module without replacing them with fake ones. As with other mocks, call `vi.mock` in the test file or a [setup file](/config/setupfiles) — see [Mocking Modules](#mocking-modules) above.
 
 ```ts
 import { vi } from 'vitest'

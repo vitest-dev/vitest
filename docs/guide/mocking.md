@@ -45,7 +45,7 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
 ::: warning
-This will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+This will not work in the Browser Mode. For a workaround, see [Spying on Module Exports](/guide/browser/#spying-on-module-exports). For where to place `vi.mock` in Browser Mode, see [Mocking Modules](/guide/browser/#mocking-modules).
 :::
 
 ### Mock an exported function
@@ -53,7 +53,7 @@ This will not work in the Browser Mode. For a workaround, see [Limitations](/gui
 1. Example with `vi.mock`:
 
 ::: warning
-Don't forget that a `vi.mock` call is hoisted to top of the file. It will always be executed before all imports.
+Don't forget that a `vi.mock` call is hoisted to top of the file. It will always be executed before all imports. In Browser Mode, the call must also live in the test file or a [setup file](/config/setupfiles) — see [Mocking Modules](/guide/browser/#mocking-modules).
 :::
 
 ```ts [example.js]
@@ -75,7 +75,7 @@ vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
 ::: warning
-`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Spying on Module Exports](/guide/browser/#spying-on-module-exports).
 :::
 
 ### Mock an exported class implementation
@@ -106,7 +106,7 @@ vi.spyOn(mod, 'SomeClass').mockImplementation(class FakeClass {
 ```
 
 ::: warning
-`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Spying on Module Exports](/guide/browser/#spying-on-module-exports).
 :::
 
 ### Spy on an object returned from a function

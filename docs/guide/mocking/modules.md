@@ -57,6 +57,8 @@ vi.mock(import('./example.js'), () => {
 
 ::: tip
 Remember that you can call `vi.mock` in a [setup file](/config/setupfiles) to apply the module mock in every test file automatically.
+
+In [Browser Mode](/guide/browser/#mocking-modules), the mock must live in the test file or a setup file. Importing a separate mock helper with a static `import` is not enough — the browser can fetch modules in parallel before the mock is registered.
 :::
 
 ::: tip
@@ -115,7 +117,7 @@ expect(exampleObject.answer).toHaveBeenCalled()
 ```
 
 ::: danger Browser Mode Support
-This will not work in the [Browser Mode](/guide/browser/) because it uses the browser's native ESM support to serve modules. The module namespace object is sealed and can't be reconfigured. To bypass this limitation, Vitest supports `{ spy: true }` option in `vi.mock('./example.js')`. This will automatically spy on every export in the module without replacing them with fake ones.
+This will not work in the [Browser Mode](/guide/browser/) because it uses the browser's native ESM support to serve modules. The module namespace object is sealed and can't be reconfigured. To bypass this limitation, Vitest supports `{ spy: true }` option in `vi.mock('./example.js')`. This will automatically spy on every export in the module without replacing them with fake ones. Place the `vi.mock` call in the test file or a [setup file](/config/setupfiles) — see [Browser Mode: Mocking Modules](/guide/browser/#mocking-modules).
 
 ```ts
 import { vi } from 'vitest'
@@ -287,7 +289,7 @@ vi.mock(import('vscode'), () => {
 
 ## How it Works
 
-Vitest implements different module mocking mechanisms depending on the environment. The only feature they share is the plugin transformer. When Vitest sees that a file has `vi.mock` inside, it will transform every static import into a dynamic one and move the `vi.mock` call to the top of the file. This allows Vitest to register the mock before the import happens without breaking the ESM rule of hoisted imports.
+Vitest implements different module mocking mechanisms depending on the environment. The only feature they share is the plugin transformer. When Vitest sees that a file has `vi.mock` inside, it will transform every static import into a dynamic one and move the `vi.mock` call to the top of the file. This allows Vitest to register the mock before the import happens without breaking the ESM rule of hoisted imports. That rewrite only applies to files that contain `vi.mock` or `vi.hoisted` themselves — which is why a separate statically imported mock helper does not work reliably in [Browser Mode](/guide/browser/#mocking-modules).
 
 ::: code-group
 ```ts [example.js]
@@ -360,6 +362,20 @@ ${resolvedFactoryKeys.map(key => `export const ${key} = __private_module__["${ke
 This module can now be served back to the browser. You can inspect the code in the devtools when you run the tests.
 
 ## Mocking Modules Pitfalls
+
+### Browser Mode: `vi.mock` Must Be in the Test or Setup File
+
+In [Browser Mode](/guide/browser/#mocking-modules), Vitest only rewrites static imports in files that contain `vi.mock` or `vi.hoisted`. If you define the mock in another file and import that helper statically, the browser may load the module under test before the mock is registered:
+
+```ts
+// ❌ Unreliable in Browser Mode
+import './random.mock.js'
+import { randomString } from './random.js'
+```
+
+Call `vi.mock` in the test file, or in a [setup file](/config/setupfiles) for shared mocks. See [Browser Mode limitations](/guide/browser/#mocking-modules) for a full example.
+
+### Same-File Method Calls Cannot Be Mocked
 
 Beware that it is not possible to mock calls to methods that are called inside other methods of the same file. For example, in this code:
 

@@ -39,6 +39,8 @@ Substitutes all imported modules from provided `path` with another module. You c
 
 It is recommended to use `vi.mock` or `vi.hoisted` only inside test files. If Vite's [module runner](/config/experimental#experimental-vitemodulerunner) is disabled, they will not be hoisted. This is a performance optimisation to avoid ready unnecessary files.
 
+In [Browser Mode](/guide/browser/#mocking-modules), `vi.mock` must appear in the test file or a [setup file](/config/setupfiles). A separate mock helper imported with a static `import` will not reliably register before modules are fetched.
+
 ::: warning
 `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
 
@@ -653,7 +655,7 @@ console.log(cart.getApples()) // still 42!
 :::
 
 ::: tip
-It is not possible to spy on exported methods in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
+It is not possible to spy on exported methods in [Browser Mode](/guide/browser/#spying-on-module-exports). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly. As with other mocks, place `vi.mock` in the test file or a [setup file](/config/setupfiles) — see [Mocking Modules](/guide/browser/#mocking-modules).
 
 ```ts
 import { calculator } from './src/calculator.ts'
