@@ -37,6 +37,9 @@ interface StopOptions {
 
 const START_TIMEOUT = 60_000
 const STOP_TIMEOUT = 60_000
+// how long a failed pipe write may wait for the worker's 'exit' event
+// before it is reported as the worker error itself
+const PIPE_ERROR_EXIT_GRACE = 1_000
 
 /** @experimental */
 export class PoolRunner {
@@ -277,6 +280,9 @@ export class PoolRunner {
     try {
       this._state = RunnerState.STOPPING
 
+      clearTimeout(this._pipeErrorTimer)
+      this._pipeErrorTimer = undefined
+
       // Remove exit listener early to avoid "unexpected exit" errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
 
@@ -355,8 +361,30 @@ export class PoolRunner {
     this._eventEmitter.off(event, callback)
   }
 
+  private _pipeErrorTimer: ReturnType<typeof setTimeout> | undefined
+
   private emitWorkerError = (maybeError: unknown): void => {
     const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError))
+
+    // A write into a dying worker fails with EPIPE (or a closed IPC channel)
+    // and can be observed before the worker's 'exit' event, especially on
+    // macOS. The exit event knows the exit code, the signal and the affected
+    // test files, so hold the write error and let `emitUnexpectedExit` report
+    // instead. The timer covers a broken channel whose process never exits.
+    const code = (error as NodeJS.ErrnoException).code
+    if (code === 'EPIPE' || code === 'ERR_IPC_CHANNEL_CLOSED') {
+      if (this._pipeErrorTimer) {
+        return
+      }
+      this._pipeErrorTimer = setTimeout(() => {
+        this._pipeErrorTimer = undefined
+        if (this._eventEmitter.listenerCount('error')) {
+          this._eventEmitter.emit('error', error)
+        }
+      }, PIPE_ERROR_EXIT_GRACE)
+      this._pipeErrorTimer.unref()
+      return
+    }
 
     this._eventEmitter.emit('error', error)
   }
@@ -378,6 +406,8 @@ export class PoolRunner {
   }
 
   private emitUnexpectedExit = (code?: number, signal?: string): void => {
+    clearTimeout(this._pipeErrorTimer)
+    this._pipeErrorTimer = undefined
     const hasCode = typeof code === 'number'
     const errorDetails = hasCode || signal
       ? `with ${hasCode ? `exit code ${code} ` : ''}${signal ? `signal ${signal} ` : ''}`
