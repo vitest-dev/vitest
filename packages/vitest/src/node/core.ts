@@ -347,7 +347,10 @@ export class Vitest {
           || this.projects.some(p => p.vite.config.configFile === file)
           || this.config._containerConfigFiles?.includes(file)
         if (isConfig) {
-          await this._restart('config')
+          // a floating rejection in an event handler would crash the process
+          await this._restart('config').catch((error) => {
+            this.logger.printError(error, { fullStack: true, type: 'Restart Error' })
+          })
         }
       })
 

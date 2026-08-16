@@ -1,5 +1,5 @@
 import { resolve } from 'pathe'
-import { expect, it, test } from 'vitest'
+import { expect, it, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { runVitest, useFS } from '../../test-utils'
 
@@ -7,6 +7,7 @@ test('can pass down the config as a module', async () => {
   const vitest = await createVitest('test', {
     config: '@test/test-dep-config',
   })
+  onTestFinished(() => vitest.close())
 
   expect(vitest.vite.config.configFile).toBe(
     resolve(import.meta.dirname, '../deps/test-dep-config/index.js'),
