@@ -113,7 +113,7 @@ export class ExplorerTree {
     }
   }
 
-  /** Remove every project entry for a filepath and refresh the explorer state. */
+  /** Remove all file nodes matching a filepath across projects and recalculate the explorer view. */
   removeFile(filepath: string) {
     for (const fileNode of this.root.tasks.filter(file => file.filepath === filepath)) {
       removeNodeSubtree(this.nodes, fileNode)
