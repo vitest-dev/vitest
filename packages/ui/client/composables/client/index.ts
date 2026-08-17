@@ -47,7 +47,7 @@ function createVitestClient(): VitestClient {
         onCollected(files) {
           client.state.collectFiles(files)
           if (files) {
-            explorerTree.collectFiles(files)
+            explorerTree.reconcileFiles(files)
           }
         },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {

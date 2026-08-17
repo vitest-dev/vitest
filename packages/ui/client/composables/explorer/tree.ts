@@ -103,12 +103,11 @@ export class ExplorerTree {
     }
   }
 
-  collectFiles(files: File[]) {
-    queueMicrotask(() => {
-      for (let i = 0; i < files.length; i++) {
-        this.reconcileFile(files[i])
-      }
-    })
+  // TODO: jsdoc
+  reconcileFiles(files: File[]) {
+    for (let i = 0; i < files.length; i++) {
+      this.reconcileFile(files[i])
+    }
   }
 
   private reconcileFile(file: File) {
@@ -132,15 +131,14 @@ export class ExplorerTree {
     }
   }
 
+  // todo: jsdoc
   removeFile(filepath: string) {
-    queueMicrotask(() => {
-      for (const fileNode of this.root.tasks.filter(file => file.filepath === filepath)) {
-        removeNodeSubtree(this.nodes, fileNode)
-        this.root.tasks.splice(this.root.tasks.indexOf(fileNode), 1)
-      }
-      uiFiles.value = [...this.root.tasks]
-      this.collect(false, true)
-    })
+    for (const fileNode of this.root.tasks.filter(file => file.filepath === filepath)) {
+      removeNodeSubtree(this.nodes, fileNode)
+      this.root.tasks.splice(this.root.tasks.indexOf(fileNode), 1)
+    }
+    uiFiles.value = [...this.root.tasks]
+    this.collect(false, true)
   }
 
   endRun(executionTime = performance.now() - this.startTime) {
@@ -154,6 +152,7 @@ export class ExplorerTree {
     this.collect(false, false)
   }
 
+  // TODO: jsdoc
   private collect(start: boolean, end: boolean, task = true) {
     if (task) {
       queueMicrotask(() => {
