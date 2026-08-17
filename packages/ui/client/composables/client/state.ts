@@ -72,9 +72,9 @@ export class StateManager {
   }
 
   private pruneStaleTaskIds(file: RunnerTestFile): void {
-    const valid = new Set<string>()
-    const collect = (task: RunnerTask): void => {
-      valid.add(task.id)
+    const validIds = new Set<string>()
+    function collect(task: RunnerTask): void {
+      validIds.add(task.id)
       if (task.type === 'suite') {
         task.tasks.forEach(collect)
       }
@@ -83,7 +83,7 @@ export class StateManager {
 
     const prefix = `${file.id}_`
     for (const id of [...this.idMap.keys()]) {
-      if (id.startsWith(prefix) && !valid.has(id)) {
+      if (id.startsWith(prefix) && !validIds.has(id)) {
         this.idMap.delete(id)
       }
     }
