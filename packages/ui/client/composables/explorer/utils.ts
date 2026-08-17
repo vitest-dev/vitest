@@ -130,19 +130,6 @@ export function createOrUpdateFileNode(
   }
 }
 
-export function pruneStaleChildren(nodes: Map<string, UITaskTreeNode>, parentNode: ParentTreeNode, tasks: Task[]) {
-  const taskById = new Map(tasks.map(task => [task.id, task] as const))
-  for (const child of [...parentNode.tasks]) {
-    const task = taskById.get(child.id)
-    if (!task || task.type !== child.type) {
-      removeNodeSubtree(nodes, child)
-    }
-    else if (isParentNode(child) && task.type === 'suite') {
-      pruneStaleChildren(nodes, child, task.tasks)
-    }
-  }
-}
-
 export function createOrUpdateSuiteTask(
   id: string,
   all: boolean,
@@ -253,6 +240,19 @@ export function createOrUpdateNode(
       for (let i = 0; i < task.tasks.length; i++) {
         createOrUpdateNode(taskNode.id, task.tasks[i], createAll)
       }
+    }
+  }
+}
+
+export function pruneStaleChildren(nodes: Map<string, UITaskTreeNode>, parentNode: ParentTreeNode, tasks: Task[]) {
+  const taskById = new Map(tasks.map(task => [task.id, task] as const))
+  for (const child of [...parentNode.tasks]) {
+    const task = taskById.get(child.id)
+    if (!task || task.type !== child.type) {
+      removeNodeSubtree(nodes, child)
+    }
+    else if (isParentNode(child) && task.type === 'suite') {
+      pruneStaleChildren(nodes, child, task.tasks)
     }
   }
 }
