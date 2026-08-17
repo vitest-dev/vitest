@@ -106,10 +106,9 @@ export class StateManager {
 
   /** Replace selected files with local placeholders for logs emitted during collection. */
   clearFiles(
-    _project: { config: { name: string | undefined; root: string } },
+    project: { config: { name: string | undefined; root: string } },
     paths: string[] = [],
   ): void {
-    const project = _project
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       const fileTask = createFileTask(
