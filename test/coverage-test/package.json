@@ -20,10 +20,10 @@
     "happy-dom": "^20.11.2",
     "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",
-    "magic-string": "^1.1.0",
+    "magic-string": "^1.2.0",
     "magicast": "^0.5.4",
-    "sass-embedded": "^1.100.0",
-    "unplugin-swc": "^1.5.10",
+    "sass-embedded": "^1.102.0",
+    "unplugin-swc": "^1.5.11",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "catalog:"
