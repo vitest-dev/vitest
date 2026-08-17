@@ -2,7 +2,7 @@ import type { MockerRegistry } from '@vitest/mocker'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject, Vitest } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
@@ -21,6 +21,26 @@ import { WebSocketServer } from 'ws'
 const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
+
+const DEFAULT_HEARTBEAT_INTERVAL = 15_000
+const HEARTBEAT_MAX_MISSED = 2
+let warnedInvalidHeartbeatInterval = false
+
+function resolveHeartbeatInterval(vitest: Vitest): number {
+  const rawInterval = process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
+  if (!rawInterval) {
+    return DEFAULT_HEARTBEAT_INTERVAL
+  }
+  const interval = Number(rawInterval)
+  if (Number.isNaN(interval)) {
+    if (!warnedInvalidHeartbeatInterval) {
+      warnedInvalidHeartbeatInterval = true
+      vitest.logger.warn(`VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "${rawInterval}". Using the default interval of ${DEFAULT_HEARTBEAT_INTERVAL}ms instead.`)
+    }
+    return DEFAULT_HEARTBEAT_INTERVAL
+  }
+  return interval
+}
 
 export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
   const vite = globalServer.vite
@@ -94,8 +114,36 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
       debug?.('[%s] Browser API connected to %s', rpcId, type)
 
+      // if the browser stops answering pings, terminate the socket so the
+      // "close" handler below rejects pending calls (like `createTesters`)
+      // instead of the run hanging forever; timeouts that live in the browser
+      // (`testTimeout`, iframe ack) cannot fire once its process is frozen
+      const heartbeatInterval = resolveHeartbeatInterval(vitest)
+      let missedPongs = 0
+      ws.on('pong', () => {
+        missedPongs = 0
+      })
+      const heartbeat = heartbeatInterval > 0
+        ? setInterval(() => {
+            if (ws.readyState !== ws.OPEN) {
+              return
+            }
+            if (missedPongs >= HEARTBEAT_MAX_MISSED) {
+              debug?.('[%s] %s did not respond to %s heartbeat pings, terminating the connection', rpcId, type, missedPongs)
+              rpc.$close(
+                new Error(`[vitest] The browser ${type} did not respond to a heartbeat ping for ${missedPongs * heartbeatInterval}ms. The browser process might be frozen or killed. Closing the connection.`),
+              )
+              ws.terminate()
+              return
+            }
+            missedPongs++
+            ws.ping()
+          }, heartbeatInterval).unref()
+        : undefined
+
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        clearInterval(heartbeat)
         offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
