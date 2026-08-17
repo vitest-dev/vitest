@@ -16,7 +16,7 @@ import {
   searchMatcher,
   uiFiles,
 } from '~/composables/explorer/state'
-import { reconcileFile, removeNodeSubtree } from '~/composables/explorer/utils'
+import { createOrUpdateFileNode, isParentNode, pruneRemovedChildren, removeNodeSubtree } from '~/composables/explorer/utils'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
@@ -105,7 +105,15 @@ export class ExplorerTree {
   // TODO: jsdoc
   reconcileFiles(files: File[]) {
     for (let i = 0; i < files.length; i++) {
-      reconcileFile(this.nodes, files[i])
+      this.reconcileFile(files[i])
+    }
+  }
+
+  private reconcileFile(file: File) {
+    createOrUpdateFileNode(file, true)
+    const fileNode = this.nodes.get(file.id)
+    if (fileNode && isParentNode(fileNode)) {
+      pruneRemovedChildren(this.nodes, fileNode, file.tasks)
     }
   }
 

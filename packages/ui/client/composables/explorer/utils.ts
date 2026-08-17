@@ -125,15 +125,7 @@ export function createOrUpdateFileNode(
   }
 }
 
-export function reconcileFile(nodes: Map<string, UITaskTreeNode>, file: File) {
-  createOrUpdateFileNode(file, true)
-  const fileNode = nodes.get(file.id)
-  if (fileNode && isParentNode(fileNode)) {
-    pruneRemovedChildren(nodes, fileNode, file.tasks)
-  }
-}
-
-function pruneRemovedChildren(nodes: Map<string, UITaskTreeNode>, parentNode: ParentTreeNode, tasks: Task[]) {
+export function pruneRemovedChildren(nodes: Map<string, UITaskTreeNode>, parentNode: ParentTreeNode, tasks: Task[]) {
   const taskById = new Map(tasks.map(task => [task.id, task] as const))
   for (const child of [...parentNode.tasks]) {
     const task = taskById.get(child.id)
