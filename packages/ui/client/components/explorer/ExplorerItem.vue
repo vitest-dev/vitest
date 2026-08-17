@@ -116,9 +116,9 @@ const gridStyles = computed(() => {
   // action buttons
   gridColumns.push('min-content')
 
-  // all the vertical lines with width 1rem and mx-2: always centered
+  // Zero-width guide columns use the grid gap as a half-rem indentation step.
   return `grid-template-columns: ${
-    entries.map(() => '1rem').join(' ')
+    entries.map(() => '0').join(' ')
   } ${gridColumns.join(' ')};`
 })
 
@@ -208,9 +208,9 @@ const tagsBgGradient = computed(() => {
     @click="toggleOpen()"
   >
     <template v-if="indent > 0">
-      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px inline-flex mx-2 op20 />
+      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px op20 />
     </template>
-    <div :class="type === 'test' ? 'w-2' : 'w-4'">
+    <div w-4>
       <div v-if="type === 'file' || type === 'suite'" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
