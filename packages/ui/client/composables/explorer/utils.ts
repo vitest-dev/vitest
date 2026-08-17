@@ -71,6 +71,7 @@ export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.t
   return sorted
 }
 
+// TODO: jsdoc
 export function createOrUpdateFileNode(
   file: File,
   collect = false,
