@@ -130,15 +130,15 @@ export function createOrUpdateFileNode(
   }
 }
 
-export function pruneRemovedChildren(nodes: Map<string, UITaskTreeNode>, parentNode: ParentTreeNode, tasks: Task[]) {
+export function pruneStaleChildren(nodes: Map<string, UITaskTreeNode>, parentNode: ParentTreeNode, tasks: Task[]) {
   const taskById = new Map(tasks.map(task => [task.id, task] as const))
   for (const child of [...parentNode.tasks]) {
     const task = taskById.get(child.id)
-    if (!task) {
+    if (!task || task.type !== child.type) {
       removeNodeSubtree(nodes, child)
     }
     else if (isParentNode(child) && task.type === 'suite') {
-      pruneRemovedChildren(nodes, child, task.tasks)
+      pruneStaleChildren(nodes, child, task.tasks)
     }
   }
 }

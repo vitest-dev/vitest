@@ -8,6 +8,7 @@ import { assertTestCounts, getExplorerItem, startVitestUi } from './helper'
 
 // Regression tests for explorer tree reconciliation on watch re-runs:
 // - removing a test from a file must drop the stale test node (no ghost node)
+// - changing a task type must replace the incompatible node with the reused id
 // - deleting a test file must drop the stale file node (onTestRemoved forwarding)
 test.describe('explorer reconcile', () => {
   let vitest: Vitest | undefined
@@ -37,12 +38,13 @@ test.describe('explorer reconcile', () => {
     fs.writeFileSync(secondFile, secondContent, 'utf-8')
   })
 
-  test('reconciles removed tests and deleted files', async ({ page }) => {
+  test('prunes stale tasks and removes deleted files', async ({ page }) => {
     await page.goto(baseURL)
 
-    // initial: 2 tests in basic.test.ts + 1 test in second.test.ts
-    await assertTestCounts(page, { pass: 3, fail: 0 })
+    // initial: 3 tests in basic.test.ts + 1 test in second.test.ts
+    await assertTestCounts(page, { pass: 4, fail: 0 })
     await expect(getExplorerItem(page, 'reconcile-keep')).toBeVisible()
+    await expect(getExplorerItem(page, 'reconcile-type-suite')).toBeVisible()
     await expect(getExplorerItem(page, 'reconcile-remove-me')).toBeVisible()
     await expect(getExplorerItem(page, 'reconcile-second-file')).toBeVisible()
 
@@ -59,7 +61,26 @@ test.describe('explorer reconcile', () => {
     // the removed test node must disappear (no ghost node), the kept one stays
     await expect(getExplorerItem(page, 'reconcile-remove-me')).toHaveCount(0)
     await expect(getExplorerItem(page, 'reconcile-keep')).toBeVisible()
-    await assertTestCounts(page, { pass: 2, fail: 0 })
+    await assertTestCounts(page, { pass: 3, fail: 0 })
+
+    // replace a suite with a test at the same position-based id
+    fs.writeFileSync(
+      basicFile,
+      fs.readFileSync(basicFile, 'utf-8').replace(
+        /\/\/ TEST TASK TYPE CHANGE START[\s\S]*?\/\/ TEST TASK TYPE CHANGE END\n/,
+        `// TEST TASK TYPE CHANGE START
+test('reconcile-type-test', () => {
+  expect(3 + 3).toBe(6)
+})
+// TEST TASK TYPE CHANGE END
+`,
+      ),
+      'utf-8',
+    )
+
+    await expect(getExplorerItem(page, 'reconcile-type-suite')).toHaveCount(0)
+    await expect(getExplorerItem(page, 'reconcile-type-test')).toBeVisible()
+    await assertTestCounts(page, { pass: 3, fail: 0 })
 
     // delete an entire test file and let the watcher emit onTestRemoved
     fs.rmSync(secondFile)
@@ -67,6 +88,6 @@ test.describe('explorer reconcile', () => {
     // the deleted file's test node must disappear (no ghost file node)
     await expect(getExplorerItem(page, 'reconcile-second-file')).toHaveCount(0)
     await expect(getExplorerItem(page, 'reconcile-keep')).toBeVisible()
-    await assertTestCounts(page, { pass: 1, fail: 0 })
+    await assertTestCounts(page, { pass: 2, fail: 0 })
   })
 })

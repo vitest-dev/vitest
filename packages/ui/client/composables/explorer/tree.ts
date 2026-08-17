@@ -16,7 +16,7 @@ import {
   searchMatcher,
   uiFiles,
 } from '~/composables/explorer/state'
-import { createOrUpdateFileNode, isParentNode, pruneRemovedChildren, removeNodeSubtree } from '~/composables/explorer/utils'
+import { isParentNode, pruneStaleChildren, removeNodeSubtree } from '~/composables/explorer/utils'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
@@ -102,18 +102,14 @@ export class ExplorerTree {
     }
   }
 
-  /** Update collected files and prune tasks that no longer exist. */
-  reconcileFiles(files: File[]) {
+  /** Prune removed or type-incompatible task nodes from collected files. */
+  pruneStaleTasks(files: File[]) {
     for (let i = 0; i < files.length; i++) {
-      this.reconcileFile(files[i])
-    }
-  }
-
-  private reconcileFile(file: File) {
-    createOrUpdateFileNode(file, true)
-    const fileNode = this.nodes.get(file.id)
-    if (fileNode && isParentNode(fileNode)) {
-      pruneRemovedChildren(this.nodes, fileNode, file.tasks)
+      const file = files[i]
+      const fileNode = this.nodes.get(file.id)
+      if (fileNode && isParentNode(fileNode)) {
+        pruneStaleChildren(this.nodes, fileNode, file.tasks)
+      }
     }
   }
 
