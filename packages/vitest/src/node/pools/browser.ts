@@ -15,6 +15,7 @@ import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
 import { detectCodeBlock } from '../../utils/test-helpers'
+import { BrowserConnectionError } from '../errors'
 
 const debug = createDebugger('vitest:browser:pool')
 
@@ -435,8 +436,7 @@ class BrowserPool {
           // if user cancels the test run manually, ignore the error and exit gracefully
           if (
             this.project.vitest.isCancelling
-            && error instanceof Error
-            && error.message.startsWith('Browser connection was closed while running tests')
+            && error instanceof BrowserConnectionError
           ) {
             this.cancel()
             this._promise?.resolve()
