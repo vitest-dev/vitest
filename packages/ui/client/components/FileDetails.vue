@@ -26,9 +26,10 @@ import ViewTestReport from './views/ViewTestReport.vue'
 const draft = ref(false)
 
 const test = computed(() => {
-  return selectedTest.value
-    ? client.state.idMap.get(selectedTest.value) as RunnerTestCase
+  const task = selectedTest.value
+    ? client.state.idMap.get(selectedTest.value)
     : undefined
+  return task?.type === 'test' ? (task as RunnerTestCase) : undefined
 })
 
 const failedSnapshot = computed(() => {
