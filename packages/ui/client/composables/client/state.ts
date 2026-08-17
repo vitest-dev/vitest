@@ -71,12 +71,7 @@ export class StateManager {
     })
   }
 
-  /**
-   * Remove `idMap` entries for a re-collected file whose position-based ids no longer
-   * exist in the fresh task tree, so stale tasks cannot be resolved after a re-run.
-   * Scoped to the file's own id subtree (`${file.id}_*`).
-   */
-  pruneStaleTaskIds(file: RunnerTestFile): void {
+  private pruneStaleTaskIds(file: RunnerTestFile): void {
     const valid = new Set<string>()
     const collect = (task: RunnerTask): void => {
       valid.add(task.id)
@@ -94,10 +89,6 @@ export class StateManager {
     }
   }
 
-  /**
-   * Remove a deleted/renamed test file and its whole id subtree from the state.
-   * Called when the server reports a removed test file (`onTestRemoved`).
-   */
   removeFile(filepath: string): void {
     const files = this.filesMap.get(filepath)
     if (files) {
