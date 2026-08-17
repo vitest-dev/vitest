@@ -327,8 +327,8 @@ function createAnnotationElement(annotation: TestAnnotation) {
 }
 
 const { pause, resume } = watch(
-  [codemirrorRef, errors, annotations, finished] as const,
-  ([cmValue, errors, annotations, end]) => {
+  [codemirrorRef, errors, annotations, finished, loading] as const,
+  ([cmValue, errors, annotations, end, loadingFile]) => {
     if (!cmValue) {
       widgets.length = 0
       handles.length = 0
@@ -351,7 +351,7 @@ const { pause, resume } = watch(
     widgets.length = 0
     handles.length = 0
 
-    setTimeout(() => {
+    if (!loadingFile) {
       // add new data
       errors.forEach(createErrorElement)
 
@@ -363,9 +363,9 @@ const { pause, resume } = watch(
       }
 
       cmValue.on('changes', codemirrorChanges)
-    }, 100)
+    }
   },
-  { flush: 'post' },
+  { immediate: true },
 )
 
 watchDebounced(() => [finished.value, saving.value, currentPosition.value] as const, ([f, s], old) => {
