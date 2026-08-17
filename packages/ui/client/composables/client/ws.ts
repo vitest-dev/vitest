@@ -2,17 +2,11 @@ import type { BirpcOptions, PromisifyFn } from 'birpc'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { reactive, shallowRef } from 'vue'
 import { StateManager } from './state'
 
 export interface VitestClientOptions {
-  handlers?: Partial<WebSocketEvents>
-  autoReconnect?: boolean
-  reconnectInterval?: number
-  reconnectTries?: number
-  connectTimeout?: number
-  reactive?: <T>(v: T, forKey: 'state' | 'idMap' | 'filesMap') => T
-  ref?: <T>(v: T) => { value: T }
-  WebSocketConstructor?: typeof WebSocket
+  handlers: WebSocketEvents
 }
 
 export type VitestClientRpc = {
@@ -23,75 +17,27 @@ export interface VitestClient {
   ws: WebSocket
   state: StateManager
   rpc: VitestClientRpc
-  // TODO: unused
-  waitForConnection: () => Promise<void>
   reconnect: () => Promise<void>
 }
 
-export function createWsClient(url: string, options: VitestClientOptions = {}): VitestClient {
-  const {
-    handlers = {},
-    autoReconnect = true,
-    reconnectInterval = 2000,
-    reconnectTries = 10,
-    connectTimeout = 60000,
-    reactive = v => v,
-    WebSocketConstructor = globalThis.WebSocket,
-  } = options
-
+export function createWsClient(url: string, options: VitestClientOptions): VitestClient {
+  const reconnectInterval = 2000
+  const reconnectTries = 10
   let tries = reconnectTries
-  let openPromise: Promise<void>
   const ctx = reactive<VitestClient>({
-    ws: new WebSocketConstructor(url),
+    ws: new WebSocket(url),
     state: new StateManager(),
     rpc: undefined!,
-    waitForConnection: () => openPromise,
     reconnect,
-  }, 'state')
+  }) as VitestClient
 
-  ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
-  ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
+  // TODO: This seems effectively a no-op: `state` already exposes reactive Map proxies,
+  // and `shallowRef` wraps those same proxies. Revisit the intended optimization from
+  // https://github.com/vitest-dev/vitest/pull/5906.
+  ctx.state.filesMap = shallowRef(ctx.state.filesMap) as any
+  ctx.state.idMap = shallowRef(ctx.state.idMap) as any
 
   let onMessage: (data: any) => void
-  const functions: WebSocketEvents = {
-    onTestAnnotate(testId, annotation) {
-      handlers.onTestAnnotate?.(testId, annotation)
-    },
-    onTestArtifactRecord(testId, artifact) {
-      handlers.onTestArtifactRecord?.(testId, artifact)
-    },
-    onSpecsCollected(specs, startTime) {
-      specs?.forEach(([config, file]) => {
-        ctx.state.clearFiles({ config }, [file])
-      })
-      handlers.onSpecsCollected?.(specs, startTime)
-    },
-    onCollected(files) {
-      ctx.state.collectFiles(files)
-      handlers.onCollected?.(files)
-    },
-    onTaskUpdate(packs, events) {
-      ctx.state.updateTasks(packs)
-      handlers.onTaskUpdate?.(packs, events)
-    },
-    onTestRemoved(path) {
-      if (path) {
-        ctx.state.removeFile(path)
-      }
-      handlers.onTestRemoved?.(path)
-    },
-    onUserConsoleLog(log) {
-      ctx.state.updateUserLog(log)
-      handlers.onUserConsoleLog?.(log)
-    },
-    onFinished(files, errors, coverage, executionTime) {
-      handlers.onFinished?.(files, errors, coverage, executionTime)
-    },
-    onFinishedReportCoverage() {
-      handlers.onFinishedReportCoverage?.()
-    },
-  }
-
   const birpcHandlers = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
@@ -111,43 +57,25 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
   } satisfies BirpcOptions<WebSocketHandlers>
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
-    functions,
+    options.handlers,
     birpcHandlers,
   )
 
-  async function reconnect(reset = false) {
-    if (reset) {
-      tries = reconnectTries
-    }
-    ctx.ws = new WebSocketConstructor(url)
+  async function reconnect() {
+    ctx.ws = new WebSocket(url)
     registerWS()
   }
 
   function registerWS() {
-    openPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(
-          new Error(
-            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
-          ),
-        )
-      }, connectTimeout)
-      if (ctx.ws.OPEN === ctx.ws.readyState) {
-        resolve()
-      }
-      // still have a listener even if it's already open to update tries
-      ctx.ws.addEventListener('open', () => {
-        tries = reconnectTries
-        resolve()
-        clearTimeout(timeout)
-      })
+    ctx.ws.addEventListener('open', () => {
+      tries = reconnectTries
     })
     ctx.ws.addEventListener('message', (v) => {
       onMessage(v.data)
     })
     ctx.ws.addEventListener('close', () => {
       tries -= 1
-      if (autoReconnect && tries > 0) {
+      if (tries > 0) {
         setTimeout(reconnect, reconnectInterval)
       }
     })

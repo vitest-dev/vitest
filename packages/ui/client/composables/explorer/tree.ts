@@ -25,8 +25,6 @@ export class ExplorerTree {
   public startTime: number = 0
   public executionTime: number = 0
   constructor(
-    public projects: string[] = [],
-    public colors = new Map<string, string | undefined>(),
     private onTaskUpdateCalled: boolean = false,
     private resumeEndTimeout = 500,
     public root = <RootTreeNode>{
@@ -64,10 +62,7 @@ export class ExplorerTree {
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
   }
 
-  loadFiles(remoteFiles: File[], projects: { name: string; color?: string }[]) {
-    this.projects.splice(0, this.projects.length, ...projects.map(p => p.name))
-    this.colors = new Map(projects.map(p => [p.name, p.color]))
-
+  loadFiles(remoteFiles: File[]) {
     runLoadFiles(
       remoteFiles,
       true,

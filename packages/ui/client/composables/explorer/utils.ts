@@ -10,7 +10,7 @@ import type {
 import { client, config } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
-import { getBadgeNameColor, isSuite as isTaskSuite } from '~/utils/task'
+import { isSuite as isTaskSuite } from '~/utils/task'
 
 export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
   return node.type === 'test'
@@ -108,7 +108,6 @@ export function createOrUpdateFileNode(
       slow: false,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: explorerTree.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
