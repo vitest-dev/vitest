@@ -102,7 +102,7 @@ export class ExplorerTree {
     }
   }
 
-  /** Prune removed or type-incompatible task nodes from collected files. */
+  /** After recollection, trim nodes when a task list shrank or a position changed between suite and test. */
   pruneStaleTasks(files: File[]) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
