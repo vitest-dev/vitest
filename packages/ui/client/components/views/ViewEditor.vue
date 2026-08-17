@@ -351,21 +351,19 @@ const { pause, resume } = watch(
     widgets.length = 0
     handles.length = 0
 
-    if (loadingFile) {
-      return
+    if (!loadingFile) {
+      // add new data
+      errors.forEach(createErrorElement)
+
+      annotations.forEach(createAnnotationElement)
+
+      // Prevent getting access to initial state
+      if (!hasBeenEdited.value) {
+        cmValue.clearHistory()
+      }
+
+      cmValue.on('changes', codemirrorChanges)
     }
-
-    // add new data
-    errors.forEach(createErrorElement)
-
-    annotations.forEach(createAnnotationElement)
-
-    // Prevent getting access to initial state
-    if (!hasBeenEdited.value) {
-      cmValue.clearHistory()
-    }
-
-    cmValue.on('changes', codemirrorChanges)
   },
   { flush: 'post' },
 )
