@@ -224,7 +224,7 @@ const tagsBgGradient = computed(() => {
         :aria-label="`${opened ? 'Collapse' : 'Expand'} ${name}`"
         @click.stop="toggleOpen"
       >
-        <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+        <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right'" op40 />
       </button>
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
