@@ -105,7 +105,7 @@ export class StateManager {
     this.filesMap.delete(filepath)
   }
 
-  /** Replace selected files with local placeholders for logs emitted during collection. */
+  /** Stage selected files as local placeholders for logs emitted during collection. */
   clearFiles(
     project: SerializedTestSpecification[0],
     paths: string[] = [],

@@ -46,7 +46,7 @@ function createVitestClient(): VitestClient {
           explorerTree.startTime = startTime || performance.now()
         },
         onCollected(files) {
-          // Collection supplies the complete task trees that replace the file placeholders.
+          // Collection supplies complete task trees that supersede any file placeholders.
           client.state.collectFiles(files)
           if (files) {
             explorerTree.pruneStaleTasks(files)
