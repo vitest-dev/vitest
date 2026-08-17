@@ -307,11 +307,8 @@ const tagsBgGradient = computed(() => {
 </template>
 
 <style scoped>
-.vertical-line:first-of-type {
-  @apply border-l-2px;
-}
-.vertical-line + .vertical-line {
-  @apply border-r-1px;
+.vertical-line {
+  @apply border-l-1px;
 }
 .test-actions {
   display: none;
