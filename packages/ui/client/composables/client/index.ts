@@ -46,7 +46,7 @@ function createVitestClient(): VitestClient {
         },
         onCollected(files) {
           client.state.collectFiles(files)
-          if (files?.length) {
+          if (files) {
             explorerTree.collectFiles(files)
           }
         },
