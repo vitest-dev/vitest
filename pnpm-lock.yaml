@@ -58,8 +58,8 @@ catalogs:
       specifier: ^8.18.1
       version: 8.18.1
     '@types/yauzl':
-      specifier: ^2.10.3
-      version: 2.10.3
+      specifier: ^3.4.0
+      version: 3.4.0
     '@unocss/reset':
       specifier: ^66.7.5
       version: 66.7.5
@@ -1168,7 +1168,7 @@ importers:
         version: 19.2.18
       '@types/yauzl':
         specifier: 'catalog:'
-        version: 2.10.3
+        version: 3.4.0
       '@vitejs/plugin-basic-ssl':
         specifier: ^2.3.0
         version: 2.3.0(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(tsx@4.23.12)(yaml@2.9.0))
@@ -5159,6 +5159,9 @@ packages:
 
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
+
+  '@types/yauzl@3.4.0':
+    resolution: {integrity: sha512-NRPn5w6h8dhcnmx3YIRQcqMywY/+nND/uOkJessedcrowO3C0AssHp3tMJpxKAwOhFOo0OV1y9VtsC5hbKKBAw==}
 
   '@typescript-eslint/eslint-plugin@8.66.0':
     resolution: {integrity: sha512-p088eaGrzYz1s+7cov0aMOCkNGTJlVxF4jgubf28c8L0Cv9Rloj8YBHnv4hXLq6IIEE1AsjNWavO+k+8kP2Y0A==}
@@ -13624,6 +13627,11 @@ snapshots:
       '@types/node': 24.13.3
 
   '@types/yauzl@2.10.3':
+    dependencies:
+      '@types/node': 24.13.3
+    optional: true
+
+  '@types/yauzl@3.4.0':
     dependencies:
       '@types/node': 24.13.3
 
