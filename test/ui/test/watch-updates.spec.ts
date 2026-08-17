@@ -10,11 +10,11 @@ import { assertTestCounts, getExplorerItem, startVitestUi } from './helper'
 // - removing a test from a file must drop the stale test node (no ghost node)
 // - changing a task type must replace the incompatible node with the reused id
 // - deleting a test file must drop the stale file node (onTestRemoved forwarding)
-test.describe('explorer reconcile', () => {
+test.describe('explorer watch updates', () => {
   let vitest: Vitest | undefined
   let baseURL: string
 
-  const root = path.join(import.meta.dirname, '../fixtures/reconcile')
+  const root = path.join(import.meta.dirname, '../fixtures/watch-updates')
   const basicFile = path.join(root, 'basic.test.ts')
   const secondFile = path.join(root, 'second.test.ts')
   const basicContent = fs.readFileSync(basicFile, 'utf-8')
