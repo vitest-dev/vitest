@@ -73,6 +73,7 @@ export class StateManager {
   }
 
   private clearFileTaskIds(fileId: string): void {
+    // this assumes each task id is prefixed with file id (see `TaskBase.id` jsdoc)
     const prefix = `${fileId}_`
     for (const id of this.idMap.keys()) {
       if (id === fileId || id.startsWith(prefix)) {
