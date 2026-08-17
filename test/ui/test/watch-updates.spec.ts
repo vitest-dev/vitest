@@ -48,6 +48,9 @@ test.describe('explorer watch updates', () => {
     await expect(getExplorerItem(page, 'reconcile-remove-me')).toBeVisible()
     await expect(getExplorerItem(page, 'reconcile-second-file')).toBeVisible()
 
+    await getExplorerItem(page, 'reconcile-remove-me').click()
+    await expect(page.getByTestId('file-detail')).toContainText('reconcile-remove-me')
+
     // remove a single test from basic.test.ts and let watch mode re-run
     fs.writeFileSync(
       basicFile,
@@ -60,7 +63,9 @@ test.describe('explorer watch updates', () => {
 
     // the removed test node must disappear (no ghost node), the kept one stays
     await expect(getExplorerItem(page, 'reconcile-remove-me')).toHaveCount(0)
+    await expect(page.getByTestId('file-detail')).not.toContainText('reconcile-remove-me')
     await expect(getExplorerItem(page, 'reconcile-keep')).toBeVisible()
+    await page.getByRole('button', { name: 'Show dashboard' }).click()
     await assertTestCounts(page, { pass: 3, fail: 0 })
 
     // replace a suite with a test at the same position-based id
