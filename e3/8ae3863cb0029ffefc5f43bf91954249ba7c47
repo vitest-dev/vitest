@@ -1,0 +1,105 @@
+docs/api/browser/locators.md
+  s_bfc6c51df21e5f::t_fd9944479389b8 518
+docs/guide/projects.md
+  s_bfc6c51df21e5f::t_d90ff82bfcee76 394-412
+eslint.config.js
+  s_bfc6c51df21e5f::t_ae4071dc03cad2 29
+packages/browser/context.d.ts
+  s_bfc6c51df21e5f::t_72088f3fbd26e0 450-452,772
+packages/browser/src/client/tester/locators.ts
+  s_bfc6c51df21e5f::t_0dceadb10d766a 4,277
+packages/ui/client/components/FileDetails.vue
+  s_bfc6c51df21e5f::t_7396ceb3c80f69 9,17,63,113
+packages/ui/client/components/artifacts/visual-regression/VisualRegressionSlider.spec.ts
+  s_bfc6c51df21e5f::t_ca4a5d6ad1eae9 79-80
+packages/ui/client/components/explorer/ExplorerItem.vue
+  s_bfc6c51df21e5f::t_af107018ccea1c 12,32,166,222
+packages/ui/client/composables/client/static.ts
+  s_bfc6c51df21e5f::t_90ed2ef7d16bba 71
+packages/ui/client/composables/explorer/tree.ts
+  s_bfc6c51df21e5f::t_a44946ace78ed7 65
+packages/ui/client/composables/explorer/utils.ts
+  s_bfc6c51df21e5f::t_2d954167aa307c 13
+packages/ui/client/composables/trace-view.ts
+  s_bfc6c51df21e5f::t_7b117bf00f3722 4,226
+packages/ui/client/utils/task.ts
+  s_bfc6c51df21e5f::t_1d017a715a9b2f 1,148,164-184
+packages/utils/src/source-map/node.ts
+  s_bfc6c51df21e5f::t_e05411cb150ae1 15-27
+packages/vitest/src/node/cache/files.ts
+  s_bfc6c51df21e5f::t_c61ac6a5bd0193 24-30
+packages/vitest/src/node/cli/cli-api.ts
+  s_bfc6c51df21e5f::t_73be0bf2b2935e 132-134,136-145,168,179-202
+packages/vitest/src/node/core.ts
+  s_bfc6c51df21e5f::t_6faef62fa430b0 350-353,377
+packages/vitest/src/node/projects/resolveProjects.ts
+  s_bfc6c51df21e5f::t_ad09415b525b19 106,138,191,219-220,268,287,351,420,473,478,480-482,493-496,783-784,817,826,836,961,1026-1030,1206,1281-1282,1294-1295,1329,1334,1336,1343,1357,1386,1394-1396
+packages/vitest/src/node/test-run.ts
+  s_bfc6c51df21e5f::t_8f185851ca6fd3 192-193
+packages/vitest/src/runtime/runner/run.ts
+  s_bfc6c51df21e5f::t_b1c5ccb07db2dd 41,992,1013
+packages/vitest/src/runtime/workers/base.ts
+  s_bfc6c51df21e5f::t_324bc4bea0a171 30-31,33-34
+packages/vitest/src/runtime/workers/init-forks.ts
+  s_bfc6c51df21e5f::t_78fc49a84729c4 44-47,49-50
+packages/vitest/src/runtime/workers/init.ts
+  s_bfc6c51df21e5f::t_d84781246ea146 83-87
+packages/vitest/src/runtime/workers/vm.ts
+  s_bfc6c51df21e5f::t_c345ea4c630f2d 122-123
+pnpm-lock.yaml
+  s_bfc6c51df21e5f::t_95a3fd4098a4f4 1310-1312,4953-4955,13401-13402
+test/browser/test/locators.test-d.ts
+  s_bfc6c51df21e5f::t_e6c9cc1fe2629c 1-11
+test/e2e/deps/malformed-source-map/external-map.js
+  s_bfc6c51df21e5f::t_2f89aa3710c07a 1-5
+test/e2e/deps/malformed-source-map/external-map.js.map
+  s_bfc6c51df21e5f::t_91fad04e7f697b 1
+test/e2e/deps/malformed-source-map/index.js
+  s_bfc6c51df21e5f::t_bac271021701ea 1-7
+test/e2e/deps/malformed-source-map/package.json
+  s_bfc6c51df21e5f::t_bc57fa0b3b3778 1-9
+test/e2e/fixtures/custom-pool-sync-transport/pool/runtime.js
+  s_bfc6c51df21e5f::t_a790181cbdca6e 1-34
+test/e2e/fixtures/custom-pool-sync-transport/pool/sync-transport-pool.ts
+  s_bfc6c51df21e5f::t_a10759c13d9bd5 1-67
+test/e2e/fixtures/custom-pool-sync-transport/tests/basic.spec.ts
+  s_bfc6c51df21e5f::t_e8ffea6dc43720 1-5
+test/e2e/fixtures/custom-pool-sync-transport/vitest.config.ts
+  s_bfc6c51df21e5f::t_e94452740774b0 1-9
+test/e2e/fixtures/malformed-source-map/external-map.spec.ts
+  s_bfc6c51df21e5f::t_7f6997f24df6b0 1-6
+test/e2e/fixtures/malformed-source-map/external-module.spec.ts
+  s_bfc6c51df21e5f::t_cc0c5e2f0c0a98 1-6
+test/e2e/fixtures/malformed-source-map/inlined-module.spec.ts
+  s_bfc6c51df21e5f::t_659126809f69ea 1-6
+test/e2e/fixtures/malformed-source-map/malformed-source-map.js
+  s_bfc6c51df21e5f::t_8c10c6dffd4496 1-7
+test/e2e/package.json
+  s_bfc6c51df21e5f::t_998f2e11d044c1 21
+test/e2e/test/cli-config.test.ts
+  s_bfc6c51df21e5f::t_a6a3698302c463 2,10
+test/e2e/test/concurrent.test.ts
+  s_bfc6c51df21e5f::t_2bae349a1f9ce3 1099,1217,1221-1227,1232,1238,1242,1255-1266,1298-1304,1309,1315,1319,1332-1343
+test/e2e/test/config/browser-configs.test.ts
+  s_bfc6c51df21e5f::t_6fd8443b1e95c4 45-50
+test/e2e/test/custom-pool.test.ts
+  s_bfc6c51df21e5f::t_462d41f38803cd 23-34
+test/e2e/test/malformed-source-map.test.ts
+  s_bfc6c51df21e5f::t_39a2556af4160d 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e38ae3863cb0029ffefc5f43bf91954249ba7c47",
+  "prompts": {},
+  "sessions": {
+    "s_bfc6c51df21e5f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ff1fb67a7ffeQvwVlqji5yKhgu",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
