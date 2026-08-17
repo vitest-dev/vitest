@@ -211,7 +211,7 @@ const tagsBgGradient = computed(() => {
     @click="selectTask"
   >
     <template v-if="indent > 0">
-      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px ml-2 op10 />
+      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px ml-1 op10 />
     </template>
     <div w-4 h-full>
       <button
