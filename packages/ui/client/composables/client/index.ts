@@ -40,8 +40,8 @@ function createVitestClient(): VitestClient {
         },
         onSpecsCollected(specs, startTime) {
           // Run-start specifications identify files before their task trees are collected.
-          specs?.forEach(([project, file]) => {
-            client.state.clearFiles(project, [file])
+          specs?.forEach((spec) => {
+            client.state.clearFiles(spec)
           })
           explorerTree.startTime = startTime || performance.now()
         },
