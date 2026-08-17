@@ -1,8 +1,7 @@
-import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
+import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
-  ParentTreeNode,
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
@@ -17,7 +16,7 @@ import {
   searchMatcher,
   uiFiles,
 } from '~/composables/explorer/state'
-import { createOrUpdateFileNode, isParentNode, removeNodeSubtree } from '~/composables/explorer/utils'
+import { reconcileFile, removeNodeSubtree } from '~/composables/explorer/utils'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
@@ -106,28 +105,7 @@ export class ExplorerTree {
   // TODO: jsdoc
   reconcileFiles(files: File[]) {
     for (let i = 0; i < files.length; i++) {
-      this.reconcileFile(files[i])
-    }
-  }
-
-  private reconcileFile(file: File) {
-    createOrUpdateFileNode(file, true)
-    const fileNode = this.nodes.get(file.id)
-    if (fileNode && isParentNode(fileNode)) {
-      this.pruneRemovedChildren(fileNode, file.tasks)
-    }
-  }
-
-  private pruneRemovedChildren(parentNode: ParentTreeNode, tasks: Task[]) {
-    const taskById = new Map(tasks.map(task => [task.id, task] as const))
-    for (const child of [...parentNode.tasks]) {
-      const task = taskById.get(child.id)
-      if (!task) {
-        removeNodeSubtree(this.nodes, child)
-      }
-      else if (isParentNode(child) && task.type === 'suite') {
-        this.pruneRemovedChildren(child, task.tasks)
-      }
+      reconcileFile(this.nodes, files[i])
     }
   }
 
