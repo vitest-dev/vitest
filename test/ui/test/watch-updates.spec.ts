@@ -4,8 +4,6 @@ import path from 'node:path'
 import { expect, test } from '@playwright/test'
 import { assertTestCounts, getExplorerItem, startVitestUi } from './helper'
 
-// TODO: rename
-
 // Regression tests for explorer tree reconciliation on watch re-runs:
 // - removing a test from a file must drop the stale test node (no ghost node)
 // - changing a task type must replace the incompatible node with the reused id
@@ -48,10 +46,9 @@ test.describe('explorer watch updates', () => {
     await expect(getExplorerItem(page, 'reconcile-remove-me')).toBeVisible()
     await expect(getExplorerItem(page, 'reconcile-second-file')).toBeVisible()
 
+    // select then remove a single test from basic.test.ts and let watch mode re-run
     await getExplorerItem(page, 'reconcile-remove-me').click()
     await expect(page.getByTestId('file-detail')).toContainText('reconcile-remove-me')
-
-    // remove a single test from basic.test.ts and let watch mode re-run
     fs.writeFileSync(
       basicFile,
       basicContent.replace(
@@ -87,10 +84,9 @@ test('reconcile-type-test', () => {
     await expect(getExplorerItem(page, 'reconcile-type-test')).toBeVisible()
     await assertTestCounts(page, { pass: 3, fail: 0 })
 
+    // select then delete an entire test file and let the watcher emit onTestRemoved
     await getExplorerItem(page, 'reconcile-second-file').click()
     await expect(page.getByTestId('file-detail')).toContainText('reconcile-second-file')
-
-    // delete an entire test file and let the watcher emit onTestRemoved
     fs.rmSync(secondFile)
 
     // the deleted file's test node must disappear (no ghost file node)
