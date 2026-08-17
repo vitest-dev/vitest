@@ -138,7 +138,13 @@ export class ExplorerTree {
     this.collect(false, false)
   }
 
-  /** Refresh the explorer summary and filters, optionally in a microtask. */
+  /**
+   * Synchronize task nodes, summary counts, and filtered entries with the runner state.
+   *
+   * @param start Reset summary counters before updates when true; skip the reset when false.
+   * @param end Traverse every file and finalize the run when true; process only pending files when false.
+   * @param task Invoke the collector in a microtask when true; invoke it immediately when false.
+   */
   private collect(start: boolean, end: boolean, task = true) {
     if (task) {
       queueMicrotask(() => {
