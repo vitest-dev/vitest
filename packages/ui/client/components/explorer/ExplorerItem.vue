@@ -210,7 +210,7 @@ const tagsBgGradient = computed(() => {
     <template v-if="indent > 0">
       <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px inline-flex mx-2 op20 />
     </template>
-    <div w-4>
+    <div :class="type === 'test' ? 'w-2' : 'w-4'">
       <div v-if="type === 'file' || type === 'suite'" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
