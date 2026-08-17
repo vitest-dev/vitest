@@ -102,7 +102,7 @@ export class ExplorerTree {
     }
   }
 
-  // TODO: jsdoc
+  /** Update collected files and prune tasks that no longer exist. */
   reconcileFiles(files: File[]) {
     for (let i = 0; i < files.length; i++) {
       this.reconcileFile(files[i])
@@ -117,7 +117,7 @@ export class ExplorerTree {
     }
   }
 
-  // todo: jsdoc
+  /** Remove every project entry for a filepath and refresh the explorer state. */
   removeFile(filepath: string) {
     for (const fileNode of this.root.tasks.filter(file => file.filepath === filepath)) {
       removeNodeSubtree(this.nodes, fileNode)
@@ -138,7 +138,7 @@ export class ExplorerTree {
     this.collect(false, false)
   }
 
-  // TODO: jsdoc
+  /** Refresh the explorer summary and filters, optionally in a microtask. */
   private collect(start: boolean, end: boolean, task = true) {
     if (task) {
       queueMicrotask(() => {
