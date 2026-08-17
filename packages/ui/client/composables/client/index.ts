@@ -39,18 +39,29 @@ function createVitestClient(): VitestClient {
           explorerTree.recordTestArtifact(testId, artifact)
         },
         onSpecsCollected(specs, startTime) {
-          specs?.forEach(([config, file]) => {
-            client.state.clearFiles({ config }, [file])
+          // Run-start specifications identify files before their task trees are collected.
+          specs?.forEach((spec) => {
+            client.state.clearFiles(spec)
           })
           explorerTree.startTime = startTime || performance.now()
         },
         onCollected(files) {
+          // Collection supplies complete task trees that supersede any file placeholders.
           client.state.collectFiles(files)
+          if (files) {
+            explorerTree.pruneStaleTasks(files)
+          }
         },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
           client.state.updateTasks(packs)
           explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
+        },
+        onTestRemoved(path?: string) {
+          if (path) {
+            client.state.removeFile(path)
+            explorerTree.removeFile(path)
+          }
         },
         onUserConsoleLog(log) {
           client.state.updateUserLog(log)
