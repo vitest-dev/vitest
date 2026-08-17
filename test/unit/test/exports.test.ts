@@ -83,6 +83,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "AgentReporter": "function",
         "BaseCoverageProvider": "function",
         "BaseSequencer": "function",
+        "BrowserConnectionError": "function",
         "DefaultReporter": "function",
         "DotReporter": "function",
         "ForksPoolWorker": "function",

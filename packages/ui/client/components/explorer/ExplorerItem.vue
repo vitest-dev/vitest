@@ -9,7 +9,7 @@ import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { coverageEnabled, disableCoverage } from '~/composables/navigation'
-import { getBadgeTextColor } from '~/utils/task'
+import { getProjectBadgeStyle } from '~/utils/task'
 import IconAction from '../IconAction.vue'
 import IconButton from '../IconButton.vue'
 import StatusIcon from '../StatusIcon.vue'
@@ -29,7 +29,7 @@ const {
   type,
   disableTaskLocation,
   onItemClick,
-  projectNameColor,
+  projectName,
   state,
 } = defineProps<{
   taskId: string
@@ -46,7 +46,6 @@ const {
   expandable: boolean
   search?: string
   projectName?: string
-  projectNameColor: string
   disableTaskLocation?: boolean
   onItemClick?: (task: Task) => void
 }>()
@@ -165,7 +164,7 @@ function showDetails() {
   }
 }
 
-const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor))
+const projectBadgeStyle = computed(() => getProjectBadgeStyle(config.value, projectName))
 
 /**
 experiments trying to show tags compactly
@@ -229,7 +228,7 @@ const tagsBgGradient = computed(() => {
       <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
       <span v-if="type === 'file' && label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
       <span text-sm truncate font-light>
-        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
+        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="projectBadgeStyle">
           {{ projectName }}
         </span>
         <span :class="state === 'fail' ? 'text-red-700 dark:text-red-500' : undefined" v-html="highlighted" />

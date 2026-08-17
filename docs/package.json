@@ -34,9 +34,9 @@
     "unocss": "catalog:",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^1.3.0",
-    "vitepress": "2.0.0-alpha.18",
+    "vitepress": "2.0.0-alpha.19",
     "vitepress-plugin-group-icons": "^1.7.6",
-    "vitepress-plugin-llms": "^1.13.4",
+    "vitepress-plugin-llms": "^1.13.5",
     "vitepress-plugin-tabs": "^0.9.1",
     "workbox-window": "^7.4.1"
   }

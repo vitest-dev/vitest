@@ -189,6 +189,8 @@ export class TestRun {
               // source map is already applied for inlined modules.
               // Module node exists due to Vitest fetch module,
               // but transformResult should be empty for external modules.
+              // TODO: this uses client module graph and thus miss detects
+              // inlined modules in ssr environment as if external.
               const mod = project.vite.moduleGraph.getModuleById(file)
               if (!mod?.transformResult && existsSync(file)) {
                 const code = readFileSync(file, 'utf-8')

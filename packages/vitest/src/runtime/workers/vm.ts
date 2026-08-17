@@ -119,7 +119,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   })
 
   process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
+    const filepath = state.filepath
+    throw new Error(`process.exit unexpectedly called with "${code}"${filepath ? ` (test file: ${filepath})` : ''}`)
   }
 
   listenForErrors(() => state)

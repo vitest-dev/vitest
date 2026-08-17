@@ -6,15 +6,15 @@ import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
   browserState,
   client,
+  config,
   current,
   currentLogs,
   isReport,
 } from '~/composables/client'
 import { tagsDefinitions } from '~/composables/client/state'
-import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { selectedTest, viewMode } from '~/composables/params'
-import { getBadgeNameColor, getBadgeTextColor } from '~/utils/task'
+import { getBadgeNameColor, getProjectBadgeStyle } from '~/utils/task'
 import FileDetailsModuleGraph from './FileDetailsModuleGraph.vue'
 import IconButton from './IconButton.vue'
 import StatusIcon from './StatusIcon.vue'
@@ -60,12 +60,7 @@ function onDraft(value: boolean) {
 }
 
 const projectName = computed(() => current.value?.file.projectName || '')
-const projectNameColor = computed(() => {
-  const projectNameValue = projectName.value
-  return explorerTree.colors.get(projectNameValue) || getBadgeNameColor(projectNameValue)
-})
-
-const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
+const projectBadgeStyle = computed(() => getProjectBadgeStyle(config.value, projectName.value))
 
 const testTitle = computed(() => {
   const testId = selectedTest.value
@@ -115,7 +110,7 @@ const tags = computed(() => {
         <span
           v-if="current?.file.projectName"
           class="rounded-full py-0.5 px-2 text-xs font-light"
-          :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
+          :style="projectBadgeStyle"
           cursor-default
         >
           {{ current.file.projectName }}

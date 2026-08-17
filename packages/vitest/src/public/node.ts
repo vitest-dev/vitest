@@ -21,7 +21,7 @@ export type {
 } from '../node/core'
 export { BaseCoverageProvider } from '../node/coverage'
 export { createVitest } from '../node/create'
-export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
+export { BrowserConnectionError, GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export { Logger } from '../node/logger'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { resolveFsAllow } from '../node/plugins/utils'

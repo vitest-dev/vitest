@@ -69,3 +69,10 @@ it('runs global setup/teardown', async () => {
     }
   `)
 })
+
+it('respects root', async () => {
+  const config = resolve(import.meta.dirname, '../fixtures/global-setup-root/vitest.config.ts')
+  const { stderr } = await runVitest({ config })
+
+  expect(stderr).toBe('')
+})

@@ -1,6 +1,7 @@
 import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { ref, watch, watchEffect } from 'vue'
+import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
@@ -222,17 +223,12 @@ watchEffect(() => {
 })
 
 export function isTraceViewEnabled(test: RunnerTestFile): boolean {
-  const project = getProjectConfigByTest(test)
+  const project = getProjectConfigByName(config.value, test.file.projectName)
   const traceView
     = browserState?.config.browser?.traceView
       ?? project?.browser.traceView
       ?? config.value.browser?.traceView
   return traceView?.enabled ?? false
-}
-
-function getProjectConfigByTest(test: RunnerTestFile) {
-  const projectName = test.file.projectName || ''
-  return config.value.projects?.find(project => project.name === projectName)
 }
 
 export function getTraceAttemptLabel(trace: BrowserTraceData) {
