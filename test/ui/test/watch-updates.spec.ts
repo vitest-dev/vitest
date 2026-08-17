@@ -87,12 +87,17 @@ test('reconcile-type-test', () => {
     await expect(getExplorerItem(page, 'reconcile-type-test')).toBeVisible()
     await assertTestCounts(page, { pass: 3, fail: 0 })
 
+    await getExplorerItem(page, 'reconcile-second-file').click()
+    await expect(page.getByTestId('file-detail')).toContainText('reconcile-second-file')
+
     // delete an entire test file and let the watcher emit onTestRemoved
     fs.rmSync(secondFile)
 
     // the deleted file's test node must disappear (no ghost file node)
     await expect(getExplorerItem(page, 'reconcile-second-file')).toHaveCount(0)
+    await expect(page.getByTestId('file-detail')).toHaveCount(0)
     await expect(getExplorerItem(page, 'reconcile-keep')).toBeVisible()
+    await page.getByRole('button', { name: 'Show dashboard' }).click()
     await assertTestCounts(page, { pass: 2, fail: 0 })
   })
 })
