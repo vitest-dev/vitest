@@ -3,6 +3,7 @@ import type {
   RunnerTask,
   RunnerTaskResultPack,
   RunnerTestFile,
+  SerializedTestSpecification,
   TestTagDefinition,
   UserConsoleLog,
 } from 'vitest'
@@ -106,15 +107,15 @@ export class StateManager {
 
   /** Replace selected files with local placeholders for logs emitted during collection. */
   clearFiles(
-    project: { config: { name: string | undefined; root: string } },
+    project: SerializedTestSpecification[0],
     paths: string[] = [],
   ): void {
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       const fileTask = createFileTask(
         path,
-        project.config.root,
-        project.config.name || '',
+        project.root,
+        project.name || '',
       )
       fileTask.local = true
       this.idMap.set(fileTask.id, fileTask)
@@ -123,7 +124,7 @@ export class StateManager {
         return
       }
       const filtered = files.filter(
-        file => file.projectName !== project.config.name,
+        file => file.projectName !== project.name,
       )
       // always keep a File task, so we can associate logs with it
       if (!filtered.length) {
