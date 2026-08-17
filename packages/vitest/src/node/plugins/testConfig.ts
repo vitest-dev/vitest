@@ -17,8 +17,9 @@ import { escapeRegExp } from '../../utils/base'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { deleteDefineConfig } from './utils'
 
-// `name` must stay unique per project, `projects` would redefine the whole workspace
-const NON_INHERITED_OPTIONS = ['name', 'projects'] as const
+// `name` must stay unique per project, `projects` would redefine the whole
+// workspace, and `root` would re-root the project onto the declaring config
+const NON_INHERITED_OPTIONS = ['name', 'projects', 'root'] as const
 
 // the root `globalSetup` already runs once per test run; a non-root
 // config (a shared config or a container) keeps it because nothing else runs it

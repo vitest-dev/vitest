@@ -2,11 +2,28 @@ import type {
   DepOptimizationOptions,
   UserConfig as ViteConfig,
 } from 'vite'
-import type { DepsOptimizationOptions } from '../types/config'
+import type { DepsOptimizationOptions, UserConfig } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import * as vite from 'vite'
 import { rootDir } from '../../paths'
+import { VitestCache } from '../cache'
+
+export function resolveTestCacheDir(
+  root: string,
+  testConfig: UserConfig,
+  viteCacheDir: string | undefined,
+): string {
+  const name = testConfig.name
+  const label = typeof name === 'string' ? name : (name?.label || '')
+  return VitestCache.resolveCacheDir(
+    root,
+    testConfig.cache != null && testConfig.cache !== false
+      ? testConfig.cache.dir
+      : viteCacheDir,
+    label,
+  )
+}
 
 export function resolveOptimizerConfig(
   testOptions_: DepsOptimizationOptions | undefined,

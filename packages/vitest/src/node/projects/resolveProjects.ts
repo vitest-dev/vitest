@@ -329,16 +329,17 @@ async function resolveDeclaredProjectEntries(
       : options.extends !== false
         ? (parentViteConfig.configFile || false)
         : false
-    // if `root` is configured, resolve it relative to the declaring config's
-    // root (like other options); if `root` is not specified, inline configs
-    // use the same root as the declaring config
-    const rawRoot = options.test?.root ?? options.root
-    const root = rawRoot
-      ? resolve(configRoot, rawRoot)
-      : configRoot
+    // `test.root` overrides the top level `root`, so the entry carries a
+    // single resolved root; both are resolved relative to the declaring
+    // config's root (like other options), and inline configs without a
+    // root use the same root as the declaring config
+    const { root: testRoot, ...test } = options.test ?? {}
+    const customRoot = testRoot ?? options.root
+    const root = customRoot ? resolve(configRoot, customRoot) : configRoot
 
     promises.push(concurrent(() => resolveSingleProjectEntry(context, {
       ...options,
+      test,
       root,
       configFile,
     }, index)))
@@ -733,12 +734,7 @@ async function resolveSingleProjectEntry(
         isInlineEntry ? { options, extendsTrueRootConfig } : undefined,
       ),
       ...(options.plugins || []),
-      ...WorkspaceVitestPlugin(
-        harness,
-        parentViteConfig,
-        rootConfig,
-        options,
-      ),
+      ...WorkspaceVitestPlugin(harness, parentViteConfig),
       ...BrowserLoaderPlugin(captures, harness),
     ],
   }
