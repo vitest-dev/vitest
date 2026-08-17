@@ -75,10 +75,6 @@ function toggleOpen() {
   }
 }
 
-function selectTask() {
-  onItemClick?.(task.value!)
-}
-
 async function onRun(task: Task) {
   onItemClick?.(task)
   if (coverageEnabled.value) {
@@ -207,7 +203,7 @@ const tagsBgGradient = computed(() => {
     :aria-label="name"
     :data-current="current"
     data-testid="explorer-item"
-    @click="selectTask"
+    @click="onItemClick?.(task)"
   >
     <template v-if="indent > 0">
       <div v-for="i in data" :key="i" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
