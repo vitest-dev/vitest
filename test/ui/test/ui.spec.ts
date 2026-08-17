@@ -106,6 +106,7 @@ test.describe('ui', () => {
   test('collapses explorer suites only from the disclosure button', async ({ page }) => {
     await page.goto(pageUrl)
 
+    // "suite" is an actual title of this suite
     const suite = getExplorerItem(page, 'suite')
     await suite.click()
     await expect(page.getByTestId('file-detail')).toContainText('console.test.ts')
