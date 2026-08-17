@@ -65,7 +65,6 @@ const failedSnapshot = computed(() => {
 
 function toggleOpen() {
   if (!expandable) {
-    onItemClick?.(task.value!)
     return
   }
 
@@ -75,6 +74,10 @@ function toggleOpen() {
   else {
     explorerTree.expandNode(taskId)
   }
+}
+
+function selectTask() {
+  onItemClick?.(task.value!)
 }
 
 async function onRun(task: Task) {
@@ -205,13 +208,24 @@ const tagsBgGradient = computed(() => {
     :aria-label="name"
     :data-current="current"
     data-testid="explorer-item"
-    @click="toggleOpen()"
+    @click="selectTask"
   >
     <template v-if="indent > 0">
       <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px op20 />
     </template>
-    <div w-4>
-      <div v-if="type === 'file' || type === 'suite'" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+    <div w-4 h-full>
+      <button
+        v-if="type === 'file' || type === 'suite'"
+        type="button"
+        w-full
+        h-full
+        flex
+        items-center
+        :aria-label="`${opened ? 'Collapse' : 'Expand'} ${name}`"
+        @click.stop="toggleOpen"
+      >
+        <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+      </button>
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
     <div flex items-baseline gap-2 overflow-hidden>
