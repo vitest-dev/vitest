@@ -104,7 +104,7 @@ export class StateManager {
     this.filesMap.delete(filepath)
   }
 
-  // this file is reused by ws-client, and should not rely on heavy dependencies like workspace
+  /** Replace selected files with local placeholders for logs emitted during collection. */
   clearFiles(
     _project: { config: { name: string | undefined; root: string } },
     paths: string[] = [],
