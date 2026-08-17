@@ -277,8 +277,10 @@ export class PoolRunner {
     try {
       this._state = RunnerState.STOPPING
 
-      // Remove exit listener early to avoid "unexpected exit" errors during shutdown
+      // Remove exit and error listeners early to avoid "unexpected exit" and
+      // channel teardown errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
+      this.worker.off('error', this.emitWorkerError)
 
       const stopSpan = this.startTracesSpan('vitest.worker.stop')
       await this.withTimeout(
