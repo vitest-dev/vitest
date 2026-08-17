@@ -102,10 +102,8 @@ const data = computed(() => {
 const gridStyles = computed(() => {
   const entries = data.value
   const gridColumns: string[] = []
-  // folder icon
-  if (type === 'file' || type === 'suite') {
-    gridColumns.push('min-content')
-  }
+  // disclosure icon placeholder
+  gridColumns.push('min-content')
 
   // status icon
   gridColumns.push('min-content')
@@ -212,8 +210,8 @@ const tagsBgGradient = computed(() => {
     <template v-if="indent > 0">
       <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px inline-flex mx-2 op20 />
     </template>
-    <div v-if="type === 'file' || type === 'suite'" w-4>
-      <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+    <div w-4>
+      <div v-if="type === 'file' || type === 'suite'" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
     <div flex items-baseline gap-2 overflow-hidden>
