@@ -178,11 +178,6 @@ export function createOrUpdateNode(
     : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
-    // Position-based ids can be reused for a different task type after a re-run.
-    if (taskNode && taskNode.type !== task.type) {
-      removeNodeSubtree(explorerTree.nodes, taskNode)
-      taskNode = undefined
-    }
     if (taskNode) {
       if (!node.children.has(task.id)) {
         node.tasks.push(taskNode)
