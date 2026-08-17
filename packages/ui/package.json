@@ -61,7 +61,7 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.5.0",
+    "@faker-js/faker": "^10.6.0",
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
     "@types/codemirror": "^5.60.18",
@@ -88,7 +88,7 @@
     "vitest-browser-vue": "2.1.0",
     "vue": "catalog:",
     "vue-router": "^5.2.0",
-    "vue-tsc": "^3.3.9",
+    "vue-tsc": "^3.3.10",
     "vue-virtual-scroller": "2.0.1"
   }
 }

@@ -51,7 +51,7 @@ catalog:
   '@babel/core': ^7.29.7
   '@babel/plugin-proposal-decorators': ^7.29.7
   '@iconify-json/carbon': ^1.2.25
-  '@iconify-json/logos': ^1.2.12
+  '@iconify-json/logos': ^1.2.13
   '@iconify/vue': ^5.0.1
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
@@ -80,9 +80,9 @@ catalog:
   istanbul-lib-report: ^3.0.1
   istanbul-lib-source-maps: ^5.0.6
   istanbul-reports: ^3.2.0
-  knip: ^6.32.0
+  knip: ^6.32.2
   loupe: ^3.2.1
-  magic-string: ^1.1.0
+  magic-string: ^1.2.0
   magicast: ^0.5.4
   msw: ^2.15.0
   obug: ^2.1.4
