@@ -213,18 +213,15 @@ const tagsBgGradient = computed(() => {
     <template v-if="indent > 0">
       <div v-for="i in data" :key="i" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
     </template>
-    <div w-4 h-full>
+    <div class="w-4 h-full">
       <button
         v-if="type === 'file' || type === 'suite'"
         type="button"
-        w-full
-        h-full
-        flex
-        items-center
+        class="w-full h-full flex items-center"
         :aria-label="`${opened ? 'Collapse' : 'Expand'} ${name}`"
         @click.stop="toggleOpen"
       >
-        <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right'" op40 />
+        <div class="op40" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right'" />
       </button>
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
