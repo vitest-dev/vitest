@@ -365,7 +365,7 @@ const { pause, resume } = watch(
       cmValue.on('changes', codemirrorChanges)
     }
   },
-  { flush: 'post' },
+  { immediate: true },
 )
 
 watchDebounced(() => [finished.value, saving.value, currentPosition.value] as const, ([f, s], old) => {
