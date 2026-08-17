@@ -71,7 +71,12 @@ export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.t
   return sorted
 }
 
-// TODO: jsdoc
+/**
+ * Create or update the explorer node that mirrors a runner file.
+ *
+ * @param file Runner file whose explorer node should be synchronized.
+ * @param collect Synchronize all descendant task nodes when true; update only the file node when false.
+ */
 export function createOrUpdateFileNode(
   file: File,
   collect = false,
