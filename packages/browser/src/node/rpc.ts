@@ -386,6 +386,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               if (module.type === 'redirect') {
                 const redirectUrl = new URL(module.redirect)
                 module.redirect = join(vite.config.root, redirectUrl.pathname)
+                checkFileAccess(module.redirect)
               }
               defaultMockerRegistry.register(module)
             }
