@@ -148,14 +148,39 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         importer,
       },
     )
+    // Use require() for node built-in modules so that ESM imports and CJS
+    // requires return the same module object. This is important for tools
+    // like MSW that patch the module returned by require().
+    const loadModule = () => {
+      if (isBuiltin(id) || id.startsWith('node:')) {
+        // For node built-ins, use require to get the same object that
+        // CJS require() returns, ensuring import and require are equivalent.
+        // The base path for createRequire doesn't matter for built-ins,
+        // but we need a valid file path. Use importer if it's a file URL,
+        // otherwise fall back to process.cwd().
+        let requireBase: string
+        if (importer && (importer.startsWith('file://') || importer.startsWith('/'))) {
+          requireBase = importer.startsWith('file://') ? fileURLToPath(importer) : importer
+        }
+        else if (filename.startsWith('file://') || filename.startsWith('/')) {
+          requireBase = filename.startsWith('file://') ? fileURLToPath(filename) : filename
+        }
+        else {
+          requireBase = process.cwd()
+        }
+        const req = this.createRequire(requireBase)
+        return Promise.resolve(req(id))
+      }
+      return this.vm
+        ? this.vm.externalModulesExecutor.import(file)
+        : import(file)
+    }
     const namespace = await this._otel.$(
       'vitest.module.external',
       {
         attributes: { 'code.file.path': file },
       },
-      () => this.vm
-        ? this.vm.externalModulesExecutor.import(file)
-        : import(file),
+      () => loadModule(),
     ).finally(() => {
       this.options.moduleExecutionInfo?.set(filename, finishModuleExecutionInfo())
     })
