@@ -366,8 +366,7 @@ body {
 
   contribution.plugins = [
     ...BrowserPlugin(contribution),
-    // this plugin's `configureServer` is ignored since it's added through `applyToEnvironment`
-    interceptorPlugin({ registry: mockerRegistry }),
+    interceptorPlugin({ registry: mockerRegistry, registerWebSocketEvents: false }),
     {
       name: 'vitest:browser:framework-sourcemaps',
       enforce: 'post',
