@@ -67,24 +67,15 @@ export class StateManager {
       }
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
+      this.clearFileTaskIds(file.id)
       this.updateId(file)
-      this.pruneStaleTaskIds(file)
     })
   }
 
-  private pruneStaleTaskIds(file: RunnerTestFile): void {
-    const validIds = new Set<string>()
-    function collect(task: RunnerTask): void {
-      validIds.add(task.id)
-      if (task.type === 'suite') {
-        task.tasks.forEach(collect)
-      }
-    }
-    collect(file)
-
-    const prefix = `${file.id}_`
-    for (const id of [...this.idMap.keys()]) {
-      if (id.startsWith(prefix) && !validIds.has(id)) {
+  private clearFileTaskIds(fileId: string): void {
+    const prefix = `${fileId}_`
+    for (const id of this.idMap.keys()) {
+      if (id === fileId || id.startsWith(prefix)) {
         this.idMap.delete(id)
       }
     }
@@ -94,12 +85,7 @@ export class StateManager {
     const files = this.filesMap.get(filepath)
     if (files) {
       for (const file of files) {
-        const prefix = `${file.id}_`
-        for (const id of [...this.idMap.keys()]) {
-          if (id === file.id || id.startsWith(prefix)) {
-            this.idMap.delete(id)
-          }
-        }
+        this.clearFileTaskIds(file.id)
       }
     }
     this.filesMap.delete(filepath)
