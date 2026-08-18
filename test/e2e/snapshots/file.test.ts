@@ -48,3 +48,25 @@ test('file snapshot', async () => {
     }
   `)
 })
+
+test('file snapshot can use another test filename', async () => {
+  const result = await runInlineTests({
+    'other.test.ts': `
+import { expect, test } from 'vitest'
+
+test('file snapshot', async () => {
+  await expect('content').toMatchFileSnapshot('__snapshots__/basic.test.ts.snap')
+})
+`,
+  }, { update: true })
+
+  expect(result.stderr).toBe('')
+  expect(result.testTree()).toMatchInlineSnapshot(`
+    {
+      "other.test.ts": {
+        "file snapshot": "passed",
+      },
+    }
+  `)
+  expect(result.fs.readFile('__snapshots__/basic.test.ts.snap')).toBe('content')
+})
