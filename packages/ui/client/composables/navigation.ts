@@ -112,7 +112,7 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo({ file, line, view, test, column }: Params) {
+export function navigateTo({ file, line, view, test, column }: Omit<Params, 'attempt' | 'step'>) {
   activeFileId.value = file
   lineNumber.value = line
   columnNumber.value = column

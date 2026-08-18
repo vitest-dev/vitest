@@ -21,9 +21,10 @@ import {
   mainSizes,
   panels,
 } from '~/composables/navigation'
-import { activeTraceView } from '~/composables/trace-view'
+import { activeTraceView, initializeTraceView } from '~/composables/trace-view'
 
 const dashboardVisible = initializeNavigation()
+initializeTraceView()
 
 const onBrowserPanelResizing = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
   // don't trigger events in the iframe while resizing

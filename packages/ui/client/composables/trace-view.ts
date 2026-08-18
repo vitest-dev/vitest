@@ -3,7 +3,7 @@ import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/c
 import { ref, watch, watchEffect } from 'vue'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
-import { selectedTest } from './params'
+import { selectedTest, selectedTraceAttempt, selectedTraceStep } from './params'
 
 export interface TraceSelection {
   test: RunnerTestCase
@@ -173,22 +173,83 @@ export function getTraceEntryClass(entry: BrowserTraceEntry) {
 
 export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
+  setActiveTrace(test, getTraceAttemptKey(trace), 0)
+}
+
+function setActiveTrace(test: RunnerTestCase, attemptKey: string | undefined, stepIndex: number) {
   activeTraceView.value = {
     test,
-    attemptKey: getTraceAttemptKey(trace),
-    selectedStepIndex: 0,
+    attemptKey,
+    selectedStepIndex: stepIndex,
   }
+  selectedTraceAttempt.value = attemptKey ?? null
+  selectedTraceStep.value = stepIndex
 }
 
 export function closeTrace() {
   activeTraceView.value = undefined
+  selectedTraceAttempt.value = null
+  selectedTraceStep.value = null
 }
 
 export function selectActiveTraceStep(index: number) {
   const selection = activeTraceView.value
   if (selection) {
     selection.selectedStepIndex = index
+    selectedTraceStep.value = index
   }
+}
+
+export function initializeTraceView() {
+  const attemptKey = selectedTraceAttempt.value
+  const step = selectedTraceStep.value
+  if (attemptKey == null && step == null) {
+    return
+  }
+
+  const testId = selectedTest.value
+  if (!testId) {
+    closeTrace()
+    return
+  }
+
+  const restoreTrace = () => {
+    if (selectedTest.value !== testId) {
+      return true
+    }
+    if (!Object.hasOwn(config.value, 'root')) {
+      return false
+    }
+
+    const test = client.state.idMap.get(testId)
+    if (test?.type !== 'test' || !isTraceViewEnabled(test.file)) {
+      closeTrace()
+      return true
+    }
+
+    const attempts = getTraceAttemptMap(test.artifacts)
+    const trace = attemptKey && Object.hasOwn(attempts, attemptKey) ? attempts[attemptKey] : undefined
+    const selectedTrace = trace ?? Object.values(attempts)[0]
+    const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
+    detailsPosition.value = 'bottom'
+    setActiveTrace(test, selectedTrace ? getTraceAttemptKey(selectedTrace) : undefined, selectedStepIndex)
+    return true
+  }
+
+  if (restoreTrace()) {
+    return
+  }
+
+  const stop = watch([() => client.state.idMap.get(testId), config, selectedTest], () => {
+    if (restoreTrace()) {
+      stop()
+    }
+  })
+}
+
+function parseTraceStep(value: unknown, entryCount: number): number {
+  const step = typeof value === 'number' ? value : Number(value)
+  return Number.isInteger(step) && step >= 0 && step < entryCount ? step : 0
 }
 
 // Open/close only on selected-test navigation so the close button can clear the
@@ -198,7 +259,8 @@ watch(selectedTest, (testId) => {
     const test = client.state.idMap.get(testId)
     if (test?.type === 'test' && isTraceViewEnabled(test.file)) {
       // Auto-open trace view when selecting a trace-enabled test.
-      activeTraceView.value = { test, selectedStepIndex: 0 }
+      const trace = Object.values(getTraceAttemptMap(test.artifacts))[0]
+      setActiveTrace(test, trace ? getTraceAttemptKey(trace) : undefined, 0)
       return
     }
   }
@@ -216,7 +278,8 @@ watchEffect(() => {
     const test = client.state.idMap.get(testId)
     if (test?.type === 'test' && active.test !== test) {
       // Rerun produced a fresh test object; reset attempt selection.
-      activeTraceView.value = { test, selectedStepIndex: 0 }
+      const trace = Object.values(getTraceAttemptMap(test.artifacts))[0]
+      setActiveTrace(test, trace ? getTraceAttemptKey(trace) : undefined, 0)
     }
   }
 })
