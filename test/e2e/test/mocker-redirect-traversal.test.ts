@@ -14,6 +14,7 @@ async function createMockerServer() {
     configFile: false,
     logLevel: 'silent',
     server: {
+      host: '127.0.0.1',
       fs: { allow: [root] },
     },
     plugins: [
@@ -37,7 +38,7 @@ async function createMockerServer() {
 
 function registerRedirect(port: string, redirect: string) {
   return new Promise<void>((resolve, reject) => {
-    const ws = new WebSocket(`ws://localhost:${port}`, 'vite-hmr')
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`, 'vite-hmr')
     const timeout = setTimeout(() => {
       ws.close()
       reject(new Error('timed out waiting for the register result'))
