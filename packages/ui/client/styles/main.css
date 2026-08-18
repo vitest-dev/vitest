@@ -91,6 +91,10 @@ html.dark {
   background: var(--cm-line-highlight-background);
 }
 
+/*
+ * Unlike readOnly: 'nocursor', hiding only the caret preserves text selection
+ * and lets the active line follow clicks.
+ */
 .codemirror-hide-cursor .CodeMirror-cursors {
   visibility: hidden !important;
 }
