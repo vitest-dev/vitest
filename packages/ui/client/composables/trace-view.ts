@@ -75,6 +75,7 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
       ...entry,
       startTime: start.startTime,
       duration: entry.startTime - start.startTime,
+      snapshot: entry.snapshot ?? start.snapshot,
     }
     parents.pop()
   }
