@@ -526,6 +526,67 @@ test('negation wildcard filter excludes all matching browser instances', async (
   ])
 })
 
+test('negation filter excludes a single browser instance', async () => {
+  const projects = await config({
+    project: '!myproject (chromium)',
+    projects: [
+      {
+        test: {
+          name: 'myproject',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+      {
+        test: {
+          name: 'other',
+        },
+      },
+    ],
+  })
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
+    'other',
+    'myproject (firefox)',
+  ])
+})
+
+test('negation filter excludes a browser instance of a matching project', async () => {
+  const projects = await config({
+    project: ['myproject', '!myproject (chromium)'],
+    projects: [
+      {
+        test: {
+          name: 'myproject',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+      {
+        test: {
+          name: 'other',
+        },
+      },
+    ],
+  })
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
+    'myproject (firefox)',
+  ])
+})
+
 test('filter for the global browser project includes all browser instances', async () => {
   const projects = await config({
     project: 'myproject',
