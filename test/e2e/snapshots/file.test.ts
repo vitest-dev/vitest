@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
 test('white space sensitive', async () => {
   const root = join(import.meta.dirname, 'fixtures/file')
@@ -25,4 +25,26 @@ test('white space sensitive', async () => {
 +     echo "hello"
 `)
   expect(vitest.exitCode).toBe(1)
+})
+
+test('file snapshot cannot use the test snapshot path', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import { expect, test } from 'vitest'
+
+test('file snapshot', async () => {
+  await expect('content').toMatchFileSnapshot('__snapshots__/basic.test.ts.snap')
+})
+`,
+  })
+
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "file snapshot": [
+          "File snapshot cannot use the same path as the test snapshot file: <root>/__snapshots__/basic.test.ts.snap",
+        ],
+      },
+    }
+  `)
 })

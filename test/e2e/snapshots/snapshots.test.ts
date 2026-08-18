@@ -29,28 +29,6 @@ test('--update works for workspace project', async () => {
   expect.soft(exitCode).toBe(0)
 })
 
-test('file snapshot cannot use the test snapshot path', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
-import { expect, test } from 'vitest'
-
-test('file snapshot', async () => {
-  await expect('content').toMatchFileSnapshot('__snapshots__/basic.test.ts.snap')
-})
-`,
-  })
-
-  expect(result.errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "file snapshot": [
-          "File snapshot cannot use the same path as the test snapshot file: <root>/__snapshots__/basic.test.ts.snap",
-        ],
-      },
-    }
-  `)
-})
-
 test('test.fails fails snapshot', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
