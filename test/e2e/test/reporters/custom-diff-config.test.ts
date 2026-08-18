@@ -1,6 +1,6 @@
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('custom diff config', async () => {
   const filename = resolve('./fixtures/reporters/custom-diff-config.test.ts')

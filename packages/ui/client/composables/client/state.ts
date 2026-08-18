@@ -3,6 +3,7 @@ import type {
   RunnerTask,
   RunnerTaskResultPack,
   RunnerTestFile,
+  SerializedTestSpecification,
   TestTagDefinition,
   UserConsoleLog,
 } from 'vitest'
@@ -66,40 +67,55 @@ export class StateManager {
       }
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
+      this.clearFileTaskIds(file.id)
       this.updateId(file)
     })
   }
 
-  // this file is reused by ws-client, and should not rely on heavy dependencies like workspace
-  clearFiles(
-    _project: { config: { name: string | undefined; root: string } },
-    paths: string[] = [],
-  ): void {
-    const project = _project
-    paths.forEach((path) => {
-      const files = this.filesMap.get(path)
-      const fileTask = createFileTask(
-        path,
-        project.config.root,
-        project.config.name || '',
-      )
-      fileTask.local = true
-      this.idMap.set(fileTask.id, fileTask)
-      if (!files) {
-        this.filesMap.set(path, [fileTask])
-        return
+  private clearFileTaskIds(fileId: string): void {
+    // this assumes each task id is prefixed with file id (see `TaskBase.id` jsdoc)
+    const prefix = `${fileId}_`
+    for (const id of this.idMap.keys()) {
+      if (id === fileId || id.startsWith(prefix)) {
+        this.idMap.delete(id)
       }
-      const filtered = files.filter(
-        file => file.projectName !== project.config.name,
-      )
-      // always keep a File task, so we can associate logs with it
-      if (!filtered.length) {
-        this.filesMap.set(path, [fileTask])
+    }
+  }
+
+  removeFile(filepath: string): void {
+    const files = this.filesMap.get(filepath)
+    if (files) {
+      for (const file of files) {
+        this.clearFileTaskIds(file.id)
       }
-      else {
-        this.filesMap.set(path, [...filtered, fileTask])
-      }
-    })
+    }
+    this.filesMap.delete(filepath)
+  }
+
+  /** Stage selected files as local placeholders for logs emitted during collection. */
+  clearFiles([project, path]: SerializedTestSpecification): void {
+    const files = this.filesMap.get(path)
+    const fileTask = createFileTask(
+      path,
+      project.root,
+      project.name || '',
+    )
+    fileTask.local = true
+    this.idMap.set(fileTask.id, fileTask)
+    if (!files) {
+      this.filesMap.set(path, [fileTask])
+      return
+    }
+    const filtered = files.filter(
+      file => file.projectName !== project.name,
+    )
+    // always keep a File task, so we can associate logs with it
+    if (!filtered.length) {
+      this.filesMap.set(path, [fileTask])
+    }
+    else {
+      this.filesMap.set(path, [...filtered, fileTask])
+    }
   }
 
   updateId(task: RunnerTask): void {

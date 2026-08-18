@@ -6,15 +6,12 @@ import type {
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
 import type {
-  BrowserServerContribution,
   ParentProjectBrowser,
 } from '../types/browser'
-import type { ResolvedConfig } from '../types/config'
+import type { ConfigResolutionCaptures, ResolvedConfig, ResolvedProjectEntry } from '../types/config'
+import c from 'tinyrainbow'
 import { createViteServer } from '../vite'
-
-export interface BrowserContributionHolder {
-  contribution?: BrowserServerContribution
-}
+import { createViteLogger } from '../viteLogger'
 
 function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
   const pre: VitePlugin[] = []
@@ -35,7 +32,7 @@ function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
 }
 
 export function BrowserLoaderPlugin(
-  holder: BrowserContributionHolder,
+  captures: ConfigResolutionCaptures,
   harness: PluginHarness,
 ): VitePlugin[] {
   return [
@@ -60,12 +57,44 @@ export function BrowserLoaderPlugin(
           throw new Error(`Browser Mode was enabled, but provider was not specified anywhere. See https://vitest.dev/guide/browser/#configuration`)
         }
         const contribution = await provider.serverFactory()
-        holder.contribution = contribution
+        captures.browserContribution = contribution
         const browserConfig = await contribution.config(viteConfig, harness)
-        return browserConfig
+        const logLevel = viteConfig.logLevel ?? 'warn'
+        const logger = createViteLogger(harness.logger, logLevel, {
+          allowClearScreen: false,
+        })
+        return {
+          ...browserConfig,
+          customLogger: {
+            ...logger,
+            info(message, options) {
+              // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L76-L86
+              // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L483-L490
+              const isOptimizerMessage
+                = message.includes('dependency optimized: ')
+                  || message.includes('dependencies optimized: ')
+                  || message.includes('optimized dependencies changed. reloading')
+              if (isOptimizerMessage) {
+                // escalate from `info` to `warn` so it shows up on Vitest's default logLevel `warn`
+                logger.warn(message, options)
+              }
+              else {
+                logger.info(message, options)
+              }
+              if (message.includes('optimized dependencies changed. reloading')) {
+                logger.warn(
+                  [
+                    c.yellow(`\n${c.bold('[vitest]')} Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`),
+                    c.yellow(`For a stable experience, add the newly optimized dependencies to your config's ${c.bold('`optimizeDeps.include`')} field manually.\n`),
+                  ].join(''),
+                )
+              }
+            },
+          },
+        }
       },
       applyToEnvironment(environment) {
-        const contribution = holder.contribution
+        const contribution = captures.browserContribution
         if (contribution && environment.name === 'client') {
           // `post` browser plugins are injected by `vitest:browser:loader:post`
           // instead, so they run after the `post` plugins of the main pipeline
@@ -81,13 +110,13 @@ export function BrowserLoaderPlugin(
       configureServer: {
         order: 'pre',
         async handler(server) {
-          await holder.contribution?.configureServer(server)
+          await captures.browserContribution?.configureServer(server)
         },
       },
       transformIndexHtml: {
         order: 'pre',
         async handler(html, ctx) {
-          return holder.contribution?.transformIndexHtml(ctx)
+          return captures.browserContribution?.transformIndexHtml(ctx)
         },
       },
     },
@@ -95,7 +124,7 @@ export function BrowserLoaderPlugin(
       name: 'vitest:browser:loader:post',
       enforce: 'post',
       applyToEnvironment(environment) {
-        const contribution = holder.contribution
+        const contribution = captures.browserContribution
         if (contribution && environment.name === 'client') {
           return sortPluginsByEnforce(
             contribution.plugins.filter(plugin => plugin.enforce === 'post'),
@@ -111,6 +140,7 @@ export async function createClusterServer(
   vitest: Vitest,
   viteConfig: ResolvedViteConfig,
   config: ResolvedConfig,
+  children: readonly ResolvedProjectEntry[],
 ): Promise<{ server: ViteDevServer; parent?: ParentProjectBrowser }> {
   const contribution = config._browserContribution
 
@@ -124,6 +154,23 @@ export async function createClusterServer(
 
   const parent = contribution.createParent({ config, vitest })
   contribution.parent = parent
+
+  // Start browser launches now so their latency overlaps Vite server creation.
+  // Entries that cannot run browser tests are skipped because they will never
+  // initialize a provider that could adopt and close the prepared browser.
+  for (const child of children) {
+    if (
+      child.hidden
+      || child.hasTestFiles === false
+      || (child.projectConfig.typecheck.enabled && child.projectConfig.typecheck.only)
+    ) {
+      continue
+    }
+    // The Vite server is shared, but each child carries its own resolved
+    // provider and browser options, so it must be prewarmed independently.
+    const projectConfig = child.projectConfig
+    projectConfig.browser.provider?.prewarm?.({ config: projectConfig, vitest })
+  }
 
   const server = await createViteServer(viteConfig)
   await server.listen(config.api.port)

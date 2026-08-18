@@ -4,8 +4,9 @@ import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
-import type { BuiltinPool, ResolvedConfig } from './types/config'
+import type { ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
+import process from 'node:process'
 import { isatty } from 'node:tty'
 import { resolve } from 'pathe'
 import { version as viteVersion } from 'vite'
@@ -30,19 +31,10 @@ export interface ProcessPool {
   close?: () => Awaitable<void>
 }
 
-export interface PoolProcessOptions {
+interface PoolProcessOptions {
   execArgv: string[]
   env: Record<string, string>
 }
-
-export const builtinPools: BuiltinPool[] = [
-  'forks',
-  'threads',
-  'browser',
-  'vmThreads',
-  'vmForks',
-  'typescript',
-]
 
 export function getFilePoolName(project: TestProject): ResolvedConfig['pool'] {
   if (project.config.browser.enabled) {
@@ -335,7 +327,7 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
     return null
   }
 
-  const memory = nodeos.totalmem()
+  const memory = process.constrainedMemory?.() || nodeos.totalmem()
   const limit = getWorkerMemoryLimit(config)
 
   if (typeof memory === 'number') {

@@ -1,6 +1,5 @@
 import type {
   Graph,
-  GraphConfig,
   GraphController,
   GraphLink,
   GraphNode,
@@ -19,8 +18,6 @@ export type ModuleGraphController = GraphController<
   ModuleNode,
   ModuleLink
 >
-export type ModuleGraphConfig = GraphConfig<ModuleType, ModuleNode, ModuleLink>
-
 function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
   const labels = modules.map(module =>
     createModuleLabelItem(module),

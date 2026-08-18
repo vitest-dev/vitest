@@ -173,7 +173,7 @@ export interface MockContext<T extends Procedure | Constructable = Procedure> {
 
 export type Procedure = (...args: any[]) => any
 // pick a single function type from function overloads, unions, etc...
-export type NormalizedProcedure<T extends Procedure | Constructable> = T extends Constructable
+type NormalizedProcedure<T extends Procedure | Constructable> = T extends Constructable
   ? ({
     new (...args: ConstructorParameters<T>): InstanceType<T>
   })

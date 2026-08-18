@@ -2,7 +2,7 @@ import type { MockerRegistry } from '@vitest/mocker'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject, Vitest } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
@@ -10,16 +10,37 @@ import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname, join, resolve } from 'pathe'
-import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
+import { BrowserConnectionError, createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
+
+const DEFAULT_HEARTBEAT_INTERVAL = 15_000
+const HEARTBEAT_MAX_MISSED = 2
+let warnedInvalidHeartbeatInterval = false
+
+function resolveHeartbeatInterval(vitest: Vitest): number {
+  const rawInterval = process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
+  if (!rawInterval) {
+    return DEFAULT_HEARTBEAT_INTERVAL
+  }
+  const interval = Number(rawInterval)
+  if (Number.isNaN(interval)) {
+    if (!warnedInvalidHeartbeatInterval) {
+      warnedInvalidHeartbeatInterval = true
+      vitest.logger.warn(`VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "${rawInterval}". Using the default interval of ${DEFAULT_HEARTBEAT_INTERVAL}ms instead.`)
+    }
+    return DEFAULT_HEARTBEAT_INTERVAL
+  }
+  return interval
+}
 
 export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
   const vite = globalServer.vite
@@ -93,8 +114,36 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
       debug?.('[%s] Browser API connected to %s', rpcId, type)
 
+      // if the browser stops answering pings, terminate the socket so the
+      // "close" handler below rejects pending calls (like `createTesters`)
+      // instead of the run hanging forever; timeouts that live in the browser
+      // (`testTimeout`, iframe ack) cannot fire once its process is frozen
+      const heartbeatInterval = resolveHeartbeatInterval(vitest)
+      let missedPongs = 0
+      ws.on('pong', () => {
+        missedPongs = 0
+      })
+      const heartbeat = heartbeatInterval > 0
+        ? setInterval(() => {
+            if (ws.readyState !== ws.OPEN) {
+              return
+            }
+            if (missedPongs >= HEARTBEAT_MAX_MISSED) {
+              debug?.('[%s] %s did not respond to %s heartbeat pings, terminating the connection', rpcId, type, missedPongs)
+              rpc.$close(
+                new Error(`[vitest] The browser ${type} did not respond to a heartbeat ping for ${missedPongs * heartbeatInterval}ms. The browser process might be frozen or killed. Closing the connection.`),
+              )
+              ws.terminate()
+              return
+            }
+            missedPongs++
+            ws.ping()
+          }, heartbeatInterval).unref()
+        : undefined
+
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        clearInterval(heartbeat)
         offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
@@ -103,7 +152,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         }
         // this will reject any hanging methods if there are any
         rpc.$close(
-          new Error(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
+          new BrowserConnectionError(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
         )
       })
     })
@@ -130,13 +179,15 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     )
   }
 
-  function isCdpAllowed(project: TestProject) {
+  function canExec(project: TestProject) {
     return (
       project.config.api.allowExec
       && project.vitest.config.api.allowExec
-      && project.config.api.allowWrite
-      && project.vitest.config.api.allowWrite
     )
+  }
+
+  function isCdpAllowed(project: TestProject) {
+    return canExec(project) && canWrite(project)
   }
 
   function assertCdpAllowed(project: TestProject) {
@@ -276,6 +327,19 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
           return fs.readFile(snapshotPath, 'utf-8')
         },
+        async readSnapshotFileData(snapshotPath) {
+          checkFileAccess(snapshotPath)
+          if (!existsSync(snapshotPath)) {
+            return null
+          }
+          if (!canExec(project)) {
+            throw new Error(
+              `Cannot read snapshot file because browser API exec operations are disabled. See https://vitest.dev/config/api.`,
+            )
+          }
+          const content = await fs.readFile(snapshotPath, 'utf-8')
+          return evaluateSnapshotFile(snapshotPath, content)
+        },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
           if (!canWrite(project)) {
@@ -402,6 +466,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               if (module.type === 'redirect') {
                 const redirectUrl = new URL(module.redirect)
                 module.redirect = join(vite.config.root, redirectUrl.pathname)
+                checkFileAccess(module.redirect)
               }
               defaultMockerRegistry.register(module)
             }
@@ -481,7 +546,7 @@ function cloneByOwnProperties(value: any) {
  * Replacer function for serialization methods such as JS.stringify() or
  * flatted.stringify().
  */
-export function stringifyReplace(key: string, value: any): any {
+function stringifyReplace(key: string, value: any): any {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {

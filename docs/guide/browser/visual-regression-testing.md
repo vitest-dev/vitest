@@ -82,14 +82,12 @@ export default defineConfig({
     // ...other configurations
     projects: [
       {
-        extends: true,
         test: {
           name: 'unit',
           exclude: [vrtPattern, ...defaultExclude],
         },
       },
       {
-        extends: true,
         test: {
           name: 'vrt',
           browser: {
@@ -179,8 +177,8 @@ Note that **screenshots for deleted or renamed tests aren't removed automaticall
 When a visual test fails, Vitest provides three images to help debug:
 
 1. **Reference screenshot**: the expected baseline image
-1. **Actual screenshot**: what was captured during the test
-1. **Diff image**: highlights the differences; only generated when the screenshots have the same dimensions (behavior may vary with custom matchers)
+2. **Actual screenshot**: what was captured during the test
+3. **Diff image**: highlights the differences; only generated when the screenshots have the same dimensions (behavior may vary with custom matchers)
 
 You'll see something like this in the CLI output:
 
@@ -675,7 +673,6 @@ export default defineConfig({
     // ...other configurations
     projects: [
       {
-        extends: true,
         test: {
           name: 'vrt',
           browser: {

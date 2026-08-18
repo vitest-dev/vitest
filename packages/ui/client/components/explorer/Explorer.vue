@@ -3,7 +3,6 @@ import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import { hideAllPoppers } from 'floating-vue'
 import { computed, ref } from 'vue'
 
-// @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
 import { availableProjects, config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
@@ -333,7 +332,6 @@ const {
                 :typecheck="item.typecheck === true"
                 :label="item.label"
                 :project-name="item.projectName ?? ''"
-                :project-name-color="item.projectNameColor ?? ''"
                 :state="item.state"
                 :duration="item.duration"
                 :slow="item.slow === true"

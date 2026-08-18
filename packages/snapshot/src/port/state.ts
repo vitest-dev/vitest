@@ -26,7 +26,7 @@ import {
   addExtraLineBreaks,
   CounterMap,
   DefaultMap,
-  getSnapshotData,
+  evaluateSnapshotFile,
   keyToTestName,
   normalizeNewlines,
   removeExtraLineBreaks,
@@ -95,11 +95,13 @@ export default class SnapshotState {
   private constructor(
     public testFilePath: string,
     public snapshotPath: string,
-    snapshotContent: string | null,
+    fileData: SnapshotData | null,
     options: SnapshotStateOptions,
   ) {
-    const { data, dirty } = getSnapshotData(snapshotContent, options)
-    this._fileExists = snapshotContent != null // TODO: update on watch?
+    const data = fileData ?? Object.create(null)
+    this._fileExists = fileData != null // TODO: update on watch?
+    const update = options.updateSnapshot
+    const dirty = (update === 'all' || update === 'new') && fileData != null
     this._initialData = { ...data }
     this._snapshotData = { ...data }
     this._dirty = dirty
@@ -122,13 +124,17 @@ export default class SnapshotState {
   }
 
   static async create(testFilePath: string, options: SnapshotStateOptions): Promise<SnapshotState> {
-    const snapshotPath = await options.snapshotEnvironment.resolvePath(
-      testFilePath,
-    )
-    const content = await options.snapshotEnvironment.readSnapshotFile(
-      snapshotPath,
-    )
-    return new SnapshotState(testFilePath, snapshotPath, content, options)
+    const environment = options.snapshotEnvironment
+    const snapshotPath = await environment.resolvePath(testFilePath)
+    let fileData: SnapshotData | null
+    if (environment.readSnapshotFileData) {
+      fileData = await environment.readSnapshotFileData(snapshotPath)
+    }
+    else {
+      const content = await environment.readSnapshotFile(snapshotPath)
+      fileData = content != null ? evaluateSnapshotFile(snapshotPath, content) : null
+    }
+    return new SnapshotState(testFilePath, snapshotPath, fileData, options)
   }
 
   get snapshotUpdateState(): SnapshotUpdateState {

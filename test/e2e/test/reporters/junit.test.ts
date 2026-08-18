@@ -1,9 +1,10 @@
-import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite, RunnerTask as Task } from 'vitest'
+import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { runVitest, runVitestCli } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test, TestRunner } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
+import { runVitest, runVitestCli } from '#test-utils'
+import { getDuration } from '../../../../packages/vitest/src/node/reporters/junit'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
@@ -385,15 +386,3 @@ test('resolves unhandled errors to the owning project in a multi-project workspa
   })
   expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
 })
-
-function executionTime(durationMS: number) {
-  return (durationMS / 1000).toLocaleString('en-US', {
-    useGrouping: false,
-    maximumFractionDigits: 10,
-  })
-}
-
-export function getDuration(task: Task): string | undefined {
-  const duration = task.result?.duration ?? 0
-  return executionTime(duration)
-}

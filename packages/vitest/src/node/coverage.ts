@@ -18,7 +18,7 @@ import { glob } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
-import { resolveCoverageProviderModule } from '../utils/coverage'
+import { getCoverageFilesDirectory, resolveCoverageProviderModule } from '../utils/coverage'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -65,7 +65,6 @@ const THRESHOLD_KEYS: Readonly<Threshold[]> = [
 ]
 const GLOBAL_THRESHOLDS_KEY = 'global'
 const DEFAULT_PROJECT: unique symbol = Symbol.for('default-project')
-let uniqueId = 0
 
 export async function getCoverageProvider(
   options: SerializedCoverageConfig | undefined,
@@ -87,9 +86,9 @@ export class BaseCoverageProvider {
   options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
   autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
+  globMatchers?: { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean }
 
   coverageFiles: CoverageFiles = new Map()
-  pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
   reportsDirectoryLock!: ReportsDirectoryLock
   roots: string[] = []
@@ -109,6 +108,8 @@ export class BaseCoverageProvider {
     }
 
     const config = ctx._coverageOptions
+
+    this.globMatchers = undefined
 
     this.options = {
       ...coverageConfigDefaults,
@@ -134,14 +135,9 @@ export class BaseCoverageProvider {
       },
     }
 
-    const shard = this.ctx.config.shard
-    const tempDirectory = `.tmp${
-      shard ? `-${shard.index}-${shard.count}` : ''
-    }`
-
-    this.coverageFilesDirectory = resolve(
+    this.coverageFilesDirectory = getCoverageFilesDirectory(
       this.options.reportsDirectory,
-      tempDirectory,
+      this.ctx.config.shard,
     )
     this.reportsDirectoryLock = new ReportsDirectoryLock(resolve(this.options.reportsDirectory))
 
@@ -175,18 +171,15 @@ export class BaseCoverageProvider {
 
     const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
 
-    if (pm.isMatch(relativeFilename, this.options.exclude, { dot: true })) {
+    const { matchExclude, matchInclude } = this.getGlobMatchers()
+
+    if (matchExclude(relativeFilename)) {
       this.globCache.set(filename, false)
       return false
     }
 
     // By default `coverage.include` matches all files, except "coverage.exclude"
-    const glob = this.options.include || '**'
-
-    let included = pm.isMatch(relativeFilename, glob, {
-      dot: true,
-      ignore: this.options.exclude,
-    })
+    let included = matchInclude(relativeFilename)
 
     if (included && this.changedFiles) {
       included = this.changedFiles.includes(filename)
@@ -195,6 +188,25 @@ export class BaseCoverageProvider {
     this.globCache.set(filename, included)
 
     return included
+  }
+
+  /**
+   * Compile `coverage.include`/`coverage.exclude` into reusable matchers once.
+   * `picomatch.isMatch(file, patterns, options)` recompiles the patterns on
+   * every call, which dominates the filtering step on large test suites.
+   */
+  private getGlobMatchers(): { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean } {
+    if (!this.globMatchers) {
+      const exclude = this.options.exclude
+      const include = this.options.include
+
+      this.globMatchers = {
+        matchExclude: exclude.length ? pm(exclude, { dot: true }) : () => false,
+        matchInclude: include ? pm(include, { dot: true, ignore: exclude }) : () => true,
+      }
+    }
+
+    return this.globMatchers
   }
 
   private async getUntestedFilesByRoot(
@@ -270,29 +282,17 @@ export class BaseCoverageProvider {
     await fs.mkdir(this.coverageFilesDirectory, { recursive: true })
 
     this.coverageFiles = new Map()
-    this.pendingPromises = []
-  }
-
-  private normalizeCoverageFileError(error: unknown): unknown {
-    if (
-      error instanceof Error
-      && 'code' in error
-      && error.code === 'ENOENT'
-      && !existsSync(this.coverageFilesDirectory)
-    ) {
-      return new Error(
-        `Something removed the coverage directory "${this.coverageFilesDirectory}" Vitest created earlier. Make sure you are not running multiple Vitests with the same "coverage.reportsDirectory" at the same time.`,
-        { cause: error },
-      )
-    }
-
-    return error
   }
 
   onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
     }
+
+    if (typeof coverage !== 'string') {
+      throw new TypeError(`Expected string coverage payload, received ${typeof coverage}, ${JSON.stringify(coverage)}`)
+    }
+    const filename = coverage
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
@@ -302,20 +302,9 @@ export class BaseCoverageProvider {
     }
 
     const testFilenames = testFiles.join()
-    const filename = resolve(
-      this.coverageFilesDirectory,
-      `coverage-${uniqueId++}.json`,
-    )
-
     entry[environment] ??= {}
     // If there's a result from previous run, overwrite it
     entry[environment][testFilenames] = filename
-
-    const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
-      .catch((error) => {
-        throw this.normalizeCoverageFileError(error)
-      })
-    this.pendingPromises.push(promise)
   }
 
   async readCoverageFiles<CoverageType>({ onFileRead, onFinished, onDebug }: {
@@ -326,10 +315,7 @@ export class BaseCoverageProvider {
     onDebug: ((...logs: any[]) => void) & { enabled: boolean }
   }): Promise<void> {
     let index = 0
-    const total = this.pendingPromises.length
-
-    await Promise.all(this.pendingPromises)
-    this.pendingPromises = []
+    const total = this.coverageFiles.size
 
     for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
       for (const [environment, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
@@ -344,9 +330,6 @@ export class BaseCoverageProvider {
 
           await Promise.all(chunk.map(async (filename) => {
             const contents = await fs.readFile(filename, 'utf-8')
-              .catch((error) => {
-                throw this.normalizeCoverageFileError(error)
-              })
             const coverage = JSON.parse(contents)
 
             onFileRead(coverage)

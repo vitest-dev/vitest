@@ -280,7 +280,7 @@ function createOrUpdateEntry(tasks: Task[]) {
   }
 }
 
-export function resetCollectorInfo(summary: CollectorInfo) {
+function resetCollectorInfo(summary: CollectorInfo) {
   summary.files = 0
   summary.time = ''
   summary.filesFailed = 0

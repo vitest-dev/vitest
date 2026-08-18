@@ -143,12 +143,13 @@ export interface SerializedConfig {
   benchmark: {
     enabled: boolean
     retainSamples: boolean
+    provider: string | undefined
     suppressExportGetterWarnings: boolean
     projectName: string
   }
   serializedDefines: string
+  fsModuleCache: boolean
   experimental: {
-    fsModuleCache: boolean
     importDurations: {
       print: boolean | 'on-warn'
       limit: number
@@ -169,11 +170,14 @@ export interface SerializedConfig {
   mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
   disableColors: boolean
+  attachmentsDir: string
 }
 
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
+  /** Directory where workers write raw coverage results, shard-aware */
+  coverageFilesDirectory: string
   htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined

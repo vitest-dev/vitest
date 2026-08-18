@@ -10,7 +10,7 @@ import type {
 import { client, config } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
-import { getBadgeNameColor, isSuite as isTaskSuite } from '~/utils/task'
+import { isSuite as isTaskSuite } from '~/utils/task'
 
 export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
   return node.type === 'test'
@@ -22,10 +22,6 @@ export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode {
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
-}
-
-export function isSuiteNode(node: UITaskTreeNode): node is SuiteTreeNode {
-  return node.type === 'suite'
 }
 
 export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | SuiteTreeNode {
@@ -75,6 +71,12 @@ export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.t
   return sorted
 }
 
+/**
+ * Create or update the explorer node that mirrors a runner file.
+ *
+ * @param file Runner file whose explorer node should be synchronized.
+ * @param collect Synchronize all descendant task nodes when true; update only the file node when false.
+ */
 export function createOrUpdateFileNode(
   file: File,
   collect = false,
@@ -112,7 +114,6 @@ export function createOrUpdateFileNode(
       slow: false,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: explorerTree.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
@@ -234,6 +235,35 @@ export function createOrUpdateNode(
       for (let i = 0; i < task.tasks.length; i++) {
         createOrUpdateNode(taskNode.id, task.tasks[i], createAll)
       }
+    }
+  }
+}
+
+export function pruneStaleChildren(nodes: Map<string, UITaskTreeNode>, parentNode: ParentTreeNode, tasks: Task[]) {
+  const taskById = new Map(tasks.map(task => [task.id, task] as const))
+  for (const child of [...parentNode.tasks]) {
+    const task = taskById.get(child.id)
+    if (!task || task.type !== child.type) {
+      removeNodeSubtree(nodes, child)
+    }
+    else if (isParentNode(child) && task.type === 'suite') {
+      pruneStaleChildren(nodes, child, task.tasks)
+    }
+  }
+}
+
+export function removeNodeSubtree(nodes: Map<string, UITaskTreeNode>, node: UITaskTreeNode) {
+  if (isParentNode(node)) {
+    for (const child of [...node.tasks]) {
+      removeNodeSubtree(nodes, child)
+    }
+  }
+  nodes.delete(node.id)
+  const parent = nodes.get(node.parentId)
+  if (parent && isParentNode(parent) && parent.children.delete(node.id)) {
+    const index = parent.tasks.findIndex(task => task.id === node.id)
+    if (index !== -1) {
+      parent.tasks.splice(index, 1)
     }
   }
 }

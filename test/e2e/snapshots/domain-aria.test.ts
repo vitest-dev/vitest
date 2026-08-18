@@ -110,7 +110,7 @@ test('aria snapshot', { tags: ['browser'] }, async () => {
     Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
 
     Failure screenshot:
-      - snapshots/fixtures/domain-aria/__screenshots__/basic.test.ts/semantic-match-with-regex-in-snapshot-1.png
+      - snapshots/fixtures/domain-aria/.vitest/attachments/failure-screenshots/basic.test.ts/semantic-match-with-regex-in-snapshot.png
 
     - Expected
     + Received
@@ -119,11 +119,11 @@ test('aria snapshot', { tags: ['browser'] }, async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:20:24
+     ❯ basic.test.ts:20:25
          18|     <button aria-label="9999">Pattern</button>
          19|   \`
          20|   expect(document.body).toMatchAriaSnapshot()
-           |                        ^
+           |                         ^
          21| })
          22|
 

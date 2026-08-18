@@ -1,19 +1,20 @@
 import type {
   InlineConfig,
   ResolvedConfig as ResolvedViteConfig,
+  Plugin as VitePlugin,
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { Logger } from '../logger'
-import type { BrowserContributionHolder } from '../plugins/browserLoader'
 import type {
   ApiConfig,
+  ConfigResolutionCaptures,
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { deepMerge, slash, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -28,10 +29,9 @@ import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
-import { CliOverride } from '../plugins/cliOverride'
-import { VitestConfig } from '../plugins/config'
+import { ViteConfigPlugin } from '../plugins/config'
 import { VitestCorePlugin } from '../plugins/index'
-import { VitestConfigServer } from '../plugins/server'
+import { TestConfigPlugin } from '../plugins/testConfig'
 import { resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
@@ -56,13 +56,16 @@ function resolvePath(path: string, root: string) {
   )
 }
 
-export function findConfigFile(root: string): string | undefined {
+export function findConfigFile(root: string): string | false {
   for (const configFile of configFiles) {
     const configPath = resolve(root, configFile)
     if (existsSync(configPath)) {
       return configPath
     }
   }
+  // if not found, then there is no config to find.
+  // `false` will stop vite from trying to find it again
+  return false
 }
 
 function parseInspector(inspect: string | undefined | boolean | number) {
@@ -170,6 +173,24 @@ function resolveInlineWorkerOption(value: string | number): number {
   }
 }
 
+/**
+ * Records which options the user provided explicitly. Must be computed from
+ * the raw user config sources BEFORE `configDefaults` is merged in - the
+ * merged object cannot distinguish a default from a user-provided value.
+ */
+function captureProvidedOptions(
+  ...sources: (UserConfig | undefined)[]
+): ResolvedConfig['providedOptions'] {
+  return {
+    pool: sources.some(source => source?.pool != null),
+    isolate: sources.some(source => source?.isolate != null),
+    environment: sources.some(source => source?.environment != null || source?.dom),
+    fsModuleCache: sources.some(source =>
+      source?.fsModuleCache != null
+      || (source?.experimental as { fsModuleCache?: boolean } | undefined)?.fsModuleCache != null),
+  }
+}
+
 // warn only once, check one PER PROCESS, not per instance,
 // that's why it's on a module-level
 let warnedTypeCheck = false
@@ -205,14 +226,26 @@ export function resolveTestConfig(
     options.environment = 'happy-dom'
   }
 
+  // provenance must be captured from the raw options BEFORE `configDefaults`
+  // is merged in - the merged object cannot distinguish a default from a
+  // user-provided value; `viteConfig.test` is not resolved yet at this point,
+  // the call sites assign the resolved config to it after this function returns
+  const providedOptions = captureProvidedOptions(
+    options,
+    viteConfig.test as UserConfig | undefined,
+  )
+
   const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
   resolved.root = viteConfig.root
+  resolved.providedOptions = providedOptions
 
-  // Coverage is collected once for the whole run using the root config, so projects
-  // share its resolved coverage. Each project's setup/test/config files are then
+  // These options are resolved once for the whole run using the root config.
+  // Coverage is shared by reference: each project's setup/test/config files are
   // appended to the same exclude list below, keeping them out of the report.
   if (globalConfig) {
     resolved.coverage = globalConfig.coverage
+    resolved.attachmentsDir = globalConfig.attachmentsDir
+    resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
   }
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
@@ -293,6 +326,12 @@ export function resolveTestConfig(
   resolved.benchmark = {
     ...benchmarkConfigDefaults,
     ...resolved.benchmark,
+  }
+  if (resolved.benchmark.provider) {
+    resolved.benchmark.provider = resolvePath(
+      resolved.benchmark.provider,
+      resolved.root,
+    )
   }
 
   const inspector = resolved.inspect || resolved.inspectBrk
@@ -410,6 +449,7 @@ export function resolveTestConfig(
         + `Use a single provider for the project, or move the instances into separate projects.`,
       )
     }
+    browser.provider ??= browser.instances.find(instance => instance.provider)?.provider
 
     // use `chromium` by default when the preview provider is specified
     // for a smoother experience. if chromium is not available, it will
@@ -750,12 +790,15 @@ export function resolveTestConfig(
       .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
   }
 
-  resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
-  for (const reporter of resolved.reporters) {
-    if (Array.isArray(reporter) && reporter[0] === 'blob') {
-      const options = reporter[1] as any
-      if (options && typeof options.label === 'string') {
-        resolved.mergeReportsLabel = options.label
+  // only the root resolves the label; projects receive the root's value above
+  if (!globalConfig) {
+    resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
+    for (const reporter of resolved.reporters) {
+      if (Array.isArray(reporter) && reporter[0] === 'blob') {
+        const options = reporter[1] as any
+        if (options && typeof options.label === 'string') {
+          resolved.mergeReportsLabel = options.label
+        }
       }
     }
   }
@@ -957,6 +1000,7 @@ export function resolveTestConfig(
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
   resolved.experimental ??= {} as any
+  resolved.sharedViteServer ??= true
   if (resolved.experimental.openTelemetry?.sdkPath) {
     const sdkPath = resolve(
       resolved.root,
@@ -970,12 +1014,6 @@ export function resolveTestConfig(
       resolved.experimental.openTelemetry.browserSdkPath,
     )
     resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
-  }
-  if (resolved.experimental.fsModuleCachePath) {
-    resolved.experimental.fsModuleCachePath = resolve(
-      resolved.root,
-      resolved.experimental.fsModuleCachePath,
-    )
   }
   resolved.experimental.importDurations ??= {} as any
   resolved.experimental.importDurations.print ??= false
@@ -991,11 +1029,78 @@ export function resolveTestConfig(
   resolved.experimental.importDurations.thresholds.warn ??= 100
   resolved.experimental.importDurations.thresholds.danger ??= 500
 
+  const diagnostics = (resolved.experimental.diagnostics as boolean | { isolate?: boolean; environment?: boolean; import?: boolean; transform?: boolean } | undefined)
+    ?? true
+  resolved.experimental.diagnostics = typeof diagnostics === 'boolean'
+    ? { isolate: diagnostics, environment: diagnostics, import: diagnostics, transform: diagnostics }
+    : {
+        isolate: diagnostics.isolate ?? true,
+        environment: diagnostics.environment ?? true,
+        import: diagnostics.import ?? true,
+        transform: diagnostics.transform ?? true,
+      }
+
   if (typeof resolved.experimental.vcsProvider === 'string' && resolved.experimental.vcsProvider !== 'git') {
     resolved.experimental.vcsProvider = resolvePath(resolved.experimental.vcsProvider, resolved.root)
   }
 
+  // `experimental.fsModuleCache` / `experimental.fsModuleCachePath` were promoted to
+  // the top-level `fsModuleCache` / `fsModuleCachePath` options.
+  const legacyExperimental = options.experimental as
+    | { fsModuleCache?: boolean; fsModuleCachePath?: string }
+    | undefined
+  if (legacyExperimental?.fsModuleCache != null) {
+    logger.deprecate('`experimental.fsModuleCache` is deprecated. Use the top-level `fsModuleCache` option instead.')
+    if (options.fsModuleCache === undefined) {
+      resolved.fsModuleCache = legacyExperimental.fsModuleCache
+    }
+  }
+  if (legacyExperimental?.fsModuleCachePath != null) {
+    logger.deprecate('`experimental.fsModuleCachePath` is deprecated. Use the top-level `fsModuleCachePath` option instead.')
+    if (options.fsModuleCachePath === undefined) {
+      resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
+    }
+  }
+  resolved.fsModuleCache ??= false
+  if (resolved.fsModuleCachePath) {
+    resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
+  }
+
   return resolved
+}
+
+/**
+ * Captures `config.test` before any Vitest plugin modifies it. Inline projects
+ * that share this config's Vite server resolve against the captured value
+ * instead of re-executing the config file (`sharedViteServer`).
+ *
+ * Must be the first inline plugin. The consumer must clear
+ * `captures.rawTestConfig` after storing it because the server retains the plugin.
+ */
+export function CaptureRawTestConfig(captures: ConfigResolutionCaptures, capture: boolean | undefined): VitePlugin {
+  return {
+    name: 'vitest:capture-raw-test-config',
+    enforce: 'pre',
+    config: {
+      order: 'pre',
+      handler(config) {
+        if (!(capture ?? config.test?.sharedViteServer ?? true)) {
+          return
+        }
+        const { projects, ...test } = (config.test ?? {}) as UserConfig
+        // the captured config is only read when this config's inline
+        // projects are resolved; without `projects` there is nothing to
+        // read it (`injectTestProjects` then resolves through Vite instead)
+        if (projects === undefined) {
+          return
+        }
+        // cloned so mutations from later hooks and from the test-config
+        // resolution never reach the captured value; `projects` is left out
+        // because it is never inherited and can be the largest part of the config
+        captures.rawTestConfig = deepClone(test) as UserConfig
+      },
+    },
+  }
 }
 
 function resolveConfigPath(root: string, options: UserConfig) {
@@ -1014,28 +1119,32 @@ export async function resolveConfig(
   pluginsHarness: PluginHarness = new PluginHarness(),
 ): Promise<ResolvedViteConfig> {
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
-  const cliOptionsCopy = deepMerge({}, options)
-  const viteOverridesCopy = deepMerge({}, viteOverrides)
-  const root = resolve(options.root || process.cwd())
-  const configPath = resolveConfigPath(root, options)
+  const cliOptionsCopy = deepMerge({}, options) as UserConfig
+  const viteOverridesCopy = deepMerge({}, viteOverrides) as ViteUserConfig
+  const configPath = resolveConfigPath(
+    // try to find the config relative to `--root` or process.cwd()
+    resolve(options.root || process.cwd()),
+    options,
+  )
   options.config = configPath
-  options.root = root
 
-  const rootBrowserHolder: BrowserContributionHolder = {}
+  const captures: ConfigResolutionCaptures = {}
   const inlineConfig: InlineConfig = mergeConfig(
     {
       configFile: configPath,
       configLoader: options.configLoader,
       mode: options.mode || 'test',
       plugins: [
-        CliOverride(cliOptionsCopy),
-        ...VitestConfigServer(pluginsHarness),
-        ...VitestConfig(pluginsHarness),
-        ...VitestCorePlugin(pluginsHarness, options),
-        ...BrowserLoaderPlugin(rootBrowserHolder, pluginsHarness),
+        // the capture hook runs before `vitest:config:cli`, so `--sharedViteServer`
+        // has to be passed directly instead of being read from `config.test`
+        CaptureRawTestConfig(captures, cliOptionsCopy.sharedViteServer),
+        ...TestConfigPlugin(pluginsHarness, captures, cliOptionsCopy),
+        ...ViteConfigPlugin(pluginsHarness),
+        ...VitestCorePlugin(pluginsHarness),
+        ...BrowserLoaderPlugin(captures, pluginsHarness),
       ],
     } satisfies InlineConfig,
-    mergeConfig(viteOverrides, { root }),
+    viteOverrides,
   )
 
   const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
@@ -1085,7 +1194,25 @@ export async function resolveConfig(
 
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
-  rootConfig._browserContribution = rootBrowserHolder.contribution
+  rootConfig._browserContribution = captures.browserContribution
+  // projects never inherit `tagsFilter` and `browser` from the programmatic
+  // config (see `inheritRootViteOverrides`), so remove them from the base too
+  if (captures.rawTestConfig) {
+    const overridesTest = (viteOverridesCopy as ViteUserConfig).test as UserConfig | undefined
+    if (overridesTest?.tagsFilter !== undefined) {
+      delete captures.rawTestConfig.tagsFilter
+    }
+    if (overridesTest?.browser !== undefined) {
+      delete captures.rawTestConfig.browser
+    }
+  }
+  // the root keeps the config for the whole session so `injectTestProjects`
+  // can resolve shared-server projects at any point
+  rootConfig._rawTestConfig = captures.rawTestConfig
+  rootConfig._moduleRunnerOptions = captures.moduleRunnerOptions
+  // `captures` lives as long as the server that keeps its plugins,
+  // so it should not hold onto the config
+  captures.rawTestConfig = undefined
 
   rootConfig.resolvedProjects = await resolveProjectEntries(
     pluginsHarness,

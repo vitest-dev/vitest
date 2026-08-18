@@ -26,6 +26,7 @@ export default antfu(
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
       'test/e2e/deps/error/*',
+      'test/e2e/deps/malformed-source-map/*.js',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
@@ -63,8 +64,6 @@ export default antfu(
       'ts/no-unsafe-function-type': 'off',
 
       'markdown/fenced-code-language': 'off',
-      // it uses parser which is not compatible with vitepress
-      'markdown/no-missing-link-fragments': 'off',
 
       'no-restricted-imports': [
         'error',
@@ -117,6 +116,8 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      // it uses parser which is not compatible with vitepress
+      'markdown/no-missing-link-fragments': 'off',
       'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',

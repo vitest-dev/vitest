@@ -49,20 +49,41 @@ const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
 
+// In worker threads stdio is proxied to the parent over a MessagePort with a
+// backpressure protocol: a chunk stays buffered inside the worker until the
+// parent acks the previous one. The pool starts `runner.stop()` as soon as it
+// receives `testfileFinished`, and `thread.terminate()` halts the worker before
+// buffered chunks are ever posted, losing output. An empty write's callback
+// only fires after every previously buffered chunk has been acked, so awaiting
+// it before signaling completion guarantees the output reached the parent.
+// A cheap no-op for forks, where stdio goes through OS pipes.
+function flushStdio(): Promise<unknown> {
+  const flush = (stream: NodeJS.WriteStream) =>
+    new Promise((resolve) => {
+      try {
+        stream.write('', () => resolve(undefined))
+      }
+      catch {
+        resolve(undefined)
+      }
+    })
+  return Promise.all([flush(process.stdout), flush(process.stderr)])
+}
+
 let traces!: Traces
 
 /** @experimental */
 export function init(worker: Options): void {
-  worker.on(onMessage)
-  if (worker.onModuleRunner) {
-    listeners.onModuleRunner(worker.onModuleRunner)
-  }
-
   let runPromise: Promise<unknown> | undefined
   let isRunning = false
   let workerTeardown: (() => Promise<unknown>) | undefined | void
   let setupContext!: WorkerSetupContext
   let poolId!: number
+
+  worker.on(onMessage)
+  if (worker.onModuleRunner) {
+    listeners.onModuleRunner(worker.onModuleRunner)
+  }
 
   function send(response: WorkerResponse) {
     worker.post(worker.serialize ? worker.serialize(response) : response)
@@ -168,6 +189,8 @@ export function init(worker: Options): void {
           )
           const error = await runPromise
 
+          await flushStdio()
+
           send({
             type: 'testfileFinished',
             __vitest_worker_response__,
@@ -226,6 +249,8 @@ export function init(worker: Options): void {
           )
           const error = await runPromise
 
+          await flushStdio()
+
           send({
             type: 'testfileFinished',
             __vitest_worker_response__,
@@ -275,10 +300,14 @@ export function init(worker: Options): void {
 
           persistCompileCache()
 
+          await flushStdio()
+
           send({ type: 'stopped', error, __vitest_worker_response__ })
         }
         catch (error) {
           persistCompileCache()
+
+          await flushStdio()
 
           send({ type: 'stopped', error: serializeError(error), __vitest_worker_response__ })
         }

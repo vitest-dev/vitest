@@ -13,8 +13,11 @@ export interface VitestPluginContext {
    * Use this to make sure Vitest generates correct hash. It is a good idea
    * to define this function if your plugin can be registered with different options.
    *
-   * This is called only if `experimental.fsModuleCache` is defined.
-   * @experimental
+   * This is called only if `fsModuleCache` is enabled.
+   */
+  defineCacheKeyGenerator: (callback: CacheKeyIdGenerator) => void
+  /**
+   * @deprecated Use {@link defineCacheKeyGenerator} instead.
    */
   experimental_defineCacheKeyGenerator: (callback: CacheKeyIdGenerator) => void
 }

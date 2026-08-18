@@ -1,6 +1,6 @@
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('should print function name', async () => {
   const filename = resolve('./fixtures/reporters/function-as-name.test.ts')

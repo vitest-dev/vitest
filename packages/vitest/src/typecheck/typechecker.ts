@@ -18,6 +18,9 @@ import { createLocationsIndexMap } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
 import { getRawErrsMapFromTsCompile } from './parse'
 
+// the V8 fatal output of a checker that ran out of memory
+export const OOM_OUTPUT_PATTERN: RegExp = /JavaScript heap out of memory|Reached heap limit|Allocation failed/i
+
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
 
@@ -286,6 +289,14 @@ export class Typechecker {
     return this.process?.exitCode != null && this.process.exitCode
   }
 
+  public getSignal(): NodeJS.Signals | null {
+    return this.process?.signalCode ?? null
+  }
+
+  public getChecker(): string {
+    return this.project.config.typecheck.checker
+  }
+
   public getOutput(): string {
     return this._output
   }
@@ -401,13 +412,16 @@ export class Typechecker {
         child.process?.off('error', onError)
         clearTimeout(timeout)
         if (process.platform === 'win32') {
-          // on Windows, the process might be spawned but fail to start
-          // we wait for a potential error here. if "close" event didn't trigger,
-          // we resolve the promise
-          winTimeout = setTimeout(() => {
-            resolved = true
-            resolve({ result: child })
-          }, 200)
+          // on Windows, the process might be spawned but fail to start,
+          // so we wait for the "close" event instead of resolving right away.
+          // `start` awaits the process anyway; the watch process never exits,
+          // so resolve it after a grace period
+          if (watch) {
+            winTimeout = setTimeout(() => {
+              resolved = true
+              resolve({ result: child })
+            }, 200)
+          }
         }
         else {
           resolved = true
@@ -417,8 +431,15 @@ export class Typechecker {
 
       if (process.platform === 'win32') {
         child.process.once('close', (code) => {
-          if (code != null && code !== 0 && !dataReceived) {
+          // an OOM abort writes only to stderr, but the checker did start;
+          // `start` awaits the process and reports the crash from its output
+          if (code != null && code !== 0 && !dataReceived && !OOM_OUTPUT_PATTERN.test(this._output)) {
             onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+          }
+          else if (!resolved) {
+            clearTimeout(winTimeout)
+            resolved = true
+            resolve({ result: child })
           }
         })
       }

@@ -1,6 +1,6 @@
 import type {
-  BenchmarkUserOptions,
   CoverageOptions,
+  ResolvedBenchmarkOptions,
   UserConfig,
 } from './node/types/config'
 import type { FieldsWithDefaultValues } from './node/types/coverage'
@@ -14,7 +14,7 @@ export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/.git/**',
 ]
-export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
+export const benchmarkConfigDefaults: ResolvedBenchmarkOptions = {
   enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
@@ -58,7 +58,7 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
   autoAttachSubprocess: false,
 }
 
-export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
+const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
 }

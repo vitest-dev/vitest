@@ -24,3 +24,23 @@ it('Temporal.Now follows fake timers', () => {
   expect(globalThis.Temporal).toBe(real)
   expect(globalThis.Temporal.Now.instant().epochMilliseconds).not.toBe(1234)
 })
+
+it('Temporal.Now follows setSystemTime without fake timers', () => {
+  const real = globalThis.Temporal
+
+  expect(vi.isFakeTimers()).toBe(false)
+  vi.setSystemTime(0)
+  expect(vi.isFakeTimers()).toBe(false)
+  expect(globalThis.Temporal).not.toBe(real)
+  expect(globalThis.Temporal.Now.instant().epochMilliseconds).toBe(0)
+
+  vi.setSystemTime(1234)
+  expect(vi.isFakeTimers()).toBe(false)
+  expect(globalThis.Temporal.Now.instant().epochMilliseconds).toBe(1234)
+
+  // restore
+  vi.useRealTimers()
+  expect(vi.isFakeTimers()).toBe(false)
+  expect(globalThis.Temporal).toBe(real)
+  expect(globalThis.Temporal.Now.instant().epochMilliseconds).not.toBe(1234)
+})

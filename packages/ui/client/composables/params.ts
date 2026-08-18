@@ -10,7 +10,7 @@ export interface Params {
   column: null | number
 }
 
-export const params = useUrlSearchParams<Params>('hash', {
+const params = useUrlSearchParams<Params>('hash', {
   initialValue: {
     attempt: null,
     file: '',
