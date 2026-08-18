@@ -86,7 +86,60 @@ jobs:
             docs/**
             .github/**
             !.github/workflows/ci.yml
+            !.github/docker/**
             **.md
+
+  # Ensures the playwright-deps image exists in GHCR: a no-op manifest check
+  # when the tag for the locked Playwright version + Dockerfile hash already
+  # exists, otherwise builds and pushes it. Fork PRs get a read-only token and
+  # cannot push a missing tag; changes to the tag inputs must come from a
+  # branch in this repository.
+  playwright-deps-image:
+    runs-on: ubuntu-latest
+    name: 'Image: playwright-deps, ubuntu-latest'
+    timeout-minutes: 15
+    permissions:
+      packages: write # push the playwright-deps image to GHCR
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve image tag
+        id: image
+        run: |
+          version="$(node -e "
+            const fs = require('fs');
+            const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
+            const match = lockfile.match(/playwright:\s+specifier: [\s\w.^]+version: (\d+\.\d+\.\d+)/);
+            if (!match) throw new Error('Failed to resolve playwright version');
+            console.log(match[1]);
+          ")"
+          hash="$(sha256sum .github/docker/Dockerfile | cut -c1-12)"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY@L}/playwright-deps:${version}-${hash}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Build and push if missing
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+          PLAYWRIGHT_VERSION: ${{ steps.image.outputs.version }}
+        run: |
+          if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+            echo "$IMAGE already exists, skipping build"
+          else
+            docker build --build-arg "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" -t "$IMAGE" .github/docker
+            if ! docker push "$IMAGE"; then
+              echo "::error::Failed to publish $IMAGE. Fork PRs cannot push to GHCR - a Vitest maintainer needs to run CI from a vitest-dev/vitest branch to publish the playwright-deps:$PLAYWRIGHT_VERSION image."
+              exit 1
+            fi
+          fi
 
   test:
     needs: changed
@@ -171,33 +224,77 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
-  test-browser:
+  # runner.test.ts is the heaviest spec (~28% of the suite, ~70% of whichever
+  # shard it lands in). Windows isolates it in its own job and shards the other
+  # 32 specs; Ubuntu shards the whole suite 2 ways (runner rides in one shard).
+  # Every spec, runner included, runs on both OSes. Ubuntu runs inside the
+  # playwright-deps container so `playwright install-deps` is never needed;
+  # Windows needs no system deps.
+  test-browser-windows:
     needs: changed
-    name: 'Browsers: ${{ matrix.name }}, node-24, ${{ matrix.os }}'
+    name: 'Browsers: ${{ matrix.name }}, node-24, windows-latest'
     if: needs.changed.outputs.should_skip != 'true'
 
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     strategy:
-      # runner.test.ts is the heaviest spec (~28% of the suite, ~70% of whichever
-      # shard it lands in). Windows isolates it in its own job and shards the other
-      # 32 specs; Ubuntu shards the whole suite 2 ways (runner rides in one shard).
-      # Every spec, runner included, runs on both OSes.
       matrix:
         include:
-          - os: windows-latest
-            name: runner
+          - name: runner
             command: pnpm run test:browser:playwright runner.test.ts
-          - os: windows-latest
-            name: rest 1/2
+          - name: rest 1/2
             command: "pnpm run test:browser:playwright --exclude 'specs/runner.test.ts' --shard=1/2"
-          - os: windows-latest
-            name: rest 2/2
+          - name: rest 2/2
             command: "pnpm run test:browser:playwright --exclude 'specs/runner.test.ts' --shard=2/2"
-          - os: ubuntu-latest
-            name: shard 1/2
+      fail-fast: false
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 24
+
+      - name: Install
+        run: pnpm i --filter '!docs'
+
+      - uses: ./.github/actions/setup-playwright
+        with:
+          browsers: all
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test Browser (playwright)
+        # matrix.command is a fixed, workflow-defined string
+        run: ${{ matrix.command }} # zizmor: ignore[template-injection]
+
+  test-browser-linux:
+    needs:
+      - changed
+      - playwright-deps-image
+    name: 'Browsers: ${{ matrix.name }}, node-24, ubuntu-latest'
+    if: needs.changed.outputs.should_skip != 'true'
+
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read # pull the playwright-deps image from GHCR
+    container:
+      # the tag is version-keyed, built by playwright-deps-image in this workflow
+      image: ${{ needs.playwright-deps-image.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --shm-size=2gb
+    strategy:
+      matrix:
+        include:
+          - name: shard 1/2
             command: pnpm run test:browser:playwright --shard=1/2
-          - os: ubuntu-latest
-            name: shard 2/2
+          - name: shard 2/2
             command: pnpm run test:browser:playwright --shard=2/2
       fail-fast: false
 
@@ -227,11 +324,22 @@ jobs:
         run: ${{ matrix.command }} # zizmor: ignore[template-injection]
 
   test-vite7:
-    needs: changed
+    needs:
+      - changed
+      - playwright-deps-image
     # Runs on ubuntu to keep macOS under its ~5 concurrent-runner limit.
     name: 'Test: vite@7, ${{ matrix.suite }}, node-24, ubuntu-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      packages: read # pull the playwright-deps image from GHCR
+    container:
+      # the tag is version-keyed, built by playwright-deps-image in this workflow
+      image: ${{ needs.playwright-deps-image.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --shm-size=2gb
 
     timeout-minutes: 30
 
