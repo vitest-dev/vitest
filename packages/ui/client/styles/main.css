@@ -92,8 +92,8 @@ html.dark {
 }
 
 /*
- * Unlike readOnly: 'nocursor', hiding only the caret preserves text selection
- * and lets the active line follow clicks.
+ * readOnly: 'nocursor' disables CodeMirror's input and prevents focus.
+ * Hide only the caret so read-only code remains focusable and selectable.
  */
 .codemirror-hide-cursor .CodeMirror-cursors {
   visibility: hidden !important;
