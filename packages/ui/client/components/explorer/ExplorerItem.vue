@@ -96,15 +96,12 @@ function updateSnapshot(task: Task) {
 
 const gridStyles = computed(() => {
   const gridColumns: string[] = []
-
   // allocate zero-width columns to simulate indentation via grid gap
   for (let i = 0; i < indent; i++) {
     gridColumns.push('0')
   }
-
   // all items have collapse/expand icon equivalent spacing
   gridColumns.push('min-content')
-
   // status icon
   gridColumns.push('min-content')
   // typecheck icon
@@ -115,7 +112,6 @@ const gridStyles = computed(() => {
   gridColumns.push('minmax(0, 1fr)')
   // action buttons
   gridColumns.push('min-content')
-
   return `grid-template-columns: ${gridColumns.join(' ')};`
 })
 
