@@ -4,8 +4,7 @@ import type { Ref } from 'vue'
 import { onMounted, ref, useAttrs } from 'vue'
 import { codemirrorRef, useCodeMirror } from '~/composables/codemirror'
 
-const { hideCursor, mode, readOnly } = defineProps<{
-  hideCursor?: boolean
+const { mode, readOnly } = defineProps<{
   mode?: string
   readOnly?: boolean
   saving?: boolean
@@ -79,7 +78,7 @@ onMounted(async () => {
     class="codemirror-scrolls"
     :class="{
       'codemirror-busy': saving,
-      'codemirror-hide-cursor': hideCursor,
+      'codemirror-hide-cursor': readOnly,
     }"
   >
     <textarea ref="el" />

@@ -32,6 +32,7 @@ const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
 const loading = ref(true)
 const saving = ref(false)
+const readOnly = computed(() => isReport || !config.value.api?.allowWrite)
 const currentPosition = ref<CodeMirror.Position | undefined>()
 
 watch(
@@ -450,12 +451,11 @@ onBeforeUnmount(clearListeners)
     h-full
     v-bind="{
       lineNumbers: true,
-      readOnly: isReport || !config.api?.allowWrite,
+      readOnly,
       saving,
       styleActiveLine: true,
       gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
     }"
-    :hide-cursor="isReport"
     :mode="ext"
     data-testid="code-mirror"
     @save="onSave"
