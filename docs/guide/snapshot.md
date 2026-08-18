@@ -109,7 +109,7 @@ it('render basic', async () => {
 It will compare with the content of `./test/basic.output.html`. And can be written back with the `--update` flag.
 
 ::: warning
-Do not use a snapshot path managed by Vitest, such as `__snapshots__/basic.test.ts.snap`, with `toMatchFileSnapshot`. This includes snapshot paths belonging to other test files. Choose a separate file path for file snapshots.
+Do not use a snapshot path managed by Vitest, such as `__snapshots__/basic.test.ts.snap`, with `toMatchFileSnapshot`. Choose a separate file path pattern for file snapshots.
 :::
 
 ## Visual Snapshots
