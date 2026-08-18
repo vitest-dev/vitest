@@ -48,6 +48,9 @@ function onStepKeydown(event: KeyboardEvent, index: number) {
   }
 
   event.preventDefault()
+  if (nextIndex === index) {
+    return
+  }
   onSelectStep(nextIndex)
   const nextButton = (event.currentTarget as HTMLButtonElement).parentElement?.children[nextIndex]
   if (nextButton instanceof HTMLButtonElement) {
