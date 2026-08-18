@@ -1,6 +1,40 @@
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
+test('printBasicPrototype', async () => {
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
+        import { expect, test } from 'vitest'
+
+        test('non default snapshot format', () => {
+          expect({ foo: ['bar'] }).toMatchInlineSnapshot(\`
+            Object {
+              "foo": Array [
+                "bar",
+              ],
+            }
+          \`)
+        })
+      `,
+    },
+    {
+      snapshotFormat: {
+        printBasicPrototype: true,
+      },
+    },
+  )
+
+  expect(result.stderr).toBe('')
+  expect(result.testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "non default snapshot format": "passed",
+      },
+    }
+  `)
+})
+
 describe('maxOutputLength', () => {
   test('default', async () => {
     const result = await runInlineTests(
