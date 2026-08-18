@@ -166,6 +166,11 @@ test.describe('ui', () => {
     await testVisualRegression(page)
   })
 
+  test('report tab falls back to file report when a suite is selected', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testSuiteReportFallback(page)
+  })
+
   test('can edit file', async ({ page }) => {
     await page.goto(pageUrl)
     await testWriteFile(page, { enabled: true })
@@ -472,6 +477,17 @@ async function testError(page: Page) {
     /AssertionError: expected/,
     /Error: this-is-blue/,
   ])
+}
+
+async function testSuiteReportFallback(page: Page) {
+  // "View Suite Source Code" selects the suite and opens the editor tab
+  const suite = getExplorerItem(page, 'suite')
+  await suite.hover()
+  await suite.getByTestId('btn-open-details').click()
+
+  // the report tab must render the file report instead of crashing on a suite
+  await page.getByTestId('btn-report').click()
+  await expect(page.getByTestId('report')).toBeVisible()
 }
 
 async function testTagsFilter(page: Page) {
