@@ -96,6 +96,12 @@ function updateSnapshot(task: Task) {
 
 const gridStyles = computed(() => {
   const gridColumns: string[] = []
+
+  // allocate zero-width columns to simulate indentation via grid gap
+  for (let i = 0; i < indent; i++) {
+    gridColumns.push('0')
+  }
+
   // all items have collapse/expand icon equivalent spacing
   gridColumns.push('min-content')
 
@@ -110,8 +116,7 @@ const gridStyles = computed(() => {
   // action buttons
   gridColumns.push('min-content')
 
-  // Zero-width guide columns use the grid gap as a half-rem indentation step.
-  return `grid-template-columns: ${'0 '.repeat(Math.max(0, indent))}${gridColumns.join(' ')};`
+  return `grid-template-columns: ${gridColumns.join(' ')};`
 })
 
 const runButtonTitle = computed(() => {
