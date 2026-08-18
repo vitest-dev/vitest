@@ -200,7 +200,7 @@ const tagsBgGradient = computed(() => {
     @click="onItemClick?.(task)"
   >
     <template v-if="indent > 0">
-      <div v-for="i in indent" :key="`${taskId}-${i}`" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
+      <div v-for="i in indent" :key="i" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
     </template>
     <div class="w-4 h-full">
       <button
