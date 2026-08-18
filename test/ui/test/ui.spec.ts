@@ -125,6 +125,22 @@ test.describe('ui', () => {
     await testConsole(page)
   })
 
+  test('collapses explorer suites only from the disclosure button', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    // "suite" is an actual title of this suite
+    const suite = getExplorerItem(page, 'suite')
+    await suite.click()
+    await expect(page.getByTestId('file-detail')).toContainText('console.test.ts')
+    await expect(getExplorerItem(page, 'nested suite')).toBeVisible()
+
+    await suite.getByRole('button', { name: 'Collapse suite', exact: true }).click()
+    await expect(getExplorerItem(page, 'nested suite')).not.toBeVisible()
+
+    await suite.getByRole('button', { name: 'Expand suite', exact: true }).click()
+    await expect(getExplorerItem(page, 'nested suite')).toBeVisible()
+  })
+
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
     await testError(page)
