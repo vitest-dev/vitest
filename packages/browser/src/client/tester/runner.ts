@@ -29,7 +29,7 @@ import {
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getTestName } from '../../../../vitest/src/utils/tasks'
-import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
+import { getBrowserState, getOrchestratorState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { recordBrowserTraceEntry } from './trace'
@@ -92,7 +92,10 @@ function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        getBrowserState().browserTraceDomSnapshot = await import('rrweb-snapshot')
+        getBrowserState().browserTraceDomSnapshot ??= await (
+          getOrchestratorState()?.browserTraceDomSnapshotPromise
+          ?? import('rrweb-snapshot')
+        )
         getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       }
       else {

@@ -1,6 +1,25 @@
 diff --git a/dist/rrweb-snapshot.js b/dist/rrweb-snapshot.js
+index 1c0fc62d7ede018a7797d3e707c73fa803166d2d..1770d23f71d86d08bd16409f5b3a0e45005934fc 100644
 --- a/dist/rrweb-snapshot.js
 +++ b/dist/rrweb-snapshot.js
+@@ -603,7 +603,7 @@ function genId() {
+   return _id++;
+ }
+ function getValidTagName(element) {
+-  if (element instanceof HTMLFormElement) {
++  if (Object.prototype.toString.call(element) === "[object HTMLFormElement]") {
+     return "form";
+   }
+   const processedTagName = toLowerCase(element.tagName);
+@@ -1057,7 +1057,7 @@ function serializeElementNode(n, options) {
+   }
+   if (tagName === "img" && inlineImages) {
+     if (!canvasService) {
+-      canvasService = doc.createElement("canvas");
++      canvasService = document.createElement("canvas");
+       canvasCtx = canvasService.getContext("2d");
+     }
+     const image = n;
 @@ -1536,6 +1536,18 @@ const pseudoClassPlugin = {
            if (selector.includes(":hover")) {
              rule2.selector += ",\n" + selector.replace(/:hover/g, ".\\:hover");
