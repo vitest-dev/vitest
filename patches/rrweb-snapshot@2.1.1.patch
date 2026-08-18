@@ -1,5 +1,5 @@
 diff --git a/dist/rrweb-snapshot.js b/dist/rrweb-snapshot.js
-index 1c0fc62d7ede018a7797d3e707c73fa803166d2d..1770d23f71d86d08bd16409f5b3a0e45005934fc 100644
+index 1c0fc62d7ede018a7797d3e707c73fa803166d2d..eadcceb088ac1deef08655eb2ed1cdb95fdb515b 100644
 --- a/dist/rrweb-snapshot.js
 +++ b/dist/rrweb-snapshot.js
 @@ -603,7 +603,7 @@ function genId() {
@@ -11,16 +11,38 @@ index 1c0fc62d7ede018a7797d3e707c73fa803166d2d..1770d23f71d86d08bd16409f5b3a0e45
      return "form";
    }
    const processedTagName = toLowerCase(element.tagName);
-@@ -1057,7 +1057,7 @@ function serializeElementNode(n, options) {
+@@ -612,8 +612,16 @@ function getValidTagName(element) {
+   }
+   return processedTagName;
+ }
+-let canvasService;
+-let canvasCtx;
++const canvasServices = new WeakMap();
++function getCanvasService(doc) {
++  let service = canvasServices.get(doc);
++  if (!service) {
++    const canvas = doc.createElement("canvas");
++    service = { canvas, context: canvas.getContext("2d") };
++    canvasServices.set(doc, service);
++  }
++  return service;
++}
+ const SRCSET_NOT_SPACES = /^[^ \t\n\r\u000c]+/;
+ const SRCSET_COMMAS_OR_SPACES = /^[, \t\n\r\u000c]+/;
+ function getAbsoluteSrcsetString(doc, attributeValue) {
+@@ -1056,10 +1064,7 @@ function serializeElementNode(n, options) {
+     }
    }
    if (tagName === "img" && inlineImages) {
-     if (!canvasService) {
+-    if (!canvasService) {
 -      canvasService = doc.createElement("canvas");
-+      canvasService = document.createElement("canvas");
-       canvasCtx = canvasService.getContext("2d");
-     }
+-      canvasCtx = canvasService.getContext("2d");
+-    }
++    const { canvas: canvasService, context: canvasCtx } = getCanvasService(doc);
      const image = n;
-@@ -1536,6 +1536,18 @@ const pseudoClassPlugin = {
+     const imageSrc = image.currentSrc || image.getAttribute("src") || "<unknown-src>";
+     const priorCrossOrigin = image.crossOrigin;
+@@ -1536,6 +1541,18 @@ const pseudoClassPlugin = {
            if (selector.includes(":hover")) {
              rule2.selector += ",\n" + selector.replace(/:hover/g, ".\\:hover");
            }
