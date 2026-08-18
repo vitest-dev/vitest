@@ -60,6 +60,28 @@ test.describe('ui', () => {
     await expect(badToken.text()).resolves.toContain('Vitest UI requires authentication.')
   })
 
+  test('blocks unauthenticated coverage requests', async ({ request }) => {
+    const base = new URL(pageUrl)
+    base.search = ''
+
+    const entry = new URL('coverage/index.html', base).toString()
+    const tokenless = await request.get(entry)
+    expect(tokenless.status()).toBe(403)
+    await expect(tokenless.text()).resolves.toContain('Vitest UI requires authentication.')
+
+    // Connect matches the mount case-insensitively and treats `.` as a
+    // boundary, so these must be gated too, not just the `/`-delimited path.
+    for (const path of ['Coverage/index.html', 'coverage.', 'coverage./index.html']) {
+      const res = await request.get(new URL(path, base).toString())
+      expect(res.status(), path).toBe(403)
+    }
+
+    const withToken = new URL(entry)
+    withToken.searchParams.set('token', vitest!.config.api.token)
+    const authed = await request.get(withToken.toString())
+    expect(authed.status()).toBe(200)
+  })
+
   test('does not serve the api token file', async ({ request }) => {
     const { tokenPath } = resolveApiToken(vitest!.config.root)
     expect(existsSync(tokenPath)).toBe(true)

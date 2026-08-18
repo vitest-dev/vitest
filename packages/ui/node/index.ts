@@ -1,4 +1,6 @@
+import type { IncomingMessage } from 'node:http'
 import type { PluginHarness, Vite } from 'vitest/node'
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 import { join, resolve } from 'pathe'
@@ -11,6 +13,7 @@ import { distClientRoot } from './paths'
 export { distClientRoot }
 
 const UI_TOKEN_COOKIE = 'vitest-ui-token'
+const AUTH_REQUIRED_MESSAGE = 'Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...'
 
 export default (harness: PluginHarness): Vite.Plugin => {
   if (harness.version !== version) {
@@ -32,6 +35,49 @@ export default (harness: PluginHarness): Vite.Plugin => {
         const ctx = harness.getVitest()
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
+
+        function serializeTokenCookie(): string {
+          return serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
+            path: base,
+            httpOnly: true,
+            sameSite: 'strict',
+          })
+        }
+
+        function hasValidTokenCookie(req: IncomingMessage): boolean {
+          const cookieToken = parseCookie(req.headers.cookie ?? '')[UI_TOKEN_COOKIE]
+          if (!cookieToken) {
+            return false
+          }
+          try {
+            return crypto.timingSafeEqual(
+              Buffer.from(cookieToken),
+              Buffer.from(ctx.config.api.token),
+            )
+          }
+          catch {
+            return false
+          }
+        }
+
+        // Authenticate the whole UI subtree in one place. Mounted on `base` so
+        // Connect matches it exactly like the static handlers below, which it
+        // routes case-insensitively and on `.`/`/` boundaries; a pathname
+        // comparison here would diverge and be bypassable (e.g. /__vitest__/Coverage).
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(base, function vitestUiAuth(req, res, next) {
+          // a valid `?token=` bootstraps the cookie so later cookie-only
+          // requests (the coverage iframe and its child assets) stay authorized
+          if (isValidApiRequest(ctx.config, req)) {
+            res.setHeader('Set-Cookie', serializeTokenCookie())
+            return next()
+          }
+          if (hasValidTokenCookie(req)) {
+            return next()
+          }
+          res.statusCode = 403
+          res.end(AUTH_REQUIRED_MESSAGE)
+        })
 
         // Serve coverage HTML at ./coverage if configured
         const coverageHtmlDir = ctx.config.coverage?.htmlDir
@@ -98,21 +144,12 @@ export default (harness: PluginHarness): Vite.Plugin => {
           if (req.url) {
             const url = new URL(req.url, 'http://localhost')
             if (url.pathname === base) {
+              // vitestUiAuth already validated the request and set the cookie;
+              // redirect to strip the token from the URL
               if (isValidApiRequest(ctx.config, req)) {
                 res.statusCode = 302
-                res.setHeader('Set-Cookie', serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
-                  path: base,
-                  httpOnly: true,
-                  sameSite: 'strict',
-                }))
                 res.setHeader('Location', base)
                 res.end()
-                return
-              }
-              const cookieToken = parseCookie(req.headers.cookie ?? '')[UI_TOKEN_COOKIE]
-              if (cookieToken !== ctx.config.api.token) {
-                res.statusCode = 403
-                res.end('Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...')
                 return
               }
               const html = clientIndexHtml.replace(

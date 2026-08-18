@@ -1,5 +1,7 @@
+import type { TestContext } from 'vitest'
+import type { RunVitestConfig } from '#test-utils'
 import { randomUUID } from 'node:crypto'
-import { access, readFile, rm } from 'node:fs/promises'
+import { readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { sep } from 'node:path'
 import { resolve } from 'pathe'
@@ -64,32 +66,43 @@ describe(GithubActionsReporter, () => {
   })
 
   describe('summary', () => {
-    it('writes one when enabled', async ({ onTestFinished }) => {
+    async function createSummary(options: {
+      summaryConfig: GithubActionsReporter['options']['jobSummary']
+      vitestConfig?: RunVitestConfig
+      ctx: TestContext
+    }): Promise<string> {
       const outputPath = resolve(tmpdir(), randomUUID())
 
-      onTestFinished(async () => {
-        await rm(outputPath).catch(() => {
-          console.error(`Could not remove ${outputPath}`)
-        })
+      options.ctx.onTestFinished(async () => {
+        await rm(outputPath).catch(() => {})
       })
 
-      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
-
       await runVitest({
+        ...options.vitestConfig,
         reporters: new GithubActionsReporter({
           jobSummary: {
             outputPath,
-            fileLinks: {
-              commitHash: 'aaa',
-              repository: 'owner/repo',
-              workspacePath,
-            },
+            ...options.summaryConfig,
           },
         }),
         root: './fixtures/reporters/github-actions',
       })
 
-      const summary = await readFile(outputPath, 'utf8')
+      return readFile(outputPath, 'utf8')
+    }
+
+    it('writes one when enabled', async (ctx) => {
+      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
+      const summary = await createSummary({
+        summaryConfig: {
+          fileLinks: {
+            commitHash: 'aaa',
+            repository: 'owner/repo',
+            workspacePath,
+          },
+        },
+        ctx,
+      })
 
       expect(summary).toMatchInlineSnapshot(`
         "## Vitest Test Report
@@ -124,51 +137,41 @@ describe(GithubActionsReporter, () => {
     it.for([
       { title: 'Custom Test Report', expectedTitle: 'Custom Test Report' },
       { title: undefined, expectedTitle: 'Vitest Test Report' },
-    ] as const)('uses $expectedTitle when title is $title', async ({ title, expectedTitle }, { onTestFinished }) => {
-      const outputPath = resolve(tmpdir(), randomUUID())
-
-      onTestFinished(async () => {
-        await rm(outputPath).catch(() => {
-          console.error(`Could not remove ${outputPath}`)
-        })
+    ] as const)('uses a custom title when providing one', async ({ title, expectedTitle }, ctx) => {
+      const summary = await createSummary({
+        summaryConfig: { title },
+        ctx,
       })
-
-      await runVitest({
-        reporters: new GithubActionsReporter({
-          jobSummary: {
-            title,
-            outputPath,
-          },
-        }),
-        root: './fixtures/reporters/github-actions',
-      })
-
-      const summary = await readFile(outputPath, 'utf8')
 
       expect(summary.startsWith(`## ${expectedTitle}\n\n`)).toBe(true)
     })
 
-    it.for([{ enabled: false }, { outputPath: undefined }] as const)('does not write one when disabled or without `outputPath`', async (options) => {
-      const outputPath = resolve(tmpdir(), randomUUID())
-
-      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
-
-      await runVitest({
-        reporters: new GithubActionsReporter({
-          jobSummary: {
-            outputPath,
-            ...options,
-            fileLinks: {
-              commitHash: 'aaa',
-              repository: 'owner/repo',
-              workspacePath,
-            },
-          },
-        }),
-        root: './fixtures/reporters/github-actions',
+    it.for([
+      { title: 'Custom Test Report', expectedTitle: 'Custom Test Report' },
+      { title: undefined, expectedTitle: '(suite-name) Vitest Test Report' },
+    ] as const)('displays `test.name` when not using a custom title', async ({ title, expectedTitle }, ctx) => {
+      const summary = await createSummary({
+        summaryConfig: { title },
+        vitestConfig: { name: 'suite-name' },
+        ctx,
       })
 
-      const summary = await access(outputPath).then(() => true).catch(() => false)
+      expect(summary.startsWith(`## ${expectedTitle}\n\n`)).toBe(true)
+    })
+
+    it.for([{ enabled: false }, { outputPath: undefined }] as const)('does not write one when disabled or without `outputPath`', async (options, ctx) => {
+      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
+      const summary = await createSummary({
+        summaryConfig: {
+          ...options,
+          fileLinks: {
+            commitHash: 'aaa',
+            repository: 'owner/repo',
+            workspacePath,
+          },
+        },
+        ctx,
+      }).then(() => true).catch(() => false)
 
       expect(summary).toBe(false)
     })
@@ -177,33 +180,19 @@ describe(GithubActionsReporter, () => {
       { commitHash: undefined },
       { repository: undefined },
       { workspacePath: undefined },
-    ] as const)('writes one without links when one of `commitHash`, `repository` or `workspacePath` are not provided', async (options, { onTestFinished }) => {
-      const outputPath = resolve(tmpdir(), randomUUID())
-
-      onTestFinished(async () => {
-        await rm(outputPath).catch(() => {
-          console.error(`Could not remove ${outputPath}`)
-        })
-      })
-
+    ] as const)('writes one without links when one of `commitHash`, `repository` or `workspacePath` are not provided', async (options, ctx) => {
       const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
-
-      await runVitest({
-        reporters: new GithubActionsReporter({
-          jobSummary: {
-            outputPath,
-            fileLinks: {
-              commitHash: 'aaa',
-              repository: 'owner/repo',
-              workspacePath,
-              ...options,
-            },
+      const summary = await createSummary({
+        summaryConfig: {
+          fileLinks: {
+            commitHash: 'aaa',
+            repository: 'owner/repo',
+            workspacePath,
+            ...options,
           },
-        }),
-        root: './fixtures/reporters/github-actions',
+        },
+        ctx,
       })
-
-      const summary = await readFile(outputPath, 'utf8')
 
       expect(summary).toMatchInlineSnapshot(`
         "## Vitest Test Report

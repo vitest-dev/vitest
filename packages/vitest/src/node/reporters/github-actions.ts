@@ -2,6 +2,7 @@ import type { SerializedError } from '@vitest/utils'
 import type { TestAnnotation } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
+import type { ResolvedConfig } from '../types/config'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
 import { writeFileSync } from 'node:fs'
@@ -75,11 +76,14 @@ interface JobSummaryOptions {
 
 type ResolvedOptions = Required<GithubActionsReporterOptions>
 
+// we prepend `test.name` to the default title when set, custom titles don't follow this logic
+// we need to know when the user provides a custom one, so this is handled outside `defaultOptions`
+const DEFAULT_TITLE = 'Vitest Test Report'
+
 const defaultOptions: ResolvedOptions = {
   onWritePath: defaultOnWritePath,
   displayAnnotations: true,
   jobSummary: {
-    title: 'Vitest Test Report',
     enabled: true,
     outputPath: process.env.GITHUB_STEP_SUMMARY,
     fileLinks: {
@@ -182,7 +186,7 @@ export class GithubActionsReporter implements Reporter {
 
     if (this.options.jobSummary.enabled === true && this.options.jobSummary.outputPath) {
       const summary = renderSummary(
-        collectSummaryData(testModules),
+        collectSummaryData(testModules, this.ctx.config),
         this.options.jobSummary.title,
         this.options.jobSummary.fileLinks,
       )
@@ -258,6 +262,7 @@ function escapeProperty(s: string): string {
 type SummaryTestsStats = Record<'failed' | 'passed' | 'expectedFail' | 'skipped' | 'todo', number>
 
 interface SummaryData {
+  name: string | null
   fileStats: Pick<SummaryTestsStats, 'failed' | 'passed'>
   testsStats: SummaryTestsStats
   flakyTests: Array<{
@@ -277,8 +282,9 @@ interface SummaryData {
   }>
 }
 
-function collectSummaryData(testModules: ReadonlyArray<TestModule>): SummaryData {
+function collectSummaryData(testModules: ReadonlyArray<TestModule>, config: ResolvedConfig): SummaryData {
   const summaryData: SummaryData = {
+    name: config.name || null,
     fileStats: {
       failed: 0,
       passed: 0,
@@ -446,10 +452,16 @@ function renderStats({ fileStats, testsStats }: SummaryData): string {
   return output
 }
 
-function renderSummary(summaryData: SummaryData, title: string = defaultOptions.jobSummary.title!, fileLinks?: JobSummaryOptions['fileLinks']): string {
+function renderSummary(summaryData: SummaryData, title?: string, fileLinks?: JobSummaryOptions['fileLinks']): string {
   const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
+  const header = title
+    ?? (
+      summaryData.name
+        ? `(${summaryData.name}) ${DEFAULT_TITLE}`
+        : DEFAULT_TITLE
+    )
 
-  let summary = `## ${title}\n${renderStats(summaryData)}`
+  let summary = `## ${header}\n${renderStats(summaryData)}`
 
   if (summaryData.flakyTests.length > 0) {
     summary += '\n### Flaky Tests\n\nThese tests passed only after one or more retries, indicating potential instability.\n'
