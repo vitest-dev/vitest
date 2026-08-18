@@ -1246,7 +1246,17 @@ export function matchesProjectFilter(projects: string[], name: string): boolean 
   if (!projects.length) {
     return true
   }
-  return projects.some((project) => {
+  // exclusions are combined with AND: with `!a !b`, `.some()` would keep `a`
+  // because it doesn't match `!b`, and keep `b` because it doesn't match `!a`
+  if (isExcludedByProjectFilter(projects, name)) {
+    return false
+  }
+  const included = projects.filter(project => !project.startsWith('!'))
+  // only exclusions were passed, so everything they didn't remove is included
+  if (!included.length) {
+    return true
+  }
+  return included.some((project) => {
     const regexp = wildcardPatternToRegExp(project)
     return regexp.test(name)
   })

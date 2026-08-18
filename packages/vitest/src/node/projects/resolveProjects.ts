@@ -1134,13 +1134,18 @@ function matchesEntryFilter(
     return true
   }
   const names = [name, ...(ancestors || [])]
-  return filter.some((project) => {
+  // exclusions are combined with AND, and remove the whole subtree they match
+  if (isEntryExcludedByFilter(filter, name, ancestors)) {
+    return false
+  }
+  const included = filter.filter(project => !project.startsWith('!'))
+  // only exclusions were passed, so everything they didn't remove is included
+  if (!included.length) {
+    return true
+  }
+  return included.some((project) => {
     const regexp = wildcardPatternToRegExp(project)
-    // a negated pattern compiles into a negative lookahead: the entry is kept
-    // only when neither its name nor any of its containers match the exclusion
-    return project.startsWith('!')
-      ? names.every(candidate => regexp.test(candidate))
-      : names.some(candidate => regexp.test(candidate))
+    return names.some(candidate => regexp.test(candidate))
   })
 }
 
