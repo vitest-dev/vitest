@@ -51,6 +51,7 @@ html.dark {
   --cm-regex: #ab5e3f;
   --cm-json-property: #698c96;
   --cm-line-number-gutter: #f8f8f8;
+  --cm-line-highlight-background: rgb(59 130 246 / 12%);
   /* scrollbars colors */
   --cm-ttc-c-thumb: #eee;
   --cm-ttc-c-track: white;
@@ -79,11 +80,19 @@ html.dark {
   --cm-json-property: #6b8b9e;
   --cm-line-number: #888888;
   --cm-line-number-gutter: #161616;
-  --cm-line-highlight-background: #444444;
+  --cm-line-highlight-background: rgb(59 130 246 / 18%);
   --cm-selection-background: #44444450;
   /* scrollbars colors */
   --cm-ttc-c-thumb: #222;
   --cm-ttc-c-track: #111;
+}
+
+.CodeMirror-activeline-background {
+  background: var(--cm-line-highlight-background);
+}
+
+.codemirror-hide-cursor .CodeMirror-cursors {
+  visibility: hidden !important;
 }
 
 .splitpanes__pane {

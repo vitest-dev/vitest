@@ -277,7 +277,7 @@ test.describe('html report', () => {
 
   test('cannot edit file', async ({ page }) => {
     await page.goto(pageUrl)
-    await testWriteFile(page, { enabled: false })
+    await testWriteFile(page, { enabled: false, hideCursor: true })
   })
 
   test('cannot execute', async ({ page }) => {
@@ -642,13 +642,17 @@ async function testCrossOriginAccess(page: Page, pageUrl: string) {
   expect(wsResult).toBe('error')
 }
 
-async function testWriteFile(page: Page, options: { enabled: boolean }) {
+async function testWriteFile(page: Page, options: { enabled: boolean; hideCursor?: boolean }) {
   await getExplorerItem(page, 'add').click()
   const codeTabButton = page.getByTestId('btn-code')
   await expect(codeTabButton).toHaveText('Code')
   await codeTabButton.click()
   const editor = page.getByTestId('editor')
   await expect(editor).toContainText('expect(1 + 1).toEqual(2)')
+  await editor.click()
+  if (options.hideCursor) {
+    await expect(editor.locator('.CodeMirror-cursors')).toHaveCSS('visibility', 'hidden')
+  }
   await page.keyboard.type('\n// edited \n')
   if (options.enabled) {
     await expect(editor).toContainText('// edited')
