@@ -92,10 +92,7 @@ function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        getBrowserState().browserTraceDomSnapshot ??= await (
-          getOrchestratorState()?.browserTraceDomSnapshotPromise
-          ?? import('rrweb-snapshot')
-        )
+        getBrowserState().browserTraceDomSnapshot ??= await getOrchestratorState().browserTraceDomSnapshotPromise
         getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       }
       else {

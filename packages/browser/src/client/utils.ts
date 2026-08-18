@@ -120,7 +120,7 @@ export function getBrowserState(): BrowserRunnerState {
 }
 
 /* @__NO_SIDE_EFFECTS__ */
-export function getOrchestratorState(): BrowserRunnerState | undefined {
+export function getOrchestratorState(): BrowserRunnerState {
   // @ts-expect-error not typed global
   return window.parent.__vitest_browser_runner__
 }
