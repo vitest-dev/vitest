@@ -99,6 +99,13 @@ test('printBasicPrototype', async () => {
   )
 
   expect(result.stderr).toBe('')
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "non default snapshot format": "passed",
+      },
+    }
+  `)
   expect(result.fs.readFile('basic.test.ts')).toMatchInlineSnapshot(`
     "
             import { expect, test } from 'vitest'
