@@ -94,11 +94,7 @@ function updateSnapshot(task: Task) {
   return client.rpc.updateSnapshot(task.file)
 }
 
-const data = computed(() => {
-  return indent <= 0 ? [] : Array.from({ length: indent }, (_, i) => `${taskId}-${i}`)
-})
 const gridStyles = computed(() => {
-  const entries = data.value
   const gridColumns: string[] = []
   // disclosure icon placeholder
   gridColumns.push('min-content')
@@ -115,9 +111,7 @@ const gridStyles = computed(() => {
   gridColumns.push('min-content')
 
   // Zero-width guide columns use the grid gap as a half-rem indentation step.
-  return `grid-template-columns: ${
-    entries.map(() => '0').join(' ')
-  } ${gridColumns.join(' ')};`
+  return `grid-template-columns: ${'0 '.repeat(Math.max(0, indent))}${gridColumns.join(' ')};`
 })
 
 const runButtonTitle = computed(() => {
@@ -206,7 +200,7 @@ const tagsBgGradient = computed(() => {
     @click="onItemClick?.(task)"
   >
     <template v-if="indent > 0">
-      <div v-for="i in data" :key="i" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
+      <div v-for="i in indent" :key="`${taskId}-${i}`" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
     </template>
     <div class="w-4 h-full">
       <button
