@@ -96,7 +96,7 @@ function updateSnapshot(task: Task) {
 
 const gridStyles = computed(() => {
   const gridColumns: string[] = []
-  // chevron icon placeholder
+  // all items have collapse/expand icon equivalent spacing
   gridColumns.push('min-content')
 
   // status icon
