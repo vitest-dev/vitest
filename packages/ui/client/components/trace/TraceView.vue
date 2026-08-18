@@ -29,6 +29,32 @@ function onSelectStep(index: number) {
   }
 }
 
+function onStepKeydown(event: KeyboardEvent, index: number) {
+  let nextIndex: number
+  if (event.key === 'ArrowUp') {
+    nextIndex = Math.max(index - 1, 0)
+  }
+  else if (event.key === 'ArrowDown') {
+    nextIndex = Math.min(index + 1, entries.value.length - 1)
+  }
+  else if (event.key === 'Home') {
+    nextIndex = 0
+  }
+  else if (event.key === 'End') {
+    nextIndex = entries.value.length - 1
+  }
+  else {
+    return
+  }
+
+  event.preventDefault()
+  onSelectStep(nextIndex)
+  const nextButton = (event.currentTarget as HTMLButtonElement).parentElement?.children[nextIndex]
+  if (nextButton instanceof HTMLButtonElement) {
+    nextButton.focus()
+  }
+}
+
 watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
@@ -154,7 +180,9 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
           :class="getStepButtonClass(step, index)"
           :style="{ paddingInlineStart: `${0.5 + step.depth}rem` }"
           :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
+          :tabindex="selection.selectedStepIndex === index ? 0 : -1"
           @click="onSelectStep(index)"
+          @keydown="onStepKeydown($event, index)"
         >
           <span
             v-if="step.depth > 0"
