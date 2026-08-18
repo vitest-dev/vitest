@@ -78,6 +78,7 @@ export class ExplorerTree {
 
   startRun() {
     this.startTime = performance.now()
+    // TODO: Replace this bootstrap/run fallback with explicit lifecycle handling.
     this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
   }
