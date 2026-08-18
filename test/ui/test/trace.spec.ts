@@ -175,18 +175,18 @@ async function testBasic(page: Page) {
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 33 })
   await expect(traceSteps.nth(1)).toBeFocused()
-  await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')
 
   await traceSteps.nth(1).press('End')
   await expect(traceSteps.nth(2)).toBeFocused()
-  await expect(traceSteps.nth(2)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(2)).toHaveAttribute('aria-selected', 'true')
   await traceSteps.nth(2).press('ArrowDown')
   await expect(traceSteps.nth(2)).toBeFocused()
   await traceSteps.nth(2).press('Home')
   await expect(traceSteps.nth(0)).toBeFocused()
-  await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await traceSteps.nth(0).press('ArrowUp')
   await expect(traceSteps.nth(0)).toBeFocused()
 
@@ -195,7 +195,7 @@ async function testBasic(page: Page) {
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
   await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
-  await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
