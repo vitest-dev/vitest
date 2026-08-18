@@ -96,7 +96,7 @@ function updateSnapshot(task: Task) {
 
 const gridStyles = computed(() => {
   const gridColumns: string[] = []
-  // disclosure icon placeholder
+  // chevron icon placeholder
   gridColumns.push('min-content')
 
   // status icon
