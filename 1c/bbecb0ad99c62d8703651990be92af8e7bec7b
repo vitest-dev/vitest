@@ -1,0 +1,19 @@
+test/e2e/snapshots/options.test.ts
+  s_4d278f4af57b1e::t_fa78f3f6dc887d 89,94,102-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1cbbecb0ad99c62d8703651990be92af8e7bec7b",
+  "prompts": {},
+  "sessions": {
+    "s_4d278f4af57b1e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fed084800ffewZobWvNikqpfHB",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
