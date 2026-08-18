@@ -135,6 +135,11 @@ export class SnapshotClient {
     }
 
     const snapshotState = this.getSnapshotState(filepath)
+    if (rawSnapshot?.file === snapshotState.snapshotPath) {
+      throw new Error(
+        `File snapshot cannot use the same path as the test snapshot file: ${rawSnapshot.file}`,
+      )
+    }
     const testName = [name, ...(message ? [message] : [])].join(' > ')
 
     // Probe first so we can mark as checked even on early return
