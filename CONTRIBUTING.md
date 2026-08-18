@@ -47,17 +47,19 @@ If you want to use break point and explore code execution you can use the ["Run 
 
 ## Testing Vitest against external packages
 
-You may wish to test your locally-modified copy of Vitest against another package that is using it. For pnpm, after building Vitest, you can use [`pnpm.overrides`](https://pnpm.io/9.x/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
+You may wish to test your locally-modified copy of Vitest against another package that is using it. For pnpm, after building Vitest, you can use [`overrides`](https://pnpm.io/settings/dependency-resolution#overrides). Please note that `overrides` must be specified at the root of the project, in `pnpm-workspace.yaml`:
+
+```yaml
+overrides:
+  vitest: 'link:../path/to/vitest/packages/vitest'
+```
+
+You must also first list the package as a dependency in the root `package.json`:
 
 ```json
 {
   "dependencies": {
     "vitest": "*"
-  },
-  "pnpm": {
-    "overrides": {
-      "vitest": "link:../path/to/vitest/packages/vitest"
-    }
   }
 }
 ```
