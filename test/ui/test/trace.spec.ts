@@ -394,14 +394,14 @@ async function testPersistsSelectionInURL(page: Page) {
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
   // Invalid attempt and step values fall back to the first available entry.
-  const invalidSelectionUrl = await page.evaluate(() => {
-    const params = new URLSearchParams(location.hash.split('?')[1])
-    params.set('trace-attempt', 'constructor')
-    params.set('trace-step', '999')
-    return `${location.origin}${location.pathname}${location.search}#/?${params}`
-  })
+  const invalidSelectionUrl = new URL(page.url())
+  const invalidParams = new URLSearchParams(invalidSelectionUrl.hash.split('?')[1])
+  invalidParams.set('trace-attempt', 'constructor')
+  invalidParams.set('trace-step', '999')
+  invalidSelectionUrl.hash = `/?${invalidParams}`
+  // Leave the app so the invalid URL exercises initialization, not hash navigation.
   await page.goto('about:blank')
-  await page.goto(invalidSelectionUrl)
+  await page.goto(invalidSelectionUrl.href)
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:0',
     'trace-step': '0',
@@ -426,7 +426,6 @@ async function testPersistsAttemptInURL(page: Page) {
 
   // Opening a retry writes its attempt key to the URL.
   await page.getByTestId('trace-open-button').nth(1).click()
-
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:1',
     'trace-step': '0',
@@ -435,9 +434,9 @@ async function testPersistsAttemptInURL(page: Page) {
 
   // Reloading restores the selected retry instead of the initial attempt.
   await page.reload()
-
   const traceView = page.getByTestId('trace-view')
-  await expect(traceView.frameLocator('iframe').getByText('retryCount: 1')).toBeVisible()
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:1',
     'trace-step': '0',
