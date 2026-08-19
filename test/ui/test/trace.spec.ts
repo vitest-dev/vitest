@@ -60,6 +60,14 @@ test.describe('ui', () => {
   test('attempts', async ({ page }) => {
     await testAttempts(page)
   })
+
+  test('persists selection in URL', async ({ page }) => {
+    await testPersistsSelectionInURL(page)
+  })
+
+  test('persists attempt in URL', async ({ page }) => {
+    await testPersistsAttemptInURL(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -132,70 +140,78 @@ test.describe('html reporter', () => {
   })
 
   test('persists selection in URL', async ({ page }) => {
-    await openExplorerItem(page, 'simple')
-
-    const traceView = page.getByTestId('trace-view')
-    const traceSteps = traceView.getByTestId('trace-step')
-    await traceSteps.nth(1).click()
-
-    await expect.poll(() => getTraceHashParams(page)).toEqual({
-      attempt: '0:0',
-      hasTest: true,
-      step: '1',
-    })
-
-    await page.reload()
-
-    await expect(traceView).toBeVisible()
-    await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
-    await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Another' })).toBeVisible()
-
-    const invalidSelectionUrl = await page.evaluate(() => {
-      const params = new URLSearchParams(location.hash.split('?')[1])
-      params.set('attempt', 'constructor')
-      params.set('step', '999')
-      return `${location.origin}${location.pathname}${location.search}#/?${params}`
-    })
-    await page.goto('about:blank')
-    await page.goto(invalidSelectionUrl)
-
-    await expect.poll(() => getTraceHashParams(page)).toEqual({
-      attempt: '0:0',
-      hasTest: true,
-      step: '0',
-    })
-    await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
-    await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' })).toBeVisible()
-
-    await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
-    await expect.poll(() => getTraceHashParams(page)).toEqual({
-      attempt: null,
-      hasTest: true,
-      step: null,
-    })
+    await testPersistsSelectionInURL(page)
   })
 
   test('persists attempt in URL', async ({ page }) => {
-    await openExplorerItem(page, 'retried test')
-    await page.getByTestId('trace-open-button').nth(1).click()
-
-    await expect.poll(() => getTraceHashParams(page)).toEqual({
-      attempt: '0:1',
-      hasTest: true,
-      step: '0',
-    })
-
-    await page.reload()
-
-    const traceView = page.getByTestId('trace-view')
-    await expect(traceView.frameLocator('iframe').getByText('retryCount: 1')).toBeVisible()
-    await expect.poll(() => getTraceHashParams(page)).toEqual({
-      attempt: '0:1',
-      hasTest: true,
-      step: '0',
-    })
+    await testPersistsAttemptInURL(page)
   })
 })
+
+async function testPersistsSelectionInURL(page: Page) {
+  await openExplorerItem(page, 'simple')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step')
+  await traceSteps.nth(1).click()
+
+  await expect.poll(() => getTraceHashParams(page)).toEqual({
+    attempt: '0:0',
+    hasTest: true,
+    step: '1',
+  })
+
+  await page.reload()
+
+  await expect(traceView).toBeVisible()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Another' })).toBeVisible()
+
+  const invalidSelectionUrl = await page.evaluate(() => {
+    const params = new URLSearchParams(location.hash.split('?')[1])
+    params.set('attempt', 'constructor')
+    params.set('step', '999')
+    return `${location.origin}${location.pathname}${location.search}#/?${params}`
+  })
+  await page.goto('about:blank')
+  await page.goto(invalidSelectionUrl)
+
+  await expect.poll(() => getTraceHashParams(page)).toEqual({
+    attempt: '0:0',
+    hasTest: true,
+    step: '0',
+  })
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect.poll(() => getTraceHashParams(page)).toEqual({
+    attempt: null,
+    hasTest: true,
+    step: null,
+  })
+}
+
+async function testPersistsAttemptInURL(page: Page) {
+  await openExplorerItem(page, 'retried test')
+  await page.getByTestId('trace-open-button').nth(1).click()
+
+  await expect.poll(() => getTraceHashParams(page)).toEqual({
+    attempt: '0:1',
+    hasTest: true,
+    step: '0',
+  })
+
+  await page.reload()
+
+  const traceView = page.getByTestId('trace-view')
+  await expect(traceView.frameLocator('iframe').getByText('retryCount: 1')).toBeVisible()
+  await expect.poll(() => getTraceHashParams(page)).toEqual({
+    attempt: '0:1',
+    hasTest: true,
+    step: '0',
+  })
+}
 
 async function getTraceHashParams(page: Page) {
   return page.evaluate(() => {
