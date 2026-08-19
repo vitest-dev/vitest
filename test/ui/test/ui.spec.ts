@@ -8,10 +8,10 @@ import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiTok
 import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 const TEST_COUNTS = {
-  pass: 18,
+  pass: 20,
   fail: 3,
   files: {
-    pass: 7,
+    pass: 9,
   },
 }
 
@@ -155,6 +155,18 @@ test.describe('ui', () => {
     await page.setViewportSize({ width: 1000, height: 500 })
     await page.goto(pageUrl)
     await testFilterInitiallyInvisibleItem(page)
+  })
+
+  test('renders explorer items revealed by a viewport resize', async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 500 })
+    await page.goto(pageUrl)
+
+    await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
+    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+
+    await page.setViewportSize({ width: 1000, height: 1300 })
+
+    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
   })
 
   test('tags filter', async ({ page }) => {
@@ -600,9 +612,9 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 }
 
 async function testFilterInitiallyInvisibleItem(page: Page) {
-  await expect(getExplorerItem(page, 'sample.test.ts')).not.toBeVisible()
-  await page.getByPlaceholder('Search...').fill('sample.test.ts')
-  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+  await page.getByPlaceholder('Search...').fill('zz-last-file.test.ts')
+  await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeVisible()
 }
 
 async function testCrossOriginAccess(page: Page, pageUrl: string) {
