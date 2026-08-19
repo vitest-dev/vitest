@@ -1,0 +1,23 @@
+packages/ui/client/components/CodeMirrorContainer.vue
+  s_0aafc746b3f6cb::t_792f71dca0c8b3 2,4,7,9,40
+packages/ui/client/components/ModuleTransformResultView.vue
+  s_0aafc746b3f6cb::t_35a44673b7e913 310,319,330
+packages/ui/client/components/views/ViewEditor.vue
+  s_0aafc746b3f6cb::t_1c0d874284437a 451-453
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "39b380bed115cfd225bf8b14421b4d96356bb424",
+  "prompts": {},
+  "sessions": {
+    "s_0aafc746b3f6cb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fec36bba2ffeEUun9TQak10XZp",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
