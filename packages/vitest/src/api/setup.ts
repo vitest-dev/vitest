@@ -215,7 +215,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   ctx.reporters.push(new WebSocketReporter(ctx, wss, clients))
 }
 
-export class WebSocketReporter implements Reporter {
+class WebSocketReporter implements Reporter {
   private start = 0
   private end = 0
   constructor(
