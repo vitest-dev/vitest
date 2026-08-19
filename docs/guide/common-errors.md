@@ -228,7 +228,7 @@ Calls to `require()` always use Node.js directly and leave the module runner. As
 - requiring TypeScript or other files that Node.js cannot execute is not supported
 - importing and requiring the same file can evaluate it twice, which can break singleton state, object identity, or `instanceof` checks
 
-If your project uses CommonJS and doesn't need Vite transforms, disable the module runner so the whole module graph is loaded by the native runtime:
+If your project uses CommonJS and doesn't need Vite transforms, set [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner) to `false` so the whole module graph is loaded by the native runtime:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -242,9 +242,7 @@ export default defineConfig({
 })
 ```
 
-In this mode, source files must be executable by the runtime. See [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner) for requirements and limitations.
-
-If the application uses ESM source but imports an internal CommonJS package, you can instead [externalize](/config/server#server-deps-external) the complete CommonJS package. This keeps its entry points and internal `require()` calls in the same native module cache:
+If the application uses ESM source but imports a CommonJS package from the same monorepo, you can instead use [`server.deps.external`](/config/server#server-deps-external) to externalize the complete CommonJS package. This keeps its entry points and internal `require()` calls in the same native module cache. For example:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -259,7 +257,3 @@ export default defineConfig({
   },
 })
 ```
-
-Match the whole package directory so all entry points and subpaths are externalized. The externalized files must already be valid for Node.js to execute.
-
-If a package instead depends on bundler transformations, inline it as described in the next section.
