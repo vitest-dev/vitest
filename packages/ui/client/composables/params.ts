@@ -1,24 +1,24 @@
 import { toRef, useUrlSearchParams } from '@vueuse/core'
 
 export interface Params {
-  'trace-attempt': null | string
   'file': string
   'view': null | 'graph' | 'editor' | 'console'
   'line': null | number
-  'trace-step': null | number
   'test': null | string
   'column': null | number
+  'trace-attempt': null | string
+  'trace-step': null | number
 }
 
 const params = useUrlSearchParams<Params>('hash', {
   initialValue: {
-    'trace-attempt': null,
     'file': '',
     'view': null,
     'line': null,
-    'trace-step': null,
     'test': null,
     'column': null,
+    'trace-attempt': null,
+    'trace-step': null,
   },
 })
 
