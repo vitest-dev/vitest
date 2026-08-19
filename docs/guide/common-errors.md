@@ -166,6 +166,52 @@ test('rejects for missing user', async () => {
 })
 ```
 
+## CommonJS source code is not fully supported
+
+Vitest is ESM-first. By default, source files run in Vite's [module runner](/config/experimental#experimental-vitemodulerunner), which provides CommonJS variables such as `require`, `module`, and `exports` for compatibility but does not reproduce Node.js CommonJS semantics completely.
+
+Calls to `require()` always use Node.js directly and leave the module runner. As a result:
+
+- Vite plugins, aliases, transforms, and module mocks do not apply to required files
+- requiring TypeScript or other files that Node.js cannot execute is not supported
+- importing and requiring the same file can evaluate it twice, which can break singleton state, object identity, or `instanceof` checks
+
+If your project uses CommonJS and doesn't need Vite transforms, disable the module runner so the whole module graph is loaded by the native runtime:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      viteModuleRunner: false,
+    },
+  },
+})
+```
+
+In this mode, source files must be executable by the runtime. For example, compile TypeScript that uses CommonJS-only syntax such as `export =` before testing it if your Node.js version cannot run it directly.
+
+If the application uses ESM source but imports an internal CommonJS package, you can instead [externalize](/config/server#server-deps-external) the complete CommonJS package. This keeps its entry points and internal `require()` calls in the same native module cache:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    server: {
+      deps: {
+        external: [/\/packages\/legacy-cjs\//],
+      },
+    },
+  },
+})
+```
+
+Match the whole package directory so all entry points and subpaths are externalized. The externalized files must already be valid for Node.js to execute.
+
+If a package instead depends on bundler transformations, inline it as described in the next section.
+
 ## Package fails to load in Vitest but works in your app
 
 Some packages work in an app build but fail in Vitest because they are only valid after a bundler has rewritten or resolved them. When Vitest externalizes a dependency, Node.js loads it directly, so Node's ESM and package rules apply. See Node.js documentation on [ECMAScript modules](https://nodejs.org/docs/latest/api/esm.html) and [packages](https://nodejs.org/docs/latest/api/packages.html) for the precise rules.

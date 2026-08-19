@@ -43,5 +43,5 @@ ReferenceError: __dirname is not defined
 ::: warning
 This option doesn't affect externalized modules which are always executed by the native runtime. Node.js provides CommonJS variables to externalized CommonJS modules on its own.
 
-Note that inlined CommonJS modules are not processed by Vite plugins even when this option is enabled: `require` calls always leave the module runner, so features like mocking do not apply to them.
+Note that inlined CommonJS modules are not processed by Vite plugins even when this option is enabled: `require` calls always leave the module runner, so features like mocking do not apply to them. See [CommonJS source code is not fully supported](/guide/common-errors#commonjs-source-code-is-not-fully-supported) for configuration alternatives.
 :::
