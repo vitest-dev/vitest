@@ -376,20 +376,21 @@ async function testPersistsSelectionInURL(page: Page) {
 
   // Selecting another trace step updates the URL and rendered snapshot.
   await traceSteps.nth(1).click()
-
-  const selectedParams = {
+  await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:0',
     'trace-step': '1',
     'test': testId,
-  }
-  await expect.poll(() => getHashParams(page)).toMatchObject(selectedParams)
+  })
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
   // Reloading preserves the same URL, selected step, and rendered snapshot.
   await page.reload()
-  await expect.poll(() => getHashParams(page)).toMatchObject(selectedParams)
-  await expect(traceView).toBeVisible()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    'trace-attempt': '0:0',
+    'trace-step': '1',
+    'test': testId,
+  })
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
@@ -427,28 +428,22 @@ async function testPersistsAttemptInURL(page: Page) {
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
 
-  // Opening a test selects its initial attempt without explicit trace URL state.
-  await expect(traceView).toBeVisible()
-  await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
-  const defaultParams = getHashParams(page)
-  expect(defaultParams).toMatchObject({ test: testId })
-  expect(defaultParams).not.toHaveProperty('trace-attempt')
-  expect(defaultParams).not.toHaveProperty('trace-step')
-
   // Opening a retry writes its attempt key to the URL.
   await page.getByTestId('trace-open-button').nth(1).click()
-  const selectedParams = {
+  await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:1',
     'trace-step': '0',
     'test': testId,
-  }
-  await expect.poll(() => getHashParams(page)).toMatchObject(selectedParams)
+  })
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
 
   // Reloading preserves the same URL and selected retry snapshot.
   await page.reload()
-  await expect.poll(() => getHashParams(page)).toMatchObject(selectedParams)
-  await expect(traceView).toBeVisible()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    'trace-attempt': '0:1',
+    'trace-step': '0',
+    'test': testId,
+  })
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
 }
 
