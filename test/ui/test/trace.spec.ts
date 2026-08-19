@@ -377,20 +377,20 @@ async function testPersistsSelectionInURL(page: Page) {
   // Selecting another trace step updates the URL and rendered snapshot.
   await traceSteps.nth(1).click()
   await expect.poll(() => getHashParams(page)).toMatchObject({
-    'trace-attempt': '0:0',
     'trace-step': '1',
     'test': testId,
   })
+  expect(getHashParams(page)).not.toHaveProperty('trace-attempt')
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
   // Reloading preserves the same URL, selected step, and rendered snapshot.
   await page.reload()
   await expect.poll(() => getHashParams(page)).toMatchObject({
-    'trace-attempt': '0:0',
     'trace-step': '1',
     'test': testId,
   })
+  expect(getHashParams(page)).not.toHaveProperty('trace-attempt')
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
@@ -404,10 +404,10 @@ async function testPersistsSelectionInURL(page: Page) {
   await page.goto('about:blank')
   await page.goto(invalidSelectionUrl.href)
   await expect.poll(() => getHashParams(page)).toMatchObject({
-    'trace-attempt': '0:0',
     'trace-step': '0',
     'test': testId,
   })
+  expect(getHashParams(page)).not.toHaveProperty('trace-attempt')
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 

@@ -229,13 +229,13 @@ export function initializeTraceView() {
     }
 
     const attempts = getTraceAttemptMap(test.artifacts)
-    const trace = attemptKey && Object.hasOwn(attempts, attemptKey) ? attempts[attemptKey] : undefined
-    const selectedTrace = trace ?? Object.values(attempts)[0]
+    const selectedAttemptKey = attemptKey && Object.hasOwn(attempts, attemptKey) ? attemptKey : undefined
+    const selectedTrace = selectedAttemptKey ? attempts[selectedAttemptKey] : Object.values(attempts)[0]
     const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
     detailsPosition.value = 'bottom'
     setActiveTrace({
       test,
-      attemptKey: selectedTrace ? getTraceAttemptKey(selectedTrace) : undefined,
+      attemptKey: selectedAttemptKey,
       selectedStepIndex,
     })
     return true
