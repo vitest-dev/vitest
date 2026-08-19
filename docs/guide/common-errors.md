@@ -242,7 +242,7 @@ export default defineConfig({
 })
 ```
 
-In this mode, source files must be executable by the runtime. For example, compile TypeScript that uses CommonJS-only syntax such as `export =` before testing it if your Node.js version cannot run it directly.
+In this mode, source files must be executable by the runtime. See [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner) for requirements and limitations.
 
 If the application uses ESM source but imports an internal CommonJS package, you can instead [externalize](/config/server#server-deps-external) the complete CommonJS package. This keeps its entry points and internal `require()` calls in the same native module cache:
 
