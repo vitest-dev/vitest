@@ -30,9 +30,6 @@ export type CLIOptions<Config extends object> = {
 }
 
 type VitestCLIOptions = CLIOptions<CliOptions>
-type CollectCLIOptions = Omit<VitestCLIOptions, 'related'> & {
-  findRelatedTests: CLIOption<boolean>
-}
 
 const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
   port: {
@@ -1017,7 +1014,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   taskTitleValueFormatTruncate: null,
 }
 
-export const collectCliOptionsConfig: CollectCLIOptions = {
+export const collectCliOptionsConfig: VitestCLIOptions = {
   ...cliOptionsConfig,
   json: {
     description: 'Print collected tests as JSON or write to a file (Default: false)',
