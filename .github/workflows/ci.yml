@@ -161,6 +161,7 @@ jobs:
           VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
         with:
           name: vitest-results-${{ matrix.suite }}-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: |
