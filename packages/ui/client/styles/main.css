@@ -92,7 +92,7 @@ html.dark {
 }
 
 /*
- * code mirror has readOnly: 'nocursor' option, but it would disable entire editor input and prevent focus.
+ * code mirror has readOnly: 'nocursor' option, but it would disable editor input and prevent focus.
  * this only hides the cursor caret while keeping the editor region focusable and selectable.
  */
 .codemirror-hide-cursor .CodeMirror-cursors {
