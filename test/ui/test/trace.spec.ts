@@ -377,8 +377,8 @@ async function testPersistsSelectionInURL(page: Page) {
 
   const invalidSelectionUrl = await page.evaluate(() => {
     const params = new URLSearchParams(location.hash.split('?')[1])
-    params.set('attempt', 'constructor')
-    params.set('step', '999')
+    params.set('trace-attempt', 'constructor')
+    params.set('trace-step', '999')
     return `${location.origin}${location.pathname}${location.search}#/?${params}`
   })
   await page.goto('about:blank')
@@ -425,9 +425,9 @@ async function getTraceHashParams(page: Page) {
   return page.evaluate(() => {
     const params = new URLSearchParams(location.hash.split('?')[1])
     return {
-      attempt: params.get('attempt'),
+      attempt: params.get('trace-attempt'),
       hasTest: params.has('test'),
-      step: params.get('step'),
+      step: params.get('trace-step'),
     }
   })
 }
