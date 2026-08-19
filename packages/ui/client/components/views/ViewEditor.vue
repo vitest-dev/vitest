@@ -62,7 +62,6 @@ watch(
 
     await nextTick()
 
-    // fire focusing editor after loading
     loading.value = false
   },
   { immediate: true },
@@ -81,15 +80,9 @@ watch(() => [loading.value, saving.value, props.file, lineNumber.value, columnNu
         else {
           codemirrorRef.value?.scrollIntoView(line, 100)
           nextTick(() => {
-            codemirrorRef.value?.focus()
             codemirrorRef.value?.setCursor(line)
           })
         }
-      })
-    }
-    else {
-      nextTick(() => {
-        codemirrorRef.value?.focus()
       })
     }
   }
@@ -455,10 +448,11 @@ onBeforeUnmount(clearListeners)
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{
+    :read-only="isReport || !config.api?.allowWrite"
+    :saving="saving"
+    :options="{
       lineNumbers: true,
-      readOnly: isReport || !config.api?.allowWrite,
-      saving,
+      styleActiveLine: true,
       gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
     }"
     :mode="ext"

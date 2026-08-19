@@ -29,6 +29,35 @@ function onSelectStep(index: number) {
   }
 }
 
+function onStepKeydown(event: KeyboardEvent, index: number) {
+  let nextIndex: number
+  if (event.key === 'ArrowUp') {
+    nextIndex = Math.max(index - 1, 0)
+  }
+  else if (event.key === 'ArrowDown') {
+    nextIndex = Math.min(index + 1, entries.value.length - 1)
+  }
+  else if (event.key === 'Home') {
+    nextIndex = 0
+  }
+  else if (event.key === 'End') {
+    nextIndex = entries.value.length - 1
+  }
+  else {
+    return
+  }
+
+  event.preventDefault()
+  if (nextIndex === index) {
+    return
+  }
+  onSelectStep(nextIndex)
+  const nextButton = (event.currentTarget as HTMLButtonElement).parentElement?.children[nextIndex]
+  if (nextButton instanceof HTMLButtonElement) {
+    nextButton.focus()
+  }
+}
+
 watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
@@ -143,18 +172,27 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
     class="h-full min-h-0"
   >
     <Pane :size="30" min-size="20">
-      <div class="h-full min-h-0 p-4" flex="~ col gap-1" overflow-auto>
+      <div
+        class="h-full min-h-0 p-4"
+        flex="~ col gap-1"
+        overflow-auto
+        role="listbox"
+        aria-label="Trace steps"
+      >
         <button
           v-for="(step, index) of entries"
           :key="index"
           type="button"
+          role="option"
           data-testid="trace-step"
           :data-test-range="step.range?.phase"
           class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
           :style="{ paddingInlineStart: `${0.5 + step.depth}rem` }"
-          :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
+          :aria-selected="selection.selectedStepIndex === index"
+          :tabindex="selection.selectedStepIndex === index ? 0 : -1"
           @click="onSelectStep(index)"
+          @keydown="onStepKeydown($event, index)"
         >
           <span
             v-if="step.depth > 0"
