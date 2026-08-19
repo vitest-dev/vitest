@@ -157,6 +157,22 @@ test.describe('ui', () => {
     await testFilterInitiallyInvisibleItem(page)
   })
 
+  test('resizes the explorer virtual scroller with the viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 500 })
+    await page.goto(pageUrl)
+    await page.getByTestId('collapse-all').click()
+    await page.getByTestId('expand-all').click()
+
+    const scroller = page.locator('.vue-recycle-scroller')
+    const initialHeight = await scroller.evaluate(element => element.clientHeight)
+    const initialItems = await page.locator('[data-testid="explorer-item"]:visible').count()
+
+    await page.setViewportSize({ width: 1000, height: 800 })
+
+    await expect.poll(() => scroller.evaluate(element => element.clientHeight)).toBeGreaterThan(initialHeight)
+    await expect.poll(() => page.locator('[data-testid="explorer-item"]:visible').count()).toBeGreaterThan(initialItems)
+  })
+
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
     await testTagsFilter(page)
