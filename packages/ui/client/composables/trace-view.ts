@@ -174,17 +174,17 @@ export function getTraceEntryClass(entry: BrowserTraceEntry) {
 
 export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
-  setActiveTrace(test, getTraceAttemptKey(trace), 0)
+  setActiveTrace({
+    test,
+    attemptKey: getTraceAttemptKey(trace),
+    selectedStepIndex: 0,
+  })
 }
 
-function setActiveTrace(test: RunnerTestCase, attemptKey: string | undefined, stepIndex: number) {
-  activeTraceView.value = {
-    test,
-    attemptKey,
-    selectedStepIndex: stepIndex,
-  }
-  selectedTraceAttempt.value = attemptKey ?? null
-  selectedTraceStep.value = stepIndex
+function setActiveTrace(selection: TraceSelection) {
+  activeTraceView.value = selection
+  selectedTraceAttempt.value = selection.attemptKey ?? null
+  selectedTraceStep.value = selection.selectedStepIndex
 }
 
 export function closeTrace() {
@@ -233,7 +233,11 @@ export function initializeTraceView() {
     const selectedTrace = trace ?? Object.values(attempts)[0]
     const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
     detailsPosition.value = 'bottom'
-    setActiveTrace(test, selectedTrace ? getTraceAttemptKey(selectedTrace) : undefined, selectedStepIndex)
+    setActiveTrace({
+      test,
+      attemptKey: selectedTrace ? getTraceAttemptKey(selectedTrace) : undefined,
+      selectedStepIndex,
+    })
     return true
   }
 
@@ -261,7 +265,11 @@ watch(selectedTest, (testId) => {
     if (test?.type === 'test' && isTraceViewEnabled(test.file)) {
       // Auto-open trace view when selecting a trace-enabled test.
       const trace = Object.values(getTraceAttemptMap(test.artifacts))[0]
-      setActiveTrace(test, trace ? getTraceAttemptKey(trace) : undefined, 0)
+      setActiveTrace({
+        test,
+        attemptKey: trace ? getTraceAttemptKey(trace) : undefined,
+        selectedStepIndex: 0,
+      })
       return
     }
   }
@@ -280,7 +288,11 @@ watchEffect(() => {
     if (test?.type === 'test' && active.test !== test) {
       // Rerun produced a fresh test object; reset attempt selection.
       const trace = Object.values(getTraceAttemptMap(test.artifacts))[0]
-      setActiveTrace(test, trace ? getTraceAttemptKey(trace) : undefined, 0)
+      setActiveTrace({
+        test,
+        attemptKey: trace ? getTraceAttemptKey(trace) : undefined,
+        selectedStepIndex: 0,
+      })
     }
   }
 })
