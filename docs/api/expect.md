@@ -2020,6 +2020,28 @@ test.each(errorDirs)('build fails with "%s"', async (dir) => {
 })
 ```
 
+## expect.fail
+
+- **Type:** `(message?: string) => never`
+
+Explicitly forces a test failure with an optional custom message.
+
+For example, you can use it inside a `try/catch` block to ensure an error was thrown:
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fails when error is not thrown', async () => {
+  try {
+    await performAction()
+    expect.fail('Expected performAction to throw an error')
+  }
+  catch (error) {
+    expect(error).toBeInstanceOf(CustomError)
+  }
+})
+```
+
 ## expect.anything
 
 - **Type:** `() => any`
