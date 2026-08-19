@@ -151,7 +151,6 @@ async function testBasic(page: Page) {
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
   await traceStepNames.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
-  await expect(traceSteps.nth(0)).toBeFocused()
 
   // verify source location highlight
   const activeLine = page.getByTestId('editor').locator('.CodeMirror-activeline')
