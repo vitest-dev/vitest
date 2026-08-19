@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { assertTestCounts, evaluateEditor, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -153,9 +153,9 @@ async function testBasic(page: Page) {
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
   await expect(traceSteps.nth(0)).toBeFocused()
 
-  // verify editor cursor position
-  const getEditorCursor = () => evaluateEditor(page, editor => editor.getCursor())
-  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 33 })
+  // verify source location highlight
+  const activeLine = page.getByTestId('editor').locator('.CodeMirror-activeline')
+  await expect(activeLine).toContainText('Render simple')
 
   // markers ordered by 'test finished' > 'Render simple' > 'Render another'
   const traceEditorMarkers = page.getByTestId('editor').getByTestId('trace-editor-marker')
@@ -173,7 +173,7 @@ async function testBasic(page: Page) {
   // selecting 2nd trace step with keyboard and verify again
   await traceSteps.nth(0).press('ArrowDown')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
-  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 33 })
+  await expect(activeLine).toContainText('Render another')
   await expect(traceSteps.nth(1)).toBeFocused()
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')

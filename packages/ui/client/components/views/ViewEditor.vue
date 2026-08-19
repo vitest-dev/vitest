@@ -452,6 +452,7 @@ onBeforeUnmount(clearListeners)
       lineNumbers: true,
       readOnly: isReport || !config.api?.allowWrite,
       saving,
+      styleActiveLine: true,
       gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
     }"
     :mode="ext"
