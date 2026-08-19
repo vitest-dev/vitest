@@ -51,7 +51,8 @@ html.dark {
   --cm-regex: #ab5e3f;
   --cm-json-property: #698c96;
   --cm-line-number-gutter: #f8f8f8;
-  --cm-line-highlight-background: rgb(59 130 246 / 12%);
+  /* blue-500, with higher opacity in dark mode */
+  --cm-line-highlight-background: rgb(59 130 246 / 10%);
   /* scrollbars colors */
   --cm-ttc-c-thumb: #eee;
   --cm-ttc-c-track: white;
