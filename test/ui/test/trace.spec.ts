@@ -421,9 +421,7 @@ async function testPersistsAttemptInURL(page: Page) {
   })
 }
 
-async function getHashParams(page: Page) {
-  return page.evaluate(() => {
-    const params = new URLSearchParams(location.hash.split('?')[1])
-    return Object.fromEntries(params)
-  })
+function getHashParams(page: Page) {
+  const hash = new URL(page.url()).hash
+  return Object.fromEntries(new URLSearchParams(hash.split('?')[1]))
 }
