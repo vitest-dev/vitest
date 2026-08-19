@@ -307,7 +307,7 @@ onKeyStroke('Escape', () => {
           h-full
           :model-value="source"
           read-only
-          v-bind="{ lineNumbers: true }"
+          :options="{ lineNumbers: true }"
           :mode="ext"
           @codemirror="markImportDurations($event)"
         />
@@ -316,7 +316,7 @@ onKeyStroke('Escape', () => {
           h-full
           :model-value="code"
           read-only
-          v-bind="{ lineNumbers: true }"
+          :options="{ lineNumbers: true }"
           mode="js"
         />
       </div>
@@ -327,7 +327,7 @@ onKeyStroke('Escape', () => {
         <CodeMirrorContainer
           :model-value="sourceMap.mappings"
           read-only
-          v-bind="{ lineNumbers: true }"
+          :options="{ lineNumbers: true }"
         />
       </div>
     </template>
