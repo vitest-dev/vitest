@@ -363,10 +363,10 @@ async function testPersistsSelectionInURL(page: Page) {
   const traceSteps = traceView.getByTestId('trace-step')
   await traceSteps.nth(1).click()
 
-  await expect.poll(() => getTraceHashParams(page)).toEqual({
-    attempt: '0:0',
-    hasTest: true,
-    step: '1',
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    'trace-attempt': '0:0',
+    'trace-step': '1',
+    'test': expect.any(String),
   })
 
   await page.reload()
@@ -384,50 +384,46 @@ async function testPersistsSelectionInURL(page: Page) {
   await page.goto('about:blank')
   await page.goto(invalidSelectionUrl)
 
-  await expect.poll(() => getTraceHashParams(page)).toEqual({
-    attempt: '0:0',
-    hasTest: true,
-    step: '0',
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    'trace-attempt': '0:0',
+    'trace-step': '0',
+    'test': expect.any(String),
   })
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' })).toBeVisible()
 
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
-  await expect.poll(() => getTraceHashParams(page)).toEqual({
-    attempt: null,
-    hasTest: true,
-    step: null,
-  })
+  await expect(traceView).not.toBeVisible()
+  const params = await getHashParams(page)
+  expect(params).toMatchObject({ test: expect.any(String) })
+  expect(params).not.toHaveProperty('trace-attempt')
+  expect(params).not.toHaveProperty('trace-step')
 }
 
 async function testPersistsAttemptInURL(page: Page) {
   await openExplorerItem(page, 'retried test')
   await page.getByTestId('trace-open-button').nth(1).click()
 
-  await expect.poll(() => getTraceHashParams(page)).toEqual({
-    attempt: '0:1',
-    hasTest: true,
-    step: '0',
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    'trace-attempt': '0:1',
+    'trace-step': '0',
+    'test': expect.any(String),
   })
 
   await page.reload()
 
   const traceView = page.getByTestId('trace-view')
   await expect(traceView.frameLocator('iframe').getByText('retryCount: 1')).toBeVisible()
-  await expect.poll(() => getTraceHashParams(page)).toEqual({
-    attempt: '0:1',
-    hasTest: true,
-    step: '0',
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    'trace-attempt': '0:1',
+    'trace-step': '0',
+    'test': expect.any(String),
   })
 }
 
-async function getTraceHashParams(page: Page) {
+async function getHashParams(page: Page) {
   return page.evaluate(() => {
     const params = new URLSearchParams(location.hash.split('?')[1])
-    return {
-      attempt: params.get('trace-attempt'),
-      hasTest: params.has('test'),
-      step: params.get('trace-step'),
-    }
+    return Object.fromEntries(params)
   })
 }
