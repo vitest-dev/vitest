@@ -1,5 +1,0 @@
-{
-  "name": "@test/vite-external",
-  "type": "module",
-  "main": "index.js"
-}

@@ -1,6 +1,0 @@
-{
-  "name": "test-dep-error",
-  "type": "module",
-  "version": "0.0.0",
-  "exports": "./index.js"
-}

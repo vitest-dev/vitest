@@ -1,8 +1,0 @@
-{
-  "name": "project-b",
-  "type": "module",
-  "private": true,
-  "dependencies": {
-    "project-a": "workspace:*"
-  }
-}

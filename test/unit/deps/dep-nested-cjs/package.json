@@ -1,5 +1,0 @@
-{
-  "name": "@vitest/test-dep-nested-cjs",
-  "type": "commonjs",
-  "main": "./index.js"
-}

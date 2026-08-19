@@ -1,6 +1,0 @@
-{
-  "name": "@vitest/test-dep-optimizer-external",
-  "type": "module",
-  "private": true,
-  "main": "./index.js"
-}

@@ -1,6 +1,0 @@
-{
-  "name": "project-a",
-  "type": "module",
-  "private": true,
-  "exports": "./src/index.ts"
-}

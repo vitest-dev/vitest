@@ -1,5 +1,0 @@
-{
-  "name": "@test/test-dep-url",
-  "type": "module",
-  "exports": "./index.js"
-}

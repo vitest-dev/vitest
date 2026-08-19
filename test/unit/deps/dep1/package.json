@@ -1,5 +1,0 @@
-{
-  "name": "@vitest/test-dep1",
-  "type": "module",
-  "exports": "./esm/index.js"
-}

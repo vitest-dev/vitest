@@ -1,3 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`a > b > c > d > e > very deep > msg 1`] = `"hi"`;

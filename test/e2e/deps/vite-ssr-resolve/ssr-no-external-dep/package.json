@@ -1,5 +1,0 @@
-{
-  "name": "ssr-no-external-dep",
-  "type": "module",
-  "exports": "./index.js"
-}

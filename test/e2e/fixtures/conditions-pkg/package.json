@@ -1,9 +1,0 @@
-{
-  "name": "conditions",
-  "private": true,
-  "type": "module",
-  "main": "index.js",
-  "dependencies": {
-    "subpackage": "file:../conditions-subpackage"
-  }
-}

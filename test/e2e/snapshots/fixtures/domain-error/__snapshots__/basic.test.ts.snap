@@ -1,6 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`file 1`] = `
-name=alice
-file-broken
-`;

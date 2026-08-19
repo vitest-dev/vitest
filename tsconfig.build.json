@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "paths": {
-      "vitest": ["./packages/vitest/dist/index.d.ts"],
-      "vitest/*": ["./packages/vitest/dist/*"]
-    }
-  }
-}

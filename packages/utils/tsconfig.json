@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "moduleResolution": "Bundler",
-    "isolatedDeclarations": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["**/dist/**"]
-}
