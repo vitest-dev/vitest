@@ -29,6 +29,10 @@ export interface CliOptions extends UserConfig {
    */
   filesOnly?: boolean
   /**
+   * List only tests related to the provided source files.
+   */
+  findRelatedTests?: boolean
+  /**
    * Parse files statically instead of running them to collect tests
    * @experimental
    */

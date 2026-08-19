@@ -420,6 +420,23 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
+  expect(parseCLI('vitest list --findRelatedTests ./source-a.ts ./source-b.ts')).toEqual({
+    filter: [],
+    options: {
+      'related': ['./source-a.ts', './source-b.ts'],
+      '--': [],
+      'color': true,
+    },
+  })
+  expect(parseCLI('vitest list --findRelatedTests --filesOnly ./source-a.ts ./source-b.ts')).toEqual({
+    filter: [],
+    options: {
+      'related': ['./source-a.ts', './source-b.ts'],
+      'filesOnly': true,
+      '--': [],
+      'color': true,
+    },
+  })
 
   expect(parseCLI('vitest --coverage --browser=chrome')).toEqual({
     filter: [],
