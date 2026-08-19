@@ -361,23 +361,37 @@ async function testPersistsSelectionInURL(page: Page) {
   const testId = getHashParams(page).test
   expect(testId).toBeDefined()
 
-  // Selecting a trace step writes the complete trace selection to the URL.
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  // Opening a test selects its first trace step without explicit trace URL state.
+  await expect(traceView).toBeVisible()
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+  const defaultParams = getHashParams(page)
+  expect(defaultParams).toMatchObject({ test: testId })
+  expect(defaultParams).not.toHaveProperty('trace-attempt')
+  expect(defaultParams).not.toHaveProperty('trace-step')
+
+  // Selecting another trace step updates the URL and rendered snapshot.
   await traceSteps.nth(1).click()
 
-  await expect.poll(() => getHashParams(page)).toMatchObject({
+  const selectedParams = {
     'trace-attempt': '0:0',
     'trace-step': '1',
     'test': testId,
-  })
+  }
+  await expect.poll(() => getHashParams(page)).toMatchObject(selectedParams)
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
-  // Reloading restores both the selected step and its rendered snapshot.
+  // Reloading preserves the same URL, selected step, and rendered snapshot.
   await page.reload()
-
+  await expect.poll(() => getHashParams(page)).toMatchObject(selectedParams)
   await expect(traceView).toBeVisible()
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
-  await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
   // Invalid attempt and step values fall back to the first available entry.
   const invalidSelectionUrl = await page.evaluate(() => {
@@ -388,14 +402,13 @@ async function testPersistsSelectionInURL(page: Page) {
   })
   await page.goto('about:blank')
   await page.goto(invalidSelectionUrl)
-
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:0',
     'trace-step': '0',
     'test': testId,
   })
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
-  await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' })).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // Closing removes only trace state and preserves the selected test.
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
