@@ -1,0 +1,51 @@
+docs/guide/cli-generated.md
+  s_bc3f96ae498c74::t_c71a2afca3258b 799
+docs/guide/projects.md
+  s_bc3f96ae498c74::t_db5233e8b7440d 238-246
+packages/browser/src/client/orchestrator.ts
+  s_bc3f96ae498c74::t_ca476981303eee 30-36
+packages/browser/src/client/tester/runner.ts
+  s_bc3f96ae498c74::t_5d2fecc76c8b47 32,95
+packages/browser/src/client/utils.ts
+  s_bc3f96ae498c74::t_18fc65eec94ab3 101-102,122-127
+packages/ui/client/components/CodeMirrorContainer.vue
+  s_bc3f96ae498c74::t_50cc1658ff9b2d 74-83
+packages/ui/client/components/views/ViewEditor.vue
+  s_bc3f96ae498c74::t_2a8f43ce584bb4 455
+packages/ui/client/composables/codemirror.ts
+  s_bc3f96ae498c74::t_4397dd5523c872 16
+packages/ui/client/styles/main.css
+  s_bc3f96ae498c74::t_b7480f067c1b3a 54-55,84,91-102
+packages/vitest/src/node/cli/cli-config.ts
+  s_bc3f96ae498c74::t_c3b2e296ab5ce8 748
+packages/vitest/src/node/config/resolveConfig.ts
+  s_bc3f96ae498c74::t_a3a1908a125648 1254-1259
+packages/vitest/src/node/projects/resolveProjects.ts
+  s_bc3f96ae498c74::t_09fa66f1a537bb 817-820,1086-1092,1094,1096
+packages/vitest/src/utils/base.ts
+  s_bc3f96ae498c74::t_6e5d836597233f 27
+patches/rrweb-snapshot@2.1.1.patch
+  s_bc3f96ae498c74::t_e63a0873f9a2f5 2,5-45
+pnpm-lock.yaml
+  s_bc3f96ae498c74::t_8e54e40af91b93 199,600,937,18397
+test/e2e/test/config/browser-configs.test.ts
+  s_bc3f96ae498c74::t_3a99f19b9e8031 529-589
+test/e2e/test/projects.test.ts
+  s_bc3f96ae498c74::t_c7d2ee529c024a 1042-1045
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b517da31d65175ec15710ad3394560047e573f85",
+  "prompts": {},
+  "sessions": {
+    "s_bc3f96ae498c74": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fe865b1d8ffeoxfbrUrgePh68N",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
