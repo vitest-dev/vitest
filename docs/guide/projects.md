@@ -235,6 +235,15 @@ bun run test --project e2e --project unit
 ```
 :::
 
+The filter supports `*` wildcards and `!` exclusions. A project runs if it matches no negated pattern and, when regular patterns are also given, matches at least one of them:
+
+```bash
+# run every project except "e2e"
+vitest --project '!e2e'
+# run every project starting with "unit", except "unit (browser)"
+vitest --project 'unit*' --project '!unit (browser)'
+```
+
 ## Configuration
 
 Projects defined with an inline configuration inherit all options from the root-level configuration. This is controlled by the `extends` option, which is enabled by default since Vitest 5.0:

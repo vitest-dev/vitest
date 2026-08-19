@@ -78,6 +78,7 @@ export class ExplorerTree {
 
   startRun() {
     this.startTime = performance.now()
+    // TODO: Replace this bootstrap/run fallback with explicit lifecycle handling.
     this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
   }
@@ -87,7 +88,7 @@ export class ExplorerTree {
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
-      this.collect(true, false, false)
+      this.collect(true, false)
       this.rafCollector.resume()
     }
   }
@@ -97,7 +98,7 @@ export class ExplorerTree {
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
-      this.collect(true, false, false)
+      this.collect(true, false)
       this.rafCollector.resume()
     }
   }
@@ -139,43 +140,22 @@ export class ExplorerTree {
    *
    * @param start Reset summary counters before updates when true; skip the reset when false.
    * @param end Traverse every file and finalize the run when true; process only pending files when false.
-   * @param task Invoke the collector in a microtask when true; invoke it immediately when false.
    */
-  private collect(start: boolean, end: boolean, task = true) {
-    if (task) {
-      queueMicrotask(() => {
-        runCollect(
-          start,
-          end,
-          this.summary,
-          searchMatcher.value.matcher,
-          {
-            failed: filter.failed,
-            success: filter.success,
-            skipped: filter.skipped,
-            slow: filter.slow,
-            onlyTests: filter.onlyTests,
-          },
-          end ? this.executionTime : performance.now() - this.startTime,
-        )
-      })
-    }
-    else {
-      runCollect(
-        start,
-        end,
-        this.summary,
-        searchMatcher.value.matcher,
-        {
-          failed: filter.failed,
-          success: filter.success,
-          skipped: filter.skipped,
-          slow: filter.slow,
-          onlyTests: filter.onlyTests,
-        },
-        end ? this.executionTime : performance.now() - this.startTime,
-      )
-    }
+  private collect(start: boolean, end: boolean) {
+    runCollect(
+      start,
+      end,
+      this.summary,
+      searchMatcher.value.matcher,
+      {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        slow: filter.slow,
+        onlyTests: filter.onlyTests,
+      },
+      end ? this.executionTime : performance.now() - this.startTime,
+    )
   }
 
   collectTestsTotal(
@@ -194,50 +174,40 @@ export class ExplorerTree {
   }
 
   collapseNode(id: string) {
-    queueMicrotask(() => {
-      runCollapseNode(id)
-    })
+    runCollapseNode(id)
   }
 
   expandNode(id: string) {
-    queueMicrotask(() => {
-      runExpandNode(id, searchMatcher.value.matcher, {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      })
+    runExpandNode(id, searchMatcher.value.matcher, {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      slow: filter.slow,
+      onlyTests: filter.onlyTests,
     })
   }
 
   collapseAllNodes() {
-    queueMicrotask(() => {
-      runCollapseAllTask()
-    })
+    runCollapseAllTask()
   }
 
   expandAllNodes() {
-    queueMicrotask(() => {
-      runExpandAll(searchMatcher.value.matcher, {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      })
+    runExpandAll(searchMatcher.value.matcher, {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      slow: filter.slow,
+      onlyTests: filter.onlyTests,
     })
   }
 
   filterNodes() {
-    queueMicrotask(() => {
-      runFilter(searchMatcher.value.matcher, {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      })
+    runFilter(searchMatcher.value.matcher, {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      slow: filter.slow,
+      onlyTests: filter.onlyTests,
     })
   }
 }

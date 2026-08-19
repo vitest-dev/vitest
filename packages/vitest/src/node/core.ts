@@ -26,6 +26,7 @@ import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpe
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
+import { setup as wsApiSetup } from '../api/setup'
 import { defaultBrowserPort } from '../constants'
 import { distDir } from '../paths'
 import { createTagsFilter } from '../runtime/runner/utils/tags'
@@ -447,8 +448,22 @@ export class Vitest {
     // root-level browser server the API lives on the same shared httpServer and
     // is only needed when a UI (Vitest dashboard or browser orchestrator) is served.
     const apiNeeded = !this._rootBrowserParent || resolved.ui || resolved.browser.ui
-    if (resolved.api && resolved.watch && apiNeeded) {
-      (await import('../api/setup')).setup(this)
+    const rootApi = resolved.api && resolved.watch && apiNeeded
+    if (rootApi) {
+      wsApiSetup(this)
+    }
+
+    const attachedApiServers = new Set([rootApi ? this.vite.httpServer : null])
+    for (const project of this.projects) {
+      const browserServer = project.vite
+      if (
+        project.config.browser.ui
+        && browserServer?.httpServer
+        && !attachedApiServers.has(browserServer.httpServer)
+      ) {
+        attachedApiServers.add(browserServer.httpServer)
+        wsApiSetup(this, browserServer)
+      }
     }
 
     await this._fsCache.ensureCacheIntegrity()

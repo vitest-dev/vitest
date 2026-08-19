@@ -235,8 +235,8 @@ const {
         <FilterStatus v-model="filter.slow" :label="`Slow${slowTime}`" />
       </div>
     </div>
-    <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
-      <ResultsPanel>
+    <div flex-auto py-1 overflow-hidden>
+      <ResultsPanel h-full flex="~ col">
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red-700 dark:text-red-500>
@@ -314,11 +314,13 @@ const {
         </template>
         <template v-else>
           <RecycleScroller
-            page-mode
+            class="scrolls"
+            flex-auto
             key-field="id"
             :item-size="28"
             :items="uiEntries"
             :buffer="100"
+            @scroll.passive="hideAllPoppers"
           >
             <template #default="{ item }">
               <ExplorerItem

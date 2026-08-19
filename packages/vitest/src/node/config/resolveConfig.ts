@@ -1251,9 +1251,12 @@ export function matchesProjectFilter(projects: string[], name: string): boolean 
   if (!projects.length) {
     return true
   }
-  return projects.some((project) => {
-    const regexp = wildcardPatternToRegExp(project)
-    return regexp.test(name)
+  if (isExcludedByProjectFilter(projects, name)) {
+    return false
+  }
+  const positives = projects.filter(project => !project.startsWith('!'))
+  return !positives.length || positives.some((project) => {
+    return wildcardPatternToRegExp(project).test(name)
   })
 }
 

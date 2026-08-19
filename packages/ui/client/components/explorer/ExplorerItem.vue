@@ -64,7 +64,6 @@ const failedSnapshot = computed(() => {
 
 function toggleOpen() {
   if (!expandable) {
-    onItemClick?.(task.value!)
     return
   }
 
@@ -95,17 +94,14 @@ function updateSnapshot(task: Task) {
   return client.rpc.updateSnapshot(task.file)
 }
 
-const data = computed(() => {
-  return indent <= 0 ? [] : Array.from({ length: indent }, (_, i) => `${taskId}-${i}`)
-})
 const gridStyles = computed(() => {
-  const entries = data.value
   const gridColumns: string[] = []
-  // folder icon
-  if (type === 'file' || type === 'suite') {
-    gridColumns.push('min-content')
+  // allocate zero-width columns to simulate indentation via grid gap
+  for (let i = 0; i < indent; i++) {
+    gridColumns.push('0')
   }
-
+  // all items have collapse/expand icon equivalent spacing
+  gridColumns.push('min-content')
   // status icon
   gridColumns.push('min-content')
   // typecheck icon
@@ -116,11 +112,7 @@ const gridStyles = computed(() => {
   gridColumns.push('minmax(0, 1fr)')
   // action buttons
   gridColumns.push('min-content')
-
-  // all the vertical lines with width 1rem and mx-2: always centered
-  return `grid-template-columns: ${
-    entries.map(() => '1rem').join(' ')
-  } ${gridColumns.join(' ')};`
+  return `grid-template-columns: ${gridColumns.join(' ')};`
 })
 
 const runButtonTitle = computed(() => {
@@ -206,13 +198,21 @@ const tagsBgGradient = computed(() => {
     :aria-label="name"
     :data-current="current"
     data-testid="explorer-item"
-    @click="toggleOpen()"
+    @click="onItemClick?.(task)"
   >
     <template v-if="indent > 0">
-      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px inline-flex mx-2 op20 />
+      <div v-for="i in indent" :key="i" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
     </template>
-    <div v-if="type === 'file' || type === 'suite'" w-4>
-      <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+    <div class="w-4 h-full">
+      <button
+        v-if="type === 'file' || type === 'suite'"
+        type="button"
+        class="w-full h-full flex items-center"
+        :aria-label="`${opened ? 'Collapse' : 'Expand'} ${name}`"
+        @click.stop="toggleOpen"
+      >
+        <div class="op40" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right'" />
+      </button>
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
     <div flex items-baseline gap-2 overflow-hidden>
@@ -294,12 +294,6 @@ const tagsBgGradient = computed(() => {
 </template>
 
 <style scoped>
-.vertical-line:first-of-type {
-  @apply border-l-2px;
-}
-.vertical-line + .vertical-line {
-  @apply border-r-1px;
-}
 .test-actions {
   display: none;
 }

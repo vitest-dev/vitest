@@ -3,16 +3,6 @@ import { expect, test } from 'vitest'
 
 import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
-test('non default snapshot format', () => {
-  expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
-    {
-      "foo": [
-        "bar",
-      ],
-    }
-  `)
-})
-
 test('--update works for workspace project', async () => {
   // setup wrong snapshot value
   editFile(

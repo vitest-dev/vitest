@@ -27,6 +27,13 @@ export class IframeOrchestrator {
   constructor() {
     debug('init orchestrator', getBrowserState().sessionId)
 
+    if (getConfig().browser.traceView.enabled) {
+      const domSnapshot = import('rrweb-snapshot')
+      // a load failure surfaces in the tester that awaits this
+      domSnapshot.catch(() => {})
+      getBrowserState().browserTraceDomSnapshotPromise = domSnapshot
+    }
+
     const otelConfig = getBrowserState().config.experimental.openTelemetry
     this.traces = new Traces({
       enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
