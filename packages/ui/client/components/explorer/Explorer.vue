@@ -235,8 +235,8 @@ const {
         <FilterStatus v-model="filter.slow" :label="`Slow${slowTime}`" />
       </div>
     </div>
-    <div flex-auto min-h-0 py-1 overflow-hidden>
-      <ResultsPanel h-full min-h-0 flex="~ col">
+    <div flex-auto py-1 overflow-hidden>
+      <ResultsPanel h-full flex="~ col">
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red-700 dark:text-red-500>
@@ -316,7 +316,6 @@ const {
           <RecycleScroller
             class="scrolls"
             flex-auto
-            min-h-0
             key-field="id"
             :item-size="28"
             :items="uiEntries"
