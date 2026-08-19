@@ -814,10 +814,10 @@ function expandBrowserInstancesInEntries(
       continue
     }
 
-    const keepAllInstances = matchesEntryFilter(globalConfig.project, parentName, entry.ancestors)
-    const filteredInstances = keepAllInstances
-      ? instances
-      : instances.filter(instance => matchesProjectFilter(globalConfig.project, instance.name!))
+    const parentMatches = matchesEntryFilter(globalConfig.project, parentName, entry.ancestors)
+    const filteredInstances = instances.filter(instance => parentMatches
+      ? !isExcludedByProjectFilter(globalConfig.project, instance.name!)
+      : matchesProjectFilter(globalConfig.project, instance.name!))
     if (!filteredInstances.length) {
       debug?.(`browser project ${projectLabel(parentName)} is dropped: no instances match the --project filter`)
       continue
@@ -1083,14 +1083,17 @@ function matchesEntryFilter(
   if (!filter.length) {
     return true
   }
+  if (isEntryExcludedByFilter(filter, name, ancestors)) {
+    return false
+  }
+  const positives = filter.filter(project => !project.startsWith('!'))
+  if (!positives.length) {
+    return true
+  }
   const names = [name, ...(ancestors || [])]
-  return filter.some((project) => {
+  return positives.some((project) => {
     const regexp = wildcardPatternToRegExp(project)
-    // a negated pattern compiles into a negative lookahead: the entry is kept
-    // only when neither its name nor any of its containers match the exclusion
-    return project.startsWith('!')
-      ? names.every(candidate => regexp.test(candidate))
-      : names.some(candidate => regexp.test(candidate))
+    return names.some(candidate => regexp.test(candidate))
   })
 }
 
