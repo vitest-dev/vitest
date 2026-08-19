@@ -1,0 +1,31 @@
+packages/ui/client/components/CodeMirrorContainer.vue
+  s_6647713d3a3d65::t_523a67721028ad 73-82
+packages/ui/client/components/trace/TraceView.vue
+  s_6647713d3a3d65::t_ca090c0b9a7c8d 32-60,175-181,186,192-193,195
+packages/ui/client/composables/codemirror.ts
+  s_6647713d3a3d65::t_aab1016d9527db 16
+packages/ui/client/styles/main.css
+  s_6647713d3a3d65::t_3c44c1e50b6f9a 54-55,84,91-102
+test/ui/test/trace-stream.spec.ts
+  s_6647713d3a3d65::t_b997b75521181b 69,80,92,103
+test/ui/test/trace.spec.ts
+  s_6647713d3a3d65::t_d0bdecfafcb96f 5,152,154,156-158,173-174,176-178,182-192,198
+test/ui/test/ui.spec.ts
+  s_6647713d3a3d65::t_6af99b926ce30a 652-653
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "372855e845cc58b035a133df3ded21484fef9d34",
+  "prompts": {},
+  "sessions": {
+    "s_6647713d3a3d65": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fe761d6f0ffesnF3tThAmJmK2w",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
