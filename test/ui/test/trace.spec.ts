@@ -359,6 +359,7 @@ async function testNested(page: Page) {
 async function testPersistsSelectionInURL(page: Page) {
   await openExplorerItem(page, 'simple')
 
+  // Selecting a trace step writes the complete trace selection to the URL.
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step')
   await traceSteps.nth(1).click()
@@ -369,12 +370,14 @@ async function testPersistsSelectionInURL(page: Page) {
     'test': expect.any(String),
   })
 
+  // Reloading restores both the selected step and its rendered snapshot.
   await page.reload()
 
   await expect(traceView).toBeVisible()
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Another' })).toBeVisible()
 
+  // Invalid attempt and step values fall back to the first available entry.
   const invalidSelectionUrl = await page.evaluate(() => {
     const params = new URLSearchParams(location.hash.split('?')[1])
     params.set('trace-attempt', 'constructor')
@@ -392,6 +395,7 @@ async function testPersistsSelectionInURL(page: Page) {
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' })).toBeVisible()
 
+  // Closing removes only trace state and preserves the selected test.
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
   await expect(traceView).not.toBeVisible()
   const params = await getHashParams(page)
@@ -402,6 +406,8 @@ async function testPersistsSelectionInURL(page: Page) {
 
 async function testPersistsAttemptInURL(page: Page) {
   await openExplorerItem(page, 'retried test')
+
+  // Opening a retry writes its attempt key to the URL.
   await page.getByTestId('trace-open-button').nth(1).click()
 
   await expect.poll(() => getHashParams(page)).toMatchObject({
@@ -410,6 +416,7 @@ async function testPersistsAttemptInURL(page: Page) {
     'test': expect.any(String),
   })
 
+  // Reloading restores the selected retry instead of the initial attempt.
   await page.reload()
 
   const traceView = page.getByTestId('trace-view')
