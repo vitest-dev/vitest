@@ -147,7 +147,7 @@ test.describe('html reporter', () => {
     await page.reload()
 
     await expect(traceView).toBeVisible()
-    await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+    await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
     await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Another' })).toBeVisible()
 
     const invalidSelectionUrl = await page.evaluate(() => {
@@ -164,7 +164,7 @@ test.describe('html reporter', () => {
       hasTest: true,
       step: '0',
     })
-    await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+    await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
     await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' })).toBeVisible()
 
     await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
