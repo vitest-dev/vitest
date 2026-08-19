@@ -398,7 +398,7 @@ async function testPersistsSelectionInURL(page: Page) {
   // Closing removes only trace state and preserves the selected test.
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
   await expect(traceView).not.toBeVisible()
-  const params = await getHashParams(page)
+  const params = getHashParams(page)
   expect(params).toMatchObject({ test: expect.any(String) })
   expect(params).not.toHaveProperty('trace-attempt')
   expect(params).not.toHaveProperty('trace-step')
