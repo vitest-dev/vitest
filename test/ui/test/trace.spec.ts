@@ -358,6 +358,8 @@ async function testNested(page: Page) {
 
 async function testPersistsSelectionInURL(page: Page) {
   await openExplorerItem(page, 'simple')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
 
   // Selecting a trace step writes the complete trace selection to the URL.
   const traceView = page.getByTestId('trace-view')
@@ -367,7 +369,7 @@ async function testPersistsSelectionInURL(page: Page) {
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:0',
     'trace-step': '1',
-    'test': expect.any(String),
+    'test': testId,
   })
 
   // Reloading restores both the selected step and its rendered snapshot.
@@ -390,7 +392,7 @@ async function testPersistsSelectionInURL(page: Page) {
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:0',
     'trace-step': '0',
-    'test': expect.any(String),
+    'test': testId,
   })
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' })).toBeVisible()
@@ -399,13 +401,15 @@ async function testPersistsSelectionInURL(page: Page) {
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
   await expect(traceView).not.toBeVisible()
   const params = getHashParams(page)
-  expect(params).toMatchObject({ test: expect.any(String) })
+  expect(params).toMatchObject({ test: testId })
   expect(params).not.toHaveProperty('trace-attempt')
   expect(params).not.toHaveProperty('trace-step')
 }
 
 async function testPersistsAttemptInURL(page: Page) {
   await openExplorerItem(page, 'retried test')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
 
   // Opening a retry writes its attempt key to the URL.
   await page.getByTestId('trace-open-button').nth(1).click()
@@ -413,7 +417,7 @@ async function testPersistsAttemptInURL(page: Page) {
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:1',
     'trace-step': '0',
-    'test': expect.any(String),
+    'test': testId,
   })
 
   // Reloading restores the selected retry instead of the initial attempt.
@@ -424,7 +428,7 @@ async function testPersistsAttemptInURL(page: Page) {
   await expect.poll(() => getHashParams(page)).toMatchObject({
     'trace-attempt': '0:1',
     'trace-step': '0',
-    'test': expect.any(String),
+    'test': testId,
   })
 }
 
