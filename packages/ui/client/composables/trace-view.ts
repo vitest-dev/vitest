@@ -264,10 +264,8 @@ watch(selectedTest, (testId) => {
     const test = client.state.idMap.get(testId)
     if (test?.type === 'test' && isTraceViewEnabled(test.file)) {
       // Auto-open trace view when selecting a trace-enabled test.
-      const trace = Object.values(getTraceAttemptMap(test.artifacts))[0]
       setActiveTrace({
         test,
-        attemptKey: trace ? getTraceAttemptKey(trace) : undefined,
         selectedStepIndex: 0,
       })
       return
@@ -287,10 +285,8 @@ watchEffect(() => {
     const test = client.state.idMap.get(testId)
     if (test?.type === 'test' && active.test !== test) {
       // Rerun produced a fresh test object; reset attempt selection.
-      const trace = Object.values(getTraceAttemptMap(test.artifacts))[0]
       setActiveTrace({
         test,
-        attemptKey: trace ? getTraceAttemptKey(trace) : undefined,
         selectedStepIndex: 0,
       })
     }
