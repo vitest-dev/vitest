@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { EditorFromTextArea } from 'codemirror'
+import type { EditorConfiguration, EditorFromTextArea } from 'codemirror'
 import type { Ref } from 'vue'
-import { onMounted, ref, useAttrs } from 'vue'
+import { onMounted, ref } from 'vue'
 import { codemirrorRef, useCodeMirror } from '~/composables/codemirror'
 
-const { mode, readOnly } = defineProps<{
+const { mode, options, readOnly } = defineProps<{
   mode?: string
+  options?: EditorConfiguration
   readOnly?: boolean
   saving?: boolean
 }>()
@@ -16,8 +17,6 @@ const emit = defineEmits<{
 }>()
 
 const modelValue = defineModel<string>()
-
-const attrs = useAttrs()
 
 const modeMap: Record<string, any> = {
   html: 'htmlmixed',
@@ -38,7 +37,7 @@ const el = ref<HTMLTextAreaElement>()
 onMounted(async () => {
   // useCodeMirror will remove the codemirrorRef.value on onUnmounted callback
   const codemirror = useCodeMirror(el, modelValue as unknown as Ref<string>, {
-    ...attrs,
+    ...options,
     mode: modeMap[mode || ''] || mode,
     readOnly: readOnly ? true : undefined,
     extraKeys: {

@@ -448,10 +448,10 @@ onBeforeUnmount(clearListeners)
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{
+    :read-only="isReport || !config.api?.allowWrite"
+    :saving="saving"
+    :options="{
       lineNumbers: true,
-      readOnly: isReport || !config.api?.allowWrite,
-      saving,
       styleActiveLine: true,
       gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
     }"
