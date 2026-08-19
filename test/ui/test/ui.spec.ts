@@ -661,6 +661,7 @@ async function testWriteFile(page: Page, options: { enabled: boolean }) {
   await codeTabButton.click()
   const editor = page.getByTestId('editor')
   await expect(editor).toContainText('expect(1 + 1).toEqual(2)')
+  await editor.click()
   await expect(editor.locator('.CodeMirror-cursors')).toHaveCSS('visibility', options.enabled ? 'visible' : 'hidden')
   await page.keyboard.type('\n// edited \n')
   if (options.enabled) {

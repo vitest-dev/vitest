@@ -149,8 +149,9 @@ async function testBasic(page: Page) {
 
   // selecting steps should open source code view
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
-  await traceStepNames.getByText('Render simple').click()
+  await traceSteps.nth(0).click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
+  await expect(traceSteps.nth(0)).toBeFocused()
 
   // verify source location highlight
   const activeLine = page.getByTestId('editor').locator('.CodeMirror-activeline')
@@ -169,20 +170,32 @@ async function testBasic(page: Page) {
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
 
-  // selecting 2nd trace step and verify again
-  await traceStepNames.getByText('Render another').click()
+  // selecting 2nd trace step with keyboard and verify again
+  await traceSteps.nth(0).press('ArrowDown')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect(activeLine).toContainText('Render another')
-  await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(1)).toBeFocused()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')
+
+  await traceSteps.nth(1).press('End')
+  await expect(traceSteps.nth(2)).toBeFocused()
+  await expect(traceSteps.nth(2)).toHaveAttribute('aria-selected', 'true')
+  await traceSteps.nth(2).press('ArrowDown')
+  await expect(traceSteps.nth(2)).toBeFocused()
+  await traceSteps.nth(2).press('Home')
+  await expect(traceSteps.nth(0)).toBeFocused()
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await traceSteps.nth(0).press('ArrowUp')
+  await expect(traceSteps.nth(0)).toBeFocused()
 
   // selecting 1st trace step from editor and verify again
   await traceEditorMarkers.nth(1).click()
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
   await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
-  await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
