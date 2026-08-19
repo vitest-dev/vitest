@@ -8,10 +8,10 @@ import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiTok
 import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 const TEST_COUNTS = {
-  pass: 18,
+  pass: 20,
   fail: 3,
   files: {
-    pass: 7,
+    pass: 9,
   },
 }
 
@@ -157,20 +157,16 @@ test.describe('ui', () => {
     await testFilterInitiallyInvisibleItem(page)
   })
 
-  test('resizes the explorer virtual scroller with the viewport', async ({ page }) => {
+  test('renders explorer items revealed by a viewport resize', async ({ page }) => {
     await page.setViewportSize({ width: 1000, height: 500 })
     await page.goto(pageUrl)
-    await page.getByTestId('collapse-all').click()
-    await page.getByTestId('expand-all').click()
 
-    const scroller = page.locator('.vue-recycle-scroller')
-    const initialHeight = await scroller.evaluate(element => element.clientHeight)
-    const initialItems = await page.locator('[data-testid="explorer-item"]:visible').count()
+    await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
+    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
 
-    await page.setViewportSize({ width: 1000, height: 800 })
+    await page.setViewportSize({ width: 1000, height: 1300 })
 
-    await expect.poll(() => scroller.evaluate(element => element.clientHeight)).toBeGreaterThan(initialHeight)
-    await expect.poll(() => page.locator('[data-testid="explorer-item"]:visible').count()).toBeGreaterThan(initialItems)
+    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
   })
 
   test('tags filter', async ({ page }) => {
