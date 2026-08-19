@@ -612,9 +612,9 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 }
 
 async function testFilterInitiallyInvisibleItem(page: Page) {
-  await expect(getExplorerItem(page, 'sample.test.ts')).not.toBeVisible()
-  await page.getByPlaceholder('Search...').fill('sample.test.ts')
-  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+  await page.getByPlaceholder('Search...').fill('zz-last-file.test.ts')
+  await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeVisible()
 }
 
 async function testCrossOriginAccess(page: Page, pageUrl: string) {
