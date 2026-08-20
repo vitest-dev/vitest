@@ -53,6 +53,7 @@ interface TraceSnapshot {
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
   pseudoClassIds: Record<PseudoClassName, number[]>
+  popoverIds: number[]
 }
 
 // rrweb-snapshot rewrites pseudo-class selectors in serialized styles so replay can
@@ -144,6 +145,10 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
       y: window.scrollY,
     },
     pseudoClassIds: {} as any,
+    popoverIds: Array.from(
+      document.querySelectorAll(':popover-open'),
+      element => mirror.getId(element),
+    ).filter(id => id !== -1),
   }
   for (const className of PSEUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)

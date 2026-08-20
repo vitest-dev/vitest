@@ -5,6 +5,7 @@ import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
 import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
+import { restoreOpenPopovers } from './restore-state'
 
 const props = defineProps<{
   trace: NormalizedBrowserTraceData
@@ -62,7 +63,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
   }
-  const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
+  const { serialized, selectorId, viewport, scroll, pseudoClassIds, popoverIds = [] } = step.snapshot
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
   // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
@@ -89,6 +90,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       }
     }
   }
+  restoreOpenPopovers(mirror, popoverIds)
   iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
   if (selectorId != null) {
     const el = mirror.getNode(selectorId)
