@@ -66,12 +66,12 @@ async function setupRelatedTests() {
   return result
 }
 
-test('list --findRelatedTests includes direct and transitive dependents', async () => {
+test('list --related includes direct and transitive dependents', async () => {
   const { root } = await setupRelatedTests()
   const { stdout, stderr, exitCode } = await runVitestCli(
     'list',
     `--root=${root}`,
-    '--findRelatedTests',
+    '--related',
     'src/shared.ts',
   )
 
@@ -84,12 +84,12 @@ test('list --findRelatedTests includes direct and transitive dependents', async 
   expect(exitCode).toBe(0)
 })
 
-test('list --findRelatedTests combines multiple source files', async () => {
+test('list --related combines multiple source files', async () => {
   const { root } = await setupRelatedTests()
   const { stdout, stderr, exitCode } = await runVitestCli(
     'list',
     `--root=${root}`,
-    '--findRelatedTests',
+    '--related',
     'src/shared.ts',
     'src/other.ts',
   )
@@ -104,19 +104,19 @@ test('list --findRelatedTests combines multiple source files', async () => {
   expect(exitCode).toBe(0)
 })
 
-test('list --findRelatedTests supports files-only and JSON output', async () => {
+test('list --related supports files-only and JSON output', async () => {
   const { root } = await setupRelatedTests()
   const filesResult = await runVitestCli(
     'list',
     `--root=${root}`,
-    '--findRelatedTests',
+    '--related',
     '--filesOnly',
     'src/shared.ts',
   )
   const jsonResult = await runVitestCli(
     'list',
     `--root=${root}`,
-    '--findRelatedTests',
+    '--related',
     'src/shared.ts',
     '--json',
   )

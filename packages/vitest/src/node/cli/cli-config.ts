@@ -30,6 +30,7 @@ export type CLIOptions<Config extends object> = {
 }
 
 type VitestCLIOptions = CLIOptions<CliOptions>
+type CollectCliOptions = Omit<CliOptions, 'related'> & { related?: boolean }
 
 const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
   port: {
@@ -986,7 +987,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   environmentOptions: null,
   unstubEnvs: null,
   related: null,
-  findRelatedTests: null,
   restoreMocks: null,
   runner: null,
   mockReset: null,
@@ -1014,7 +1014,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   taskTitleValueFormatTruncate: null,
 }
 
-export const collectCliOptionsConfig: VitestCLIOptions = {
+export const collectCliOptionsConfig: CLIOptions<CollectCliOptions> = {
   ...cliOptionsConfig,
   json: {
     description: 'Print collected tests as JSON or write to a file (Default: false)',
@@ -1030,8 +1030,8 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
     description: 'How many tests to process at the same time (default: os.availableParallelism())',
     argument: '<limit>',
   },
-  findRelatedTests: {
-    description: 'Print only tests related to the specified files',
+  related: {
+    description: 'Print only tests related to the specified source files',
   },
   changed: {
     description: 'Print only tests that are affected by the changed files (default: `false`)',

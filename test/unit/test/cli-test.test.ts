@@ -420,7 +420,7 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(parseCLI('vitest list --findRelatedTests ./source-a.ts ./source-b.ts')).toEqual({
+  expect(parseCLI('vitest list --related ./source-a.ts ./source-b.ts')).toEqual({
     filter: [],
     options: {
       'related': ['./source-a.ts', './source-b.ts'],
@@ -428,7 +428,7 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(parseCLI('vitest list --findRelatedTests --filesOnly ./source-a.ts ./source-b.ts')).toEqual({
+  expect(parseCLI('vitest list --related --filesOnly ./source-a.ts ./source-b.ts')).toEqual({
     filter: [],
     options: {
       'related': ['./source-a.ts', './source-b.ts'],
