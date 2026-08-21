@@ -34,6 +34,10 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
     67,
   ],
 )
+export const traceSizes = useLocalStorage<[browser: number, trace: number]>(
+  'vitest-ui_splitpanes-traceSizes',
+  [55, 45],
+)
 
 export const detailsPanelVisible = useLocalStorage<boolean>(
   'vitest-ui_details-panel-visible',

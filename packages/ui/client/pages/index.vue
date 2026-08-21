@@ -19,6 +19,7 @@ import {
   initializeNavigation,
   mainSizes,
   panels,
+  traceSizes,
 } from '~/composables/navigation'
 import { activeTraceView } from '~/composables/trace-view'
 
@@ -43,6 +44,15 @@ const onModuleResized = useDebounceFn(({ panes }: { panes: { size: number }[] })
     detailSizes.value[i] = e.size
   })
   recordDetailsResize(panes)
+  allowBrowserEvents()
+}, 0)
+
+const onTraceResized = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
+  if (panes.length === 2) {
+    panes.forEach((pane, index) => {
+      traceSizes.value[index] = pane.size
+    })
+  }
   allowBrowserEvents()
 }, 0)
 
@@ -119,11 +129,13 @@ function allowBrowserEvents() {
                     v-if="browserState.config.browser?.traceView.enabled"
                     class="h-full"
                     :horizontal="detailsPosition === 'right'"
+                    @resize="preventBrowserEvents"
+                    @resized="onTraceResized"
                   >
-                    <Pane :size="activeTraceView ? 55 : 100" min-size="10">
+                    <Pane :size="activeTraceView ? traceSizes[0] : 100" min-size="10">
                       <BrowserIframe v-once />
                     </Pane>
-                    <Pane v-if="activeTraceView" size="45" min-size="10">
+                    <Pane v-if="activeTraceView" :size="traceSizes[1]" min-size="10">
                       <TraceViewPane :selection="activeTraceView" />
                     </Pane>
                   </Splitpanes>
