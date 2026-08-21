@@ -1,6 +1,6 @@
 import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
-import { ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
@@ -201,32 +201,28 @@ export function selectActiveTraceStep(index: number) {
   }
 }
 
+// Resolve the URL-selected task only when it can be shown in the trace view.
+const selectedTestTask = computed(() => {
+  const test = selectedTest.value
+    ? client.state.idMap.get(selectedTest.value)
+    : undefined
+  return test?.type === 'test' && isTraceViewEnabled(test.file)
+    ? test
+    : undefined
+})
+
+// Restore trace URL state once its selected test becomes available.
 export function initializeTraceView() {
   const attemptKey = selectedTraceAttempt.value
   const step = selectedTraceStep.value
-  if (attemptKey == null && step == null) {
-    return
-  }
-
-  const testId = selectedTest.value
-  if (!testId) {
-    closeTrace()
+  if (!selectedTest.value || (attemptKey == null && step == null)) {
     return
   }
 
   const restoreTrace = () => {
-    if (selectedTest.value !== testId) {
-      return true
-    }
-    // Config starts empty and receives root once initialization completes.
-    if (!config.value.root) {
+    const test = selectedTestTask.value
+    if (!test) {
       return false
-    }
-
-    const test = client.state.idMap.get(testId)
-    if (test?.type !== 'test' || !isTraceViewEnabled(test.file)) {
-      closeTrace()
-      return true
     }
 
     const attempts = getTraceAttemptMap(test.artifacts)
@@ -242,15 +238,9 @@ export function initializeTraceView() {
     return true
   }
 
-  if (restoreTrace()) {
-    return
+  if (!restoreTrace()) {
+    watch(selectedTestTask, restoreTrace, { once: true })
   }
-
-  const stop = watch([() => client.state.idMap.get(testId), config, selectedTest], () => {
-    if (restoreTrace()) {
-      stop()
-    }
-  })
 }
 
 function parseTraceStep(value: unknown, entryCount: number): number {
@@ -262,8 +252,8 @@ function parseTraceStep(value: unknown, entryCount: number): number {
 // trace view without being auto-opened again for the same selected test.
 watch(selectedTest, (testId) => {
   if (testId) {
-    const test = client.state.idMap.get(testId)
-    if (test?.type === 'test' && isTraceViewEnabled(test.file)) {
+    const test = selectedTestTask.value
+    if (test) {
       // Auto-open trace view when selecting a trace-enabled test.
       setActiveTrace({ test, selectedStepIndex: 0 })
       return
@@ -280,8 +270,8 @@ watchEffect(() => {
   const active = activeTraceView.value
   const testId = selectedTest.value
   if (active && testId && active.test.id === testId) {
-    const test = client.state.idMap.get(testId)
-    if (test?.type === 'test' && active.test !== test) {
+    const test = selectedTestTask.value
+    if (test && active.test !== test) {
       // Rerun produced a fresh test object; reset attempt selection.
       setActiveTrace({ test, selectedStepIndex: 0 })
     }
