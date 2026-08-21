@@ -83,9 +83,9 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   })
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
-      const el = mirror.getNode(id) as Element | null
+      const el = mirror.getNode(id) as HTMLElement | null
       if (className === ':popover-open') {
-        (el as HTMLElement | null)?.showPopover?.()
+        el?.showPopover?.()
       }
       else if (el?.classList) {
         el.classList.add(className)
