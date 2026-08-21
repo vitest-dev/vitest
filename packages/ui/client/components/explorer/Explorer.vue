@@ -502,7 +502,6 @@ function onTreeItemClick(taskId: string) {
                 :aria-setsize="active ? treeItemAria.get(item.id)?.setsize : undefined"
                 :aria-expanded="active && item.expandable ? item.expanded : undefined"
                 :aria-selected="active ? isSelected(item.id) : undefined"
-                :data-active="active && activeTaskId === item.id"
                 :indent="item.indent"
                 :name="item.name"
                 :typecheck="item.typecheck === true"

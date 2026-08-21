@@ -301,8 +301,4 @@ const tagsBgGradient = computed(() => {
 .item-wrapper:hover .test-actions {
   display: flex;
 }
-.item-wrapper[data-active="true"] {
-  outline: 2px solid currentColor;
-  outline-offset: -2px;
-}
 </style>
