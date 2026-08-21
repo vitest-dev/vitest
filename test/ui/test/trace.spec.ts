@@ -365,14 +365,24 @@ async function testPersistsSelectionInURL(page: Page) {
   const traceSteps = traceView.getByTestId('trace-step')
   const traceFrame = traceView.frameLocator('iframe')
 
-  // Opening a test selects its first trace step without explicit trace URL state.
+  // Opening a test selects its first trace step and persists it in the URL.
   await expect(traceView).toBeVisible()
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
-  const defaultParams = getHashParams(page)
-  expect(defaultParams).toMatchObject({ test: testId })
-  expect(defaultParams).not.toHaveProperty('traceAttempt')
-  expect(defaultParams).not.toHaveProperty('traceStep')
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+
+  // Reloading restores the auto-opened default step.
+  await page.reload()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // Selecting another trace step updates the URL and rendered snapshot.
   await traceSteps.nth(1).click()
