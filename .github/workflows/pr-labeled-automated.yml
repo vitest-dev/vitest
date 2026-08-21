@@ -62,11 +62,11 @@ jobs:
           ref: main
       - name: AgentScan
         id: agentscan
-        uses: MatteoGabriele/agentscan-action@d8da234c758c9a195222a68c3ecfe02a603185b6 # v1.15.1
+        uses: MatteoGabriele/agentscan-action@cf7615ba9f4fa86beab3323bc84b803ab430f8dc # v2.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          agent-scan-comment: false
-          skip-comment-on-organic: true
+          mode: labels
+          trusted-author-associations: 'owner, collaborator, member'
           label-automation: maybe automated
           label-mixed: maybe automated
           label-community-flagged: bot

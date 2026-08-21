@@ -257,6 +257,19 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           return true
         }
 
+        // SSR transformed import binding
+        if (
+          type === 'statement'
+          && node.type === 'VariableDeclarator'
+          && node.init
+          && node.init.type === 'MemberExpression'
+          && node.init.object.type === 'MemberExpression'
+          && node.init.object.object.type === 'Identifier'
+          && node.init.object.object.name.startsWith('__vite_ssr_import_')
+        ) {
+          return true
+        }
+
         // SSR transformed exports vite@>6.3.5
         if (
           type === 'statement'
