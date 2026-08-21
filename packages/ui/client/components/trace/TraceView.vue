@@ -5,7 +5,6 @@ import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
 import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
-import { restoreOpenPopovers } from './restore-state'
 
 const props = defineProps<{
   trace: NormalizedBrowserTraceData
@@ -90,7 +89,10 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       }
     }
   }
-  restoreOpenPopovers(mirror, popoverIds)
+  for (const id of popoverIds) {
+    const element = mirror.getNode(id) as HTMLElement | null
+    element?.showPopover?.()
+  }
   iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
   if (selectorId != null) {
     const el = mirror.getNode(selectorId)
