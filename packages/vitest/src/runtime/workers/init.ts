@@ -49,6 +49,11 @@ const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
 
+const streams = [
+  { write: process.stdout.write.bind(process.stdout) },
+  { write: process.stderr.write.bind(process.stderr) },
+]
+
 // In worker threads stdio is proxied to the parent over a MessagePort with a
 // backpressure protocol: a chunk stays buffered inside the worker until the
 // parent acks the previous one. The pool starts `runner.stop()` as soon as it
@@ -58,7 +63,7 @@ let reportMemory = false
 // it before signaling completion guarantees the output reached the parent.
 // A cheap no-op for forks, where stdio goes through OS pipes.
 function flushStdio(): Promise<unknown> {
-  const flush = (stream: NodeJS.WriteStream) =>
+  const flush = (stream: (typeof streams)[number]) =>
     new Promise((resolve) => {
       try {
         stream.write('', () => resolve(undefined))
@@ -67,7 +72,7 @@ function flushStdio(): Promise<unknown> {
         resolve(undefined)
       }
     })
-  return Promise.all([flush(process.stdout), flush(process.stderr)])
+  return Promise.all(streams.map(stream => flush(stream)))
 }
 
 let traces!: Traces

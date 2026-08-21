@@ -71,6 +71,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
   // but external resources (images, stylesheets) won't load without a server.
   const doc = iframe.contentDocument!
+  // TODO: rrweb also closes and opens the document during rebuild, so this reset may be redundant.
   doc.open()
   doc.close()
   const mirror = createMirror()
@@ -81,10 +82,16 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     mirror,
     UNSAFE_allowUnprotectedRebuild: true,
   })
+  // Close rrweb's parser after rebuilding. During page load, leaving it open
+  // prevents the parent load event, which browsers may show as an endless spinner.
+  doc.close()
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
-      const el = mirror.getNode(id) as Element | null
-      if (el?.classList) {
+      const el = mirror.getNode(id) as HTMLElement | null
+      if (className === ':popover-open') {
+        el?.showPopover?.()
+      }
+      else if (el?.classList) {
         el.classList.add(className)
       }
     }
