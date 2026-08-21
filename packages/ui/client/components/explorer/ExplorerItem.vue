@@ -196,6 +196,7 @@ const tagsBgGradient = computed(() => {
     class="item-wrapper"
     :style="gridStyles"
     :aria-label="name"
+    :data-task-id="taskId"
     :data-current="current"
     data-testid="explorer-item"
     @click="onItemClick?.(task)"
@@ -299,5 +300,9 @@ const tagsBgGradient = computed(() => {
 }
 .item-wrapper:hover .test-actions {
   display: flex;
+}
+.item-wrapper[data-active="true"] {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
 }
 </style>

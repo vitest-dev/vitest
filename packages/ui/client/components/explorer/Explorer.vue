@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
+import type { UITaskTreeNode } from '~/composables/explorer/types'
 import { hideAllPoppers } from 'floating-vue'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import { RecycleScroller } from 'vue-virtual-scroller'
-import { availableProjects, config } from '~/composables/client'
+import { availableProjects, client, config } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer'
 import { useSearch } from '~/composables/explorer/search'
 import { ALL_PROJECTS, projectSort } from '~/composables/explorer/state'
 import { activeFileId, selectedTest } from '~/composables/params'
@@ -38,6 +40,12 @@ const slowTime = computed(() => {
 const searchBox = ref<HTMLInputElement | undefined>()
 const selectProjectRef = ref<HTMLSelectElement | undefined>()
 const sortProjectRef = ref<HTMLSelectElement | undefined>()
+const scrollerRef = ref<{
+  el?: HTMLElement
+  scrollToItem: (index: number, options?: { align?: 'nearest' }) => void
+}>()
+const focusedTaskId = ref<string>()
+const selectedTaskId = ref<string>()
 
 const {
   initialized,
@@ -62,6 +70,143 @@ const {
   disableClearProjectSort,
   searchMatcher,
 } = useSearch(searchBox, selectProjectRef, sortProjectRef)
+
+const activeTaskId = computed(() => {
+  if (uiEntries.value.some(item => item.id === focusedTaskId.value)) {
+    return focusedTaskId.value
+  }
+  if (selectedTest.value && uiEntries.value.some(item => item.id === selectedTest.value)) {
+    return selectedTest.value
+  }
+  if (uiEntries.value.some(item => item.id === activeFileId.value)) {
+    return activeFileId.value
+  }
+  return uiEntries.value[0]?.id
+})
+
+const treeItemAria = computed(() => {
+  const siblings = new Map<string, UITaskTreeNode[]>()
+  for (const item of uiEntries.value) {
+    const entries = siblings.get(item.parentId) ?? []
+    entries.push(item)
+    siblings.set(item.parentId, entries)
+  }
+
+  const metadata = new Map<string, { posinset: number; setsize: number }>()
+  for (const entries of siblings.values()) {
+    for (let i = 0; i < entries.length; i++) {
+      metadata.set(entries[i].id, { posinset: i + 1, setsize: entries.length })
+    }
+  }
+  return metadata
+})
+
+function isSelected(taskId: string) {
+  const selectedId = selectedTaskId.value ?? selectedTest.value ?? activeFileId.value
+  return selectedId === taskId
+}
+
+function getTreeItemElement(taskId: string) {
+  return document.getElementById(`explorer-item-${taskId}`)
+}
+
+function nextFrame() {
+  return new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+}
+
+async function selectItem(index: number) {
+  const item = uiEntries.value[index]
+  const task = item && client.state.idMap.get(item.id)
+  if (!item || !task) {
+    return
+  }
+
+  selectedTaskId.value = item.id
+  onItemClick?.(task)
+  if (!getTreeItemElement(item.id)) {
+    scrollerRef.value?.scrollToItem(index, { align: 'nearest' })
+    await nextTick()
+    await nextFrame()
+  }
+  focusedTaskId.value = item.id
+}
+
+function onTreeKeydown(event: KeyboardEvent) {
+  const target = event.target
+  if (!(target instanceof HTMLElement) || target.getAttribute('role') !== 'tree') {
+    return
+  }
+
+  const index = uiEntries.value.findIndex(item => item.id === activeTaskId.value)
+  const item = uiEntries.value[index]
+  if (!item) {
+    return
+  }
+
+  let nextIndex: number | undefined
+  if (event.key === 'ArrowUp') {
+    nextIndex = Math.max(index - 1, 0)
+  }
+  else if (event.key === 'ArrowDown') {
+    nextIndex = Math.min(index + 1, uiEntries.value.length - 1)
+  }
+  else if (event.key === 'Home') {
+    nextIndex = 0
+  }
+  else if (event.key === 'End') {
+    nextIndex = uiEntries.value.length - 1
+  }
+  else if (event.key === 'ArrowRight') {
+    if (item.expandable && !item.expanded) {
+      explorerTree.expandNode(item.id)
+    }
+    else if (uiEntries.value[index + 1]?.indent > item.indent) {
+      nextIndex = index + 1
+    }
+  }
+  else if (event.key === 'ArrowLeft') {
+    if (item.expandable && item.expanded) {
+      explorerTree.collapseNode(item.id)
+    }
+    else {
+      nextIndex = uiEntries.value.findIndex(entry => entry.id === item.parentId)
+    }
+  }
+  else if (event.key === 'Enter') {
+    const task = client.state.idMap.get(item.id)
+    if (task) {
+      selectedTaskId.value = item.id
+      onItemClick?.(task)
+    }
+  }
+  else if (event.key !== ' ') {
+    return
+  }
+
+  event.preventDefault()
+  if (nextIndex !== undefined && nextIndex >= 0 && nextIndex !== index) {
+    selectItem(nextIndex)
+  }
+}
+
+function onTreeFocus(event: FocusEvent) {
+  if (event.target === event.currentTarget && !focusedTaskId.value) {
+    focusedTaskId.value = activeTaskId.value
+  }
+}
+
+function onTreeBlur(event: FocusEvent) {
+  if (event.target === event.currentTarget) {
+    focusedTaskId.value = undefined
+    selectedTaskId.value = undefined
+  }
+}
+
+function onTreeItemClick(taskId: string) {
+  focusedTaskId.value = taskId
+  selectedTaskId.value = taskId
+  scrollerRef.value?.el?.focus()
+}
 </script>
 
 <template>
@@ -314,21 +459,38 @@ const {
         </template>
         <template v-else>
           <RecycleScroller
+            ref="scrollerRef"
             class="scrolls"
             flex-auto
             key-field="id"
+            role="tree"
+            aria-label="Test explorer"
+            tabindex="0"
+            :aria-activedescendant="activeTaskId ? `explorer-item-${activeTaskId}` : undefined"
             :item-size="28"
             :items="uiEntries"
             :buffer="100"
             @scroll.passive="hideAllPoppers"
+            @blur="onTreeBlur"
+            @focus="onTreeFocus"
+            @keydown="onTreeKeydown"
           >
-            <template #default="{ item }">
+            <template #default="{ item, active }">
               <ExplorerItem
+                :id="active ? `explorer-item-${item.id}` : undefined"
                 class="h-28px m-0 p-0"
                 :task-id="item.id"
                 :expandable="item.expandable"
                 :type="item.type"
                 :current="activeFileId === item.id"
+                :role="active ? 'treeitem' : undefined"
+                :aria-hidden="active ? undefined : true"
+                :aria-level="active ? item.indent + 1 : undefined"
+                :aria-posinset="active ? treeItemAria.get(item.id)?.posinset : undefined"
+                :aria-setsize="active ? treeItemAria.get(item.id)?.setsize : undefined"
+                :aria-expanded="active && item.expandable ? item.expanded : undefined"
+                :aria-selected="active ? isSelected(item.id) : undefined"
+                :data-active="active && activeTaskId === item.id"
                 :indent="item.indent"
                 :name="item.name"
                 :typecheck="item.typecheck === true"
@@ -339,8 +501,9 @@ const {
                 :slow="item.slow === true"
                 :opened="item.expanded"
                 :disable-task-location="!includeTaskLocation"
-                :class="selectedTest === item.id || (!selectedTest && activeFileId === item.id) ? 'bg-active' : ''"
+                :class="isSelected(item.id) ? 'bg-active' : ''"
                 :on-item-click="onItemClick"
+                @click="onTreeItemClick(item.id)"
               />
             </template>
           </RecycleScroller>
