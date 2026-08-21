@@ -1,0 +1,19 @@
+packages/ui/client/components/explorer/Explorer.vue
+  s_88a37ea04ffda9::t_059d460ecda48f 3,5,8-9,43-48,73-209,462,466-469,474-476,478,480,486-493,504,506
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b58f1baf5a15757ef564c51010725345a2e3fbdf",
+  "prompts": {},
+  "sessions": {
+    "s_88a37ea04ffda9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fdd3a91acfferr7TFHR4qAn0U3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
