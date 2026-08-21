@@ -62,7 +62,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
   }
-  const { serialized, selectorId, viewport, scroll, pseudoClassIds, popoverIds = [] } = step.snapshot
+  const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
   // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
@@ -84,14 +84,13 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
       const el = mirror.getNode(id) as Element | null
-      if (el?.classList) {
+      if (className === ':popover-open') {
+        (el as HTMLElement | null)?.showPopover?.()
+      }
+      else if (el?.classList) {
         el.classList.add(className)
       }
     }
-  }
-  for (const id of popoverIds) {
-    const element = mirror.getNode(id) as HTMLElement | null
-    element?.showPopover?.()
   }
   iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
   if (selectorId != null) {
