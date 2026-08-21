@@ -82,7 +82,7 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
   return merged
 }
 
-export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, NormalizedBrowserTraceData> {
+export function getTraceAttemptMap(artifacts: TestArtifact[]): Map<string, NormalizedBrowserTraceData> {
   const grouped: Record<string, BrowserTraceData[]> = {}
   for (const artifact of artifacts) {
     if (artifact.type !== 'internal:browserTrace') {
@@ -94,14 +94,14 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, No
     grouped[key].push(trace)
   }
 
-  const merged: Record<string, NormalizedBrowserTraceData> = {}
+  const merged = new Map<string, NormalizedBrowserTraceData>()
   for (const [key, traces] of Object.entries(grouped)) {
     const trace = traces[0]
     const entries = traces.flatMap(trace => trace.entries)
-    merged[key] = {
+    merged.set(key, {
       ...trace,
       entries: normalizeTraceEntries(entries),
-    }
+    })
   }
   return merged
 }
@@ -109,8 +109,8 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, No
 export function getSelectedTrace(selection: TraceSelection): NormalizedBrowserTraceData | undefined {
   const attempts = getTraceAttemptMap(selection.test.artifacts)
   return selection.attemptKey
-    ? attempts[selection.attemptKey]
-    : Object.values(attempts)[0]
+    ? attempts.get(selection.attemptKey)
+    : [...attempts.values()][0]
 }
 
 export function getTraceEditorMarkersForFile(
@@ -230,8 +230,8 @@ export function initializeTraceView() {
     }
 
     const attempts = getTraceAttemptMap(test.artifacts)
-    const selectedAttemptKey = attemptKey && Object.hasOwn(attempts, attemptKey) ? attemptKey : undefined
-    const selectedTrace = selectedAttemptKey ? attempts[selectedAttemptKey] : Object.values(attempts)[0]
+    const selectedAttemptKey = attemptKey != null && attempts.has(attemptKey) ? attemptKey : undefined
+    const selectedTrace = selectedAttemptKey ? attempts.get(selectedAttemptKey) : [...attempts.values()][0]
     const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
     detailsPosition.value = 'bottom'
     setActiveTrace({
