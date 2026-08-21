@@ -211,43 +211,6 @@ const selectedTestTask = computed(() => {
     : undefined
 })
 
-// Restore trace URL state once its selected test becomes available.
-export function initializeTraceView() {
-  const attemptKey = selectedTraceAttempt.value
-  const step = selectedTraceStep.value
-  if (!selectedTest.value || (attemptKey == null && step == null)) {
-    return
-  }
-
-  const restoreTrace = () => {
-    const test = selectedTestTask.value
-    if (!test) {
-      return false
-    }
-
-    const attempts = getTraceAttemptMap(test.artifacts)
-    const selectedAttemptKey = attemptKey != null && attempts.has(attemptKey) ? attemptKey : undefined
-    const selectedTrace = selectedAttemptKey ? attempts.get(selectedAttemptKey) : [...attempts.values()][0]
-    const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
-    detailsPosition.value = 'bottom'
-    setActiveTrace({
-      test,
-      attemptKey: selectedAttemptKey,
-      selectedStepIndex,
-    })
-    return true
-  }
-
-  if (!restoreTrace()) {
-    watch(selectedTestTask, restoreTrace, { once: true })
-  }
-}
-
-function parseTraceStep(value: unknown, entryCount: number): number {
-  const step = typeof value === 'number' ? value : Number(value)
-  return Number.isInteger(step) && step >= 0 && step < entryCount ? step : 0
-}
-
 // Open/close only on selected-test navigation so the close button can clear the
 // trace view without being auto-opened again for the same selected test.
 watch(selectedTest, (testId) => {
@@ -296,4 +259,41 @@ export function getTraceAttemptLabel(trace: BrowserTraceData) {
     parts.push(`Repeat ${trace.repeats}`)
   }
   return parts.join(' / ')
+}
+
+// Restore trace URL state once its selected test becomes available.
+export function initializeTraceView() {
+  const attemptKey = selectedTraceAttempt.value
+  const step = selectedTraceStep.value
+  if (!selectedTest.value || (attemptKey == null && step == null)) {
+    return
+  }
+
+  const restoreTrace = () => {
+    const test = selectedTestTask.value
+    if (!test) {
+      return false
+    }
+
+    const attempts = getTraceAttemptMap(test.artifacts)
+    const selectedAttemptKey = attemptKey != null && attempts.has(attemptKey) ? attemptKey : undefined
+    const selectedTrace = selectedAttemptKey ? attempts.get(selectedAttemptKey) : [...attempts.values()][0]
+    const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
+    detailsPosition.value = 'bottom'
+    setActiveTrace({
+      test,
+      attemptKey: selectedAttemptKey,
+      selectedStepIndex,
+    })
+    return true
+  }
+
+  if (!restoreTrace()) {
+    watch(selectedTestTask, restoreTrace, { once: true })
+  }
+}
+
+function parseTraceStep(value: unknown, entryCount: number): number {
+  const step = typeof value === 'number' ? value : Number(value)
+  return Number.isInteger(step) && step >= 0 && step < entryCount ? step : 0
 }
