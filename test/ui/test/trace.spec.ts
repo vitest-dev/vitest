@@ -232,9 +232,14 @@ async function testPopover(page: Page) {
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step-name')
   const traceFrame = traceView.frameLocator('iframe')
+  const popoverContent = traceFrame.getByText('Popover content')
   await expect(traceView).toBeVisible()
-  await traceSteps.getByText('Render popover').click()
-  await expect(traceFrame.getByText('Popover content')).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
+  await traceSteps.getByText('Render open popover').click()
+  await expect(popoverContent).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
 }
 
 async function testPseudoState(page: Page) {

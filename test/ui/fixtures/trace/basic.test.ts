@@ -19,10 +19,12 @@ test('switch-target', async () => {
 })
 
 test('popover', async () => {
-  document.body.innerHTML = '<div popover="auto">Popover content</div>'
+  document.body.innerHTML = '<div popover="auto" style="inset: auto; top: 0; left: 0; margin: 0">Popover content</div>'
   const popover = document.querySelector<HTMLElement>('[popover]')!
+  const popoverContent = page.getByText('Popover content')
+  await popoverContent.mark('Render closed popover')
   popover.showPopover()
-  await page.getByText('Popover content').mark('Render popover')
+  await popoverContent.mark('Render open popover')
 })
 
 test('pseudo-state', async () => {
