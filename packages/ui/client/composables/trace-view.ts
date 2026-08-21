@@ -218,7 +218,8 @@ export function initializeTraceView() {
     if (selectedTest.value !== testId) {
       return true
     }
-    if (!Object.hasOwn(config.value, 'root')) {
+    // Config starts empty and receives root once initialization completes.
+    if (!config.value.root) {
       return false
     }
 
