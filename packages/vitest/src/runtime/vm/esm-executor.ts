@@ -1,6 +1,6 @@
 import type vm from 'node:vm'
 import type { ExternalModulesExecutor, SyncModuleDisposition } from '../external-executor'
-import type { VMModule, VMSourceTextModule, VMSyntheticModule } from './types'
+import type { SourceTextModuleOptions, VMModule, VMSourceTextModule, VMSyntheticModule } from './types'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
@@ -164,11 +164,10 @@ export class EsmExecutor {
     code: string,
   ): VMSourceTextModule {
     const codeCache = this.executor.codeCache
-    const cachedData = codeCache?.get(fileURL, code)
-    const m = new SourceTextModule(code, {
+    let cachedData = codeCache?.get(fileURL, code)
+    const options: SourceTextModuleOptions = {
       identifier: fileURL,
       context: this.context,
-      cachedData,
       // static callbacks: Node keeps them registered for as long as the
       // module's host-defined-options symbol is alive, so a closure here would
       // retain this executor (and the whole test file's world) beyond the
@@ -176,10 +175,30 @@ export class EsmExecutor {
       // at call time instead.
       importModuleDynamically: staticImportModuleDynamically,
       initializeImportMeta: staticInitializeImportMeta,
-    })
+    }
+    let m: VMSourceTextModule | undefined
+    if (cachedData) {
+      try {
+        m = new SourceTextModule(code, { ...options, cachedData })
+      }
+      catch (error: any) {
+        // Unlike `vm.Script` (which only sets `cachedDataRejected`), a module
+        // throws when V8 rejects the cache - e.g. after a test changed V8 flags
+        // at runtime with `v8.setFlagsFromString()`, which alters the flag hash
+        // the cache is checked against for the rest of the worker's life.
+        // Drop the entry and compile from source.
+        if (error?.code !== 'ERR_VM_MODULE_CACHED_DATA_REJECTED') {
+          throw error
+        }
+        codeCache!.delete(fileURL)
+        cachedData = undefined
+      }
+    }
+    m ??= new SourceTextModule(code, options)
     // the code cache of a SourceTextModule must be created before evaluation
     if (!cachedData) {
-      codeCache?.store(fileURL, code, () => m.createCachedData())
+      const created = m
+      codeCache?.store(fileURL, code, () => created.createCachedData())
     }
     return m
   }
