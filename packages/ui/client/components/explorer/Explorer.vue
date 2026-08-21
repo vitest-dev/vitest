@@ -2,7 +2,7 @@
 import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type { UITaskTreeNode } from '~/composables/explorer/types'
 import { hideAllPoppers } from 'floating-vue'
-import { computed, nextTick, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { RecycleScroller } from 'vue-virtual-scroller'
 import { availableProjects, client, config } from '~/composables/client'
@@ -110,25 +110,19 @@ function getTreeItemElement(taskId: string) {
   return document.getElementById(`explorer-item-${taskId}`)
 }
 
-function nextFrame() {
-  return new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
-}
-
-async function selectItem(index: number) {
+function selectItem(index: number) {
   const item = uiEntries.value[index]
   const task = item && client.state.idMap.get(item.id)
   if (!item || !task) {
     return
   }
 
-  selectedTaskId.value = item.id
-  onItemClick?.(task)
   if (!getTreeItemElement(item.id)) {
     scrollerRef.value?.scrollToItem(index, { align: 'nearest' })
-    await nextTick()
-    await nextFrame()
   }
   focusedTaskId.value = item.id
+  selectedTaskId.value = item.id
+  onItemClick?.(task)
 }
 
 function onTreeKeydown(event: KeyboardEvent) {
