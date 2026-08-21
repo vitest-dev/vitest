@@ -18,6 +18,13 @@ test('switch-target', async () => {
   await page.getByRole('button').mark('Render switch target')
 })
 
+test('popover', async () => {
+  document.body.innerHTML = '<div popover="auto">Popover content</div>'
+  const popover = document.querySelector<HTMLElement>('[popover]')!
+  popover.showPopover()
+  await page.getByText('Popover content').mark('Render popover')
+})
+
 test('pseudo-state', async () => {
   document.body.innerHTML = `
 <style>
