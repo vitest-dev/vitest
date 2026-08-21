@@ -64,6 +64,14 @@ test.describe('ui', () => {
   test('attempts', async ({ page }) => {
     await testAttempts(page)
   })
+
+  test('persists selection in URL', async ({ page }) => {
+    await testPersistsSelectionInURL(page)
+  })
+
+  test('persists attempt in URL', async ({ page }) => {
+    await testPersistsAttemptInURL(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -137,6 +145,14 @@ test.describe('html reporter', () => {
 
   test('attempts', async ({ page }) => {
     await testAttempts(page)
+  })
+
+  test('persists selection in URL', async ({ page }) => {
+    await testPersistsSelectionInURL(page)
+  })
+
+  test('persists attempt in URL', async ({ page }) => {
+    await testPersistsAttemptInURL(page)
   })
 })
 
@@ -362,4 +378,110 @@ async function testNested(page: Page) {
     'Sibling mark',
     'test finished',
   ])
+}
+
+async function testPersistsSelectionInURL(page: Page) {
+  await openExplorerItem(page, 'simple')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  // Opening a test selects its first trace step and persists it in the URL.
+  await expect(traceView).toBeVisible()
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+
+  // Reloading restores the auto-opened default step.
+  await page.reload()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // Selecting another trace step updates the URL and rendered snapshot.
+  await traceSteps.nth(1).click()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '1',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+
+  // Reloading preserves the same URL, selected step, and rendered snapshot.
+  await page.reload()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '1',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+
+  // Invalid attempt and step values fall back to the first available entry.
+  const invalidSelectionUrl = new URL(page.url())
+  const invalidParams = new URLSearchParams(invalidSelectionUrl.hash.split('?')[1])
+  invalidParams.set('traceAttempt', 'constructor')
+  invalidParams.set('traceStep', '999')
+  invalidSelectionUrl.hash = `/?${invalidParams}`
+  // Leave the app so the invalid URL exercises initialization, not hash navigation.
+  await page.goto('about:blank')
+  await page.goto(invalidSelectionUrl.href)
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // Closing removes only trace state and preserves the selected test.
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect(traceView).not.toBeVisible()
+  const params = getHashParams(page)
+  expect(params).toMatchObject({ test: testId })
+  expect(params).not.toHaveProperty('traceAttempt')
+  expect(params).not.toHaveProperty('traceStep')
+}
+
+async function testPersistsAttemptInURL(page: Page) {
+  await openExplorerItem(page, 'retried test')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  // Opening a retry writes its attempt key to the URL.
+  await page.getByTestId('trace-open-button').nth(1).click()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceAttempt: '0:1',
+    traceStep: '0',
+    test: testId,
+  })
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+
+  // Reloading preserves the same URL and selected retry snapshot.
+  await page.reload()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceAttempt: '0:1',
+    traceStep: '0',
+    test: testId,
+  })
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+}
+
+function getHashParams(page: Page) {
+  const hash = new URL(page.url()).hash
+  return Object.fromEntries(new URLSearchParams(hash.split('?')[1]))
 }
