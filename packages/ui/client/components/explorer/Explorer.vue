@@ -2,7 +2,7 @@
 import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type { UITaskTreeNode } from '~/composables/explorer/types'
 import { hideAllPoppers } from 'floating-vue'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import { RecycleScroller } from 'vue-virtual-scroller'
 import { availableProjects, client, config } from '~/composables/client'
@@ -45,6 +45,7 @@ const scrollerRef = ref<{
   scrollToItem: (index: number, options?: { align?: 'nearest' }) => void
 }>()
 const focusedTaskId = ref<string>()
+const ariaActiveTaskId = ref<string>()
 const selectedTaskId = ref<string>()
 
 const {
@@ -110,6 +111,19 @@ function getTreeItemElement(taskId: string) {
   return document.getElementById(`explorer-item-${taskId}`)
 }
 
+async function updateAriaActiveTask(taskId: string, index: number) {
+  if (!getTreeItemElement(taskId)) {
+    scrollerRef.value?.scrollToItem(index, { align: 'nearest' })
+    for (let i = 0; i < 3 && !getTreeItemElement(taskId); i++) {
+      await nextTick()
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    }
+  }
+  if (focusedTaskId.value === taskId && getTreeItemElement(taskId)) {
+    ariaActiveTaskId.value = taskId
+  }
+}
+
 function selectItem(index: number) {
   const item = uiEntries.value[index]
   const task = item && client.state.idMap.get(item.id)
@@ -117,12 +131,10 @@ function selectItem(index: number) {
     return
   }
 
-  if (!getTreeItemElement(item.id)) {
-    scrollerRef.value?.scrollToItem(index, { align: 'nearest' })
-  }
   focusedTaskId.value = item.id
   selectedTaskId.value = item.id
   onItemClick?.(task)
+  void updateAriaActiveTask(item.id, index)
 }
 
 function onTreeKeydown(event: KeyboardEvent) {
@@ -186,18 +198,24 @@ function onTreeKeydown(event: KeyboardEvent) {
 function onTreeFocus(event: FocusEvent) {
   if (event.target === event.currentTarget && !focusedTaskId.value) {
     focusedTaskId.value = activeTaskId.value
+    const index = uiEntries.value.findIndex(item => item.id === focusedTaskId.value)
+    if (focusedTaskId.value && index >= 0) {
+      void updateAriaActiveTask(focusedTaskId.value, index)
+    }
   }
 }
 
 function onTreeBlur(event: FocusEvent) {
   if (event.target === event.currentTarget) {
     focusedTaskId.value = undefined
+    ariaActiveTaskId.value = undefined
     selectedTaskId.value = undefined
   }
 }
 
 function onTreeItemClick(taskId: string) {
   focusedTaskId.value = taskId
+  ariaActiveTaskId.value = taskId
   selectedTaskId.value = taskId
   scrollerRef.value?.el?.focus()
 }
@@ -460,7 +478,7 @@ function onTreeItemClick(taskId: string) {
             role="tree"
             aria-label="Test explorer"
             tabindex="0"
-            :aria-activedescendant="activeTaskId ? `explorer-item-${activeTaskId}` : undefined"
+            :aria-activedescendant="ariaActiveTaskId ? `explorer-item-${ariaActiveTaskId}` : undefined"
             :item-size="28"
             :items="uiEntries"
             :buffer="100"

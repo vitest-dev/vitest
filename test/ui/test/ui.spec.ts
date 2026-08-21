@@ -177,6 +177,12 @@ test.describe('ui', () => {
 
     await page.setViewportSize({ width: 1000, height: 500 })
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+    await tree.press('End')
+    await tree.press('Home')
+    const firstItem = getExplorerItem(page, 'aa-first-file.test.ts')
+    const firstItemId = await firstItem.getAttribute('id') as string
+    await expect(tree).toHaveAttribute('aria-activedescendant', firstItemId)
+
     const previousItemId = await tree.getAttribute('aria-activedescendant')
     await tree.press('End')
     await expect.poll(() => tree.getAttribute('aria-activedescendant')).not.toBe(previousItemId)
@@ -188,10 +194,10 @@ test.describe('ui', () => {
     await expect(tree).toHaveAttribute('aria-activedescendant', lastItemId)
 
     await tree.press('Home')
-    await expect(tree).toHaveAttribute('aria-activedescendant', await getExplorerItem(page, 'aa-first-file.test.ts').getAttribute('id') as string)
-    await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toHaveAttribute('aria-selected', 'true')
+    await expect(tree).toHaveAttribute('aria-activedescendant', firstItemId)
+    await expect(firstItem).toHaveAttribute('aria-selected', 'true')
     await tree.press('ArrowUp')
-    await expect(tree).toHaveAttribute('aria-activedescendant', await getExplorerItem(page, 'aa-first-file.test.ts').getAttribute('id') as string)
+    await expect(tree).toHaveAttribute('aria-activedescendant', firstItemId)
   })
 
   test('error', async ({ page }) => {
