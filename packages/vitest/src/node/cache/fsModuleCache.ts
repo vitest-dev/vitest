@@ -40,6 +40,8 @@ export class FileSystemModuleCache {
 
   private version = '1.0.0-beta.5'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
+  // sha1 of everything in the cache key that depends only on the environment
+  // (serialized config, config file contents, versions), computed once
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
   private warnedDeprecatedIgnore = new Set<string>()
@@ -228,9 +230,9 @@ export class FileSystemModuleCache {
     // coverage provider is dynamic, so we also clear the whole cache if
     // vitest.enableCoverage/vitest.disableCoverage is called
     const coverageAffectsCache = String(this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id))
-    let cacheConfig = this.fsEnvironmentHashMap.get(environment)
-    if (!cacheConfig) {
-      cacheConfig = JSON.stringify(
+    let environmentHash = this.fsEnvironmentHashMap.get(environment)
+    if (!environmentHash) {
+      const cacheConfig = JSON.stringify(
         {
           root: config.root,
           // at the moment, Vitest always forces base to be /
@@ -258,14 +260,20 @@ export class FileSystemModuleCache {
           return value
         },
       )
-      this.fsEnvironmentHashMap.set(environment, cacheConfig)
+      // The serialized config embeds the config files' contents and can run
+      // to hundreds of kilobytes; hashing it once per environment instead of
+      // once per module keeps key generation off the main thread's profile.
+      environmentHash = hash(
+        'sha1',
+        (process.env.NODE_ENV ?? '') + this.version + cacheConfig,
+        'hex',
+      )
+      this.fsEnvironmentHashMap.set(environment, environmentHash)
     }
 
     hashString += id
       + fileContent
-      + (process.env.NODE_ENV ?? '')
-      + this.version
-      + cacheConfig
+      + environmentHash
       + coverageAffectsCache
 
     const cacheKey = hash('sha1', hashString, 'hex')
