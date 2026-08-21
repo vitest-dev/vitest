@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 12, fail: 0 })
+    await assertTestCounts(page, { pass: 13, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -35,6 +35,10 @@ test.describe('ui', () => {
 
   test('viewport', async ({ page }) => {
     await testViewport(page)
+  })
+
+  test('popover', async ({ page }) => {
+    await testPopover(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -104,7 +108,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 12, fail: 0 })
+    await assertTestCounts(page, { pass: 13, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -113,6 +117,10 @@ test.describe('html reporter', () => {
 
   test('viewport', async ({ page }) => {
     await testViewport(page)
+  })
+
+  test('popover', async ({ page }) => {
+    await testPopover(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -232,6 +240,22 @@ async function testViewport(page: Page) {
   await expect(traceView).toBeVisible()
   await traceSteps.getByText('Render viewport').click()
   await expect(traceFrame.locator('.viewport-pass')).toBeVisible()
+}
+
+async function testPopover(page: Page) {
+  await openExplorerItem(page, 'popover')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step-name')
+  const traceFrame = traceView.frameLocator('iframe')
+  const popoverContent = traceFrame.getByText('Popover content')
+  await expect(traceView).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
+  await traceSteps.getByText('Render open popover').click()
+  await expect(popoverContent).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
 }
 
 async function testPseudoState(page: Page) {
