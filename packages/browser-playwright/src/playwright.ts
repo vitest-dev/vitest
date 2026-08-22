@@ -653,6 +653,19 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     await this._throwIfClosing(browserPage)
   }
 
+  async closePage(sessionId: string): Promise<void> {
+    const page = this.pages.get(sessionId)
+
+    if (!page) {
+      return
+    }
+
+    debug?.('[%s][%s] closing the page', sessionId, this.browserName)
+    this.pages.delete(sessionId)
+    await page.close()
+    // the context is closed with the provider, it can still hold pending tracing chunks
+  }
+
   private async _throwIfClosing(disposable?: { close: () => Promise<void> }) {
     if (this.closing) {
       debug?.('[%s] provider was closed, cannot perform the action on %s', this.browserName, String(disposable))

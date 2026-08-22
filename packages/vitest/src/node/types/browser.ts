@@ -52,6 +52,7 @@ export interface BrowserProvider {
   supportsParallelism: boolean
   getCommandsContext: (sessionId: string) => Record<string, unknown>
   openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
+  closePage?: (sessionId: string) => Awaitable<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
 }
