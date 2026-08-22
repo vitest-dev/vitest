@@ -50,21 +50,14 @@ export class CodeCache {
     this.entries.delete(identifier)
   }
 
-  /**
-   * Drops every entry. V8 validates cached data against a hash of its current
-   * flags, so everything stored before a runtime flag change would be rejected.
-   */
   clear(): void {
     this.entries.clear()
   }
 }
 
 /**
- * The `node:v8` module handed to code running inside the vm context:
- * `setFlagsFromString` changes the flag hash V8 checks cached data against, so
- * the wrapped version empties the code cache right after the real call. The
- * executors still handle a rejection (flags can change through paths this does
- * not see), this only keeps the common case from compiling everything twice.
+ * `node:v8` as seen inside the vm context: changing V8 flags invalidates every
+ * code cache produced so far, so `setFlagsFromString` also empties ours.
  */
 export function createV8ModuleWithCacheReset<T extends { setFlagsFromString: (flags: string) => void }>(
   v8: T,

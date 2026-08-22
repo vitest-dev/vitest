@@ -182,11 +182,8 @@ export class EsmExecutor {
         m = new SourceTextModule(code, { ...options, cachedData })
       }
       catch (error: any) {
-        // Unlike `vm.Script` (which only sets `cachedDataRejected`), a module
-        // throws when V8 rejects the cache - e.g. after a test changed V8 flags
-        // at runtime with `v8.setFlagsFromString()`, which alters the flag hash
-        // the cache is checked against for the rest of the worker's life.
-        // Drop the entry and compile from source.
+        // unlike vm.Script, a module throws when V8 rejects the cache (e.g. the
+        // V8 flags changed at runtime): compile from source instead
         if (error?.code !== 'ERR_VM_MODULE_CACHED_DATA_REJECTED') {
           throw error
         }

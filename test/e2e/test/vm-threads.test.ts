@@ -530,13 +530,9 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
-// The V8 code cache of an externalized ES module is reused for the next file
-// on the same worker. A test that changes V8 flags at runtime (a common way to
-// get `gc()` in a test) alters the flag hash V8 checks cached data against, and
-// unlike `vm.Script` a `SourceTextModule` throws when its cache is rejected.
-// Through `node:v8` inside the context the cache is cleared up front; a flag
-// change vitest cannot see (here: the worker realm's own `v8` binding) is
-// caught when the module is created and it is compiled from source instead.
+// changing V8 flags at runtime invalidates the module code cache shared across
+// files on a worker: via the context's `node:v8` the cache is cleared up front,
+// via anything else (here the worker realm's binding) the rejection is caught
 test.for([
   ['vmThreads', 'context'],
   ['vmForks', 'context'],
@@ -547,7 +543,6 @@ test.for([
   async ([pool, from]) => {
     const setFlags = from === 'context'
       ? `v8.setFlagsFromString('--expose-gc')`
-      // the un-patched builtin, reached around the vm context's module system
       : `process.getBuiltinModule('node:v8').setFlagsFromString('--expose-gc')`
     const testFile = `
       import v8 from 'node:v8'
