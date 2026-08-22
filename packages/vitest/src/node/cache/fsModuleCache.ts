@@ -38,7 +38,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.5'
+  private version = '1.0.0-beta.6'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -228,9 +228,9 @@ export class FileSystemModuleCache {
     // coverage provider is dynamic, so we also clear the whole cache if
     // vitest.enableCoverage/vitest.disableCoverage is called
     const coverageAffectsCache = String(this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id))
-    let cacheConfig = this.fsEnvironmentHashMap.get(environment)
-    if (!cacheConfig) {
-      cacheConfig = JSON.stringify(
+    let environmentHash = this.fsEnvironmentHashMap.get(environment)
+    if (!environmentHash) {
+      const cacheConfig = JSON.stringify(
         {
           root: config.root,
           // at the moment, Vitest always forces base to be /
@@ -258,14 +258,18 @@ export class FileSystemModuleCache {
           return value
         },
       )
-      this.fsEnvironmentHashMap.set(environment, cacheConfig)
+      // everything in the key that does not depend on the module, as one digest
+      environmentHash = hash(
+        'sha1',
+        (process.env.NODE_ENV ?? '') + this.version + cacheConfig,
+        'hex',
+      )
+      this.fsEnvironmentHashMap.set(environment, environmentHash)
     }
 
     hashString += id
       + fileContent
-      + (process.env.NODE_ENV ?? '')
-      + this.version
-      + cacheConfig
+      + environmentHash
       + coverageAffectsCache
 
     const cacheKey = hash('sha1', hashString, 'hex')
