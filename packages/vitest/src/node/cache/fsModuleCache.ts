@@ -38,10 +38,8 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.5'
+  private version = '1.0.0-beta.6'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
-  // sha1 of everything in the cache key that depends only on the environment
-  // (serialized config, config file contents, versions), computed once
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
   private warnedDeprecatedIgnore = new Set<string>()
@@ -260,9 +258,7 @@ export class FileSystemModuleCache {
           return value
         },
       )
-      // The serialized config embeds the config files' contents and can run
-      // to hundreds of kilobytes; hashing it once per environment instead of
-      // once per module keeps key generation off the main thread's profile.
+      // everything in the key that does not depend on the module, as one digest
       environmentHash = hash(
         'sha1',
         (process.env.NODE_ENV ?? '') + this.version + cacheConfig,
