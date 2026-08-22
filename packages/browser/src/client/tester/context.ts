@@ -10,7 +10,6 @@ import type {
   LocatorSelectors,
   MarkOptions,
   UserEvent,
-  UserEventWheelOptions,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
@@ -74,8 +73,29 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     tripleClick(element, options) {
       return convertToLocator(element).tripleClick(options)
     },
-    wheel(elementOrOptions: Element | Locator, options: UserEventWheelOptions) {
+    wheel(elementOrOptions, options) {
       return convertToLocator(elementOrOptions).wheel(options)
+    },
+    pointer(options) {
+      return ensureAwaited<void>(async () => {
+        const pointerOptions = await Promise.all(options.map(async (option) => {
+          if ('target' in option && option.target) {
+            const target = (await serializeElement(option.target))
+
+            return {
+              ...option,
+              target,
+            }
+          }
+
+          return option
+        }))
+
+        await triggerCommand<void>(
+          '__vitest_pointer',
+          [pointerOptions],
+        )
+      })
     },
     selectOptions(element, value, options) {
       return convertToLocator(element).selectOptions(value, options)
@@ -244,7 +264,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
     async paste() {
       await userEvent.paste(clipboardData)
     },
-    async wheel(element: Element | Locator, options: UserEventWheelOptions) {
+    async wheel(element, options) {
       const resolvedElement = isLocator(element) ? element.element() : element
       const resolvedOptions = resolveUserEventWheelOptions(options)
 
@@ -268,6 +288,10 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
       for (let count = 0; count < times; count += 1) {
         resolvedElement.dispatchEvent(wheelEvent)
       }
+    },
+    async pointer(options) {
+      // @todo
+      const _ = options
     },
   }
 
