@@ -65,8 +65,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
         return {
           code: s.toString(),
           map: s.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
-          // readable by the server through `pluginContainer.getModuleInfo(id).meta`
-          // (the vm-pool module graph prewarm skips factory-mocked subtrees)
+          // read by the vm-pool module graph prewarm
           meta: { vitestStaticMocks: staticMocks },
         }
       }

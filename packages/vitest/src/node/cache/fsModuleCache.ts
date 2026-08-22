@@ -409,14 +409,12 @@ export interface CachedInlineModuleMeta {
   mappings: boolean
   importedUrls: string[]
   moduleType?: ModuleType
-  /** what the vm-pool module-graph prewarm must know to skip work the worker never requests */
   prewarm?: CachedPrewarmHints
 }
 
 export interface CachedPrewarmHints {
   /** urls this module only imports with `import()` */
   dynamicDeps?: string[]
-  /** `vi.mock`/`vi.unmock` calls with a static specifier, as seen by the hoistMocks transform */
   staticMocks?: { method: string; specifier: string; hasFactory: boolean; factoryLoadsOriginal: boolean }[]
 }
 

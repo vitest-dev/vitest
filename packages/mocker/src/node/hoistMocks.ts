@@ -17,24 +17,15 @@ import { relative } from 'pathe'
 import { esmWalker } from './esmWalker'
 
 export interface StaticMockCall {
-  /** `mock` or `unmock` (one of `hoistableMockMethodNames`) */
   method: string
-  /** the first argument when it is statically known: `vi.mock('./x')`, `vi.mock(import('./x'))` */
   specifier: string
-  /** a factory (second argument) was passed */
   hasFactory: boolean
-  /**
-   * the factory visibly loads the original module anyway: it declares a
-   * parameter (`importOriginal`) or calls `importActual` in its body
-   */
+  /** the factory takes `importOriginal` or calls `importActual` */
   factoryLoadsOriginal: boolean
 }
 
 export interface HoistMocksOptions {
-  /**
-   * Called for every hoisted `vi.mock`/`vi.unmock` call whose module specifier
-   * is a string literal (directly or inside `import()`).
-   */
+  /** called for every hoisted mock call with a string-literal specifier */
   onStaticMock?: (call: StaticMockCall) => void
   /**
    * List of modules that should always be imported before compiler hints.

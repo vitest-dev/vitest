@@ -25,11 +25,8 @@ const saveCachePromises = new Map<
 const readFilePromises = new Map<string, Promise<string | null>>()
 
 /**
- * What `prewarmModuleGraph` needs to skip modules a vm-pool worker never asks
- * for: children this module only reaches through `import()`, and (for a test
- * file) the specifiers it replaces with `vi.mock(specifier, factory)`. Read off
- * a freshly transformed node; persisted in the fs module cache so cache-hit
- * runs prune the same way.
+ * What `prewarmModuleGraph` uses to skip modules a worker never requests; read
+ * off a transformed node, or restored from the fs module cache on a hit.
  */
 export function getPrewarmHints(environment: DevEnvironment, node: EnvironmentModuleNode): CachedPrewarmHints | undefined {
   const result = node.transformResult as (TransformResult & { deps?: string[]; dynamicDeps?: string[]; __vitestStaticMocks?: CachedPrewarmHints['staticMocks'] }) | null
@@ -316,7 +313,6 @@ class ModuleFetcher {
       ssr: true,
       __vitestTmp: cachePath,
       __vitestModuleType: moduleType,
-      // the module-graph prewarm reads these off the node; see getPrewarmHints
       dynamicDeps: cachedModule.prewarm?.dynamicDeps,
       __vitestStaticMocks: cachedModule.prewarm?.staticMocks,
     }
@@ -619,7 +615,6 @@ declare module 'vite' {
     // `experimental.fsModuleCache` store or the forks pool's tmp copies
     __vitestTmp?: string
     __vitestModuleType?: ModuleType
-    /** static `vi.mock`/`vi.unmock` calls restored from the fs module cache (see getPrewarmHints) */
     __vitestStaticMocks?: CachedPrewarmHints['staticMocks']
   }
 }

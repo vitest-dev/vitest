@@ -178,18 +178,11 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       const seen = new Set<string>()
       const noSkips: ReadonlySet<string> = new Set()
 
-      // `skip` holds the ids a root test file replaces with `vi.mock(id, factory)`
-      // (unless the factory visibly loads the original via `importOriginal` /
-      // `importActual`): the worker never requests those modules (the factory
-      // answers instead), so neither they nor their subtrees are worth
-      // transforming for that file. Another root that imports them for real
-      // still fetches them.
+      // `skip`: ids the root test file replaces with a `vi.mock` factory; the
+      // worker never requests them, another root that imports them still does
       async function walkNode(node: EnvironmentModuleNode, skip: ReadonlySet<string>): Promise<void> {
         const children: Promise<unknown>[] = []
-        // `import()` targets are fetched by the worker only if and when the
-        // import executes; prewarming them would transform whole lazily-loaded
-        // subtrees most tests never touch. A module the importer ALSO imports
-        // statically is still walked.
+        // `import()`-only targets are fetched on demand if the import ever runs
         const dynamicOnly = getPrewarmHints(environment, node)?.dynamicDeps
         for (const child of node.importedModules) {
           if (child.url == null || seen.has(child.url)) {
@@ -235,15 +228,12 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           node = moduleGraph.getModuleById(url) ?? undefined
         }
         if (node) {
-          // a root is fetched before its mocks are known; resolve them now
           const rootSkip = skip === noSkips && importer === undefined ? await factoryMockedIds(node) : skip
           await walkNode(node, rootSkip)
         }
         return node
       }
 
-      // ids the test file mocks with a factory, as recorded by the hoistMocks
-      // transform (`vi.mock('./x', () => ...)`, `vi.mock(import('./x'), ...)`)
       async function factoryMockedIds(node: EnvironmentModuleNode): Promise<ReadonlySet<string>> {
         if (node.id == null) {
           return noSkips
@@ -261,7 +251,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
             }
           }
           catch {
-            // unresolvable here; the worker reports it if it matters
+            // left to the worker
           }
         }))
         return ids

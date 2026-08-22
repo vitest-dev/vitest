@@ -530,10 +530,8 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
-// The module graph prewarm walks a test file's import graph on the server. It
-// must not transform modules the worker will never request: the subtree behind
-// a `vi.mock(path, factory)` (the factory answers instead) and `import()`
-// targets that are only loaded if the import executes.
+// the prewarm must not transform what the worker never requests: the subtree
+// behind a `vi.mock(path, factory)` and never-executed `import()` targets
 test.for(['vmThreads', 'vmForks'] as const)(
   '%s prewarm skips factory-mocked and dynamically imported subtrees',
   async (pool) => {
