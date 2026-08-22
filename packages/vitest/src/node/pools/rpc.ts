@@ -178,10 +178,12 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       const seen = new Set<string>()
       const noSkips: ReadonlySet<string> = new Set()
 
-      // `skip` holds the ids a root test file replaces with `vi.mock(id, factory)`:
-      // the worker never requests those modules (the factory answers instead),
-      // so neither they nor their subtrees are worth transforming for that
-      // file. Another root that imports them for real still fetches them.
+      // `skip` holds the ids a root test file replaces with `vi.mock(id, factory)`
+      // (unless the factory visibly loads the original via `importOriginal` /
+      // `importActual`): the worker never requests those modules (the factory
+      // answers instead), so neither they nor their subtrees are worth
+      // transforming for that file. Another root that imports them for real
+      // still fetches them.
       async function walkNode(node: EnvironmentModuleNode, skip: ReadonlySet<string>): Promise<void> {
         const children: Promise<unknown>[] = []
         // `import()` targets are fetched by the worker only if and when the
@@ -246,7 +248,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         if (node.id == null) {
           return noSkips
         }
-        const specifiers = getPrewarmHints(environment, node)?.staticMocks?.filter(call => call.method === 'mock' && call.hasFactory)
+        const specifiers = getPrewarmHints(environment, node)?.staticMocks?.filter(call => call.method === 'mock' && call.hasFactory && !call.factoryLoadsOriginal)
         if (!specifiers?.length) {
           return noSkips
         }

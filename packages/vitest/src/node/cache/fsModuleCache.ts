@@ -417,7 +417,7 @@ export interface CachedPrewarmHints {
   /** urls this module only imports with `import()` */
   dynamicDeps?: string[]
   /** `vi.mock`/`vi.unmock` calls with a static specifier, as seen by the hoistMocks transform */
-  staticMocks?: { method: string; specifier: string; hasFactory: boolean }[]
+  staticMocks?: { method: string; specifier: string; hasFactory: boolean; factoryLoadsOriginal: boolean }[]
 }
 
 /**

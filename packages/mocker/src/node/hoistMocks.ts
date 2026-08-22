@@ -21,8 +21,13 @@ export interface StaticMockCall {
   method: string
   /** the first argument when it is statically known: `vi.mock('./x')`, `vi.mock(import('./x'))` */
   specifier: string
-  /** a factory (second argument) was passed, so the original module is never loaded */
+  /** a factory (second argument) was passed */
   hasFactory: boolean
+  /**
+   * the factory visibly loads the original module anyway: it declares a
+   * parameter (`importOriginal`) or calls `importActual` in its body
+   */
+  factoryLoadsOriginal: boolean
 }
 
 export interface HoistMocksOptions {
@@ -363,10 +368,16 @@ export function hoistMocks(
               specifierNode = specifierNode.source
             }
             if (specifierNode?.type === 'Literal' && typeof specifierNode.value === 'string') {
+              const factory = node.arguments[1] as Positioned<Expression> | undefined
+              const factoryLoadsOriginal = factory != null && (
+                ((factory.type === 'ArrowFunctionExpression' || factory.type === 'FunctionExpression') && factory.params.length > 0)
+                || code.slice(factory.start, factory.end).includes('importActual')
+              )
               options.onStaticMock({
                 method: methodName,
                 specifier: specifierNode.value,
-                hasFactory: node.arguments.length > 1,
+                hasFactory: factory != null,
+                factoryLoadsOriginal,
               })
             }
           }
