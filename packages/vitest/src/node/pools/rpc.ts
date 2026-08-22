@@ -1,3 +1,4 @@
+import type { StaticMockCall } from '@vitest/mocker/node'
 import type { DevEnvironment, EnvironmentModuleNode, FetchResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
@@ -175,32 +176,44 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     async prewarmModuleGraph(environmentName, files) {
       const environment = getEnvironment(environmentName)
       const moduleGraph = environment.moduleGraph
-      const seen = new Set<string>()
+      const noUrls = new Set<string>()
 
-      async function walkNode(node: EnvironmentModuleNode): Promise<void> {
-        const children: Promise<void>[] = []
-        for (const child of node.importedModules) {
-          if (child.url == null || seen.has(child.url)) {
-            continue
-          }
-          if (child.transformResult) {
-            seen.add(child.url)
-            children.push(walkNode(child))
-          }
-          else {
-            children.push(fetchNode(child.url, node.id ?? undefined))
-          }
-        }
-        if (children.length) {
-          await Promise.all(children)
-        }
+      // hoisted `vi.mock` calls of a file, as recorded by the hoistMocks plugin
+      // (`null`/`undefined`: the file was not hoisted)
+      function getStaticMocks(node: EnvironmentModuleNode): StaticMockCall[] | null | undefined {
+        return node.transformResult?.__vitestStaticMocks
+          ?? (node.id != null ? environment.pluginContainer.getModuleInfo(node.id)?.meta?.vitestStaticMocks : undefined)
       }
 
-      async function fetchNode(url: string, importer: string | undefined): Promise<void> {
-        if (seen.has(url)) {
-          return
+      // `import()` targets are only fetched if the import runs. hoistMocks
+      // rewrites the static imports of a hoisted file into `await import()`, so
+      // there every dependency counts as static.
+      function getDynamicOnlyDeps(node: EnvironmentModuleNode): Set<string> {
+        const result = node.transformResult
+        if (!result?.dynamicDeps?.length || getStaticMocks(node)) {
+          return noUrls
         }
-        seen.add(url)
+        const dynamicOnly = new Set(result.dynamicDeps)
+        result.deps?.forEach(url => dynamicOnly.delete(url))
+        return dynamicOnly
+      }
+
+      // the modules a test file replaces with an inline `vi.mock` factory are
+      // never requested by the worker while it runs that file
+      async function getMockedUrls(testFileNode: EnvironmentModuleNode): Promise<Set<string>> {
+        const mocks = getStaticMocks(testFileNode)?.filter(
+          mock => mock.method === 'mock' && mock.hasFactory && !mock.factoryLoadsOriginal,
+        )
+        if (!mocks?.length) {
+          return noUrls
+        }
+        const resolved = await Promise.all(mocks.map(mock =>
+          environment.pluginContainer.resolveId(mock.specifier, testFileNode.id ?? undefined).catch(() => null),
+        ))
+        return new Set(resolved.filter(r => r != null).map(r => normalizeResolvedIdToUrl(environment, r.id)))
+      }
+
+      async function load(url: string, importer: string | undefined): Promise<EnvironmentModuleNode | undefined> {
         try {
           await fetchModule(url, importer, environment, undefined, undefined, false)
         }
@@ -209,33 +222,49 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           // import context
           return
         }
-        let node: EnvironmentModuleNode | undefined
         try {
-          node = await moduleGraph.getModuleByUrl(url) ?? moduleGraph.getModuleById(url) ?? undefined
+          return await moduleGraph.getModuleByUrl(url) ?? moduleGraph.getModuleById(url)
         }
         catch {
-          node = moduleGraph.getModuleById(url) ?? undefined
-        }
-        if (node) {
-          await walkNode(node)
+          return moduleGraph.getModuleById(url)
         }
       }
 
-      await Promise.all([...files, ...project.config.setupFiles].map(async (file) => {
-        const nodes = moduleGraph.getModulesByFile(file)
-        if (nodes && nodes.size) {
-          await Promise.all(Array.from(nodes, (node) => {
-            if (node.transformResult) {
-              seen.add(node.url)
-              return walkNode(node)
+      // every root (test file or setup file) walks with its own `seen` and
+      // `skip`: a module one root mocks can still be needed by another
+      async function walkRoot(file: string): Promise<void> {
+        const seen = new Set<string>()
+        let skip = noUrls
+
+        async function walkNode(node: EnvironmentModuleNode): Promise<void> {
+          const dynamicOnly = getDynamicOnlyDeps(node)
+          const children: Promise<void>[] = []
+          for (const child of node.importedModules) {
+            if (child.url == null || seen.has(child.url) || skip.has(child.url) || dynamicOnly.has(child.url)) {
+              continue
             }
-            return fetchNode(node.url, undefined)
-          }))
+            seen.add(child.url)
+            children.push(child.transformResult
+              ? walkNode(child)
+              : load(child.url, node.id ?? undefined).then(loaded => loaded && walkNode(loaded)))
+          }
+          if (children.length) {
+            await Promise.all(children)
+          }
         }
-        else {
-          await fetchNode(file, undefined)
+
+        const nodes = moduleGraph.getModulesByFile(file)
+        for (const node of nodes?.size ? nodes : [undefined]) {
+          const root = node?.transformResult ? node : await load(node?.url ?? file, undefined)
+          if (root) {
+            seen.add(root.url)
+            skip = await getMockedUrls(root)
+            await walkNode(root)
+          }
         }
-      }))
+      }
+
+      await Promise.all([...files, ...project.config.setupFiles].map(file => walkRoot(file)))
     },
     async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]

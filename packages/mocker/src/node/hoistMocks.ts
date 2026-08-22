@@ -1,11 +1,14 @@
 import type {
+  ArrowFunctionExpression,
   AwaitExpression,
   CallExpression,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
   Expression,
+  FunctionExpression,
   Identifier,
   ImportDeclaration,
+  SpreadElement,
   VariableDeclaration,
 } from 'estree'
 import type { Rollup } from 'vite'
@@ -16,7 +19,18 @@ import MagicString from 'magic-string'
 import { relative } from 'pathe'
 import { esmWalker } from './esmWalker'
 
+export interface StaticMockCall {
+  method: string
+  specifier: string
+  /** an inline factory function was passed */
+  hasFactory: boolean
+  /** the factory takes `importOriginal` or calls `importActual` */
+  factoryLoadsOriginal: boolean
+}
+
 export interface HoistMocksOptions {
+  /** called for every hoisted mock call with a statically known specifier */
+  onStaticMock?: (call: StaticMockCall) => void
   /**
    * List of modules that should always be imported before compiler hints.
    * @default 'vitest'
@@ -340,6 +354,23 @@ export function hoistMocks(
               `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`,
             )
           }
+          if (options.onStaticMock) {
+            const specifier = getStaticSpecifier(node.arguments[0])
+            if (specifier != null) {
+              // only an inline function is known not to need the original module;
+              // `{ spy: true }` or a factory passed by reference may load it
+              const factory = node.arguments[1]?.type === 'ArrowFunctionExpression' || node.arguments[1]?.type === 'FunctionExpression'
+                ? node.arguments[1] as Positioned<ArrowFunctionExpression | FunctionExpression>
+                : undefined
+              options.onStaticMock({
+                method: methodName,
+                specifier,
+                hasFactory: factory != null,
+                factoryLoadsOriginal: factory != null
+                  && (factory.params.length > 0 || code.slice(factory.start, factory.end).includes('importActual')),
+              })
+            }
+          }
           // rewrite vi.mock(import('..')) into vi.mock('..')
           if (
             node.type === 'CallExpression'
@@ -609,4 +640,20 @@ function createIndexLocationsMap(source: string): Map<number, { line: number; co
     }
   }
   return map
+}
+
+// `'./x'`, `` `./x` ``, `import('./x')`, `await import('./x')`
+function getStaticSpecifier(node: Expression | SpreadElement | undefined): string | undefined {
+  if (node?.type === 'AwaitExpression') {
+    node = node.argument
+  }
+  if (node?.type === 'ImportExpression') {
+    node = node.source
+  }
+  if (node?.type === 'Literal' && typeof node.value === 'string') {
+    return node.value
+  }
+  if (node?.type === 'TemplateLiteral' && node.expressions.length === 0) {
+    return node.quasis[0].value.cooked ?? undefined
+  }
 }
