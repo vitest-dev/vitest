@@ -513,7 +513,13 @@ function getOwnServerReason(
     return 'the raw `test` options of the declaring config are not available'
   }
   if (options.extends !== undefined && options.extends !== true) {
-    return '`extends` doesn\'t point to the declaring config'
+    // a path back to the declaring config means the same as `extends: true`
+    const extendsDeclaringConfig = typeof options.extends === 'string'
+      && context.parentViteConfig.configFile !== undefined
+      && resolve(context.parentConfig.root, options.extends) === context.parentViteConfig.configFile
+    if (!extendsDeclaringConfig) {
+      return '`extends` doesn\'t point to the declaring config'
+    }
   }
   for (const key in options) {
     if (key === 'test' || key === 'extends') {

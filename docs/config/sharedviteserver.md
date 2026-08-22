@@ -13,7 +13,7 @@ Inline [projects](/guide/projects) that don't modify the Vite config reuse the V
 
 This option _only_ applies to inline projects. Projects referenced as config files or directories always resolve their own Vite config and create their own server.
 
-A project still gets its own Vite server when it defines Vite-level options that change the server (`plugins`, `resolve`, and so on), when its `extends` doesn't point to the declaring config, or when it defines test options that affect the Vite config:
+A project still gets its own Vite server when it defines Vite-level options that change the server (`plugins`, `resolve`, and so on), when its `extends` doesn't point to the declaring config (`extends: true` and a path that resolves to the declaring config file are equivalent), or when it defines test options that affect the Vite config:
 
 - [`alias`](/config/alias)
 - [`browser`](/config/browser/enabled)
