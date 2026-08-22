@@ -3,7 +3,7 @@ import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } f
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult, ModuleType, VitestFetchResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
-import type { FileSystemModuleCache } from '../cache/fsModuleCache'
+import type { CachedPrewarmHints, FileSystemModuleCache } from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -23,6 +23,30 @@ const saveCachePromises = new Map<
   Promise<VitestFetchResult | FetchCachedFileSystemResult>
 >()
 const readFilePromises = new Map<string, Promise<string | null>>()
+
+/**
+ * What `prewarmModuleGraph` uses to skip modules a worker never requests; read
+ * off a transformed node, or restored from the fs module cache on a hit.
+ */
+export function getPrewarmHints(environment: DevEnvironment, node: EnvironmentModuleNode): CachedPrewarmHints | undefined {
+  const result = node.transformResult as (TransformResult & { deps?: string[]; dynamicDeps?: string[]; __vitestStaticMocks?: CachedPrewarmHints['staticMocks'] }) | null
+  if (!result) {
+    return undefined
+  }
+  let dynamicDeps: string[] | undefined
+  if (result.dynamicDeps?.length) {
+    const staticDeps = new Set(result.deps)
+    dynamicDeps = result.dynamicDeps.filter(dep => !staticDeps.has(dep))
+  }
+  const staticMocks = result.__vitestStaticMocks
+    ?? (node.id != null
+      ? environment.pluginContainer.getModuleInfo(node.id)?.meta?.vitestStaticMocks as CachedPrewarmHints['staticMocks']
+      : undefined)
+  if (!dynamicDeps?.length && !staticMocks?.length) {
+    return undefined
+  }
+  return { dynamicDeps, staticMocks }
+}
 
 class ModuleFetcher {
   private tmpDirectories = new Set<string>()
@@ -148,7 +172,7 @@ class ModuleFetcher {
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    const cachedResult = await this.cacheResult(result, cachePath, importedUrls, !!mappings)
+    const cachedResult = await this.cacheResult(result, cachePath, importedUrls, !!mappings, getPrewarmHints(environment, moduleGraphModule))
     // remember where the code is stored on disk so that repeat fetches and the
     // `fetchWarmModules` snapshot can point at it in this session already, not
     // only after the cache is read back in the next one
@@ -289,6 +313,8 @@ class ModuleFetcher {
       ssr: true,
       __vitestTmp: cachePath,
       __vitestModuleType: moduleType,
+      dynamicDeps: cachedModule.prewarm?.dynamicDeps,
+      __vitestStaticMocks: cachedModule.prewarm?.staticMocks,
     }
 
     // we populate the module graph to make the watch mode work because it relies on importers
@@ -376,6 +402,7 @@ class ModuleFetcher {
     cachePath: string,
     importedUrls: string[] = [],
     mappings = false,
+    prewarm?: CachedPrewarmHints,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result
       ? getCachedResult(result, cachePath)
@@ -386,7 +413,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, importedUrls, mappings)
+      .saveCachedModule(cachePath, result, importedUrls, mappings, prewarm)
       .then(() => returnResult)
       .catch((error) => {
         debugFs?.(`failed to cache ${cachePath}, serving it inline: ${error}`)
@@ -588,5 +615,6 @@ declare module 'vite' {
     // `experimental.fsModuleCache` store or the forks pool's tmp copies
     __vitestTmp?: string
     __vitestModuleType?: ModuleType
+    __vitestStaticMocks?: CachedPrewarmHints['staticMocks']
   }
 }

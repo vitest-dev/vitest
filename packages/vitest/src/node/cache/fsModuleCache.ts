@@ -136,6 +136,7 @@ export class FileSystemModuleCache {
       importedUrls: meta.importedUrls,
       mappings: meta.mappings,
       moduleType: meta.moduleType,
+      prewarm: meta.prewarm,
     }
   }
 
@@ -144,6 +145,7 @@ export class FileSystemModuleCache {
     fetchResult: VitestFetchResult,
     importedUrls: string[] = [],
     mappings: boolean = false,
+    prewarm?: CachedPrewarmHints,
   ): Promise<void> {
     if ('code' in fetchResult) {
       const result = {
@@ -153,6 +155,7 @@ export class FileSystemModuleCache {
         importedUrls,
         mappings,
         moduleType: fetchResult.moduleType,
+        prewarm,
       } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
@@ -406,6 +409,13 @@ export interface CachedInlineModuleMeta {
   mappings: boolean
   importedUrls: string[]
   moduleType?: ModuleType
+  prewarm?: CachedPrewarmHints
+}
+
+export interface CachedPrewarmHints {
+  /** urls this module only imports with `import()` */
+  dynamicDeps?: string[]
+  staticMocks?: { method: string; specifier: string; hasFactory: boolean; factoryLoadsOriginal: boolean }[]
 }
 
 /**

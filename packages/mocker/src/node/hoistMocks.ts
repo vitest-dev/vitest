@@ -16,7 +16,17 @@ import MagicString from 'magic-string'
 import { relative } from 'pathe'
 import { esmWalker } from './esmWalker'
 
+export interface StaticMockCall {
+  method: string
+  specifier: string
+  hasFactory: boolean
+  /** the factory takes `importOriginal` or calls `importActual` */
+  factoryLoadsOriginal: boolean
+}
+
 export interface HoistMocksOptions {
+  /** called for every hoisted mock call with a string-literal specifier */
+  onStaticMock?: (call: StaticMockCall) => void
   /**
    * List of modules that should always be imported before compiler hints.
    * @default 'vitest'
@@ -339,6 +349,28 @@ export function hoistMocks(
               declarationNode,
               `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`,
             )
+          }
+          if (options.onStaticMock) {
+            let specifierNode = node.arguments[0] as Expression | undefined
+            if (specifierNode?.type === 'AwaitExpression') {
+              specifierNode = specifierNode.argument
+            }
+            if (specifierNode?.type === 'ImportExpression') {
+              specifierNode = specifierNode.source
+            }
+            if (specifierNode?.type === 'Literal' && typeof specifierNode.value === 'string') {
+              const factory = node.arguments[1] as Positioned<Expression> | undefined
+              const factoryLoadsOriginal = factory != null && (
+                ((factory.type === 'ArrowFunctionExpression' || factory.type === 'FunctionExpression') && factory.params.length > 0)
+                || code.slice(factory.start, factory.end).includes('importActual')
+              )
+              options.onStaticMock({
+                method: methodName,
+                specifier: specifierNode.value,
+                hasFactory: factory != null,
+                factoryLoadsOriginal,
+              })
+            }
           }
           // rewrite vi.mock(import('..')) into vi.mock('..')
           if (

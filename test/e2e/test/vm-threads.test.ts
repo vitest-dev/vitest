@@ -529,3 +529,44 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+// the prewarm must not transform what the worker never requests: the subtree
+// behind a `vi.mock(path, factory)` and never-executed `import()` targets
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s prewarm skips factory-mocked and dynamically imported subtrees',
+  async (pool) => {
+    const leaves = Object.fromEntries(
+      Array.from({ length: 20 }, (_, i) => [`heavy/leaf${i}.js`, `export const v${i} = ${i}`]),
+    )
+    const { stderr, exitCode, ctx } = await runInlineTests({
+      ...leaves,
+      'heavy/index.js': Array.from({ length: 20 }, (_, i) => `export * from './leaf${i}.js'`).join('\n'),
+      'lazy/index.js': Array.from({ length: 20 }, (_, i) => `export * from '../heavy/leaf${i}.js'`).join('\n'),
+      'consumer.js': `
+        import * as heavy from './heavy/index.js'
+        export const count = () => Object.keys(heavy).length
+        export const lazy = () => import('./lazy/index.js')
+      `,
+      'consumer.test.js': `
+        import { expect, test, vi } from 'vitest'
+        import { count } from './consumer.js'
+
+        vi.mock('./heavy/index.js', () => ({ a: 1 }))
+
+        test('uses the mock and never calls lazy()', () => {
+          expect(count()).toBe(1)
+        })
+      `,
+    }, {
+      pool,
+      fsModuleCache: true,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+    const transformed = [...ctx!.projects[0].vite.environments.ssr.moduleGraph.idToModuleMap.values()]
+      .filter(mod => mod.transformResult && /\/(?:heavy|lazy)\//.test(mod.id ?? ''))
+      .map(mod => mod.url)
+    expect(transformed).toEqual([])
+  },
+)
