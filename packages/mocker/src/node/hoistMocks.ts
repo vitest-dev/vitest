@@ -16,7 +16,21 @@ import MagicString from 'magic-string'
 import { relative } from 'pathe'
 import { esmWalker } from './esmWalker'
 
+export interface StaticMockCall {
+  /** `mock` or `unmock` (one of `hoistableMockMethodNames`) */
+  method: string
+  /** the first argument when it is statically known: `vi.mock('./x')`, `vi.mock(import('./x'))` */
+  specifier: string
+  /** a factory (second argument) was passed, so the original module is never loaded */
+  hasFactory: boolean
+}
+
 export interface HoistMocksOptions {
+  /**
+   * Called for every hoisted `vi.mock`/`vi.unmock` call whose module specifier
+   * is a string literal (directly or inside `import()`).
+   */
+  onStaticMock?: (call: StaticMockCall) => void
   /**
    * List of modules that should always be imported before compiler hints.
    * @default 'vitest'
@@ -339,6 +353,22 @@ export function hoistMocks(
               declarationNode,
               `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`,
             )
+          }
+          if (options.onStaticMock) {
+            let specifierNode = node.arguments[0] as Expression | undefined
+            if (specifierNode?.type === 'AwaitExpression') {
+              specifierNode = specifierNode.argument
+            }
+            if (specifierNode?.type === 'ImportExpression') {
+              specifierNode = specifierNode.source
+            }
+            if (specifierNode?.type === 'Literal' && typeof specifierNode.value === 'string') {
+              options.onStaticMock({
+                method: methodName,
+                specifier: specifierNode.value,
+                hasFactory: node.arguments.length > 1,
+              })
+            }
           }
           // rewrite vi.mock(import('..')) into vi.mock('..')
           if (

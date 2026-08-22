@@ -9,7 +9,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { isBuiltin, toBuiltin } from '../../utils/modules'
-import { handleRollupError } from '../environments/fetchModule'
+import { getPrewarmHints, handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
 
 interface MethodsOptions {
@@ -176,19 +176,35 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       const environment = getEnvironment(environmentName)
       const moduleGraph = environment.moduleGraph
       const seen = new Set<string>()
+      const noSkips: ReadonlySet<string> = new Set()
 
-      async function walkNode(node: EnvironmentModuleNode): Promise<void> {
-        const children: Promise<void>[] = []
+      // `skip` holds the ids a root test file replaces with `vi.mock(id, factory)`:
+      // the worker never requests those modules (the factory answers instead),
+      // so neither they nor their subtrees are worth transforming for that
+      // file. Another root that imports them for real still fetches them.
+      async function walkNode(node: EnvironmentModuleNode, skip: ReadonlySet<string>): Promise<void> {
+        const children: Promise<unknown>[] = []
+        // `import()` targets are fetched by the worker only if and when the
+        // import executes; prewarming them would transform whole lazily-loaded
+        // subtrees most tests never touch. A module the importer ALSO imports
+        // statically is still walked.
+        const dynamicOnly = getPrewarmHints(environment, node)?.dynamicDeps
         for (const child of node.importedModules) {
           if (child.url == null || seen.has(child.url)) {
             continue
           }
+          if (child.id != null && skip.has(child.id)) {
+            continue
+          }
+          if (dynamicOnly?.includes(child.url)) {
+            continue
+          }
           if (child.transformResult) {
             seen.add(child.url)
-            children.push(walkNode(child))
+            children.push(walkNode(child, skip))
           }
           else {
-            children.push(fetchNode(child.url, node.id ?? undefined))
+            children.push(fetchNode(child.url, node.id ?? undefined, skip))
           }
         }
         if (children.length) {
@@ -196,7 +212,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         }
       }
 
-      async function fetchNode(url: string, importer: string | undefined): Promise<void> {
+      async function fetchNode(url: string, importer: string | undefined, skip: ReadonlySet<string>): Promise<EnvironmentModuleNode | undefined> {
         if (seen.has(url)) {
           return
         }
@@ -217,23 +233,51 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           node = moduleGraph.getModuleById(url) ?? undefined
         }
         if (node) {
-          await walkNode(node)
+          // a root is fetched before its mocks are known; resolve them now
+          const rootSkip = skip === noSkips && importer === undefined ? await factoryMockedIds(node) : skip
+          await walkNode(node, rootSkip)
         }
+        return node
+      }
+
+      // ids the test file mocks with a factory, as recorded by the hoistMocks
+      // transform (`vi.mock('./x', () => ...)`, `vi.mock(import('./x'), ...)`)
+      async function factoryMockedIds(node: EnvironmentModuleNode): Promise<ReadonlySet<string>> {
+        if (node.id == null) {
+          return noSkips
+        }
+        const specifiers = getPrewarmHints(environment, node)?.staticMocks?.filter(call => call.method === 'mock' && call.hasFactory)
+        if (!specifiers?.length) {
+          return noSkips
+        }
+        const ids = new Set<string>()
+        await Promise.all(specifiers.map(async ({ specifier }) => {
+          try {
+            const resolved = await environment.pluginContainer.resolveId(specifier, node.id!)
+            if (resolved?.id) {
+              ids.add(resolved.id)
+            }
+          }
+          catch {
+            // unresolvable here; the worker reports it if it matters
+          }
+        }))
+        return ids
       }
 
       await Promise.all([...files, ...project.config.setupFiles].map(async (file) => {
         const nodes = moduleGraph.getModulesByFile(file)
         if (nodes && nodes.size) {
-          await Promise.all(Array.from(nodes, (node) => {
+          await Promise.all(Array.from(nodes, async (node) => {
             if (node.transformResult) {
               seen.add(node.url)
-              return walkNode(node)
+              return walkNode(node, await factoryMockedIds(node))
             }
-            return fetchNode(node.url, undefined)
+            return fetchNode(node.url, undefined, noSkips)
           }))
         }
         else {
-          await fetchNode(file, undefined)
+          await fetchNode(file, undefined, noSkips)
         }
       }))
     },
