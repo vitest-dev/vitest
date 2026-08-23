@@ -22,14 +22,12 @@ import { esmWalker } from './esmWalker'
 export interface StaticMockCall {
   method: string
   specifier: string
-  /** an inline factory function was passed */
   hasFactory: boolean
-  /** the factory takes `importOriginal` or calls `importActual` */
+  /** the factory uses `importOriginal`/`importActual` */
   factoryLoadsOriginal: boolean
 }
 
 export interface HoistMocksOptions {
-  /** called for every hoisted mock call with a statically known specifier */
   onStaticMock?: (call: StaticMockCall) => void
   /**
    * List of modules that should always be imported before compiler hints.
@@ -357,8 +355,7 @@ export function hoistMocks(
           if (options.onStaticMock) {
             const specifier = getStaticSpecifier(node.arguments[0])
             if (specifier != null) {
-              // only an inline function is known not to need the original module;
-              // `{ spy: true }` or a factory passed by reference may load it
+              // anything but an inline function may still load the original
               const factory = node.arguments[1]?.type === 'ArrowFunctionExpression' || node.arguments[1]?.type === 'FunctionExpression'
                 ? node.arguments[1] as Positioned<ArrowFunctionExpression | FunctionExpression>
                 : undefined
@@ -642,7 +639,6 @@ function createIndexLocationsMap(source: string): Map<number, { line: number; co
   return map
 }
 
-// `'./x'`, `` `./x` ``, `import('./x')`, `await import('./x')`
 function getStaticSpecifier(node: Expression | SpreadElement | undefined): string | undefined {
   if (node?.type === 'AwaitExpression') {
     node = node.argument

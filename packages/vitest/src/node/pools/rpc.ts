@@ -178,16 +178,13 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       const moduleGraph = environment.moduleGraph
       const noUrls = new Set<string>()
 
-      // hoisted `vi.mock` calls of a file, as recorded by the hoistMocks plugin
-      // (`null`/`undefined`: the file was not hoisted)
       function getStaticMocks(node: EnvironmentModuleNode): StaticMockCall[] | null | undefined {
         return node.transformResult?.__vitestStaticMocks
           ?? (node.id != null ? environment.pluginContainer.getModuleInfo(node.id)?.meta?.vitestStaticMocks : undefined)
       }
 
-      // `import()` targets are only fetched if the import runs. hoistMocks
-      // rewrites the static imports of a hoisted file into `await import()`, so
-      // there every dependency counts as static.
+      // `import()` targets load on demand; a hoisted file's imports are all
+      // rewritten to `import()`, so none of them count
       function getDynamicOnlyDeps(node: EnvironmentModuleNode): Set<string> {
         const result = node.transformResult
         if (!result?.dynamicDeps?.length || getStaticMocks(node)) {
@@ -198,8 +195,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         return dynamicOnly
       }
 
-      // the modules a test file replaces with an inline `vi.mock` factory are
-      // never requested by the worker while it runs that file
+      // modules the file replaces with an inline factory are never requested
       async function getMockedUrls(testFileNode: EnvironmentModuleNode): Promise<Set<string>> {
         const mocks = getStaticMocks(testFileNode)?.filter(
           mock => mock.method === 'mock' && mock.hasFactory && !mock.factoryLoadsOriginal,
@@ -230,8 +226,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         }
       }
 
-      // every root (test file or setup file) walks with its own `seen` and
-      // `skip`: a module one root mocks can still be needed by another
+      // per root: a module one root mocks can still be needed by another
       async function walkRoot(file: string): Promise<void> {
         const seen = new Set<string>()
         let skip = noUrls

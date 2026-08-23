@@ -597,7 +597,7 @@ declare module 'vite' {
     // `experimental.fsModuleCache` store or the forks pool's tmp copies
     __vitestTmp?: string
     __vitestModuleType?: ModuleType
-    // static `vi.mock` calls recorded by the hoistMocks plugin; null: not a hoisted file
+    // set by the hoistMocks plugin; null when the file was not hoisted
     __vitestStaticMocks?: StaticMockCall[] | null
   }
 }

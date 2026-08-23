@@ -61,8 +61,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
           options.onStaticMock?.(call)
         },
       })
-      // always reported: vite merges `meta` into the module's info and keeps
-      // it across re-transforms, so a file that lost its mocks must reset it
+      // vite keeps `meta` across re-transforms, so always reset it
       if (!s) {
         return { meta: { vitestStaticMocks: null } }
       }

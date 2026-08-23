@@ -576,8 +576,6 @@ test.for([
   },
 )
 
-// the prewarm must not transform what the worker never requests: the subtree
-// behind a `vi.mock(path, factory)` and never-executed `import()` targets
 test('prewarm skips factory-mocked and dynamically imported subtrees', async () => {
   const leaves = (dir: string) => Object.fromEntries(
     Array.from({ length: 5 }, (_, i) => [`${dir}/leaf${i}.js`, `export const v${i} = ${i}`]),
@@ -597,7 +595,6 @@ test('prewarm skips factory-mocked and dynamically imported subtrees', async () 
     'spied/index.js': barrel,
     'lazy/index.js': barrel,
     'setup-only/index.js': barrel,
-    // the setup file needs the real module the test file mocks
     'setup.js': `import './setup-only/index.js'`,
     'consumer.js': `
       export * as used from './used/index.js'
@@ -625,8 +622,7 @@ test('prewarm skips factory-mocked and dynamically imported subtrees', async () 
       const project = ctx.getRootProject()
       const rpc = createMethodsRPC(project)
       const testFile = resolve(root, 'consumer.test.js')
-      // a vm worker fetches the test file before the prewarm; preParse and IDE
-      // integrations transform it directly instead
+      // workers fetch the test file first; preParse transforms it directly
       if (prepare === 'fetch') {
         await rpc.fetch(testFile, undefined, 'ssr')
       }
@@ -647,7 +643,7 @@ test('prewarm skips factory-mocked and dynamically imported subtrees', async () 
   const subtree = (dir: string) => [`${dir}/index.js`, ...Array.from({ length: 5 }, (_, i) => `${dir}/leaf${i}.js`)]
   const expected = ['consumer.js', ...subtree('setup-only'), 'setup.js', ...subtree('spied'), ...subtree('used')]
   expect(await prewarmed('fetch')).toEqual(expected)
-  // again, served from the fs module cache
+  // fs module cache hit
   expect(await prewarmed('fetch')).toEqual(expected)
   expect(await prewarmed('transformRequest')).toEqual(expected)
 })
