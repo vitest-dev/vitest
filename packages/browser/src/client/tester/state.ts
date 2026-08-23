@@ -42,6 +42,7 @@ const state: WorkerGlobalState = {
   durations: {
     environment: 0,
     prepare: performance.now(),
+    fetch: 0,
   },
   providedContext: {},
 }

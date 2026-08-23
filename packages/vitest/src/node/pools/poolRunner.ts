@@ -184,6 +184,7 @@ export class PoolRunner {
     this._operationLock = createDefer()
 
     let startSpan: Span | undefined
+    const startedAt = performance.now()
     try {
       this._state = RunnerState.STARTING
 
@@ -233,6 +234,12 @@ export class PoolRunner {
       await startPromise
 
       this._state = RunnerState.STARTED
+
+      // record how long it took to spawn this worker, load its bundle and set up the
+      // environment, so the reporter can surface the cost of `isolate: true`
+      const { state } = this.project.vitest
+      state.startupTime += performance.now() - startedAt
+      state.workersSpawned += 1
     }
     catch (error: any) {
       this._state = RunnerState.START_FAILURE
@@ -270,8 +277,10 @@ export class PoolRunner {
     try {
       this._state = RunnerState.STOPPING
 
-      // Remove exit listener early to avoid "unexpected exit" errors during shutdown
+      // Remove exit and error listeners early to avoid "unexpected exit" and
+      // channel teardown errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
+      this.worker.off('error', this.emitWorkerError)
 
       const stopSpan = this.startTracesSpan('vitest.worker.stop')
       await this.withTimeout(

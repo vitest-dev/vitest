@@ -745,7 +745,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   project: {
     shorthand: 'p',
     description:
-      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.',
+      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`. A project runs if it matches no negated pattern and, when regular patterns are also given, matches at least one of them.',
     argument: '<name>',
     array: true,
   },
@@ -887,6 +887,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   strictTags: {
     description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
+  sharedViteServer: {
+    description: 'Let inline projects that don\'t modify the Vite config reuse the Vite server of the config that declares them. (default: `true`)',
+  },
 
   experimental: {
     description: 'Experimental features.',
@@ -949,6 +952,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       preParse: {
         description: 'Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)',
+      },
+      diagnostics: {
+        description: 'Print performance hints after the run when a configuration change would make it significantly faster. Hints never suggest changing options that were set explicitly. (default: `true`)',
+        argument: '',
+        subcommands: {
+          isolate: {
+            description: 'Print a hint estimating how much time `isolate: false` would save when `isolate: true` spends a significant amount of time spawning a worker per test file. (default: `true`)',
+          },
+          environment: {
+            description: 'Print a hint when re-creating a DOM environment for every test file dominates the run and a `vm` pool would set it up once per worker. (default: `true`)',
+          },
+          import: {
+            description: 'Print a hint when test files repeatedly evaluate the same module graph (typical for barrel-file imports) and `isolate: false` would evaluate it once per worker. (default: `true`)',
+          },
+          transform: {
+            description: 'Print a hint when transforming modules dominates the run and `fsModuleCache` would persist the results across runs. (default: `true`)',
+          },
+        },
       },
     },
   },

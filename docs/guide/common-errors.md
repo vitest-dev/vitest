@@ -217,3 +217,43 @@ export default defineConfig({
   },
 })
 ```
+
+## CommonJS source code is not fully supported
+
+Vitest is ESM-first. By default, source files run in Vite's [module runner](/config/experimental#experimental-vitemodulerunner), which provides CommonJS variables such as `require`, `module`, and `exports` for compatibility but does not reproduce Node.js CommonJS semantics completely.
+
+Calls to `require()` always use Node.js directly and leave the module runner. As a result:
+
+- Vite plugins, aliases, transforms, and module mocks do not apply to required files
+- requiring TypeScript or other files that Node.js cannot execute is not supported
+- importing and requiring the same file can evaluate it twice, which can break singleton state, object identity, or `instanceof` checks
+
+If your project uses CommonJS and doesn't need Vite transforms, set [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner) to `false` so the whole module graph is loaded by the native runtime:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      viteModuleRunner: false,
+    },
+  },
+})
+```
+
+If the application uses ESM source but imports a CommonJS package from the same monorepo, you can instead use [`server.deps.external`](/config/server#server-deps-external) to externalize the complete CommonJS package. This keeps its entry points and internal `require()` calls in the same native module cache. For example:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    server: {
+      deps: {
+        external: [/\/packages\/legacy-cjs\//],
+      },
+    },
+  },
+})
+```

@@ -1,3 +1,4 @@
+import type { ServerResponse } from 'node:http'
 import type { HtmlTagDescriptor, UserConfig, UserConfig as ViteUserConfig } from 'vite'
 import type { BrowserCommand, BrowserProviderOption, BrowserServerContribution, BrowserServerFactory, PluginHarness, ResolvedConfig } from 'vitest/node'
 import { createReadStream, readFileSync } from 'node:fs'
@@ -35,6 +36,18 @@ export function defineBrowserCommand<T extends unknown[]>(
 export { assertBrowserApiWrite, assertBrowserFileAccess, parseKeyDef, resolveScreenshotPath } from './utils'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
+
+// pin a Cache-Control value and stop Vite's later middleware from overriding it
+function pinCacheControl(res: ServerResponse, value: string): void {
+  res.setHeader('Cache-Control', value)
+  const setHeader = res.setHeader.bind(res)
+  res.setHeader = function (name, ...args) {
+    if (name === 'Cache-Control') {
+      return res
+    }
+    return (setHeader as (...a: unknown[]) => ServerResponse)(name, ...args)
+  }
+}
 
 /**
  * The browser provider's `serverFactory`. Returns a `BrowserServerContribution`
@@ -219,20 +232,28 @@ body {
         )
       }
 
+      // vitest's own dist files only change with the vitest version and
+      // browser contexts don't outlive the process, so there is no reason
+      // to revalidate them in every tester iframe. Skipped for persistent
+      // contexts and preview providers — their disk cache would survive a vitest upgrade
+      const persistentContext = (parentServer.config.browser.provider?.options as { persistentContext?: unknown } | undefined)?.persistentContext
+      const immutablePrefixes = persistentContext || parentServer.config.browser.provider?.name === 'preview'
+        ? []
+        : ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
+
       server.middlewares.use((req, res, next) => {
-        // 9000 mega head move
-        // Vite always caches optimized dependencies, but users might mock
-        // them in _some_ tests, while keeping original modules in others
-        // there is no way to configure that in Vite, so we patch it here
-        // to always ignore the cache-control set by Vite in the next middleware
-        if (req.url && versionRegexp.test(req.url) && !req.url.includes('chunk-')) {
-          res.setHeader('Cache-Control', 'no-cache')
-          const setHeader = res.setHeader.bind(res)
-          res.setHeader = function (name, value) {
-            if (name === 'Cache-Control') {
-              return res
-            }
-            return setHeader(name, value)
+        const url = req.url
+        if (url) {
+          if (immutablePrefixes.some(prefix => url.startsWith(prefix))) {
+            pinCacheControl(res, 'public,max-age=31536000,immutable')
+          }
+          // 9000 mega head move
+          // Vite always caches optimized dependencies, but users might mock
+          // them in _some_ tests, while keeping original modules in others;
+          // there is no way to configure that in Vite, so we pin no-cache
+          // and ignore the cache-control Vite sets in the next middleware
+          else if (versionRegexp.test(url) && !url.includes('chunk-')) {
+            pinCacheControl(res, 'no-cache')
           }
         }
         next()
@@ -345,8 +366,7 @@ body {
 
   contribution.plugins = [
     ...BrowserPlugin(contribution),
-    // this plugin's `configureServer` is ignored since it's added through `applyToEnvironment`
-    interceptorPlugin({ registry: mockerRegistry }),
+    interceptorPlugin({ registry: mockerRegistry, registerWebSocketEvents: false }),
     {
       name: 'vitest:browser:framework-sourcemaps',
       enforce: 'post',
@@ -435,13 +455,18 @@ function resolveBrowserOptimizeDeps(
   // - vitest/browser, @vitest/browser/context, @vitest/browser/utils are
   //   VIRTUAL modules generated per-server (see pluginContext.ts) — optimizer
   //   cannot resolve/run their `load`, it would freeze stale/empty content.
-  // - vite/module-runner is small enough to not need pre-bundling.
   // - msw is a large, side-effectful service-worker library.
   const exclude = [
     'vitest/browser',
-    'vite/module-runner',
     '@vitest/browser/utils',
     '@vitest/browser/context',
+    // these are real modules, but they cannot be specified in
+    // `optimizeDeps.include`: `@vitest/browser` is only installed as a
+    // transitive dependency of provider-specific packages such as
+    // `@vitest/browser-playwright`, so the optimizer cannot resolve them
+    // from the project root
+    '@vitest/browser/locators',
+    '@vitest/browser/client',
     'msw',
     'msw/browser',
   ]
@@ -473,19 +498,20 @@ function resolveBrowserOptimizeDeps(
 
   // Pre-bundle the vitest runtime so the browser fetches a few optimized
   // chunks instead of ~20 separately-served dist chunks (faster startup).
-  // `vitest`, `vitest/internal/browser` and `@vitest/browser/client` are
-  // optimized together in a single pass, so esbuild dedupes their shared
-  // stateful chunks (the test collector, the runner, the RPC client) to a
-  // single instance — preserving module identity between the test files'
-  // `import 'vitest'` and the tester. Their transitive deps (@vitest/utils,
-  // @vitest/spy, pathe, tinyrainbow, …) are inlined into these bundles.
+  // `vitest` and `vitest/internal/browser` are optimized together in a single
+  // pass, so esbuild dedupes their shared stateful chunks (the test collector,
+  // the runner) to a single instance, preserving module identity between the
+  // test files' `import 'vitest'` and the tester. Their transitive deps
+  // (@vitest/utils, @vitest/spy, pathe, tinyrainbow, …) are inlined into
+  // these bundles.
   const include = [
     'vitest > expect-type',
     'vitest > magic-string',
     'vitest > chai',
+    'vitest > vite/module-runner',
     'vitest',
     'vitest/internal/browser',
-    '@vitest/browser/client',
+    'vitest/internal/traces',
   ]
 
   const provider = testConfig.browser?.provider

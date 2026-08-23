@@ -76,17 +76,23 @@ export interface WorkerGlobalState {
   current?: Task
   filepath?: string
   metaEnv: MetaEnv
+  metaDefines?: Record<string, any>
   environment: Environment
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>
   getterTracker?: GetterTracker
-  onCancel: (listener: (reason: CancelReason) => unknown) => void
+  onCancel: (listener: (reason: CancelReason) => unknown) => () => void
   onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>
   durations: {
     environment: number
     prepare: number
+    /**
+     * Wall time the worker spent blocked on module fetch requests to the
+     * server, measured as the union of in-flight intervals.
+     */
+    fetch: number
   }
   onFilterStackTrace?: (trace: string) => string
 }

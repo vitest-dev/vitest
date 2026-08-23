@@ -123,7 +123,7 @@ async function loadProviderModule(
  * provider module on first use. The result is cached for the lifetime of the
  * worker so a custom provider is imported at most once.
  */
-export function resolveBenchmarkProvider(
+function resolveBenchmarkProvider(
   config: SerializedConfig,
   moduleRunner: TestModuleRunner,
 ): Promise<BenchmarkProvider> {

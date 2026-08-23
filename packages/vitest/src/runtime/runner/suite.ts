@@ -207,10 +207,6 @@ export function getDefaultSuite(): SuiteCollector<object> {
   return defaultSuite
 }
 
-export function getTestFilepath(): string {
-  return currentTestFilepath
-}
-
 export function getRunner(): VitestRunner {
   assert(runner, 'the runner')
   return runner
@@ -436,8 +432,7 @@ function createSuiteCollector(
     }
 
     if (runner.config.includeTaskLocation) {
-      const error = stackTraceError.stack!
-      const stack = findTestFileStackTrace(currentTestFilepath, error)
+      const stack = findTestFileStackTrace(currentTestFilepath, stackTraceError)
       if (stack) {
         task.location = {
           line: stack.line,
@@ -523,7 +518,7 @@ function createSuiteCollector(
     if (runner && includeLocation && runner.config.includeTaskLocation) {
       const limit = Error.stackTraceLimit
       Error.stackTraceLimit = 15
-      const error = new Error('stacktrace').stack!
+      const error = new Error('stacktrace')
       Error.stackTraceLimit = limit
       const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
@@ -553,11 +548,22 @@ function createSuiteCollector(
 
     const allChildren: Task[] = []
 
+    let containsOnly = false
+    let containsTest = false
     for (const i of tasks) {
-      allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
+      const child = i.type === 'collector' ? await i.collect(file) : i
+      allChildren.push(child)
+      if (child.mode === 'only' || (child.type === 'suite' && child.containsOnly)) {
+        containsOnly = true
+      }
+      if (child.type === 'test' || (child.type === 'suite' && child.containsTest)) {
+        containsTest = true
+      }
     }
 
     suite.tasks = allChildren
+    suite.containsOnly = containsOnly
+    suite.containsTest = containsTest
 
     return suite
   }

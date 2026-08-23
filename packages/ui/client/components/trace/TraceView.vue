@@ -29,6 +29,35 @@ function onSelectStep(index: number) {
   }
 }
 
+function onStepKeydown(event: KeyboardEvent, index: number) {
+  let nextIndex: number
+  if (event.key === 'ArrowUp') {
+    nextIndex = Math.max(index - 1, 0)
+  }
+  else if (event.key === 'ArrowDown') {
+    nextIndex = Math.min(index + 1, entries.value.length - 1)
+  }
+  else if (event.key === 'Home') {
+    nextIndex = 0
+  }
+  else if (event.key === 'End') {
+    nextIndex = entries.value.length - 1
+  }
+  else {
+    return
+  }
+
+  event.preventDefault()
+  if (nextIndex === index) {
+    return
+  }
+  onSelectStep(nextIndex)
+  const nextButton = (event.currentTarget as HTMLButtonElement).parentElement?.children[nextIndex]
+  if (nextButton instanceof HTMLButtonElement) {
+    nextButton.focus()
+  }
+}
+
 watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
@@ -42,6 +71,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
   // but external resources (images, stylesheets) won't load without a server.
   const doc = iframe.contentDocument!
+  // TODO: rrweb also closes and opens the document during rebuild, so this reset may be redundant.
   doc.open()
   doc.close()
   const mirror = createMirror()
@@ -52,10 +82,16 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     mirror,
     UNSAFE_allowUnprotectedRebuild: true,
   })
+  // Close rrweb's parser after rebuilding. During page load, leaving it open
+  // prevents the parent load event, which browsers may show as an endless spinner.
+  doc.close()
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
-      const el = mirror.getNode(id) as Element | null
-      if (el?.classList) {
+      const el = mirror.getNode(id) as HTMLElement | null
+      if (className === ':popover-open') {
+        el?.showPopover?.()
+      }
+      else if (el?.classList) {
         el.classList.add(className)
       }
     }
@@ -143,18 +179,27 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
     class="h-full min-h-0"
   >
     <Pane :size="30" min-size="20">
-      <div class="h-full min-h-0 p-4" flex="~ col gap-1" overflow-auto>
+      <div
+        class="h-full min-h-0 p-4"
+        flex="~ col gap-1"
+        overflow-auto
+        role="listbox"
+        aria-label="Trace steps"
+      >
         <button
           v-for="(step, index) of entries"
           :key="index"
           type="button"
+          role="option"
           data-testid="trace-step"
           :data-test-range="step.range?.phase"
           class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
           :style="{ paddingInlineStart: `${0.5 + step.depth}rem` }"
-          :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
+          :aria-selected="selection.selectedStepIndex === index"
+          :tabindex="selection.selectedStepIndex === index ? 0 : -1"
           @click="onSelectStep(index)"
+          @keydown="onStepKeydown($event, index)"
         >
           <span
             v-if="step.depth > 0"

@@ -1,5 +1,4 @@
 import type { Plugin as VitePlugin } from 'vite'
-import type { CliOptions } from '../cli/cli-api'
 import type { PluginHarness } from '../config/pluginHarness'
 import { resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
@@ -9,9 +8,10 @@ import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
+import { resolveTestCacheDir } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
-export function VitestCorePlugin(harness: PluginHarness, options: CliOptions = {}): VitePlugin[] {
+export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
   return [
     {
       name: 'vitest:config:append',
@@ -22,11 +22,12 @@ export function VitestCorePlugin(harness: PluginHarness, options: CliOptions = {
       config: {
         order: 'post',
         handler(viteConfig) {
-          const root = resolve(options.root || viteConfig.test?.root || viteConfig.root || process.cwd())
+          const root = resolve(viteConfig.test?.root || viteConfig.root || process.cwd())
 
           return {
             base: '/',
             root,
+            cacheDir: resolveTestCacheDir(root, viteConfig.test || {}, viteConfig.cacheDir),
             build: {
               // Vitest doesn't use outputDir, but this value affects what folders are watched
               // https://github.com/vitejs/vite/pull/16453

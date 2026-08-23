@@ -9,17 +9,13 @@ outline: deep
 
 ## Migrating to Vitest 5.0 {#vitest-5}
 
-::: warning Work in progress
-Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
-:::
-
 ::: warning Prerequisites
 Vitest 5.0 requires Vite >= 6.4.0 and Node.js >= 22.12.0. Before proceeding with any other migration steps, ensure your environment meets these requirements. Running Vitest 5.0 on older versions of Vite or Node.js is not supported and may result in unexpected errors.
 :::
 
 ### `clearMocks` is Enabled by Default
 
-[`clearMocks`](/config/#clearmocks) now defaults to `true`. Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, resetting the `mock.calls`, `mock.instances`, `mock.contexts` and `mock.results` of every mock. Mock implementations are left intact, so this only affects the recorded history.
+[`clearMocks`](/config/clearmocks) now defaults to `true`: Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, clearing the recorded history of every mock while leaving implementations intact.
 
 In practice this means a mock no longer carries calls from one test into the next:
 
@@ -56,6 +52,25 @@ export default defineConfig({
 })
 ```
 
+### `testNamePattern` Matches the `>`-Joined Full Name
+
+[`testNamePattern`](/config/testnamepattern) (the `-t` CLI flag) now matches against the test's full name with the suite chain and test name joined by `' > '`, the same string shown in the reporter output. Previously the segments were joined with a single space, mirroring Jest.
+
+Only patterns that span the boundary between two segments are affected:
+
+```ts
+describe('math', () => {
+  test('adds', () => {})
+})
+```
+
+```bash
+vitest -t 'math adds' # [!code --]
+vitest -t 'math > adds' # [!code ++]
+```
+
+To keep a pattern working regardless of the separator, match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
 ### Inline Projects Inherit the Root Config by Default
 
 The [`extends`](/guide/projects#configuration) option now defaults to `true`: every project defined as an inline configuration in [`test.projects`](/guide/projects) inherits all options from the root configuration, including Vite options like `plugins` or `resolve.alias`. The options are merged with the same rules that applied to an explicit `extends: true` in Vitest 4:
@@ -81,15 +96,9 @@ export default defineConfig({
 })
 ```
 
-A few options are excluded because they are always scoped to a single project or to the whole test run:
-
-- `name` and `projects` are never inherited.
-- `globalSetup` is not inherited from the root config: the root-level `globalSetup` already runs once per test run, so inheriting it would run the same files again for every project. It is still inherited when extending a non-root config file.
-- The project's own `tags` replace the inherited array instead of being merged with it.
-
 Projects referenced as config files or directories are not affected; they still don't inherit any options from the root config.
 
-Keep in mind that arrays are merged, not overridden. For example, if the root config defines `setupFiles`, the project's own `setupFiles` are appended to the inherited ones. If you need the previous behavior, set `extends: false` in the project configuration:
+Keep in mind that arrays are merged, not overridden: if the root config defines `setupFiles`, the project's own `setupFiles` are appended to the inherited ones. See [the projects guide](/guide/projects#configuration) for the merge rules and the few options that are never inherited. If you need the previous behavior, set `extends: false` in the project configuration:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -105,6 +114,56 @@ export default defineConfig({
           setupFiles: ['./setup.unit.ts'],
         },
       },
+    ],
+  },
+})
+```
+
+### Referenced Config Files Can Define Their Own Projects
+
+A config file referenced in [`test.projects`](/guide/projects) that declares `projects` itself now provides the [nested projects](/guide/projects#nested-projects) it declares (named `app (unit)`, `app (e2e)`, and so on) instead of running tests as a single project.
+
+In Vitest 4 the `projects` field of a referenced config was silently ignored. Check that your project configs don't carry a `projects` field unknowingly. The most common way to do that is merging a config that defines it:
+
+```ts [packages/app/vitest.config.ts]
+import { defineProject, mergeConfig } from 'vitest/config'
+import rootConfig from '../../vitest.config' // [!code --]
+import sharedConfig from '../../vitest.shared' // [!code ++]
+
+export default mergeConfig(
+  // the root config defines `test.projects`, so merging it
+  // would turn this project into a container for those projects
+  rootConfig, // [!code --]
+  sharedConfig, // [!code ++]
+  defineProject({
+    test: {
+      environment: 'jsdom',
+    },
+  }),
+)
+```
+
+Since the inherited `projects` paths resolve relative to the referenced config, this misconfiguration usually fails loudly at startup with `Projects definition references a non-existing file or a directory`, `No projects were found in "..."`, or a circular `projects` definition error.
+
+Inline configurations continue to ignore the `projects` field at runtime, but it is now also excluded from their `ProjectConfig` type.
+
+### Inline Projects Share the Vite Server by Default
+
+Inline projects that don't modify the Vite config now reuse the Vite server of the config that declares them instead of resolving a new Vite config and creating a new server per project, so shared files are transformed once and tests run faster. This is controlled by the new [`sharedViteServer`](/config/sharedviteserver) option, which is enabled by default; its documentation lists the exact options that still give a project its own server.
+
+Note that this _only_ applies to inline projects. Projects referenced as config files or directories always resolve their own Vite config and create their own server, exactly as before.
+
+The observable change: when the server is shared, the declaring config file is executed once instead of once per project, so its plugins are instantiated once and their `config` hooks no longer run for every project. If a plugin relies on being re-instantiated per project, disable the sharing:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    sharedViteServer: false, // [!code ++]
+    projects: [
+      { test: { name: 'unit' } },
+      { test: { name: 'integration' } },
     ],
   },
 })
@@ -140,9 +199,33 @@ The dynamic variants [`vi.doMock`](/api/vi#vi-domock) and [`vi.doUnmock`](/api/v
 
 ### Automocked Modules Stay Automocked in the Browser
 
-In browser mode, mock metadata is serialized between Vitest and the test iframe. An automocked module (a [`vi.mock`](/api/vi#vi-mock) call with no factory) was incorrectly restored as a spy on the other side, so its exports kept calling the real implementation instead of the auto-generated stubs.
+In browser mode, the exports of an automocked module (a [`vi.mock`](/api/vi#vi-mock) call with no factory) incorrectly kept calling the real implementation instead of the auto-generated stubs. If a browser test relied on that, its exports now return `undefined` by default. Pass [`{ spy: true }`](/api/vi#vi-mock) to keep calling the real implementation while still tracking calls, or provide a factory with the behavior you need.
 
-Automocks are now restored as automocks. If a browser test relied on the original implementation running through an automocked module, its exports now return `undefined` by default. Pass [`{ spy: true }`](/api/vi#vi-mock) to keep calling the real implementation while still tracking calls, or provide a factory with the behavior you need.
+### Class Mocks Keep Prototype Methods
+
+Instances created from a class mock previously inherited from the mock's own empty `prototype`. Methods defined with the regular class syntax were `undefined` on instances, even inside the constructor, and `instanceof` checks against the implementation class failed. This affected [`vi.fn(Dog)`](/api/vi#vi-fn), `vi.spyOn(obj, 'Dog')` with or without a mock implementation, and [`.mockImplementation(class ...)`](/api/mock#mockimplementation).
+
+The mock's `prototype` is now chained to the implementation's prototype, so instances behave like instances of the implementation class:
+
+```ts
+class Dog {
+  speak() {
+    return 'bark!'
+  }
+}
+
+const MockedDog = vi.fn(Dog)
+const dog = new MockedDog()
+
+typeof dog.speak // was 'undefined', now 'function'
+dog instanceof Dog // was false, now true
+dog instanceof MockedDog // true, as before
+
+// the chain is visible on the mock itself
+Object.getPrototypeOf(MockedDog.prototype) // was Object.prototype, now Dog.prototype
+```
+
+Overriding methods on the mock's `prototype` still works and shadows the implementation, and [`mockReset`](/api/mock#mockreset) reverts the chain together with the implementation. See [Mocking Classes](/guide/mocking/classes) for details.
 
 ### Benchmarking API Rewrite
 
@@ -183,9 +266,9 @@ vitest --ui
 # UI started at http://localhost:51204/__vitest__/?token=...
 ```
 
-### Fake Timers Now Mock `Temporal`
+### Fake Timers and `setSystemTime` Now Mock `Temporal`
 
-Vitest now mocks the [`Temporal`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) API alongside `Date` when fake timers are enabled, following the [`@sinonjs/fake-timers` v15.4 update](https://github.com/sinonjs/fake-timers/blob/main/CHANGELOG.md#1540--2026-05-05). This only takes effect when `Temporal` is available on the global object — either natively (Node.js >= 26 by default, behind `--harmony-temporal` on older versions, and supporting browsers) or through a globally installed polyfill such as `import 'temporal-polyfill/global'`.
+Vitest now mocks the [`Temporal`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) API alongside `Date`, following the [`@sinonjs/fake-timers` v15.4 update](https://github.com/sinonjs/fake-timers/blob/main/CHANGELOG.md#1540--2026-05-05). This only takes effect when `Temporal` is available on the global object, natively or through a globally installed polyfill such as `import 'temporal-polyfill/global'`.
 
 Previously `Temporal.Now` kept returning the real wall-clock time even when [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers) was active. Now it follows the mocked clock:
 
@@ -195,19 +278,17 @@ vi.useFakeTimers({ now: 0 })
 Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 ```
 
-`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
-
-```ts
-vi.useFakeTimers({ toNotFake: ['Temporal'] })
-```
-
-### `setSystemTime` Now Mocks Temporal
-
-Previously `vi.setSystemTime` mocked only `Date` without fake timers, but now it also mocks methods of `Temporal.Now`.
+The same applies to [`vi.setSystemTime()`](/api/vi#vi-setsystemtime), which previously mocked only `Date` when used without fake timers:
 
 ```ts
 vi.setSystemTime(0)
 Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
+```
+
+`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
+
+```ts
+vi.useFakeTimers({ toNotFake: ['Temporal'] })
 ```
 
 ### `toThrow("")` Matches Any Error Message
@@ -229,28 +310,7 @@ expect(() => { throw new Error('boom') }).not.toThrow(/^$/)
 
 Assertion interfaces now use two type parameters: `R` is the matcher return type and `T` is the received value type. Synchronous assertions use `void`, while assertions accessed through `.resolves`, `.rejects`, [`expect.poll`](/api/expect#poll), or [`expect.element`](/api/browser/assertions) use `Promise<void>`.
 
-If you declare custom matchers, augment the `Matchers<R, T>` interface. It adds the matcher to instance assertions, asymmetric matchers, and the type accepted by `expect.extend`:
-
-```ts [vitest.d.ts]
-import 'vitest'
-
-interface CustomMatchers<R = unknown, T = unknown> {
-  toBeFoo: () => R
-  toEqualTyped: (expected: T) => R
-}
-
-declare module 'vitest' {
-  interface Matchers<R, T> extends CustomMatchers<R, T> {}
-}
-```
-
-This makes custom matcher return types reflect how the matcher is used:
-
-```ts
-const syncResult = expect('value').toEqualTyped('other') // void
-const asyncResult = expect(Promise.resolve('value')).resolves.toEqualTyped('other') // Promise<void>
-await asyncResult
-```
+If you declare custom matchers, augment the `Matchers<R, T>` interface as shown in [Extending Matchers](/guide/extending-matchers). It adds the matcher to instance assertions, asymmetric matchers, and the type accepted by `expect.extend`, and the matcher's return type reflects how it is used: `void` when called synchronously, `Promise<void>` through `.resolves` or `.rejects`.
 
 Code that refers to assertion types directly must also provide the return type first:
 
@@ -274,6 +334,21 @@ await expect.poll(async ({ signal }) => {
 ```
 
 A poll that legitimately needs more time should raise its `timeout`. Otherwise it fails with `expect.poll() function didn't resolve in time.` (or `expect.poll() assertion didn't resolve in time.`).
+
+### Unawaited Asynchronous Assertions Fail the Test
+
+Asynchronous assertions, like `resolves`, `rejects` and `toMatchFileSnapshot`, now fail the test if they are not awaited. Previously, Vitest auto-awaited them at the end of the test and printed a warning:
+
+```ts
+test('unawaited assertion', async () => {
+  // v4: prints a warning, the test passes // [!code --]
+  // v5: the test fails // [!code ++]
+  expect(promise).resolves.toBe(1) // [!code --]
+  await expect(promise).resolves.toBe(1) // [!code ++]
+})
+```
+
+The reported error points to the assertion that was not awaited.
 
 ### Test Titles and Inspected Values Use `pretty-format`
 
@@ -399,9 +474,7 @@ export default defineConfig({
 
 ### Coverage `include` and `exclude` Match More Precisely
 
-`coverage.include` and `coverage.exclude` were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. For example, a pattern could match a file because a parent directory in its absolute path happened to contain the same segment. Patterns are now matched against each file's path relative to the project root, without `contains`.
-
-A pattern with no glob wildcard is treated as a directory and expanded to match everything inside it:
+[`coverage.include`](/config/coverage#coverage-include) and `coverage.exclude` were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. Patterns are now matched against each file's path relative to the project root, without `contains`, and a pattern with no glob wildcard is treated as a directory that matches everything inside it:
 
 ```ts [vitest.config.ts]
 export default defineConfig({
@@ -445,17 +518,38 @@ Vitest no longer serves the browser orchestrator UI from a bare `/__vitest_test_
 
 If you manually opened the browser preview by copying the Vite server URL or visiting `/__vitest_test__/` directly, use the URL opened or printed by Vitest instead.
 
+### `browser.api` Is Replaced by the Top-Level `api`
+
+Browser mode now runs on a single Vite server configured by the top-level [`api`](/config/api) option; the default port in browser mode is still `63315`. The `browser.api` option is deprecated and no longer has any effect, so move its value to `api`:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    api: { port: 4444 }, // [!code ++]
+    browser: {
+      enabled: true,
+      api: { port: 4444 }, // [!code --]
+    },
+  },
+})
+```
+
+The already deprecated `browser.isolate` option now also prints a warning at startup; its value is still applied to the top-level [`isolate`](/config/isolate) option that replaces it.
+
 ### Generated Reports and Artifacts Use the `.vitest` Directory
 
 Vitest now uses a single `.vitest` directory at the project root as the shared artifact root, so one `.vitest` entry in `.gitignore` is enough. Defaults that moved this major:
 
 - **Attachments** ([`attachmentsDir`](/config/attachmentsdir)): `.vitest-attachements/` → `.vitest/attachments/`
+- **Failure screenshots** ([`screenshotFailures`](/config/browser/screenshotfailures)): `__screenshots__/` → `.vitest/attachments/failure-screenshots/`, so they are no longer mixed with the reference screenshots of `toMatchScreenshot`
 - **Blob reporter** and `--merge-reports`: `.vitest-reports/blob-*.json` → `.vitest/blob/blob-*.json`
 - **HTML reporter** ([`html`](/guide/reporters#html-reporter)): `html/index.html` → `.vitest/index.html`, and its option changed from `outputFile` (a file) to `outputDir` (a directory)
 - **JSON reporter** ([`json`](/guide/reporters#json-reporter)): stdout → `.vitest/json/output.json`
 - **JUnit reporter** ([`junit`](/guide/reporters#junit-reporter)): stdout → `.vitest/junit/output.xml`
 
-The `json` and `junit` reporters now write to a file by default instead of printing to stdout. If you previously relied on the report being printed to stdout (for example `vitest --reporter=json > out.json` or `vitest --reporter=json | jq`), either read the generated artifact file instead (for example `jq . .vitest/json/output.json`), or opt back into stdout with the reporter's `stdout` option (`reporters: [['json', { stdout: true }]]`). An explicit `outputFile` is still respected and unchanged.
+The `json` and `junit` reporters now write to a file by default instead of printing to stdout. If you piped the report (for example `vitest --reporter=json | jq`), read the artifact file instead, or opt back into stdout with the reporter's [`stdout` option](/guide/reporters#reporter-output) (`reporters: [['json', { stdout: true }]]`). An explicit `outputFile` is still respected and unchanged.
 
 ### `toMatchScreenshot` Now Uses a Dedicated Screenshot Directory Config
 
@@ -501,12 +595,28 @@ class MyReporter implements Reporter {
 
 Node.js and browser tests run in separate pools and do not share these ids, so the same value can appear in both.
 
+### `resolveConfig` Returns the Resolved Vite Config
+
+The [`resolveConfig`](/guide/advanced/#resolveconfig) helper from `vitest/node` no longer returns a `{ vitestConfig, viteConfig }` pair. It resolves the config without creating a Vite server and returns the resolved Vite config; the fully resolved Vitest config is available on its `test` property:
+
+```ts
+import { resolveConfig } from 'vitest/node'
+
+const { viteConfig, vitestConfig } = await resolveConfig(options) // [!code --]
+const viteConfig = await resolveConfig(options) // [!code ++]
+const vitestConfig = viteConfig.test // [!code ++]
+```
+
+The Vitest 4 limitations are gone: the returned config now includes fully resolved `projects`, and `viteConfig.test` no longer holds partially resolved options.
+
 ### Package Migration
 
 The following packages are deprecated as of this release. They will no longer receive feature updates, but security fixes will continue to be backported:
 
 - [`@vitest/runner`](https://npmx.dev/package/@vitest/runner)
 - [`@vitest/ws-client`](https://npmx.dev/package/@vitest/ws-client)
+
+`vitest` also no longer depends on [`@vitest/expect`](https://npmx.dev/package/@vitest/expect): the assertion code is bundled into `vitest` itself. The package is still published and usable on its own, but it no longer shares state with Vitest's `expect`. Interact with Vitest's assertions through the `vitest` entry point (`expect`, `expect.extend`, `chai`) instead.
 
 The [`@vitest/browser-webdriverio`](https://npmx.dev/package/@vitest/browser-webdriverio) provider has been moved to the [vitest-community](https://github.com/vitest-community/vitest-webdriverio) organization. Going forward, WebdriverIO support is community-maintained and addressed on a per-issue basis. If you use it, update your dependency to the new package and report any issues in the new repository.
 
@@ -594,6 +704,13 @@ Vitest's `test` names are joined with a `>` symbol to make it easier to distingu
 ```diff
 - `${describeTitle} ${testTitle}`
 + `${describeTitle} > ${testTitle}`
+```
+
+The same applies to [`testNamePattern`](/config/testnamepattern) (the `-t` flag): Vitest matches against the `>`-joined full name, while Jest matches the space-joined name. Update patterns that span a suite and a test accordingly, or match a single segment (`-t adds`) or use a wildcard between segments (`-t 'math.*adds'`).
+
+```diff
+- vitest -t 'math adds'
++ vitest -t 'math > adds'
 ```
 
 ### Envs

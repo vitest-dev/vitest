@@ -11,24 +11,18 @@ import { readFile } from 'node:fs/promises'
 import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
 import { join } from 'pathe'
 import { fetchModule } from 'vite'
+import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
 import { detectModuleType } from '../resolver'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
-const saveCachePromises = new Map<string, Promise<VitestFetchResult>>()
-const readFilePromises = new Map<string, Promise<string | null>>()
+const debugFs = createDebugger('vitest:cache:fs')
 
-/**
- * Tracks the wall time during which at least one transform is running.
- * Durations of individual fetches cannot be summed instead: concurrent
- * fetches (parallel workers, the vm pool graph prewarm) all wait on the same
- * deduplicated in-flight transforms, so per-caller wall times overcount the
- * actual work by orders of magnitude.
- */
-export interface TransformClock {
-  transformStarted: () => void
-  transformFinished: () => void
-}
+const saveCachePromises = new Map<
+  string,
+  Promise<VitestFetchResult | FetchCachedFileSystemResult>
+>()
+const readFilePromises = new Map<string, Promise<string | null>>()
 
 class ModuleFetcher {
   private tmpDirectories = new Set<string>()
@@ -42,7 +36,6 @@ class ModuleFetcher {
     private resolver: VitestResolver,
     private config: ResolvedConfig,
     private fsCache: FileSystemModuleCache,
-    private clock: TransformClock,
     private tmpProjectDir: string,
   ) {
     this.fsCacheEnabled = config.fsModuleCache === true
@@ -252,6 +245,13 @@ class ModuleFetcher {
     importer: string | undefined,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
     if (moduleGraphModule.transformResult?.__vitestTmp) {
+      if (!existsSync(moduleGraphModule.transformResult.__vitestTmp)) {
+        debugFs?.(
+          `cached file ${moduleGraphModule.transformResult.__vitestTmp} disappeared, re-transforming`,
+        )
+        moduleGraphModule.transformResult.__vitestTmp = undefined
+        return undefined
+      }
       return {
         cached: true as const,
         file: moduleGraphModule.file,
@@ -325,27 +325,21 @@ class ModuleFetcher {
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
   ): Promise<VitestFetchResult> {
-    this.clock.transformStarted()
-    try {
-      const moduleRunnerModule = await fetchModule(
-        environment,
-        url,
-        importer,
-        {
-          ...options,
-          inlineSourceMap: false,
-        },
-      ).catch(handleRollupError)
+    const moduleRunnerModule = await fetchModule(
+      environment,
+      url,
+      importer,
+      {
+        ...options,
+        inlineSourceMap: false,
+      },
+    ).catch(handleRollupError)
 
-      const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
-      if ('code' in result) {
-        result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
-      }
-      return result
+    const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
+    if ('code' in result) {
+      result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
     }
-    finally {
-      this.clock.transformFinished()
-    }
+    return result
   }
 
   private sourceLoader(file: string | null): (() => Promise<string | null>) | undefined {
@@ -388,21 +382,23 @@ class ModuleFetcher {
       : result
 
     if (saveCachePromises.has(cachePath)) {
-      await saveCachePromises.get(cachePath)
-      return returnResult
+      return saveCachePromises.get(cachePath)!
     }
 
     const savePromise = this.fsCache
       .saveCachedModule(cachePath, result, importedUrls, mappings)
-      .then(() => result)
+      .then(() => returnResult)
+      .catch((error) => {
+        debugFs?.(`failed to cache ${cachePath}, serving it inline: ${error}`)
+        return result
+      })
       .finally(() => {
         saveCachePromises.delete(cachePath)
       })
 
     saveCachePromises.set(cachePath, savePromise)
-    await savePromise
 
-    return returnResult
+    return savePromise
   }
 
   private readFileConcurrently(file: string): Promise<string | null> {
@@ -434,11 +430,10 @@ export function createFetchModuleFunction(
   resolver: VitestResolver,
   config: ResolvedConfig,
   fsCache: FileSystemModuleCache,
-  clock: TransformClock,
   traces: Traces,
   tmpProjectDir: string,
 ): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config, fsCache, clock, tmpProjectDir)
+  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
   return async (url, importer, environment, cacheFs, options, otelCarrier) => {
     await traces.waitInit()
     const context = otelCarrier

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { runBrowserTests } from './utils'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 test('fails gracefully when browser crashes', async () => {
   const { stderr } = await runBrowserTests({
@@ -7,8 +7,48 @@ test('fails gracefully when browser crashes', async () => {
     reporters: [['verbose', { isTTY: false }]],
   })
 
-  expect(stderr).toContain('Browser connection was closed while running tests. Was the page closed unexpectedly?')
+  // the crash is reported over CDP and as a websocket disconnect;
+  // whichever arrives first fails the run
+  expect(stderr).toMatch(
+    /page crashed while running tests|Browser connection was closed while running tests/,
+  )
 })
+
+// crashing the browser after `cancelCurrentRun` rejects the pending
+// `createTesters` call while `isCancelling` is set, so the run must
+// exit gracefully instead of reporting an unhandled error
+test.runIf(provider.name === 'playwright' && instances[0].browser !== 'webkit')(
+  'exits gracefully when the browser connection is closed while cancelling',
+  async () => {
+    const crashUrl = instances[0].browser === 'firefox' ? 'about:crashcontent' : 'chrome://crash'
+    const { ctx, stderr } = await runInlineBrowserTests(
+      {
+        'cancel.test.ts': `
+          import { commands } from 'vitest/browser'
+          import { test } from 'vitest'
+
+          test('cancels the run and crashes the browser', async () => {
+            await commands.cancelAndCrash()
+          })
+        `,
+      },
+      {
+        browser: {
+          instances: [instances[0]],
+          commands: {
+            async cancelAndCrash(context) {
+              context.project.vitest.cancelCurrentRun('keyboard-input')
+              await context.page.goto(crashUrl, { timeout: 1000 }).catch(() => {})
+            },
+          },
+        },
+      },
+    )
+
+    expect(ctx!.state.getUnhandledErrors()).toEqual([])
+    expect(stderr).not.toContain('Failed to run the test')
+  },
+)
 
 test('vitest bails out when the iframe is no longer accessible', async () => {
   const { stderr } = await runBrowserTests({

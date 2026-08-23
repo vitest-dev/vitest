@@ -13,7 +13,7 @@ test('server-url http', async () => {
   const url = ctx?.projects[0].vite.resolvedUrls?.local[0]
   expect(stderr).toBe('')
   expect.assert(url)
-  expect(new URL(url).port).toBe('51133')
+  expect(new URL(url).port).toBe('31133')
 })
 
 test('server-url https', async () => {
@@ -25,6 +25,6 @@ test('server-url https', async () => {
   expect(stderr).toBe('')
   const url = ctx?.projects[0].vite.resolvedUrls?.local[0]
   expect.assert(url)
-  expect(new URL(url).port).toBe('51122')
+  expect(new URL(url).port).toBe('31122')
   expect(stdout).toReportSummaryTestFiles({ passed: instances.length })
 })

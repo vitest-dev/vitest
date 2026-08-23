@@ -21,7 +21,7 @@ export type {
 } from '../node/core'
 export { BaseCoverageProvider } from '../node/coverage'
 export { createVitest } from '../node/create'
-export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
+export { BrowserConnectionError, GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export { Logger } from '../node/logger'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { resolveFsAllow } from '../node/plugins/utils'
@@ -71,7 +71,7 @@ export type {
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
 
-export type { JUnitOptions } from '../node/reporters/junit'
+export type { JUnitOptions, SuiteNameTemplateVariables } from '../node/reporters/junit'
 export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
@@ -85,6 +85,7 @@ export type {
   TestResult,
   TestResultFailed,
   TestResultPassed,
+  TestResultPending,
   TestResultSkipped,
   TestState,
   TestSuite,
@@ -117,6 +118,7 @@ export type {
   BrowserServerFactory,
   BrowserServerState,
   BrowserServerStateSession,
+  BrowserTraceViewOptions,
   CDPSession,
   ParentProjectBrowser,
   ProjectBrowser,

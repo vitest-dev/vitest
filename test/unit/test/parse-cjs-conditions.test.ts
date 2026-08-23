@@ -65,6 +65,20 @@ describe('parseCjsConditions', () => {
     expect(result).toEqual(new Set(['node', 'require', 'node-addons', 'custom']))
   })
 
+  it('includes module-sync when require(esm) is supported', () => {
+    const result = parseCjsConditions([], undefined, true)
+    expect(result).toEqual(new Set(['node', 'require', 'node-addons', 'module-sync']))
+  })
+
+  it('keeps user-specified module-sync when require(esm) is supported', () => {
+    const result = parseCjsConditions(
+      ['--conditions=module-sync', '--conditions=custom'],
+      undefined,
+      true,
+    )
+    expect(result).toEqual(new Set(['node', 'require', 'node-addons', 'module-sync', 'custom']))
+  })
+
   it('ignores unrelated execArgv entries', () => {
     const result = parseCjsConditions(
       ['--experimental-vm-modules', '-e', 'console.log("hi")'],

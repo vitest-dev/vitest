@@ -1872,9 +1872,7 @@ test('buyApples returns new stock id', async () => {
 ```
 
 :::warning
-If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
-
-Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
+If the assertion is not awaited, the test will be marked as "failed" at the end of the test.
 :::
 
 ## rejects
@@ -1903,9 +1901,7 @@ test('buyApples throws an error when no id provided', async () => {
 ```
 
 :::warning
-If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
-
-Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
+If the assertion is not awaited, the test will be marked as "failed" at the end of the test.
 :::
 
 ## expect.assertions
@@ -2020,6 +2016,28 @@ test.each(errorDirs)('build fails with "%s"', async (dir) => {
         expect.unreachable('All error test must be handled')
         break
     }
+  }
+})
+```
+
+## expect.fail
+
+- **Type:** `(message?: string) => never`
+
+Explicitly forces a test failure with an optional custom message.
+
+For example, you can use it inside a `try/catch` block to ensure an error was thrown:
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fails when error is not thrown', async () => {
+  try {
+    await performAction()
+    expect.fail('Expected performAction to throw an error')
+  }
+  catch (error) {
+    expect(error).toBeInstanceOf(CustomError)
   }
 })
 ```

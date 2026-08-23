@@ -22,16 +22,17 @@ import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
+import { setup as wsApiSetup } from '../api/setup'
 import { defaultBrowserPort } from '../constants'
 import { distDir } from '../paths'
 import { createTagsFilter } from '../runtime/runner/utils/tags'
 import { limitConcurrency } from '../utils/limit-concurrency'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
-import { convertTasksToEvents, getTasks, hasFailed, interpretTaskModes, someTasksAreOnly } from '../utils/tasks'
+import { convertTasksToEvents, getTasks, hasFailed, interpretTaskModes } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
@@ -255,7 +256,6 @@ export class Vitest {
       this._resolver,
       resolved,
       this._fsCache,
-      this.state,
       this._traces,
       this._tmpDir,
     )
@@ -335,13 +335,23 @@ export class Vitest {
         await this._restart()
       }
 
+      // container configs have no Vite server (and might be outside the root),
+      // so their files are watched explicitly
+      if (resolved._containerConfigFiles?.length) {
+        server.watcher.add(resolved._containerConfigFiles)
+      }
+
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
           || this.projects.some(p => p.vite.config.configFile === file)
+          || this.config._containerConfigFiles?.includes(file)
         if (isConfig) {
-          await this._restart('config')
+          // a floating rejection in an event handler would crash the process
+          await this._restart('config').catch((error) => {
+            this.logger.printError(error, { fullStack: true, type: 'Restart Error' })
+          })
         }
       })
 
@@ -365,14 +375,7 @@ export class Vitest {
     catch { }
   }
 
-  /**
-   * Phase B (projects) — instantiate `TestProject`s from the resolved entries
-   * and create their Vite servers, deduping by `viteConfig` identity. Run
-   * `configureVitest` hooks. Validate filters and project resolution. Set up
-   * the core workspace project, populate tags, build reporters.
-   *
-   * @internal
-   */
+  /** @internal */
   async _attachProjectServers(): Promise<void> {
     const resolved = this.config
     const entries = resolved.resolvedProjects || []
@@ -445,8 +448,22 @@ export class Vitest {
     // root-level browser server the API lives on the same shared httpServer and
     // is only needed when a UI (Vitest dashboard or browser orchestrator) is served.
     const apiNeeded = !this._rootBrowserParent || resolved.ui || resolved.browser.ui
-    if (resolved.api && resolved.watch && apiNeeded) {
-      (await import('../api/setup')).setup(this)
+    const rootApi = resolved.api && resolved.watch && apiNeeded
+    if (rootApi) {
+      wsApiSetup(this)
+    }
+
+    const attachedApiServers = new Set([rootApi ? this.vite.httpServer : null])
+    for (const project of this.projects) {
+      const browserServer = project.vite
+      if (
+        project.config.browser.ui
+        && browserServer?.httpServer
+        && !attachedApiServers.has(browserServer.httpServer)
+      ) {
+        attachedApiServers.add(browserServer.httpServer)
+        wsApiSetup(this, browserServer)
+      }
     }
 
     await this._fsCache.ensureCacheIntegrity()
@@ -670,9 +687,8 @@ export class Vitest {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
 
-      const { files, errors, coverages, executionTimes, transformTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
-      this.state.blobs = { files, errors, coverages, executionTimes, transformTimes }
-      this.state.transformTime = transformTimes.reduce((a, b) => a + b, 0)
+      const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+      this.state.blobs = { files, errors, coverages, executionTimes }
 
       await this.report('onInit', this)
 
@@ -1122,7 +1138,7 @@ export class Vitest {
       ? createTagsFilter(this.config.tagsFilter, this.config.tags)
       : undefined
     // Phase 2: cross-file .only resolution
-    const globalHasOnly = results.some(({ file }) => someTasksAreOnly(file))
+    const globalHasOnly = results.some(({ file }) => !!file.containsOnly)
     for (const { file, specification } of results) {
       const config = specification.project.config
       interpretTaskModes(
@@ -1146,7 +1162,7 @@ export class Vitest {
       return createFailedFileTask(specification.project, specification.moduleId, error)
     })
     const config = specification.project.config
-    const hasOnly = someTasksAreOnly(file)
+    const hasOnly = !!file.containsOnly
     const tagsFilter = this.config.tagsFilter
       ? createTagsFilter(this.config.tagsFilter, this.config.tags)
       : undefined
@@ -1433,6 +1449,10 @@ export class Vitest {
     }
 
     this._rerunTimer = setTimeout(async () => {
+      if (this.closingPromise) {
+        return
+      }
+
       if (this.watcher.changedTests.size === 0) {
         this.watcher.invalidates.clear()
         return
@@ -1538,6 +1558,12 @@ export class Vitest {
   public async close(): Promise<void> {
     if (!this.closingPromise) {
       this.closingPromise = (async () => {
+        // let an in-flight (re)run settle instead of tearing down under it:
+        // its file stats and transforms would race the teardown and reject
+        // after the caller already cleaned up the test files
+        clearTimeout(this._rerunTimer)
+        await this.runningPromise?.catch(noop)
+
         const teardownProjects = [...this.projects]
         if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
           teardownProjects.push(this.coreWorkspaceProject)

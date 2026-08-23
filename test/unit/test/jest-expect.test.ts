@@ -3,7 +3,7 @@ import nodeAssert, { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -364,6 +364,21 @@ describe('jest-expect', () => {
       Object.freeze(x.a)
       expect(x).toEqual(y)
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`)
+  })
+
+  it('fails cleanly when toHaveProperty receives a nullish value', () => {
+    expect(() => expect(null).toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got null]`,
+    )
+    expect(() => expect(null).not.toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got null]`,
+    )
+    expect(() => expect(undefined).toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got undefined]`,
+    )
+    expect(() => expect(undefined).not.toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toHaveProperty() expects to receive a valid object, but got undefined]`,
+    )
   })
 
   it('assertions', () => {
@@ -1232,12 +1247,6 @@ describe('async expect', () => {
   })
 
   describe('promise auto queuing', () => {
-    // silence warning
-    beforeAll(() => {
-      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      return () => spy.mockRestore()
-    })
-
     it.fails('fails', () => {
       expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
         .resolves
@@ -1246,7 +1255,7 @@ describe('async expect', () => {
 
     let value = 0
 
-    it('pass first', () => {
+    it.fails('not awaited fails', () => {
       expect((async () => {
         await new Promise(resolve => setTimeout(resolve, 500))
         value += 1
@@ -1256,8 +1265,7 @@ describe('async expect', () => {
         .toBe(1)
     })
 
-    it('pass second', () => {
-    // even if 'pass first' is sync, we will still wait the expect to resolve
+    it('not awaited assertion is still resolved', () => {
       expect(value).toBe(1)
     })
   })

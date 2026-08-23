@@ -1,6 +1,7 @@
 import type { ParsedSelector } from 'ivya'
 import type {
   LocatorByRoleOptions,
+  LocatorFilterOptions,
   LocatorOptions,
   LocatorScreenshotOptions,
   MarkOptions,
@@ -273,7 +274,7 @@ export abstract class Locator {
     return this.locator(getByTitleSelector(title, options))
   }
 
-  public filter(filter: LocatorOptions): Locator {
+  public filter(filter: LocatorFilterOptions): Locator {
     const selectors = []
 
     if (filter?.hasText) {

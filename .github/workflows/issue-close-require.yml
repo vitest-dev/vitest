@@ -32,4 +32,4 @@ jobs:
           actions: close-issues
           token: ${{ secrets.GITHUB_TOKEN }}
           labels: maybe automated
-          inactive-day: 3
+          inactive-day: 1

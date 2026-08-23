@@ -23,15 +23,18 @@ describe('Typechecker', () => {
         enabled: true,
         checker: resolve(
           import.meta.dirname,
-          '../fixtures/typecheck-crash/fake-tsc.mjs',
+          // Windows can't execute an .mjs file, the .cmd shim runs it with node
+          process.platform === 'win32'
+            ? '../fixtures/typecheck-crash/fake-tsc.cmd'
+            : '../fixtures/typecheck-crash/fake-tsc.mjs',
         ),
       },
     })
 
     // A checker that aborts (OOM) without producing diagnostics must NOT be
     // reported as passing — the run has to fail with a clear error. The abort
-    // surfaces as a signal (SIGABRT) on POSIX and as exit code 134 on Windows;
-    // both paths must be treated as an abnormal, failing exit.
+    // surfaces as a signal (SIGABRT) on POSIX and as a non-zero exit code on
+    // Windows; both paths must be treated as an abnormal, failing exit.
     expect(exitCode).toBe(1)
     expect(stderr).toContain('Typecheck Error')
     expect(stderr).toContain('before type checking finished')

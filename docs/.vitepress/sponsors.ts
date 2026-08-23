@@ -67,6 +67,11 @@ export const sponsors: SponsorTier[] = [
         url: 'https://aerius.se/',
         img: '/aerius.png',
       },
+      {
+        name: 'TestMu AI',
+        url: 'https://www.testmuai.com/?utm_medium=sponsor&utm_source=vitest-dev',
+        img: '/testmuai.svg',
+      },
     ],
   },
 ]

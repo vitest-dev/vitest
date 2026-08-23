@@ -42,8 +42,12 @@ const vitest = vi.defineHelper(async (options: TestUserConfig & { $viteConfig?: 
     vitestOptions,
   )
   onTestFinished(async () => {
-    await vitest.vite.waitForRequestsIdle()
-    await vitest.close()
+    try {
+      await vitest.vite.waitForRequestsIdle()
+    }
+    finally {
+      await vitest.close()
+    }
   })
   return vitest
 })
@@ -103,6 +107,21 @@ test('does not disable pre-transform requests in browser mode', async () => {
     client: undefined,
     server: undefined,
   })
+})
+
+test('pre-bundles vite module runner through vitest in browser mode', async () => {
+  const v = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+
+  expect(v.vite.config.optimizeDeps.include).toContain('vitest > vite/module-runner')
+  expect(v.vite.config.optimizeDeps.exclude).not.toContain('vite/module-runner')
 })
 
 test('disables pre-transform requests in node mode', async () => {
@@ -504,6 +523,67 @@ test('negation wildcard filter excludes all matching browser instances', async (
   })
   expect(projects.map(p => p.projectConfig.name)).toEqual([
     'other',
+  ])
+})
+
+test('negation filter excludes a single browser instance', async () => {
+  const projects = await config({
+    project: '!myproject (chromium)',
+    projects: [
+      {
+        test: {
+          name: 'myproject',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+      {
+        test: {
+          name: 'other',
+        },
+      },
+    ],
+  })
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
+    'other',
+    'myproject (firefox)',
+  ])
+})
+
+test('negation filter excludes a browser instance of a matching project', async () => {
+  const projects = await config({
+    project: ['myproject', '!myproject (chromium)'],
+    projects: [
+      {
+        test: {
+          name: 'myproject',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+      {
+        test: {
+          name: 'other',
+        },
+      },
+    ],
+  })
+  expect(projects.map(p => p.projectConfig.name)).toEqual([
+    'myproject (firefox)',
   ])
 })
 

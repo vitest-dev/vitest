@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { assertTestCounts, evaluateEditor, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 12, fail: 0 })
+    await assertTestCounts(page, { pass: 13, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -35,6 +35,10 @@ test.describe('ui', () => {
 
   test('viewport', async ({ page }) => {
     await testViewport(page)
+  })
+
+  test('popover', async ({ page }) => {
+    await testPopover(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -59,6 +63,14 @@ test.describe('ui', () => {
 
   test('attempts', async ({ page }) => {
     await testAttempts(page)
+  })
+
+  test('persists selection in URL', async ({ page }) => {
+    await testPersistsSelectionInURL(page)
+  })
+
+  test('persists attempt in URL', async ({ page }) => {
+    await testPersistsAttemptInURL(page)
   })
 })
 
@@ -96,7 +108,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 12, fail: 0 })
+    await assertTestCounts(page, { pass: 13, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -105,6 +117,10 @@ test.describe('html reporter', () => {
 
   test('viewport', async ({ page }) => {
     await testViewport(page)
+  })
+
+  test('popover', async ({ page }) => {
+    await testPopover(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -130,6 +146,14 @@ test.describe('html reporter', () => {
   test('attempts', async ({ page }) => {
     await testAttempts(page)
   })
+
+  test('persists selection in URL', async ({ page }) => {
+    await testPersistsSelectionInURL(page)
+  })
+
+  test('persists attempt in URL', async ({ page }) => {
+    await testPersistsAttemptInURL(page)
+  })
 })
 
 async function testBasic(page: Page) {
@@ -149,12 +173,13 @@ async function testBasic(page: Page) {
 
   // selecting steps should open source code view
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
-  await traceStepNames.getByText('Render simple').click()
+  await traceSteps.nth(0).click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
+  await expect(traceSteps.nth(0)).toBeFocused()
 
-  // verify editor cursor position
-  const getEditorCursor = () => evaluateEditor(page, editor => editor.getCursor())
-  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 33 })
+  // verify source location highlight
+  const activeLine = page.getByTestId('editor').locator('.CodeMirror-activeline')
+  await expect(activeLine).toContainText('Render simple')
 
   // markers ordered by 'test finished' > 'Render simple' > 'Render another'
   const traceEditorMarkers = page.getByTestId('editor').getByTestId('trace-editor-marker')
@@ -169,20 +194,32 @@ async function testBasic(page: Page) {
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
 
-  // selecting 2nd trace step and verify again
-  await traceStepNames.getByText('Render another').click()
+  // selecting 2nd trace step with keyboard and verify again
+  await traceSteps.nth(0).press('ArrowDown')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
-  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 33 })
-  await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(activeLine).toContainText('Render another')
+  await expect(traceSteps.nth(1)).toBeFocused()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')
+
+  await traceSteps.nth(1).press('End')
+  await expect(traceSteps.nth(2)).toBeFocused()
+  await expect(traceSteps.nth(2)).toHaveAttribute('aria-selected', 'true')
+  await traceSteps.nth(2).press('ArrowDown')
+  await expect(traceSteps.nth(2)).toBeFocused()
+  await traceSteps.nth(2).press('Home')
+  await expect(traceSteps.nth(0)).toBeFocused()
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await traceSteps.nth(0).press('ArrowUp')
+  await expect(traceSteps.nth(0)).toBeFocused()
 
   // selecting 1st trace step from editor and verify again
   await traceEditorMarkers.nth(1).click()
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
   await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
-  await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
@@ -203,6 +240,22 @@ async function testViewport(page: Page) {
   await expect(traceView).toBeVisible()
   await traceSteps.getByText('Render viewport').click()
   await expect(traceFrame.locator('.viewport-pass')).toBeVisible()
+}
+
+async function testPopover(page: Page) {
+  await openExplorerItem(page, 'popover')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step-name')
+  const traceFrame = traceView.frameLocator('iframe')
+  const popoverContent = traceFrame.getByText('Popover content')
+  await expect(traceView).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
+  await traceSteps.getByText('Render open popover').click()
+  await expect(popoverContent).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
 }
 
 async function testPseudoState(page: Page) {
@@ -325,4 +378,110 @@ async function testNested(page: Page) {
     'Sibling mark',
     'test finished',
   ])
+}
+
+async function testPersistsSelectionInURL(page: Page) {
+  await openExplorerItem(page, 'simple')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  // Opening a test selects its first trace step and persists it in the URL.
+  await expect(traceView).toBeVisible()
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+
+  // Reloading restores the auto-opened default step.
+  await page.reload()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // Selecting another trace step updates the URL and rendered snapshot.
+  await traceSteps.nth(1).click()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '1',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+
+  // Reloading preserves the same URL, selected step, and rendered snapshot.
+  await page.reload()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '1',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+
+  // Invalid attempt and step values fall back to the first available entry.
+  const invalidSelectionUrl = new URL(page.url())
+  const invalidParams = new URLSearchParams(invalidSelectionUrl.hash.split('?')[1])
+  invalidParams.set('traceAttempt', 'constructor')
+  invalidParams.set('traceStep', '999')
+  invalidSelectionUrl.hash = `/?${invalidParams}`
+  // Leave the app so the invalid URL exercises initialization, not hash navigation.
+  await page.goto('about:blank')
+  await page.goto(invalidSelectionUrl.href)
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceStep: '0',
+    test: testId,
+  })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // Closing removes only trace state and preserves the selected test.
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect(traceView).not.toBeVisible()
+  const params = getHashParams(page)
+  expect(params).toMatchObject({ test: testId })
+  expect(params).not.toHaveProperty('traceAttempt')
+  expect(params).not.toHaveProperty('traceStep')
+}
+
+async function testPersistsAttemptInURL(page: Page) {
+  await openExplorerItem(page, 'retried test')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  // Opening a retry writes its attempt key to the URL.
+  await page.getByTestId('trace-open-button').nth(1).click()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceAttempt: '0:1',
+    traceStep: '0',
+    test: testId,
+  })
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+
+  // Reloading preserves the same URL and selected retry snapshot.
+  await page.reload()
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceAttempt: '0:1',
+    traceStep: '0',
+    test: testId,
+  })
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+}
+
+function getHashParams(page: Page) {
+  const hash = new URL(page.url()).hash
+  return Object.fromEntries(new URLSearchParams(hash.split('?')[1]))
 }

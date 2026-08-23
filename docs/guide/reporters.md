@@ -741,6 +741,24 @@ export default defineConfig({
 })
 ```
 
+The job summary title defaults to `Vitest Test Report` or `(${test.name}) Vitest Test Report` when [`test.name` is set](/config/name).
+
+You can customize the title by setting `jobSummary.title` to distinguish multiple Vitest invocations that append to the same job summary. Please note that `test.name` will not be displayed when using a custom title.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          title: 'My Test Report',
+        },
+      }],
+    ],
+  },
+})
+```
+
 The flaky tests section of the summary includes permalink URLs that link test names directly to the relevant source lines on GitHub. These links are generated automatically using environment variables that GitHub Actions provides (`$GITHUB_REPOSITORY`, `$GITHUB_SHA`, and `$GITHUB_WORKSPACE`), so no configuration is needed in most cases.
 
 If you need to override these values — for example, when running in a container or a custom environment — you can customize them via the `fileLinks` option:

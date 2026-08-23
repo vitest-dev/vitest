@@ -78,3 +78,47 @@ describe('maxOutputLength', () => {
     `)
   })
 })
+
+test('printBasicPrototype', async () => {
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
+        import { expect, test } from 'vitest'
+
+        test('non default snapshot format', () => {
+          expect({ foo: ['bar'] }).toMatchInlineSnapshot()
+        })
+      `,
+    },
+    {
+      update: 'all',
+      snapshotFormat: {
+        printBasicPrototype: true,
+      },
+    },
+  )
+
+  expect(result.stderr).toBe('')
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "non default snapshot format": "passed",
+      },
+    }
+  `)
+  expect(result.fs.readFile('basic.test.ts')).toMatchInlineSnapshot(`
+    "
+            import { expect, test } from 'vitest'
+
+            test('non default snapshot format', () => {
+              expect({ foo: ['bar'] }).toMatchInlineSnapshot(\`
+                Object {
+                  \"foo\": Array [
+                    \"bar\",
+                  ],
+                }
+              \`)
+            })
+          "
+  `)
+})

@@ -161,6 +161,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       ?? globalConfig.slowTestThreshold
       ?? configDefaults.slowTestThreshold,
     disableColors: isAgent && !isForceColor(),
+    attachmentsDir: config.attachmentsDir,
   }
 }
 

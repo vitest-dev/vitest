@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest'
-import { CodeCache } from 'vitest/src/runtime/vm/code-cache.js'
+import { CodeCache, createV8ModuleWithCacheReset } from '../../../packages/vitest/src/runtime/vm/code-cache.js'
 
 test('returns the stored data only for the exact same source', () => {
   const cache = new CodeCache()
@@ -60,4 +60,25 @@ test('delete removes the entry', () => {
 
   cache.store('/mod.js', 'source', produce)
   expect(produce).toHaveBeenCalledTimes(2)
+})
+
+test('the vm-context v8 module clears the cache when flags change', () => {
+  const cache = new CodeCache()
+  const flags: string[] = []
+  const realV8 = {
+    setFlagsFromString: (flag: string) => {
+      flags.push(flag)
+    },
+    other: 1,
+  }
+  const patched = createV8ModuleWithCacheReset(realV8, cache)
+
+  cache.store('/mod.js', 'source', () => Buffer.from('cached'))
+  patched.setFlagsFromString('--expose-gc')
+
+  expect(flags).toEqual(['--expose-gc'])
+  expect(cache.get('/mod.js', 'source')).toBeUndefined()
+  expect(patched.other).toBe(1)
+  expect(patched).not.toBe(realV8)
+  expect(realV8.setFlagsFromString).not.toBe(patched.setFlagsFromString)
 })

@@ -1,11 +1,10 @@
 {
-  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "$schema": "./node_modules/knip/schema.json",
   "ignoreWorkspaces": [
     "examples/*",
     "test/e2e/dts/*",
     "test/e2e/fixtures/conditions-pkg"
   ],
-  "ignoreBinaries": ["yq"],
   "ignoreIssues": {
     "docs/.vitepress/blog.data.ts": ["files"],
     "docs/.vitepress/components/*.vue": ["files"],
@@ -92,14 +91,26 @@
       ]
     },
     "packages/vitest": {
-      "entry": ["*.{cjs,d.cts,d.ts,mjs}"],
+      // Keep src entries in sync with rollup.config.js: Knip does not read
+      // rollup configs here (the rollup plugin is not enabled per-workspace),
+      // and package.json exports only point to dist.
+      "entry": [
+        "*.{cjs,d.cts,d.ts,mjs}",
+        "src/paths.ts",
+        "src/public/*.ts",
+        "src/node/cli.ts",
+        "src/integrations/spy.ts",
+        "src/runtime/nodejsWorkerLoader.ts",
+        "src/runtime/runVmTests.ts",
+        "src/runtime/workers/*.ts",
+        "src/utils/tasks.ts"
+      ],
       "ignoreDependencies": [
         // Dynamically imported providers remain optional for Vitest users.
         "@vitest/browser-playwright",
         "@vitest/browser-preview",
         "@vitest/browser-webdriverio",
         "@vitest/ui",
-        "@types/chai",
         "chai",
         "why-is-node-running"
       ]

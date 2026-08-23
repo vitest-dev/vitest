@@ -8,7 +8,7 @@ import { getWorkerState } from './utils'
 
 const RealDate = globalThis.Date
 
-export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
+const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
 function getTaskIdByStack(root: string) {
   const stack = new Error('STACK_TRACE_ERROR').stack?.split('\n')

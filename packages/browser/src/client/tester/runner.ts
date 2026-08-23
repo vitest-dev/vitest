@@ -17,6 +17,7 @@ import type {
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
+import { basename, resolve } from 'pathe'
 import { recordArtifact, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
@@ -28,7 +29,7 @@ import {
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getTestName } from '../../../../vitest/src/utils/tasks'
-import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
+import { getBrowserState, getOrchestratorState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { recordBrowserTraceEntry } from './trace'
@@ -91,7 +92,7 @@ function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        getBrowserState().browserTraceDomSnapshot = await import('rrweb-snapshot')
+        getBrowserState().browserTraceDomSnapshot ??= await getOrchestratorState().browserTraceDomSnapshotPromise
         getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       }
       else {
@@ -195,7 +196,13 @@ function createBrowserRunner(
       ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
-        } as any /** TODO */).catch((err) => {
+          path: resolve(
+            this.config.attachmentsDir,
+            'failure-screenshots',
+            basename(task.file.filepath),
+            `${task.fullTestName.replace(/\W/g, '-')}.png`,
+          ),
+        }).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
