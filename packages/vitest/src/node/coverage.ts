@@ -345,11 +345,19 @@ export class BaseCoverageProvider {
   async cleanAfterRun(): Promise<void> {
     try {
       this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+      // Tolerate the directories being gone already, the same way `clean()`
+      // does. By this point the run's result is decided — reports are written
+      // and thresholds evaluated — so throwing here turns a passing run into
+      // a non-zero exit that looks exactly like a threshold failure.
+      await fs.rm(this.coverageFilesDirectory, { recursive: true, force: true })
 
       // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0) {
-        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      if (
+        existsSync(this.options.reportsDirectory)
+        && readdirSync(this.options.reportsDirectory).length === 0
+      ) {
+        await fs.rm(this.options.reportsDirectory, { recursive: true, force: true })
       }
     }
     finally {
