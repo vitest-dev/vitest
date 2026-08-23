@@ -194,6 +194,11 @@ test.describe('ui', () => {
     await testVisualRegression(page)
   })
 
+  test('report tab falls back to file report when a suite is selected', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testSuiteReportFallback(page)
+  })
+
   test('can edit file', async ({ page }) => {
     await page.goto(pageUrl)
     await testWriteFile(page, { enabled: true })
@@ -285,6 +290,11 @@ test.describe('html report', () => {
   test('visual regression in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
     await testVisualRegression(page)
+  })
+
+  test('report tab falls back to file report when a suite is selected', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testSuiteReportFallback(page)
   })
 
   test('cannot edit file', async ({ page }) => {
@@ -500,6 +510,16 @@ async function testError(page: Page) {
     /AssertionError: expected/,
     /Error: this-is-blue/,
   ])
+}
+
+async function testSuiteReportFallback(page: Page) {
+  const suite = getExplorerItem(page, 'suite')
+  await suite.hover()
+  await suite.getByTestId('btn-open-details').click()
+  await expect(page.getByTestId('editor')).toBeVisible()
+
+  await page.getByTestId('btn-report').click()
+  await expect(page.getByTestId('report')).toContainText('All tests passed in this file')
 }
 
 async function testTagsFilter(page: Page) {

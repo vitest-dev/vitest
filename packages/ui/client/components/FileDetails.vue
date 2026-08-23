@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RunnerTask, RunnerTestCase } from 'vitest'
+import type { RunnerTask } from 'vitest'
 import type { Params } from '~/composables/params'
 import { computed, ref } from 'vue'
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
@@ -26,9 +26,10 @@ import ViewTestReport from './views/ViewTestReport.vue'
 const draft = ref(false)
 
 const test = computed(() => {
-  return selectedTest.value
-    ? client.state.idMap.get(selectedTest.value) as RunnerTestCase
+  const task = selectedTest.value
+    ? client.state.idMap.get(selectedTest.value)
     : undefined
+  return task?.type === 'test' ? task : undefined
 })
 
 const failedSnapshot = computed(() => {
