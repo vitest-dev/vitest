@@ -7,6 +7,9 @@ import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { ModuleRunnerTransform } from './runnerTransform'
 import { getDefaultResolveOptions } from './utils'
+import { resolveEsbuildOptions, resolveOxcOptions } from './transformTarget'
+
+export { resolveEsbuildOptions, resolveOxcOptions } from './transformTarget'
 
 export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
   let root: string
@@ -75,24 +78,10 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
         if ('rolldownVersion' in vite) {
           // eslint-disable-next-line ts/ban-ts-comment
           // @ts-ignore rolldown-vite only
-          config.oxc = viteConfig.oxc === false
-            ? false
-            : {
-                // eslint-disable-next-line ts/ban-ts-comment
-                // @ts-ignore rolldown-vite only
-                target: viteConfig.oxc?.target || 'node18',
-              }
+          config.oxc = resolveOxcOptions(viteConfig.oxc)
         }
         else {
-          config.esbuild = viteConfig.esbuild === false
-            ? false
-            : {
-                // Lowest target Vitest supports is Node18
-                target: viteConfig.esbuild?.target || 'node18',
-                sourcemap: 'external',
-                // Enables using ignore hint for coverage providers with @preserve keyword
-                legalComments: 'inline',
-              }
+          config.esbuild = resolveEsbuildOptions(viteConfig.esbuild)
         }
 
         const classNameStrategy
