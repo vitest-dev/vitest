@@ -123,7 +123,7 @@ class ModuleFetcher {
       }
 
       const tmpFile = join(tmpDir, hash('sha1', result.id, 'hex'))
-      return this.cacheResult(result, tmpFile, transformResult ?? null).then((result) => {
+      return this.cacheResult(result, tmpFile, transformResult).then((result) => {
         if (transformResult) {
           transformResult.__vitestTmp = tmpFile
         }
@@ -149,7 +149,13 @@ class ModuleFetcher {
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    const cachedResult = await this.cacheResult(result, cachePath, moduleGraphModule.transformResult, importedUrls, !!mappings)
+    const cachedResult = await this.cacheResult(
+      result,
+      cachePath,
+      moduleGraphModule.transformResult,
+      importedUrls,
+      !!mappings,
+    )
     // remember where the code is stored on disk so that repeat fetches and the
     // `fetchWarmModules` snapshot can point at it in this session already, not
     // only after the cache is read back in the next one
