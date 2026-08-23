@@ -450,7 +450,19 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         }
       }
 
-      if (this.isIncluded(fileURLToPath(result.url))) {
+      // V8 can report coverage entries whose URL is not a `file:` URL
+      // (e.g. `about:/…` injected by RSC virtual modules, `data:` inline
+      // modules). `fileURLToPath` throws `ERR_INVALID_URL_SCHEME` on those
+      // and aborts the whole coverage run, so skip them here.
+      let filePath: string
+      try {
+        filePath = fileURLToPath(result.url)
+      }
+      catch {
+        continue
+      }
+
+      if (this.isIncluded(filePath)) {
         scriptCoverages.push({ ...result, url: decodeURIComponent(result.url) })
       }
     }
