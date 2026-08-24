@@ -34,8 +34,8 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
     67,
   ],
 )
-export const traceSizes = useLocalStorage<[steps: number, iframe: number]>(
-  'vitest-ui_splitpanes-traceSizes',
+export const traceViewSplitSizes = useLocalStorage<[steps: number, iframe: number]>(
+  'vitest-ui_splitpanes-traceViewSplitSizes',
   [30, 70],
 )
 

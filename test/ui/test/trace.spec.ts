@@ -539,7 +539,7 @@ function getRenderedTracePaneSizes(splitpanes: Locator) {
 
 function getStoredTracePaneSizes(page: Page): Promise<number[] | null> {
   return page.evaluate(() => {
-    const value = localStorage.getItem('vitest-ui_splitpanes-traceSizes')
+    const value = localStorage.getItem('vitest-ui_splitpanes-traceViewSplitSizes')
     const sizes = value ? JSON.parse(value) as number[] : null
     return sizes?.map(size => Number(size.toFixed(4))) ?? null
   })

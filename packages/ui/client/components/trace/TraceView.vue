@@ -4,7 +4,7 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
-import { traceSizes } from '~/composables/navigation'
+import { traceViewSplitSizes } from '~/composables/navigation'
 import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -176,7 +176,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
 
 function onTraceResized({ panes }: { panes: { size: number }[] }) {
   if (panes.length === 2) {
-    traceSizes.value = [panes[0].size, panes[1].size]
+    traceViewSplitSizes.value = [panes[0].size, panes[1].size]
   }
 }
 </script>
@@ -186,7 +186,7 @@ function onTraceResized({ panes }: { panes: { size: number }[] }) {
     class="h-full min-h-0"
     @resized="onTraceResized"
   >
-    <Pane :size="traceSizes[0]" min-size="20">
+    <Pane :size="traceViewSplitSizes[0]" min-size="20">
       <div
         class="h-full min-h-0 p-4"
         flex="~ col gap-1"
@@ -245,7 +245,7 @@ function onTraceResized({ panes }: { panes: { size: number }[] }) {
         </button>
       </div>
     </Pane>
-    <Pane :size="traceSizes[1]" min-size="20">
+    <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div class="h-full min-h-0" flex="~ col" overflow-auto>
         <iframe
           v-if="selectedStep"
