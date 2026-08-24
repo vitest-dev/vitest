@@ -511,20 +511,20 @@ async function testPersistsResizedTracePanes(page: Page) {
     throw new Error('Trace split panes are not visible')
   }
 
-  // Resizing the step list persists both pane sizes.
+  // Resize the step list from its 30% default to roughly 60% and persist both pane sizes.
   await page.mouse.move(
     splitterBox.x + splitterBox.width / 2,
     splitterBox.y + splitterBox.height / 2,
   )
   await page.mouse.down()
   await page.mouse.move(
-    traceViewBox.x + traceViewBox.width * 0.4,
+    traceViewBox.x + traceViewBox.width * 0.6,
     splitterBox.y + splitterBox.height / 2,
     { steps: 5 },
   )
   await page.mouse.up()
 
-  await expect.poll(async () => (await getStoredTracePaneSizes(page))?.[0]).toBeGreaterThan(35)
+  await expect.poll(async () => (await getStoredTracePaneSizes(page))?.[0]).toBeGreaterThan(55)
   const expectedTraceStepsBox = await traceSteps.boundingBox()
   if (!expectedTraceStepsBox) {
     throw new Error('Trace steps are not visible')
