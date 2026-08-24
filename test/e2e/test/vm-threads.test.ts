@@ -529,3 +529,47 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+// changing V8 flags at runtime invalidates the module code cache shared across
+// files on a worker: via the context's `node:v8` the cache is cleared up front,
+// via anything else (here the worker realm's binding) the rejection is caught
+test.for([
+  ['vmThreads', 'context'],
+  ['vmForks', 'context'],
+  ['vmThreads', 'worker realm'],
+  ['vmForks', 'worker realm'],
+] as const)(
+  '%s survives a runtime V8 flag change from the %s',
+  async ([pool, from]) => {
+    const setFlags = from === 'context'
+      ? `v8.setFlagsFromString('--expose-gc')`
+      : `process.getBuiltinModule('node:v8').setFlagsFromString('--expose-gc')`
+    const testFile = `
+      import v8 from 'node:v8'
+      import { expect, test } from 'vitest'
+      import { answer } from 'esm-dep'
+
+      test('imports the external module', () => {
+        expect(answer).toBe(42)
+        ${setFlags}
+      })
+    `
+    const { stderr, exitCode } = await runInlineTests({
+      'node_modules/esm-dep/package.json': JSON.stringify({
+        name: 'esm-dep',
+        type: 'module',
+        main: './index.js',
+      }),
+      'node_modules/esm-dep/index.js': `export const answer = 42\n${'// padding so V8 emits a code cache\n'.repeat(200)}`,
+      'a.test.js': testFile,
+      'b.test.js': testFile,
+      'c.test.js': testFile,
+    }, {
+      pool,
+      maxWorkers: 1,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)

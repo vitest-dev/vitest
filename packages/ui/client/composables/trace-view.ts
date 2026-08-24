@@ -213,6 +213,8 @@ const selectedTestTask = computed(() => {
 
 // Open/close only on selected-test navigation so the close button can clear the
 // trace view without being auto-opened again for the same selected test.
+// Flush synchronously so traceStep is set before the URL is updated.
+// Vueuse URL watcher pauses while writing and would otherwise miss the change.
 watch(selectedTest, (testId) => {
   if (testId) {
     const test = selectedTestTask.value
@@ -225,7 +227,7 @@ watch(selectedTest, (testId) => {
 
   // Close trace view when navigation moves away from a trace-enabled test.
   closeTrace()
-})
+}, { flush: 'sync' })
 
 // Keep the pane attached to the latest test object after reruns, and reset the
 // attempt selection because retries/repeats belong to one run.
