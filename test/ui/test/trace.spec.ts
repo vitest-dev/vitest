@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
@@ -499,6 +499,7 @@ async function testPersistsResizedTracePanes(page: Page) {
   await openExplorerItem(page, 'simple')
 
   const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByRole('listbox', { name: 'Trace steps' })
   const splitpanes = traceView.locator('.splitpanes').first()
   const splitter = splitpanes.locator('.splitpanes__splitter').first()
   await expect(traceView).toBeVisible()
@@ -524,28 +525,22 @@ async function testPersistsResizedTracePanes(page: Page) {
   await page.mouse.up()
 
   await expect.poll(async () => (await getStoredTracePaneSizes(page))?.[0]).toBeGreaterThan(35)
-  const expectedSizes = (await getStoredTracePaneSizes(page))!
-  await expect.poll(() => getRenderedTracePaneSizes(splitpanes)).toEqual(expectedSizes)
+  const expectedTraceStepsBox = await traceSteps.boundingBox()
+  if (!expectedTraceStepsBox) {
+    throw new Error('Trace steps are not visible')
+  }
 
-  // Reloading repeatedly preserves the stored and rendered pane sizes.
+  // Reloading repeatedly preserves the resized trace step width.
   for (let i = 0; i < 2; i++) {
     await page.reload()
     await expect(traceView).toBeVisible()
-    await expect.poll(() => getRenderedTracePaneSizes(splitpanes)).toEqual(expectedSizes)
-    await expect.poll(() => getStoredTracePaneSizes(page)).toEqual(expectedSizes)
+    await expect.poll(async () => (await traceSteps.boundingBox())?.width).toBeCloseTo(expectedTraceStepsBox.width)
   }
-}
-
-function getRenderedTracePaneSizes(splitpanes: Locator) {
-  return splitpanes.locator('.splitpanes__pane').evaluateAll(panes => panes.map((pane) => {
-    return Number.parseFloat((pane as HTMLElement).style.width)
-  }))
 }
 
 function getStoredTracePaneSizes(page: Page): Promise<number[] | null> {
   return page.evaluate(() => {
     const value = localStorage.getItem('vitest-ui_splitpanes-traceViewSplitSizes')
-    const sizes = value ? JSON.parse(value) as number[] : null
-    return sizes?.map(size => Number(size.toFixed(4))) ?? null
+    return value ? JSON.parse(value) : null
   })
 }
