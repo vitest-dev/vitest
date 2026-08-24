@@ -64,8 +64,7 @@
       ]
     },
     "packages/coverage-istanbul": {
-      "entry": ["src/{browser,index,provider}.ts"],
-      "ignoreDependencies": ["@babel/core"]
+      "entry": ["src/{browser,index,provider}.ts"]
     },
     "packages/coverage-v8": {
       "entry": ["src/{browser,index,provider}.ts"],

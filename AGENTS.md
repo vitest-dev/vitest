@@ -202,7 +202,7 @@ Other blocking CI jobs:
 - Add deps with `pnpm add <pkg>` inside the target package: `catalogMode: prefer` writes `catalog:` into package.json and adds the version to the default catalog in `pnpm-workspace.yaml` automatically. To bump a shared dep, edit its catalog entry, never per-package ranges.
 - The `overrides` in `pnpm-workspace.yaml` force one version of `vite`, `rollup`, `@types/node`, `acorn`, and `mlly` across the workspace; editing a range in an individual package.json changes what gets published, not what installs locally.
 - The workspace develops against the latest supported Vite major, but `vitest` supports the full peer range and CI runs a dedicated job against the previous major (`pnpm override-vite7` reproduces it locally). Do not rely on newest-Vite-only APIs without a fallback.
-- Deps listed under `patchedDependencies` (`acorn`, `cac`, `@sinonjs/fake-timers`, `rrweb-snapshot`, istanbul-lib-*) are version-locked. Bumping one requires regenerating the patch with `pnpm patch` and updating the version-keyed entry in `pnpm-workspace.yaml`.
+- Deps listed under `patchedDependencies` (`acorn`, `cac`, `@sinonjs/fake-timers`, `rrweb-snapshot`) are version-locked. Bumping one requires regenerating the patch with `pnpm patch` and updating the version-keyed entry in `pnpm-workspace.yaml`.
 - Dependency build scripts run only for packages listed under `allowBuilds` in `pnpm-workspace.yaml`; a new dep with a postinstall step installs unbuilt unless added there.
 - pnpm enforces a 24h `minimumReleaseAge`: installing a version published less than a day ago either resolves to an older version or appends the pick to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`. Both outcomes are expected; commit the yaml change instead of reverting it.
 

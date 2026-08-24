@@ -1,4 +1,4 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
 import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
@@ -6,10 +6,9 @@ import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeScriptCovs } from '@bcoe/v8-coverage'
+import * as libCoverage from '@vitest/istanbul-lib-coverage'
+import * as libReport from '@vitest/istanbul-lib-report'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
-import libCoverage from 'istanbul-lib-coverage'
-import libReport from 'istanbul-lib-report'
-import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
 import { normalize } from 'pathe'
@@ -156,13 +155,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     for (const reporter of this.options.reporter) {
       // Type assertion required for custom reporters
-      reports
-        .create(reporter[0] as Parameters<typeof reports.create>[0], {
+      const reportInstance = await libReport
+        .createAsync(reporter[0] as Parameters<typeof libReport.create>[0], {
           skipFull: this.options.skipFull,
           projectRoot: this.ctx.config.root,
           ...reporter[1],
         })
-        .execute(context)
+
+      reportInstance.execute(context)
     }
 
     if (this.options.thresholds) {
@@ -370,8 +370,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           return 'ignore-this-and-nested-nodes'
         }
       },
-    },
-    )
+    }) as libCoverage.CoverageMapData
   }
 
   private async getSources(

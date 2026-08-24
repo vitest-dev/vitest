@@ -1,5 +1,5 @@
+import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 import type { SnapshotSummary } from '@vitest/snapshot'
-import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Suite, TaskMeta, TaskState, TestBenchmark } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
