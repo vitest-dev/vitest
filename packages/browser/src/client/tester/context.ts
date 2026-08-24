@@ -9,6 +9,8 @@ import type {
   Locator,
   LocatorSelectors,
   MarkOptions,
+  PointerInput,
+  PointerInputNormalized,
   UserEvent,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
@@ -77,24 +79,32 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     wheel(elementOrOptions, options) {
       return convertToLocator(elementOrOptions).wheel(options)
     },
-    pointer(options) {
+    pointer(input) {
       return ensureAwaited<void>(async () => {
-        const pointerOptions = await Promise.all(options.map(async (option) => {
-          if ('target' in option && option.target) {
-            const target = (await serializeElement(option.target))
+        const inputArray = (Array.isArray(input) ? (input as Extract<PointerInput, any[]>) : [input])
+        // @todo make this type-safe
+        const serializedInputArray = await Promise.all(inputArray.map(async (input) => {
+          if (typeof input === 'object' && 'target' in input && input.target) {
+            const target = (await serializeElement(input.target))
 
             return {
-              ...option,
+              ...input,
               target,
             }
           }
 
-          return option
+          if (typeof input === 'string') {
+            return {
+              keys: input,
+            }
+          }
+
+          return input
         }))
 
         await triggerCommand<void>(
           '__vitest_pointer',
-          [pointerOptions],
+          [serializedInputArray],
         )
       })
     },
@@ -293,6 +303,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
     async pointer(options) {
       // @todo
       const _ = options
+      // await userEvent.pointer()
     },
   }
 

@@ -23,7 +23,7 @@ test('click triggers hover events', async ({ expect }) => {
   const target = page.getByRole("button")
 
   await userEvent.pointer([
-    { target, action: 'click' },
+    { target, keys: '[MouseLeft]' },
     { target: document.body },
   ])
 
@@ -51,7 +51,7 @@ test('click at coordinates triggers hover events', async ({ expect }) => {
   buttonElement.addEventListener('click', click)
 
   await userEvent.pointer([
-    { coordinates: { x: 11, y: 11 }, action: 'click' },
+    { coords: { x: 11, y: 11 }, keys: '[MouseLeft]' },
     { target: document.body },
   ])
 
@@ -84,8 +84,8 @@ test('moves between coordinates', async ({ expect }) => {
   b.addEventListener('mouseenter', enterB)
 
   await userEvent.pointer([
-    { coordinates: { x: 50, y: 50 } },
-    { coordinates: { x: 50, y: 250 } },
+    { coords: { x: 50, y: 50 } },
+    { coords: { x: 50, y: 250 } },
   ])
 
   expect(enterA).toHaveBeenCalledOnce()
@@ -111,7 +111,7 @@ test('down only fires mousedown event', async ({ expect }) => {
   const target = page.getByRole('button')
 
   await userEvent.pointer([
-    { target, action: 'down' },
+    { target, keys: '[MouseLeft>]' },
   ])
 
   expect(down).toHaveBeenCalledOnce()
@@ -120,10 +120,10 @@ test('down only fires mousedown event', async ({ expect }) => {
 })
 
 test.for([
-  { action: 'down' },
-  { action: 'up' },
-  { action: 'click' },
-] as const)('pointer $action action works with offsets', async ({ action }, { expect }) => {
+  { action: 'down', keys: '[MouseLeft>]' },
+  { action: 'up', keys: '[/MouseLeft]' },
+  { action: 'click', keys: '[MouseLeft]' },
+] as const)('pointer $action action works with offsets', async ({ action, keys }, { expect }) => {
   document.body.innerHTML = `
     <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
   `
@@ -135,7 +135,7 @@ test.for([
   buttonElement.addEventListener(action === 'click' ? 'click' : `mouse${action}`, spy)
 
   await userEvent.pointer([
-    { target: buttonElement, offset: { x: 10, y: 10 }, action },
+    { target: buttonElement, coords: { x: 10, y: 10 }, keys },
   ])
 
   expect(spy).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
@@ -160,7 +160,7 @@ test('multiple clicks trigger double click', async ({ expect }) => {
   const target = page.getByRole('button')
 
   await userEvent.pointer([
-    { target, action: 'click', times: 3 },
+    { target, keys: '[MouseLeft]'.repeat(3) },
   ])
 
   expect(click).toHaveBeenCalledTimes(3)
@@ -188,7 +188,7 @@ test('clicks with middle button', async ({ expect }) => {
   const target = page.getByRole('button')
 
   await userEvent.pointer([
-    { target, button: 'middle', action: 'click' },
+    { target, keys: '[MouseMiddle]' },
   ])
 
   expect(down).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
@@ -217,7 +217,7 @@ test('clicks with right button', async ({ expect }) => {
   const target = page.getByRole('button')
 
   await userEvent.pointer([
-    { target, button: 'right', action: 'click' },
+    { target, keys: '[MouseRight]' },
   ])
 
   expect(down).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
@@ -261,8 +261,8 @@ test('drags and drops', async ({ expect }) => {
   source.addEventListener('dragend', dragEnd)
 
   await userEvent.pointer([
-    { target: source, action: 'down' },
-    { target: dropTarget, action: 'up' },
+    { target: source, keys: '[MouseLeft>]' },
+    { target: dropTarget, keys: '[/MouseLeft]' },
   ])
 
   expect(dragStart).toHaveBeenCalledOnce()
@@ -288,8 +288,8 @@ test('temporary modifiers apply to one action', async ({ expect }) => {
   const target = page.getByRole('button')
 
   await userEvent.pointer([
-    { target, action: 'click', keys: '{ShiftLeft}' },
-    { target, action: 'click' },
+    { target, keys: '[ShiftLeft>][MouseLeft][/ShiftLeft]' },
+    { target, keys: '[MouseLeft]' },
   ])
 
   expect(click).toHaveBeenCalledTimes(2)
@@ -321,10 +321,10 @@ test('persistent modifiers survive multiple actions', async ({ expect }) => {
   d.addEventListener('click', clickD)
 
   await userEvent.pointer([
-    { target: a, action: 'click', keys: '{ShiftLeft>}{AltLeft>}' },
-    { target: b, action: 'click' },
-    { target: c, action: 'click', keys: '{/ShiftLeft}{/AltLeft}' },
-    { target: d, action: 'click' },
+    { target: a, keys: '[ShiftLeft>][AltLeft>][MouseLeft]' },
+    { target: b, keys: '[MouseLeft]' },
+    { target: c, keys: '[MouseLeft][/ShiftLeft][/AltLeft]' },
+    { target: d, keys: '[MouseLeft]' },
   ])
 
   expect(clickA).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ shiftKey: true, altKey: true }))
@@ -346,9 +346,8 @@ test('modifiers work with coordinates', async ({ expect }) => {
 
   await userEvent.pointer([
     {
-      coordinates: { x: 11, y: 11 },
-      action: 'click',
-      keys: '{AltLeft}',
+      coords: { x: 11, y: 11 },
+      keys: '[AltLeft>][MouseLeft][/AltLeft]',
     },
   ])
 
