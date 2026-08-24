@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
@@ -71,6 +71,10 @@ test.describe('ui', () => {
 
   test('persists attempt in URL', async ({ page }) => {
     await testPersistsAttemptInURL(page)
+  })
+
+  test('persists resized trace panes across reloads', async ({ page }) => {
+    await testPersistsResizedTracePanes(page)
   })
 })
 
@@ -153,6 +157,10 @@ test.describe('html reporter', () => {
 
   test('persists attempt in URL', async ({ page }) => {
     await testPersistsAttemptInURL(page)
+  })
+
+  test('persists resized trace panes across reloads', async ({ page }) => {
+    await testPersistsResizedTracePanes(page)
   })
 })
 
@@ -479,6 +487,62 @@ async function testPersistsAttemptInURL(page: Page) {
     test: testId,
   })
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+}
+
+async function testPersistsResizedTracePanes(page: Page) {
+  // Opening a trace renders resizable step list and iframe panes.
+  await openExplorerItem(page, 'simple')
+
+  const traceView = page.getByTestId('trace-view')
+  const splitpanes = traceView.locator('.splitpanes').first()
+  const splitter = splitpanes.locator('.splitpanes__splitter').first()
+  await expect(traceView).toBeVisible()
+  await expect(splitter).toBeVisible()
+
+  const splitpanesBox = await splitpanes.boundingBox()
+  const splitterBox = await splitter.boundingBox()
+  if (!splitpanesBox || !splitterBox) {
+    throw new Error('Trace split panes are not visible')
+  }
+
+  // Resizing the step list persists both pane sizes.
+  await page.mouse.move(
+    splitterBox.x + splitterBox.width / 2,
+    splitterBox.y + splitterBox.height / 2,
+  )
+  await page.mouse.down()
+  await page.mouse.move(
+    splitpanesBox.x + splitpanesBox.width * 0.4,
+    splitterBox.y + splitterBox.height / 2,
+    { steps: 5 },
+  )
+  await page.mouse.up()
+
+  await expect.poll(async () => (await getStoredTracePaneSizes(page))?.[0]).toBeGreaterThan(35)
+  const expectedSizes = (await getStoredTracePaneSizes(page))!
+  await expect.poll(() => getRenderedTracePaneSizes(splitpanes)).toEqual(expectedSizes)
+
+  // Reloading repeatedly preserves the stored and rendered pane sizes.
+  for (let i = 0; i < 2; i++) {
+    await page.reload()
+    await expect(traceView).toBeVisible()
+    await expect.poll(() => getRenderedTracePaneSizes(splitpanes)).toEqual(expectedSizes)
+    await expect.poll(() => getStoredTracePaneSizes(page)).toEqual(expectedSizes)
+  }
+}
+
+function getRenderedTracePaneSizes(splitpanes: Locator) {
+  return splitpanes.locator('.splitpanes__pane').evaluateAll(panes => panes.map((pane) => {
+    return Number.parseFloat((pane as HTMLElement).style.width)
+  }))
+}
+
+function getStoredTracePaneSizes(page: Page): Promise<number[] | null> {
+  return page.evaluate(() => {
+    const value = localStorage.getItem('vitest-ui_splitpanes-traceSizes')
+    const sizes = value ? JSON.parse(value) as number[] : null
+    return sizes?.map(size => Number(size.toFixed(4))) ?? null
+  })
 }
 
 function getHashParams(page: Page) {
