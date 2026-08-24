@@ -15,7 +15,6 @@ const entries = computed(() => props.trace.entries)
 const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
 
 const iframeEl = ref<HTMLIFrameElement>()
-let highlightEl: HTMLElement | undefined
 const iframeSandbox = computed(() => {
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
@@ -64,7 +63,6 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     return
   }
   const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
-  highlightEl = undefined
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
   // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
@@ -109,7 +107,6 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       iframe.contentWindow!.requestAnimationFrame(() => {
         const rect = (el as Element).getBoundingClientRect()
         const overlay = doc.createElement('div')
-        highlightEl = overlay
         overlay.setAttribute('data-testid', 'trace-view-highlight')
         overlay.style.cssText = `
           position: fixed;
@@ -131,8 +128,10 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 }, { immediate: true })
 
 watch(showTraceSelectorHighlight, (show) => {
-  if (highlightEl) {
-    highlightEl.style.display = show ? '' : 'none'
+  const overlay = iframeEl.value?.contentDocument
+    ?.querySelector<HTMLElement>('[data-testid="trace-view-highlight"]')
+  if (overlay) {
+    overlay.style.display = show ? '' : 'none'
   }
 })
 
