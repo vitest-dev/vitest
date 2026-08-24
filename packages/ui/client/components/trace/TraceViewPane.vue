@@ -2,7 +2,7 @@
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceTargetHighlight } from '~/composables/trace-view'
+import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceSelectorHighlight } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 
 const props = defineProps<{
@@ -27,7 +27,7 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
       </span>
       <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
         <input
-          v-model="showTraceTargetHighlight"
+          v-model="showTraceSelectorHighlight"
           type="checkbox"
         >
         <span>Show highlight</span>
@@ -43,7 +43,6 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
       v-if="trace"
       :trace="trace"
       :selection="selection"
-      :show-target-highlight="showTraceTargetHighlight"
     />
     <div v-else class="text-sm opacity-50 p-4">
       No trace found

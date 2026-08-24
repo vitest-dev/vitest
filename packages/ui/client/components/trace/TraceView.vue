@@ -4,12 +4,11 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
-import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
+import { getTraceEntryClass, selectActiveTraceStep, showTraceSelectorHighlight } from '~/composables/trace-view'
 
 const props = defineProps<{
   trace: NormalizedBrowserTraceData
   selection: TraceSelection
-  showTargetHighlight: boolean
 }>()
 
 const entries = computed(() => props.trace.entries)
@@ -124,14 +123,14 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
           border: 2px solid #3b82f6;
           box-sizing: border-box;
         `
-        overlay.style.display = props.showTargetHighlight ? '' : 'none'
+        overlay.style.display = showTraceSelectorHighlight.value ? '' : 'none'
         doc.documentElement.appendChild(overlay)
       })
     }
   }
 }, { immediate: true })
 
-watch(() => props.showTargetHighlight, (show) => {
+watch(showTraceSelectorHighlight, (show) => {
   if (highlightEl) {
     highlightEl.style.display = show ? '' : 'none'
   }

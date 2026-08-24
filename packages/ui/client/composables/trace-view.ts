@@ -30,8 +30,8 @@ export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
 }
 
 export const activeTraceView = ref<TraceSelection>()
-export const showTraceTargetHighlight = useLocalStorage(
-  'vitest-ui_trace-target-highlight',
+export const showTraceSelectorHighlight = useLocalStorage(
+  'vitest-ui_trace-selector-highlight',
   true,
 )
 
