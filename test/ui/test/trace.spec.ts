@@ -505,9 +505,9 @@ async function testPersistsResizedTracePanes(page: Page) {
   await expect(traceView).toBeVisible()
   await expect(splitter).toBeVisible()
 
-  const splitpanesBox = await splitpanes.boundingBox()
+  const traceViewBox = await traceView.boundingBox()
   const splitterBox = await splitter.boundingBox()
-  if (!splitpanesBox || !splitterBox) {
+  if (!traceViewBox || !splitterBox) {
     throw new Error('Trace split panes are not visible')
   }
 
@@ -518,7 +518,7 @@ async function testPersistsResizedTracePanes(page: Page) {
   )
   await page.mouse.down()
   await page.mouse.move(
-    splitpanesBox.x + splitpanesBox.width * 0.4,
+    traceViewBox.x + traceViewBox.width * 0.4,
     splitterBox.y + splitterBox.height / 2,
     { steps: 5 },
   )
