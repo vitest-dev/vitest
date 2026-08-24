@@ -540,6 +540,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     // }
     const context = this.persistentContext ?? await browser.newContext(options)
     await this._throwIfClosing(context)
+    // mock routes are unrouted between test files, which toggles Chromium's
+    // request interception on and off. The enable is applied asynchronously,
+    // so a module request can slip past the routes and link the real module
+    // for the file's lifetime (#8339). A never-matching route keeps the
+    // interception enabled for the whole session.
+    await context.route(() => false, () => {})
     if (actionTimeout != null) {
       context.setDefaultTimeout(actionTimeout)
     }
