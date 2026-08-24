@@ -65,9 +65,6 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await openExplorerItem(page, 'custom trace')
 
   const traceView = page.getByTestId('trace-view')
-  await expect(traceView).toBeHidden()
-
-  await page.getByTestId('trace-open-button').click()
   await expect(traceView).toBeVisible()
 
   const traceSteps = traceView.getByTestId('trace-step')

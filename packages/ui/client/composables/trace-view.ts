@@ -206,7 +206,9 @@ const selectedTestTask = computed(() => {
   const test = selectedTest.value
     ? client.state.idMap.get(selectedTest.value)
     : undefined
-  return test?.type === 'test' && isTraceViewEnabled(test.file)
+  const hasTrace = test?.type === 'test'
+    && test.artifacts.some(artifact => artifact.type === 'internal:browserTrace')
+  return test?.type === 'test' && (isTraceViewEnabled(test.file) || hasTrace)
     ? test
     : undefined
 })
