@@ -175,7 +175,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
 
-function onSplitPanesResized({ panes }: SplitpanesResizedPayload) {
+function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
   if (panes.length === 2) {
     traceViewSplitSizes.value = [panes[0].size, panes[1].size]
   }
@@ -185,7 +185,7 @@ function onSplitPanesResized({ panes }: SplitpanesResizedPayload) {
 <template>
   <Splitpanes
     class="h-full min-h-0"
-    @resized="onSplitPanesResized"
+    @resized="onSplitpanesResized"
   >
     <Pane :size="traceViewSplitSizes[0]" min-size="20">
       <div
