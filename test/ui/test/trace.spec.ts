@@ -489,6 +489,11 @@ async function testPersistsAttemptInURL(page: Page) {
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
 }
 
+function getHashParams(page: Page) {
+  const hash = new URL(page.url()).hash
+  return Object.fromEntries(new URLSearchParams(hash.split('?')[1]))
+}
+
 async function testPersistsResizedTracePanes(page: Page) {
   // Opening a trace renders resizable step list and iframe panes.
   await openExplorerItem(page, 'simple')
@@ -543,9 +548,4 @@ function getStoredTracePaneSizes(page: Page): Promise<number[] | null> {
     const sizes = value ? JSON.parse(value) as number[] : null
     return sizes?.map(size => Number(size.toFixed(4))) ?? null
   })
-}
-
-function getHashParams(page: Page) {
-  const hash = new URL(page.url()).hash
-  return Object.fromEntries(new URLSearchParams(hash.split('?')[1]))
 }
