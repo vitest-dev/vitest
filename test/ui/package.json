@@ -12,6 +12,8 @@
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "happy-dom": "^20.11.2",
+    "playwright": "catalog:",
+    "rrweb-snapshot": "2.1.1",
     "vitest": "workspace:*"
   }
 }
