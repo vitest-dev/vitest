@@ -1,6 +1,8 @@
+import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { createMethodsRPC, createVitest } from 'vitest/node'
 
-import { createFile, resolvePath, runInlineTests, runVitest, runVitestCli } from '../../test-utils'
+import { createFile, resolvePath, runInlineTests, runVitest, runVitestCli, useFS } from '../../test-utils'
 
 test('importing files in restricted fs works correctly', async () => {
   createFile(
@@ -529,3 +531,119 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+// changing V8 flags at runtime invalidates the module code cache shared across
+// files on a worker: via the context's `node:v8` the cache is cleared up front,
+// via anything else (here the worker realm's binding) the rejection is caught
+test.for([
+  ['vmThreads', 'context'],
+  ['vmForks', 'context'],
+  ['vmThreads', 'worker realm'],
+  ['vmForks', 'worker realm'],
+] as const)(
+  '%s survives a runtime V8 flag change from the %s',
+  async ([pool, from]) => {
+    const setFlags = from === 'context'
+      ? `v8.setFlagsFromString('--expose-gc')`
+      : `process.getBuiltinModule('node:v8').setFlagsFromString('--expose-gc')`
+    const testFile = `
+      import v8 from 'node:v8'
+      import { expect, test } from 'vitest'
+      import { answer } from 'esm-dep'
+
+      test('imports the external module', () => {
+        expect(answer).toBe(42)
+        ${setFlags}
+      })
+    `
+    const { stderr, exitCode } = await runInlineTests({
+      'node_modules/esm-dep/package.json': JSON.stringify({
+        name: 'esm-dep',
+        type: 'module',
+        main: './index.js',
+      }),
+      'node_modules/esm-dep/index.js': `export const answer = 42\n${'// padding so V8 emits a code cache\n'.repeat(200)}`,
+      'a.test.js': testFile,
+      'b.test.js': testFile,
+      'c.test.js': testFile,
+    }, {
+      pool,
+      maxWorkers: 1,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+test('prewarm skips factory-mocked and dynamically imported subtrees', async () => {
+  const leaves = (dir: string) => Object.fromEntries(
+    Array.from({ length: 5 }, (_, i) => [`${dir}/leaf${i}.js`, `export const v${i} = ${i}`]),
+  )
+  const barrel = Array.from({ length: 5 }, (_, i) => `export * from './leaf${i}.js'`).join('\n')
+  const root = resolvePath(import.meta.url, '../fixtures/vm-prewarm')
+  const cacheDir = resolve(root, 'cache')
+  useFS(root, {
+    ...leaves('used'),
+    ...leaves('mocked'),
+    ...leaves('spied'),
+    ...leaves('lazy'),
+    ...leaves('setup-only'),
+    'used/index.js': barrel,
+    'mocked/index.js': barrel,
+    'mocked/other.js': `export * from './index.js'`,
+    'spied/index.js': barrel,
+    'lazy/index.js': barrel,
+    'setup-only/index.js': barrel,
+    'setup.js': `import './setup-only/index.js'`,
+    'consumer.js': `
+      export * as used from './used/index.js'
+      export * as mocked from './mocked/index.js'
+      export * as other from './mocked/other.js'
+      export * as spied from './spied/index.js'
+      export const lazy = () => import('./lazy/index.js')
+    `,
+    'consumer.test.js': `
+      import { test, vi } from 'vitest'
+      import * as consumer from './consumer.js'
+
+      vi.mock('./mocked/index.js', () => ({ a: 1 }))
+      vi.mock(\`./mocked/other.js\`, () => ({ b: 1 }))
+      vi.mock('./spied/index.js', { spy: true })
+      vi.mock('./setup-only/index.js', () => ({ c: 1 }))
+
+      test('stub', () => consumer)
+    `,
+  })
+
+  async function prewarmed(prepare: 'fetch' | 'transformRequest'): Promise<string[]> {
+    const ctx = await createVitest('test', { root, watch: false, setupFiles: ['./setup.js'], fsModuleCache: true, fsModuleCachePath: cacheDir, reporters: [] })
+    try {
+      const project = ctx.getRootProject()
+      const rpc = createMethodsRPC(project)
+      const testFile = resolve(root, 'consumer.test.js')
+      // workers fetch the test file first; preParse transforms it directly
+      if (prepare === 'fetch') {
+        await rpc.fetch(testFile, undefined, 'ssr')
+      }
+      else {
+        await project.vite.environments.ssr.transformRequest(testFile)
+      }
+      await rpc.prewarmModuleGraph('ssr', [testFile])
+      return [...project.vite.environments.ssr.moduleGraph.idToModuleMap.values()]
+        .filter(mod => mod.transformResult && mod.id?.startsWith(root) && mod.id !== testFile)
+        .map(mod => relative(root, mod.id!))
+        .sort()
+    }
+    finally {
+      await ctx.close()
+    }
+  }
+
+  const subtree = (dir: string) => [`${dir}/index.js`, ...Array.from({ length: 5 }, (_, i) => `${dir}/leaf${i}.js`)]
+  const expected = ['consumer.js', ...subtree('setup-only'), 'setup.js', ...subtree('spied'), ...subtree('used')]
+  expect(await prewarmed('fetch')).toEqual(expected)
+  // fs module cache hit
+  expect(await prewarmed('fetch')).toEqual(expected)
+  expect(await prewarmed('transformRequest')).toEqual(expected)
+})
