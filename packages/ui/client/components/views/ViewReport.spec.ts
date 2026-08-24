@@ -57,7 +57,7 @@ describe.todo('ViewReport', () => {
     beforeEach(async () => {
       await render(ViewReport, {
         props: {
-          file: fileWithTextStacks,
+          task: fileWithTextStacks,
         },
         attrs: {
           'data-testid': viewReportTestId,
@@ -100,7 +100,7 @@ describe.todo('ViewReport', () => {
       ],
     }
     const container = await render(ViewReport, {
-      props: { file },
+      props: { task: file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
     const preElements = taskError.element().querySelectorAll('pre')
@@ -149,7 +149,7 @@ describe.todo('ViewReport', () => {
       ],
     }
     const container = await render(ViewReport, {
-      props: { file },
+      props: { task: file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
     const preElements = taskError.element().querySelectorAll('pre')
@@ -193,7 +193,7 @@ describe.todo('ViewReport', () => {
   it('test diff display', async () => {
     const component = await render(ViewReport, {
       props: {
-        file: fileWithTextStacks,
+        task: fileWithTextStacks,
       },
     })
 

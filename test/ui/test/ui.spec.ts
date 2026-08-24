@@ -194,9 +194,9 @@ test.describe('ui', () => {
     await testVisualRegression(page)
   })
 
-  test('report tab falls back to file report when a suite is selected', async ({ page }) => {
+  test('report tab is scoped to the selected suite', async ({ page }) => {
     await page.goto(pageUrl)
-    await testSuiteReportFallback(page)
+    await testSuiteReport(page)
   })
 
   test('can edit file', async ({ page }) => {
@@ -292,9 +292,9 @@ test.describe('html report', () => {
     await testVisualRegression(page)
   })
 
-  test('report tab falls back to file report when a suite is selected', async ({ page }) => {
+  test('report tab is scoped to the selected suite', async ({ page }) => {
     await page.goto(pageUrl)
-    await testSuiteReportFallback(page)
+    await testSuiteReport(page)
   })
 
   test('cannot edit file', async ({ page }) => {
@@ -512,14 +512,14 @@ async function testError(page: Page) {
   ])
 }
 
-async function testSuiteReportFallback(page: Page) {
+async function testSuiteReport(page: Page) {
   const suite = getExplorerItem(page, 'suite')
   await suite.hover()
   await suite.getByTestId('btn-open-details').click()
   await expect(page.getByTestId('editor')).toBeVisible()
 
   await page.getByTestId('btn-report').click()
-  await expect(page.getByTestId('report')).toContainText('All tests passed in this file')
+  await expect(page.getByTestId('report')).toContainText('All tests passed in this suite')
 }
 
 async function testTagsFilter(page: Page) {
