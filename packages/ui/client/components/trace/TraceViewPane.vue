@@ -11,7 +11,6 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
-const highlightButtonLabel = computed(() => `${showTraceTargetHighlight.value ? 'Hide' : 'Show'} target highlight`)
 </script>
 
 <template>
@@ -26,14 +25,13 @@ const highlightButtonLabel = computed(() => `${showTraceTargetHighlight.value ? 
       >
         {{ attemptLabel }}
       </span>
-      <IconButton
-        v-tooltip.bottom="highlightButtonLabel"
-        :title="highlightButtonLabel"
-        :active="showTraceTargetHighlight"
-        :aria-pressed="showTraceTargetHighlight"
-        icon="i-carbon:view"
-        @click="showTraceTargetHighlight = !showTraceTargetHighlight"
-      />
+      <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
+        <input
+          v-model="showTraceTargetHighlight"
+          type="checkbox"
+        >
+        <span>Show highlight</span>
+      </label>
       <IconButton
         v-tooltip.bottom="'Close Trace Viewer'"
         title="Close Trace Viewer"
