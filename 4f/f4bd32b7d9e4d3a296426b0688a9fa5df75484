@@ -1,0 +1,19 @@
+packages/ui/client/components/trace/TraceView.vue
+  s_36be7b0cda9a49::t_beae7d24bea503 2,178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4ff4bd32b7d9e4d3a296426b0688a9fa5df75484",
+  "prompts": {},
+  "sessions": {
+    "s_36be7b0cda9a49": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fcea11542ffeJ97d3GP9FtDLNj",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
