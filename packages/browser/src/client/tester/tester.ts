@@ -261,6 +261,11 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
         }
       },
     )
+
+    if (method === 'collect') {
+      const mocker = (globalThis as any).__vitest_mocker__ as VitestBrowserClientMocker | undefined
+      await mocker?.invalidate()
+    }
   }
 }
 

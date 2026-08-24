@@ -50,12 +50,13 @@ export class ModuleMocker implements TestModuleMocker {
 
   public async invalidate(): Promise<void> {
     const ids = Array.from(this.mockedIds)
+    this.mockedIds.clear()
+    this.registry.clear()
+    await this.interceptor.invalidate()
     if (!ids.length) {
       return
     }
     await this.rpc.invalidate(ids)
-    await this.interceptor.invalidate()
-    this.registry.clear()
   }
 
   public async importActual<T>(id: string, importer: string): Promise<T> {
