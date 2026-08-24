@@ -505,9 +505,10 @@ async function testPersistsResizedTracePanes(page: Page) {
   await expect(traceView).toBeVisible()
   await expect(splitter).toBeVisible()
 
+  const initialTraceStepsBox = await traceSteps.boundingBox()
   const traceViewBox = await traceView.boundingBox()
   const splitterBox = await splitter.boundingBox()
-  if (!traceViewBox || !splitterBox) {
+  if (!initialTraceStepsBox || !traceViewBox || !splitterBox) {
     throw new Error('Trace split panes are not visible')
   }
 
@@ -529,6 +530,14 @@ async function testPersistsResizedTracePanes(page: Page) {
   if (!expectedTraceStepsBox) {
     throw new Error('Trace steps are not visible')
   }
+  // The resize visibly expands the step list without moving it.
+  expect(expectedTraceStepsBox).toEqual({
+    x: expect.closeTo(initialTraceStepsBox.x, 1),
+    y: expect.closeTo(initialTraceStepsBox.y, 1),
+    width: expect.any(Number),
+    height: expect.closeTo(initialTraceStepsBox.height, 1),
+  })
+  expect(expectedTraceStepsBox.width).toBeGreaterThan(initialTraceStepsBox.width * 1.5)
 
   // Reloading repeatedly preserves the resized trace step geometry.
   for (let i = 0; i < 2; i++) {
