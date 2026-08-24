@@ -530,11 +530,16 @@ async function testPersistsResizedTracePanes(page: Page) {
     throw new Error('Trace steps are not visible')
   }
 
-  // Reloading repeatedly preserves the resized trace step width.
+  // Reloading repeatedly preserves the resized trace step geometry.
   for (let i = 0; i < 2; i++) {
     await page.reload()
     await expect(traceView).toBeVisible()
-    await expect.poll(async () => (await traceSteps.boundingBox())?.width).toBeCloseTo(expectedTraceStepsBox.width)
+    await expect.poll(() => traceSteps.boundingBox()).toEqual({
+      x: expect.closeTo(expectedTraceStepsBox.x, 1),
+      y: expect.closeTo(expectedTraceStepsBox.y, 1),
+      width: expect.closeTo(expectedTraceStepsBox.width, 1),
+      height: expect.closeTo(expectedTraceStepsBox.height, 1),
+    })
   }
 }
 
