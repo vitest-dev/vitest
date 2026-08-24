@@ -2,7 +2,7 @@
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { closeTrace, getSelectedTrace, getTraceAttemptLabel } from '~/composables/trace-view'
+import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceTargetHighlight } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 
 const props = defineProps<{
@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
+const highlightButtonLabel = computed(() => `${showTraceTargetHighlight.value ? 'Hide' : 'Show'} target highlight`)
 </script>
 
 <template>
@@ -26,6 +27,14 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
         {{ attemptLabel }}
       </span>
       <IconButton
+        v-tooltip.bottom="highlightButtonLabel"
+        :title="highlightButtonLabel"
+        :active="showTraceTargetHighlight"
+        :aria-pressed="showTraceTargetHighlight"
+        icon="i-carbon:view"
+        @click="showTraceTargetHighlight = !showTraceTargetHighlight"
+      />
+      <IconButton
         v-tooltip.bottom="'Close Trace Viewer'"
         title="Close Trace Viewer"
         icon="i-carbon:close"
@@ -36,6 +45,7 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
       v-if="trace"
       :trace="trace"
       :selection="selection"
+      :show-target-highlight="showTraceTargetHighlight"
     />
     <div v-else class="text-sm opacity-50 p-4">
       No trace found
