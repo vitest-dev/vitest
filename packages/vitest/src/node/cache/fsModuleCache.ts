@@ -1,4 +1,5 @@
-import type { DevEnvironment } from 'vite'
+import type { StaticMockCall } from '@vitest/mocker/node'
+import type { DevEnvironment, TransformResult } from 'vite'
 import type { ModuleType, VitestFetchResult } from '../../types/general'
 import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
@@ -38,7 +39,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.6'
+  private version = '1.0.0-beta.7'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -136,12 +137,16 @@ export class FileSystemModuleCache {
       importedUrls: meta.importedUrls,
       mappings: meta.mappings,
       moduleType: meta.moduleType,
+      deps: meta.deps,
+      dynamicDeps: meta.dynamicDeps,
+      staticMocks: meta.staticMocks,
     }
   }
 
   async saveCachedModule(
     cachedFilePath: string,
     fetchResult: VitestFetchResult,
+    transformResult: TransformResult | null,
     importedUrls: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
@@ -153,6 +158,9 @@ export class FileSystemModuleCache {
         importedUrls,
         mappings,
         moduleType: fetchResult.moduleType,
+        deps: transformResult?.deps,
+        dynamicDeps: transformResult?.dynamicDeps,
+        staticMocks: transformResult?.__vitestStaticMocks,
       } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
@@ -406,6 +414,9 @@ export interface CachedInlineModuleMeta {
   mappings: boolean
   importedUrls: string[]
   moduleType?: ModuleType
+  deps?: string[]
+  dynamicDeps?: string[]
+  staticMocks?: StaticMockCall[] | null
 }
 
 /**

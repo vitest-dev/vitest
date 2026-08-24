@@ -1,4 +1,5 @@
 import type { Span } from '@opentelemetry/api'
+import type { StaticMockCall } from '@vitest/mocker/node'
 import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult, ModuleType, VitestFetchResult } from '../../types/general'
@@ -122,7 +123,7 @@ class ModuleFetcher {
       }
 
       const tmpFile = join(tmpDir, hash('sha1', result.id, 'hex'))
-      return this.cacheResult(result, tmpFile).then((result) => {
+      return this.cacheResult(result, tmpFile, transformResult).then((result) => {
         if (transformResult) {
           transformResult.__vitestTmp = tmpFile
         }
@@ -148,7 +149,13 @@ class ModuleFetcher {
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    const cachedResult = await this.cacheResult(result, cachePath, importedUrls, !!mappings)
+    const cachedResult = await this.cacheResult(
+      result,
+      cachePath,
+      moduleGraphModule.transformResult,
+      importedUrls,
+      !!mappings,
+    )
     // remember where the code is stored on disk so that repeat fetches and the
     // `fetchWarmModules` snapshot can point at it in this session already, not
     // only after the cache is read back in the next one
@@ -287,8 +294,11 @@ class ModuleFetcher {
       code: cachedModule.code,
       map,
       ssr: true,
+      deps: cachedModule.deps,
+      dynamicDeps: cachedModule.dynamicDeps,
       __vitestTmp: cachePath,
       __vitestModuleType: moduleType,
+      __vitestStaticMocks: cachedModule.staticMocks,
     }
 
     // we populate the module graph to make the watch mode work because it relies on importers
@@ -339,6 +349,10 @@ class ModuleFetcher {
     if ('code' in result) {
       result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
     }
+    const transformResult = moduleGraphModule.transformResult
+    if (transformResult && moduleGraphModule.id) {
+      transformResult.__vitestStaticMocks ??= environment.pluginContainer.getModuleInfo(moduleGraphModule.id)?.meta?.vitestStaticMocks ?? null
+    }
     return result
   }
 
@@ -374,6 +388,7 @@ class ModuleFetcher {
   private async cacheResult(
     result: FetchResult,
     cachePath: string,
+    transformResult: TransformResult | null,
     importedUrls: string[] = [],
     mappings = false,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
@@ -386,7 +401,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, importedUrls, mappings)
+      .saveCachedModule(cachePath, result, transformResult, importedUrls, mappings)
       .then(() => returnResult)
       .catch((error) => {
         debugFs?.(`failed to cache ${cachePath}, serving it inline: ${error}`)
@@ -588,5 +603,7 @@ declare module 'vite' {
     // `experimental.fsModuleCache` store or the forks pool's tmp copies
     __vitestTmp?: string
     __vitestModuleType?: ModuleType
+    // set by the hoistMocks plugin; null when the file was not hoisted
+    __vitestStaticMocks?: StaticMockCall[] | null
   }
 }
