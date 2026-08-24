@@ -1,7 +1,7 @@
 import type { Page } from 'playwright'
 import { createRequire } from 'node:module'
 import { chromium } from 'playwright'
-import { onTestFinished, recordArtifact, test } from 'vitest'
+import { onTestFinished, recordArtifact, test, vi } from 'vitest'
 
 const require = createRequire(import.meta.url)
 const rrwebSnapshotPath = require.resolve('rrweb-snapshot')
@@ -22,7 +22,7 @@ test('custom trace', async ({ task }) => {
   await recordTrace(page, task, 'after action', 1)
 })
 
-async function recordTrace(page: Page, task: Parameters<typeof recordArtifact>[0], name: string, startTime: number) {
+const recordTrace = vi.defineHelper(async (page: Page, task: Parameters<typeof recordArtifact>[0], name: string, startTime: number) => {
   const snapshot = await page.evaluate(() => {
     const { snapshot } = (globalThis as any).rrwebSnapshot
     const serialized = snapshot(document)
@@ -57,4 +57,4 @@ async function recordTrace(page: Page, task: Parameters<typeof recordArtifact>[0
       }],
     },
   })
-}
+})

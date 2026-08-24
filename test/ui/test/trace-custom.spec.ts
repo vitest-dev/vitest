@@ -66,6 +66,7 @@ async function testCustomTrace(page: Page, baseURL: string) {
 
   const traceView = page.getByTestId('trace-view')
   await expect(traceView).toBeVisible()
+  await expect(page.locator('#details-splitpanes')).toHaveClass(/splitpanes--horizontal/)
 
   const traceSteps = traceView.getByTestId('trace-step')
   await expect(traceView.getByTestId('trace-step-name')).toHaveText([
@@ -76,6 +77,17 @@ async function testCustomTrace(page: Page, baseURL: string) {
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Before action' })).toBeVisible()
 
+  await traceSteps.nth(0).click()
+  const editor = page.getByTestId('editor')
+  const activeLine = editor.locator('.CodeMirror-activeline')
+  await expect(activeLine).toHaveText(/await recordTrace\(page, task, 'before action', 0\)/)
+
+  const traceEditorMarkers = editor.getByTestId('trace-editor-marker')
+  await expect(traceEditorMarkers).toHaveCount(2)
+  await expect(traceEditorMarkers.nth(0)).toHaveAttribute('aria-current', 'step')
+
   await traceSteps.nth(1).click()
+  await expect(activeLine).toHaveText(/await recordTrace\(page, task, 'after action', 1\)/)
+  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceFrame.getByRole('button', { name: 'After action' })).toBeVisible()
 }
