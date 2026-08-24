@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { SplitpanesResizedPayload } from 'splitpanes'
 import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
@@ -174,7 +175,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
 
-function onTraceResized({ panes }: { panes: { size: number }[] }) {
+function onTraceResized({ panes }: SplitpanesResizedPayload) {
   if (panes.length === 2) {
     traceViewSplitSizes.value = [panes[0].size, panes[1].size]
   }
