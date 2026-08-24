@@ -345,11 +345,11 @@ export class BaseCoverageProvider {
   async cleanAfterRun(): Promise<void> {
     try {
       this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+      await fs.rm(this.coverageFilesDirectory, { recursive: true, force: true, maxRetries: 10 })
 
       // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0) {
-        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      if (existsSync(this.options.reportsDirectory) && readdirSync(this.options.reportsDirectory).length === 0) {
+        await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
       }
     }
     finally {

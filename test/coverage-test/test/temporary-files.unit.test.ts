@@ -19,6 +19,18 @@ test('clean() acquires the reportsDirectory lock and cleanAfterRun() releases it
   expect(existsSync(lockFile)).toBe(false)
 })
 
+test('cleanAfterRun() tolerates the temporary directory being gone', async () => {
+  const { provider, reportsDirectory, lockFile } = createProvider()
+
+  await provider.clean(true)
+
+  rmSync(reportsDirectory, { recursive: true, force: true })
+
+  await expect(provider.cleanAfterRun()).resolves.toBeUndefined()
+
+  expect(existsSync(lockFile)).toBe(false)
+})
+
 test('clean() is re-entrant for the same process (e.g. watch mode reruns)', async () => {
   const { provider } = createProvider()
 
