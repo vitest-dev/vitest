@@ -1,16 +1,20 @@
 import type { Page } from 'playwright'
+import type { TestContext } from 'vitest'
 import { createRequire } from 'node:module'
 import { recordArtifact, vi } from 'vitest'
 
 const require = createRequire(import.meta.url)
 const rrwebSnapshotPath = require.resolve('rrweb-snapshot')
 
-export async function createTraceRecorder(page: Page, task: Parameters<typeof recordArtifact>[0]) {
+export async function createTraceRecorder(page: Page, task: TestContext['task']) {
   await page.addScriptTag({ path: rrwebSnapshotPath })
-  const startTime = performance.now()
+  // TODO: Initialize per attempt from a runner hook, trace fixture, or early
+  // beforeEach; task.result.startTime spans all retry/repeat attempts.
+  const traceStartTime = performance.now()
 
   return {
     snapshot: vi.defineHelper(async (name: string) => {
+      const startTime = performance.now() - traceStartTime
       const snapshot = await page.evaluate(() => {
         const { snapshot } = (globalThis as any).rrwebSnapshot
         const serialized = snapshot(document)
@@ -40,7 +44,7 @@ export async function createTraceRecorder(page: Page, task: Parameters<typeof re
           entries: [{
             name,
             kind: 'mark',
-            startTime: performance.now() - startTime,
+            startTime,
             snapshot,
           }],
         },
