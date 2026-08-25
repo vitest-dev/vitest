@@ -15,7 +15,6 @@ import {
   activeTraceView,
   getTraceEditorMarkersForFile,
   getTraceEntryClass,
-  isTraceViewEnabled,
   selectActiveTraceStep,
 } from '~/composables/trace-view'
 import { escapeHtml } from '~/utils/escape'
@@ -141,9 +140,7 @@ function codemirrorChanges() {
 }
 
 const TRACE_GUTTER_ID = 'trace-step-gutter'
-const traceGutterConfigs = isTraceViewEnabled(props.file)
-  ? [{ className: TRACE_GUTTER_ID, style: 'width: 14px' }]
-  : []
+const traceGutterEnabled = computed(() => activeTraceView.value?.test.file.id === props.file.id)
 let traceGutterLines: number[] = []
 
 const traceEditorMarkersForFile = computed(() => {
@@ -165,6 +162,13 @@ function syncTraceMarkers() {
     editor.setGutterMarker(line, TRACE_GUTTER_ID, null)
   }
   traceGutterLines = []
+
+  editor.setOption('gutters', [
+    'CodeMirror-linenumbers',
+    ...(traceGutterEnabled.value
+      ? [{ className: TRACE_GUTTER_ID, style: 'width: 14px' }]
+      : []),
+  ])
 
   const lineCount = editor.lineCount()
   for (const marker of traceEditorMarkersForFile.value) {
@@ -195,7 +199,7 @@ function syncTraceMarkers() {
 }
 
 watch(
-  [codemirrorRef, traceEditorMarkersForFile, loading],
+  [codemirrorRef, traceGutterEnabled, traceEditorMarkersForFile, loading],
   () => {
     syncTraceMarkers()
   },
@@ -453,7 +457,7 @@ onBeforeUnmount(clearListeners)
     :options="{
       lineNumbers: true,
       styleActiveLine: true,
-      gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
+      gutters: ['CodeMirror-linenumbers'],
     }"
     :mode="ext"
     data-testid="code-mirror"

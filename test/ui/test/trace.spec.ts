@@ -182,7 +182,10 @@ async function testBasic(page: Page) {
   await expect(activeLine).toContainText('Render simple')
 
   // markers ordered by 'test finished' > 'Render simple' > 'Render another'
-  const traceEditorMarkers = page.getByTestId('editor').getByTestId('trace-editor-marker')
+  const editor = page.getByTestId('editor')
+  const traceEditorMarkers = editor.getByTestId('trace-editor-marker')
+  const traceGutter = editor.locator('.CodeMirror-gutter.trace-step-gutter')
+  await expect(traceGutter).toBeVisible()
   await expect(traceEditorMarkers).toHaveCount(3)
   await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
@@ -242,6 +245,7 @@ async function testBasic(page: Page) {
   // verify closing trace viewer doesn't immediately auto-open it again
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
   await expect(traceView).toBeHidden()
+  await expect(traceGutter).toHaveCount(0)
 }
 
 async function testViewport(page: Page) {
