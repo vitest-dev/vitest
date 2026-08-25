@@ -8,7 +8,7 @@ import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
-import { distClientRoot } from './paths'
+import { distClientRoot, resolvePlaywrightTraceViewerRoot } from './paths'
 
 const gzipAsync = promisify(gzip)
 
@@ -82,6 +82,15 @@ export default class HTMLReporter implements Reporter {
         await fs.rm(destAttachmentsDir, { recursive: true, force: true })
         await fs.mkdir(destAttachmentsDir, { recursive: true })
         await fs.cp(attachmentsDir, destAttachmentsDir, { recursive: true })
+      }
+
+      const playwrightTraceViewerRoot = hasPlaywrightTrace(result.files)
+        ? resolvePlaywrightTraceViewerRoot(this.ctx.config.root)
+        : undefined
+      if (playwrightTraceViewerRoot) {
+        const traceViewerDir = resolve(this.reporterDir, 'trace')
+        await fs.rm(traceViewerDir, { recursive: true, force: true })
+        await fs.cp(playwrightTraceViewerRoot, traceViewerDir, { recursive: true })
       }
     }
 
@@ -228,6 +237,17 @@ async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
   for (const file of files) {
     await inlineTaskAttachments(file)
   }
+}
+
+function hasPlaywrightTrace(files: RunnerTestFile[]): boolean {
+  return files.some(hasTaskPlaywrightTrace)
+}
+
+function hasTaskPlaywrightTrace(task: RunnerTask): boolean {
+  if (task.type === 'suite') {
+    return task.tasks.some(hasTaskPlaywrightTrace)
+  }
+  return task.annotations.some(annotation => annotation.type === 'traces' && annotation.attachment?.path)
 }
 
 async function inlineTaskAttachments(task: RunnerTask): Promise<void> {

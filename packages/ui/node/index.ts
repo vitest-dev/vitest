@@ -8,7 +8,7 @@ import sirv from 'sirv'
 import c from 'tinyrainbow'
 import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
-import { distClientRoot } from './paths'
+import { distClientRoot, resolvePlaywrightTraceViewerRoot } from './paths'
 
 export { distClientRoot }
 
@@ -94,6 +94,14 @@ export default (harness: PluginHarness): Vite.Plugin => {
                 )
               },
             }),
+          )
+        }
+
+        const playwrightTraceViewerRoot = resolvePlaywrightTraceViewerRoot(ctx.config.root)
+        if (playwrightTraceViewerRoot) {
+          server.middlewares.use(
+            join(base, 'trace'),
+            sirv(playwrightTraceViewerRoot, { dev: true }),
           )
         }
 

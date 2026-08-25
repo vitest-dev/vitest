@@ -18,6 +18,16 @@ export function getAttachmentUrl(attachment: TestAttachment): string {
   return `data:${contentType};base64,${attachment.body}`
 }
 
+export function getPlaywrightTraceUrl(attachment: TestAttachment): string | undefined {
+  if (!attachment.path) {
+    return
+  }
+  const traceUrl = new URL(getAttachmentUrl(attachment), window.location.href)
+  const viewerUrl = new URL('./trace/index.html', window.location.href)
+  viewerUrl.searchParams.set('trace', traceUrl.href)
+  return viewerUrl.href
+}
+
 export function sanitizeFilePath(s: string, contentType: string | undefined): string {
   const extension = contentType ? mime.getExtension(contentType) : null
   // eslint-disable-next-line no-control-regex
