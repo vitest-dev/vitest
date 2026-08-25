@@ -72,6 +72,7 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await expect(traceView.getByTestId('trace-step-name')).toHaveText([
     'before action',
     'action',
+    'test finished',
   ])
   await expect(traceSteps.nth(1)).toHaveAttribute('data-test-range', 'end')
   await expect(traceSteps.nth(1).locator('.text-blue-500')).toBeVisible()
@@ -85,13 +86,20 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await expect(activeLine).toHaveText(/await recorder\.snapshot\('before action'\)/)
 
   const traceEditorMarkers = editor.getByTestId('trace-editor-marker')
-  await expect(traceEditorMarkers).toHaveCount(2)
-  await expect(traceEditorMarkers.nth(0)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers).toHaveCount(3)
+  const snapshotMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: before action"]'))
+  const actionMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: action"]'))
+  const lifecycleMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: vitest:onAfterRetryTask"]'))
+  await expect(snapshotMarker).toHaveAttribute('aria-current', 'step')
 
   await traceSteps.nth(1).click()
   await expect(activeLine).toHaveText(/const result = await recorder\.mark\('action'/)
-  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(actionMarker).toHaveAttribute('aria-current', 'step')
   await expect(traceFrame.getByRole('button', { name: 'After action' })).toBeVisible()
+
+  await traceSteps.nth(2).click()
+  await expect(activeLine).toHaveText(/test\('custom trace'/)
+  await expect(lifecycleMarker).toHaveAttribute('aria-current', 'step')
 
   await page.goto(baseURL)
   await openExplorerItem(page, 'custom trace attempts')
@@ -105,6 +113,16 @@ async function testCustomTrace(page: Page, baseURL: string) {
 
   for (let index = 0; index < 4; index++) {
     await traceOpenButtons.nth(index).click()
-    await expect(traceView.getByTestId('trace-step-name')).toHaveText('attempt')
+    await expect(traceView.getByTestId('trace-step-name')).toHaveText([
+      'attempt',
+      'test finished',
+    ])
+    const lifecycleStep = traceView.getByTestId('trace-step').nth(1)
+    if (index % 2 === 0) {
+      await expect(lifecycleStep).toHaveClass(/text-red-600/)
+    }
+    else {
+      await expect(lifecycleStep).not.toHaveClass(/text-red-600/)
+    }
   }
 }

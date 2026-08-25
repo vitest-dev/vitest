@@ -13,16 +13,24 @@ export interface TraceAttempt {
   startTime: number
 }
 
-interface SnapshotEntryOptions extends MarkOptions {
-  range?: {
-    id: string
-    phase: 'start' | 'end'
+export interface SnapshotOptions extends MarkOptions {
+  location?: {
+    file: string
+    line: number
+    column: number
   }
   status?: 'pass' | 'fail'
 }
 
+interface SnapshotEntryOptions extends SnapshotOptions {
+  range?: {
+    id: string
+    phase: 'start' | 'end'
+  }
+}
+
 export interface TraceRecorder {
-  snapshot: (name: string, options?: MarkOptions) => Promise<void>
+  snapshot: (name: string, options?: SnapshotOptions) => Promise<void>
   mark: {
     (name: string, options?: MarkOptions): Promise<void>
     <T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T>
@@ -72,6 +80,7 @@ export async function createTraceRecorder(
           ...(options.range ? { range: options.range } : {}),
           ...(options.status ? { status: options.status } : {}),
           ...(options.stack ? { stack: options.stack } : {}),
+          ...(options.location ? { location: options.location } : {}),
         }],
       },
     })
