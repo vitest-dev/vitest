@@ -83,7 +83,7 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await traceSteps.nth(0).click()
   const editor = page.getByTestId('editor')
   const activeLine = editor.locator('.CodeMirror-activeline')
-  await expect(activeLine).toHaveText(/await recorder\.snapshot\('before action'\)/)
+  await expect(activeLine).toHaveText(/await trace\.snapshot\('before action'\)/)
 
   const traceEditorMarkers = editor.getByTestId('trace-editor-marker')
   await expect(traceEditorMarkers).toHaveCount(3)
@@ -93,7 +93,7 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await expect(snapshotMarker).toHaveAttribute('aria-current', 'step')
 
   await traceSteps.nth(1).click()
-  await expect(activeLine).toHaveText(/const result = await recorder\.mark\('action'/)
+  await expect(activeLine).toHaveText(/const result = await trace\.mark\('action'/)
   await expect(actionMarker).toHaveAttribute('aria-current', 'step')
   await expect(traceFrame.getByRole('button', { name: 'After action' })).toBeVisible()
 

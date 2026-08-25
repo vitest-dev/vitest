@@ -1,18 +1,12 @@
-import { chromium } from 'playwright'
-import { onTestFinished, test } from 'vitest'
+import { test } from './trace/test'
 
 let attemptIndex = 0
 
-test('custom trace attempts', { retry: 1, repeats: 1 }, async ({ trace }) => {
+test('custom trace attempts', { retry: 1, repeats: 1 }, async ({ page, trace }) => {
   const currentAttempt = attemptIndex++
-  const browser = await chromium.launch()
-  onTestFinished(() => browser.close())
 
-  const page = await browser.newPage()
   await page.setContent(`<main>Attempt ${currentAttempt}</main>`)
-  const recorder = await trace(page)
-  onTestFinished(() => recorder.finish())
-  await recorder.snapshot('attempt')
+  await trace.snapshot('attempt')
 
   if (currentAttempt % 2 === 0) {
     throw new Error('Retry this attempt')
