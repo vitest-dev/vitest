@@ -1,8 +1,13 @@
-import type { Page } from '@playwright/test'
+import type { Page, TestInfo } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
 import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+
+function isolatedTraceConfig(testInfo: TestInfo) {
+  // Playwright Test otherwise injects one worker-shared trace directory into nested browser launches.
+  return { mode: 'on' as const, tracesDir: testInfo.outputPath('vitest-traces') }
+}
 
 async function mockTraceViewer(page: Page) {
   await page.context().route('https://trace.playwright.dev/', async (route) => {
@@ -22,12 +27,15 @@ test.describe('ui', () => {
   let vitest: Vitest | undefined
   let baseURL: string
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({}, testInfo) => {
     const server = await startVitestUi({
       root: './fixtures/playwright-trace',
       watch: true,
       ui: true,
       open: false,
+      browser: {
+        trace: isolatedTraceConfig(testInfo),
+      },
     })
     vitest = server.vitest
     baseURL = server.url
@@ -56,13 +64,16 @@ test.describe('html reporter', () => {
   let previewServer: PreviewServer
   let baseURL: string
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({}, testInfo) => {
     const server = await startHtmlReportPreview(
       {
         root: './fixtures/playwright-trace',
         run: true,
         ui: false,
         reporters: 'html',
+        browser: {
+          trace: isolatedTraceConfig(testInfo),
+        },
       },
       {
         root: './fixtures/playwright-trace',
