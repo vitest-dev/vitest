@@ -59,12 +59,12 @@ export async function openPlaywrightTrace(attachment: TestAttachment): Promise<v
       return
     }
     popup.location.href = 'https://trace.playwright.dev/'
-    // TODO: Ask Playwright to expose a readiness signal instead of relying on a fixed delay.
+    // TODO: Playwright should expose a readiness signal instead of relying on a fixed delay.
     setTimeout(() => {
       if (!popup.closed) {
         popup.postMessage({ method: 'load', params: { trace } }, 'https://trace.playwright.dev')
       }
-    }, 1000)
+    }, 500)
   }
   catch {
     if (!popup.closed) {
