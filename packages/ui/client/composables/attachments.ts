@@ -3,8 +3,7 @@ import mime from 'mime/lite'
 import { basename } from 'pathe'
 import { isReport } from '~/constants'
 
-const playwrightTraceOrigin = 'https://trace.playwright.dev'
-const playwrightTraceViewerUrl = `${playwrightTraceOrigin}/`
+const playwrightTraceViewerUrl = 'https://trace.playwright.dev/'
 // TODO: Ask Playwright to expose a readiness signal instead of relying on a fixed delay.
 const traceViewerBootstrapDelay = 1_000
 
@@ -23,39 +22,38 @@ export function getAttachmentUrl(attachment: TestAttachment): string {
   return `data:${contentType};base64,${attachment.body}`
 }
 
-export function openPlaywrightTrace(attachment: TestAttachment): boolean {
+export async function openPlaywrightTrace(attachment: TestAttachment): Promise<void> {
   const popup = window.open('', '_blank')
   if (!popup) {
-    return false
+    return
   }
 
   popup.document.write('<!doctype html><title>Opening Playwright Trace</title><body>Opening Playwright trace...</body>')
   popup.document.close()
   popup.focus()
 
-  void fetch(getAttachmentUrl(attachment)).then((response) => {
+  try {
+    const response = await fetch(getAttachmentUrl(attachment))
     if (!response.ok) {
       throw new Error(`Failed to load Playwright trace: ${response.statusText}`)
     }
-    return response.blob()
-  }).then((trace) => {
+    const trace = await response.blob()
     if (popup.closed) {
       return
     }
     popup.location.href = playwrightTraceViewerUrl
     setTimeout(() => {
       if (!popup.closed) {
-        popup.postMessage({ method: 'load', params: { trace } }, playwrightTraceOrigin)
+        popup.postMessage({ method: 'load', params: { trace } }, 'https://trace.playwright.dev')
       }
     }, traceViewerBootstrapDelay)
-  }).catch(() => {
+  }
+  catch {
     if (!popup.closed) {
       popup.document.write('<!doctype html><title>Failed to Open Playwright Trace</title><body>Failed to load Playwright trace attachment.</body>')
       popup.document.close()
     }
-  })
-
-  return true
+  }
 }
 
 export function sanitizeFilePath(s: string, contentType: string | undefined): string {
