@@ -287,6 +287,7 @@ export class Typechecker {
         treeKill = x('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
           nodeOptions: { stdio: 'ignore' },
           throwOnError: false,
+          timeout: 5000,
         })
       }
       else if (child.pid != null) {
@@ -307,7 +308,9 @@ export class Typechecker {
 
     if (treeKill) {
       try {
-        await treeKill
+        if ((await treeKill).exitCode !== 0) {
+          child.kill()
+        }
       }
       catch {
         child.kill()

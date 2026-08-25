@@ -8,9 +8,29 @@ function isProcessRunning(pid: number) {
     process.kill(pid, 0)
     return true
   }
-  catch {
-    return false
+  catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ESRCH') {
+      return false
+    }
+    throw error
   }
+}
+
+function readPids(pidFile: string) {
+  try {
+    const pids: unknown = JSON.parse(fs.readFileSync(pidFile, 'utf8'))
+    if (
+      Array.isArray(pids)
+      && pids.length === 2
+      && pids.every((pid): pid is number => Number.isInteger(pid) && pid > 0)
+    ) {
+      return pids
+    }
+  }
+  catch {
+    // The checker may still be writing the file.
+  }
+  return []
 }
 
 describe('Typechecker', () => {
@@ -55,17 +75,23 @@ describe('Typechecker', () => {
   it('stops the typechecker process tree', async () => {
     const { ctx, root } = await runInlineTests({
       'vitest.config.mjs': ts`
+        import { chmodSync } from 'node:fs'
         import { resolve } from 'node:path'
+
+        const checker = resolve(
+          import.meta.dirname,
+          process.platform === 'win32' ? 'fake-checker.cmd' : 'fake-checker.mjs',
+        )
+        if (process.platform !== 'win32') {
+          chmodSync(checker, 0o755)
+        }
 
         export default {
           test: {
             typecheck: {
               enabled: true,
               only: true,
-              checker: resolve(
-                import.meta.dirname,
-                process.platform === 'win32' ? 'fake-checker.cmd' : 'fake-checker.mjs',
-              ),
+              checker,
             },
           },
         }
@@ -81,7 +107,10 @@ describe('Typechecker', () => {
           ['-e', 'setInterval(() => {}, 1_000)'],
           { stdio: 'inherit' },
         )
-        writeFileSync(resolve(process.cwd(), 'checker-child.pid'), String(child.pid))
+        writeFileSync(
+          resolve(process.cwd(), 'checker-pids.json'),
+          JSON.stringify([process.pid, child.pid]),
+        )
         process.stdout.write('Found 0 errors. Watching for file changes.\n')
         setInterval(() => {}, 1_000)
       `,
@@ -90,18 +119,23 @@ describe('Typechecker', () => {
       watch: true,
     })
 
-    const pidFile = resolve(root, 'checker-child.pid')
-    await expect.poll(() => fs.existsSync(pidFile), { timeout: 5000 }).toBe(true)
-    const childPid = Number(fs.readFileSync(pidFile, 'utf8'))
+    const pidFile = resolve(root, 'checker-pids.json')
+    await expect.poll(() => readPids(pidFile), { timeout: 5000 }).toHaveLength(2)
+    const pids = readPids(pidFile)
 
     try {
-      expect(isProcessRunning(childPid)).toBe(true)
+      expect(pids.map(isProcessRunning)).toEqual([true, true])
       await ctx!.close()
-      await expect.poll(() => isProcessRunning(childPid), { timeout: 5000 }).toBe(false)
+      await expect.poll(
+        () => pids.map(isProcessRunning),
+        { timeout: 5000 },
+      ).toEqual([false, false])
     }
     finally {
-      if (isProcessRunning(childPid)) {
-        process.kill(childPid)
+      for (const pid of pids.reverse()) {
+        if (isProcessRunning(pid)) {
+          process.kill(pid)
+        }
       }
     }
   })
