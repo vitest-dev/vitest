@@ -89,7 +89,6 @@ export async function createTraceRecorder(
           snapshot,
           ...(options.range ? { range: options.range } : {}),
           ...(options.status ? { status: options.status } : {}),
-          ...(options.stack ? { stack: options.stack } : {}),
           ...(location ? { location } : {}),
         }],
       },
