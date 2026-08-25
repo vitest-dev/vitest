@@ -1,13 +1,8 @@
-import type { Page, TestInfo } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
 import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
-
-function isolatedTraceConfig(testInfo: TestInfo) {
-  // Playwright Test otherwise injects one worker-shared trace directory into nested browser launches.
-  return { mode: 'on' as const, tracesDir: testInfo.outputPath('vitest-traces') }
-}
 
 async function mockTraceViewer(page: Page) {
   await page.context().route('https://trace.playwright.dev/', async (route) => {
@@ -23,6 +18,19 @@ async function mockTraceViewer(page: Page) {
   })
 }
 
+async function testPlaywrightTrace(page: Page, baseURL: string) {
+  await mockTraceViewer(page)
+  await page.goto(baseURL)
+  await assertTestCounts(page, { pass: 1, fail: 0 })
+  await openExplorerItem(page, 'playwright trace')
+
+  const popupPromise = page.waitForEvent('popup')
+  await page.getByRole('button', { name: 'Open trace' }).click()
+  const popup = await popupPromise
+  await expect(popup).toHaveURL('https://trace.playwright.dev/')
+  await expect(popup).toHaveTitle('Loaded Playwright Trace')
+}
+
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let baseURL: string
@@ -34,7 +42,8 @@ test.describe('ui', () => {
       ui: true,
       open: false,
       browser: {
-        trace: isolatedTraceConfig(testInfo),
+        // Playwright Test otherwise injects one worker-shared trace directory into nested browser launches.
+        trace: { mode: 'on', tracesDir: testInfo.outputPath('vitest-traces') },
       },
     })
     vitest = server.vitest
@@ -46,17 +55,7 @@ test.describe('ui', () => {
   })
 
   test('opens Playwright trace viewer', async ({ page }) => {
-    await mockTraceViewer(page)
-    await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 1, fail: 0 })
-    await openExplorerItem(page, 'playwright trace')
-
-    const openTrace = page.getByRole('button', { name: 'Open trace' })
-    const popupPromise = page.waitForEvent('popup')
-    await openTrace.click()
-    const popup = await popupPromise
-    await expect(popup).toHaveURL('https://trace.playwright.dev/')
-    await expect(popup).toHaveTitle('Loaded Playwright Trace')
+    await testPlaywrightTrace(page, baseURL)
   })
 })
 
@@ -72,7 +71,8 @@ test.describe('html reporter', () => {
         ui: false,
         reporters: 'html',
         browser: {
-          trace: isolatedTraceConfig(testInfo),
+          // Playwright Test otherwise injects one worker-shared trace directory into nested browser launches.
+          trace: { mode: 'on', tracesDir: testInfo.outputPath('vitest-traces') },
         },
       },
       {
@@ -89,15 +89,6 @@ test.describe('html reporter', () => {
   })
 
   test('opens Playwright trace viewer', async ({ page }) => {
-    await mockTraceViewer(page)
-    await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 1, fail: 0 })
-    await openExplorerItem(page, 'playwright trace')
-
-    const popupPromise = page.waitForEvent('popup')
-    await page.getByRole('button', { name: 'Open trace' }).click()
-    const popup = await popupPromise
-    await expect(popup).toHaveURL('https://trace.playwright.dev/')
-    await expect(popup).toHaveTitle('Loaded Playwright Trace')
+    await testPlaywrightTrace(page, baseURL)
   })
 })
