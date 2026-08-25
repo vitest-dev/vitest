@@ -273,8 +273,46 @@ export class Typechecker {
   }
 
   public async stop(): Promise<void> {
-    this.process?.kill()
-    this.process = undefined
+    const child = this.process
+    if (!child) {
+      return
+    }
+
+    child.stdout?.destroy()
+    child.stderr?.destroy()
+
+    let treeKill: Result | undefined
+    try {
+      if (process.platform === 'win32' && child.pid != null) {
+        treeKill = x('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
+          nodeOptions: { stdio: 'ignore' },
+          throwOnError: false,
+        })
+      }
+      else if (child.pid != null) {
+        try {
+          process.kill(-child.pid)
+        }
+        catch {
+          child.kill()
+        }
+      }
+      else {
+        child.kill()
+      }
+    }
+    finally {
+      this.process = undefined
+    }
+
+    if (treeKill) {
+      try {
+        await treeKill
+      }
+      catch {
+        child.kill()
+      }
+    }
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string): Promise<void> {
@@ -343,6 +381,7 @@ export class Typechecker {
     const child = x(typecheck.checker, args, {
       nodeOptions: {
         cwd: root,
+        detached: process.platform !== 'win32',
         stdio: 'pipe',
       },
       throwOnError: false,
