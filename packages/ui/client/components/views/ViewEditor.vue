@@ -307,12 +307,13 @@ function createAnnotationElement(annotation: TestAnnotation) {
       if (annotation.type === 'traces') {
         const open = document.createElement('button')
         open.type = 'button'
+        open.ariaLabel = 'Open trace'
         open.addEventListener('click', () => openPlaywrightTrace(attachment))
         open.classList.add('flex', 'w-min', 'gap-2', 'items-center', 'font-sans', 'underline', 'cursor-pointer')
         const openIcon = document.createElement('div')
         openIcon.classList.add('i-carbon:launch', 'block')
         const openText = document.createElement('span')
-        openText.textContent = 'Open trace'
+        openText.textContent = 'Open'
         open.append(openIcon, openText)
         notice.append(open)
       }

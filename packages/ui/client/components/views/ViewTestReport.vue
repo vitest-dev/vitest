@@ -83,10 +83,11 @@ const meta = computed(() => {
               v-if="annotation.type === 'traces' && annotation.attachment"
               class="flex gap-1 items-center text-yellow-500/80 cursor-pointer"
               type="button"
+              aria-label="Open trace"
               @click="openPlaywrightTrace(annotation.attachment)"
             >
               <span class="i-carbon:launch block" />
-              Open trace
+              Open
             </button>
             <a
               v-if="annotation.attachment && !annotation.attachment.contentType?.startsWith('image/')"
