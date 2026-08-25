@@ -1,0 +1,27 @@
+test/ui/fixtures/trace-custom/app/app.js
+  s_63b53ba77b98ad::t_7c9c0f0b66fee9 1-11
+test/ui/fixtures/trace-custom/app/index.html
+  s_63b53ba77b98ad::t_4beb687f22bf67 1-19
+test/ui/fixtures/trace-custom/attempts.test.ts
+  s_63b53ba77b98ad::t_5ec83bc43d43f9 8-9
+test/ui/fixtures/trace-custom/global-setup.ts
+  s_63b53ba77b98ad::t_2b2d2f23894528 1-29
+test/ui/fixtures/trace-custom/vitest.config.ts
+  s_63b53ba77b98ad::t_c8b8de72e5c604 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "17397ef2dcd84c663d73bd2508d169c560d8ab2e",
+  "prompts": {},
+  "sessions": {
+    "s_63b53ba77b98ad": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fce7b4967ffe2zHxRBuWyNkHQ7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
