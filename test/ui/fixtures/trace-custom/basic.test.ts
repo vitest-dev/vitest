@@ -1,5 +1,5 @@
 import { chromium } from 'playwright'
-import { onTestFinished, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 
 test('custom trace', async ({ trace }) => {
   const browser = await chromium.launch()
@@ -11,8 +11,11 @@ test('custom trace', async ({ trace }) => {
 
   await recorder.snapshot('before action')
 
-  await page.locator('main').evaluate((element) => {
-    element.innerHTML = '<button>After action</button>'
-  })
-  await recorder.snapshot('after action')
+  const result = await recorder.mark('action', async () => {
+    await page.locator('main').evaluate((element) => {
+      element.innerHTML = '<button>After action</button>'
+    })
+    return 'action result'
+  }, { kind: 'action' })
+  expect(result).toBe('action result')
 })

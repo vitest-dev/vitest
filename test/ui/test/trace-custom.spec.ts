@@ -71,8 +71,10 @@ async function testCustomTrace(page: Page, baseURL: string) {
   const traceSteps = traceView.getByTestId('trace-step')
   await expect(traceView.getByTestId('trace-step-name')).toHaveText([
     'before action',
-    'after action',
+    'action',
   ])
+  await expect(traceSteps.nth(1)).toHaveAttribute('data-test-range', 'end')
+  await expect(traceSteps.nth(1).locator('.text-blue-500')).toBeVisible()
 
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Before action' })).toBeVisible()
@@ -87,7 +89,7 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await expect(traceEditorMarkers.nth(0)).toHaveAttribute('aria-current', 'step')
 
   await traceSteps.nth(1).click()
-  await expect(activeLine).toHaveText(/await recorder\.snapshot\('after action'\)/)
+  await expect(activeLine).toHaveText(/const result = await recorder\.mark\('action'/)
   await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceFrame.getByRole('button', { name: 'After action' })).toBeVisible()
 
