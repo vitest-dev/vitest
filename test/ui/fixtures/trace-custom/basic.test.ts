@@ -1,4 +1,5 @@
-import { expect, test } from './trace/test'
+import { expect } from 'vitest'
+import { test } from './trace/test'
 
 test('custom trace', async ({ page }) => {
   await page.setContent('<main><button>Before action</button></main>')

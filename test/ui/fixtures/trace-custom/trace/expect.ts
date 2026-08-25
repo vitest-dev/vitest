@@ -1,47 +1,44 @@
 import type { Locator } from 'playwright'
-import type { Assertion, ExpectStatic } from 'vitest'
 // @ts-ignore
 import { parseStacktrace } from '@vitest/utils/source-map'
-import { expect as baseExpect } from 'vitest'
+import { expect } from 'vitest'
 import { getActiveTraceRecorder } from './active'
 
-interface LocatorAssertion extends Assertion<Promise<void>, Locator> {
-  toBeVisible: (options?: { timeout?: number }) => Promise<void>
-}
-
-type TraceExpect = ExpectStatic & {
-  (actual: Locator, message?: string): LocatorAssertion
-}
-
-export const expect = new Proxy(baseExpect, {
-  apply(target, thisArg, argumentsList) {
-    const [actual] = argumentsList
-    const assertion = Reflect.apply(target, thisArg, argumentsList)
+expect.extend({
+  async toBeVisible(actual: unknown, options?: { timeout?: number }) {
     if (!isLocator(actual)) {
-      return assertion
+      throw new TypeError('toBeVisible expects a Playwright Locator')
     }
 
-    return new Proxy(assertion, {
-      get(target, key, receiver) {
-        if (key !== 'toBeVisible') {
-          return Reflect.get(target, key, receiver)
-        }
-
-        return async (options?: { timeout?: number }) => {
-          const frame = parseStacktrace(new Error().stack ?? '').find(({ file }) => !file.includes('/trace/'))
-          const location = frame
-            ? { file: frame.file, line: frame.line, column: frame.column }
-            : undefined
-          await getActiveTraceRecorder().assert(
-            'expect.toBeVisible',
-            () => baseExpect.poll(() => actual.isVisible(), options).toBe(true),
-            { location },
-          )
-        }
-      },
+    const frame = parseStacktrace(new Error().stack ?? '').find(({ file }) => {
+      return !file.includes('/node_modules/') && !file.includes('/trace/')
     })
+    const location = frame
+      ? { file: frame.file, line: frame.line, column: frame.column }
+      : undefined
+    const isNot = this.isNot
+    try {
+      await getActiveTraceRecorder().assert(
+        `expect.${isNot ? 'not.' : ''}toBeVisible`,
+        () => actual.waitFor({
+          state: isNot ? 'hidden' : 'visible',
+          timeout: options?.timeout,
+        }),
+        { location },
+      )
+      return {
+        pass: !isNot,
+        message: () => `Expected locator ${isNot ? '' : 'not '}to be visible`,
+      }
+    }
+    catch (error) {
+      return {
+        pass: isNot,
+        message: () => error instanceof Error ? error.message : String(error),
+      }
+    }
   },
-}) as TraceExpect
+})
 
 function isLocator(value: unknown): value is Locator {
   return !!value

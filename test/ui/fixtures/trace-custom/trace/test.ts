@@ -2,9 +2,8 @@ import { chromium } from 'playwright'
 import { test as base } from 'vitest'
 import { clearActiveTraceRecorder, setActiveTraceRecorder } from './active'
 import { getTraceAttempt } from './attempt'
+import './expect'
 import { createTraceRecorder } from './recorder'
-
-export { expect } from './expect'
 
 export const test = base
   .extend('browser', { scope: 'worker' }, async ({}, { onCleanup }) => {
