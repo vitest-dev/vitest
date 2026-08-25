@@ -125,4 +125,8 @@ async function testCustomTrace(page: Page, baseURL: string) {
       await expect(lifecycleStep).not.toHaveClass(/text-red-600/)
     }
   }
+
+  await traceOpenButtons.nth(0).click()
+  await traceView.getByTestId('trace-step').nth(1).click()
+  await expect(page.getByTestId('editor').locator('.CodeMirror-activeline')).toHaveText(/throw new Error\('Retry this attempt'\)/)
 }

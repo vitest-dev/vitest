@@ -1,6 +1,7 @@
 import type { Page } from 'playwright'
 import type { TestContext } from 'vitest'
 import type { MarkOptions } from 'vitest/browser'
+import { parseStacktrace } from '@vitest/utils/source-map'
 import { createRequire } from 'node:module'
 import { recordArtifact, vi } from 'vitest'
 
@@ -47,6 +48,14 @@ export async function createTraceRecorder(
 
   async function recordSnapshot(name: string, options: SnapshotEntryOptions = {}): Promise<void> {
     const startTime = performance.now() - attempt.startTime
+    const stackLocation = options.stack ? parseStacktrace(options.stack)[0] : undefined
+    const location = options.location ?? (stackLocation
+      ? {
+          file: stackLocation.file,
+          line: stackLocation.line,
+          column: stackLocation.column,
+        }
+      : undefined)
     const snapshot = await page.evaluate(() => {
       const { snapshot } = (globalThis as any).rrwebSnapshot
       const serialized = snapshot(document)
@@ -81,7 +90,7 @@ export async function createTraceRecorder(
           ...(options.range ? { range: options.range } : {}),
           ...(options.status ? { status: options.status } : {}),
           ...(options.stack ? { stack: options.stack } : {}),
-          ...(options.location ? { location: options.location } : {}),
+          ...(location ? { location } : {}),
         }],
       },
     })
