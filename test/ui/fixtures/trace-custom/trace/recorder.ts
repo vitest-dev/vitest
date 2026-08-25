@@ -45,10 +45,11 @@ export async function createTraceRecorder(
   task: TestContext['task'],
   attempt: TraceAttempt,
 ): Promise<TraceRecorder> {
-  await page.addScriptTag({ path: rrwebSnapshotPath })
+  let snapshotReady: Promise<unknown> | undefined
 
   async function recordSnapshot(name: string, options: SnapshotEntryOptions = {}): Promise<void> {
     const startTime = performance.now() - attempt.startTime
+    await (snapshotReady ??= page.addScriptTag({ path: rrwebSnapshotPath }))
     const stackLocation = options.stack ? parseStacktrace(options.stack)[0] : undefined
     const location = options.location ?? (stackLocation
       ? {
