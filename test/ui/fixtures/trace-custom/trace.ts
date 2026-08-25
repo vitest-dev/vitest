@@ -9,7 +9,8 @@ const rrwebSnapshotPath = require.resolve('rrweb-snapshot')
 export async function createTraceRecorder(page: Page, task: TestContext['task']) {
   await page.addScriptTag({ path: rrwebSnapshotPath })
   // TODO: Initialize per attempt from a runner hook, trace fixture, or early
-  // beforeEach; task.result.startTime spans all retry/repeat attempts.
+  // beforeEach. task.result.startTime spans all attempts, and retryCount is not
+  // reset between repeats, so the task result cannot identify an attempt exactly.
   const traceStartTime = performance.now()
 
   return {
