@@ -6,7 +6,7 @@ import { createServer } from 'node:http'
 
 declare module 'vitest' {
   interface ProvidedContext {
-    traceAppUrl: string
+    baseURL: string
   }
 }
 
@@ -31,7 +31,7 @@ export async function setup({ provide }: TestProject): Promise<void> {
   })
 
   const address = server.address() as AddressInfo
-  provide('traceAppUrl', `http://127.0.0.1:${address.port}`)
+  provide('baseURL', `http://127.0.0.1:${address.port}`)
 }
 
 export async function teardown(): Promise<void> {

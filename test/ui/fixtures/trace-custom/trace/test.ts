@@ -4,15 +4,15 @@ import { getTraceAttempt } from './attempt'
 import { createTraceRecorder } from './recorder'
 
 export const test = base
+  .extend('baseURL', () => inject('baseURL'))
   .extend('browser', { scope: 'worker' }, async ({}, { onCleanup }) => {
     const browser = await chromium.launch()
     onCleanup(() => browser.close())
     return browser
   })
-  .extend('page', async ({ browser }, { onCleanup }) => {
-    const page = await browser.newPage()
+  .extend('page', async ({ baseURL, browser }, { onCleanup }) => {
+    const page = await browser.newPage({ baseURL })
     onCleanup(() => page.close())
-    await page.goto(inject('traceAppUrl'))
     return page
   })
   .extend('trace', { auto: true }, async ({ page, task }, { onCleanup }) => {

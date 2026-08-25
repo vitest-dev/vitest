@@ -2,6 +2,7 @@ import { expect } from 'vitest'
 import { test } from './trace/test'
 
 test('custom trace', async ({ page, trace }) => {
+  await page.goto('/')
   await trace.snapshot('before action')
 
   const result = await trace.mark('action', async () => {
