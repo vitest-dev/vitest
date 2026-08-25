@@ -6,7 +6,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: playwright(),
-      instances: [{ browser: 'chromium' }],
+      instances: [{ browser: 'chromium', viewport: { width: 320, height: 240 } }],
       headless: true,
       trace: 'on',
     },
