@@ -1,6 +1,7 @@
 import type { Page } from 'playwright'
 import type { TestContext } from 'vitest'
 import type { MarkOptions } from 'vitest/browser'
+// @ts-ignore
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { createRequire } from 'node:module'
 import { recordArtifact, vi } from 'vitest'
@@ -95,7 +96,6 @@ export async function createTraceRecorder(
     })
   }
 
-  const snapshot = vi.defineHelper(recordSnapshot)
   const finish = async (): Promise<void> => {
     const status = task.result?.state
     const stack = status === 'fail' ? task.result?.errors?.[0].stack : undefined
@@ -108,7 +108,8 @@ export async function createTraceRecorder(
       ...(stack ? { stack } : location ? { location } : {}),
     })
   }
-  const mark = vi.defineHelper(async <T>(
+
+  const mark: TraceRecorder['mark'] = async <T>(
     name: string,
     bodyOrOptions?: MarkOptions | (() => T | Promise<T>),
     options?: MarkOptions,
@@ -140,11 +141,11 @@ export async function createTraceRecorder(
         status,
       })
     }
-  }) as TraceRecorder['mark']
+  }
 
   return {
     finish,
-    snapshot,
-    mark,
+    snapshot: vi.defineHelper(recordSnapshot),
+    mark: vi.defineHelper(mark)
   }
 }
