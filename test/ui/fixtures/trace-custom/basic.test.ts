@@ -8,6 +8,7 @@ test('custom trace', async ({ trace }) => {
   const page = await browser.newPage()
   await page.setContent('<main><button>Before action</button></main>')
   const recorder = await trace(page)
+  onTestFinished(() => recorder.finish())
 
   await recorder.snapshot('before action')
 

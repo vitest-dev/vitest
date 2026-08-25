@@ -30,6 +30,7 @@ interface SnapshotEntryOptions extends SnapshotOptions {
 }
 
 export interface TraceRecorder {
+  finish: () => Promise<void>
   snapshot: (name: string, options?: SnapshotOptions) => Promise<void>
   mark: {
     (name: string, options?: MarkOptions): Promise<void>
@@ -87,6 +88,18 @@ export async function createTraceRecorder(
   }
 
   const snapshot = vi.defineHelper(recordSnapshot)
+  const finish = async (): Promise<void> => {
+    const status = task.result?.state
+    const stack = status === 'fail' ? task.result?.errors?.[0].stack : undefined
+    const location = task.location
+      ? { ...task.location, file: task.file.filepath }
+      : undefined
+    await recordSnapshot('vitest:onAfterRetryTask', {
+      kind: 'lifecycle',
+      ...(status === 'pass' || status === 'fail' ? { status } : {}),
+      ...(stack ? { stack } : location ? { location } : {}),
+    })
+  }
   const mark = vi.defineHelper(async <T>(
     name: string,
     bodyOrOptions?: MarkOptions | (() => T | Promise<T>),
@@ -122,6 +135,7 @@ export async function createTraceRecorder(
   }) as TraceRecorder['mark']
 
   return {
+    finish,
     snapshot,
     mark,
   }

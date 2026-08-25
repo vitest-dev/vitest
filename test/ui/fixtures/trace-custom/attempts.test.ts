@@ -11,6 +11,7 @@ test('custom trace attempts', { retry: 1, repeats: 1 }, async ({ trace }) => {
   const page = await browser.newPage()
   await page.setContent(`<main>Attempt ${currentAttempt}</main>`)
   const recorder = await trace(page)
+  onTestFinished(() => recorder.finish())
   await recorder.snapshot('attempt')
 
   if (currentAttempt % 2 === 0) {
