@@ -1,19 +1,18 @@
 import { chromium } from 'playwright'
 import { onTestFinished, test } from 'vitest'
-import { createTraceRecorder } from './trace'
 
-test('custom trace', async ({ task }) => {
+test('custom trace', async ({ trace }) => {
   const browser = await chromium.launch()
   onTestFinished(() => browser.close())
 
   const page = await browser.newPage()
   await page.setContent('<main><button>Before action</button></main>')
-  const trace = await createTraceRecorder(page, task)
+  const recorder = await trace(page)
 
-  await trace.snapshot('before action')
+  await recorder.snapshot('before action')
 
   await page.locator('main').evaluate((element) => {
     element.innerHTML = '<button>After action</button>'
   })
-  await trace.snapshot('after action')
+  await recorder.snapshot('after action')
 })

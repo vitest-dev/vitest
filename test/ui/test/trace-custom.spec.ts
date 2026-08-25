@@ -61,7 +61,7 @@ test.describe('custom trace artifact html reporter', () => {
 
 async function testCustomTrace(page: Page, baseURL: string) {
   await page.goto(baseURL)
-  await assertTestCounts(page, { pass: 1, fail: 0 })
+  await assertTestCounts(page, { pass: 2, fail: 0 })
   await openExplorerItem(page, 'custom trace')
 
   const traceView = page.getByTestId('trace-view')
@@ -80,14 +80,29 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await traceSteps.nth(0).click()
   const editor = page.getByTestId('editor')
   const activeLine = editor.locator('.CodeMirror-activeline')
-  await expect(activeLine).toHaveText(/await trace\.snapshot\('before action'\)/)
+  await expect(activeLine).toHaveText(/await recorder\.snapshot\('before action'\)/)
 
   const traceEditorMarkers = editor.getByTestId('trace-editor-marker')
   await expect(traceEditorMarkers).toHaveCount(2)
   await expect(traceEditorMarkers.nth(0)).toHaveAttribute('aria-current', 'step')
 
   await traceSteps.nth(1).click()
-  await expect(activeLine).toHaveText(/await trace\.snapshot\('after action'\)/)
+  await expect(activeLine).toHaveText(/await recorder\.snapshot\('after action'\)/)
   await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceFrame.getByRole('button', { name: 'After action' })).toBeVisible()
+
+  await page.goto(baseURL)
+  await openExplorerItem(page, 'custom trace attempts')
+  const traceOpenButtons = page.getByTestId('trace-open-button')
+  await expect(traceOpenButtons).toHaveText([
+    'Open trace viewer',
+    'Open trace viewer Retry 1',
+    'Open trace viewer Repeat 1',
+    'Open trace viewer Retry 1 / Repeat 1',
+  ])
+
+  for (let index = 0; index < 4; index++) {
+    await traceOpenButtons.nth(index).click()
+    await expect(traceView.getByTestId('trace-step-name')).toHaveText('attempt')
+  }
 }
