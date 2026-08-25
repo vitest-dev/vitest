@@ -1,7 +1,10 @@
 import { chromium } from 'playwright'
 import { test as base } from 'vitest'
+import { clearActiveTraceRecorder, setActiveTraceRecorder } from './active'
 import { getTraceAttempt } from './attempt'
 import { createTraceRecorder } from './recorder'
+
+export { expect } from './expect'
 
 export const test = base
   .extend('browser', { scope: 'worker' }, async ({}, { onCleanup }) => {
@@ -16,6 +19,10 @@ export const test = base
   })
   .extend('trace', { auto: true }, async ({ page, task }, { onCleanup }) => {
     const trace = await createTraceRecorder(page, task, getTraceAttempt(task))
-    onCleanup(() => trace.finish())
+    setActiveTraceRecorder(trace)
+    onCleanup(async () => {
+      clearActiveTraceRecorder(trace)
+      await trace.finish()
+    })
     return trace
   })

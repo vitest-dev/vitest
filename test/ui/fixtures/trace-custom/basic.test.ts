@@ -1,16 +1,12 @@
-import { expect } from 'vitest'
-import { test } from './trace/test'
+import { expect, test } from './trace/test'
 
-test('custom trace', async ({ page, trace }) => {
+test('custom trace', async ({ page }) => {
   await page.setContent('<main><button>Before action</button></main>')
 
-  await trace.snapshot('before action')
+  await page.locator('main').evaluate((element) => {
+    element.innerHTML = '<button>After action</button>'
+  })
 
-  const result = await trace.mark('action', async () => {
-    await page.locator('main').evaluate((element) => {
-      element.innerHTML = '<button>After action</button>'
-    })
-    return 'action result'
-  }, { kind: 'action' })
-  expect(result).toBe('action result')
+  await expect(page.getByRole('button', { name: 'After action' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Missing' }).click({ timeout: 10 })).rejects.toThrow()
 })
