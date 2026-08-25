@@ -1,5 +1,5 @@
 import { chromium } from 'playwright'
-import { test as base } from 'vitest'
+import { inject, test as base } from 'vitest'
 import { getTraceAttempt } from './attempt'
 import { createTraceRecorder } from './recorder'
 
@@ -12,6 +12,7 @@ export const test = base
   .extend('page', async ({ browser }, { onCleanup }) => {
     const page = await browser.newPage()
     onCleanup(() => page.close())
+    await page.goto(inject('traceAppUrl'))
     return page
   })
   .extend('trace', { auto: true }, async ({ page, task }, { onCleanup }) => {

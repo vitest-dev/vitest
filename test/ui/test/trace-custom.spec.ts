@@ -117,6 +117,7 @@ async function testCustomTrace(page: Page, baseURL: string) {
       'attempt',
       'test finished',
     ])
+    await expect(traceFrame.getByText(`Attempt ${index}`)).toBeVisible()
     const lifecycleStep = traceView.getByTestId('trace-step').nth(1)
     if (index % 2 === 0) {
       await expect(lifecycleStep).toHaveClass(/text-red-600/)
