@@ -2,6 +2,7 @@ import { test, vi } from 'vitest'
 import { userEvent, page } from 'vitest/browser'
 
 type PointerAction = (event: PointerEvent) => void
+type MouseAction = (event: MouseEvent) => void
 
 test('click triggers hover events', async ({ expect }) => {
   document.body.innerHTML = `
@@ -10,11 +11,11 @@ test('click triggers hover events', async ({ expect }) => {
     </div>
   `;
 
-  const enter = vi.fn<PointerAction>()
-  const leave = vi.fn<PointerAction>()
+  const enter = vi.fn<MouseAction>()
+  const leave = vi.fn<MouseAction>()
   const click = vi.fn<PointerAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('mouseenter', enter)
   buttonElement.addEventListener('mouseleave', leave)
@@ -40,11 +41,11 @@ test('click at coordinates triggers hover events', async ({ expect }) => {
     <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
   `
 
-  const enter = vi.fn<PointerAction>()
-  const leave = vi.fn<PointerAction>()
+  const enter = vi.fn<MouseAction>()
+  const leave = vi.fn<MouseAction>()
   const click = vi.fn<PointerAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('mouseenter', enter)
   buttonElement.addEventListener('mouseleave', leave)
@@ -72,12 +73,12 @@ test('moves between coordinates', async ({ expect }) => {
     <div id="b" style="position:absolute; top:200px; left:0; width:100px; height:100px;"></div>
   `
 
-  const enterA = vi.fn<PointerAction>()
-  const leaveA = vi.fn<PointerAction>()
-  const enterB = vi.fn<PointerAction>()
+  const enterA = vi.fn<MouseAction>()
+  const leaveA = vi.fn<MouseAction>()
+  const enterB = vi.fn<MouseAction>()
 
-  const a = document.body.querySelector('#a')
-  const b = document.body.querySelector('#b')
+  const a = document.body.querySelector('#a') as HTMLDivElement
+  const b = document.body.querySelector('#b') as HTMLDivElement
 
   a.addEventListener('mouseenter', enterA)
   a.addEventListener('mouseleave', leaveA)
@@ -98,11 +99,11 @@ test('moves between coordinates', async ({ expect }) => {
 test('down only fires mousedown event', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
-  const down = vi.fn<PointerAction>()
-  const up = vi.fn<PointerAction>()
+  const down = vi.fn<MouseAction>()
+  const up = vi.fn<MouseAction>()
   const click = vi.fn<PointerAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('mousedown', down)
   buttonElement.addEventListener('mouseup', up)
@@ -128,9 +129,9 @@ test.for([
     <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
   `
 
-  const spy = vi.fn<PointerAction>()
+  const spy = vi.fn<(e: PointerEvent | MouseEvent) => void>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener(action === 'click' ? 'click' : `mouse${action}`, spy)
 
@@ -150,9 +151,9 @@ test('multiple clicks trigger double click', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
   const click = vi.fn<PointerAction>()
-  const doubleClick = vi.fn<PointerAction>()
+  const doubleClick = vi.fn<MouseAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('click', click)
   buttonElement.addEventListener('dblclick', doubleClick)
@@ -175,11 +176,11 @@ test('multiple clicks trigger double click', async ({ expect }) => {
 test('clicks with middle button', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
-  const down = vi.fn<PointerAction>()
-  const up = vi.fn<PointerAction>()
+  const down = vi.fn<MouseAction>()
+  const up = vi.fn<MouseAction>()
   const click = vi.fn<PointerAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('mousedown', down)
   buttonElement.addEventListener('mouseup', up)
@@ -203,11 +204,11 @@ test('clicks with middle button', async ({ expect }) => {
 test('clicks with right button', async ({ expect }) => {
   document.body.innerHTML = `<button>Button</button>`
 
-  const down = vi.fn<PointerAction>()
-  const up = vi.fn<PointerAction>()
+  const down = vi.fn<MouseAction>()
+  const up = vi.fn<MouseAction>()
   const click = vi.fn<PointerAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('mousedown', down)
   buttonElement.addEventListener('mouseup', up)
@@ -237,20 +238,20 @@ test('drags and drops', async ({ expect }) => {
 
   const DRAG_CONTENT = 'drag content'
 
-  const source = document.body.querySelector<HTMLElement>('#source')
-  const dropTarget = document.body.querySelector<HTMLElement>('#target')
+  const source = document.body.querySelector('#source') as HTMLElement
+  const dropTarget = document.body.querySelector('#target') as HTMLElement
 
   type DragAction = (event: DragEvent) => void
 
-  let dragData: string
+  let dragData: string | undefined
 
   const dragStart = vi.fn<DragAction>((event) => {
-    event.dataTransfer.setData('text/plain', DRAG_CONTENT)
+    event.dataTransfer!.setData('text/plain', DRAG_CONTENT)
   })
   const dragEnter = vi.fn<DragAction>()
   const drop = vi.fn<DragAction>((event) => {
     // retrieving the data from the mock doesn't work, so we need to save it
-    dragData = event.dataTransfer.getData('text/plain')
+    dragData = event.dataTransfer!.getData('text/plain')
   })
   const dragEnd = vi.fn<DragAction>()
 
@@ -281,7 +282,7 @@ test('temporary modifiers apply to one action', async ({ expect }) => {
 
   const click = vi.fn<PointerAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('click', click)
 
@@ -310,10 +311,10 @@ test('persistent modifiers survive multiple actions', async ({ expect }) => {
   const clickC = vi.fn<PointerAction>()
   const clickD = vi.fn<PointerAction>()
 
-  const a = document.body.querySelector('#a')
-  const b = document.body.querySelector('#b')
-  const c = document.body.querySelector('#c')
-  const d = document.body.querySelector('#d')
+  const a = document.body.querySelector('#a') as HTMLButtonElement
+  const b = document.body.querySelector('#b') as HTMLButtonElement
+  const c = document.body.querySelector('#c') as HTMLButtonElement
+  const d = document.body.querySelector('#d') as HTMLButtonElement
 
   a.addEventListener('click', clickA)
   b.addEventListener('click', clickB)
@@ -340,7 +341,7 @@ test('modifiers work with coordinates', async ({ expect }) => {
 
   const click = vi.fn<PointerAction>()
 
-  const buttonElement = document.body.querySelector('button')
+  const buttonElement = document.body.querySelector('button')!
 
   buttonElement.addEventListener('click', click)
 
