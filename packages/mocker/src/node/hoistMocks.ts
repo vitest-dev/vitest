@@ -1,11 +1,14 @@
 import type {
+  ArrowFunctionExpression,
   AwaitExpression,
   CallExpression,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
   Expression,
+  FunctionExpression,
   Identifier,
   ImportDeclaration,
+  SpreadElement,
   VariableDeclaration,
 } from 'estree'
 import type { Rollup } from 'vite'
@@ -16,7 +19,16 @@ import MagicString from 'magic-string'
 import { relative } from 'pathe'
 import { esmWalker } from './esmWalker'
 
+export interface StaticMockCall {
+  method: string
+  specifier: string
+  hasFactory: boolean
+  /** the factory uses `importOriginal`/`importActual` */
+  factoryLoadsOriginal: boolean
+}
+
 export interface HoistMocksOptions {
+  onStaticMock?: (call: StaticMockCall) => void
   /**
    * List of modules that should always be imported before compiler hints.
    * @default 'vitest'
@@ -340,6 +352,22 @@ export function hoistMocks(
               `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`,
             )
           }
+          if (options.onStaticMock) {
+            const specifier = getStaticSpecifier(node.arguments[0])
+            if (specifier != null) {
+              // anything but an inline function may still load the original
+              const factory = node.arguments[1]?.type === 'ArrowFunctionExpression' || node.arguments[1]?.type === 'FunctionExpression'
+                ? node.arguments[1] as Positioned<ArrowFunctionExpression | FunctionExpression>
+                : undefined
+              options.onStaticMock({
+                method: methodName,
+                specifier,
+                hasFactory: factory != null,
+                factoryLoadsOriginal: factory != null
+                  && (factory.params.length > 0 || code.slice(factory.start, factory.end).includes('importActual')),
+              })
+            }
+          }
           // rewrite vi.mock(import('..')) into vi.mock('..')
           if (
             node.type === 'CallExpression'
@@ -609,4 +637,19 @@ function createIndexLocationsMap(source: string): Map<number, { line: number; co
     }
   }
   return map
+}
+
+function getStaticSpecifier(node: Expression | SpreadElement | undefined): string | undefined {
+  if (node?.type === 'AwaitExpression') {
+    node = node.argument
+  }
+  if (node?.type === 'ImportExpression') {
+    node = node.source
+  }
+  if (node?.type === 'Literal' && typeof node.value === 'string') {
+    return node.value
+  }
+  if (node?.type === 'TemplateLiteral' && node.expressions.length === 0) {
+    return node.quasis[0].value.cooked ?? undefined
+  }
 }

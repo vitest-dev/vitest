@@ -267,8 +267,8 @@ describe('API', () => {
   })
 
   test('recordArtifact uses vi.defineHelper callsite', async () => {
-    let artifact: TestArtifact | undefined
-    const { stderr } = await runInlineTests({
+    const artifacts: TestArtifact[] = []
+    const { root, stderr } = await runInlineTests({
       'basic.test.ts': `
         import { recordArtifact, test, vi } from 'vitest'
 
@@ -284,13 +284,20 @@ describe('API', () => {
     }, {
       reporters: [{
         onTestCaseResult(testCase) {
-          artifact = testCase.artifacts()[0]
+          artifacts.push(...testCase.artifacts())
         },
       }],
     })
 
     expect(stderr).toBe('')
-    expect(artifact?.location?.line).toBe(10)
+    expect(artifacts).toHaveLength(1)
+    expect(artifacts[0]).toMatchObject({
+      type: 'helper',
+      location: {
+        file: resolve(root, 'basic.test.ts'),
+        line: 10,
+      },
+    })
   })
 })
 
