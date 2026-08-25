@@ -70,8 +70,8 @@ async function testCustomTrace(page: Page, baseURL: string) {
 
   const traceSteps = traceView.getByTestId('trace-step')
   await expect(traceView.getByTestId('trace-step-name')).toHaveText([
-    'page.setContent',
-    'locator.evaluate',
+    'page.goto',
+    'locator.click',
     'expect.toBeVisible',
     'locator.click',
     'test finished',
@@ -89,20 +89,20 @@ async function testCustomTrace(page: Page, baseURL: string) {
   await traceSteps.nth(0).click()
   const editor = page.getByTestId('editor')
   const activeLine = editor.locator('.CodeMirror-activeline')
-  await expect(activeLine).toHaveText(/await page\.setContent/)
+  await expect(activeLine).toHaveText(/await page\.goto/)
 
   const traceEditorMarkers = editor.getByTestId('trace-editor-marker')
   await expect(traceEditorMarkers).toHaveCount(5)
-  const setContentMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: page.setContent"]'))
-  const evaluateMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: locator.evaluate"]'))
+  const gotoMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: page.goto"]'))
+  const clickMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: locator.click"]')).first()
   const assertionMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: expect.toBeVisible"]'))
-  const failedActionMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: locator.click"]'))
+  const failedActionMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: locator.click"]')).last()
   const lifecycleMarker = traceEditorMarkers.and(page.locator('[aria-label="Select trace step: vitest:onAfterRetryTask"]'))
-  await expect(setContentMarker).toHaveAttribute('aria-current', 'step')
+  await expect(gotoMarker).toHaveAttribute('aria-current', 'step')
 
   await traceSteps.nth(1).click()
-  await expect(activeLine).toHaveText(/await page\.locator\('main'\)\.evaluate/)
-  await expect(evaluateMarker).toHaveAttribute('aria-current', 'step')
+  await expect(activeLine).toHaveText(/name: 'Before action'/)
+  await expect(clickMarker).toHaveAttribute('aria-current', 'step')
   await expect(traceFrame.getByRole('button', { name: 'After action' })).toBeVisible()
 
   await traceSteps.nth(2).click()
@@ -128,13 +128,18 @@ async function testCustomTrace(page: Page, baseURL: string) {
   ])
 
   for (let index = 0; index < 4; index++) {
+    await page.goto(baseURL)
+    await openExplorerItem(page, 'custom trace attempts')
     await traceOpenButtons.nth(index).click()
     await expect(traceView.getByTestId('trace-step-name')).toHaveText([
-      'page.setContent',
+      'page.goto',
+      'locator.fill',
       'attempt',
       'test finished',
     ])
-    const lifecycleStep = traceView.getByTestId('trace-step').nth(2)
+    await traceView.getByTestId('trace-step').nth(2).click()
+    await expect(traceFrame.getByText(`Attempt ${index}`)).toBeVisible()
+    const lifecycleStep = traceView.getByTestId('trace-step').nth(3)
     if (index % 2 === 0) {
       await expect(lifecycleStep).toHaveClass(/text-red-600/)
     }
@@ -143,7 +148,9 @@ async function testCustomTrace(page: Page, baseURL: string) {
     }
   }
 
+  await page.goto(baseURL)
+  await openExplorerItem(page, 'custom trace attempts')
   await traceOpenButtons.nth(0).click()
-  await traceView.getByTestId('trace-step').nth(2).click()
+  await traceView.getByTestId('trace-step').nth(3).click()
   await expect(page.getByTestId('editor').locator('.CodeMirror-activeline')).toHaveText(/throw new Error\('Retry this attempt'\)/)
 }
