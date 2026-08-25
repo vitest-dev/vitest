@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RunnerTestCase } from 'vitest'
 import { computed } from 'vue'
-import { getAttachmentUrl, getPlaywrightTraceUrl, sanitizeFilePath } from '~/composables/attachments'
+import { getAttachmentUrl, openPlaywrightTrace, sanitizeFilePath } from '~/composables/attachments'
 import { config } from '~/composables/client'
 import { getLocationString, openLocation } from '~/composables/location'
 import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
@@ -79,16 +79,15 @@ const meta = computed(() => {
         <div flex="~ gap-2 items-center justify-between" overflow-hidden>
           <div class="flex gap-2" overflow-hidden>
             <span class="font-bold" ws-nowrap truncate>{{ annotation.type }}</span>
-            <a
-              v-if="annotation.type === 'traces' && annotation.attachment && getPlaywrightTraceUrl(annotation.attachment)"
+            <button
+              v-if="annotation.type === 'traces' && annotation.attachment"
               class="flex gap-1 items-center text-yellow-500/80 cursor-pointer"
-              :href="getPlaywrightTraceUrl(annotation.attachment)"
-              target="_blank"
-              rel="noopener"
+              type="button"
+              @click="openPlaywrightTrace(annotation.attachment)"
             >
               <span class="i-carbon:launch block" />
               Open trace
-            </a>
+            </button>
             <a
               v-if="annotation.attachment && !annotation.attachment.contentType?.startsWith('image/')"
               class="flex gap-1 items-center text-yellow-500/80 cursor-pointer"

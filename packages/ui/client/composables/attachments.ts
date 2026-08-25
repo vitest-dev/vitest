@@ -3,6 +3,11 @@ import mime from 'mime/lite'
 import { basename } from 'pathe'
 import { isReport } from '~/constants'
 
+const playwrightTraceOrigin = 'https://trace.playwright.dev'
+const playwrightTraceViewerUrl = `${playwrightTraceOrigin}/`
+// TODO: Ask Playwright to expose a readiness signal instead of relying on a fixed delay.
+const traceViewerBootstrapDelay = 1_000
+
 export function getAttachmentUrl(attachment: TestAttachment): string {
   const contentType = attachment.contentType ?? 'application/octet-stream'
   if (attachment.path) {
@@ -18,14 +23,39 @@ export function getAttachmentUrl(attachment: TestAttachment): string {
   return `data:${contentType};base64,${attachment.body}`
 }
 
-export function getPlaywrightTraceUrl(attachment: TestAttachment): string | undefined {
-  if (!attachment.path) {
-    return
+export function openPlaywrightTrace(attachment: TestAttachment): boolean {
+  const popup = window.open('', '_blank')
+  if (!popup) {
+    return false
   }
-  const traceUrl = new URL(getAttachmentUrl(attachment), window.location.href)
-  const viewerUrl = new URL('./trace/index.html', window.location.href)
-  viewerUrl.searchParams.set('trace', traceUrl.href)
-  return viewerUrl.href
+
+  popup.document.write('<!doctype html><title>Opening Playwright Trace</title><body>Opening Playwright trace...</body>')
+  popup.document.close()
+  popup.focus()
+
+  void fetch(getAttachmentUrl(attachment)).then((response) => {
+    if (!response.ok) {
+      throw new Error(`Failed to load Playwright trace: ${response.statusText}`)
+    }
+    return response.blob()
+  }).then((trace) => {
+    if (popup.closed) {
+      return
+    }
+    popup.location.href = playwrightTraceViewerUrl
+    setTimeout(() => {
+      if (!popup.closed) {
+        popup.postMessage({ method: 'load', params: { trace } }, playwrightTraceOrigin)
+      }
+    }, traceViewerBootstrapDelay)
+  }).catch(() => {
+    if (!popup.closed) {
+      popup.document.write('<!doctype html><title>Failed to Open Playwright Trace</title><body>Failed to load Playwright trace attachment.</body>')
+      popup.document.close()
+    }
+  })
+
+  return true
 }
 
 export function sanitizeFilePath(s: string, contentType: string | undefined): string {
