@@ -1,0 +1,152 @@
+import type { Page } from 'playwright'
+import type { TestContext } from 'vitest'
+import type { MarkOptions } from 'vitest/browser'
+// @ts-ignore
+import { parseStacktrace } from '@vitest/utils/source-map'
+import { createRequire } from 'node:module'
+import { recordArtifact, vi } from 'vitest'
+
+const require = createRequire(import.meta.url)
+const rrwebSnapshotPath = require.resolve('rrweb-snapshot')
+
+export interface TraceAttempt {
+  retry: number
+  repeats: number
+  startTime: number
+}
+
+export interface SnapshotOptions extends MarkOptions {
+  location?: {
+    file: string
+    line: number
+    column: number
+  }
+  status?: 'pass' | 'fail'
+}
+
+interface SnapshotEntryOptions extends SnapshotOptions {
+  range?: {
+    id: string
+    phase: 'start' | 'end'
+  }
+}
+
+export interface TraceRecorder {
+  finish: () => Promise<void>
+  snapshot: (name: string, options?: SnapshotOptions) => Promise<void>
+  mark: {
+    (name: string, options?: MarkOptions): Promise<void>
+    <T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T>
+  }
+}
+
+export async function createTraceRecorder(
+  page: Page,
+  task: TestContext['task'],
+  attempt: TraceAttempt,
+): Promise<TraceRecorder> {
+  let snapshotReady: Promise<unknown> | undefined
+
+  async function recordSnapshot(name: string, options: SnapshotEntryOptions = {}): Promise<void> {
+    const startTime = performance.now() - attempt.startTime
+    await (snapshotReady ??= page.addScriptTag({ path: rrwebSnapshotPath }))
+    const stackLocation = options.stack ? parseStacktrace(options.stack)[0] : undefined
+    const location = options.location ?? (stackLocation
+      ? {
+          file: stackLocation.file,
+          line: stackLocation.line,
+          column: stackLocation.column,
+        }
+      : undefined)
+    const snapshot = await page.evaluate(() => {
+      const { snapshot } = (globalThis as any).rrwebSnapshot
+      const serialized = snapshot(document)
+      if (!serialized) {
+        throw new Error('Failed to serialize document')
+      }
+      return {
+        serialized,
+        viewport: {
+          width: globalThis.innerWidth,
+          height: globalThis.innerHeight,
+        },
+        scroll: {
+          x: globalThis.scrollX,
+          y: globalThis.scrollY,
+        },
+        pseudoClassIds: {},
+      }
+    })
+
+    await recordArtifact(task, {
+      type: 'internal:browserTrace',
+      data: {
+        retry: attempt.retry,
+        repeats: attempt.repeats,
+        recordCanvas: false,
+        entries: [{
+          name,
+          kind: options.kind ?? 'mark',
+          startTime,
+          snapshot,
+          ...(options.range ? { range: options.range } : {}),
+          ...(options.status ? { status: options.status } : {}),
+          ...(location ? { location } : {}),
+        }],
+      },
+    })
+  }
+
+  const finish = async (): Promise<void> => {
+    const status = task.result?.state
+    const stack = status === 'fail' ? task.result?.errors?.[0].stack : undefined
+    const location = task.location
+      ? { ...task.location, file: task.file.filepath }
+      : undefined
+    await recordSnapshot('vitest:onAfterRetryTask', {
+      kind: 'lifecycle',
+      ...(status === 'pass' || status === 'fail' ? { status } : {}),
+      ...(stack ? { stack } : location ? { location } : {}),
+    })
+  }
+
+  const mark: TraceRecorder['mark'] = async <T>(
+    name: string,
+    bodyOrOptions?: MarkOptions | (() => T | Promise<T>),
+    options?: MarkOptions,
+  ): Promise<T | void> => {
+    if (typeof bodyOrOptions !== 'function') {
+      return recordSnapshot(name, bodyOrOptions)
+    }
+
+    const rangeId = Math.random().toString(36).slice(2)
+    await recordSnapshot(name, {
+      ...options,
+      kind: 'mark',
+      range: { id: rangeId, phase: 'start' },
+    })
+
+    let status: 'pass' | 'fail' = 'pass'
+    try {
+      return await bodyOrOptions()
+    }
+    catch (error) {
+      status = 'fail'
+      throw error
+    }
+    finally {
+      await recordSnapshot(name, {
+        ...options,
+        kind: options?.kind,
+        range: { id: rangeId, phase: 'end' },
+        status,
+      })
+    }
+  }
+
+  return {
+    finish,
+    snapshot: vi.defineHelper(recordSnapshot),
+    mark: vi.defineHelper(mark)
+  }
+}

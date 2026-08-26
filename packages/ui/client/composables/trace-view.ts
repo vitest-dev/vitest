@@ -97,7 +97,13 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Map<string, Norma
     const trace = artifact.data as BrowserTraceData
     const key = getTraceAttemptKey(trace)
     grouped[key] ??= []
-    grouped[key].push(trace)
+    grouped[key].push({
+      ...trace,
+      entries: trace.entries.map(entry => ({
+        ...entry,
+        location: entry.location ?? artifact.location,
+      })),
+    })
   }
 
   const merged = new Map<string, NormalizedBrowserTraceData>()
@@ -212,7 +218,9 @@ const selectedTestTask = computed(() => {
   const test = selectedTest.value
     ? client.state.idMap.get(selectedTest.value)
     : undefined
-  return test?.type === 'test' && isTraceViewEnabled(test.file)
+  const hasTrace = test?.type === 'test'
+    && test.artifacts.some(artifact => artifact.type === 'internal:browserTrace')
+  return test?.type === 'test' && (isTraceViewEnabled(test.file) || hasTrace)
     ? test
     : undefined
 })
@@ -226,6 +234,7 @@ watch(selectedTest, (testId) => {
     const test = selectedTestTask.value
     if (test) {
       // Auto-open trace view when selecting a trace-enabled test.
+      detailsPosition.value = 'bottom'
       setActiveTrace({ test, selectedStepIndex: 0 })
       return
     }
