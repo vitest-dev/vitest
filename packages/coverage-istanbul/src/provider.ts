@@ -1,17 +1,14 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
-import type { Instrumenter } from 'istanbul-lib-instrument'
+import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
+import type { Instrumenter } from '@vitest/istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
 import type { CoverageProvider, ReportContext, Vite, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
-// @ts-expect-error missing types
-import { defaults as istanbulDefaults } from '@istanbuljs/schema'
 import { addMapping, GenMapping, toEncodedMap } from '@jridgewell/gen-mapping'
 import { eachMapping, TraceMap } from '@jridgewell/trace-mapping'
-import libCoverage from 'istanbul-lib-coverage'
-import { createInstrumenter } from 'istanbul-lib-instrument'
-import libReport from 'istanbul-lib-report'
-import libSourceMaps from 'istanbul-lib-source-maps'
-import reports from 'istanbul-reports'
+import * as libCoverage from '@vitest/istanbul-lib-coverage'
+import { createInstrumenter } from '@vitest/istanbul-lib-instrument'
+import * as libReport from '@vitest/istanbul-lib-report'
+import * as libSourceMaps from '@vitest/istanbul-lib-source-maps'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
 import c from 'tinyrainbow'
@@ -58,16 +55,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         coverageGlobalScope: 'globalThis',
         coverageGlobalScopeFunc: false,
         ignoreClassMethods: this.options.ignoreClassMethods,
-        parserPlugins: [
-          ...istanbulDefaults.instrumenter.parserPlugins,
-          ['importAttributes', { deprecatedAssertSyntax: true }],
-        ],
-        generatorOpts: {
-          // @ts-expect-error missing type
-          importAttributesKeyword: 'with',
-        },
-
-        // Custom option from the patched istanbul-lib-instrument: https://github.com/istanbuljs/istanbuljs/pull/835
         ignoreLines: true,
       })
     }
@@ -206,13 +193,14 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     for (const reporter of this.options.reporter) {
       // Type assertion required for custom reporters
-      reports
-        .create(reporter[0] as Parameters<typeof reports.create>[0], {
+      const reportInstance = await libReport
+        .createAsync(reporter[0] as Parameters<typeof libReport.create>[0], {
           skipFull: this.options.skipFull,
           projectRoot: this.ctx.config.root,
           ...reporter[1],
         })
-        .execute(context)
+
+      reportInstance.execute(context)
     }
 
     if (this.options.thresholds) {
