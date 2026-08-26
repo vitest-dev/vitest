@@ -110,6 +110,16 @@ test.describe('ui', () => {
     await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
     expect(page.url()).toBe(`${cleanPageUrl}#/`)
 
+    const tokenCookie = (await page.context().cookies(cleanPageUrl))
+      .find(cookie => cookie.name === 'vitest-ui-token')
+    expect(tokenCookie).toMatchObject({
+      httpOnly: true,
+      sameSite: 'Strict',
+    })
+    expect(tokenCookie!.expires).toBeGreaterThan(
+      Date.now() / 1000 + 60 * 60 * 24 * 364,
+    )
+
     await page.goto(cleanPageUrl)
     await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
     expect(page.url()).toBe(`${cleanPageUrl}#/`)
