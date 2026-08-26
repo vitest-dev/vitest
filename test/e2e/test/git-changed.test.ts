@@ -28,6 +28,21 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
     expect(stdout).not.toContain('not-related.test.ts')
   })
 
+  it('should run the whole test suite if file exists in dot-directory trigger', async () => {
+    const dotFileName = 'fixtures/git-changed/related/.temp/rerun.temp'
+    createFile(dotFileName, '')
+    const { stdout, stderr } = await runVitest({
+      root: join(process.cwd(), 'fixtures/git-changed/related'),
+      include: ['related.test.ts'],
+      forceRerunTriggers: ['**/.temp/**'],
+      changed: true,
+    })
+    expect(stderr).toBe('')
+    expect(stdout).toContain('1 passed')
+    expect(stdout).toContain('related.test.ts')
+    expect(stdout).not.toContain('not-related.test.ts')
+  })
+
   it('should run no tests if file does not exist', async () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
