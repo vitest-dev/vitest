@@ -141,7 +141,7 @@ function codemirrorChanges() {
 }
 
 const TRACE_GUTTER_ID = 'trace-step-gutter'
-const traceGutterConfigs = isTraceViewEnabled(props.file)
+const traceGutterConfigs = activeTraceView.value || isTraceViewEnabled(props.file)
   ? [{ className: TRACE_GUTTER_ID, style: 'width: 14px' }]
   : []
 let traceGutterLines: number[] = []

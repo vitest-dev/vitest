@@ -1496,6 +1496,12 @@ importers:
       happy-dom:
         specifier: ^20.11.2
         version: 20.11.2
+      playwright:
+        specifier: 'catalog:'
+        version: 1.62.1
+      rrweb-snapshot:
+        specifier: 2.1.1
+        version: 2.1.1(patch_hash=b66b30796877352a5f887f3f4115c4e7265ddc11772af2223da4bd92293716f6)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
