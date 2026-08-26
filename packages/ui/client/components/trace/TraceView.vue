@@ -4,7 +4,7 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
-import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
+import { getTraceEntryClass, selectActiveTraceStep, showTraceSelectorHighlight } from '~/composables/trace-view'
 
 const props = defineProps<{
   trace: NormalizedBrowserTraceData
@@ -120,11 +120,20 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
           border: 2px solid #3b82f6;
           box-sizing: border-box;
         `
+        overlay.style.display = showTraceSelectorHighlight.value ? '' : 'none'
         doc.documentElement.appendChild(overlay)
       })
     }
   }
 }, { immediate: true })
+
+watch(showTraceSelectorHighlight, (show) => {
+  const overlay = iframeEl.value?.contentDocument
+    ?.querySelector<HTMLElement>('[data-testid="trace-view-highlight"]')
+  if (overlay) {
+    overlay.style.display = show ? '' : 'none'
+  }
+})
 
 function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
   const selected = props.selection.selectedStepIndex === index
