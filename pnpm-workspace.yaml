@@ -65,26 +65,26 @@ catalog:
   '@types/semver': ^7.8.0
   '@types/ws': ^8.18.1
   '@types/yauzl': ^3.4.0
-  '@unocss/reset': ^66.7.5
+  '@unocss/reset': ^66.8.1
   '@vitejs/plugin-vue': ^6.0.8
   '@vitest/istanbul-lib-coverage': ^1.0.0
   '@vitest/istanbul-lib-report': ^1.0.0
   '@vueuse/core': ^14.4.0
   acorn-walk: ^8.3.5
   ansivision: ^0.4.0
-  birpc: ^4.1.0
+  birpc: ^4.2.0
   cac: ^6.7.14
   chai: ^6.2.2
   flatted: ^3.4.4
   knip: ^6.32.2
   loupe: ^3.2.1
-  magic-string: ^1.2.0
+  magic-string: ^1.2.2
   magicast: ^0.5.4
   msw: ^2.15.0
   obug: ^2.1.4
   pathe: ^2.0.3
   playwright: ^1.62.1
-  rollup: ^4.62.4
+  rollup: ^4.62.5
   semver: ^7.8.5
   sinon: ^22.1.0
   sinon-chai: ^4.0.1
@@ -98,7 +98,7 @@ catalog:
   tinyrainbow: ^3.1.1
   tinyspy: ^4.0.4
   typescript: ^5.9.3
-  unocss: ^66.7.5
+  unocss: ^66.8.1
   vite: 8.0.11
   vitest-sonar-reporter: 3.0.0
   vue: ^3.5.41
