@@ -136,6 +136,25 @@ describe('vi.when()', () => {
       expect(w).toHaveBeenExhausted()
     })
 
+    test('resolves an unwrapped value for an async mock using `thenResolve`', async () => {
+      const spy = vi.fn<(input: string) => Promise<string>>()
+
+      const w = vi.when(spy)
+        .calledWith('easter-egg')
+        .thenResolve('bar')
+
+      expect(w).not.toHaveBeenExhausted()
+
+      await expect(spy('easter-egg')).resolves.toBe('bar')
+
+      expect(spy).toHaveBeenLastCalledWith('easter-egg')
+      expect(spy).toHaveLastResolvedWith('bar')
+
+      expect(spy).toHaveBeenCalledOnce()
+
+      expect(w).toHaveBeenExhausted()
+    })
+
     test('rejects a promise when using `toReject`', async () => {
       const spy = vi.fn<Fn>()
 
