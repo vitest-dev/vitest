@@ -3,7 +3,7 @@
   "type": "module",
   "version": "5.0.0-rc.2",
   "private": true,
-  "packageManager": "pnpm@11.22.0",
+  "packageManager": "pnpm@11.24.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
@@ -58,7 +58,7 @@
     "changelogithub": "^14.0.0",
     "eslint": "^10.8.1",
     "knip": "catalog:",
-    "magic-string": "^1.2.0",
+    "magic-string": "^1.2.2",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
     "rollup": "catalog:",
