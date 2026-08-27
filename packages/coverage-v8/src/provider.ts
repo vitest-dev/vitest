@@ -449,6 +449,13 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         }
       }
 
+      // V8 can report scripts that are not backed by a file, e.g. "about:", "data:"
+      // or "blob:" URLs coming from virtual modules. `fileURLToPath` throws on those.
+      if (!result.url.startsWith(FILE_PROTOCOL)) {
+        debug('Skipping non-file URL %s', result.url)
+        continue
+      }
+
       if (this.isIncluded(fileURLToPath(result.url))) {
         scriptCoverages.push({ ...result, url: decodeURIComponent(result.url) })
       }
