@@ -19,13 +19,29 @@ describe.for([
     fs.editFile('./basic.test.js', code => `${code}\n`)
 
     await vitest.waitForStdout('RERUN  ../basic.test.js')
-    await vitest.waitForStdout('Waiting for file changes...')
+    await vitest.waitForStdout('Tests failed. Watching for file changes...')
 
     expect(vitest.stdout).not.toContain('log fail')
     expect(vitest.stdout).toContain('❯ failed.test.js')
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
     expect(vitest.stdout).toContain('1 passed')
+    expect(vitest.stdout).not.toContain('PASS  Waiting for file changes')
+  })
+
+  it('returns to PASS once the failing file is fixed', async () => {
+    const { vitest, fs } = await runReporterTests(isTTY)
+
+    expect(vitest.stdout).toContain('1 failed')
+
+    vitest.resetOutput()
+
+    fs.editFile('./failed.test.js', code => code.replace('throw new Error(\'failed\')', ''))
+
+    await vitest.waitForStdout('RERUN  ../failed.test.js')
+    await vitest.waitForStdout('PASS  Waiting for file changes...')
+
+    expect(vitest.stdout).not.toContain('1 failed')
   })
 
   it('prints tests once if changed test is the same', async () => {
