@@ -633,10 +633,16 @@ export function subsetEquality(
           const result
             = object != null
               && hasPropertyInObject(object, key)
-              && equals(object[key], subset[key], [
-                ...filteredCustomTesters,
-                subsetEqualityWithContext(seenReferences),
-              ])
+              && equals(
+                object[key],
+                subset[key],
+                isAsymmetric(subset[key])
+                  ? filteredCustomTesters
+                  : [
+                      ...filteredCustomTesters,
+                      subsetEqualityWithContext(seenReferences),
+                    ],
+              )
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only

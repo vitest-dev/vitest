@@ -196,6 +196,14 @@ describe('jest-expect', () => {
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
   })
 
+  it('checks every expected property in arrayContaining inside toMatchObject', () => {
+    expect({ records: [{ id: 1 }] }).not.toMatchObject({
+      records: expect.arrayContaining([
+        { id: 1, required: 'value' },
+      ]),
+    })
+  })
+
   it('asymmetric matchers and equality testers', () => {
     // iterable equality testers
     expect([new Set(['x'])]).toEqual(
