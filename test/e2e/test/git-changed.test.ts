@@ -1,7 +1,9 @@
+import { webcrypto as crypto } from 'node:crypto'
 import { join } from 'node:path'
+import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 
-import { createFile, editFile, resolvePath, runVitest } from '../../test-utils'
+import { createFile, editFile, resolvePath, runVitest, useFS } from '../../test-utils'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
@@ -32,6 +34,32 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   })
+})
+
+// https://github.com/vitest-dev/vitest/issues/11054
+// picomatch's default `dot: false` refuses to let `**` cross a dot-prefixed directory
+// segment, so a project checked out under e.g. `.app/` silently ignored every trigger.
+it.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTriggers matches when project root has a dot-prefixed directory segment', async () => {
+  const dotRoot = resolve(process.cwd(), `.vitest-test-${crypto.randomUUID()}`)
+  const fs = useFS(dotRoot, {
+    'sample.test.ts': `
+      import { expect, it } from 'vitest'
+      it('passes', () => {
+        expect(1).toBe(1)
+      })
+    `,
+    'trigger.txt': 'x',
+  })
+
+  const { stdout, stderr } = await runVitest({
+    root: fs.root,
+    include: ['sample.test.ts'],
+    related: 'trigger.txt',
+    forceRerunTriggers: ['**/trigger.txt'],
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('1 passed')
 })
 
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {

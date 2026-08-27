@@ -135,7 +135,11 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    // `dot: true` so a trigger like '**/package.json' still matches when the project
+    // itself lives under a dot-prefixed directory segment (e.g. `.app/`, `~/.local/src/`) -
+    // picomatch's default `dot: false` otherwise refuses to let `**` cross that segment,
+    // silently disabling every trigger. See https://github.com/vitest-dev/vitest/issues/11054
+    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers, { dot: true }) : undefined
     if (matcher && related.some(file => matcher(file))) {
       return specs
     }
