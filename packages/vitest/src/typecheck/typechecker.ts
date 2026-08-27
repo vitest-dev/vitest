@@ -274,48 +274,16 @@ export class Typechecker {
 
   public async stop(): Promise<void> {
     const child = this.process
+    this.process = undefined
     if (!child) {
       return
     }
 
+    // the open pipes keep the main process alive even after the checker is gone
     child.stdout?.destroy()
     child.stderr?.destroy()
 
-    let treeKill: Result | undefined
-    try {
-      if (process.platform === 'win32' && child.pid != null) {
-        treeKill = x('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
-          nodeOptions: { stdio: 'ignore' },
-          throwOnError: false,
-          timeout: 5000,
-        })
-      }
-      else if (child.pid != null) {
-        try {
-          process.kill(-child.pid)
-        }
-        catch {
-          child.kill()
-        }
-      }
-      else {
-        child.kill()
-      }
-    }
-    finally {
-      this.process = undefined
-    }
-
-    if (treeKill) {
-      try {
-        if ((await treeKill).exitCode !== 0) {
-          child.kill()
-        }
-      }
-      catch {
-        child.kill()
-      }
-    }
+    await killProcessTree(child)
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string): Promise<void> {
@@ -564,4 +532,33 @@ function findGeneratedPosition(traceMap: TraceMap, { line, column, source }: { l
     }
   }
   return { line: null, column: null }
+}
+
+async function killProcessTree(child: ChildProcess): Promise<void> {
+  if (child.pid == null || child.exitCode !== null || child.signalCode !== null) {
+    child.kill()
+    return
+  }
+
+  // Windows has no process groups, so `taskkill` walks the tree instead
+  if (process.platform === 'win32') {
+    const killed = await x('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
+      nodeOptions: { stdio: 'ignore' },
+      throwOnError: false,
+      timeout: 5000,
+    }).then(result => result.exitCode === 0, () => false)
+
+    if (!killed) {
+      child.kill()
+    }
+    return
+  }
+
+  // `prepare` spawns detached, which makes the child the leader of its own group
+  try {
+    process.kill(-child.pid)
+  }
+  catch {
+    child.kill()
+  }
 }

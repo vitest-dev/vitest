@@ -1,37 +1,7 @@
 import fs from 'node:fs'
 import { resolve } from 'pathe'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, onTestFinished } from 'vitest'
 import { runInlineTests, runVitest, ts } from '../../test-utils'
-
-function isProcessRunning(pid: number) {
-  try {
-    process.kill(pid, 0)
-    return true
-  }
-  catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ESRCH') {
-      return false
-    }
-    throw error
-  }
-}
-
-function readPids(pidFile: string) {
-  try {
-    const pids: unknown = JSON.parse(fs.readFileSync(pidFile, 'utf8'))
-    if (
-      Array.isArray(pids)
-      && pids.length === 2
-      && pids.every((pid): pid is number => Number.isInteger(pid) && pid > 0)
-    ) {
-      return pids
-    }
-  }
-  catch {
-    // The checker may still be writing the file.
-  }
-  return []
-}
 
 describe('Typechecker', () => {
   it('handles non-existing typechecker command gracefully', async () => {
@@ -120,23 +90,56 @@ describe('Typechecker', () => {
     })
 
     const pidFile = resolve(root, 'checker-pids.json')
-    await expect.poll(() => readPids(pidFile), { timeout: 5000 }).toHaveLength(2)
-    const pids = readPids(pidFile)
-
-    try {
-      expect(pids.map(isProcessRunning)).toEqual([true, true])
-      await ctx!.close()
-      await expect.poll(
-        () => pids.map(isProcessRunning),
-        { timeout: 5000 },
-      ).toEqual([false, false])
-    }
-    finally {
+    let pids: number[] = []
+    onTestFinished(() => {
       for (const pid of pids.reverse()) {
-        if (isProcessRunning(pid)) {
+        if (isProcessAlive(pid)) {
           process.kill(pid)
         }
       }
-    }
+    })
+
+    await expect.poll(() => {
+      pids = readPids(pidFile)
+      return pids
+    }, { timeout: 5000 }).toHaveLength(2)
+
+    expect(pids.map(isProcessAlive)).toEqual([true, true])
+    await ctx!.close()
+    await expect.poll(
+      () => pids.map(isProcessAlive),
+      { timeout: 5000 },
+    ).toEqual([false, false])
   })
 })
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    // Sending signal 0 checks if the process exists without actually killing it:
+    // https://nodejs.org/api/process.html#processkillpid-signal
+    process.kill(pid, 0)
+    return true
+  }
+  catch (error) {
+    // ESRCH means the process is gone. Treat anything else (e.g. EPERM) as alive
+    // so we never reclaim a lock from a process that is still running.
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
+  }
+}
+
+function readPids(pidFile: string) {
+  try {
+    const pids = JSON.parse(fs.readFileSync(pidFile, 'utf8'))
+    if (
+      Array.isArray(pids)
+      && pids.length === 2
+      && pids.every((pid): pid is number => Number.isInteger(pid) && pid > 0)
+    ) {
+      return pids
+    }
+  }
+  catch {
+    // The checker may still be writing the file.
+  }
+  return []
+}
