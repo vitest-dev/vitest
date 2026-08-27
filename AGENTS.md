@@ -148,12 +148,12 @@ Rules that `lint:fix` cannot fix:
 
 ### Comments Policy
 
-- Avoid writing comments for every change - if the code is expressive enough, it doesn't need a comment.
+- Avoid writing comments for every code change - if the code is expressive enough, it doesn't need a comment.
 - In general, only public methods MUST have comments. Exported internal functions, properties or constants SHOULD not have comments. The name SHOULD be expressive enough to not need a comment.
-- You MIGHT leave a comment if the line or a block of code deals with an edge case that is not ovbious from the context. In general, the naming SHOULD provide enough information. If you spread the logic between different files or functions and NEED to add a comment, reconsider the change - perhaps, there is a simpler solution.
-- When leaving a comment, be BRIEF and do not overexplain. If you wrote a big comment with edge cases and examples, rethink the code - there MIGHT be a simpler change that does not require a wall of text.
+- You MIGHT leave a comment if the line or a block of code deals with an edge case that is not obvious from the context. In general, the naming SHOULD provide enough information. If you spread the logic between different files or functions and NEED to add a comment, reconsider the change - perhaps, there is a simpler solution.
+- When adding a code comment, be BRIEF and do not overexplain. If you wrote a big comment with edge cases and examples, rethink the code - there MIGHT be a simpler change that does not require a wall of text.
 - You MUST NOT use overly specific jargon in comments, keep it simple.
-
+- You MUST NOT add a comment that only justifies the change against a prior implementation.
 
 ## Common Workflows
 
