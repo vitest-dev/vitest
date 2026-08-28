@@ -100,6 +100,36 @@ test('vi.fn() has overridable length', () => {
 })
 
 describe('vi.fn() state', () => {
+  test('vi.clearAllMocks() clears manually modified state', () => {
+    const mock = vi.fn()
+    const state = mock.mock
+
+    vi.clearAllMocks()
+    state.calls.push([])
+    vi.clearAllMocks()
+
+    assertStateEmpty(state)
+  })
+
+  test('vi.clearAllMocks() only clears mocks with dirty state', () => {
+    const mocks = Array.from({ length: 100 }, () => vi.fn())
+    const dirtyMock = mocks.at(-1)!
+    dirtyMock()
+
+    const cleared: number[] = []
+    for (const [index, mock] of mocks.entries()) {
+      const mockClear = mock.mockClear
+      mock.mockClear = function () {
+        cleared.push(index)
+        return mockClear.call(this)
+      }
+    }
+
+    vi.clearAllMocks()
+
+    expect(cleared).toEqual([99])
+  })
+
   // TODO: test when calls is not empty
   test('vi.fn() clears calls without a custom implementation', () => {
     const mock = vi.fn()
@@ -318,6 +348,14 @@ describe('vi.fn() state', () => {
 })
 
 describe('vi.fn() configuration', () => {
+  test('vi.resetAllMocks() resets an uncalled once implementation', () => {
+    const mock = vi.fn().mockReturnValueOnce(42)
+
+    vi.resetAllMocks()
+
+    expect(mock()).toBe(undefined)
+  })
+
   test('vi.fn() resets the original mock implementation', () => {
     const mock = vi.fn(() => 42)
     expect(mock()).toBe(42)

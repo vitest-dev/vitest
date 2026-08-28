@@ -85,6 +85,29 @@ test('instance mocks are independently tracked, but prototype shares the state',
   expect(Class.prototype.method).toHaveBeenCalledTimes(3)
 })
 
+test('clearAllMocks clears instance and prototype state', () => {
+  const { Class } = mockModule()
+  const instance = new Class()
+
+  instance.method()
+  expect(instance.method).toHaveBeenCalledOnce()
+  expect(Class.prototype.method).toHaveBeenCalledOnce()
+
+  vi.clearAllMocks()
+
+  expect(instance.method).not.toHaveBeenCalled()
+  expect(Class.prototype.method).not.toHaveBeenCalled()
+})
+
+test('resetAllMocks resets uncalled prototype configuration', () => {
+  const { Class } = mockModule()
+  Class.prototype.method.mockReturnValue(42)
+
+  vi.resetAllMocks()
+
+  expect(new Class().method()).toBe(undefined)
+})
+
 test('instance methods and prototype method share the state', () => {
   const { Class } = mockModule()
   const t1 = vi.mocked(new Class())
