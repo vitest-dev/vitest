@@ -72,6 +72,10 @@ test.describe('ui', () => {
   test('persists attempt in URL', async ({ page }) => {
     await testPersistsAttemptInURL(page)
   })
+
+  test('persists resized trace panes across reloads', async ({ page }) => {
+    await testPersistsResizedTracePanes(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -153,6 +157,10 @@ test.describe('html reporter', () => {
 
   test('persists attempt in URL', async ({ page }) => {
     await testPersistsAttemptInURL(page)
+  })
+
+  test('persists resized trace panes across reloads', async ({ page }) => {
+    await testPersistsResizedTracePanes(page)
   })
 })
 
@@ -497,4 +505,71 @@ async function testPersistsAttemptInURL(page: Page) {
 function getHashParams(page: Page) {
   const hash = new URL(page.url()).hash
   return Object.fromEntries(new URLSearchParams(hash.split('?')[1]))
+}
+
+async function testPersistsResizedTracePanes(page: Page) {
+  // Opening a trace renders resizable step list and iframe panes.
+  await openExplorerItem(page, 'simple')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByRole('listbox', { name: 'Trace steps' })
+  const splitpanes = traceView.locator('.splitpanes').first()
+  const splitter = splitpanes.locator('.splitpanes__splitter').first()
+  await expect(traceView).toBeVisible()
+  await expect(splitter).toBeVisible()
+
+  const initialTraceStepsBox = await traceSteps.boundingBox()
+  const traceViewBox = await traceView.boundingBox()
+  const splitterBox = await splitter.boundingBox()
+  if (!initialTraceStepsBox || !traceViewBox || !splitterBox) {
+    throw new Error('Trace split panes are not visible')
+  }
+
+  // Resize the step list from its 30% default to roughly 60% and persist both pane sizes.
+  expect(initialTraceStepsBox.width).toBeLessThan(traceViewBox.width / 2)
+  await page.mouse.move(
+    splitterBox.x + splitterBox.width / 2,
+    splitterBox.y + splitterBox.height / 2,
+  )
+  await page.mouse.down()
+  await page.mouse.move(
+    traceViewBox.x + traceViewBox.width * 0.6,
+    splitterBox.y + splitterBox.height / 2,
+    { steps: 5 },
+  )
+  await page.mouse.up()
+
+  // wait for storage update
+  await expect.poll(async () => (await getStoredTracePaneSizes(page))?.[0]).toBeGreaterThan(55)
+  const expectedTraceStepsBox = await traceSteps.boundingBox()
+  if (!expectedTraceStepsBox) {
+    throw new Error('Trace steps are not visible')
+  }
+  // The resize visibly expands the step list without moving it.
+  expect(expectedTraceStepsBox).toEqual({
+    x: expect.closeTo(initialTraceStepsBox.x, 1),
+    y: expect.closeTo(initialTraceStepsBox.y, 1),
+    width: expect.any(Number),
+    height: expect.closeTo(initialTraceStepsBox.height, 1),
+  })
+  expect(expectedTraceStepsBox.width).toBeGreaterThan(traceViewBox.width / 2)
+
+  // Reloading repeatedly preserves the resized trace step geometry.
+  for (let i = 0; i < 2; i++) {
+    await page.reload()
+    await expect(traceView).toBeVisible()
+    await expect.poll(() => traceSteps.boundingBox()).toEqual({
+      x: expect.closeTo(expectedTraceStepsBox.x, 1),
+      y: expect.closeTo(expectedTraceStepsBox.y, 1),
+      width: expect.closeTo(expectedTraceStepsBox.width, 1),
+      height: expect.closeTo(expectedTraceStepsBox.height, 1),
+    })
+  }
+}
+
+function getStoredTracePaneSizes(page: Page): Promise<number[] | null> {
+  return page.evaluate(() => {
+    const value = localStorage.getItem('vitest-ui_splitpanes-traceViewSplitSizes')
+    return value ? JSON.parse(value) : null
+  })
 }
