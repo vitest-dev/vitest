@@ -1,7 +1,6 @@
-'use strict'
-const { ReportBase } = require('@vitest/istanbul-lib-report')
+import { ReportBase } from '@vitest/istanbul-lib-report'
 
-module.exports = class CustomReporter extends ReportBase {
+export default class CustomReporter extends ReportBase {
   constructor(opts) {
     super()
 
@@ -14,11 +13,11 @@ module.exports = class CustomReporter extends ReportBase {
 
   onStart(root, context) {
     this.contentWriter = context.writer.writeFile(this.file)
-    this.contentWriter.println('Start of custom coverage report CJS')
+    this.contentWriter.println('Start of custom coverage report ESM')
   }
 
   onEnd() {
-    this.contentWriter.println('End of custom coverage report CJS')
+    this.contentWriter.println('End of custom coverage report ESM')
     this.contentWriter.close()
   }
 }

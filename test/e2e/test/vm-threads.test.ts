@@ -1,6 +1,8 @@
+import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { createMethodsRPC, createVitest } from 'vitest/node'
 
-import { createFile, resolvePath, runInlineTests, runVitest, runVitestCli } from '../../test-utils'
+import { createFile, resolvePath, runInlineTests, runVitest, runVitestCli, useFS } from '../../test-utils'
 
 test('importing files in restricted fs works correctly', async () => {
   createFile(
@@ -573,3 +575,75 @@ test.for([
     expect(exitCode).toBe(0)
   },
 )
+
+test('prewarm skips factory-mocked and dynamically imported subtrees', async () => {
+  const leaves = (dir: string) => Object.fromEntries(
+    Array.from({ length: 5 }, (_, i) => [`${dir}/leaf${i}.js`, `export const v${i} = ${i}`]),
+  )
+  const barrel = Array.from({ length: 5 }, (_, i) => `export * from './leaf${i}.js'`).join('\n')
+  const root = resolvePath(import.meta.url, '../fixtures/vm-prewarm')
+  const cacheDir = resolve(root, 'cache')
+  useFS(root, {
+    ...leaves('used'),
+    ...leaves('mocked'),
+    ...leaves('spied'),
+    ...leaves('lazy'),
+    ...leaves('setup-only'),
+    'used/index.js': barrel,
+    'mocked/index.js': barrel,
+    'mocked/other.js': `export * from './index.js'`,
+    'spied/index.js': barrel,
+    'lazy/index.js': barrel,
+    'setup-only/index.js': barrel,
+    'setup.js': `import './setup-only/index.js'`,
+    'consumer.js': `
+      export * as used from './used/index.js'
+      export * as mocked from './mocked/index.js'
+      export * as other from './mocked/other.js'
+      export * as spied from './spied/index.js'
+      export const lazy = () => import('./lazy/index.js')
+    `,
+    'consumer.test.js': `
+      import { test, vi } from 'vitest'
+      import * as consumer from './consumer.js'
+
+      vi.mock('./mocked/index.js', () => ({ a: 1 }))
+      vi.mock(\`./mocked/other.js\`, () => ({ b: 1 }))
+      vi.mock('./spied/index.js', { spy: true })
+      vi.mock('./setup-only/index.js', () => ({ c: 1 }))
+
+      test('stub', () => consumer)
+    `,
+  })
+
+  async function prewarmed(prepare: 'fetch' | 'transformRequest'): Promise<string[]> {
+    const ctx = await createVitest('test', { root, watch: false, setupFiles: ['./setup.js'], fsModuleCache: true, fsModuleCachePath: cacheDir, reporters: [] })
+    try {
+      const project = ctx.getRootProject()
+      const rpc = createMethodsRPC(project)
+      const testFile = resolve(root, 'consumer.test.js')
+      // workers fetch the test file first; preParse transforms it directly
+      if (prepare === 'fetch') {
+        await rpc.fetch(testFile, undefined, 'ssr')
+      }
+      else {
+        await project.vite.environments.ssr.transformRequest(testFile)
+      }
+      await rpc.prewarmModuleGraph('ssr', [testFile])
+      return [...project.vite.environments.ssr.moduleGraph.idToModuleMap.values()]
+        .filter(mod => mod.transformResult && mod.id?.startsWith(root) && mod.id !== testFile)
+        .map(mod => relative(root, mod.id!))
+        .sort()
+    }
+    finally {
+      await ctx.close()
+    }
+  }
+
+  const subtree = (dir: string) => [`${dir}/index.js`, ...Array.from({ length: 5 }, (_, i) => `${dir}/leaf${i}.js`)]
+  const expected = ['consumer.js', ...subtree('setup-only'), 'setup.js', ...subtree('spied'), ...subtree('used')]
+  expect(await prewarmed('fetch')).toEqual(expected)
+  // fs module cache hit
+  expect(await prewarmed('fetch')).toEqual(expected)
+  expect(await prewarmed('transformRequest')).toEqual(expected)
+})

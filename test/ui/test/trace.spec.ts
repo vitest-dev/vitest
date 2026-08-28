@@ -200,7 +200,20 @@ async function testBasic(page: Page) {
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // verify selector highlight
-  await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+  const traceHighlight = traceFrame.getByTestId('trace-view-highlight')
+  const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
+  await expect(traceHighlight).toBeVisible()
+  await expect(showHighlightCheckbox).toBeChecked()
+
+  // hide selector highlight and persist preference across reloads
+  await showHighlightCheckbox.uncheck()
+  await expect(traceHighlight).toBeHidden()
+  await page.reload()
+  await expect(traceView).toBeVisible()
+  await expect(traceHighlight).toBeHidden()
+  await expect(showHighlightCheckbox).not.toBeChecked()
+  await showHighlightCheckbox.check()
+  await expect(traceHighlight).toBeVisible()
 
   // selecting 2nd trace step with keyboard and verify again
   await traceSteps.nth(0).press('ArrowDown')

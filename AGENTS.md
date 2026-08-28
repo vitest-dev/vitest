@@ -146,14 +146,14 @@ Rules that `lint:fix` cannot fix:
 - When describing the changes in commit message or in PR/issue description be very brief and to the point, the code should speak for itself.
 - Runtime code must not use APIs newer than the minimum Node version in `engines`. CI's main matrix runs newer Node versions with a single minimum-version e2e leg, so a breakage there may surface in only one CI job.
 
-### Comments Policy
+### Code Comments Policy
 
 - Avoid writing comments for every change - if the code is expressive enough, it doesn't need a comment.
 - In general, only public methods MUST have comments. Exported internal functions, properties or constants SHOULD not have comments. The name SHOULD be expressive enough to not need a comment.
-- You MIGHT leave a comment if the line or a block of code deals with an edge case that is not ovbious from the context. In general, the naming SHOULD provide enough information. If you spread the logic between different files or functions and NEED to add a comment, reconsider the change - perhaps, there is a simpler solution.
-- When leaving a comment, be BRIEF and do not overexplain. If you wrote a big comment with edge cases and examples, rethink the code - there MIGHT be a simpler change that does not require a wall of text.
+- You MIGHT leave a comment if the line or a block of code deals with an edge case that is not obvious from the context. In general, the naming SHOULD provide enough information. If you spread the logic between different files or functions and NEED to add a comment, reconsider the change - perhaps, there is a simpler solution.
+- When adding a code comment, be BRIEF and do not overexplain. If you wrote a big comment with edge cases and examples, rethink the code - there MIGHT be a simpler change that does not require a wall of text.
 - You MUST NOT use overly specific jargon in comments, keep it simple.
-
+- You MUST NOT add a code comment that only justifies the change against a prior implementation.
 
 ## Common Workflows
 
@@ -202,7 +202,7 @@ Other blocking CI jobs:
 - Add deps with `pnpm add <pkg>` inside the target package: `catalogMode: prefer` writes `catalog:` into package.json and adds the version to the default catalog in `pnpm-workspace.yaml` automatically. To bump a shared dep, edit its catalog entry, never per-package ranges.
 - The `overrides` in `pnpm-workspace.yaml` force one version of `vite`, `rollup`, `@types/node`, `acorn`, and `mlly` across the workspace; editing a range in an individual package.json changes what gets published, not what installs locally.
 - The workspace develops against the latest supported Vite major, but `vitest` supports the full peer range and CI runs a dedicated job against the previous major (`pnpm override-vite7` reproduces it locally). Do not rely on newest-Vite-only APIs without a fallback.
-- Deps listed under `patchedDependencies` (`acorn`, `cac`, `@sinonjs/fake-timers`, `rrweb-snapshot`, istanbul-lib-*) are version-locked. Bumping one requires regenerating the patch with `pnpm patch` and updating the version-keyed entry in `pnpm-workspace.yaml`.
+- Deps listed under `patchedDependencies` (`acorn`, `cac`, `@sinonjs/fake-timers`, `rrweb-snapshot`) are version-locked. Bumping one requires regenerating the patch with `pnpm patch` and updating the version-keyed entry in `pnpm-workspace.yaml`.
 - Dependency build scripts run only for packages listed under `allowBuilds` in `pnpm-workspace.yaml`; a new dep with a postinstall step installs unbuilt unless added there.
 - pnpm enforces a 24h `minimumReleaseAge`: installing a version published less than a day ago either resolves to an older version or appends the pick to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`. Both outcomes are expected; commit the yaml change instead of reverting it.
 
