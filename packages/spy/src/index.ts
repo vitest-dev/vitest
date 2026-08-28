@@ -20,18 +20,16 @@ export function isMockFunction(fn: any): fn is Mock {
   )
 }
 
-type AnyMock = Mock<Procedure | Constructable>
-
 const MOCK_RESTORE = new Set<() => void>()
 // Jest keeps the state in a separate WeakMap which is good for memory,
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
-const DIRTY_MOCK_STATES = new Set<AnyMock>()
-const REGISTERED_MOCKS = new Set<WeakRef<AnyMock>>()
-const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<AnyMock>>((ref) => {
+const DIRTY_MOCK_STATES = new Set<Mock<Procedure | Constructable>>()
+const REGISTERED_MOCKS = new Set<WeakRef<Mock<Procedure | Constructable>>>()
+const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constructable>>>((ref) => {
   REGISTERED_MOCKS.delete(ref)
 })
-const MOCK_CONFIGS = new WeakMap<AnyMock, MockConfig>()
+const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 
 export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
