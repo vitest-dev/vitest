@@ -791,7 +791,7 @@ export class Vitest {
       }
 
       if (options?.staticParse) {
-        const testModules = await this.experimental_parseSpecifications(files, {
+        const testModules = await this.parseSpecifications(files, {
           concurrency: options.staticParseConcurrency,
         })
         return { testModules, unhandledErrors: [] }
@@ -855,7 +855,7 @@ export class Vitest {
 
       if (this.config.experimental.preParse) {
         // This populates specification.testModule with parsed information
-        await this.experimental_parseSpecifications(specifications)
+        await this.parseSpecifications(specifications)
         specifications = specifications.filter(({ testModule }) => {
           return !testModule || testModule.task.mode !== 'skip'
         })
@@ -1115,7 +1115,18 @@ export class Vitest {
     )
   }
 
-  public async experimental_parseSpecifications(specifications: TestSpecification[], options?: {
+  /**
+   * @deprecated Use `parseSpecifications` instead
+   */
+  public experimental_parseSpecifications(specifications: TestSpecification[], options?: {
+    /** @default os.availableParallelism() */
+    concurrency?: number
+  }): Promise<TestModule[]> {
+    this.logger.deprecate(`The "experimental_parseSpecifications" method is deprecated. Use "parseSpecifications" instead.`)
+    return this.parseSpecifications(specifications, options)
+  }
+
+  public async parseSpecifications(specifications: TestSpecification[], options?: {
     /** @default os.availableParallelism() */
     concurrency?: number
   }): Promise<TestModule[]> {
