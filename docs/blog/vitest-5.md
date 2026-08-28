@@ -56,16 +56,23 @@ To stay updated, keep an eye on the [VoidZero blog](https://voidzero.dev/blog) a
 
 Performance was the main focus of this release. To measure it, we built [vitest-dev/benchmarks](https://github.com/vitest-dev/benchmarks): a set of generated reference apps, from a 5-file utility package to an enterprise monolith with 1,280 modules and a barrel-file-heavy app with 817 modules. Every app runs across pools (`forks`, `threads`, `vmForks`, `vmThreads`), environments (`node`, `jsdom`, `happy-dom`, and Browser Mode), with and without isolation, so we can see how each change behaves on realistic projects instead of micro-benchmarks.
 
-<!-- TODO: replace with the final numbers from `pnpm compare results/vitest-4.1.json results/vitest-5.0.json` -->
+Here is a selection of cells from the comparison between Vitest 4.1.10 and Vitest 5.0 (Apple M4, 10 cores, Node 24, whole-process wall clock of `vitest run`, median of 3 runs):
 
-| App | Vitest 4.1 | Vitest 5.0 | Change |
-| --- | --- | --- | --- |
-| micro-utils (5 files, node) | X.XXs | X.XXs | -XX% |
-| react-spa (92 modules, jsdom) | X.XXs | X.XXs | -XX% |
-| barrel-hell (817 modules) | X.XXs | X.XXs | -XX% |
-| enterprise-monolith (1,280 modules) | X.XXs | X.XXs | -XX% |
-| long-haul (80 jsdom files) | X.XXs | X.XXs | -XX% |
-| design-system (80 components, browser) | X.XXs | X.XXs | -XX% |
+| App | Configuration | Vitest 4.1 | Vitest 5.0 | Change |
+| --- | --- | ---: | ---: | ---: |
+| micro-utils (5 test files) | `vmThreads`, `jsdom` | 0.61s | 0.56s | −8% |
+| node-library (40 test files) | `forks`, isolated | 0.86s | 0.75s | −13% |
+| deps-heavy | `vmThreads` | 1.59s | 0.74s | −53% |
+| react-spa (92 modules) | `vmThreads`, `jsdom` | 1.25s | 1.07s | −15% |
+| react-spa (92 modules) | Browser Mode, Chromium | 2.40s | 2.01s | −16% |
+| vue-spa (37 components) | Browser Mode, Chromium | 1.94s | 1.58s | −18% |
+| design-system (80 components) | `vmThreads`, `jsdom` | 2.09s | 1.72s | −18% |
+| barrel-hell (817 modules) | `forks`, isolated, `fsModuleCache` | 1.33s | 1.08s | −18% |
+| enterprise-monolith (1,280 modules) | `forks`, isolated | 7.24s | 5.83s | −19% |
+| long-haul (80 `jsdom` files) | `vmForks`, `happy-dom` | 5.43s | 4.06s | −25% |
+| cpu-bound (30 test files) | `threads`, 100% workers | 0.91s | 0.83s | −8% |
+
+The biggest wins are in the vm pools, in Browser Mode, and in large isolated suites. Cells that were already dominated by the environment setup, like `forks` with `jsdom` and isolation, stay within ±3% of Vitest 4.1. The full result set for every cell is in the [benchmarks repository](https://github.com/vitest-dev/benchmarks).
 
 Some of the changes behind these numbers:
 
