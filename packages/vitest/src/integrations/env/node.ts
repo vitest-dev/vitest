@@ -41,6 +41,7 @@ function populateNodeGlobals() {
 export default <Environment>{
   name: 'node',
   viteEnvironment: 'ssr',
+  prewarmModules: false,
   // this is largely copied from jest's node environment
   async setupVM() {
     populateNodeGlobals()
