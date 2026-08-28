@@ -173,8 +173,7 @@ export class VitestWatcher {
       return false
     }
 
-    // `dot: true` for the same reason as the `related` check in specifications.ts:
-    // otherwise a dot-prefixed project directory segment silently breaks every trigger.
+    // dot: true, see specifications.ts (#11054)
     if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers, { dot: true })) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
       return true

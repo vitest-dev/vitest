@@ -37,8 +37,6 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
 })
 
 // https://github.com/vitest-dev/vitest/issues/11054
-// picomatch's default `dot: false` refuses to let `**` cross a dot-prefixed directory
-// segment, so a project checked out under e.g. `.app/` silently ignored every trigger.
 it.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTriggers matches when project root has a dot-prefixed directory segment', async () => {
   const dotRoot = resolve(process.cwd(), `.vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(dotRoot, {
