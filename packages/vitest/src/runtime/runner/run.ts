@@ -737,6 +737,22 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         return
       }
 
+      // if the test is marked to be failed, flip the result of this attempt
+      // before deciding whether to retry, so that an erroring attempt counts
+      // as meeting the expectation while a passing attempt is the failure
+      // mode that can be retried. A `TestSyntaxError` is never flipped.
+      if (test.fails) {
+        if (test.result.state === 'pass') {
+          const error = processError(new Error('Expect test to fail'))
+          test.result.state = 'fail'
+          test.result.errors = [error]
+        }
+        else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
+          test.result.state = 'pass'
+          test.result.errors = undefined
+        }
+      }
+
       if (test.result.state === 'pass') {
         break
       }
@@ -759,19 +775,6 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       // update retry info
       updateTask('test-retried', test, runner)
-    }
-  }
-
-  // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
-  if (test.fails) {
-    if (test.result.state === 'pass') {
-      const error = processError(new Error('Expect test to fail'))
-      test.result.state = 'fail'
-      test.result.errors = [error]
-    }
-    else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
-      test.result.state = 'pass'
-      test.result.errors = undefined
     }
   }
 
