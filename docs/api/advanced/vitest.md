@@ -185,17 +185,21 @@ This method is called automatically by [`startVitest`](/guide/advanced/tests) if
 ## collect
 
 ```ts
-function collect(filters?: string[]): Promise<TestRunResult>
+function collect(
+  filters?: string[],
+  options?: {
+    staticParse?: boolean
+    staticParseConcurrency?: number
+  }
+): Promise<TestRunResult>
 ```
 
-Execute test files without running test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
+Based on `staticParse`, this will either statically analyse test files to collect them (the default) or run the code without executing test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 This method resolves tests specifications based on the config `include`, `exclude`, and `includeSource` values. Read more at [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed.
 
 ::: warning
-Note that Vitest doesn't use static analysis to collect tests. Vitest will run every test file in isolation, just like it runs regular tests.
-
-This makes this method very slow, unless you disable isolation before collecting tests.
+Note that since Vitest 5, the tests are collected by static analysis by default. If disabled via the second option, Vitest will run every test file in isolation, just like it runs regular tests. This would make this method very slow, unless you disable isolation manually before collecting tests.
 :::
 
 ## start

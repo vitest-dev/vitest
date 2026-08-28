@@ -762,7 +762,7 @@ export class Vitest {
     })
   }
 
-  async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {
+  async collect(filters?: string[], options: { staticParse?: boolean; staticParseConcurrency?: number } = {}): Promise<TestRunResult> {
     return this._traces.$('vitest.collect', async (collectSpan) => {
       const filenamePattern = filters && filters?.length > 0 ? filters : []
       collectSpan.setAttribute('vitest.collect.filters', filenamePattern)
@@ -790,7 +790,7 @@ export class Vitest {
         return { testModules: [], unhandledErrors: [] }
       }
 
-      if (options?.staticParse) {
+      if (options.staticParse !== false) {
         const testModules = await this.experimental_parseSpecifications(files, {
           concurrency: options.staticParseConcurrency,
         })
