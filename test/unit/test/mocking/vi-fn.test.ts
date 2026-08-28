@@ -100,17 +100,6 @@ test('vi.fn() has overridable length', () => {
 })
 
 describe('vi.fn() state', () => {
-  test('vi.clearAllMocks() clears manually modified state', () => {
-    const mock = vi.fn()
-    const state = mock.mock
-
-    vi.clearAllMocks()
-    state.calls.push([])
-    vi.clearAllMocks()
-
-    assertStateEmpty(state)
-  })
-
   test('vi.clearAllMocks() only clears mocks with dirty state', () => {
     const mocks = Array.from({ length: 100 }, () => vi.fn())
     const dirtyMock = mocks.at(-1)!

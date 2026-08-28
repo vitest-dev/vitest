@@ -88,6 +88,7 @@ test('instance mocks are independently tracked, but prototype shares the state',
 test('clearAllMocks clears instance and prototype state', () => {
   const { Class } = mockModule()
   const instance = new Class()
+  vi.clearAllMocks()
 
   instance.method()
   expect(instance.method).toHaveBeenCalledOnce()

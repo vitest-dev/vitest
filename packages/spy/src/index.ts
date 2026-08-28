@@ -30,6 +30,7 @@ const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constru
   REGISTERED_MOCKS.delete(ref)
 })
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
+const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
 
 export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
@@ -66,6 +67,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     config.mockName = mock.name || 'vi.fn()'
   }
   MOCK_CONFIGS.set(mock, config)
+  MOCKS_BY_STATE.set(state, mock)
   const ref = new WeakRef(mock)
   REGISTERED_MOCKS.add(ref)
   MOCK_FINALIZER.register(mock, ref)
@@ -96,7 +98,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     configurable: false,
     enumerable: true,
     writable: false,
-    value: trackMockState(state, () => DIRTY_MOCK_STATES.add(mock)),
+    value: state,
   })
 
   mock.mockImplementation = function mockImplementation(implementation) {
@@ -494,10 +496,14 @@ function createMock(
   const pseudoOriginal = mockImplementation // init with vi.fn(Klass)
   const name = (mockName || original?.name || 'Mock') as string
   const noopImplementation = function () {}
+  const prototypeMock = prototypeState && MOCKS_BY_STATE.get(prototypeState)
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: (function (this: any, ...args: any[]) {
       DIRTY_MOCK_STATES.add(namedObject[name])
+      if (prototypeMock) {
+        DIRTY_MOCK_STATES.add(prototypeMock)
+      }
       registerCalls(args, state, prototypeState)
       registerInvocationOrder(invocationCallCounter++, state, prototypeState)
 
@@ -755,19 +761,6 @@ function getDefaultState(): MockContext {
     },
   }
   return state
-}
-
-function trackMockState(state: MockContext, onAccess: () => void): MockContext {
-  return new Proxy(state, {
-    get(target, property, receiver) {
-      onAccess()
-      return Reflect.get(target, property, receiver)
-    },
-    set(target, property, value, receiver) {
-      onAccess()
-      return Reflect.set(target, property, value, receiver)
-    },
-  })
 }
 
 export function restoreAllMocks(): void {
