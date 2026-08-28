@@ -26,6 +26,7 @@ import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpe
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
+import { setup as wsApiSetup } from '../api/setup'
 import { defaultBrowserPort } from '../constants'
 import { distDir } from '../paths'
 import { createTagsFilter } from '../runtime/runner/utils/tags'
@@ -347,7 +348,10 @@ export class Vitest {
           || this.projects.some(p => p.vite.config.configFile === file)
           || this.config._containerConfigFiles?.includes(file)
         if (isConfig) {
-          await this._restart('config')
+          // a floating rejection in an event handler would crash the process
+          await this._restart('config').catch((error) => {
+            this.logger.printError(error, { fullStack: true, type: 'Restart Error' })
+          })
         }
       })
 
@@ -371,14 +375,7 @@ export class Vitest {
     catch { }
   }
 
-  /**
-   * Phase B (projects) — instantiate `TestProject`s from the resolved entries
-   * and create their Vite servers, deduping by `viteConfig` identity. Run
-   * `configureVitest` hooks. Validate filters and project resolution. Set up
-   * the core workspace project, populate tags, build reporters.
-   *
-   * @internal
-   */
+  /** @internal */
   async _attachProjectServers(): Promise<void> {
     const resolved = this.config
     const entries = resolved.resolvedProjects || []
@@ -451,8 +448,22 @@ export class Vitest {
     // root-level browser server the API lives on the same shared httpServer and
     // is only needed when a UI (Vitest dashboard or browser orchestrator) is served.
     const apiNeeded = !this._rootBrowserParent || resolved.ui || resolved.browser.ui
-    if (resolved.api && resolved.watch && apiNeeded) {
-      (await import('../api/setup')).setup(this)
+    const rootApi = resolved.api && resolved.watch && apiNeeded
+    if (rootApi) {
+      wsApiSetup(this)
+    }
+
+    const attachedApiServers = new Set([rootApi ? this.vite.httpServer : null])
+    for (const project of this.projects) {
+      const browserServer = project.vite
+      if (
+        project.config.browser.ui
+        && browserServer?.httpServer
+        && !attachedApiServers.has(browserServer.httpServer)
+      ) {
+        attachedApiServers.add(browserServer.httpServer)
+        wsApiSetup(this, browserServer)
+      }
     }
 
     await this._fsCache.ensureCacheIntegrity()

@@ -14,6 +14,10 @@ export class GitNotFoundError extends Error {
   }
 }
 
+export class BrowserConnectionError extends Error {
+  code = 'VITEST_BROWSER_CONNECTION_CLOSED'
+}
+
 export class LocationFilterFileNotFoundError extends Error {
   code = 'VITEST_LOCATION_FILTER_FILE_NOT_FOUND'
 

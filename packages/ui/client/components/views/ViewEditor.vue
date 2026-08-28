@@ -62,7 +62,6 @@ watch(
 
     await nextTick()
 
-    // fire focusing editor after loading
     loading.value = false
   },
   { immediate: true },
@@ -81,15 +80,9 @@ watch(() => [loading.value, saving.value, props.file, lineNumber.value, columnNu
         else {
           codemirrorRef.value?.scrollIntoView(line, 100)
           nextTick(() => {
-            codemirrorRef.value?.focus()
             codemirrorRef.value?.setCursor(line)
           })
         }
-      })
-    }
-    else {
-      nextTick(() => {
-        codemirrorRef.value?.focus()
       })
     }
   }
@@ -327,8 +320,8 @@ function createAnnotationElement(annotation: TestAnnotation) {
 }
 
 const { pause, resume } = watch(
-  [codemirrorRef, errors, annotations, finished] as const,
-  ([cmValue, errors, annotations, end]) => {
+  [codemirrorRef, errors, annotations, finished, loading] as const,
+  ([cmValue, errors, annotations, end, loadingFile]) => {
     if (!cmValue) {
       widgets.length = 0
       handles.length = 0
@@ -351,7 +344,7 @@ const { pause, resume } = watch(
     widgets.length = 0
     handles.length = 0
 
-    setTimeout(() => {
+    if (!loadingFile) {
       // add new data
       errors.forEach(createErrorElement)
 
@@ -363,9 +356,9 @@ const { pause, resume } = watch(
       }
 
       cmValue.on('changes', codemirrorChanges)
-    }, 100)
+    }
   },
-  { flush: 'post' },
+  { immediate: true },
 )
 
 watchDebounced(() => [finished.value, saving.value, currentPosition.value] as const, ([f, s], old) => {
@@ -455,10 +448,11 @@ onBeforeUnmount(clearListeners)
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{
+    :read-only="isReport || !config.api?.allowWrite"
+    :saving="saving"
+    :options="{
       lineNumbers: true,
-      readOnly: isReport || !config.api?.allowWrite,
-      saving,
+      styleActiveLine: true,
       gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
     }"
     :mode="ext"

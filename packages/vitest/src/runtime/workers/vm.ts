@@ -37,15 +37,14 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   state.environment = environment
 
   // let the server transform this file's import graph while this worker is
-  // busy importing the environment package (jsdom takes ~0.5s per worker) —
-  // the server is otherwise idle during that window on a cold start. The
-  // transforms also land in the `fetchWarmModules` snapshot, so the worker's
-  // own fetches short-circuit to disk reads. Failures are ignored: the
-  // worker's own fetch reports them with the proper import context.
-  rpc.prewarmModuleGraph(
-    environment.viteEnvironment || environment.name,
-    ctx.files.map(file => file.filepath),
-  ).catch(() => {})
+  // busy setting up the environment (jsdom takes ~0.5s per worker) —
+  // the server is otherwise idle during that window on a cold start.
+  if (environment.prewarmModules !== false) {
+    rpc.prewarmModuleGraph(
+      environment.viteEnvironment || environment.name,
+      ctx.files.map(file => file.filepath),
+    ).catch(() => {})
+  }
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
@@ -119,7 +118,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   })
 
   process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
+    const filepath = state.filepath
+    throw new Error(`process.exit unexpectedly called with "${code}"${filepath ? ` (test file: ${filepath})` : ''}`)
   }
 
   listenForErrors(() => state)

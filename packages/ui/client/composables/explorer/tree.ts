@@ -14,7 +14,9 @@ import { runFilter } from '~/composables/explorer/filter'
 import {
   filter,
   searchMatcher,
+  uiFiles,
 } from '~/composables/explorer/state'
+import { isParentNode, pruneStaleChildren, removeNodeSubtree } from '~/composables/explorer/utils'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
@@ -22,8 +24,6 @@ export class ExplorerTree {
   public startTime: number = 0
   public executionTime: number = 0
   constructor(
-    public projects: string[] = [],
-    public colors = new Map<string, string | undefined>(),
     private onTaskUpdateCalled: boolean = false,
     private resumeEndTimeout = 500,
     public root = <RootTreeNode>{
@@ -61,10 +61,7 @@ export class ExplorerTree {
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
   }
 
-  loadFiles(remoteFiles: File[], projects: { name: string; color?: string }[]) {
-    this.projects.splice(0, this.projects.length, ...projects.map(p => p.name))
-    this.colors = new Map(projects.map(p => [p.name, p.color]))
-
+  loadFiles(remoteFiles: File[]) {
     runLoadFiles(
       remoteFiles,
       true,
@@ -81,6 +78,7 @@ export class ExplorerTree {
 
   startRun() {
     this.startTime = performance.now()
+    // TODO: Replace this bootstrap/run fallback with explicit lifecycle handling.
     this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
   }
@@ -90,7 +88,7 @@ export class ExplorerTree {
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
-      this.collect(true, false, false)
+      this.collect(true, false)
       this.rafCollector.resume()
     }
   }
@@ -100,9 +98,30 @@ export class ExplorerTree {
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
-      this.collect(true, false, false)
+      this.collect(true, false)
       this.rafCollector.resume()
     }
+  }
+
+  /** After recollection, trim nodes when a task list shrank or a position changed between suite and test. */
+  pruneStaleTasks(files: File[]) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const fileNode = this.nodes.get(file.id)
+      if (fileNode && isParentNode(fileNode)) {
+        pruneStaleChildren(this.nodes, fileNode, file.tasks)
+      }
+    }
+  }
+
+  /** Remove all file nodes matching a filepath across projects and recalculate the explorer view. */
+  removeFile(filepath: string) {
+    for (const fileNode of this.root.tasks.filter(file => file.filepath === filepath)) {
+      removeNodeSubtree(this.nodes, fileNode)
+      this.root.tasks.splice(this.root.tasks.indexOf(fileNode), 1)
+    }
+    uiFiles.value = [...this.root.tasks]
+    this.collect(false, true)
   }
 
   endRun(executionTime = performance.now() - this.startTime) {
@@ -116,41 +135,27 @@ export class ExplorerTree {
     this.collect(false, false)
   }
 
-  private collect(start: boolean, end: boolean, task = true) {
-    if (task) {
-      queueMicrotask(() => {
-        runCollect(
-          start,
-          end,
-          this.summary,
-          searchMatcher.value.matcher,
-          {
-            failed: filter.failed,
-            success: filter.success,
-            skipped: filter.skipped,
-            slow: filter.slow,
-            onlyTests: filter.onlyTests,
-          },
-          end ? this.executionTime : performance.now() - this.startTime,
-        )
-      })
-    }
-    else {
-      runCollect(
-        start,
-        end,
-        this.summary,
-        searchMatcher.value.matcher,
-        {
-          failed: filter.failed,
-          success: filter.success,
-          skipped: filter.skipped,
-          slow: filter.slow,
-          onlyTests: filter.onlyTests,
-        },
-        end ? this.executionTime : performance.now() - this.startTime,
-      )
-    }
+  /**
+   * Synchronize task nodes, summary counts, and filtered entries with the runner state.
+   *
+   * @param start Reset summary counters before updates when true; skip the reset when false.
+   * @param end Traverse every file and finalize the run when true; process only pending files when false.
+   */
+  private collect(start: boolean, end: boolean) {
+    runCollect(
+      start,
+      end,
+      this.summary,
+      searchMatcher.value.matcher,
+      {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        slow: filter.slow,
+        onlyTests: filter.onlyTests,
+      },
+      end ? this.executionTime : performance.now() - this.startTime,
+    )
   }
 
   collectTestsTotal(
@@ -169,50 +174,40 @@ export class ExplorerTree {
   }
 
   collapseNode(id: string) {
-    queueMicrotask(() => {
-      runCollapseNode(id)
-    })
+    runCollapseNode(id)
   }
 
   expandNode(id: string) {
-    queueMicrotask(() => {
-      runExpandNode(id, searchMatcher.value.matcher, {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      })
+    runExpandNode(id, searchMatcher.value.matcher, {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      slow: filter.slow,
+      onlyTests: filter.onlyTests,
     })
   }
 
   collapseAllNodes() {
-    queueMicrotask(() => {
-      runCollapseAllTask()
-    })
+    runCollapseAllTask()
   }
 
   expandAllNodes() {
-    queueMicrotask(() => {
-      runExpandAll(searchMatcher.value.matcher, {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      })
+    runExpandAll(searchMatcher.value.matcher, {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      slow: filter.slow,
+      onlyTests: filter.onlyTests,
     })
   }
 
   filterNodes() {
-    queueMicrotask(() => {
-      runFilter(searchMatcher.value.matcher, {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      })
+    runFilter(searchMatcher.value.matcher, {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      slow: filter.slow,
+      onlyTests: filter.onlyTests,
     })
   }
 }

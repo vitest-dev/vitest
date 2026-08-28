@@ -98,6 +98,8 @@ export interface BrowserRunnerState {
   browserTraceAttempts: Map<string, BrowserTraceAttempt>
   // lazily loaded only when traceView is enabled
   browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
+  // import started by the orchestrator so every tester reuses one module instance
+  browserTraceDomSnapshotPromise?: Promise<typeof import('rrweb-snapshot')>
   selectorEngine: Ivya
   traces: Traces
   cleanups: Array<() => unknown>
@@ -115,6 +117,12 @@ export interface BrowserRunnerState {
 export function getBrowserState(): BrowserRunnerState {
   // @ts-expect-error not typed global
   return window.__vitest_browser_runner__
+}
+
+/* @__NO_SIDE_EFFECTS__ */
+export function getOrchestratorState(): BrowserRunnerState {
+  // @ts-expect-error not typed global
+  return window.parent.__vitest_browser_runner__
 }
 
 /* @__NO_SIDE_EFFECTS__ */

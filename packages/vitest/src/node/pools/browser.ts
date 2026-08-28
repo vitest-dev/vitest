@@ -15,8 +15,11 @@ import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
 import { detectCodeBlock } from '../../utils/test-helpers'
+import { BrowserConnectionError } from '../errors'
 
 const debug = createDebugger('vitest:browser:pool')
+
+const PROVIDER_CLOSE_TIMEOUT = 10_000
 
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
@@ -164,7 +167,22 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
   return {
     name: 'browser',
     async close() {
-      await Promise.all(Array.from(providers, provider => provider.close()))
+      // a frozen or crashed browser never answers the close message;
+      // don't wait for it forever, the browser process is killed
+      // when this process exits anyway
+      await Promise.all(Array.from(providers, (provider) => {
+        let timer: ReturnType<typeof setTimeout>
+        return Promise.race([
+          Promise.resolve(provider.close()).finally(() => clearTimeout(timer)),
+          new Promise<void>((resolve) => {
+            timer = setTimeout(() => {
+              vitest.logger.warn(`The browser did not close within ${PROVIDER_CLOSE_TIMEOUT}ms. The browser process will be killed when the process exits.`)
+              resolve()
+            }, PROVIDER_CLOSE_TIMEOUT)
+            timer.unref()
+          }),
+        ])
+      }))
       vitest._browserSessions.sessionIds.clear()
       providers.clear()
       vitest.projects.forEach((project) => {
@@ -418,8 +436,7 @@ class BrowserPool {
           // if user cancels the test run manually, ignore the error and exit gracefully
           if (
             this.project.vitest.isCancelling
-            && error instanceof Error
-            && error.message.startsWith('Browser connection was closed while running tests')
+            && error instanceof BrowserConnectionError
           ) {
             this.cancel()
             this._promise?.resolve()

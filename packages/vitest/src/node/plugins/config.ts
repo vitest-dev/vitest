@@ -5,7 +5,6 @@ import { relative } from 'pathe'
 import * as vite from 'vite'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
-import { VitestOptimizer } from './optimizer'
 import { ModuleRunnerTransform } from './runnerTransform'
 import { getDefaultResolveOptions } from './utils'
 
@@ -163,7 +162,6 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
         },
       },
     },
-    VitestOptimizer(),
     ModuleRunnerTransform(),
   ]
 }

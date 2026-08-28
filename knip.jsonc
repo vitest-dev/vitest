@@ -5,7 +5,6 @@
     "test/e2e/dts/*",
     "test/e2e/fixtures/conditions-pkg"
   ],
-  "ignoreBinaries": ["yq"],
   "ignoreIssues": {
     "docs/.vitepress/blog.data.ts": ["files"],
     "docs/.vitepress/components/*.vue": ["files"],
@@ -65,8 +64,7 @@
       ]
     },
     "packages/coverage-istanbul": {
-      "entry": ["src/{browser,index,provider}.ts"],
-      "ignoreDependencies": ["@babel/core"]
+      "entry": ["src/{browser,index,provider}.ts"]
     },
     "packages/coverage-v8": {
       "entry": ["src/{browser,index,provider}.ts"],

@@ -741,7 +741,9 @@ export default defineConfig({
 })
 ```
 
-The job summary title defaults to `Vitest Test Report`. You can use `jobSummary.title` to distinguish multiple Vitest invocations that append to the same job summary.
+The job summary title defaults to `Vitest Test Report` or `(${test.name}) Vitest Test Report` when [`test.name` is set](/config/name).
+
+You can customize the title by setting `jobSummary.title` to distinguish multiple Vitest invocations that append to the same job summary. Please note that `test.name` will not be displayed when using a custom title.
 
 ```ts
 export default defineConfig({

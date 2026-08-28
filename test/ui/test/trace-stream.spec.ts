@@ -66,7 +66,7 @@ test.describe('trace stream', () => {
     ])
 
     // first step is selected by default
-    await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+    await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
 
     // progresses up-to `render-b`
     await writeFile(resolve(gatesDir, 'b.txt'), 'open')
@@ -77,7 +77,7 @@ test.describe('trace stream', () => {
 
     // select next step
     await traceStepNames.nth(1).click()
-    await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+    await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
 
     // continue test and wait for finishes
     await writeFile(resolve(gatesDir, 'c.txt'), 'open')
@@ -89,7 +89,7 @@ test.describe('trace stream', () => {
       'test finished',
     ])
     // last selected step is preserved
-    await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+    await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
 
     // re-run and verify trace view is cleared
     await rm(gatesDir, { recursive: true, force: true })
@@ -100,7 +100,7 @@ test.describe('trace stream', () => {
     await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
     ])
-    await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+    await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
     await writeFile(resolve(gatesDir, 'b.txt'), 'open')
     await writeFile(resolve(gatesDir, 'c.txt'), 'open')
     await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([

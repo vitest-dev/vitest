@@ -56,13 +56,16 @@ function resolvePath(path: string, root: string) {
   )
 }
 
-export function findConfigFile(root: string): string | undefined {
+export function findConfigFile(root: string): string | false {
   for (const configFile of configFiles) {
     const configPath = resolve(root, configFile)
     if (existsSync(configPath)) {
       return configPath
     }
   }
+  // if not found, then there is no config to find.
+  // `false` will stop vite from trying to find it again
+  return false
 }
 
 function parseInspector(inspect: string | undefined | boolean | number) {
@@ -1118,10 +1121,12 @@ export async function resolveConfig(
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
   const cliOptionsCopy = deepMerge({}, options) as UserConfig
   const viteOverridesCopy = deepMerge({}, viteOverrides) as ViteUserConfig
-  const root = resolve(options.root || process.cwd())
-  const configPath = resolveConfigPath(root, options)
+  const configPath = resolveConfigPath(
+    // try to find the config relative to `--root` or process.cwd()
+    resolve(options.root || process.cwd()),
+    options,
+  )
   options.config = configPath
-  options.root = root
 
   const captures: ConfigResolutionCaptures = {}
   const inlineConfig: InlineConfig = mergeConfig(
@@ -1135,11 +1140,11 @@ export async function resolveConfig(
         CaptureRawTestConfig(captures, cliOptionsCopy.sharedViteServer),
         ...TestConfigPlugin(pluginsHarness, captures, cliOptionsCopy),
         ...ViteConfigPlugin(pluginsHarness),
-        ...VitestCorePlugin(pluginsHarness, options),
+        ...VitestCorePlugin(pluginsHarness),
         ...BrowserLoaderPlugin(captures, pluginsHarness),
       ],
     } satisfies InlineConfig,
-    mergeConfig(viteOverrides, { root }),
+    viteOverrides,
   )
 
   const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
@@ -1246,9 +1251,12 @@ export function matchesProjectFilter(projects: string[], name: string): boolean 
   if (!projects.length) {
     return true
   }
-  return projects.some((project) => {
-    const regexp = wildcardPatternToRegExp(project)
-    return regexp.test(name)
+  if (isExcludedByProjectFilter(projects, name)) {
+    return false
+  }
+  const positives = projects.filter(project => !project.startsWith('!'))
+  return !positives.length || positives.some((project) => {
+    return wildcardPatternToRegExp(project).test(name)
   })
 }
 

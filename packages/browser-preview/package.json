@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser-preview",
   "type": "module",
-  "version": "5.0.0-rc.1",
+  "version": "5.0.0-rc.2",
   "description": "Browser running for Vitest using your browser of choice",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/user-event": "^14.6.3",
+    "@testing-library/user-event": "^14.6.6",
     "@vitest/browser": "workspace:*"
   },
   "devDependencies": {

@@ -366,8 +366,7 @@ body {
 
   contribution.plugins = [
     ...BrowserPlugin(contribution),
-    // this plugin's `configureServer` is ignored since it's added through `applyToEnvironment`
-    interceptorPlugin({ registry: mockerRegistry }),
+    interceptorPlugin({ registry: mockerRegistry, registerWebSocketEvents: false }),
     {
       name: 'vitest:browser:framework-sourcemaps',
       enforce: 'post',
@@ -461,10 +460,13 @@ function resolveBrowserOptimizeDeps(
     'vitest/browser',
     '@vitest/browser/utils',
     '@vitest/browser/context',
-    // this is a real module but cannot be specified in `optimizeDeps.include`
-    // because `@vitest/browser` is only installed as a transitive dependency of
-    // provider-specific packages such as `@vitest/browser-playwright`
+    // these are real modules, but they cannot be specified in
+    // `optimizeDeps.include`: `@vitest/browser` is only installed as a
+    // transitive dependency of provider-specific packages such as
+    // `@vitest/browser-playwright`, so the optimizer cannot resolve them
+    // from the project root
     '@vitest/browser/locators',
+    '@vitest/browser/client',
     'msw',
     'msw/browser',
   ]
@@ -496,12 +498,12 @@ function resolveBrowserOptimizeDeps(
 
   // Pre-bundle the vitest runtime so the browser fetches a few optimized
   // chunks instead of ~20 separately-served dist chunks (faster startup).
-  // `vitest`, `vitest/internal/browser` and `@vitest/browser/client` are
-  // optimized together in a single pass, so esbuild dedupes their shared
-  // stateful chunks (the test collector, the runner, the RPC client) to a
-  // single instance — preserving module identity between the test files'
-  // `import 'vitest'` and the tester. Their transitive deps (@vitest/utils,
-  // @vitest/spy, pathe, tinyrainbow, …) are inlined into these bundles.
+  // `vitest` and `vitest/internal/browser` are optimized together in a single
+  // pass, so esbuild dedupes their shared stateful chunks (the test collector,
+  // the runner) to a single instance, preserving module identity between the
+  // test files' `import 'vitest'` and the tester. Their transitive deps
+  // (@vitest/utils, @vitest/spy, pathe, tinyrainbow, …) are inlined into
+  // these bundles.
   const include = [
     'vitest > expect-type',
     'vitest > magic-string',
@@ -510,7 +512,6 @@ function resolveBrowserOptimizeDeps(
     'vitest',
     'vitest/internal/browser',
     'vitest/internal/traces',
-    '@vitest/browser/client',
   ]
 
   const provider = testConfig.browser?.provider

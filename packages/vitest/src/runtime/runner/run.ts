@@ -39,6 +39,7 @@ const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
 let limitMaxConcurrency: ConcurrencyLimiter
+let limitTestConcurrency: ConcurrencyLimiter
 
 /**
  * Normalizes retry configuration to extract individual values.
@@ -999,7 +1000,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => runTest(c, runner),
+      () => limitTestConcurrency(() => runTest(c, runner)),
     )
   }
   else if (c.type === 'suite') {
@@ -1020,6 +1021,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
 
 async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
   limitMaxConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
+  limitTestConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
 
   for (const file of files) {
     if (!file.tasks.length && !runner.config.passWithNoTests) {
