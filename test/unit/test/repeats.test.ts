@@ -40,7 +40,9 @@ const retryNumbers: number[] = []
 
 describe('testing repeats with retry', () => {
   describe('normal test', () => {
-    const result = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    // the body always throws, so each repeat meets the `fails` expectation on
+    // its first attempt and the retry is not spent
+    const result = [1, 1, 1, 1, 1]
     test.fails('test 1', { repeats: 4, retry: 1 }, () => {
       retryNumbers.push(1)
       expect(1).toBe(2)

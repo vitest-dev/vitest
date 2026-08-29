@@ -63,4 +63,25 @@ describe('retry with test.fails', () => {
     expect(stdout).toContain('1 failed')
     expect(stdout).toContain('1 passed')
   })
+
+  test('a retry condition is matched against the missing failure', async () => {
+    const { stdout } = await runInlineTests({
+      'fails-retry.test.ts': ts`
+        import { expect, test } from 'vitest'
+        let matched = 0
+        test.fails('condition matches', { retry: { count: 2, condition: /Expect test to fail/ } }, () => {
+          matched++
+        })
+        let unmatched = 0
+        test.fails('condition does not match', { retry: { count: 2, condition: /something else/ } }, () => {
+          unmatched++
+        })
+        test('only the matching one is retried', () => {
+          expect([matched, unmatched]).toEqual([3, 1])
+        })
+      `,
+    })
+
+    expect(stdout).toContain('1 passed')
+  })
 })

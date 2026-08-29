@@ -182,17 +182,13 @@ describe('retry fail', () => {
   })
 
   it('assert', () => {
+    // the first attempt already threw, which is what `fails` expects, so the
+    // two retries are not spent
     expect(state).toMatchInlineSnapshot(`
       [
         "(0, 0) run",
         "(0, 0) finish",
         "(0, 0) fail",
-        "(1, 0) run",
-        "(1, 0) finish",
-        "(1, 0) fail",
-        "(2, 0) run",
-        "(2, 0) finish",
-        "(2, 0) fail",
       ]
     `)
   })

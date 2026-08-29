@@ -737,28 +737,16 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         return
       }
 
-      // if the test is marked to be failed, flip the result of this attempt
-      // before deciding whether to retry, so that an erroring attempt counts
-      // as meeting the expectation while a passing attempt is the failure
-      // mode that can be retried. A `TestSyntaxError` is never flipped.
-      if (test.fails) {
-        if (test.result.state === 'pass') {
-          const error = processError(new Error('Expect test to fail'))
-          test.result.state = 'fail'
-          test.result.errors = [error]
-        }
-        else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
-          test.result.state = 'pass'
-          test.result.errors = undefined
-        }
-      }
-
-      if (test.result.state === 'pass') {
+      // `fails` inverts what a satisfactory attempt looks like, so the retry
+      // decision has to be made against the expectation rather than the raw
+      // state. The result itself is still inverted once, after the loop, so
+      // that `onTestFailed` and later repeats keep seeing the real state.
+      if (metExpectation(test)) {
         break
       }
 
       if (retryCount < retry) {
-        const shouldRetry = passesRetryCondition(test, test.result.errors)
+        const shouldRetry = passesRetryCondition(test, retryErrors(test))
 
         if (!shouldRetry) {
           break
@@ -778,6 +766,18 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
+  // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
+  if (test.fails) {
+    if (test.result.state === 'pass') {
+      test.result.state = 'fail'
+      test.result.errors = [expectedToFailError()]
+    }
+    else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
+      test.result.state = 'pass'
+      test.result.errors = undefined
+    }
+  }
+
   cleanupRunningTest()
   setCurrentTest(undefined)
 
@@ -786,6 +786,43 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onAfterRunTask?.(test)
 
   updateTask('test-finished', test, runner)
+}
+
+function expectedToFailError(): TestError {
+  return processError(new Error('Expect test to fail'))
+}
+
+/**
+ * Whether the attempt that just finished met the test's expectation, and so
+ * should not be retried.
+ *
+ * For a `fails` test the expectation is inverted: an attempt that threw has met
+ * it and there is nothing left to re-check, while an attempt that passed is the
+ * failure mode `retry` exists for. A `TestSyntaxError` is never inverted, so it
+ * can never meet the expectation.
+ */
+function metExpectation(test: Test): boolean {
+  const result = test.result!
+  if (!test.fails) {
+    return result.state === 'pass'
+  }
+  return result.state === 'fail'
+    && !result.errors?.some(e => e.__vitest_test_syntax_error__)
+}
+
+/**
+ * The errors the retry decision reasons about.
+ *
+ * A `fails` test that passed has no error of its own, but its failure is the
+ * missing failure, so the retry `condition` is matched against the same error
+ * the test is finally reported with instead of against nothing.
+ */
+function retryErrors(test: Test): TestError[] | undefined {
+  const result = test.result!
+  if (test.fails && result.state === 'pass') {
+    return [expectedToFailError()]
+  }
+  return result.errors
 }
 
 function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | undefined) {
