@@ -75,24 +75,32 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
         if ('rolldownVersion' in vite) {
           // eslint-disable-next-line ts/ban-ts-comment
           // @ts-ignore rolldown-vite only
-          config.oxc = viteConfig.oxc === false
-            ? false
-            : {
-                // eslint-disable-next-line ts/ban-ts-comment
-                // @ts-ignore rolldown-vite only
-                target: viteConfig.oxc?.target || 'node18',
-              }
+          if (viteConfig.oxc === undefined) {
+            config.oxc = { target: 'node18' }
+          }
+          else if (viteConfig.oxc !== false && !viteConfig.oxc.target) {
+            config.oxc = { ...viteConfig.oxc, target: 'node18' }
+          }
         }
         else {
-          config.esbuild = viteConfig.esbuild === false
-            ? false
-            : {
-                // Lowest target Vitest supports is Node18
-                target: viteConfig.esbuild?.target || 'node18',
-                sourcemap: 'external',
-                // Enables using ignore hint for coverage providers with @preserve keyword
-                legalComments: 'inline',
-              }
+          if (viteConfig.esbuild === false) {
+            config.esbuild = false
+          }
+          else if (viteConfig.esbuild === undefined) {
+            config.esbuild = {
+              target: 'node18',
+              sourcemap: 'external',
+              legalComments: 'inline',
+            }
+          }
+          else if (!viteConfig.esbuild.target) {
+            config.esbuild = {
+              ...viteConfig.esbuild,
+              target: 'node18',
+              sourcemap: 'external',
+              legalComments: 'inline',
+            }
+          }
         }
 
         const classNameStrategy
