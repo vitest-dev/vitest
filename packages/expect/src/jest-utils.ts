@@ -630,13 +630,24 @@ export function subsetEquality(
 
             seenReferences.set(subset[key], true)
           }
+          // an asymmetric matcher runs its own comparison, and subset
+          // semantics must not leak into it: inside `arrayContaining`, for
+          // one, the sample is compared as the left-hand side, so a subset
+          // tester would let an actual element satisfy a sample that has
+          // more fields than it
           const result
             = object != null
               && hasPropertyInObject(object, key)
-              && equals(object[key], subset[key], [
-                ...filteredCustomTesters,
-                subsetEqualityWithContext(seenReferences),
-              ])
+              && equals(
+                object[key],
+                subset[key],
+                isAsymmetric(subset[key])
+                  ? filteredCustomTesters
+                  : [
+                      ...filteredCustomTesters,
+                      subsetEqualityWithContext(seenReferences),
+                    ],
+              )
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only

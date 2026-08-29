@@ -795,3 +795,42 @@ describe('Standard Schema', () => {
     })
   })
 })
+
+// https://github.com/vitest-dev/vitest/issues/11071
+describe('asymmetric matchers nested in toMatchObject', () => {
+  test('arrayContaining does not ignore fields of the expected element', () => {
+    expect(() =>
+      expect({ records: [{ id: 1 }] }).toMatchObject({
+        records: expect.arrayContaining([{ id: 1, required: 'missing' }]),
+      }),
+    ).toThrow()
+
+    expect({ records: [{ id: 1, required: 'present' }] }).toMatchObject({
+      records: expect.arrayContaining([{ id: 1, required: 'present' }]),
+    })
+  })
+
+  test('arrayContaining still allows extra fields on the actual element', () => {
+    expect({ records: [{ id: 1, extra: true }] }).toMatchObject({
+      records: expect.arrayContaining([{ id: 1, extra: true }]),
+    })
+  })
+
+  test('nested plain objects keep subset semantics', () => {
+    expect({ user: { name: 'John', age: 30 } }).toMatchObject({
+      user: { name: 'John' },
+    })
+  })
+
+  test('objectContaining is unaffected', () => {
+    expect({ user: { name: 'John', age: 30 } }).toMatchObject({
+      user: expect.objectContaining({ name: 'John' }),
+    })
+
+    expect(() =>
+      expect({ user: { name: 'John' } }).toMatchObject({
+        user: expect.objectContaining({ name: 'John', age: 30 }),
+      }),
+    ).toThrow()
+  })
+})
