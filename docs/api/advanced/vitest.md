@@ -584,10 +584,10 @@ Vitest will only collect tests defined in the file. It will never follow imports
 Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
 :::
 
-## experimental_parseSpecifications <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecifications}
+## parseSpecifications <Version>5.0.0</Version> {#parsespecifications}
 
 ```ts
-function experimental_parseSpecifications(
+function parseSpecifications(
   specifications: TestSpecification[],
   options?: {
     concurrency?: number
