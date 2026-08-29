@@ -212,35 +212,39 @@ test('fetch', async () => {
   `)
 })
 
-test('fs handle', async () => {
+test('fs watcher', async () => {
   const { stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
-      import { readFile } from 'node:fs'
+      import { watch } from 'node:fs'
 
-      test('leaking fs handle', () => {
-        readFile(import.meta.filename, () => {});
+      test('leaking fs watcher', () => {
+        watch(import.meta.filename, () => {});
       })
     `,
     'packages/example/test/example-2.test.ts': `
-      import { readFile } from 'node:fs'
+      import { watch } from 'node:fs'
 
-      test('not a leak', async () => {
-        await new Promise(resolve => readFile(import.meta.filename, () => { resolve() }));
+      test('not a leak', () => {
+        watch(import.meta.filename, () => {}).close();
       })
     `,
   })
 
-  // This might be racy. Sometimes readFile fires two FSREQCALLBACK's, sometimes just one.
-  expect(stderr).toContain(`\
-FSREQCALLBACK leaking in packages/example/test/example.test.ts
-  3|
-  4|       test('leaking fs handle', () => {
-  5|         readFile(import.meta.filename, () => {});
-   |         ^
-  6|       })
-  7|
- ❯ packages/example/test/example.test.ts:5:9
-`)
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    FSEVENTWRAP leaking in packages/example/test/example.test.ts
+      3|
+      4|       test('leaking fs watcher', () => {
+      5|         watch(import.meta.filename, () => {});
+       |         ^
+      6|       })
+      7|
+     ❯ packages/example/test/example.test.ts:5:9
+
+    "
+  `)
 })
 
 test('http server', async () => {
