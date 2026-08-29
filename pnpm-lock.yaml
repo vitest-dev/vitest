@@ -1341,6 +1341,9 @@ importers:
       vitest-sonar-reporter:
         specifier: 'catalog:'
         version: 3.0.0(vitest@packages+vitest)
+      vue-tsc:
+        specifier: ^3.3.11
+        version: 3.3.11(typescript@5.9.3)
       ws:
         specifier: 'catalog:'
         version: 8.21.3
@@ -1403,19 +1406,6 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
-
-  test/typescript:
-    dependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-    devDependencies:
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      vue-tsc:
-        specifier: ^3.3.11
-        version: 3.3.11(typescript@5.9.3)
 
   test/ui:
     devDependencies:
