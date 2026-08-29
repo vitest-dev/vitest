@@ -44,7 +44,7 @@ Quick links:
 
 If you've not used Vitest before, we suggest reading the [Getting Started](/guide/) and [Features](/guide/features) guides first.
 
-We extend our gratitude to the over [799 contributors to Vitest Core](https://github.com/vitest-dev/vitest/graphs/contributors) and to the maintainers and contributors of Vitest integrations, tools, and translations who have helped us develop this new major release. We encourage you to get involved and help us improve Vitest for the entire ecosystem. Learn more at our [Contributing Guide](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
+We extend our gratitude to the over [790 contributors to Vitest Core](https://github.com/vitest-dev/vitest/graphs/contributors) and to the maintainers and contributors of Vitest integrations, tools, and translations who have helped us develop this new major release. We encourage you to get involved and help us improve Vitest for the entire ecosystem. Learn more at our [Contributing Guide](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
 
 To get started, we suggest helping [triage issues](https://github.com/vitest-dev/vitest/issues), [review PRs](https://github.com/vitest-dev/vitest/pulls), send failing tests PRs based on open issues, and support others in [Discussions](https://github.com/vitest-dev/vitest/discussions) and Vitest Land's [help forum](https://discord.com/channels/917386801235247114/1057959614160851024). If you'd like to talk to us, join our [Discord community](http://chat.vitest.dev/) and say hi on the [#contributing channel](https://discord.com/channels/917386801235247114/1057959614160851024).
 
@@ -78,7 +78,7 @@ Some of the changes behind these numbers:
 
 - **Inline projects share the Vite server.** Projects defined in `test.projects` that don't change the Vite config now reuse the Vite server of the config that declares them, so shared files are transformed once. See [`sharedViteServer`](/config/sharedviteserver).
 - **File system module cache is stable.** The [`fsModuleCache`](/config/fsmodulecache) option (previously `experimental.fsModuleCache`) persists transformed modules on disk, so they are reused across reruns and separate Vitest processes. Plugins can participate in the cache key with [`defineCacheKeyGenerator`](/api/advanced/plugin#definecachekeygenerator).
-- **Fewer round trips between the main process and workers.** Warm modules are served to workers in one round trip, and the Node compile cache is persisted on teardown.
+- **Fewer round trips between the main process and workers.** Warm modules are served to workers in one round trip.
 - **Faster vm pools.** `vmThreads` and `vmForks` reuse compiled code across contexts and prewarm the module graph. They also support `require(esm)` now.
 - **Faster Browser Mode.** Vitest prebundles its own runtime, prewarms the browser while the Vite server starts, opens browser sessions adaptively instead of `maxWorkers` sessions upfront, and cuts per-file round trips.
 - **Smaller install.** Vitest now bundles its own dependencies, which reduces the number of packages in `node_modules` and the time spent resolving them.
@@ -92,7 +92,7 @@ Duration  3.76s (environment 79%, import 13%, transform 6%, tests 1%, setup 1%)
 
 ## Trace View
 
-Vitest 5 adds a built-in [Trace View](/guide/browser/trace-view) for Browser Mode. When [`browser.traceView`](/config/browser/traceview) is enabled, Vitest records every interaction, assertion, and `page.mark` as a DOM snapshot and lets you replay the test step by step after the browser has already moved on. The viewer is available in the browser UI, in [Vitest UI](/guide/ui), and in the [HTML reporter](/guide/reporters#html-reporter), so it works for local debugging and for CI failures alike.
+Vitest 5 adds a built-in [Trace View](/guide/browser/trace-view) for Browser Mode. When [`browser.traceView`](/config/browser/traceview) is enabled, Vitest records every interaction, assertion, and `page.mark` as a DOM snapshot and lets you replay the test step by step after the browser has already moved on. The viewer is available in the browser UI, in [Vitest UI](/guide/ui), and in the [HTML reporter](/guide/reporters#html-reporter), so it works for local debugging and for CI failures.
 
 <div class="flex align-center justify-center">
   <video controls muted>
@@ -147,7 +147,7 @@ export default defineConfig({
 
 A config file referenced in `test.projects` can now declare its own `projects`. Such a config acts as a container, exactly like the root config, and provides [nested projects](/guide/projects#nested-projects) named `app (unit)`, `app (e2e)`, and so on. This makes it possible to reference a package that already defines its own projects without duplicating them at the root:
 
-```ts [vitest.config.ts]
+```ts [packages/app/vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -192,7 +192,7 @@ Behaviors can be limited with `thenReturnOnce` or a `times` option, and the new 
 
 The benchmarking API was rewritten. `bench` is no longer a top-level import; it is a [test-context fixture](/guide/test-context#bench) available inside regular `test()` calls in benchmark files. This gives benchmarks access to everything the test runner offers: fixtures, lifecycle hooks, retries, filtering, and assertions.
 
-```ts
+```ts [parse.bench.ts]
 import { expect, test } from 'vitest'
 
 test('compare parsers', async ({ bench }) => {
@@ -238,11 +238,11 @@ vi.setSystemTime(0)
 Temporal.Now.instant().epochMilliseconds // 0
 ```
 
-`Temporal` is part of the default set of faked APIs. To keep it native, add it to `toNotFake`.
+`Temporal` is part of the default set of faked APIs. To avoid faking it, add it to `toNotFake` in the [config](/config/faketimers#faketimers-tonotfake) or when invoking `vi.setSystemTime()`.
 
 ## Stricter Assertions
 
-Asynchronous assertions like `resolves`, `rejects`, and `toMatchFileSnapshot` now fail the test when they are not awaited. Previously, Vitest awaited them at the end of the test and printed a warning, which hid the real problem: the assertion did not run where it was written.
+Asynchronous assertions like `resolves`, `rejects`, and `toMatchFileSnapshot` now fail the test when they are not awaited. Before, Vitest awaited them at the end of the test and only printed a warning. The test still passed even though the assertion never ran at the point where it was written.
 
 ```ts
 test('unawaited assertion', async () => {
@@ -275,9 +275,7 @@ declare module 'vitest' {
 }
 ```
 
-`R` reflects how the matcher is used: `void` when called synchronously, `Promise<void>` through `.resolves`, `.rejects`, `expect.poll`, or `expect.element`.
-
-`T` is the type of the received value, so an expected argument can be typed the same as the value under test:
+`R` reflects how the matcher is used: `void` when called synchronously, `Promise<void>` through `.resolves`, `.rejects`, `expect.poll`, or `expect.element`. `T` is the type of the received value, so an expected argument can be typed the same as the value under test:
 
 ```ts
 declare module 'vitest' {
@@ -304,9 +302,9 @@ Custom matchers also get access to the underlying Chai [`assertion`](/guide/exte
 
 [`clearMocks`](/config/clearmocks) now defaults to `true`. Vitest calls `vi.clearAllMocks()` before every test, so a mock no longer carries call history from one test into the next while the implementations stay intact. This removes one of the most common sources of order-dependent tests. To keep the previous behavior, set `clearMocks: false`.
 
-## The `.vitest` Directory
+## Reporters Updates
 
-Reporters and other integrations now write their output into a single `.vitest` directory at the project root: the `html`, `json`, and `junit` reporters, failure screenshots, and Playwright traces all use it by default. This reduces the number of entries you need to add to `.gitignore` to one.
+Reporters and other integrations now write their output into a single `.vitest` directory at the project root: the `html`, `json`, and `junit` reporters, failure screenshots, and new traces all use it by default. This reduces the number of entries you need to add to `.gitignore` to one.
 
 Third-party reporters can use the same convention through the new [`vitest.createReport(scope)`](/api/advanced/vitest#createreport) API, which returns a `Report` limited to its own `.vitest/<scope>` directory.
 
