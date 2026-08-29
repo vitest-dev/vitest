@@ -136,6 +136,27 @@ describe('vi.when()', () => {
       expect(w).toHaveBeenExhausted()
     })
 
+    test('resolves with an unwrapped value for an async function', async () => {
+      const spy = vi.fn<(...args: FnData['args']) => Promise<FnData['value']>>()
+
+      const args: FnData['args'] = ['a', 0]
+      const value: FnData['value'] = 97
+
+      const w = vi.when(spy)
+        .calledWith(...args)
+        .thenResolve(value)
+        .thenResolveOnce(value)
+
+      expect(w).not.toHaveBeenExhausted()
+
+      await expect(spy(...args)).resolves.toBe(value)
+      await expect(spy(...args)).resolves.toBe(value)
+
+      expect(spy).toHaveBeenCalledTimes(2)
+
+      expect(w).toHaveBeenExhausted()
+    })
+
     test('rejects a promise when using `toReject`', async () => {
       const spy = vi.fn<Fn>()
 
