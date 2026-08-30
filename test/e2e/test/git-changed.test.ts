@@ -34,6 +34,18 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
   })
 })
 
+it.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTriggers matches files under a dot-named directory', async () => {
+  const { stdout, stderr } = await runVitest({
+    related: '/tmp/.hidden-vitest-root/package.json',
+    root: './fixtures/git-changed/related',
+    include: ['related.test.ts'],
+    forceRerunTriggers: ['**/package.json'],
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('1 passed')
+  expect(stdout).toContain('related.test.ts')
+})
+
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {
   const { stdout, stderr } = await runVitest({
     related: 'src/sourceA.ts',
