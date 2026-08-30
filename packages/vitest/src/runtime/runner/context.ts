@@ -1,14 +1,10 @@
 import type { Awaitable } from '@vitest/utils'
 import type { RuntimeContext, SuiteCollector, Test, TestAnnotation, TestContext, VitestRunner, WriteableTestContext } from './types'
-import { getSafeTimers } from '@vitest/utils/timers'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
+import { TaskDeadline } from './deadline'
 import { PendingError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
-
-const now = globalThis.performance
-  ? globalThis.performance.now.bind(globalThis.performance)
-  : Date.now
 
 export const collectorContext: RuntimeContext = {
   tasks: [],
@@ -40,46 +36,55 @@ export function withTimeout<T extends (...args: any[]) => any>(
     return fn
   }
 
-  const { setTimeout, clearTimeout } = getSafeTimers()
-
   // this function name is used to filter error in test/e2e/test/fails.test.ts
   return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
-    const startTime = now()
     const runner = getRunner()
-    runner._currentTaskStartTime = startTime
-    runner._currentTaskTimeout = timeout
+    const previousDeadline = runner._deadline
     return new Promise((resolve_, reject_) => {
-      const timer = setTimeout(() => {
-        clearTimeout(timer)
+      let settled = false
+      const deadline = new TaskDeadline(timeout, () => {
+        // an operation derived a shorter deadline from this one,
+        // so its error describes the failure better than a generic timeout
+        const pending = deadline.settle()
+        if (pending) {
+          pending.then(rejectTimeoutError, reject)
+          return
+        }
         rejectTimeoutError()
-      }, timeout)
-      // `unref` might not exist in browser
-      timer.unref?.()
+      })
+      runner._deadline = deadline
 
-      function rejectTimeoutError() {
-        const error = makeTimeoutError(isHook, timeout, stackTraceError)
+      function rejectTimeoutError(pending?: string[]) {
+        if (settled) {
+          return
+        }
+        settled = true
+        const error = makeTimeoutError(isHook, timeout, stackTraceError, pending)
         onTimeout?.(args, error)
         reject_(error)
       }
 
       function resolve(result: unknown) {
-        runner._currentTaskStartTime = undefined
-        runner._currentTaskTimeout = undefined
-        clearTimeout(timer)
+        runner._deadline = previousDeadline
+        deadline.clear()
         // if test/hook took too long in microtask, setTimeout won't be triggered,
         // but we still need to fail the test, see
         // https://github.com/vitest-dev/vitest/issues/2920
-        if (now() - startTime >= timeout) {
+        if (deadline.exceeded()) {
           rejectTimeoutError()
           return
         }
+        settled = true
         resolve_(result)
       }
 
       function reject(error: unknown) {
-        runner._currentTaskStartTime = undefined
-        runner._currentTaskTimeout = undefined
-        clearTimeout(timer)
+        if (settled) {
+          return
+        }
+        settled = true
+        runner._deadline = previousDeadline
+        deadline.clear()
         reject_(error)
       }
 
@@ -249,10 +254,11 @@ export function createTestContext(
   return runner.extendTaskContext?.(context) || context
 }
 
-function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Error) {
+function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Error, pending?: string[]) {
+  const waiting = pending?.length ? ` while waiting for ${pending.join(', ')}` : ''
   const message = `${
     isHook ? 'Hook' : 'Test'
-  } timed out in ${timeout}ms.\nIf this is a long-running ${
+  } timed out in ${timeout}ms${waiting}.\nIf this is a long-running ${
     isHook ? 'hook' : 'test'
   }, pass a timeout value as the last argument or configure it globally with "${
     isHook ? 'hookTimeout' : 'testTimeout'
