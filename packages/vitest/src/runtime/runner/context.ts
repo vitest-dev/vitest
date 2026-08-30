@@ -1,4 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
+import type { PendingOperation } from './deadline'
 import type { RuntimeContext, SuiteCollector, Test, TestAnnotation, TestContext, VitestRunner, WriteableTestContext } from './types'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { TaskDeadline } from './deadline'
@@ -54,7 +55,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
       })
       runner._deadline = deadline
 
-      function rejectTimeoutError(pending?: string[]) {
+      function rejectTimeoutError(pending?: PendingOperation[]) {
         if (settled) {
           return
         }
@@ -254,8 +255,13 @@ export function createTestContext(
   return runner.extendTaskContext?.(context) || context
 }
 
-function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Error, pending?: string[]) {
-  const waiting = pending?.length ? ` while waiting for ${pending.join(', ')}` : ''
+function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Error, pending?: PendingOperation[]) {
+  const waiting = pending?.length ? ` while waiting for ${pending.map(operation => operation.name).join(', ')}` : ''
+  // point at the action the task is stuck on rather than at the task itself
+  const lastOperationSource = pending?.at(-1)?.source
+  if (lastOperationSource) {
+    stackTraceError = lastOperationSource
+  }
   const message = `${
     isHook ? 'Hook' : 'Test'
   } timed out in ${timeout}ms${waiting}.\nIf this is a long-running ${

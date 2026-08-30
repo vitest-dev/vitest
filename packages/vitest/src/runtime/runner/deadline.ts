@@ -9,8 +9,13 @@ const DERIVED_BUFFER = 100
 // how long the task timer waits for a tracked operation past that operation's own deadline
 const SETTLE_GRACE = 500
 
-interface TrackedOperation {
+export interface PendingOperation {
   name: string
+  /** error created where the operation was called, used for the timeout stack trace */
+  source?: Error
+}
+
+interface TrackedOperation extends PendingOperation {
   promise: Promise<unknown>
   endTime: number
 }
@@ -48,8 +53,8 @@ export class TaskDeadline {
   }
 
   /** Registers an operation with its own timeout; see `settle`. */
-  track<T>(name: string, promise: Promise<T>, timeout: number): Promise<T> {
-    const operation = { name, promise, endTime: now() + timeout }
+  track<T>(name: string, promise: Promise<T>, timeout: number, source?: Error): Promise<T> {
+    const operation = { name, source, promise, endTime: now() + timeout }
     this.operations.add(operation)
     promise.finally(() => this.operations.delete(operation)).catch(() => {})
     return promise
@@ -57,10 +62,10 @@ export class TaskDeadline {
 
   /**
    * Waits for the operations that were due before the task. Rejects with the
-   * error of the first one that failed, otherwise resolves with the names of
-   * the ones that did not report back in time.
+   * error of the first one that failed, otherwise resolves with the ones
+   * that did not report back in time.
    */
-  settle(): Promise<string[]> | undefined {
+  settle(): Promise<PendingOperation[]> | undefined {
     const operations = [...this.operations].filter(operation => operation.endTime <= this.endTime)
     if (!operations.length) {
       return undefined
@@ -70,12 +75,9 @@ export class TaskDeadline {
     return Promise.race([
       // wait until all operations resolve (or the first one rejects)
       Promise.all(operations.map(operation => operation.promise)).then(() => []),
-      // or resolve after a grace period with action names for the error message (500ms)
-      new Promise<string[]>(resolve => setTimeout(() => {
-        const names = operations
-          .filter(operation => this.operations.has(operation))
-          .map(operation => operation.name)
-        resolve(names)
+      // or resolve after a grace period with the pending actions for the error (500ms)
+      new Promise<PendingOperation[]>(resolve => setTimeout(() => {
+        resolve(operations.filter(operation => this.operations.has(operation)))
       // the grace may already be in the past
       }, Math.max(waitUntil - now(), 0))),
     ])

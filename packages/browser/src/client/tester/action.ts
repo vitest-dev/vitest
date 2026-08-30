@@ -77,7 +77,7 @@ class Action<T = void> implements Promise<T> {
     )
     const deadline = getBrowserState().runner._deadline
     return deadline && timeout != null
-      ? deadline.track(this.command.slice('__vitest_'.length), promise, timeout)
+      ? deadline.track(this.command.slice('__vitest_'.length), promise, timeout, this._errorSource)
       : promise
   }
 

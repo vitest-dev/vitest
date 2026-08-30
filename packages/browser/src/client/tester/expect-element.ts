@@ -43,6 +43,12 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
   }, pollOptions)
 
   chai.util.flag(expectElement, '_poll.element', true)
+  if (timeout != null) {
+    chai.util.flag(expectElement, '_poll.wrap', (promise: Promise<void>, source: Error) => {
+      const name = `expect.element().${chai.util.flag(expectElement, '_name')}()`
+      return getBrowserState().runner._deadline?.track(name, promise, timeout, source) ?? promise
+    })
+  }
 
   // ask `expect.poll` to invoke trace after the assertion
   const currentTest = getWorkerState().current
