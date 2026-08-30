@@ -68,9 +68,15 @@ export class TaskDeadline {
     const { setTimeout } = getSafeTimers()
     const waitUntil = Math.max(...operations.map(operation => operation.endTime)) + SETTLE_GRACE
     return Promise.race([
+      // wait until all operations resolve (or the first one rejects)
       Promise.all(operations.map(operation => operation.promise)).then(() => []),
+      // or resolve after a grace period with action names for the error message (500ms)
       new Promise<string[]>(resolve => setTimeout(() => {
-        resolve(operations.filter(operation => this.operations.has(operation)).map(operation => operation.name))
+        const names = operations
+          .filter(operation => this.operations.has(operation))
+          .map(operation => operation.name)
+        resolve(names)
+      // the grace may already be in the past
       }, Math.max(waitUntil - now(), 0))),
     ])
   }
