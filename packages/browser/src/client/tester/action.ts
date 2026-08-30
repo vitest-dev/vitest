@@ -36,70 +36,76 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options?: 
  */
 class Action<T = void> implements Promise<T> {
   public readonly [Symbol.toStringTag] = 'Action'
-  private _promise: Promise<T> | undefined
-  private _awaited = false
-  private readonly _errorSource: Error
+  readonly #command: string
+  readonly #args: ActionArguments
+  readonly #options: ActionOptions | undefined
+  readonly #errorSource: Error
+  #promise: Promise<T> | undefined
+  #awaited = false
 
   constructor(
-    private readonly command: string,
-    private readonly args: ActionArguments,
-    private readonly options: ActionOptions | undefined,
+    command: string,
+    args: ActionArguments,
+    options: ActionOptions | undefined,
     errorSource?: Error,
   ) {
-    this._errorSource = errorSource ?? new Error('STACK_TRACE_ERROR')
+    this.#command = command
+    this.#args = args
+    this.#options = options
+    this.#errorSource = errorSource ?? new Error('STACK_TRACE_ERROR')
     const test = getWorkerState().current
     if (errorSource || !test || test.type !== 'test') {
-      this._promise = this.run()
+      this.#promise = this.#run()
       return
     }
     test.onFinished ??= []
     test.onFinished.push(() => {
-      if (!this._awaited) {
+      if (!this.#awaited) {
         const error = new Error(
           `The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.`,
         )
-        error.stack = this._errorSource.stack?.replace(this._errorSource.message, error.message)
+        error.stack = this.#errorSource.stack?.replace(this.#errorSource.message, error.message)
         throw error
       }
     })
   }
 
-  private async run(): Promise<T> {
-    const timeout = resolveActionTimeout(this.options)
-    const options = timeout == null ? this.options : { ...this.options, timeout }
-    const args = typeof this.args === 'function'
-      ? await this.args(options)
-      : [...this.args, options]
+  async #run(): Promise<T> {
+    const timeout = resolveActionTimeout(this.#options)
+    const options = timeout == null ? this.#options : { ...this.#options, timeout }
+    const args = typeof this.#args === 'function'
+      ? await this.#args(options)
+      : [...this.#args, options]
     const promise = getBrowserState().commands.triggerCommand<T>(
-      this.command,
+      this.#command,
       args,
-      this._errorSource,
+      this.#errorSource,
     )
     const deadline = getBrowserState().runner._deadline
     return deadline && timeout != null
-      ? deadline.track(this.command.slice('__vitest_'.length), promise, timeout, this._errorSource)
+      ? deadline.track(this.#command.slice('__vitest_'.length), promise, timeout, this.#errorSource)
       : promise
   }
 
   // the command starts only when awaited, so an unawaited action cannot reject unhandled
-  private get promise(): Promise<T> {
-    this._awaited = true
-    return this._promise ??= this.run()
+  #start(): Promise<T> {
+    this.#awaited = true
+    return this.#promise ??= this.#run()
   }
 
   then<R1 = T, R2 = never>(
     onFulfilled?: ((value: T) => R1 | PromiseLike<R1>) | null,
     onRejected?: ((reason: any) => R2 | PromiseLike<R2>) | null,
   ): Promise<R1 | R2> {
-    return this.promise.then(onFulfilled, onRejected)
+    return this.#start().then(onFulfilled, onRejected)
   }
 
   catch<R = never>(onRejected?: ((reason: any) => R | PromiseLike<R>) | null): Promise<T | R> {
-    return this.promise.catch(onRejected)
+    return this.#start().catch(onRejected)
   }
 
   finally(onFinally?: (() => void) | null): Promise<T> {
-    return this.promise.finally(onFinally)
+    return this.#start().finally(onFinally)
   }
 }
 
