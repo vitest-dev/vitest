@@ -65,6 +65,7 @@ const PROJECT_CLI_OVERRIDES = [
   'inspect',
   'inspectBrk',
   'fileParallelism',
+  'maxWorkers',
   'tagsFilter',
   'browser',
   'experimental',
