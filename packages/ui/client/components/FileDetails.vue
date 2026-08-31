@@ -25,7 +25,7 @@ import ViewTestReport from './views/ViewTestReport.vue'
 
 const draft = ref(false)
 
-const task = computed(() => {
+const selectedTask = computed(() => {
   return (selectedTest.value
     ? client.state.idMap.get(selectedTest.value)
     : undefined) ?? current.value
@@ -212,9 +212,9 @@ const tags = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <template v-else-if="!viewMode && task">
-        <ViewTestReport v-if="task.type === 'test'" :test="task" data-testid="report" />
-        <ViewReport v-else :suite="task" data-testid="report" />
+      <template v-else-if="!viewMode && selectedTask">
+        <ViewTestReport v-if="selectedTask.type === 'test'" :test="selectedTask" data-testid="report" />
+        <ViewReport v-else :suite="selectedTask" data-testid="report" />
       </template>
     </div>
   </div>
