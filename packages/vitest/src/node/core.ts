@@ -670,10 +670,17 @@ export class Vitest {
   }
 
   /**
-   * Deletes all Vitest caches, including the `fsModuleCache`.
-   * @experimental
+   * @deprecated Use `clearCache` instead.
    */
-  public async experimental_clearCache(): Promise<void> {
+  public experimental_clearCache(): Promise<void> {
+    this.logger.deprecate(`The "experimental_clearCache" method is deprecated. Use "clearCache" instead.`)
+    return this.clearCache()
+  }
+
+  /**
+   * Deletes all Vitest caches, including the `fsModuleCache`.
+   */
+  public async clearCache(): Promise<void> {
     await this.cache.results.clearCache()
     await this._fsCache.clearCache()
   }

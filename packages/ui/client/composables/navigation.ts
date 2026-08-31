@@ -127,24 +127,14 @@ export function navigateTo({ file, line, view, test, column }: Omit<Params, 'tra
 }
 
 export function clickOnTask(task: Task) {
-  if (task.type === 'test') {
-    if (viewMode.value === 'editor') {
-      showTaskSource(task)
-    }
-    else {
-      navigateTo({
-        file: task.file.id,
-        line: null,
-        column: null,
-        view: viewMode.value,
-        test: task.id,
-      })
-    }
+  const isFile = 'filepath' in task
+  if (!isFile && viewMode.value === 'editor') {
+    showTaskSource(task)
   }
   else {
     navigateTo({
       file: task.file.id,
-      test: null,
+      test: isFile ? null : task.id,
       line: null,
       view: viewMode.value,
       column: null,
