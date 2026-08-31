@@ -203,7 +203,7 @@
     "birpc": "catalog:",
     "cac": "catalog:",
     "flatted": "catalog:",
-    "happy-dom": "^20.11.6",
+    "happy-dom": "^20.12.0",
     "jsdom": "^29.1.1",
     "local-pkg": "^1.2.1",
     "mime": "^4.1.0",
