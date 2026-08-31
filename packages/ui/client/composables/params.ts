@@ -1,9 +1,11 @@
 import { toRef, useUrlSearchParams } from '@vueuse/core'
 
 export interface Params {
+  // File.id
   file: string
   view: null | 'graph' | 'editor' | 'console'
   line: null | number
+  // Task.id of either Test or Suite (but not File)
   test: null | string
   column: null | number
   traceAttempt: null | string
