@@ -32,6 +32,7 @@ function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
 const failed = computed(() => {
   const suite = props.suite
   const failedFlatMap = suite.tasks.flatMap(t => collectFailed(t, 0))
+  // append suite level errors as same indent level as children errors
   if (suite.result?.errors?.length) {
     const taskError: LeveledTask = {
       ...suite,
@@ -43,7 +44,6 @@ const failed = computed(() => {
   return failedFlatMap
 })
 
-// Files and suites both have type "suite", but only files have a filepath.
 const isFile = computed(() => 'filepath' in props.suite)
 </script>
 
