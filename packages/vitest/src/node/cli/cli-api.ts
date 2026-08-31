@@ -151,7 +151,7 @@ export async function startVitest(
       await ctx.listTags()
     }
     else if (ctx.config.clearCache) {
-      await ctx.experimental_clearCache()
+      await ctx.clearCache()
     }
     else if (ctx.config.mergeReports) {
       await ctx.mergeReports()
