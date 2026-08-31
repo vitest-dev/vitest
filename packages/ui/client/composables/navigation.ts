@@ -127,18 +127,19 @@ export function navigateTo({ file, line, view, test, column }: Omit<Params, 'tra
 }
 
 export function clickOnTask(task: Task) {
-  const isFile = task.id === task.file.id
+  const isFile = 'filepath' in task
   if (!isFile && viewMode.value === 'editor') {
     showTaskSource(task)
-    return
   }
-  navigateTo({
-    file: task.file.id,
-    test: isFile ? null : task.id,
-    line: null,
-    view: viewMode.value,
-    column: null,
-  })
+  else {
+    navigateTo({
+      file: task.file.id,
+      test: isFile ? null : task.id,
+      line: null,
+      view: viewMode.value,
+      column: null,
+    })
+  }
 }
 
 export function showCoverage() {
