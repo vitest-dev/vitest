@@ -25,18 +25,10 @@ import ViewTestReport from './views/ViewTestReport.vue'
 
 const draft = ref(false)
 
-const selectedTask = computed(() => {
-  return selectedTest.value
+const task = computed(() => {
+  return (selectedTest.value
     ? client.state.idMap.get(selectedTest.value)
-    : undefined
-})
-
-const test = computed(() => {
-  return selectedTask.value?.type === 'test' ? selectedTask.value : undefined
-})
-
-const currentSuite = computed(() => {
-  return selectedTask.value?.type === 'suite' ? selectedTask.value : current.value
+    : undefined) ?? current.value
 })
 
 const failedSnapshot = computed(() => {
@@ -220,8 +212,8 @@ const tags = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewReport v-else-if="!viewMode && !test && currentSuite" :suite="currentSuite" data-testid="report" />
-      <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
+      <ViewTestReport v-else-if="!viewMode && task?.type === 'test'" :test="task" data-testid="report" />
+      <ViewReport v-else-if="!viewMode && task?.type === 'suite'" :suite="task" data-testid="report" />
     </div>
   </div>
 </template>
