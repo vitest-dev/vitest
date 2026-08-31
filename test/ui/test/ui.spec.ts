@@ -125,20 +125,9 @@ test.describe('ui', () => {
     await testConsole(page)
   })
 
-  test('collapses explorer suites only from the disclosure button', async ({ page }) => {
+  test('suite report navigation', async ({ page }) => {
     await page.goto(pageUrl)
-
-    // "suite" is an actual title of this suite
-    const suite = getExplorerItem(page, 'suite')
-    await suite.click()
-    await expect(page.getByTestId('file-detail')).toBeVisible()
-    await expect(getExplorerItem(page, 'nested suite')).toBeVisible()
-
-    await suite.getByRole('button', { name: 'Collapse suite', exact: true }).click()
-    await expect(getExplorerItem(page, 'nested suite')).not.toBeVisible()
-
-    await suite.getByRole('button', { name: 'Expand suite', exact: true }).click()
-    await expect(getExplorerItem(page, 'nested suite')).toBeVisible()
+    await testSuiteReport(page)
   })
 
   test('error', async ({ page }) => {
@@ -192,11 +181,6 @@ test.describe('ui', () => {
   test('visual regression in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
     await testVisualRegression(page)
-  })
-
-  test('report tab is scoped to the selected suite', async ({ page }) => {
-    await page.goto(pageUrl)
-    await testSuiteReport(page)
   })
 
   test('can edit file', async ({ page }) => {
@@ -292,7 +276,7 @@ test.describe('html report', () => {
     await testVisualRegression(page)
   })
 
-  test('report tab is scoped to the selected suite', async ({ page }) => {
+  test('suite report navigation', async ({ page }) => {
     await page.goto(pageUrl)
     await testSuiteReport(page)
   })
@@ -513,9 +497,17 @@ async function testError(page: Page) {
 }
 
 async function testSuiteReport(page: Page) {
+  // "suite" is an actual title of this suite
   const suite = getExplorerItem(page, 'suite')
   await suite.click()
   await expect(page.getByTestId('report')).toContainText('All tests passed in this suite')
+  await expect(getExplorerItem(page, 'nested suite')).toBeVisible()
+
+  await suite.getByRole('button', { name: 'Collapse suite', exact: true }).click()
+  await expect(getExplorerItem(page, 'nested suite')).not.toBeVisible()
+
+  await suite.getByRole('button', { name: 'Expand suite', exact: true }).click()
+  await expect(getExplorerItem(page, 'nested suite')).toBeVisible()
 }
 
 async function testTagsFilter(page: Page) {
