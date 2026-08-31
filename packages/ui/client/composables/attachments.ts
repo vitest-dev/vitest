@@ -42,6 +42,8 @@ export function internalOrExternalUrl(attachment: TestAttachment): string {
 export async function openPlaywrightTrace(attachment: TestAttachment): Promise<void> {
   const popup = window.open('', '_blank')
   if (!popup) {
+    // eslint-disable-next-line no-alert
+    window.alert('Unable to open Playwright Trace Viewer. Please allow pop-ups and try again.')
     return
   }
 
