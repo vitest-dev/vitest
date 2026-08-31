@@ -6,7 +6,7 @@ import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
-  task: RunnerTestFile | RunnerTestSuite
+  suite: RunnerTestFile | RunnerTestSuite
 }>()
 
 type LeveledTask = RunnerTask & {
@@ -30,11 +30,11 @@ function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
 }
 
 const failed = computed(() => {
-  const task = props.task
-  const failedFlatMap = task.tasks.flatMap(t => collectFailed(t, 0))
-  if (task.result?.errors?.length) {
+  const suite = props.suite
+  const failedFlatMap = suite.tasks.flatMap(t => collectFailed(t, 0))
+  if (suite.result?.errors?.length) {
     const taskError: LeveledTask = {
-      ...task,
+      ...suite,
       level: 0,
       tasks: [],
     }
@@ -44,7 +44,7 @@ const failed = computed(() => {
 })
 
 // Files and suites both have type "suite", but only files have a filepath.
-const isFile = computed(() => 'filepath' in props.task)
+const isFile = computed(() => 'filepath' in props.suite)
 </script>
 
 <template>

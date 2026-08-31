@@ -220,7 +220,7 @@ const tags = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewReport v-else-if="!viewMode && !test && reportTask" :task="reportTask" data-testid="report" />
+      <ViewReport v-else-if="!viewMode && !test && reportTask" :suite="reportTask" data-testid="report" />
       <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
     </div>
   </div>
