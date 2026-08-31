@@ -10,11 +10,11 @@ test('task timeouts wait for pending actions', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "actions.test.ts": {
-        "does not wait for an action due after the test": [
-          "Test timed out in 500ms.
+        "names the pending action when it does not report back": [
+          "Test timed out in 500ms while waiting for screenshot.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
         ],
-        "names the pending action when it does not report back": [
+        "reports an action due after the test without waiting for it": [
           "Test timed out in 500ms while waiting for screenshot.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
         ],

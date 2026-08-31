@@ -31,11 +31,18 @@ test('the timer calls onTimeout unless cleared', async () => {
   expect(fired).toHaveBeenCalledOnce()
 })
 
-test('settle has nothing to wait for without operations due before the task', () => {
+test('settle has nothing to wait for without operations', () => {
   const deadline = new TaskDeadline(100, noop)
   expect(deadline.settle()).toBeUndefined()
+  deadline.clear()
+})
+
+test('settle reports an operation due after the task right away', async () => {
+  const deadline = new TaskDeadline(100, noop)
   deadline.track('click', never, 5000)
-  expect(deadline.settle()).toBeUndefined()
+  const pending = await deadline.settle()
+  expect.assert(pending)
+  expect(pending.map(operation => operation.name)).toEqual(['click'])
   deadline.clear()
 })
 
@@ -65,7 +72,7 @@ test('settle reports operations that did not report back within the grace', asyn
   deadline.track('screenshot', never, 5000)
   const pending = await deadline.settle()
   expect.assert(pending)
-  expect(pending.map(operation => operation.name)).toEqual(['click'])
+  expect(pending.map(operation => operation.name)).toEqual(['click', 'screenshot'])
   expect(pending[0].source).toBe(source)
   deadline.clear()
 })

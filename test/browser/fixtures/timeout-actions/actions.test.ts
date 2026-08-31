@@ -9,6 +9,6 @@ it('names the pending action when it does not report back', async () => {
   await page.screenshot({ path: 'delay-2000.png' })
 }, 500)
 
-it('does not wait for an action due after the test', async () => {
+it('reports an action due after the test without waiting for it', async () => {
   await page.screenshot({ path: 'delay-2000.png', timeout: 5000 })
 }, 500)
