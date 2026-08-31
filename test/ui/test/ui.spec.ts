@@ -501,6 +501,11 @@ async function testError(page: Page) {
 async function testSuiteReport(page: Page) {
   const report = page.getByTestId('report')
 
+  await getExplorerItem(page, 'suite-report.test.ts').click()
+  await expect(report).toContainText('before-all-marker')
+  await expect(report).toContainText('direct-child-marker')
+  await expect(report).toContainText('nested-child-marker')
+
   const successfulSuite = getExplorerItem(page, 'successful suite')
   await successfulSuite.click()
   await expect(page.getByTestId('report')).toContainText('All tests passed in this suite')
