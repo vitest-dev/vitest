@@ -58,18 +58,33 @@ export async function openPlaywrightTrace(attachment: TestAttachment): Promise<v
     if (popup.closed) {
       return
     }
-    popup.location.href = 'https://trace.playwright.dev/'
-    // TODO: Playwright should expose a readiness signal instead of relying on a fixed delay.
-    setTimeout(() => {
-      if (!popup.closed) {
-        popup.postMessage({ method: 'load', params: { trace } }, 'https://trace.playwright.dev')
+
+    // Playwright signals when the trace viewer is ready to receive messages: https://github.com/microsoft/playwright/pull/42451
+    const ready = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        window.removeEventListener('message', onMessage)
+        reject(new Error('Timed out waiting for Playwright Trace Viewer'))
+      }, 10_000)
+      function onMessage(event: MessageEvent) {
+        if (event.origin !== 'https://trace.playwright.dev' || event.source !== popup || event.data?.method !== 'ready') {
+          return
+        }
+        clearTimeout(timeout)
+        window.removeEventListener('message', onMessage)
+        resolve()
       }
-    }, 500)
+      window.addEventListener('message', onMessage)
+    })
+    popup.location.href = 'https://trace.playwright.dev/next/'
+    await ready
+    if (!popup.closed) {
+      popup.postMessage({ method: 'load', params: { trace } }, 'https://trace.playwright.dev')
+    }
   }
   catch {
     if (!popup.closed) {
-      popup.document.write('<!doctype html><title>Failed to Open Playwright Trace</title><body>Failed to load Playwright trace attachment.</body>')
-      popup.document.close()
+      const errorPage = new Blob(['<!doctype html><title>Failed to Open Playwright Trace</title><body>Failed to load Playwright trace attachment.</body>'], { type: 'text/html' })
+      popup.location.href = URL.createObjectURL(errorPage)
     }
   }
 }

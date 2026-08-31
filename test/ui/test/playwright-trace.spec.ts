@@ -75,12 +75,12 @@ async function testPlaywrightTrace(page: Page, baseURL: string) {
   const popupPromise = page.waitForEvent('popup')
   await page.getByRole('button', { name: 'Open trace' }).click()
   const popup = await popupPromise
-  await expect(popup).toHaveURL('https://trace.playwright.dev/')
+  await expect(popup).toHaveURL('https://trace.playwright.dev/next/')
   await expect(popup).toHaveTitle('Loaded Playwright Trace')
 }
 
 async function mockTraceViewer(page: Page) {
-  await page.context().route('https://trace.playwright.dev/', async (route) => {
+  await page.context().route('https://trace.playwright.dev/next/', async (route) => {
     await route.fulfill({
       contentType: 'text/html',
       body: `<script>
@@ -88,6 +88,7 @@ async function mockTraceViewer(page: Page) {
           if (event.data?.method === 'load' && event.data.params?.trace instanceof Blob && event.data.params.trace.size > 0)
             document.title = 'Loaded Playwright Trace'
         })
+        opener.postMessage({ method: 'ready' }, '*')
       </script>`,
     })
   })
