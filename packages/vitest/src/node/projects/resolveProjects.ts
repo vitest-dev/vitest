@@ -50,6 +50,7 @@ const PROJECT_CLI_OVERRIDES = [
   'allowOnly',
   'sequence',
   'testTimeout',
+  'hookTimeout',
   'pool',
   'update',
   'globals',
