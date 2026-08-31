@@ -187,12 +187,6 @@ describe('retry fail', () => {
         "(0, 0) run",
         "(0, 0) finish",
         "(0, 0) fail",
-        "(1, 0) run",
-        "(1, 0) finish",
-        "(1, 0) fail",
-        "(2, 0) run",
-        "(2, 0) finish",
-        "(2, 0) fail",
       ]
     `)
   })

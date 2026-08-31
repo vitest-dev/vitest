@@ -20,7 +20,7 @@ it('retry test fails', { retry: 10 }, () => {
 
 it('result', () => {
   expect(count1).toEqual(3)
-  expect(count2).toEqual(2)
+  expect(count2).toEqual(1)
   expect(count3).toEqual(3)
 })
 
