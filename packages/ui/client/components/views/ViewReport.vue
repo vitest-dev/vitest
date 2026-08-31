@@ -50,7 +50,7 @@ const isFile = computed(() => 'filepath' in props.suite)
 <template>
   <div h-full class="scrolls">
     <template v-if="failed.length">
-      <div v-for="failedTask of failed" :id="failedTask.id" :key="failedTask.id">
+      <div v-for="task of failed" :id="task.id" :key="task.id">
         <div
           bg="red-500/10"
           text="red-500 sm"
@@ -58,21 +58,21 @@ const isFile = computed(() => 'filepath' in props.suite)
           m-2
           rounded
           :style="{
-            'margin-left': `${2 * (failedTask as LeveledTask).level + 0.5}rem`,
+            'margin-left': `${2 * (task as LeveledTask).level + 0.5}rem`,
           }"
         >
           <div flex="~ gap-2 items-center">
-            <span>{{ failedTask.name }}</span>
-            <FailureScreenshot :task="failedTask" />
+            <span>{{ task.name }}</span>
+            <FailureScreenshot :task="task" />
           </div>
-          <template v-if="failedTask.result?.errors && config.root">
+          <template v-if="task.result?.errors && config.root">
             <ViewReportError
-              v-for="(error, idx) of failedTask.result.errors"
+              v-for="(error, idx) of task.result.errors"
               :key="idx"
               :error="error"
-              :filename="failedTask.file.name"
+              :filename="task.file.name"
               :root="config.root"
-              :file-id="failedTask.file.id"
+              :file-id="task.file.id"
             />
           </template>
         </div>
