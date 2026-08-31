@@ -60,7 +60,7 @@ test('if no cache key generator is defined, the hash is invalid', async () => {
       {
         async onInit(vitest) {
           // make sure cache is empty
-          await vitest.experimental_clearCache()
+          await vitest.clearCache()
         },
       },
     ],
@@ -106,7 +106,7 @@ test('if cache key generator is defined, the hash is valid', async () => {
       {
         async onInit(vitest) {
           // make sure cache is empty
-          await vitest.experimental_clearCache()
+          await vitest.clearCache()
         },
       },
     ],
@@ -150,7 +150,7 @@ test('if cache key generator bails out, the file is not cached', async () => {
       {
         async onInit(vitest) {
           // make sure cache is empty
-          await vitest.experimental_clearCache()
+          await vitest.clearCache()
         },
       },
     ],

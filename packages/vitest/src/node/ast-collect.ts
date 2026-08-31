@@ -109,6 +109,10 @@ function astParseFile(filepath: string, code: string) {
       return getName(callee.tag)
     }
     if (callee.type === 'MemberExpression') {
+      // A computed access like `it[1].call(it[2])` is not a Vitest call.
+      if (callee.computed) {
+        return null
+      }
       if (
         callee.object?.type === 'Identifier'
         && isVitestFunctionName(callee.object.name)
