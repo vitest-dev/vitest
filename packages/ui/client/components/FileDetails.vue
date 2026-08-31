@@ -35,7 +35,7 @@ const test = computed(() => {
   return selectedTask.value?.type === 'test' ? selectedTask.value : undefined
 })
 
-const reportTask = computed(() => {
+const currentSuite = computed(() => {
   return selectedTask.value?.type === 'suite' ? selectedTask.value : current.value
 })
 
@@ -220,7 +220,7 @@ const tags = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewReport v-else-if="!viewMode && !test && reportTask" :suite="reportTask" data-testid="report" />
+      <ViewReport v-else-if="!viewMode && !test && currentSuite" :suite="currentSuite" data-testid="report" />
       <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
     </div>
   </div>
