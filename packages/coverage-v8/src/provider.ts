@@ -450,7 +450,18 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         }
       }
 
-      if (this.isIncluded(fileURLToPath(result.url))) {
+      // Skip URLs that are not resolvable to a file path (e.g. virtual
+      // modules with `about:` schemes from vitest-plugin-rsc, or file:
+      // URLs with null-byte paths on Windows).
+      let filePath: string
+      try {
+        filePath = fileURLToPath(result.url)
+      }
+      catch {
+        continue
+      }
+
+      if (this.isIncluded(filePath)) {
         scriptCoverages.push({ ...result, url: decodeURIComponent(result.url) })
       }
     }

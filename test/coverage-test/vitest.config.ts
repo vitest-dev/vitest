@@ -158,6 +158,7 @@ export default defineConfig({
                   '**/workspace.multi-transform.test.ts',
                   '**/web-worker.test.ts',
                   '**/virtual-files.test.ts',
+                  '**/non-file-urls.v8.test.ts',
                   '**/query-param-transforms.test.ts',
                   '**/multi-environment.test.ts',
                   '**/import-meta-env.test.ts',
