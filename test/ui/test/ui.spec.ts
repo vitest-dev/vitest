@@ -520,11 +520,10 @@ async function testSuiteReport(page: Page) {
   await expect(report).toContainText('nested-child-marker')
   await expect(report).not.toContainText('direct-child-marker')
 
+  // test that the suite can be collapsed and expanded
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
-
   await successfulSuite.getByRole('button', { name: 'Collapse successful suite', exact: true }).click()
   await expect(getExplorerItem(page, 'successful child')).not.toBeVisible()
-
   await successfulSuite.getByRole('button', { name: 'Expand successful suite', exact: true }).click()
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
 }
