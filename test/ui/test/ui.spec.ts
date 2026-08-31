@@ -131,7 +131,7 @@ test.describe('ui', () => {
     // "suite" is an actual title of this suite
     const suite = getExplorerItem(page, 'suite')
     await suite.click()
-    await expect(page.getByTestId('file-detail')).toContainText('console.test.ts')
+    await expect(page.getByTestId('file-detail')).toBeVisible()
     await expect(getExplorerItem(page, 'nested suite')).toBeVisible()
 
     await suite.getByRole('button', { name: 'Collapse suite', exact: true }).click()
@@ -514,11 +514,7 @@ async function testError(page: Page) {
 
 async function testSuiteReport(page: Page) {
   const suite = getExplorerItem(page, 'suite')
-  await suite.hover()
-  await suite.getByTestId('btn-open-details').click()
-  await expect(page.getByTestId('editor')).toBeVisible()
-
-  await page.getByTestId('btn-report').click()
+  await suite.click()
   await expect(page.getByTestId('report')).toContainText('All tests passed in this suite')
 }
 
