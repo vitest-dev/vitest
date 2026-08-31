@@ -212,8 +212,10 @@ const tags = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewTestReport v-else-if="!viewMode && task?.type === 'test'" :test="task" data-testid="report" />
-      <ViewReport v-else-if="!viewMode && task?.type === 'suite'" :suite="task" data-testid="report" />
+      <template v-else-if="!viewMode && task">
+        <ViewTestReport v-if="task.type === 'test'" :test="task" data-testid="report" />
+        <ViewReport v-else :suite="task" data-testid="report" />
+      </template>
     </div>
   </div>
 </template>
