@@ -52,7 +52,7 @@ patchedDependencies:
 catalog:
   '@babel/core': ^7.29.7
   '@babel/plugin-proposal-decorators': ^7.29.7
-  '@iconify-json/carbon': ^1.2.25
+  '@iconify-json/carbon': ^1.2.26
   '@iconify-json/logos': ^1.2.13
   '@iconify/vue': ^5.0.1
   '@jridgewell/remapping': ^2.3.5
@@ -76,22 +76,22 @@ catalog:
   cac: ^6.7.14
   chai: ^6.2.2
   flatted: ^3.4.4
-  knip: ^6.32.2
+  knip: ^6.33.0
   loupe: ^3.2.1
-  magic-string: ^1.2.2
+  magic-string: ^1.2.3
   magicast: ^0.5.4
   msw: ^2.15.0
   obug: ^2.1.4
   pathe: ^2.0.3
   playwright: ^1.62.1
-  rollup: ^4.62.5
+  rollup: ^4.63.1
   semver: ^7.8.5
   sinon: ^22.1.0
   sinon-chai: ^4.0.1
   sirv: ^3.0.2
   std-env: ^4.2.0
   strip-literal: ^3.1.0
-  tinybench: 6.1.3
+  tinybench: 6.1.4
   tinyexec: 1.3.0
   tinyglobby: ^0.2.17
   tinyhighlight: ^0.3.2
@@ -101,7 +101,7 @@ catalog:
   unocss: ^66.8.1
   vite: 8.0.11
   vitest-sonar-reporter: 3.0.0
-  vue: ^3.5.41
+  vue: ^3.5.42
   ws: ^8.21.3
   yauzl: ^3.4.0
 peerDependencyRules:

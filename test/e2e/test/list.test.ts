@@ -9,7 +9,7 @@ test.each([
   ['--browser.enabled'],
   ['--typecheck'],
   ['--typecheck.only'],
-  ['--static-parse'],
+  ['--no-static-parse'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
   expect(stdout).toMatchSnapshot()
@@ -21,7 +21,7 @@ test.each([
   ['json', '--json'],
   ['json with a file', '--json=./list.json'],
 ])('%s output shows error', async (_, ...args) => {
-  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts', ...args)
+  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts', '--no-static-parse', ...args)
   expect(stdout).toBe('')
   expect(stderr).toMatchSnapshot()
   expect(exitCode).toBe(1)
@@ -33,27 +33,51 @@ test('correctly outputs json', async () => {
     "[
       {
         "name": "basic suite > inner suite > some test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 5,
+          "column": 5
+        }
       },
       {
         "name": "basic suite > inner suite > another test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 9,
+          "column": 5
+        }
       },
       {
         "name": "basic suite > basic test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 14,
+          "column": 3
+        }
       },
       {
         "name": "outside test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 19,
+          "column": 1
+        }
       },
       {
         "name": "1 plus 1",
-        "file": "<root>/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts",
+        "location": {
+          "line": 5,
+          "column": 1
+        }
       },
       {
         "name": "failing test",
-        "file": "<root>/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts",
+        "location": {
+          "line": 9,
+          "column": 1
+        }
       }
     ]
     "
@@ -88,27 +112,51 @@ test('correctly saves json', async () => {
     "[
       {
         "name": "basic suite > inner suite > some test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 5,
+          "column": 5
+        }
       },
       {
         "name": "basic suite > inner suite > another test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 9,
+          "column": 5
+        }
       },
       {
         "name": "basic suite > basic test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 14,
+          "column": 3
+        }
       },
       {
         "name": "outside test",
-        "file": "<root>/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts",
+        "location": {
+          "line": 19,
+          "column": 1
+        }
       },
       {
         "name": "1 plus 1",
-        "file": "<root>/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts",
+        "location": {
+          "line": 5,
+          "column": 1
+        }
       },
       {
         "name": "failing test",
-        "file": "<root>/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts",
+        "location": {
+          "line": 9,
+          "column": 1
+        }
       }
     ]"
   `)
