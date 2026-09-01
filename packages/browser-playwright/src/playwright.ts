@@ -12,6 +12,7 @@ import type {
   LaunchOptions,
   Page,
   CDPSession as PlaywrightCDPSession,
+  Route,
 } from 'playwright'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
@@ -28,6 +29,7 @@ import type {
   CDPSession,
   TestProject,
 } from 'vitest/node'
+import { randomUUID } from 'node:crypto'
 import { defineBrowserProvider } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import { resolve } from 'pathe'
@@ -40,6 +42,16 @@ const debug = createDebugger('vitest:browser:playwright')
 
 const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
+
+const interceptionProbeUrl = '/__vitest_interception_probe__'
+const interceptionProbeRoute = `**${interceptionProbeUrl}`
+// Chromium acknowledges `Fetch.enable` before the interception is actually
+// active, so a module request right after the first `context.route` call can
+// be served unmocked (#8339). Arming polls until the interception is verified
+// live and fails loudly if it never converges. The timeout is not
+// configurable: it is calibrated from measured arm latencies (p99 x 3 —
+// p99 604ms across 74 arms, including a 32 parallel sessions run).
+const interceptionArmTimeout = 2_000
 
 // Enable intercepting of requests made by service workers - experimental API is only available in Chromium based browsers
 // Requests from service workers are only available on context.route() https://playwright.dev/docs/service-workers-experimental
@@ -240,6 +252,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private browserPromise: Promise<Browser> | null = null
   private closing = false
+  private armedContexts = new WeakMap<BrowserContext, {
+    promise: Promise<void>
+    probeRoute: (route: Route) => Promise<void>
+  }>()
+
+  private contextRouteCounts = new WeakMap<BrowserContext, number>()
+  private contextLocks = new WeakMap<BrowserContext, Promise<void>>()
 
   public tracingContexts: Set<string> = new Set()
   public pendingTraces: Map<string, string> = new Map()
@@ -379,6 +398,65 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
+  // Mock routes are registered and removed per test file, but the interception
+  // they rely on must be armed before the file's imports are released and can
+  // be disarmed only when the last mock route of the context is gone.
+  private serializeContext<T>(context: BrowserContext, task: () => Promise<T>): Promise<T> {
+    const previous = this.contextLocks.get(context) ?? Promise.resolve()
+    const result = previous.then(task, task)
+    this.contextLocks.set(context, result.then(() => {}, () => {}))
+    return result
+  }
+
+  private armInterception(page: Page): Promise<void> {
+    if (this.browserName !== 'chromium') {
+      return Promise.resolve()
+    }
+    const context = page.context()
+    const armed = this.armedContexts.get(context)
+    if (armed) {
+      return armed.promise
+    }
+    const token = randomUUID()
+    const probeRoute = (route: Route) => route.fulfill({
+      status: 204,
+      headers: { 'x-vitest-probe': token },
+    })
+    const promise = (async () => {
+      await context.route(interceptionProbeRoute, probeRoute)
+      const startedAt = performance.now()
+      const deadline = Date.now() + interceptionArmTimeout
+      while (Date.now() < deadline) {
+        const result = await Promise.race([
+          page.evaluate(
+            url => fetch(url, { cache: 'no-store' }).then(r => r.headers.get('x-vitest-probe'), () => null),
+            interceptionProbeUrl,
+          ).catch(() => null),
+          new Promise<null>(resolve => setTimeout(resolve, deadline - Date.now(), null)),
+        ])
+        if (result === token) {
+          debug?.('[%s] request interception armed in %sms', this.browserName, (performance.now() - startedAt).toFixed(1))
+          return
+        }
+        await new Promise(resolve => setTimeout(resolve, 10))
+      }
+      this.armedContexts.delete(context)
+      await context.unroute(interceptionProbeRoute, probeRoute).catch(() => {})
+      throw new Error(`Cannot verify that ${this.browserName} request interception is active after ${interceptionArmTimeout}ms; module mocks would not apply reliably (#8339)`)
+    })()
+    this.armedContexts.set(context, { promise, probeRoute })
+    return promise
+  }
+
+  private async disarmInterception(context: BrowserContext): Promise<void> {
+    const armed = this.armedContexts.get(context)
+    if (!armed) {
+      return
+    }
+    this.armedContexts.delete(context)
+    await context.unroute(interceptionProbeRoute, armed.probeRoute)
+  }
+
   private createMocker(): BrowserModuleMocker {
     const idPredicates = new Map<string, (url: URL) => boolean>()
     const sessionIds = new Map<string, Set<string>>()
@@ -423,100 +501,127 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
-        const { url: moduleUrl, predicate } = createPredicate(module.url)
-        const key = predicateKey(sessionId, moduleUrl)
-        const existingPredicate = idPredicates.get(key)
-        if (existingPredicate) {
-          await page.context().unroute(existingPredicate)
-        }
-        const ids = sessionIds.get(sessionId) ?? new Set<string>()
-        ids.add(moduleUrl)
-        sessionIds.set(sessionId, ids)
-        idPredicates.set(key, predicate)
-        await page.context().route(predicate, async (route) => {
-          if (module.type === 'manual') {
-            const exports = Object.keys(await module.resolve())
-            const body = createManualModuleSource(module.url, exports)
-            return route.fulfill({
-              body,
-              headers: getHeaders(this.project.browser!.vite.config),
-            })
-          }
-
-          // webkit doesn't support redirect responses
-          // https://github.com/microsoft/playwright/issues/18318
-          const isWebkit = this.browserName === 'webkit'
-          if (isWebkit) {
-            let url: string
-            if (module.type === 'redirect') {
-              const redirect = new URL(module.redirect)
-              url = redirect.href.slice(redirect.origin.length)
-            }
-            else {
-              const request = new URL(route.request().url())
-              request.searchParams.set('mock', module.type)
-              url = request.href.slice(request.origin.length)
-            }
-
-            const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
-            if (!result) {
-              return route.continue()
-            }
-            let content = result.code
-            if (result.map && 'version' in result.map && result.map.mappings) {
-              const type = isDirectCSSRequest(url) ? 'css' : 'js'
-              content = getCodeWithSourcemap(type, content.toString(), result.map)
-            }
-            return route.fulfill({
-              body: content,
-              headers: getHeaders(this.project.browser!.vite.config),
-            })
-          }
-
-          if (module.type === 'redirect') {
-            return route.fulfill({
-              status: 302,
-              headers: {
-                Location: module.redirect,
-              },
-            })
-          }
-          else if (module.type === 'automock' || module.type === 'autospy') {
-            const url = new URL(route.request().url())
-            url.searchParams.set('mock', module.type)
-            return route.fulfill({
-              status: 302,
-              headers: {
-                Location: url.href,
-              },
-            })
+        const context = page.context()
+        await this.serializeContext(context, async () => {
+          await this.armInterception(page)
+          const { url: moduleUrl, predicate } = createPredicate(module.url)
+          const key = predicateKey(sessionId, moduleUrl)
+          const existingPredicate = idPredicates.get(key)
+          if (existingPredicate) {
+            await context.unroute(existingPredicate)
           }
           else {
-            // all types are exhausted
-            const _module: never = module
+            this.contextRouteCounts.set(context, (this.contextRouteCounts.get(context) ?? 0) + 1)
           }
+          const ids = sessionIds.get(sessionId) ?? new Set<string>()
+          ids.add(moduleUrl)
+          sessionIds.set(sessionId, ids)
+          idPredicates.set(key, predicate)
+          await context.route(predicate, async (route) => {
+            if (module.type === 'manual') {
+              const exports = Object.keys(await module.resolve())
+              const body = createManualModuleSource(module.url, exports)
+              return route.fulfill({
+                body,
+                headers: getHeaders(this.project.browser!.vite.config),
+              })
+            }
+
+            // webkit doesn't support redirect responses
+            // https://github.com/microsoft/playwright/issues/18318
+            const isWebkit = this.browserName === 'webkit'
+            if (isWebkit) {
+              let url: string
+              if (module.type === 'redirect') {
+                const redirect = new URL(module.redirect)
+                url = redirect.href.slice(redirect.origin.length)
+              }
+              else {
+                const request = new URL(route.request().url())
+                request.searchParams.set('mock', module.type)
+                url = request.href.slice(request.origin.length)
+              }
+
+              const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
+              if (!result) {
+                return route.continue()
+              }
+              let content = result.code
+              if (result.map && 'version' in result.map && result.map.mappings) {
+                const type = isDirectCSSRequest(url) ? 'css' : 'js'
+                content = getCodeWithSourcemap(type, content.toString(), result.map)
+              }
+              return route.fulfill({
+                body: content,
+                headers: getHeaders(this.project.browser!.vite.config),
+              })
+            }
+
+            if (module.type === 'redirect') {
+              return route.fulfill({
+                status: 302,
+                headers: {
+                  Location: module.redirect,
+                },
+              })
+            }
+            else if (module.type === 'automock' || module.type === 'autospy') {
+              const url = new URL(route.request().url())
+              url.searchParams.set('mock', module.type)
+              return route.fulfill({
+                status: 302,
+                headers: {
+                  Location: url.href,
+                },
+              })
+            }
+            else {
+              // all types are exhausted
+              const _module: never = module
+            }
+          })
         })
       },
       delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
-        const key = predicateKey(sessionId, id)
-        const predicate = idPredicates.get(key)
-        if (predicate) {
-          await page.context().unroute(predicate).finally(() => idPredicates.delete(key))
-        }
-      },
-      clear: async (sessionId: string): Promise<void> => {
-        const page = this.getPage(sessionId)
-        const ids = sessionIds.get(sessionId) ?? new Set<string>()
-        const promises = Array.from(ids, (id) => {
+        const context = page.context()
+        await this.serializeContext(context, async () => {
           const key = predicateKey(sessionId, id)
           const predicate = idPredicates.get(key)
           if (predicate) {
-            return page.context().unroute(predicate).finally(() => idPredicates.delete(key))
+            await context.unroute(predicate).finally(() => idPredicates.delete(key))
+            const count = (this.contextRouteCounts.get(context) ?? 1) - 1
+            this.contextRouteCounts.set(context, count)
+            if (count === 0) {
+              await this.disarmInterception(context)
+            }
           }
-          return null
         })
-        await Promise.all(promises).finally(() => sessionIds.delete(sessionId))
+      },
+      clear: async (sessionId: string): Promise<void> => {
+        const page = this.getPage(sessionId)
+        const context = page.context()
+        await this.serializeContext(context, async () => {
+          const ids = sessionIds.get(sessionId) ?? new Set<string>()
+          let removed = 0
+          const promises = Array.from(ids, (id) => {
+            const key = predicateKey(sessionId, id)
+            const predicate = idPredicates.get(key)
+            if (predicate) {
+              removed++
+              return context.unroute(predicate).finally(() => idPredicates.delete(key))
+            }
+            return null
+          })
+          await Promise.all(promises).finally(() => sessionIds.delete(sessionId))
+          if (removed > 0) {
+            const count = Math.max(0, (this.contextRouteCounts.get(context) ?? 0) - removed)
+            this.contextRouteCounts.set(context, count)
+            if (count === 0) {
+              await this.disarmInterception(context)
+            }
+          }
+        })
       },
     }
   }
