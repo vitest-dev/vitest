@@ -1,5 +1,3 @@
-// @vitest-environment node
-
 import { createRequire } from 'node:module'
 import timers, { setTimeout as namedSetTimeout } from 'node:timers'
 import * as timersNamespace from 'node:timers'
