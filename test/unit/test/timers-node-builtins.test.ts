@@ -36,6 +36,20 @@ test('mocks node:timers default and require imports', () => {
   expect(called).toEqual(['default', 'require'])
 })
 
+test('mocks only configured Node timer imports', () => {
+  const originalSetTimeout = timers.setTimeout
+  const originalSetInterval = timers.setInterval
+  const originalSetTimeoutPromise = timersPromises.setTimeout
+  const originalSetIntervalPromise = timersPromises.setInterval
+
+  vi.useFakeTimers({ nodeBuiltins: true, toFake: ['setTimeout'] })
+
+  expect(timers.setTimeout).not.toBe(originalSetTimeout)
+  expect(timers.setInterval).toBe(originalSetInterval)
+  expect(timersPromises.setTimeout).not.toBe(originalSetTimeoutPromise)
+  expect(timersPromises.setInterval).toBe(originalSetIntervalPromise)
+})
+
 test('mocks node:timers/promises default and require imports', async () => {
   vi.useFakeTimers({ nodeBuiltins: true })
   const resolved: string[] = []
