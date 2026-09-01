@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..8795aa3874e622b4af9aa69f9bddfedcdfcec1d9 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..9810f1610891fd090fc4046ed36ec879e3424781 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -1,19 +1,6 @@
@@ -22,109 +22,39 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..8795aa3874e622b4af9aa69f9bddfedc
  
  /**
   * @typedef {"nextAsync" | "manual" | "interval"} TickMode
-@@ -440,8 +427,8 @@ if (typeof require === "function" && typeof module === "object") {
-  * @property {Uninstall} uninstall - restores native timers
-  * @property {string[]} methods - names of faked methods
-  * @property {boolean} [shouldClearNativeTimers] - inherited from config
-- * @property {{methodName:string, original:unknown}[] | undefined} timersModuleMethods - saved Node timers module methods
-- * @property {{methodName:string, original:unknown}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
-+ * @property {{methodName:string, original:unknown, target:object}[] | undefined} timersModuleMethods - saved Node timers module methods
-+ * @property {{methodName:string, original:unknown, target:object}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
-  * @property {Map<VoidVarArgsFunc, AbortSignal>} abortListenerMap - active abort listeners
-  * @property {SetTickMode} setTickMode - switches the auto-tick mode
-  * @property {Map<number, Timer>} [timers] - internal timer storage
-@@ -537,7 +524,7 @@ function withGlobal(_global) {
+@@ -537,7 +524,8 @@ function withGlobal(_global) {
          isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
      isPresent.nextTick =
          _global.process && typeof _global.process.nextTick === "function";
 -    const utilPromisify = _global.process && require("util").promisify;
-+    const utilPromisify = _global.process && _global.__vitest_required__ && _global.__vitest_required__.util.promisify;
++    const utilPromisify =
++        _global.process && _global.__vitest_required__?.util.promisify;
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
-@@ -2618,26 +2605,16 @@ function withGlobal(_global) {
-                             }
-                         }
-                     }
--                    if (clock.timersModuleMethods !== undefined) {
--                        for (
--                            let j = 0;
--                            j < clock.timersModuleMethods.length;
--                            j++
--                        ) {
--                            const entry = clock.timersModuleMethods[j];
--                            timersModule[entry.methodName] = entry.original;
--                        }
-+                }
-+
-+                if (clock.timersModuleMethods !== undefined) {
-+                    for (const entry of clock.timersModuleMethods) {
-+                        entry.target[entry.methodName] = entry.original;
-                     }
--                    if (clock.timersPromisesModuleMethods !== undefined) {
--                        for (
--                            let j = 0;
--                            j < clock.timersPromisesModuleMethods.length;
--                            j++
--                        ) {
--                            const entry = clock.timersPromisesModuleMethods[j];
--                            timersPromisesModule[entry.methodName] =
--                                entry.original;
--                        }
-+                }
-+                if (clock.timersPromisesModuleMethods !== undefined) {
-+                    for (const entry of clock.timersPromisesModuleMethods) {
-+                        entry.target[entry.methodName] = entry.original;
-                     }
-                 }
+@@ -2577,6 +2565,7 @@ function withGlobal(_global) {
+         clock.uninstall = function () {
+             uninstalled = true;
+             clock.setTickMode({ mode: "manual" });
++            const { timersModule, timersPromisesModule } = clock;
  
-@@ -2726,6 +2703,13 @@ function withGlobal(_global) {
-             );
-         }
+             if (clock.methods) {
+                 const installedHrTime = "_hrtime";
+@@ -2750,6 +2739,13 @@ function withGlobal(_global) {
+         const clock = createClock(config.now, config.loopLimit);
+         clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
  
 +        const vitestRequired = config.nodeBuiltins && _global.__vitest_required__;
-+        const timersModule = vitestRequired && vitestRequired.timers;
-+        const timersPromisesModule =
-+            vitestRequired && vitestRequired.timersPromises;
-+        const syncBuiltinESMExports =
-+            vitestRequired && vitestRequired.syncBuiltinESMExports;
++        const timersModule = vitestRequired?.timers;
++        const timersPromisesModule = vitestRequired?.timersPromises;
++        const syncBuiltinESMExports = vitestRequired?.syncBuiltinESMExports;
++        clock.timersModule = timersModule;
++        clock.timersPromisesModule = timersPromisesModule;
 +
-         if (config.target) {
-             throw new TypeError(
-                 "config.target is no longer supported. Use `withGlobal(target)` instead.",
-@@ -2849,6 +2833,7 @@ function withGlobal(_global) {
-                 clock.timersModuleMethods.push({
-                     methodName: nameOfMethodToReplace,
-                     original: original,
-+                    target: timersModule,
-                 });
-                 timersModule[nameOfMethodToReplace] =
-                     _global[nameOfMethodToReplace];
-@@ -2858,6 +2843,7 @@ function withGlobal(_global) {
-                     clock.timersPromisesModuleMethods.push({
-                         methodName: "setTimeout",
-                         original: timersPromisesModule.setTimeout,
-+                        target: timersPromisesModule,
-                     });
+         clock.abortListenerMap = new Map();
  
-                     timersPromisesModule.setTimeout = (
-@@ -2911,6 +2897,7 @@ function withGlobal(_global) {
-                     clock.timersPromisesModuleMethods.push({
-                         methodName: "setImmediate",
-                         original: timersPromisesModule.setImmediate,
-+                        target: timersPromisesModule,
-                     });
- 
-                     timersPromisesModule.setImmediate = (value, options = {}) =>
-@@ -2960,6 +2947,7 @@ function withGlobal(_global) {
-                     clock.timersPromisesModuleMethods.push({
-                         methodName: "setInterval",
-                         original: timersPromisesModule.setInterval,
-+                        target: timersPromisesModule,
-                     });
- 
-                     timersPromisesModule.setInterval = (
-@@ -3091,6 +3079,20 @@ function withGlobal(_global) {
+         if (hasToFake) {
+@@ -3091,6 +3087,20 @@ function withGlobal(_global) {
              }
          }
  
