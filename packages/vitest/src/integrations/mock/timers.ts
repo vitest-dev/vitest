@@ -16,6 +16,7 @@ import { isChildProcess } from '../../runtime/utils'
 
 const RealDate = globalThis.Date
 
+// Custom options are implemented by patching the package
 export interface FakeTimersConfig extends SinonFakeTimersConfig {
   /**
    * Mock timer APIs imported from `node:timers` and `node:timers/promises`.
