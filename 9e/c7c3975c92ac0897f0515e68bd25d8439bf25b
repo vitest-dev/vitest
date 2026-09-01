@@ -1,0 +1,27 @@
+packages/vitest/src/integrations/mock/timers.ts
+  s_7bdd52c7255784::t_0c4852897f2843 12,19-27
+packages/vitest/src/integrations/vi.ts
+  s_7bdd52c7255784::t_f5996926266de6 12
+packages/vitest/src/public/index.ts
+  s_7bdd52c7255784::t_60da4c87eaf35e 34,36
+packages/vitest/src/runtime/config.ts
+  s_7bdd52c7255784::t_4c8deef18cb18d 4
+pnpm-lock.yaml
+  s_7bdd52c7255784::t_98a0891583630e 176,1009,13236,16130,16138,17857,17862,18722
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9ec7c3975c92ac0897f0515e68bd25d8439bf25b",
+  "prompts": {},
+  "sessions": {
+    "s_7bdd52c7255784": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa572d07fffefHc69PXXwWWdg9",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
