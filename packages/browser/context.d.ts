@@ -449,20 +449,20 @@ export type PointerInput = PointerActionInput | readonly PointerActionInput[];
 export type PointerInputNormalized = readonly PointerActionInputObject[]
 
 type PointerActionInput = string | PointerActionInputObject
-type PointerActionInputObject = ({
-    keys: string
-} & PointerActionPosition) | PointerAction
+type PointerActionInputObject = PointerActionKeys | PointerMoveAction /* @todo | PointerPressAction */
 
 interface PointerActionPosition {
-    target?: Element | Locator
-    coords?: PointerCoords
-    /* @todo properties not supported
-    node?: Node;
-    offset?: number;
-    */
+  target?: Element | Locator
+  coords?: PointerCoords
+  /* @todo properties not supported
+  node?: Node;
+  offset?: number;
+  */
 }
 
-type PointerAction = /* PointerPressAction | */ PointerMoveAction
+interface PointerActionKeys extends PointerActionPosition {
+  keys: string
+}
 
 interface PointerMoveAction extends PointerActionPosition {}
 

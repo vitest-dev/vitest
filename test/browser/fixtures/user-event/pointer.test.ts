@@ -1,4 +1,4 @@
-import { test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { userEvent, page } from 'vitest/browser'
 
 type PointerAction = (event: PointerEvent) => void
@@ -382,4 +382,109 @@ test('keyboard-fired modifiers apply to pointer events', async ({ expect }) => {
   expect(click).toHaveBeenNthCalledWith(1, expect.objectContaining({ shiftKey: true }))
   expect(click).toHaveBeenNthCalledWith(2, expect.objectContaining({ altKey: true }))
   expect(click).toHaveBeenNthCalledWith(3, expect.objectContaining({ metaKey: true }))
+})
+
+describe('keeps using previous target or coordinates', () => {
+  const HTML = `<button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>`
+  const TARGET = page.getByRole('button')
+  const COORDS = { x: 11, y: 11 }
+  const EXPECTED_COORDS_TARGET = { clientX: expect.closeTo(60), clientY: expect.closeTo(30) }
+  const EXPECTED_COORDS_COORDS = { clientX: expect.closeTo(11), clientY: expect.closeTo(11) }
+
+  test.for([
+    {
+      name: 'target same',
+      action: async () => {
+        await userEvent.pointer([
+          { keys: '[MouseLeft]', target: TARGET },
+          '[MouseLeft]',
+        ])
+      },
+      expectedCoords: EXPECTED_COORDS_TARGET,
+    },
+    {
+      name: 'target different',
+      action: async () => {
+        await userEvent.pointer([{ keys: '[MouseLeft]', target: TARGET }])
+        await userEvent.pointer('[MouseLeft]',)
+      },
+      expectedCoords: EXPECTED_COORDS_TARGET,
+    },
+    {
+      name: 'target same',
+      action: async () => {
+        await userEvent.pointer([
+          { keys: '[MouseLeft]', coords: COORDS },
+          '[MouseLeft]',
+        ])
+      },
+      expectedCoords: EXPECTED_COORDS_COORDS,
+    },
+    {
+      name: 'coordinates different',
+      action: async () => {
+        await userEvent.pointer([{ keys: '[MouseLeft]', coords: COORDS }])
+        await userEvent.pointer('[MouseLeft]',)
+      },
+      expectedCoords: EXPECTED_COORDS_COORDS,
+    },
+  ])('previous target $name action', async ({ action, expectedCoords }, { expect }) => {
+    document.body.innerHTML = HTML
+
+    const click = vi.fn<PointerAction>()
+
+    const buttonElement = document.body.querySelector('button')!
+    buttonElement.addEventListener('click', click)
+
+    await action()
+
+    expect(click).toHaveBeenCalledTimes(2)
+    expect(click).toHaveBeenNthCalledWith(1, expect.objectContaining(expectedCoords))
+    expect(click).toHaveBeenNthCalledWith(2, expect.objectContaining(expectedCoords))
+  })
+
+  test.for([
+    {
+      name: 'coords resets previous target',
+      action: async () => {
+        await userEvent.pointer([
+          { keys: '[MouseLeft]', target: TARGET },
+          '[MouseLeft]',
+          { keys: '[MouseLeft]', coords: COORDS },
+        ])
+      },
+      expectedCalls: [
+        [expect.objectContaining(EXPECTED_COORDS_TARGET)],
+        [expect.objectContaining(EXPECTED_COORDS_TARGET)],
+        [expect.objectContaining(EXPECTED_COORDS_COORDS)],
+      ]
+    },
+    {
+      name: 'target resets previous coords',
+      action: async () => {
+        await userEvent.pointer([
+          { keys: '[MouseLeft]', coords: COORDS },
+          '[MouseLeft]',
+          { keys: '[MouseLeft]', target: TARGET },
+        ])
+      },
+      expectedCalls: [
+        [expect.objectContaining(EXPECTED_COORDS_COORDS)],
+        [expect.objectContaining(EXPECTED_COORDS_COORDS)],
+        [expect.objectContaining(EXPECTED_COORDS_TARGET)],
+      ]
+    },
+  ])('$name', async ({ action, expectedCalls }, { expect }) => {
+    document.body.innerHTML = HTML
+
+    const click = vi.fn<PointerAction>()
+
+    const buttonElement = document.body.querySelector('button')!
+    buttonElement.addEventListener('click', click)
+
+    await action()
+
+    expect(click).toHaveBeenCalledTimes(3)
+    expect(click.mock.calls).toEqual(expectedCalls)
+  })
 })

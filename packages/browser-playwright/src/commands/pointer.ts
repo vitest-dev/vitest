@@ -20,9 +20,13 @@ function equals(a: object, b: object): boolean {
 }
 
 type SerializedPointerInput = ElementToSerializedLocator<PointerInputNormalized[number]>
+interface PointerReturnData extends Pick<SerializedPointerInput, 'coords' | 'target'> {
+  unreleased?: string[]
+}
 type PointerEvent = (
   input: readonly SerializedPointerInput[],
-) => Promise<void>
+  state?: PointerReturnData,
+) => Promise<PointerReturnData>
 
 type ElementToSerializedLocator<T> = T extends Element | Locator
   ? SerializedLocator
@@ -33,12 +37,30 @@ type ElementToSerializedLocator<T> = T extends Element | Locator
 export const pointer: UserEventCommand<PointerEvent> = async (
   context,
   input,
+  state = {},
 ) => {
-  // @todo: should this throw if keys are not released at the end?
-  const pressedKeys = new Set<string>()
+  const pressedKeys = new Set<string>(state.unreleased)
+  let lastTarget: SerializedPointerInput['target'] = state.target
+  let lastCoords: SerializedPointerInput['coords'] = state.coords
 
-  // @todo save lastTarget or lastCoords for clicking when there's no target or coords otherwise we can't perform the action
   for (const option of input) {
+    let target = option.target
+    let coords = option.coords
+
+    if (target) {
+      lastTarget = target
+      lastCoords = undefined
+    }
+    else if (coords) {
+      lastTarget = undefined
+      lastCoords = coords
+    }
+    else {
+      target = lastTarget
+      coords = lastCoords
+    }
+
+    const pointerAction = { ...option, target, coords }
     const keys = 'keys' in option
       ? option.keys
       : null
@@ -49,28 +71,32 @@ export const pointer: UserEventCommand<PointerEvent> = async (
 
     // mouse buttons have their own moving logic, no need to move twice
     if (!hasMouseButtonAction) {
-      const x = option.coords?.x ?? 0
-      const y = option.coords?.y ?? 0
+      const x = coords?.x ?? 0
+      const y = coords?.y ?? 0
 
-      if (option.target) {
+      if (target) {
         await hover(
           context,
-          option.target,
-          { position: option.coords ? { x, y } : undefined },
+          target,
+          { position: coords ? { x, y } : undefined },
         )
       }
-      else if (option.coords) {
+      else if (coords) {
         await context.page.mouse.move(x, y)
       }
     }
 
-    // console.log('parsedKeys', parsedKeys)
-
     if (parsedKeys) {
       for (const key of parsedKeys) {
-        await keyDefHandler(key, option, pressedKeys, context)
+        await keyDefHandler(key, pointerAction, pressedKeys, context)
       }
     }
+  }
+
+  return {
+    unreleased: Array.from(pressedKeys),
+    target: lastTarget,
+    coords: lastCoords,
   }
 }
 
