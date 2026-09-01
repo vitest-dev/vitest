@@ -23,7 +23,7 @@ export interface FakeTimersConfig extends SinonFakeTimersConfig {
    *
    * @default false
    */
-  nodeBuiltins?: boolean
+  fakeNodeBuiltins?: boolean
 }
 
 export class FakeTimers {

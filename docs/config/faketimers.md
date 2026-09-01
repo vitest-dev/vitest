@@ -68,7 +68,7 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
 
-## fakeTimers.nodeBuiltins <Version>5.0.0</Version> {#faketimers-nodebuiltins}
+## fakeTimers.fakeNodeBuiltins <Version>5.0.0</Version> {#faketimers-fakenodebuiltins}
 
 - **Type:** `boolean`
 - **Default:** `false`

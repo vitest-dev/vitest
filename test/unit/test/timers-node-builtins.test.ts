@@ -33,7 +33,7 @@ test('mocks only configured Node timer imports', () => {
   const originalSetTimeoutPromise = timersPromises.setTimeout
   const originalSetIntervalPromise = timersPromises.setInterval
 
-  vi.useFakeTimers({ nodeBuiltins: true, toFake: ['setTimeout'] })
+  vi.useFakeTimers({ fakeNodeBuiltins: true, toFake: ['setTimeout'] })
 
   expect(timers.setTimeout).not.toBe(originalSetTimeout)
   expect(timers.setInterval).toBe(originalSetInterval)
@@ -42,7 +42,7 @@ test('mocks only configured Node timer imports', () => {
 })
 
 test('mocks node:timers imports', () => {
-  vi.useFakeTimers({ nodeBuiltins: true })
+  vi.useFakeTimers({ fakeNodeBuiltins: true })
   const called: string[] = []
 
   timers.setTimeout(() => called.push('default'), 100)
@@ -55,7 +55,7 @@ test('mocks node:timers imports', () => {
 })
 
 test('mocks node:timers/promises imports', async () => {
-  vi.useFakeTimers({ nodeBuiltins: true })
+  vi.useFakeTimers({ fakeNodeBuiltins: true })
   const resolved: string[] = []
 
   timersPromises.setTimeout(100).then(() => resolved.push('default'))
@@ -73,7 +73,7 @@ test('restores Node timer imports', () => {
   const originalNamedSetTimeout = namedSetTimeout
   const originalNamedSetTimeoutPromise = namedSetTimeoutPromise
 
-  vi.useFakeTimers({ nodeBuiltins: true })
+  vi.useFakeTimers({ fakeNodeBuiltins: true })
   expect(timers.setTimeout).not.toBe(originalSetTimeout)
   expect(timersPromises.setTimeout).not.toBe(originalSetTimeoutPromise)
   expect(namedSetTimeout).not.toBe(originalNamedSetTimeout)
