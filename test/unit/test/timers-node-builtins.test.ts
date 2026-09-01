@@ -27,15 +27,17 @@ test('does not mock Node timer imports by default', () => {
   expect(namedSetTimeoutPromise).toBe(originalNamedSetTimeoutPromise)
 })
 
-test('mocks node:timers default and require imports', () => {
+test('mocks node:timers imports', () => {
   vi.useFakeTimers({ nodeBuiltins: true })
   const called: string[] = []
 
   timers.setTimeout(() => called.push('default'), 100)
+  namedSetTimeout(() => called.push('named'), 100)
+  timersNamespace.setTimeout(() => called.push('namespace'), 100)
   requiredTimers.setTimeout(() => called.push('require'), 100)
 
   vi.advanceTimersByTime(100)
-  expect(called).toEqual(['default', 'require'])
+  expect(called).toEqual(['default', 'named', 'namespace', 'require'])
 })
 
 test('mocks only configured Node timer imports', () => {
@@ -52,7 +54,7 @@ test('mocks only configured Node timer imports', () => {
   expect(timersPromises.setInterval).toBe(originalSetIntervalPromise)
 })
 
-test('mocks node:timers/promises default and require imports', async () => {
+test('mocks node:timers/promises imports', async () => {
   vi.useFakeTimers({ nodeBuiltins: true })
   const resolved: string[] = []
   const controller = new AbortController()
@@ -60,6 +62,14 @@ test('mocks node:timers/promises default and require imports', async () => {
   const promises = [
     timersPromises.setTimeout(10_000, undefined, { signal: controller.signal }).then(
       () => resolved.push('default'),
+      () => {},
+    ),
+    namedSetTimeoutPromise(10_000, undefined, { signal: controller.signal }).then(
+      () => resolved.push('named'),
+      () => {},
+    ),
+    timersPromisesNamespace.setTimeout(10_000, undefined, { signal: controller.signal }).then(
+      () => resolved.push('namespace'),
       () => {},
     ),
     requiredTimersPromises.setTimeout(10_000, undefined, { signal: controller.signal }).then(
@@ -70,7 +80,7 @@ test('mocks node:timers/promises default and require imports', async () => {
 
   try {
     await vi.advanceTimersByTimeAsync(10_000)
-    expect(resolved).toEqual(['default', 'require'])
+    expect(resolved).toEqual(['default', 'named', 'namespace', 'require'])
   }
   finally {
     controller.abort()
@@ -78,61 +88,21 @@ test('mocks node:timers/promises default and require imports', async () => {
   }
 })
 
-test('restores node timer imports', () => {
+test('restores Node timer imports', () => {
   const originalSetTimeout = timers.setTimeout
   const originalSetTimeoutPromise = timersPromises.setTimeout
-
-  vi.useFakeTimers({ nodeBuiltins: true })
-  expect(timers.setTimeout).not.toBe(originalSetTimeout)
-  expect(timersPromises.setTimeout).not.toBe(originalSetTimeoutPromise)
-
-  vi.useRealTimers()
-  expect(timers.setTimeout).toBe(originalSetTimeout)
-  expect(timersPromises.setTimeout).toBe(originalSetTimeoutPromise)
-})
-
-test('mocks named Node timer imports', async () => {
-  vi.useFakeTimers({ nodeBuiltins: true })
-  const called: string[] = []
-  const controller = new AbortController()
-
-  namedSetTimeout(() => called.push('named'), 100)
-  timersNamespace.setTimeout(() => called.push('namespace'), 100)
-  const promises = [
-    namedSetTimeoutPromise(10_000, undefined, { signal: controller.signal }).then(
-      () => called.push('promises named'),
-      () => {},
-    ),
-    timersPromisesNamespace.setTimeout(10_000, undefined, { signal: controller.signal }).then(
-      () => called.push('promises namespace'),
-      () => {},
-    ),
-  ]
-
-  try {
-    await vi.advanceTimersByTimeAsync(10_000)
-    expect(called).toEqual([
-      'named',
-      'namespace',
-      'promises named',
-      'promises namespace',
-    ])
-  }
-  finally {
-    controller.abort()
-    await Promise.all(promises)
-  }
-})
-
-test('restores named Node timer imports', () => {
   const originalNamedSetTimeout = namedSetTimeout
   const originalNamedSetTimeoutPromise = namedSetTimeoutPromise
 
   vi.useFakeTimers({ nodeBuiltins: true })
+  expect(timers.setTimeout).not.toBe(originalSetTimeout)
+  expect(timersPromises.setTimeout).not.toBe(originalSetTimeoutPromise)
   expect(namedSetTimeout).not.toBe(originalNamedSetTimeout)
   expect(namedSetTimeoutPromise).not.toBe(originalNamedSetTimeoutPromise)
 
   vi.useRealTimers()
+  expect(timers.setTimeout).toBe(originalSetTimeout)
+  expect(timersPromises.setTimeout).toBe(originalSetTimeoutPromise)
   expect(namedSetTimeout).toBe(originalNamedSetTimeout)
   expect(namedSetTimeoutPromise).toBe(originalNamedSetTimeoutPromise)
 })
