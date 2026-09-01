@@ -9,13 +9,6 @@ outline: deep
 
 Options that Vitest will pass down to [`@sinon/fake-timers`](https://npmx.dev/package/@sinonjs/fake-timers) when using [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers).
 
-## fakeTimers.nodeBuiltins <Version>5.0.0</Version> {#faketimers-nodebuiltins}
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Mock timer APIs imported from `node:timers` and `node:timers/promises`.
-
 ## fakeTimers.now
 
 - **Type:** `number | Date`
@@ -74,3 +67,10 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 - **Default:** `true`
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
+
+## fakeTimers.nodeBuiltins <Version>5.0.0</Version> {#faketimers-nodebuiltins}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Mock timer APIs imported from `node:timers` and `node:timers/promises`.
