@@ -358,3 +358,28 @@ test('modifiers work with coordinates', async ({ expect }) => {
     clientY: expect.closeTo(11),
   }))
 })
+
+test('keyboard-fired modifiers apply to pointer events', async ({ expect }) => {
+  document.body.innerHTML = `<button>Button</button>`
+
+  const click = vi.fn<PointerAction>()
+
+  const buttonElement = document.body.querySelector('button')!
+
+  buttonElement.addEventListener('click', click)
+
+  const target = page.getByRole('button')
+
+
+  await userEvent.keyboard('[ShiftLeft>]')
+  await userEvent.pointer({ keys: '[MouseLeft]', target })
+  await userEvent.keyboard('[/ShiftLeft][AltLeft>]')
+  await userEvent.pointer({ keys: '[MouseLeft]', target })
+  await userEvent.keyboard('[/AltLeft][MetaLeft>]')
+  await userEvent.pointer({ keys: '[MouseLeft]', target })
+  await userEvent.keyboard('[/MetaLeft]')
+
+  expect(click).toHaveBeenNthCalledWith(1, expect.objectContaining({ shiftKey: true }))
+  expect(click).toHaveBeenNthCalledWith(2, expect.objectContaining({ altKey: true }))
+  expect(click).toHaveBeenNthCalledWith(3, expect.objectContaining({ metaKey: true }))
+})
