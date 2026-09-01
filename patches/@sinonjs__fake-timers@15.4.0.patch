@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2a0d2f5a4 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..8795aa3874e622b4af9aa69f9bddfedcdfcec1d9 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -1,19 +1,6 @@
@@ -22,7 +22,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
  
  /**
   * @typedef {"nextAsync" | "manual" | "interval"} TickMode
-@@ -440,8 +427,9 @@ if (typeof require === "function" && typeof module === "object") {
+@@ -440,8 +427,8 @@ if (typeof require === "function" && typeof module === "object") {
   * @property {Uninstall} uninstall - restores native timers
   * @property {string[]} methods - names of faked methods
   * @property {boolean} [shouldClearNativeTimers] - inherited from config
@@ -30,11 +30,10 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
 - * @property {{methodName:string, original:unknown}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
 + * @property {{methodName:string, original:unknown, target:object}[] | undefined} timersModuleMethods - saved Node timers module methods
 + * @property {{methodName:string, original:unknown, target:object}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
-+ * @property {(() => void) | undefined} syncBuiltinESMExports - synchronizes Node builtin ESM exports
   * @property {Map<VoidVarArgsFunc, AbortSignal>} abortListenerMap - active abort listeners
   * @property {SetTickMode} setTickMode - switches the auto-tick mode
   * @property {Map<number, Timer>} [timers] - internal timer storage
-@@ -537,7 +525,7 @@ function withGlobal(_global) {
+@@ -537,7 +524,7 @@ function withGlobal(_global) {
          isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
      isPresent.nextTick =
          _global.process && typeof _global.process.nextTick === "function";
@@ -43,7 +42,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
-@@ -2618,28 +2606,25 @@ function withGlobal(_global) {
+@@ -2618,26 +2605,16 @@ function withGlobal(_global) {
                              }
                          }
                      }
@@ -78,17 +77,8 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
 +                        entry.target[entry.methodName] = entry.original;
                      }
                  }
-+                if (
-+                    clock.syncBuiltinESMExports &&
-+                    (clock.timersModuleMethods?.length ||
-+                        clock.timersPromisesModuleMethods?.length)
-+                ) {
-+                    clock.syncBuiltinESMExports();
-+                }
  
-                 // Prevent multiple executions which will completely remove these props
-                 clock.methods = [];
-@@ -2726,6 +2711,13 @@ function withGlobal(_global) {
+@@ -2726,6 +2703,13 @@ function withGlobal(_global) {
              );
          }
  
@@ -102,15 +92,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
          if (config.target) {
              throw new TypeError(
                  "config.target is no longer supported. Use `withGlobal(target)` instead.",
-@@ -2815,6 +2807,7 @@ function withGlobal(_global) {
-         if (_global === globalObject && timersPromisesModule) {
-             clock.timersPromisesModuleMethods = [];
-         }
-+        clock.syncBuiltinESMExports = syncBuiltinESMExports;
-         for (i = 0, l = clock.methods.length; i < l; i++) {
-             const nameOfMethodToReplace = clock.methods[i];
- 
-@@ -2849,6 +2842,7 @@ function withGlobal(_global) {
+@@ -2849,6 +2833,7 @@ function withGlobal(_global) {
                  clock.timersModuleMethods.push({
                      methodName: nameOfMethodToReplace,
                      original: original,
@@ -118,7 +100,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
                  });
                  timersModule[nameOfMethodToReplace] =
                      _global[nameOfMethodToReplace];
-@@ -2858,6 +2852,7 @@ function withGlobal(_global) {
+@@ -2858,6 +2843,7 @@ function withGlobal(_global) {
                      clock.timersPromisesModuleMethods.push({
                          methodName: "setTimeout",
                          original: timersPromisesModule.setTimeout,
@@ -126,7 +108,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
                      });
  
                      timersPromisesModule.setTimeout = (
-@@ -2911,6 +2906,7 @@ function withGlobal(_global) {
+@@ -2911,6 +2897,7 @@ function withGlobal(_global) {
                      clock.timersPromisesModuleMethods.push({
                          methodName: "setImmediate",
                          original: timersPromisesModule.setImmediate,
@@ -134,7 +116,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
                      });
  
                      timersPromisesModule.setImmediate = (value, options = {}) =>
-@@ -2960,6 +2956,7 @@ function withGlobal(_global) {
+@@ -2960,6 +2947,7 @@ function withGlobal(_global) {
                      clock.timersPromisesModuleMethods.push({
                          methodName: "setInterval",
                          original: timersPromisesModule.setInterval,
@@ -142,16 +124,22 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
                      });
  
                      timersPromisesModule.setInterval = (
-@@ -3091,6 +3088,14 @@ function withGlobal(_global) {
+@@ -3091,6 +3079,20 @@ function withGlobal(_global) {
              }
          }
  
 +        if (
-+            clock.syncBuiltinESMExports &&
++            syncBuiltinESMExports &&
 +            (clock.timersModuleMethods?.length ||
 +                clock.timersPromisesModuleMethods?.length)
 +        ) {
-+            clock.syncBuiltinESMExports();
++            const uninstall = clock.uninstall;
++            clock.uninstall = () => {
++                const result = uninstall();
++                syncBuiltinESMExports();
++                return result;
++            };
++            syncBuiltinESMExports();
 +        }
 +
          return clock;
