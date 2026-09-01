@@ -11,6 +11,7 @@ import type {
   MarkOptions,
   PointerInput,
   PointerInputNormalized,
+  SerializedLocator,
   UserEvent,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
@@ -25,6 +26,10 @@ import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, seriali
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
+
+interface PointerState extends Pick<PointerInputNormalized[number], 'coords' | 'target'> {
+  unreleased?: string[]
+}
 
 // @ts-expect-error not typed global
 const provider = __vitest_browser_runner__.provider
@@ -43,6 +48,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
   const keyboard = {
     unreleased: [] as string[],
   }
+  let pointerState: PointerState = {}
 
   // https://playwright.dev/docs/api/class-keyboard
   // https://webdriver.io/docs/api/browser/keys/
@@ -80,8 +86,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     pointer(input) {
       return ensureAwaited<void>(async () => {
-        const inputArray = (Array.isArray(input) ? (input as Extract<PointerInput, any[]>) : [input])
-        // @todo make this type-safe
+        type SerializedInput = PointerInputNormalized[number] extends infer PIN
+          ? { [K in keyof PIN]: K extends 'target' ? SerializedLocator : PIN[K] }
+          : never
+
+        const inputArray = (Array.isArray(input) ? input : [input]) as Extract<PointerInput, readonly any[]>
         const serializedInputArray = await Promise.all(inputArray.map(async (input) => {
           if (typeof input === 'object' && 'target' in input && input.target) {
             const target = (await serializeElement(input.target))
@@ -89,21 +98,22 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
             return {
               ...input,
               target,
-            }
+            } satisfies SerializedInput
           }
 
           if (typeof input === 'string') {
             return {
               keys: input,
-            }
+            } satisfies SerializedInput
           }
 
-          return input
+          // `target` has been serialized but TS doesn't resolve/remove it from whatever's left of `PointerActionInputObject`
+          return input as SerializedInput
         }))
 
-        await triggerCommand<void>(
+        pointerState = await triggerCommand<PointerState>(
           '__vitest_pointer',
-          [serializedInputArray],
+          [serializedInputArray, pointerState],
         )
       })
     },
