@@ -217,6 +217,10 @@ Hoist compiler hints, replace static imports with dynamic ones and update export
 
 This is required to ensure mocks are resolved before we import the user module.
 
+Module-runner integrations can supply `renderExport(name, expression)`, returning code that registers a live export getter for an imported binding re-exported through an export list. Vitest supplies this backend for Vite module-runner transforms only; native ESM output, including Browser Mode, is unchanged.
+
+`hoistMocksPlugin` returns this code in `meta.vitestHoistedExports` so the module-runner integration can prepend it **after** SSR transformation, before evaluating any static imports. Calling `hoistMocks` directly inserts the generated code before the hoisted calls.
+
 ```ts
 import { parseAst } from 'vite'
 

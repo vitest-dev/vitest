@@ -1,6 +1,8 @@
 import type { RunVitestConfig } from '../../test-utils'
-import path from 'node:path'
+import { unlinkSync } from 'node:fs'
+import { SourceMap } from 'node:module'
 import { playwright } from '@vitest/browser-playwright'
+import path from 'pathe'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { runInlineTests, runVitest, StableTestFileOrderSorter } from '../../test-utils'
@@ -153,6 +155,188 @@ function modeToConfig(mode: string): RunVitestConfig {
   }
   return {}
 }
+
+test.for([
+  ['node', 'hoisted'],
+  ['node', 'mock'],
+  ['jsdom', 'hoisted'],
+  ['jsdom', 'mock'],
+])('imported-value re-exports retain live bindings (%s, %s)', async ([environment, trigger]) => {
+  const { stderr, thrown, errorTree } = await runInlineTests({
+    'dependency.js': `
+export let value = 1
+export { value as default }
+export const identity = {}
+export function increment() { value++ }
+export function read() { return value }
+    `,
+    'unused.js': 'export {}',
+    'reexport.ts': `
+import { vi } from 'vitest'
+export { value, value as alias, importedDefault as default, importedDefault as namedDefault, namespace, identity, local, vi }
+export { value as 'string name' }
+import importedDefault, { value, identity, read } from './dependency.js'
+import * as namespace from './dependency.js'
+${trigger === 'hoisted' ? 'vi.hoisted(() => ({}))' : 'vi.mock(\'./unused.js\', () => ({}))'}
+const local: number = 42
+export function internal() { return read() }
+    `,
+    'explicit.js': `export { value } from './dependency.js'`,
+    'basic.test.js': `
+import { expect, test } from 'vitest'
+import * as reexported from './reexport.ts'
+import * as dependency from './dependency.js'
+import * as explicit from './explicit.js'
+
+test('live imported exports and unaffected paths', () => {
+  expect(reexported.local).toBe(42)
+  expect(reexported.vi.hoisted).toBeTypeOf('function')
+  expect(reexported.internal()).toBe(1)
+  expect(explicit.value).toBe(1)
+
+  expect.soft(reexported.value).toBe(1)
+  expect.soft(reexported.alias).toBe(1)
+  expect.soft(reexported['string name']).toBe(1)
+  expect.soft(reexported.default).toBe(1)
+  expect.soft(reexported.namedDefault).toBe(1)
+  expect.soft(reexported.identity).toBe(dependency.identity)
+  expect.soft(reexported.namespace).toBe(dependency)
+
+  dependency.increment()
+  expect(reexported.internal()).toBe(2)
+  expect(explicit.value).toBe(2)
+  expect.soft(reexported.value).toBe(2)
+  expect.soft(reexported.alias).toBe(2)
+  expect.soft(reexported['string name']).toBe(2)
+  expect.soft(reexported.default).toBe(2)
+  expect.soft(reexported.namedDefault).toBe(2)
+})
+    `,
+  }, { environment })
+
+  expect(thrown).toBe(false)
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "live imported exports and unaffected paths": "passed",
+      },
+    }
+  `)
+})
+
+test('imported-value re-exports use the same live mock as internal imports', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'dependency.js': `throw new Error('the original must not evaluate')`,
+    'reexport.js': `
+import { vi } from 'vitest'
+import { value, identity } from './dependency.js'
+import * as namespace from './dependency.js'
+const state = vi.hoisted(() => ({ value: 1, events: ['hoisted'] }))
+vi.mock('./dependency.js', () => {
+  state.events.push('factory')
+  return { get value() { return state.value }, identity: {} }
+})
+export { value, identity, namespace }
+export function internal() { return { value, identity, namespace } }
+export function increment() { state.value++ }
+export const events = state.events
+    `,
+    'basic.test.js': `
+import { expect, test } from 'vitest'
+import * as exported from './reexport.js'
+test('order, identity and live mock updates', () => {
+  expect(exported.events).toEqual(['hoisted', 'factory'])
+  expect(exported.value).toBe(1)
+  expect(exported.identity).toBe(exported.internal().identity)
+  expect(exported.namespace).toBe(exported.internal().namespace)
+  exported.increment()
+  expect(exported.value).toBe(2)
+  expect(exported.value).toBe(exported.internal().value)
+})
+    `,
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "order, identity and live mock updates": "passed",
+      },
+    }
+  `)
+})
+
+test.for(['dynamic', 'static'])('imported-value re-exports register getters before circular imports (%s)', async (kind) => {
+  let transforms = 0
+  const config = (): RunVitestConfig => ({
+    fsModuleCache: true,
+    $viteConfig: {
+      plugins: [{
+        name: 'count-reexport-transforms',
+        transform(_code, id) {
+          if (id.endsWith('/reexport.js')) {
+            transforms++
+          }
+        },
+      }],
+    },
+  })
+  const run = await runInlineTests({
+    'dependency.js': `
+import * as exported from './reexport.js'
+export const before = { registered: Object.hasOwn(exported, 'value'), value: exported.value }
+export const value = 1
+    `,
+    'reexport.js': `
+import { vi } from 'vitest'
+import { value${kind === 'dynamic' ? ', before' : ''} } from './dependency.js'
+vi.hoisted(() => ({}))
+export { value${kind === 'dynamic' ? ', before' : ''} }
+${kind === 'static' ? 'export { before } from \'./dependency.js\'' : ''}
+export function read() { return value }
+    `,
+    'basic.test.js': `
+import { expect, test } from 'vitest'
+import { value, before } from './reexport.js'
+test('registered before imports, undefined during TDZ, live after initialization', () => {
+  expect(before).toEqual({ registered: true, value: undefined })
+  expect(value).toBe(1)
+})
+    `,
+  }, config())
+  expect(run.stderr).toBe('')
+  expect(run.testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "registered before imports, undefined during TDZ, live after initialization": "passed",
+      },
+    }
+  `)
+  const project = run.ctx!.projects[0]
+  const environment = project.vite.environments.ssr
+  const node = environment.moduleGraph.getModuleById(path.join(run.root, 'reexport.js'))!
+  const result = node.transformResult!
+  const line = result.code.slice(0, result.code.indexOf('function read')).split('\n').length
+  const map = new SourceMap(JSON.parse(JSON.stringify(result.map)))
+  expect(map.findOrigin(line, 1).lineNumber).toBe(7)
+  expect(transforms).toBe(1)
+
+  environment.moduleGraph.invalidateModule(node)
+  const restored = await project._fetcher(node.url, undefined, environment)
+  expect(restored).toHaveProperty('cached', true)
+  if (!('tmp' in restored)) {
+    throw new Error('Expected the restored module to be cached')
+  }
+  unlinkSync(restored.tmp)
+  await project._fetcher(node.url, undefined, environment)
+  expect(node.transformResult!.code.match(/__vite_ssr_exportName__\("value",/g)).toHaveLength(1)
+
+  await run.ctx!.close()
+  const warm = await runVitest({ ...config(), root: run.root })
+  expect(warm.stderr).toBe('')
+  expect(warm.testTree()).toEqual(run.testTree())
+  expect(transforms).toBe(1)
+})
 
 test.for(['node', 'playwright'])('importOriginal for virtual modules (%s)', async (mode) => {
   const { stderr, errorTree } = await runInlineTests({

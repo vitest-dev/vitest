@@ -1,6 +1,7 @@
 /* eslint-disable style/no-tabs */
 import type { Rolldown } from 'vite'
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
+import { SourceMap } from 'node:module'
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
 import { describe, expect, it, test, vi } from 'vitest'
@@ -285,6 +286,53 @@ vi.mock('./mock.js', () => {
       const __vi_import_0__ = await import("vue");
       import {vi} from "vitest";
       export {createApp}"
+    `)
+  })
+
+  test('renders live imported exports without changing local exports', () => {
+    const result = hoistMockAndResolve(`#!/usr/bin/env node
+export { value as first, local, namespace as middle, value as last, }
+export { local as another, value as tail, namespace as end }
+export { importedDefault as default, value as 'string name', namespace }
+import importedDefault, { value } from './dependency.js'
+import * as namespace from './dependency.js'
+import { vi } from 'vitest'
+const local = 42
+vi.hoisted(() => ({}))
+`, '/reexport.js', parse, {
+      ...hoistMocksOptions,
+      renderExport: (name, expression) => `registerExport(${JSON.stringify(name)}, () => ${expression});\n`,
+    })!
+
+    expect(() => parseAst(result.code)).not.toThrow()
+    const localLine = result.code.slice(0, result.code.indexOf('const local')).split('\n').length
+    const map = new SourceMap(JSON.parse(result.map.toString()))
+    expect(map.findOrigin(localLine, 1)).toMatchObject({
+      fileName: '/reexport.js',
+      lineNumber: 8,
+      columnNumber: 1,
+    })
+    expect(result.code).toMatchInlineSnapshot(`
+      "#!/usr/bin/env node
+      registerExport("first", () => __vi_import_0__.value);
+      registerExport("middle", () => __vi_import_1__);
+      registerExport("last", () => __vi_import_0__.value);
+      registerExport("tail", () => __vi_import_0__.value);
+      registerExport("end", () => __vi_import_1__);
+      registerExport("default", () => __vi_import_0__.default);
+      registerExport("string name", () => __vi_import_0__.value);
+      registerExport("namespace", () => __vi_import_1__);
+      vi.hoisted(() => ({}))
+      const __vi_import_0__ = await import("./dependency.js");
+      const __vi_import_1__ = await import("./dependency.js");
+      export { local, }
+      export { local as another }
+
+
+
+      import { vi } from 'vitest'
+      const local = 42
+      "
     `)
   })
 

@@ -1,14 +1,51 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestProject, TestUserConfig, VitestOptions } from 'vitest/node'
 import { playwright } from '@vitest/browser-playwright'
+import { parseAst } from 'vite'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
+import { runInlineTests } from '../../test-utils'
 
 async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, config: false, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
 }
+
+test.for(['node', 'browser'])('mock export backend follows the module-runner environment (%s)', async (mode) => {
+  const run = await runInlineTests({
+    'dependency.js': 'export const value = 1',
+    'reexport.js': `import { value } from './dependency.js'; import { vi } from 'vitest'; vi.hoisted(() => ({})); export { value }`,
+    'basic.test.js': `
+import { expect, test } from 'vitest'
+import { value } from './dependency.js'
+test('runtime starts', () => expect(value).toBe(1))
+    `,
+  }, {
+    // Keep the started server alive for the transform assertions below.
+    watch: true,
+    ...(mode === 'browser'
+      ? { browser: { enabled: true, headless: true, provider: playwright(), instances: [{ browser: 'chromium' as const }] } }
+      : {}),
+    $viteConfig: { environments: { __vitest_vm__: {} } },
+  })
+  expect(run.stderr).toBe('')
+  expect(run.testTree()).toEqual({ 'basic.test.js': { 'runtime starts': 'passed' } })
+
+  const id = run.fs.resolveFile('reexport.js')
+  for (const name of ['ssr', 'client', '__vitest_vm__']) {
+    const environment = run.ctx!.vite.environments[name]
+    const result = await environment.transformRequest(id)
+    const body = parseAst(result!.code).body
+    const exports = environment.pluginContainer.getModuleInfo(id)?.meta.vitestHoistedExports
+    const usesModuleRunner = name !== '__vitest_vm__' && (name !== 'client' || mode !== 'browser')
+    expect(exports, name).toBe(usesModuleRunner
+      ? '__vite_ssr_exportName__("value", () => { try { return __vi_import_0__.value } catch {} });\n'
+      : null)
+    expect(body.filter(node => node.type === 'ExportNamedDeclaration'), name)
+      .toHaveLength(usesModuleRunner ? 0 : 1)
+  }
+})
 
 test('can change global configuration', async () => {
   const v = await vitest({}, {}, {
@@ -254,6 +291,7 @@ test('can access browser.instances[].browser', async () => {
   const names: { browser: string; project: string }[] = []
 
   await vitest({}, {
+    include: [],
     name: 'custom-project-name',
     browser: {
       enabled: true,
@@ -308,6 +346,7 @@ test('can access project\'s browser.instances[].browser', async () => {
           },
         ],
         test: {
+          include: [],
           name: 'custom-project-name',
           browser: {
             enabled: true,

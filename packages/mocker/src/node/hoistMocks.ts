@@ -4,6 +4,7 @@ import type {
   CallExpression,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
+  ExportSpecifier,
   Expression,
   FunctionExpression,
   Identifier,
@@ -29,6 +30,8 @@ export interface StaticMockCall {
 
 export interface HoistMocksOptions {
   onStaticMock?: (call: StaticMockCall) => void
+  /** Emit a live export getter for an imported binding, before hoisted code runs. */
+  renderExport?: (name: string, expression: string) => string
   /**
    * List of modules that should always be imported before compiler hints.
    * @default 'vitest'
@@ -456,6 +459,51 @@ export function hoistMocks(
 
   if (!hasMockApiCall) {
     return
+  }
+
+  const { renderExport } = options
+  if (renderExport) {
+    let exports = ''
+    for (const node of ast.body as Node[]) {
+      if (node.type !== 'ExportNamedDeclaration' || node.source) {
+        continue
+      }
+      const specifiers = node.specifiers as Positioned<ExportSpecifier>[]
+      const removed = new Set(specifiers.filter((specifier) => {
+        const binding = idToImportMap.get((specifier.local as Identifier).name)
+        if (!binding) {
+          return false
+        }
+        const name = specifier.exported.type === 'Identifier'
+          ? specifier.exported.name
+          : String(specifier.exported.value)
+        exports += renderExport(name, binding)
+        return true
+      }))
+      if (!removed.size) {
+        continue
+      }
+      if (removed.size === specifiers.length) {
+        s.remove(node.start, node.end)
+        continue
+      }
+      // Remove adjacent imported specifiers together, including their separator.
+      for (let i = 0; i < specifiers.length; i++) {
+        if (!removed.has(specifiers[i])) {
+          continue
+        }
+        const start = i
+        while (removed.has(specifiers[i + 1])) {
+          i++
+        }
+        const last = i === specifiers.length - 1
+        s.remove(
+          last ? specifiers[start - 1].end : specifiers[start].start,
+          last ? specifiers[i].end : specifiers[i + 1].start,
+        )
+      }
+    }
+    s.appendLeft(hashbangEnd, exports)
   }
 
   function getNodeName(node: CallExpression) {

@@ -34,19 +34,20 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
     `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\s*\\(`,
   )
 
-  let root: string
+  let root = options.root
 
   return {
     name: 'vitest:mocks',
     enforce: 'post',
-    configResolved(config) {
-      root = config.root
-    },
+    configResolved: options.root === undefined
+      ? (config) => { root = config.root }
+      : undefined,
     transform(code, id) {
       if (!filter(id)) {
         return
       }
       const staticMocks: StaticMockCall[] = []
+      let hoistedExports = ''
       const s = hoistMocks(code, id, this.parse, {
         regexpHoistable,
         hoistableMockMethodNames,
@@ -56,6 +57,10 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
         root,
         getMap: () => this.getCombinedSourcemap(),
         ...options,
+        renderExport: options.renderExport && ((name, expression) => {
+          hoistedExports += options.renderExport!(name, expression)
+          return ''
+        }),
         onStaticMock(call) {
           staticMocks.push(call)
           options.onStaticMock?.(call)
@@ -63,12 +68,12 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
       })
       // vite keeps `meta` across re-transforms, so always reset it
       if (!s) {
-        return { meta: { vitestStaticMocks: null } }
+        return { meta: { vitestStaticMocks: null, vitestHoistedExports: null } }
       }
       return {
         code: s.toString(),
         map: s.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
-        meta: { vitestStaticMocks: staticMocks },
+        meta: { vitestStaticMocks: staticMocks, vitestHoistedExports: hoistedExports || null },
       }
     },
   }

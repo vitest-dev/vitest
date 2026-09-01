@@ -299,6 +299,8 @@ class ModuleFetcher {
       __vitestTmp: cachePath,
       __vitestModuleType: moduleType,
       __vitestStaticMocks: cachedModule.staticMocks,
+      // Cached code has already passed processResultSource.
+      __vitestExportsHoisted: true,
     }
 
     // we populate the module graph to make the watch mode work because it relies on importers
@@ -476,6 +478,22 @@ function processResultSource(environment: DevEnvironment, result: FetchResult): 
 
   const node = environment.moduleGraph.getModuleById(result.id)
   if (node?.transformResult) {
+    const transform = node.transformResult
+    if (!transform.__vitestExportsHoisted) {
+      const exports = environment.pluginContainer.getModuleInfo(result.id)?.meta?.vitestHoistedExports
+      if (exports) {
+        // Register before Vite's static imports, including cyclic source re-exports.
+        // This must happen after SSR transformation and before source maps/caching.
+        transform.code = exports + transform.code
+        if (transform.map && 'version' in transform.map) {
+          transform.map = {
+            ...transform.map,
+            mappings: ';'.repeat(exports.split('\n').length - 1) + transform.map.mappings,
+          }
+        }
+      }
+      transform.__vitestExportsHoisted = true
+    }
     // this also overrides node.transformResult.code which is also what the module
     // runner does under the hood by default (we disable source maps inlining)
     inlineSourceMap(node.transformResult)
@@ -605,5 +623,7 @@ declare module 'vite' {
     __vitestModuleType?: ModuleType
     // set by the hoistMocks plugin; null when the file was not hoisted
     __vitestStaticMocks?: StaticMockCall[] | null
+    // The export prelude is already part of code; do not prepend it on repeat fetches.
+    __vitestExportsHoisted?: boolean
   }
 }
