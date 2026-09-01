@@ -9,6 +9,13 @@ outline: deep
 
 Options that Vitest will pass down to [`@sinon/fake-timers`](https://npmx.dev/package/@sinonjs/fake-timers) when using [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers).
 
+## fakeTimers.nodeBuiltins <Version>5.0.0</Version> {#faketimers-nodebuiltins}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Mock timer APIs imported from `node:timers` and `node:timers/promises`.
+
 ## fakeTimers.now
 
 - **Type:** `number | Date`

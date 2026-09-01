@@ -92,7 +92,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..ce5b46a643ab4d4b820dda2c84b0fba2
              );
          }
  
-+        const vitestRequired = _global.__vitest_required__;
++        const vitestRequired = config.nodeBuiltins && _global.__vitest_required__;
 +        const timersModule = vitestRequired && vitestRequired.timers;
 +        const timersPromisesModule =
 +            vitestRequired && vitestRequired.timersPromises;

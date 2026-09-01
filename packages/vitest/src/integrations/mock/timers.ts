@@ -8,13 +8,22 @@
 import type {
   Clock,
   FakeMethod,
-  Config as FakeTimersConfig,
   FakeTimers as FakeTimersContext,
+  Config as SinonFakeTimersConfig,
 } from '@sinonjs/fake-timers'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
 
 const RealDate = globalThis.Date
+
+export interface FakeTimersConfig extends SinonFakeTimersConfig {
+  /**
+   * Mock timer APIs imported from `node:timers` and `node:timers/promises`.
+   *
+   * @default false
+   */
+  nodeBuiltins?: boolean
+}
 
 export class FakeTimers {
   private _global: typeof globalThis
