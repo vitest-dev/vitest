@@ -6,6 +6,8 @@ import * as timersPromisesNamespace from 'node:timers/promises'
 import { afterEach, expect, test, vi } from 'vitest'
 
 const require = createRequire(import.meta.url)
+const requiredTimers: typeof timers = require('node:timers')
+const requiredTimersPromises: typeof timersPromises = require('node:timers/promises')
 
 afterEach(() => {
   vi.useRealTimers()
@@ -30,7 +32,7 @@ test('mocks node:timers default and require imports', () => {
   const called: string[] = []
 
   timers.setTimeout(() => called.push('default'), 100)
-  require('node:timers').setTimeout(() => called.push('require'), 100)
+  requiredTimers.setTimeout(() => called.push('require'), 100)
 
   vi.advanceTimersByTime(100)
   expect(called).toEqual(['default', 'require'])
@@ -60,7 +62,7 @@ test('mocks node:timers/promises default and require imports', async () => {
       () => resolved.push('default'),
       () => {},
     ),
-    require('node:timers/promises').setTimeout(10_000, undefined, { signal: controller.signal }).then(
+    requiredTimersPromises.setTimeout(10_000, undefined, { signal: controller.signal }).then(
       () => resolved.push('require'),
       () => {},
     ),
