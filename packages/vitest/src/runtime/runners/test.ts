@@ -1,9 +1,9 @@
 import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
-import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
 import type { Bench } from '../benchmark'
 import type { SerializedConfig } from '../config'
+import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import type {
   CancelReason,
   File,
@@ -36,7 +36,7 @@ import { getWorkerState } from '../utils'
 export class TestRunner implements VitestTestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
-  private moduleRunner!: ModuleRunner
+  private moduleRunner!: TestModuleRunner
   private cancelRun = false
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
@@ -63,10 +63,6 @@ export class TestRunner implements VitestTestRunner {
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
-    const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
-    if (moduleNode && (source === 'setup' || moduleNode.evaluated)) {
-      this.workerState.evaluatedModules.invalidateModule(moduleNode)
-    }
     return this._otel.$(
       `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
       {
@@ -78,7 +74,8 @@ export class TestRunner implements VitestTestRunner {
         if (!this.viteModuleRunner) {
           filepath = `${filepath}?vitest=${Date.now()}`
         }
-        return this.moduleRunner.import(filepath)
+        const options = this.viteModuleRunner ? { invalidate: true } : undefined
+        return this.moduleRunner.import(filepath, options)
       },
     )
   }

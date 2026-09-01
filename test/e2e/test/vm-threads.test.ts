@@ -102,6 +102,43 @@ test('vm pools report errors from modules covered by the graph prewarm', async (
   expect(stderr).toContain('does-not-exist.js')
 })
 
+// Node's link() does not wait for a dependency that another root is still
+// linking. The shared module needs an import that resolves asynchronously
+// (here a Vite-transformed stylesheet) to open the window
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s links a dependency shared by concurrent imports once',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests({
+      'node_modules/shared-dep/package.json': JSON.stringify({
+        name: 'shared-dep',
+        type: 'module',
+        exports: { './a': './a.js', './b': './b.js' },
+      }),
+      'node_modules/shared-dep/a.js': `export { value } from './shared.js'; export const fromA = 'a'`,
+      'node_modules/shared-dep/b.js': `export { value } from './shared.js'; export const fromB = 'b'`,
+      'node_modules/shared-dep/shared.js': `import './style.css'; export const value = 'shared'`,
+      'node_modules/shared-dep/style.css': `.a { color: red }`,
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('concurrent imports share a dependency', async () => {
+          const [a, b] = await Promise.all([
+            import('shared-dep/a'),
+            import('shared-dep/b'),
+          ])
+          expect(a.fromA).toBe('a')
+          expect(b.fromB).toBe('b')
+          expect(a.value).toBe('shared')
+          expect(b.value).toBe('shared')
+        })
+      `,
+    }, { pool })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // The module-sync condition was added in Node 22.12/20.19 when require(esm)
 // was unflagged. The fix uses the _resolveFilename conditions option which
 // is only available on Node 22.12+. Node 20 is unfixable and reaches EOL

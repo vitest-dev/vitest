@@ -1,5 +1,5 @@
+import type { ReportOptions } from '@vitest/istanbul-lib-report'
 import type { Arrayable } from '@vitest/utils'
-import type { ReportOptions } from 'istanbul-reports'
 import type { TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta } from '../../types/general'
 import type { RuntimeCoverageModuleLoader, RuntimeCoverageProviderModule } from '../../utils/coverage'
@@ -279,7 +279,7 @@ export interface CoverageOptions {
   ignoreClassMethods?: string[]
 
   /**
-   * Custom instrumenter factory to use instead of the default `istanbul-lib-instrument`.
+   * Custom instrumenter factory to use instead of the default `@vitest/istanbul-lib-instrument`.
    *
    * The factory receives the same runtime coverage options Vitest passes to its
    * built-in Istanbul instrumenter and must return an object implementing the

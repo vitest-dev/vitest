@@ -1,4 +1,4 @@
-import type { CoverageMapData } from 'istanbul-lib-coverage'
+import type { CoverageMapData } from '@vitest/istanbul-lib-coverage'
 import type { IstanbulCoverageProvider } from './provider'
 import { COVERAGE_STORE_KEY } from './constants'
 

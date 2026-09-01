@@ -685,6 +685,21 @@ describe('nested projects', () => {
     expect(ctx!.projects.map(project => project.config.testTimeout)).toEqual([999])
   })
 
+  it('cli --maxWorkers reaches projects', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { test: { name: 'unit' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    }, { $cliOptions: { maxWorkers: 3 } })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.config.maxWorkers)).toEqual([3])
+  })
+
   it('benchmark projects are created for nested projects', async () => {
     const { stderr, ctx } = await runInlineTests({
       'vitest.config.js': {

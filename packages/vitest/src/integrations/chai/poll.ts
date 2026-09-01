@@ -212,20 +212,23 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }
           })
           let resultPromise: Promise<void> | undefined
+          // lets `expect.element` register the poll with the task deadline
+          const wrap = chai.util.flag(assertion, '_poll.wrap') as ((promise: Promise<void>, source: Error) => Promise<void>) | undefined
+          const start = () => resultPromise ||= wrap ? wrap(promise(), STACK_TRACE_ERROR) : promise()
           // only .then is enough to check awaited, but we type this as `Promise<void>` in global types
           // so let's follow it
           return {
             then(onFulfilled, onRejected) {
               awaited = true
-              return (resultPromise ||= promise()).then(onFulfilled, onRejected)
+              return start().then(onFulfilled, onRejected)
             },
             catch(onRejected) {
               awaited = true
-              return (resultPromise ||= promise()).catch(onRejected)
+              return start().catch(onRejected)
             },
             finally(onFinally) {
               awaited = true
-              return (resultPromise ||= promise()).finally(onFinally)
+              return start().finally(onFinally)
             },
             [Symbol.toStringTag]: 'Promise',
           } satisfies Promise<void>

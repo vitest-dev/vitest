@@ -6,7 +6,7 @@ import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
-  file: RunnerTestFile
+  suite: RunnerTestFile | RunnerTestSuite
 }>()
 
 type LeveledTask = RunnerTask & {
@@ -30,29 +30,21 @@ function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
 }
 
 const failed = computed(() => {
-  const file = props.file
-  const failedFlatMap = file.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
-  const result = file.result
-  const fileError = result?.errors?.[0]
-  // we must check also if the test cannot compile
-  if (fileError) {
-    // create a dummy one
-    const fileErrorTask: RunnerTestSuite & { level: number } = {
-      id: file!.id,
-      file: file!,
-      name: file!.name,
-      fullName: file!.name,
+  const suite = props.suite
+  const failedFlatMap = suite.tasks.flatMap(t => collectFailed(t, 0))
+  // prepend suite level errors as same indent level as children errors
+  if (suite.result?.errors?.length) {
+    const taskError: LeveledTask = {
+      ...suite,
       level: 0,
-      type: 'suite',
-      mode: 'run',
-      meta: {},
       tasks: [],
-      result,
     }
-    failedFlatMap.unshift(fileErrorTask)
+    failedFlatMap.unshift(taskError)
   }
   return failedFlatMap
 })
+
+const isFile = computed(() => 'filepath' in props.suite)
 </script>
 
 <template>
@@ -78,9 +70,9 @@ const failed = computed(() => {
               v-for="(error, idx) of task.result.errors"
               :key="idx"
               :error="error"
-              :filename="file.name"
+              :filename="task.file.name"
               :root="config.root"
-              :file-id="file.id"
+              :file-id="task.file.id"
             />
           </template>
         </div>
@@ -88,7 +80,7 @@ const failed = computed(() => {
     </template>
     <template v-else>
       <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
+        All tests passed in this {{ isFile ? 'file' : 'suite' }}
       </div>
     </template>
   </div>

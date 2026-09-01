@@ -38,3 +38,55 @@ export function internalOrExternalUrl(attachment: TestAttachment): string {
 
   return getAttachmentUrl(attachment)
 }
+
+export async function openPlaywrightTrace(attachment: TestAttachment): Promise<void> {
+  const popup = window.open('', '_blank')
+  if (!popup) {
+    // eslint-disable-next-line no-alert
+    window.alert('Unable to open Playwright Trace Viewer. Please allow pop-ups and try again.')
+    return
+  }
+
+  popup.document.write('<!doctype html><title>Opening Playwright Trace</title><body>Opening Playwright trace...</body>')
+  popup.document.close()
+  popup.focus()
+
+  try {
+    const response = await fetch(getAttachmentUrl(attachment))
+    if (!response.ok) {
+      throw new Error(`Failed to load Playwright trace: ${response.statusText}`)
+    }
+    const trace = await response.blob()
+    if (popup.closed) {
+      return
+    }
+
+    // Playwright signals when the trace viewer is ready to receive messages: https://github.com/microsoft/playwright/pull/42451
+    const ready = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        window.removeEventListener('message', onMessage)
+        reject(new Error('Timed out waiting for Playwright Trace Viewer'))
+      }, 10_000)
+      function onMessage(event: MessageEvent) {
+        if (event.origin !== 'https://trace.playwright.dev' || event.source !== popup || event.data?.method !== 'ready') {
+          return
+        }
+        clearTimeout(timeout)
+        window.removeEventListener('message', onMessage)
+        resolve()
+      }
+      window.addEventListener('message', onMessage)
+    })
+    popup.location.href = 'https://trace.playwright.dev/next/'
+    await ready
+    if (!popup.closed) {
+      popup.postMessage({ method: 'load', params: { trace } }, 'https://trace.playwright.dev')
+    }
+  }
+  catch {
+    if (!popup.closed) {
+      const errorPage = new Blob(['<!doctype html><title>Failed to Open Playwright Trace</title><body>Failed to load Playwright trace attachment.</body>'], { type: 'text/html' })
+      popup.location.href = URL.createObjectURL(errorPage)
+    }
+  }
+}
