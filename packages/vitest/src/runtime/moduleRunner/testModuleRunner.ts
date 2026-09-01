@@ -5,5 +5,4 @@ export interface TestModuleRunner {
   moduleExecutionInfo?: ModuleExecutionInfo
   mocker?: TestModuleMocker
   import: <T = any>(moduleId: string, options?: { invalidate?: boolean }) => Promise<T>
-  syncBuiltinESMExports?: () => void
 }

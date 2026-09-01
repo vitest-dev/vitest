@@ -138,10 +138,6 @@ export class VitestModuleRunner
     return super.import(url)
   }
 
-  public syncBuiltinESMExports(): void {
-    this.vitestOptions.vm?.externalModulesExecutor.syncBuiltinESMExports()
-  }
-
   public async fetchModule(url: string, importer?: string): Promise<EvaluatedModuleNode> {
     const module = await (this as any).cachedModule(url, importer)
     return module

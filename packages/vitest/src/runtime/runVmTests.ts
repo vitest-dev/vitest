@@ -28,6 +28,7 @@ export async function run(
   config: SerializedConfig,
   moduleRunner: TestModuleRunner,
   traces: Traces,
+  syncBuiltinESMExports: () => void,
 ): Promise<void> {
   const workerState = getWorkerState()
 
@@ -66,7 +67,7 @@ export async function run(
     util,
     timers,
     timersPromises,
-    syncBuiltinESMExports: () => moduleRunner.syncBuiltinESMExports?.(),
+    syncBuiltinESMExports,
   }
 
   await traces.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
