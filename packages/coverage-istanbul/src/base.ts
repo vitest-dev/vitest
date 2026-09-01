@@ -5,7 +5,18 @@ import { COVERAGE_STORE_KEY } from './constants'
 export const BaseCoverageProviderModule = {
   takeCoverage(): CoverageMapData | undefined {
     // @ts-expect-error -- untyped global
-    return globalThis[COVERAGE_STORE_KEY]
+    const coverageMap = globalThis[COVERAGE_STORE_KEY] as CoverageMapData | undefined
+
+    if (!coverageMap) {
+      return
+    }
+
+    // isolate:false keeps many files in one run request. takeCoverage runs
+    // after each file; without a snapshot+reset the next take still holds
+    // earlier hits and merge double-counts them.
+    const snapshot = structuredClone(coverageMap)
+    this.startCoverage()
+    return snapshot
   },
 
   // Reset coverage map to prevent duplicate results if this is called twice in row

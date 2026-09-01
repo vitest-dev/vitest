@@ -52,6 +52,10 @@ for (const isolate of [true, false]) {
           statements: '4/4 (100%)',
         },
       })
+
+      // 100% still passes if isolate:false merge double-counts the first file.
+      // isolation-1 calls each math function once; hits must stay 1.
+      expect(Object.values(math.f)).toEqual([1, 1, 1, 1])
     })
   }
 }
