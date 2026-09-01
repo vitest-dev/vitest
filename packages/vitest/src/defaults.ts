@@ -1,7 +1,7 @@
+import type { FakeTimersConfig } from './integrations/mock/timers'
 import type {
   CoverageOptions,
   ResolvedBenchmarkOptions,
-  UserConfig,
 } from './node/types/config'
 import type { FieldsWithDefaultValues } from './node/types/coverage'
 import os from 'node:os'
@@ -58,7 +58,7 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
   autoAttachSubprocess: false,
 }
 
-const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
+const fakeTimersDefaults: FakeTimersConfig = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
 }
@@ -91,7 +91,7 @@ export const configDefaults: Readonly<{
     include: never[]
   }
   coverage: CoverageOptions
-  fakeTimers: NonNullable<UserConfig['fakeTimers']>
+  fakeTimers: FakeTimersConfig
   maxConcurrency: number
   dangerouslyIgnoreUnhandledErrors: boolean
   typecheck: {
