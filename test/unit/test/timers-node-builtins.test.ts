@@ -27,19 +27,6 @@ test('does not mock Node timer imports by default', () => {
   expect(namedSetTimeoutPromise).toBe(originalNamedSetTimeoutPromise)
 })
 
-test('mocks node:timers imports', () => {
-  vi.useFakeTimers({ nodeBuiltins: true })
-  const called: string[] = []
-
-  timers.setTimeout(() => called.push('default'), 100)
-  namedSetTimeout(() => called.push('named'), 100)
-  timersNamespace.setTimeout(() => called.push('namespace'), 100)
-  requiredTimers.setTimeout(() => called.push('require'), 100)
-
-  vi.advanceTimersByTime(100)
-  expect(called).toEqual(['default', 'named', 'namespace', 'require'])
-})
-
 test('mocks only configured Node timer imports', () => {
   const originalSetTimeout = timers.setTimeout
   const originalSetInterval = timers.setInterval
@@ -52,6 +39,19 @@ test('mocks only configured Node timer imports', () => {
   expect(timers.setInterval).toBe(originalSetInterval)
   expect(timersPromises.setTimeout).not.toBe(originalSetTimeoutPromise)
   expect(timersPromises.setInterval).toBe(originalSetIntervalPromise)
+})
+
+test('mocks node:timers imports', () => {
+  vi.useFakeTimers({ nodeBuiltins: true })
+  const called: string[] = []
+
+  timers.setTimeout(() => called.push('default'), 100)
+  namedSetTimeout(() => called.push('named'), 100)
+  timersNamespace.setTimeout(() => called.push('namespace'), 100)
+  requiredTimers.setTimeout(() => called.push('require'), 100)
+
+  vi.advanceTimersByTime(100)
+  expect(called).toEqual(['default', 'named', 'namespace', 'require'])
 })
 
 test('mocks node:timers/promises imports', async () => {
