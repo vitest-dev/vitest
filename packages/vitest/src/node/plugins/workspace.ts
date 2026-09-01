@@ -1,27 +1,21 @@
 import type * as vite from 'vite'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
-import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
+import { resolve } from 'pathe'
 import { API_TOKEN_FILE } from '../config/apiToken'
-import { VitestConfig } from './config'
+import { ViteConfigPlugin } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { VitestConfigServer } from './server'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
+import { resolveTestCacheDir } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
-
-interface WorkspaceOptions extends TestProjectInlineConfiguration {
-  root?: string
-}
 
 export function WorkspaceVitestPlugin(
   harness: PluginHarness,
   globalViteConfig: vite.ResolvedConfig,
-  globalConfig: ResolvedConfig,
-  options: WorkspaceOptions,
 ): VitePlugin[] {
   return [
     {
@@ -32,11 +26,16 @@ export function WorkspaceVitestPlugin(
       },
       config(viteConfig) {
         const testConfig = viteConfig.test || {}
-        const root = options.root || testConfig.root || viteConfig.root
+        const root = testConfig.root || viteConfig.root
 
         const config: ViteConfig = {
           base: '/',
           root,
+          cacheDir: resolveTestCacheDir(
+            resolve(root || process.cwd()),
+            testConfig,
+            viteConfig.cacheDir,
+          ),
           server: {
             open: false,
             fs: {
@@ -53,12 +52,11 @@ export function WorkspaceVitestPlugin(
         config.server.watch = null
       },
     },
-    ...VitestConfigServer(harness, globalConfig),
     SsrRunnerFixerPlugin(harness),
     MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(),
     CoverageTransform(harness),
-    ...VitestConfig(harness),
+    ...ViteConfigPlugin(harness),
     ...MocksPlugins(),
     VitestProjectResolver(harness),
     NormalizeURLPlugin(),

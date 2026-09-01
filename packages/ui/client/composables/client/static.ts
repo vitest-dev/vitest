@@ -68,12 +68,8 @@ export function createStaticClient(): VitestClient {
     ws: new EventTarget() as WebSocket,
     state: new StateManager(),
     rpc: undefined!,
-    reconnect: () => registerMetadata(),
-    waitForConnection: async () => {},
+    reconnect: async () => {},
   }) as VitestClient
-
-  ctx.state.filesMap = reactive(ctx.state.filesMap) as StateManager['filesMap']
-  ctx.state.idMap = reactive(ctx.state.idMap) as StateManager['idMap']
 
   async function registerMetadata() {
     const content = await window.HTML_REPORT_METADATA!

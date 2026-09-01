@@ -97,7 +97,7 @@ export function createRuntimeRpc(
   )
 }
 
-export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
+function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
       // keep $rejectPendingCalls as sync function

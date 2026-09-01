@@ -26,6 +26,7 @@ export default antfu(
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
       'test/e2e/deps/error/*',
+      'test/e2e/deps/malformed-source-map/*.js',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',

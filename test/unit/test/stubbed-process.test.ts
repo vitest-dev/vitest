@@ -9,3 +9,9 @@ it('should not hang', () => {
 it('should not crash (#9173)', async () => {
   await import('./fixtures/increment')
 })
+
+it('should not hang', () => {
+  vi.unstubAllGlobals()
+
+  process.stdout.write = () => true
+})

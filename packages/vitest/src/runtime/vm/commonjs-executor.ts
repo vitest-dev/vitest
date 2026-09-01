@@ -4,6 +4,7 @@ import type { VMSyntheticModule } from './types'
 import { Module as _Module, createRequire, isBuiltin } from 'node:module'
 import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
+import { createV8ModuleWithCacheReset } from './code-cache'
 import {
   activeImportModuleDynamically,
   interopCommonJsModule,
@@ -526,6 +527,12 @@ export class CommonjsExecutor {
     if (identifier === 'node:module' || identifier === 'module') {
       const module = new this.Module('/module.js') // path should not matter
       module.exports = this.Module
+      this.builtinCache[normalized] = module
+      return module.exports
+    }
+    if (normalized === 'v8' && this.codeCache) {
+      const module = new this.Module('/v8.js')
+      module.exports = createV8ModuleWithCacheReset(moduleExports, this.codeCache)
       this.builtinCache[normalized] = module
       return module.exports
     }

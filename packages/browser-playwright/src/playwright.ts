@@ -621,6 +621,14 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     await this._throwIfClosing(page)
     this.pages.set(sessionId, page)
 
+    // fail the run immediately with an attributed error; otherwise the crash
+    // is only visible as a websocket disconnect, if the browser closes it at all
+    page.on('crash', () => {
+      debug?.('[%s][%s] the page crashed', sessionId, this.browserName)
+      const session = this.project.vitest._browserSessions.getSession(sessionId)
+      session?.fail(new Error(`The ${this.browserName} page crashed while running tests. This can happen if the browser ran out of memory.`))
+    })
+
     if (process.env.VITEST_PW_DEBUG) {
       page.on('requestfailed', (request) => {
         console.error(
@@ -665,6 +673,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       on: cdp.on.bind(cdp),
       off: cdp.off.bind(cdp),
       once: cdp.once.bind(cdp),
+      // For now this isn't typed as CDPSession but exposed only for `maybeCollectChromiumGarbage`
+      detach: cdp.detach.bind(cdp),
     } as any // overloaded CDPSession type is too tricky in monorepo
   }
 

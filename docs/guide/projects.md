@@ -235,6 +235,15 @@ bun run test --project e2e --project unit
 ```
 :::
 
+The filter supports `*` wildcards and `!` exclusions. A project runs if it matches no negated pattern and, when regular patterns are also given, matches at least one of them:
+
+```bash
+# run every project except "e2e"
+vitest --project '!e2e'
+# run every project starting with "unit", except "unit (browser)"
+vitest --project 'unit*' --project '!unit (browser)'
+```
+
 ## Configuration
 
 Projects defined with an inline configuration inherit all options from the root-level configuration. This is controlled by the `extends` option, which is enabled by default since Vitest 5.0:
@@ -391,3 +400,22 @@ export default defineProject({
 ```
 
 Note that only config files can define nested projects. The `projects` option inside an inline configuration is not supported.
+
+## Debugging Project Resolution
+
+If projects are not resolved the way you expect, run Vitest with the `DEBUG=vitest:projects` environment variable:
+
+```bash
+DEBUG=vitest:projects vitest
+```
+
+Vitest will log how every project was resolved: which files a glob pattern matched, how browser instances and benchmark projects were expanded, why a project was dropped by the `--project` filter, and whether a project creates its own Vite server or [shares one](/config/sharedviteserver) with another project:
+
+```
+vitest:projects resolving 3 project definitions declared by <root>/vitest.config.ts
+vitest:projects projects glob "packages/*" matched 2 paths
+vitest:projects inline project "unit" shares the Vite server of <root>/vitest.config.ts
+vitest:projects project "e2e" is dropped by the --project filter: unit
+vitest:projects resolved projects: "unit", "pkg-a", "pkg-b"
+vitest:projects creating a Vite server for project "pkg-a"
+```

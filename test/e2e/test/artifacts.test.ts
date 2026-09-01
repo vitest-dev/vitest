@@ -265,8 +265,43 @@ describe('API', () => {
     }, { globals: true })
     expect(stderr).toBe('')
   })
+
+  test('recordArtifact uses vi.defineHelper callsite', async () => {
+    const artifacts: TestArtifact[] = []
+    const { root, stderr } = await runInlineTests({
+      'basic.test.ts': `
+        import { recordArtifact, test, vi } from 'vitest'
+
+        const record = vi.defineHelper(async (task) => {
+          await Promise.resolve()
+          return recordArtifact(task, { type: 'helper' })
+        })
+
+        test('records an artifact', async ({ task }) => {
+          await record(task)
+        })
+      `,
+    }, {
+      reporters: [{
+        onTestCaseResult(testCase) {
+          artifacts.push(...testCase.artifacts())
+        },
+      }],
+    })
+
+    expect(stderr).toBe('')
+    expect(artifacts).toHaveLength(1)
+    expect(artifacts[0]).toMatchObject({
+      type: 'helper',
+      location: {
+        file: resolve(root, 'basic.test.ts'),
+        line: 10,
+      },
+    })
+  })
 })
 
+// verify artifacts don't affect reporter output
 describe('reporters', () => {
   test('tap', async () => {
     const { stdout } = await runInlineTests(
@@ -368,7 +403,7 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
         .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
@@ -401,7 +436,7 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
         .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')

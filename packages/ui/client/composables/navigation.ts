@@ -34,6 +34,10 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
     67,
   ],
 )
+export const traceViewSplitSizes = useLocalStorage<[steps: number, iframe: number]>(
+  'vitest-ui_splitpanes-traceViewSplitSizes',
+  [30, 70],
+)
 
 export const detailsPanelVisible = useLocalStorage<boolean>(
   'vitest-ui_details-panel-visible',
@@ -112,7 +116,7 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo({ file, line, view, test, column }: Params) {
+export function navigateTo({ file, line, view, test, column }: Omit<Params, 'traceAttempt' | 'traceStep'>) {
   activeFileId.value = file
   lineNumber.value = line
   columnNumber.value = column
@@ -123,24 +127,14 @@ export function navigateTo({ file, line, view, test, column }: Params) {
 }
 
 export function clickOnTask(task: Task) {
-  if (task.type === 'test') {
-    if (viewMode.value === 'editor') {
-      showTaskSource(task)
-    }
-    else {
-      navigateTo({
-        file: task.file.id,
-        line: null,
-        column: null,
-        view: viewMode.value,
-        test: task.id,
-      })
-    }
+  const isFile = 'filepath' in task
+  if (!isFile && viewMode.value === 'editor') {
+    showTaskSource(task)
   }
   else {
     navigateTo({
       file: task.file.id,
-      test: null,
+      test: isFile ? null : task.id,
       line: null,
       view: viewMode.value,
       column: null,

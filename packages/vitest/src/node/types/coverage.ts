@@ -1,5 +1,5 @@
+import type { ReportOptions } from '@vitest/istanbul-lib-report'
 import type { Arrayable } from '@vitest/utils'
-import type { ReportOptions } from 'istanbul-reports'
 import type { TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta } from '../../types/general'
 import type { RuntimeCoverageModuleLoader, RuntimeCoverageProviderModule } from '../../utils/coverage'
@@ -92,8 +92,6 @@ export type CoverageReporterWithOptions<
     ? [ReporterName, object] // E.g. the "none" reporter
     : [ReporterName, Partial<ReportOptions[ReporterName]>]
   : [ReporterName, Record<string, unknown>]
-
-export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
 
 /** Fields that have default values. Internally these will always be defined. */
 export type FieldsWithDefaultValues
@@ -281,7 +279,7 @@ export interface CoverageOptions {
   ignoreClassMethods?: string[]
 
   /**
-   * Custom instrumenter factory to use instead of the default `istanbul-lib-instrument`.
+   * Custom instrumenter factory to use instead of the default `@vitest/istanbul-lib-instrument`.
    *
    * The factory receives the same runtime coverage options Vitest passes to its
    * built-in Istanbul instrumenter and must return an object implementing the

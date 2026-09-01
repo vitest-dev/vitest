@@ -47,24 +47,22 @@ export function runLoadFiles(
 }
 
 export function preparePendingTasks(packs: TaskResultPack[]) {
-  queueMicrotask(() => {
-    const pending = explorerTree.pendingTasks
-    const idMap = client.state.idMap
-    for (const pack of packs) {
-      const result = pack[1]
-      if (result) {
-        const task = idMap.get(pack[0])
-        if (task) {
-          let file = pending.get(task.file.id)
-          if (!file) {
-            file = new Set()
-            pending.set(task.file.id, file)
-          }
-          file.add(task.id)
+  const pending = explorerTree.pendingTasks
+  const idMap = client.state.idMap
+  for (const pack of packs) {
+    const result = pack[1]
+    if (result) {
+      const task = idMap.get(pack[0])
+      if (task) {
+        let file = pending.get(task.file.id)
+        if (!file) {
+          file = new Set()
+          pending.set(task.file.id, file)
         }
+        file.add(task.id)
       }
     }
-  })
+  }
 }
 
 export function recordTestArtifact(
@@ -104,31 +102,23 @@ export function runCollect(
   }
 
   const collect = !start
-  queueMicrotask(() => {
-    if (end) {
-      traverseFiles(collect)
-    }
-    else {
-      traverseReceivedFiles(collect)
-    }
-  })
+  if (end) {
+    traverseFiles(collect)
+  }
+  else {
+    traverseReceivedFiles(collect)
+  }
 
-  queueMicrotask(() => {
-    collectData(summary, executionTime)
-  })
+  collectData(summary, executionTime)
 
-  queueMicrotask(() => {
-    if (end) {
-      summary.failedSnapshot = uiFiles.value && hasFailedSnapshot(
-        uiFiles.value.map(f => findById(f.id)!),
-      )
-      summary.failedSnapshotEnabled = true
-    }
-  })
+  if (end) {
+    summary.failedSnapshot = uiFiles.value && hasFailedSnapshot(
+      uiFiles.value.map(f => findById(f.id)!),
+    )
+    summary.failedSnapshotEnabled = true
+  }
 
-  queueMicrotask(() => {
-    doRunFilter(search, filter, end)
-  })
+  doRunFilter(search, filter, end)
 }
 
 function* collectRunningTodoTests() {
@@ -229,32 +219,23 @@ function doRunFilter(
   const ids = new Set(openedTreeItems.value)
   const applyExpandNodes = (ids.size > 0 && expandAll === false) || resetExpandAll
 
-  // refresh explorer
-  queueMicrotask(() => {
-    refreshExplorer(search, filter, end)
-  })
+  refreshExplorer(search, filter, end)
 
   // initialize the explorer
   if (!initialized.value) {
-    queueMicrotask(() => {
-      if (uiEntries.value.length || end) {
-        initialized.value = true
-      }
-    })
+    if (uiEntries.value.length || end) {
+      initialized.value = true
+    }
   }
 
   if (applyExpandNodes) {
     // expand all nodes
-    queueMicrotask(() => {
-      expandNodesOnEndRun(ids, end)
-      if (resetExpandAll) {
-        treeFilter.value.expandAll = false
-      }
-    })
+    expandNodesOnEndRun(ids, end)
+    if (resetExpandAll) {
+      treeFilter.value.expandAll = false
+    }
     // refresh explorer
-    queueMicrotask(() => {
-      refreshExplorer(search, filter, end)
-    })
+    refreshExplorer(search, filter, end)
   }
 }
 

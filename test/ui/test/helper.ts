@@ -56,11 +56,12 @@ export async function startHtmlReportPreview(
   }
 }
 
-export async function assertTestCounts(page: Page, { pass, fail }: { pass: number; fail: number }) {
+export async function assertTestCounts(page: Page, { pass, fail, skip = 0 }: { pass: number; fail: number; skip?: number }) {
+  const skipped = skip ? ` ${skip} Skip` : ''
   await expect
     .soft(page.getByTestId('tests-entry'))
     .toContainText(
-      `${pass} Pass ${fail} Fail ${pass + fail} Total`,
+      `${pass} Pass ${fail} Fail${skipped} ${pass + fail + skip} Total`,
     )
 }
 

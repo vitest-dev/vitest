@@ -41,20 +41,15 @@ export default function workerInit(options: {
     teardown: () => {
       processRemoveAllListeners('message')
       processOff('error', onError)
+      // the guard installed by the test runner stays active between test
+      // files: with `isolate: false` a late process.exit would kill the
+      // other files sharing this process
+      process.exit = processExit
     },
-    runTests: (state, traces) => executeTests('run', state, traces),
-    collectTests: (state, traces) => executeTests('collect', state, traces),
+    runTests: (state, traces) => runTests('run', state, traces),
+    collectTests: (state, traces) => runTests('collect', state, traces),
     setup: options.setup,
   })
-
-  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) {
-    try {
-      await runTests(method, state, traces)
-    }
-    finally {
-      process.exit = processExit
-    }
-  }
 }
 
 // Prevent leaving worker in loops where it tries to send message to closed main

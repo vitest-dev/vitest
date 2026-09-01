@@ -1,5 +1,5 @@
 import type { ParsedStack } from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
+import { parseStacktrace } from '@vitest/utils/source-map'
 
 export function findTestFileStackTrace(testFilePath: string, error: Error): ParsedStack | undefined {
   let stack: string | undefined
@@ -14,12 +14,6 @@ export function findTestFileStackTrace(testFilePath: string, error: Error): Pars
   if (!stack) {
     return undefined
   }
-  // first line is the error message
-  const lines = stack.split('\n').slice(1)
-  for (const line of lines) {
-    const parsed = parseSingleStack(line)
-    if (parsed && parsed.file === testFilePath) {
-      return parsed
-    }
-  }
+  return parseStacktrace(stack, { ignoreStackEntries: [] })
+    .find(stack => stack.file === testFilePath)
 }

@@ -35,6 +35,7 @@ export default ({ mode }: { mode: string }) => {
     srcExclude: [
       '**/guide/examples/*',
       '**/guide/cli-generated.md',
+      'AGENTS.md',
     ],
     locales: {
       root: {
@@ -541,6 +542,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'projects',
                 link: '/config/projects',
+              },
+              {
+                text: 'sharedViteServer',
+                link: '/config/sharedviteserver',
               },
               {
                 text: 'isolate',

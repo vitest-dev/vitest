@@ -745,7 +745,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   project: {
     shorthand: 'p',
     description:
-      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.',
+      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`. A project runs if it matches no negated pattern and, when regular patterns are also given, matches at least one of them.',
     argument: '<name>',
     array: true,
   },
@@ -887,6 +887,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   strictTags: {
     description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
+  sharedViteServer: {
+    description: 'Let inline projects that don\'t modify the Vite config reuse the Vite server of the config that declares them. (default: `true`)',
+  },
 
   experimental: {
     description: 'Experimental features.',
@@ -1020,7 +1023,8 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
     description: 'Print only test files with out the test cases',
   },
   staticParse: {
-    description: 'Parse files statically instead of running them to collect tests (default: false)',
+    description: 'Parse files statically instead of running them to collect tests (default: true)',
+    default: true,
   },
   staticParseConcurrency: {
     description: 'How many tests to process at the same time (default: os.availableParallelism())',

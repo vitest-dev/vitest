@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const traces = computed(() => {
   const traceMap = getTraceAttemptMap(props.test.artifacts)
-  return Object.values(traceMap).map(trace => ({
+  return [...traceMap.values()].map(trace => ({
     trace,
     label: getTraceAttemptLabel(trace),
   }))

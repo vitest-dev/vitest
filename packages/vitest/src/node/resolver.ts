@@ -107,7 +107,7 @@ const depsExternal = [
   /\/node_modules\/.*\.mjs$/,
 ]
 
-export function guessCJSversion(id: string): string | undefined {
+function guessCJSversion(id: string): string | undefined {
   if (ESM_EXT_RE.test(id)) {
     for (const i of [
       id.replace(ESM_EXT_RE, '.mjs'),
@@ -235,7 +235,7 @@ export async function detectModuleType(
   return 'esm'
 }
 
-export async function shouldExternalize(
+async function shouldExternalize(
   id: string,
   options: ExternalizeOptions,
   cache: Map<string, Promise<string | false | undefined>>,

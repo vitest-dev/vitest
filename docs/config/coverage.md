@@ -45,6 +45,8 @@ List of files included in coverage as glob patterns. By default only files cover
 
 It is recommended to pass file extensions in the pattern.
 
+Patterns are matched against each file's path relative to the project root. A pattern with no glob wildcard is treated as a directory and matches everything inside it, so `include: ['src']` is equivalent to `include: ['src/**']`.
+
 See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.exclude
@@ -54,7 +56,7 @@ See [Including and excluding files from coverage report](/guide/coverage.html#in
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
-List of files excluded from coverage as glob patterns.
+List of files excluded from coverage as glob patterns. Patterns are matched the same way as [`coverage.include`](#coverage-include).
 
 See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
@@ -96,7 +98,7 @@ Directory to write coverage report to.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
-Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reports`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
+Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@vitest/istanbul-lib-report`](https://github.com/vitest-dev/istanbuljs/tree/main/packages/istanbul-lib-report/src/reports) for details about reporter specific options.
 
 The reporter has three different types:
 
@@ -457,7 +459,7 @@ Concurrency limit used when processing the coverage results.
 - **Type:** `(options: InstrumenterOptions) => CoverageInstrumenter`
 - **Available for providers:** `'istanbul'`
 
-Factory for a custom instrumenter to use in place of the default `istanbul-lib-instrument`. Vitest calls the factory once during initialization and reuses the returned instrumenter for every file. The rest of the Istanbul pipeline (collection, merging, reporting) is unchanged.
+Factory for a custom instrumenter to use in place of the default `@vitest/istanbul-lib-instrument`. Vitest calls the factory once during initialization and reuses the returned instrumenter for every file. The rest of the Istanbul pipeline (collection, merging, reporting) is unchanged.
 
 The factory receives an `InstrumenterOptions` object with Vitest's runtime coverage settings, and must return an object implementing the `CoverageInstrumenter` interface. Both types are exported from `vitest/node`.
 

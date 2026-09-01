@@ -4,6 +4,6 @@ import type { ModuleExecutionInfo } from './moduleDebug'
 export interface TestModuleRunner {
   moduleExecutionInfo?: ModuleExecutionInfo
   mocker?: TestModuleMocker
-  import: <T = any>(moduleId: string) => Promise<T>
+  import: <T = any>(moduleId: string, options?: { invalidate?: boolean }) => Promise<T>
   syncBuiltinESMExports?: () => void
 }

@@ -38,6 +38,7 @@ const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
 let limitMaxConcurrency: ConcurrencyLimiter
+let limitTestConcurrency: ConcurrencyLimiter
 
 /**
  * Normalizes retry configuration to extract individual values.
@@ -165,7 +166,7 @@ async function callTestHooks(
   context.onTestFinished = onTestFinished
 }
 
-export async function callSuiteHook<T extends keyof SuiteHooks>(
+async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
   currentTask: Task,
   name: T,
@@ -523,7 +524,7 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 // throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
-export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
+function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
   eventsPacks.push([task.id, event, undefined])
   packs.set(task.id, [task.result, task.meta])
   sendTasksUpdateThrottled(runner)
@@ -582,7 +583,7 @@ function passesRetryCondition(test: Test, errors: TestError[] | undefined): bool
   return false
 }
 
-export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
+async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run' && test.mode !== 'queued') {
@@ -835,7 +836,7 @@ function markPendingTasksAsSkipped(suite: Suite, runner: VitestRunner, note?: st
   })
 }
 
-export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
+async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunSuite?.(suite)
 
   if (suite.result?.state === 'fail') {
@@ -988,7 +989,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => runTest(c, runner),
+      () => limitTestConcurrency(() => runTest(c, runner)),
     )
   }
   else if (c.type === 'suite') {
@@ -1007,8 +1008,9 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
   }
 }
 
-export async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
+async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
   limitMaxConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
+  limitTestConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
 
   for (const file of files) {
     if (!file.tasks.length && !runner.config.passWithNoTests) {

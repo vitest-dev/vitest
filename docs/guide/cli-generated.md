@@ -796,7 +796,7 @@ Minimum time in milliseconds it takes to spawn the typechecker
 
 - **CLI:** `-p, --project <name>`
 
-The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.
+The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`. A project runs if it matches no negated pattern and, when regular patterns are also given, matches at least one of them.
 
 ### slowTestThreshold
 
@@ -929,6 +929,13 @@ Run only tests with the specified tags. You can use logical operators `&&` (and)
 - **Config:** [strictTags](/config/stricttags)
 
 Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)
+
+### sharedViteServer
+
+- **CLI:** `--sharedViteServer`
+- **Config:** [sharedViteServer](/config/sharedviteserver)
+
+Let inline projects that don't modify the Vite config reuse the Vite server of the config that declares them. (default: `true`)
 
 ### experimental.importDurations.print
 

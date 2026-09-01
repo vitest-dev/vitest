@@ -1,6 +1,6 @@
 import type vm from 'node:vm'
 import type { ExternalModulesExecutor, SyncModuleDisposition } from '../external-executor'
-import type { VMModule, VMSourceTextModule, VMSyntheticModule } from './types'
+import type { SourceTextModuleOptions, VMModule, VMSourceTextModule, VMSyntheticModule } from './types'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
@@ -92,6 +92,7 @@ export class EsmExecutor {
   private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
+  private linkQueue: Promise<void> = Promise.resolve()
   private context: vm.Context
 
   #httpIp = IPnumber('127.0.0.0')
@@ -109,16 +110,7 @@ export class EsmExecutor {
     if (m.status === 'errored') {
       throw m.error
     }
-    if (m.status === 'unlinked') {
-      this.esmLinkMap.set(
-        m,
-        m.link((identifier, referencer) =>
-          this.executor.resolveModule(identifier, referencer.identifier),
-        ),
-      )
-    }
-
-    await this.esmLinkMap.get(m)
+    await this.linkModule(m)
 
     if (m.status === 'linked') {
       await m.evaluate()
@@ -126,6 +118,31 @@ export class EsmExecutor {
 
     return m
   }
+
+  // Roots are linked one at a time: Node's link() does not wait for a
+  // dependency that another root is still linking, and instantiate() then
+  // fails on it. Sharing the queue with all roots keeps cycle handling to
+  // Node's own single-root linker, which never has to wait.
+  private linkModule(m: VMModule): Promise<void> {
+    const pending = this.esmLinkMap.get(m)
+    if (pending) {
+      return pending
+    }
+    if (m.status !== 'unlinked' && m.status !== 'linking') {
+      return Promise.resolve()
+    }
+    const linking = this.linkQueue.then(() => {
+      if (m.status === 'unlinked') {
+        return m.link(this.linker)
+      }
+    })
+    this.esmLinkMap.set(m, linking)
+    this.linkQueue = linking.catch(() => {})
+    return linking
+  }
+
+  private linker = (identifier: string, referencer: VMModule): Promise<VMModule> =>
+    this.executor.resolveModule(identifier, referencer.identifier)
 
   public async createEsModule(
     fileURL: string,
@@ -164,11 +181,10 @@ export class EsmExecutor {
     code: string,
   ): VMSourceTextModule {
     const codeCache = this.executor.codeCache
-    const cachedData = codeCache?.get(fileURL, code)
-    const m = new SourceTextModule(code, {
+    let cachedData = codeCache?.get(fileURL, code)
+    const options: SourceTextModuleOptions = {
       identifier: fileURL,
       context: this.context,
-      cachedData,
       // static callbacks: Node keeps them registered for as long as the
       // module's host-defined-options symbol is alive, so a closure here would
       // retain this executor (and the whole test file's world) beyond the
@@ -176,10 +192,27 @@ export class EsmExecutor {
       // at call time instead.
       importModuleDynamically: staticImportModuleDynamically,
       initializeImportMeta: staticInitializeImportMeta,
-    })
+    }
+    let m: VMSourceTextModule | undefined
+    if (cachedData) {
+      try {
+        m = new SourceTextModule(code, { ...options, cachedData })
+      }
+      catch (error: any) {
+        // unlike vm.Script, a module throws when V8 rejects the cache (e.g. the
+        // V8 flags changed at runtime): compile from source instead
+        if (error?.code !== 'ERR_VM_MODULE_CACHED_DATA_REJECTED') {
+          throw error
+        }
+        codeCache!.delete(fileURL)
+        cachedData = undefined
+      }
+    }
+    m ??= new SourceTextModule(code, options)
     // the code cache of a SourceTextModule must be created before evaluation
     if (!cachedData) {
-      codeCache?.store(fileURL, code, () => m.createCachedData())
+      const created = m
+      codeCache?.store(fileURL, code, () => created.createCachedData())
     }
     return m
   }

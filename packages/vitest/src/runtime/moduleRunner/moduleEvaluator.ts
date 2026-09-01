@@ -302,9 +302,23 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const meta = context[ssrImportMetaKey]
     meta.env = this.env
 
+    const globalNamespace = this.vm?.context || globalThis
+    // `import.meta` defines evaluated by the runtime defines script;
+    // `import.meta.env.*` entries are applied through `process.env` instead
+    const metaDefines = (globalNamespace as any).__vitest_worker__?.metaDefines
+    if (metaDefines) {
+      for (const key in metaDefines) {
+        const segments = key.split('.')
+        let target: any = meta
+        for (let i = 0; i < segments.length - 1; i++) {
+          target = target[segments[i]] || (target[segments[i]] = {})
+        }
+        target[segments[segments.length - 1]] = metaDefines[key]
+      }
+    }
+
     const testFilepath = this.options.getCurrentTestFilepath?.()
     if (testFilepath === module.file) {
-      const globalNamespace = this.vm?.context || globalThis
       Object.defineProperty(meta, 'vitest', {
         // @ts-expect-error injected untyped global
         get: () => globalNamespace.__vitest_index__,

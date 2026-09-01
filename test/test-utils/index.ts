@@ -187,7 +187,7 @@ export async function runVitest(
   ;(viteConfig as any).test = rest
 
   try {
-    ctx = await startVitest(cliFilters, {
+    ctx = await startVitest(cliFilters, removeUndefinedValues({
       root,
       config: configFile,
       standalone,
@@ -224,7 +224,7 @@ export async function runVitest(
         diagnostics: rest.experimental?.diagnostics ?? false,
         ...cliOptions?.experimental,
       },
-    }, {
+    }), {
       ...viteConfig,
       plugins: [
         ...(viteConfig.plugins ?? []),
@@ -319,8 +319,9 @@ export async function runVitest(
         ? buildErrorProjectTree(modules, options)
         : buildErrorTree(modules, options)
       const errors = ctx?.state.getUnhandledErrors()
-      if (errors && errors.length > 0) {
-        tree.__unhandled_errors__ = errors.map((e: any) => e.message)
+      const root = ctx?.config.root
+      if (errors && errors.length > 0 && root) {
+        tree.__unhandled_errors__ = errors.map((e: any) => replaceRoot(e.message, root))
       }
       return tree
     },
@@ -908,4 +909,13 @@ export function buildErrorProjectTree(testModules: TestModule[], options?: Build
   }
 
   return projectTree
+}
+
+function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
+  for (const key of Object.keys(obj)) {
+    if (obj[key] === undefined) {
+      delete obj[key]
+    }
+  }
+  return obj
 }

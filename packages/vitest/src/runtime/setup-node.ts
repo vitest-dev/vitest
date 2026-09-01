@@ -70,7 +70,7 @@ function resolveAsset(mod: NodeJS.Module, url: string) {
   mod.exports = url
 }
 
-export async function setupConsoleLogSpy(): Promise<void> {
+async function setupConsoleLogSpy(): Promise<void> {
   const { createCustomConsole } = await import('./console')
 
   globalThis.console = createCustomConsole()

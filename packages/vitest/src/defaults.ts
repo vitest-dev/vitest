@@ -58,7 +58,7 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
   autoAttachSubprocess: false,
 }
 
-export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
+const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
 }

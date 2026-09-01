@@ -122,6 +122,37 @@ vitest --pool=forks
 ```
 :::
 
+## Time Zone Does Not Change in Worker Threads
+
+Setting `process.env.TZ` in a setup file or in a test, or setting `TZ` via [`env`](/config/env), has no effect on `Date` in `pool: 'threads'` and `pool: 'vmThreads'`. Node.js applies `TZ` only when the main thread sets it. A worker thread sees the new value on `process.env`, but keeps the time zone of the main process.
+
+```ts
+process.env.TZ = 'Asia/Tokyo'
+new Date('2026-01-01T00:00:00Z').getHours() // 9 in forks, unchanged in threads
+```
+
+Set the time zone before workers start. Use the shell, the config file, or [`globalSetup`](/config/globalsetup); all of them run in the main process and work in every pool.
+
+::: code-group
+```bash [CLI]
+TZ=Asia/Tokyo vitest
+```
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+process.env.TZ = 'Asia/Tokyo'
+
+export default defineConfig({})
+```
+```ts [globalSetup.js]
+export default function () {
+  process.env.TZ = 'Asia/Tokyo'
+}
+```
+:::
+
+If tests need different time zones at runtime, use `pool: 'forks'` or `pool: 'vmForks'`, where each worker is a separate process, or pass the `timeZone` option to `Intl.DateTimeFormat` instead of changing `TZ`.
+
 ## Unhandled Promise Rejection
 
 This error happens when a Promise rejects but no `.catch()` handler or `await` is attached to it before the microtask queue flushes. This behavior comes from JavaScript itself and is not specific to Vitest. Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection).
@@ -213,6 +244,46 @@ export default defineConfig({
   ssr: {
     resolve: {
       noExternal: ['wrapper-package', 'broken-package'],
+    },
+  },
+})
+```
+
+## CommonJS source code is not fully supported
+
+Vitest is ESM-first. By default, source files run in Vite's [module runner](/config/experimental#experimental-vitemodulerunner), which provides CommonJS variables such as `require`, `module`, and `exports` for compatibility but does not reproduce Node.js CommonJS semantics completely.
+
+Calls to `require()` always use Node.js directly and leave the module runner. As a result:
+
+- Vite plugins, aliases, transforms, and module mocks do not apply to required files
+- requiring TypeScript or other files that Node.js cannot execute is not supported
+- importing and requiring the same file can evaluate it twice, which can break singleton state, object identity, or `instanceof` checks
+
+If your project uses CommonJS and doesn't need Vite transforms, set [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner) to `false` so the whole module graph is loaded by the native runtime:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      viteModuleRunner: false,
+    },
+  },
+})
+```
+
+If the application uses ESM source but imports a CommonJS package from the same monorepo, you can instead use [`server.deps.external`](/config/server#server-deps-external) to externalize the complete CommonJS package. This keeps its entry points and internal `require()` calls in the same native module cache. For example:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    server: {
+      deps: {
+        external: [/\/packages\/legacy-cjs\//],
+      },
     },
   },
 })
