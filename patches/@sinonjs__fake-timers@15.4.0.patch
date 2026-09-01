@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..9810f1610891fd090fc4046ed36ec879e3424781 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..a392c25b7c1ccf5ab4ccea6ba9694fc29625fb5f 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -1,19 +1,6 @@
@@ -40,24 +40,27 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..9810f1610891fd090fc4046ed36ec879
  
              if (clock.methods) {
                  const installedHrTime = "_hrtime";
-@@ -2750,6 +2739,13 @@ function withGlobal(_global) {
+@@ -2750,6 +2739,15 @@ function withGlobal(_global) {
          const clock = createClock(config.now, config.loopLimit);
          clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
  
++        // Vitest injects Node builtins because this file is bundled without require.
 +        const vitestRequired = config.nodeBuiltins && _global.__vitest_required__;
 +        const timersModule = vitestRequired?.timers;
 +        const timersPromisesModule = vitestRequired?.timersPromises;
 +        const syncBuiltinESMExports = vitestRequired?.syncBuiltinESMExports;
++        // Keep the modules on the clock so uninstall can restore their methods.
 +        clock.timersModule = timersModule;
 +        clock.timersPromisesModule = timersPromisesModule;
 +
          clock.abortListenerMap = new Map();
  
          if (hasToFake) {
-@@ -3091,6 +3087,20 @@ function withGlobal(_global) {
+@@ -3091,6 +3089,21 @@ function withGlobal(_global) {
              }
          }
  
++        // Keep ESM named exports in sync with the patched CommonJS modules.
 +        if (
 +            syncBuiltinESMExports &&
 +            (clock.timersModuleMethods?.length ||
