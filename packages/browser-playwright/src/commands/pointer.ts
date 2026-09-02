@@ -107,7 +107,7 @@ function groupKeyDefs(keyDefs: readonly KeyDefOutput[]): GroupedKeyDef[] {
       last.times += keyDef.repeat
     }
     else {
-      last = { times: 1, keyDef }
+      last = { times: keyDef.repeat, keyDef }
       output.push(last)
     }
   }
