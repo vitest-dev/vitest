@@ -457,8 +457,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       try {
         filePath = fileURLToPath(result.url)
       }
-      catch (error) {
-        throw new Error(`Failed to convert URL "${result.url}"`, { cause: error })
+      catch {
+        continue
       }
 
       if (this.isIncluded(filePath)) {

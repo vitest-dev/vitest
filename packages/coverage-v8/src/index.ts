@@ -60,7 +60,15 @@ const mod: CoverageProviderModule & {
     // Reduce amount of data sent over rpc by doing some early result filtering
     for (const entry of coverage.result as ScriptCoverageWithOffset[]) {
       if (filterResult(entry)) {
-        entry.startOffset = options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0
+        let filePath: string
+        try {
+          filePath = fileURLToPath(entry.url)
+        }
+        catch {
+          continue
+        }
+
+        entry.startOffset = options?.moduleExecutionInfo?.get(normalize(filePath))?.startOffset || 0
 
         result.push(entry)
       }
