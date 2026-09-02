@@ -1,4 +1,7 @@
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { join as patheJoin } from 'pathe'
 import { describe, expect, it } from 'vitest'
 
 import { createFile, editFile, resolvePath, runVitest } from '../../test-utils'
@@ -32,6 +35,30 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   })
+})
+
+// Fixes #11054 — picomatch `dot: false` (the default) will not let `**` cross a
+// path segment that starts with `.`, so `--changed` / `related` silently skip
+// forceRerunTriggers when the project lives under `.app/`, `~/.local/…`, etc.
+it.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTriggers match files under a dot-named directory', async () => {
+  const dotDir = patheJoin(tmpdir(), '.vitest-force-rerun-dot')
+  mkdirSync(dotDir, { recursive: true })
+  const pkg = patheJoin(dotDir, 'package.json')
+  writeFileSync(pkg, '{}\n')
+  try {
+    const { stdout, stderr } = await runVitest({
+      root: join(process.cwd(), 'fixtures/git-changed/related'),
+      include: ['related.test.ts'],
+      forceRerunTriggers: ['**/package.json'],
+      related: [pkg],
+    })
+    expect(stderr).toBe('')
+    expect(stdout).toContain('1 passed')
+    expect(stdout).toContain('related.test.ts')
+  }
+  finally {
+    rmSync(dotDir, { recursive: true, force: true })
+  }
 })
 
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {

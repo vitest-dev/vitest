@@ -135,7 +135,11 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    // Absolute paths may include a `.dot` directory segment; picomatch's
+    // default `dot: false` makes `**` skip those (see #11054).
+    const matcher = forceRerunTriggers.length
+      ? pm(forceRerunTriggers, { dot: true })
+      : undefined
     if (matcher && related.some(file => matcher(file))) {
       return specs
     }
