@@ -102,8 +102,8 @@ test('vi.fn() has overridable length', () => {
 describe('vi.fn() state', () => {
   test('vi.clearAllMocks() only clears mocks with dirty state', () => {
     const mocks = Array.from({ length: 100 }, () => vi.fn())
-    const dirtyMock = mocks.at(-1)!
-    dirtyMock()
+    mocks[49]()
+    mocks.at(-1)!()
 
     const cleared: number[] = []
     for (const [index, mock] of mocks.entries()) {
@@ -116,7 +116,7 @@ describe('vi.fn() state', () => {
 
     vi.clearAllMocks()
 
-    expect(cleared).toEqual([99])
+    expect(cleared).toEqual([49, 99])
   })
 
   // TODO: test when calls is not empty

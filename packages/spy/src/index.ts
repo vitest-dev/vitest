@@ -771,7 +771,7 @@ export function restoreAllMocks(): void {
 }
 
 export function clearAllMocks(): void {
-  for (const mock of [...DIRTY_MOCK_STATES]) {
+  for (const mock of DIRTY_MOCK_STATES) {
     mock.mockClear()
   }
 }
