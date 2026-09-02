@@ -2,7 +2,7 @@
 title: Vitest 5.0 is out!
 author:
   name: The Vitest Team
-date: 2026-09-04
+date: 2026-09-03
 sidebar: false
 head:
   - - meta
@@ -27,7 +27,7 @@ head:
 
 # Vitest 5.0 is out!
 
-_September 4th, 2026_
+_September 3d, 2026_
 
 ![Vitest 5 Announcement Cover Image](/og-vitest-5.jpg)
 
