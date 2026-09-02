@@ -50,8 +50,8 @@ patchedDependencies:
   cac@6.7.14: patches/cac@6.7.14.patch
   rrweb-snapshot@2.1.1: patches/rrweb-snapshot@2.1.1.patch
 catalog:
-  '@babel/core': ^7.29.7
-  '@babel/plugin-proposal-decorators': ^7.29.7
+  '@babel/core': ^8.0.1
+  '@babel/plugin-proposal-decorators': ^8.0.2
   '@iconify-json/carbon': ^1.2.26
   '@iconify-json/logos': ^1.2.13
   '@iconify/vue': ^5.0.1
