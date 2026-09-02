@@ -277,7 +277,7 @@ export interface UserEvent {
    *   { target, coords: { x: 10, y: 10 }, keys: '[/MouseLeft]' },
    * ])
    */
-  pointer(options: PointerInput): Promise<void>
+  pointer(options: UserEventPointerInput): Promise<void>
   /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
@@ -479,13 +479,13 @@ export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelD
  * @since 5.0.0
  * @experimental
  */
-export type PointerInput = PointerActionInput | readonly PointerActionInput[];
+export type UserEventPointerInput = PointerActionInput | readonly PointerActionInput[];
 /**
  * Array form of pointer input after single-entry inputs and strings actions are expanded.
  *
  * @internal
  */
-export type PointerInputNormalized = readonly PointerActionInputObject[]
+export type UserEventPointerInputNormalized = readonly PointerActionInputObject[]
 
 type PointerActionInput = string | PointerActionInputObject
 type PointerActionInputObject = PointerActionKeys | PointerMoveAction

@@ -1,12 +1,12 @@
 import type { SerializedLocator } from '@vitest/browser'
-import type { Locator, PointerInputNormalized } from 'vitest/browser'
+import type { Locator, UserEventPointerInputNormalized } from 'vitest/browser'
 import type { BrowserCommandContext } from 'vitest/node'
 import type { UserEventCommand } from './utils'
 import { parseKeyDef } from '@vitest/browser'
 import { click } from './click'
 import { hover } from './hover'
 
-type SerializedPointerInput = ElementToSerializedLocator<PointerInputNormalized[number]>
+type SerializedPointerInput = ElementToSerializedLocator<UserEventPointerInputNormalized[number]>
 interface PointerReturnData extends Pick<SerializedPointerInput, 'coords' | 'target'> {
   unreleased?: string[]
 }

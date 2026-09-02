@@ -9,10 +9,10 @@ import type {
   Locator,
   LocatorSelectors,
   MarkOptions,
-  PointerInput,
-  PointerInputNormalized,
   SerializedLocator,
   UserEvent,
+  UserEventPointerInput,
+  UserEventPointerInputNormalized,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
@@ -28,7 +28,7 @@ import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
 
-interface PointerState extends Pick<PointerInputNormalized[number], 'coords' | 'target'> {
+interface PointerState extends Pick<UserEventPointerInputNormalized[number], 'coords' | 'target'> {
   unreleased?: string[]
 }
 
@@ -87,11 +87,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     pointer(input) {
       return ensureAwaited<void>(async () => {
-        type SerializedInput = PointerInputNormalized[number] extends infer PIN
+        type SerializedInput = UserEventPointerInputNormalized[number] extends infer PIN
           ? { [K in keyof PIN]: K extends 'target' ? SerializedLocator : PIN[K] }
           : never
 
-        const inputArray = (Array.isArray(input) ? input : [input]) as Extract<PointerInput, readonly any[]>
+        const inputArray = (Array.isArray(input) ? input : [input]) as Extract<UserEventPointerInput, readonly any[]>
         const serializedInputArray = await Promise.all(inputArray.map(async (input) => {
           if (typeof input === 'object' && 'target' in input && input.target) {
             const target = (await serializeElement(input.target))

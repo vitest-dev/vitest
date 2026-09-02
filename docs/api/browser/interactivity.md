@@ -238,7 +238,7 @@ This method is intended for testing UI that explicitly listens to `wheel` events
 <Experimental />
 
 ```ts
-function pointer(options: PointerInput): Promise<void>
+function pointer(options: UserEventPointerInput): Promise<void>
 ```
 
 Performs one or more pointer actions. Pass a key string, an action object, or an array of strings and objects. Key strings use [user-event `pointer` syntax](https://testing-library.com/docs/user-event/pointer). For example, `[MouseLeft]` presses and releases the left mouse button, `[MouseLeft>]` keeps it pressed, and `[/MouseLeft]` releases it.
