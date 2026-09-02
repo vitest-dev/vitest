@@ -2,22 +2,9 @@ import type { SerializedLocator } from '@vitest/browser'
 import type { Locator, PointerInputNormalized } from 'vitest/browser'
 import type { BrowserCommandContext } from 'vitest/node'
 import type { UserEventCommand } from './utils'
-import { deepEqual } from 'node:assert/strict'
 import { parseKeyDef } from '@vitest/browser'
 import { click } from './click'
 import { hover } from './hover'
-
-// @todo remove this abomination
-function equals(a: object, b: object): boolean {
-  try {
-    deepEqual(a, b)
-
-    return true
-  }
-  catch {
-    return false
-  }
-}
 
 type SerializedPointerInput = ElementToSerializedLocator<PointerInputNormalized[number]>
 interface PointerReturnData extends Pick<SerializedPointerInput, 'coords' | 'target'> {
@@ -47,12 +34,8 @@ export const pointer: UserEventCommand<PointerEvent> = async (
     let target = option.target
     let coords = option.coords
 
-    if (target) {
+    if (target || coords) {
       lastTarget = target
-      lastCoords = undefined
-    }
-    else if (coords) {
-      lastTarget = undefined
       lastCoords = coords
     }
     else {
@@ -65,12 +48,13 @@ export const pointer: UserEventCommand<PointerEvent> = async (
       ? option.keys
       : null
     const parsedKeys = keys === null ? null : groupKeyDefs(parseKeyDef(keys))
-    const hasMouseButtonAction = parsedKeys?.some(
-      ({ keyDef: { keyDef: { code }, releasePrevious, releaseSelf } }) => code === 'MouseLeft' && !releasePrevious && releaseSelf,
+    const hasClickAction = parsedKeys?.some(
+      ({ keyDef: { keyDef: { code }, releasePrevious, releaseSelf } }) =>
+        code === 'MouseLeft' && !releasePrevious && releaseSelf,
     )
 
-    // mouse buttons have their own moving logic, no need to move twice
-    if (!hasMouseButtonAction) {
+    // click has its own moving logic, no need to move twice
+    if (!hasClickAction) {
       const x = coords?.x ?? 0
       const y = coords?.y ?? 0
 
@@ -111,7 +95,15 @@ function groupKeyDefs(keyDefs: readonly KeyDefOutput[]): GroupedKeyDef[] {
   let last: GroupedKeyDef | undefined
 
   for (const keyDef of keyDefs) {
-    if (last !== undefined && equals(last.keyDef, keyDef)) {
+    if (
+      last !== undefined
+      // for our purpose we can ignore the `repeat` property
+      && last.keyDef.releasePrevious === keyDef.releasePrevious
+      && last.keyDef.releaseSelf === keyDef.releaseSelf
+      && last.keyDef.keyDef.key === keyDef.keyDef.key
+      && last.keyDef.keyDef.code === keyDef.keyDef.code
+      && last.keyDef.keyDef.location === keyDef.keyDef.location
+    ) {
       last.times += keyDef.repeat
     }
     else {
@@ -138,7 +130,8 @@ async function keyDefHandler(
     const button = code.replace('Mouse', '').toLowerCase() as 'left' | 'right' | 'middle'
     const mouseOptions = {
       button,
-    }
+      clickCount: times,
+    } satisfies Parameters<typeof context['page']['mouse']['up']>[0]
 
     if (releasePrevious) {
       await context.page.mouse.up(mouseOptions)
@@ -146,7 +139,6 @@ async function keyDefHandler(
     else if (releaseSelf) {
       const clickOptions = {
         ...mouseOptions,
-        clickCount: times,
         position: pointerAction.coords
           ? {
               x: pointerAction.coords?.x ?? 0,
