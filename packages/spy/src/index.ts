@@ -24,8 +24,13 @@ const MOCK_RESTORE = new Set<() => void>()
 // Jest keeps the state in a separate WeakMap which is good for memory,
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
-const REGISTERED_MOCKS = new Set<Mock<Procedure | Constructable>>()
+const DIRTY_MOCK_STATES = new Set<Mock<Procedure | Constructable>>()
+const REGISTERED_MOCKS = new Set<WeakRef<Mock<Procedure | Constructable>>>()
+const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constructable>>>((ref) => {
+  REGISTERED_MOCKS.delete(ref)
+})
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
+const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
 
 export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
@@ -62,7 +67,10 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     config.mockName = mock.name || 'vi.fn()'
   }
   MOCK_CONFIGS.set(mock, config)
-  REGISTERED_MOCKS.add(mock)
+  MOCKS_BY_STATE.set(state, mock)
+  const ref = new WeakRef(mock)
+  REGISTERED_MOCKS.add(ref)
+  MOCK_FINALIZER.register(mock, ref)
 
   mock._isMockFunction = true
   mock.getMockImplementation = () => {
@@ -220,6 +228,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     state.invocationCallOrder = []
     state.results = []
     state.settledResults = []
+    DIRTY_MOCK_STATES.delete(mock)
     return mock
   }
 
@@ -487,9 +496,14 @@ function createMock(
   const pseudoOriginal = mockImplementation // init with vi.fn(Klass)
   const name = (mockName || original?.name || 'Mock') as string
   const noopImplementation = function () {}
+  const prototypeMock = prototypeState && MOCKS_BY_STATE.get(prototypeState)
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: (function (this: any, ...args: any[]) {
+      DIRTY_MOCK_STATES.add(namedObject[name])
+      if (prototypeMock) {
+        DIRTY_MOCK_STATES.add(prototypeMock)
+      }
       registerCalls(args, state, prototypeState)
       registerInvocationOrder(invocationCallCounter++, state, prototypeState)
 
@@ -757,11 +771,21 @@ export function restoreAllMocks(): void {
 }
 
 export function clearAllMocks(): void {
-  REGISTERED_MOCKS.forEach(mock => mock.mockClear())
+  for (const mock of DIRTY_MOCK_STATES) {
+    mock.mockClear()
+  }
 }
 
 export function resetAllMocks(): void {
-  REGISTERED_MOCKS.forEach(mock => mock.mockReset())
+  for (const ref of REGISTERED_MOCKS) {
+    const mock = ref.deref()
+    if (mock) {
+      mock.mockReset()
+    }
+    else {
+      REGISTERED_MOCKS.delete(ref)
+    }
+  }
 }
 
 function throwConstructorError(shorthand: string): never {
