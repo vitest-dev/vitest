@@ -252,7 +252,30 @@ export interface UserEvent {
    */
   wheel(element: Element | Locator, options: UserEventWheelOptions): Promise<void>
   /**
-   * @todo
+   * Performs one or more pointer actions.
+   *
+   * Pass a string to press or release a pointer button, an object to position the pointer and perform an action, or an array to perform actions in order.
+   * Key strings use the {@link https://testing-library.com/docs/user-event/pointer|`@testing-library/user-event` pointer syntax}.
+   *
+   * Unlike `@testing-library/user-event`, Vitest supports only `x` and `y` coordinates and does not support the `node` and `offset` selection fields.
+   *
+   * @param options - A pointer action or an ordered sequence of pointer actions.
+   * @returns A promise that resolves after all pointer actions finish.
+   *
+   * @since 5.0.0
+   * @experimental The Pointer API is experimental and not subject to semver.
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-pointer}
+   *
+   * @example
+   * // Click the left mouse button.
+   * await userEvent.pointer({ target: button, keys: '[MouseLeft]' })
+   *
+   * @example
+   * // Drag from `source` to a point inside `target`.
+   * await userEvent.pointer([
+   *   { target: source, keys: '[MouseLeft>]' },
+   *   { target, coords: { x: 10, y: 10 }, keys: '[/MouseLeft]' },
+   * ])
    */
   pointer(options: PointerInput): Promise<void>
   /**
@@ -445,19 +468,47 @@ export interface UserEventWheelDirectionOptions extends UserEventWheelBaseOption
  */
 export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelDirectionOptions
 
+/**
+ * Input accepted by {@link UserEvent.pointer}.
+ *
+ * - A string presses or releases a pointer button at the current position.
+ * - An object with `keys` positions the pointer and performs a button action.
+ * - An object without `keys` moves the pointer.
+ * - An array performs its actions in order.
+ *
+ * @since 5.0.0
+ * @experimental
+ */
 export type PointerInput = PointerActionInput | readonly PointerActionInput[];
+/**
+ * Array form of pointer input after single-entry inputs and strings actions are expanded.
+ *
+ * @internal
+ */
 export type PointerInputNormalized = readonly PointerActionInputObject[]
 
 type PointerActionInput = string | PointerActionInputObject
-type PointerActionInputObject = PointerActionKeys | PointerMoveAction /* @todo | PointerPressAction */
+type PointerActionInputObject = PointerActionKeys | PointerMoveAction
 
 interface PointerActionPosition {
+  /**
+   * Element to move the pointer to before performing the action.
+   *
+   * If `coords` is omitted, the browser provider chooses a position within the element.
+   * If both `target` and `coords` are omitted, the action uses the last known pointer position.
+   */
   target?: Element | Locator
+  /**
+   * Coordinates used to position the pointer.
+   *
+   * Without `target`, the values are viewport coordinates.
+   * With `target`, the values are pixel offsets from the target's top-left corner.
+   *
+   * This differs from `@testing-library/user-event`, where coordinates describe the final pointer position.
+   *
+   * Vitest also only supports `x` and `y`. Other coordinates, such as `clientX`, `offsetX`, `pageX`, and `screenX`, are not supported.
+   */
   coords?: PointerCoords
-  /* @todo properties not supported
-  node?: Node;
-  offset?: number;
-  */
 }
 
 interface PointerActionKeys extends PointerActionPosition {
@@ -469,15 +520,6 @@ interface PointerMoveAction extends PointerActionPosition {}
 interface PointerCoords {
   x?: number
   y?: number
-  // @todo supports only a subset
-  // clientX?: number;
-  // clientY?: number;
-  // offsetX?: number;
-  // offsetY?: number;
-  // pageX?: number;
-  // pageY?: number;
-  // screenX?: number;
-  // screenY?: number;
 }
 
 
