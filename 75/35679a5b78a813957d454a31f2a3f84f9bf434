@@ -1,0 +1,19 @@
+test/ui/playwright.config.ts
+  s_a7705656cce13c::t_a7f9eaa18589ab 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7535679a5b78a813957d454a31f2a3f84f9bf434",
+  "prompts": {},
+  "sessions": {
+    "s_a7705656cce13c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9aba0a10ffe6vxNAGwh9l5ah9",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
