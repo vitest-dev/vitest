@@ -3,7 +3,7 @@ import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
 import { inBrowser } from 'vitepress'
 import VitestTheme from '@voidzero-dev/vitepress-theme/src/vitest'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
-import { h } from 'vue'
+import { Fragment, h } from 'vue'
 import Version from '../components/Version.vue'
 import CRoot from '../components/CRoot.vue'
 import Deprecated from '../components/Deprecated.vue'
@@ -54,9 +54,10 @@ function getRedirectPath(url: URL) {
 export default {
   extends: VitestTheme as unknown as any,
   Layout() {
-    return h(VitestTheme.Layout, null, {
-      'layout-top': () => h(OldDocument),
-    })
+    return h(Fragment, null, [
+      h(OldDocument),
+      h(VitestTheme.Layout),
+    ])
   },
   enhanceApp({ app }) {
     app.component('Version', Version)
