@@ -317,10 +317,32 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
         resolvedElement.dispatchEvent(wheelEvent)
       }
     },
-    async pointer(options) {
-      // @todo
-      const _ = options
-      // await userEvent.pointer()
+    async pointer(input) {
+      type SerializedInput = UserEventPointerInputNormalized[number] extends infer PIN
+        ? { [K in keyof PIN]: K extends 'target' ? Element : PIN[K] }
+        : never
+
+      const inputArray = (Array.isArray(input) ? input : [input]) as Extract<UserEventPointerInput, readonly any[]>
+      const normalizedInput = inputArray.map((input) => {
+        if (typeof input === 'string') {
+          return { keys: input } satisfies SerializedInput
+        }
+
+        const target = input.target
+
+        if (target && isLocator(target)) {
+          return {
+            ...input,
+            get target() {
+              return target.element()
+            },
+          } satisfies SerializedInput
+        }
+
+        return input as SerializedInput
+      })
+
+      await userEvent.pointer(normalizedInput)
     },
   }
 
