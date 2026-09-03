@@ -5,8 +5,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      // Keep enough rows rendered for tests that access the explorer without filtering.
-      use: { ...devices['Desktop Chrome'], viewport: { width: 800, height: 1600 } },
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   use: {

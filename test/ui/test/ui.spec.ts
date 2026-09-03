@@ -18,6 +18,9 @@ const TEST_COUNTS = {
   },
 }
 
+// Keep enough main fixture rows rendered for tests that access the explorer without filtering.
+test.use({ viewport: { width: 800, height: 1600 } })
+
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let pageUrl: string
