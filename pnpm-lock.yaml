@@ -141,6 +141,9 @@ catalogs:
     tinyspy:
       specifier: ^4.0.4
       version: 4.0.4
+    tsx:
+      specifier: ^4.23.13
+      version: 4.23.13
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
@@ -324,6 +327,9 @@ importers:
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.17
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.13
       unocss:
         specifier: 'catalog:'
         version: 66.8.1(vite@8.0.11(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.48.0)(tsx@4.23.13)(yaml@2.8.2))

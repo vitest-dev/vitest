@@ -8,6 +8,8 @@ import CRoot from '../components/CRoot.vue'
 import Deprecated from '../components/Deprecated.vue'
 import Experimental from '../components/Experimental.vue'
 import Advanced from '../components/Advanced.vue'
+import ChangelogButton from '../components/ChangelogButton.vue'
+import CopyPrompt from '../components/CopyPrompt.vue'
 import CourseLink from '../components/CourseLink.vue'
 import './styles.css'
 import '@shikijs/vitepress-twoslash/style.css'
@@ -57,6 +59,8 @@ export default {
     app.component('Experimental', Experimental)
     app.component('Deprecated', Deprecated)
     app.component('Advanced', Advanced)
+    app.component('ChangelogButton', ChangelogButton)
+    app.component('CopyPrompt', CopyPrompt)
     app.component('CourseLink', CourseLink)
     app.use(TwoslashFloatingVue)
     enhanceAppWithTabs(app)

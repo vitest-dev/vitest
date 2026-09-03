@@ -97,6 +97,7 @@ catalog:
   tinyhighlight: ^0.3.2
   tinyrainbow: ^3.1.1
   tinyspy: ^4.0.4
+  tsx: ^4.23.13
   typescript: ^5.9.3
   unocss: ^66.8.1
   vite: 8.0.11
