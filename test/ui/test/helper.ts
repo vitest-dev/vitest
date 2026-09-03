@@ -66,6 +66,7 @@ export async function assertTestCounts(page: Page, { pass, fail, skip = 0 }: { p
 }
 
 export function getExplorerItem(page: Page, name: string) {
+  // The virtual scroller keeps recycled rows in the DOM with visibility hidden.
   return page.locator('[data-testid="explorer-item"]:visible').and(page.getByLabel(name, { exact: true }))
 }
 
