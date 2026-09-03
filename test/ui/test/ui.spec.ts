@@ -607,6 +607,16 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: TEST_COUNTS.files.pass, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 
+  // only include individual tests matching the search
+  await page.getByPlaceholder('Search...').fill('sample.test.ts')
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'add')).toBeVisible()
+  await onlyTestsFilter.check()
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
+  await expect(getExplorerItem(page, 'add')).toHaveCount(0)
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: 0 })
+  await onlyTestsFilter.uncheck()
+
   // match nothing
   await page.getByPlaceholder('Search...').fill('nothing')
   await expect(page.getByTestId('results-panel').getByText('No matched test')).toBeVisible()
