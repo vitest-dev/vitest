@@ -290,7 +290,7 @@ function astParseFile(filepath: string, code: string) {
         start,
         end,
         name: message,
-        type: isTestFunctionName(name) ? 'test' : 'suite',
+        type: properties.includes('describe') || properties.includes('suite') || !isTestFunctionName(name) ? 'suite' : 'test',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
