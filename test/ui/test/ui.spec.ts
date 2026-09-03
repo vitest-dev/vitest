@@ -593,14 +593,14 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   const passFilter = page.getByRole('checkbox', { name: 'Pass', exact: true })
   const onlyTestsFilter = page.getByRole('checkbox', { name: 'Only Tests', exact: true })
 
-  await onlyTestsFilter.check({ force: true })
+  await onlyTestsFilter.check()
   await expectExplorerSummary(page, {
     fail: TEST_COUNTS.fail,
     running: 0,
     pass: TEST_COUNTS.pass,
     skip: TEST_COUNTS.skip,
   })
-  await onlyTestsFilter.uncheck({ force: true })
+  await onlyTestsFilter.uncheck()
 
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
@@ -619,15 +619,15 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 
   // match only failing files when fail filter applied
   await page.getByPlaceholder('Search...').fill('')
-  await failFilter.check({ force: true })
+  await failFilter.check()
   await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: 0, skip: 0 })
   await expect(page.getByTestId('results-panel').getByText('error.test.ts', { exact: true })).toBeVisible()
   await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
 
   // classify every visible file by its file status
   await page.getByPlaceholder('Search...').fill('successful child')
-  await failFilter.uncheck({ force: true })
-  await passFilter.check({ force: true })
+  await failFilter.uncheck()
+  await passFilter.check()
   await expectExplorerSummary(page, { fail: 1, running: 0, pass: 0, skip: 0 })
   await expect(page.getByTestId('results-panel').getByText('suite-report.test.ts', { exact: true })).toBeVisible()
 
@@ -638,7 +638,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
 
   // html entities in task names are escaped
-  await passFilter.uncheck({ force: true })
+  await passFilter.uncheck()
   await page.getByPlaceholder('Search...').fill('<MyComponent />')
   // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
   await page.getByTestId('collapse-all').click()
