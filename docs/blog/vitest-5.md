@@ -304,7 +304,7 @@ Custom matchers also get access to the underlying Chai [`assertion`](/guide/exte
 
 ## Reporters Updates
 
-Reporters and other integrations now write their output into a single `.vitest` directory at the project root: the `html`, `json`, and `junit` reporters, failure screenshots, and new traces all use it by default. This reduces the number of entries you need to add to `.gitignore` to one.
+Reporters and other integrations now write their output into a single `.vitest` directory at the project root: the `html`, `json`, and `junit` reporters, `attachmentsDir`, failure screenshots, and new traces all use it by default. This reduces the number of entries you need to add to `.gitignore` to one.
 
 Third-party reporters can use the same convention through the new [`vitest.createReport(scope)`](/api/advanced/vitest#createreport) API, which returns a `Report` limited to its own `.vitest/<scope>` directory.
 
