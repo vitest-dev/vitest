@@ -30,7 +30,7 @@ The supported version ranges are automatically determined by:
 - **Previous Major** (only for its latest minor) and **Previous Minor** receives important fixes and security patches.
 - All versions before these are no longer supported.
 
-We recommend updating Vitest regularly. Check out the [Migration Guides](/guide/migration) when you update to each Major. We test new Vitest versions before releasing them through the [vitest-ecosystem-ci project](https://github.com/vitest-dev/vitest-ecosystem-ci). Most projects using Vitest should be able to quickly offer support or migrate to new versions as soon as they are released.
+We recommend updating Vitest regularly. Check out the [Migration Guides](/guide/migration/) when you update to each Major. We test new Vitest versions before releasing them through the [vitest-ecosystem-ci project](https://github.com/vitest-dev/vitest-ecosystem-ci). Most projects using Vitest should be able to quickly offer support or migrate to new versions as soon as they are released.
 
 ## Semantic Versioning Edge Cases
 
@@ -50,7 +50,7 @@ Pre-releases allow early adopters and maintainers from the Ecosystem to do integ
 
 ## Deprecations
 
-We periodically deprecate features that have been superseded by better alternatives in Minor releases. Deprecated features will continue to work with a type or logged warning. They will be removed in the next major release after entering deprecated status. The [Migration Guide](/guide/migration.html) for each major will list these removals and document an upgrade path for them.
+We periodically deprecate features that have been superseded by better alternatives in Minor releases. Deprecated features will continue to work with a type or logged warning. They will be removed in the next major release after entering deprecated status. The [Migration Guide](/guide/migration/) for each major will list these removals and document an upgrade path for them.
 
 ## Experimental Features
 
