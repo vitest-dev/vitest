@@ -450,18 +450,12 @@ export function collectTestsTotalData(
       skipped: 0,
       running: 0,
     } satisfies FilteredTests
-    // will match when the filter entry is active or filter is inactive (skipped excluded)
-    // for example, we should update all when the filter is empty
-    // but shouldn't update failed if we're filtering by success
-    const empty = !filter.success && !filter.failed
-    const applyFailed = filter.failed || empty
-    const applySuccess = filter.success || empty
     for (const f of tests) {
       if (f.result?.state === 'fail') {
-        data.failed += applyFailed ? 1 : 0
+        data.failed++
       }
       else if (f.result?.state === 'pass') {
-        data.success += applySuccess ? 1 : 0
+        data.success++
       }
       else if (f.mode === 'skip' || f.mode === 'todo') {
         data.skipped++

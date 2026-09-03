@@ -617,10 +617,16 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expect(page.getByTestId('results-panel').getByText('error.test.ts', { exact: true })).toBeVisible()
   await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
 
-  // match only pass files when fail filter applied
-  await page.getByPlaceholder('Search...').fill('console')
+  // classify every visible file by its file status
+  await page.getByPlaceholder('Search...').fill('successful child')
   await page.getByText(/^Fail$/, { exact: true }).click()
   await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+  await expect(page.getByText('FAIL (1)')).toBeVisible()
+  await expect(page.getByText('PASS (0)')).toBeVisible()
+  await expect(page.getByTestId('results-panel').getByText('suite-report.test.ts', { exact: true })).toBeVisible()
+
+  // match only pass files when pass filter applied
+  await page.getByPlaceholder('Search...').fill('console')
   await page.getByText('PASS (1)').click()
   await expect(page.getByTestId('results-panel').getByText('console.test.ts', { exact: true })).toBeVisible()
   await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
