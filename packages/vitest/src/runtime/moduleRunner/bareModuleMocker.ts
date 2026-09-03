@@ -152,35 +152,38 @@ export class BareModuleMocker implements TestModuleMocker {
       return
     }
 
+    const pendingIds = BareModuleMocker.pendingIds
+    BareModuleMocker.pendingIds = []
+
     const resolveMock = async (mock: PendingSuiteMock) => {
-      const { id, url, external } = await this.resolveId(
-        mock.id,
-        mock.importer,
-      )
-      if (mock.action === 'unmock') {
-        this.unmockPath(id)
-      }
-      if (mock.action === 'mock') {
-        this.mockPath(
-          mock.id,
-          id,
-          url,
-          external,
-          mock.type,
-          mock.factory,
-        )
-      }
+      const resolved = await this.resolveId(mock.id, mock.importer)
+      return { mock, ...resolved }
     }
 
     // group consecutive mocks of the same action type together,
     // resolve in parallel inside each group, but run groups sequentially
     // to preserve mock/unmock ordering
-    const groups = groupByConsecutiveAction(BareModuleMocker.pendingIds)
+    const groups = groupByConsecutiveAction(pendingIds)
     for (const group of groups) {
-      await Promise.all(group.map(resolveMock))
+      // apply in queue order: two mocks of the same path can resolve out of
+      // order, and the last queued one must win
+      const resolvedGroup = await Promise.all(group.map(resolveMock))
+      for (const { mock, id, url, external } of resolvedGroup) {
+        if (mock.action === 'unmock') {
+          this.unmockPath(id)
+        }
+        if (mock.action === 'mock') {
+          this.mockPath(
+            mock.id,
+            id,
+            url,
+            external,
+            mock.type,
+            mock.factory,
+          )
+        }
+      }
     }
-
-    BareModuleMocker.pendingIds = []
   }
 
   // public method to avoid circular dependency
