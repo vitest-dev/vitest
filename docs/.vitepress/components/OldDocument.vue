@@ -9,21 +9,18 @@
 </template>
 
 <style>
-.docs-layout,
-.marketing-layout {
+:root {
   --vp-old-document-height: 96px;
 }
 
 @media (min-width: 455px) {
-  .docs-layout,
-  .marketing-layout {
+  :root {
     --vp-old-document-height: 64px;
   }
 }
 
 @media (min-width: 960px) {
-  .docs-layout,
-  .marketing-layout {
+  :root {
     --vp-old-document-height: 32px;
   }
 }
@@ -62,12 +59,12 @@
 }
 
 @media (min-width: 1024px) {
-  .docs-layout:has(.old-document) {
+  :root:has(.docs-layout) {
     --vp-banner-height: var(--vp-old-document-height);
     --vp-layout-top-height: var(--vp-old-document-height);
   }
 
-  .docs-layout .old-document {
+  :root:has(.docs-layout) .old-document {
     position: fixed;
     top: 0;
   }
