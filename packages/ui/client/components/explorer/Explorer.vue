@@ -240,8 +240,7 @@ const {
         <template v-if="initialized" #summary>
           <div
             data-testid="explorer-summary"
-            items-center
-            gap-x-1
+            class="items-center gap-x-1"
             :class="isReport
               ? 'flex'
               : 'grid grid-cols-[auto_min-content_auto] grid-rows-[min-content_min-content]'"
