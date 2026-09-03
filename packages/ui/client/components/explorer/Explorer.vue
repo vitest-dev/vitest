@@ -251,7 +251,7 @@ const {
             </span>
             <span>/</span>
             <span class="text-purple-700 dark:text-purple-400">
-              SKIP ({{ filter.onlyTests ? testsTotal.skipped : '--' }})
+              SKIP ({{ testsTotal.skipped }})
             </span>
           </div>
         </template>
