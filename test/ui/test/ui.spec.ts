@@ -10,10 +10,11 @@ import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getE
 const TEST_COUNTS = {
   pass: 21,
   fail: 5,
-  skip: 1,
+  skip: 2,
   files: {
     pass: 9,
     fail: 3,
+    skip: 1,
   },
 }
 
@@ -155,7 +156,7 @@ test.describe('ui', () => {
     await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
 
-    await page.setViewportSize({ width: 1000, height: 1600 })
+    await page.setViewportSize({ width: 1000, height: 2000 })
 
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
   })
@@ -595,8 +596,13 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
-  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: TEST_COUNTS.files.pass, skip: 0 })
+  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: TEST_COUNTS.files.pass, skip: TEST_COUNTS.files.skip })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+
+  // count skipped files when filtered
+  await page.getByPlaceholder('Search...').fill('skipped.test.ts')
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: TEST_COUNTS.files.skip })
+  await expect(getExplorerItem(page, 'skipped.test.ts')).toBeVisible()
 
   // "Only Tests" mode text search excludes test file name matches
   await page.getByPlaceholder('Search...').fill('sample.test.ts')
