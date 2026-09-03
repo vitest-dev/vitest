@@ -5,7 +5,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      // Keep all fixture rows rendered; increase this when adding explorer fixtures.
+      // Keep enough rows rendered for tests that access the explorer without filtering.
       use: { ...devices['Desktop Chrome'], viewport: { width: 800, height: 1300 } },
     },
   ],
