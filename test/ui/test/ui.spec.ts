@@ -598,7 +598,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: TEST_COUNTS.files.pass, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 
-  // only include individual tests matching the search
+  // "Only Tests" mode text search excludes test file name matches
   await page.getByPlaceholder('Search...').fill('sample.test.ts')
   await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
