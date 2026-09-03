@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createFile, editFile, resolvePath, runVitest } from '../../test-utils'
 
-const fileName = 'fixtures/git-changed/related/rerun.temp'
+const fileName = 'fixtures/git-changed/related/.project/rerun.temp/trigger'
 
 // NOTE: if there are any changes in fixtures/git-changed,
 // most tests will probably fail

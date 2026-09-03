@@ -87,7 +87,7 @@ test('answer is 42', () => {
 test('editing force rerun trigger reruns all tests', async () => {
   const { vitest, fs } = await testUtils.runInlineTests({
     ...baseFixture,
-    'force-watch/trigger.js': 'export const trigger = false\n',
+    '.project/force-watch/trigger.js': 'export const trigger = false\n',
     'vitest.config.ts': /* ts */ `
 export default {
   test: {
@@ -100,9 +100,9 @@ export default {
   await vitest.waitForStdout('Waiting for file changes...')
   vitest.resetOutput()
 
-  fs.editFile('force-watch/trigger.js', modifyContent)
+  fs.editFile('.project/force-watch/trigger.js', modifyContent)
 
-  await vitest.waitForStdout('RERUN  ../force-watch/trigger.js')
+  await vitest.waitForStdout('RERUN  ../.project/force-watch/trigger.js')
   await vitest.waitForStdout('example.test.ts')
   await vitest.waitForStdout('math.test.ts')
   await vitest.waitForStdout('2 passed')
