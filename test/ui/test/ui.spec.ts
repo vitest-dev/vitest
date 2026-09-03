@@ -635,8 +635,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expect(getExplorerItem(page, 'error.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
-  // `suite-report.test.ts` is a failed file but matches `PASS` filter
-  // because it contains a passing test
+  // match a failed file through its passing child
   await page.getByPlaceholder('Search...').fill('successful child')
   await failFilter.click()
   await passFilter.click()
