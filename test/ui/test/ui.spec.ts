@@ -589,9 +589,9 @@ async function testDashboardFilter(page: Page) {
 }
 
 async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
-  const failFilter = page.getByRole('checkbox', { name: 'Fail', exact: true })
-  const passFilter = page.getByRole('checkbox', { name: 'Pass', exact: true })
-  const onlyTestsFilter = page.getByRole('checkbox', { name: 'Only Tests', exact: true })
+  const failFilter = page.getByRole('checkbox', { name: 'Fail', exact: true }).locator('..')
+  const passFilter = page.getByRole('checkbox', { name: 'Pass', exact: true }).locator('..')
+  const onlyTestsFilter = page.getByRole('checkbox', { name: 'Only Tests', exact: true }).locator('..')
 
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
@@ -603,7 +603,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'add')).toBeVisible()
-  await onlyTestsFilter.check()
+  await onlyTestsFilter.click()
   await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
   await expect(getExplorerItem(page, 'add')).toHaveCount(0)
@@ -616,7 +616,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
     pass: TEST_COUNTS.pass,
     skip: TEST_COUNTS.skip,
   })
-  await onlyTestsFilter.uncheck()
+  await onlyTestsFilter.click()
 
   // match nothing
   await page.getByPlaceholder('Search...').fill('nothing')
@@ -630,15 +630,15 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 
   // match only failing files when fail filter applied
   await page.getByPlaceholder('Search...').fill('')
-  await failFilter.check()
+  await failFilter.click()
   await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: 0, skip: 0 })
   await expect(getExplorerItem(page, 'error.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
   // classify every visible file by its file status
   await page.getByPlaceholder('Search...').fill('successful child')
-  await failFilter.uncheck()
-  await passFilter.check()
+  await failFilter.click()
+  await passFilter.click()
   await expectExplorerSummary(page, { fail: 1, running: 0, pass: 0, skip: 0 })
   await expect(getExplorerItem(page, 'suite-report.test.ts')).toBeVisible()
 
@@ -649,7 +649,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
   // html entities in task names are escaped
-  await passFilter.uncheck()
+  await passFilter.click()
   await page.getByPlaceholder('Search...').fill('<MyComponent />')
   // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
   await page.getByTestId('collapse-all').click()

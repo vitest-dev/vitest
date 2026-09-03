@@ -4,32 +4,37 @@ const { disabled = false } = defineProps<{
   disabled?: boolean
 }>()
 const modelValue = defineModel<boolean | null>()
+
+function toggle() {
+  if (disabled) {
+    return
+  }
+
+  modelValue.value = !modelValue.value
+}
 </script>
 
 <template>
   <label
-    class="font-light text-sm checkbox w-fit flex items-center py-1 gap-y-1 mb-1px overflow-hidden relative"
+    class="font-light text-sm checkbox w-fit flex items-center py-1 gap-y-1 mb-1px overflow-hidden"
     :class="disabled ? 'cursor-not-allowed op50' : 'cursor-pointer'"
+    v-bind="$attrs"
+    @click.prevent="toggle"
   >
-    <input
-      v-model="modelValue"
-      type="checkbox"
-      :disabled="disabled"
-      absolute
-      inset-y-0
-      start-0
-      w-5
-      op0
-    >
     <span
       :class="[
         modelValue ? 'i-carbon:checkbox-checked-filled' : 'i-carbon:checkbox',
       ]"
       text-lg
       flex-shrink-0
-      pointer-events-none
       aria-hidden="true"
     />
+    <input
+      v-model="modelValue"
+      type="checkbox"
+      :disabled="disabled"
+      sr-only
+    >
     <span flex-1 ms-2 select-none whitespace-nowrap truncate>{{ label }}</span>
   </label>
 </template>
