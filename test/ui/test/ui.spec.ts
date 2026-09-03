@@ -156,6 +156,7 @@ test.describe('ui', () => {
     await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
 
+    // Keep the last fixture row in view; increase this when adding explorer fixtures.
     await page.setViewportSize({ width: 1000, height: 2000 })
 
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
