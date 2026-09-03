@@ -464,7 +464,7 @@ export function collectTestsTotalData(
         data.success += applySuccess ? 1 : 0
       }
       else if (f.mode === 'skip' || f.mode === 'todo') {
-        // just ignore
+        data.skipped++
       }
       else {
         data.running++

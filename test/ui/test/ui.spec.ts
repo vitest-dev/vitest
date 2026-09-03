@@ -10,10 +10,11 @@ import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getE
 const TEST_COUNTS = {
   pass: 21,
   fail: 5,
-  skip: 1,
+  skip: 2,
   files: {
     pass: 9,
     fail: 3,
+    skip: 1,
   },
 }
 
@@ -592,7 +593,13 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
   await page.getByText(`PASS (${TEST_COUNTS.files.pass})`).click()
+  await expect(page.getByText(`SKIP (${TEST_COUNTS.files.skip})`)).toBeVisible()
   await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
+
+  // count skipped files when filtered
+  await page.getByPlaceholder('Search...').fill('skipped.test.ts')
+  await expect(page.getByText(`SKIP (${TEST_COUNTS.files.skip})`)).toBeVisible()
+  await expect(page.getByTestId('results-panel').getByText('skipped.test.ts', { exact: true })).toBeVisible()
 
   // match nothing
   await page.getByPlaceholder('Search...').fill('nothing')
