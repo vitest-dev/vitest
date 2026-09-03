@@ -635,10 +635,15 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await expect(getExplorerItem(page, 'error.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
-  // match only pass files when pass filter applied
-  await page.getByPlaceholder('Search...').fill('console')
+  // match a failed file through its passing child
+  await page.getByPlaceholder('Search...').fill('successful child')
   await failFilter.click()
   await passFilter.click()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: '--' })
+  await expect(getExplorerItem(page, 'suite-report.test.ts')).toBeVisible()
+
+  // match only pass files when pass filter applied
+  await page.getByPlaceholder('Search...').fill('console')
   await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
   await expect(getExplorerItem(page, 'console.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
