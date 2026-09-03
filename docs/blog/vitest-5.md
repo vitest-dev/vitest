@@ -84,6 +84,8 @@ Some of the changes behind these numbers:
 - **Smaller install.** Vitest now bundles its own dependencies, which reduces the number of packages in `node_modules` and the time spent resolving them.
 - **Faster coverage.** The `v8` provider merges reports with bounded memory and precompiled globs, both providers send less data over RPC, and `istanbul` moved to the maintained [`@vitest/istanbuljs`](https://github.com/vitest-dev/istanbuljs) packages. The [coverage tables](https://github.com/vitest-dev/benchmarks#coverage-vitest-4110-vs-500) in the benchmarks repository list every app.
 
+Vitest 5 also introduces [`vitest doctor`](/guide/cli#vitest-doctor), a new command that runs your test suite with alternative configurations and recommends options that could make it faster.
+
 The [duration breakdown](/guide/profiling-test-performance) in the reporter output now shows percentages, so it's easier to see where the time goes:
 
 ```
