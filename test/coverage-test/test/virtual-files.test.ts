@@ -6,6 +6,7 @@ test('virtual files should be excluded', async () => {
     include: ['fixtures/test/virtual-files-fixture.test.ts'],
     coverage: { reporter: 'json' },
     config: 'fixtures/configs/vitest.config.virtual-files.ts',
+    injectCjsGlobals: false,
   })
 
   expect(stdout).toContain('virtual-files-fixture.test.ts')
