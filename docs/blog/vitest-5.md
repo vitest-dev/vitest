@@ -39,7 +39,7 @@ Quick links:
 
 - [Docs](/)
 - Translations: [简体中文](https://cn.vitest.dev/)
-- [Migration Guide](/guide/migration#vitest-5)
+- [Migration Guide](/guide/migration/)
 - [GitHub Changelog](https://github.com/vitest-dev/vitest/releases/tag/v5.0.0)
 
 If you've not used Vitest before, we suggest reading the [Getting Started](/guide/) and [Features](/guide/features) guides first.
@@ -227,7 +227,7 @@ export default defineConfig({
 })
 ```
 
-Locators are also [strict by default](/guide/migration#locators-are-strict-by-default): `locators.exact` is enabled, so `getByText('Item')` no longer matches `Item 1` by accident.
+Locators are also [strict by default](/guide/migration/#locators-are-strict-by-default): `locators.exact` is enabled, so `getByText('Item')` no longer matches `Item 1` by accident.
 
 ## Mocking `Temporal`
 
@@ -334,7 +334,7 @@ export default defineConfig({
 
 ## Breaking Changes
 
-Vitest 5 requires Vite >= 6.4.0 and Node.js >= 22.12.0. Vitest 5 has several breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](/guide/migration#vitest-5) before upgrading.
+Vitest 5 requires Vite >= 6.4.0 and Node.js >= 22.12.0. Vitest 5 has several breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](/guide/migration/) before upgrading.
 
 The complete list of changes is at the [Vitest 5 Changelog](https://github.com/vitest-dev/vitest/releases/tag/v5.0.0).
 
