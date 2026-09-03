@@ -10,7 +10,6 @@ const modelValue = defineModel<boolean | null>()
   <label
     class="font-light text-sm checkbox w-fit flex items-center py-1 gap-y-1 mb-1px overflow-hidden relative"
     :class="disabled ? 'cursor-not-allowed op50' : 'cursor-pointer'"
-    v-bind="$attrs"
   >
     <input
       v-model="modelValue"
