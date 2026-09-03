@@ -370,18 +370,17 @@ test('keyboard-fired modifiers apply to pointer events', async ({ expect }) => {
 
   const target = page.getByRole('button')
 
-
   await userEvent.keyboard('[ShiftLeft>]')
-  await userEvent.pointer({ keys: '[MouseLeft]', target })
-  await userEvent.keyboard('[/ShiftLeft][AltLeft>]')
+  await userEvent.pointer({ keys: '[MouseLeft][/ShiftLeft]', target })
+  await userEvent.keyboard('[AltLeft>]')
   await userEvent.pointer({ keys: '[MouseLeft]', target })
   await userEvent.keyboard('[/AltLeft][MetaLeft>]')
   await userEvent.pointer({ keys: '[MouseLeft]', target })
   await userEvent.keyboard('[/MetaLeft]')
 
-  expect(click).toHaveBeenNthCalledWith(1, expect.objectContaining({ shiftKey: true }))
-  expect(click).toHaveBeenNthCalledWith(2, expect.objectContaining({ altKey: true }))
-  expect(click).toHaveBeenNthCalledWith(3, expect.objectContaining({ metaKey: true }))
+  expect(click).toHaveBeenNthCalledWith(1, expect.objectContaining({ shiftKey: true, altKey: false, metaKey: false }))
+  expect(click).toHaveBeenNthCalledWith(2, expect.objectContaining({ altKey: true, shiftKey: false, metaKey: false }))
+  expect(click).toHaveBeenNthCalledWith(3, expect.objectContaining({ metaKey: true, shiftKey: false, altKey: false }))
 })
 
 describe('keeps using previous target or coordinates', () => {
