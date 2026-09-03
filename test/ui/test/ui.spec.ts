@@ -10,12 +10,16 @@ import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getE
 const TEST_COUNTS = {
   pass: 21,
   fail: 5,
-  skip: 1,
+  skip: 2,
   files: {
     pass: 9,
     fail: 3,
+    skip: 1,
   },
 }
+
+// Keep enough main fixture rows rendered for tests that access the explorer without filtering.
+test.use({ viewport: { width: 800, height: 1600 } })
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -155,7 +159,8 @@ test.describe('ui', () => {
     await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
 
-    await page.setViewportSize({ width: 1000, height: 1600 })
+    // Keep the last fixture row in view; increase this when adding explorer fixtures.
+    await page.setViewportSize({ width: 1000, height: 2000 })
 
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
   })
@@ -501,31 +506,31 @@ async function testError(page: Page) {
 async function testSuiteReport(page: Page) {
   const report = page.getByTestId('report')
 
-  await getExplorerItem(page, 'suite-report.test.ts').click()
+  await openExplorerItem(page, 'suite-report.test.ts')
   await expect(report).toContainText('before-all-marker')
   await expect(report).toContainText('direct-child-marker')
   await expect(report).toContainText('nested-child-marker')
 
-  const successfulSuite = getExplorerItem(page, 'successful suite')
-  await successfulSuite.click()
+  await openExplorerItem(page, 'successful suite')
   await expect(page.getByTestId('report')).toContainText('All tests passed in this suite')
 
-  await getExplorerItem(page, 'hook failure suite').click()
+  await openExplorerItem(page, 'hook failure suite')
   await expect(report).toContainText('before-all-marker')
   await expect(report).not.toContainText('direct-child-marker')
 
-  await getExplorerItem(page, 'child failure suite').click()
+  await openExplorerItem(page, 'child failure suite')
   await expect(report).toContainText('failing child')
   await expect(report).toContainText('direct-child-marker')
   await expect(report).not.toContainText('before-all-marker')
 
-  await getExplorerItem(page, 'nested failure suite').click()
+  await openExplorerItem(page, 'nested failure suite')
   await expect(report).toContainText('failing nested suite')
   await expect(report).toContainText('failing nested child')
   await expect(report).toContainText('nested-child-marker')
   await expect(report).not.toContainText('direct-child-marker')
 
   // test that the suite can be collapsed and expanded
+  const successfulSuite = getExplorerItem(page, 'successful suite')
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
   await successfulSuite.getByRole('button', { name: 'Collapse successful suite', exact: true }).click()
   await expect(getExplorerItem(page, 'successful child')).not.toBeVisible()
@@ -537,7 +542,7 @@ async function testTagsFilter(page: Page) {
   await page.getByPlaceholder('Search...').fill('tag:db')
 
   // only one test with the tag "db"
-  await expect(page.getByText('PASS (1)')).toBeVisible()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
   await expect(getExplorerItem(page, 'has tags')).toBeVisible()
 
   await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
@@ -589,48 +594,83 @@ async function testDashboardFilter(page: Page) {
 }
 
 async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
+  const failFilter = page.getByRole('checkbox', { name: 'Fail', exact: true }).locator('..')
+  const passFilter = page.getByRole('checkbox', { name: 'Pass', exact: true }).locator('..')
+  const onlyTestsFilter = page.getByRole('checkbox', { name: 'Only Tests', exact: true }).locator('..')
+
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
-  await page.getByText(`PASS (${TEST_COUNTS.files.pass})`).click()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
+  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: TEST_COUNTS.files.pass, skip: '--' })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+
+  // count skipped files when filtered
+  await page.getByPlaceholder('Search...').fill('skipped.test.ts')
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: '--' })
+  await expect(getExplorerItem(page, 'skipped.test.ts')).toBeVisible()
+
+  // "Only Tests" mode text search excludes test file name matches
+  await page.getByPlaceholder('Search...').fill('sample.test.ts')
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'add')).toBeVisible()
+  await onlyTestsFilter.click()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: 0 })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
+  await expect(getExplorerItem(page, 'add')).toHaveCount(0)
+
+  // match all individual tests when no search
+  await page.getByPlaceholder('Search...').fill('')
+  await expectExplorerSummary(page, {
+    fail: TEST_COUNTS.fail,
+    running: 0,
+    pass: TEST_COUNTS.pass,
+    skip: TEST_COUNTS.skip,
+  })
+  await onlyTestsFilter.click()
 
   // match nothing
   await page.getByPlaceholder('Search...').fill('nothing')
-  await page.getByText('No matched test').click()
+  await expect(page.getByTestId('results-panel').getByText('No matched test')).toBeVisible()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: '--' })
 
   // searching "add" will match "sample.test.ts" since it includes a test case named "add"
   await page.getByPlaceholder('Search...').fill('add')
-  await page.getByText('PASS (1)').click()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 
   // match only failing files when fail filter applied
   await page.getByPlaceholder('Search...').fill('')
-  await page.getByText(/^Fail$/, { exact: true }).click()
-  await page.getByText(`FAIL (${TEST_COUNTS.files.fail})`).click()
-  await expect(page.getByTestId('results-panel').getByText('error.test.ts', { exact: true })).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
+  await failFilter.click()
+  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: 0, skip: '--' })
+  await expect(getExplorerItem(page, 'error.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
-  // match only pass files when fail filter applied
+  // match a failed file through its passing child
+  await page.getByPlaceholder('Search...').fill('successful child')
+  await failFilter.click()
+  await passFilter.click()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: '--' })
+  await expect(getExplorerItem(page, 'suite-report.test.ts')).toBeVisible()
+
+  // match only pass files when pass filter applied
   await page.getByPlaceholder('Search...').fill('console')
-  await page.getByText(/^Fail$/, { exact: true }).click()
-  await page.locator('span').filter({ hasText: /^Pass$/ }).click()
-  await page.getByText('PASS (1)').click()
-  await expect(page.getByTestId('results-panel').getByText('console.test.ts', { exact: true })).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
+  await expect(getExplorerItem(page, 'console.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
   // html entities in task names are escaped
-  await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+  await passFilter.click()
   await page.getByPlaceholder('Search...').fill('<MyComponent />')
   // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
   await page.getByTestId('collapse-all').click()
   await page.getByTestId('expand-all').click()
-  await expect(page.getByText('<MyComponent />')).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
+  await expect(getExplorerItem(page, '<MyComponent />')).toBeVisible()
+  await expect(getExplorerItem(page, 'task-name.test.ts')).toBeVisible()
 
   // html entities in task names are escaped
   await page.getByPlaceholder('Search...').fill('<>\'"')
-  await expect(page.getByText('<>\'"')).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
+  await expect(getExplorerItem(page, '<>\'"')).toBeVisible()
+  await expect(getExplorerItem(page, 'task-name.test.ts')).toBeVisible()
 
   // pass files with special chars
   await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
@@ -641,6 +681,15 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
     await testItem.getByLabel('Run current test').click()
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   }
+}
+
+async function expectExplorerSummary(
+  page: Page,
+  expected: { fail: number; running: number; pass: number; skip: number | '--' },
+) {
+  await expect(page.getByTestId('explorer-summary')).toHaveText(
+    `FAIL (${expected.fail}) / RUNNING (${expected.running}) PASS (${expected.pass}) / SKIP (${expected.skip})`,
+  )
 }
 
 async function testFilterInitiallyInvisibleItem(page: Page) {
