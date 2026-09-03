@@ -5,7 +5,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      // increase viewport height so virtual scroller renders all explorer items
+      // Keep all fixture rows rendered; increase this when adding explorer fixtures.
       use: { ...devices['Desktop Chrome'], viewport: { width: 800, height: 1300 } },
     },
   ],
