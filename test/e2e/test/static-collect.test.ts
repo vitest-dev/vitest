@@ -42,6 +42,30 @@ test('correctly collects a simple test', async () => {
   `)
 })
 
+test('collects test.describe as a suite', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    test.describe('scoped suite', () => {
+      test('nested test', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "scoped suite": {
+        "nested test": {
+          "errors": [],
+          "fullName": "scoped suite > nested test",
+          "id": "1709388417_0_0",
+          "location": "5:7",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
 test('ignores lowered "using" helper calls like it[1].call(it[2])', async () => {
   // parsers can inject this helper when lowering `using` declarations
   const testModule = await collectTests(`
