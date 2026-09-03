@@ -449,7 +449,17 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         }
       }
 
-      if (this.isIncluded(fileURLToPath(result.url))) {
+      let filePath
+
+      // Skip results that cannot be converted to file paths, for example virtual files that don't prefix to project root
+      try {
+        filePath = fileURLToPath(result.url)
+      }
+      catch {
+        continue
+      }
+
+      if (this.isIncluded(filePath)) {
         scriptCoverages.push({ ...result, url: decodeURIComponent(result.url) })
       }
     }
