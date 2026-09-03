@@ -233,15 +233,19 @@ await page.getByRole('tablist').wheel({ direction: 'right' })
 This method is intended for testing UI that explicitly listens to `wheel` events (e.g., custom zoom controls, horizontal tab scrolling, canvas interactions). If you need to scroll the page to bring an element into view, rely on the built-in automatic scrolling functionality provided by other `userEvent` methods or [locator actions](/api/browser/locators#methods) instead.
 :::
 
-## userEvent.pointer <Version type="experimental">5.0.0</Version> {#userevent-pointer}
-
-<Experimental />
+## userEvent.pointer <Version type="experimental">5.0.0</Version> <Experimental /> {#userevent-pointer}
 
 ```ts
 function pointer(options: UserEventPointerInput): Promise<void>
 ```
 
 Performs one or more pointer actions. Pass a key string, an action object, or an array of strings and objects. Key strings use [user-event `pointer` syntax](https://testing-library.com/docs/user-event/pointer). For example, `[MouseLeft]` presses and releases the left mouse button, `[MouseLeft>]` keeps it pressed, and `[/MouseLeft]` releases it.
+
+::: tip
+The `pointer` method is a low-level API for composing complex pointer interactions and performing actions that dedicated methods do not support, such as dragging an element to a precise position.
+
+For one-off actions, prefer the equivalent dedicated method because in most cases they are simpler to use. For example, if you just want to click an element once, use [`userEvent.click`](#userevent-click).
+:::
 
 An action object accepts `keys`, `target`, and `coords`. An object without `keys` only moves the pointer.
 
