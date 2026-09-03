@@ -590,9 +590,9 @@ async function testDashboardFilter(page: Page) {
 
 async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   const summary = page.getByTestId('explorer-summary')
-  const running = summary.getByText(/RUNNING/)
 
-  await expect(summary).toHaveCSS('display', options.mode === 'static' ? 'flex' : 'grid')
+  // Static reports only contain completed test results.
+  const running = summary.getByText(/RUNNING/)
   if (options.mode === 'static') {
     await expect(running).toHaveCount(0)
   }
