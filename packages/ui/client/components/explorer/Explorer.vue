@@ -238,7 +238,7 @@ const {
     <div flex-auto py-1 overflow-hidden>
       <ResultsPanel h-full flex="~ col">
         <template v-if="initialized" #summary>
-          <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
+          <div data-testid="explorer-summary" grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red-700 dark:text-red-500>
               FAIL ({{ testsTotal.failed }})
             </span>
