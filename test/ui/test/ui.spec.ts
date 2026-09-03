@@ -593,15 +593,6 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   const passFilter = page.getByRole('checkbox', { name: 'Pass', exact: true })
   const onlyTestsFilter = page.getByRole('checkbox', { name: 'Only Tests', exact: true })
 
-  await onlyTestsFilter.check()
-  await expectExplorerSummary(page, {
-    fail: TEST_COUNTS.fail,
-    running: 0,
-    pass: TEST_COUNTS.pass,
-    skip: TEST_COUNTS.skip,
-  })
-  await onlyTestsFilter.uncheck()
-
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
   await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: TEST_COUNTS.files.pass, skip: 0 })
@@ -609,12 +600,22 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 
   // only include individual tests matching the search
   await page.getByPlaceholder('Search...').fill('sample.test.ts')
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'add')).toBeVisible()
   await onlyTestsFilter.check()
+  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
   await expect(getExplorerItem(page, 'add')).toHaveCount(0)
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: 0 })
+
+  // match all individual tests when no search
+  await page.getByPlaceholder('Search...').fill('')
+  await expectExplorerSummary(page, {
+    fail: TEST_COUNTS.fail,
+    running: 0,
+    pass: TEST_COUNTS.pass,
+    skip: TEST_COUNTS.skip,
+  })
   await onlyTestsFilter.uncheck()
 
   // match nothing
