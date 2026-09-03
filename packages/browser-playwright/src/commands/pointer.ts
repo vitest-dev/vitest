@@ -8,11 +8,11 @@ import { hover } from './hover'
 
 type SerializedPointerInput = ElementToSerializedLocator<UserEventPointerInputNormalized[number]>
 interface PointerReturnData extends Pick<SerializedPointerInput, 'coords' | 'target'> {
-  unreleased?: string[]
+  unreleased: string[]
 }
 type PointerEvent = (
   input: readonly SerializedPointerInput[],
-  state?: PointerReturnData,
+  state: Partial<PointerReturnData>,
 ) => Promise<PointerReturnData>
 
 type ElementToSerializedLocator<T> = T extends Element | Locator

@@ -28,9 +28,7 @@ import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
 
-interface PointerState extends Pick<UserEventPointerInputNormalized[number], 'coords' | 'target'> {
-  unreleased?: string[]
-}
+type PointerState = Pick<UserEventPointerInputNormalized[number], 'coords' | 'target'>
 
 // @ts-expect-error not typed global
 const provider = __vitest_browser_runner__.provider
@@ -49,7 +47,10 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
   const keyboard = {
     unreleased: [] as string[],
   }
-  let pointerState: PointerState = {}
+  const pointerState: PointerState = {
+    coords: undefined,
+    target: undefined,
+  }
 
   // https://playwright.dev/docs/api/class-keyboard
   // https://webdriver.io/docs/api/browser/keys/
@@ -93,8 +94,14 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
 
         const inputArray = (Array.isArray(input) ? input : [input]) as Extract<UserEventPointerInput, readonly any[]>
         const serializedInputArray = await Promise.all(inputArray.map(async (input) => {
-          if (typeof input === 'object' && 'target' in input && input.target) {
-            const target = (await serializeElement(input.target))
+          if (typeof input === 'string') {
+            return {
+              keys: input,
+            } satisfies SerializedInput
+          }
+
+          if (input.target) {
+            const target = await serializeElement(input.target)
 
             return {
               ...input,
@@ -102,20 +109,20 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
             } satisfies SerializedInput
           }
 
-          if (typeof input === 'string') {
-            return {
-              keys: input,
-            } satisfies SerializedInput
-          }
-
           // `target` has been serialized but TS doesn't resolve/remove it from whatever's left of `PointerActionInputObject`
           return input as SerializedInput
         }))
 
-        pointerState = await triggerCommand<PointerState>(
+        const { coords, target, unreleased } = await triggerCommand<PointerState & {
+          unreleased: string[]
+        }>(
           '__vitest_pointer',
-          [serializedInputArray, pointerState],
+          [serializedInputArray, { ...pointerState, unreleased: keyboard.unreleased }],
         )
+
+        pointerState.target = target
+        pointerState.coords = coords
+        keyboard.unreleased = unreleased
       })
     },
     selectOptions(element, value, options) {
