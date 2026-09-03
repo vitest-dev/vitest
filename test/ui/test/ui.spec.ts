@@ -132,6 +132,65 @@ test.describe('ui', () => {
     await testSuiteReport(page)
   })
 
+  test('navigates the explorer with keyboard', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    const suite = getExplorerItem(page, 'suite')
+    const nestedSuite = getExplorerItem(page, 'nested suite')
+    const tree = page.getByRole('tree', { name: 'Test explorer' })
+    await suite.click()
+    await expect(tree).toBeFocused()
+    await expect(tree).toHaveAttribute('aria-activedescendant', await suite.getAttribute('id') as string)
+
+    await tree.press('ArrowLeft')
+    await expect(tree).toBeFocused()
+    await expect(nestedSuite).not.toBeVisible()
+
+    await tree.press('ArrowRight')
+    await expect(tree).toBeFocused()
+    await expect(nestedSuite).toBeVisible()
+    await tree.press('ArrowRight')
+    await expect(tree).toHaveAttribute('aria-activedescendant', await nestedSuite.getAttribute('id') as string)
+    await expect(nestedSuite).toHaveAttribute('aria-selected', 'true')
+
+    const testItem = getExplorerItem(page, 'test')
+    await tree.press('ArrowDown')
+    await expect(tree).toHaveAttribute('aria-activedescendant', await testItem.getAttribute('id') as string)
+    await expect(testItem).toHaveAttribute('aria-selected', 'true')
+    await expect(page).toHaveURL(/test=/)
+    await tree.press('ArrowUp')
+    await expect(tree).toHaveAttribute('aria-activedescendant', await nestedSuite.getAttribute('id') as string)
+
+    await tree.press('ArrowLeft')
+    await expect(testItem).not.toBeVisible()
+    await tree.press('ArrowLeft')
+    await expect(tree).toHaveAttribute('aria-activedescendant', await suite.getAttribute('id') as string)
+
+    await page.setViewportSize({ width: 1000, height: 500 })
+    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+    await tree.press('End')
+    await tree.press('Home')
+    const firstItem = getExplorerItem(page, 'aa-first-file.test.ts')
+    const firstItemId = await firstItem.getAttribute('id') as string
+    await expect(tree).toHaveAttribute('aria-activedescendant', firstItemId)
+
+    const previousItemId = await tree.getAttribute('aria-activedescendant')
+    await tree.press('End')
+    await expect.poll(() => tree.getAttribute('aria-activedescendant')).not.toBe(previousItemId)
+    const lastItemId = await tree.getAttribute('aria-activedescendant') as string
+    const lastItem = page.locator(`#${lastItemId}`)
+    await expect(lastItem).toBeVisible()
+    await expect(lastItem).toHaveAttribute('aria-selected', 'true')
+    await tree.press('ArrowDown')
+    await expect(tree).toHaveAttribute('aria-activedescendant', lastItemId)
+
+    await tree.press('Home')
+    await expect(tree).toHaveAttribute('aria-activedescendant', firstItemId)
+    await expect(firstItem).toHaveAttribute('aria-selected', 'true')
+    await tree.press('ArrowUp')
+    await expect(tree).toHaveAttribute('aria-activedescendant', firstItemId)
+  })
+
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
     await testError(page)

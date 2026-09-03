@@ -207,6 +207,7 @@ const tagsBgGradient = computed(() => {
       <button
         v-if="type === 'file' || type === 'suite'"
         type="button"
+        tabindex="-1"
         class="w-full h-full flex items-center"
         :aria-label="`${opened ? 'Collapse' : 'Expand'} ${name}`"
         @click.stop="toggleOpen"
