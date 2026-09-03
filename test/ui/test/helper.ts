@@ -71,8 +71,9 @@ export function getExplorerItem(page: Page, name: string) {
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  await getExplorerItem(page, name).scrollIntoViewIfNeeded()
-  await getExplorerItem(page, name).dispatchEvent('click')
+  const item = getExplorerItem(page, name)
+  await item.scrollIntoViewIfNeeded()
+  await item.getByText(name, { exact: true }).click()
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {
