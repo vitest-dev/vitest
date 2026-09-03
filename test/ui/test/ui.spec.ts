@@ -589,6 +589,17 @@ async function testDashboardFilter(page: Page) {
 }
 
 async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
+  const summary = page.getByTestId('explorer-summary')
+  const running = summary.getByText(/RUNNING/)
+
+  await expect(summary).toHaveCSS('display', options.mode === 'static' ? 'flex' : 'grid')
+  if (options.mode === 'static') {
+    await expect(running).toHaveCount(0)
+  }
+  else {
+    await expect(running).toBeVisible()
+  }
+
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
   await page.getByText(`PASS (${TEST_COUNTS.files.pass})`).click()
