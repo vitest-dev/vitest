@@ -19,6 +19,11 @@ Error: top level error
 "
 `;
 
+exports[`basic output shows error with static parsing 1`] = `
+"Error: No test suite found in file <root>/fixtures/list/top-level-error.test.ts
+"
+`;
+
 exports[`correctly outputs all tests with args: "--browser.enabled" 1`] = `
 "[chromium] basic.test.ts > basic suite > inner suite > some test
 [chromium] basic.test.ts > basic suite > inner suite > another test
@@ -104,6 +109,11 @@ Error: top level error
 "
 `;
 
+exports[`json output shows error with static parsing 1`] = `
+"Error: No test suite found in file <root>/fixtures/list/top-level-error.test.ts
+"
+`;
+
 exports[`json with a file output shows error 1`] = `
 "Error: describe error
  ❯ describe-error.test.ts:4:9
@@ -120,5 +130,10 @@ Error: top level error
        |       ^
       2|
 
+"
+`;
+
+exports[`json with a file output shows error with static parsing 1`] = `
+"Error: No test suite found in file <root>/fixtures/list/top-level-error.test.ts
 "
 `;
