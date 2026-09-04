@@ -462,7 +462,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public toTestSpecification(): TestSpecification {
     const isTypecheck = this.task.meta.typecheck === true
-    const testIds = [...this.children.allTests()].map(test => test.id)
+    const testIds = Array.from(this.children.allTests(), test => test.id)
     return this.project.createSpecification(
       this.module.moduleId,
       { testIds },
@@ -516,10 +516,7 @@ export class TestModule extends SuiteImplementation {
     super(task, project)
     this.moduleId = task.filepath
     this.relativeModuleId = task.name
-    if (task.viteEnvironment === '__browser__') {
-      this.viteEnvironment = project.browser?.vite.environments.client
-    }
-    else if (typeof task.viteEnvironment === 'string') {
+    if (typeof task.viteEnvironment === 'string') {
       this.viteEnvironment = project.vite.environments[task.viteEnvironment]
     }
   }

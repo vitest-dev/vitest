@@ -22,14 +22,17 @@ export interface Environment {
    * By default, fallbacks to `name`.
    */
   viteEnvironment?: 'client' | 'ssr' | ({} & string)
+  /**
+   * Let the server transform the test file's import graph while `setupVM`
+   * runs. Only worth it when `setupVM` is slow (jsdom, happy-dom): otherwise
+   * the transforms compete with the worker's own module requests.
+   *
+   * @default `true`
+   */
+  prewarmModules?: boolean
   setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
   setup: (
     global: any,
     options: Record<string, any>,
   ) => Awaitable<EnvironmentReturn>
-}
-
-export interface ResolvedTestEnvironment {
-  environment: Environment
-  options: Record<string, any> | null
 }

@@ -1,15 +1,9 @@
 import type { RunVitestConfig } from '../../test-utils'
-import { setDefaultResultOrder } from 'node:dns'
 import path from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
-import { webdriverio } from '@vitest/browser-webdriverio'
-import { afterAll, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runInlineTests, runVitest } from '../../test-utils'
-
-// webdriver@9 sets dns.setDefaultResultOrder("ipv4first") on import,
-// which makes Vite resolve localhost to 127.0.0.1 and breaks other tests asserting "localhost"
-afterAll(() => setDefaultResultOrder('verbatim'))
+import { runInlineTests, runVitest, StableTestFileOrderSorter } from '../../test-utils'
 
 test('setting resetMocks works if restoreMocks is also set', async () => {
   const { stderr, testTree } = await runInlineTests({
@@ -146,15 +140,6 @@ test('redirect mock works without loading broken original', () => {
   `)
 })
 
-function replaceRoot(tree: any, root: string): any {
-  for (const child of Object.values(tree) as any[]) {
-    if (child?.__module_errors__) {
-      child.__module_errors__ = child.__module_errors__.map((e: string) => e.replace(root, '<root>'))
-    }
-  }
-  return tree
-}
-
 function modeToConfig(mode: string): RunVitestConfig {
   if (mode === 'playwright') {
     return {
@@ -166,34 +151,11 @@ function modeToConfig(mode: string): RunVitestConfig {
       },
     }
   }
-  if (mode === 'webdriverio') {
-    return {
-      browser: {
-        enabled: true,
-        provider: webdriverio({
-          ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
-            ? {
-                'wdio:chromedriverOptions': {
-                  binary: process.env.CHROMEDRIVER_PATH,
-                },
-                'capabilities': {
-                  'goog:chromeOptions': {
-                    binary: process.env.CHROME_BIN,
-                  },
-                },
-              }
-            : {}),
-        }),
-        instances: [{ browser: 'chrome' }],
-        headless: true,
-      },
-    }
-  }
   return {}
 }
 
-test.for(['node', 'playwright', 'webdriverio'])('importOriginal for virtual modules (%s)', async (mode) => {
-  const { stderr, errorTree, root } = await runInlineTests({
+test.for(['node', 'playwright'])('importOriginal for virtual modules (%s)', async (mode) => {
+  const { stderr, errorTree } = await runInlineTests({
     'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
@@ -227,36 +189,17 @@ test('importOriginal returns original virtual module exports', () => {
     `,
   }, modeToConfig(mode))
 
-  // webdriverio uses a server-side interceptor plugin whose load hook
-  // intercepts the clean id, so importActual returns the mock instead
-  // of the original module. This is a known limitation.
-  if (mode === 'webdriverio') {
-    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
-      {
-        "__unhandled_errors__": [
-          "[vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock",
-        ],
-        "basic.test.js": {
-          "__module_errors__": [
-            "Failed to import test file <root>/basic.test.js",
-          ],
-        },
-      }
-    `)
-  }
-  else {
-    expect(stderr).toBe('')
-    expect(errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.js": {
-          "importOriginal returns original virtual module exports": "passed",
-        },
-      }
-    `)
-  }
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "importOriginal returns original virtual module exports": "passed",
+      },
+    }
+  `)
 })
 
-test.for(['node', 'playwright', 'webdriverio'])('mocking virtual module without importOriginal skips loading original (%s)', async (mode) => {
+test.for(['node', 'playwright'])('mocking virtual module without importOriginal skips loading original (%s)', async (mode) => {
   const { stderr, testTree } = await runInlineTests({
     'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
@@ -300,8 +243,8 @@ test('mock works without loading original', () => {
   `)
 })
 
-test.for(['node', 'playwright', 'webdriverio'])('mocking actual module with factory skips loading original (%s)', async (mode) => {
-  const { stderr, errorTree, root } = await runInlineTests({
+test.for(['node', 'playwright'])('mocking actual module with factory skips loading original (%s)', async (mode) => {
+  const { stderr, errorTree } = await runInlineTests({
     'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
@@ -330,19 +273,6 @@ test('mock works without loading original', () => {
     `,
   }, modeToConfig(mode))
 
-  if (mode === 'webdriverio') {
-    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
-      {
-        "basic.test.js": {
-          "__module_errors__": [
-            "Failed to import test file <root>/basic.test.js",
-          ],
-        },
-      }
-    `)
-    return
-  }
-
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -353,8 +283,8 @@ test('mock works without loading original', () => {
   `)
 })
 
-test.for(['node', 'playwright', 'webdriverio'])('mocking actual module via __mocks__ skips loading original (%s)', async (mode) => {
-  const { stderr, errorTree, root } = await runInlineTests({
+test.for(['node', 'playwright'])('mocking actual module via __mocks__ skips loading original (%s)', async (mode) => {
+  const { stderr, errorTree } = await runInlineTests({
     'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
@@ -381,19 +311,6 @@ test('mock works without loading original', () => {
 })
     `,
   }, modeToConfig(mode))
-
-  if (mode === 'webdriverio') {
-    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
-      {
-        "basic.test.js": {
-          "__module_errors__": [
-            "Failed to import test file <root>/basic.test.js",
-          ],
-        },
-      }
-    `)
-    return
-  }
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -446,10 +363,46 @@ ${importChecks}
   `)
 })
 
+test('the last doMock of the same path wins', async () => {
+  // repeats doMock twice for the same path without an import in between
+  //   vi.doMock('/mock-lib-0', () => ({ value: 'first' }));
+  //   vi.doMock('/mock-lib-0', () => ({ value: 'second' }));
+  //   ...
+  // then, the last registered factory should be used
+  //   import('/mock-lib-0') // => { value: 'second' }
+  const N = 20
+  const mockEntries = Array.from({ length: N }, (_, i) => `\
+vi.doMock('/mock-lib-${i}', () => ({ value: 'first' }));
+vi.doMock('/mock-lib-${i}', () => ({ value: 'second' }));
+`).join('\n')
+  const importChecks = Array.from({ length: N }, (_, i) => `\
+await expect(import('/mock-lib-${i}')).resolves.toEqual({ value: 'second' });
+`).join('\n')
+
+  const { stderr, errorTree } = await runInlineTests({
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+
+test('duplicate mock of the same path (last one should win)', async () => {
+${mockEntries}
+${importChecks}
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "duplicate mock of the same path (last one should win)": "passed",
+      },
+    }
+  `)
+})
+
 test.for([
   'node',
   'playwright',
-  'webdriverio',
 ])('repeating mock, importActual, and resetModules (%s)', async (mode) => {
   const { stderr, errorTree } = await runInlineTests({
     // external
@@ -551,7 +504,7 @@ test("local", async () => {
     './local.js': `export const local = 'local'`,
   }, modeToConfig(mode))
 
-  if (mode === 'webdriverio' || mode === 'playwright') {
+  if (mode === 'playwright') {
     // browser mode doesn't support resetModules nor node builtin
     expect(errorTree()).toMatchInlineSnapshot(`
       {
@@ -590,6 +543,68 @@ test("local", async () => {
       },
       "local.test.ts": {
         "local": "passed",
+      },
+    }
+  `)
+})
+
+test('automocking works with isolate:false when factory mock runs first (resolve alias)', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': `
+import path from 'node:path'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '~': path.resolve(import.meta.dirname, 'src'),
+    },
+  },
+  test: {
+    isolate: false,
+  },
+})
+    `,
+    './src/dep.ts': `
+export function useDep(): string { return 'real' }
+export function helperDep(): number { return 42 }
+    `,
+    './a-factory.test.ts': `
+import { vi, test, expect } from 'vitest'
+import { useDep } from '~/dep'
+vi.mock(import('~/dep'), () => ({
+  useDep: () => 'factory',
+  helperDep: () => 0,
+}))
+test('factory mock', () => {
+  expect(useDep()).toBe('factory')
+})
+    `,
+    './b-automock.test.ts': `
+import { vi, test, expect } from 'vitest'
+import { useDep } from '~/dep'
+vi.mock(import('~/dep'))
+test('automock exports are mock functions', () => {
+  expect(vi.isMockFunction(useDep)).toBe(true)
+})
+test('automock mockReturnValue works', () => {
+  vi.mocked(useDep).mockReturnValue('mocked')
+  expect(useDep()).toBe('mocked')
+})
+    `,
+  }, {
+    sequence: { sequencer: StableTestFileOrderSorter },
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a-factory.test.ts": {
+        "factory mock": "passed",
+      },
+      "b-automock.test.ts": {
+        "automock exports are mock functions": "passed",
+        "automock mockReturnValue works": "passed",
       },
     }
   `)

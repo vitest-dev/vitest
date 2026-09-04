@@ -29,5 +29,3 @@ export class MinimalReporter extends DefaultReporter {
     }
   }
 }
-
-export { MinimalReporter as AgentReporter }

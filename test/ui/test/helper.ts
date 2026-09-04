@@ -56,20 +56,22 @@ export async function startHtmlReportPreview(
   }
 }
 
-export async function assertTestCounts(page: Page, { pass, fail }: { pass: number; fail: number }) {
+export async function assertTestCounts(page: Page, { pass, fail, skip = 0 }: { pass: number; fail: number; skip?: number }) {
+  const skipped = skip ? ` ${skip} Skip` : ''
   await expect
     .soft(page.getByTestId('tests-entry'))
     .toContainText(
-      `${pass} Pass ${fail} Fail ${pass + fail} Total`,
+      `${pass} Pass ${fail} Fail${skipped} ${pass + fail + skip} Total`,
     )
 }
 
 export function getExplorerItem(page: Page, name: string) {
-  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
+  return page.locator('[data-testid="explorer-item"]:visible').and(page.getByLabel(name, { exact: true }))
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  await getExplorerItem(page, name).click()
+  await getExplorerItem(page, name).scrollIntoViewIfNeeded()
+  await getExplorerItem(page, name).dispatchEvent('click')
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {

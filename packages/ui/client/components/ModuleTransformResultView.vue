@@ -45,7 +45,7 @@ const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
 const source = computed(() => result.value?.source?.trim() || '')
 const isCached = computed(() => {
-  if (!result.value || !('code' in result.value) || !config.value.experimental?.fsModuleCache) {
+  if (!result.value || !('code' in result.value) || !config.value.fsModuleCache) {
     return undefined
   }
   const index = result.value.code.lastIndexOf('vitestCache=')
@@ -239,7 +239,7 @@ onKeyStroke('Escape', () => {
               cached
             </Badge>
             <template #popper>
-              This module is cached on the file system under `experimental.fsModuleCachePath` ("node_modules/.exprtimental-vitest-cache" by default).
+              This module is cached on the file system under `fsModuleCachePath` ("node_modules/.vitest-cache" by default).
             </template>
           </VueTooltip>
           <VueTooltip v-if="isCached === false" class="inline" cursor-help>
@@ -307,7 +307,7 @@ onKeyStroke('Escape', () => {
           h-full
           :model-value="source"
           read-only
-          v-bind="{ lineNumbers: true }"
+          :options="{ lineNumbers: true }"
           :mode="ext"
           @codemirror="markImportDurations($event)"
         />
@@ -316,7 +316,7 @@ onKeyStroke('Escape', () => {
           h-full
           :model-value="code"
           read-only
-          v-bind="{ lineNumbers: true }"
+          :options="{ lineNumbers: true }"
           mode="js"
         />
       </div>
@@ -327,7 +327,7 @@ onKeyStroke('Escape', () => {
         <CodeMirrorContainer
           :model-value="sourceMap.mappings"
           read-only
-          v-bind="{ lineNumbers: true }"
+          :options="{ lineNumbers: true }"
         />
       </div>
     </template>

@@ -47,6 +47,7 @@ export interface WebSocketHandlers {
   getModuleGraph: (
     projectName: string,
     id: string,
+    viteEnvironment?: string,
   ) => Promise<ModuleGraphData>
   getTransformResult: (
     projectName: string,
@@ -76,6 +77,7 @@ export interface WebSocketEvents {
   onTestAnnotate?: (testId: string, annotation: TestAnnotation) => Awaitable<void>
   onTestArtifactRecord?: (testId: string, artifact: TestArtifact) => Awaitable<void>
   onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
+  onTestRemoved?: (path?: string) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
   onSpecsCollected?: (specs?: SerializedTestSpecification[], startTime?: number) => Awaitable<void>

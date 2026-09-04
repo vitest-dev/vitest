@@ -12,14 +12,3 @@ test.runIf(provider.name === 'playwright')('[playwright] runs multiple different
   expect(stdout).toContain('[chromium] HTML_INJECTED_VAR is true')
   expect(stdout).toContain('[firefox] HTML_INJECTED_VAR is undefined')
 })
-
-test.runIf(provider.name === 'webdriverio')('[webdriverio] runs multiple different configurations correctly', async () => {
-  const { stdout, exitCode, stderr } = await runBrowserTests({
-    root: './fixtures/multiple-different-configs',
-  })
-
-  expect(stderr).toBe('')
-  expect(exitCode).toBe(0)
-  expect(stdout).toContain('[chromium] HTML_INJECTED_VAR is true')
-  expect(stdout).toContain('[firefox] HTML_INJECTED_VAR is undefined')
-})

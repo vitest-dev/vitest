@@ -12,6 +12,11 @@ const FIXTURES = '**/fixtures/**'
 
 export default defineConfig({
   test: {
+    fsModuleCache: true,
+    watchTriggerPatterns: [{
+      pattern: /test\/coverage-test\/fixtures/,
+      testsToRun: () => [],
+    }],
     reporters: process.env.CI ? 'minimal' : 'verbose',
     isolate: false,
     setupFiles: ['./setup.ts'],
@@ -92,6 +97,7 @@ export default defineConfig({
             '**/test/source-maps.test.ts',
             '**/test/mock-autospy.test.ts',
             '**/test/mock-importActual.test.ts',
+            '**/virtual-files.test.ts',
           ],
           exclude: [FIXTURES],
         },
@@ -126,6 +132,7 @@ export default defineConfig({
             '**/test/source-maps.test.ts',
             '**/test/mock-autospy.test.ts',
             '**/test/mock-importActual.test.ts',
+            '**/virtual-files.test.ts',
           ],
           exclude: [FIXTURES],
         },

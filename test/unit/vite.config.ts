@@ -40,7 +40,7 @@ export default defineConfig({
       babel({
         presets: [
           {
-            preset: ({
+            preset: () => ({
               plugins: [['@babel/plugin-proposal-decorators', { version: '2023-11' }]],
             }),
             rolldown: {
@@ -62,8 +62,7 @@ export default defineConfig({
     '__DEFINE__': '"defined"',
     '__JSON__': JSON.stringify({ hello: 'world' }),
     // edge cases
-    // should not be available for reassigning as __MODE__ = 'test2'
-    // but can reassign with process.env.MODE = 'test2'
+    // evaluated once when the worker starts
     '__MODE__': 'process.env.MODE',
     'SOME.VARIABLE': '"variable"',
     'SOME.SOME.VARIABLE': '"nested variable"',

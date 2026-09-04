@@ -24,8 +24,13 @@ const MOCK_RESTORE = new Set<() => void>()
 // Jest keeps the state in a separate WeakMap which is good for memory,
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
-const REGISTERED_MOCKS = new Set<Mock<Procedure | Constructable>>()
+const DIRTY_MOCK_STATES = new Set<Mock<Procedure | Constructable>>()
+const REGISTERED_MOCKS = new Set<WeakRef<Mock<Procedure | Constructable>>>()
+const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constructable>>>((ref) => {
+  REGISTERED_MOCKS.delete(ref)
+})
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
+const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
 
 export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
@@ -62,13 +67,31 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     config.mockName = mock.name || 'vi.fn()'
   }
   MOCK_CONFIGS.set(mock, config)
-  REGISTERED_MOCKS.add(mock)
+  MOCKS_BY_STATE.set(state, mock)
+  const ref = new WeakRef(mock)
+  REGISTERED_MOCKS.add(ref)
+  MOCK_FINALIZER.register(mock, ref)
 
   mock._isMockFunction = true
   mock.getMockImplementation = () => {
     // Jest only returns `config.mockImplementation` here,
     // but we think it makes sense to return what the next function will be called
     return config.onceMockImplementations[0] || config.mockImplementation
+  }
+
+  // keep the prototype chain in sync with the implementation the next
+  // construction will use, so it is correct before any `new` call.
+  // automocked classes are skipped: their methods are pre-mocked
+  // on `mock.prototype`
+  const updateMockPrototype = () => {
+    if (!options.prototypeMembers?.length) {
+      reparentMockPrototype(
+        mock,
+        config.onceMockImplementations[0]
+        || config.mockImplementation
+        || originalImplementation,
+      )
+    }
   }
 
   Object.defineProperty(mock, 'mock', {
@@ -80,11 +103,13 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 
   mock.mockImplementation = function mockImplementation(implementation) {
     config.mockImplementation = implementation
+    updateMockPrototype()
     return mock
   }
 
   mock.mockImplementationOnce = function mockImplementationOnce(implementation) {
     config.onceMockImplementations.push(implementation)
+    updateMockPrototype()
     return mock
   }
 
@@ -95,10 +120,12 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     const reset = () => {
       config.mockImplementation = previousImplementation
       config.onceMockImplementations = previousOnceImplementations
+      updateMockPrototype()
     }
 
     config.mockImplementation = implementation
     config.onceMockImplementations = []
+    updateMockPrototype()
 
     const returnValue = callback()
 
@@ -201,6 +228,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     state.invocationCallOrder = []
     state.results = []
     state.settledResults = []
+    DIRTY_MOCK_STATES.delete(mock)
     return mock
   }
 
@@ -211,6 +239,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
       : undefined
     config.mockName = resetToMockName ? (mock.name || 'vi.fn()') : 'vi.fn()'
     config.onceMockImplementations = []
+    updateMockPrototype()
     return mock
   }
 
@@ -236,6 +265,10 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 
   if (mockImplementation) {
     mock.mockImplementation(mockImplementation)
+  }
+  else {
+    // vi.spyOn() has no mock implementation, chain the original one
+    updateMockPrototype()
   }
 
   return mock
@@ -410,7 +443,7 @@ export function spyOn<T extends object, K extends keyof any>(
         || error.message.includes('can\'t redefine non-configurable property'))
     ) {
       throw new TypeError(
-        `Cannot spy on export "${String(key)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/browser/#limitations`,
+        `Cannot spy on export "${String(key)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/mocking/modules#mocking-a-module`,
         { cause: error },
       )
     }
@@ -462,9 +495,15 @@ function createMock(
   const original = config.mockOriginal // init with vi.spyOn(obj, 'Klass')
   const pseudoOriginal = mockImplementation // init with vi.fn(Klass)
   const name = (mockName || original?.name || 'Mock') as string
+  const noopImplementation = function () {}
+  const prototypeMock = prototypeState && MOCKS_BY_STATE.get(prototypeState)
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: (function (this: any, ...args: any[]) {
+      DIRTY_MOCK_STATES.add(namedObject[name])
+      if (prototypeMock) {
+        DIRTY_MOCK_STATES.add(prototypeMock)
+      }
       registerCalls(args, state, prototypeState)
       registerInvocationOrder(invocationCallCounter++, state, prototypeState)
 
@@ -491,7 +530,7 @@ function createMock(
           || prototypeConfig?.onceMockImplementations.shift()
           || prototypeConfig?.mockImplementation
           || original
-          || function () {}
+          || noopImplementation
 
       let returnValue
       let thrownValue
@@ -499,6 +538,13 @@ function createMock(
 
       try {
         if (new.target) {
+          // the prototype chain is already prepared when the implementation
+          // is registered, but a consumed `mockImplementationOnce` can change
+          // which implementation this construction uses
+          if (prototypeMembers.length === 0) {
+            // eslint-disable-next-line ts/no-use-before-define
+            reparentMockPrototype(mock, implementation === noopImplementation ? undefined : implementation)
+          }
           returnValue = Reflect.construct(implementation, args, new.target)
 
           // jest calls this before the implementation, but we have to resolve this _after_
@@ -590,6 +636,26 @@ function createMock(
     copyOriginalStaticProperties(mock, copyPropertiesFrom)
   }
   return mock
+}
+
+// puts the implementation's prototype behind `mock.prototype` so instances
+// see prototype methods both during and after construction, while properties
+// assigned on `mock.prototype` still shadow them
+function reparentMockPrototype(
+  mock: Mock<Procedure | Constructable>,
+  implementation: Procedure | Constructable | undefined,
+) {
+  const mockPrototype = mock.prototype
+  if (mockPrototype == null) {
+    return
+  }
+  // an implementation without a usable prototype (reset mock, arrow or bound
+  // function) reverts the chain to `Object.prototype`, the parent every mock
+  // is created with
+  const parent = (implementation as Constructable | undefined)?.prototype ?? Object.prototype
+  if (Object.getPrototypeOf(mockPrototype) !== parent) {
+    Object.setPrototypeOf(mockPrototype, parent)
+  }
 }
 
 function registerCalls(args: unknown[], state: MockContext, prototypeState?: MockContext) {
@@ -705,11 +771,21 @@ export function restoreAllMocks(): void {
 }
 
 export function clearAllMocks(): void {
-  REGISTERED_MOCKS.forEach(mock => mock.mockClear())
+  for (const mock of DIRTY_MOCK_STATES) {
+    mock.mockClear()
+  }
 }
 
 export function resetAllMocks(): void {
-  REGISTERED_MOCKS.forEach(mock => mock.mockReset())
+  for (const ref of REGISTERED_MOCKS) {
+    const mock = ref.deref()
+    if (mock) {
+      mock.mockReset()
+    }
+    else {
+      REGISTERED_MOCKS.delete(ref)
+    }
+  }
 }
 
 function throwConstructorError(shorthand: string): never {

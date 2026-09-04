@@ -108,6 +108,10 @@ it('render basic', async () => {
 
 It will compare with the content of `./test/basic.output.html`. And can be written back with the `--update` flag.
 
+::: warning
+Do not use a snapshot path managed by Vitest, such as `__snapshots__/basic.test.ts.snap`, with `toMatchFileSnapshot`. Choose a separate file path pattern for file snapshots.
+:::
+
 ## Visual Snapshots
 
 For visual regression testing of UI components and pages, Vitest provides built-in support through [browser mode](/guide/browser/) with the [`toMatchScreenshot()`](/api/browser/assertions#tomatchscreenshot) assertion:
@@ -246,8 +250,8 @@ import { expect, test, Snapshots } from 'vitest'
 const { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } = Snapshots
 
 expect.extend({
-  toMatchTrimmedSnapshot(received: string) {
-    return toMatchSnapshot.call(this, received.slice(0, 10))
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    return toMatchSnapshot.call(this, received.slice(0, length))
   },
   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
     return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
@@ -298,7 +302,7 @@ File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Prom
 :::
 
 ::: warning
-When custom inline snapshot matcher is aynchronous, Vitest cannot automatically infer the call location for inline snapshot rewriting. You must capture the call site by setting the `'error'` flag on the chai assertion object:
+When custom inline snapshot matcher is asynchronous, Vitest cannot automatically infer the call location for inline snapshot rewriting. You must capture the call site by setting the `'error'` flag on the chai assertion object:
 
 ```ts
 import { expect, chai, Snapshots } from 'vitest'
@@ -317,16 +321,16 @@ expect.extend({
 
 :::
 
-For TypeScript, extend the `Assertion` interface:
+For TypeScript, augment the `Matchers<R, T>` interface:
 
 ```ts
 import 'vitest'
 
 declare module 'vitest' {
-  interface Assertion<T = any> {
-    toMatchTrimmedSnapshot: (length: number) => T
-    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => T
-    toMatchTrimmedFileSnapshot: (file: string) => Promise<T>
+  interface Matchers<R, T> {
+    toMatchTrimmedSnapshot: (length: number) => R
+    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => R
+    toMatchTrimmedFileSnapshot: (file: string) => Promise<void>
   }
 }
 ```
@@ -391,14 +395,21 @@ This asymmetry is what makes `--update` work correctly: `match` returns a `resol
 Register a custom matcher with `expect.extend(...)` and call the snapshot composables from `vitest`:
 
 ```ts [setup.ts]
-import { expect, Snaphsots } from 'vitest'
+import { expect, Snapshots } from 'vitest'
+
+declare module 'vitest' {
+  interface Matchers<R, T> {
+    toMatchMyDomainSnapshot: () => R
+    toMatchMyDomainInlineSnapshot: (inlineSnapshot?: string) => R
+  }
+}
 
 expect.extend({
   toMatchMyDomainSnapshot(received: unknown) {
-    return Snaphsots.toMatchDomainSnapshot.call(this, myAdapter, received)
+    return Snapshots.toMatchDomainSnapshot.call(this, myAdapter, received)
   },
   toMatchMyDomainInlineSnapshot(received: unknown, inlineSnapshot?: string) {
-    return Snaphsots.toMatchDomainInlineSnapshot.call(
+    return Snapshots.toMatchDomainInlineSnapshot.call(
       this,
       myAdapter,
       received,
@@ -493,6 +504,13 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
 ```ts [setup.ts]
 import { expect, Snapshots } from 'vitest'
 import { kvAdapter } from './kv-adapter'
+
+declare module 'vitest' {
+  interface Matchers<R, T> {
+    toMatchKvSnapshot: () => R
+    toMatchKvInlineSnapshot: (inlineSnapshot?: string) => R
+  }
+}
 
 expect.extend({
   toMatchKvSnapshot(received: unknown) {

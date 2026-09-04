@@ -5,12 +5,12 @@ import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
 import type { BrowserTraceAttempt } from './tester/trace'
 
-export async function importId(id: string): Promise<any> {
+async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export async function importFs(id: string): Promise<any> {
+async function importFs(id: string): Promise<any> {
   const name = `/@fs/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
@@ -98,6 +98,8 @@ export interface BrowserRunnerState {
   browserTraceAttempts: Map<string, BrowserTraceAttempt>
   // lazily loaded only when traceView is enabled
   browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
+  // import started by the orchestrator so every tester reuses one module instance
+  browserTraceDomSnapshotPromise?: Promise<typeof import('rrweb-snapshot')>
   selectorEngine: Ivya
   traces: Traces
   cleanups: Array<() => unknown>
@@ -115,6 +117,12 @@ export interface BrowserRunnerState {
 export function getBrowserState(): BrowserRunnerState {
   // @ts-expect-error not typed global
   return window.__vitest_browser_runner__
+}
+
+/* @__NO_SIDE_EFFECTS__ */
+export function getOrchestratorState(): BrowserRunnerState {
+  // @ts-expect-error not typed global
+  return window.parent.__vitest_browser_runner__
 }
 
 /* @__NO_SIDE_EFFECTS__ */

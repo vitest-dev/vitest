@@ -4,7 +4,7 @@ import type { RunnerTestFile, RunnerTask as Task, TestAnnotation, TestError } fr
 import { until, useResizeObserver, watchDebounced } from '@vueuse/core'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
-import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
+import { getAttachmentUrl, openPlaywrightTrace, sanitizeFilePath } from '~/composables/attachments'
 import { client, config, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
@@ -62,7 +62,6 @@ watch(
 
     await nextTick()
 
-    // fire focusing editor after loading
     loading.value = false
   },
   { immediate: true },
@@ -81,15 +80,9 @@ watch(() => [loading.value, saving.value, props.file, lineNumber.value, columnNu
         else {
           codemirrorRef.value?.scrollIntoView(line, 100)
           nextTick(() => {
-            codemirrorRef.value?.focus()
             codemirrorRef.value?.setCursor(line)
           })
         }
-      })
-    }
-    else {
-      nextTick(() => {
-        codemirrorRef.value?.focus()
       })
     }
   }
@@ -311,6 +304,19 @@ function createAnnotationElement(annotation: TestAnnotation) {
       notice.append(link)
     }
     else {
+      if (annotation.type === 'traces') {
+        const open = document.createElement('button')
+        open.type = 'button'
+        open.ariaLabel = 'Open trace'
+        open.addEventListener('click', () => openPlaywrightTrace(attachment))
+        open.classList.add('flex', 'w-min', 'gap-2', 'items-center', 'font-sans', 'underline', 'cursor-pointer')
+        const openIcon = document.createElement('div')
+        openIcon.classList.add('i-carbon:launch', 'block')
+        const openText = document.createElement('span')
+        openText.textContent = 'Open'
+        open.append(openIcon, openText)
+        notice.append(open)
+      }
       const download = document.createElement('a')
       download.href = getAttachmentUrl(attachment)
       download.download = sanitizeFilePath(annotation.message, attachment.contentType)
@@ -327,8 +333,8 @@ function createAnnotationElement(annotation: TestAnnotation) {
 }
 
 const { pause, resume } = watch(
-  [codemirrorRef, errors, annotations, finished] as const,
-  ([cmValue, errors, annotations, end]) => {
+  [codemirrorRef, errors, annotations, finished, loading] as const,
+  ([cmValue, errors, annotations, end, loadingFile]) => {
     if (!cmValue) {
       widgets.length = 0
       handles.length = 0
@@ -351,7 +357,7 @@ const { pause, resume } = watch(
     widgets.length = 0
     handles.length = 0
 
-    setTimeout(() => {
+    if (!loadingFile) {
       // add new data
       errors.forEach(createErrorElement)
 
@@ -363,9 +369,9 @@ const { pause, resume } = watch(
       }
 
       cmValue.on('changes', codemirrorChanges)
-    }, 100)
+    }
   },
-  { flush: 'post' },
+  { immediate: true },
 )
 
 watchDebounced(() => [finished.value, saving.value, currentPosition.value] as const, ([f, s], old) => {
@@ -455,10 +461,11 @@ onBeforeUnmount(clearListeners)
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{
+    :read-only="isReport || !config.api?.allowWrite"
+    :saving="saving"
+    :options="{
       lineNumbers: true,
-      readOnly: isReport || !config.api?.allowWrite,
-      saving,
+      styleActiveLine: true,
       gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
     }"
     :mode="ext"

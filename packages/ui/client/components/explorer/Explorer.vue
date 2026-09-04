@@ -3,9 +3,8 @@ import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import { hideAllPoppers } from 'floating-vue'
 import { computed, ref } from 'vue'
 
-// @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
-import { availableProjects, config } from '~/composables/client'
+import { availableProjects, config, isReport } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
 import { ALL_PROJECTS, projectSort } from '~/composables/explorer/state'
 import { activeFileId, selectedTest } from '~/composables/params'
@@ -236,15 +235,21 @@ const {
         <FilterStatus v-model="filter.slow" :label="`Slow${slowTime}`" />
       </div>
     </div>
-    <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
-      <ResultsPanel>
+    <div flex-auto py-1 overflow-hidden>
+      <ResultsPanel h-full flex="~ col">
         <template v-if="initialized" #summary>
-          <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
+          <div
+            data-testid="explorer-summary"
+            class="items-center gap-x-1"
+            :class="isReport
+              ? 'flex'
+              : 'grid grid-cols-[auto_min-content_auto] grid-rows-[min-content_min-content]'"
+          >
             <span text-red-700 dark:text-red-500>
               FAIL ({{ testsTotal.failed }})
             </span>
             <span>/</span>
-            <span text-yellow-700 dark:text-yellow-500>
+            <span v-if="!isReport" text-yellow-700 dark:text-yellow-500>
               RUNNING ({{ testsTotal.running }})
             </span>
             <span text-green-700 dark:text-green-500>
@@ -315,11 +320,13 @@ const {
         </template>
         <template v-else>
           <RecycleScroller
-            page-mode
+            class="scrolls"
+            flex-auto
             key-field="id"
             :item-size="28"
             :items="uiEntries"
             :buffer="100"
+            @scroll.passive="hideAllPoppers"
           >
             <template #default="{ item }">
               <ExplorerItem
@@ -333,7 +340,6 @@ const {
                 :typecheck="item.typecheck === true"
                 :label="item.label"
                 :project-name="item.projectName ?? ''"
-                :project-name-color="item.projectNameColor ?? ''"
                 :state="item.state"
                 :duration="item.duration"
                 :slow="item.slow === true"

@@ -1,7 +1,9 @@
 import type { Context } from 'node:vm'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
+import type { ModuleInformation } from '../external-executor'
 import { pathToFileURL } from 'node:url'
+import v8 from 'node:v8'
 import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
 import { loadEnvironment } from '../../integrations/env/loader'
@@ -13,13 +15,19 @@ import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
+import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
+import { CodeCache } from '../vm/code-cache'
 import { FileMap } from '../vm/file-map'
+import { captureContextKeys, setActiveVmExecutor, stripDisposedContext } from '../vm/utils'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
+const codeCache = new CodeCache()
+const resolveCache = new Map<string, string>()
+const moduleInfoCache = new Map<string, ModuleInformation>()
 
 export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
   const { ctx, rpc } = state
@@ -27,6 +35,16 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const beforeEnvironmentTime = performance.now()
   const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces, true)
   state.environment = environment
+
+  // let the server transform this file's import graph while this worker is
+  // busy setting up the environment (jsdom takes ~0.5s per worker) —
+  // the server is otherwise idle during that window on a cold start.
+  if (environment.prewarmModules !== false) {
+    rpc.prewarmModuleGraph(
+      environment.viteEnvironment || environment.name,
+      ctx.files.map(file => file.filepath),
+    ).catch(() => {})
+  }
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
@@ -67,6 +85,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     )
   }
 
+  // captured before vitest installs its own globals (worker state, console,
+  // mocker, executor symbol): they reference the test file's module graph, so
+  // the teardown strip must treat them as removable, not as pristine
+  const initialContextKeys = captureContextKeys(context)
+
   provideWorkerState(context, state)
 
   // this is unfortunately needed for our own dependencies
@@ -86,13 +109,17 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const externalModulesExecutor = new ExternalModulesExecutor({
     context,
     fileMap,
+    codeCache,
+    resolveCache,
+    moduleInfoCache,
     packageCache,
     transform: rpc.transform,
     viteClientModule: stubs['/@vite/client'],
   })
 
   process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
+    const filepath = state.filepath
+    throw new Error(`process.exit unexpectedly called with "${code}"${filepath ? ` (test file: ${filepath})` : ''}`)
   }
 
   listenForErrors(() => state)
@@ -118,6 +145,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     writable: false,
   })
   context.__vitest_mocker__ = moduleRunner.mocker
+
+  setupEnv(ctx.config.env, state.metaEnv)
 
   if (ctx.config.serializedDefines) {
     try {
@@ -149,6 +178,13 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       'vitest.runtime.environment.teardown',
       () => vm.teardown?.(),
     )
+    // unregisters the runner from Vite's `Error.prepareStackTrace` interceptor:
+    // its module-level cache holds `evaluatedModules` of every runner it has
+    // seen, which would otherwise keep each test file's entire module graph
+    // (and with it the vm context) alive for the lifetime of the worker
+    await moduleRunner.close()
+    stripDisposedContext(context, initialContextKeys)
+    setActiveVmExecutor(undefined)
   }
 }
 
@@ -156,4 +192,11 @@ export function setupVmWorker(context: WorkerSetupContext): void {
   if (context.config.experimental.viteModuleRunner === false) {
     throw new Error(`Pool "${context.pool}" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   }
+  // V8's isolate-level compilation cache keeps evaluated `vm.SourceTextModule`s
+  // (and everything their module state references) alive until a
+  // memory-pressure GC clears the cache, which in practice means every test
+  // file's world accumulates until the worker hits `vmMemoryLimit`. The
+  // compiled-code caching the flag disables is already covered by the
+  // worker's own script and code caches.
+  v8.setFlagsFromString('--no-compilation-cache')
 }

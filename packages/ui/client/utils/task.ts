@@ -1,15 +1,8 @@
-import type { RunnerTask, RunnerTestSuite } from 'vitest'
+import type { RunnerTask, RunnerTestSuite, SerializedRootConfig } from 'vitest'
 import { isDark } from '~/composables'
 
 export function isSuite(task: RunnerTask): task is RunnerTestSuite {
   return Object.hasOwn(task, 'tasks')
-}
-
-export function isTaskDone(task: RunnerTask) {
-  const state = task.result?.state
-  const mode = task.mode
-
-  return state === 'pass' || state === 'fail' || state === 'skip' || mode === 'skip' || mode === 'todo'
 }
 
 export function caseInsensitiveMatch(target: string, str2: string) {
@@ -152,7 +145,7 @@ export function getBadgeNameColor(name: string | undefined, transparent = false)
   return (transparent ? transparentColors : colors)[index % colors.length]
 }
 
-export function getBadgeTextColor(color: string) {
+function getBadgeTextColor(color: string) {
   switch (color) {
     case 'blue':
     case 'green':
@@ -166,5 +159,26 @@ export function getBadgeTextColor(color: string) {
     case 'white':
     default:
       return 'black'
+  }
+}
+
+export function getProjectConfigByName(
+  // TODO: config shouldn't be partial in valid app lifetime. rework later.
+  config: Partial<SerializedRootConfig>,
+  projectName: string | undefined,
+) {
+  return config.projects?.find(project => project.name === projectName)
+}
+
+export function getProjectBadgeStyle(
+  config: Partial<SerializedRootConfig>,
+  projectName: string | undefined,
+) {
+  const backgroundColor = getProjectConfigByName(config, projectName)?.color
+    ?? getBadgeNameColor(projectName)
+
+  return {
+    backgroundColor,
+    color: getBadgeTextColor(backgroundColor),
   }
 }

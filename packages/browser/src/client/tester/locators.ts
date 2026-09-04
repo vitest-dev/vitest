@@ -1,6 +1,7 @@
 import type { ParsedSelector } from 'ivya'
 import type {
   LocatorByRoleOptions,
+  LocatorFilterOptions,
   LocatorOptions,
   LocatorScreenshotOptions,
   MarkOptions,
@@ -28,11 +29,13 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertElementToCssSelector, escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
+import { LocatorAction, resolveActionTimeout, UploadAction } from './action'
+import { convertElementToCssSelector, escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from './tester-utils'
 import { recordBrowserTraceEntry } from './trace'
 
 export { ensureAwaited } from '../utils'
-export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from './tester-utils'
+export { processTimeoutOptions } from './action'
+export { convertElementToCssSelector, getIframeScale } from './tester-utils'
 export {
   getByAltTextSelector,
   getByLabelSelector,
@@ -92,15 +95,15 @@ export abstract class Locator {
   }
 
   public click(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_click', this.serialize(), options)
+    return this.action('__vitest_click', [], options)
   }
 
   public dblClick(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_dblClick', this.serialize(), options)
+    return this.action('__vitest_dblClick', [], options)
   }
 
   public tripleClick(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_tripleClick', this.serialize(), options)
+    return this.action('__vitest_tripleClick', [], options)
   }
 
   public wheel(options: UserEventWheelOptions): Promise<void> {
@@ -125,56 +128,27 @@ export abstract class Locator {
   }
 
   public clear(options?: UserEventClearOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_clear', this.serialize(), options)
+    return this.action('__vitest_clear', [], options)
   }
 
   public hover(options?: UserEventHoverOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_hover', this.serialize(), options)
+    return this.action('__vitest_hover', [], options)
   }
 
   public unhover(options?: UserEventHoverOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_hover', { selector: 'html > body', locator: 'locator(\'body\')' }, options)
+    return this.action('__vitest_hover', [], options, { selector: 'html > body', locator: 'locator(\'body\')' })
   }
 
   public fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_fill', this.serialize(), text, options)
+    return this.action('__vitest_fill', [text], options)
   }
 
   public upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
-    return ensureAwaited(async (error) => {
-      const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
-        if (typeof file === 'string') {
-          return file
-        }
-        const bas64String = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
-          reader.readAsDataURL(file)
-        })
-
-        return {
-          name: file.name,
-          mimeType: file.type,
-          // strip prefix `data:[<media-type>][;base64],`
-          base64: bas64String.slice(bas64String.indexOf(',') + 1),
-        }
-      })
-      return getBrowserState().commands.triggerCommand<void>(
-        '__vitest_upload',
-        [this.serialize(), await Promise.all(filesPromise), options],
-        error,
-      )
-    })
+    return new UploadAction(this.serialize(), files, options, this._errorSource)
   }
 
   public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {
-    return this.triggerCommand<void>(
-      '__vitest_dragAndDrop',
-      this.toJSON(),
-      target.toJSON(),
-      options,
-    )
+    return this.action('__vitest_dragAndDrop', [target.toJSON()], options, this.toJSON())
   }
 
   public selectOptions(
@@ -193,7 +167,7 @@ export abstract class Locator {
       }
       return v
     })
-    return this.triggerCommand('__vitest_selectOptions', this.serialize(), values, options)
+    return this.action('__vitest_selectOptions', [values], options)
   }
 
   public screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
@@ -273,7 +247,7 @@ export abstract class Locator {
     return this.locator(getByTitleSelector(title, options))
   }
 
-  public filter(filter: LocatorOptions): Locator {
+  public filter(filter: LocatorFilterOptions): Locator {
     const selectors = []
 
     if (filter?.hasText) {
@@ -368,9 +342,8 @@ export abstract class Locator {
   }
 
   public async findElement(options_: SelectorOptions = {}): Promise<HTMLElement | SVGElement> {
-    const options = processTimeoutOptions(options_)
-    const timeout = options?.timeout
-    const strict = options?.strict ?? true
+    const timeout = resolveActionTimeout(options_)
+    const strict = options_?.strict ?? true
     const startTime = now()
     let intervalIndex = 0
     while (true) {
@@ -397,22 +370,19 @@ export abstract class Locator {
     }
   }
 
-  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
-    if (this._errorSource) {
-      return triggerCommandWithTrace<T>({
-        name: command,
-        arguments: args,
-        errorSource: this._errorSource,
-      })
-    }
-    return ensureAwaited(error => triggerCommandWithTrace<T>({
-      name: command,
-      arguments: args,
-      errorSource: error,
-    }))
+  private action(
+    command: string,
+    args: unknown[],
+    options?: { timeout?: number },
+    target: SerializedLocator = this.serialize(),
+  ): Promise<void> {
+    return new LocatorAction(target, command, args, options, this._errorSource)
   }
 }
 
+/**
+ * @deprecated
+ */
 export function triggerCommandWithTrace<T>(
   options: {
     name: string

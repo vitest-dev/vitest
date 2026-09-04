@@ -7,6 +7,7 @@ export async function setup() {
   const server = await createServer({
     root: resolve(import.meta.dirname, '..'),
     server: {
+      host: '127.0.0.1',
       port: 9988,
     },
   })

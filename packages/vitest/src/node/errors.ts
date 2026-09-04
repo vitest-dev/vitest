@@ -14,6 +14,10 @@ export class GitNotFoundError extends Error {
   }
 }
 
+export class BrowserConnectionError extends Error {
+  code = 'VITEST_BROWSER_CONNECTION_CLOSED'
+}
+
 export class LocationFilterFileNotFoundError extends Error {
   code = 'VITEST_LOCATION_FILTER_FILE_NOT_FOUND'
 
@@ -37,13 +41,5 @@ export class RangeLocationFilterProvidedError extends Error {
   constructor(filter: string) {
     super(`Found "-" in location filter ${filter}.  Note that range location filters `
       + `are not supported.  Consider specifying the exact line numbers of your tests.`)
-  }
-}
-
-export class VitestFilteredOutProjectError extends Error {
-  code = 'VITEST_FILTERED_OUT_PROJECT'
-
-  constructor() {
-    super('VITEST_FILTERED_OUT_PROJECT')
   }
 }

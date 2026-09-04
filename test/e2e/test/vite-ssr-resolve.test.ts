@@ -4,7 +4,7 @@ import { join } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-const nodeModulesDir = join(import.meta.dirname, '../../node_modules')
+const nodeModulesDir = join(import.meta.dirname, '../node_modules')
 
 describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite SSR config in %s style', (style) => {
   test('merges vite ssr.resolve.noExternal with server.deps.inline', async () => {

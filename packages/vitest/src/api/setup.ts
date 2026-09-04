@@ -156,8 +156,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           catch {}
           return result
         },
-        async getModuleGraph(project, id): Promise<ModuleGraphData> {
-          return getModuleGraph(ctx, project, id)
+        async getModuleGraph(project, id, viteEnvironment): Promise<ModuleGraphData> {
+          return getModuleGraph(ctx, project, id, viteEnvironment)
         },
         async updateSnapshot(file?: File) {
           // silently ignore exec/write attempts if not allowed
@@ -196,6 +196,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           'onFinishedReportCoverage',
           'onCollected',
           'onTaskUpdate',
+          'onTestRemoved',
         ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
@@ -214,7 +215,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   ctx.reporters.push(new WebSocketReporter(ctx, wss, clients))
 }
 
-export class WebSocketReporter implements Reporter {
+class WebSocketReporter implements Reporter {
   private start = 0
   private end = 0
   constructor(
@@ -272,6 +273,16 @@ export class WebSocketReporter implements Reporter {
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs, events)?.catch?.(noop)
+    })
+  }
+
+  onTestRemoved(trigger?: string): void {
+    if (this.clients.size === 0) {
+      return
+    }
+
+    this.clients.forEach((client) => {
+      client.onTestRemoved?.(trigger)?.catch?.(noop)
     })
   }
 

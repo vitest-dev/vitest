@@ -28,7 +28,7 @@ export class BrowserSessions {
     let isReady = false
     const timeout = setTimeout(() => {
       defer.reject(new Error(`Failed to connect to the browser session "${sessionId}" [${project.name}] within the timeout.`))
-    }, project.vitest.config.browser.connectTimeout ?? 60_000).unref()
+    }, project.config.browser.connectTimeout ?? 60_000).unref()
 
     const resolveIfReady = () => {
       if (!isConnected || !isReady) {

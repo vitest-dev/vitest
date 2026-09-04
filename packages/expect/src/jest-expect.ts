@@ -467,6 +467,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       }
 
       const actual = this._obj as any
+      if (actual == null) {
+        throw new TypeError(
+          `.toHaveProperty() expects to receive a valid object, but got ${actual}`,
+        )
+      }
       const [propertyName, expected] = args
       const getValue = () => {
         const hasOwn = Object.hasOwn(
@@ -603,14 +608,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = spy.mock.calls.some(callArg => equalsArgumentArray(callArg, args))
     const isNot = utils.flag(this, 'negate') as boolean
 
-    const msg = utils.getMessage(this, [
-      pass,
-      `expected "${spyName}" to be called with arguments: #{exp}`,
-      `expected "${spyName}" to not be called with arguments: #{exp}`,
-      args,
-    ])
-
     if ((pass && isNot) || (!pass && !isNot)) {
+      const msg = utils.getMessage(this, [
+        pass,
+        `expected "${spyName}" to be called with arguments: #{exp}`,
+        `expected "${spyName}" to not be called with arguments: #{exp}`,
+        args,
+      ])
       throw new AssertionError(formatCalls(spy, msg, args))
     }
   })
@@ -622,14 +626,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = hasCallWithArgs && callCount === 1
     const isNot = utils.flag(this, 'negate') as boolean
 
-    const msg = utils.getMessage(this, [
-      pass,
-      `expected "${spyName}" to be called once with arguments: #{exp}`,
-      `expected "${spyName}" to not be called once with arguments: #{exp}`,
-      args,
-    ])
-
     if ((pass && isNot) || (!pass && !isNot)) {
+      const msg = utils.getMessage(this, [
+        pass,
+        `expected "${spyName}" to be called once with arguments: #{exp}`,
+        `expected "${spyName}" to not be called once with arguments: #{exp}`,
+        args,
+      ])
       throw new AssertionError(formatCalls(spy, msg, args))
     }
   })

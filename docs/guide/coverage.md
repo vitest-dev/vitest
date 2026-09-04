@@ -81,10 +81,7 @@ import Box from '../.vitepress/components/Box.vue'
 
 ## Istanbul Provider
 
-[Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
-This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
-
-In practice, instrumenting source files means adding additional Javascript in user's files:
+[Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested. This provider works on any JavaScript runtime as coverage tracking works by transforming your source code to add instrumentation logic. In practice, the code Vitest will end up running looks something like this:
 
 ```js
 // Simplified example of branch and function coverage counters
@@ -116,9 +113,8 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 - ✅ Works on any Javascript runtime
 - ✅ Widely used and battle-tested for over 13 years.
 - ✅ In some cases faster than V8. Coverage instrumentation can be limited to specific files, as opposed to V8 where all modules are instrumented.
-- ❌ Requires pre-instrumentation step
+- ❌ Source code is transformed to add instrumentation before running
 - ❌ Execution speed is slower than V8 due to instrumentation overhead
-- ❌ Instrumentation increases file sizes
 - ❌ Memory usage is higher than V8
 
 <div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
@@ -261,10 +257,36 @@ export default defineConfig({
 })
 ```
 
-Custom reporters are loaded by Istanbul and must match its reporter interface. See [built-in reporters' implementation](https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib) for reference.
+Custom reporters are loaded by `@vitest/istanbul-lib-report` and must match its reporter interface. See [built-in reporters' implementation](https://github.com/vitest-dev/istanbuljs/tree/main/packages/istanbul-lib-report/src/reports) for reference.
 
+::: code-group
+```js [custom-reporter.mjs]
+import { ReportBase } from '@vitest/istanbul-lib-report'
+
+export default class CustomReporter extends ReportBase {
+  constructor(opts) {
+    super()
+
+    if (!opts.file) {
+      throw new Error('File is required as custom reporter parameter')
+    }
+
+    this.file = opts.file
+  }
+
+  onStart(root, context) {
+    this.contentWriter = context.writer.writeFile(this.file)
+    this.contentWriter.println('Start of custom coverage report ESM')
+  }
+
+  onEnd() {
+    this.contentWriter.println('End of custom coverage report ESM')
+    this.contentWriter.close()
+  }
+}
+```
 ```js [custom-reporter.cjs]
-const { ReportBase } = require('istanbul-lib-report')
+const { ReportBase } = require('@vitest/istanbul-lib-report')
 
 module.exports = class CustomReporter extends ReportBase {
   constructor(opts) {
@@ -285,6 +307,7 @@ module.exports = class CustomReporter extends ReportBase {
   }
 }
 ```
+:::
 
 ## Custom Coverage Provider
 

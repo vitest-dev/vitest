@@ -1,12 +1,14 @@
-import type { CoverageMap, CoverageSummary } from 'istanbul-lib-coverage'
+import type { CoverageMap, CoverageSummary } from '@vitest/istanbul-lib-coverage'
 import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
 import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
+import { createHash } from 'node:crypto'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl, slash } from '@vitest/utils/helpers'
@@ -16,7 +18,7 @@ import { glob } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
-import { resolveCoverageProviderModule } from '../utils/coverage'
+import { getCoverageFilesDirectory, resolveCoverageProviderModule } from '../utils/coverage'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -63,7 +65,6 @@ const THRESHOLD_KEYS: Readonly<Threshold[]> = [
 ]
 const GLOBAL_THRESHOLDS_KEY = 'global'
 const DEFAULT_PROJECT: unique symbol = Symbol.for('default-project')
-let uniqueId = 0
 
 export async function getCoverageProvider(
   options: SerializedCoverageConfig | undefined,
@@ -85,10 +86,11 @@ export class BaseCoverageProvider {
   options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
   autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
+  globMatchers?: { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean }
 
   coverageFiles: CoverageFiles = new Map()
-  pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  reportsDirectoryLock!: ReportsDirectoryLock
   roots: string[] = []
   changedFiles?: string[]
 
@@ -106,6 +108,8 @@ export class BaseCoverageProvider {
     }
 
     const config = ctx._coverageOptions
+
+    this.globMatchers = undefined
 
     this.options = {
       ...coverageConfigDefaults,
@@ -131,15 +135,11 @@ export class BaseCoverageProvider {
       },
     }
 
-    const shard = this.ctx.config.shard
-    const tempDirectory = `.tmp${
-      shard ? `-${shard.index}-${shard.count}` : ''
-    }`
-
-    this.coverageFilesDirectory = resolve(
+    this.coverageFilesDirectory = getCoverageFilesDirectory(
       this.options.reportsDirectory,
-      tempDirectory,
+      this.ctx.config.shard,
     )
+    this.reportsDirectoryLock = new ReportsDirectoryLock(resolve(this.options.reportsDirectory))
 
     // If --project filter is set pick only roots of resolved projects
     this.roots = ctx.config.project?.length
@@ -171,18 +171,15 @@ export class BaseCoverageProvider {
 
     const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
 
-    if (pm.isMatch(relativeFilename, this.options.exclude, { dot: true })) {
+    const { matchExclude, matchInclude } = this.getGlobMatchers()
+
+    if (matchExclude(relativeFilename)) {
       this.globCache.set(filename, false)
       return false
     }
 
     // By default `coverage.include` matches all files, except "coverage.exclude"
-    const glob = this.options.include || '**'
-
-    let included = pm.isMatch(relativeFilename, glob, {
-      dot: true,
-      ignore: this.options.exclude,
-    })
+    let included = matchInclude(relativeFilename)
 
     if (included && this.changedFiles) {
       included = this.changedFiles.includes(filename)
@@ -191,6 +188,25 @@ export class BaseCoverageProvider {
     this.globCache.set(filename, included)
 
     return included
+  }
+
+  /**
+   * Compile `coverage.include`/`coverage.exclude` into reusable matchers once.
+   * `picomatch.isMatch(file, patterns, options)` recompiles the patterns on
+   * every call, which dominates the filtering step on large test suites.
+   */
+  private getGlobMatchers(): { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean } {
+    if (!this.globMatchers) {
+      const exclude = this.options.exclude
+      const include = this.options.include
+
+      this.globMatchers = {
+        matchExclude: exclude.length ? pm(exclude, { dot: true }) : () => false,
+        matchInclude: include ? pm(include, { dot: true, ignore: exclude }) : () => true,
+      }
+    }
+
+    return this.globMatchers
   }
 
   private async getUntestedFilesByRoot(
@@ -245,6 +261,8 @@ export class BaseCoverageProvider {
   }
 
   async clean(clean = true): Promise<void> {
+    await this.reportsDirectoryLock.acquire()
+
     if (clean && existsSync(this.options.reportsDirectory)) {
       await fs.rm(this.options.reportsDirectory, {
         recursive: true,
@@ -264,29 +282,17 @@ export class BaseCoverageProvider {
     await fs.mkdir(this.coverageFilesDirectory, { recursive: true })
 
     this.coverageFiles = new Map()
-    this.pendingPromises = []
-  }
-
-  private normalizeCoverageFileError(error: unknown): unknown {
-    if (
-      error instanceof Error
-      && 'code' in error
-      && error.code === 'ENOENT'
-      && !existsSync(this.coverageFilesDirectory)
-    ) {
-      return new Error(
-        `Something removed the coverage directory "${this.coverageFilesDirectory}" Vitest created earlier. Make sure you are not running multiple Vitests with the same "coverage.reportsDirectory" at the same time.`,
-        { cause: error },
-      )
-    }
-
-    return error
   }
 
   onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
     }
+
+    if (typeof coverage !== 'string') {
+      throw new TypeError(`Expected string coverage payload, received ${typeof coverage}, ${JSON.stringify(coverage)}`)
+    }
+    const filename = coverage
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
@@ -296,20 +302,9 @@ export class BaseCoverageProvider {
     }
 
     const testFilenames = testFiles.join()
-    const filename = resolve(
-      this.coverageFilesDirectory,
-      `coverage-${uniqueId++}.json`,
-    )
-
     entry[environment] ??= {}
     // If there's a result from previous run, overwrite it
     entry[environment][testFilenames] = filename
-
-    const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
-      .catch((error) => {
-        throw this.normalizeCoverageFileError(error)
-      })
-    this.pendingPromises.push(promise)
   }
 
   async readCoverageFiles<CoverageType>({ onFileRead, onFinished, onDebug }: {
@@ -320,10 +315,7 @@ export class BaseCoverageProvider {
     onDebug: ((...logs: any[]) => void) & { enabled: boolean }
   }): Promise<void> {
     let index = 0
-    const total = this.pendingPromises.length
-
-    await Promise.all(this.pendingPromises)
-    this.pendingPromises = []
+    const total = this.coverageFiles.size
 
     for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
       for (const [environment, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
@@ -338,9 +330,6 @@ export class BaseCoverageProvider {
 
           await Promise.all(chunk.map(async (filename) => {
             const contents = await fs.readFile(filename, 'utf-8')
-              .catch((error) => {
-                throw this.normalizeCoverageFileError(error)
-              })
             const coverage = JSON.parse(contents)
 
             onFileRead(coverage)
@@ -354,12 +343,17 @@ export class BaseCoverageProvider {
   }
 
   async cleanAfterRun(): Promise<void> {
-    this.coverageFiles = new Map()
-    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+    try {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
 
-    // Remove empty reports directory, e.g. when only text-reporter is used
-    if (readdirSync(this.options.reportsDirectory).length === 0) {
-      await fs.rm(this.options.reportsDirectory, { recursive: true })
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0) {
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      }
+    }
+    finally {
+      await this.reportsDirectoryLock.release()
     }
   }
 
@@ -574,7 +568,7 @@ export class BaseCoverageProvider {
        * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
        */
       if (threshold >= 0) {
-        const coverage = summary.data[thresholdKey].pct
+        const coverage = summary.data[thresholdKey].pct as number
 
         if (coverage < threshold) {
           process.exitCode = 1
@@ -645,7 +639,7 @@ export class BaseCoverageProvider {
          */
         if (threshold >= 0) {
           const actual = Math.min(
-            ...summaries.map(summary => summary[key].pct),
+            ...summaries.map(summary => summary[key].pct as number),
           )
 
           if (actual > threshold) {
@@ -760,15 +754,6 @@ export class BaseCoverageProvider {
       }
     }
 
-    if (project.isBrowserEnabled() || viteEnvironment === '__browser__') {
-      const client = project.browser?.vite.environments.client || project.vite.environments.client
-      const result = await client.transformRequest(url)
-
-      if (result) {
-        return result
-      }
-    }
-
     return project.vite.environments[viteEnvironment].transformRequest(url)
   }
 
@@ -792,7 +777,7 @@ export class BaseCoverageProvider {
 
         try {
           const environment = project.config.environment
-          const viteEnvironment = environment === 'jsdom' || environment === 'happy-dom' ? 'client' : 'ssr'
+          const viteEnvironment = environment === 'jsdom' || environment === 'happy-dom' || project.isBrowserEnabled() ? 'client' : 'ssr'
           return await this.transformFile(filename, project, viteEnvironment)
         }
         catch (err) {
@@ -950,5 +935,114 @@ function resolveMergeConfig(mod: any): any {
         return config
       }
     }
+  }
+}
+
+/**
+ * Cross-process lock on a coverage `reportsDirectory`.
+ *
+ * Two `vitest run --coverage` runs pointed at the same reports directory delete
+ * each other's reports, so the second one to start fails fast instead. The lock
+ * file lives in the OS temp directory so it survives the cleanup it guards, and a
+ * lock left behind by a process that no longer exists is reclaimed on the next run.
+ */
+interface LockOwner {
+  pid: number
+  reportsDirectory: string
+}
+
+class ReportsDirectoryLock {
+  readonly lockFile: string
+
+  constructor(private readonly reportsDirectory: string) {
+    const hash = createHash('sha256')
+      .update(reportsDirectory)
+      .digest('hex')
+      .slice(0, 16)
+
+    this.lockFile = resolve(tmpdir(), `vitest-coverage-${hash}.lock`)
+  }
+
+  async acquire(): Promise<void> {
+    if (await this.tryWrite()) {
+      return
+    }
+
+    const owner = await this.readOwner()
+
+    // We already hold the lock for this directory (e.g. watch-mode reruns).
+    if (owner?.pid === process.pid) {
+      return
+    }
+
+    // Another running Vitest owns this directory.
+    if (owner && isProcessAlive(owner.pid)) {
+      throw this.inUseError(owner)
+    }
+
+    // The lock was left behind by a process that no longer exists. Reclaim it.
+    await fs.rm(this.lockFile, { force: true })
+
+    if (!(await this.tryWrite())) {
+      throw this.inUseError(await this.readOwner())
+    }
+  }
+
+  async release(): Promise<void> {
+    const owner = await this.readOwner()
+
+    if (owner?.pid === process.pid) {
+      await fs.rm(this.lockFile, { force: true })
+    }
+  }
+
+  private async tryWrite(): Promise<boolean> {
+    const payload = JSON.stringify({ pid: process.pid, reportsDirectory: this.reportsDirectory })
+
+    try {
+      // `wx` fails with EEXIST if the file already exists, so only one process wins.
+      await fs.writeFile(this.lockFile, payload, { flag: 'wx' })
+      return true
+    }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        return false
+      }
+      throw error
+    }
+  }
+
+  private async readOwner(): Promise<LockOwner | null> {
+    try {
+      const owner = JSON.parse(await fs.readFile(this.lockFile, 'utf-8'))
+      return typeof owner?.pid === 'number' ? owner : null
+    }
+    catch {
+      return null
+    }
+  }
+
+  private inUseError(owner: LockOwner | null): Error {
+    return new Error(
+      `The coverage report directory "${this.reportsDirectory}" is already in use by `
+      + `another Vitest process${owner ? ` (pid ${owner.pid})` : ''}. Running coverage for multiple `
+      + `Vitest processes in the same directory at the same time is not supported, because they would `
+      + `delete each other's reports.\nGive each run its own "coverage.reportsDirectory" `
+      + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
+    )
+  }
+}
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    // Sending signal 0 checks if the process exists without actually killing it:
+    // https://nodejs.org/api/process.html#processkillpid-signal
+    process.kill(pid, 0)
+    return true
+  }
+  catch (error) {
+    // ESRCH means the process is gone. Treat anything else (e.g. EPERM) as alive
+    // so we never reclaim a lock from a process that is still running.
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
   }
 }

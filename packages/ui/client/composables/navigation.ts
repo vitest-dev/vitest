@@ -12,7 +12,7 @@ export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
 export const coverageVisible = ref(false)
 export const disableCoverage = ref(true)
-export const coverage = computed(() => config.value?.coverage)
+const coverage = computed(() => config.value?.coverage)
 export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
   return (
@@ -33,6 +33,10 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
       : 33,
     67,
   ],
+)
+export const traceViewSplitSizes = useLocalStorage<[steps: number, iframe: number]>(
+  'vitest-ui_splitpanes-traceViewSplitSizes',
+  [30, 70],
 )
 
 export const detailsPanelVisible = useLocalStorage<boolean>(
@@ -112,7 +116,7 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo({ file, line, view, test, column }: Params) {
+export function navigateTo({ file, line, view, test, column }: Omit<Params, 'traceAttempt' | 'traceStep'>) {
   activeFileId.value = file
   lineNumber.value = line
   columnNumber.value = column
@@ -123,24 +127,14 @@ export function navigateTo({ file, line, view, test, column }: Params) {
 }
 
 export function clickOnTask(task: Task) {
-  if (task.type === 'test') {
-    if (viewMode.value === 'editor') {
-      showTaskSource(task)
-    }
-    else {
-      navigateTo({
-        file: task.file.id,
-        line: null,
-        column: null,
-        view: viewMode.value,
-        test: task.id,
-      })
-    }
+  const isFile = 'filepath' in task
+  if (!isFile && viewMode.value === 'editor') {
+    showTaskSource(task)
   }
   else {
     navigateTo({
       file: task.file.id,
-      test: null,
+      test: isFile ? null : task.id,
       line: null,
       view: viewMode.value,
       column: null,

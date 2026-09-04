@@ -9,8 +9,11 @@ type Awaitable<T> = T | PromiseLike<T>
 `expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides Chai-style assertions (e.g., [`expect(spy).to.have.been.called()`](#called)) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
 
 ```ts
-export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
-  <T>(actual: T, message?: string): Assertion<T>
+export interface ExpectStatic
+  extends Chai.ExpectStatic,
+  Matchers<any>,
+  AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<void, T>
   extend: (expects: MatchersObject) => void
   anything: () => any
   any: (constructor: unknown) => any
@@ -1819,7 +1822,7 @@ test('spy called after another', () => {
 ```
 
 ::: tip Migration Guide
-For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration#mocha-chai-sinon).
+For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration/mocha).
 :::
 
 ## toSatisfy
@@ -1869,9 +1872,7 @@ test('buyApples returns new stock id', async () => {
 ```
 
 :::warning
-If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
-
-Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
+If the assertion is not awaited, the test will be marked as "failed" at the end of the test.
 :::
 
 ## rejects
@@ -1900,9 +1901,7 @@ test('buyApples throws an error when no id provided', async () => {
 ```
 
 :::warning
-If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
-
-Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
+If the assertion is not awaited, the test will be marked as "failed" at the end of the test.
 :::
 
 ## expect.assertions
@@ -2017,6 +2016,28 @@ test.each(errorDirs)('build fails with "%s"', async (dir) => {
         expect.unreachable('All error test must be handled')
         break
     }
+  }
+})
+```
+
+## expect.fail
+
+- **Type:** `(message?: string) => never`
+
+Explicitly forces a test failure with an optional custom message.
+
+For example, you can use it inside a `try/catch` block to ensure an error was thrown:
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fails when error is not thrown', async () => {
+  try {
+    await performAction()
+    expect.fail('Expected performAction to throw an error')
+  }
+  catch (error) {
+    expect(error).toBeInstanceOf(CustomError)
   }
 })
 ```
@@ -2242,12 +2263,11 @@ import { expect, test } from 'vitest'
 
 test('custom matchers', () => {
   expect.extend({
-    toBeFoo: (received, expected) => {
-      if (received !== 'foo') {
-        return {
-          message: () => `expected ${received} to be foo`,
-          pass: false,
-        }
+    toBeFoo(received) {
+      const { isNot } = this
+      return {
+        message: () => `expected ${received} is${isNot ? ' not' : ''} foo`,
+        pass: received === 'foo',
       }
     },
   })
@@ -2263,18 +2283,19 @@ If you want your matchers to appear in every test, you should call this method i
 
 This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
 
-If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
+If you are using TypeScript, you can extend the default `Matchers` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
 ```ts
-interface CustomMatchers<R = unknown> {
-  toBeFoo: () => R
-}
+import 'vitest'
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
+  interface Matchers<R, T> {
+    toBeFoo: () => R
+  }
 }
 ```
+
+`R` is the assertion return type, and `T` is the type of the received value.
 
 ::: warning
 Don't forget to include the ambient declaration file in your `tsconfig.json`.

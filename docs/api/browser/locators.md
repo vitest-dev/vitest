@@ -515,7 +515,7 @@ page.getByRole('button')
 ## filter
 
 ```ts
-function filter(options: LocatorOptions): Locator
+function filter(options: LocatorFilterOptions): Locator
 ```
 
 This methods narrows down the locator according to the options, such as filtering by text. It can be chained to apply multiple filters.

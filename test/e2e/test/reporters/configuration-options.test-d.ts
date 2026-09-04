@@ -41,6 +41,7 @@ test('reporters, multiple', () => {
 test('reporters, with options', () => {
   assertType<Configuration>({
     reporters: [
+      ['github-actions', { jobSummary: { title: 'Custom Test Report' } }],
       ['json', { outputFile: 'test.json' }],
       ['junit', { classname: 'something', suiteName: 'Suite name', outputFile: 'test.json' }],
       ['vitest-sonar-reporter', { outputFile: 'report.xml' }],

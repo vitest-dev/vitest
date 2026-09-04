@@ -27,12 +27,6 @@ function createMismatchError(
   return error
 }
 
-export interface Context {
-  file: string
-  title?: string
-  fullTitle?: string
-}
-
 interface AssertOptions {
   received: unknown
   filepath: string
@@ -71,7 +65,7 @@ export interface MatchResult {
   expected?: unknown
 }
 
-export interface SnapshotClientOptions {
+interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
 }
 
@@ -141,6 +135,14 @@ export class SnapshotClient {
     }
 
     const snapshotState = this.getSnapshotState(filepath)
+    if (rawSnapshot?.file === snapshotState.snapshotPath) {
+      // note that this hard rejection is best-effort in a sense that,
+      // if `toMatchFileSnapshot` is called with a different test file's snapshot path,
+      // this check will not catch it.
+      throw new Error(
+        `File snapshot cannot use the same path as the test snapshot file: ${rawSnapshot.file}`,
+      )
+    }
     const testName = [name, ...(message ? [message] : [])].join(' > ')
 
     // Probe first so we can mark as checked even on early return

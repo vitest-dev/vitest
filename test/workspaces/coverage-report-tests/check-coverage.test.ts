@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
-import libCoverage from 'istanbul-lib-coverage'
+import * as libCoverage from '@vitest/istanbul-lib-coverage'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 

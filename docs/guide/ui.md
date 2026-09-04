@@ -118,7 +118,7 @@ By left-clicking on the module node, you open the Module Info view.
 <img alt="The module info view for an inlined module" img-light src="/ui/light-module-info.png">
 <img alt="The module info view for an inlined module" img-dark src="/ui/dark-module-info.png">
 
-This view is separated into two parts. The top part shows the full module ID and some diagnostics about the module. If [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache) is enabled, there will be a "cached" or "not cached" badge. On the right you can see time diagnostics:
+This view is separated into two parts. The top part shows the full module ID and some diagnostics about the module. If [`fsModuleCache`](/config/fsmodulecache) is enabled, there will be a "cached" or "not cached" badge. On the right you can see time diagnostics:
 
 - Self Time: the time it took to import the module, excluding static imports.
 - Total Time: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.

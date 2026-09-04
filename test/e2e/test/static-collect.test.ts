@@ -1,8 +1,8 @@
 import type { CliOptions, TestCase, TestModule, TestSuite } from 'vitest/node'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest, rolldownVersion } from 'vitest/node'
+import { runVitest } from '#test-utils'
 
 test('correctly collects a simple test', async () => {
   const testModule = await collectTests(`
@@ -36,6 +36,67 @@ test('correctly collects a simple test', async () => {
           "location": "9:7",
           "mode": "skip",
           "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('collects test.describe as a suite', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    test.describe('scoped suite', () => {
+      test('nested test', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "scoped suite": {
+        "nested test": {
+          "errors": [],
+          "fullName": "scoped suite > nested test",
+          "id": "1709388417_0_0",
+          "location": "5:7",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('ignores lowered "using" helper calls like it[1].call(it[2])', async () => {
+  // parsers can inject this helper when lowering `using` declarations
+  const testModule = await collectTests(`
+    import { describe, test } from 'vitest'
+
+    var __callDispose = (stack, error, hasError) => {
+      var next = (it) => {
+        while (it = stack.pop()) {
+          var result = it[1] && it[1].call(it[2])
+        }
+      }
+      return next()
+    }
+
+    describe('disposable', () => {
+      test('uses a resource', () => {
+        var _stack = []
+        __callDispose(_stack)
+      })
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "disposable": {
+        "uses a resource": {
+          "errors": [],
+          "fullName": "disposable > uses a resource",
+          "id": "1709388417_0_0",
+          "location": "14:7",
+          "mode": "run",
+          "state": "pending",
         },
       },
     }

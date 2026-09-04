@@ -1,15 +1,14 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
 import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
-import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import { mergeScriptCovs } from '@bcoe/v8-coverage'
+import * as libCoverage from '@vitest/istanbul-lib-coverage'
+import * as libReport from '@vitest/istanbul-lib-report'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
-import libCoverage from 'istanbul-lib-coverage'
-import libReport from 'istanbul-lib-report'
-import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
 import { normalize } from 'pathe'
@@ -17,6 +16,7 @@ import { provider } from 'std-env'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider, parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
+import { commands } from './commands'
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
@@ -37,6 +37,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
+
+    for (const project of ctx.projects) {
+      if (project.isBrowserEnabled() && project.browser) {
+        for (const [name, command] of Object.entries(commands)) {
+          project.browser.registerCommand(`__vitest_${name}` as any, command)
+        }
+      }
+    }
 
     if (this.options.autoAttachSubprocess) {
       const isAnyThreadsPools = ctx.projects.some(p => p.config.pool === 'threads' || p.config.pool === 'vmThreads')
@@ -59,42 +67,40 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let merged: RawCoverage = { result: [] }
 
+    const mergedScripts = new Map<ScriptCoverageWithOffset['url'], ScriptCoverageWithOffset>()
     const autoAttachSubprocess = this.options.autoAttachSubprocess
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
-        merged = mergeProcessCovs([merged, coverage])
+        for (const script of coverage.result) {
+          const previous = mergedScripts.get(script.url)
+          const merged: typeof script = mergeScriptCovs(previous ? [previous, script] : [script])
 
-        // mergeProcessCovs sometimes loses autoAttachSubprocess
-        const fromExtendedContext = autoAttachSubprocess ? coverage.result.filter(r => r.isExtendedContext) : []
+          const startOffset = previous?.startOffset || script.startOffset || 0
+          const isExtendedContext = previous?.isExtendedContext || script.isExtendedContext
 
-        // mergeProcessCovs sometimes loses startOffset, e.g. in vue
-        merged.result.forEach((result) => {
-          if (!result.startOffset) {
-            const original = coverage.result.find(r => r.url === result.url)
-            result.startOffset = original?.startOffset || 0
+          merged.startOffset ||= startOffset
+
+          if (autoAttachSubprocess && isExtendedContext) {
+            merged.isExtendedContext = true
           }
 
-          if (autoAttachSubprocess && !result.isExtendedContext) {
-            const actual = fromExtendedContext.find(r => r.url === result.url)
-            result.isExtendedContext = actual?.isExtendedContext
-          }
-        })
+          mergedScripts.set(merged.url, merged)
+        }
       },
       onFinished: async (project, environment) => {
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const converted = await this.convertCoverage(
-          merged,
+          { result: Array.from(mergedScripts.values()) },
           project,
           environment,
         )
 
         coverageMap.merge(converted)
 
-        merged = { result: [] }
+        mergedScripts.clear()
       },
       onDebug: debug,
     })
@@ -149,13 +155,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     for (const reporter of this.options.reporter) {
       // Type assertion required for custom reporters
-      reports
-        .create(reporter[0] as Parameters<typeof reports.create>[0], {
+      const reportInstance = await libReport
+        .createAsync(reporter[0] as Parameters<typeof libReport.create>[0], {
           skipFull: this.options.skipFull,
           projectRoot: this.ctx.config.root,
           ...reporter[1],
         })
-        .execute(context)
+
+      reportInstance.execute(context)
     }
 
     if (this.options.thresholds) {
@@ -246,6 +253,19 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           && node.type === 'VariableDeclarator'
           && node.id.type === 'Identifier'
           && node.id.name.startsWith('__vite_ssr_import_')
+        ) {
+          return true
+        }
+
+        // SSR transformed import binding
+        if (
+          type === 'statement'
+          && node.type === 'VariableDeclarator'
+          && node.init
+          && node.init.type === 'MemberExpression'
+          && node.init.object.type === 'MemberExpression'
+          && node.init.object.object.type === 'Identifier'
+          && node.init.object.object.name.startsWith('__vite_ssr_import_')
         ) {
           return true
         }
@@ -350,8 +370,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           return 'ignore-this-and-nested-nodes'
         }
       },
-    },
-    )
+    }) as libCoverage.CoverageMapData
   }
 
   private async getSources(
@@ -364,7 +383,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     map?: Vite.Rollup.SourceMap
   }> {
     // TODO: need to standardize file urls before this call somehow, this is messy
-    const filepath = url.match(/^file:\/\/\/\w:\//)
+    const filepath = /^file:\/\/\/\w:\//.test(url)
       ? url.slice(8)
       : removeStartsWith(url, FILE_PROTOCOL)
     // TODO: do we still need to "catch" here? why would it fail?
@@ -407,13 +426,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     project: TestProject = this.ctx.getRootProject(),
     environment: string,
   ): Promise<CoverageMap> {
-    if (environment === '__browser__' && !project.browser) {
-      throw new Error(`Cannot access browser module graph because it was torn down.`)
-    }
-
     const onTransform = async (filepath: string, isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false) => {
       const result = await this.transformFile(filepath, project, environment, !isExtendedContext)
-      if (result && environment === '__browser__' && project.browser) {
+      if (result && project.isBrowserEnabled()) {
         return { ...result, code: `${result.code}// <inline-source-map>` }
       }
       return result
@@ -422,7 +437,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const scriptCoverages = []
 
     for (const result of coverage.result) {
-      if (environment === '__browser__') {
+      if (environment === 'client' && project.isBrowserEnabled()) {
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
         }
@@ -434,7 +449,17 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         }
       }
 
-      if (this.isIncluded(fileURLToPath(result.url))) {
+      let filePath
+
+      // Skip results that cannot be converted to file paths, for example virtual files that don't prefix to project root
+      try {
+        filePath = fileURLToPath(result.url)
+      }
+      catch {
+        continue
+      }
+
+      if (this.isIncluded(filePath)) {
         scriptCoverages.push({ ...result, url: decodeURIComponent(result.url) })
       }
     }

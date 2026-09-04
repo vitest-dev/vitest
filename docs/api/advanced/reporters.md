@@ -187,10 +187,10 @@ export default new MyReporter()
 function onCoverage(coverage: unknown): Awaitable<void>
 ```
 
-This hook is called after coverage results have been processed. Coverage provider's reporters are called after this hook. The typings of `coverage` depends on the `coverage.provider`. For Vitest's default built-in providers you can import the types from `istanbul-lib-coverage` package:
+This hook is called after coverage results have been processed. Coverage provider's reporters are called after this hook. The typings of `coverage` depends on the `coverage.provider`. For Vitest's default built-in providers you can import the types from `@vitest/istanbul-lib-coverage` package:
 
 ```ts
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 
 declare function onCoverage(coverage: CoverageMap): Awaitable<void>
 ```

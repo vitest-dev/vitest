@@ -8,10 +8,10 @@ function reject() {
 }
 
 test('resolved inline', async () => {
-  await expect(resolve()).resolves.toMatchInlineSnapshot('"foo"')
+  await (expect(resolve()).resolves.toMatchInlineSnapshot('"foo"') satisfies Promise<void>)
 })
 
 test('rejected inline', async () => {
-  await expect(reject()).rejects.toMatchInlineSnapshot('[Error: foo]')
+  await (expect(reject()).rejects.toMatchInlineSnapshot('[Error: foo]') satisfies Promise<void>)
   await expect(reject()).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: foo]`)
 })

@@ -1,13 +1,19 @@
 import type { ParsedStack } from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
+import { parseStacktrace } from '@vitest/utils/source-map'
 
-export function findTestFileStackTrace(testFilePath: string, error: string): ParsedStack | undefined {
-  // first line is the error message
-  const lines = error.split('\n').slice(1)
-  for (const line of lines) {
-    const stack = parseSingleStack(line)
-    if (stack && stack.file === testFilePath) {
-      return stack
-    }
+export function findTestFileStackTrace(testFilePath: string, error: Error): ParsedStack | undefined {
+  let stack: string | undefined
+  try {
+    stack = error.stack
   }
+  catch {
+    // accessing `.stack` runs `Error.prepareStackTrace`, which can throw
+    // if the test froze `Object.prototype` (see vitest-dev/vscode#798)
+    return undefined
+  }
+  if (!stack) {
+    return undefined
+  }
+  return parseStacktrace(stack, { ignoreStackEntries: [] })
+    .find(stack => stack.file === testFilePath)
 }

@@ -1,4 +1,4 @@
-import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
+import type { CoverageSummary, FileCoverageData } from '@vitest/istanbul-lib-coverage'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { SuiteAPI, TestAPI } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
@@ -8,8 +8,8 @@ import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
+import * as libCoverage from '@vitest/istanbul-lib-coverage'
 import { toArray } from '@vitest/utils/helpers'
-import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
 import { onTestFailed, onTestFinished, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
 import * as testUtils from '../test-utils/index'
@@ -26,7 +26,7 @@ export const coverageTest: TestAPI = process.env.COVERAGE_TEST !== 'true'
   ? (() => {}) as any as TestAPI
   : vitestTest
 
-export async function runVitest(config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) {
+export const runVitest = vi.defineHelper(async (config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) => {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
@@ -93,7 +93,7 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
   }
 
   return result
-}
+})
 
 export async function cleanupCoverageJson(name = './coverage/coverage-final.json') {
   if (existsSync(name)) {

@@ -9,7 +9,7 @@ import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { coverageEnabled, disableCoverage } from '~/composables/navigation'
-import { getBadgeTextColor } from '~/utils/task'
+import { getProjectBadgeStyle } from '~/utils/task'
 import IconAction from '../IconAction.vue'
 import IconButton from '../IconButton.vue'
 import StatusIcon from '../StatusIcon.vue'
@@ -29,7 +29,7 @@ const {
   type,
   disableTaskLocation,
   onItemClick,
-  projectNameColor,
+  projectName,
   state,
 } = defineProps<{
   taskId: string
@@ -46,7 +46,6 @@ const {
   expandable: boolean
   search?: string
   projectName?: string
-  projectNameColor: string
   disableTaskLocation?: boolean
   onItemClick?: (task: Task) => void
 }>()
@@ -65,7 +64,6 @@ const failedSnapshot = computed(() => {
 
 function toggleOpen() {
   if (!expandable) {
-    onItemClick?.(task.value!)
     return
   }
 
@@ -96,17 +94,14 @@ function updateSnapshot(task: Task) {
   return client.rpc.updateSnapshot(task.file)
 }
 
-const data = computed(() => {
-  return indent <= 0 ? [] : Array.from({ length: indent }, (_, i) => `${taskId}-${i}`)
-})
 const gridStyles = computed(() => {
-  const entries = data.value
   const gridColumns: string[] = []
-  // folder icon
-  if (type === 'file' || type === 'suite') {
-    gridColumns.push('min-content')
+  // allocate zero-width columns to simulate indentation via grid gap
+  for (let i = 0; i < indent; i++) {
+    gridColumns.push('0')
   }
-
+  // all items have collapse/expand icon equivalent spacing
+  gridColumns.push('min-content')
   // status icon
   gridColumns.push('min-content')
   // typecheck icon
@@ -117,11 +112,7 @@ const gridStyles = computed(() => {
   gridColumns.push('minmax(0, 1fr)')
   // action buttons
   gridColumns.push('min-content')
-
-  // all the vertical lines with width 1rem and mx-2: always centered
-  return `grid-template-columns: ${
-    entries.map(() => '1rem').join(' ')
-  } ${gridColumns.join(' ')};`
+  return `grid-template-columns: ${gridColumns.join(' ')};`
 })
 
 const runButtonTitle = computed(() => {
@@ -164,7 +155,7 @@ function showDetails() {
   }
 }
 
-const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor))
+const projectBadgeStyle = computed(() => getProjectBadgeStyle(config.value, projectName))
 
 /**
 experiments trying to show tags compactly
@@ -207,20 +198,28 @@ const tagsBgGradient = computed(() => {
     :aria-label="name"
     :data-current="current"
     data-testid="explorer-item"
-    @click="toggleOpen()"
+    @click="onItemClick?.(task)"
   >
     <template v-if="indent > 0">
-      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px inline-flex mx-2 op20 />
+      <div v-for="i in indent" :key="i" class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400" />
     </template>
-    <div v-if="type === 'file' || type === 'suite'" w-4>
-      <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+    <div class="w-4 h-full">
+      <button
+        v-if="type === 'file' || type === 'suite'"
+        type="button"
+        class="w-full h-full flex items-center"
+        :aria-label="`${opened ? 'Collapse' : 'Expand'} ${name}`"
+        @click.stop="toggleOpen"
+      >
+        <div class="op40" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right'" />
+      </button>
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
     <div flex items-baseline gap-2 overflow-hidden>
       <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
       <span v-if="type === 'file' && label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
       <span text-sm truncate font-light>
-        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
+        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="projectBadgeStyle">
           {{ projectName }}
         </span>
         <span :class="state === 'fail' ? 'text-red-700 dark:text-red-500' : undefined" v-html="highlighted" />
@@ -295,12 +294,6 @@ const tagsBgGradient = computed(() => {
 </template>
 
 <style scoped>
-.vertical-line:first-of-type {
-  @apply border-l-2px;
-}
-.vertical-line + .vertical-line {
-  @apply border-r-1px;
-}
 .test-actions {
   display: none;
 }

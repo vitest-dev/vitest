@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import type { SplitpanesResizedPayload } from 'splitpanes'
 import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
-// @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
-import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
+import { traceViewSplitSizes } from '~/composables/navigation'
+import { getTraceEntryClass, selectActiveTraceStep, showTraceSelectorHighlight } from '~/composables/trace-view'
 
 const props = defineProps<{
   trace: NormalizedBrowserTraceData
@@ -30,6 +31,35 @@ function onSelectStep(index: number) {
   }
 }
 
+function onStepKeydown(event: KeyboardEvent, index: number) {
+  let nextIndex: number
+  if (event.key === 'ArrowUp') {
+    nextIndex = Math.max(index - 1, 0)
+  }
+  else if (event.key === 'ArrowDown') {
+    nextIndex = Math.min(index + 1, entries.value.length - 1)
+  }
+  else if (event.key === 'Home') {
+    nextIndex = 0
+  }
+  else if (event.key === 'End') {
+    nextIndex = entries.value.length - 1
+  }
+  else {
+    return
+  }
+
+  event.preventDefault()
+  if (nextIndex === index) {
+    return
+  }
+  onSelectStep(nextIndex)
+  const nextButton = (event.currentTarget as HTMLButtonElement).parentElement?.children[nextIndex]
+  if (nextButton instanceof HTMLButtonElement) {
+    nextButton.focus()
+  }
+}
+
 watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
@@ -43,18 +73,27 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
   // but external resources (images, stylesheets) won't load without a server.
   const doc = iframe.contentDocument!
+  // TODO: rrweb also closes and opens the document during rebuild, so this reset may be redundant.
   doc.open()
   doc.close()
   const mirror = createMirror()
+  // rrweb >=2.0 hardened the API to force sandbox iframe usage https://github.com/rrweb-io/rrweb/issues/1817. We already ensure the same manually so opt-out the guard by UNSAFE_allowUnprotectedRebuild
   rebuild(serialized, {
     doc,
     cache: createCache(),
     mirror,
+    UNSAFE_allowUnprotectedRebuild: true,
   })
+  // Close rrweb's parser after rebuilding. During page load, leaving it open
+  // prevents the parent load event, which browsers may show as an endless spinner.
+  doc.close()
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
-      const el = mirror.getNode(id) as Element | null
-      if (el?.classList) {
+      const el = mirror.getNode(id) as HTMLElement | null
+      if (className === ':popover-open') {
+        el?.showPopover?.()
+      }
+      else if (el?.classList) {
         el.classList.add(className)
       }
     }
@@ -83,11 +122,20 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
           border: 2px solid #3b82f6;
           box-sizing: border-box;
         `
+        overlay.style.display = showTraceSelectorHighlight.value ? '' : 'none'
         doc.documentElement.appendChild(overlay)
       })
     }
   }
 }, { immediate: true })
+
+watch(showTraceSelectorHighlight, (show) => {
+  const overlay = iframeEl.value?.contentDocument
+    ?.querySelector<HTMLElement>('[data-testid="trace-view-highlight"]')
+  if (overlay) {
+    overlay.style.display = show ? '' : 'none'
+  }
+})
 
 function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
   const selected = props.selection.selectedStepIndex === index
@@ -135,25 +183,41 @@ function formatStepName(step: NormalizedBrowserTraceEntry) {
 function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
+
+function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
+  if (panes.length === 2) {
+    traceViewSplitSizes.value = [panes[0].size, panes[1].size]
+  }
+}
 </script>
 
 <template>
   <Splitpanes
     class="h-full min-h-0"
+    @resized="onSplitpanesResized"
   >
-    <Pane :size="30" min-size="20">
-      <div class="h-full min-h-0 p-4" flex="~ col gap-1" overflow-auto>
+    <Pane :size="traceViewSplitSizes[0]" min-size="20">
+      <div
+        class="h-full min-h-0 p-4"
+        flex="~ col gap-1"
+        overflow-auto
+        role="listbox"
+        aria-label="Trace steps"
+      >
         <button
           v-for="(step, index) of entries"
           :key="index"
           type="button"
+          role="option"
           data-testid="trace-step"
           :data-test-range="step.range?.phase"
           class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
           :style="{ paddingInlineStart: `${0.5 + step.depth}rem` }"
-          :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
+          :aria-selected="selection.selectedStepIndex === index"
+          :tabindex="selection.selectedStepIndex === index ? 0 : -1"
           @click="onSelectStep(index)"
+          @keydown="onStepKeydown($event, index)"
         >
           <span
             v-if="step.depth > 0"
@@ -191,7 +255,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
         </button>
       </div>
     </Pane>
-    <Pane :size="70" min-size="20">
+    <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div class="h-full min-h-0" flex="~ col" overflow-auto>
         <iframe
           v-if="selectedStep"

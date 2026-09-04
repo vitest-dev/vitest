@@ -14,7 +14,7 @@ The explorer will not use the `idsMap` and `filesMap` directly from the `ws-clie
 - [nodes](client/composables/explorer/tree.ts): changes in the `ws-client` state will be mapped here with tree structure.
 - [uiEntries](client/composables/explorer/state.ts): a shallow ref to represent the flat tree entries in the ui, the logic will use `nodes` to build it.
 
-Any operation in the explorer using `queueMicrotask` to avoid blocking the main thread, and any operation on list/map using `generators`.
+Explorer updates are throttled with `requestAnimationFrame`, and operations on lists and maps use generators.
 
 The explorer logic splits the actions in three main parts:
 - collecting tasks while running the tests
