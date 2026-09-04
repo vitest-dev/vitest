@@ -1,5 +1,5 @@
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions, CDPSession, BrowserCommands } from 'vitest/internal/browser'
+import { StringifyOptions, CDPSession, BrowserCommands, BrowserTraceEntryKind, MarkOptions } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 import { __ivyaAriaTypes } from '@vitest/browser/internal/vendor-types'
@@ -18,7 +18,7 @@ export type BufferEncoding =
   | 'binary'
   | 'hex'
 
-export { CDPSession };
+export { BrowserTraceEntryKind, CDPSession, MarkOptions };
 
 export interface ScreenshotOptions extends SelectorOptions {
   /**
@@ -40,22 +40,6 @@ export interface ScreenshotOptions extends SelectorOptions {
    * @default true
    */
   save?: boolean
-}
-
-export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
-
-export interface MarkOptions {
-  /**
-   * Optional stack string used to resolve marker location.
-   * Useful for wrapper libraries that need to forward the end-user callsite.
-   */
-  stack?: string
-
-  /**
-   * Optional marker kind that's used to categorize the marker in the trace viewer.
-   * @default 'mark'
-   */
-  kind?: BrowserTraceEntryKind
 }
 
 interface StandardScreenshotComparators {
