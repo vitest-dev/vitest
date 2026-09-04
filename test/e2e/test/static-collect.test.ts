@@ -1543,6 +1543,15 @@ test('invalid @module-tag throws and error', async () => {
   `)
 })
 
+test('reports the details of a transform error', async () => {
+  const testModule = await collectTestModule(`it('unterminated', () => {`)
+
+  const [error] = testModule.errors()
+  expect(error.message.split('\n')[0]).toBe('Transform failed with 1 error:')
+  expect(error.__vitest_rollup_error__).toMatchObject({ id: 'simple.test.ts' })
+  expect((error.__vitest_rollup_error__ as any).plugin).toBeTypeOf('string')
+})
+
 test('collects tests with runIf modifier', async () => {
   const testModule = await collectTests(`
     import { test } from 'vitest'
