@@ -1,4 +1,5 @@
 /* eslint-disable no-lone-blocks */
+/* eslint-disable ts/no-unused-expressions */
 
 import { expect, test } from 'vitest'
 
@@ -184,5 +185,9 @@ test('expect.* allows asymmetrict mattchers with different types', async () => {
 })
 
 test('chai assertion', async () => {
+  expect('a').not.toBe('b')
+  expect(1).to.eq(1)
+  expect(1).to.not.equal(2)
+  expect(true).to.be.true
   await (expect(Promise.resolve('a')).resolves.eq('a') satisfies Promise<(type: string, message?: string) => Chai.Assertion>)
 })

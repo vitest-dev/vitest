@@ -7,6 +7,7 @@
  */
 
 import type { MockInstance } from '@vitest/spy'
+import type * as chai from 'chai'
 import type { Formatter } from 'tinyrainbow'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
@@ -627,8 +628,12 @@ export interface JestAssertion<R extends void | Promise<void>, T = unknown> exte
   toHaveNthReturnedWith: <E>(nthCall: number, value: E) => R
 }
 
+// `Chai.Assertion` is an ambient global that is not guaranteed to be part of
+// the consumer's program, unlike the types imported from the `chai` module
+type ChaiAssertion = InstanceType<typeof chai.Assertion>
+
 type VitestAssertion<A, R extends void | Promise<void>, T = unknown> = {
-  [K in keyof A]: A[K] extends Chai.Assertion
+  [K in keyof A]: A[K] extends ChaiAssertion
     ? Assertion<R, T>
     : A[K] extends (...args: any[]) => any
       ? R extends Promise<void> ? PromisifyFunction<A[K]> : A[K]
@@ -646,7 +651,7 @@ type PromisifyFunction<T> = T extends (...args: infer A) => infer R
 export type PromisifyAssertion<T> = Assertion<Promise<void>, Awaited<T>>
 
 export interface Assertion<R extends void | Promise<void> = void, T = unknown>
-  extends VitestAssertion<Chai.Assertion, R, T>,
+  extends VitestAssertion<ChaiAssertion, R, T>,
   JestAssertion<R, T>,
   ChaiMockAssertion<R, T>,
   Matchers<R, T> {
