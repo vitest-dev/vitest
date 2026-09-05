@@ -28,6 +28,7 @@ import type {
   CDPSession,
   TestProject,
 } from 'vitest/node'
+import { randomUUID } from 'node:crypto'
 import { defineBrowserProvider } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import { resolve } from 'pathe'
@@ -240,6 +241,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private browserPromise: Promise<Browser> | null = null
   private closing = false
+  private armedContexts = new WeakMap<BrowserContext, Promise<void>>()
 
   public tracingContexts: Set<string> = new Set()
   public pendingTraces: Map<string, string> = new Map()
@@ -379,6 +381,42 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
+  // Chromium acks `Fetch.enable` before interception is live, so a module request right
+  // after the first `context.route` call can be served unmocked (#8339).
+  private armInterception(page: Page): Promise<void> {
+    if (this.browserName !== 'chromium') {
+      return Promise.resolve()
+    }
+    const context = page.context()
+    const armed = this.armedContexts.get(context) ?? this.probeInterception(page)
+    this.armedContexts.set(context, armed)
+    return armed
+  }
+
+  private async probeInterception(page: Page): Promise<void> {
+    const probeUrl = '/__vitest_interception_probe__'
+    const token = randomUUID()
+    await page.context().route(`**${probeUrl}`, route => route.fulfill({
+      status: 204,
+      headers: { 'x-vitest-probe': token },
+    }))
+    const deadline = Date.now() + 5_000
+    while (Date.now() < deadline) {
+      const result = await Promise.race([
+        page.evaluate(
+          url => fetch(url, { cache: 'no-store' }).then(r => r.headers.get('x-vitest-probe'), () => null),
+          probeUrl,
+        ).catch(() => null),
+        new Promise<null>(resolve => setTimeout(resolve, deadline - Date.now(), null)),
+      ])
+      if (result === token) {
+        return
+      }
+      await new Promise(resolve => setTimeout(resolve, 10))
+    }
+    throw new Error(`Cannot verify that ${this.browserName} request interception is active after 5s; module mocks would not apply reliably (#8339)`)
+  }
+
   private createMocker(): BrowserModuleMocker {
     const idPredicates = new Map<string, (url: URL) => boolean>()
     const sessionIds = new Map<string, Set<string>>()
@@ -423,6 +461,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
+        await this.armInterception(page)
         const { url: moduleUrl, predicate } = createPredicate(module.url)
         const key = predicateKey(sessionId, moduleUrl)
         const existingPredicate = idPredicates.get(key)
