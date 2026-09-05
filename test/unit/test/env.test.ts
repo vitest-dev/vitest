@@ -67,6 +67,16 @@ test('PROD, DEV, SSR should be boolean', () => {
   expect(import.meta.env.SSR).toEqual(false)
 })
 
+test('ignores assignments to import.meta.env', () => {
+  const env = import.meta.env
+  // @ts-expect-error for testing
+  import.meta.env = {}
+  expect(import.meta.env).toBe(env)
+  // @ts-expect-error for testing
+  import.meta.env = import.meta.env || {}
+  expect(import.meta.env).toBe(env)
+})
+
 test.runIf(process.platform === 'win32')('main process env variables are case insensitive', () => {
   expect(process.env.PROGRAMFILES).toBeDefined()
   expect(process.env['PROGRAMFILES(X86)']).toBeDefined()
