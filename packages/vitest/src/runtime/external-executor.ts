@@ -104,6 +104,10 @@ export class ExternalModulesExecutor {
     this.resolvers = [this.vite.resolve]
   }
 
+  public syncBuiltinESMExports(): void {
+    this.cjs.syncBuiltinESMExports()
+  }
+
   async import(identifier: string): Promise<object> {
     const module = await this.createModule(identifier)
     await this.esm.evaluateModule(module)
