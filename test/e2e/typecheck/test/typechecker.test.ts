@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runVitest } from '../../../test-utils'
 
 describe('Typechecker', () => {
   it('handles non-existing typechecker command gracefully', async () => {

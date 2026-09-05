@@ -2,7 +2,7 @@ import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
 
-import { runVitest } from '../../test-utils'
+import { runVitest } from '../../../test-utils'
 
 describe('should fail', async () => {
   const root = resolve(import.meta.dirname, '../failing')
@@ -11,7 +11,7 @@ describe('should fail', async () => {
   it('typecheck files', async () => {
     const { stderr } = await runVitest({
       root,
-      dir: './failing',
+      dir: root,
       typecheck: {
         enabled: true,
         allowJs: true,
@@ -47,7 +47,7 @@ describe('should fail', async () => {
     const { stderr } = await runVitest({
       root,
       dir: resolve(import.meta.dirname, '..', './failing'),
-      config: resolve('./test/vitest.custom.config.ts'),
+      config: resolve(import.meta.dirname, './vitest.custom.config.ts'),
       typecheck: { enabled: true },
     })
 
