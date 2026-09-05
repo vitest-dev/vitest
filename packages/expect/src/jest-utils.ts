@@ -77,12 +77,18 @@ function asymmetricMatch(a: any, b: any, customTesters: Array<Tester>) {
     return undefined
   }
 
+  // subset equality is directional: it asks whether the second argument is
+  // contained in the first. A matcher runs its own comparison and may pass its
+  // sample as the first argument (`arrayContaining` does), which would flip
+  // that question around, so it must not inherit a subset tester.
+  const testers = customTesters.filter(tester => !isSubsetEqualityTester(tester))
+
   if (asymmetricA) {
-    return a.asymmetricMatch(b, customTesters)
+    return a.asymmetricMatch(b, testers)
   }
 
   if (asymmetricB) {
-    return b.asymmetricMatch(a, customTesters)
+    return b.asymmetricMatch(a, testers)
   }
 }
 
@@ -604,6 +610,19 @@ function isObjectWithKeys(a: any) {
   )
 }
 
+const subsetEqualityTesters = new WeakSet<Tester>()
+
+function registerSubsetEqualityTester<T extends (...args: any[]) => any>(
+  tester: T,
+): T {
+  subsetEqualityTesters.add(tester as unknown as Tester)
+  return tester
+}
+
+function isSubsetEqualityTester(tester: Tester): boolean {
+  return tester === subsetEquality || subsetEqualityTesters.has(tester)
+}
+
 export function subsetEquality(
   object: unknown,
   subset: unknown,
@@ -617,7 +636,7 @@ export function subsetEquality(
   // there are circular references in the subset passed to it.
   const subsetEqualityWithContext
     = (seenReferences: WeakMap<object, boolean> = new WeakMap()) =>
-      (object: any, subset: any): boolean | undefined => {
+      registerSubsetEqualityTester((object: any, subset: any): boolean | undefined => {
         if (!isObjectWithKeys(subset)) {
           return undefined
         }
@@ -645,7 +664,7 @@ export function subsetEquality(
           seenReferences.delete(subset[key])
           return result
         })
-      }
+      })
 
   return subsetEqualityWithContext()(object, subset)
 }
