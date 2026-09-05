@@ -769,6 +769,21 @@ describe('nested projects', () => {
     expect(ctx!.projects.map(project => project.config.maxWorkers)).toEqual([3])
   })
 
+  it('cli --hookTimeout reaches projects', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { test: { name: 'unit', hookTimeout: 2222 } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    }, { $cliOptions: { hookTimeout: 999 } })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.config.hookTimeout)).toEqual([999])
+  })
+
   it('benchmark projects are created for nested projects', async () => {
     const { stderr, ctx } = await runInlineTests({
       'vitest.config.js': {
