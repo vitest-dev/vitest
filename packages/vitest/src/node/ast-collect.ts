@@ -12,6 +12,7 @@ import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
 import { calculateSuiteHash, createFileTask as createFileTaskOriginal, createTaskName } from '../utils/tasks'
 import { detectCodeBlock } from '../utils/test-helpers'
+import { toRollupError } from './environments/fetchModule'
 
 interface ParsedFile extends File {
   start: number
@@ -323,28 +324,16 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     end: 0,
     result: {
       state: 'fail',
-      errors: serializeError(project, error),
+      errors: serializeError(error),
     },
   }
   file.file = file
   return file
 }
 
-function serializeError(ctx: TestProject, error: any): TestError[] {
-  if ('errors' in error && 'pluginCode' in error) {
-    const errors = error.errors.map((e: any) => {
-      return {
-        name: error.name,
-        message: e.text,
-        stack: e.location
-          ? `${error.name}: ${e.text}\n  at ${relative(ctx.config.root, e.location.file)}:${e.location.line}:${e.location.column}`
-          : '',
-      }
-    })
-    return errors
-  }
+function serializeError(error: any): TestError[] {
   return [
-    {
+    toRollupError(error) ?? {
       name: error.name,
       stack: error.stack,
       message: error.message,
