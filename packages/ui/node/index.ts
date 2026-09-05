@@ -13,6 +13,7 @@ import { distClientRoot } from './paths'
 export { distClientRoot }
 
 const UI_TOKEN_COOKIE = 'vitest-ui-token'
+const UI_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 const AUTH_REQUIRED_MESSAGE = 'Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...'
 
 export default (harness: PluginHarness): Vite.Plugin => {
@@ -40,6 +41,7 @@ export default (harness: PluginHarness): Vite.Plugin => {
           return serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
             path: base,
             httpOnly: true,
+            maxAge: UI_TOKEN_COOKIE_MAX_AGE,
             sameSite: 'strict',
           })
         }
