@@ -246,6 +246,7 @@ export function resolveTestConfig(
     resolved.coverage = globalConfig.coverage
     resolved.attachmentsDir = globalConfig.attachmentsDir
     resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
+    resolved.watch = globalConfig.watch
   }
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
