@@ -450,8 +450,10 @@ export abstract class BaseReporter implements Reporter {
     return color(` ${duration}${c.dim('ms')}`)
   }
 
-  onWatcherStart(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
-    const failed = errors.length > 0 || hasFailed(files)
+  onWatcherStart(_files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
+    // A rerun reports only the files it reran, so the banner reads the whole suite instead.
+    const allFiles = this.ctx.state.getFiles()
+    const failed = errors.length > 0 || hasFailed(allFiles)
 
     if (failed) {
       this.log(withLabel('red', 'FAIL', 'Tests failed. Watching for file changes...'))
@@ -465,7 +467,7 @@ export abstract class BaseReporter implements Reporter {
 
     const hints = [c.dim('press ') + c.bold('h') + c.dim(' to show help')]
 
-    if (hasFailedSnapshot(files)) {
+    if (hasFailedSnapshot(allFiles)) {
       hints.unshift(c.dim('press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot'))
     }
     else {
