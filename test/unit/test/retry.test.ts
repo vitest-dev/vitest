@@ -7,9 +7,9 @@ it('retry test', { retry: 2 }, () => {
 })
 
 let count2 = 0
-it.fails('retry test fails', { retry: 1 }, () => {
+it.fails('does not retry an expected failure', { retry: 2 }, () => {
   count2 += 1
-  expect(count2).toBe(3)
+  expect(1).toBe(2)
 })
 
 let count3 = 0
@@ -20,7 +20,7 @@ it('retry test fails', { retry: 10 }, () => {
 
 it('result', () => {
   expect(count1).toEqual(3)
-  expect(count2).toEqual(2)
+  expect(count2).toEqual(1)
   expect(count3).toEqual(3)
 })
 

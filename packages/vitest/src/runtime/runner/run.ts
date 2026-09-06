@@ -742,6 +742,10 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         break
       }
 
+      if (test.fails) {
+        break
+      }
+
       if (retryCount < retry) {
         const shouldRetry = passesRetryCondition(test, test.result.errors)
 
