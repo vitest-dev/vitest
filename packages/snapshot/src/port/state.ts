@@ -147,10 +147,13 @@ export default class SnapshotState {
 
   markSnapshotsAsCheckedForTest(testName: string): void {
     this._uncheckedKeys.forEach((uncheckedKey) => {
+      if (!uncheckedKey.startsWith(testName)) {
+        return
+      }
       // skip snapshots with following keys
       //   testName n
       //   testName > xxx n (this is for toMatchSnapshot("xxx") API)
-      if (/ \d+$| > /.test(uncheckedKey.slice(testName.length))) {
+      if (/^ \d+$|^ > /.test(uncheckedKey.slice(testName.length))) {
         this._uncheckedKeys.delete(uncheckedKey)
       }
     })
