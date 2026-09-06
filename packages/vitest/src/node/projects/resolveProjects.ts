@@ -1046,7 +1046,9 @@ function expandBenchmarksInEntries(
     result.push({
       viteConfig: entry.viteConfig, // shared with non-benchmark counterpart
       projectConfig: benchmarkConfig,
-      ancestors: entry.ancestors,
+      ancestors: benchmarkOnly && entry.projectConfig.name
+        ? [...(entry.ancestors ?? []), entry.projectConfig.name]
+        : entry.ancestors,
       sharedServer: entry.sharedServer,
     })
   }
