@@ -4,7 +4,7 @@ title: Vitest UI | Guide
 
 # Vitest UI
 
-Vitest UI is a visual interface for exploring your test results. You can use it interactively while tests run or generate the same interface as a static HTML report to review after the test process exits.
+Vitest UI is a visual interface for exploring your test results. You can use it interactively while tests run or as a static HTML report for reviewing completed runs.
 
 Vitest UI is optional, so you'll need to install it with:
 
@@ -12,9 +12,12 @@ Vitest UI is optional, so you'll need to install it with:
 npm i -D @vitest/ui
 ```
 
+<img alt="Vitest UI" img-light src="/ui-1-light.png">
+<img alt="Vitest UI" img-dark src="/ui-1-dark.png">
+
 ## Interactive UI
 
-The interactive UI runs alongside Vitest's development server. Start it by passing the `--ui` flag:
+The interactive UI runs alongside Vitest's development server and requires [watch mode](/config/watch), which is enabled by default. Start it by passing the `--ui` flag:
 
 ```bash
 vitest --ui
@@ -26,18 +29,9 @@ Then you can visit the Vitest UI at <a href="http://localhost:51204/__vitest__/"
 Vitest UI access is protected. If the direct URL shows an error, open the URL with a token printed by Vitest in the terminal, for example `http://localhost:51204/__vitest__/?token=...`.
 :::
 
-::: warning
-The interactive UI requires a running Vite server, so make sure to run Vitest in `watch` mode (the default). To review results after the test process exits, use the [HTML Reporter](#html-reporter).
-:::
-
-<img alt="Vitest UI" img-light src="/ui-1-light.png">
-<img alt="Vitest UI" img-dark src="/ui-1-dark.png">
-
-You can check your coverage report in Vitest UI: see [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
-
 ## HTML Reporter
 
-The HTML reporter generates a static version of Vitest UI from a completed test run. It is useful for run mode, CI, and automated workflows where results are reviewed after the test process exits.
+The HTML reporter writes test results to a static version of Vitest UI. It is useful for run mode, CI, and automated workflows where results are reviewed later.
 
 Use the `html` reporter from the command line or in your Vitest configuration:
 
@@ -59,21 +53,19 @@ export default defineConfig({
 
 :::
 
-When [`browser.traceView`](/guide/browser/trace-view) is enabled, the report also preserves recorded browser interactions so they can be replayed later in the trace viewer.
-
-::: warning
-If you still want to see how your tests are running in real time in the terminal, add `configDefaults.reporters` to the `reporters` option: `['html', ...configDefaults.reporters]`.
+::: tip Keep terminal output
+Configuring the HTML reporter replaces the default terminal reporter. To keep terminal output, [include Vitest's default reporters](/guide/reporters#default-configuration).
 :::
 
 ### Preview Locally
 
-To preview the generated report, use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
+By default, the report entry is written to `.vitest/index.html`. You can configure the artifact directory with the HTML reporter's `outputDir` option.
+
+To preview the default output, use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
 
 ```sh
 npx vite preview --outDir .vitest
 ```
-
-You can configure the output location with the HTML reporter's `outputDir` option. It points to the report artifact root, and the report entry is written to `<outputDir>/index.html`. The default value is `.vitest`, the shared Vitest artifact directory.
 
 ### Share as a Single File
 
@@ -125,6 +117,14 @@ When you use `singleFile: true`, you can upload the report as a single file and 
     path: .vitest/index.html
     archive: false
 ```
+
+## Coverage
+
+Vitest UI displays coverage results in both the interactive UI and HTML reports. See [Vitest UI Coverage](/guide/coverage#vitest-ui) for setup and usage.
+
+## Trace View
+
+Vitest UI replays recorded browser interactions when [`browser.traceView`](/guide/browser/trace-view) is enabled. The interactive UI streams trace entries as tests run, while HTML reports preserve recorded traces for later review.
 
 ## Module Graph
 
