@@ -75,7 +75,30 @@ npx vite preview --outDir .vitest
 
 You can configure the output location with the HTML reporter's `outputDir` option. It points to the report artifact root, and the report entry is written to `<outputDir>/index.html`. The default value is `.vitest`, the shared Vitest artifact directory.
 
-See the [HTML reporter options](/guide/reporters#html-reporter) for configuring `outputDir` and generating a portable report with `singleFile`.
+### Share as a Single File
+
+Set `singleFile` to generate a self-contained HTML report:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['html', { singleFile: true }],
+    ],
+  },
+})
+```
+
+When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole output directory.
+
+::: warning
+`singleFile` has two caveats:
+
+- The file can grow very large because everything is embedded inline. It can be slow to open, memory-hungry, or exceed the size limits of artifact viewers and static hosts.
+- Coverage HTML reports are not inlined yet and remain as separate files.
+
+Prefer the default multi-file report when the suite has many or large attachments, or when you need coverage included in the bundle.
+:::
 
 ### View Reports from CI
 

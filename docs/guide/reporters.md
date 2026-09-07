@@ -552,32 +552,7 @@ export default defineConfig({
 ```
 :::
 
-Set `singleFile` to generate a self-contained HTML report:
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: [
-      ['html', { singleFile: true }],
-    ],
-  },
-})
-```
-
-When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole `html` output directory.
-
-::: warning
-`singleFile` has two caveats:
-
-- The file can grow very large because everything is embedded inline — slow to open, memory-hungry, and possibly over the size limits of artifact viewers or static hosts.
-- Coverage HTML reports are not inlined yet and remain as separate files.
-
-Prefer the default multi-file report when the suite has many or large attachments, or when you need coverage included in the bundle.
-:::
-
-::: tip
-This reporter requires installed [`@vitest/ui`](/guide/ui) package.
-:::
+Use `singleFile` to produce one portable HTML file. See [Share as a Single File](/guide/ui#share-as-a-single-file) for configuration and limitations.
 
 ### TAP Reporter
 
