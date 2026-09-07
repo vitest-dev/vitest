@@ -15,9 +15,9 @@ npm i -D @vitest/ui
 <img alt="Vitest UI" img-light src="/ui-1-light.png">
 <img alt="Vitest UI" img-dark src="/ui-1-dark.png">
 
-## Interactive UI
+## Live UI
 
-The interactive UI runs alongside Vitest's development server and requires [watch mode](/config/watch), which is enabled by default. Start it by passing the `--ui` flag:
+The Live UI runs alongside Vitest's development server and requires [watch mode](/config/watch), which is enabled by default. Start it by passing the `--ui` flag:
 
 ```bash
 vitest --ui
@@ -142,11 +142,11 @@ When you use `singleFile: true`, you can upload the report as a single file and 
 
 ## Coverage
 
-Vitest UI displays coverage results in both the interactive UI and HTML reports. See [Vitest UI Coverage](/guide/coverage#vitest-ui) for setup and usage.
+Vitest UI displays coverage results in both the Live UI and HTML reports. See [Vitest UI Coverage](/guide/coverage#vitest-ui) for setup and usage.
 
 ## Trace View
 
-Vitest UI replays recorded browser interactions when [`browser.traceView`](/guide/browser/trace-view) is enabled. The interactive UI streams trace entries as tests run, while HTML reports preserve recorded traces for later review.
+Vitest UI replays recorded browser interactions when [`browser.traceView`](/guide/browser/trace-view) is enabled. The Live UI streams trace entries as tests run, while HTML reports preserve recorded traces for later review.
 
 ## Module Graph
 
