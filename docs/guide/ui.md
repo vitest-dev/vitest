@@ -119,9 +119,15 @@ When you use `singleFile: true`, you can upload the report as a single file and 
 
 ```yaml
 - uses: actions/upload-artifact@v7
+  id: upload-report
   with:
     path: .vitest/index.html
     archive: false
+
+- name: Link HTML report
+  run: echo "::notice title=Vitest HTML report::$REPORT_URL"
+  env:
+    REPORT_URL: ${{ steps.upload-report.outputs.artifact-url }}
 ```
 
 ## Coverage
