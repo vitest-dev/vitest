@@ -55,6 +55,16 @@ export default defineConfig({
 
 ::: tip Keep terminal output
 Configuring the HTML reporter replaces the default terminal reporter. To keep terminal output, [include Vitest's default reporters](/guide/reporters#default-configuration).
+
+```ts [vitest.config.ts]
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: ['html', ...configDefaults.reporters],
+  },
+})
+```
 :::
 
 ### Preview Locally
