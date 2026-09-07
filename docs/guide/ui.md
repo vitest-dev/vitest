@@ -107,11 +107,13 @@ To view the HTML report from CI, for example in GitHub Actions, upload the outpu
     name: vitest-report
     path: .vitest/
 
-- name: Viewer link in summary
-  run: echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
+- name: Link HTML report
+  run: echo "::notice title=Vitest HTML report::$REPORT_URL"
+  env:
+    REPORT_URL: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}
 ```
 
-This adds a link to the job summary. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
+This adds the report link as a notice annotation on the workflow run. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
 
 When you use `singleFile: true`, you can upload the report as a single file and view it directly from GitHub artifacts with the `archive: false` option:
 
