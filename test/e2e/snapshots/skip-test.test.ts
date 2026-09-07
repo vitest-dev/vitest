@@ -153,7 +153,7 @@ exports[\`removed test 1\`] = \`2\`;
     }
   `)
 
-  const updated = await runInlineTests(structure, { update: true })
+  const updated = await runInlineTests(structure, { update: 'all' })
   expect(fs.readFileSync(path.join(updated.root, '__snapshots__/basic.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
