@@ -118,3 +118,5 @@ allowBuilds:
   protobufjs: true
   sharp: true
   vue-demi: true
+
+  "test-package": true
