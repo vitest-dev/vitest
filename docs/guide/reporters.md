@@ -534,9 +534,9 @@ export default defineConfig({
 
 ### HTML Reporter
 
-Generates a static version of [Vitest UI](/guide/ui#html-reporter) that can be reviewed after the test process exits. See the [HTML Reporter guide](/guide/ui#html-reporter) for local preview, CI artifacts, and sharing workflows.
+Generates a static version of [Vitest UI](/guide/ui) that can be reviewed after the test process exits. See the [HTML Reporter guide](/guide/ui#html-reporter) for local preview, CI artifacts, and sharing workflows.
 
-The report artifact root can be specified using the reporter's `outputDir` option. The report entry is written to `<outputDir>/index.html` and the UI assets files live under `<outputDir>/ui/`. By default `outputDir` is `.vitest`, the shared Vitest artifact directory, so attachments (`.vitest/attachments`) and coverage (`.vitest/coverage`) are reused without being copied.
+The report artifact root can be specified using the reporter's `outputDir` option and the report entry is written to `<outputDir>/index.html`. By default `outputDir` is the shared Vitest artifact directory `.vitest`, so attachments (`.vitest/attachments`) and coverage (`.vitest/coverage`) are reused without being copied.
 
 :::code-group
 ```bash [CLI]
