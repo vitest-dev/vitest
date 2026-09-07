@@ -67,6 +67,8 @@ To preview the default output, use the [vite preview](https://vitejs.dev/guide/c
 npx vite preview --outDir .vitest
 ```
 
+Open the URL printed by Vite in your browser. Alternatively, VS Code's Integrated Browser can open `.vitest/index.html` directly without a preview server.
+
 ### Share as a Single File
 
 Set `singleFile` to generate a self-contained HTML report:
@@ -82,6 +84,8 @@ export default defineConfig({
 ```
 
 When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole output directory.
+
+Because everything is inlined, you can open `<outputDir>/index.html` directly in a browser with a `file://` URL. No preview server is required.
 
 ::: warning
 `singleFile` has two caveats:
