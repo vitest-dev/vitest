@@ -270,11 +270,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       },
     })
 
+    const shouldInterop = (value: unknown) => this.shouldInterop(module.file, { default: value })
     const moduleProxy = {
       set exports(value) {
         span.addEvent('`module.exports` is assigned directly, copying all properties to `exports`')
         exportAll(cjsExports, value)
-        exportsObject.default = value
+        exportsObject.default = shouldInterop(value) ? getDefaultExport(value) : value
         moduleExports = value
       },
       get exports() {
@@ -600,6 +601,13 @@ function defineExport(exports: any, key: string | symbol, value: () => any) {
 export function isPrimitive(v: any): boolean {
   const isObject = typeof v === 'object' || typeof v === 'function'
   return !isObject || v == null
+}
+
+function getDefaultExport(value: any) {
+  if (!isPrimitive(value) && value.__esModule && 'default' in value) {
+    return value.default
+  }
+  return value
 }
 
 function interopModule(mod: any) {

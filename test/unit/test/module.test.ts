@@ -30,6 +30,9 @@ import * as primitiveAll from '../src/cjs/primitive-cjs'
 import * as prototypeCjs from '../src/cjs/prototype-cjs'
 
 // @ts-expect-error is not typed with imports
+import * as reexportedDefaultCjs from '../src/cjs/reexport-default.cjs'
+
+// @ts-expect-error is not typed with imports
 import * as prototypeEsm from '../src/esm/esm.js'
 
 // @ts-expect-error is not typed with imports
@@ -80,6 +83,11 @@ it('should work when using module.exports cjs', () => {
   expect(cjs.b).toBe(2)
   expect(a).toBe(1)
   expect(b).toBe(2)
+})
+
+it('interops module.exports assigned from an __esModule require', () => {
+  expect(reexportedDefaultCjs.default).toBeTypeOf('function')
+  expect(reexportedDefaultCjs.named).toBe('named')
 })
 
 it('works with bare exports cjs', () => {
