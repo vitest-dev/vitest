@@ -154,7 +154,15 @@ export function TestConfigPlugin(
             resolvedTestConfig._scriptDefines = sharedServer.scriptDefines
           }
           else if (isBrowserEnabled) {
-            resolvedTestConfig.defines = config.define || {}
+            // Vite 8 (dev) defines these as globals. `config.define` holds
+            // JSON-stringified source (`JSON.stringify("BAR")` → `'"BAR"'`).
+            // Assigning that string to `globalThis` wraps the value in extra
+            // quotes (#11164). Parse like Node, but leave `config.define`
+            // intact so Vite can still replace.
+            const { defines } = deleteDefineConfig({
+              define: { ...config.define },
+            })
+            resolvedTestConfig.defines = defines
           }
           else {
             const { defines, scriptDefines } = deleteDefineConfig(config)

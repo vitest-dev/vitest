@@ -1297,10 +1297,11 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
 
 test('browser root', async () => {
   process.env.BROWSER_DEFINE_TEST_PROJECT = 'false'
-  const { testTree, stderr } = await runVitest({
+  const { testTree, stderr, ctx } = await runVitest({
     root: './fixtures/config/browser-define',
   })
   expect(stderr).toBe('')
+  expect(ctx!.projects[0].config.defines.FOO).toBe('BAR')
   expect(testTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
@@ -1312,10 +1313,11 @@ test('browser root', async () => {
 
 test('browser project', async () => {
   process.env.BROWSER_DEFINE_TEST_PROJECT = 'true'
-  const { testTree, stderr } = await runVitest({
+  const { testTree, stderr, ctx } = await runVitest({
     root: './fixtures/config/browser-define',
   })
   expect(stderr).toBe('')
+  expect(ctx!.projects[0].config.defines.FOO).toBe('BAR')
   expect(testTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
