@@ -39,7 +39,7 @@ Quick links:
 
 - [Docs](/)
 - Translations: [简体中文](https://cn.vitest.dev/)
-- [Migration Guide](/guide/migration#vitest-4)
+- [Migration Guide](https://v4.vitest.dev/guide/migration)
 - [GitHub Changelog](https://github.com/vitest-dev/vitest/releases/tag/v4.0.0)
 
 If you've not used Vitest before, we suggest reading the [Getting Started](/guide/) and [Features](/guide/features) guides first.
@@ -329,7 +329,7 @@ Vitest 4 comes with new advanced public [API methods](/api/advanced/vitest):
 
 ## Breaking changes
 
-Vitest 4 has a few breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](/guide/migration#vitest-4) before upgrading.
+Vitest 4 has a few breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](https://v4.vitest.dev/guide/migration) before upgrading.
 
 The complete list of changes is at the [Vitest 4 Changelog](https://github.com/vitest-dev/vitest/releases/tag/v4.0.0).
 

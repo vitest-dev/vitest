@@ -3,6 +3,7 @@ import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { configDefaults } from 'vitest/config'
 import { resolveConfig } from 'vitest/node'
+import { resolveTestConfig } from '#test-utils'
 
 test('resolves the test config', async () => {
   const viteConfig = await resolveConfig()
@@ -139,4 +140,21 @@ test('coverage.changed inherits from test.changed but can be overridden', async 
   })
 
   expect(overridden.coverage.changed).toBe(false)
+})
+
+test('user oxc.target as array doesn\'t break config resolution', async () => {
+  const { config } = await resolveTestConfig({
+    $viteConfig: {
+      oxc: {
+        target: ['chrome121', 'firefox118'],
+      },
+      esbuild: {
+        target: ['chrome121', 'firefox118'],
+      },
+    },
+  })
+  expect.assert(config.oxc !== false)
+  expect.assert(config.esbuild !== false)
+  expect(config.oxc.target).toEqual(['chrome121', 'firefox118'])
+  expect(config.esbuild.target).toEqual(['chrome121', 'firefox118'])
 })

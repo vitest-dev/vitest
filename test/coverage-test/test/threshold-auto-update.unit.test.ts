@@ -1,5 +1,5 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
-import { createCoverageSummary } from 'istanbul-lib-coverage'
+import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
+import { createCoverageSummary } from '@vitest/istanbul-lib-coverage'
 import { parseModule } from 'magicast'
 
 import { expect, test, vi } from 'vitest'

@@ -1,3 +1,4 @@
+import type { StaticMockCall } from '@vitest/mocker/node'
 import type { DevEnvironment, EnvironmentModuleNode, FetchResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
@@ -137,10 +138,10 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           continue
         }
         // the transformed code is already stored on disk either by the forks
-        // pool (`cacheFs`) or by `experimental.fsModuleCache` — the worker can
+        // pool (`cacheFs`) or by `fsModuleCache` — the worker can
         // read the file itself instead of fetching each module separately.
         // invalidated modules lose `transformResult` and drop out automatically
-        const tmp = transformResult.__vitestTmp ?? (transformResult as { _vitest_tmp?: string })._vitest_tmp
+        const tmp = transformResult.__vitestTmp
         if (typeof tmp !== 'string') {
           continue
         }
@@ -151,10 +152,6 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           tmp,
           url: node.url,
           invalidate: false,
-          // the fetch that stored this module on disk also memoized its module
-          // type on the transform result (only when `injectCjsGlobals` is
-          // disabled); reuse it so the evaluator injects the CJS globals for the
-          // same modules it would on the direct-fetch path, no re-detection here
           moduleType: transformResult.__vitestModuleType,
         }
         warm[node.url] = entry
@@ -175,20 +172,79 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     async prewarmModuleGraph(environmentName, files) {
       const environment = getEnvironment(environmentName)
       const moduleGraph = environment.moduleGraph
-      const seen = new Set<string>()
 
-      async function walkNode(node: EnvironmentModuleNode): Promise<void> {
+      function getStaticMocks(node: EnvironmentModuleNode): StaticMockCall[] | null | undefined {
+        return node.transformResult?.__vitestStaticMocks
+          ?? environment.pluginContainer.getModuleInfo(node.id!)?.meta?.vitestStaticMocks
+      }
+
+      // modules the root replaces with an inline factory are never requested
+      async function resolveMockedIds(root: EnvironmentModuleNode): Promise<Set<string>> {
+        const ids = new Set<string>()
+        const mocks = getStaticMocks(root)?.filter(
+          mock => mock.method === 'mock' && mock.hasFactory && !mock.factoryLoadsOriginal,
+        )
+        if (mocks?.length) {
+          await Promise.all(mocks.map(async (mock) => {
+            const resolved = await environment.pluginContainer.resolveId(mock.specifier, root.id ?? undefined).catch(() => null)
+            if (resolved) {
+              ids.add(resolved.id)
+            }
+          }))
+        }
+        return ids
+      }
+
+      // `import()` targets load on demand; a hoisted file's imports are all
+      // rewritten to `import()`, so none of them count
+      function getDynamicOnlyIds(node: EnvironmentModuleNode): Set<string> | undefined {
+        const result = node.transformResult
+        if (!result?.dynamicDeps?.length || getStaticMocks(node)) {
+          return undefined
+        }
+        const staticDeps = new Set(result.deps)
+        const dynamicOnly = new Set(result.dynamicDeps.filter(dep => !staticDeps.has(dep)))
+        if (!dynamicOnly.size) {
+          return undefined
+        }
+        const ids = new Set<string>()
+        for (const child of node.importedModules) {
+          if (child.id != null && dynamicOnly.has(child.url)) {
+            ids.add(child.id)
+          }
+        }
+        return ids
+      }
+
+      async function load(url: string, importer: string | undefined): Promise<EnvironmentModuleNode | undefined> {
+        try {
+          const fetchResult = await fetchModule(url, importer, environment, undefined, undefined, false)
+          if ('id' in fetchResult) {
+            return moduleGraph.getModuleById(fetchResult.id)
+          }
+        }
+        catch {
+          // the worker's own fetch will surface the error with the proper import context
+        }
+        return undefined
+      }
+
+      async function walkNode(node: EnvironmentModuleNode, skip: Set<string>): Promise<void> {
+        const dynamicOnly = getDynamicOnlyIds(node)
         const children: Promise<void>[] = []
         for (const child of node.importedModules) {
-          if (child.url == null || seen.has(child.url)) {
+          if (child.id == null || skip.has(child.id) || dynamicOnly?.has(child.id)) {
             continue
           }
+          skip.add(child.id)
           if (child.transformResult) {
-            seen.add(child.url)
-            children.push(walkNode(child))
+            children.push(walkNode(child, skip))
           }
           else {
-            children.push(fetchNode(child.url, node.id ?? undefined))
+            children.push(
+              load(child.url, node.id ?? undefined)
+                .then(loaded => loaded && walkNode(loaded, skip)),
+            )
           }
         }
         if (children.length) {
@@ -196,44 +252,27 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         }
       }
 
-      async function fetchNode(url: string, importer: string | undefined): Promise<void> {
-        if (seen.has(url)) {
-          return
-        }
-        seen.add(url)
-        try {
-          await fetchModule(url, importer, environment, undefined, undefined, false)
-        }
-        catch {
-          // the worker's own fetch will surface the error with the proper
-          // import context
-          return
-        }
-        let node: EnvironmentModuleNode | undefined
-        try {
-          node = await moduleGraph.getModuleByUrl(url) ?? moduleGraph.getModuleById(url) ?? undefined
-        }
-        catch {
-          node = moduleGraph.getModuleById(url) ?? undefined
-        }
-        if (node) {
-          await walkNode(node)
+      async function walkRoot(root: EnvironmentModuleNode): Promise<void> {
+        const skip = await resolveMockedIds(root)
+        skip.add(root.id!)
+        await walkNode(root, skip)
+      }
+
+      async function loadRoot(url: string): Promise<void> {
+        const root = await load(url, undefined)
+        if (root) {
+          await walkRoot(root)
         }
       }
 
       await Promise.all([...files, ...project.config.setupFiles].map(async (file) => {
         const nodes = moduleGraph.getModulesByFile(file)
-        if (nodes && nodes.size) {
-          await Promise.all(Array.from(nodes, (node) => {
-            if (node.transformResult) {
-              seen.add(node.url)
-              return walkNode(node)
-            }
-            return fetchNode(node.url, undefined)
-          }))
+        if (nodes?.size) {
+          await Promise.all(Array.from(nodes, node =>
+            node.transformResult ? walkRoot(node) : loadRoot(node.url)))
         }
         else {
-          await fetchNode(file, undefined)
+          await loadRoot(file)
         }
       }))
     },

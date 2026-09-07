@@ -20,7 +20,8 @@ import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
+import { ScreenshotAction } from './action'
+import { isLocator, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
@@ -309,7 +310,7 @@ export const page: BrowserPage = {
       })
     })
   },
-  async screenshot(options = {}) {
+  screenshot(options = {}) {
     const currentTest = getWorkerState().current
     if (!currentTest) {
       throw new Error('Cannot take a screenshot outside of a test.')
@@ -333,28 +334,15 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
-    const [element, ...mask] = await Promise.all([
-      options.element ? serializeElement(options.element, options) : undefined,
-      ...('mask' in options
-        ? (options.mask as Array<Element | Locator>).map(el => serializeElement(el, options))
-        : []),
-    ])
-
-    const normalizedOptions = 'mask' in options
-      ? { ...options, mask }
-      : options
-
-    return ensureAwaited(error => triggerCommand(
-      '__vitest_screenshot',
-      [
-        name,
-        processTimeoutOptions({
-          ...normalizedOptions,
-          element,
-        } as any /** TODO */),
-      ],
-      error,
-    ))
+    return new ScreenshotAction(name, options, async () => {
+      const [element, ...mask] = await Promise.all([
+        options.element ? serializeElement(options.element, options) : undefined,
+        ...('mask' in options
+          ? (options.mask as Array<Element | Locator>).map(el => serializeElement(el, options))
+          : []),
+      ])
+      return 'mask' in options ? { element, mask } : { element }
+    }) as any /** TODO */
   },
   mark<T>(
     name: string,

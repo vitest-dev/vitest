@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import type { SplitpanesResizedPayload } from 'splitpanes'
 import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
-import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
+import { traceViewSplitSizes } from '~/composables/navigation'
+import { getTraceEntryClass, selectActiveTraceStep, showTraceSelectorHighlight } from '~/composables/trace-view'
 
 const props = defineProps<{
   trace: NormalizedBrowserTraceData
@@ -71,6 +73,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
   // but external resources (images, stylesheets) won't load without a server.
   const doc = iframe.contentDocument!
+  // TODO: rrweb also closes and opens the document during rebuild, so this reset may be redundant.
   doc.open()
   doc.close()
   const mirror = createMirror()
@@ -81,10 +84,16 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     mirror,
     UNSAFE_allowUnprotectedRebuild: true,
   })
+  // Close rrweb's parser after rebuilding. During page load, leaving it open
+  // prevents the parent load event, which browsers may show as an endless spinner.
+  doc.close()
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
-      const el = mirror.getNode(id) as Element | null
-      if (el?.classList) {
+      const el = mirror.getNode(id) as HTMLElement | null
+      if (className === ':popover-open') {
+        el?.showPopover?.()
+      }
+      else if (el?.classList) {
         el.classList.add(className)
       }
     }
@@ -113,11 +122,20 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
           border: 2px solid #3b82f6;
           box-sizing: border-box;
         `
+        overlay.style.display = showTraceSelectorHighlight.value ? '' : 'none'
         doc.documentElement.appendChild(overlay)
       })
     }
   }
 }, { immediate: true })
+
+watch(showTraceSelectorHighlight, (show) => {
+  const overlay = iframeEl.value?.contentDocument
+    ?.querySelector<HTMLElement>('[data-testid="trace-view-highlight"]')
+  if (overlay) {
+    overlay.style.display = show ? '' : 'none'
+  }
+})
 
 function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
   const selected = props.selection.selectedStepIndex === index
@@ -165,13 +183,20 @@ function formatStepName(step: NormalizedBrowserTraceEntry) {
 function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
+
+function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
+  if (panes.length === 2) {
+    traceViewSplitSizes.value = [panes[0].size, panes[1].size]
+  }
+}
 </script>
 
 <template>
   <Splitpanes
     class="h-full min-h-0"
+    @resized="onSplitpanesResized"
   >
-    <Pane :size="30" min-size="20">
+    <Pane :size="traceViewSplitSizes[0]" min-size="20">
       <div
         class="h-full min-h-0 p-4"
         flex="~ col gap-1"
@@ -230,7 +255,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
         </button>
       </div>
     </Pane>
-    <Pane :size="70" min-size="20">
+    <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div class="h-full min-h-0" flex="~ col" overflow-auto>
         <iframe
           v-if="selectedStep"

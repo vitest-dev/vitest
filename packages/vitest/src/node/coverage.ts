@@ -1,4 +1,4 @@
-import type { CoverageMap, CoverageSummary } from 'istanbul-lib-coverage'
+import type { CoverageMap, CoverageSummary } from '@vitest/istanbul-lib-coverage'
 import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
 import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
@@ -568,7 +568,7 @@ export class BaseCoverageProvider {
        * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
        */
       if (threshold >= 0) {
-        const coverage = summary.data[thresholdKey].pct
+        const coverage = summary.data[thresholdKey].pct as number
 
         if (coverage < threshold) {
           process.exitCode = 1
@@ -639,7 +639,7 @@ export class BaseCoverageProvider {
          */
         if (threshold >= 0) {
           const actual = Math.min(
-            ...summaries.map(summary => summary[key].pct),
+            ...summaries.map(summary => summary[key].pct as number),
           )
 
           if (actual > threshold) {

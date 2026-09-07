@@ -1,4 +1,4 @@
-import libCoverage from 'istanbul-lib-coverage'
+import * as libCoverage from '@vitest/istanbul-lib-coverage'
 import { expect } from 'vitest'
 import { readCoverageJson, runVitest, test } from '../utils'
 

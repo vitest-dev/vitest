@@ -2,7 +2,7 @@
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { closeTrace, getSelectedTrace, getTraceAttemptLabel } from '~/composables/trace-view'
+import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceSelectorHighlight } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 
 const props = defineProps<{
@@ -25,6 +25,13 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
       >
         {{ attemptLabel }}
       </span>
+      <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
+        <input
+          v-model="showTraceSelectorHighlight"
+          type="checkbox"
+        >
+        <span>Show highlight</span>
+      </label>
       <IconButton
         v-tooltip.bottom="'Close Trace Viewer'"
         title="Close Trace Viewer"

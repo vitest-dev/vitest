@@ -49,4 +49,24 @@ export class CodeCache {
   delete(identifier: string): void {
     this.entries.delete(identifier)
   }
+
+  clear(): void {
+    this.entries.clear()
+  }
+}
+
+/**
+ * `node:v8` as seen inside the vm context: changing V8 flags invalidates every
+ * code cache produced so far, so `setFlagsFromString` also empties ours.
+ */
+export function createV8ModuleWithCacheReset<T extends { setFlagsFromString: (flags: string) => void }>(
+  v8: T,
+  codeCache: CodeCache,
+): T {
+  const patched = Object.create(Object.getPrototypeOf(v8), Object.getOwnPropertyDescriptors(v8)) as T
+  patched.setFlagsFromString = function setFlagsFromString(flags: string): void {
+    v8.setFlagsFromString(flags)
+    codeCache.clear()
+  }
+  return patched
 }

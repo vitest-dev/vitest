@@ -108,7 +108,7 @@ export class VitestModuleRunner
     return exports
   }
 
-  public async import(rawId: string): Promise<any> {
+  public async import(rawId: string, options?: { invalidate?: boolean }): Promise<any> {
     const resolved = await this._otel.$(
       'vitest.module.resolve_id',
       {
@@ -128,7 +128,14 @@ export class VitestModuleRunner
         return result
       },
     )
-    return super.import(resolved ? resolved.url : rawId)
+    const url = resolved ? resolved.url : rawId
+    if (options?.invalidate) {
+      const module = this.evaluatedModules.getModuleByUrl(url)
+      if (module?.evaluated) {
+        this.evaluatedModules.invalidateModule(module)
+      }
+    }
+    return super.import(url)
   }
 
   public async fetchModule(url: string, importer?: string): Promise<EvaluatedModuleNode> {

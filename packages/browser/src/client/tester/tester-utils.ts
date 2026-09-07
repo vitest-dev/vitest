@@ -2,7 +2,7 @@ import type { Locator, SelectorOptions, SerializedLocator, UserEventWheelDeltaOp
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
-import { getBrowserState, getWorkerState, now } from '../utils'
+import { getBrowserState, getWorkerState } from '../utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
@@ -218,40 +218,6 @@ export class CommandsManager {
       },
     )
   }
-}
-
-export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
-  if (
-    // if timeout is set, keep it
-    (options_ && options_.timeout != null)
-  ) {
-    return options_
-  }
-  // if there is a default action timeout, use it
-  if (getWorkerState().config.browser.providerOptions.actionTimeout != null) {
-    return options_
-  }
-  const runner = getBrowserState().runner
-  const startTime = runner._currentTaskStartTime
-  // ignore timeout if this is called outside of a test
-  if (!startTime) {
-    return options_
-  }
-  const timeout = runner._currentTaskTimeout
-  if (timeout === 0 || timeout == null || timeout === Number.POSITIVE_INFINITY) {
-    return options_
-  }
-  options_ = options_ || {} as T
-  const currentTime = now()
-  const endTime = startTime + timeout
-  const remainingTime = Math.floor(endTime - currentTime)
-  // keep some buffer to process the timeout, but always hand the provider a
-  // positive value so it surfaces a descriptive, source-mapped locator error
-  // instead of letting the task timer win the race with a generic timeout;
-  // the buffer covers the provider->server->client round-trip of the rejection,
-  // which can exceed 100ms on loaded CI machines running several browsers
-  options_.timeout = Math.max(remainingTime - 250, 1)
-  return options_
 }
 
 export function getIframeScale(): number {

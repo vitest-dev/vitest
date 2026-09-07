@@ -6,7 +6,7 @@ import { StableTestFileOrderSorter } from '../../test-utils'
 test('cancels previous run before starting new one', async () => {
   const errors: unknown[] = []
 
-  const vitest = await createVitest('test', {
+  const vitest = await createVitest({
     maxWorkers: 1,
     maxConcurrency: 1,
     watch: false,

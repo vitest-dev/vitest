@@ -40,7 +40,7 @@ export default defineConfig({
       babel({
         presets: [
           {
-            preset: ({
+            preset: () => ({
               plugins: [['@babel/plugin-proposal-decorators', { version: '2023-11' }]],
             }),
             rolldown: {

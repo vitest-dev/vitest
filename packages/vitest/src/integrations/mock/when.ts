@@ -85,7 +85,7 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenResolve: (value: ReturnType, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenResolve: (value: Awaited<ReturnType>, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a synchronous return value for a single call with the registered arguments, then removes the behavior.
@@ -103,7 +103,7 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenResolveOnce: (value: ReturnType, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenResolveOnce: (value: Awaited<ReturnType>, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a thrown error for when the spy is called with the registered arguments.

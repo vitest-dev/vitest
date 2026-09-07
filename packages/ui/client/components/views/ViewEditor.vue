@@ -4,7 +4,7 @@ import type { RunnerTestFile, RunnerTask as Task, TestAnnotation, TestError } fr
 import { until, useResizeObserver, watchDebounced } from '@vueuse/core'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
-import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
+import { getAttachmentUrl, openPlaywrightTrace, sanitizeFilePath } from '~/composables/attachments'
 import { client, config, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
@@ -304,6 +304,19 @@ function createAnnotationElement(annotation: TestAnnotation) {
       notice.append(link)
     }
     else {
+      if (annotation.type === 'traces') {
+        const open = document.createElement('button')
+        open.type = 'button'
+        open.ariaLabel = 'Open trace'
+        open.addEventListener('click', () => openPlaywrightTrace(attachment))
+        open.classList.add('flex', 'w-min', 'gap-2', 'items-center', 'font-sans', 'underline', 'cursor-pointer')
+        const openIcon = document.createElement('div')
+        openIcon.classList.add('i-carbon:launch', 'block')
+        const openText = document.createElement('span')
+        openText.textContent = 'Open'
+        open.append(openIcon, openText)
+        notice.append(open)
+      }
       const download = document.createElement('a')
       download.href = getAttachmentUrl(attachment)
       download.download = sanitizeFilePath(annotation.message, attachment.contentType)

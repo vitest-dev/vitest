@@ -41,7 +41,7 @@ Quick links:
 
 - [Docs](/)
 - Translations: [简体中文](https://cn.vitest.dev/)
-- [Migration Guide](/guide/migration)
+- [Migration Guide](https://v3.vitest.dev/guide/migration)
 - [GitHub Changelog](https://github.com/vitest-dev/vitest/releases/tag/v3.0.0)
 
 If you've not used Vitest before, we suggest reading the [Getting Started](/guide/) and [Features](/guide/features) guides first.
@@ -137,7 +137,7 @@ We have redesigned the public API available from `vitest/node` and are planning 
 
 ## Breaking changes
 
-Vitest 3 has a few small breaking changes that should not affect most users, but we advise reviewing the detailed [Migration Guide](/guide/migration.html#vitest-3) before upgrading.
+Vitest 3 has a few small breaking changes that should not affect most users, but we advise reviewing the detailed [Migration Guide](https://v3.vitest.dev/guide/migration) before upgrading.
 
 The complete list of changes is at the [Vitest 3 Changelog](https://github.com/vitest-dev/vitest/releases/tag/v3.0.0).
 

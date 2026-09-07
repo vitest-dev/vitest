@@ -1,4 +1,4 @@
-import type { CoverageMap, FileCoverage } from 'istanbul-lib-coverage'
+import type { CoverageMap, FileCoverage } from '@vitest/istanbul-lib-coverage'
 import { expect } from 'vitest'
 import { formatSummary } from './utils'
 

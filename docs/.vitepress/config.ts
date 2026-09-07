@@ -1101,20 +1101,20 @@ export default ({ mode }: { mode: string }) => {
           // active-use guides further from the user's first scroll.
           {
             text: 'Migration',
-            link: '/guide/migration',
+            link: '/guide/migration/',
             collapsed: false,
             items: [
               {
                 text: 'Migrating to Vitest 5.0',
-                link: '/guide/migration#vitest-5',
+                link: '/guide/migration/',
               },
               {
                 text: 'Migrating from Jest',
-                link: '/guide/migration#jest',
+                link: '/guide/migration/jest',
               },
               {
                 text: 'Migrating from Mocha + Chai + Sinon',
-                link: '/guide/migration#mocha-chai-sinon',
+                link: '/guide/migration/mocha',
               },
             ],
           },

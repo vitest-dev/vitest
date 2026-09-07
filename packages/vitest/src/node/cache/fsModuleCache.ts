@@ -1,4 +1,5 @@
-import type { DevEnvironment } from 'vite'
+import type { StaticMockCall } from '@vitest/mocker/node'
+import type { DevEnvironment, TransformResult } from 'vite'
 import type { ModuleType, VitestFetchResult } from '../../types/general'
 import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
@@ -38,7 +39,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.5'
+  private version = '1.0.0-beta.7'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -136,12 +137,16 @@ export class FileSystemModuleCache {
       importedUrls: meta.importedUrls,
       mappings: meta.mappings,
       moduleType: meta.moduleType,
+      deps: meta.deps,
+      dynamicDeps: meta.dynamicDeps,
+      staticMocks: meta.staticMocks,
     }
   }
 
   async saveCachedModule(
     cachedFilePath: string,
     fetchResult: VitestFetchResult,
+    transformResult: TransformResult | null,
     importedUrls: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
@@ -153,6 +158,9 @@ export class FileSystemModuleCache {
         importedUrls,
         mappings,
         moduleType: fetchResult.moduleType,
+        deps: transformResult?.deps,
+        dynamicDeps: transformResult?.dynamicDeps,
+        staticMocks: transformResult?.__vitestStaticMocks,
       } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
@@ -228,9 +236,9 @@ export class FileSystemModuleCache {
     // coverage provider is dynamic, so we also clear the whole cache if
     // vitest.enableCoverage/vitest.disableCoverage is called
     const coverageAffectsCache = String(this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id))
-    let cacheConfig = this.fsEnvironmentHashMap.get(environment)
-    if (!cacheConfig) {
-      cacheConfig = JSON.stringify(
+    let environmentHash = this.fsEnvironmentHashMap.get(environment)
+    if (!environmentHash) {
+      const cacheConfig = JSON.stringify(
         {
           root: config.root,
           // at the moment, Vitest always forces base to be /
@@ -258,14 +266,18 @@ export class FileSystemModuleCache {
           return value
         },
       )
-      this.fsEnvironmentHashMap.set(environment, cacheConfig)
+      // everything in the key that does not depend on the module, as one digest
+      environmentHash = hash(
+        'sha1',
+        (process.env.NODE_ENV ?? '') + this.version + cacheConfig,
+        'hex',
+      )
+      this.fsEnvironmentHashMap.set(environment, environmentHash)
     }
 
     hashString += id
       + fileContent
-      + (process.env.NODE_ENV ?? '')
-      + this.version
-      + cacheConfig
+      + environmentHash
       + coverageAffectsCache
 
     const cacheKey = hash('sha1', hashString, 'hex')
@@ -402,6 +414,9 @@ export interface CachedInlineModuleMeta {
   mappings: boolean
   importedUrls: string[]
   moduleType?: ModuleType
+  deps?: string[]
+  dynamicDeps?: string[]
+  staticMocks?: StaticMockCall[] | null
 }
 
 /**
