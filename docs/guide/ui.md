@@ -67,7 +67,7 @@ To preview the default output, use the [vite preview](https://vitejs.dev/guide/c
 npx vite preview --outDir .vitest
 ```
 
-Open the URL printed by Vite in your browser. Alternatively, VS Code's Integrated Browser can open `.vitest/index.html` directly without a preview server.
+Open the URL printed by Vite in your browser. Alternatively, [VS Code's Integrated Browser](https://code.visualstudio.com/docs/debugtest/integrated-browser) can open `.vitest/index.html` directly without a preview server.
 
 ### Share as a Single File
 
