@@ -4,13 +4,17 @@ title: Vitest UI | Guide
 
 # Vitest UI
 
-Powered by Vite, Vitest also has a dev server under the hood when running the tests. This allows Vitest to provide a beautiful UI to view and interact with your tests. The Vitest UI is optional, so you'll need to install it with:
+Vitest UI is a visual interface for exploring your test results. You can use it interactively while tests run or generate the same interface as a static HTML report to review after the test process exits.
+
+Vitest UI is optional, so you'll need to install it with:
 
 ```bash
 npm i -D @vitest/ui
 ```
 
-Then you can start the tests with UI by passing the `--ui` flag:
+## Interactive UI
+
+The interactive UI runs alongside Vitest's development server. Start it by passing the `--ui` flag:
 
 ```bash
 vitest --ui
@@ -23,13 +27,25 @@ Vitest UI access is protected. If the direct URL shows an error, open the URL wi
 :::
 
 ::: warning
-The UI is interactive and requires a running Vite server, so make sure to run Vitest in `watch` mode (the default). Alternatively, you can generate a static HTML report that looks identical to the Vitest UI by specifying `html` in config's `reporters` option.
+The interactive UI requires a running Vite server, so make sure to run Vitest in `watch` mode (the default). To review results after the test process exits, use the [HTML Reporter](#html-reporter).
 :::
 
 <img alt="Vitest UI" img-light src="/ui-1-light.png">
 <img alt="Vitest UI" img-dark src="/ui-1-dark.png">
 
-UI can also be used as a reporter. Use `'html'` reporter in your Vitest configuration to generate HTML output and preview the results of your tests:
+You can check your coverage report in Vitest UI: see [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
+
+## HTML Reporter
+
+The HTML reporter generates a static version of Vitest UI from a completed test run. It is useful for run mode, CI, and automated workflows where results are reviewed after the test process exits.
+
+Use the `html` reporter from the command line or in your Vitest configuration:
+
+::: code-group
+
+```bash [CLI]
+vitest run --reporter=html
+```
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -41,25 +57,28 @@ export default defineConfig({
 })
 ```
 
-You can check your coverage report in Vitest UI: see [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
+:::
+
+When [`browser.traceView`](/guide/browser/trace-view) is enabled, the report also preserves recorded browser interactions so they can be replayed later in the trace viewer.
 
 ::: warning
 If you still want to see how your tests are running in real time in the terminal, add `configDefaults.reporters` to the `reporters` option: `['html', ...configDefaults.reporters]`.
 :::
 
-::: tip
-To preview your HTML report, you can use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
+### Preview Locally
+
+To preview the generated report, use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
 
 ```sh
 npx vite preview --outDir .vitest
 ```
 
 You can configure the output location with the HTML reporter's `outputDir` option. It points to the report artifact root, and the report entry is written to `<outputDir>/index.html`. The default value is `.vitest`, the shared Vitest artifact directory.
-:::
 
-If you need a portable report that can be opened or shared as one file, see [`singleFile`](/guide/reporters#html-reporter) in the HTML reporter documentation.
+See the [HTML reporter options](/guide/reporters#html-reporter) for configuring `outputDir` and generating a portable report with `singleFile`.
 
-::: tip
+### View Reports from CI
+
 To view the HTML report from CI, for example in GitHub Actions, upload the output directory as an artifact:
 
 ```yaml
@@ -75,7 +94,7 @@ To view the HTML report from CI, for example in GitHub Actions, upload the outpu
 
 This adds a link to the job summary. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
 
-When you use `singleFile: true`, you can upload the report as a single file and it will become viewable directly GitHub artifacts with `archive: false` option:
+When you use `singleFile: true`, you can upload the report as a single file and view it directly from GitHub artifacts with the `archive: false` option:
 
 ```yaml
 - uses: actions/upload-artifact@v7
@@ -83,7 +102,6 @@ When you use `singleFile: true`, you can upload the report as a single file and 
     path: .vitest/index.html
     archive: false
 ```
-:::
 
 ## Module Graph
 
