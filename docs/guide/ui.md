@@ -37,10 +37,6 @@ Use the `html` reporter from the command line or in your Vitest configuration:
 
 ::: code-group
 
-```bash [CLI]
-vitest run --reporter=html
-```
-
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
@@ -49,6 +45,10 @@ export default defineConfig({
     reporters: ['html'],
   },
 })
+```
+
+```bash [CLI]
+vitest run --reporter=html
 ```
 
 :::
