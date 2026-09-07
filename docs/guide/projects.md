@@ -234,7 +234,7 @@ pnpm run test --project e2e --project unit
 bun run test --project e2e --project unit
 ```
 :::
-:::::
+::::
 
 The filter supports `*` wildcards and `!` exclusions. A project runs if it matches no negated pattern and, when regular patterns are also given, matches at least one of them:
 
