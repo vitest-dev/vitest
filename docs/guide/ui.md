@@ -17,7 +17,9 @@ npm i -D @vitest/ui
 
 ## Live UI
 
-The Live UI runs alongside Vitest's development server and requires [watch mode](/config/watch), which is enabled by default. Start it by passing the `--ui` flag:
+The Live UI runs alongside Vitest's development server and requires [watch mode](/config/watch), which is enabled by default. It stays connected to the running Vitest process, so results update as tests rerun. You can also rerun selected tests, update failed snapshots, and edit test files directly from the UI.
+
+Start it by passing the `--ui` flag:
 
 ```bash
 vitest --ui
@@ -31,7 +33,7 @@ Vitest UI access is protected. If the direct URL shows an error, open the URL wi
 
 ## HTML Reporter
 
-The HTML reporter writes test results to a static version of Vitest UI. It is useful for run mode, CI, and automated workflows where results are reviewed later.
+The HTML reporter writes test results to a static version of Vitest UI. The result views remain navigable, but the report is read-only and cannot rerun tests, update snapshots, or edit test files. It is useful for run mode, CI, and automated workflows where results are reviewed later.
 
 Use the `html` reporter from the command line or in your Vitest configuration:
 
