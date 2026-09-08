@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { RunnerTask } from 'vitest'
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
 import { layoutMode, params } from '~/composables/params'
 import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceSelectorHighlight } from '~/composables/trace-view'
+import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
 
 const props = defineProps<{
@@ -13,19 +13,7 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
-const traceTitle = computed(() => {
-  const suites: string[] = []
-  let task: RunnerTask | undefined = props.selection.test.suite
-  while (task) {
-    suites.unshift(task.name)
-    task = task.suite
-  }
-  const context = [props.selection.test.file.name, ...suites]
-  return {
-    context: context.join(' > '),
-    full: [...context, props.selection.test.name].join(' > '),
-  }
-})
+const traceContext = computed(() => getNames(props.selection.test).slice(0, -1).join(' > '))
 const focusedTraceUrl = computed(() => {
   const url = new URL(globalThis.location.href)
   const focusedParams = new URLSearchParams()
@@ -47,11 +35,10 @@ const focusedTraceUrl = computed(() => {
       <div
         v-if="layoutMode === 'trace'"
         data-testid="trace-view-title"
-        :title="traceTitle.full"
         pl-1 text-sm flex-auto min-w-0 ws-nowrap overflow-hidden truncate
       >
         <span font-bold>{{ selection.test.name }}</span>
-        <span v-if="traceTitle.context" ml-2 op-50>{{ traceTitle.context }}</span>
+        <span v-if="traceContext" ml-2 op-50>{{ traceContext }}</span>
       </div>
       <span v-else data-testid="trace-view-title" pl-1 font-bold text-sm flex-auto>Trace Viewer</span>
       <!-- TODO: pane should own attempt selector here? -->
