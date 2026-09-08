@@ -520,9 +520,7 @@ async function testFocusedTraceMode(page: Page) {
 
   // Select a trace step in the standard layout.
   await page.goto(standardUrl)
-
   await openExplorerItem(page, 'simple')
-
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step')
   const traceFrame = traceView.frameLocator('iframe')
