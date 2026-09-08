@@ -287,7 +287,7 @@ export function fn<T extends Procedure | Constructable = Procedure>(
     // we pass this down so getMockImplementation() always returns the value
     mockImplementation: originalImplementation,
     // special case so that .mockReset() resets the value to
-    // the the originalImplementation instead of () => undefined
+    // the originalImplementation instead of () => undefined
     resetToMockImplementation: true,
   }) as Mock<T>
 }

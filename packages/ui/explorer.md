@@ -31,7 +31,7 @@ Whereas collecting and searching are complex operations, expanding/collapsing no
 Old [ws-client](client/composables/client/index.ts) logic was traversing the full tree to update all the nodes in the ui on every `onTaskUpdate` callback (was using reactive `idsMap` in the `ws-client` state).
 The new logic will traverse only the task files in the task result provided in the `onTaskUpdate` callback, that's a huge improvement in performance.
 
-The main change in the new logic is about using `requestAnimationFrame` to collect ui updates every 100ms, collecting all changes received in `onTaskUpdate` callback. On every loop, the [uiEntries](client/composables/state.ts) will be recreated with collected changes, the virtual scroller will handle the updates properly.
+The main change in the new logic is about using `requestAnimationFrame` to collect ui updates every 100ms, collecting all changes received in `onTaskUpdate` callback. On every loop, the [uiEntries](client/composables/explorer/state.ts) will be recreated with collected changes, the virtual scroller will handle the updates properly.
 
 The logic is implemented in [collect](client/composables/explorer/collector.ts) function and the `requestAnimationFrame` loop configured in the [tree class](client/composables/explorer/tree.ts), `runCollect` function.
 

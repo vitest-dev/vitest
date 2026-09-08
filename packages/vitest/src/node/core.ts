@@ -599,7 +599,7 @@ export class Vitest {
    */
   public getRootProject(): TestProject {
     if (!this.coreWorkspaceProject) {
-      throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
+      throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the workspace config is not resolved.`)
     }
     return this.coreWorkspaceProject
   }
