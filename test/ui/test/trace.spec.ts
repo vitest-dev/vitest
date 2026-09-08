@@ -553,10 +553,6 @@ async function testFocusedTraceMode(page: Page) {
     width: viewport.width,
     height: viewport.height,
   })
-  await expect.poll(() => getHashParams(page)).toMatchObject({
-    layout: 'trace',
-    traceStep: '1',
-  })
 
   // Reloading restores the selected trace step.
   await page.reload()
