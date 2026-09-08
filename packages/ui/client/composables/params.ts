@@ -3,7 +3,7 @@ import { toRef, useUrlSearchParams } from '@vueuse/core'
 export interface Params {
   // File.id
   file: string
-  // Full-screen UI layout
+  // Replaces the standard UI with a full-page trace view
   layout: null | 'trace'
   view: null | 'graph' | 'editor' | 'console'
   line: null | number
