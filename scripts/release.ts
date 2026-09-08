@@ -8,7 +8,7 @@ try {
 
   console.log('Bumping versions in packages:', packages.join(', '), '\n')
 
-  const result = await versionBump({
+  await versionBump({
     files: packages,
     commit: true,
     push: true,
