@@ -250,6 +250,12 @@ async function testBasic(page: Page) {
   // verify closing trace viewer doesn't immediately auto-open it again
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
   await expect(traceView).toBeHidden()
+
+  // reopen the trace viewer from the report
+  await page.getByTestId('btn-report').click()
+  await page.getByTestId('trace-open-button').click()
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Switch Target' })).toBeVisible()
 }
 
 async function testViewport(page: Page) {
