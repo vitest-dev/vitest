@@ -1,0 +1,19 @@
+test/e2e/test/fs-module-cache-resiliency.test.ts
+  s_9365e71365efc5::t_8ae3317a166e52 4,150-242
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1a4e0f37890db56bc82ef295ef1b085ca6646a9d",
+  "prompts": {},
+  "sessions": {
+    "s_9365e71365efc5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f7ea06020ffeQnKqzD48wTxztE",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
