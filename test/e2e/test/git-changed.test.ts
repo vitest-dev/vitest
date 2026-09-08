@@ -32,6 +32,20 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
     const { stdout } = await run()
     expect(stdout).toContain('No test files found, exiting with code 0')
   })
+
+  it('should match a changed file under a dot directory', async () => {
+    // the triggers are matched against absolute paths, so a dot segment anywhere in
+    // the project's own path used to stop `**` from reaching the file
+    const { stdout, stderr } = await runVitest({
+      root: join(process.cwd(), 'fixtures/git-changed/related'),
+      include: ['related.test.ts'],
+      forceRerunTriggers: ['**/package.json'],
+      related: ['.config/package.json'],
+    })
+    expect(stderr).toBe('')
+    expect(stdout).toContain('1 passed')
+    expect(stdout).toContain('related.test.ts')
+  })
 })
 
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {

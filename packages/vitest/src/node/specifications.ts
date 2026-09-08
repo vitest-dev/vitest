@@ -135,7 +135,8 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    // paths are absolute, so without `dot: true` a project under a dot directory matches nothing
+    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers, { dot: true }) : undefined
     if (matcher && related.some(file => matcher(file))) {
       return specs
     }
