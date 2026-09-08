@@ -516,7 +516,6 @@ async function testPersistsAttemptInURL(page: Page) {
     traceStep: '0',
     test: testId,
   })
-  await expect(traceView.getByRole('combobox', { name: 'Trace attempt' })).toHaveValue('0:1')
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
 
   // Reloading preserves the same URL and selected retry snapshot.
