@@ -525,6 +525,7 @@ async function testFocusedTraceMode(page: Page) {
   const traceSteps = traceView.getByTestId('trace-step')
   const traceFrame = traceView.frameLocator('iframe')
   await traceSteps.nth(1).click()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
   // Follow its new-tab URL in the current page to inspect the focused layout.
   const openFocusedTrace = traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })
