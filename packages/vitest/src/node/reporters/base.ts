@@ -18,7 +18,7 @@ import { getSuites, getTestName, getTests, hasFailed, hasFailedSnapshot } from '
 import { generateCodeFrame, printStack } from '../printError'
 import { estimateModuleEvaluationSaving, getEnvironmentDiagnostics, getImportDiagnostics, getTransformDiagnostics, isSavingWorthHinting } from './diagnostics'
 import { computeDurationBreakdown, formatDurationBreakdown } from './durationBreakdown'
-import { BENCH_TABLE_HEAD, computeBenchColumnWidths, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
+import { BENCH_TABLE_HEAD, computeBenchColumnWidths, computeRelativeScores, formatRelativeScore, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
   countTestErrors,
@@ -1310,12 +1310,14 @@ export abstract class BaseReporter implements Reporter {
         ...BENCH_TABLE_HEAD,
       ]
       const widths = computeBenchColumnWidths(tableHead, rows)
+      const scoreLabels = computeRelativeScores(tasks).map(formatRelativeScore)
+      const scoreWidth = Math.max(...scoreLabels.map(label => label.length))
       const indent = ` ${basePadding}  `
 
       this.log(`${indent}${padBenchRow(tableHead, widths).map(c.bold).join('  ')}`)
       printedCount++
 
-      for (const task of tasks) {
+      for (const [index, task] of tasks.entries()) {
         const padded = padBenchRow(renderBenchmarkRow(task), widths)
         let row = [
           padded[0],
@@ -1330,6 +1332,10 @@ export abstract class BaseReporter implements Reporter {
           c.dim(padded[9]),
           c.dim(padded[10]),
         ].join('  ')
+
+        if (scoreWidth > 0) {
+          row += c.bold(c.cyan(`  ${scoreLabels[index].padStart(scoreWidth)}`))
+        }
 
         if (task.rank === 1 && tasks.length > 1) {
           row += c.bold(c.green('   fastest'))
