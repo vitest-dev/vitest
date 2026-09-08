@@ -345,6 +345,41 @@ describe('vi.fn() configuration', () => {
     expect(mock()).toBe(undefined)
   })
 
+  test('vi.resetAllMocks() only resets mocks that were called or reconfigured', () => {
+    const mocks = Array.from({ length: 100 }, () => vi.fn())
+    mocks[10]()
+    mocks[20].mockReturnValue(42)
+    mocks[30].mockReturnValueOnce(42)
+    mocks[40].mockName('named')
+    mocks[50]()
+    mocks[50].mockReturnValue(42)
+
+    const reset: number[] = []
+    for (const [index, mock] of mocks.entries()) {
+      const mockReset = mock.mockReset
+      mock.mockReset = function () {
+        reset.push(index)
+        return mockReset.call(this)
+      }
+    }
+
+    vi.resetAllMocks()
+
+    expect(reset.sort((a, b) => a - b)).toEqual([10, 20, 30, 40, 50])
+    expect(mocks[20]()).toBe(undefined)
+    expect(mocks[30]()).toBe(undefined)
+    expect(mocks[40].getMockName()).toBe('vi.fn()')
+  })
+
+  test('vi.resetAllMocks() still resets a reconfigured mock after vi.clearAllMocks()', () => {
+    const mock = vi.fn().mockReturnValue(42)
+
+    vi.clearAllMocks()
+    vi.resetAllMocks()
+
+    expect(mock()).toBe(undefined)
+  })
+
   test('vi.fn() resets the original mock implementation', () => {
     const mock = vi.fn(() => 42)
     expect(mock()).toBe(42)

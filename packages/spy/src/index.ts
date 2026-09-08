@@ -25,10 +25,9 @@ const MOCK_RESTORE = new Set<() => void>()
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
 const DIRTY_MOCK_STATES = new Set<Mock<Procedure | Constructable>>()
-const REGISTERED_MOCKS = new Set<WeakRef<Mock<Procedure | Constructable>>>()
-const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constructable>>>((ref) => {
-  REGISTERED_MOCKS.delete(ref)
-})
+// Mocks whose implementation, once-queue or name changed since their last
+// `mockReset()`, so `resetAllMocks()` only visits mocks that are not already reset
+const DIRTY_MOCK_CONFIGS = new Set<Mock<Procedure | Constructable>>()
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
 
@@ -68,9 +67,6 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
   }
   MOCK_CONFIGS.set(mock, config)
   MOCKS_BY_STATE.set(state, mock)
-  const ref = new WeakRef(mock)
-  REGISTERED_MOCKS.add(ref)
-  MOCK_FINALIZER.register(mock, ref)
 
   mock._isMockFunction = true
   mock.getMockImplementation = () => {
@@ -102,18 +98,21 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
   })
 
   mock.mockImplementation = function mockImplementation(implementation) {
+    DIRTY_MOCK_CONFIGS.add(mock)
     config.mockImplementation = implementation
     updateMockPrototype()
     return mock
   }
 
   mock.mockImplementationOnce = function mockImplementationOnce(implementation) {
+    DIRTY_MOCK_CONFIGS.add(mock)
     config.onceMockImplementations.push(implementation)
     updateMockPrototype()
     return mock
   }
 
   mock.withImplementation = function withImplementation(implementation, callback) {
+    DIRTY_MOCK_CONFIGS.add(mock)
     const previousImplementation = config.mockImplementation
     const previousOnceImplementations = config.onceMockImplementations
 
@@ -239,6 +238,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
       : undefined
     config.mockName = resetToMockName ? (mock.name || 'vi.fn()') : 'vi.fn()'
     config.onceMockImplementations = []
+    DIRTY_MOCK_CONFIGS.delete(mock)
     updateMockPrototype()
     return mock
   }
@@ -250,6 +250,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 
   mock.mockName = function mockName(name: string) {
     if (typeof name === 'string') {
+      DIRTY_MOCK_CONFIGS.add(mock)
       config.mockName = name
     }
     return mock
@@ -777,14 +778,13 @@ export function clearAllMocks(): void {
 }
 
 export function resetAllMocks(): void {
-  for (const ref of REGISTERED_MOCKS) {
-    const mock = ref.deref()
-    if (mock) {
-      mock.mockReset()
-    }
-    else {
-      REGISTERED_MOCKS.delete(ref)
-    }
+  // `mockReset()` removes the mock from both sets, so a mock present in both
+  // is visited once.
+  for (const mock of DIRTY_MOCK_STATES) {
+    mock.mockReset()
+  }
+  for (const mock of DIRTY_MOCK_CONFIGS) {
+    mock.mockReset()
   }
 }
 
