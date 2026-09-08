@@ -3,6 +3,7 @@ import { toRef, useUrlSearchParams } from '@vueuse/core'
 export interface Params {
   // File.id
   file: string
+  mode: null | 'trace'
   view: null | 'graph' | 'editor' | 'console'
   line: null | number
   // Task.id of either Test or Suite (but not File)
@@ -15,6 +16,7 @@ export interface Params {
 const params = useUrlSearchParams<Params>('hash', {
   initialValue: {
     file: '',
+    mode: null,
     view: null,
     line: null,
     test: null,
@@ -25,6 +27,7 @@ const params = useUrlSearchParams<Params>('hash', {
 })
 
 export const activeFileId = toRef(params, 'file')
+export const uiMode = toRef(params, 'mode')
 export const viewMode = toRef(params, 'view')
 export const lineNumber = toRef(params, 'line')
 export const columnNumber = toRef(params, 'column')
