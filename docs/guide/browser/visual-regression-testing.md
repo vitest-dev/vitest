@@ -770,6 +770,6 @@ Visual regression tests rely on screenshots remaining stable across runs. In pra
 
 This ensures that transient visual changes (like loading spinners or animations) don't cause false positives. If something never stops animating, though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).
 
-If a stable screenshot is captured after one or more retries and a reference screenshot exists, Vitest performs a final comparison with the reference using `createDiff: true`. This will generate a diff image if they don't match.
+Once a stable screenshot is captured and a reference screenshot exists, Vitest performs a final comparison with the reference using `createDiff: true`. This will generate a diff image if they don't match.
 
 During stability detection, Vitest calls comparators with `createDiff: false` since it only needs to know if screenshots match. This keeps the detection process fast.
