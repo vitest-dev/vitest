@@ -211,7 +211,7 @@ test('throws an error if tag is not defined in the config, but in --tags-filter 
     },
     { fails: true },
   )
-  expect(stderr).toContain('The Vitest config does\'t define any "tags", cannot apply "unknown" tag pattern for this test. See: https://vitest.dev/guide/test-tags')
+  expect(stderr).toContain('The Vitest config doesn\'t define any "tags", cannot apply "unknown" tag pattern for this test. See: https://vitest.dev/guide/test-tags')
 })
 
 test('defining a tag available only in one project', async () => {
