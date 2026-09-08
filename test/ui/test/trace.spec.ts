@@ -73,6 +73,10 @@ test.describe('ui', () => {
     await testPersistsAttemptInURL(page)
   })
 
+  test('focused trace mode', async ({ page }) => {
+    await testFocusedTraceMode(page)
+  })
+
   test('persists resized trace panes across reloads', async ({ page }) => {
     await testPersistsResizedTracePanes(page)
   })
@@ -157,6 +161,10 @@ test.describe('html reporter', () => {
 
   test('persists attempt in URL', async ({ page }) => {
     await testPersistsAttemptInURL(page)
+  })
+
+  test('focused trace mode', async ({ page }) => {
+    await testFocusedTraceMode(page)
   })
 
   test('persists resized trace panes across reloads', async ({ page }) => {
@@ -500,6 +508,48 @@ async function testPersistsAttemptInURL(page: Page) {
     test: testId,
   })
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+}
+
+async function testFocusedTraceMode(page: Page) {
+  await openExplorerItem(page, 'simple')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceFrame = traceView.frameLocator('iframe')
+  await traceSteps.nth(1).click()
+
+  const focusedUrl = new URL(page.url())
+  const focusedParams = new URLSearchParams(focusedUrl.hash.split('?')[1])
+  focusedParams.set('mode', 'trace')
+  focusedUrl.hash = `/?${focusedParams}`
+  await page.goto(focusedUrl.href)
+
+  const viewport = page.viewportSize()
+  if (!viewport) {
+    throw new Error('Viewport size is unavailable')
+  }
+  await expect(traceView).toBeVisible()
+  await expect(page.getByAltText('Vitest logo')).toBeHidden()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect.poll(() => traceView.boundingBox()).toEqual({
+    x: 0,
+    y: 0,
+    width: viewport.width,
+    height: viewport.height,
+  })
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    mode: 'trace',
+    traceStep: '1',
+  })
+
+  await page.reload()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect(page.getByAltText('Vitest logo')).toBeHidden()
+
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect(traceView).toBeHidden()
+  await expect(page.getByAltText('Vitest logo')).toBeVisible()
+  expect(getHashParams(page)).not.toHaveProperty('mode')
 }
 
 function getHashParams(page: Page) {
