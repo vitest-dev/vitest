@@ -520,7 +520,7 @@ async function testFocusedTraceMode(page: Page) {
 
   const focusedUrl = new URL(page.url())
   const focusedParams = new URLSearchParams(focusedUrl.hash.split('?')[1])
-  focusedParams.set('mode', 'trace')
+  focusedParams.set('layout', 'trace')
   focusedUrl.hash = `/?${focusedParams}`
   await page.goto(focusedUrl.href)
 
@@ -538,7 +538,7 @@ async function testFocusedTraceMode(page: Page) {
     height: viewport.height,
   })
   await expect.poll(() => getHashParams(page)).toMatchObject({
-    mode: 'trace',
+    layout: 'trace',
     traceStep: '1',
   })
 
@@ -549,7 +549,7 @@ async function testFocusedTraceMode(page: Page) {
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
   await expect(traceView).toBeHidden()
   await expect(page.getByAltText('Vitest logo')).toBeVisible()
-  expect(getHashParams(page)).not.toHaveProperty('mode')
+  expect(getHashParams(page)).not.toHaveProperty('layout')
 }
 
 function getHashParams(page: Page) {

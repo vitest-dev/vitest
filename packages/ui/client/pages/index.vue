@@ -20,7 +20,7 @@ import {
   mainSizes,
   panels,
 } from '~/composables/navigation'
-import { uiMode } from '~/composables/params'
+import { layoutMode } from '~/composables/params'
 import { activeTraceView } from '~/composables/trace-view'
 
 const dashboardVisible = initializeNavigation()
@@ -82,8 +82,8 @@ function allowBrowserEvents() {
 </script>
 
 <template>
-  <ProgressBar v-if="uiMode !== 'trace'" />
-  <div v-if="uiMode === 'trace'" h-screen w-screen overflow="hidden">
+  <ProgressBar v-if="layoutMode !== 'trace'" />
+  <div v-if="layoutMode === 'trace'" h-screen w-screen overflow="hidden">
     <TraceViewPane v-if="activeTraceView" :selection="activeTraceView" />
   </div>
   <div v-else h-screen w-screen overflow="hidden">
