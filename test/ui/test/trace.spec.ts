@@ -511,6 +511,7 @@ async function testPersistsAttemptInURL(page: Page) {
 }
 
 async function testFocusedTraceMode(page: Page) {
+  // Opening the trace layout without a selection shows its empty state.
   const standardUrl = page.url()
   const emptyTraceUrl = new URL(standardUrl)
   emptyTraceUrl.hash = '/?layout=trace'
@@ -531,6 +532,7 @@ async function testFocusedTraceMode(page: Page) {
   focusedUrl.hash = `/?${focusedParams}`
   await page.goto(focusedUrl.href)
 
+  // The focused layout fills the viewport and preserves the selected trace step.
   const viewport = page.viewportSize()
   if (!viewport) {
     throw new Error('Viewport size is unavailable')
@@ -549,6 +551,7 @@ async function testFocusedTraceMode(page: Page) {
     traceStep: '1',
   })
 
+  // Reloading restores the focused trace without exposing standard UI controls.
   await page.reload()
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect(page.getByAltText('Vitest logo')).toBeHidden()
