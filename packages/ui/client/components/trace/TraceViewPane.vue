@@ -29,18 +29,18 @@ const focusedTraceUrl = computed(() => {
 </script>
 
 <template>
-  <div data-testid="trace-view" h-full min-h-0 flex="~ col">
-    <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
+  <div data-testid="trace-view" class="h-full min-h-0 flex flex-col">
+    <div class="h-10 flex items-center gap-2 border-b border-base bg-header p-3">
       <div class="i-carbon:data-vis-4" />
       <div
         v-if="layoutMode === 'trace'"
         data-testid="trace-view-title"
-        pl-1 text-sm flex-auto min-w-0 ws-nowrap overflow-hidden truncate
+        class="min-w-0 flex-auto overflow-hidden truncate ws-nowrap pl-1 text-sm"
       >
-        <span font-bold>{{ selection.test.name }}</span>
-        <span v-if="traceContext" ml-2 op-50>{{ traceContext }}</span>
+        <span class="font-bold">{{ selection.test.name }}</span>
+        <span v-if="traceContext" class="ml-2 op-50">{{ traceContext }}</span>
       </div>
-      <span v-else data-testid="trace-view-title" pl-1 font-bold text-sm flex-auto>Trace Viewer</span>
+      <span v-else data-testid="trace-view-title" class="flex-auto pl-1 text-sm font-bold">Trace Viewer</span>
       <!-- TODO: pane should own attempt selector here? -->
       <span
         v-if="attemptLabel"
@@ -64,7 +64,7 @@ const focusedTraceUrl = computed(() => {
         aria-label="Open Trace Viewer in New Tab"
         class="w-1.4em h-1.4em flex op70 rounded hover:bg-active hover:op100"
       >
-        <span class="i-carbon:launch" ma block />
+        <span class="i-carbon:launch m-auto block" />
       </a>
       <IconButton
         v-if="layoutMode !== 'trace'"
