@@ -517,6 +517,8 @@ async function testFocusedTraceMode(page: Page) {
   emptyTraceUrl.hash = '/?layout=trace'
   await page.goto(emptyTraceUrl.href)
   await expect(page.getByText('No trace found')).toBeVisible()
+
+  // Open a selected trace step through its focused-layout link.
   await page.goto(standardUrl)
 
   await openExplorerItem(page, 'simple')
