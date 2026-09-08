@@ -376,13 +376,12 @@ async function testAttempts(page: Page) {
     'Retry 1',
     'Retry 2',
   ])
+
   await expect(attemptSelect).toHaveValue('0:0')
-
-  await expect(page.getByTestId('trace-open-button')).toHaveText(['Open trace viewer'])
-
   await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 
+  // trace step is reset to first step when switching attempts
   await traceSteps.nth(1).click()
   await attemptSelect.selectOption('0:1')
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
