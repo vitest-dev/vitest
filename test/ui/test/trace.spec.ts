@@ -536,13 +536,15 @@ async function testFocusedTraceMode(page: Page) {
   }
   await page.goto(focusedUrl)
 
-  // The focused layout fills the viewport and preserves the selected trace step.
+  // The focused layout fills the viewport, preserves selection, and hides standard controls.
   const viewport = page.viewportSize()
   if (!viewport) {
     throw new Error('Viewport size is unavailable')
   }
   await expect(traceView).toBeVisible()
   await expect(page.getByAltText('Vitest logo')).toBeHidden()
+  await expect(traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })).toBeHidden()
+  await expect(traceView.getByRole('button', { name: 'Close Trace Viewer' })).toBeHidden()
   await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect.poll(() => traceView.boundingBox()).toEqual({
@@ -556,12 +558,10 @@ async function testFocusedTraceMode(page: Page) {
     traceStep: '1',
   })
 
-  // Reloading restores the focused trace without exposing standard UI controls.
+  // Reloading restores the selected trace step.
   await page.reload()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
-  await expect(page.getByAltText('Vitest logo')).toBeHidden()
-  await expect(traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })).toBeHidden()
-  await expect(traceView.getByRole('button', { name: 'Close Trace Viewer' })).toBeHidden()
 }
 
 function getHashParams(page: Page) {
