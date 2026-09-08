@@ -45,6 +45,7 @@ const focusedTraceUrl = computed(() => {
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <div class="i-carbon:data-vis-4" />
       <div
+        v-if="layoutMode === 'trace'"
         data-testid="trace-view-title"
         :title="traceTitle.full"
         pl-1 text-sm flex-auto min-w-0 ws-nowrap overflow-hidden truncate
@@ -52,6 +53,7 @@ const focusedTraceUrl = computed(() => {
         <span font-bold>{{ selection.test.name }}</span>
         <span v-if="traceTitle.context" ml-2 op-50>{{ traceTitle.context }}</span>
       </div>
+      <span v-else data-testid="trace-view-title" pl-1 font-bold text-sm flex-auto>Trace Viewer</span>
       <!-- TODO: pane should own attempt selector here? -->
       <span
         v-if="attemptLabel"

@@ -524,6 +524,7 @@ async function testFocusedTraceMode(page: Page) {
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step')
   const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceView.getByTestId('trace-view-title')).toHaveText('Trace Viewer')
   await traceSteps.nth(1).click()
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
 
