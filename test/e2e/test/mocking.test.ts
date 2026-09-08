@@ -44,6 +44,35 @@ test('spy is not called here', () => {
   `)
 })
 
+test('mockReset works with autospied Node modules', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': {
+      test: {
+        mockReset: true,
+      },
+    },
+    './basic.test.js': `
+import * as fsp from 'node:fs/promises'
+import { expect, test, vi } from 'vitest'
+
+vi.mock(import('node:fs/promises'), { spy: true })
+
+test('exposes the spied module', () => {
+  expect(fsp.readFile).toBeDefined()
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "exposes the spied module": "passed",
+      },
+    }
+  `)
+})
+
 test('invalid packages', async () => {
   const { stderr, errorTree } = await runVitest({
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),
