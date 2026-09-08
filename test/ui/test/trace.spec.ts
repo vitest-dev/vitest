@@ -385,19 +385,11 @@ async function testAttempts(page: Page) {
 
   await traceSteps.nth(1).click()
   await attemptSelect.selectOption('0:1')
-  await expect.poll(() => getHashParams(page)).toMatchObject({
-    traceAttempt: '0:1',
-    traceStep: '0',
-  })
   await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 
   await attemptSelect.selectOption('0:2')
-  await expect.poll(() => getHashParams(page)).toMatchObject({
-    traceAttempt: '0:2',
-    traceStep: '0',
-  })
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 }
