@@ -38,7 +38,7 @@ Today, we are thrilled to announce Vitest 4!
 Quick links:
 
 - [Docs](/)
-- Translations: [简体中文](https://cn.vitest.dev/)
+- Translations: [简体中文](https://v4.cn.vitest.dev/)
 - [Migration Guide](https://v4.vitest.dev/guide/migration)
 - [GitHub Changelog](https://github.com/vitest-dev/vitest/releases/tag/v4.0.0)
 
