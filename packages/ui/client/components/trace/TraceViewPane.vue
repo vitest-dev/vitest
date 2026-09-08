@@ -12,6 +12,20 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
+const focusedTraceUrl = computed(() => {
+  const url = new URL(globalThis.location.href)
+  const params = new URLSearchParams(url.hash.split('?')[1])
+  params.set('layout', 'trace')
+  params.set('traceStep', String(props.selection.selectedStepIndex))
+  if (props.selection.attemptKey) {
+    params.set('traceAttempt', props.selection.attemptKey)
+  }
+  else {
+    params.delete('traceAttempt')
+  }
+  url.hash = `/?${params}`
+  return url.href
+})
 </script>
 
 <template>
@@ -33,6 +47,17 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
         >
         <span>Show highlight</span>
       </label>
+      <a
+        v-if="layoutMode !== 'trace'"
+        v-tooltip.bottom="'Open Trace Viewer in New Tab'"
+        :href="focusedTraceUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open Trace Viewer in New Tab"
+        class="w-1.4em h-1.4em flex op70 rounded hover:bg-active hover:op100"
+      >
+        <span class="i-carbon:launch" ma block />
+      </a>
       <IconButton
         v-if="layoutMode !== 'trace'"
         v-tooltip.bottom="'Close Trace Viewer'"

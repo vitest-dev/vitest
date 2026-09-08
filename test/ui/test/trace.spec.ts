@@ -526,11 +526,13 @@ async function testFocusedTraceMode(page: Page) {
   const traceFrame = traceView.frameLocator('iframe')
   await traceSteps.nth(1).click()
 
-  const focusedUrl = new URL(page.url())
-  const focusedParams = new URLSearchParams(focusedUrl.hash.split('?')[1])
-  focusedParams.set('layout', 'trace')
-  focusedUrl.hash = `/?${focusedParams}`
-  await page.goto(focusedUrl.href)
+  const openFocusedTrace = traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })
+  await expect(openFocusedTrace).toHaveAttribute('target', '_blank')
+  const focusedUrl = await openFocusedTrace.getAttribute('href')
+  if (!focusedUrl) {
+    throw new Error('Focused trace URL is unavailable')
+  }
+  await page.goto(focusedUrl)
 
   // The focused layout fills the viewport and preserves the selected trace step.
   const viewport = page.viewportSize()
@@ -555,6 +557,7 @@ async function testFocusedTraceMode(page: Page) {
   await page.reload()
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect(page.getByAltText('Vitest logo')).toBeHidden()
+  await expect(traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })).toBeHidden()
   await expect(traceView.getByRole('button', { name: 'Close Trace Viewer' })).toBeHidden()
 }
 
