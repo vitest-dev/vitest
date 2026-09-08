@@ -32,7 +32,7 @@ export default ({ mode }: { mode: string }) => {
       zh: {
         label: '简体中文',
         lang: 'zh',
-        link: 'https://cn.vitest.dev/',
+        link: 'https://v1.cn.vitest.dev/',
       },
     },
     head: [
