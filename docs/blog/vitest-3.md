@@ -40,7 +40,7 @@ Today, we are thrilled to announce Vitest 3! This is a big one!
 Quick links:
 
 - [Docs](/)
-- Translations: [简体中文](https://cn.vitest.dev/)
+- Translations: [简体中文](https://v3.cn.vitest.dev/)
 - [Migration Guide](https://v3.vitest.dev/guide/migration)
 - [GitHub Changelog](https://github.com/vitest-dev/vitest/releases/tag/v3.0.0)
 
