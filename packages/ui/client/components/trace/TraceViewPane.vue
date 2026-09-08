@@ -16,7 +16,7 @@ const traceAttempts = computed(() => [...getTraceAttemptMap(props.selection.test
   label: getTraceAttemptLabel(trace) || 'Initial run',
 })))
 const selectedAttemptKey = computed({
-  get: () => props.selection.attemptKey ?? traceAttempts.value[0]?.key ?? '',
+  get: () => props.selection.attemptKey ?? '0:0',
   set: selectActiveTraceAttempt,
 })
 </script>
