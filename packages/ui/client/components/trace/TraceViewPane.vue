@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RunnerTask } from 'vitest'
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
@@ -12,6 +13,19 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
+const traceTitle = computed(() => {
+  const suites: string[] = []
+  let task: RunnerTask | undefined = props.selection.test.suite
+  while (task) {
+    suites.unshift(task.name)
+    task = task.suite
+  }
+  const context = [props.selection.test.file.name, ...suites]
+  return {
+    context: context.join(' > '),
+    full: [...context, props.selection.test.name].join(' > '),
+  }
+})
 const focusedTraceUrl = computed(() => {
   const url = new URL(globalThis.location.href)
   const focusedParams = new URLSearchParams()
@@ -30,7 +44,14 @@ const focusedTraceUrl = computed(() => {
   <div data-testid="trace-view" h-full min-h-0 flex="~ col">
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <div class="i-carbon:data-vis-4" />
-      <span pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>Trace Viewer</span>
+      <div
+        data-testid="trace-view-title"
+        :title="traceTitle.full"
+        pl-1 text-sm flex-auto min-w-0 ws-nowrap overflow-hidden truncate
+      >
+        <span font-bold>{{ selection.test.name }}</span>
+        <span v-if="traceTitle.context" ml-2 op-50>{{ traceTitle.context }}</span>
+      </div>
       <!-- TODO: pane should own attempt selector here? -->
       <span
         v-if="attemptLabel"
