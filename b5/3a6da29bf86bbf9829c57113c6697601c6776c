@@ -1,0 +1,19 @@
+test/e2e/snapshots/browser-csp.test.ts
+  s_df6ca15062dadf::t_caa08b93438c4f 36-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b53a6da29bf86bbf9829c57113c6697601c6776c",
+  "prompts": {},
+  "sessions": {
+    "s_df6ca15062dadf": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_014dcfddaffeTonA8OxP4QmNWw",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

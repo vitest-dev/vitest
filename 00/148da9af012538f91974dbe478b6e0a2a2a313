@@ -1,0 +1,21 @@
+packages/browser-playwright/src/playwright.ts
+  s_df6ca15062dadf::t_05c3b4915a71a8 668-669
+packages/vitest/src/node/pools/browser.ts
+  s_df6ca15062dadf::t_433b5e1f5a4ba2 9,11,412,414,471-566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "00148da9af012538f91974dbe478b6e0a2a2a313",
+  "prompts": {},
+  "sessions": {
+    "s_df6ca15062dadf": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_014dcfddaffeTonA8OxP4QmNWw",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+test/ui/test/playwright-trace.spec.ts
+  s_f96d934eea6f5c::t_bed9f120914216 1,7-20,41,46,50-51,81,87,89-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5d33c3faf07e9dadbb1f4d99193a7a6dda85fdac",
+  "prompts": {},
+  "sessions": {
+    "s_f96d934eea6f5c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fc869b08bffeIyIYctxaoBqxcd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

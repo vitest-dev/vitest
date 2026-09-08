@@ -1,0 +1,39 @@
+packages/mocker/src/node/hoistMocks.ts
+  s_63b53ba77b98ad::t_9e3cdeb4ee19ae 2,8,11,22-29,31,355-370,641-655
+packages/mocker/src/node/hoistMocksPlugin.ts
+  s_63b53ba77b98ad::t_b9f0308db4bb87 3,49,59-62,64-71
+packages/mocker/src/node/index.ts
+  s_63b53ba77b98ad::t_1f2743b000fbcc 6
+packages/ui/client/components/trace/TraceView.vue
+  s_63b53ba77b98ad::t_a58c98d74fc103 7,123,130-137
+packages/ui/client/components/trace/TraceViewPane.vue
+  s_63b53ba77b98ad::t_e2766925a2d762 5,28-34
+packages/ui/client/composables/trace-view.ts
+  s_63b53ba77b98ad::t_a01deb5d2d0546 3,34-38
+packages/vitest/src/node/cache/fsModuleCache.ts
+  s_63b53ba77b98ad::t_9462c56006d421 1-2,42,140-142,149,161-163,417-419
+packages/vitest/src/node/environments/fetchModule.ts
+  s_63b53ba77b98ad::t_7888f17f59b140 2,126,152-158,297-298,301,352-355,391,404,606-607
+packages/vitest/src/node/pools/rpc.ts
+  s_63b53ba77b98ad::t_8ac9003dd14b48 1,141,144,176-233,236,239,241,244-247,255-264,270-272,275
+test/e2e/test/vm-threads.test.ts
+  s_63b53ba77b98ad::t_679b18b6911519 1,3,5,578-649
+test/ui/test/trace.spec.ts
+  s_63b53ba77b98ad::t_7f6133dccd2460 195-208
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0b54fbb07d4d48c646223f93716ef8955b1fbe66",
+  "prompts": {},
+  "sessions": {
+    "s_63b53ba77b98ad": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fce7b4967ffe2zHxRBuWyNkHQ7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

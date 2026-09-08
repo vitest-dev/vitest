@@ -1,0 +1,21 @@
+AGENTS.md
+  s_4ed8232e38440d::t_142ef180918943 53-61
+test/browser/specs/errors.test.ts
+  s_4ed8232e38440d::t_850f5fba48e9c2 128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2122042209a12f1d029f665ad10e16b01aa4c85c",
+  "prompts": {},
+  "sessions": {
+    "s_4ed8232e38440d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0063f4b73ffefVOo3yD3AeZPZp",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

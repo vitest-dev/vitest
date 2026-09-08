@@ -1,0 +1,21 @@
+patches/@sinonjs__fake-timers@15.4.0.patch
+  s_7bdd52c7255784::t_87169d605401f2 2,25,36,45,81,95,103,111,119,127,132,136-142
+pnpm-lock.yaml
+  s_7bdd52c7255784::t_152f77e9332f18 176,1009,13236,18722
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1dafb9f080e5598ae565335f685508c62c067edb",
+  "prompts": {},
+  "sessions": {
+    "s_7bdd52c7255784": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa572d07fffefHc69PXXwWWdg9",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

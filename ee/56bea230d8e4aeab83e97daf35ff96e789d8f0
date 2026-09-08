@@ -1,0 +1,25 @@
+pnpm-lock.yaml
+  s_70e5da4f06eedf::t_94867f3e2c9c6b 1307-1309,4969-4971,13521-13522
+test/e2e/deps/malformed-source-map/index.js
+  s_70e5da4f06eedf::t_f05f68cbec6be5 1
+test/e2e/deps/malformed-source-map/malformed.js
+  s_70e5da4f06eedf::t_b0493fd3e831e6 1-7
+test/e2e/deps/malformed-source-map/package.json
+  s_70e5da4f06eedf::t_28426b88c0c668 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ee56bea230d8e4aeab83e97daf35ff96e789d8f0",
+  "prompts": {},
+  "sessions": {
+    "s_70e5da4f06eedf": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0078acc36ffepRug8BUv5UNTGj",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

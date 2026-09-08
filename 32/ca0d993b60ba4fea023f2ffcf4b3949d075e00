@@ -1,0 +1,85 @@
+docs/.vitepress/config.ts
+  s_31b7abf176fb1d::t_99cd25d371cbd4 545-548
+docs/.vitepress/sponsors.ts
+  s_31b7abf176fb1d::t_5ee9a84c808ba2 70-74
+docs/api/advanced/test-project.md
+  s_31b7abf176fb1d::t_f06774f8eae2be 101-109
+docs/config/sharedviteserver.md
+  s_31b7abf176fb1d::t_76f7f5dd7f8c64 1-74
+docs/guide/cli-generated.md
+  s_31b7abf176fb1d::t_649b1ec9dc77fd 933-939
+docs/guide/migration.md
+  s_31b7abf176fb1d::t_ed37375f9abd2c 160-185
+docs/package.json
+  s_31b7abf176fb1d::t_64cd6e37f7708b 21
+docs/public/testmuai.svg
+  s_31b7abf176fb1d::t_54acf55da50a1f 1-22
+examples/projects/package.json
+  s_31b7abf176fb1d::t_24febe295fae69 12
+package.json
+  s_31b7abf176fb1d::t_cab30d758567d3 45,59
+packages/browser/src/node/index.ts
+  s_31b7abf176fb1d::t_fda06fc0e4631b 505
+packages/vitest/src/node/cli/cli-config.ts
+  s_31b7abf176fb1d::t_6a006a846dea7b 890-892
+packages/vitest/src/node/config/resolveConfig.ts
+  s_31b7abf176fb1d::t_e1f4cac51603b5 4,10,17,32,34,1000,1069-1102,1119-1120,1126,1133-1137,1139,1192-1210
+packages/vitest/src/node/plugins/config.ts
+  s_31b7abf176fb1d::t_ac7c22e04f4a3a 1,3,10,12,15-33,49,133-165
+packages/vitest/src/node/plugins/runnerTransform.ts
+  s_31b7abf176fb1d::t_0266ad8af09517 1
+packages/vitest/src/node/plugins/testConfig.ts
+  s_31b7abf176fb1d::t_31d6ef21339533 1,3-14,16,18-59,63-66,69-102,108,111-142,145-163,174-180,182-184,187-190,192-193,196-224,231-305
+packages/vitest/src/node/plugins/utils.ts
+  s_31b7abf176fb1d::t_31f2ea8a5f7c06 66-73,75,83-87,93-96,113-116,118
+packages/vitest/src/node/plugins/workspace.ts
+  s_31b7abf176fb1d::t_5a7ace2da3d9cf 6,59
+packages/vitest/src/node/pools/workers/typecheckWorker.ts
+  s_31b7abf176fb1d::t_9d707610b6a331 10,133
+packages/vitest/src/node/project.ts
+  s_31b7abf176fb1d::t_817f75e344e9cb 66,99,215-223,584
+packages/vitest/src/node/projects/resolveProjects.ts
+  s_31b7abf176fb1d::t_6a6ed0fb86390f 10,15,27,29,31,36-37,335-343,383,462-466,495,510-719,728,756-763,771,804-810,1037,1365-1375,1397-1406,1423-1425
+packages/vitest/src/node/types/config.ts
+  s_31b7abf176fb1d::t_b680367432c1a0 408-424,1276-1281,1366-1377,1389-1414,1452-1457,1488,1530
+packages/vitest/src/runtime/moduleRunner/moduleEvaluator.ts
+  s_31b7abf176fb1d::t_45ab3f1c27fbf6 305-319
+packages/vitest/src/runtime/workers/base.ts
+  s_31b7abf176fb1d::t_6e5f0803bcf7b6 137-149
+packages/vitest/src/typecheck/typechecker.ts
+  s_31b7abf176fb1d::t_47f9f725738fc0 21-23,434-436
+packages/vitest/src/types/worker.ts
+  s_31b7abf176fb1d::t_83879f71fa764f 79
+packages/vitest/src/utils/config-helpers.ts
+  s_31b7abf176fb1d::t_a86d2d0cd994a8 33-34,36-43,55,71
+pnpm-lock.yaml
+  s_31b7abf176fb1d::t_759f230eb73ae9 206-207,248-249,309-310,478-479,1648-1649,1662,1691-1692,1718-1720,2393-2394,2397,2433-2434,2437-2439,4973-4977,5175-5176,5179,5183-5184,5196-5197,5199-5200,5206-5207,5216-5217,5222-5223,5225-5227,5233-5234,5243-5244,5256-5257,5259-5261,5267-5270,5393-5394,6719-6721,6739-6740,6745-6746,6768-6769,6785-6786,6791-6792,6820-6821,6848-6849,7253-7256,7753-7754,7757-7758,7761-7763,10641,10643,10645-10646,10648-10651,10654-10655,10657-10663,10665-10674,10678,10693,10701,10704,11514,11520,11565,11568,11571,11573,11579,11661,11664,11667,11669,11674,11678,11684,13357,13359-13361,13517,13520,13735,13738-13743,13751,13753-13756,13758,13763,13765-13766,13772,13774-13775,13786,13788-13789,13795,13799,13801-13803,13805,13811-13814,13830,13832-13840,13845,13847,13851,13856,13858-13865,13872-13876,14068,14070-14072,14074,15525,15527,15530,15532-15533,15540,15542,15546,15548,15550,15552,15554,15556-15559,15561,15563,15565-15566,15568,15570,15572,15574,15580,15592,15594,15599-15600,15607,15609,15611-15612,15624,15626-15627,15633,15636,15644,15646,15648-15650,15655,15661,15666,15668,15676,15690,15692,15694,15696,15698-15699,15704,15707-15708,15710,15717,15719,15721,15724,15739,15741,15768,16047,16267-16268,16752,16754,16756-16758,17203,19855,19858
+test/e2e/test/config/browser-configs.test.ts
+  s_31b7abf176fb1d::t_96c80cc3aac1ee 108-122
+test/e2e/test/projects.test.ts
+  s_31b7abf176fb1d::t_744ef057b7ee18 1-2,750-1029
+test/typescript/fixtures/typecheck-crash/fake-tsc.cmd
+  s_31b7abf176fb1d::t_4b2b3458a402d0 1-2
+test/typescript/test/typechecker.test.ts
+  s_31b7abf176fb1d::t_df3b99bda69499 26-29,36-37
+test/unit/test/define-ssr.test.ts
+  s_31b7abf176fb1d::t_8abd7ead632a56 58,62,65,69
+test/unit/vite.config.ts
+  s_31b7abf176fb1d::t_771244478b1e3b 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "32ca0d993b60ba4fea023f2ffcf4b3949d075e00",
+  "prompts": {},
+  "sessions": {
+    "s_31b7abf176fb1d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0113c014dffedcBLk1e2byPd35",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

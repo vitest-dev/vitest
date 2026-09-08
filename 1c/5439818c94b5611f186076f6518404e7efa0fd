@@ -1,0 +1,681 @@
+.github/PULL_REQUEST_TEMPLATE.md
+  s_7bdd52c7255784::t_54c8494059901a 3-6
+.github/actions/send-ai-bot-comment/action.yml
+  s_7bdd52c7255784::t_2e106b78489795 22-23,28-29
+.github/actions/setup-playwright/action.yml
+  s_7bdd52c7255784::t_9976f7f3349e31 42-43
+.github/docker/Dockerfile
+  s_7bdd52c7255784::t_d9b8db04b2dfce 1-16
+.github/workflows/ci.yml
+  s_7bdd52c7255784::t_9ed0eb5c2fa85f 13,30,73,92,95-147,221,232-238,240,243,247,249,251,253-300,302,332-334,339-347,371-372
+.github/workflows/cr.yml
+  s_7bdd52c7255784::t_2bb8c1af3fe43c 5,8,13,18
+.github/workflows/issue-close-require.yml
+  s_7bdd52c7255784::t_83abd141475f22 35
+.github/workflows/issue-labeled.yml
+  s_7bdd52c7255784::t_244f4da7d759cb 59
+.github/workflows/pr-labeled-automated.yml
+  s_7bdd52c7255784::t_7f6727608fb191 40,43-45,50-51,59-60,62-69,74-80
+.github/workflows/semgrep.yml
+  s_7bdd52c7255784::t_70f733c93cb04d 17,32
+AGENTS.md
+  s_7bdd52c7255784::t_e50be0d6a5057d 5-12,20,60-69,75-88,92,94,102-103,107,109,124-133,139-140,146-156,172-187,200-207,210-211,232,234,236,238
+CONTRIBUTING.md
+  s_7bdd52c7255784::t_e898f49fde3a69 50-57,113
+docs/.vitepress/config.ts
+  s_7bdd52c7255784::t_93fd12bfda519e 38,546-549
+docs/.vitepress/sponsors.ts
+  s_7bdd52c7255784::t_f503574337f2b2 70-74
+docs/AGENTS.md
+  s_7bdd52c7255784::t_645f3d9589b1dd 1-26
+docs/api/advanced/reporters.md
+  s_7bdd52c7255784::t_1abf4b4b065121 190,193
+docs/api/advanced/test-project.md
+  s_7bdd52c7255784::t_833eebb78d9170 101-109
+docs/api/advanced/vitest.md
+  s_7bdd52c7255784::t_ef31cdd580149c 188-194,197,202,591,594,604,607,612-613
+docs/api/browser/interactivity.md
+  s_7bdd52c7255784::t_5083d300bec9a7 284-291
+docs/api/browser/locators.md
+  s_7bdd52c7255784::t_b732eb88a5f10a 518
+docs/api/expect.md
+  s_7bdd52c7255784::t_705535841b91e0 2023-2044
+docs/api/mock.md
+  s_7bdd52c7255784::t_d098e8fcf54734 169-170,289-290
+docs/api/vi.md
+  s_7bdd52c7255784::t_0fb073fe72e101 476-478,483,486-487,622-623
+docs/config/api.md
+  s_7bdd52c7255784::t_21a680b84c9403 34
+docs/config/coverage.md
+  s_7bdd52c7255784::t_5675e18c3b0a12 48-49,59,101,462
+docs/config/env.md
+  s_7bdd52c7255784::t_bdf4f15b22ba98 11-14
+docs/config/faketimers.md
+  s_7bdd52c7255784::t_a40f6afdb3eae6 26-27
+docs/config/injectcjsglobals.md
+  s_7bdd52c7255784::t_76dd7acfe06ae3 46
+docs/config/pool.md
+  s_7bdd52c7255784::t_7083cf0b441037 16
+docs/config/sharedviteserver.md
+  s_7bdd52c7255784::t_fa817cf7f8e891 1-74
+docs/guide/browser/visual-regression-testing.md
+  s_7bdd52c7255784::t_895bf8bdd48d97 180-181
+docs/guide/cli-generated.md
+  s_7bdd52c7255784::t_dbe83b5f983808 799,933-939
+docs/guide/cli.md
+  s_7bdd52c7255784::t_69450bc2f5ad03 124
+docs/guide/common-errors.md
+  s_7bdd52c7255784::t_b974adff52a8b6 125-155,251-290
+docs/guide/coverage.md
+  s_7bdd52c7255784::t_84d1dc3250a92e 260,262-287,289,310
+docs/guide/environment.md
+  s_7bdd52c7255784::t_68cbe0b6ff8a2e 52-54
+docs/guide/migration.md
+  s_7bdd52c7255784::t_0641dbbfd78903 18,59,101,124,126,150-171,202-218,220-228,269,271,281,284-285,288,291,313,477,521-540,546,552,598-611,619-620
+docs/guide/mocking/classes.md
+  s_7bdd52c7255784::t_a31c912fb673ae 30-35,101,133-198,212
+docs/guide/projects.md
+  s_7bdd52c7255784::t_8690cd52c63d7b 238-246,403-421
+docs/guide/recipes/conditional-mocking.md
+  s_7bdd52c7255784::t_72056e121b13c0 155-156
+docs/guide/reporters.md
+  s_7bdd52c7255784::t_f7d71a82b26945 744-761
+docs/guide/snapshot.md
+  s_7bdd52c7255784::t_f70a5b85da9305 111-114
+docs/package.json
+  s_7bdd52c7255784::t_dda34f25e11649 21,25-26,31,37,39
+docs/public/testmuai.svg
+  s_7bdd52c7255784::t_63e5d79cbd22c8 1-22
+eslint.config.js
+  s_7bdd52c7255784::t_f2cee31d25de7d 29
+examples/fastify/package.json
+  s_7bdd52c7255784::t_51c0000ba551c6 15,17
+examples/projects/package.json
+  s_7bdd52c7255784::t_00fd00579d41e4 12-14,18,22
+knip.jsonc
+  s_7bdd52c7255784::t_59a7ae969334e2 2,67,93-106
+package.json
+  s_7bdd52c7255784::t_da36faa9ae7992 4,6,41,45,59,61,65,69
+packages/browser-playwright/package.json
+  s_7bdd52c7255784::t_caf0f1096af7d3 4
+packages/browser-playwright/src/locators.ts
+  s_7bdd52c7255784::t_2097ec9fed4af7 27,31,35,39,43
+packages/browser-playwright/src/playwright.ts
+  s_7bdd52c7255784::t_dbac024528fbbb 624-631,676-677
+packages/browser-preview/package.json
+  s_7bdd52c7255784::t_1b913e9b8ba544 4,51
+packages/browser/context.d.ts
+  s_7bdd52c7255784::t_611dceaaab0161 450-452,772
+packages/browser/package.json
+  s_7bdd52c7255784::t_43093b6796eae7 4,79,91,95
+packages/browser/src/client/orchestrator.ts
+  s_7bdd52c7255784::t_b6d4040bba7f80 30-36
+packages/browser/src/client/tester/action.ts
+  s_7bdd52c7255784::t_724c51ec16913a 1-164
+packages/browser/src/client/tester/context.ts
+  s_7bdd52c7255784::t_aefe9959679c52 23-24,313,337-345
+packages/browser/src/client/tester/expect-element.ts
+  s_7bdd52c7255784::t_7f272b9d3e9ff6 7,19-20,46-51
+packages/browser/src/client/tester/locators.ts
+  s_7bdd52c7255784::t_d71b4ee33e6589 4,32-33,37-38,98,102,106,131,135,139,143,147,151,170,250,345-346,373-379,383-385
+packages/browser/src/client/tester/runner.ts
+  s_7bdd52c7255784::t_ca9f8efba6caf5 20,32,95,199-205
+packages/browser/src/client/tester/snapshot.ts
+  s_7bdd52c7255784::t_a736591200805d 26-30
+packages/browser/src/client/tester/tester-utils.ts
+  s_7bdd52c7255784::t_567fa2f3fe2c26 5
+packages/browser/src/client/tester/trace.ts
+  s_7bdd52c7255784::t_e5bd898eed9e2b 58-59,65-66,74
+packages/browser/src/client/utils.ts
+  s_7bdd52c7255784::t_1b47c0f82b0aed 101-102,122-127
+packages/browser/src/node/index.ts
+  s_7bdd52c7255784::t_a30c40a885f240 369,463-469,501-506,511,514
+packages/browser/src/node/rpc.ts
+  s_7bdd52c7255784::t_c40b07fc6bd651 5,13,18,25-44,117-143,146,155,182,189-192,330-342,469
+packages/browser/src/types.ts
+  s_7bdd52c7255784::t_21f29dc2ebd834 35
+packages/coverage-istanbul/package.json
+  s_7bdd52c7255784::t_53358e32971e73 4,53-56
+packages/coverage-istanbul/src/base.ts
+  s_7bdd52c7255784::t_f55a315fa388bb 1
+packages/coverage-istanbul/src/provider.ts
+  s_7bdd52c7255784::t_85d57e54e5b8ee 1-2,8-11,196-197,202-203
+packages/coverage-v8/package.json
+  s_7bdd52c7255784::t_608e718e7a1e07 4,58-59
+packages/coverage-v8/src/provider.ts
+  s_7bdd52c7255784::t_474c046a1096ee 1,9-10,158-159,164-165,260-272,373
+packages/expect/package.json
+  s_7bdd52c7255784::t_8403901ef53f0f 4
+packages/expect/src/jest-expect.ts
+  s_7bdd52c7255784::t_adb2641949856a 470-474,612-617,630-635
+packages/expect/src/state.ts
+  s_7bdd52c7255784::t_deda88455c55ee 46,48-54
+packages/mocker/package.json
+  s_7bdd52c7255784::t_594b1632c739d7 4,99-100
+packages/mocker/src/node/hoistMocks.ts
+  s_7bdd52c7255784::t_90f1b866b3b782 2,8,11,22-29,31,355-370,641-655
+packages/mocker/src/node/hoistMocksPlugin.ts
+  s_7bdd52c7255784::t_1c1c4b0c408481 3,49,59-62,64-71
+packages/mocker/src/node/index.ts
+  s_7bdd52c7255784::t_edf6917f9c8a04 6
+packages/mocker/src/node/interceptorPlugin.ts
+  s_7bdd52c7255784::t_5c374a939330b8 5,16-22,67-69,81-88
+packages/pretty-format/package.json
+  s_7bdd52c7255784::t_1086445412f1e5 4
+packages/snapshot/package.json
+  s_7bdd52c7255784::t_4813fca9132029 4
+packages/snapshot/src/client.ts
+  s_7bdd52c7255784::t_4f57b60466439a 138-145
+packages/snapshot/src/environment.ts
+  s_7bdd52c7255784::t_5bf923112cfd51 2
+packages/snapshot/src/port/state.ts
+  s_7bdd52c7255784::t_146566dde55ed4 29,98,101-104,127-137
+packages/snapshot/src/port/utils.ts
+  s_7bdd52c7255784::t_f71f7b0d566f66 9,30-34,36-39,41-45,47
+packages/snapshot/src/types/environment.ts
+  s_7bdd52c7255784::t_9036058c3d8d0c 10-11
+packages/spy/package.json
+  s_7bdd52c7255784::t_bd68336b270011 4
+packages/spy/src/index.ts
+  s_7bdd52c7255784::t_3bd92cb72acde7 74-88,98,104,115,120,233,260-263,489,519,527-533,627-646
+packages/ui/CONTRIBUTING.md
+  s_7bdd52c7255784::t_df22170dc9679e 70
+packages/ui/client/components/CodeMirrorContainer.vue
+  s_7bdd52c7255784::t_662a16a75974d6 2,4,7,9,40,73-82
+packages/ui/client/components/FileDetails.vue
+  s_7bdd52c7255784::t_caa5a014425c0e 2,9,17,28-31,63,113,215-218
+packages/ui/client/components/ModuleTransformResultView.vue
+  s_7bdd52c7255784::t_ecfb88d4d13ae0 310,319,330
+packages/ui/client/components/artifacts/visual-regression/VisualRegressionSlider.spec.ts
+  s_7bdd52c7255784::t_7e768148270d72 79-80
+packages/ui/client/components/explorer/Explorer.vue
+  s_7bdd52c7255784::t_f19941607585b1 238-239,317-318,323
+packages/ui/client/components/explorer/ExplorerItem.vue
+  s_7bdd52c7255784::t_3b551326bf094f 12,32,99-101,103-104,115,158,201,204,206-215,222
+packages/ui/client/components/trace/TraceArtifacts.vue
+  s_7bdd52c7255784::t_52d62d2ce5d310 12
+packages/ui/client/components/trace/TraceView.vue
+  s_7bdd52c7255784::t_ca28f25bf85f96 2,8-9,34-62,76,87-89,92-96,125,132-139,186-191,197,199-206,211,217-218,220,258
+packages/ui/client/components/trace/TraceViewPane.vue
+  s_7bdd52c7255784::t_40c5ecc5822807 5,28-34
+packages/ui/client/components/views/ViewEditor.vue
+  s_7bdd52c7255784::t_8e71409a37fb6a 7,307-319,336-337,360,372,374,464-466,468
+packages/ui/client/components/views/ViewReport.spec.ts
+  s_7bdd52c7255784::t_fc45df96948113 60,103,152,196
+packages/ui/client/components/views/ViewReport.vue
+  s_7bdd52c7255784::t_3607698cb78148 9,33-38,42,46-47,73,75,83
+packages/ui/client/components/views/ViewTestReport.vue
+  s_7bdd52c7255784::t_10f8a262b569be 4,82-91
+packages/ui/client/composables/attachments.ts
+  s_7bdd52c7255784::t_eb775ac4625210 41-92
+packages/ui/client/composables/client/index.ts
+  s_7bdd52c7255784::t_3f472649e72bbe 12,27-28,30,33,41-54,56,60-67,83-86,90,190,199
+packages/ui/client/composables/client/state.ts
+  s_7bdd52c7255784::t_247d62fa05beec 6,70,75-80,82-89,91-118
+packages/ui/client/composables/client/static.ts
+  s_7bdd52c7255784::t_3e6d087e572815 71
+packages/ui/client/composables/client/ws.ts
+  s_7bdd52c7255784::t_deffe945d3a401 5,9,23-25,28,32,34-38,60,64-65,70-71,78
+packages/ui/client/composables/codemirror.ts
+  s_7bdd52c7255784::t_bb1d471f50d4d3 16
+packages/ui/client/composables/explorer/collector.ts
+  s_7bdd52c7255784::t_d009b56c39a238 50-60,62,65,105-110,112,114-119,121,222,226-228,233-236,238
+packages/ui/client/composables/explorer/tree.ts
+  s_7bdd52c7255784::t_52c958d6df1621 17,19,64,81,91,101,106-126,138-158,177,181-186,191,195-200,205-210
+packages/ui/client/composables/explorer/utils.ts
+  s_7bdd52c7255784::t_6b749d54cda59b 13,74-79,241-269
+packages/ui/client/composables/navigation.ts
+  s_7bdd52c7255784::t_da7e47a0c285d1 37-40,119,130-132,137
+packages/ui/client/composables/params.ts
+  s_7bdd52c7255784::t_744f0d581cff1d 4,8,11-12,22-23,32-33
+packages/ui/client/composables/trace-view.ts
+  s_7bdd52c7255784::t_09555bb6060013 3-5,8,34-38,91,103,107,110,118-119,183,187-193,198-199,206,210-219,222-223,226-227,229,236,244-245,247,253,271-309
+packages/ui/client/styles/main.css
+  s_7bdd52c7255784::t_8948a047d6f11e 54-55,84,91-102
+packages/ui/client/utils/task.ts
+  s_7bdd52c7255784::t_c1f45116a3a02a 1,148,164-184
+packages/ui/explorer.md
+  s_7bdd52c7255784::t_40226ec864563a 17
+packages/ui/node/index.ts
+  s_7bdd52c7255784::t_28363784576fcf 1,3,16,39-81,147-148
+packages/ui/package.json
+  s_7bdd52c7255784::t_120302da33a1bd 4,64,82,90-91
+packages/utils/package.json
+  s_7bdd52c7255784::t_4abcf745f97431 4
+packages/utils/src/source-map/node.ts
+  s_7bdd52c7255784::t_3c2547a4403e5b 15-27
+packages/vitest/package.json
+  s_7bdd52c7255784::t_16b5b2cd4b540f 4,172,176,179,185,195-196,206
+packages/vitest/src/api/setup.ts
+  s_7bdd52c7255784::t_bcfbe4168b5918 199,218,279-288
+packages/vitest/src/api/types.ts
+  s_7bdd52c7255784::t_de1471f041d7c4 80
+packages/vitest/src/constants.ts
+  s_7bdd52c7255784::t_7d01efa6343816 8,10
+packages/vitest/src/defaults.ts
+  s_7bdd52c7255784::t_095d3dd80327d7 61
+packages/vitest/src/integrations/chai/poll.ts
+  s_7bdd52c7255784::t_05cadf7c039874 215-217,223,227,231
+packages/vitest/src/integrations/env/loader.ts
+  s_7bdd52c7255784::t_7d0d87467692eb 22,57
+packages/vitest/src/integrations/env/node.ts
+  s_7bdd52c7255784::t_37bef17a42f227 44
+packages/vitest/src/integrations/env/utils.ts
+  s_7bdd52c7255784::t_02421c5543bf0f 5
+packages/vitest/src/integrations/mock/when.ts
+  s_7bdd52c7255784::t_841ac07cfc7c50 88,106
+packages/vitest/src/node/ast-collect.ts
+  s_7bdd52c7255784::t_612912e701a671 33,112-115
+packages/vitest/src/node/cache/files.ts
+  s_7bdd52c7255784::t_4f21699c9f7bd8 24-30
+packages/vitest/src/node/cache/fsModuleCache.ts
+  s_7bdd52c7255784::t_b6cffda412e18d 1-2,42,140-142,149,161-163,239-241,269-275,280,417-419
+packages/vitest/src/node/cli/cli-api.ts
+  s_7bdd52c7255784::t_a95f97406f592f 33,38,132-134,136-145,154,168,179-202,358,365,389
+packages/vitest/src/node/cli/cli-config.ts
+  s_7bdd52c7255784::t_dd44849fa82e16 748,890-892,1026-1027
+packages/vitest/src/node/config/resolveConfig.ts
+  s_7bdd52c7255784::t_7b530ad247880a 4,10,17,32,34,59,66-68,181,1003,1072-1105,1122-1128,1131,1138-1144,1147,1197-1215,1254-1259
+packages/vitest/src/node/config/serializeConfig.ts
+  s_7bdd52c7255784::t_1d3ba871f21ab2 164
+packages/vitest/src/node/core.ts
+  s_7bdd52c7255784::t_0b52a6e5822b72 29,351-354,378,451-466,672-679,683,772,800-801,865,1125-1136
+packages/vitest/src/node/coverage.ts
+  s_7bdd52c7255784::t_a4cc8291ecada9 1,571,642
+packages/vitest/src/node/environments/fetchModule.ts
+  s_7bdd52c7255784::t_8ba4632b6f9591 2,126,152-158,297-298,301,352-355,391,404,606-607
+packages/vitest/src/node/errors.ts
+  s_7bdd52c7255784::t_8a670f89e8302a 17-20
+packages/vitest/src/node/plugins/browserLoader.ts
+  s_7bdd52c7255784::t_9b91beba720bab 11-12,14,35,60,62-94,97,113,119,127
+packages/vitest/src/node/plugins/config.ts
+  s_7bdd52c7255784::t_a70e5eaba6205f 1,3,9,11,14-32,48,75-78,80-86,123-155
+packages/vitest/src/node/plugins/index.ts
+  s_7bdd52c7255784::t_c2216a82214b7b 11,14,25,30
+packages/vitest/src/node/plugins/runnerTransform.ts
+  s_7bdd52c7255784::t_7e19acc8517eef 1
+packages/vitest/src/node/plugins/testConfig.ts
+  s_7bdd52c7255784::t_316bdc6ec052f3 1,3-14,16,18-60,64-67,70-103,109,112-143,146-164,175-181,183-185,188-191,193-194,197-225,232-306
+packages/vitest/src/node/plugins/utils.ts
+  s_7bdd52c7255784::t_5c18432e7ac51d 5,10-26,83-90,92,100-104,110-113,130-133,135
+packages/vitest/src/node/plugins/vitestResolver.ts
+  s_7bdd52c7255784::t_cee2ea65d3177d 7,13-14,22-26,42,48-49,59-63
+packages/vitest/src/node/plugins/workspace.ts
+  s_7bdd52c7255784::t_ad233641b8e491 4,6,13,29,34-38,59
+packages/vitest/src/node/pool.ts
+  s_7bdd52c7255784::t_842c5f8dc3a284 7,34
+packages/vitest/src/node/pools/browser.ts
+  s_7bdd52c7255784::t_d88a1abee59e21 9,11,18,22-23,170-185,430,432,439,488-583
+packages/vitest/src/node/pools/poolRunner.ts
+  s_7bdd52c7255784::t_e130a2642548ab 280-281,283
+packages/vitest/src/node/pools/rpc.ts
+  s_7bdd52c7255784::t_18402d8a260b3e 1,141,144,176-233,236,239,241,244-247,255-264,270-272,275
+packages/vitest/src/node/pools/workers/forksWorker.ts
+  s_7bdd52c7255784::t_9c482d579017c8 5,10-12,27-29,41-46,50-55,70-71,130-163
+packages/vitest/src/node/pools/workers/typecheckWorker.ts
+  s_7bdd52c7255784::t_887e5ebf7fe6d1 10,133
+packages/vitest/src/node/printError.ts
+  s_7bdd52c7255784::t_ceba3b1df06f74 246-258
+packages/vitest/src/node/project.ts
+  s_7bdd52c7255784::t_9d18782f6851e2 66,99,215-223,584
+packages/vitest/src/node/projects/resolveProjects.ts
+  s_7bdd52c7255784::t_b09d86c2f91668 10,15,27,29,31,36-37,68,107,139,192,220-221,269,288,318-325,333-339,343,353,367,422,447-451,475,480,482-484,489-692,701,729-730,732-733,735,737-739,772-780,814,818-821,823,833,958,997,1023-1027,1087-1093,1095,1097,1206,1281-1282,1294-1295,1304-1314,1329,1334-1343,1357,1361-1363,1386,1394-1396
+packages/vitest/src/node/reporters/base.ts
+  s_7bdd52c7255784::t_0cd00d965d7939 61,161-162,240,246,255,301-309,317-337
+packages/vitest/src/node/reporters/durationBreakdown.ts
+  s_7bdd52c7255784::t_a5a2d8f150e3c4 3
+packages/vitest/src/node/reporters/github-actions.ts
+  s_7bdd52c7255784::t_c5231ae0325ad8 5,30-35,79-82,188-192,265,285,287,455,457-464
+packages/vitest/src/node/reporters/index.ts
+  s_7bdd52c7255784::t_5824c749ba39ad 16,23,30,46-47
+packages/vitest/src/node/reporters/json.ts
+  s_7bdd52c7255784::t_38701c5d99207e 1
+packages/vitest/src/node/reporters/renderers/utils.ts
+  s_7bdd52c7255784::t_9036de5c3d298c 21-25,27-28,70
+packages/vitest/src/node/resolver.ts
+  s_7bdd52c7255784::t_74add18b2beaba 110,238
+packages/vitest/src/node/stdin.ts
+  s_7bdd52c7255784::t_6eb29775308de1 25
+packages/vitest/src/node/test-run.ts
+  s_7bdd52c7255784::t_a510c369210ca9 192-193
+packages/vitest/src/node/types/config.ts
+  s_7bdd52c7255784::t_e29f8b95d8c0da 28-29,32,226,405-421,1273-1278,1363-1374,1386-1411,1449-1454,1485,1527
+packages/vitest/src/node/types/coverage.ts
+  s_7bdd52c7255784::t_91b31c02777abe 1,282
+packages/vitest/src/public/index.ts
+  s_7bdd52c7255784::t_ef82300fe0f253 108
+packages/vitest/src/public/node.ts
+  s_7bdd52c7255784::t_8824633d884922 24,74,88,121
+packages/vitest/src/runtime/benchmark.ts
+  s_7bdd52c7255784::t_0b793364db49a6 126
+packages/vitest/src/runtime/config.ts
+  s_7bdd52c7255784::t_bd493689738fc1 173
+packages/vitest/src/runtime/console.ts
+  s_7bdd52c7255784::t_0fba8aea6a60f3 11
+packages/vitest/src/runtime/moduleRunner/moduleEvaluator.ts
+  s_7bdd52c7255784::t_cff497c67cec37 305-319
+packages/vitest/src/runtime/moduleRunner/moduleRunner.ts
+  s_7bdd52c7255784::t_072d305f5e9bfd 111,131-138
+packages/vitest/src/runtime/rpc.ts
+  s_7bdd52c7255784::t_a97510afbfb585 100
+packages/vitest/src/runtime/runner/context.ts
+  s_7bdd52c7255784::t_e4ac7aae83811f 2,5,43,45-53,55-56,58-63,69-70,74,78,83-88,258-264,267
+packages/vitest/src/runtime/runner/deadline.ts
+  s_7bdd52c7255784::t_705b283369a2e0 1-89
+packages/vitest/src/runtime/runner/run.ts
+  s_7bdd52c7255784::t_54f278ade2fc3d 41,169,527,586,839,992,1011,1013
+packages/vitest/src/runtime/runner/types.ts
+  s_7bdd52c7255784::t_992587677f3f98 7,396,564,935,946,957,964,974,986,991,999,1006,1013,1020,1029,1038,1050,1058,1063,1068,1082,1091,1111,1121,1132,1223,1398,1405,1772
+packages/vitest/src/runtime/runner/utils/collect.ts
+  s_7bdd52c7255784::t_508f4fd68b2bfe 2,17-18
+packages/vitest/src/runtime/runners/test.ts
+  s_7bdd52c7255784::t_9882842c9c2a08 6,39,77-78
+packages/vitest/src/runtime/setup-node.ts
+  s_7bdd52c7255784::t_9f7e4c52febc3a 73
+packages/vitest/src/runtime/vm/code-cache.ts
+  s_7bdd52c7255784::t_fa4d4644c5712f 52-71
+packages/vitest/src/runtime/vm/commonjs-executor.ts
+  s_7bdd52c7255784::t_b7732262855724 7,533-538
+packages/vitest/src/runtime/vm/esm-executor.ts
+  s_7bdd52c7255784::t_57a0a69b5c9270 3,95,113,122-146,184-185,195-211,214-215
+packages/vitest/src/runtime/vm/types.ts
+  s_7bdd52c7255784::t_124c4c9baba7d1 69
+packages/vitest/src/runtime/workers/base.ts
+  s_7bdd52c7255784::t_b95dfe8fc9f64d 30-31,33-34,139-151
+packages/vitest/src/runtime/workers/init-forks.ts
+  s_7bdd52c7255784::t_775d467b72502d 44-47,49-50
+packages/vitest/src/runtime/workers/init.ts
+  s_7bdd52c7255784::t_77dd34a8201e72 52-56,66,75,88-92
+packages/vitest/src/runtime/workers/vm.ts
+  s_7bdd52c7255784::t_c70cd6d642ba8a 40-47,121-122
+packages/vitest/src/typecheck/parse.ts
+  s_7bdd52c7255784::t_c8a13a9ee3d425 6
+packages/vitest/src/typecheck/typechecker.ts
+  s_7bdd52c7255784::t_a552eb5844c3c2 21-23,434-436
+packages/vitest/src/types/environment.ts
+  s_7bdd52c7255784::t_ef9e06aef9c1a3 25-32
+packages/vitest/src/types/worker.ts
+  s_7bdd52c7255784::t_57900f46417ee2 79
+packages/vitest/src/utils/base.ts
+  s_7bdd52c7255784::t_6265ddf030c78c 27
+packages/vitest/src/utils/config-helpers.ts
+  s_7bdd52c7255784::t_b98f2cca200da5 33-34,36-43,55,71
+packages/vitest/src/utils/env.ts
+  s_7bdd52c7255784::t_0e419565f09563 3,8
+packages/vitest/src/utils/modules.ts
+  s_7bdd52c7255784::t_fb8eb2ccc77e51 27
+packages/web-worker/package.json
+  s_7bdd52c7255784::t_07dd635a74cfd2 4,48
+patches/rrweb-snapshot@2.1.1.patch
+  s_7bdd52c7255784::t_ad4674ae3e76ce 2,5-45
+pnpm-workspace.yaml
+  s_7bdd52c7255784::t_0cd46337cddfe3 5-10,55-56,67-68,70-71,75,79,81,87,94-95,101,104-105
+scripts/override-vite7.ts
+  s_7bdd52c7255784::t_8e8233974c12e1 1,3-5,7-8,11
+test/browser/fixtures/dep-imports-vitest/basic.test.ts
+  s_7bdd52c7255784::t_3348652fa4f36c 1-5
+test/browser/fixtures/dep-imports-vitest/node_modules/fake-browser-lib/index.js
+  s_7bdd52c7255784::t_b3410bb557969c 1,3
+test/browser/fixtures/dep-imports-vitest/node_modules/fake-browser-lib/package.json
+  s_7bdd52c7255784::t_1b69b0c31897da 1-6
+test/browser/fixtures/dep-imports-vitest/setup.ts
+  s_7bdd52c7255784::t_2db2e50ac6127a 1
+test/browser/fixtures/dep-imports-vitest/vitest.config.ts
+  s_7bdd52c7255784::t_4014a463cf8a70 1,3,5-22
+test/browser/fixtures/timeout-actions/actions.test.ts
+  s_7bdd52c7255784::t_b05b9d75e8c5e0 1-14
+test/browser/fixtures/timeout-actions/vitest.config.ts
+  s_7bdd52c7255784::t_7b6893d5b015ce 1-29
+test/browser/specs/bail-out.test.ts
+  s_7bdd52c7255784::t_c14f63183e61a6 2,10-14,17-52
+test/browser/specs/dep-imports-vitest.test.ts
+  s_7bdd52c7255784::t_66d26dcc1d4240 1-16
+test/browser/specs/errors.test.ts
+  s_7bdd52c7255784::t_52d9417917cda3 128
+test/browser/specs/failure-screenshot.test.ts
+  s_7bdd52c7255784::t_bff2bccca8061e 33-36,79-82,106-109
+test/browser/specs/heartbeat.test.ts
+  s_7bdd52c7255784::t_840dd25ce1202f 1-135
+test/browser/specs/projects-ui.test.ts
+  s_7bdd52c7255784::t_6da3f16aa8899c 1-3,5-9,11-33,35-40,42-44
+test/browser/specs/runner.test.ts
+  s_7bdd52c7255784::t_3a54d48cb36704 295
+test/browser/specs/timeout-actions.test.ts
+  s_7bdd52c7255784::t_7a9ce145534330 1-45
+test/browser/test/locators.test-d.ts
+  s_7bdd52c7255784::t_8b804ef3c612ae 1-11
+test/coverage-test/fixtures/custom-reporter.cjs
+  s_7bdd52c7255784::t_0875854a32fca5 2,17,21
+test/coverage-test/fixtures/custom-reporter.mjs
+  s_7bdd52c7255784::t_f99987841e436e 1-23
+test/coverage-test/fixtures/src/node-built-ins.ts
+  s_7bdd52c7255784::t_0ea3d5c7cbeebb 1-5
+test/coverage-test/fixtures/test/vite-ssr-imports.test.ts
+  s_7bdd52c7255784::t_70ea6e7133adc9 1-6
+test/coverage-test/package.json
+  s_7bdd52c7255784::t_a84b4d1e7f92e5 15-16,19-21,23-24
+test/coverage-test/setup.ts
+  s_7bdd52c7255784::t_3fc74840aa8d37 1
+test/coverage-test/test/bundled-sources.test.ts
+  s_7bdd52c7255784::t_f3672f9ab4e9f1 1
+test/coverage-test/test/custom-reporter.test.ts
+  s_7bdd52c7255784::t_489ac2a9035750 7,12,20,22,24-52
+test/coverage-test/test/pre-transpiled-source.test.ts
+  s_7bdd52c7255784::t_d6935e0cace96e 1
+test/coverage-test/test/results-snapshot.test.ts
+  s_7bdd52c7255784::t_344101c28fffe8 2,71-108
+test/coverage-test/test/threshold-auto-update.unit.test.ts
+  s_7bdd52c7255784::t_2f0944f31fc68c 1-2
+test/coverage-test/utils.ts
+  s_7bdd52c7255784::t_944c98d9e27f2e 1,11
+test/e2e/deps/malformed-source-map/external-map.js
+  s_7bdd52c7255784::t_ced4a99cbbca49 1-5
+test/e2e/deps/malformed-source-map/external-map.js.map
+  s_7bdd52c7255784::t_cbad86c23559cf 1
+test/e2e/deps/malformed-source-map/index.js
+  s_7bdd52c7255784::t_7e13dad1bf97b0 1-7
+test/e2e/deps/malformed-source-map/package.json
+  s_7bdd52c7255784::t_75e3f154a39952 1-9
+test/e2e/fixtures/custom-pool-sync-transport/pool/runtime.js
+  s_7bdd52c7255784::t_735498b3ecb38f 1-2,4-5,7-15,17-26,28-34
+test/e2e/fixtures/custom-pool-sync-transport/pool/sync-transport-pool.ts
+  s_7bdd52c7255784::t_80becd897d4d5b 1-67
+test/e2e/fixtures/custom-pool-sync-transport/tests/basic.spec.ts
+  s_7bdd52c7255784::t_9cad180bb75860 1-5
+test/e2e/fixtures/custom-pool-sync-transport/vitest.config.ts
+  s_7bdd52c7255784::t_02cdf082cb3ca2 2,4-9
+test/e2e/fixtures/global-setup-root/nested/example.test.ts
+  s_7bdd52c7255784::t_6a2d12bf37b5f5 1-5
+test/e2e/fixtures/global-setup-root/nested/global-setup.ts
+  s_7bdd52c7255784::t_be392ef98b4605 1-3
+test/e2e/fixtures/global-setup-root/vitest.config.ts
+  s_7bdd52c7255784::t_d0a7d06b5742d6 1,5-8
+test/e2e/fixtures/global-setup/globalSetup/another-vite-instance.ts
+  s_7bdd52c7255784::t_0b5116d513a8f9 10
+test/e2e/fixtures/global-setup/test/global-setup.test.ts
+  s_7bdd52c7255784::t_dd67957d6243a5 25
+test/e2e/fixtures/malformed-source-map/external-map.spec.ts
+  s_7bdd52c7255784::t_2709d861132a10 1-6
+test/e2e/fixtures/malformed-source-map/external-module.spec.ts
+  s_7bdd52c7255784::t_db43adbf949877 1-6
+test/e2e/fixtures/malformed-source-map/inlined-module.spec.ts
+  s_7bdd52c7255784::t_6aee6180544a67 1-6
+test/e2e/fixtures/malformed-source-map/malformed-source-map.js
+  s_7bdd52c7255784::t_8284bdfb84c921 1-7
+test/e2e/fixtures/mocker/redirect-security/root/inroot.js
+  s_7bdd52c7255784::t_c2051dc2fcbd7b 1
+test/e2e/fixtures/mocker/redirect-security/secret.txt
+  s_7bdd52c7255784::t_c058b5af5fed88 1
+test/e2e/package.json
+  s_7bdd52c7255784::t_1c990d377704dd 21,46,49
+test/e2e/snapshots/broken-file.test.ts
+  s_7bdd52c7255784::t_9cd6f6428eefc8 1-32
+test/e2e/snapshots/browser-csp.test.ts
+  s_7bdd52c7255784::t_b20daf9804e571 1-54
+test/e2e/snapshots/domain-aria-inline.test.ts
+  s_7bdd52c7255784::t_ba369f4a0c4e10 97
+test/e2e/snapshots/domain-aria.test.ts
+  s_7bdd52c7255784::t_af443cf1e7a01f 113
+test/e2e/snapshots/file.test.ts
+  s_7bdd52c7255784::t_8b66cdbaa19b3e 3,29-72
+test/e2e/snapshots/fixtures/broken-file/.gitignore
+  s_7bdd52c7255784::t_ee5f32dda158a6 1
+test/e2e/snapshots/fixtures/broken-file/basic.test.ts
+  s_7bdd52c7255784::t_bc230c6dda02e1 1-5
+test/e2e/snapshots/fixtures/browser-csp/.gitignore
+  s_7bdd52c7255784::t_79d145cb132dd0 1
+test/e2e/snapshots/fixtures/browser-csp/basic.test.ts
+  s_7bdd52c7255784::t_e590b3dbc9246d 1,3-6,8-9
+test/e2e/snapshots/fixtures/browser-csp/vitest.config.ts
+  s_7bdd52c7255784::t_2280d8ac7cefa3 1,4-22
+test/e2e/snapshots/options.test.ts
+  s_7bdd52c7255784::t_87a9ec87b8baa3 81-124
+test/e2e/test/__snapshots__/list.test.ts.snap
+  s_7bdd52c7255784::t_0b96512c190f70 32,42,52,62,73,79
+test/e2e/test/artifacts.test.ts
+  s_7bdd52c7255784::t_f1bd3b3cd85c01 268-301,304,406,439
+test/e2e/test/bail-race.test.ts
+  s_7bdd52c7255784::t_e3be89a8f54b7d 9
+test/e2e/test/caching.test.ts
+  s_7bdd52c7255784::t_4d62b0a87bca30 63,109,153
+test/e2e/test/cli-config.test.ts
+  s_7bdd52c7255784::t_edd920ed13aee9 2,10
+test/e2e/test/concurrent.test.ts
+  s_7bdd52c7255784::t_b314873cb99cdd 1099,1217,1221-1227,1232,1238,1242,1255-1266,1298-1304,1309,1315,1319,1332-1343
+test/e2e/test/config/browser-configs.test.ts
+  s_7bdd52c7255784::t_8150617dac7e40 45-50,112-126,529-589
+test/e2e/test/config/root.test.ts
+  s_7bdd52c7255784::t_04efcc91f11cd8 1-392
+test/e2e/test/custom-pool.test.ts
+  s_7bdd52c7255784::t_12daa6aa9991df 23-34
+test/e2e/test/detect-async-leaks.test.ts
+  s_7bdd52c7255784::t_1399e73ae68fb7 215,218,220-221,225,227-228,233-247
+test/e2e/test/env-setup-non-error-cause.test.ts
+  s_7bdd52c7255784::t_53cd30c8172280 1-73,75-85,87-90
+test/e2e/test/global-setup.test.ts
+  s_7bdd52c7255784::t_6884007fa45b9e 72-78
+test/e2e/test/list.test.ts
+  s_7bdd52c7255784::t_8443db31cc2ecd 12,24,36-40,44-48,52-56,60-64,68-72,76-80,115-119,123-127,131-135,139-143,147-151,155-159
+test/e2e/test/malformed-source-map.test.ts
+  s_7bdd52c7255784::t_e26c6250855cd0 1-28
+test/e2e/test/mocker-redirect-traversal.test.ts
+  s_7bdd52c7255784::t_e23d7da2e033ae 1-85
+test/e2e/test/pre-parse.test.ts
+  s_7bdd52c7255784::t_84622f7c4b080e 302
+test/e2e/test/projects.test.ts
+  s_7bdd52c7255784::t_8e324cba9e41f5 1-2,688-702,765-1044,1057-1060
+test/e2e/test/public.test.ts
+  s_7bdd52c7255784::t_5ed56000e6a144 6,144-160
+test/e2e/test/reporters/agent.test.ts
+  s_7bdd52c7255784::t_9631ceeca66d13 21,24
+test/e2e/test/reporters/configuration-options.test-d.ts
+  s_7bdd52c7255784::t_32e7a460089f47 44
+test/e2e/test/reporters/default.test.ts
+  s_7bdd52c7255784::t_4cc3735f4a0580 4,21,25,29,34,39,43,47,52,77-153
+test/e2e/test/reporters/github-actions.test.ts
+  s_7bdd52c7255784::t_8f48876dc4cb83 1-2,4,69-73,76-77,81,85,91-105,137-144,146-147,149-156,159-174,183,185-191,193-194
+test/e2e/test/reporters/junit.test.ts
+  s_7bdd52c7255784::t_1597018edc0d34 1,7
+test/e2e/test/reporters/merge-reports.test.ts
+  s_7bdd52c7255784::t_c95a144fdcefa0 4,14,111,879,883-885,891-894,919-931
+test/e2e/test/reporters/utils.ts
+  s_7bdd52c7255784::t_157a19f31fc235 3-7
+test/e2e/test/setup-files.test.ts
+  s_7bdd52c7255784::t_816c89ebd1bd7e 3,86-134
+test/e2e/test/stacktraces.test.ts
+  s_7bdd52c7255784::t_72a724bca37dc6 295,375
+test/e2e/test/static-collect.test.ts
+  s_7bdd52c7255784::t_6ad9b21fafd2d0 45-81
+test/e2e/test/vm-threads.test.ts
+  s_7bdd52c7255784::t_c9358f6d3b830b 1,3,5,105-141,571-686
+test/e2e/test/workers-option.test.ts
+  s_7bdd52c7255784::t_eb9352af15febf 3
+test/test-utils/index.ts
+  s_7bdd52c7255784::t_003e243394726f 190,227,322-324,913-921
+test/test-utils/package.json
+  s_7bdd52c7255784::t_83ad274adf92e4 10
+test/typescript/fixtures/typecheck-crash/fake-tsc.cmd
+  s_7bdd52c7255784::t_cbe7ea1661cd28 1-2
+test/typescript/package.json
+  s_7bdd52c7255784::t_e18981e2d0cfaa 14
+test/typescript/test/typechecker.test.ts
+  s_7bdd52c7255784::t_39aa1cead1ecad 26-29,36-37
+test/ui/fixtures/main/browser/aa-first-file.test.ts
+  s_7bdd52c7255784::t_5569059205c74e 1-5
+test/ui/fixtures/main/node/suite-report.test.ts
+  s_7bdd52c7255784::t_0983378bbbe7e7 1-29
+test/ui/fixtures/main/node/zz-last-file.test.ts
+  s_7bdd52c7255784::t_b0d332e2bdc1a8 3
+test/ui/fixtures/playwright-trace/basic.test.ts
+  s_7bdd52c7255784::t_c9571a38c87017 1-12
+test/ui/fixtures/playwright-trace/vitest.config.ts
+  s_7bdd52c7255784::t_c16f4a315c1fa8 1,4-14
+test/ui/fixtures/trace/basic.test.ts
+  s_7bdd52c7255784::t_a6987415619d90 21-29
+test/ui/fixtures/watch-updates/basic.test.ts
+  s_7bdd52c7255784::t_3a8047e24b9257 1-19
+test/ui/fixtures/watch-updates/second.test.ts
+  s_7bdd52c7255784::t_f5c211364c77f0 1-5
+test/ui/package.json
+  s_7bdd52c7255784::t_3f61b6a05228c3 14
+test/ui/test/helper.ts
+  s_7bdd52c7255784::t_742fc703e7ed9a 59-60,64
+test/ui/test/playwright-trace.spec.ts
+  s_7bdd52c7255784::t_c27e026494ca93 1-95
+test/ui/test/trace-stream.spec.ts
+  s_7bdd52c7255784::t_932bd2a7f3d8bb 69,80,92,103
+test/ui/test/trace.spec.ts
+  s_7bdd52c7255784::t_3edf7660580294 5,29,40-43,67-78,115,126-129,153-164,184,186,188-190,203-216,218-219,221-223,227-237,243,266-281,403-575
+test/ui/test/ui.spec.ts
+  s_7bdd52c7255784::t_e02c10fba82f26 11-13,15-16,65-86,112,116,130-134,151-162,281-285,309,501-535,563-566,574,578,580-582,586-588,609,647-649,696-697
+test/ui/test/watch-updates.spec.ts
+  s_7bdd52c7255784::t_1c29ce1c655c8e 1-99
+test/unit/package.json
+  s_7bdd52c7255784::t_5916e485b9d879 38
+test/unit/test/deadline.test.ts
+  s_7bdd52c7255784::t_cca118a55b46de 1-86
+test/unit/test/define-ssr.test.ts
+  s_7bdd52c7255784::t_ee26f3dcd5176c 58,62,65,69
+test/unit/test/exports.test.ts
+  s_7bdd52c7255784::t_1631444a406303 86
+test/unit/test/jest-expect.test.ts
+  s_7bdd52c7255784::t_9954552bb9fdaa 369-383
+test/unit/test/jest-mock.test.ts
+  s_7bdd52c7255784::t_0570ed5aa1169a 620
+test/unit/test/memory-limit.test.ts
+  s_7bdd52c7255784::t_6f9339dd6884e7 2
+test/unit/test/mocking/vi-fn.test.ts
+  s_7bdd52c7255784::t_4063c655cd6e1e 802-992
+test/unit/test/mocking/vi-spyOn.test.ts
+  s_7bdd52c7255784::t_2bfe8587a77fae 298-371
+test/unit/test/mocking/vi-when.test.ts
+  s_7bdd52c7255784::t_ea2f7caaf677c3 139-159
+test/unit/test/module-diagnostic.test.ts
+  s_7bdd52c7255784::t_0295c85c23f8d1 2-4,6-19,21-250,253-423
+test/unit/test/stubbed-process.test.ts
+  s_7bdd52c7255784::t_50f1ef477352be 12-17
+test/unit/test/vm-code-cache.test.ts
+  s_7bdd52c7255784::t_9a8d0688664ba4 2,64-84
+test/unit/vite.config.ts
+  s_7bdd52c7255784::t_65f65c871c43f6 65
+test/workspaces/coverage-report-tests/check-coverage.test.ts
+  s_7bdd52c7255784::t_c16dd0b6c6233e 2
+test/workspaces/package.json
+  s_7bdd52c7255784::t_c73ce3ddc93b64 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1c5439818c94b5611f186076f6518404e7efa0fd",
+  "prompts": {},
+  "sessions": {
+    "s_7bdd52c7255784": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa572d07fffefHc69PXXwWWdg9",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

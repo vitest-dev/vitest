@@ -1,0 +1,23 @@
+packages/ui/client/components/explorer/Explorer.vue
+  s_962473b9038ee4::t_9ee350e27e8260 254
+packages/ui/client/composables/explorer/collector.ts
+  s_962473b9038ee4::t_4f7a45bc5b275f 455,458,461
+test/ui/test/ui.spec.ts
+  s_962473b9038ee4::t_8dc03dd2f794d7 540,598,603,624,628,634,638-640,643-648,679
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "091533d654df07f337bd8fd2c80b3de786edd66e",
+  "prompts": {},
+  "sessions": {
+    "s_962473b9038ee4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f99f5bed0ffeAqs9bH7aJURvYa",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

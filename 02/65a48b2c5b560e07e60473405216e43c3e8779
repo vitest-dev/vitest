@@ -1,0 +1,19 @@
+test/ui/test/watch-updates.spec.ts
+  s_bfc6c51df21e5f::t_0d05c07c1667e3 51-53,66,68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0265a48b2c5b560e07e60473405216e43c3e8779",
+  "prompts": {},
+  "sessions": {
+    "s_bfc6c51df21e5f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ff1fb67a7ffeQvwVlqji5yKhgu",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

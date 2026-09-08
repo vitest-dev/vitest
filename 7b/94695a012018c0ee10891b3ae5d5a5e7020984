@@ -1,0 +1,19 @@
+packages/ui/client/components/views/ViewEditor.vue
+  s_db9b05e1a6bebc::t_8908ba94dce586 330-331,354-356,358,360-363,365-366
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7b94695a012018c0ee10891b3ae5d5a5e7020984",
+  "prompts": {},
+  "sessions": {
+    "s_db9b05e1a6bebc": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ff1d8b0abffefhgvC6W5w5Tbi3",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

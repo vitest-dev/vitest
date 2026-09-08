@@ -1,0 +1,21 @@
+packages/ui/client/composables/params.ts
+  s_5f54539c0647d6::t_16e85df6da3b6b 4-10,15-21,30-31
+test/ui/test/trace.spec.ts
+  s_5f54539c0647d6::t_dede4b5525f9bd 374-375,380-381,383,390-391,393,400-401,407-408,410,419-420,434-436,443-445
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "136a924496c97205a155ab1b7252935152e84f3c",
+  "prompts": {},
+  "sessions": {
+    "s_5f54539c0647d6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fe6f43ac1ffeScAEahjpPIxJ4n",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

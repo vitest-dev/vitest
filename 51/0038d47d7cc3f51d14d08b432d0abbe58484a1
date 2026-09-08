@@ -1,0 +1,241 @@
+.github/workflows/cr.yml
+  s_df6ca15062dadf::t_c2b9ac8d6d8a34 5,8,13,18
+.github/workflows/semgrep.yml
+  s_df6ca15062dadf::t_3d8258634ab30d 32
+docs/.vitepress/config.ts
+  s_df6ca15062dadf::t_f1e0dedaa24838 545-548
+docs/.vitepress/sponsors.ts
+  s_df6ca15062dadf::t_c7be664e783876 70-74
+docs/api/advanced/test-project.md
+  s_df6ca15062dadf::t_61a4f08e8f100f 101-109
+docs/api/browser/interactivity.md
+  s_df6ca15062dadf::t_0479d21dbe8c13 284-291
+docs/api/mock.md
+  s_df6ca15062dadf::t_7cc237f379b301 169-170,289-290
+docs/api/vi.md
+  s_df6ca15062dadf::t_0883aeb1c0bf83 476-478,483,486-487,622-623
+docs/config/sharedviteserver.md
+  s_df6ca15062dadf::t_f2955aedeb1052 1-52,55-74
+docs/guide/browser/visual-regression-testing.md
+  s_df6ca15062dadf::t_902b2df2d5fd60 180-181
+docs/guide/cli-generated.md
+  s_df6ca15062dadf::t_8bcabc573119d9 933-939
+docs/guide/migration.md
+  s_df6ca15062dadf::t_429fc33d40017a 160-185,220-245
+docs/guide/mocking/classes.md
+  s_df6ca15062dadf::t_7ac3dff7e904e0 30-35,101,133-198,212
+docs/guide/recipes/conditional-mocking.md
+  s_df6ca15062dadf::t_5e96b7027d5321 155-156
+docs/package.json
+  s_df6ca15062dadf::t_3b49ac17af06f5 21,25-26,31,37
+docs/public/testmuai.svg
+  s_df6ca15062dadf::t_2695b3fa1365f4 1-22
+examples/fastify/package.json
+  s_df6ca15062dadf::t_44d3fb80244170 15,17
+examples/projects/package.json
+  s_df6ca15062dadf::t_eb08da61bb438f 12,14,18,22
+knip.jsonc
+  s_df6ca15062dadf::t_531171f4a779e1 2,95-108
+package.json
+  s_df6ca15062dadf::t_49cb07ca6fa1b8 4,6,45,59,65,69
+packages/browser-playwright/package.json
+  s_df6ca15062dadf::t_23c4650828773a 4
+packages/browser-preview/package.json
+  s_df6ca15062dadf::t_9377ed3ada6980 4,51
+packages/browser/package.json
+  s_df6ca15062dadf::t_cb73e06ab85c61 4,79,91
+packages/browser/src/client/tester/runner.ts
+  s_df6ca15062dadf::t_9ddeb78f05a5a3 20,199-205
+packages/browser/src/node/index.ts
+  s_df6ca15062dadf::t_e482733ab67c1e 464-467,509,512
+packages/coverage-istanbul/package.json
+  s_df6ca15062dadf::t_f6a49e7d89becf 4
+packages/coverage-v8/package.json
+  s_df6ca15062dadf::t_ab29f387b8f9c4 4
+packages/expect/package.json
+  s_df6ca15062dadf::t_a9b6e4888ac7df 4
+packages/expect/src/jest-expect.ts
+  s_df6ca15062dadf::t_682aa499f5d4cd 470-474
+packages/mocker/package.json
+  s_df6ca15062dadf::t_68a823099775a4 4
+packages/pretty-format/package.json
+  s_df6ca15062dadf::t_f149970a4bba78 4
+packages/snapshot/package.json
+  s_df6ca15062dadf::t_33eb12dd532235 4
+packages/spy/package.json
+  s_df6ca15062dadf::t_c41ff007c12505 4
+packages/spy/src/index.ts
+  s_df6ca15062dadf::t_704241aaf4815e 74-88,98,104,115,120,233,260-263,489,519,527-533,627-646
+packages/ui/package.json
+  s_df6ca15062dadf::t_e7813e0956b1a8 4
+packages/utils/package.json
+  s_df6ca15062dadf::t_7940163ee7f23b 4
+packages/vitest/package.json
+  s_df6ca15062dadf::t_0fa6584b3fb916 4,179,185,206
+packages/vitest/src/constants.ts
+  s_df6ca15062dadf::t_f9da3e8a36a6ca 8,10
+packages/vitest/src/defaults.ts
+  s_df6ca15062dadf::t_b154573319be6e 61
+packages/vitest/src/integrations/env/loader.ts
+  s_df6ca15062dadf::t_9d537db7cc5a32 22,57
+packages/vitest/src/integrations/env/utils.ts
+  s_df6ca15062dadf::t_b02623a333daf3 5
+packages/vitest/src/node/ast-collect.ts
+  s_df6ca15062dadf::t_a3d3f34a991a2a 33
+packages/vitest/src/node/cli/cli-api.ts
+  s_df6ca15062dadf::t_970ec3705de92e 346,353,377
+packages/vitest/src/node/cli/cli-config.ts
+  s_df6ca15062dadf::t_cfc41f97dfd274 890-892
+packages/vitest/src/node/config/resolveConfig.ts
+  s_df6ca15062dadf::t_84ba9b2c330b0d 4,10,17,32,34,178,1000,1069-1102,1119-1120,1126,1133-1137,1139,1192-1210
+packages/vitest/src/node/config/serializeConfig.ts
+  s_df6ca15062dadf::t_571b3cbb8262f0 164
+packages/vitest/src/node/plugins/browserLoader.ts
+  s_df6ca15062dadf::t_364195d4b42f55 11-12,14,35,60,62-94,97,113,119,127
+packages/vitest/src/node/plugins/config.ts
+  s_df6ca15062dadf::t_e01c20022768f6 1,3,10,12,15-33,49,133-165
+packages/vitest/src/node/plugins/runnerTransform.ts
+  s_df6ca15062dadf::t_e14d533f319584 1
+packages/vitest/src/node/plugins/testConfig.ts
+  s_df6ca15062dadf::t_02fe1ac66b34c2 1,3-14,16,18-59,63-66,69-102,108,111-142,145-163,174-180,182-184,187-190,192-193,196-224,231-305
+packages/vitest/src/node/plugins/utils.ts
+  s_df6ca15062dadf::t_4b1f8ac9c5dc93 66-73,75,83-87,93-96,113-116,118
+packages/vitest/src/node/plugins/workspace.ts
+  s_df6ca15062dadf::t_33e0823ef5cecc 6,59
+packages/vitest/src/node/pool.ts
+  s_df6ca15062dadf::t_3df4b76b03fcc5 7,34
+packages/vitest/src/node/pools/workers/typecheckWorker.ts
+  s_df6ca15062dadf::t_7fbf6619e76575 10,133
+packages/vitest/src/node/project.ts
+  s_df6ca15062dadf::t_3d8004b038bc46 66,99,215-223,584
+packages/vitest/src/node/projects/resolveProjects.ts
+  s_df6ca15062dadf::t_0b66545c5f8dab 10,15,27,29,31,36-37,335-343,383,462-466,495,510-719,728,756-763,771,804-810,1037,1365-1375,1397-1406,1423-1425
+packages/vitest/src/node/reporters/base.ts
+  s_df6ca15062dadf::t_92e2f163ea282c 61,161-162,240,246,255,301-309,317-337
+packages/vitest/src/node/reporters/durationBreakdown.ts
+  s_df6ca15062dadf::t_f83c7a28692fcb 3
+packages/vitest/src/node/reporters/index.ts
+  s_df6ca15062dadf::t_14a4d739dce207 16,23,30,46-47
+packages/vitest/src/node/reporters/renderers/utils.ts
+  s_df6ca15062dadf::t_403c5d635d0671 21-25,27-28,70
+packages/vitest/src/node/resolver.ts
+  s_df6ca15062dadf::t_82bc67823b339c 110,238
+packages/vitest/src/node/stdin.ts
+  s_df6ca15062dadf::t_393c2d7b5db778 25
+packages/vitest/src/node/types/config.ts
+  s_df6ca15062dadf::t_e339ad7c42e631 28-29,32,226,405-421,1273-1278,1363-1374,1386-1411,1449-1454,1485,1527
+packages/vitest/src/public/index.ts
+  s_df6ca15062dadf::t_a80c7291c661df 108
+packages/vitest/src/public/node.ts
+  s_df6ca15062dadf::t_fffb8bd0e3c467 74,88,121
+packages/vitest/src/runtime/benchmark.ts
+  s_df6ca15062dadf::t_530881c4cce54e 126
+packages/vitest/src/runtime/config.ts
+  s_df6ca15062dadf::t_f0046df6a27378 173
+packages/vitest/src/runtime/console.ts
+  s_df6ca15062dadf::t_de6161c491905f 11
+packages/vitest/src/runtime/moduleRunner/moduleEvaluator.ts
+  s_df6ca15062dadf::t_8b66c5c458ba8a 305-319
+packages/vitest/src/runtime/rpc.ts
+  s_df6ca15062dadf::t_04212098a9108e 100
+packages/vitest/src/runtime/runner/run.ts
+  s_df6ca15062dadf::t_8aeac36fe31ef5 168,526,585,838,1010
+packages/vitest/src/runtime/runner/types.ts
+  s_df6ca15062dadf::t_7121988d890461 395,563,934,945,956,963,973,985,990,998,1005,1012,1019,1028,1037,1049,1057,1062,1067,1081,1090,1110,1120,1131,1222,1397,1404
+packages/vitest/src/runtime/setup-node.ts
+  s_df6ca15062dadf::t_7e38612348bc82 72
+packages/vitest/src/runtime/vm/types.ts
+  s_df6ca15062dadf::t_d5b9f0205794d9 69
+packages/vitest/src/runtime/workers/base.ts
+  s_df6ca15062dadf::t_12219ca642d4b3 137-149
+packages/vitest/src/typecheck/parse.ts
+  s_df6ca15062dadf::t_1952ee8be8e876 6
+packages/vitest/src/typecheck/typechecker.ts
+  s_df6ca15062dadf::t_a9ca02533e2e6a 21-23,434-436
+packages/vitest/src/types/worker.ts
+  s_df6ca15062dadf::t_032961894da75d 79
+packages/vitest/src/utils/config-helpers.ts
+  s_df6ca15062dadf::t_cd710b0960767c 33-34,36-43,55,71
+packages/vitest/src/utils/env.ts
+  s_df6ca15062dadf::t_d87e32ad4a7c4f 3,8
+packages/vitest/src/utils/modules.ts
+  s_df6ca15062dadf::t_55d91534f71e21 27
+packages/web-worker/package.json
+  s_df6ca15062dadf::t_ca455fc3020da5 4
+pnpm-lock.yaml
+  s_df6ca15062dadf::t_1ea99a1137aad0 19-20,79-80,103-104,145-146,148-149,172-173,175-176,206-207,248-249,252,266-267,278-279,285,291,303,306,309-310,316,319,321-322,324-325,334,337,339-340,349,352,355,357-358,361,367,379,390-391,396-397,400,431,461,470,478-479,484-485,491,496-497,508-509,512,530,538-539,563,569-570,585,630-631,812,886,898,907,913,928,940,946,949,952,955,958,964,1037,1039-1040,1052-1053,1107,1115-1116,1143,1146,1174,1204,1216,1234,1255,1257-1258,1275-1276,1279,1285,1318,1383-1384,1392-1393,1396,1405,1457-1458,1461,1494-1495,1510,1555,1566-1567,1606,1651-1652,1665,1694-1695,1721-1723,1751-1754,1876-1880,2307-2310,2319-2320,2322-2323,2326,2400-2401,2404,2440-2441,2444-2446,2743-2744,2991-2992,2997-2998,3003-3004,3009-3010,3015-3016,3021-3022,3027-3028,3033-3034,4687-4688,4691-4692,4695-4696,4699-4700,4703-4704,4707-4708,4711-4712,4715-4716,4721-4722,4725-4726,4954-4962,4979-4980,5157-5158,5161,5165-5166,5178-5179,5181-5182,5188-5189,5198-5199,5204-5205,5207-5209,5215-5216,5225-5226,5238-5239,5241-5243,5249-5252,5375-5376,5412-5413,5426-5430,5444-5445,5450-5451,5456-5457,5462-5464,5477-5478,5480-5481,5483-5484,5486-5487,5492-5494,5892-5893,6648-6650,6668-6669,6674-6675,6697-6698,6714-6715,6720-6721,6749-6750,6777-6778,6921-6922,7130-7132,7182-7185,7217-7218,7682-7683,7686-7687,7690-7692,7760-7761,8115-8116,9043-9044,9047,9049-9052,9318-9319,9686-9687,9796-9797,10006-10007,10183-10184,10284-10285,10449-10450,10461-10462,10562,10564,10566-10567,10569-10572,10575-10576,10578-10584,10586-10595,10599,10614-10615,10622,10625,10661-10666,10761,10819,10836-10839,11345,11375-11379,11387,11389,11444,11450,11495,11498,11501,11503,11509,11591,11594,11597,11599,11604,11608,11614,11702,11706,11740,11760,11763,11938,11940-11941,11945,11947-11949,11953,11957,11959-11961,11964,11966,11970,11972-11976,11981,11983,11987,11990,12983,12990,13153,13155-13156,13161,13163,13167,13169,13172,13174,13176,13178,13182,13184,13186,13188-13189,13191,13193-13194,13200,13205,13207-13208,13216,13219,13246,13248-13250,13379,13384,13388,13391,13406,13409,13415-13416,13427,13460-13461,13468,13472-13473,13477,13622,13625-13630,13638,13640-13643,13645,13650,13652-13653,13659,13661-13662,13673,13675-13676,13682,13686,13688-13690,13692,13698-13701,13717,13719-13727,13732,13734,13738,13743,13745-13752,13759-13763,13891,13902,13913,13915,13919,13921,13923,13925,13927,13935,13939,13942-13943,13955,13957-13959,13961,13983,13985-13988,13991-13995,13998,14000-14001,14025,14030-14031,14033,14035,14041,14043,14046,14051,14053-14054,14064,14066-14067,14081,14083-14091,14098-14102,14120,14126,14128,14130,14132-14133,14135,14137-14139,14142,14144-14146,14150-14152,14154,14156,14159,14161,14163,14165,14168,14175,14179,14183-14184,14186,14188-14190,14202,14206,14208,14538,15371,15373,15376,15378-15379,15386,15388,15392,15394,15396,15398,15400,15402-15405,15407,15409,15411-15412,15414,15416,15418,15420,15426,15438,15440,15445-15446,15453,15455,15457-15458,15470,15472-15473,15479,15482,15490,15492,15494-15496,15501,15507,15512,15514,15522,15536,15538,15540,15542,15544-15545,15550,15553-15554,15556,15563,15565,15567,15569-15570,15585,15587,15614,15806,15893,15898,15901-15902,16045-16048,16112-16113,16137,16145,16178,16597,16599,16601-16603,16682,16686,17048,17065,17098,17100-17107,18201,18204,18207,18213,18314,18323,18638,18640-18645,18813,18815,19099,19186,19196,19379,19397,19403,19409,19434,19436,19466,19474,19520,19525,19533,19548,19551,19566,19569,19571,19575,19596,19598-19599,19601,19607-19609,19611,19613-19616,19619-19621,19658,19660,19662,19682,19684,19686,19689,19698,19700,19702,19705,19719,19721,19724-19725,19738,19742,19745,19747,19749-19753,19789,20046-20047
+pnpm-workspace.yaml
+  s_df6ca15062dadf::t_d79a31cc61da77 5-6,54,75,83,98-99,108-109
+test/browser/specs/failure-screenshot.test.ts
+  s_df6ca15062dadf::t_9705410d192633 33-36,79-82,106-109
+test/browser/specs/runner.test.ts
+  s_df6ca15062dadf::t_138e303d6162bb 295
+test/coverage-test/package.json
+  s_df6ca15062dadf::t_bf8749b626c2d4 20,26
+test/e2e/package.json
+  s_df6ca15062dadf::t_5b69d617e327a4 45,48
+test/e2e/snapshots/domain-aria-inline.test.ts
+  s_df6ca15062dadf::t_b25663fa4d4a7d 97
+test/e2e/snapshots/domain-aria.test.ts
+  s_df6ca15062dadf::t_a08401f18ee0f0 113
+test/e2e/test/artifacts.test.ts
+  s_df6ca15062dadf::t_20ae3f333fa4d2 270,372,405
+test/e2e/test/config/browser-configs.test.ts
+  s_df6ca15062dadf::t_565bf1beea3d74 108-122
+test/e2e/test/projects.test.ts
+  s_df6ca15062dadf::t_24cec0be3b1f8f 1-2,750-1029
+test/e2e/test/reporters/agent.test.ts
+  s_df6ca15062dadf::t_01eea7e30a1395 21,24
+test/e2e/test/reporters/default.test.ts
+  s_df6ca15062dadf::t_2bf94dacb9002e 4,21,25,29,34,39,43,47,52,77-153
+test/e2e/test/reporters/junit.test.ts
+  s_df6ca15062dadf::t_49f62ab02868da 1,7
+test/e2e/test/reporters/merge-reports.test.ts
+  s_df6ca15062dadf::t_2ff82758035e9c 4,14,111
+test/e2e/test/reporters/utils.ts
+  s_df6ca15062dadf::t_478e8077fbe021 3-7
+test/e2e/test/workers-option.test.ts
+  s_df6ca15062dadf::t_145917b1e4de51 3
+test/test-utils/package.json
+  s_df6ca15062dadf::t_11f858512eaec3 10
+test/typescript/fixtures/typecheck-crash/fake-tsc.cmd
+  s_df6ca15062dadf::t_9e27f318b4c6b7 1-2
+test/typescript/test/typechecker.test.ts
+  s_df6ca15062dadf::t_8253f827b82872 26-29,36-37
+test/ui/package.json
+  s_df6ca15062dadf::t_969c8547102303 14
+test/unit/package.json
+  s_df6ca15062dadf::t_a0502ceb7e9743 38
+test/unit/test/define-ssr.test.ts
+  s_df6ca15062dadf::t_1ec6a479e19b6d 58,62,65,69
+test/unit/test/jest-expect.test.ts
+  s_df6ca15062dadf::t_5340d37e84d467 369-383
+test/unit/test/jest-mock.test.ts
+  s_df6ca15062dadf::t_9d67aaa5e03165 620
+test/unit/test/memory-limit.test.ts
+  s_df6ca15062dadf::t_faa84458b4bacb 2
+test/unit/test/mocking/vi-fn.test.ts
+  s_df6ca15062dadf::t_bd66de551bd718 802-992
+test/unit/test/mocking/vi-spyOn.test.ts
+  s_df6ca15062dadf::t_11280e54631013 298-371
+test/unit/test/vm-code-cache.test.ts
+  s_df6ca15062dadf::t_cf96c33d4f4bce 2
+test/unit/vite.config.ts
+  s_df6ca15062dadf::t_309ad67e0fbc52 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "510038d47d7cc3f51d14d08b432d0abbe58484a1",
+  "prompts": {},
+  "sessions": {
+    "s_df6ca15062dadf": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_014dcfddaffeTonA8OxP4QmNWw",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

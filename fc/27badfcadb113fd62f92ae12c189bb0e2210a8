@@ -1,0 +1,33 @@
+test/ui/fixtures/trace-custom/app/app.js
+  s_757ab56394b860::t_c78a878db6310d 1-11
+test/ui/fixtures/trace-custom/app/index.html
+  s_757ab56394b860::t_65e6549602ce26 1-19
+test/ui/fixtures/trace-custom/attempts.test.ts
+  s_757ab56394b860::t_23b52c4e56aa75 8
+test/ui/fixtures/trace-custom/basic.test.ts
+  s_757ab56394b860::t_d191a29d4e63ad 8-9,11
+test/ui/fixtures/trace-custom/global-setup.ts
+  s_757ab56394b860::t_d5cab922e0dfde 1-41
+test/ui/fixtures/trace-custom/trace/test.ts
+  s_757ab56394b860::t_9b0f38bb716a9b 2,15
+test/ui/fixtures/trace-custom/vitest.config.ts
+  s_757ab56394b860::t_92ca88b7fe38cf 5
+test/ui/test/trace-custom.spec.ts
+  s_757ab56394b860::t_474cf7686c7e57 120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "fc27badfcadb113fd62f92ae12c189bb0e2210a8",
+  "prompts": {},
+  "sessions": {
+    "s_757ab56394b860": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fc89c5151ffeCTiaVRY3p4VeTW",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

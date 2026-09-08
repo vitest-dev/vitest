@@ -1,0 +1,37 @@
+packages/browser/src/client/tester/trace.ts
+  s_36be7b0cda9a49::t_a94d88f67f73cd 58-59,65-66,74
+packages/ui/client/components/trace/TraceView.vue
+  s_36be7b0cda9a49::t_7d779b6b25ff85 90-94
+packages/ui/client/composables/trace-view.ts
+  s_36be7b0cda9a49::t_281c46f693e471 216-217,230
+packages/vitest/src/node/cache/fsModuleCache.ts
+  s_36be7b0cda9a49::t_52e84051052f28 41,231-233,261-267,272
+packages/vitest/src/runtime/vm/code-cache.ts
+  s_36be7b0cda9a49::t_342fd1f5dc2a21 52-71
+packages/vitest/src/runtime/vm/commonjs-executor.ts
+  s_36be7b0cda9a49::t_2b0927afd47204 7,517-522
+packages/vitest/src/runtime/vm/esm-executor.ts
+  s_36be7b0cda9a49::t_8f928aff473bfa 3,167-168,178-194,197-198
+test/e2e/test/vm-threads.test.ts
+  s_36be7b0cda9a49::t_8099238cf090cc 532-575
+test/ui/fixtures/trace/basic.test.ts
+  s_36be7b0cda9a49::t_82da32293e256f 21-29
+test/unit/test/vm-code-cache.test.ts
+  s_36be7b0cda9a49::t_9dbfaa00350080 2,64-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "69316b807387ed63dd5547958ff057967ca5c31e",
+  "prompts": {},
+  "sessions": {
+    "s_36be7b0cda9a49": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fcea11542ffeJ97d3GP9FtDLNj",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

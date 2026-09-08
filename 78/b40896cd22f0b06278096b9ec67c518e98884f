@@ -1,0 +1,19 @@
+test/e2e/test/concurrent.test.ts
+  s_9d81b4129e1ace::t_5999f4c50339ad 1099,1221-1227,1232,1238,1242,1255-1266
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "78b40896cd22f0b06278096b9ec67c518e98884f",
+  "prompts": {},
+  "sessions": {
+    "s_9d81b4129e1ace": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00b912e64ffeC7PYqaGIEiV1rX",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

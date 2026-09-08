@@ -1,0 +1,21 @@
+packages/ui/client/composables/explorer/tree.ts
+  s_bfc6c51df21e5f::t_d566738e32c46a 19,105-106,108-112
+test/ui/fixtures/reconcile/basic.test.ts
+  s_bfc6c51df21e5f::t_a812fcac077d96 1,7-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d0e05ac6800ac9e1bf20c5f750961a3402bbe50e",
+  "prompts": {},
+  "sessions": {
+    "s_bfc6c51df21e5f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ff1fb67a7ffeQvwVlqji5yKhgu",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}

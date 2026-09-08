@@ -1,0 +1,19 @@
+test/unit/test/mocking/vi-fn.test.ts
+  s_91345335a56b6a::t_e312d3099b7493 809,890,902,909
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "36b2389f3cca07e484db9b873458eb8a22bcc99a",
+  "prompts": {},
+  "sessions": {
+    "s_91345335a56b6a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_016598e92ffeI04xtiVDoLePvR",
+        "model": "gpt-5.6"
+      },
+      "human_author": "Hiroshi Ogawa <4232207+hi-ogawa@users.noreply.github.com>"
+    }
+  }
+}
