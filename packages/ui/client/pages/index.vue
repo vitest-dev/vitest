@@ -85,6 +85,9 @@ function allowBrowserEvents() {
   <ProgressBar v-if="layoutMode !== 'trace'" />
   <div v-if="layoutMode === 'trace'" h-screen w-screen overflow="hidden">
     <TraceViewPane v-if="activeTraceView" :selection="activeTraceView" />
+    <div v-else h-full flex items-center justify-center text-sm op-50>
+      No trace found
+    </div>
   </div>
   <div v-else h-screen w-screen overflow="hidden">
     <Splitpanes

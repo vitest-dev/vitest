@@ -511,6 +511,13 @@ async function testPersistsAttemptInURL(page: Page) {
 }
 
 async function testFocusedTraceMode(page: Page) {
+  const standardUrl = page.url()
+  const emptyTraceUrl = new URL(standardUrl)
+  emptyTraceUrl.hash = '/?layout=trace'
+  await page.goto(emptyTraceUrl.href)
+  await expect(page.getByText('No trace found')).toBeVisible()
+  await page.goto(standardUrl)
+
   await openExplorerItem(page, 'simple')
 
   const traceView = page.getByTestId('trace-view')
