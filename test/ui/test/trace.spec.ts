@@ -543,6 +543,7 @@ async function testFocusedTraceMode(page: Page) {
   }
   await expect(traceView).toBeVisible()
   await expect(page.getByAltText('Vitest logo')).toBeHidden()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect.poll(() => traceView.boundingBox()).toEqual({
     x: 0,
