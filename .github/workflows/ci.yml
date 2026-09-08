@@ -139,9 +139,9 @@ jobs:
         with:
           node-version: 20
 
-      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
         if: ${{ matrix.browser[0] == 'chromium' }}
-      - uses: browser-actions/setup-firefox@v1
+      - uses: browser-actions/setup-firefox@0bc507ddf224827e3b1af68e014d5e42ab93e795 # 1.7.2
         if: ${{ matrix.browser[0] == 'firefox' }}
 
       - name: Install
