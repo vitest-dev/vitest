@@ -518,7 +518,7 @@ async function testFocusedTraceMode(page: Page) {
   await page.goto(emptyTraceUrl.href)
   await expect(page.getByText('No trace found')).toBeVisible()
 
-  // Open a selected trace step through its focused-layout link.
+  // Select a trace step in the standard layout.
   await page.goto(standardUrl)
 
   await openExplorerItem(page, 'simple')
@@ -528,6 +528,7 @@ async function testFocusedTraceMode(page: Page) {
   const traceFrame = traceView.frameLocator('iframe')
   await traceSteps.nth(1).click()
 
+  // Follow its new-tab URL in the current page to inspect the focused layout.
   const openFocusedTrace = traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })
   await expect(openFocusedTrace).toHaveAttribute('target', '_blank')
   const focusedUrl = await openFocusedTrace.getAttribute('href')
