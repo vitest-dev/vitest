@@ -3,7 +3,7 @@ import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
 import { layoutMode, params } from '~/composables/params'
-import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceSelectorHighlight } from '~/composables/trace-view'
+import { closeTrace, getSelectedTrace, getTraceAttemptLabel, getTraceAttemptMap, selectActiveTraceAttempt, showTraceSelectorHighlight } from '~/composables/trace-view'
 import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
 
@@ -13,6 +13,14 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
+const traceAttempts = computed(() => [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
+  key,
+  label: getTraceAttemptLabel(trace) || 'Initial run',
+})))
+const selectedAttemptKey = computed({
+  get: () => props.selection.attemptKey ?? traceAttempts.value[0]?.key ?? '',
+  set: selectActiveTraceAttempt,
+})
 const traceContext = computed(() => getNames(props.selection.test).slice(0, -1).join(' > '))
 const focusedTraceUrl = computed(() => {
   const url = new URL(globalThis.location.href)
@@ -41,9 +49,22 @@ const focusedTraceUrl = computed(() => {
         <span v-if="traceContext" class="ml-2 op-50">{{ traceContext }}</span>
       </div>
       <span v-else data-testid="trace-view-title" class="flex-auto pl-1 text-sm font-bold">Trace Viewer</span>
-      <!-- TODO: pane should own attempt selector here? -->
+      <select
+        v-if="traceAttempts.length > 1"
+        v-model="selectedAttemptKey"
+        aria-label="Trace attempt"
+        class="max-w-40 cursor-pointer border border-base rounded bg-base px-2 py-1 text-xs"
+      >
+        <option
+          v-for="attempt in traceAttempts"
+          :key="attempt.key"
+          :value="attempt.key"
+        >
+          {{ attempt.label }}
+        </option>
+      </select>
       <span
-        v-if="attemptLabel"
+        v-else-if="attemptLabel"
         class="text-xs opacity-70"
       >
         {{ attemptLabel }}

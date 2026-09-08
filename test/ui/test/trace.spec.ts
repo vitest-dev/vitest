@@ -369,8 +369,16 @@ async function testAttempts(page: Page) {
 
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
+  const traceSteps = traceView.getByTestId('trace-step')
 
   await expect(traceView).toBeVisible()
+  const attemptSelect = traceView.getByRole('combobox', { name: 'Trace attempt' })
+  await expect(attemptSelect.locator('option')).toHaveText([
+    'Initial run',
+    'Retry 1',
+    'Retry 2',
+  ])
+  await expect(attemptSelect).toHaveValue('0:0')
 
   const traceOpenButtons = page.getByTestId('trace-open-button')
   await expect(traceOpenButtons).toHaveText([
@@ -379,15 +387,24 @@ async function testAttempts(page: Page) {
     'Open trace viewer Retry 2',
   ])
 
-  await traceOpenButtons.nth(0).click()
   await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 
-  await traceOpenButtons.nth(1).click()
+  await traceSteps.nth(1).click()
+  await attemptSelect.selectOption('0:1')
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceAttempt: '0:1',
+    traceStep: '0',
+  })
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 
-  await traceOpenButtons.nth(2).click()
+  await attemptSelect.selectOption('0:2')
+  await expect.poll(() => getHashParams(page)).toMatchObject({
+    traceAttempt: '0:2',
+    traceStep: '0',
+  })
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 }
@@ -498,6 +515,7 @@ async function testPersistsAttemptInURL(page: Page) {
     traceStep: '0',
     test: testId,
   })
+  await expect(traceView.getByRole('combobox', { name: 'Trace attempt' })).toHaveValue('0:1')
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
 
   // Reloading preserves the same URL and selected retry snapshot.
@@ -507,6 +525,7 @@ async function testPersistsAttemptInURL(page: Page) {
     traceStep: '0',
     test: testId,
   })
+  await expect(traceView.getByRole('combobox', { name: 'Trace attempt' })).toHaveValue('0:1')
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
 }
 

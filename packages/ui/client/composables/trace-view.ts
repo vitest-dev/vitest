@@ -207,6 +207,17 @@ export function selectActiveTraceStep(index: number) {
   }
 }
 
+export function selectActiveTraceAttempt(attemptKey: string) {
+  const selection = activeTraceView.value
+  if (selection) {
+    setActiveTrace({
+      ...selection,
+      attemptKey,
+      selectedStepIndex: 0,
+    })
+  }
+}
+
 // Resolve the URL-selected task only when it can be shown in the trace view.
 const selectedTestTask = computed(() => {
   const test = selectedTest.value
