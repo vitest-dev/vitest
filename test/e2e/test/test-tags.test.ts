@@ -156,7 +156,7 @@ test('throws an error if no tags are defined in the config, but in the test', as
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.js [ basic.test.js ]
-    Error: The Vitest config does't define any "tags", cannot apply "unknown" tag for this test. See: https://vitest.dev/guide/test-tags
+    Error: The Vitest config doesn't define any "tags", cannot apply "unknown" tag for this test. See: https://vitest.dev/guide/test-tags
      ❯ basic.test.js:2:9
           1|
           2|         test('test 1', { tags: ['unknown'] }, () => {})
