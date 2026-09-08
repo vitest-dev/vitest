@@ -178,13 +178,11 @@ export function getTraceEntryClass(entry: BrowserTraceEntry) {
   return 'text-gray-400 dark:text-gray-500'
 }
 
-export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
+export function openTrace(test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
-  setActiveTrace({
-    test,
-    attemptKey: getTraceAttemptKey(trace),
-    selectedStepIndex: 0,
-  })
+  if (activeTraceView.value?.test !== test) {
+    setActiveTrace({ test, selectedStepIndex: 0 })
+  }
 }
 
 function setActiveTrace(selection: TraceSelection) {
@@ -204,6 +202,17 @@ export function selectActiveTraceStep(index: number) {
   if (selection) {
     selection.selectedStepIndex = index
     selectedTraceStep.value = index
+  }
+}
+
+export function selectActiveTraceAttempt(attemptKey: string) {
+  const selection = activeTraceView.value
+  if (selection) {
+    setActiveTrace({
+      ...selection,
+      attemptKey,
+      selectedStepIndex: 0,
+    })
   }
 }
 
