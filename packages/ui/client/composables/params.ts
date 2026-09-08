@@ -14,7 +14,7 @@ export interface Params {
   traceStep: null | number
 }
 
-const params = useUrlSearchParams<Params>('hash', {
+export const params = useUrlSearchParams<Params>('hash', {
   initialValue: {
     file: '',
     layout: null,

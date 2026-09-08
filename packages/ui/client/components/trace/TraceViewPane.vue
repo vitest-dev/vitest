@@ -2,7 +2,7 @@
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { layoutMode } from '~/composables/params'
+import { layoutMode, params } from '~/composables/params'
 import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceSelectorHighlight } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 
@@ -14,16 +14,14 @@ const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
 const focusedTraceUrl = computed(() => {
   const url = new URL(globalThis.location.href)
-  const params = new URLSearchParams(url.hash.split('?')[1])
-  params.set('layout', 'trace')
-  params.set('traceStep', String(props.selection.selectedStepIndex))
-  if (props.selection.attemptKey) {
-    params.set('traceAttempt', props.selection.attemptKey)
+  const focusedParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null) {
+      focusedParams.set(key, String(value))
+    }
   }
-  else {
-    params.delete('traceAttempt')
-  }
-  url.hash = `/?${params}`
+  focusedParams.set('layout', 'trace')
+  url.hash = `/?${focusedParams}`
   return url.href
 })
 </script>
