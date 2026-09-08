@@ -2,6 +2,7 @@
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
+import { layoutMode } from '~/composables/params'
 import { closeTrace, getSelectedTrace, getTraceAttemptLabel, showTraceSelectorHighlight } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 
@@ -33,6 +34,7 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
         <span>Show highlight</span>
       </label>
       <IconButton
+        v-if="layoutMode !== 'trace'"
         v-tooltip.bottom="'Close Trace Viewer'"
         title="Close Trace Viewer"
         icon="i-carbon:close"

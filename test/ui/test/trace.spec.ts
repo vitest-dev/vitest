@@ -552,11 +552,7 @@ async function testFocusedTraceMode(page: Page) {
   await page.reload()
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect(page.getByAltText('Vitest logo')).toBeHidden()
-
-  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
-  await expect(traceView).toBeHidden()
-  await expect(page.getByAltText('Vitest logo')).toBeVisible()
-  expect(getHashParams(page)).not.toHaveProperty('layout')
+  await expect(traceView.getByRole('button', { name: 'Close Trace Viewer' })).toBeHidden()
 }
 
 function getHashParams(page: Page) {

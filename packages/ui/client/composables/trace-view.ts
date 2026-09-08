@@ -5,7 +5,7 @@ import { computed, ref, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
-import { layoutMode, selectedTest, selectedTraceAttempt, selectedTraceStep } from './params'
+import { selectedTest, selectedTraceAttempt, selectedTraceStep } from './params'
 
 export interface TraceSelection {
   test: RunnerTestCase
@@ -195,7 +195,6 @@ function setActiveTrace(selection: TraceSelection) {
 
 export function closeTrace() {
   activeTraceView.value = undefined
-  layoutMode.value = null
   selectedTraceAttempt.value = null
   selectedTraceStep.value = null
 }
