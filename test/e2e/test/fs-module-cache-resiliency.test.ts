@@ -1,7 +1,7 @@
 import { chmodSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 import { join } from 'pathe'
 import { afterEach, expect, test } from 'vitest'
-import { runInlineTests } from '#test-utils'
+import { runInlineTests, runVitest } from '#test-utils'
 
 // The on-disk module cache is an optimisation. It lives in a directory nobody
 // owns exclusively — CI images sweep it mid-run, disks fill up, mounts are
@@ -146,4 +146,97 @@ test('the cache is still populated and reused when nothing interferes', async ()
   expect(warm.testTree()).toMatchObject({
     'basic.test.js': { adds: 'passed' },
   })
+})
+
+test('cached modules are invalidated after every lockfile change', async () => {
+  const firstRun = await runInlineTests({
+    'package.json': JSON.stringify({ type: 'module' }),
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          deps: {
+            optimizer: {
+              ssr: {
+                enabled: true,
+                include: ['optimized-dep'],
+              },
+            },
+          },
+        },
+      }
+    `,
+    'node_modules/.pnpm/lock.yaml': 'lockfile generation 1',
+    'node_modules/optimized-dep/package.json': JSON.stringify({
+      name: 'optimized-dep',
+      type: 'module',
+      exports: './index.js',
+    }),
+    'node_modules/optimized-dep/index.js': `export default 'optimized'`,
+    'node_modules/mocked-dep/package.json': JSON.stringify({
+      name: 'mocked-dep',
+      type: 'module',
+      exports: './index.js',
+    }),
+    'node_modules/mocked-dep/index.js': `export default 'original'`,
+    'subject.js': `
+      import value from 'mocked-dep'
+      export const getValue = () => value
+    `,
+    'basic.test.js': /* js */ `
+      import { expect, test, vi } from 'vitest'
+      import { getValue } from './subject.js'
+
+      vi.mock('mocked-dep', () => ({ default: 'mocked' }))
+
+      test('uses the mock', () => {
+        expect(getValue()).toBe('mocked')
+      })
+    `,
+  })
+
+  const fs = firstRun.fs
+  const first = {
+    errorTree: firstRun.errorTree(),
+    stderr: firstRun.stderr,
+  }
+  await firstRun.ctx?.close()
+
+  async function run() {
+    const result = await runVitest({ root: fs.root })
+    const errorTree = result.errorTree()
+    await result.ctx?.close()
+    return { errorTree, stderr: result.stderr }
+  }
+
+  fs.editFile('node_modules/.pnpm/lock.yaml', () => 'lockfile generation 2')
+  const second = await run()
+  fs.editFile('node_modules/.pnpm/lock.yaml', () => 'lockfile generation 3')
+  const third = await run()
+
+  expect([first.stderr, second.stderr, third.stderr]).toEqual(['', '', ''])
+  expect([
+    first.errorTree,
+    second.errorTree,
+    third.errorTree,
+  ]).toMatchInlineSnapshot(`
+    [
+      {
+        "basic.test.js": {
+          "uses the mock": "passed",
+        },
+      },
+      {
+        "basic.test.js": {
+          "uses the mock": "passed",
+        },
+      },
+      {
+        "basic.test.js": {
+          "uses the mock": "passed",
+        },
+      },
+    ]
+  `)
 })
