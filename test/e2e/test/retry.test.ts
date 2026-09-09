@@ -57,8 +57,8 @@ test('expected failures stop retrying after a failed assertion', async () => {
   `)
   expect([...results[0].children.allTests()].map(test => ({
     name: test.name,
-    retries: test.diagnostic().retryCount,
-    repeats: test.diagnostic().repeatCount,
+    retries: test.diagnostic()!.retryCount,
+    repeats: test.diagnostic()!.repeatCount,
   }))).toMatchInlineSnapshot(`
     [
       {
@@ -101,7 +101,7 @@ test.each([0, 1, 2])('expected failures exhaust retries when assertions pass (re
     }
   `)
   const [test] = results[0].children.allTests()
-  expect(test.diagnostic().retryCount).toBe(2 * (repeats + 1))
+  expect(test.diagnostic()!.retryCount).toBe(2 * (repeats + 1))
 })
 
 test('expected failures retain a failed repeat after a successful repeat', async () => {
@@ -116,8 +116,8 @@ test('expected failures retain a failed repeat after a successful repeat', async
   })
 
   const [test] = results[0].children.allTests()
-  expect(test.diagnostic().retryCount).toBe(2)
-  expect(test.diagnostic().repeatCount).toBe(1)
+  expect(test.diagnostic()!.retryCount).toBe(2)
+  expect(test.diagnostic()!.repeatCount).toBe(1)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "fails.test.js": {
