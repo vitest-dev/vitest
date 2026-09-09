@@ -24,6 +24,37 @@ describe('assertTypes', () => {
 })
 
 describe('deepMerge', () => {
+  test('does not merge __proto__ properties', () => {
+    const source = JSON.parse(`{
+      "__proto__": { "rootPolluted": true },
+      "nested": {
+        "__proto__": { "nestedPolluted": true }
+      }
+    }`)
+
+    try {
+      const merged = deepMerge({}, source)
+
+      expect({
+        merged,
+        rootPolluted: ({} as any).rootPolluted,
+        nestedPolluted: ({} as any).nestedPolluted,
+      }).toMatchInlineSnapshot(`
+        {
+          "merged": {
+            "nested": {},
+          },
+          "nestedPolluted": undefined,
+          "rootPolluted": undefined,
+        }
+      `)
+    }
+    finally {
+      Reflect.deleteProperty(Object.prototype, 'rootPolluted')
+      Reflect.deleteProperty(Object.prototype, 'nestedPolluted')
+    }
+  })
+
   test('non plain objects retain their prototype, arrays are not merging, plain objects are merging', () => {
     class TestA {
       baz = 'baz'
