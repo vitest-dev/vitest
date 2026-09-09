@@ -82,7 +82,7 @@ function allowBrowserEvents() {
 
 <template>
   <ProgressBar />
-  <div h-screen w-screen overflow="hidden">
+  <div class="h-screen w-screen overflow-hidden">
     <Splitpanes
       class="pt-4px"
       @resized="onMainResized"
@@ -102,8 +102,7 @@ function allowBrowserEvents() {
         </transition>
         <template v-else>
           <div
-            flex="~ col"
-            h-full
+            class="flex flex-col h-full"
           >
             <Splitpanes
               id="details-splitpanes"
@@ -136,7 +135,7 @@ function allowBrowserEvents() {
                 :size="detailSizes[1]"
                 min-size="10"
               >
-                <div h-full overflow-hidden>
+                <div class="h-full overflow-hidden">
                   <Dashboard v-if="dashboardVisible" key="summary" />
                   <Coverage
                     v-else-if="coverageVisible"

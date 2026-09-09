@@ -460,7 +460,7 @@ onBeforeUnmount(clearListeners)
   <CodeMirrorContainer
     ref="editor"
     v-model="code"
-    h-full
+    class="h-full"
     :read-only="isReport || !config.api?.allowWrite"
     :saving="saving"
     :options="{

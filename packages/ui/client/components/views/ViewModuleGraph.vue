@@ -410,13 +410,11 @@ function bindOnClick(
 </script>
 
 <template>
-  <div h-full min-h-75 flex-1 overflow="hidden">
+  <div class="h-full min-h-75 flex-1 overflow-hidden">
     <div>
-      <div flex items-center gap-2 px-3 py-2>
+      <div class="flex items-center gap-2 px-3 py-2">
         <div
-          flex="~ gap-1"
-          items-center
-          select-none
+          class="flex gap-1 items-center select-none"
         >
           <div class="pr-2">
             {{ filteredGraph.nodes.length }}/{{ graph.nodes.length }} {{ filteredGraph.nodes.length === 1 ? 'module' : 'modules' }}
@@ -427,23 +425,14 @@ function bindOnClick(
             type="checkbox"
           >
           <label
-            font-light
-            text-sm
-            ws-nowrap
-            overflow-hidden
-            select-none
-            truncate
+            class="font-light text-sm ws-nowrap overflow-hidden select-none truncate border-b-2 border-$cm-namespace"
             for="hide-node-modules"
-            border-b-2
-            border="$cm-namespace"
           >Hide node_modules</label>
         </div>
         <div
           v-for="node of controller?.nodeTypes.sort()"
           :key="node"
-          flex="~ gap-1"
-          items-center
-          select-none
+          class="flex gap-1 items-center select-none"
         >
           <input
             :id="`type-${node}`"
@@ -452,24 +441,14 @@ function bindOnClick(
             @change="setFilter(node, ($event as any).target.checked)"
           >
           <label
-            font-light
-            text-sm
-            ws-nowrap
-            overflow-hidden
-            capitalize
-            select-none
-            truncate
+            class="font-light text-sm ws-nowrap overflow-hidden capitalize select-none truncate border-b-2"
             :for="`type-${node}`"
-            border-b-2
             :style="{ 'border-color': `var(--color-node-${node})` }"
           >{{ node }} Modules</label>
         </div>
-        <div flex-auto />
+        <div class="flex-auto" />
         <div
-          flex="~ gap-2"
-          items-center
-          text-xs
-          opacity-60
+          class="flex gap-2 items-center text-xs opacity-60"
         >
           <span>Click on node: details • Right-click/Shift: expand graph</span>
         </div>

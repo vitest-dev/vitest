@@ -11,14 +11,18 @@ defineProps<{
   <button
     :aria-label="title"
     role="button"
-    :opacity="disabled ? 10 : 70"
-    rounded
     :disabled="disabled"
-    :hover="disabled || active ? '' : 'bg-active op100'"
-    class="w-1.4em h-1.4em flex" :class="[{ 'bg-gray-500:35 op100': active }]"
+    class="w-1.4em h-1.4em flex rounded"
+    :class="{
+      'op10': disabled && !active,
+      'op70': !disabled,
+      'op100': disabled && active,
+      'bg-gray-500:35': active,
+      'hover:bg-active hover:op100': !disabled && !active,
+    }"
   >
     <slot>
-      <span :class="icon" ma block />
+      <span :class="icon" class="ma block" />
     </slot>
   </button>
 </template>
