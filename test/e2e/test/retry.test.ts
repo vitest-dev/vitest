@@ -128,3 +128,34 @@ test('expected failures retain a failed repeat after a successful repeat', async
     }
   `)
 })
+
+test('ordinary and expected failures both retain failed repeats without retries', async () => {
+  const { errorTree } = await runInlineTests({
+    'repeats.test.js': `
+      import { expect, it } from 'vitest'
+
+      it('ordinary', { repeats: 1 }, ({ task }) => {
+        if (task.result.repeatCount === 0) {
+          throw new Error('first repeat failed')
+        }
+      })
+
+      it.fails('expected failure', { repeats: 1 }, ({ task }) => {
+        expect(task.result.repeatCount).toBe(0)
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "repeats.test.js": {
+        "expected failure": [
+          "Expect test to fail",
+        ],
+        "ordinary": [
+          "first repeat failed",
+        ],
+      },
+    }
+  `)
+})
