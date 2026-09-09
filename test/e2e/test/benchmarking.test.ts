@@ -206,7 +206,11 @@ test('bench exposes plain and perProject compositions and prints a table', async
 // decorations that only appear on some rows; strip both so row parsing and
 // snapshots stay deterministic.
 function stripBenchSuffix(line: string) {
-  return line.replace(/\s+\[[\d.]+x\]\s*$/, '').replace(/\s+(?:fastest|slowest)\s*$/, '')
+  // `fastest` / `slowest` is appended after the score, so it has to be
+  // stripped first or the trailing `$` anchor never matches the score.
+  return line
+    .replace(/\s+(?:fastest|slowest)\s*$/, '')
+    .replace(/\s+\[[\d.]+x\]\s*$/, '')
 }
 
 // Column widths come from the normalized content so measurement noise at
