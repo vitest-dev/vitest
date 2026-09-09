@@ -14,9 +14,8 @@ defineProps<{
     :disabled="disabled"
     class="w-1.4em h-1.4em flex rounded"
     :class="{
-      'op10': disabled && !active,
+      'op10': disabled,
       'op70': !disabled,
-      'op100': disabled && active,
       'bg-gray-500:35': active,
       'hover:bg-active hover:op100': !disabled && !active,
     }"
