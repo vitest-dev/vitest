@@ -617,6 +617,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    if (test.fails) {
+      test.result.state = 'run'
+    }
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
@@ -738,6 +741,18 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         return
       }
 
+      // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
+      if (test.fails) {
+        if (test.result.state === 'pass') {
+          const error = processError(new Error('Expect test to fail'))
+          test.result.state = 'fail'
+          test.result.errors = [error]
+        }
+        else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
+          test.result.state = 'pass'
+          test.result.errors = undefined
+        }
+      }
       if (test.result.state === 'pass') {
         break
       }
@@ -760,19 +775,6 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       // update retry info
       updateTask('test-retried', test, runner)
-    }
-  }
-
-  // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
-  if (test.fails) {
-    if (test.result.state === 'pass') {
-      const error = processError(new Error('Expect test to fail'))
-      test.result.state = 'fail'
-      test.result.errors = [error]
-    }
-    else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
-      test.result.state = 'pass'
-      test.result.errors = undefined
     }
   }
 
