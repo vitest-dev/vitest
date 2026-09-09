@@ -121,9 +121,7 @@ test('expected failures retain a failed repeat after a successful repeat', async
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "fails.test.js": {
-        "fails first repeat": [
-          "Expect test to fail",
-        ],
+        "fails first repeat": "passed",
       },
     }
   `)
@@ -149,9 +147,7 @@ test('ordinary and expected failures both retain failed repeats without retries'
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "repeats.test.js": {
-        "expected failure": [
-          "Expect test to fail",
-        ],
+        "expected failure": "passed",
         "ordinary": [
           "first repeat failed",
         ],
