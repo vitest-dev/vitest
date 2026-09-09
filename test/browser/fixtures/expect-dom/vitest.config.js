@@ -14,6 +14,11 @@ export default defineConfig({
         toMatchScreenshot: {
           comparators: {
             failing: () => ({ pass: false, diff: null, message: null }),
+            'stability-only': (_reference, _actual, { createDiff }) => ({
+              pass: !createDiff,
+              diff: null,
+              message: createDiff ? 'createDiff:true rejected' : null,
+            }),
           },
         },
       },

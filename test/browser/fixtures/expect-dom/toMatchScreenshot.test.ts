@@ -19,6 +19,7 @@ const renderTestCase = (colors: readonly [string, string, string]) =>
 declare module 'vitest/browser' {
   interface ScreenshotComparatorRegistry {
     failing: Record<string, never>
+    'stability-only': Record<string, never>
   }
 }
 
@@ -475,6 +476,67 @@ describe('.toMatchScreenshot', () => {
 
     expect(errorMessage).matches(/^Could not capture a stable screenshot within 100ms\.$/m)
   })
+
+  // Only run this test if snapshots aren't being updated
+  test.runIf(server.config.snapshotOptions.updateSnapshot !== 'all')(
+    'still runs createDiff:true after first-capture stability',
+    async ({ onTestFinished }) => {
+      const filename = globalThis.crypto.randomUUID()
+      const path = join(
+        '__screenshots__',
+        'toMatchScreenshot.test.ts',
+        `${filename}-${server.browser}-${server.platform}.png`,
+      )
+
+      onTestFinished(async () => {
+        await server.commands.removeFile(path)
+      })
+
+      renderTestCase([
+        'oklch(39.6% 0.141 25.723)',
+        'oklch(40.5% 0.101 131.063)',
+        'oklch(37.9% 0.146 265.522)',
+      ])
+
+      const locator = page.getByTestId(dataTestId)
+
+      await locator.screenshot({
+        save: true,
+        path,
+      })
+
+      let errorMessage: string
+
+      try {
+        await expect(locator).toMatchScreenshot(filename, {
+          comparatorName: 'stability-only',
+        })
+      }
+      catch (error) {
+        errorMessage = error.message
+      }
+
+      expect(typeof errorMessage).toBe('string')
+
+      const [referencePath, actualPath, diffPath] = extractToMatchScreenshotPaths(
+        errorMessage,
+        filename,
+      )
+
+      expect(referencePath).toMatch(new RegExp(`${path}$`))
+      expect(typeof actualPath).toBe('string')
+
+      onTestFinished(async () => {
+        await Promise.all([
+          server.commands.removeFile(actualPath),
+          typeof diffPath === 'string' ? server.commands.removeFile(diffPath) : undefined,
+        ])
+      })
+
+      expect(errorMessage).toContain('Screenshot does not match the stored reference.')
+      expect(errorMessage).toContain('createDiff:true rejected')
+    },
+  )
 
   // Only run this test if snapshots aren't being updated
   test.runIf(server.config.snapshotOptions.updateSnapshot !== 'all')(
