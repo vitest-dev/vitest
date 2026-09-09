@@ -171,6 +171,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       ctx.config,
       moduleRunner,
       traces,
+      () => externalModulesExecutor.syncBuiltinESMExports(),
     )
   }
   finally {

@@ -1,31 +1,81 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd41680f2e 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915d53c0eb8 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
-@@ -2,14 +2,14 @@
+@@ -1,19 +1,6 @@
+ "use strict";
  
  const globalObject = require("@sinonjs/commons").global;
- let timersModule, timersPromisesModule;
+-let timersModule, timersPromisesModule;
 -if (typeof require === "function" && typeof module === "object") {
-+if (typeof __vitest_required__ !== 'undefined') {
-     try {
+-    try {
 -        timersModule = require("timers");
-+        timersModule = __vitest_required__.timers;
-     } catch {
-         // ignored
-     }
-     try {
+-    } catch {
+-        // ignored
+-    }
+-    try {
 -        timersPromisesModule = require("timers/promises");
-+        timersPromisesModule = __vitest_required__.timersPromises;
-     } catch {
-         // ignored
-     }
-@@ -537,7 +537,7 @@ function withGlobal(_global) {
+-    } catch {
+-        // ignored
+-    }
+-}
+ 
+ /**
+  * @typedef {"nextAsync" | "manual" | "interval"} TickMode
+@@ -537,7 +524,8 @@ function withGlobal(_global) {
          isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
      isPresent.nextTick =
          _global.process && typeof _global.process.nextTick === "function";
 -    const utilPromisify = _global.process && require("util").promisify;
-+    const utilPromisify = _global.process && _global.__vitest_required__ && _global.__vitest_required__.util.promisify;
++    const utilPromisify =
++        _global.process && _global.__vitest_required__?.util.promisify;
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
+@@ -2577,6 +2565,7 @@ function withGlobal(_global) {
+         clock.uninstall = function () {
+             uninstalled = true;
+             clock.setTickMode({ mode: "manual" });
++            const { timersModule, timersPromisesModule } = clock;
+ 
+             if (clock.methods) {
+                 const installedHrTime = "_hrtime";
+@@ -2750,6 +2739,16 @@ function withGlobal(_global) {
+         const clock = createClock(config.now, config.loopLimit);
+         clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
+ 
++        // Vitest injects Node builtins because this file is bundled without require.
++        const vitestRequired =
++            config.fakeNodeBuiltins && _global.__vitest_required__;
++        const timersModule = vitestRequired?.timers;
++        const timersPromisesModule = vitestRequired?.timersPromises;
++        const syncBuiltinESMExports = vitestRequired?.syncBuiltinESMExports;
++        // Keep the modules on the clock so uninstall can restore their methods.
++        clock.timersModule = timersModule;
++        clock.timersPromisesModule = timersPromisesModule;
++
+         clock.abortListenerMap = new Map();
+ 
+         if (hasToFake) {
+@@ -3091,6 +3090,21 @@ function withGlobal(_global) {
+             }
+         }
+ 
++        // Keep ESM named exports in sync with the patched CommonJS modules.
++        if (
++            syncBuiltinESMExports &&
++            (clock.timersModuleMethods?.length ||
++                clock.timersPromisesModuleMethods?.length)
++        ) {
++            const uninstall = clock.uninstall;
++            clock.uninstall = () => {
++                const result = uninstall();
++                syncBuiltinESMExports();
++                return result;
++            };
++            syncBuiltinESMExports();
++        }
++
+         return clock;
+     }
+ 
