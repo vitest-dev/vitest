@@ -20,6 +20,7 @@ import {
   mainSizes,
   panels,
 } from '~/composables/navigation'
+import { layoutMode } from '~/composables/params'
 import { activeTraceView } from '~/composables/trace-view'
 
 const dashboardVisible = initializeNavigation()
@@ -81,8 +82,14 @@ function allowBrowserEvents() {
 </script>
 
 <template>
-  <ProgressBar />
-  <div h-screen w-screen overflow="hidden">
+  <ProgressBar v-if="layoutMode !== 'trace'" />
+  <div v-if="layoutMode === 'trace'" class="h-screen w-screen overflow-hidden">
+    <TraceViewPane v-if="activeTraceView" :selection="activeTraceView" />
+    <div v-else class="h-full flex items-center justify-center text-sm op-50">
+      No trace found
+    </div>
+  </div>
+  <div v-else class="h-screen w-screen overflow-hidden">
     <Splitpanes
       class="pt-4px"
       @resized="onMainResized"
