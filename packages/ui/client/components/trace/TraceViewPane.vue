@@ -21,8 +21,8 @@ const selectedAttemptKey = computed({
   get: () => props.selection.attemptKey ?? '0:0',
   set: selectActiveTraceAttempt,
 })
-const traceContext = computed(() => getNames(props.selection.test).slice(0, -1).join(' > '))
-const focusedTraceUrl = computed(() => {
+const ancestorNames = computed(() => getNames(props.selection.test).slice(0, -1).join(' > '))
+const traceLayoutPageUrl = computed(() => {
   const url = new URL(globalThis.location.href)
   const focusedParams = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
@@ -46,7 +46,7 @@ const focusedTraceUrl = computed(() => {
         class="min-w-0 flex-auto overflow-hidden truncate ws-nowrap pl-1 text-sm"
       >
         <span class="font-bold">{{ selection.test.name }}</span>
-        <span v-if="traceContext" class="ml-2 op-50">{{ traceContext }}</span>
+        <span v-if="ancestorNames" class="ml-2 op-50">{{ ancestorNames }}</span>
       </div>
       <span v-else data-testid="trace-view-title" class="flex-auto pl-1 text-sm font-bold">Trace Viewer</span>
       <select
@@ -79,7 +79,7 @@ const focusedTraceUrl = computed(() => {
       <a
         v-if="layoutMode !== 'trace'"
         v-tooltip.bottom="'Open Trace Viewer in New Tab'"
-        :href="focusedTraceUrl"
+        :href="traceLayoutPageUrl"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Open Trace Viewer in New Tab"
