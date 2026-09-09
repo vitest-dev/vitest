@@ -269,6 +269,14 @@ test.skipIf(!supportsRequireEsm).for(['vmThreads', 'vmForks'] as const)(
         exports: './index.mjs',
       }),
       'node_modules/esm-pkg-2/index.mjs': 'export const state = { name: "esm-pkg-2" }',
+      'esm-scope/interop-dep.mjs': 'export default function impl() {}',
+      'esm-scope/interop-consumer.cjs': [
+        "'use strict'",
+        "var dep = require('./interop-dep.mjs')",
+        "function _interopDefault(e) { return e && e.__esModule ? e : { default: e } }",
+        "var dep__default = _interopDefault(dep)",
+        "module.exports = { hasMarker: '__esModule' in dep, defaultType: typeof dep__default.default }",
+      ].join('\n'),
       'require-esm.test.js': `
         import { createRequire } from 'node:module'
         import { expect, test } from 'vitest'
@@ -356,6 +364,18 @@ test.skipIf(!supportsRequireEsm).for(['vmThreads', 'vmForks'] as const)(
           const imported = await import('esm-pkg-2')
           const required = require('esm-pkg-2')
           expect(required.state).toBe(imported.state)
+        })
+
+        test('marks the namespace with __esModule for CJS interop helpers', () => {
+          const ns = require('./esm-scope/entry.mjs')
+          expect(ns.__esModule).toBe(true)
+          expect(typeof ns.default).toBe('string')
+        })
+
+        test('require(esm) result interoperates with transpiled CJS helpers', () => {
+          const result = require('./esm-scope/interop-consumer.cjs')
+          expect(result.hasMarker).toBe(true)
+          expect(result.defaultType).toBe('function')
         })
       `,
     }, {

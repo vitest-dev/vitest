@@ -119,6 +119,7 @@ export class ExternalModulesExecutor {
   }
 
   #esmSyntaxCache = new Map<string, boolean>()
+  #esmRequireCompatNamespaces = new Map<string, Record<string, unknown>>()
 
   // require() dispatches to the sync ESM loader only for files that are
   // explicitly marked as ESM (.mjs or a "type": "module" package scope).
@@ -154,9 +155,21 @@ export class ExternalModulesExecutor {
     const namespace = module.namespace as Record<string, unknown>
     // Node parity: an ES module can define its own require() result with an
     // export named "module.exports"
-    return 'module.exports' in namespace
-      ? namespace['module.exports']
-      : namespace
+    if ('module.exports' in namespace) {
+      return namespace['module.exports']
+    }
+    // Node marks require(esm) results with __esModule so CJS interop helpers
+    // (Babel/Rollup `interopRequireDefault`) treat them as transpiled ESM.
+    // The vm module namespace is sealed, so expose a cached copy instead.
+    let compatNamespace = this.#esmRequireCompatNamespaces.get(url)
+    if (!compatNamespace) {
+      compatNamespace = { __esModule: true }
+      for (const key of Object.keys(namespace)) {
+        compatNamespace[key] = namespace[key]
+      }
+      this.#esmRequireCompatNamespaces.set(url, compatNamespace)
+    }
+    return compatNamespace
   }
 
   public resolveSyncSpecifier = (
