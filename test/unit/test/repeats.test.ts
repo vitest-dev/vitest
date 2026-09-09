@@ -52,7 +52,8 @@ describe('testing repeats with retry', () => {
   })
 
   test('should not reset retry count', { repeats: 2, retry: 1 }, () => {
-    expect(TestRunner.getCurrentTest()!.result?.retryCount).toBe(3)
+    const result = TestRunner.getCurrentTest()!.result!
+    expect(result.retryCount).toBe(result.repeatCount! + 1)
   })
 })
 

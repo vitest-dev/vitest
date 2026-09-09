@@ -80,28 +80,56 @@ test('expected failures stop retrying after a failed assertion', async () => {
   `)
 })
 
-test.each([0, 1, 2])('expected failures exhaust retries when assertions pass (repeats: %i)', async (repeats) => {
+test('expected failures exhaust retries in every repeat when assertions pass', async () => {
   const { errorTree, results } = await runInlineTests({
     'fails.test.js': `
       import { expect, it } from 'vitest'
 
-      it.fails('unexpected pass', { retry: 2, repeats: ${repeats} }, () => {
-        expect(1).toBe(1)
-      })
+      for (const repeats of [0, 1, 2]) {
+        it.fails('unexpected pass with ' + repeats + ' repeats', { retry: 2, repeats }, () => {
+          expect(1).toBe(1)
+        })
+      }
     `,
   })
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "fails.test.js": {
-        "unexpected pass": [
+        "unexpected pass with 0 repeats": [
+          "Expect test to fail",
+        ],
+        "unexpected pass with 1 repeats": [
+          "Expect test to fail",
+          "Expect test to fail",
+        ],
+        "unexpected pass with 2 repeats": [
+          "Expect test to fail",
+          "Expect test to fail",
           "Expect test to fail",
         ],
       },
     }
   `)
-  const [test] = results[0].children.allTests()
-  expect(test.diagnostic()!.retryCount).toBe(2 * (repeats + 1))
+  expect([...results[0].children.allTests()].map(test => ({
+    name: test.name,
+    retries: test.diagnostic()!.retryCount,
+  }))).toMatchInlineSnapshot(`
+    [
+      {
+        "name": "unexpected pass with 0 repeats",
+        "retries": 2,
+      },
+      {
+        "name": "unexpected pass with 1 repeats",
+        "retries": 4,
+      },
+      {
+        "name": "unexpected pass with 2 repeats",
+        "retries": 6,
+      },
+    ]
+  `)
 })
 
 test('expected failures retain a failed repeat after a successful repeat', async () => {
@@ -121,7 +149,9 @@ test('expected failures retain a failed repeat after a successful repeat', async
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "fails.test.js": {
-        "fails first repeat": "passed",
+        "fails first repeat": [
+          "Expect test to fail",
+        ],
       },
     }
   `)
@@ -147,7 +177,9 @@ test('ordinary and expected failures both retain failed repeats without retries'
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "repeats.test.js": {
-        "expected failure": "passed",
+        "expected failure": [
+          "Expect test to fail",
+        ],
         "ordinary": [
           "first repeat failed",
         ],
