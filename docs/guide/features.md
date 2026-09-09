@@ -194,7 +194,7 @@ if (import.meta.vitest) {
 
 Learn more at [In-source testing](/guide/in-source).
 
-## Benchmarking <Experimental /> {#benchmarking}
+## Benchmarking {#benchmarking}
 
 You can run benchmark tests with the [`bench`](/api/test#bench) fixture from the [test context](/guide/test-context#bench) via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
