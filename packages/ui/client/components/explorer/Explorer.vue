@@ -65,21 +65,17 @@ const {
 </script>
 
 <template>
-  <div h="full" flex="~ col">
+  <div class="h-full flex flex-col">
     <div>
-      <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
+      <div class="p-2 h-10 flex gap-2 items-center bg-header border-b border-base">
         <slot name="header" :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined" />
       </div>
       <div
         v-if="enableProjects"
-        p="l3 y2 r2"
-        bg-header
-        border="b-2 base"
-        grid="~ cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2 gap-y-1"
-        items-center
+        class="pl-3 py-2 pr-2 bg-header border-base border-b-2 grid grid-cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2 gap-y-1 items-center"
       >
-        <div class="i-carbon:workspace" flex-shrink-0 />
-        <label for="project-select" text-sm>
+        <div class="i-carbon:workspace flex-shrink-0" />
+        <label for="project-select" class="text-sm">
           Projects
         </label>
         <div class="relative flex-1">
@@ -87,18 +83,7 @@ const {
             id="project-select"
             ref="selectProjectRef"
             v-model="currentProject"
-            w-full
-            appearance-none
-            bg-base
-            text-base
-            border="~ base rounded"
-            pl-2
-            pr-8
-            py-1
-            text-sm
-            cursor-pointer
-            hover:bg-active
-            class="outline-none"
+            class="outline-none w-full appearance-none bg-base text-base border-base border rounded pl-2 pr-8 py-1 text-sm cursor-pointer hover:bg-active"
           >
             <option :value="ALL_PROJECTS" class="text-base bg-base">
               All Projects
@@ -124,14 +109,10 @@ const {
         />
       </div>
       <div
-        p="l3 y2 r2"
-        bg-header
-        border="b-2 base"
-        grid="~ cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2"
-        items-center
+        class="pl-3 py-2 pr-2 bg-header border-base border-b-2 grid grid-cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2 items-center"
       >
-        <div class="i-carbon:arrows-vertical" flex-shrink-0 />
-        <label for="project-sort" text-sm>
+        <div class="i-carbon:arrows-vertical flex-shrink-0" />
+        <label for="project-sort" class="text-sm">
           Sort by
         </label>
         <div class="relative flex-1">
@@ -139,18 +120,7 @@ const {
             id="project-sort"
             ref="sortProjectRef"
             v-model="projectSort"
-            w-full
-            appearance-none
-            bg-base
-            text-base
-            border="~ base rounded"
-            pl-2
-            pr-8
-            py-1
-            text-sm
-            cursor-pointer
-            hover:bg-active
-            class="outline-none"
+            class="outline-none w-full appearance-none bg-base text-base border-base border rounded pl-2 pr-8 py-1 text-sm cursor-pointer hover:bg-active"
           >
             <option value="default" class="text-base bg-base">
               Default
@@ -179,24 +149,15 @@ const {
         />
       </div>
       <div
-        p="l3 y2 r2"
-        flex="~ gap-2"
-        items-center
-        bg-header
-        border="b-2 base"
+        class="pl-3 py-2 pr-2 flex gap-2 items-center bg-header border-base border-b-2"
       >
-        <div class="i-carbon:search" flex-shrink-0 />
+        <div class="i-carbon:search flex-shrink-0" />
         <input
           ref="searchBox"
           v-model="search"
           placeholder="Search... (e.g. test name, tag:expression)"
-          outline="none"
-          bg="transparent"
-          font="light"
-          text="sm"
-          flex-1
-          pl-1
-          :op="search.length ? '100' : '50'"
+          class="outline-none bg-transparent font-light text-sm flex-1 pl-1"
+          :class="search.length ? 'op100' : 'op50'"
           @keydown.esc="clearSearch(false)"
           @keydown.enter="emit('run', isFiltered || isFilteredByStatus ? filteredFiles : undefined)"
         >
@@ -209,15 +170,11 @@ const {
         />
       </div>
       <div
-        p="l3 y2 r2"
-        items-center
-        bg-header
-        border="b-2 base"
-        flex="~ wrap gap-x-4 justify-between"
+        class="pl-3 py-2 pr-2 items-center bg-header border-base border-b-2 flex flex-wrap justify-between gap-x-4"
       >
-        <div min-w-full flex="~ gap-2 items-center">
-          <div aria-hidden="true" class="i-carbon:filter" flex-shrink-0 />
-          <div flex-grow-1 text-sm>
+        <div class="min-w-full flex gap-2 items-center">
+          <div aria-hidden="true" class="i-carbon:filter flex-shrink-0" />
+          <div class="flex-grow-1 text-sm">
             Filter
           </div>
           <IconButton
@@ -235,8 +192,8 @@ const {
         <FilterStatus v-model="filter.slow" :label="`Slow${slowTime}`" />
       </div>
     </div>
-    <div flex-auto py-1 overflow-hidden>
-      <ResultsPanel h-full flex="~ col">
+    <div class="flex-auto py-1 overflow-hidden">
+      <ResultsPanel class="h-full flex flex-col">
         <template v-if="initialized" #summary>
           <div
             data-testid="explorer-summary"
@@ -245,14 +202,14 @@ const {
               ? 'flex'
               : 'grid grid-cols-[auto_min-content_auto] grid-rows-[min-content_min-content]'"
           >
-            <span text-red-700 dark:text-red-500>
+            <span class="text-red-700 dark:text-red-500">
               FAIL ({{ testsTotal.failed }})
             </span>
             <span>/</span>
-            <span v-if="!isReport" text-yellow-700 dark:text-yellow-500>
+            <span v-if="!isReport" class="text-yellow-700 dark:text-yellow-500">
               RUNNING ({{ testsTotal.running }})
             </span>
-            <span text-green-700 dark:text-green-500>
+            <span class="text-green-700 dark:text-green-500">
               PASS ({{ testsTotal.success }})
             </span>
             <span>/</span>
@@ -263,21 +220,16 @@ const {
         </template>
         <!-- empty-state -->
         <template v-if="(isFiltered || isFilteredByStatus || !!currentProjectName) && uiEntries.length === 0">
-          <div v-if="initialized" flex="~ col" items-center p="x4 y4" font-light>
-            <div v-if="searchMatcher.error" text-red text-center>
+          <div v-if="initialized" class="flex flex-col items-center px-4 py-4 font-light">
+            <div v-if="searchMatcher.error" class="text-red text-center">
               {{ searchMatcher.error }}
             </div>
-            <div v-else op30>
+            <div v-else class="op30">
               No matched test
             </div>
             <button
               type="button"
-              font-light
-              text-sm
-              border="~ gray-400/50 rounded"
-              p="x2 y0.5"
-              m="t2"
-              op="50"
+              class="font-light text-sm border rounded border-gray-400/50 px-2 py-0.5 mt-2 op-50"
               :class="disableClearSearch ? null : 'hover:op100'"
               :disabled="disableClearSearch"
               @click.passive="clearSearch(true)"
@@ -286,12 +238,7 @@ const {
             </button>
             <button
               type="button"
-              font-light
-              text-sm
-              border="~ gray-400/50 rounded"
-              p="x2 y0.5"
-              m="t2"
-              op="50"
+              class="font-light text-sm border rounded border-gray-400/50 px-2 py-0.5 mt-2 op-50"
               :class="disableFilter ? null : 'hover:op100'"
               :disabled="disableFilter"
               @click.passive="clearFilter(true)"
@@ -300,28 +247,22 @@ const {
             </button>
             <button
               type="button"
-              font-light
-              op="50 hover:100"
-              text-sm
-              border="~ gray-400/50 rounded"
-              p="x2 y0.5"
-              m="t2"
+              class="font-light op-50 hover:op-100 text-sm border rounded border-gray-400/50 px-2 py-0.5 mt-2"
               @click.passive="clearAll"
             >
               Clear All
             </button>
           </div>
-          <div v-else flex="~ col" items-center p="x4 y4" font-light>
+          <div v-else class="flex flex-col items-center px-4 py-4 font-light">
             <div class="i-carbon:circle-dash animate-spin" />
-            <div op30>
+            <div class="op30">
               Loading...
             </div>
           </div>
         </template>
         <template v-else>
           <RecycleScroller
-            class="scrolls"
-            flex-auto
+            class="scrolls flex-auto"
             key-field="id"
             :item-size="28"
             :items="uiEntries"
