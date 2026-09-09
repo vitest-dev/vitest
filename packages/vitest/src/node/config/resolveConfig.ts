@@ -557,6 +557,11 @@ export function resolveTestConfig(
   resolved.deps.moduleDirectories ??= []
 
   resolved.deps.optimizer ??= {}
+  if (resolved.deps.optimizer.web) {
+    logger.deprecate(
+      '`deps.optimizer.web` is deprecated. Use `deps.optimizer.client` instead (or `deps.optimizer.ssr` for `node` and `edge` environments).',
+    )
+  }
   resolved.deps.optimizer.ssr ??= {}
   resolved.deps.optimizer.ssr.enabled ??= false
   resolved.deps.optimizer.client ??= {}
