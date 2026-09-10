@@ -3,12 +3,12 @@
 </script>
 
 <template>
-  <div p-2 text-center flex>
+  <div class="p-2 text-center flex">
     <div>
-      <div text-4xl min-w-2em>
+      <div class="text-4xl min-w-2em">
         <slot name="body" />
       </div>
-      <div text-md>
+      <div>
         <slot name="header" />
       </div>
     </div>

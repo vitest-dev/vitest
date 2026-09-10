@@ -208,9 +208,9 @@ onKeyStroke('Escape', () => {
 </script>
 
 <template>
-  <div w-350 max-w-screen h-full flex flex-col>
-    <div p-4 relative>
-      <div flex justify-between>
+  <div class="w-350 max-w-screen h-full flex flex-col">
+    <div class="p-4 relative">
+      <div class="flex justify-between">
         <p>
           <IconButton
             v-if="canUndo"
@@ -220,8 +220,8 @@ onKeyStroke('Escape', () => {
             @click="goBack()"
           />
           Module Info
-          <VueTooltip class="inline" cursor-help>
-            <Badge type="custom" ml-1 :style="{ backgroundColor: `var(--color-node-${type})` }">
+          <VueTooltip class="inline cursor-help">
+            <Badge type="custom" class="ml-1" :style="{ backgroundColor: `var(--color-node-${type})` }">
               {{ type }}
             </Badge>
             <template #popper>
@@ -234,16 +234,16 @@ onKeyStroke('Escape', () => {
               </template>
             </template>
           </VueTooltip>
-          <VueTooltip v-if="isCached === true" class="inline" cursor-help>
-            <Badge type="tip" ml-2>
+          <VueTooltip v-if="isCached === true" class="inline cursor-help">
+            <Badge type="tip" class="ml-2">
               cached
             </Badge>
             <template #popper>
               This module is cached on the file system under `fsModuleCachePath` ("node_modules/.vitest-cache" by default).
             </template>
           </VueTooltip>
-          <VueTooltip v-if="isCached === false" class="inline" cursor-help>
-            <Badge type="warning" ml-2>
+          <VueTooltip v-if="isCached === false" class="inline cursor-help">
+            <Badge type="warning" class="ml-2">
               not cached
             </Badge>
             <template #popper>
@@ -252,8 +252,8 @@ onKeyStroke('Escape', () => {
             </template>
           </VueTooltip>
         </p>
-        <div mr-8 flex gap-2 items-center>
-          <VueTooltip v-if="durations.selfTime != null && durations.external !== true" class="inline" cursor-help>
+        <div class="mr-8 flex gap-2 items-center">
+          <VueTooltip v-if="durations.selfTime != null && durations.external !== true" class="inline cursor-help">
             <Badge :type="getImportDurationType(durations.selfTime)">
               self: {{ formatTime(durations.selfTime) }}
             </Badge>
@@ -261,7 +261,7 @@ onKeyStroke('Escape', () => {
               It took {{ formatPreciseTime(durations.selfTime) }} to import this module, excluding static imports.
             </template>
           </VueTooltip>
-          <VueTooltip v-if="durations.totalTime != null" class="inline" cursor-help>
+          <VueTooltip v-if="durations.totalTime != null" class="inline cursor-help">
             <Badge :type="getImportDurationType(durations.totalTime)">
               total: {{ formatTime(durations.totalTime) }}
             </Badge>
@@ -269,7 +269,7 @@ onKeyStroke('Escape', () => {
               It took {{ formatPreciseTime(durations.totalTime) }} to import the whole module, including static imports.
             </template>
           </VueTooltip>
-          <VueTooltip v-if="result && 'transformTime' in result && result.transformTime" class="inline" cursor-help>
+          <VueTooltip v-if="result && 'transformTime' in result && result.transformTime" class="inline cursor-help">
             <Badge :type="getImportDurationType(result.transformTime)">
               transform: {{ formatTime(result.transformTime) }}
             </Badge>
@@ -279,32 +279,29 @@ onKeyStroke('Escape', () => {
           </VueTooltip>
         </div>
       </div>
-      <p op50 font-mono text-sm>
+      <p class="op50 font-mono text-sm">
         {{ id }}
       </p>
       <IconButton
         icon="i-carbon-close"
-        absolute
-        top-5px
-        right-5px
-        text-2xl
+        class="absolute top-5px right-5px text-2xl"
         @click="emit('close')"
       />
     </div>
-    <div v-if="!result" p-5>
+    <div v-if="!result" class="p-5">
       No transform result found for this module.
     </div>
     <template v-else>
-      <div grid="~ rows-[min-content_auto]" overflow-hidden flex-auto :class="{ 'cols-2': code != null }">
-        <div p="x3 y-1" bg-overlay border="base b t r">
+      <div class="grid grid-rows-[min-content_auto] overflow-hidden flex-auto" :class="{ 'cols-2': code != null }">
+        <div class="px-3 py-1 bg-overlay border-base border-b border-t border-r">
           Source
         </div>
-        <div v-if="code != null" p="x3 y-1" bg-overlay border="base b t">
+        <div v-if="code != null" class="px-3 py-1 bg-overlay border-base border-b border-t">
           Transformed
         </div>
         <CodeMirrorContainer
           :key="id"
-          h-full
+          class="h-full"
           :model-value="source"
           read-only
           :options="{ lineNumbers: true }"
@@ -313,7 +310,7 @@ onKeyStroke('Escape', () => {
         />
         <CodeMirrorContainer
           v-if="code != null"
-          h-full
+          class="h-full"
           :model-value="code"
           read-only
           :options="{ lineNumbers: true }"
@@ -321,7 +318,7 @@ onKeyStroke('Escape', () => {
         />
       </div>
       <div v-if="sourceMap.mappings !== ''">
-        <div p="x3 y-1" bg-overlay border="base b t">
+        <div class="px-3 py-1 bg-overlay border-base border-b border-t">
           Source map (v{{ sourceMap.version }})
         </div>
         <CodeMirrorContainer

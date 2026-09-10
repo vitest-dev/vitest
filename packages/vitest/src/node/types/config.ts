@@ -1313,7 +1313,7 @@ export interface ResolvedConfig
 
   maxWorkers: number
 
-  vmMemoryLimit?: UserConfig['vmMemoryLimit']
+  vmMemoryLimit?: string | number
   dumpDir?: string
   tagsFilter?: string[]
   mergeReportsLabel?: string

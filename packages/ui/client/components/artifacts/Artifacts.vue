@@ -45,35 +45,29 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
   <TraceArtifacts :test="test" />
 
   <template v-if="handledArtifacts.length">
-    <h1 m-2>
+    <h1 class="m-2">
       Test Artifacts
     </h1>
     <div
       v-for="{ artifact, component, props }, index of handledArtifacts"
       :key="artifact.type + index"
-      bg="yellow-500/10"
-      text="yellow-500 sm"
-      p="x3 y2"
-      m-2
-      rounded
+      class="bg-yellow-500/10 text-sm text-yellow-500 px-3 py-2 m-2 rounded"
       role="note"
     >
-      <div flex="~ gap-2 items-center justify-between" overflow-hidden>
+      <div class="flex gap-2 items-center justify-between overflow-hidden">
         <div>
           <span
             v-if="artifact.location && artifact.location.file === test.file.filepath"
             v-tooltip.bottom="'Open in Editor'"
             title="Open in Editor"
-            class="flex gap-1 text-yellow-500/80 cursor-pointer"
-            ws-nowrap
+            class="flex gap-1 text-yellow-500/80 cursor-pointer ws-nowrap"
             @click="openLocation(test, artifact.location)"
           >
             {{ getLocationString(artifact.location) }}
           </span>
           <span
             v-else-if="artifact.location && artifact.location.file !== test.file.filepath"
-            class="flex gap-1 text-yellow-500/80"
-            ws-nowrap
+            class="flex gap-1 text-yellow-500/80 ws-nowrap"
           >
             {{ getLocationString(artifact.location) }}
           </span>
