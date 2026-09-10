@@ -1,7 +1,7 @@
 import type { TestModule } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '..', 'fixtures', 'repeats')
 
@@ -23,4 +23,67 @@ test('repeats config option is exposed to tests and repeats execution', async ()
   const overridden = tests.find(t => t.name === 'test option overrides config')!
   expect(overridden.options.repeats).toBe(1)
   expect(overridden.diagnostic()!.repeatCount).toBe(1)
+})
+
+test('failed repeats are retained after a successful repeat', async () => {
+  const { errorTree, results } = await runInlineTests({
+    'repeats.test.js': `
+      import { it } from 'vitest'
+
+      it('fails twice then passes', { repeats: 2, retry: 1 }, ({ task }) => {
+        if (task.result.repeatCount < 2) {
+          throw new Error('repeat ' + task.result.repeatCount + ' failed')
+        }
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "repeats.test.js": {
+        "fails twice then passes": [
+          "repeat 0 failed",
+          "repeat 0 failed",
+          "repeat 1 failed",
+          "repeat 1 failed",
+        ],
+      },
+    }
+  `)
+  const [test] = results[0].children.allTests()
+  expect(test.diagnostic()!.retryCount).toBe(2)
+  expect(test.diagnostic()!.repeatCount).toBe(2)
+})
+
+test('onTestFailed runs only for failed repeats', async () => {
+  const { errorTree } = await runInlineTests({
+    'repeats.test.js': `
+      import { expect, it } from 'vitest'
+
+      const failedRepeats = []
+
+      it('fails first repeat', { repeats: 1 }, ({ task, onTestFailed }) => {
+        const repeatCount = task.result.repeatCount
+        onTestFailed(() => failedRepeats.push(repeatCount))
+        if (repeatCount === 0) {
+          throw new Error('repeat 0 failed')
+        }
+      })
+
+      it('records failed repeats', () => {
+        expect(failedRepeats).toEqual([0])
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "repeats.test.js": {
+        "fails first repeat": [
+          "repeat 0 failed",
+        ],
+        "records failed repeats": "passed",
+      },
+    }
+  `)
 })
