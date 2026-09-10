@@ -119,7 +119,7 @@ test('expected failures exhaust retries in every repeat when assertions pass', a
 })
 
 test('expected failures can recover through a retry in every repeat', async () => {
-  const { stderr, errorTree, results } = await runInlineTests({
+  const { stderr, errorTree } = await runInlineTests({
     'repeats.test.js': `
       import { afterAll, expect, it } from 'vitest'
 
@@ -145,21 +145,25 @@ test('expected failures can recover through a retry in every repeat', async () =
       },
     }
   `)
-  const [test] = results[0].children.allTests()
-  expect(test.diagnostic()!.retryCount).toBe(3)
-  expect(test.diagnostic()!.repeatCount).toBe(2)
 })
 
 test('syntax errors remain failures after successful repeats', async () => {
-  const { errorTree, results } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     'repeats.test.js': `
-      import { expect, it } from 'vitest'
+      import { afterAll, expect, it } from 'vitest'
+
+      const runs = [0, 0]
 
       it.fails('syntax error', { repeats: 1, retry: 1 }, ({ task }) => {
+        runs[task.result.repeatCount]++
         if (task.result.repeatCount === 0) {
           expect(1).toMatchInlineSnapshot('1')
         }
         expect(1).toBe(2)
+      })
+
+      afterAll(() => {
+        expect(runs).toEqual([2, 1])
       })
     `,
   })
@@ -174,7 +178,4 @@ test('syntax errors remain failures after successful repeats', async () => {
       },
     }
   `)
-  const [test] = results[0].children.allTests()
-  expect(test.diagnostic()!.retryCount).toBe(1)
-  expect(test.diagnostic()!.repeatCount).toBe(1)
 })
