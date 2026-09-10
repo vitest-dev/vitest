@@ -2,7 +2,7 @@ import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
 
-/** Minimum time between two renders, no matter how many scheduled renderes were called */
+/** Minimum time between two renders, no matter how many scheduled renders were called */
 const DEFAULT_RENDER_THRESHOLD_MS = 100
 
 /** Interval between automatic renders. If no test state changes happened, this will increase just duration field */

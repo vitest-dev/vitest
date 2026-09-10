@@ -1,7 +1,7 @@
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
-import { beforeAll, describe, expect, test } from 'vitest'
+import { beforeAll, describe, expect, onTestFinished, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import { resetModules } from '../../../packages/vitest/src/runtime/utils'
 
@@ -24,6 +24,62 @@ describe('assertTypes', () => {
 })
 
 describe('deepMerge', () => {
+  test('does not merge prototype mutation properties', () => {
+    onTestFinished(() => {
+      Reflect.deleteProperty(Object.prototype, 'rootPolluted')
+      Reflect.deleteProperty(Object.prototype, 'nestedPolluted')
+    })
+
+    const source = JSON.parse(`{
+      "__proto__": { "rootPolluted": true },
+      "constructor": { "name": "Object", "injected": true },
+      "prototype": { "injected": true },
+      "nested": {
+        "__proto__": { "nestedPolluted": true },
+        "constructor": { "name": "Object", "injected": true },
+        "prototype": { "injected": true }
+      }
+    }`)
+
+    const merged = deepMerge({
+      constructor: { name: 'Object', preserved: true },
+      prototype: { preserved: true },
+      nested: {
+        constructor: { name: 'Object', preserved: true },
+        prototype: { preserved: true },
+      },
+    }, source)
+
+    expect({
+      merged,
+      rootPolluted: ({} as any).rootPolluted,
+      nestedPolluted: ({} as any).nestedPolluted,
+    }).toMatchInlineSnapshot(`
+      {
+        "merged": {
+          "constructor": {
+            "name": "Object",
+            "preserved": true,
+          },
+          "nested": {
+            "constructor": {
+              "name": "Object",
+              "preserved": true,
+            },
+            "prototype": {
+              "preserved": true,
+            },
+          },
+          "prototype": {
+            "preserved": true,
+          },
+        },
+        "nestedPolluted": undefined,
+        "rootPolluted": undefined,
+      }
+    `)
+  })
+
   test('non plain objects retain their prototype, arrays are not merging, plain objects are merging', () => {
     class TestA {
       baz = 'baz'

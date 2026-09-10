@@ -185,15 +185,7 @@ const tagsBgGradient = computed(() => {
 <template>
   <div
     v-if="task"
-    items-center
-    p="x-2 y-1"
-    grid="~ rows-1 items-center gap-x-2"
-    w-full
-    h-28px
-    border-rounded
-    hover="bg-active"
-    cursor-pointer
-    class="item-wrapper"
+    class="item-wrapper items-center py-1 px-2 grid gap-x-2 grid-rows-1 w-full h-28px rounded hover:bg-active cursor-pointer"
     :style="gridStyles"
     :aria-label="name"
     :data-current="current"
@@ -214,11 +206,11 @@ const tagsBgGradient = computed(() => {
         <div class="op40" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right'" />
       </button>
     </div>
-    <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
-    <div flex items-baseline gap-2 overflow-hidden>
-      <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
-      <span v-if="type === 'file' && label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
-      <span text-sm truncate font-light>
+    <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" class="w-4" />
+    <div class="flex items-baseline gap-2 overflow-hidden">
+      <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon flex-shrink-0" />
+      <span v-if="type === 'file' && label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 flex-shrink-0">{{ label }}</span>
+      <span class="text-sm truncate font-light">
         <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="projectBadgeStyle">
           {{ projectName }}
         </span>
@@ -226,14 +218,14 @@ const tagsBgGradient = computed(() => {
       </span>
       <span
         v-if="typeof duration === 'number'"
-        text="xs"
+        class="text-xs"
         :class="slow ? 'text-yellow-700 dark:text-yellow-500' : 'op20'"
         style="white-space: nowrap"
       >
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div gap-1 justify-end items-center flex-grow-1 pl-1 class="test-actions">
+    <div class="test-actions gap-1 justify-end items-center flex-grow-1 pl-1">
       <!-- <div
         v-if="tagsBorderGradient"
         text-xs
@@ -267,7 +259,7 @@ const tagsBgGradient = computed(() => {
           @click.prevent.stop="showDetails"
         />
         <template #popper>
-          <div v-if="disableShowDetails" class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
+          <div v-if="disableShowDetails" class="op100 gap-1 py-1 grid items-center grid-cols-[1.5em_1fr]">
             <div class="i-carbon:information-square w-1.5em h-1.5em" />
             <div>{{ showDetailsTooltip }}: this feature is not available, you have disabled <span class="text-[#add467]">includeTaskLocation</span> in your configuration file.</div>
             <div style="grid-column: 2">
@@ -285,7 +277,7 @@ const tagsBgGradient = computed(() => {
         data-testid="btn-run-test"
         :title="runButtonTitle"
         icon="i-carbon:play-filled-alt"
-        text-green-700 dark:text-green-500
+        class="text-green-700 dark:text-green-500"
         :disabled="config.api?.allowExec === false"
         @click.prevent.stop="onRun(task)"
       />
