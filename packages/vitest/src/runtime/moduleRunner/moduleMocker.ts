@@ -229,18 +229,15 @@ export class VitestMocker extends BareModuleMocker {
         && !callstack.includes(mockId)
         && !callstack.includes(url)
       ) {
+        const mockCallstack = [...callstack, mockId]
         try {
-          callstack.push(mockId)
-          // this will not work if user does Promise.all(import(), import())
-          // we can also use AsyncLocalStorage to store callstack, but this won't work in the browser
-          // maybe we should improve mock API in the future?
-          this.mockContext.callstack = callstack
+          // Keep a separate stack for this factory. Dynamic imports can run in
+          // parallel and must not be mistaken for this factory's self-import.
+          this.mockContext.callstack = mockCallstack
           return await this.callFunctionMock(mockId, this.getMockPath(url), mock)
         }
         finally {
           this.mockContext.callstack = null
-          const indexMock = callstack.indexOf(mockId)
-          callstack.splice(indexMock, 1)
         }
       }
       else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {

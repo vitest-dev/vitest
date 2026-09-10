@@ -44,6 +44,41 @@ test('spy is not called here', () => {
   `)
 })
 
+test('concurrent dynamic imports use the manual mock', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './target.ts': `export default 'original'`,
+    './basic.test.ts': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock(import('./target.ts'), () => ({ default: 'mocked' }))
+
+test('uses the mock for every concurrent import', async () => {
+  await import('node:path')
+  const modules = await Promise.all([
+    import('./target.ts'),
+    import('./target.ts'),
+    import('./target.ts'),
+  ])
+
+  expect(modules.map(module => module.default)).toEqual([
+    'mocked',
+    'mocked',
+    'mocked',
+  ])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "uses the mock for every concurrent import": "passed",
+      },
+    }
+  `)
+})
+
 test('mockReset works with autospied Node modules', async () => {
   const { stderr, testTree } = await runInlineTests({
     'vitest.config.js': {
