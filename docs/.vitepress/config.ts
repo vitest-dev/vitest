@@ -171,10 +171,10 @@ export default ({ mode }: { mode: string }) => {
             title: 'Versions',
             items: [
               { text: 'Unreleased Docs', link: 'https://main.vitest.dev/' },
+              { text: 'Vitest v4 Docs', link: 'https://v4.vitest.dev/' },
               { text: 'Vitest v3 Docs', link: 'https://v3.vitest.dev/' },
               { text: 'Vitest v2 Docs', link: 'https://v2.vitest.dev/' },
               { text: 'Vitest v1 Docs', link: 'https://v1.vitest.dev/' },
-              { text: 'Vitest v0 Docs', link: 'https://v0.vitest.dev/' },
             ],
           },
           /* {
@@ -236,6 +236,10 @@ export default ({ mode }: { mode: string }) => {
                   link: 'https://main.vitest.dev/',
                 },
                 {
+                  text: 'v4.x',
+                  link: 'https://v4.vitest.dev/',
+                },
+                {
                   text: 'v3.x',
                   link: 'https://v3.vitest.dev/',
                 },
@@ -246,10 +250,6 @@ export default ({ mode }: { mode: string }) => {
                 {
                   text: 'v1.x',
                   link: 'https://v1.vitest.dev/',
-                },
-                {
-                  text: 'v0.x',
-                  link: 'https://v0.vitest.dev/',
                 },
               ],
             },

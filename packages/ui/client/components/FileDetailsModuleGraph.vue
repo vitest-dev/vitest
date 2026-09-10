@@ -40,8 +40,8 @@ const graph = computed(() => {
 </script>
 
 <template>
-  <div flex-1 overflow-hidden>
-    <div v-if="isLoading" h-full flex items-center justify-center op-70>
+  <div class="flex-1 overflow-hidden">
+    <div v-if="isLoading" class="h-full flex items-center justify-center op-70">
       Loading module graph...
     </div>
     <ViewModuleGraph

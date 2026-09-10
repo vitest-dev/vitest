@@ -32,48 +32,29 @@ const widthPending = computed(() => {
 
 <template>
   <div
-    absolute
-    t-0
-    l-0
-    r-0
-    z-index-1031
-    pointer-events-none
-    p-0
-    h-3px
-    grid="~ auto-cols-max"
-    justify-items-center
-    w-screen
+    class="absolute pointer-events-none p-0 h-3px grid auto-cols-max justify-items-center w-screen"
     :class="classes"
   >
-    <div h-3px relative overflow-hidden class="px-0" w-screen>
+    <div class="px-0 h-3px relative overflow-hidden w-screen">
       <div
-        absolute
-        l-0
-        t-0
-        bg-red-700 dark:bg-red-500
-        h-3px
+        class="absolute bg-red-700 dark:bg-red-500 h-3px"
+
         :class="classes"
         :style="`width: ${widthFailed}px;`"
       >
         &#160;
       </div>
       <div
-        absolute
-        l-0
-        t-0
-        bg-green-700 dark:bg-green-500
-        h-3px
+        class="absolute bg-green-700 dark:bg-green-500 h-3px"
+
         :class="classes"
         :style="`left: ${widthFailed}px; width: ${widthPass}px;`"
       >
         &#160;
       </div>
       <div
-        absolute
-        l-0
-        t-0
-        bg-yellow-700 dark:bg-yellow-500
-        h-3px
+        class="absolute bg-yellow-700 dark:bg-yellow-500 h-3px"
+
         :class="classes"
         :style="`left: ${widthPass + widthFailed}px; width: ${widthPending}px;`"
       >

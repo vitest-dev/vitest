@@ -28,6 +28,13 @@ describe('resolveDoctorCandidates', () => {
       .toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
   })
 
+  it('adds the vm pools for custom environments', () => {
+    expect(candidateIds([project({ environment: './happy-dom-env.ts' })]))
+      .toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
+    expect(candidateIds([project({ environment: 'edge-runtime' })]))
+      .toEqual(['threads', 'no-isolate', 'fs-cache'])
+  })
+
   it('does not repeat what the config already uses', () => {
     expect(candidateIds([project({ pool: 'threads', isolate: false, fsModuleCache: true })])).toEqual([])
   })
