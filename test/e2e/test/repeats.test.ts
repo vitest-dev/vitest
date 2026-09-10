@@ -126,3 +126,37 @@ test('onTestFailed runs only for failed repeats', async () => {
     }
   `)
 })
+
+test('expected failures are evaluated for each repeat', async () => {
+  const { errorTree } = await runInlineTests({
+    'repeats.test.js': `
+      import { afterAll, expect, it } from 'vitest'
+
+      const runs = [0, 0, 0, 0, 0]
+
+      it.fails('alternates passing and failing repeats', { repeats: 4 }, ({ task }) => {
+        const repeatCount = task.result.repeatCount
+        runs[repeatCount]++
+        if (repeatCount % 2 === 1) {
+          throw new Error('repeat ' + repeatCount + ' failed')
+        }
+      })
+
+      afterAll(() => {
+        expect(runs).toEqual([1, 1, 1, 1, 1])
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "repeats.test.js": {
+        "alternates passing and failing repeats": [
+          "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
+        ],
+      },
+    }
+  `)
+})
