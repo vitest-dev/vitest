@@ -27,20 +27,37 @@ describe('retry', () => {
 })
 
 test('expected failures stop retrying after a failed assertion', async () => {
-  const { stderr, errorTree, results } = await runInlineTests({
+  const { stderr, errorTree } = await runInlineTests({
     'fails.test.js': `
-      import { expect, it } from 'vitest'
+      import { afterAll, expect, it } from 'vitest'
+
+      const runs = {
+        immediate: 0,
+        passesThenFails: 0,
+        repeats: [0, 0, 0],
+      }
 
       it.fails('fails immediately', { retry: 2 }, () => {
+        runs.immediate++
         expect(1).toBe(2)
       })
 
-      it.fails('passes then fails', { retry: 2 }, ({ task }) => {
-        expect(task.result.retryCount).toBe(0)
+      it.fails('passes then fails', { retry: 2 }, () => {
+        runs.passesThenFails++
+        expect(runs.passesThenFails).toBe(1)
       })
 
-      it.fails('repeats', { retry: 2, repeats: 2 }, () => {
+      it.fails('repeats', { retry: 2, repeats: 2 }, ({ task }) => {
+        runs.repeats[task.result.repeatCount]++
         expect(1).toBe(2)
+      })
+
+      afterAll(() => {
+        expect(runs).toEqual({
+          immediate: 1,
+          passesThenFails: 2,
+          repeats: [1, 1, 1],
+        })
       })
     `,
   })
@@ -54,29 +71,6 @@ test('expected failures stop retrying after a failed assertion', async () => {
         "repeats": "passed",
       },
     }
-  `)
-  expect([...results[0].children.allTests()].map(test => ({
-    name: test.name,
-    retries: test.diagnostic()!.retryCount,
-    repeats: test.diagnostic()!.repeatCount,
-  }))).toMatchInlineSnapshot(`
-    [
-      {
-        "name": "fails immediately",
-        "repeats": 0,
-        "retries": 0,
-      },
-      {
-        "name": "passes then fails",
-        "repeats": 0,
-        "retries": 1,
-      },
-      {
-        "name": "repeats",
-        "repeats": 2,
-        "retries": 0,
-      },
-    ]
   `)
 })
 
