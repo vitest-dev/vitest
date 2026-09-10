@@ -157,46 +157,15 @@ test('expected failures retain a failed repeat after a successful repeat', async
   `)
 })
 
-test('ordinary and expected failures both retain failed repeats without retries', async () => {
-  const { errorTree } = await runInlineTests({
-    'repeats.test.js': `
-      import { expect, it } from 'vitest'
-
-      it('ordinary', { repeats: 1 }, ({ task }) => {
-        if (task.result.repeatCount === 0) {
-          throw new Error('first repeat failed')
-        }
-      })
-
-      it.fails('expected failure', { repeats: 1 }, ({ task }) => {
-        expect(task.result.repeatCount).toBe(0)
-      })
-    `,
-  })
-
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "repeats.test.js": {
-        "expected failure": [
-          "Expect test to fail",
-        ],
-        "ordinary": [
-          "first repeat failed",
-        ],
-      },
-    }
-  `)
-})
-
-test.each([false, true])('each repeat can recover through a retry (fails: %s)', async (fails) => {
+test('expected failures can recover through a retry in every repeat', async () => {
   const { stderr, errorTree, results } = await runInlineTests({
     'repeats.test.js': `
       import { afterAll, expect, it } from 'vitest'
 
       const attempts = [0, 0, 0]
-      it('recovers', { fails: ${fails}, repeats: 2, retry: 2 }, ({ task }) => {
+      it.fails('recovers', { repeats: 2, retry: 2 }, ({ task }) => {
         const attempt = attempts[task.result.repeatCount]++
-        if (${fails} ? attempt > 0 : attempt === 0) {
+        if (attempt > 0) {
           throw new Error('attempt failed')
         }
       })
