@@ -54,3 +54,36 @@ test('failed repeats are retained after a successful repeat', async () => {
   expect(test.diagnostic()!.retryCount).toBe(2)
   expect(test.diagnostic()!.repeatCount).toBe(2)
 })
+
+test('onTestFailed runs only for failed repeats', async () => {
+  const { errorTree } = await runInlineTests({
+    'repeats.test.js': `
+      import { expect, it } from 'vitest'
+
+      const failedRepeats = []
+
+      it('fails first repeat', { repeats: 1 }, ({ task, onTestFailed }) => {
+        const repeatCount = task.result.repeatCount
+        onTestFailed(() => failedRepeats.push(repeatCount))
+        if (repeatCount === 0) {
+          throw new Error('repeat 0 failed')
+        }
+      })
+
+      it('records failed repeats', () => {
+        expect(failedRepeats).toEqual([0])
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "repeats.test.js": {
+        "fails first repeat": [
+          "repeat 0 failed",
+        ],
+        "records failed repeats": "passed",
+      },
+    }
+  `)
+})
