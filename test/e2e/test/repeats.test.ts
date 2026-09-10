@@ -62,16 +62,16 @@ test('onTestFailed runs only for failed repeats', async () => {
 
       const failedRepeats = []
 
-      it('fails first repeat', { repeats: 1 }, ({ task, onTestFailed }) => {
+      it('alternates passing and failing repeats', { repeats: 4 }, ({ task, onTestFailed }) => {
         const repeatCount = task.result.repeatCount
         onTestFailed(() => failedRepeats.push(repeatCount))
-        if (repeatCount === 0) {
-          throw new Error('repeat 0 failed')
+        if (repeatCount % 2 === 1) {
+          throw new Error('repeat ' + repeatCount + ' failed')
         }
       })
 
       it('records failed repeats', () => {
-        expect(failedRepeats).toEqual([0])
+        expect(failedRepeats).toEqual([1, 3])
       })
     `,
   })
@@ -79,8 +79,9 @@ test('onTestFailed runs only for failed repeats', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "repeats.test.js": {
-        "fails first repeat": [
-          "repeat 0 failed",
+        "alternates passing and failing repeats": [
+          "repeat 1 failed",
+          "repeat 3 failed",
         ],
         "records failed repeats": "passed",
       },
