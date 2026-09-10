@@ -32,7 +32,7 @@ test('failed repeats are retained after a successful repeat', async () => {
 
       it('fails twice then passes', { repeats: 2, retry: 1 }, ({ task }) => {
         if (task.result.repeatCount < 2) {
-          throw new Error('repeat ' + task.result.repeatCount + ' failed')
+          throw new Error('repeat ' + task.result.repeatCount + ', retry ' + task.result.retryCount + ' failed')
         }
       })
     `,
@@ -42,10 +42,10 @@ test('failed repeats are retained after a successful repeat', async () => {
     {
       "repeats.test.js": {
         "fails twice then passes": [
-          "repeat 0 failed",
-          "repeat 0 failed",
-          "repeat 1 failed",
-          "repeat 1 failed",
+          "repeat 0, retry 0 failed",
+          "repeat 0, retry 1 failed",
+          "repeat 1, retry 1 failed",
+          "repeat 1, retry 2 failed",
         ],
       },
     }
