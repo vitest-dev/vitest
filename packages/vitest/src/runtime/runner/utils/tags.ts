@@ -36,7 +36,7 @@ export function validateTags(config: SerializedConfig, tags: string[]): void {
 
 export function createNoTagsError(availableTags: TestTagDefinition[], tag: string, prefix = 'tag'): never {
   if (!availableTags.length) {
-    throw new Error(`The Vitest config does't define any "tags", cannot apply "${tag}" ${prefix} for this test. See: https://vitest.dev/guide/test-tags`)
+    throw new Error(`The Vitest config doesn't define any "tags", cannot apply "${tag}" ${prefix} for this test. See: https://vitest.dev/guide/test-tags`)
   }
   throw new Error(`The ${prefix} "${tag}" is not defined in the configuration. Available tags are:\n${availableTags
     .map(t => `- ${t.name}${t.description ? `: ${t.description}` : ''}`)

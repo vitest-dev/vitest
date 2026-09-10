@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
-import { presetAttributify, presetIcons, presetWind3, transformerDirectives } from 'unocss'
+import { presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
 import { resolveApiToken } from '../vitest/src/node/config/apiToken'
@@ -20,7 +20,7 @@ export default defineConfig({
   plugins: [
     Vue(),
     Unocss({
-      presets: [presetWind3(), presetAttributify(), presetIcons()],
+      presets: [presetWind3(), presetIcons()],
       content: {
         pipeline: {
           include: [

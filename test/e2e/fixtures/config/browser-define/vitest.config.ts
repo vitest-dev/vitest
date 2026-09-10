@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config'
 
 let config = defineConfig({
   define: {
+    FOO: JSON.stringify('BAR'),
     'process.env.TEST_PROCESS_ENV': JSON.stringify('PROCESS_OK'),
     'import.meta.env.TEST_META_ENV': JSON.stringify('META_OK'),
   },

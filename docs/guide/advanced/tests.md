@@ -15,7 +15,6 @@ Vitest exposes two methods to initiate Vitest:
 import { startVitest } from 'vitest/node'
 
 const vitest = await startVitest(
-  'test',
   [], // CLI filters
   {}, // override test config
   {}, // override Vite config
@@ -37,7 +36,6 @@ Creates a [Vitest](/api/advanced/vitest) instances without running tests.
 import { createVitest } from 'vitest/node'
 
 const vitest = await createVitest(
-  'test',
   {}, // override test config
   {}, // override Vite config
   {}, // custom Vitest options
@@ -106,7 +104,6 @@ In cases where you need to disable the watcher, you can pass down `server.watch:
 
 ```ts
 await createVitest(
-  'test',
   {},
   {
     plugins: [

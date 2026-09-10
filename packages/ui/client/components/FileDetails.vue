@@ -95,28 +95,23 @@ const tags = computed(() => {
 <template>
   <div
     v-if="current"
-    flex
-    flex-col
-    h-full
-    max-h-full
-    overflow-hidden
+    class="flex flex-col h-full max-h-full overflow-hidden"
     data-testid="file-detail"
   >
     <div>
-      <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
+      <div class="p-2 h-10 flex gap-2 items-center bg-header border-b border-base">
         <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
-        <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
-        <span v-if="label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
+        <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon flex-shrink-0" />
+        <span v-if="label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 flex-shrink-0">{{ label }}</span>
         <span
           v-if="current?.file.projectName"
-          class="rounded-full py-0.5 px-2 text-xs font-light"
+          class="rounded-full py-0.5 px-2 text-xs font-light cursor-default"
           :style="projectBadgeStyle"
-          cursor-default
         >
           {{ current.file.projectName }}
         </span>
-        <div flex-1 font-light overflow-hidden text-sm flex>
-          <span op-50 truncate>
+        <div class="flex-1 font-light overflow-hidden text-sm flex">
+          <span class="op-50 truncate">
             {{ testTitle }}
           </span>
 
@@ -124,12 +119,9 @@ const tags = computed(() => {
             v-for="tag of tags"
             :key="tag.name"
             v-tooltip.bottom="tag.description"
-            class="rounded-full ml-2 px-2 text-xs font-light"
+            class="rounded-full ml-2 px-2 text-xs font-light cursor-default flex items-center"
             :style="{ backgroundColor: tag.bg, color: tag.text, border: `1px solid ${tag.border}` }"
             :title="tag.description"
-            cursor-default
-            flex
-            items-center
           >
             {{ tag.name }}
           </span>
@@ -146,10 +138,9 @@ const tags = computed(() => {
           <DetailsHeaderButtons v-if="browserState" />
         </div>
       </div>
-      <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>
+      <div class="flex items-center bg-header border-base border-b-2 text-sm h-41px">
         <button
-          tab-button
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{ 'tab-button-active': viewMode == null }"
           data-testid="btn-report"
           @click="changeViewMode(null)"
@@ -158,9 +149,8 @@ const tags = computed(() => {
           Report
         </button>
         <button
-          tab-button
           data-testid="btn-graph"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{ 'tab-button-active': viewMode === 'graph' }"
           @click="changeViewMode('graph')"
         >
@@ -168,9 +158,8 @@ const tags = computed(() => {
           Module Graph
         </button>
         <button
-          tab-button
           data-testid="btn-code"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
         >
@@ -178,9 +167,8 @@ const tags = computed(() => {
           {{ draft ? "*&#160;" : "" }}Code
         </button>
         <button
-          tab-button
           data-testid="btn-console"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{
             'tab-button-active': viewMode === 'console',
             'op20': viewMode !== 'console' && consoleCount === 0,
@@ -193,7 +181,7 @@ const tags = computed(() => {
       </div>
     </div>
 
-    <div flex flex-col flex-1 overflow="hidden">
+    <div class="flex flex-col flex-1 overflow-hidden">
       <FileDetailsModuleGraph
         v-if="viewMode === 'graph'"
         :key="`graph:${current.id}`"

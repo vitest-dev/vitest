@@ -3,6 +3,8 @@ import { toRef, useUrlSearchParams } from '@vueuse/core'
 export interface Params {
   // File.id
   file: string
+  // Replaces the standard UI with a full-page trace view
+  layout: null | 'trace'
   view: null | 'graph' | 'editor' | 'console'
   line: null | number
   // Task.id of either Test or Suite (but not File)
@@ -12,9 +14,10 @@ export interface Params {
   traceStep: null | number
 }
 
-const params = useUrlSearchParams<Params>('hash', {
+export const params = useUrlSearchParams<Params>('hash', {
   initialValue: {
     file: '',
+    layout: null,
     view: null,
     line: null,
     test: null,
@@ -25,6 +28,7 @@ const params = useUrlSearchParams<Params>('hash', {
 })
 
 export const activeFileId = toRef(params, 'file')
+export const layoutMode = toRef(params, 'layout')
 export const viewMode = toRef(params, 'view')
 export const lineNumber = toRef(params, 'line')
 export const columnNumber = toRef(params, 'column')

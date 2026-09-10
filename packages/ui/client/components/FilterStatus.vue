@@ -25,17 +25,16 @@ function toggle() {
       :class="[
         modelValue ? 'i-carbon:checkbox-checked-filled' : 'i-carbon:checkbox',
       ]"
-      text-lg
-      flex-shrink-0
+      class="text-lg flex-shrink-0"
       aria-hidden="true"
     />
     <input
       v-model="modelValue"
       type="checkbox"
       :disabled="disabled"
-      sr-only
+      class="sr-only"
     >
-    <span flex-1 ms-2 select-none whitespace-nowrap truncate>{{ label }}</span>
+    <span class="flex-1 ms-2 select-none whitespace-nowrap truncate">{{ label }}</span>
   </label>
 </template>
 

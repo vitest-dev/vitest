@@ -27,6 +27,26 @@ test.each([
   expect(exitCode).toBe(1)
 })
 
+test.each([
+  ['basic'],
+  ['json', '--json'],
+  ['json with a file', '--json=./list.json'],
+])('%s output shows error with static parsing', async (_, ...args) => {
+  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts', ...args)
+  expect(stdout).toBe('')
+  expect(relative(stderr)).toMatchSnapshot()
+  expect(exitCode).toBe(1)
+})
+
+test('output shows the details of a transform error', async () => {
+  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list-parse-error')
+  expect(stdout).toBe('')
+  expect(stderr).toContain('Error: Transform failed with 1 error:')
+  expect(stderr).toContain('Plugin: vite:')
+  expect(stderr).toContain('broken.test.ts')
+  expect(exitCode).toBe(1)
+})
+
 test('correctly outputs json', async () => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json')
   expect(relative(stdout)).toMatchInlineSnapshot(`
