@@ -618,7 +618,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const repeats = test.repeats ?? 0
   let failedRepeatErrors: TestError[] | undefined
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
-    // TypeScript cannot track state mutations made by hooks and the test.
+    // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
     test.result.state = 'run' as TaskState
     test.result.errors = undefined
     const retry = getRetryCount(test.retry)
