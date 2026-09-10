@@ -407,7 +407,7 @@ export function deepMerge<T extends object = object>(
 
   if (isMergeableObject(target) && isMergeableObject(source)) {
     (Object.keys(source) as (keyof T)[]).forEach((key) => {
-      if (key === '__proto__') {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
         return
       }
       const _source = source as T

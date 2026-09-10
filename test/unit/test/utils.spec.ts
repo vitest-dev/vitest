@@ -24,16 +24,27 @@ describe('assertTypes', () => {
 })
 
 describe('deepMerge', () => {
-  test('does not merge __proto__ properties', () => {
+  test('does not merge prototype mutation properties', () => {
     const source = JSON.parse(`{
       "__proto__": { "rootPolluted": true },
+      "constructor": { "name": "Object", "injected": true },
+      "prototype": { "injected": true },
       "nested": {
-        "__proto__": { "nestedPolluted": true }
+        "__proto__": { "nestedPolluted": true },
+        "constructor": { "name": "Object", "injected": true },
+        "prototype": { "injected": true }
       }
     }`)
 
     try {
-      const merged = deepMerge({}, source)
+      const merged = deepMerge({
+        constructor: { name: 'Object', preserved: true },
+        prototype: { preserved: true },
+        nested: {
+          constructor: { name: 'Object', preserved: true },
+          prototype: { preserved: true },
+        },
+      }, source)
 
       expect({
         merged,
@@ -42,7 +53,22 @@ describe('deepMerge', () => {
       }).toMatchInlineSnapshot(`
         {
           "merged": {
-            "nested": {},
+            "constructor": {
+              "name": "Object",
+              "preserved": true,
+            },
+            "nested": {
+              "constructor": {
+                "name": "Object",
+                "preserved": true,
+              },
+              "prototype": {
+                "preserved": true,
+              },
+            },
+            "prototype": {
+              "preserved": true,
+            },
           },
           "nestedPolluted": undefined,
           "rootPolluted": undefined,
