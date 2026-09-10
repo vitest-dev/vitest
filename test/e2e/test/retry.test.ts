@@ -75,15 +75,26 @@ test('expected failures stop retrying after a failed assertion', async () => {
 })
 
 test('expected failures exhaust retries in every repeat when assertions pass', async () => {
-  const { errorTree, results } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     'fails.test.js': `
-      import { expect, it } from 'vitest'
+      import { afterAll, expect, it } from 'vitest'
+
+      const runs = [[0], [0, 0], [0, 0, 0]]
 
       for (const repeats of [0, 1, 2]) {
-        it.fails('unexpected pass with ' + repeats + ' repeats', { retry: 2, repeats }, () => {
+        it.fails('unexpected pass with ' + repeats + ' repeats', { retry: 2, repeats }, ({ task }) => {
+          runs[repeats][task.result.repeatCount]++
           expect(1).toBe(1)
         })
       }
+
+      afterAll(() => {
+        expect(runs).toEqual([
+          [3],
+          [3, 3],
+          [3, 3, 3],
+        ])
+      })
     `,
   })
 
@@ -104,25 +115,6 @@ test('expected failures exhaust retries in every repeat when assertions pass', a
         ],
       },
     }
-  `)
-  expect([...results[0].children.allTests()].map(test => ({
-    name: test.name,
-    retries: test.diagnostic()!.retryCount,
-  }))).toMatchInlineSnapshot(`
-    [
-      {
-        "name": "unexpected pass with 0 repeats",
-        "retries": 2,
-      },
-      {
-        "name": "unexpected pass with 1 repeats",
-        "retries": 4,
-      },
-      {
-        "name": "unexpected pass with 2 repeats",
-        "retries": 6,
-      },
-    ]
   `)
 })
 
