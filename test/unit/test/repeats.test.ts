@@ -50,48 +50,6 @@ describe('testing repeats with retry', () => {
       expect(retryNumbers).toStrictEqual(result)
     })
   })
-
-  const runs: [repeatCount: number, retryCount: number][] = []
-
-  test('retries each repeat once', { repeats: 2, retry: 1 }, ({ task }) => {
-    const repeatCount = task.result!.repeatCount!
-    const retryCount = task.result!.retryCount!
-    runs.push([repeatCount, retryCount])
-    if (repeatCount === retryCount) {
-      throw new Error('retry')
-    }
-  })
-
-  test('keeps retry count across repeats', () => {
-    expect(runs).toMatchInlineSnapshot(`
-      [
-        [
-          0,
-          0,
-        ],
-        [
-          0,
-          1,
-        ],
-        [
-          1,
-          1,
-        ],
-        [
-          1,
-          2,
-        ],
-        [
-          2,
-          2,
-        ],
-        [
-          2,
-          3,
-        ],
-      ]
-    `)
-  })
 })
 
 const nestedDescribeNumbers: number[] = []
