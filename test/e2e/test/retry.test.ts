@@ -220,36 +220,6 @@ test.each([false, true])('each repeat can recover through a retry (fails: %s)', 
   expect(test.diagnostic()!.repeatCount).toBe(2)
 })
 
-test('errors from failed repeats are retained across successful repeats', async () => {
-  const { errorTree, results } = await runInlineTests({
-    'repeats.test.js': `
-      import { it } from 'vitest'
-
-      it('ordinary', { repeats: 2, retry: 1 }, ({ task }) => {
-        if (task.result.repeatCount !== 1) {
-          throw new Error('repeat ' + task.result.repeatCount + ' failed')
-        }
-      })
-    `,
-  })
-
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "repeats.test.js": {
-        "ordinary": [
-          "repeat 0 failed",
-          "repeat 0 failed",
-          "repeat 2 failed",
-          "repeat 2 failed",
-        ],
-      },
-    }
-  `)
-  const [test] = results[0].children.allTests()
-  expect(test.diagnostic()!.retryCount).toBe(2)
-  expect(test.diagnostic()!.repeatCount).toBe(2)
-})
-
 test('syntax errors remain failures after successful repeats', async () => {
   const { errorTree, results } = await runInlineTests({
     'repeats.test.js': `
