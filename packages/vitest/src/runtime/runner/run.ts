@@ -616,7 +616,10 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const $ = runner.trace!
 
   const repeats = test.repeats ?? 0
+  let failedRepeatErrors: TestError[] | undefined
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    test.result.state = 'run' as TaskState
+    test.result.errors = undefined
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
@@ -761,6 +764,16 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       // update retry info
       updateTask('test-retried', test, runner)
     }
+
+    if (test.result.state === 'fail') {
+      failedRepeatErrors ??= []
+      failedRepeatErrors.push(...test.result.errors || [])
+    }
+  }
+
+  if (failedRepeatErrors) {
+    test.result.state = 'fail'
+    test.result.errors = failedRepeatErrors
   }
 
   // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
