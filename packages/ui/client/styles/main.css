@@ -10,7 +10,6 @@ body {
   --color-text-dark: #ddd;
   --color-text: var(--color-text-light);
   --background-color: #e4e4e4;
-  --splitpane-handle-size: 10px;
 }
 
 html.dark {
@@ -111,6 +110,10 @@ html.dark {
   z-index: 10;
 }
 
+[data-runner-state="running"] .splitpanes__splitter {
+  pointer-events: none;
+}
+
 .splitpanes__splitter:before {
   content: "";
   position: absolute;
@@ -129,13 +132,13 @@ html.dark {
 .splitpanes--vertical > .splitpanes__splitter:before {
   /* make vertical scroll usable */
   left: 0;
-  right: calc(var(--splitpane-handle-size) * -1);
+  right: -10px;
   height: 100%;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
   top: 0;
-  bottom: calc(var(--splitpane-handle-size) * -1);
+  bottom: -10px;
   width: 100%;
 }
 
