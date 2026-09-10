@@ -1,4 +1,5 @@
 import type { TestModule } from 'vitest/node'
+import { existsSync } from 'node:fs'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 
@@ -14,6 +15,7 @@ it(createVitest, async () => {
     ],
   })
   onTestFinished(() => ctx.close())
+  const tmpDir = ctx._tmpDir
   const testFiles = await ctx.globTestSpecifications()
   await ctx.runTestSpecifications(testFiles, false)
 
@@ -26,4 +28,8 @@ it(createVitest, async () => {
 
   expect(errors).toHaveLength(0)
   expect(reason).toBe('passed')
+
+  expect(existsSync(tmpDir)).toBe(true)
+  await ctx.close()
+  expect(existsSync(tmpDir)).toBe(false)
 })
