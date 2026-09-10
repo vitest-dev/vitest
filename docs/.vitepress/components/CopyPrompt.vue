@@ -21,7 +21,7 @@ async function copyPrompt() {
 </script>
 
 <template>
-  <button type="button" class="button button--primary" @click="copyPrompt">
+  <button type="button" class="button button--brand" @click="copyPrompt">
     <Icon :icon="state === 'copied' ? 'carbon:checkmark' : 'carbon:copy'" aria-hidden="true" />
     <span>{{ label }}</span>
   </button>

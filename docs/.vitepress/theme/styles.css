@@ -46,6 +46,27 @@
   transition: revert-layer;
 }
 
+.button.button--brand {
+  --button-brand-outline: color-mix(in srgb, var(--color-brand) 40%, transparent);
+  background-color: var(--vp-c-tip-soft);
+  outline-color: var(--button-brand-outline);
+}
+
+.button.button--brand:hover {
+  background-color: color-mix(in srgb, var(--color-brand) 24%, transparent);
+}
+
+.dark .button.button--brand:hover {
+  color: var(--color-white);
+}
+
+/* the base reset removes the outline on a clicked button, but .button draws its border with it */
+@layer base {
+  button.button--brand:focus:not(:focus-visible) {
+    outline: 1px solid var(--button-brand-outline) !important;
+  }
+}
+
 /* credit goes to https://dylanatsmith.com/wrote/styling-the-kbd-element */
 html:not(.dark) .VPContent kbd {
   --kbd-color-background: #f7f7f7;
