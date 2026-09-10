@@ -10,6 +10,7 @@ body {
   --color-text-dark: #ddd;
   --color-text: var(--color-text-light);
   --background-color: #e4e4e4;
+  --splitpane-handle-size: 10px;
 }
 
 html.dark {
@@ -128,13 +129,13 @@ html.dark {
 .splitpanes--vertical > .splitpanes__splitter:before {
   /* make vertical scroll usable */
   left: 0;
-  right: -10px;
+  right: calc(var(--splitpane-handle-size) * -1);
   height: 100%;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
   top: 0;
-  bottom: -10px;
+  bottom: calc(var(--splitpane-handle-size) * -1);
   width: 100%;
 }
 
