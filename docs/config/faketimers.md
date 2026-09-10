@@ -34,6 +34,8 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 
 An array with names of global methods and APIs to keep native. All other available timers will be mocked. For example, to keep `setInterval()` native and mock all other timers, specify this property as `['setInterval']`.
 
+When `toFake` is not specified, `queueMicrotask` is also kept native by default. To mock it, specify `toFake` explicitly.
+
 Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. When running with `--pool=forks`, Vitest automatically adds `nextTick` to the `toNotFake` array.
 
 ::: warning

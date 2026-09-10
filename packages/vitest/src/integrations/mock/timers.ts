@@ -164,6 +164,15 @@ export class FakeTimers {
     }
 
     let toNotFake = this._userConfig?.toNotFake
+    if (
+      toFake === undefined
+      && toNotFake !== undefined
+      && !toNotFake.includes('queueMicrotask')
+    ) {
+      // Do not mock queueMicrotask internally used by node by default.
+      // It can still be mocked through toFake.
+      toNotFake = [...toNotFake, 'queueMicrotask']
+    }
     if (toFake === undefined && toNotFake === undefined) {
       // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
       toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])

@@ -12,6 +12,16 @@ test(`node fetch works with fake timers`, async () => {
   expect(await Response.json('ok').json()).toBe('ok')
 })
 
+test(`toNotFake keeps queueMicrotask native`, async () => {
+  const nativeQueueMicrotask = queueMicrotask
+  vi.useFakeTimers({ toNotFake: ['Temporal'] })
+  onTestFinished(() => {
+    vi.useRealTimers()
+  })
+  expect(queueMicrotask).toBe(nativeQueueMicrotask)
+  expect(await Response.json('ok').json()).toBe('ok')
+})
+
 // skipped since this might cause a weird OOM on CI
 test.skip(`node fetch timeouts with fake queueMicrotask`, async () => {
   vi.useFakeTimers({ toFake: ['queueMicrotask'] })
