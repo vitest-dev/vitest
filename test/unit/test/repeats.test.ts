@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test, TestRunner } from 'vitest'
+import { afterAll, describe, expect, test } from 'vitest'
 
 const testNumbers: number[] = []
 
@@ -51,9 +51,21 @@ describe('testing repeats with retry', () => {
     })
   })
 
-  test('should not reset retry count', { repeats: 2, retry: 1 }, () => {
-    const result = TestRunner.getCurrentTest()!.result!
-    expect(result.retryCount).toBe(result.repeatCount! + 1)
+  const attempts = [0, 0, 0]
+  const retryCounts: number[] = []
+
+  test('keeps retry count across repeats', { repeats: 2, retry: 1 }, ({ task }) => {
+    const repeatCount = task.result.repeatCount!
+    attempts[repeatCount] += 1
+    if (attempts[repeatCount] === 1) {
+      throw new Error('retry')
+    }
+    retryCounts.push(task.result.retryCount!)
+  })
+
+  afterAll(() => {
+    expect(attempts).toStrictEqual([2, 2, 2])
+    expect(retryCounts).toStrictEqual([1, 2, 3])
   })
 })
 
