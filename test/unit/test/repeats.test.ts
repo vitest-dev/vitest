@@ -51,21 +51,46 @@ describe('testing repeats with retry', () => {
     })
   })
 
-  const attempts = [0, 0, 0]
-  const retryCounts: number[] = []
+  const runs: [repeatCount: number, retryCount: number][] = []
 
-  test('keeps retry count across repeats', { repeats: 2, retry: 1 }, ({ task }) => {
+  test('retries each repeat once', { repeats: 2, retry: 1 }, ({ task }) => {
     const repeatCount = task.result.repeatCount!
-    attempts[repeatCount] += 1
-    if (attempts[repeatCount] === 1) {
+    const retryCount = task.result.retryCount!
+    runs.push([repeatCount, retryCount])
+    if (repeatCount === retryCount) {
       throw new Error('retry')
     }
-    retryCounts.push(task.result.retryCount!)
   })
 
-  afterAll(() => {
-    expect(attempts).toStrictEqual([2, 2, 2])
-    expect(retryCounts).toStrictEqual([1, 2, 3])
+  test('keeps retry count across repeats', () => {
+    expect(runs).toMatchInlineSnapshot(`
+      [
+        [
+          0,
+          0,
+        ],
+        [
+          0,
+          1,
+        ],
+        [
+          1,
+          1,
+        ],
+        [
+          1,
+          2,
+        ],
+        [
+          2,
+          2,
+        ],
+        [
+          2,
+          3,
+        ],
+      ]
+    `)
   })
 })
 
