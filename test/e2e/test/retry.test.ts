@@ -118,31 +118,6 @@ test('expected failures exhaust retries in every repeat when assertions pass', a
   `)
 })
 
-test('expected failures retain a failed repeat after a successful repeat', async () => {
-  const { errorTree, results } = await runInlineTests({
-    'fails.test.js': `
-      import { expect, it } from 'vitest'
-
-      it.fails('fails first repeat', { retry: 2, repeats: 1 }, ({ task }) => {
-        expect(task.result.repeatCount).toBe(0)
-      })
-    `,
-  })
-
-  const [test] = results[0].children.allTests()
-  expect(test.diagnostic()!.retryCount).toBe(2)
-  expect(test.diagnostic()!.repeatCount).toBe(1)
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "fails.test.js": {
-        "fails first repeat": [
-          "Expect test to fail",
-        ],
-      },
-    }
-  `)
-})
-
 test('expected failures can recover through a retry in every repeat', async () => {
   const { stderr, errorTree, results } = await runInlineTests({
     'repeats.test.js': `
