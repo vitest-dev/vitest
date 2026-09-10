@@ -54,8 +54,8 @@ describe('testing repeats with retry', () => {
   const runs: [repeatCount: number, retryCount: number][] = []
 
   test('retries each repeat once', { repeats: 2, retry: 1 }, ({ task }) => {
-    const repeatCount = task.result.repeatCount!
-    const retryCount = task.result.retryCount!
+    const repeatCount = task.result!.repeatCount!
+    const retryCount = task.result!.retryCount!
     runs.push([repeatCount, retryCount])
     if (repeatCount === retryCount) {
       throw new Error('retry')
