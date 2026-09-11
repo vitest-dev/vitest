@@ -1,4 +1,6 @@
 import type { SerializedLocator } from './locators'
+import { vi } from 'vitest'
+import { getSafeTimers } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
 
 export interface ActionOptions {
@@ -6,10 +8,13 @@ export interface ActionOptions {
 }
 
 // an array gets the options appended; a factory receives them and builds the full argument list
-type ActionArguments = unknown[] | ((options: ActionOptions | undefined) => Promise<unknown[]>)
+type ActionArguments
+  = unknown[] | ((options: ActionOptions | undefined) => Promise<unknown[]>)
 
 /** explicit option, then the provider default, then the remaining task time */
-export function resolveActionTimeout(options?: ActionOptions): number | undefined {
+export function resolveActionTimeout(
+  options?: ActionOptions,
+): number | undefined {
   if (options?.timeout != null) {
     return options.timeout
   }
@@ -22,12 +27,30 @@ export function resolveActionTimeout(options?: ActionOptions): number | undefine
 /**
  * @deprecated the timeout is derived by the action itself; pass the options through unchanged
  */
-export function processTimeoutOptions<T extends { timeout?: number }>(options?: T): T | undefined {
+export function processTimeoutOptions<T extends { timeout?: number }>(
+  options?: T,
+): T | undefined {
   const timeout = resolveActionTimeout(options)
   if (timeout == null) {
     return options
   }
   return { ...options, timeout } as T
+}
+
+const FAKE_TIMERS_TICK = 50
+
+/** the provider waits in real time, so fake timers must keep moving for the page to update */
+function advanceFakeTimersWhilePending<T>(promise: Promise<T>): Promise<T> {
+  if (!vi.isFakeTimers()) {
+    return promise
+  }
+  const { setInterval, clearInterval } = getSafeTimers()
+  const interval = setInterval(() => {
+    if (vi.isFakeTimers()) {
+      vi.advanceTimersByTime(FAKE_TIMERS_TICK)
+    }
+  }, FAKE_TIMERS_TICK)
+  return promise.finally(() => clearInterval(interval))
 }
 
 /**
@@ -64,7 +87,10 @@ class Action<T = void> implements Promise<T> {
         const error = new Error(
           `The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.`,
         )
-        error.stack = this.#errorSource.stack?.replace(this.#errorSource.message, error.message)
+        error.stack = this.#errorSource.stack?.replace(
+          this.#errorSource.message,
+          error.message,
+        )
         throw error
       }
     })
@@ -72,25 +98,34 @@ class Action<T = void> implements Promise<T> {
 
   async #run(): Promise<T> {
     const timeout = resolveActionTimeout(this.#options)
-    const options = timeout == null ? this.#options : { ...this.#options, timeout }
-    const args = typeof this.#args === 'function'
-      ? await this.#args(options)
-      : [...this.#args, options]
-    const promise = getBrowserState().commands.triggerCommand<T>(
-      this.#command,
-      args,
-      this.#errorSource,
+    const options
+      = timeout == null ? this.#options : { ...this.#options, timeout }
+    const args
+      = typeof this.#args === 'function'
+        ? await this.#args(options)
+        : [...this.#args, options]
+    const promise = advanceFakeTimersWhilePending(
+      getBrowserState().commands.triggerCommand<T>(
+        this.#command,
+        args,
+        this.#errorSource,
+      ),
     )
     const deadline = getBrowserState().runner._deadline
     return deadline && timeout != null
-      ? deadline.track(this.#command.slice('__vitest_'.length), promise, timeout, this.#errorSource)
+      ? deadline.track(
+          this.#command.slice('__vitest_'.length),
+          promise,
+          timeout,
+          this.#errorSource,
+        )
       : promise
   }
 
   // the command starts only when awaited, so an unawaited action cannot reject unhandled
   #start(): Promise<T> {
     this.#awaited = true
-    return this.#promise ??= this.#run()
+    return (this.#promise ??= this.#run())
   }
 
   then<R1 = T, R2 = never>(
@@ -100,7 +135,9 @@ class Action<T = void> implements Promise<T> {
     return this.#start().then(onFulfilled, onRejected)
   }
 
-  catch<R = never>(onRejected?: ((reason: any) => R | PromiseLike<R>) | null): Promise<T | R> {
+  catch<R = never>(
+    onRejected?: ((reason: any) => R | PromiseLike<R>) | null,
+  ): Promise<T | R> {
     return this.#start().catch(onRejected)
   }
 
@@ -128,7 +165,12 @@ export class UploadAction extends Action {
     options?: ActionOptions,
     errorSource?: Error,
   ) {
-    super('__vitest_upload', async options => [target, await readFiles(files), options], options, errorSource)
+    super(
+      '__vitest_upload',
+      async options => [target, await readFiles(files), options],
+      options,
+      errorSource,
+    )
   }
 }
 
@@ -138,27 +180,36 @@ export class ScreenshotAction<T> extends Action<T> {
     options: ActionOptions,
     serialize: () => Promise<Record<string, unknown>>,
   ) {
-    super('__vitest_screenshot', async options => [name, { ...options, ...await serialize() }], options)
+    super(
+      '__vitest_screenshot',
+      async options => [name, { ...options, ...(await serialize()) }],
+      options,
+    )
   }
 }
 
-function readFiles(files: string | string[] | File | File[]): Promise<(string | { name: string; mimeType: string; base64: string })[]> {
-  return Promise.all((Array.isArray(files) ? files : [files]).map(async (file) => {
-    if (typeof file === 'string') {
-      return file
-    }
-    const bas64String = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
-      reader.readAsDataURL(file)
-    })
+function readFiles(
+  files: string | string[] | File | File[],
+): Promise<(string | { name: string; mimeType: string; base64: string })[]> {
+  return Promise.all(
+    (Array.isArray(files) ? files : [files]).map(async (file) => {
+      if (typeof file === 'string') {
+        return file
+      }
+      const bas64String = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () =>
+          reject(new Error(`Failed to read file: ${file.name}`))
+        reader.readAsDataURL(file)
+      })
 
-    return {
-      name: file.name,
-      mimeType: file.type,
-      // strip prefix `data:[<media-type>][;base64],`
-      base64: bas64String.slice(bas64String.indexOf(',') + 1),
-    }
-  }))
+      return {
+        name: file.name,
+        mimeType: file.type,
+        // strip prefix `data:[<media-type>][;base64],`
+        base64: bas64String.slice(bas64String.indexOf(',') + 1),
+      }
+    }),
+  )
 }
