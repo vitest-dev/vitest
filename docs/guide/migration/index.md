@@ -296,7 +296,7 @@ vi.setSystemTime(0)
 Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 ```
 
-`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
+`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/faketimers#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/faketimers#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
 
 ```ts
 vi.useFakeTimers({ toNotFake: ['Temporal'] })
@@ -464,7 +464,7 @@ test('renders', async () => {
 
 ## Glob Coverage Thresholds No Longer Inherit `perFile`
 
-`coverage.thresholds.perFile` previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
+[`coverage.thresholds.perFile`](/config/coverage#coverage-thresholds-perfile) previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
 
 ```ts [vitest.config.ts]
 export default defineConfig({
