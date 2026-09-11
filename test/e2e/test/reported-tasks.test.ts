@@ -276,6 +276,37 @@ it('correctly reports flaky tests', ({ testModule }) => {
   const result = testFlaky.result()!
   expect(result.state).toBe('passed')
   expect(result.errors).toHaveLength(2)
+  expect(testFlaky.attempts().map(attempt => ({
+    state: attempt.state,
+    errors: attempt.errors?.map(error => error.message),
+    retryCount: attempt.retryCount,
+    repeatCount: attempt.repeatCount,
+  }))).toMatchInlineSnapshot(`
+    [
+      {
+        "errors": [
+          "expected +0 to be 2 // Object.is equality",
+        ],
+        "repeatCount": 0,
+        "retryCount": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatCount": 0,
+        "retryCount": 1,
+        "state": "failed",
+      },
+      {
+        "errors": undefined,
+        "repeatCount": 0,
+        "retryCount": 2,
+        "state": "passed",
+      },
+    ]
+  `)
 })
 
 it('correctly reports repeated tests', ({ testModule }) => {

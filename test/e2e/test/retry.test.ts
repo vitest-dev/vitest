@@ -131,7 +131,7 @@ test('expected failures exhaust retries in every repeat when assertions pass', a
 })
 
 test('expected failures can recover through a retry in every repeat', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { stderr, errorTree, results } = await runInlineTests({
     'repeats.test.js': `
       import { afterAll, expect, it } from 'vitest'
 
@@ -157,6 +157,64 @@ test('expected failures can recover through a retry in every repeat', async () =
       },
     }
   `)
+
+  const [test] = results[0].children.allTests()
+  const attempts = test.attempts()
+  expect(attempts.map(attempt => ({
+    state: attempt.state,
+    errors: attempt.errors?.map(error => error.message) || [],
+    retryCount: attempt.retryCount,
+    repeatCount: attempt.repeatCount,
+  }))).toMatchInlineSnapshot(`
+    [
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatCount": 0,
+        "retryCount": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatCount": 0,
+        "retryCount": 1,
+        "state": "passed",
+      },
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatCount": 1,
+        "retryCount": 1,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatCount": 1,
+        "retryCount": 2,
+        "state": "passed",
+      },
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatCount": 2,
+        "retryCount": 2,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatCount": 2,
+        "retryCount": 3,
+        "state": "passed",
+      },
+    ]
+  `)
+  attempts.forEach((attempt) => {
+    expect(attempt.duration).toBeGreaterThanOrEqual(0)
+    expect(attempt.startTime).toBeGreaterThan(0)
+  })
 })
 
 test('syntax errors remain failures after successful repeats', async () => {
