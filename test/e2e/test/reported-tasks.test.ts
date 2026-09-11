@@ -279,30 +279,30 @@ it('correctly reports flaky tests', ({ testModule }) => {
   expect(testFlaky.attempts().map(attempt => ({
     state: attempt.state,
     errors: attempt.errors?.map(error => error.message),
-    retryCount: attempt.retryCount,
-    repeatCount: attempt.repeatCount,
+    retryIndex: attempt.retryIndex,
+    repeatIndex: attempt.repeatIndex,
   }))).toMatchInlineSnapshot(`
     [
       {
         "errors": [
           "expected +0 to be 2 // Object.is equality",
         ],
-        "repeatCount": 0,
-        "retryCount": 0,
+        "repeatIndex": 0,
+        "retryIndex": 0,
         "state": "failed",
       },
       {
         "errors": [
           "expected 1 to be 2 // Object.is equality",
         ],
-        "repeatCount": 0,
-        "retryCount": 1,
+        "repeatIndex": 0,
+        "retryIndex": 1,
         "state": "failed",
       },
       {
         "errors": undefined,
-        "repeatCount": 0,
-        "retryCount": 2,
+        "repeatIndex": 0,
+        "retryIndex": 2,
         "state": "passed",
       },
     ]

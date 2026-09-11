@@ -213,8 +213,8 @@ export class TestCase extends ReportedTaskImplementation {
       errors: attempt.errors as TestError[] | undefined,
       duration: attempt.duration,
       startTime: attempt.startTime,
-      retryCount: attempt.retryCount,
-      repeatCount: attempt.repeatCount,
+      retryIndex: attempt.retryIndex,
+      repeatIndex: attempt.repeatIndex,
     }))
   }
 
@@ -652,10 +652,10 @@ export interface TestAttempt {
   readonly duration: number
   /** Time in milliseconds when the attempt started running. */
   readonly startTime: number
-  /** The total number of retries before this attempt. */
-  readonly retryCount: number
-  /** The zero-based repeat index of this attempt. */
-  readonly repeatCount: number
+  /** The zero-based retry index within the repeat. */
+  readonly retryIndex: number
+  /** The zero-based repeat index. */
+  readonly repeatIndex: number
 }
 
 export type TestResult

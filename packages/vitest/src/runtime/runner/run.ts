@@ -634,8 +634,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           errors: errors?.length ? errors : undefined,
           duration: now() - attemptStart,
           startTime: attemptStartTime,
-          retryCount: test.result!.retryCount ?? 0,
-          repeatCount: test.result!.repeatCount ?? 0,
+          retryIndex: retryCount,
+          repeatIndex: repeatCount,
         })
       }
       let beforeEachCleanups: unknown[] = []

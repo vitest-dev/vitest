@@ -163,50 +163,50 @@ test('expected failures can recover through a retry in every repeat', async () =
   expect(attempts.map(attempt => ({
     state: attempt.state,
     errors: attempt.errors?.map(error => error.message) || [],
-    retryCount: attempt.retryCount,
-    repeatCount: attempt.repeatCount,
+    retryIndex: attempt.retryIndex,
+    repeatIndex: attempt.repeatIndex,
   }))).toMatchInlineSnapshot(`
     [
       {
         "errors": [
           "Expect test to fail",
         ],
-        "repeatCount": 0,
-        "retryCount": 0,
+        "repeatIndex": 0,
+        "retryIndex": 0,
         "state": "failed",
       },
       {
         "errors": [],
-        "repeatCount": 0,
-        "retryCount": 1,
+        "repeatIndex": 0,
+        "retryIndex": 1,
         "state": "passed",
       },
       {
         "errors": [
           "Expect test to fail",
         ],
-        "repeatCount": 1,
-        "retryCount": 1,
+        "repeatIndex": 1,
+        "retryIndex": 0,
         "state": "failed",
       },
       {
         "errors": [],
-        "repeatCount": 1,
-        "retryCount": 2,
+        "repeatIndex": 1,
+        "retryIndex": 1,
         "state": "passed",
       },
       {
         "errors": [
           "Expect test to fail",
         ],
-        "repeatCount": 2,
-        "retryCount": 2,
+        "repeatIndex": 2,
+        "retryIndex": 0,
         "state": "failed",
       },
       {
         "errors": [],
-        "repeatCount": 2,
-        "retryCount": 3,
+        "repeatIndex": 2,
+        "retryIndex": 1,
         "state": "passed",
       },
     ]

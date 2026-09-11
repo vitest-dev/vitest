@@ -171,10 +171,10 @@ export interface TaskResultAttempt {
   duration: number
   /** Time in milliseconds when the attempt started running. */
   startTime: number
-  /** The total number of retries before this attempt. */
-  retryCount: number
-  /** The zero-based repeat index of this attempt. */
-  repeatCount: number
+  /** The zero-based retry index within the repeat. */
+  retryIndex: number
+  /** The zero-based repeat index. */
+  repeatIndex: number
 }
 
 /**
