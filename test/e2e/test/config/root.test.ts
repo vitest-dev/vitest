@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { configDefaults } from 'vitest/config'
 import { resolveConfig } from 'vitest/node'
 import { runVitest, ts, useFS, useTmpFS } from '#test-utils'
 
@@ -58,6 +59,30 @@ test('watch mode re-resolves `test.root` when the config changes', async () => {
 
   await vitest.waitForStdout('Restarting due to config changes')
   await expect.poll(() => ctx?.config.root, { timeout: 5000 }).toBe(resolve(fs.root, 'nested2'))
+})
+
+test('projects inherit the root watch mode', async () => {
+  const fs = useTmpFS({
+    './vitest.config.ts': ts`
+      import { defineConfig } from 'vitest/config'
+
+      export default defineConfig({
+        test: {
+          projects: [{ test: { name: 'project' } }],
+        },
+      })
+    `,
+  })
+
+  const config = await resolveConfig({
+    config: fs.resolveFile('./vitest.config.ts'),
+    watch: !configDefaults.watch,
+  })
+
+  expect(config.test.watch).toBe(!configDefaults.watch)
+  expect(config.test.resolvedProjects.map(project => project.projectConfig.watch)).toEqual([
+    config.test.watch,
+  ])
 })
 
 test('`--root` overrides `test.root` from the config file', async () => {
