@@ -160,7 +160,6 @@ export interface TaskMeta {
 
 /**
  * The result of an individual test attempt.
- * @experimental
  */
 export interface TaskResultAttempt {
   /** The state after applying the test's expected failure option. */
@@ -195,7 +194,6 @@ export interface TaskResult {
   errors?: TestError[]
   /**
    * Individual results for every retry and repeat attempt.
-   * @experimental
    */
   attempts?: TaskResultAttempt[]
   /**

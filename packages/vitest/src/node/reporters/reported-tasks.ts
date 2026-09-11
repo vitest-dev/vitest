@@ -199,8 +199,6 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * @experimental
-   *
    * Individual results for every retry and repeat attempt.
    */
   public attempts(): ReadonlyArray<TestAttempt> {
@@ -641,7 +639,6 @@ export type TestState = TestResult['state']
 
 /**
  * The result of an individual test attempt.
- * @experimental
  */
 export interface TestAttempt {
   /** The state after applying the test's expected failure option. */
