@@ -101,7 +101,7 @@ receives an object with the following properties:
 
 - `screenshotDirectory: string`
 
-  The value provided to [`browser.expect.toMatchScreenshot.screenshotDirectory`](#browserexpecttomatchscreenshotscreenshotdirectory), if none is provided, its default value (`__screenshots__`).
+  The value provided to [`browser.expect.toMatchScreenshot.screenshotDirectory`](#browser-expect-tomatchscreenshot-screenshotdirectory), if none is provided, its default value (`__screenshots__`).
 
 - `root: string`
 
