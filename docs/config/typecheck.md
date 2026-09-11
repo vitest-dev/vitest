@@ -47,7 +47,7 @@ Glob pattern for files that should be treated as test files.
 ## typecheck.exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
+- **Default:** `['**/node_modules/**', '**/.git/**']`
 
 Glob pattern for files that should not be treated as test files.
 
