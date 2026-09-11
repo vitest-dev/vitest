@@ -69,9 +69,22 @@ export function getExplorerItem(page: Page, name: string) {
   return page.locator('[data-testid="explorer-item"]:visible').and(page.getByLabel(name, { exact: true }))
 }
 
+// The explorer renders its items in a `RecycleScroller`, so rows move while a
+// target is scrolled into view. A coordinate click (`locator.click()`) is
+// verified against the element under the cursor and then dispatched, and the
+// list can recycle in between - the click then lands on a neighbouring row.
+// Dispatching the event on the located element instead cannot hit another row.
 export async function openExplorerItem(page: Page, name: string) {
-  await getExplorerItem(page, name).scrollIntoViewIfNeeded()
-  await getExplorerItem(page, name).dispatchEvent('click')
+  const item = getExplorerItem(page, name)
+  await item.scrollIntoViewIfNeeded()
+  await item.dispatchEvent('click')
+}
+
+export async function toggleExplorerItem(page: Page, name: string, action: 'expand' | 'collapse') {
+  const label = `${action === 'expand' ? 'Expand' : 'Collapse'} ${name}`
+  const button = getExplorerItem(page, name).getByRole('button', { name: label, exact: true })
+  await button.scrollIntoViewIfNeeded()
+  await button.dispatchEvent('click')
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {
