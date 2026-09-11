@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import { join } from 'pathe'
 import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
-import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, openExplorerItem, startHtmlReportPreview, startVitestUi, toggleExplorerItem } from './helper'
 
 const TEST_COUNTS = {
   pass: 21,
@@ -501,25 +501,24 @@ async function testError(page: Page) {
 async function testSuiteReport(page: Page) {
   const report = page.getByTestId('report')
 
-  await getExplorerItem(page, 'suite-report.test.ts').click()
+  await openExplorerItem(page, 'suite-report.test.ts')
   await expect(report).toContainText('before-all-marker')
   await expect(report).toContainText('direct-child-marker')
   await expect(report).toContainText('nested-child-marker')
 
-  const successfulSuite = getExplorerItem(page, 'successful suite')
-  await successfulSuite.click()
+  await openExplorerItem(page, 'successful suite')
   await expect(page.getByTestId('report')).toContainText('All tests passed in this suite')
 
-  await getExplorerItem(page, 'hook failure suite').click()
+  await openExplorerItem(page, 'hook failure suite')
   await expect(report).toContainText('before-all-marker')
   await expect(report).not.toContainText('direct-child-marker')
 
-  await getExplorerItem(page, 'child failure suite').click()
+  await openExplorerItem(page, 'child failure suite')
   await expect(report).toContainText('failing child')
   await expect(report).toContainText('direct-child-marker')
   await expect(report).not.toContainText('before-all-marker')
 
-  await getExplorerItem(page, 'nested failure suite').click()
+  await openExplorerItem(page, 'nested failure suite')
   await expect(report).toContainText('failing nested suite')
   await expect(report).toContainText('failing nested child')
   await expect(report).toContainText('nested-child-marker')
@@ -527,9 +526,9 @@ async function testSuiteReport(page: Page) {
 
   // test that the suite can be collapsed and expanded
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
-  await successfulSuite.getByRole('button', { name: 'Collapse successful suite', exact: true }).click()
+  await toggleExplorerItem(page, 'successful suite', 'collapse')
   await expect(getExplorerItem(page, 'successful child')).not.toBeVisible()
-  await successfulSuite.getByRole('button', { name: 'Expand successful suite', exact: true }).click()
+  await toggleExplorerItem(page, 'successful suite', 'expand')
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
 }
 
