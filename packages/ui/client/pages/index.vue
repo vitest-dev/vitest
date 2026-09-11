@@ -11,6 +11,7 @@ import Navigation from '~/components/Navigation.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
 import TraceViewPane from '~/components/trace/TraceViewPane.vue'
 import { browserState } from '~/composables/client'
+import { finished } from '~/composables/client/state'
 import {
   coverageVisible,
   detailSizes,
@@ -89,7 +90,7 @@ function allowBrowserEvents() {
       No trace found
     </div>
   </div>
-  <div v-else class="h-screen w-screen overflow-hidden">
+  <div v-else class="h-screen w-screen overflow-hidden" :data-runner-state="finished ? 'idle' : 'running'">
     <Splitpanes
       class="pt-4px"
       @resized="onMainResized"
