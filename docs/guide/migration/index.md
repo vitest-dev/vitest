@@ -564,9 +564,9 @@ The `json` and `junit` reporters now write to a file by default instead of print
 
 ## `toMatchScreenshot` Now Uses a Dedicated Screenshot Directory Config
 
-Previously, reference screenshots for `toMatchScreenshot` did not correctly respect `browser.screenshotDirectory`. As a result, screenshots were saved in an unintended location when a custom directory was configured.
+Previously, reference screenshots for `toMatchScreenshot` did not correctly respect [`browser.screenshotDirectory`](/config/browser/screenshotdirectory). As a result, screenshots were saved in an unintended location when a custom directory was configured.
 
-This has now been fixed by introducing a dedicated option: `browser.expect.toMatchScreenshot.screenshotDirectory`. Its default value is `__screenshots__`.
+This has now been fixed by introducing a dedicated option: [`browser.expect.toMatchScreenshot.screenshotDirectory`](/config/browser/expect#browser-expect-tomatchscreenshot-screenshotdirectory). Its default value is `__screenshots__`.
 
 - If you did not set `browser.screenshotDirectory`, no changes are required.
 - If you did set `browser.screenshotDirectory`, you must now explicitly configure the new option:
