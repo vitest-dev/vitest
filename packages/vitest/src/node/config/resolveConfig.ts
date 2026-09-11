@@ -557,7 +557,11 @@ export function resolveTestConfig(
   resolved.deps.moduleDirectories ??= []
 
   resolved.deps.optimizer ??= {}
-  if (resolved.deps.optimizer.web) {
+  // `deps.optimizer` is keyed by Vite environment name, so `web` is a valid
+  // key when the user declares that environment themselves
+  // (`vite.environments.web`) - only the Vitest 3 alias for `client` is
+  // silently ignored
+  if (resolved.deps.optimizer.web && !viteConfig.environments.web) {
     logger.deprecate(
       '`deps.optimizer.web` is deprecated. Use `deps.optimizer.client` instead (or `deps.optimizer.ssr` for `node` and `edge` environments).',
     )
