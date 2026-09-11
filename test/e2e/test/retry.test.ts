@@ -103,12 +103,24 @@ test('expected failures exhaust retries in every repeat when assertions pass', a
       "fails.test.js": {
         "unexpected pass with 0 repeats": [
           "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
         ],
         "unexpected pass with 1 repeats": [
           "Expect test to fail",
           "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
         ],
         "unexpected pass with 2 repeats": [
+          "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
+          "Expect test to fail",
           "Expect test to fail",
           "Expect test to fail",
           "Expect test to fail",
