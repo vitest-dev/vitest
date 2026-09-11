@@ -26,6 +26,7 @@ import {
   getByTitleSelector,
   Ivya,
 } from 'ivya'
+import { vi } from 'vitest'
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
@@ -396,6 +397,9 @@ export abstract class Locator {
       }
       const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]
       const nextInterval = timeout != null ? Math.min(interval, timeout - elapsed) : interval
+      if (vi.isFakeTimers()) {
+        vi.advanceTimersByTime(nextInterval)
+      }
       await sleep(nextInterval)
     }
   }
