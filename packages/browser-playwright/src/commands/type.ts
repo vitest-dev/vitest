@@ -3,7 +3,9 @@ import type { UserEventCommand } from './utils'
 import { keyboardImplementation } from './keyboard'
 import { getDescribedLocator } from './utils'
 
-export const type: UserEventCommand<UserEvent['type']> = async (
+export const type: UserEventCommand<
+  (...args: Parameters<UserEvent['type']>) => Promise<{ unreleased: string[] }>
+> = async (
   context,
   selector,
   text,

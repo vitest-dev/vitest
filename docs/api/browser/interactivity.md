@@ -233,6 +233,54 @@ await page.getByRole('tablist').wheel({ direction: 'right' })
 This method is intended for testing UI that explicitly listens to `wheel` events (e.g., custom zoom controls, horizontal tab scrolling, canvas interactions). If you need to scroll the page to bring an element into view, rely on the built-in automatic scrolling functionality provided by other `userEvent` methods or [locator actions](/api/browser/locators#methods) instead.
 :::
 
+## userEvent.pointer <Version type="experimental">5.0.0</Version> <Experimental /> {#userevent-pointer}
+
+```ts
+function pointer(options: UserEventPointerInput): Promise<void>
+```
+
+Performs one or more pointer actions. Pass a key string, an action object, or an array of strings and objects. Key strings use [user-event `pointer` syntax](https://testing-library.com/docs/user-event/pointer). For example, `[MouseLeft]` presses and releases the left mouse button, `[MouseLeft>]` keeps it pressed, and `[/MouseLeft]` releases it.
+
+::: tip
+The `pointer` method is a low-level API for composing complex pointer interactions and performing actions that dedicated methods do not support, such as dragging an element to a precise position.
+
+For one-off actions, prefer the equivalent dedicated method because in most cases they are simpler to use. For example, if you just want to click an element once, use [`userEvent.click`](#userevent-click).
+:::
+
+An action object accepts `keys`, `target`, and `coords`. An object without `keys` only moves the pointer.
+
+The pointer position persists between `userEvent.pointer` calls on the same `userEvent` instance. This means that if an action omits both `target` and `coords`, it uses the position from the previous action.
+
+```ts
+import { page, userEvent } from 'vitest/browser'
+
+test('drags an element with pointer actions', async () => {
+  const source = page.getByTestId('source')
+  const target = page.getByTestId('target')
+
+  await userEvent.pointer([
+    { target: source, keys: '[MouseLeft>]' },
+    { target, coords: { x: 10, y: 10 }, keys: '[/MouseLeft]' },
+  ])
+})
+```
+
+::: warning Provider support and differences from user-event
+This API is not consistently supported across providers, and its behavior can differ from the `user-event` library.
+
+- The `playwright` provider does not support touch pointer keys such as `TouchA`.
+- The `webdriverio` provider does not support this method at all.
+- The `preview` provider simulates events using `@testing-library/user-event`.
+
+Vitest does not support the `node` and `offset` fields used for text selection and only accepts `x` and `y` values in `coords`.
+
+Without `target`, `coords` values are considered coordinates relative to the viewport. With `target`, they are offsets from its top-left corner. Unlike user-event, where coordinates paired with a target describe the final pointer position rather than an offset. When `coords` is provided, an omitted axis defaults to `0`.
+:::
+
+References:
+
+- [testing-library `pointer` API](https://testing-library.com/docs/user-event/pointer)
+
 ## userEvent.fill
 
 ```ts

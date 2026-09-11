@@ -3,7 +3,8 @@ import type { Locator } from 'vitest/browser'
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
 
 export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
-  ConvertUserEventParameters<Parameters<T>>
+  ConvertUserEventParameters<Parameters<T>>,
+  ReturnType<T>
 >
 
 type ConvertElementToLocator<T> = T extends Element | Locator ? SerializedLocator : T
