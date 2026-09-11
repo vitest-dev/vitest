@@ -27,8 +27,8 @@ function getTaskName(id?: string) {
 </script>
 
 <template>
-  <div v-if="formattedLogs?.length" h-full class="scrolls" flex flex-col data-testid="logs">
-    <div v-for="{ taskId, type, time, content } of formattedLogs" :key="taskId" font-mono>
+  <div v-if="formattedLogs?.length" class="scrolls h-full flex flex-col" data-testid="logs">
+    <div v-for="{ taskId, type, time, content } of formattedLogs" :key="taskId" class="font-mono">
       <ViewConsoleOutputEntry
         :task-name="getTaskName(taskId)"
         :type="type"
@@ -37,7 +37,7 @@ function getTaskName(id?: string) {
       />
     </div>
   </div>
-  <div v-else p6>
-    Log something in your test and it would print here. (e.g. <pre inline>console.log(foo)</pre>)
+  <div v-else class="p6">
+    Log something in your test and it would print here. (e.g. <pre class="inline">console.log(foo)</pre>)
   </div>
 </template>

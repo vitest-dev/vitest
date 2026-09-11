@@ -9,6 +9,14 @@ const normalizedDistDir = normalize(distDir)
 const relativeIds: Record<string, string> = {}
 const externalizeMap = new Map<string, string>()
 
+function getRelativeDistDir(root: string): string {
+  const normalizedRoot = normalize(root).replace(/\/+$/, '') || '/'
+  const rootPrefix = normalizedRoot === '/' ? normalizedRoot : `${normalizedRoot}/`
+  return normalizedDistDir.startsWith(rootPrefix)
+    ? normalizedDistDir.slice(normalizedRoot.length)
+    : ''
+}
+
 // all Vitest imports always need to be externalized
 export function getCachedVitestImport(
   id: string,
@@ -24,7 +32,7 @@ export function getCachedVitestImport(
   // always externalize Vitest because we import from there before running tests
   // so we already have it cached by Node.js
   const root = state().config.root
-  const relativeRoot = relativeIds[root] ?? (relativeIds[root] = normalizedDistDir.slice(root.length))
+  const relativeRoot = relativeIds[root] ?? (relativeIds[root] = getRelativeDistDir(root))
   if (id.includes(distDir) || id.includes(normalizedDistDir)) {
     const { file, postfix } = splitFileAndPostfix(id)
     const externalize = id.startsWith('file://')

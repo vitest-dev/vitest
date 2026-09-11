@@ -4,6 +4,7 @@ import type { Statistics } from 'tinybench'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
 import type { SerializedConfig } from '../config'
+import type { TaskDeadline } from './deadline'
 import type { TestFixtures } from './fixture'
 import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import type { kChainableContext, TypedChainableFunction } from './utils/chain'
@@ -1768,7 +1769,5 @@ export interface VitestRunner {
   /** @internal */
   _currentSpecification?: FileSpecification | undefined
   /** @internal */
-  _currentTaskStartTime?: number
-  /** @internal */
-  _currentTaskTimeout?: number
+  _deadline?: TaskDeadline | undefined
 }

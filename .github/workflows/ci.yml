@@ -10,6 +10,7 @@ on:
       - main
 
   pull_request:
+    types: [opened, synchronize, reopened, closed]
 
   workflow_dispatch:
 
@@ -26,6 +27,7 @@ env:
 
 jobs:
   lint:
+    if: github.event.action != 'closed'
     timeout-minutes: 10
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
@@ -68,6 +70,7 @@ jobs:
           ./actionlint -color -shellcheck=""
 
   changed:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     name: 'Diff: node-latest, ubuntu-latest'
     outputs:
@@ -95,6 +98,7 @@ jobs:
   # cannot push a missing tag; changes to the tag inputs must come from a
   # branch in this repository.
   playwright-deps-image:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     name: 'Image: playwright-deps, ubuntu-latest'
     timeout-minutes: 15

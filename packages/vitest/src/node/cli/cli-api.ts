@@ -30,12 +30,12 @@ export interface CliOptions extends UserConfig {
   filesOnly?: boolean
   /**
    * Parse files statically instead of running them to collect tests
-   * @experimental
+   * @default true
    */
   staticParse?: boolean
   /**
    * How many tests to process at the same time
-   * @experimental
+   * @default os.availableParallelism()
    */
   staticParseConcurrency?: number
 

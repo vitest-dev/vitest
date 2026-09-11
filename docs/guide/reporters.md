@@ -534,9 +534,11 @@ export default defineConfig({
 
 ### HTML Reporter
 
-Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
+Generates a static version of [Vitest UI](/guide/ui) for reviewing completed test runs. See the [HTML Reporter guide](/guide/ui#html-reporter) for local preview, CI artifacts, and sharing workflows.
 
-The report artifact root can be specified using the reporter's `outputDir` option. The report entry is written to `<outputDir>/index.html` and the UI assets files live under `<outputDir>/ui/`. By default `outputDir` is `.vitest`, the shared Vitest artifact directory, so attachments (`.vitest/attachments`) and coverage (`.vitest/coverage`) are reused without being copied.
+The report artifact root can be specified using the reporter's `outputDir` option and the report entry is written to `<outputDir>/index.html`. By default `outputDir` is the shared Vitest artifact directory `.vitest`.
+
+Use `singleFile` to produce one portable HTML file. See [Share as a Single File](/guide/ui#share-as-a-single-file) for configuration and limitations.
 
 :::code-group
 ```bash [CLI]
@@ -550,33 +552,6 @@ export default defineConfig({
   },
 })
 ```
-:::
-
-Set `singleFile` to generate a self-contained HTML report:
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: [
-      ['html', { singleFile: true }],
-    ],
-  },
-})
-```
-
-When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole `html` output directory.
-
-::: warning
-`singleFile` has two caveats:
-
-- The file can grow very large because everything is embedded inline — slow to open, memory-hungry, and possibly over the size limits of artifact viewers or static hosts.
-- Coverage HTML reports are not inlined yet and remain as separate files.
-
-Prefer the default multi-file report when the suite has many or large attachments, or when you need coverage included in the bundle.
-:::
-
-::: tip
-This reporter requires installed [`@vitest/ui`](/guide/ui) package.
 :::
 
 ### TAP Reporter

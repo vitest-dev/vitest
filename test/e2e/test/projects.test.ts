@@ -235,6 +235,75 @@ describe('the root config inheritance', () => {
       'inherited-tags': 2,
     })
   })
+
+  it('warns when a project without an explicit `extends` duplicates an inherited plugin', async () => {
+    const { stderr } = await runInlineTests({
+      'vitest.config.js': ts`
+        import { defineConfig } from 'vitest/config'
+
+        const myPlugin = () => ({ name: 'my-plugin' })
+
+        export default defineConfig({
+          plugins: [myPlugin()],
+          test: {
+            projects: [
+              { plugins: [myPlugin()], test: { name: 'duplicated' } },
+            ],
+          },
+        })
+      `,
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toMatchInlineSnapshot(`
+      " Vitest  The "duplicated" project applies the same plugin multiple times: "my-plugin". Since Vitest 5, an inline project extends the config file that declares it by default, so the plugins from "vitest.config.js" already apply to this project and don't need to be listed again.
+      Remove the duplicated plugins from the project, or set \`extends: false\` to not inherit the declaring config. Setting the \`extends\` option explicitly hides this warning.
+      "
+    `)
+  })
+
+  it('does not warn about duplicated plugins when `extends` is set explicitly', async () => {
+    const { stderr } = await runInlineTests({
+      'vitest.config.js': ts`
+        import { defineConfig } from 'vitest/config'
+
+        const myPlugin = () => ({ name: 'my-plugin' })
+
+        export default defineConfig({
+          plugins: [myPlugin()],
+          test: {
+            projects: [
+              { extends: true, plugins: [myPlugin()], test: { name: 'duplicated' } },
+              { extends: false, plugins: [myPlugin()], test: { name: 'isolated' } },
+            ],
+          },
+        })
+      `,
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+  })
+
+  it('does not warn when the declaring config itself registers a plugin twice', async () => {
+    const { stderr } = await runInlineTests({
+      'vitest.config.js': ts`
+        import { defineConfig } from 'vitest/config'
+
+        const myPlugin = () => ({ name: 'my-plugin' })
+        const otherPlugin = () => ({ name: 'other-plugin' })
+
+        export default defineConfig({
+          plugins: [myPlugin(), myPlugin()],
+          test: {
+            projects: [
+              { plugins: [otherPlugin()], test: { name: 'inherited' } },
+            ],
+          },
+        })
+      `,
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+  })
 })
 
 it('fails if workspace is empty', async () => {
@@ -685,6 +754,21 @@ describe('nested projects', () => {
     expect(ctx!.projects.map(project => project.config.testTimeout)).toEqual([999])
   })
 
+  it('cli --maxWorkers reaches projects', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { test: { name: 'unit' } },
+          ],
+        },
+      },
+      'basic.test.js': basicTest,
+    }, { $cliOptions: { maxWorkers: 3 } })
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map(project => project.config.maxWorkers)).toEqual([3])
+  })
+
   it('benchmark projects are created for nested projects', async () => {
     const { stderr, ctx } = await runInlineTests({
       'vitest.config.js': {
@@ -895,6 +979,57 @@ describe('sharedViteServer', () => {
     // that triggered its creation
     expect(unit.sharedViteServer).toBe(true)
     expect(e2e.sharedViteServer).toBe(true)
+  })
+
+  it('a string `extends` pointing at the declaring config keeps the server shared', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          testTimeout: 4321,
+          projects: [
+            { extends: './vitest.config.js', test: { name: 'self' } },
+            { extends: './base.config.js', test: { name: 'other' } },
+          ],
+        },
+      },
+      'base.config.js': {},
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const root = ctx!.getRootProject()
+    const shared = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.vite === root.vite]),
+    )
+    expect(shared).toEqual({
+      self: true,
+      other: false,
+    })
+    const self = ctx!.projects.find(project => project.name === 'self')!
+    expect(self.config.testTimeout).toBe(4321)
+  })
+
+  it('a string `extends` pointing at the container config shares the container server', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { extends: './vitest.config.js', test: { name: 'unit' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const [unit] = ctx!.projects
+    expect(unit.name).toBe('app (unit)')
+    expect(unit.sharedViteServer).toBe(true)
+    expect(unit.vite).not.toBe(ctx!.getRootProject().vite)
   })
 
   it('vite options that don\'t change the server don\'t prevent sharing', async () => {

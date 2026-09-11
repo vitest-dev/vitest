@@ -1023,7 +1023,8 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
     description: 'Print only test files with out the test cases',
   },
   staticParse: {
-    description: 'Parse files statically instead of running them to collect tests (default: false)',
+    description: 'Parse files statically instead of running them to collect tests (default: true)',
+    default: true,
   },
   staticParseConcurrency: {
     description: 'How many tests to process at the same time (default: os.availableParallelism())',

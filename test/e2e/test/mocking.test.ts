@@ -44,6 +44,35 @@ test('spy is not called here', () => {
   `)
 })
 
+test('mockReset works with autospied Node modules', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': {
+      test: {
+        mockReset: true,
+      },
+    },
+    './basic.test.js': `
+import * as fsp from 'node:fs/promises'
+import { expect, test, vi } from 'vitest'
+
+vi.mock(import('node:fs/promises'), { spy: true })
+
+test('exposes the spied module', () => {
+  expect(fsp.readFile).toBeDefined()
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "exposes the spied module": "passed",
+      },
+    }
+  `)
+})
+
 test('invalid packages', async () => {
   const { stderr, errorTree } = await runVitest({
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),
@@ -358,6 +387,43 @@ ${importChecks}
     {
       "basic.test.js": {
         "many unmock + mock (all should mocked)": "passed",
+      },
+    }
+  `)
+})
+
+test('the last doMock of the same path wins', async () => {
+  // repeats doMock twice for the same path without an import in between
+  //   vi.doMock('/mock-lib-0', () => ({ value: 'first' }));
+  //   vi.doMock('/mock-lib-0', () => ({ value: 'second' }));
+  //   ...
+  // then, the last registered factory should be used
+  //   import('/mock-lib-0') // => { value: 'second' }
+  const N = 20
+  const mockEntries = Array.from({ length: N }, (_, i) => `\
+vi.doMock('/mock-lib-${i}', () => ({ value: 'first' }));
+vi.doMock('/mock-lib-${i}', () => ({ value: 'second' }));
+`).join('\n')
+  const importChecks = Array.from({ length: N }, (_, i) => `\
+await expect(import('/mock-lib-${i}')).resolves.toEqual({ value: 'second' });
+`).join('\n')
+
+  const { stderr, errorTree } = await runInlineTests({
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+
+test('duplicate mock of the same path (last one should win)', async () => {
+${mockEntries}
+${importChecks}
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "duplicate mock of the same path (last one should win)": "passed",
       },
     }
   `)
