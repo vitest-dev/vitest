@@ -14,10 +14,9 @@ describe.for([
     expect(vitest.stdout).toContain('1 failed')
     expect(vitest.stdout).toContain('1 passed')
 
-    vitest.resetOutput()
-
     fs.editFile('./basic.test.js', code => `${code}\n`)
 
+    vitest.resetOutput()
     await vitest.waitForStdout('RERUN  ../basic.test.js')
     await vitest.waitForStdout('Waiting for file changes...')
 
@@ -36,10 +35,9 @@ describe.for([
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
 
-    vitest.resetOutput()
-
     fs.editFile('./failed.test.js', code => `${code}\n`)
 
+    vitest.resetOutput()
     await vitest.waitForStdout('RERUN  ../failed.test.js')
     await vitest.waitForStdout('Watching for file changes...')
 
