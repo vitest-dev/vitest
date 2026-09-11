@@ -25,6 +25,7 @@ import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
+import { getAsyncContextChain, refreshAsyncContextChain } from './async-context'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -145,7 +146,8 @@ async function callTestHooks(
 
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map(fn => limitMaxConcurrency(() => fn(test.context))))
+      const chain = getAsyncContextChain(test.context)
+      await Promise.all(hooks.map(fn => limitMaxConcurrency(() => chain ? chain(() => fn(test.context)) : fn(test.context))))
     }
     catch (e) {
       failTask(test.result!, e, runner.config._diffOptions)
@@ -154,7 +156,8 @@ async function callTestHooks(
   else {
     for (const fn of hooks) {
       try {
-        await limitMaxConcurrency(() => fn(test.context))
+        const chain = getAsyncContextChain(test.context)
+        await limitMaxConcurrency(() => chain ? chain(() => fn(test.context)) : fn(test.context))
       }
       catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)
@@ -245,6 +248,7 @@ interface AroundHooksOptions<THook extends Function> {
   callbackName: 'runTest()' | 'runSuite()'
   onTimeout?: (error: Error) => void
   invokeHook: (hook: THook, use: () => Promise<void>) => Awaitable<unknown>
+  refreshAsyncContextChain?: () => void
 }
 
 function makeAroundHookTimeoutError(
@@ -266,7 +270,7 @@ async function callAroundHooks<THook extends Function>(
   runInner: () => Promise<void>,
   options: AroundHooksOptions<THook>,
 ): Promise<void> {
-  const { hooks, hookName, callbackName, onTimeout, invokeHook } = options
+  const { hooks, hookName, callbackName, onTimeout, invokeHook, refreshAsyncContextChain } = options
 
   if (!hooks.length) {
     await runInner()
@@ -361,6 +365,10 @@ async function callAroundHooks<THook extends Function>(
       // Setup phase completed - clear setup timer
       setupTimeout.clear()
       setupLimitConcurrencyRelease?.()
+
+      // capture the async context established by the hook around `use()`,
+      // so fixture-driven entries into inner callbacks keep it (see async-context.ts)
+      refreshAsyncContextChain?.()
 
       // Run inner hooks - don't time this against our teardown timeout
       await runNextHook(index + 1).catch(e => hookErrors.push(e))
@@ -468,6 +476,7 @@ async function callAroundEachHooks(
       callbackName: 'runTest()',
       onTimeout: error => abortContextSignal(test.context, error),
       invokeHook: (hook, use) => hook(use, test.context, suite),
+      refreshAsyncContextChain: () => refreshAsyncContextChain(test.context),
     },
   )
 }
@@ -530,7 +539,7 @@ function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): v
   sendTasksUpdateThrottled(runner)
 }
 
-async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[], chainKey?: object) {
   const sequence = runner.config.sequence.hooks
 
   if (sequence === 'stack') {
@@ -543,7 +552,8 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
         if (typeof fn !== 'function') {
           return
         }
-        await limitMaxConcurrency(() => fn())
+        const chain = getAsyncContextChain(chainKey)
+        await limitMaxConcurrency(() => chain ? chain(() => fn()) : fn())
       }),
     )
   }
@@ -552,7 +562,8 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
       if (typeof fn !== 'function') {
         continue
       }
-      await limitMaxConcurrency(() => fn())
+      const chain = getAsyncContextChain(chainKey)
+      await limitMaxConcurrency(() => chain ? chain(() => fn()) : fn())
     }
   }
 }
@@ -680,7 +691,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
             suite,
           ]))
           if (beforeEachCleanups.length) {
-            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups, test.context))
           }
           // Only clean up fixtures created inside runTest (after the checkpoint)
           // Fixtures created for aroundEach will be cleaned up after aroundEach teardown

@@ -2,11 +2,19 @@ import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import type { VitestRunner, VitestRunnerConstructor } from '../runner/types'
+import { AsyncResource } from 'node:async_hooks'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { rpc } from '../rpc'
+import { setAsyncContextSnapshotFactory } from '../runner/async-context'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
 import { TestRunner } from './test'
+
+// equivalent to `AsyncLocalStorage.snapshot()` but with an explicit resource type
+setAsyncContextSnapshotFactory(() => {
+  const resource = new AsyncResource('VITEST_ASYNC_CONTEXT_CHAIN')
+  return fn => resource.runInAsyncScope(fn)
+})
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
