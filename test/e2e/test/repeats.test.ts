@@ -25,8 +25,8 @@ test('repeats config option is exposed to tests and repeats execution', async ()
   expect(overridden.diagnostic()!.repeatCount).toBe(1)
 })
 
-test('retry count is retained across repeats', async () => {
-  const { errorTree } = await runInlineTests({
+test('retry count and errors are retained across repeats', async () => {
+  const { errorTree, results } = await runInlineTests({
     'repeats.test.js': `
       import { afterAll, expect, it } from 'vitest'
 
@@ -37,7 +37,7 @@ test('retry count is retained across repeats', async () => {
         const retryCount = task.result.retryCount
         runs.push([repeatCount, retryCount])
         if (repeatCount === retryCount) {
-          throw new Error('retry')
+          throw new Error('repeat ' + repeatCount + ', retry ' + retryCount + ' failed')
         }
       })
 
@@ -60,6 +60,14 @@ test('retry count is retained across repeats', async () => {
         "retries each repeat once": "passed",
       },
     }
+  `)
+  const [test] = results[0].children.allTests()
+  expect(test.result().errors?.map(error => error.message)).toMatchInlineSnapshot(`
+    [
+      "repeat 0, retry 0 failed",
+      "repeat 1, retry 1 failed",
+      "repeat 2, retry 2 failed",
+    ]
   `)
 })
 
