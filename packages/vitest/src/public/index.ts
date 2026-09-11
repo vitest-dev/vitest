@@ -92,6 +92,7 @@ export type {
   TaskBase as RunnerTaskBase,
   TaskEventPack as RunnerTaskEventPack,
   TaskResult as RunnerTaskResult,
+  TaskResultAttempt as RunnerTaskResultAttempt,
   TaskResultPack as RunnerTaskResultPack,
   Test as RunnerTestCase,
   File as RunnerTestFile,
