@@ -70,6 +70,18 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'typecheck',
+          root: path.join(import.meta.dirname, 'typecheck'),
+          include: ['test/**/*.test.ts'],
+          testTimeout: 60_000,
+          sequence: {
+            groupOrder: 1,
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: 'snapshots',
           root: path.join(import.meta.dirname, 'snapshots'),
           exclude: ['**/fixtures/**', ...defaultExclude],

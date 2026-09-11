@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createFile, runInlineTests } from '../../test-utils'
+import { createFile, runInlineTests } from '../../../test-utils'
 
 describe('Typechecker Error Handling', () => {
   it('throws helpful error when tsc outputs help text (missing config)', async () => {

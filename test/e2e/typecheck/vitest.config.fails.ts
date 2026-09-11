@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// pnpm -C test/typescript test -- -c vitest.config.fails.ts
+// pnpm -C test/e2e/typecheck exec vitest -c vitest.config.fails.ts
 export default defineConfig({
   test: {
     dir: './failing',
