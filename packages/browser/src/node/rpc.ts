@@ -291,11 +291,18 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           return project.benchmark.writeResult(relativePath, data)
         },
         async onTaskUpdate(method, packs, events) {
-          if (method === 'collect') {
-            vitest.state.updateTasks(packs)
+          const sessions = vitest._browserSessions
+          sessions.startUpdate(options.sessionId)
+          try {
+            if (method === 'collect') {
+              vitest.state.updateTasks(packs)
+            }
+            else {
+              await vitest._testRun.updated(packs, events)
+            }
           }
-          else {
-            await vitest._testRun.updated(packs, events)
+          finally {
+            sessions.finishUpdate(options.sessionId)
           }
         },
         onAfterSuiteRun(meta) {
