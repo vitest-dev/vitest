@@ -199,6 +199,26 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
+   * @experimental
+   *
+   * Individual results for every retry and repeat attempt.
+   */
+  public attempts(): ReadonlyArray<TestAttempt> {
+    return (this.task.result?.attempts || []).map(attempt => ({
+      state: attempt.state === 'pass'
+        ? 'passed'
+        : attempt.state === 'fail'
+          ? 'failed'
+          : 'skipped',
+      errors: attempt.errors as TestError[] | undefined,
+      duration: attempt.duration,
+      startTime: attempt.startTime,
+      retryCount: attempt.retryCount,
+      repeatCount: attempt.repeatCount,
+    }))
+  }
+
+  /**
    * Test annotations added via the `task.annotate` API during the test execution.
    */
   public annotations(): ReadonlyArray<TestAnnotation> {
@@ -618,6 +638,25 @@ function buildOptions(
 export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
 export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
+
+/**
+ * The result of an individual test attempt.
+ * @experimental
+ */
+export interface TestAttempt {
+  /** The state after applying the test's expected failure option. */
+  readonly state: 'passed' | 'failed' | 'skipped'
+  /** Errors produced by this attempt. */
+  readonly errors: ReadonlyArray<TestError> | undefined
+  /** How long in milliseconds the attempt took to run. */
+  readonly duration: number
+  /** Time in milliseconds when the attempt started running. */
+  readonly startTime: number
+  /** The total number of retries before this attempt. */
+  readonly retryCount: number
+  /** The zero-based repeat index of this attempt. */
+  readonly repeatCount: number
+}
 
 export type TestResult
   = | TestResultPassed

@@ -159,6 +159,25 @@ export interface TaskMeta {
 }
 
 /**
+ * The result of an individual test attempt.
+ * @experimental
+ */
+export interface TaskResultAttempt {
+  /** The state after applying the test's expected failure option. */
+  state: 'pass' | 'fail' | 'skip'
+  /** Errors produced by this attempt. */
+  errors?: TestError[]
+  /** How long in milliseconds the attempt took to run. */
+  duration: number
+  /** Time in milliseconds when the attempt started running. */
+  startTime: number
+  /** The total number of retries before this attempt. */
+  retryCount: number
+  /** The zero-based repeat index of this attempt. */
+  repeatCount: number
+}
+
+/**
  * The result of calling a task.
  */
 export interface TaskResult {
@@ -174,6 +193,11 @@ export interface TaskResult {
    * if `expect.soft()` failed multiple times or `retry` was triggered.
    */
   errors?: TestError[]
+  /**
+   * Individual results for every retry and repeat attempt.
+   * @experimental
+   */
+  attempts?: TaskResultAttempt[]
   /**
    * How long in milliseconds the task took to run.
    */
