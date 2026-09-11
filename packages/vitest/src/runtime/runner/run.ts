@@ -616,7 +616,10 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const $ = runner.trace!
 
   const repeats = test.repeats ?? 0
+  let hasFailedRepeat = false
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
+    test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
@@ -761,6 +764,14 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       // update retry info
       updateTask('test-retried', test, runner)
     }
+
+    if (test.result.state === 'fail') {
+      hasFailedRepeat = true
+    }
+  }
+
+  if (hasFailedRepeat) {
+    test.result.state = 'fail'
   }
 
   // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
