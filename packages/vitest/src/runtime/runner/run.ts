@@ -622,6 +622,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      const attemptErrorsStart = test.result.errors?.length ?? 0
       let beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
@@ -746,11 +747,15 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         if (test.result.state === 'pass') {
           const error = processError(new Error('Expect test to fail'))
           test.result.state = 'fail'
-          test.result.errors = [error]
+          test.result.errors ??= []
+          test.result.errors.push(error)
         }
-        else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
+        else if (!test.result.errors?.slice(attemptErrorsStart).some(e => e.__vitest_test_syntax_error__)) {
           test.result.state = 'pass'
-          test.result.errors = undefined
+          test.result.errors?.splice(attemptErrorsStart)
+          if (!test.result.errors?.length) {
+            test.result.errors = undefined
+          }
         }
       }
       if (test.result.state === 'pass') {
