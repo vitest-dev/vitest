@@ -67,12 +67,6 @@ function toggleOpen() {
     return
   }
 
-  // Selecting the suite is a side-effect of expanding it so that the report
-  // updates even when Playwright's center-click lands on the expand button
-  // rather than the outer item div (the button's @click.stop would otherwise
-  // prevent the item-level @click from firing).
-  onItemClick?.(task.value!)
-
   if (opened) {
     explorerTree.collapseNode(taskId)
   }
