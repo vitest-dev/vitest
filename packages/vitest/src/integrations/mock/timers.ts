@@ -164,18 +164,24 @@ export class FakeTimers {
     }
 
     let toNotFake = this._userConfig?.toNotFake
-    if (toFake === undefined && toNotFake === undefined) {
-      // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
+    if (toFake === undefined) {
+      // Do not mock timers internally used by node by default. They can still be mocked through
+      // `toFake`. `toNotFake` subtracts from this default set: it must not fall through to the
+      // default of @sinonjs/fake-timers, which fakes every available method.
+      const excluded = new Set<string>(['nextTick', 'queueMicrotask', ...toNotFake ?? []])
       toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])
-        .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
+        .filter(timer => !excluded.has(timer))
+      // the exclusions are already applied above, and both options cannot be passed together
+      toNotFake = undefined
     }
-    if (isChildProcess() && toNotFake && !toNotFake.includes('nextTick')) {
-      toNotFake = [...toNotFake, 'nextTick']
-    }
+
+    // `toFake` and `toNotFake` cannot be passed together, so the resolved values replace whatever
+    // the user config holds instead of being merged with it
+    const { toFake: _toFake, toNotFake: _toNotFake, ...restConfig } = this._userConfig ?? {}
 
     this._clock = this._fakeTimers.install({
       now: fakeDate,
-      ...this._userConfig,
+      ...restConfig,
       ...(toFake && { toFake }),
       ...(toNotFake && { toNotFake }),
       ignoreMissingTimers: true,

@@ -154,7 +154,7 @@ describe('FakeTimers', () => {
       expect(global.clearImmediate).toBe(origClearImmediate)
     })
 
-    it.skipIf(isChildProcess)('mocks process.nextTick when toNotFake does not include nextTick', () => {
+    it('does not mock process.nextTick when toNotFake is used without it', () => {
       const origNextTick = () => {}
       const global = {
         Date: FakeDate,
@@ -164,21 +164,7 @@ describe('FakeTimers', () => {
         },
         setTimeout,
       }
-      const timers = new FakeTimers({ global, config: { toNotFake: [] } })
-      timers.useFakeTimers()
-      expect(global.process.nextTick).not.toBe(origNextTick)
-    })
-
-    it.runIf(isChildProcess)('does not mock process.nextTick when toNotFake does not include nextTick and is child_process', () => {
-      const origNextTick = () => {}
-      const global = {
-        Date: FakeDate,
-        clearTimeout,
-        process: {
-          nextTick: origNextTick,
-        },
-        setTimeout,
-      }
+      // nextTick is excluded by the Vitest default, and `toNotFake` only subtracts from it
       const timers = new FakeTimers({ global, config: { toNotFake: [] } })
       timers.useFakeTimers()
       expect(global.process.nextTick).toBe(origNextTick)
@@ -197,6 +183,38 @@ describe('FakeTimers', () => {
       const timers = new FakeTimers({ global, config: { toNotFake: ['nextTick'] } })
       timers.useFakeTimers()
       expect(global.process.nextTick).toBe(origNextTick)
+    })
+
+    it('keeps queueMicrotask native when toNotFake is used without it', () => {
+      const origQueueMicrotask = () => {}
+      const origSetImmediate = () => {}
+      const origSetTimeout = setTimeout
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        queueMicrotask: origQueueMicrotask,
+        setImmediate: origSetImmediate,
+        setTimeout,
+      }
+      // `toNotFake` subtracts from the Vitest default, it does not fall back to faking everything
+      const timers = new FakeTimers({ global, config: { toNotFake: ['setImmediate'] } })
+      timers.useFakeTimers()
+      expect(global.setTimeout).not.toBe(origSetTimeout)
+      expect(global.setImmediate).toBe(origSetImmediate)
+      expect(global.queueMicrotask).toBe(origQueueMicrotask)
+    })
+
+    it('mocks queueMicrotask when toFake includes it', () => {
+      const origQueueMicrotask = () => {}
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        queueMicrotask: origQueueMicrotask,
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global, config: { toFake: ['queueMicrotask'] } })
+      timers.useFakeTimers()
+      expect(global.queueMicrotask).not.toBe(origQueueMicrotask)
     })
 
     it("toFake and toNotFake cannot be used together", () => {
