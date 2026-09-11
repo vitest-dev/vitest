@@ -911,6 +911,57 @@ test('`vitest bench` CLI invocation filters to the cloned benchmark project', as
   expect(projectNames).toEqual(['bench'])
 })
 
+test('`vitest bench --project` filters by the configured project name', async () => {
+  const structure = {
+    'vitest.config.js': {
+      test: {
+        projects: [
+          { test: { name: '@workspace/test' } },
+          { test: { name: '@workspace/other' } },
+        ],
+      },
+    },
+    'x.bench.ts': /* ts */`
+      import { test, inject } from 'vitest'
+      test('x', async ({ bench }) => {
+        await bench('a', () => {}).run(inject('options'))
+      })
+`,
+  } satisfies Parameters<typeof runInlineTests>[0]
+
+  const selected = await runInlineTests(
+    structure,
+    {
+      project: '@workspace/test',
+      $cliOptions: { benchmarkOnly: true },
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(selected.stderr).toBe('')
+  expect(selected.ctx?.projects.map(project => project.name)).toEqual(['@workspace/test (bench)'])
+
+  const regular = await runInlineTests(
+    structure,
+    {
+      project: '@workspace/test',
+      passWithNoTests: true,
+    },
+  )
+  expect(regular.thrown).toBe(false)
+  expect(regular.ctx?.projects.map(project => project.name)).toEqual(['@workspace/test'])
+
+  const excluded = await runInlineTests(
+    structure,
+    {
+      project: '!@workspace/test',
+      $cliOptions: { benchmarkOnly: true },
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(excluded.stderr).toBe('')
+  expect(excluded.ctx?.projects.map(project => project.name)).toEqual(['@workspace/other (bench)'])
+})
+
 test('json reporter surfaces benchmarks on each assertion result', async () => {
   const { stderr, root } = await runInlineTests(
     {
