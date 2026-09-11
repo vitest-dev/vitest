@@ -485,7 +485,7 @@ export default defineConfig({
 
 ## Coverage `include` and `exclude` Match More Precisely
 
-[`coverage.include`](/config/coverage#coverage-include) and `coverage.exclude` were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. Patterns are now matched against each file's path relative to the project root, without `contains`, and a pattern with no glob wildcard is treated as a directory that matches everything inside it:
+[`coverage.include`](/config/coverage#coverage-include) and [`coverage.exclude`](/config/coverage#coverage-exclude) were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. Patterns are now matched against each file's path relative to the project root, without `contains`, and a pattern with no glob wildcard is treated as a directory that matches everything inside it:
 
 ```ts [vitest.config.ts]
 export default defineConfig({
