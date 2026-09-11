@@ -381,39 +381,41 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
-  // Chromium acks `Fetch.enable` before interception is live, so a module request right
-  // after the first `context.route` call can be served unmocked (#8339).
   private armInterception(page: Page): Promise<void> {
     if (this.browserName !== 'chromium') {
       return Promise.resolve()
     }
     const context = page.context()
-    const armed = this.armedContexts.get(context) ?? this.probeInterception(page)
+    const armed = this.armedContexts.get(context) ?? this.probeInterception(page).catch((error) => {
+      this.armedContexts.delete(context)
+      throw error
+    })
     this.armedContexts.set(context, armed)
     return armed
   }
 
   private async probeInterception(page: Page): Promise<void> {
     const probeUrl = '/__vitest_interception_probe__'
+    const probePattern = `**${probeUrl}`
     const token = randomUUID()
-    await page.context().route(`**${probeUrl}`, route => route.fulfill({
+    const context = page.context()
+    await context.route(probePattern, route => route.fulfill({
       status: 204,
       headers: { 'x-vitest-probe': token },
     }))
     const deadline = Date.now() + 5_000
     while (Date.now() < deadline) {
-      const result = await Promise.race([
-        page.evaluate(
-          url => fetch(url, { cache: 'no-store' }).then(r => r.headers.get('x-vitest-probe'), () => null),
-          probeUrl,
-        ).catch(() => null),
-        new Promise<null>(resolve => setTimeout(resolve, deadline - Date.now(), null)),
-      ])
+      const result = await page.evaluate(
+        url => fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(1_000) })
+          .then(r => r.headers.get('x-vitest-probe'), () => null),
+        probeUrl,
+      ).catch(() => null)
       if (result === token) {
         return
       }
       await new Promise(resolve => setTimeout(resolve, 10))
     }
+    await context.unroute(probePattern)
     throw new Error(`Cannot verify that ${this.browserName} request interception is active after 5s; module mocks would not apply reliably (#8339)`)
   }
 
