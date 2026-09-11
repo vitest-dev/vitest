@@ -16,6 +16,14 @@ outline: deep
 Vitest 5.0 requires Vite >= 6.4.0 and Node.js >= 22.12.0. Before proceeding with any other migration steps, ensure your environment meets these requirements. Running Vitest 5.0 on older versions of Vite or Node.js is not supported and may result in unexpected errors.
 :::
 
+## Yarn Users Must Install `vite` Explicitly
+
+`vite` is no longer a direct dependency of `vitest`. It is now a required peer dependency, so the version of Vite used by Vitest is the one installed in your project. npm, pnpm, Bun, and Deno install peer dependencies automatically. Yarn does not, so after the upgrade Vitest cannot resolve `vite` unless it is listed in your `package.json`:
+
+```bash
+yarn add -D vite
+```
+
 ## `clearMocks` is Enabled by Default
 
 [`clearMocks`](/config/clearmocks) now defaults to `true`: Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, clearing the recorded history of every mock while leaving implementations intact.
