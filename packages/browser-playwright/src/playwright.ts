@@ -28,7 +28,6 @@ import type {
   CDPSession,
   TestProject,
 } from 'vitest/node'
-import { randomUUID } from 'node:crypto'
 import { defineBrowserProvider } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import { resolve } from 'pathe'
@@ -397,20 +396,19 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private async probeInterception(page: Page): Promise<void> {
     const probeUrl = '/__vitest_interception_probe__'
     const probePattern = `**${probeUrl}`
-    const token = randomUUID()
     const context = page.context()
     await context.route(probePattern, route => route.fulfill({
       status: 204,
-      headers: { 'x-vitest-probe': token },
+      headers: { 'x-vitest-probe': '1' },
     }))
     const deadline = Date.now() + 5_000
     while (Date.now() < deadline) {
-      const result = await page.evaluate(
+      const intercepted = await page.evaluate(
         url => fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(1_000) })
-          .then(r => r.headers.get('x-vitest-probe'), () => null),
+          .then(r => r.headers.has('x-vitest-probe'), () => false),
         probeUrl,
-      ).catch(() => null)
-      if (result === token) {
+      ).catch(() => false)
+      if (intercepted) {
         return
       }
       await new Promise(resolve => setTimeout(resolve, 10))
