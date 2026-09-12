@@ -99,35 +99,17 @@ export function createRuntimeRpc(
           'onCancel',
         ],
         timeout: -1,
-        onRequest(req, next) {
-          if (req.m !== 'onUserConsoleLog') {
-            return next()
-          }
-
-          const calls = pendingCalls.get(req.m) || []
-          calls.push(req.a)
-          pendingCalls.set(req.m, calls)
-
-          return next().finally(() => {
-            const index = calls.indexOf(req.a)
-            if (index !== -1) {
-              calls.splice(index, 1)
-            }
-            if (!calls.length) {
-              pendingCalls.delete(req.m)
-            }
-          })
-        },
         ...options,
       },
     ),
+    pendingCalls,
   )
 
   pendingRpcArgs.set(rpc, pendingCalls)
   return rpc
 }
 
-function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
+function createSafeRpc(rpc: WorkerRPC, pendingCalls: Map<string, unknown[][]>): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
       // keep $rejectPendingCalls as sync function
@@ -138,13 +120,33 @@ function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(async () => {
-          const result = sendCall(...args)
-          promises.add(result)
+          const method = 'onUserConsoleLog'
+          const calls = p === method ? pendingCalls.get(method) || [] : undefined
+          if (calls) {
+            calls.push(args)
+            pendingCalls.set(method, calls)
+          }
+
           try {
-            return await result
+            const result = sendCall(...args)
+            promises.add(result)
+            try {
+              return await result
+            }
+            finally {
+              promises.delete(result)
+            }
           }
           finally {
-            promises.delete(result)
+            if (calls) {
+              const index = calls.indexOf(args)
+              if (index !== -1) {
+                calls.splice(index, 1)
+              }
+              if (!calls.length) {
+                pendingCalls.delete(method)
+              }
+            }
           }
         })
       safeSendCall.asEvent = sendCall.asEvent
