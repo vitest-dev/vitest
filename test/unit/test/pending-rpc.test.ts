@@ -36,4 +36,5 @@ test('includes a pending console log in the environment teardown error', async (
     The pending log was:
     late console log"
   `)
+  expect(getPendingRpcArgs(rpc, 'onUserConsoleLog')).toBeUndefined()
 })
