@@ -20,6 +20,7 @@ import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
+import { rm } from 'node:fs/promises'
 import os, { tmpdir } from 'node:os'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
@@ -166,7 +167,7 @@ export class Vitest {
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _fsCache!: FileSystemModuleCache
-  /** @internal */ _tmpDir = join(tmpdir(), nanoid())
+  /** @internal */ _tmpDir: string | undefined = join(tmpdir(), nanoid())
   /** @internal */ _traces!: Traces
   /** @internal */ _harness: PluginHarness
   /** @internal */ _exitTimeout: ReturnType<typeof setTimeout> | undefined
@@ -252,12 +253,14 @@ export class Vitest {
     this._fsCache = new FileSystemModuleCache(this)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._resolver = new VitestResolver(this.viteConfig.cacheDir, resolved)
+    // a closed run removes the temp dir, so a restart must allocate a new one
+    const tmpDir = this._tmpDir ??= join(tmpdir(), nanoid())
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       resolved,
       this._fsCache,
       this._traces,
-      this._tmpDir,
+      tmpDir,
     )
   }
 
@@ -1635,10 +1638,29 @@ export class Vitest {
 
           this._checkUnhandledErrors(errors)
         })
+        // the pool is down: forked workers read tmp module copies from disk
+        await this._clearTmpDir()
         await this._traces?.finish()
       })()
     }
     return this.closingPromise
+  }
+
+  /**
+   * Removes the root temp directory with the tmp module copies,
+   * mirroring `TestProject.clearTmpDir()`. The reference is cleared before
+   * the removal so a repeated close is a no-op.
+   */
+  private async _clearTmpDir(): Promise<void> {
+    if (!this._tmpDir) {
+      return
+    }
+    const tmpDir = this._tmpDir
+    this._tmpDir = undefined
+    try {
+      await rm(tmpDir, { recursive: true, force: true })
+    }
+    catch {}
   }
 
   /**
