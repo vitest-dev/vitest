@@ -42,3 +42,13 @@ test('PROD, DEV, SSR should be boolean', () => {
   import.meta.env.SSR = true
   expect(import.meta.env.SSR).toEqual(true)
 })
+
+test('ignores assignments to import.meta.env', () => {
+  const env = import.meta.env
+  // @ts-expect-error for testing
+  import.meta.env = {}
+  expect(import.meta.env).toBe(env)
+  // @ts-expect-error for testing
+  import.meta.env = import.meta.env || {}
+  expect(import.meta.env).toBe(env)
+})
