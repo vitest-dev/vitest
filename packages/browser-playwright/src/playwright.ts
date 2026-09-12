@@ -240,6 +240,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private browserPromise: Promise<Browser> | null = null
   private closing = false
+  private armedContexts = new WeakMap<BrowserContext, Promise<void>>()
 
   public tracingContexts: Set<string> = new Set()
   public pendingTraces: Map<string, string> = new Map()
@@ -379,6 +380,43 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
+  private armInterception(page: Page): Promise<void> {
+    if (this.browserName !== 'chromium') {
+      return Promise.resolve()
+    }
+    const context = page.context()
+    const armed = this.armedContexts.get(context) ?? this.probeInterception(page).catch((error) => {
+      this.armedContexts.delete(context)
+      throw error
+    })
+    this.armedContexts.set(context, armed)
+    return armed
+  }
+
+  private async probeInterception(page: Page): Promise<void> {
+    const probeUrl = '/__vitest_interception_probe__'
+    const probePattern = `**${probeUrl}`
+    const context = page.context()
+    await context.route(probePattern, route => route.fulfill({
+      status: 204,
+      headers: { 'x-vitest-probe': '1' },
+    }))
+    const deadline = Date.now() + 5_000
+    while (Date.now() < deadline) {
+      const intercepted = await page.evaluate(
+        url => fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(1_000) })
+          .then(r => r.headers.has('x-vitest-probe'), () => false),
+        probeUrl,
+      ).catch(() => false)
+      if (intercepted) {
+        return
+      }
+      await new Promise(resolve => setTimeout(resolve, 10))
+    }
+    await context.unroute(probePattern)
+    throw new Error(`Cannot verify that ${this.browserName} request interception is active after 5s; module mocks would not apply reliably (#8339)`)
+  }
+
   private createMocker(): BrowserModuleMocker {
     const idPredicates = new Map<string, (url: URL) => boolean>()
     const sessionIds = new Map<string, Set<string>>()
@@ -423,6 +461,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
+        await this.armInterception(page)
         const { url: moduleUrl, predicate } = createPredicate(module.url)
         const key = predicateKey(sessionId, moduleUrl)
         const existingPredicate = idPredicates.get(key)
