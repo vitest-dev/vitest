@@ -1,10 +1,27 @@
 import type { EvaluatedModules } from 'vite/module-runner'
+import type { UserConsoleLog } from '../types/general'
 import type { WorkerGlobalState } from '../types/worker'
 
 const NAME_WORKER_STATE = '__vitest_worker__'
 
 export class EnvironmentTeardownError extends Error {
   name = 'EnvironmentTeardownError'
+}
+
+export function createEnvironmentTeardownError(method: string, args?: unknown[]): EnvironmentTeardownError {
+  let message = `[vitest-worker]: Closing rpc while "${method}" was pending`
+
+  if (method === 'onUserConsoleLog') {
+    message += '\nThis can happen when an asynchronous operation is running after the test has finished.'
+      + '\nMake sure all asynchronous operations are awaited, or run with --detectAsyncLeaks to find leaking resources.'
+
+    const log = args?.[0] as UserConsoleLog | undefined
+    if (log && typeof log.content === 'string') {
+      message += `\n\nThe pending log was:\n${log.content}`
+    }
+  }
+
+  return new EnvironmentTeardownError(message)
 }
 
 export function getWorkerState(): WorkerGlobalState {

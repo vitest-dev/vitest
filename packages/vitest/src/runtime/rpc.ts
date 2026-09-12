@@ -52,6 +52,12 @@ function withSafeTimers(fn: () => void) {
 }
 
 const promises = new Set<Promise<unknown>>()
+const pendingRpcArgs = new WeakMap<WorkerRPC, Map<string, unknown[][]>>()
+
+export function getPendingRpcArgs(rpc: WorkerRPC, method: string): unknown[] | undefined {
+  const calls = pendingRpcArgs.get(rpc)?.get(method)
+  return calls?.[calls.length - 1]
+}
 
 export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
@@ -79,7 +85,9 @@ export function createRuntimeRpc(
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
 ): WorkerRPC {
-  return createSafeRpc(
+  const pendingCalls = new Map<string, unknown[][]>()
+
+  const rpc = createSafeRpc(
     createBirpc<RuntimeRPC, RunnerRPC>(
       {
         async onCancel(reason) {
@@ -91,10 +99,32 @@ export function createRuntimeRpc(
           'onCancel',
         ],
         timeout: -1,
+        onRequest(req, next) {
+          if (req.m !== 'onUserConsoleLog') {
+            return next()
+          }
+
+          const calls = pendingCalls.get(req.m) || []
+          calls.push(req.a)
+          pendingCalls.set(req.m, calls)
+
+          return next().finally(() => {
+            const index = calls.indexOf(req.a)
+            if (index !== -1) {
+              calls.splice(index, 1)
+            }
+            if (!calls.length) {
+              pendingCalls.delete(req.m)
+            }
+          })
+        },
         ...options,
       },
     ),
   )
+
+  pendingRpcArgs.set(rpc, pendingCalls)
+  return rpc
 }
 
 function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
