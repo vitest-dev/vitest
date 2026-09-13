@@ -51,9 +51,9 @@
     "@jridgewell/gen-mapping": "^0.3.13",
     "@jridgewell/trace-mapping": "catalog:",
     "@vitest/istanbul-lib-coverage": "catalog:",
-    "@vitest/istanbul-lib-instrument": "^1.0.0",
+    "@vitest/istanbul-lib-instrument": "^1.0.1",
     "@vitest/istanbul-lib-report": "catalog:",
-    "@vitest/istanbul-lib-source-maps": "^1.0.0",
+    "@vitest/istanbul-lib-source-maps": "^1.0.1",
     "magicast": "catalog:",
     "obug": "catalog:",
     "tinyrainbow": "catalog:"
