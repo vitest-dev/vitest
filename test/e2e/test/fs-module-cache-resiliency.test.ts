@@ -148,6 +148,42 @@ test('the cache is still populated and reused when nothing interferes', async ()
   })
 })
 
+test('re-resolves renamed extensionless dependencies', async () => {
+  const firstRun = await runInlineTests({
+    'b.ts': `export const value = 'ts'`,
+    'subject.js': `import { value } from './b'\nexport { value }`,
+    'basic.test.js': `
+      import { expect, test } from 'vitest'
+      import { value } from './subject.js'
+      test('uses the dependency', () => {
+        expect(value).toBe('ts')
+      })
+    `,
+  }, {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  })
+
+  expect(firstRun.stderr).toBe('')
+  expect(firstRun.testTree()).toMatchObject({
+    'basic.test.js': { 'uses the dependency': 'passed' },
+  })
+
+  await firstRun.ctx?.close()
+  firstRun.fs.renameFile('b.ts', 'b.tsx')
+  const secondRun = await runVitest({
+    root: firstRun.fs.root,
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  })
+
+  await secondRun.ctx?.close()
+  expect(secondRun.stderr).toBe('')
+  expect(secondRun.testTree()).toMatchObject({
+    'basic.test.js': { 'uses the dependency': 'passed' },
+  })
+})
+
 test('cached modules are invalidated after every lockfile change', async () => {
   const firstRun = await runInlineTests({
     'package.json': JSON.stringify({ type: 'module' }),
