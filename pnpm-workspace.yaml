@@ -1,9 +1,9 @@
 catalogMode: prefer
 
-cleanupUnusedCatalogs: true
+catalogPrune: true
 ignoreWorkspaceRootCheck: true
+minimumReleaseAgeExcludePrune: true
 minimumReleaseAgeExclude:
-  - tinybench@6.1.3
   - '@vitest/istanbul-lib-coverage@1.0.0'
   - '@vitest/istanbul-lib-instrument@1.0.0'
   - '@vitest/istanbul-lib-report@1.0.0'
