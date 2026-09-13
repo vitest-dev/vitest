@@ -328,6 +328,10 @@ Since Vitest 3.2, if you don't have the `browser` option in your config but spec
 
 By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/browser/viewport).
 
+::: tip
+The size passed to `page.viewport` only applies to the test that calls it - Vitest restores the previous size once that test is done, so it cannot affect the tests that follow. Call it in `beforeEach` (or set `browser.viewport`) when every test of a suite should use the same size.
+:::
+
 For an alternative debugging model that captures DOM snapshots for every test instead of showing a live iframe, see [Trace View](/guide/browser/trace-view).
 
 ## Headless

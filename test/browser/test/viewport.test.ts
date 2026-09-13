@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { server } from 'vitest/browser'
+import { page, server } from 'vitest/browser'
 
 describe.skipIf(
   // preview cannot control viewport
@@ -28,5 +28,25 @@ describe.skipIf(
     else {
       expect(screen.availWidth - topWindow.innerWidth === 0).toBe(true)
     }
+  })
+})
+
+describe.skipIf(
+  // preview cannot control viewport
+  server.provider === 'preview',
+)('viewport is scoped to the test that asks for it', () => {
+  it('resizes the viewport', async () => {
+    await page.viewport(320, 568)
+
+    expect(window.innerWidth).toBe(320)
+    expect(window.innerHeight).toBe(568)
+  })
+
+  // must run after the test above, so the order matters here
+  it('restores the previous size for the tests that follow', () => {
+    const { width, height } = server.config.browser.viewport
+
+    expect(window.innerWidth).toBe(width)
+    expect(window.innerHeight).toBe(height)
   })
 })

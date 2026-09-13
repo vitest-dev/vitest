@@ -839,6 +839,10 @@ export const commands: BrowserCommands
 export interface BrowserPage extends LocatorSelectors {
   /**
    * Change the size of iframe's viewport.
+   *
+   * The size only applies to the test that calls it: Vitest restores the
+   * previous size when that test is done. Call this in `beforeEach` if every
+   * test of the suite should use the same size.
    */
   viewport(width: number, height: number): Promise<void>
   /**
