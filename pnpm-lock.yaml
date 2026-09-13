@@ -176,7 +176,7 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@15.4.0': 8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb
+  '@sinonjs/fake-timers@15.4.0': 5945e0a65ab7feea06ac881593dfdec757a3897ab7b7445f52a45eb6b0d79ab6
   acorn@8.11.3: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
   cac@6.7.14: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
   rrweb-snapshot@2.1.1: b66b30796877352a5f887f3f4115c4e7265ddc11772af2223da4bd92293716f6
@@ -1012,7 +1012,7 @@ importers:
         version: 1.9.1
       '@sinonjs/fake-timers':
         specifier: 15.4.0
-        version: 15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)
+        version: 15.4.0(patch_hash=5945e0a65ab7feea06ac881593dfdec757a3897ab7b7445f52a45eb6b0d79ab6)
       '@types/jsdom':
         specifier: ^28.0.3
         version: 28.0.3
@@ -13311,7 +13311,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)':
+  '@sinonjs/fake-timers@15.4.0(patch_hash=5945e0a65ab7feea06ac881593dfdec757a3897ab7b7445f52a45eb6b0d79ab6)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
@@ -18797,7 +18797,7 @@ snapshots:
   sinon@22.1.0:
     dependencies:
       '@sinonjs/commons': 3.0.1
-      '@sinonjs/fake-timers': 15.4.0(patch_hash=8fb375421f30746697394082b6fcf4a218fe07a8db36474ac335c48aff32c0cb)
+      '@sinonjs/fake-timers': 15.4.0(patch_hash=5945e0a65ab7feea06ac881593dfdec757a3897ab7b7445f52a45eb6b0d79ab6)
       '@sinonjs/samsam': 10.0.2
       diff: 9.0.0
 
