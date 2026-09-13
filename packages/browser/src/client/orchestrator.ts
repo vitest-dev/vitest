@@ -245,7 +245,20 @@ export class IframeOrchestrator {
     container.appendChild(iframe)
 
     await new Promise<void>((resolve, reject) => {
+      // the load event waits for the page and all of its subresources; a request
+      // that never finishes (a stalled server, a starved browser) would leave
+      // the pool waiting for this iframe for the rest of the run
+      const timeout = getIframeTimeout()
+      const loadTimer = setTimeout(() => {
+        reject(new Error(
+          `The iframe "${iframeId}" did not load within ${timeout}ms. `
+          + `The tester page or one of its subresources never finished loading, `
+          + `check the browser console and the network tab for pending requests.`,
+        ))
+      }, timeout)
+
       iframe.onload = () => {
+        clearTimeout(loadTimer)
         const href = this.getIframeHref(iframe)
         debug('iframe loaded with href', href)
         if (href !== iframe.src) {
@@ -278,6 +291,7 @@ export class IframeOrchestrator {
         }
       }
       iframe.onerror = (e) => {
+        clearTimeout(loadTimer)
         if (typeof e === 'string') {
           reject(this.dispatchIframeError(new Error(e)))
         }
