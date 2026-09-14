@@ -10,12 +10,34 @@ declare module 'vitest' {
   }
 }
 
+// when UI is enabled, automatically set the viewport using this value as the scale target
+const IFRAME_SCALE_TARGET = 0.8
+
+beforeAll(async () => {
+  if (server.config.browser.ui) {
+    const frame = window.frameElement as HTMLIFrameElement
+    const container = frame.parentElement!
+    const frameWidth = frame.getBoundingClientRect().width
+    const containerWidth = container.getBoundingClientRect().width
+
+    await page.viewport(
+      Math.round(Math.max(containerWidth, frameWidth) * (1 / IFRAME_SCALE_TARGET)),
+      window.innerHeight,
+    )
+  }
+})
+
+// when running with UI enabled, because of scaling, a real "browser pixel"
+//  maps to many "iframe pixels"
 expect.extend({
   __withinTolerance(received, expected) {
     const difference = Math.abs(received - expected)
-    // need to use a tolerance when UI is enabled because of scaling
-    // a real pixel can be many "iframe pixels" depending on the applied scaling
-    const tolerance = server.config.browser.ui ? 5 : 0
+    const tolerance = server.config.browser.ui
+      // the test is running in a scaled frame, compute how many "iframe pixels" correspond
+      //  to a "browser pixel", ceil the result, and add an extra buffer for safety
+      ? Math.ceil(1 / IFRAME_SCALE_TARGET) + 1
+      // the test is running at full scale so the provided coordinates should match exactly
+      : 0
 
     return {
       pass: difference <= tolerance,
@@ -37,6 +59,7 @@ const BUTTON_ABSOLUTE_HTML = /* html */`<button style="position: absolute; top: 
 //  - log event position and offset (w.r.t. target)
 //  - print a red circle on `mousedown` and a blue one on `mouseup`
 // beforeAll(() => {
+//   const id = 'pntr'
 //   const ac = new AbortController()
 //   const fn = (color: string) => (e: MouseEvent) => {
 //     console.log(e)
@@ -47,10 +70,10 @@ const BUTTON_ABSOLUTE_HTML = /* html */`<button style="position: absolute; top: 
 //       offsetX: e.offsetX,
 //       offsetY: e.offsetY,
 //     })
-//     let pointer = document.getElementById('pntr')
+//     let pointer = document.getElementById(id)
 //     if (!pointer) {
 //       pointer = document.createElement('div')
-//       pointer.id = 'pntr'
+//       pointer.id = id
 //       document.body.appendChild(pointer)
 //     }
 //     pointer.style = `position: absolute; top: ${e.clientY}px; left: ${e.clientX}px; width: 5px; height: 5px; background-color: ${color}; pointer-events: none; border-radius: 100%;`
@@ -63,7 +86,7 @@ const BUTTON_ABSOLUTE_HTML = /* html */`<button style="position: absolute; top: 
 // })
 
 test('click triggers hover events', async ({ expect }) => {
-  document.body.innerHTML = `
+  document.body.innerHTML = /* html */`
     <div style="padding: 1rem;">
       <button>Button</button>
     </div>
@@ -124,7 +147,7 @@ test('click at coordinates triggers hover events', async ({ expect }) => {
 })
 
 test('moves between coordinates', async ({ expect }) => {
-  document.body.innerHTML = `
+  document.body.innerHTML = /* html */`
     <div id="a" style="position:absolute; top:0; left:0; width:100px; height:100px;"></div>
     <div id="b" style="position:absolute; top:200px; left:0; width:100px; height:100px;"></div>
   `
@@ -153,7 +176,7 @@ test('moves between coordinates', async ({ expect }) => {
 })
 
 test('down only fires mousedown event', async ({ expect }) => {
-  document.body.innerHTML = `<button>Button</button>`
+  document.body.innerHTML = /* html */`<button>Button</button>`
 
   const down = vi.fn<MouseAction>()
   const up = vi.fn<MouseAction>()
@@ -202,7 +225,7 @@ test.for([
 })
 
 test('multiple clicks trigger double click', async ({ expect }) => {
-  document.body.innerHTML = `<button>Button</button>`
+  document.body.innerHTML = /* html */`<button>Button</button>`
 
   const click = vi.fn<PointerAction>()
   const doubleClick = vi.fn<MouseAction>()
@@ -228,7 +251,7 @@ test('multiple clicks trigger double click', async ({ expect }) => {
 })
 
 test('clicks with middle button', async ({ expect }) => {
-  document.body.innerHTML = `<button>Button</button>`
+  document.body.innerHTML = /* html */`<button>Button</button>`
 
   const down = vi.fn<MouseAction>()
   const up = vi.fn<MouseAction>()
@@ -256,7 +279,7 @@ test('clicks with middle button', async ({ expect }) => {
 })
 
 test('clicks with right button', async ({ expect }) => {
-  document.body.innerHTML = `<button>Button</button>`
+  document.body.innerHTML = /* html */`<button>Button</button>`
 
   const down = vi.fn<MouseAction>()
   const up = vi.fn<MouseAction>()
@@ -285,9 +308,9 @@ test('clicks with right button', async ({ expect }) => {
 })
 
 test('drags and drops', async ({ expect }) => {
-  document.body.innerHTML = `
-    <div id="source" draggable="true" style="position: absolute; top: 0; left: 0; width: 50px; height: 50px;">Drag me</div>
-    <div id="target" style="position: absolute; top: 0; left: 300px; width: 100px; height: 100px;">Drop here</div>
+  document.body.innerHTML = /* html */`
+    <button id="source" draggable="true" style="position: absolute; top: 0; left: 0; width: 50px; height: 50px;">Drag me</button>
+    <div id="target" style="position: absolute; top: 300px; left: 0; width: 100px; height: 100px;">Drop here</div>
   `
 
   const DRAG_CONTENT = 'drag content'
@@ -332,7 +355,7 @@ test('drags and drops', async ({ expect }) => {
 })
 
 test('temporary modifiers apply to one action', async ({ expect }) => {
-  document.body.innerHTML = `<button>Button</button>`
+  document.body.innerHTML = /* html */`<button>Button</button>`
 
   const click = vi.fn<PointerAction>()
 
@@ -353,7 +376,7 @@ test('temporary modifiers apply to one action', async ({ expect }) => {
 })
 
 test('persistent modifiers survive multiple actions', async ({ expect }) => {
-  document.body.innerHTML = `
+  document.body.innerHTML = /* html */`
     <button id="a">A</button>
     <button id="b">B</button>
     <button id="c">C</button>
@@ -412,7 +435,7 @@ test('modifiers work with coordinates', async ({ expect }) => {
 })
 
 test('keyboard-fired modifiers apply to pointer events', async ({ expect }) => {
-  document.body.innerHTML = `<button>Button</button>`
+  document.body.innerHTML = /* html */`<button>Button</button>`
 
   const click = vi.fn<PointerAction>()
 
