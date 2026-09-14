@@ -66,12 +66,14 @@ export async function assertTestCounts(page: Page, { pass, fail, skip = 0 }: { p
 }
 
 export function getExplorerItem(page: Page, name: string) {
-  // The virtual scroller keeps recycled rows in the DOM with visibility hidden.
+  // Only rendered rows can be located. The virtual scroller keeps recycled rows in the DOM
+  // with visibility hidden, while items outside its render window have no element to scroll.
   return page.locator('[data-testid="explorer-item"]:visible').and(page.getByLabel(name, { exact: true }))
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  await getExplorerItem(page, name).scrollIntoViewIfNeeded()
+  // Direct dispatch is intentional for row navigation. Playwright pointer actionability can race
+  // virtual row recycling and leave the previously selected item active.
   await getExplorerItem(page, name).dispatchEvent('click')
 }
 
