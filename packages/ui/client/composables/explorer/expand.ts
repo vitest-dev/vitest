@@ -56,7 +56,7 @@ export function runExpandNode(
     filter,
   ))
 
-  const entries = [...collectExpandedNode(node, children)]
+  const entries = collectExpandedNode(node, children)
   openedTreeItems.value = Array.from(treeItems)
   // Keep expandAll state as it is: expanding individual shouldn't prevent expanding all the nodes ("expand all" button)
   // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
@@ -90,10 +90,10 @@ export function runExpandAll(
   filter: Filter,
 ) {
   expandAllNodes(explorerTree.root.tasks, false)
-  const entries = [...filterAll(
+  const entries = filterAll(
     search,
     filter,
-  )]
+  )
   treeFilter.value.expandAll = false
   openedTreeItems.value = []
   uiEntries.value = entries
@@ -130,23 +130,28 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
   }
 }
 
-function* collectExpandedNode(
+function collectExpandedNode(
   node: UITaskTreeNode,
   children: Set<UITaskTreeNode>,
 ) {
   const id = node.id
   const ids = new Set(Array.from(children).map(n => n.id))
+  const entries: UITaskTreeNode[] = []
 
   for (const child of uiEntries.value) {
     if (child.id === id) {
       child.expanded = true
       if (!ids.has(child.id)) {
-        yield node
+        entries.push(node)
       }
-      yield* children
+      for (const child of children) {
+        entries.push(child)
+      }
     }
     else if (!ids.has(child.id)) {
-      yield child
+      entries.push(child)
     }
   }
+
+  return entries
 }
