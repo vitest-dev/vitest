@@ -1,6 +1,6 @@
 import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { findById } from '~/composables/client'
-import { filterAll, filterNode } from '~/composables/explorer/filter'
+import { createFilterNodeContext, filterAll, filterNode } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
@@ -52,11 +52,11 @@ export function runExpandNode(
   // the first node is itself only when it is a file
   const children = new Set(filterNode(
     node,
-    search,
-    filter,
+    filter.onlyTests,
+    createFilterNodeContext(search, filter),
   ))
 
-  const entries = [...collectExpandedNode(node, children)]
+  const entries = spliceExpandedEntries(uiEntries.value, node, children)
   openedTreeItems.value = Array.from(treeItems)
   // Keep expandAll state as it is: expanding individual shouldn't prevent expanding all the nodes ("expand all" button)
   // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
@@ -130,35 +130,25 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
   }
 }
 
-/**
- * Build the complete next explorer entry list by emitting an expanded node and its filtered
- * subtree at the node's current position.
- *
- * `children` contains only entries produced by filtering the expanded subtree. This function
- * walks the complete current `uiEntries`. When it reaches `node`, it emits the node unless
- * `children` already contains it, followed by the children. Unrelated entries are copied
- * unchanged, while existing entries with the same IDs are skipped to avoid duplicates.
- *
- * TODO: Make this a pure splice over explicit entries and keep expansion state changes in
- * `runExpandNode`.
- */
-function* collectExpandedNode(
+function spliceExpandedEntries(
+  entries: readonly UITaskTreeNode[],
   node: UITaskTreeNode,
-  children: Set<UITaskTreeNode>,
+  children: ReadonlySet<UITaskTreeNode>,
 ) {
-  const id = node.id
-  const ids = new Set(Array.from(children).map(n => n.id))
+  const childIds = new Set(Array.from(children, child => child.id))
+  const nextEntries: UITaskTreeNode[] = []
 
-  for (const child of uiEntries.value) {
-    if (child.id === id) {
-      child.expanded = true
-      if (!ids.has(child.id)) {
-        yield node
+  for (const entry of entries) {
+    if (entry.id === node.id) {
+      if (!childIds.has(entry.id)) {
+        nextEntries.push(entry)
       }
-      yield* children
+      nextEntries.push(...children)
     }
-    else if (!ids.has(child.id)) {
-      yield child
+    else if (!childIds.has(entry.id)) {
+      nextEntries.push(entry)
     }
   }
+
+  return nextEntries
 }
