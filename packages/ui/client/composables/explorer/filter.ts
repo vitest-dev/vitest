@@ -101,6 +101,7 @@ export function* filterNode(
     }
   }
 
+  // TODO: Let filterParents own this traversal-local state.
   const filesToShow = new Set<string>()
 
   const entries = [...filterParents(
