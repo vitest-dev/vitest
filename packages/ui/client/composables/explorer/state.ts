@@ -9,8 +9,11 @@ import { createTagsFilter } from '../../../../vitest/src/runtime/runner/utils/ta
 import { config } from '../client'
 import { explorerTree } from './index'
 
+// All root file nodes, independent of the current filter and expansion state.
 export const uiFiles = shallowRef<FileTreeNode[]>([])
+// Flattened rows currently rendered by the explorer's virtual scroller.
 export const uiEntries = shallowRef<UITaskTreeNode[]>([])
+// Persisted node IDs used to restore individually expanded branches.
 export const openedTreeItems = useLocalStorage<string[]>(
   'vitest-ui_task-tree-opened',
   [],

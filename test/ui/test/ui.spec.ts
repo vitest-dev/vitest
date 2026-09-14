@@ -506,6 +506,10 @@ async function testError(page: Page) {
 async function testSuiteReport(page: Page) {
   const report = page.getByTestId('report')
 
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await page.getByPlaceholder('Search...').fill('suite-report')
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
+
   await getExplorerItem(page, 'suite-report.test.ts').click()
   await expect(report).toContainText('before-all-marker')
   await expect(report).toContainText('direct-child-marker')
