@@ -72,19 +72,19 @@ function collapseAllNodes(nodes: UITaskTreeNode[]) {
 function collectChildNodes(
   node: UITaskTreeNode,
   itself: boolean,
-  nodeIds: string[] = [],
+  collectedNodeIds: string[] = [],
 ) {
   if (itself) {
-    nodeIds.push(node.id)
+    collectedNodeIds.push(node.id)
   }
 
   if (isParentNode(node)) {
     for (let i = 0; i < node.tasks.length; i++) {
-      collectChildNodes(node.tasks[i], true, nodeIds)
+      collectChildNodes(node.tasks[i], true, collectedNodeIds)
     }
   }
 
-  return nodeIds
+  return collectedNodeIds
 }
 
 function collectCollapseNode(node: UITaskTreeNode) {
