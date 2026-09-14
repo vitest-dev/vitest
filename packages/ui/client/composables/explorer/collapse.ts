@@ -26,7 +26,7 @@ export function runCollapseNode(id: string) {
 
   const treeItems = new Set(openedTreeItems.value)
   treeItems.delete(node.id)
-  const entries = [...collectCollapseNode(node)]
+  const entries = collectCollapseNode(node)
   openedTreeItems.value = Array.from(treeItems)
   // Keep expandAll state as it is: collapsing individual shouldn't prevent collapsing all the nodes ("collapse all" button)
   // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
@@ -69,28 +69,35 @@ function collapseAllNodes(nodes: UITaskTreeNode[]) {
   }
 }
 
-function* collectChildNodes(node: UITaskTreeNode, itself: boolean): Generator<string> {
+function collectChildNodes(
+  node: UITaskTreeNode,
+  itself: boolean,
+  nodeIds: string[] = [],
+) {
   if (itself) {
-    yield node.id
+    nodeIds.push(node.id)
   }
 
   if (isParentNode(node)) {
     for (let i = 0; i < node.tasks.length; i++) {
-      yield* collectChildNodes(node.tasks[i], true)
+      collectChildNodes(node.tasks[i], true, nodeIds)
     }
   }
+
+  return nodeIds
 }
 
-function* collectCollapseNode(node: UITaskTreeNode) {
+function collectCollapseNode(node: UITaskTreeNode) {
   const id = node.id
   // collect children to remove from the list
   const childNodes = new Set<string>(collectChildNodes(node, false))
+  const entries: UITaskTreeNode[] = []
   for (let i = 0; i < uiEntries.value.length; i++) {
     const child = uiEntries.value[i]
     // collapse current node and return it
     if (child.id === id) {
       child.expanded = false
-      yield child
+      entries.push(child)
       continue
     }
 
@@ -101,6 +108,8 @@ function* collectCollapseNode(node: UITaskTreeNode) {
     }
 
     // return the node
-    yield child
+    entries.push(child)
   }
+
+  return entries
 }

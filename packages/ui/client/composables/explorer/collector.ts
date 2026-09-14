@@ -121,14 +121,10 @@ export function runCollect(
   doRunFilter(search, filter, end)
 }
 
-function* collectRunningTodoTests() {
-  yield* uiEntries.value.filter(isRunningTestNode)
-}
-
 function updateRunningTodoTests() {
   const idMap = client.state.idMap
   let task: Task | undefined
-  for (const test of collectRunningTodoTests()) {
+  for (const test of uiEntries.value.filter(isRunningTestNode)) {
     // lookup the parent
     task = idMap.get(test.parentId)
     if (task && isSuite(task) && task.mode === 'todo') {
@@ -477,16 +473,21 @@ export function collectTestsTotalData(
   return filesSummary
 }
 
-function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
+function testsCollector(
+  suite: Arrayable<Task>,
+  tests: Test[] = [],
+) {
   const arraySuites = toArray(suite)
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
     if (s.type === 'test') {
-      yield s
+      tests.push(s)
     }
     else {
-      yield* testsCollector(s.tasks)
+      testsCollector(s.tasks, tests)
     }
   }
+
+  return tests
 }
