@@ -142,7 +142,6 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     reference,
     screenshot: screenshotResult && screenshotResult.actual,
     screenshotBuffer: screenshotResult?.buffer,
-    retries: screenshotResult?.retries ?? 0,
     updateSnapshot: context.project.serializedConfig.snapshotOptions.updateSnapshot,
     paths,
     comparator,
@@ -167,14 +166,12 @@ async function determineOutcome(
     comparatorOptions,
     paths,
     reference,
-    retries,
     screenshot,
     screenshotBuffer,
     updateSnapshot,
   }: Pick<ResolvedOptions, 'comparator' | 'paths'> & {
     comparatorOptions: ResolvedOptions['resolvedOptions']['comparatorOptions']
     reference: DecodedImage | null
-    retries: number
     screenshot: DecodedImage | null
     screenshotBuffer?: Buffer<ArrayBufferLike>
     updateSnapshot: SnapshotUpdateState
@@ -220,11 +217,9 @@ async function determineOutcome(
     }
   }
 
-  // first capture matched reference (used as baseline) - no further comparison needed
-  if (retries === 0) {
-    return { type: 'matched-immediately' }
-  }
-
+  // Stability used createDiff:false (and may have used the reference as baseline).
+  // Always run the final comparison with createDiff:true so custom comparators
+  // that treat the two flags differently still run their match logic.
   const comparisonResult = await comparator(
     reference,
     screenshot,
