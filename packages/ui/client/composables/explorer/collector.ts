@@ -475,19 +475,19 @@ export function collectTestsTotalData(
 
 function testsCollector(
   suite: Arrayable<Task>,
-  tests: Test[] = [],
+  collectedTests: Test[] = [],
 ) {
   const arraySuites = toArray(suite)
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
     if (s.type === 'test') {
-      tests.push(s)
+      collectedTests.push(s)
     }
     else {
-      testsCollector(s.tasks, tests)
+      testsCollector(s.tasks, collectedTests)
     }
   }
 
-  return tests
+  return collectedTests
 }
