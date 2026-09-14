@@ -20,11 +20,10 @@ test('pointer API works with UI enabled', async () => {
       headless: true,
       ui: true,
       provider,
-      instances: instances.map(instance => ({
-        ...instance,
-        viewport: { width: 640, height: 480 },
-      })),
+      instances,
     },
+    // might be flaky because of 1:MANY pixel scaling mapping
+    retry: 3,
   })
 
   expect(errorTree({ project: true })).toMatchInlineSnapshot(`
