@@ -131,10 +131,12 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
 }
 
 /**
- * Insert an expanded node's filtered children into the current flattened explorer entries.
+ * Build the complete next explorer entry list by inserting an expanded node's filtered subtree.
  *
- * Children already present in the current entries are skipped to avoid duplicates. When
- * expanding a file, the filtered children can include the file node itself.
+ * `children` contains only entries produced by filtering the expanded subtree. This function
+ * walks the complete current `uiEntries`, inserts those children at `node`, and copies unrelated
+ * entries unchanged. Existing entries with the same IDs are skipped to avoid duplicates. When
+ * expanding a file, `children` can include the file node itself.
  */
 function* collectExpandedNode(
   node: UITaskTreeNode,
