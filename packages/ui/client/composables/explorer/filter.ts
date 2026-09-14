@@ -51,11 +51,13 @@ export function* filterNode(
   search: SearchMatcher,
   filter: Filter,
 ) {
+  // Parent node IDs that match or contain a matching descendant.
   const treeNodes = new Set<string>()
-
+  // Direct match state of visited parents, used to include their immediate children.
   const parentsMap = new Map<string, boolean>()
+  // Visited nodes with their effective match state, consumed bottom-up by filterParents.
   const list: FilterResult[] = []
-
+  // Matching file ID, or owning file ID when filtering an expanded subtree.
   let fileId: string | undefined
 
   if (filter.onlyTests) {
