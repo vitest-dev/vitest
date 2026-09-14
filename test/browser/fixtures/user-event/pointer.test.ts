@@ -1,8 +1,66 @@
-import { describe, expect, test, vi } from 'vitest'
-import { userEvent, page } from 'vitest/browser'
+import { beforeAll, describe, expect, test, vi } from 'vitest'
+import { userEvent, page, server } from 'vitest/browser'
 
 type PointerAction = (event: PointerEvent) => void
 type MouseAction = (event: MouseEvent) => void
+
+declare module 'vitest' {
+  interface Matchers<R, T> {
+    __withinTolerance(expected: number): R
+  }
+}
+
+expect.extend({
+  __withinTolerance(received, expected) {
+    const difference = Math.abs(received - expected)
+    // need to use a tolerance when UI is enabled because of scaling
+    // a real pixel can be many "iframe pixels" depending on the applied scaling
+    const tolerance = server.config.browser.ui ? 5 : 0
+
+    return {
+      pass: difference <= tolerance,
+      message: () =>
+        `expected ${received} to be within ±${tolerance} of ${expected}`,
+      actual: received,
+      expected,
+    }
+  },
+})
+
+const BUTTON_WIDTH = 100
+const BUTTON_HEIGHT = 40
+const BUTTON_OFFSET = 10
+const BUTTON_CLICK_COORDS = 15
+const BUTTON_ABSOLUTE_HTML = /* html */`<button style="position: absolute; top: ${BUTTON_OFFSET}px; left: ${BUTTON_OFFSET}px; width: ${BUTTON_WIDTH}px; height: ${BUTTON_HEIGHT}px; margin: 0; padding: 0; border: none;">Button</button>`
+
+// debugging utility to
+//  - log event position and offset (w.r.t. target)
+//  - print a red circle on `mousedown` and a blue one on `mouseup`
+// beforeAll(() => {
+//   const ac = new AbortController()
+//   const fn = (color: string) => (e: MouseEvent) => {
+//     console.log(e)
+//     console.log({
+//       browser: server.config.browser.name,
+//       clientX: e.clientX,
+//       clientY: e.clientY,
+//       offsetX: e.offsetX,
+//       offsetY: e.offsetY,
+//     })
+//     let pointer = document.getElementById('pntr')
+//     if (!pointer) {
+//       pointer = document.createElement('div')
+//       pointer.id = 'pntr'
+//       document.body.appendChild(pointer)
+//     }
+//     pointer.style = `position: absolute; top: ${e.clientY}px; left: ${e.clientX}px; width: 5px; height: 5px; background-color: ${color}; pointer-events: none; border-radius: 100%;`
+//   }
+//   document.addEventListener('mousedown', fn('red'), { signal: ac.signal })
+//   document.addEventListener('mouseup', fn('blue'), { signal: ac.signal })
+//   return () => {
+//     ac.abort()
+//   }
+// })
 
 test('click triggers hover events', async ({ expect }) => {
   document.body.innerHTML = `
@@ -37,9 +95,7 @@ test('click triggers hover events', async ({ expect }) => {
 })
 
 test('click at coordinates triggers hover events', async ({ expect }) => {
-  document.body.innerHTML = `
-    <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
-  `
+  document.body.innerHTML = BUTTON_ABSOLUTE_HTML
 
   const enter = vi.fn<MouseAction>()
   const leave = vi.fn<MouseAction>()
@@ -52,15 +108,15 @@ test('click at coordinates triggers hover events', async ({ expect }) => {
   buttonElement.addEventListener('click', click)
 
   await userEvent.pointer([
-    { coords: { x: 11, y: 11 }, keys: '[MouseLeft]' },
+    { coords: { x: BUTTON_CLICK_COORDS, y: BUTTON_CLICK_COORDS }, keys: '[MouseLeft]' },
     { target: document.body },
   ])
 
   expect(enter).toHaveBeenCalledOnce()
   expect(click).toHaveBeenCalledOnce()
   expect(click).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-    clientX: expect.closeTo(11),
-    clientY: expect.closeTo(11),
+    clientX: expect.__withinTolerance(BUTTON_CLICK_COORDS),
+    clientY: expect.__withinTolerance(BUTTON_CLICK_COORDS),
   }))
 
   expect(enter).toHaveBeenCalledBefore(click)
@@ -125,9 +181,7 @@ test.for([
   { action: 'up', keys: '[/MouseLeft]' },
   { action: 'click', keys: '[MouseLeft]' },
 ] as const)('pointer $action action works with offsets', async ({ action, keys }, { expect }) => {
-  document.body.innerHTML = `
-    <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
-  `
+  document.body.innerHTML = BUTTON_ABSOLUTE_HTML
 
   const spy = vi.fn<(e: PointerEvent | MouseEvent) => void>()
 
@@ -136,14 +190,14 @@ test.for([
   buttonElement.addEventListener(action === 'click' ? 'click' : `mouse${action}`, spy)
 
   await userEvent.pointer([
-    { target: buttonElement, coords: { x: 10, y: 10 }, keys },
+    { target: buttonElement, coords: { x: BUTTON_CLICK_COORDS, y: BUTTON_CLICK_COORDS }, keys },
   ])
 
   expect(spy).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-    clientX: expect.closeTo(20, -2),
-    clientY: expect.closeTo(20, -2),
-    offsetX: expect.closeTo(10),
-    offsetY: expect.closeTo(10),
+    clientX: expect.__withinTolerance(BUTTON_CLICK_COORDS + BUTTON_OFFSET),
+    clientY: expect.__withinTolerance(BUTTON_CLICK_COORDS + BUTTON_OFFSET),
+    offsetX: expect.__withinTolerance(BUTTON_CLICK_COORDS),
+    offsetY: expect.__withinTolerance(BUTTON_CLICK_COORDS),
   }))
 })
 
@@ -335,9 +389,7 @@ test('persistent modifiers survive multiple actions', async ({ expect }) => {
 })
 
 test('modifiers work with coordinates', async ({ expect }) => {
-  document.body.innerHTML = `
-    <button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>
-  `
+  document.body.innerHTML = BUTTON_ABSOLUTE_HTML
 
   const click = vi.fn<PointerAction>()
 
@@ -347,15 +399,15 @@ test('modifiers work with coordinates', async ({ expect }) => {
 
   await userEvent.pointer([
     {
-      coords: { x: 11, y: 11 },
+      coords: { x: BUTTON_CLICK_COORDS, y: BUTTON_CLICK_COORDS },
       keys: '[AltLeft>][MouseLeft][/AltLeft]',
     },
   ])
 
   expect(click).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
     altKey: true,
-    clientX: expect.closeTo(11),
-    clientY: expect.closeTo(11),
+    clientX: expect.__withinTolerance(BUTTON_CLICK_COORDS),
+    clientY: expect.__withinTolerance(BUTTON_CLICK_COORDS),
   }))
 })
 
@@ -384,11 +436,16 @@ test('keyboard-fired modifiers apply to pointer events', async ({ expect }) => {
 })
 
 describe('keeps using previous target or coordinates', () => {
-  const HTML = `<button style="position: absolute; top: 10px; left: 10px; width: 100px; height: 40px;">Button</button>`
   const TARGET = page.getByRole('button')
-  const COORDS = { x: 11, y: 11 }
-  const EXPECTED_COORDS_TARGET = { clientX: expect.closeTo(60), clientY: expect.closeTo(30) }
-  const EXPECTED_COORDS_COORDS = { clientX: expect.closeTo(11), clientY: expect.closeTo(11) }
+  const COORDS = { x: BUTTON_CLICK_COORDS, y: BUTTON_CLICK_COORDS }
+  const EXPECTED_COORDS_TARGET = {
+    clientX: expect.__withinTolerance(BUTTON_WIDTH / 2 + BUTTON_OFFSET),
+    clientY: expect.__withinTolerance(BUTTON_HEIGHT / 2 + BUTTON_OFFSET),
+  }
+  const EXPECTED_COORDS_COORDS = {
+    clientX: expect.__withinTolerance(BUTTON_CLICK_COORDS),
+    clientY: expect.__withinTolerance(BUTTON_CLICK_COORDS),
+  }
 
   test.for([
     {
@@ -410,7 +467,7 @@ describe('keeps using previous target or coordinates', () => {
       expectedCoords: EXPECTED_COORDS_TARGET,
     },
     {
-      name: 'target same',
+      name: 'coordinates same',
       action: async () => {
         await userEvent.pointer([
           { keys: '[MouseLeft]', coords: COORDS },
@@ -427,8 +484,8 @@ describe('keeps using previous target or coordinates', () => {
       },
       expectedCoords: EXPECTED_COORDS_COORDS,
     },
-  ])('previous target $name action', async ({ action, expectedCoords }, { expect }) => {
-    document.body.innerHTML = HTML
+  ])('previous $name action', async ({ action, expectedCoords }, { expect }) => {
+    document.body.innerHTML = BUTTON_ABSOLUTE_HTML
 
     const click = vi.fn<PointerAction>()
 
@@ -474,7 +531,7 @@ describe('keeps using previous target or coordinates', () => {
       ]
     },
   ])('$name', async ({ action, expectedCalls }, { expect }) => {
-    document.body.innerHTML = HTML
+    document.body.innerHTML = BUTTON_ABSOLUTE_HTML
 
     const click = vi.fn<PointerAction>()
 

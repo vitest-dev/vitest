@@ -5,6 +5,7 @@ import type { UserEventCommand } from './utils'
 import { parseKeyDef } from '@vitest/browser'
 import { click } from './click'
 import { hover } from './hover'
+import { resolvePageCoordinates } from './utils'
 
 type SerializedPointerInput = ElementToSerializedLocator<UserEventPointerInputNormalized[number]>
 interface PointerReturnData extends Pick<SerializedPointerInput, 'coords' | 'target'> {
@@ -66,7 +67,9 @@ export const pointer: UserEventCommand<PointerEvent> = async (
         )
       }
       else if (coords) {
-        await context.page.mouse.move(x, y)
+        const pageCoords = await resolvePageCoordinates(context, coords)
+
+        await context.page.mouse.move(pageCoords.x, pageCoords.y)
       }
     }
 
@@ -151,9 +154,11 @@ async function keyDefHandler(
         await click(context, pointerAction.target, clickOptions)
       }
       else {
+        const pageCoords = await resolvePageCoordinates(context, pointerAction.coords)
+
         await context.page.mouse.click(
-          pointerAction.coords?.x ?? 0,
-          pointerAction.coords?.y ?? 0,
+          pageCoords.x,
+          pageCoords.y,
           clickOptions,
         )
       }
