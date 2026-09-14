@@ -167,7 +167,7 @@ test.describe('ui', () => {
 
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
-    await testTagsFilter(page)
+    await testTagsFilter(page, { mode: 'ui' })
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
@@ -260,7 +260,7 @@ test.describe('html report', () => {
 
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
-    await testTagsFilter(page)
+    await testTagsFilter(page, { mode: 'static' })
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
@@ -539,11 +539,13 @@ async function testSuiteReport(page: Page) {
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
 }
 
-async function testTagsFilter(page: Page) {
+async function testTagsFilter(page: Page, options: { mode: 'ui' | 'static' }) {
+  const running = options.mode === 'static' ? undefined : 0
+
   await page.getByPlaceholder('Search...').fill('tag:db')
 
   // only one test with the tag "db"
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
+  await expectExplorerSummary(page, { fail: 0, running, pass: 1, skip: '--' })
   await expect(getExplorerItem(page, 'has tags')).toBeVisible()
 
   await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
@@ -598,24 +600,35 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   const failFilter = page.getByRole('checkbox', { name: 'Fail', exact: true }).locator('..')
   const passFilter = page.getByRole('checkbox', { name: 'Pass', exact: true }).locator('..')
   const onlyTestsFilter = page.getByRole('checkbox', { name: 'Only Tests', exact: true }).locator('..')
+  const summary = page.getByTestId('explorer-summary')
+  const runningCount = options.mode === 'static' ? undefined : 0
+
+  // Static reports only contain completed test results.
+  const running = summary.getByText(/RUNNING/)
+  if (options.mode === 'static') {
+    await expect(running).toHaveCount(0)
+  }
+  else {
+    await expect(running).toBeVisible()
+  }
 
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
-  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: TEST_COUNTS.files.pass, skip: '--' })
+  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: runningCount, pass: TEST_COUNTS.files.pass, skip: '--' })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 
   // count skipped files when filtered
   await page.getByPlaceholder('Search...').fill('skipped.test.ts')
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: '--' })
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 0, skip: '--' })
   await expect(getExplorerItem(page, 'skipped.test.ts')).toBeVisible()
 
   // "Only Tests" mode text search excludes test file name matches
   await page.getByPlaceholder('Search...').fill('sample.test.ts')
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 1, skip: '--' })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'add')).toBeVisible()
   await onlyTestsFilter.click()
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: 0 })
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 0, skip: 0 })
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
   await expect(getExplorerItem(page, 'add')).toHaveCount(0)
 
@@ -623,7 +636,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await page.getByPlaceholder('Search...').fill('')
   await expectExplorerSummary(page, {
     fail: TEST_COUNTS.fail,
-    running: 0,
+    running: runningCount,
     pass: TEST_COUNTS.pass,
     skip: TEST_COUNTS.skip,
   })
@@ -632,17 +645,17 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   // match nothing
   await page.getByPlaceholder('Search...').fill('nothing')
   await expect(page.getByTestId('results-panel').getByText('No matched test')).toBeVisible()
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: '--' })
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 0, skip: '--' })
 
   // searching "add" will match "sample.test.ts" since it includes a test case named "add"
   await page.getByPlaceholder('Search...').fill('add')
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 1, skip: '--' })
   await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 
   // match only failing files when fail filter applied
   await page.getByPlaceholder('Search...').fill('')
   await failFilter.click()
-  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: 0, pass: 0, skip: '--' })
+  await expectExplorerSummary(page, { fail: TEST_COUNTS.files.fail, running: runningCount, pass: 0, skip: '--' })
   await expect(getExplorerItem(page, 'error.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
@@ -650,12 +663,12 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await page.getByPlaceholder('Search...').fill('successful child')
   await failFilter.click()
   await passFilter.click()
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 0, skip: '--' })
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 0, skip: '--' })
   await expect(getExplorerItem(page, 'suite-report.test.ts')).toBeVisible()
 
   // match only pass files when pass filter applied
   await page.getByPlaceholder('Search...').fill('console')
-  await expectExplorerSummary(page, { fail: 0, running: 0, pass: 1, skip: '--' })
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 1, skip: '--' })
   await expect(getExplorerItem(page, 'console.test.ts')).toBeVisible()
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
@@ -686,10 +699,11 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 
 async function expectExplorerSummary(
   page: Page,
-  expected: { fail: number; running: number; pass: number; skip: number | '--' },
+  expected: { fail: number; running: number | undefined; pass: number; skip: number | '--' },
 ) {
+  const running = expected.running == null ? '' : `RUNNING (${expected.running}) `
   await expect(page.getByTestId('explorer-summary')).toHaveText(
-    `FAIL (${expected.fail}) / RUNNING (${expected.running}) PASS (${expected.pass}) / SKIP (${expected.skip})`,
+    `FAIL (${expected.fail}) / ${running}PASS (${expected.pass}) / SKIP (${expected.skip})`,
   )
 }
 
