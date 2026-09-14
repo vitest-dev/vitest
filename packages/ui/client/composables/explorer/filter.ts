@@ -51,11 +51,13 @@ export function* filterNode(
   search: SearchMatcher,
   filter: Filter,
 ) {
+  // Parent node IDs that match or contain a matching descendant.
   const treeNodes = new Set<string>()
-
+  // Direct match state of visited parents, used to include their immediate children.
   const parentsMap = new Map<string, boolean>()
+  // Visited nodes with their effective match state, consumed bottom-up by filterParents.
   const list: FilterResult[] = []
-
+  // Matching file ID, or owning file ID when filtering an expanded subtree.
   let fileId: string | undefined
 
   if (filter.onlyTests) {
@@ -92,9 +94,14 @@ export function* filterNode(
     // when expanding a non-file node
     if (!fileId && !isFileNode(node) && 'fileId' in node) {
       fileId = node.fileId as string
+      const file = explorerTree.nodes.get(fileId)
+      if (file && matcher(file, search, filter)) {
+        treeNodes.add(fileId)
+      }
     }
   }
 
+  // TODO: Let filterParents own this traversal-local state.
   const filesToShow = new Set<string>()
 
   const entries = [...filterParents(
