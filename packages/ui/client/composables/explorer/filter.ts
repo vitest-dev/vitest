@@ -92,6 +92,10 @@ export function* filterNode(
     // when expanding a non-file node
     if (!fileId && !isFileNode(node) && 'fileId' in node) {
       fileId = node.fileId as string
+      const file = explorerTree.nodes.get(fileId)
+      if (file && matcher(file, search, filter)) {
+        treeNodes.add(fileId)
+      }
     }
   }
 
