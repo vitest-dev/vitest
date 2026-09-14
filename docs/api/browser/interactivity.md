@@ -251,6 +251,10 @@ An action object accepts `keys`, `target`, and `coords`. An object without `keys
 
 The pointer position persists between `userEvent.pointer` calls on the same `userEvent` instance. This means that if an action omits both `target` and `coords`, it uses the position from the previous action.
 
+::: warning
+When the [Browser UI](/config/browser/ui) is enabled, the test iframe can be scaled to fit the available space. Vitest adjusts pointer coordinates to account for the scaling, but browser pixel rounding can cause the resulting event coordinates to differ by several _iframe pixels_. **Avoid relying on exact coordinates in this mode**.
+:::
+
 ```ts
 import { page, userEvent } from 'vitest/browser'
 
