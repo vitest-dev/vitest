@@ -169,6 +169,16 @@ export class FakeTimers {
       toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])
         .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
     }
+    else if (toFake === undefined && toNotFake !== undefined) {
+      // Keep node internals native when opting out through toNotFake.
+      // Otherwise naming toNotFake would fall through to sinon's default
+      // and silently start faking queueMicrotask. See #11226.
+      for (const timer of ['nextTick', 'queueMicrotask'] as const) {
+        if (!toNotFake.includes(timer)) {
+          toNotFake = [...toNotFake, timer]
+        }
+      }
+    }
     if (isChildProcess() && toNotFake && !toNotFake.includes('nextTick')) {
       toNotFake = [...toNotFake, 'nextTick']
     }

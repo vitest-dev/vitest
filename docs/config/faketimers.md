@@ -36,6 +36,8 @@ An array with names of global methods and APIs to keep native. All other availab
 
 Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. When running with `--pool=forks`, Vitest automatically adds `nextTick` to the `toNotFake` array.
 
+`nextTick` and `queueMicrotask` are always kept native when `toNotFake` is used, even if they are not listed. To mock them, use `toFake` instead.
+
 ::: warning
 Using both `toFake` and `toNotFake` together is not supported.
 :::
