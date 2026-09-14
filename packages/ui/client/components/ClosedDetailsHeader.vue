@@ -4,13 +4,9 @@ import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 
 <template>
   <div
-    p="2"
-    flex="~ gap-2"
-    items-center
-    bg-header
-    border="b base"
+    class="p-2 flex gap-2 items-center bg-header border-b border-base"
   >
-    <div flex-1 />
+    <div class="flex-1" />
     <DetailsHeaderButtons />
   </div>
 </template>

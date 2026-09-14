@@ -40,7 +40,7 @@ function openScreenshot() {
 
 <template>
   <template v-if="screenshotUrl">
-    <div flex="~ gap-2 items-center">
+    <div class="flex gap-2 items-center">
       <IconButton
         v-tooltip.bottom="'View screenshot error'"
         class="!op-100"

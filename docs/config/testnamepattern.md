@@ -38,5 +38,5 @@ describe('math', () => {
 ```
 
 ::: warning
-Before Vitest 5, the segments were joined with a single space (`math adds`) to mirror Jest. See the [migration guide](/guide/migration#vitest-5) for details.
+Before Vitest 5, the segments were joined with a single space (`math adds`) to mirror Jest. See the [migration guide](/guide/migration/#vitest-5) for details.
 :::

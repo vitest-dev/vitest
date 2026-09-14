@@ -1103,7 +1103,7 @@ export interface TypecheckConfig {
   /**
    * Pattern for files that should not be treated as test files
    *
-   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
+   * @default ['**\/node_modules/**', '**\/.git/**']
    */
   exclude: string[]
   /**
@@ -1313,7 +1313,7 @@ export interface ResolvedConfig
 
   maxWorkers: number
 
-  vmMemoryLimit?: UserConfig['vmMemoryLimit']
+  vmMemoryLimit?: string | number
   dumpDir?: string
   tagsFilter?: string[]
   mergeReportsLabel?: string

@@ -653,7 +653,7 @@ function reparentMockPrototype(
   // function) reverts the chain to `Object.prototype`, the parent every mock
   // is created with
   const parent = (implementation as Constructable | undefined)?.prototype ?? Object.prototype
-  if (Object.getPrototypeOf(mockPrototype) !== parent) {
+  if (mockPrototype !== parent && Object.getPrototypeOf(mockPrototype) !== parent) {
     Object.setPrototypeOf(mockPrototype, parent)
   }
 }
