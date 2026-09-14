@@ -143,6 +143,7 @@ function* collectExpandedNode(
   node: UITaskTreeNode,
   children: Set<UITaskTreeNode>,
 ) {
+  // TODO: Make this a pure splice over explicit entries and keep expansion state changes in runExpandNode.
   const id = node.id
   const ids = new Set(Array.from(children).map(n => n.id))
 
