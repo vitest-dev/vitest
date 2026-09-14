@@ -506,32 +506,31 @@ async function testError(page: Page) {
 async function testSuiteReport(page: Page) {
   const report = page.getByTestId('report')
 
-  await page.getByPlaceholder('Search...').fill('suite-report')
-  await openExplorerItem(page, 'suite-report.test.ts')
+  await getExplorerItem(page, 'suite-report.test.ts').click()
   await expect(report).toContainText('before-all-marker')
   await expect(report).toContainText('direct-child-marker')
   await expect(report).toContainText('nested-child-marker')
 
-  await openExplorerItem(page, 'successful suite')
+  const successfulSuite = getExplorerItem(page, 'successful suite')
+  await successfulSuite.click()
   await expect(page.getByTestId('report')).toContainText('All tests passed in this suite')
 
-  await openExplorerItem(page, 'hook failure suite')
+  await getExplorerItem(page, 'hook failure suite').click()
   await expect(report).toContainText('before-all-marker')
   await expect(report).not.toContainText('direct-child-marker')
 
-  await openExplorerItem(page, 'child failure suite')
+  await getExplorerItem(page, 'child failure suite').click()
   await expect(report).toContainText('failing child')
   await expect(report).toContainText('direct-child-marker')
   await expect(report).not.toContainText('before-all-marker')
 
-  await openExplorerItem(page, 'nested failure suite')
+  await getExplorerItem(page, 'nested failure suite').click()
   await expect(report).toContainText('failing nested suite')
   await expect(report).toContainText('failing nested child')
   await expect(report).toContainText('nested-child-marker')
   await expect(report).not.toContainText('direct-child-marker')
 
   // test that the suite can be collapsed and expanded
-  const successfulSuite = getExplorerItem(page, 'successful suite')
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
   await successfulSuite.getByRole('button', { name: 'Collapse successful suite', exact: true }).click()
   await expect(getExplorerItem(page, 'successful child')).not.toBeVisible()
