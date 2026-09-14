@@ -74,6 +74,7 @@ export function getExplorerItem(page: Page, name: string) {
 export async function openExplorerItem(page: Page, name: string) {
   // Direct dispatch is intentional for row navigation. Playwright pointer actionability can race
   // virtual row recycling and leave the previously selected item active.
+  // TODO: Audit direct explorer click and hover usage, keeping pointer actions only where tested.
   await getExplorerItem(page, name).dispatchEvent('click')
 }
 
