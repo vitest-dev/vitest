@@ -1,6 +1,6 @@
 import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
-import { findById } from '~/composables/client'
-import { createFilterNodeContext, filterAll, filterNode } from '~/composables/explorer/filter'
+import { client, config, findById } from '~/composables/client'
+import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
@@ -52,8 +52,13 @@ export function runExpandNode(
   // the first node is itself only when it is a file
   const children = new Set(filterNode(
     node,
-    filter.onlyTests,
-    createFilterNodeContext(search, filter),
+    {
+      nodes: explorerTree.nodes,
+      tasks: client.state.idMap,
+      search,
+      filter,
+      slowTestThreshold: config.value.slowTestThreshold,
+    },
   ))
 
   const entries = spliceExpandedEntries(uiEntries.value, node, children)

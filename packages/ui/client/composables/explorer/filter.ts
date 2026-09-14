@@ -9,13 +9,12 @@ import {
   isParentNode,
 } from '~/composables/explorer/utils'
 
-export function testMatcher(task: Task, search: SearchMatcher, filter: Filter) {
-  return task ? matchTask(task, search, filter, config.value.slowTestThreshold) : false
-}
-
-interface FilterNodeContext {
+export interface FilterNodeContext {
   nodes: ReadonlyMap<string, UITaskTreeNode>
-  matches: (node: UITaskTreeNode) => boolean
+  tasks: ReadonlyMap<string, Task>
+  search: SearchMatcher
+  filter: Filter
+  slowTestThreshold: number | undefined
 }
 
 interface FilteredTreeNode {
@@ -24,18 +23,13 @@ interface FilteredTreeNode {
   subtreeMatches: boolean
 }
 
-export function createFilterNodeContext(
+export function testMatcher(
+  task: Task,
   search: SearchMatcher,
   filter: Filter,
-): FilterNodeContext {
-  const slowTestThreshold = config.value.slowTestThreshold
-  return {
-    nodes: explorerTree.nodes,
-    matches(node) {
-      const task = client.state.idMap.get(node.id)
-      return task ? matchTask(task, search, filter, slowTestThreshold) : false
-    },
-  }
+  slowTestThreshold: number | undefined,
+) {
+  return matchTask(task, search, filter, slowTestThreshold)
 }
 
 /**
@@ -62,27 +56,33 @@ export function* filterAll(
 ) {
   const project = currentProjectName.value
   const tasks = getSortedRootTasks(projectSort.value)
-  const context = createFilterNodeContext(search, filter)
+  const context: FilterNodeContext = {
+    nodes: explorerTree.nodes,
+    tasks: client.state.idMap,
+    search,
+    filter,
+    slowTestThreshold: config.value.slowTestThreshold,
+  }
 
   for (const node of tasks) {
     if (project && node.projectName !== project) {
       continue
     }
-    yield* filterNode(node, filter.onlyTests, context)
+    yield* filterNode(node, context)
   }
 }
 
 export function* filterNode(
   node: UITaskTreeNode,
-  onlyTests: boolean,
   context: FilterNodeContext,
 ) {
+  const { onlyTests } = context.filter
   const file = isFileNode(node)
     ? undefined
     : 'fileId' in node
       ? context.nodes.get(node.fileId as string)
       : undefined
-  const ancestorMatches = !onlyTests && !!file && context.matches(file)
+  const ancestorMatches = !onlyTests && !!file && matchesNode(file, context)
   const filteredTree = filterTreeNode(node, onlyTests, context, ancestorMatches)
   if (filteredTree) {
     yield* flattenVisibleTree(filteredTree, isFileNode(node))
@@ -95,7 +95,7 @@ function filterTreeNode(
   context: FilterNodeContext,
   ancestorMatches: boolean,
 ): FilteredTreeNode | undefined {
-  const nodeMatches = (!onlyTests || node.type === 'test') && context.matches(node)
+  const nodeMatches = (!onlyTests || node.type === 'test') && matchesNode(node, context)
   const descendantsInheritMatch = ancestorMatches || nodeMatches
   const children = isParentNode(node)
     ? node.tasks
@@ -122,6 +122,13 @@ function filterTreeNode(
     children,
     subtreeMatches,
   }
+}
+
+function matchesNode(node: UITaskTreeNode, context: FilterNodeContext) {
+  const task = context.tasks.get(node.id)
+  return task
+    ? matchTask(task, context.search, context.filter, context.slowTestThreshold)
+    : false
 }
 
 function* flattenVisibleTree(

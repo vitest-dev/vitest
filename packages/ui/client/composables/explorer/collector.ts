@@ -2,7 +2,7 @@ import type { Arrayable } from '@vitest/utils'
 import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
 import { toArray } from '@vitest/utils/helpers'
-import { client, findById } from '~/composables/client'
+import { client, config, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
@@ -385,7 +385,7 @@ function collectTests(file: File, search: SearchMatcher = () => true, filter?: F
   } satisfies CollectFilteredTests
 
   for (const t of testsCollector(file)) {
-    if (!filter || testMatcher(t, search, filter)) {
+    if (!filter || testMatcher(t, search, filter, config.value.slowTestThreshold)) {
       data.total++
       if (isSlowTestTask(t)) {
         data.slow++
