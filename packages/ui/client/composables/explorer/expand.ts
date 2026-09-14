@@ -1,5 +1,6 @@
 import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { client, config, findById } from '~/composables/client'
+import { replaceSubtreeEntries } from '~/composables/explorer/entries'
 import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
@@ -48,9 +49,7 @@ export function runExpandNode(
 
   const treeItems = new Set(openedTreeItems.value)
   treeItems.add(node.id)
-  // collect children
-  // the first node is itself only when it is a file
-  const children = new Set(filterNode(
+  const filteredSubtree = [...filterNode(
     node,
     {
       nodes: explorerTree.nodes,
@@ -59,9 +58,10 @@ export function runExpandNode(
       filter,
       slowTestThreshold: config.value.slowTestThreshold,
     },
-  ))
+  )]
 
-  const entries = spliceExpandedEntries(uiEntries.value, node, children)
+  const subtree = isFileNode(node) ? filteredSubtree : [node, ...filteredSubtree]
+  const entries = replaceSubtreeEntries(uiEntries.value, node, subtree)
   openedTreeItems.value = Array.from(treeItems)
   // Keep expandAll state as it is: expanding individual shouldn't prevent expanding all the nodes ("expand all" button)
   // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
@@ -133,27 +133,4 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
     treeFilter.value.expandAll = false
     openedTreeItems.value = []
   }
-}
-
-function spliceExpandedEntries(
-  entries: readonly UITaskTreeNode[],
-  node: UITaskTreeNode,
-  children: ReadonlySet<UITaskTreeNode>,
-) {
-  const childIds = new Set(Array.from(children, child => child.id))
-  const nextEntries: UITaskTreeNode[] = []
-
-  for (const entry of entries) {
-    if (entry.id === node.id) {
-      if (!childIds.has(entry.id)) {
-        nextEntries.push(entry)
-      }
-      nextEntries.push(...children)
-    }
-    else if (!childIds.has(entry.id)) {
-      nextEntries.push(entry)
-    }
-  }
-
-  return nextEntries
 }
