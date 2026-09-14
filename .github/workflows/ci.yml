@@ -229,6 +229,15 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+      - name: Upload Playwright traces
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() && matrix.suite == 'unit' }}
+        with:
+          name: playwright-traces-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: test/ui/test-results/**/trace.zip
+          if-no-files-found: ignore
+          retention-days: 1
+
   # runner.test.ts is the heaviest spec (~28% of the suite, ~70% of whichever
   # shard it lands in). Windows isolates it in its own job and shards the other
   # 32 specs; Ubuntu shards the whole suite 2 ways (runner rides in one shard).
