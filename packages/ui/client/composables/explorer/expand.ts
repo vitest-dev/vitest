@@ -130,6 +130,12 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
   }
 }
 
+/**
+ * Insert an expanded node's filtered children into the current flattened explorer entries.
+ *
+ * Children already present in the current entries are skipped to avoid duplicates. When
+ * expanding a file, the filtered children can include the file node itself.
+ */
 function* collectExpandedNode(
   node: UITaskTreeNode,
   children: Set<UITaskTreeNode>,
