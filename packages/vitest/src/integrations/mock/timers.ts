@@ -170,9 +170,7 @@ export class FakeTimers {
         .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
     }
     else if (toFake === undefined && toNotFake !== undefined) {
-      // Keep node internals native when opting out through toNotFake.
-      // Otherwise naming toNotFake would fall through to sinon's default
-      // and silently start faking queueMicrotask. See #11226.
+      // Do not mock timers internally used by node via `toNotFake`
       for (const timer of ['nextTick', 'queueMicrotask'] as const) {
         if (!toNotFake.includes(timer)) {
           toNotFake = [...toNotFake, timer]
