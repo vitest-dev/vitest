@@ -237,14 +237,21 @@ describe('jest-expect', () => {
     expect({ nested: [{ id: 1, extra: true }] }).not.toMatchObject({
       nested: expect.arrayContaining([{ id: 1 }]),
     })
+    expect({ nested: [{ id: 1 }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+      extra: true,
+    })
 
     // an actual element still has to match the sample exactly, and extra
     // fields on it are still not allowed
     expect({ nested: [{ id: 1, required: 'x' }] }).toMatchObject({
       nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
     })
-    expect({ nested: [{ id: 1, required: 'x' }, { id: 2 }] }).toMatchObject({
+    expect({ nested: [{ id: 1, required: 'x' }, { extra: true }] }).toMatchObject({
       nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1 }], extra: true }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
     })
   })
 
