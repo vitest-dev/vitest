@@ -380,6 +380,29 @@ describe('vi.fn() configuration', () => {
     expect(mock()).toBe(undefined)
   })
 
+  test('vi.resetAllMocks() resets an implementation restored by withImplementation after mockReset()', () => {
+    const mock = vi.fn().mockImplementation(() => 1)
+    mock.withImplementation(() => 2, () => {
+      mock.mockReset()
+    })
+    expect(mock.getMockImplementation()?.()).toBe(1)
+
+    vi.resetAllMocks()
+
+    expect(mock.getMockImplementation()).toBe(undefined)
+  })
+
+  test('vi.resetAllMocks() resets a once implementation restored by withImplementation after mockReset()', () => {
+    const mock = vi.fn().mockImplementationOnce(() => 1)
+    mock.withImplementation(() => 2, () => {
+      mock.mockReset()
+    })
+
+    vi.resetAllMocks()
+
+    expect(mock.getMockImplementation()).toBe(undefined)
+  })
+
   test('vi.fn() resets the original mock implementation', () => {
     const mock = vi.fn(() => 42)
     expect(mock()).toBe(42)
