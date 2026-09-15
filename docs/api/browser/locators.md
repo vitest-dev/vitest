@@ -623,6 +623,10 @@ This options narrows down the selector to only match elements that do not contai
 
 All methods are asynchronous and must be awaited. Since Vitest 3, tests will fail if a method is not awaited.
 
+::: tip
+Like [`expect.element`](/api/browser/assertions) and [`vi.waitFor`](/api/vi#vi-waitfor), methods advance [fake timers](/api/vi#vi-usefaketimers) while they wait for the element, so a component that renders after a `setTimeout` can still be interacted with.
+:::
+
 ### click
 
 ```ts
