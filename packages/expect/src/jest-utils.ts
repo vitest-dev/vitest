@@ -77,21 +77,15 @@ function asymmetricMatch(a: any, b: any, customTesters: Array<Tester>) {
     return undefined
   }
 
-  // exclude subset equality (by toMatchObject) from participating in
-  // asymmetric matchers equality semantics since asymmetric matchers
-  // should already own such asymmetric equality logic.
-  // Otherwise, for example,
-  //   expect([{ y: 1 }]).toMatchObject(expect.arrayContaining([{ y: 1, z: 2 }]))
-  // would lead to checking undesired subset equality of
-  //   expect({ y: 1, z: 2 }).toMatchObject({ y: 1 })
-  customTesters = customTesters.filter(tester => !isSubsetEqualityTester(tester))
+  // Asymmetric matchers define their own subset semantics.
+  const testers = customTesters.filter(tester => !isSubsetEqualityTester(tester))
 
   if (asymmetricA) {
-    return a.asymmetricMatch(b, customTesters)
+    return a.asymmetricMatch(b, testers)
   }
 
   if (asymmetricB) {
-    return b.asymmetricMatch(a, customTesters)
+    return b.asymmetricMatch(a, testers)
   }
 }
 
@@ -613,13 +607,12 @@ function isObjectWithKeys(a: any) {
   )
 }
 
-// keep track of any `subsetEquality` instances
-// that appears throughout equality testing recursion.
+// Recursive subset testers are closures, so track them by identity.
 const subsetEqualityTesters = new WeakSet<Tester>()
 
-function registerSubsetEqualityTester(
-  tester: Tester,
-): Tester {
+function registerSubsetEqualityTester<T extends Tester>(
+  tester: T,
+): T {
   subsetEqualityTesters.add(tester)
   return tester
 }
