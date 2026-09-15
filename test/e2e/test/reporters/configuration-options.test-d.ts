@@ -1,5 +1,6 @@
 import type { defineConfig } from 'vitest/config'
-import { assertType, test } from 'vitest'
+import type { BuiltinReporterOptions } from 'vitest/node'
+import { assertType, expectTypeOf, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
 type Configuration = NonNullable<NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>>
@@ -55,6 +56,22 @@ test('reporters, mixed variations', () => {
       'default',
       ['verbose'],
       ['json', { outputFile: 'test.json' }],
+    ],
+  })
+})
+
+test('minimal reporter silent options', () => {
+  expectTypeOf<BuiltinReporterOptions['minimal']['silent']>().toEqualTypeOf<boolean | 'passed-only' | undefined>()
+  expectTypeOf<BuiltinReporterOptions['agent']['silent']>().toEqualTypeOf<boolean | 'passed-only' | undefined>()
+
+  assertType<Configuration>({
+    reporters: [
+      ['minimal', { silent: true }],
+      ['minimal', { silent: false }],
+      ['minimal', { silent: 'passed-only' }],
+      ['agent', { silent: true }],
+      ['agent', { silent: false }],
+      ['agent', { silent: 'passed-only' }],
     ],
   })
 })
