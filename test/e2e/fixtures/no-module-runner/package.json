@@ -10,9 +10,9 @@
     "test:run": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.13.4",
     "@vitest/ui": "workspace:*",
-    "tinyspy": "^4.0.4",
+    "tinyspy": "^4.0.6",
     "vite": "latest",
     "vitest": "workspace:*"
   },

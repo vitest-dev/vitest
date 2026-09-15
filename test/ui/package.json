@@ -7,11 +7,11 @@
     "test-fixtures": "vitest"
   },
   "devDependencies": {
-    "@testing-library/dom": "^10.4.1",
+    "@testing-library/dom": "^10.4.2",
     "@types/codemirror": "^5.60.18",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
-    "happy-dom": "^20.12.0",
+    "happy-dom": "^20.14.5",
     "vitest": "workspace:*"
   }
 }
