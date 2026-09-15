@@ -20,6 +20,7 @@ import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
+import { rm } from 'node:fs/promises'
 import os, { tmpdir } from 'node:os'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
@@ -1636,6 +1637,7 @@ export class Vitest {
           this._checkUnhandledErrors(errors)
         })
         await this._traces?.finish()
+        await rm(this._tmpDir, { force: true, recursive: true }).catch(noop)
       })()
     }
     return this.closingPromise
