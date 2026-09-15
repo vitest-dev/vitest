@@ -288,7 +288,7 @@ function visitNode(
   node: UITaskTreeNode,
   treeNodes: Set<string>,
   matcher: (node: UITaskTreeNode) => boolean,
-  entries: FilterResult[] = [],
+  results: FilterResult[] = [],
 ) {
   const match = matcher(node)
 
@@ -313,14 +313,14 @@ function visitNode(
     }
   }
 
-  entries.push([match, node])
+  results.push([match, node])
   if (isParentNode(node)) {
     for (let i = 0; i < node.tasks.length; i++) {
-      visitNode(node.tasks[i], treeNodes, matcher, entries)
+      visitNode(node.tasks[i], treeNodes, matcher, results)
     }
   }
 
-  return entries
+  return results
 }
 
 function matcher(node: UITaskTreeNode, search: SearchMatcher, filter: Filter) {
