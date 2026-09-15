@@ -147,6 +147,7 @@ export default defineConfig({
     environmentOptions: {
       custom: {
         option: 'config-option',
+        config: { name: 'custom', label: 'custom' },
       },
     },
     execArgv: ['--experimental-wasm-modules'],

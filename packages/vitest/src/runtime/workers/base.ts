@@ -107,7 +107,7 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
         'vitest.environment.vite_environment': environment.viteEnvironment || environment.name,
       },
     },
-    () => environment.setup(globalThis, environmentOptions || config.environmentOptions || {}),
+    () => environment.setup(globalThis, environmentOptions || config.environmentOptions || {}, config.environmentOptions || {}),
   )
 
   _environmentTime = performance.now() - startTime

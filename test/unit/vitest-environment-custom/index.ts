@@ -8,10 +8,11 @@ const log = createDebug('test:env')
 export default <Environment>{
   name: 'custom',
   viteEnvironment: 'ssr',
-  setupVM({ custom }) {
+  setupVM({ custom }, defaults) {
     const context = vm.createContext({
       testEnvironment: 'custom',
-      option: custom.option,
+      option: custom.option ?? defaults.custom.option,
+      customConfig: { ...defaults.custom?.config, ...custom.config },
       POOL_ID_DURING_ENV_SETUP: process.env.VITEST_POOL_ID,
       WORKER_ID_DURING_ENV_SETUP: process.env.VITEST_WORKER_ID,
       setTimeout,
@@ -30,12 +31,14 @@ export default <Environment>{
       teardown() {
         delete context.testEnvironment
         delete context.option
+        delete context.customConfig
       },
     }
   },
-  setup(global, { custom }) {
+  setup(global, { custom }, defaults) {
     global.testEnvironment = 'custom'
-    global.option = custom.option
+    global.option = custom.option ?? defaults.custom.option
+    global.customConfig = { ...defaults.custom?.config, ...custom.config }
     global.POOL_ID_DURING_ENV_SETUP = process.env.VITEST_POOL_ID
     global.WORKER_ID_DURING_ENV_SETUP = process.env.VITEST_WORKER_ID
 
@@ -43,6 +46,7 @@ export default <Environment>{
       teardown() {
         delete global.testEnvironment
         delete global.option
+        delete global.customConfig
 
         if (global.__exists) {
           log('should not log')
