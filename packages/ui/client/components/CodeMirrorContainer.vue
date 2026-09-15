@@ -71,10 +71,7 @@ onMounted(async () => {
 
 <template>
   <div
-    relative
-    font-mono
-    text-sm
-    class="codemirror-scrolls"
+    class="codemirror-scrolls relative font-mono text-sm"
     :class="{
       'codemirror-busy': saving,
       'codemirror-hide-cursor': readOnly,

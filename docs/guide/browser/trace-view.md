@@ -44,7 +44,11 @@ vitest --browser.traceView
 
 :::
 
-When `browser.traceView` is enabled, tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter). The viewer has two resizable panes:
+When `browser.traceView` is enabled, tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter).
+
+With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
+
+The viewer has two resizable panes:
 
 - **Step list** (left) — every recorded action, assertion, mark, and lifecycle entry, with name, timing, selector, and source location. Failed actions and assertions are highlighted in red.
 - **DOM snapshot** (right) — a reconstruction of the page at the selected step. The interacted element is highlighted in blue.

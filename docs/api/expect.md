@@ -1822,7 +1822,7 @@ test('spy called after another', () => {
 ```
 
 ::: tip Migration Guide
-For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration#mocha-chai-sinon).
+For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration/mocha).
 :::
 
 ## toSatisfy

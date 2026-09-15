@@ -55,5 +55,5 @@ export interface BenchmarkUserOptions {
 }
 
 export type ResolvedBenchmarkOptions = Omit<Required<BenchmarkUserOptions>, 'provider'> & {
-  provider?: string | undefined
+  provider?: string
 }
