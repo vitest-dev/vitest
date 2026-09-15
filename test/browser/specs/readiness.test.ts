@@ -148,3 +148,50 @@ test('fails instead of hanging when the tester stops responding to messages', { 
   expect(stderr).toContain(`The iframe "${fs.resolveFile('basic.test.ts')}" did not acknowledge the "prepare" message within 2000ms. The tester might have crashed, been removed, or be blocked by a long synchronous task.`)
   expect(testTree()).toMatchInlineSnapshot(`{}`)
 })
+
+test('fails instead of hanging when the iframe never loads', { timeout: 20000 }, async () => {
+  const { stderr, fs, testTree } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': `
+        import { expect, test } from 'vitest'
+
+        test('never runs', () => {
+          expect(1).toBe(1)
+        })
+      `,
+      'slow-tester.html': `
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <!-- the load event waits for subresources, and this one never
+                 finishes loading, so the iframe never fires "load" -->
+            <script src="/never-responds.js"></script>
+          </head>
+          <body></body>
+        </html>
+      `,
+    },
+    {
+      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '2000' },
+      $viteConfig: {
+        plugins: [{
+          name: 'test:never-responds',
+          configureServer(server) {
+            server.middlewares.use('/never-responds.js', () => {
+              // never ends the response
+            })
+          },
+        }],
+      },
+      browser: {
+        instances: [instances[0]],
+        testerHtmlPath: './slow-tester.html',
+      },
+    },
+  )
+
+  expect(stderr).toContain(`Failed to run the test ${fs.resolveFile('basic.test.ts')}`)
+  expect(stderr).toContain(`The iframe "${fs.resolveFile('basic.test.ts')}" did not load within 2000ms. The tester page or one of its subresources never finished loading, check the browser console and the network tab for pending requests.`)
+  expect(testTree()).toMatchInlineSnapshot(`{}`)
+})
