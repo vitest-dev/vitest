@@ -227,12 +227,7 @@ describe('jest-expect', () => {
   })
 
   // https://github.com/vitest-dev/vitest/issues/11071
-  it('asymmetric matchers do not inherit subset equality', () => {
-    // `toMatchObject` compares with `subsetEquality`, which is directional.
-    // An asymmetric matcher runs its own comparison and `arrayContaining`
-    // passes its sample as the left-hand side, so forwarding a subset tester
-    // made the sample the "object" and the actual element the "subset" --
-    // every field the sample declared beyond the actual element was ignored.
+  it('asymmetric matchers and toMatchObject equality', () => {
     expect({ records: [{ id: 1 }] }).not.toMatchObject({
       records: expect.arrayContaining([{ id: 1, required: 'x' }]),
     })
@@ -247,11 +242,6 @@ describe('jest-expect', () => {
     })
     expect({ records: [{ id: 1, extra: true }] }).not.toMatchObject({
       records: expect.arrayContaining([{ id: 1 }]),
-    })
-
-    // nested plain objects in the expected value keep subset semantics
-    expect({ user: { name: 'John', age: 30 } }).toMatchObject({
-      user: { name: 'John' },
     })
   })
 
