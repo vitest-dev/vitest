@@ -228,20 +228,23 @@ describe('jest-expect', () => {
 
   // https://github.com/vitest-dev/vitest/issues/11071
   it('asymmetric matchers and toMatchObject equality', () => {
-    expect({ records: [{ id: 1 }] }).not.toMatchObject({
-      records: expect.arrayContaining([{ id: 1, required: 'x' }]),
-    })
     expect([{ id: 1 }]).not.toMatchObject(
       expect.arrayContaining([{ id: 1, required: 'x' }]),
     )
+    expect({ nested: [{ id: 1 }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1, extra: true }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+    })
 
     // an actual element still has to match the sample exactly, and extra
     // fields on it are still not allowed
-    expect({ records: [{ id: 1, required: 'x' }] }).toMatchObject({
-      records: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    expect({ nested: [{ id: 1, required: 'x' }] }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
     })
-    expect({ records: [{ id: 1, extra: true }] }).not.toMatchObject({
-      records: expect.arrayContaining([{ id: 1 }]),
+    expect({ nested: [{ id: 1, required: 'x' }, { id: 2 }] }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
     })
   })
 
