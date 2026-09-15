@@ -42,20 +42,21 @@ export function runFilter(
   search: SearchMatcher,
   filter: Filter,
 ) {
-  const entries = [...filterAll(
+  const entries = filterAll(
     search,
     filter,
-  )]
+  )
   uiEntries.value = entries
   filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
 }
 
-export function* filterAll(
+export function filterAll(
   search: SearchMatcher,
   filter: Filter,
 ) {
   const project = currentProjectName.value
   const tasks = getSortedRootTasks(projectSort.value)
+  const entries: UITaskTreeNode[] = []
   const context: FilterNodeContext = {
     nodes: explorerTree.nodes,
     tasks: client.state.idMap,
@@ -68,11 +69,15 @@ export function* filterAll(
     if (project && node.projectName !== project) {
       continue
     }
-    yield* filterNode(node, context)
+    for (const entry of filterNode(node, context)) {
+      entries.push(entry)
+    }
   }
+
+  return entries
 }
 
-export function* filterNode(
+export function filterNode(
   node: UITaskTreeNode,
   context: FilterNodeContext,
 ) {
@@ -84,9 +89,9 @@ export function* filterNode(
       : undefined
   const ancestorMatches = !onlyTests && !!file && matchesNode(file, context)
   const filteredTree = filterTreeNode(node, onlyTests, context, ancestorMatches)
-  if (filteredTree) {
-    yield* flattenVisibleTree(filteredTree, isFileNode(node))
-  }
+  return filteredTree
+    ? flattenVisibleTree(filteredTree, isFileNode(node))
+    : []
 }
 
 function filterTreeNode(
@@ -131,19 +136,22 @@ function matchesNode(node: UITaskTreeNode, context: FilterNodeContext) {
     : false
 }
 
-function* flattenVisibleTree(
+function flattenVisibleTree(
   tree: FilteredTreeNode,
   includeRoot: boolean,
-): Generator<UITaskTreeNode> {
+  entries: UITaskTreeNode[] = [],
+) {
   if (includeRoot) {
-    yield tree.node
+    entries.push(tree.node)
   }
   if (!isParentNode(tree.node) || !tree.node.expanded) {
-    return
+    return entries
   }
   for (const child of tree.children) {
-    yield* flattenVisibleTree(child, true)
+    flattenVisibleTree(child, true, entries)
   }
+
+  return entries
 }
 
 function matchState(task: Task, filter: Filter, slowTestThreshold: number | undefined) {

@@ -121,14 +121,10 @@ export function runCollect(
   doRunFilter(search, filter, end)
 }
 
-function* collectRunningTodoTests() {
-  yield* uiEntries.value.filter(isRunningTestNode)
-}
-
 function updateRunningTodoTests() {
   const idMap = client.state.idMap
   let task: Task | undefined
-  for (const test of collectRunningTodoTests()) {
+  for (const test of uiEntries.value.filter(isRunningTestNode)) {
     // lookup the parent
     task = idMap.get(test.parentId)
     if (task && isSuite(task) && task.mode === 'todo') {
@@ -450,21 +446,15 @@ export function collectTestsTotalData(
       skipped: 0,
       running: 0,
     } satisfies FilteredTests
-    // will match when the filter entry is active or filter is inactive (skipped excluded)
-    // for example, we should update all when the filter is empty
-    // but shouldn't update failed if we're filtering by success
-    const empty = !filter.success && !filter.failed
-    const applyFailed = filter.failed || empty
-    const applySuccess = filter.success || empty
     for (const f of tests) {
       if (f.result?.state === 'fail') {
-        data.failed += applyFailed ? 1 : 0
+        data.failed++
       }
       else if (f.result?.state === 'pass') {
-        data.success += applySuccess ? 1 : 0
+        data.success++
       }
       else if (f.mode === 'skip' || f.mode === 'todo') {
-        // just ignore
+        data.skipped++
       }
       else {
         data.running++
@@ -477,16 +467,21 @@ export function collectTestsTotalData(
   return filesSummary
 }
 
-function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
+function testsCollector(
+  suite: Arrayable<Task>,
+  collectedTests: Test[] = [],
+) {
   const arraySuites = toArray(suite)
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
     if (s.type === 'test') {
-      yield s
+      collectedTests.push(s)
     }
     else {
-      yield* testsCollector(s.tasks)
+      testsCollector(s.tasks, collectedTests)
     }
   }
+
+  return collectedTests
 }

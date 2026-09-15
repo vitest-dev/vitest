@@ -49,7 +49,7 @@ export function runExpandNode(
 
   const treeItems = new Set(openedTreeItems.value)
   treeItems.add(node.id)
-  const filteredSubtree = [...filterNode(
+  const filteredSubtree = filterNode(
     node,
     {
       nodes: explorerTree.nodes,
@@ -58,7 +58,7 @@ export function runExpandNode(
       filter,
       slowTestThreshold: config.value.slowTestThreshold,
     },
-  )]
+  )
 
   const subtree = isFileNode(node) ? filteredSubtree : [node, ...filteredSubtree]
   const entries = replaceSubtreeEntries(uiEntries.value, node, subtree)
@@ -95,10 +95,10 @@ export function runExpandAll(
   filter: Filter,
 ) {
   expandAllNodes(explorerTree.root.tasks, false)
-  const entries = [...filterAll(
+  const entries = filterAll(
     search,
     filter,
-  )]
+  )
   treeFilter.value.expandAll = false
   openedTreeItems.value = []
   uiEntries.value = entries
