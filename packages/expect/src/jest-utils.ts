@@ -77,18 +77,21 @@ function asymmetricMatch(a: any, b: any, customTesters: Array<Tester>) {
     return undefined
   }
 
-  // subset equality is directional: it asks whether the second argument is
-  // contained in the first. A matcher runs its own comparison and may pass its
-  // sample as the first argument (`arrayContaining` does), which would flip
-  // that question around, so it must not inherit a subset tester.
-  const testers = customTesters.filter(tester => !isSubsetEqualityTester(tester))
+  // exclude subset equality (by toMatchObject) from participating in
+  // asymmetric matchers equality semantics since asymmetric matchers
+  // should already own such asymmetric equality logic.
+  // Otherwise, for example,
+  //   expect([{ y: 1 }]).toMatchObject(expect.arrayContaining([{ y: 1, z: 2 }]))
+  // would lead to checking undesired subset equality of
+  //   expect({ y: 1, z: 2 }).toMatchObject({ y: 1 })
+  customTesters = customTesters.filter(tester => !isSubsetEqualityTester(tester))
 
   if (asymmetricA) {
-    return a.asymmetricMatch(b, testers)
+    return a.asymmetricMatch(b, customTesters)
   }
 
   if (asymmetricB) {
-    return b.asymmetricMatch(a, testers)
+    return b.asymmetricMatch(a, customTesters)
   }
 }
 
