@@ -242,8 +242,6 @@ describe('jest-expect', () => {
       extra: true,
     })
 
-    // an actual element still has to match the sample exactly, and extra
-    // fields on it are still not allowed
     expect({ nested: [{ id: 1, required: 'x' }] }).toMatchObject({
       nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
     })
