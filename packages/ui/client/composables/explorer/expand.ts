@@ -130,6 +130,18 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
   }
 }
 
+/**
+ * Build the complete next explorer entry list by adding an expanded node and its filtered
+ * subtree at the node's current position.
+ *
+ * `children` contains only entries produced by filtering the expanded subtree. This function
+ * walks the complete current `uiEntries`. When it reaches `node`, it adds the node unless
+ * `children` already contains it, followed by the children. Unrelated entries are copied
+ * unchanged, while existing entries with the same IDs are skipped to avoid duplicates.
+ *
+ * TODO: Make this a pure splice over explicit entries and keep expansion state changes in
+ * `runExpandNode`.
+ */
 function collectExpandedNode(
   node: UITaskTreeNode,
   children: Set<UITaskTreeNode>,
