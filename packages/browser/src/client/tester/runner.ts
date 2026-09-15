@@ -38,6 +38,11 @@ interface BrowserRunnerOptions {
   config: SerializedConfig
 }
 
+interface ViewportSize {
+  width: number
+  height: number
+}
+
 export const browserHashMap: Map<string, string> = new Map()
 
 interface CoverageHandler {
@@ -77,9 +82,19 @@ function createBrowserRunner(
 
     private traces = new Map<string, string[]>()
 
+    /**
+     * The size the current attempt started with. `page.viewport` resizes the
+     * iframe for every test that runs after it, so it is restored when the
+     * attempt is over (`onAfterRetryTask`) to keep the viewport scoped to the
+     * test that asked for it.
+     */
+    private viewportBeforeAttempt: ViewportSize | undefined
+
     async onBeforeTryTask(test: Test, options: TestTryOptions) {
       await userEvent.cleanup()
       super.onBeforeTryTask?.(test, options)
+      // remember the size before the test (and its hooks) can change it
+      this.viewportBeforeAttempt = { width: window.innerWidth, height: window.innerHeight }
       const trace = this.config.browser.trace
       const { retry, repeats } = options
       const shouldTrace = trace !== 'off'
@@ -119,6 +134,7 @@ function createBrowserRunner(
     }
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
+      await this.restoreViewport()
       const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
@@ -179,6 +195,26 @@ function createBrowserRunner(
           this.cancel('test-failure')
         }
       }
+    }
+
+    /**
+     * Put back the viewport the attempt started with. This only runs when the
+     * test actually resized the iframe, so a size set in `beforeAll` or
+     * `beforeEach` - which every test of the suite starts with as well - is
+     * left alone.
+     */
+    private async restoreViewport() {
+      const before = this.viewportBeforeAttempt
+      this.viewportBeforeAttempt = undefined
+      if (
+        !before
+        || (before.width === window.innerWidth && before.height === window.innerHeight)
+      ) {
+        return
+      }
+      // the iframe can already be gone when the run was cancelled; the
+      // orchestrator reports that on its own, and it should not fail the test
+      await page.viewport(before.width, before.height).catch(() => {})
     }
 
     onTaskFinished = async (task: Task) => {
