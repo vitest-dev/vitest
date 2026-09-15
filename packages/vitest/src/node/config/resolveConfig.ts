@@ -188,7 +188,6 @@ function captureProvidedOptions(
     fsModuleCache: sources.some(source =>
       source?.fsModuleCache != null
       || (source?.experimental as { fsModuleCache?: boolean } | undefined)?.fsModuleCache != null),
-    silent: sources.some(source => source?.silent != null),
   }
 }
 
