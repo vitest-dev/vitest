@@ -101,6 +101,68 @@ ${indent}}\`)
     `)
   })
 
+  it('replaceInlineSnap with comment between method and parentheses', async () => {
+    const code = `
+  expect(0).toMatchInlineSnapshot
+    // This comment breaks snapshot updates
+    ()
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"0"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect(0).toMatchInlineSnapshot
+          // This comment breaks snapshot updates
+          (\`"0"\`)
+        "
+    `)
+  })
+
+  it('replaceInlineSnap with block comment between method and parentheses', async () => {
+    const code = `
+  expect(0).toMatchInlineSnapshot/* This comment breaks snapshot updates */()
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"0"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect(0).toMatchInlineSnapshot/* This comment breaks snapshot updates */(\`"0"\`)
+        "
+    `)
+  })
+
+  it('replaceInlineSnap with multiple comments between method and parentheses', async () => {
+    const code = `
+  expect(0).toMatchInlineSnapshot
+    // first comment
+    /* second comment */ // third comment
+    ()
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"0"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect(0).toMatchInlineSnapshot
+          // first comment
+          /* second comment */ // third comment
+          (\`"0"\`)
+        "
+    `)
+  })
+
+  it('replaceInlineSnap does not treat comment-like sequences inside strings as comments', async () => {
+    const code = `
+  expect('a // b /* c */ d').toMatchInlineSnapshot('"foo"')
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"bar"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect('a // b /* c */ d').toMatchInlineSnapshot(\`"bar"\`)
+        "
+    `)
+  })
+
   it('replaceInlineSnap(object) comments', async () => {
     const code = `
   expect({}).toMatchInlineSnapshot(
