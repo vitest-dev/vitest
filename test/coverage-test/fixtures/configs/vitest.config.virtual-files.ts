@@ -26,6 +26,10 @@ function VirtualFilesPlugin(): Plugin {
         return 'src/\0vitest-custom-virtual-file-2.ts'
       }
 
+      if (id === 'virtual:vitest-custom-virtual-file-3') {
+        return '/@fs/virtual:vitest-custom-virtual-file-3'
+      }
+
       if (id.includes('vitest-custom-virtual:math')) {
         return resolve(import.meta.dirname, "../src/vitest-custom-virtual:math")
       }
@@ -42,6 +46,13 @@ function VirtualFilesPlugin(): Plugin {
       if (id === 'src/__x00__vitest-custom-virtual-file-2.ts' || id === 'src/\x00vitest-custom-virtual-file-2.ts') {
         return `
           const virtualFile = "This file should be excluded from coverage report #2"
+          export default virtualFile;
+        `
+      }
+
+      if(id === '/@fs/virtual:vitest-custom-virtual-file-3' || id === "/virtual:vitest-custom-virtual-file-3") {
+        return `
+          const virtualFile = "This file should be excluded from coverage report #3"
           export default virtualFile;
         `
       }

@@ -6,7 +6,7 @@ import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
-  file: RunnerTestFile
+  suite: RunnerTestFile | RunnerTestSuite
 }>()
 
 type LeveledTask = RunnerTask & {
@@ -30,46 +30,34 @@ function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
 }
 
 const failed = computed(() => {
-  const file = props.file
-  const failedFlatMap = file.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
-  const result = file.result
-  const fileError = result?.errors?.[0]
-  // we must check also if the test cannot compile
-  if (fileError) {
-    // create a dummy one
-    const fileErrorTask: RunnerTestSuite & { level: number } = {
-      id: file!.id,
-      file: file!,
-      name: file!.name,
-      fullName: file!.name,
+  const suite = props.suite
+  const failedFlatMap = suite.tasks.flatMap(t => collectFailed(t, 0))
+  // prepend suite level errors as same indent level as children errors
+  if (suite.result?.errors?.length) {
+    const taskError: LeveledTask = {
+      ...suite,
       level: 0,
-      type: 'suite',
-      mode: 'run',
-      meta: {},
       tasks: [],
-      result,
     }
-    failedFlatMap.unshift(fileErrorTask)
+    failedFlatMap.unshift(taskError)
   }
   return failedFlatMap
 })
+
+const isFile = computed(() => 'filepath' in props.suite)
 </script>
 
 <template>
-  <div h-full class="scrolls">
+  <div class="scrolls h-full">
     <template v-if="failed.length">
       <div v-for="task of failed" :id="task.id" :key="task.id">
         <div
-          bg="red-500/10"
-          text="red-500 sm"
-          p="x3 y2"
-          m-2
-          rounded
+          class="bg-red-500/10 text-sm text-red-500 px-3 py-2 m-2 rounded"
           :style="{
             'margin-left': `${2 * (task as LeveledTask).level + 0.5}rem`,
           }"
         >
-          <div flex="~ gap-2 items-center">
+          <div class="flex gap-2 items-center">
             <span>{{ task.name }}</span>
             <FailureScreenshot :task="task" />
           </div>
@@ -78,17 +66,17 @@ const failed = computed(() => {
               v-for="(error, idx) of task.result.errors"
               :key="idx"
               :error="error"
-              :filename="file.name"
+              :filename="task.file.name"
               :root="config.root"
-              :file-id="file.id"
+              :file-id="task.file.id"
             />
           </template>
         </div>
       </div>
     </template>
     <template v-else>
-      <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
+      <div class="bg-green-500/10 text-sm text-green-500 px-4 py-2 m-2 rounded">
+        All tests passed in this {{ isFile ? 'file' : 'suite' }}
       </div>
     </template>
   </div>

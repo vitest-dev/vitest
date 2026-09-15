@@ -65,14 +65,12 @@ test.describe('html reporter', () => {
     const editorButton = page.getByTestId('btn-code')
     const editor = page.getByTestId('editor')
 
-    await item1.hover()
-    await item1.getByTestId('btn-open-details').click()
+    await item1.click()
     await editorButton.click()
     await expect(editor).toContainText(`test('ok'`)
     await expect(getAnnotation(editor, 'test-linux')).toBeVisible()
 
-    await item2.hover()
-    await item2.getByTestId('btn-open-details').click()
+    await item2.click()
     await editorButton.click()
     await expect(editor).toContainText(`test('ok'`)
     await expect(getAnnotation(editor, 'test-macos')).toBeVisible()

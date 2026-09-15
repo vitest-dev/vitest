@@ -476,7 +476,7 @@ describe('createTagsFilter', () => {
 
     test('throws error when no tags defined', () => {
       expect(() => createTagsFilter(['foo'], [])).toThrow(
-        'The Vitest config does\'t define any "tags"',
+        'The Vitest config doesn\'t define any "tags"',
       )
     })
 

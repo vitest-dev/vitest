@@ -198,9 +198,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
   >
     <Pane :size="traceViewSplitSizes[0]" min-size="20">
       <div
-        class="h-full min-h-0 p-4"
-        flex="~ col gap-1"
-        overflow-auto
+        class="h-full min-h-0 p-4 flex flex-col gap-1 overflow-auto"
         role="listbox"
         aria-label="Trace steps"
       >
@@ -238,7 +236,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
               />
             </span>
             <div class="min-w-0 flex-1">
-              <div truncate data-testid="trace-step-name">
+              <div class="truncate" data-testid="trace-step-name">
                 {{ formatStepName(step) }}
               </div>
               <div class="text-xs opacity-60 truncate">
@@ -256,7 +254,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
       </div>
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
-      <div class="h-full min-h-0" flex="~ col" overflow-auto>
+      <div class="h-full min-h-0 flex flex-col overflow-auto">
         <iframe
           v-if="selectedStep"
           ref="iframeEl"
