@@ -53,7 +53,7 @@ available: `resolveScreenshotPath` and `resolveDiffPath`.
 
 The directory name used for storing reference screenshots.
 
-This value is passed as `screenshotDirectory` to [`browser.expect.toMatchScreenshot.resolveScreenshotPath`](#browserexpecttomatchscreenshotresolvescreenshotpath) and [`browser.expect.toMatchScreenshot.resolveDiffPath`](#browserexpecttomatchscreenshotresolvediffpath), and used in the default path resolution of `resolveScreenshotPath`.
+This value is passed as `screenshotDirectory` to [`browser.expect.toMatchScreenshot.resolveScreenshotPath`](#browser-expect-tomatchscreenshot-resolvescreenshotpath) and [`browser.expect.toMatchScreenshot.resolveDiffPath`](#browser-expect-tomatchscreenshot-resolvediffpath), and used in the default path resolution of `resolveScreenshotPath`.
 
 ## browser.expect.toMatchScreenshot.resolveScreenshotPath
 
