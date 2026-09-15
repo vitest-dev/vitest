@@ -1,32 +1,21 @@
-Tests are split by categories. Default categories are:
+Tests are split by categories:
 
-## core
+## unit
 
-These tests are running in different pools with a single config file. If you just need to test a function call, you can place your test here.
+These tests exercise individual functions and modules. They run in different pools with a single config file.
 
-This is the only test category that doesn't start new Vitest instance for every test.
+## e2e
 
-## config
+These integration tests exercise CLI behavior and complex interactions by starting Vitest programmatically or as a separate process.
 
-Place your test here if you are testing a config option.
-
-## cli
-
-If you are testing a complex interaction, place your tests here.
-Type-focused fixtures live under `test/e2e/dts/`.
+Snapshot integration tests live under `test/e2e/snapshots`. Type-focused fixtures that validate public declarations live under `test/e2e/dts`, while integration tests for Vitest's typechecker live under `test/e2e/typecheck`.
 
 ## browser
 
-If you are testing browser mode, add your tests here.
+These tests exercise browser mode and its providers.
 
 ## ui
 
-These are e2e tests for UI package. We are using `playwright` to test it.
+These are Playwright e2e tests for the UI package.
 
-## watch
-
-Place your tests here if you are testing Vitest behaviour when file is created/updated/removed.
-
-----
-
-All other categories just group tests by type.
+The remaining top-level test directories contain specialized suites that have not yet been consolidated into these categories.
