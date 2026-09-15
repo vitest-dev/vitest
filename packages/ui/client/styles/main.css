@@ -110,6 +110,10 @@ html.dark {
   z-index: 10;
 }
 
+[data-runner-state="running"] .splitpanes__splitter {
+  pointer-events: none;
+}
+
 .splitpanes__splitter:before {
   content: "";
   position: absolute;
