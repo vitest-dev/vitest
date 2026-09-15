@@ -613,12 +613,14 @@ function isObjectWithKeys(a: any) {
   )
 }
 
+// keep track of any `subsetEquality` instances
+// that appears throughout equality testing recursion.
 const subsetEqualityTesters = new WeakSet<Tester>()
 
-function registerSubsetEqualityTester<T extends (...args: any[]) => any>(
-  tester: T,
-): T {
-  subsetEqualityTesters.add(tester as unknown as Tester)
+function registerSubsetEqualityTester(
+  tester: Tester,
+): Tester {
+  subsetEqualityTesters.add(tester)
   return tester
 }
 
