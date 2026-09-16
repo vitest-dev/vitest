@@ -30,6 +30,8 @@ const modeMap: Record<string, any> = {
   cts: { name: 'javascript', typescript: true },
   jsx: { name: 'text/jsx' },
   tsx: { name: 'text/typescript-jsx' },
+  gjs: 'gjs',
+  gts: 'gts',
 }
 
 const el = ref<HTMLTextAreaElement>()

@@ -12,10 +12,30 @@ import 'codemirror/mode/javascript/javascript'
 import 'codemirror/mode/xml/xml'
 import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/jsx/jsx'
+import 'codemirror/addon/mode/multiplex'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/selection/active-line'
 import 'codemirror/addon/scroll/simplescrollbars'
 import 'codemirror/addon/scroll/simplescrollbars.css'
+
+// Ember's .gjs/.gts files are JavaScript/TypeScript with <template> tags.
+// The inner mode highlights the template tag body as HTML.
+function defineTemplateTagMode(name: string, outer: CodeMirror.ModeSpec<any>) {
+  CodeMirror.defineMode(name, (config) => {
+    return CodeMirror.multiplexingMode(
+      CodeMirror.getMode(config, outer),
+      {
+        open: '<template',
+        close: '</template>',
+        mode: CodeMirror.getMode(config, 'htmlmixed'),
+        parseDelimiters: true,
+      },
+    )
+  })
+}
+
+defineTemplateTagMode('gjs', { name: 'javascript' })
+defineTemplateTagMode('gts', { name: 'javascript', typescript: true })
 
 export const codemirrorRef = shallowRef<CodeMirror.EditorFromTextArea>()
 
