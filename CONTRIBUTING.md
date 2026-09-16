@@ -160,7 +160,7 @@ Backport PR titles should include the target branch in a `[backport to x]` marke
 The release branches are also linked with the documentation site releases:
 
 - `main` is the source for unreleased documentation at <https://main.vitest.dev/>.
-- `release` points to the latest stable release line used for <https://vitest.dev/>. Release managers update it manually for non-beta releases from `main`; it is not moved for older-line backports.
+- `release` points to the latest stable release line used for <https://vitest.dev/>. Stable releases from `main` promote it automatically after publishing. Release managers can also run the [`Promote Stable Docs`](./.github/workflows/promote-docs.yml) workflow to include documentation follow-ups. The workflow only accepts stable, tagged, fast-forward updates, and it is not run for older-line backports.
 - `vN` branches are used for old major documentation sites. For example, <https://v3.vitest.dev/> uses `v3`.
 
 ### Release process
@@ -176,9 +176,11 @@ Releases — publishing the npm packages, creating the git release tag, and gene
 
 2. **Review and merge the PR.** Check the version bump, then merge so the `chore: release v*` commit lands on the release branch — that commit is what triggers publishing.
 
-3. **Approve the publish workflow.** Merging triggers the [`Publish Package`](./.github/workflows/publish.yml) workflow, which builds the packages and then pauses for `Release` environment approval. Open the workflow run in GitHub Actions and approve the `Release` environment deployment; the workflow then stages the packages on npm, pushes the release tag, and generates the GitHub release.
+3. **Approve the publish workflow.** Merging triggers the [`Publish Package`](./.github/workflows/publish.yml) workflow, which builds the packages and then pauses for `Release` environment approval. Open the workflow run in GitHub Actions and approve the `Release` environment deployment; the workflow then stages the packages on npm, pushes the release tag, generates the GitHub release, and promotes stable documentation released from `main`.
 
 4. **Approve the npm staged publish.** Review the staged packages on npm, then approve them with 2FA so the release becomes installable. Afterwards, confirm npm, the tag, and the GitHub release all look right.
+
+If documentation fixes land after a stable release, run the [`Promote Stable Docs`](./.github/workflows/promote-docs.yml) workflow with the `main` branch or a specific commit as the target. The workflow verifies that the target contains the current stable release tag and advances `release` without rewriting its history.
 
 ### Release Protections
 
