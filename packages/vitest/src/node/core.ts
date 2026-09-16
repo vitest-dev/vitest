@@ -801,6 +801,9 @@ export class Vitest {
         const testModules = await this.parseSpecifications(files, {
           concurrency: options.staticParseConcurrency,
         })
+        if (hasFailed(testModules.map(testModule => testModule.task))) {
+          process.exitCode = 1
+        }
         return { testModules, unhandledErrors: [] }
       }
 

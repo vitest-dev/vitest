@@ -61,10 +61,10 @@ function ellipsisFile(moduleId: string) {
 
 <template>
   <div class="overflow-auto max-h-120">
-    <h1 my-2 mx-4>
-      Import Duration Breakdown <span op-70>(ordered by Total Time)</span>
+    <h1 class="my-2 mx-4">
+      Import Duration Breakdown <span class="op-70">(ordered by Total Time)</span>
     </h1>
-    <table my-2 mx-4 text-sm font-light op-90>
+    <table class="my-2 mx-4 text-sm font-light op-90">
       <thead>
         <tr>
           <th>
@@ -90,13 +90,13 @@ function ellipsisFile(moduleId: string) {
           >
             {{ row.relativeFile }}
           </td>
-          <td pr-2 :class="row.selfTimeClass">
+          <td class="pr-2" :class="row.selfTimeClass">
             {{ row.formattedSelfTime }}
           </td>
-          <td pr-2 :class="row.totalTimeClass">
+          <td class="pr-2" :class="row.totalTimeClass">
             {{ row.formattedTotalTime }}
           </td>
-          <td pr-2 :class="row.totalTimeClass">
+          <td class="pr-2" :class="row.totalTimeClass">
             {{ Math.round((row.totalTime / imports[0].totalTime) * 100) }}%
           </td>
         </tr>

@@ -19,12 +19,10 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
 </script>
 
 <template>
-  <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative data-testid="tests-entry">
+  <div class="flex flex-wrap justify-evenly gap-2 px-4 relative" data-testid="tests-entry">
     <DashboardEntry
-      text-green-700 dark:text-green-500
+      class="text-green-700 dark:text-green-500 cursor-pointer hover:op80"
       data-testid="pass-entry"
-      cursor-pointer
-      hover="op80"
       @click="toggleFilter('success')"
     >
       <template #header>
@@ -37,8 +35,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     <DashboardEntry
       :class="{ 'text-red-700 dark:text-red-500': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }"
       data-testid="fail-entry"
-      cursor-pointer
-      hover="op80"
+      class="cursor-pointer hover:op80"
       @click="toggleFilter('failed')"
     >
       <template #header>
@@ -50,7 +47,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsExpectedFail"
-      text-cyan-700 dark:text-cyan-500
+      class="text-cyan-700 dark:text-cyan-500"
       data-testid="expected-fail-entry"
     >
       <template #header>
@@ -62,10 +59,8 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsSkipped"
-      text-purple-700 dark:text-purple-400
+      class="text-purple-700 dark:text-purple-400 cursor-pointer hover:op80"
       data-testid="skipped-entry"
-      cursor-pointer
-      hover="op80"
       @click="toggleFilter('skipped')"
     >
       <template #header>
@@ -77,7 +72,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsTodo"
-      op50
+      class="op50"
       data-testid="todo-entry"
     >
       <template #header>
@@ -90,8 +85,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     <DashboardEntry
       :tail="true"
       data-testid="total-entry"
-      cursor-pointer
-      hover="op80"
+      class="cursor-pointer hover:op80"
       @click="toggleFilter('total')"
     >
       <template #header>
@@ -103,10 +97,8 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsSlow"
-      text-yellow-700 dark:text-yellow-500
+      class="text-yellow-700 dark:text-yellow-500 cursor-pointer hover:op80"
       data-testid="slow-entry"
-      cursor-pointer
-      hover="op80"
       @click="toggleFilter('slow')"
     >
       <template #header>

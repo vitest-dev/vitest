@@ -44,7 +44,7 @@ If you want to just preview how your tests look, you can use the `preview` provi
 npm install -D vitest @vitest/browser-preview
 ```
 ```bash [yarn]
-yarn add -D vitest @vitest/browser-preview
+yarn add -D vitest vite @vitest/browser-preview
 ```
 ```bash [pnpm]
 pnpm add -D vitest @vitest/browser-preview
@@ -68,7 +68,7 @@ If you don't already use one of these tools, we recommend starting with Playwrig
 npm install -D vitest @vitest/browser-playwright
 ```
 ```bash [yarn]
-yarn add -D vitest @vitest/browser-playwright
+yarn add -D vitest vite @vitest/browser-playwright
 ```
 ```bash [pnpm]
 pnpm add -D vitest @vitest/browser-playwright
@@ -85,7 +85,7 @@ bun add -D vitest @vitest/browser-playwright
 npm install -D vitest @vitest/browser-webdriverio
 ```
 ```bash [yarn]
-yarn add -D vitest @vitest/browser-webdriverio
+yarn add -D vitest vite @vitest/browser-webdriverio
 ```
 ```bash [pnpm]
 pnpm add -D vitest @vitest/browser-webdriverio
