@@ -44,3 +44,13 @@ it('Temporal.Now follows setSystemTime without fake timers', () => {
   expect(globalThis.Temporal).toBe(real)
   expect(globalThis.Temporal.Now.instant().epochMilliseconds).not.toBe(1234)
 })
+
+it('setSystemTime accepts Temporal.Instant', () => {
+  vi.setSystemTime(globalThis.Temporal.Instant.from('2022-02-02T12:00:00Z'))
+  expect(new Date().toISOString()).toBe('2022-02-02T12:00:00.000Z')
+  expect(globalThis.Temporal.Now.instant().toString()).toBe('2022-02-02T12:00:00Z')
+
+  vi.useFakeTimers()
+  vi.setSystemTime(globalThis.Temporal.Instant.fromEpochMilliseconds(1234))
+  expect(Date.now()).toBe(1234)
+})

@@ -200,8 +200,8 @@ export class FakeTimers {
     }
   }
 
-  setSystemTime(now?: string | number | Date): void {
-    const date = (typeof now === 'undefined' || now instanceof Date) ? now : new Date(now)
+  setSystemTime(now?: string | number | Date | { epochMilliseconds: number }): void {
+    const date = (typeof now === 'undefined' || now instanceof Date) ? now : new Date(typeof now === 'object' ? now.epochMilliseconds : now)
     if (this._fakingTime) {
       this._clock.setSystemTime(date)
     }
