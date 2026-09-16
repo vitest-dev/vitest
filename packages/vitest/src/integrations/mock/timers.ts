@@ -169,6 +169,14 @@ export class FakeTimers {
       toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])
         .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
     }
+    else if (toFake === undefined && toNotFake !== undefined) {
+      // Do not mock timers internally used by node via `toNotFake`
+      for (const timer of ['nextTick', 'queueMicrotask'] as const) {
+        if (!toNotFake.includes(timer)) {
+          toNotFake = [...toNotFake, timer]
+        }
+      }
+    }
     if (isChildProcess() && toNotFake && !toNotFake.includes('nextTick')) {
       toNotFake = [...toNotFake, 'nextTick']
     }
