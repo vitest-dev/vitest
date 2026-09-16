@@ -57,7 +57,7 @@ describe.runIf(provider.name === 'playwright')('browser ui', () => {
             button.style = 'width: 5px; height: 10px; padding: 0; border: none;'
             button.addEventListener('click', spy)
             document.body.appendChild(button)
-            await userEvent.click(button)
+            await userEvent.click(button, { position: { x: 1, y: 1 } })
 
             expect(spy).toHaveBeenCalledOnce()
           })
@@ -72,6 +72,7 @@ describe.runIf(provider.name === 'playwright')('browser ui', () => {
           ui: true,
           provider,
           instances: [{ browser: 'chromium' }],
+          viewport: { width: 50, height: 50 },
         },
       },
     )
