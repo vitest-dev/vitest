@@ -19,9 +19,7 @@ test.for([
         import { asset } from './asset.js'
 
         test('resolves the asset in ${environment}', () => {
-          expect(asset.href).toBe(${environment === 'node'
-            ? 'new URL(\'./asset.svg\', import.meta.url).href'
-            : 'new URL(\'/asset.svg\', window.location.href).href'})
+          expect(asset.href).toBe(new URL('./asset.svg', import.meta.url).href)
         })
       `
     }
