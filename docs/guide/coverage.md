@@ -334,7 +334,7 @@ import type {
   CoverageProviderModule,
   ResolvedCoverageOptions,
   Vitest
-} from 'vitest'
+} from 'vitest/node'
 
 const CustomCoverageProviderModule: CoverageProviderModule = {
   getProvider(): CoverageProvider {
