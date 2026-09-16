@@ -180,8 +180,6 @@ Releases — publishing the npm packages, creating the git release tag, and gene
 
 4. **Approve the npm staged publish.** Review the staged packages on npm, then approve them with 2FA so the release becomes installable. Afterwards, confirm npm, the tag, and the GitHub release all look right.
 
-If documentation fixes land after a stable release, run the [`Promote Stable Docs`](./.github/workflows/promote-docs.yml) workflow with the `main` branch or a specific commit as the target. The workflow verifies that the target contains the current stable release tag and advances `release` without rewriting its history.
-
 ### Release Protections
 
 A few settings outside this repository guard the release process above: GitHub rulesets that keep release branches and tags from being changed by hand, a `Release` environment that requires a maintainer to approve each publish, and npm settings that decide how packages are published.
