@@ -2,7 +2,51 @@ import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { createMethodsRPC, createVitest } from 'vitest/node'
 
-import { createFile, resolvePath, runInlineTests, runVitest, runVitestCli, useFS } from '../../test-utils'
+import { createFile, resolvePath, runInlineTests, runVitest, runVitestCli, StableTestFileOrderSorter, useFS } from '../../test-utils'
+
+test.for([
+  ['vmThreads', 'node', 'happy-dom'],
+  ['vmThreads', 'happy-dom', 'node'],
+  ['vmForks', 'node', 'happy-dom'],
+  ['vmForks', 'happy-dom', 'node'],
+] as const)(
+  '%s uses the current transform when switching from %s to %s',
+  async ([pool, first, second]) => {
+    function testFile(environment: 'node' | 'happy-dom') {
+      return `
+        // @vitest-environment ${environment}
+        import { expect, test } from 'vitest'
+        import { asset } from './asset.js'
+
+        test('resolves the asset in ${environment}', () => {
+          expect(asset.href).toBe(${environment === 'node'
+            ? 'new URL(\'./asset.svg\', import.meta.url).href'
+            : 'new URL(\'/asset.svg\', window.location.href).href'})
+        })
+      `
+    }
+
+    const { stderr, exitCode, testTree } = await runInlineTests({
+      'asset.js': `export const asset = new URL('./asset.svg', import.meta.url)`,
+      'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"/>',
+      'a.test.js': testFile(first),
+      'b.test.js': testFile(second),
+    }, {
+      pool,
+      maxWorkers: 1,
+      vmMemoryLimit: '1GiB',
+      sequence: { sequencer: StableTestFileOrderSorter },
+      $viteConfig: { build: { assetsInlineLimit: 0 } },
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+    expect(testTree()).toEqual({
+      'a.test.js': { [`resolves the asset in ${first}`]: 'passed' },
+      'b.test.js': { [`resolves the asset in ${second}`]: 'passed' },
+    })
+  },
+)
 
 test('importing files in restricted fs works correctly', async () => {
   createFile(
