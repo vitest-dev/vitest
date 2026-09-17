@@ -303,6 +303,21 @@ describe('recursive custom equality tester', () => {
     expect(mockFn).toHaveLastReturnedWith([person1, person2])
     expect(mockFn).to.have.lastReturnedWith([person1, person2])
     expect(mockFn).toHaveNthReturnedWith(1, [person1, person2])
+
+    const returnFn = vi.fn(() => person1)
+    returnFn()
+    expect(returnFn).toHaveReturnedWith(person2)
+    expect(returnFn).toHaveLastReturnedWith(person2)
+    expect(returnFn).toHaveNthReturnedWith(1, person2)
+  })
+
+  test('resolve matchers pass different Person objects', async () => {
+    const mockFn = vi.fn(async () => person1)
+    await mockFn()
+
+    expect(mockFn).toHaveResolvedWith(person2)
+    expect(mockFn).toHaveLastResolvedWith(person2)
+    expect(mockFn).toHaveNthResolvedWith(1, person2)
   })
 })
 

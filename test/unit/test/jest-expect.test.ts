@@ -751,6 +751,67 @@ describe('toBeOneOf()', () => {
   })
 })
 
+describe('Map and Set equality in matchers', () => {
+  const mapA = new Map([['a', 1]])
+  const mapB = new Map([['b', 2]])
+  const setA = new Set([1])
+  const setB = new Set([2])
+
+  it('toContainEqual distinguishes different Maps and Sets', () => {
+    expect([mapA]).toContainEqual(new Map([['a', 1]]))
+    expect([mapA]).not.toContainEqual(mapB)
+    expect([setA]).toContainEqual(new Set([1]))
+    expect([setA]).not.toContainEqual(setB)
+  })
+
+  it('toHaveProperty distinguishes different Maps and Sets', () => {
+    expect({ m: mapA }).toHaveProperty('m', new Map([['a', 1]]))
+    expect({ m: mapA }).not.toHaveProperty('m', mapB)
+    expect({ s: setA }).toHaveProperty('s', new Set([1]))
+    expect({ s: setA }).not.toHaveProperty('s', setB)
+  })
+
+  it('toBeOneOf distinguishes different Maps and Sets', () => {
+    expect(mapA).toBeOneOf([new Map([['a', 1]])])
+    expect(mapA).not.toBeOneOf([mapB])
+    expect(mapA).not.toBeOneOf(new Set([mapB]))
+    expect(setA).toBeOneOf([new Set([1])])
+    expect(setA).not.toBeOneOf([setB])
+  })
+
+  it('return matchers distinguish different Maps and Sets', () => {
+    const fn = vi.fn(() => mapA)
+    fn()
+    expect(fn).toHaveReturnedWith(new Map([['a', 1]]))
+    expect(fn).not.toHaveReturnedWith(mapB)
+    expect(fn).toHaveLastReturnedWith(new Map([['a', 1]]))
+    expect(fn).not.toHaveLastReturnedWith(mapB)
+    expect(fn).toHaveNthReturnedWith(1, new Map([['a', 1]]))
+    expect(fn).not.toHaveNthReturnedWith(1, mapB)
+
+    const setFn = vi.fn(() => setA)
+    setFn()
+    expect(setFn).toHaveReturnedWith(new Set([1]))
+    expect(setFn).not.toHaveReturnedWith(setB)
+  })
+
+  it('resolve matchers distinguish different Maps and Sets', async () => {
+    const fn = vi.fn(() => Promise.resolve(mapA))
+    await fn()
+    expect(fn).toHaveResolvedWith(new Map([['a', 1]]))
+    expect(fn).not.toHaveResolvedWith(mapB)
+    expect(fn).toHaveLastResolvedWith(new Map([['a', 1]]))
+    expect(fn).not.toHaveLastResolvedWith(mapB)
+    expect(fn).toHaveNthResolvedWith(1, new Map([['a', 1]]))
+    expect(fn).not.toHaveNthResolvedWith(1, mapB)
+
+    const setFn = vi.fn(() => Promise.resolve(setA))
+    await setFn()
+    expect(setFn).toHaveResolvedWith(new Set([1]))
+    expect(setFn).not.toHaveResolvedWith(setB)
+  })
+})
+
 describe('toSatisfy()', () => {
   const isOdd = (value: number) => value % 2 !== 0
 

@@ -295,7 +295,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toContainEqual', function (expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      return jestEquals(item, expected, customTesters)
+      return jestEquals(item, expected, [...customTesters, iterableEquality])
     })
 
     this.assert(
@@ -486,7 +486,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const { value, exists } = getValue()
       const pass
         = exists
-          && (args.length === 1 || jestEquals(expected, value, customTesters))
+          && (args.length === 1 || jestEquals(expected, value, [...customTesters, iterableEquality]))
 
       const valueString
         = args.length === 1 ? '' : ` with value ${inspect(expected, { truncate: 40 })}`
@@ -936,7 +936,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         condition: (spy, value) =>
           spy.mock.settledResults.some(
             ({ type, value: result }) =>
-              type === 'fulfilled' && jestEquals(value, result),
+              type === 'fulfilled' && jestEquals(value, result, [...customTesters, iterableEquality]),
           ),
         action: 'resolve',
       },
@@ -945,7 +945,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         condition: (spy, value) =>
           spy.mock.results.some(
             ({ type, value: result }) =>
-              type === 'return' && jestEquals(value, result),
+              type === 'return' && jestEquals(value, result, [...customTesters, iterableEquality]),
           ),
         action: 'return',
       },
@@ -981,7 +981,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           return Boolean(
             result
             && result.type === 'fulfilled'
-            && jestEquals(result.value, value),
+            && jestEquals(result.value, value, [...customTesters, iterableEquality]),
           )
         },
         action: 'resolve',
@@ -993,7 +993,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           return Boolean(
             result
             && result.type === 'return'
-            && jestEquals(result.value, value),
+            && jestEquals(result.value, value, [...customTesters, iterableEquality]),
           )
         },
         action: 'return',
@@ -1024,7 +1024,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           return (
             result
             && result.type === 'fulfilled'
-            && jestEquals(result.value, value)
+            && jestEquals(result.value, value, [...customTesters, iterableEquality])
           )
         },
         action: 'resolve',
@@ -1036,7 +1036,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           return (
             result
             && result.type === 'return'
-            && jestEquals(result.value, value)
+            && jestEquals(result.value, value, [...customTesters, iterableEquality])
           )
         },
         action: 'return',
