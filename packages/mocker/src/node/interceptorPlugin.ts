@@ -24,7 +24,7 @@ export interface InterceptorPluginOptions {
 
 export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugin {
   const registry = options.registry || new MockerRegistry()
-  return {
+  const plugin: Plugin = {
     name: 'vitest:mocks:interceptor',
     enforce: 'pre',
     load: {
@@ -63,10 +63,10 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
         }
       },
     },
-    configureServer(server) {
-      if (options.registerWebSocketEvents === false) {
-        return
-      }
+  }
+
+  if (options.registerWebSocketEvents !== false) {
+    plugin.configureServer = function configureServer(server) {
       server.ws.on('vitest:interceptor:register', (event: MockedModuleSerialized) => {
         if (event.type === 'manual') {
           const module = ManualMockedModule.fromJSON(event, async () => {
@@ -115,6 +115,8 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
           })
         })
       }
-    },
+    }
   }
+
+  return plugin
 }
