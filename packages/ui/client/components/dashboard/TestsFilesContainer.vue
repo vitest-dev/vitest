@@ -6,13 +6,13 @@ import TestsEntry from './TestsEntry.vue'
 </script>
 
 <template>
-  <div gap-0 flex="~ col gap-4" h-full justify-center items-center>
+  <div class="flex flex-col gap-4 h-full justify-center items-center">
     <template v-if="explorerTree.summary.files === 0 && finished">
       <div class="text-gray-5">
         No tests found
       </div>
     </template>
-    <section aria-labelledby="tests" m="y-4 x-2">
+    <section aria-labelledby="tests" class="my-4 mx-2">
       <TestsEntry />
     </section>
     <TestFilesEntry />

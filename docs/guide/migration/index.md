@@ -16,6 +16,14 @@ outline: deep
 Vitest 5.0 requires Vite >= 6.4.0 and Node.js >= 22.12.0. Before proceeding with any other migration steps, ensure your environment meets these requirements. Running Vitest 5.0 on older versions of Vite or Node.js is not supported and may result in unexpected errors.
 :::
 
+## Yarn Users Must Install `vite` Explicitly
+
+`vite` is no longer a direct dependency of `vitest`. It is now a required peer dependency, so the version of Vite used by Vitest is the one installed in your project. npm, pnpm, Bun, and Deno install peer dependencies automatically. Yarn does not, so after the upgrade Vitest cannot resolve `vite` unless it is listed in your `package.json`:
+
+```bash
+yarn add -D vite
+```
+
 ## `clearMocks` is Enabled by Default
 
 [`clearMocks`](/config/clearmocks) now defaults to `true`: Vitest calls [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before every test, clearing the recorded history of every mock while leaving implementations intact.
@@ -288,7 +296,7 @@ vi.setSystemTime(0)
 Temporal.Now.instant().epochMilliseconds // 0 (was the real time in v4)
 ```
 
-`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
+`Temporal` is part of the default set of faked APIs, so it is controlled by [`fakeTimers.toFake`](/config/faketimers#faketimers-tofake) and [`fakeTimers.toNotFake`](/config/faketimers#faketimers-tonotfake). To keep `Temporal` native, add it to `toNotFake`:
 
 ```ts
 vi.useFakeTimers({ toNotFake: ['Temporal'] })
@@ -456,7 +464,7 @@ test('renders', async () => {
 
 ## Glob Coverage Thresholds No Longer Inherit `perFile`
 
-`coverage.thresholds.perFile` previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
+[`coverage.thresholds.perFile`](/config/coverage#coverage-thresholds-perfile) previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
 
 ```ts [vitest.config.ts]
 export default defineConfig({
@@ -477,7 +485,7 @@ export default defineConfig({
 
 ## Coverage `include` and `exclude` Match More Precisely
 
-[`coverage.include`](/config/coverage#coverage-include) and `coverage.exclude` were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. Patterns are now matched against each file's path relative to the project root, without `contains`, and a pattern with no glob wildcard is treated as a directory that matches everything inside it:
+[`coverage.include`](/config/coverage#coverage-include) and [`coverage.exclude`](/config/coverage#coverage-exclude) were matched against absolute paths with picomatch's `contains` option, which matched many more files than intended. Patterns are now matched against each file's path relative to the project root, without `contains`, and a pattern with no glob wildcard is treated as a directory that matches everything inside it:
 
 ```ts [vitest.config.ts]
 export default defineConfig({
@@ -556,9 +564,9 @@ The `json` and `junit` reporters now write to a file by default instead of print
 
 ## `toMatchScreenshot` Now Uses a Dedicated Screenshot Directory Config
 
-Previously, reference screenshots for `toMatchScreenshot` did not correctly respect `browser.screenshotDirectory`. As a result, screenshots were saved in an unintended location when a custom directory was configured.
+Previously, reference screenshots for `toMatchScreenshot` did not correctly respect [`browser.screenshotDirectory`](/config/browser/screenshotdirectory). As a result, screenshots were saved in an unintended location when a custom directory was configured.
 
-This has now been fixed by introducing a dedicated option: `browser.expect.toMatchScreenshot.screenshotDirectory`. Its default value is `__screenshots__`.
+This has now been fixed by introducing a dedicated option: [`browser.expect.toMatchScreenshot.screenshotDirectory`](/config/browser/expect#browser-expect-tomatchscreenshot-screenshotdirectory). Its default value is `__screenshots__`.
 
 - If you did not set `browser.screenshotDirectory`, no changes are required.
 - If you did set `browser.screenshotDirectory`, you must now explicitly configure the new option:
