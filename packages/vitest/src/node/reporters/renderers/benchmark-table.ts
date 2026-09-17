@@ -20,10 +20,11 @@ function formatBenchNumber(number: number): string {
 }
 
 /**
- * Relative score of every task against the fastest one in the same table
- * (`fastest.mean / task.mean` — the inverse of the v4 `benchmark.compare`
- * baseline ratio, so the fastest row is always `[1.00x]`). Returns `undefined`
- * for tasks whose mean latency is not a positive finite number.
+ * Slowdown factor of every task against the fastest one in the same table
+ * (`task.mean / fastest.mean` — the same convention as hyperfine, so the
+ * fastest row is `1` and every other row is greater than `1`).
+ * Returns `undefined` for tasks whose mean latency is not a positive finite
+ * number.
  */
 export function computeRelativeScores(tasks: readonly TestBenchmarkTask[]): (number | undefined)[] {
   if (tasks.length <= 1) {
@@ -44,13 +45,20 @@ export function computeRelativeScores(tasks: readonly TestBenchmarkTask[]): (num
     if (typeof mean !== 'number' || !Number.isFinite(mean) || mean <= 0) {
       return undefined
     }
-    return fastest / mean
+    return mean / fastest
   })
 }
 
-/** Formats a relative score as a `[1.50x]` label (`''` when undefined). */
+/**
+ * Formats a slowdown factor as a `1.50x slower` label. Returns `''` for the
+ * fastest task (`1` — it already gets the `fastest` suffix) and when
+ * undefined.
+ */
 export function formatRelativeScore(score: number | undefined): string {
-  return score == null ? '' : `[${score.toFixed(2)}x]`
+  if (score == null || score === 1) {
+    return ''
+  }
+  return `${score.toFixed(2)}x slower`
 }
 
 // Plain-text rendering of the benchmark table (no ANSI colors, no indent).

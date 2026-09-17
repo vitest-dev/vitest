@@ -48,9 +48,9 @@ function bench(tasks: TestBenchmarkTask[]): TestBenchmark[] {
 }
 
 describe('computeRelativeScores', () => {
-  it('scores each task against the fastest one', () => {
+  it('scores each task as its slowdown against the fastest one', () => {
     const tasks = [task('fast', 100, 1), task('slow', 150, 2)]
-    expect(computeRelativeScores(tasks)).toEqual([1, 100 / 150])
+    expect(computeRelativeScores(tasks)).toEqual([1, 150 / 100])
   })
 
   it('returns no scores for a single task', () => {
@@ -64,7 +64,7 @@ describe('computeRelativeScores', () => {
 
   it('skips only the invalid tasks', () => {
     const tasks = [task('fast', 100, 1), task('invalid', 0, 2), task('slow', 400, 3)]
-    expect(computeRelativeScores(tasks)).toEqual([1, undefined, 0.25])
+    expect(computeRelativeScores(tasks)).toEqual([1, undefined, 4])
   })
 
   it('handles an empty task list', () => {
@@ -73,9 +73,12 @@ describe('computeRelativeScores', () => {
 })
 
 describe('formatRelativeScore', () => {
-  it('formats the score with two decimals', () => {
-    expect(formatRelativeScore(1.5)).toBe('[1.50x]')
-    expect(formatRelativeScore(1)).toBe('[1.00x]')
+  it('formats the slowdown with two decimals', () => {
+    expect(formatRelativeScore(1.5)).toBe('1.50x slower')
+  })
+
+  it('returns an empty string for the fastest task', () => {
+    expect(formatRelativeScore(1)).toBe('')
   })
 
   it('returns an empty string for undefined', () => {
@@ -91,21 +94,21 @@ describe('renderBenchmarkTableText', () => {
       task('slow', 400, 3),
     ]))
     const lines = output.split('\n')
-    expect(lines[1]).toContain('[1.00x]')
-    expect(lines[2]).toContain('[0.50x]')
-    expect(lines[3]).toContain('[0.25x]')
+    expect(lines[2]).toContain('2.00x slower')
+    expect(lines[3]).toContain('4.00x slower')
     expect(lines[1].endsWith('fastest')).toBe(true)
     expect(lines[3].endsWith('slowest')).toBe(true)
+    // the fastest row carries no slowdown label
+    expect(lines[1]).not.toContain('slower')
     // aligned in a shared column
-    expect(lines[1].indexOf('[1.00x]')).toBe(lines[2].indexOf('[0.50x]'))
-    expect(lines[2].indexOf('[0.50x]')).toBe(lines[3].indexOf('[0.25x]'))
+    expect(lines[2].indexOf('2.00x slower')).toBe(lines[3].indexOf('4.00x slower'))
     // plain text output carries no ANSI codes
     expect(stripVTControlCharacters(output)).toBe(output)
   })
 
   it('prints no score column for a single-row table', () => {
     const output = renderBenchmarkTableText(bench([task('only', 100, 1)]))
-    expect(output).not.toContain('[1.00x]')
+    expect(output).not.toContain('slower')
     expect(output).not.toContain('fastest')
   })
 })
@@ -122,18 +125,17 @@ describe('printBenchmarkTable (default reporter path)', () => {
     const lines = logs.join('\n').split('\n')
     const fastRow = lines.find(l => l.includes('fast'))!
     const slowRow = lines.find(l => l.includes('slow'))!
-    expect(fastRow).toContain('[1.00x]')
-    expect(slowRow).toContain('[0.50x]')
     expect(fastRow).toContain('fastest')
+    expect(fastRow).not.toContain('slower')
+    expect(slowRow).toContain('2.00x slower')
     expect(slowRow).not.toContain('slowest') // only marked for 3+ rows
-    // score index in the stripped row matches between rows (aligned column)
     const stripped = (s: string) => stripVTControlCharacters(s)
-    expect(stripped(fastRow).indexOf('[1.00x]')).toBe(stripped(slowRow).indexOf('[0.50x]'))
+    expect(stripped(fastRow)).not.toContain('slower')
   })
 
   it('renders no score column for a single row', () => {
     const logs: string[] = []
     callPrint(bench([task('only', 100, 1)]), logs)
-    expect(logs.join('\n')).not.toContain('[1.00x]')
+    expect(logs.join('\n')).not.toContain('slower')
   })
 })

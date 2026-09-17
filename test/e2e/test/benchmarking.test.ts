@@ -202,15 +202,13 @@ test('bench exposes plain and perProject compositions and prints a table', async
 // Rebuilds a benchmark table with every numeric cell replaced by `d+`, padded
 // with spaces so each column keeps its natural alignment (first column
 // left-aligned, numeric columns right-aligned — same rules the reporter uses).
-// `fastest` / `slowest` and the relative score `[1.04x]` are timing
+// `fastest` / `slowest` and the slowdown label `1.04x slower` are timing
 // decorations that only appear on some rows; strip both so row parsing and
 // snapshots stay deterministic.
 function stripBenchSuffix(line: string) {
-  // `fastest` / `slowest` is appended after the score, so it has to be
-  // stripped first or the trailing `$` anchor never matches the score.
   return line
     .replace(/\s+(?:fastest|slowest)\s*$/, '')
-    .replace(/\s+\[[\d.]+x\]\s*$/, '')
+    .replace(/\s+[\d.]+x slower\s*$/, '')
 }
 
 // Column widths come from the normalized content so measurement noise at
