@@ -1347,6 +1347,7 @@ export interface ResolvedConfig
     isolate: boolean
     environment: boolean
     fsModuleCache: boolean
+    silent: boolean
   }
 
   cliOptions: CliOptions
