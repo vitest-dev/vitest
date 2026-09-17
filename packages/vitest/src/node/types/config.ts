@@ -429,7 +429,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default !process.env.CI
+   * @default !process.env.CI && process.stdin.isTTY && !isAgent
    */
   watch?: boolean
 
