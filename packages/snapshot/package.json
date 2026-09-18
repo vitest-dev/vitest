@@ -53,7 +53,8 @@
     "@vitest/pretty-format": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
-    "pathe": "catalog:"
+    "pathe": "catalog:",
+    "strip-literal": "catalog:"
   },
   "devDependencies": {
     "@types/natural-compare": "^1.4.3",
