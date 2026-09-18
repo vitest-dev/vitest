@@ -21,16 +21,50 @@ export function isMockFunction(fn: any): fn is Mock {
 }
 
 const MOCK_RESTORE = new Set<() => void>()
+type MockRef = WeakRef<Mock<Procedure | Constructable>>
 // Jest keeps the state in a separate WeakMap which is good for memory,
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
-const DIRTY_MOCK_STATES = new Set<Mock<Procedure | Constructable>>()
-const REGISTERED_MOCKS = new Set<WeakRef<Mock<Procedure | Constructable>>>()
-const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constructable>>>((ref) => {
-  REGISTERED_MOCKS.delete(ref)
+const DIRTY_MOCK_STATES = new Set<MockRef>()
+// Mocks whose implementation, once-queue or name changed since their last
+// `mockReset()`, so `resetAllMocks()` only visits mocks that are not already reset
+const DIRTY_MOCK_CONFIGS = new Set<MockRef>()
+const MOCK_REFS = new WeakMap<Mock<Procedure | Constructable>, MockRef>()
+const MOCK_FINALIZER = new FinalizationRegistry<MockRef>((ref) => {
+  DIRTY_MOCK_STATES.delete(ref)
+  DIRTY_MOCK_CONFIGS.delete(ref)
 })
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
+
+function markDirty(set: Set<MockRef>, mock: Mock<Procedure | Constructable>): void {
+  let ref = MOCK_REFS.get(mock)
+  if (!ref) {
+    ref = new WeakRef(mock)
+    MOCK_REFS.set(mock, ref)
+    MOCK_FINALIZER.register(mock, ref)
+  }
+  set.add(ref)
+}
+
+function unmarkDirty(set: Set<MockRef>, mock: Mock<Procedure | Constructable>): void {
+  const ref = MOCK_REFS.get(mock)
+  if (ref) {
+    set.delete(ref)
+  }
+}
+
+function forEachDirty(set: Set<MockRef>, fn: (mock: Mock<Procedure | Constructable>) => void): void {
+  for (const ref of set) {
+    const mock = ref.deref()
+    if (mock) {
+      fn(mock)
+    }
+    else {
+      set.delete(ref)
+    }
+  }
+}
 
 export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
@@ -68,9 +102,6 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
   }
   MOCK_CONFIGS.set(mock, config)
   MOCKS_BY_STATE.set(state, mock)
-  const ref = new WeakRef(mock)
-  REGISTERED_MOCKS.add(ref)
-  MOCK_FINALIZER.register(mock, ref)
 
   mock._isMockFunction = true
   mock.getMockImplementation = () => {
@@ -102,24 +133,28 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
   })
 
   mock.mockImplementation = function mockImplementation(implementation) {
+    markDirty(DIRTY_MOCK_CONFIGS, mock)
     config.mockImplementation = implementation
     updateMockPrototype()
     return mock
   }
 
   mock.mockImplementationOnce = function mockImplementationOnce(implementation) {
+    markDirty(DIRTY_MOCK_CONFIGS, mock)
     config.onceMockImplementations.push(implementation)
     updateMockPrototype()
     return mock
   }
 
   mock.withImplementation = function withImplementation(implementation, callback) {
+    markDirty(DIRTY_MOCK_CONFIGS, mock)
     const previousImplementation = config.mockImplementation
     const previousOnceImplementations = config.onceMockImplementations
 
     const reset = () => {
       config.mockImplementation = previousImplementation
       config.onceMockImplementations = previousOnceImplementations
+      markDirty(DIRTY_MOCK_CONFIGS, mock)
       updateMockPrototype()
     }
 
@@ -228,7 +263,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     state.invocationCallOrder = []
     state.results = []
     state.settledResults = []
-    DIRTY_MOCK_STATES.delete(mock)
+    unmarkDirty(DIRTY_MOCK_STATES, mock)
     return mock
   }
 
@@ -239,6 +274,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
       : undefined
     config.mockName = resetToMockName ? (mock.name || 'vi.fn()') : 'vi.fn()'
     config.onceMockImplementations = []
+    unmarkDirty(DIRTY_MOCK_CONFIGS, mock)
     updateMockPrototype()
     return mock
   }
@@ -250,6 +286,7 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 
   mock.mockName = function mockName(name: string) {
     if (typeof name === 'string') {
+      markDirty(DIRTY_MOCK_CONFIGS, mock)
       config.mockName = name
     }
     return mock
@@ -500,9 +537,9 @@ function createMock(
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: (function (this: any, ...args: any[]) {
-      DIRTY_MOCK_STATES.add(namedObject[name])
+      markDirty(DIRTY_MOCK_STATES, namedObject[name])
       if (prototypeMock) {
-        DIRTY_MOCK_STATES.add(prototypeMock)
+        markDirty(DIRTY_MOCK_STATES, prototypeMock)
       }
       registerCalls(args, state, prototypeState)
       registerInvocationOrder(invocationCallCounter++, state, prototypeState)
@@ -771,21 +808,14 @@ export function restoreAllMocks(): void {
 }
 
 export function clearAllMocks(): void {
-  for (const mock of DIRTY_MOCK_STATES) {
-    mock.mockClear()
-  }
+  forEachDirty(DIRTY_MOCK_STATES, mock => mock.mockClear())
 }
 
 export function resetAllMocks(): void {
-  for (const ref of REGISTERED_MOCKS) {
-    const mock = ref.deref()
-    if (mock) {
-      mock.mockReset()
-    }
-    else {
-      REGISTERED_MOCKS.delete(ref)
-    }
-  }
+  // `mockReset()` removes the mock from both sets, so a mock present in both
+  // is visited once.
+  forEachDirty(DIRTY_MOCK_STATES, mock => mock.mockReset())
+  forEachDirty(DIRTY_MOCK_CONFIGS, mock => mock.mockReset())
 }
 
 function throwConstructorError(shorthand: string): never {
