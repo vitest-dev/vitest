@@ -444,7 +444,7 @@ export interface InlineConfig {
    * Custom reporter for output. Can contain one or more built-in reporter names, reporter instances,
    * and/or paths to custom reporters.
    *
-   * @default ['default'] (or ['default', 'github-actions'] when `process.env.GITHUB_ACTIONS === 'true'`)
+   * @default ['default'] (or ['minimal'] when an agent is detected, plus 'github-actions' when `process.env.GITHUB_ACTIONS === 'true'`)
    */
   reporters?:
     | Arrayable<ReporterName | InlineReporter>
@@ -514,7 +514,7 @@ export interface InlineConfig {
    *
    * Useful if you are testing calling CLI commands
    *
-   * @default ['**\/package.json/**', '**\/{vitest,vite}.config.*\/**']
+   * @default ['**\/package.json', '**\/{vitest,vite}.config.*']
    */
   forceRerunTriggers?: string[]
 
@@ -687,7 +687,7 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [], modules: { classNameStrategy: false } }
+   * @default { include: [], modules: { classNameStrategy: 'stable' } }
    */
   css?:
     | boolean

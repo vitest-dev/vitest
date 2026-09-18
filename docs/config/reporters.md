@@ -14,7 +14,7 @@ interface UserConfig {
 type ConfigReporter = string | Reporter | [string, object?]
 ```
 
-- **Default:** [`'default'`](/guide/reporters#default-reporter). See [Default Reporters](/guide/reporters#default-reporters) for environment-specific behavior.
+- **Default:** [`'default'`](/guide/reporters#default-reporter) (or [`'minimal'`](/guide/reporters#minimal-reporter) when an agent is detected). See [Default Reporters](/guide/reporters#default-reporters) for environment-specific behavior.
 - **CLI:**
   - `--reporter=tap` for a single reporter
   - `--reporter=verbose --reporter=github-actions` for multiple reporters
