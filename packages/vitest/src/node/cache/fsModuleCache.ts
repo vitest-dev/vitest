@@ -42,7 +42,7 @@ export class FileSystemModuleCache {
   private version = '1.0.0-beta.7'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
-  private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
+  private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
   private warnedDeprecatedIgnore = new Set<string>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // surprisingly, on some machines this has negligible effect
@@ -58,8 +58,13 @@ export class FileSystemModuleCache {
     this.metadataFilePath = join(this.rootCache, METADATA_FILE)
   }
 
-  public defineCacheKeyGenerator(callback: CacheKeyIdGenerator): void {
-    this.fsCacheKeyGenerators.add(callback)
+  public defineCacheKeyGenerator(config: ResolvedConfig, callback: CacheKeyIdGenerator): void {
+    let generators = this.fsCacheKeyGenerators.get(config)
+    if (!generators) {
+      generators = new Set()
+      this.fsCacheKeyGenerators.set(config, generators)
+    }
+    generators.add(callback)
   }
 
   // A plugin can exclude itself from the cache key via `api.vitest.ignoreFsModuleCache`.
@@ -220,7 +225,7 @@ export class FileSystemModuleCache {
 
     let hashString = ''
 
-    for (const generator of this.fsCacheKeyGenerators) {
+    for (const generator of this.fsCacheKeyGenerators.get(vitestConfig) || []) {
       const result = generator({ environment, id, sourceCode: fileContent })
       if (typeof result === 'string') {
         hashString += result

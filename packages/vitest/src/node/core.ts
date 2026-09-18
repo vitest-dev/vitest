@@ -393,7 +393,7 @@ export class Vitest {
         project,
         vitest: this,
         injectTestProjects: this.injectTestProject,
-        defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
+        defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(project.config, callback),
         /**
          * @deprecated Use `defineCacheKeyGenerator` instead.
          */
@@ -402,7 +402,7 @@ export class Vitest {
             this._warnedExperimentalCacheKeyGenerator = true
             this.logger.deprecate('`experimental_defineCacheKeyGenerator` is deprecated. Use `defineCacheKeyGenerator` instead.')
           }
-          this._fsCache.defineCacheKeyGenerator(callback)
+          this._fsCache.defineCacheKeyGenerator(project.config, callback)
         },
       }))
     }))
