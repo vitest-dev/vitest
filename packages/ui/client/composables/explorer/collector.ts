@@ -2,7 +2,7 @@ import type { Arrayable } from '@vitest/utils'
 import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
 import { toArray } from '@vitest/utils/helpers'
-import { client, findById } from '~/composables/client'
+import { client, config, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
@@ -121,14 +121,10 @@ export function runCollect(
   doRunFilter(search, filter, end)
 }
 
-function* collectRunningTodoTests() {
-  yield* uiEntries.value.filter(isRunningTestNode)
-}
-
 function updateRunningTodoTests() {
   const idMap = client.state.idMap
   let task: Task | undefined
-  for (const test of collectRunningTodoTests()) {
+  for (const test of uiEntries.value.filter(isRunningTestNode)) {
     // lookup the parent
     task = idMap.get(test.parentId)
     if (task && isSuite(task) && task.mode === 'todo') {
@@ -385,7 +381,7 @@ function collectTests(file: File, search: SearchMatcher = () => true, filter?: F
   } satisfies CollectFilteredTests
 
   for (const t of testsCollector(file)) {
-    if (!filter || testMatcher(t, search, filter)) {
+    if (!filter || testMatcher(t, search, filter, config.value.slowTestThreshold)) {
       data.total++
       if (isSlowTestTask(t)) {
         data.slow++
@@ -471,16 +467,21 @@ export function collectTestsTotalData(
   return filesSummary
 }
 
-function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
+function testsCollector(
+  suite: Arrayable<Task>,
+  collectedTests: Test[] = [],
+) {
   const arraySuites = toArray(suite)
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
     if (s.type === 'test') {
-      yield s
+      collectedTests.push(s)
     }
     else {
-      yield* testsCollector(s.tasks)
+      testsCollector(s.tasks, collectedTests)
     }
   }
+
+  return collectedTests
 }
