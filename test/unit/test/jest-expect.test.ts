@@ -1844,6 +1844,52 @@ it('toHaveProperty error diff', () => {
   `)
 })
 
+it('toHaveLength error diff', () => {
+  // array
+  expect(getError(() => expect([1, 2, 3]).toHaveLength(2))).toMatchInlineSnapshot(`
+    [
+      "expected [ 1, 2, 3 ] to have a length of 2 but got 3",
+      "- Expected
+    + Received
+
+    - 2
+    + 3",
+    ]
+  `)
+
+  // string
+  expect(getError(() => expect('hello').toHaveLength(2))).toMatchInlineSnapshot(`
+    [
+      "expected 'hello' to have a length of 2 but got 5",
+      "- Expected
+    + Received
+
+    - 2
+    + 5",
+    ]
+  `)
+
+  // object with a length property
+  expect(getError(() => expect({ length: 3 }).toHaveLength(2))).toMatchInlineSnapshot(`
+    [
+      "expected { length: 3 } to have a length of 2 but got 3",
+      "- Expected
+    + Received
+
+    - 2
+    + 3",
+    ]
+  `)
+
+  // negated
+  expect(getError(() => expect([1, 2]).not.toHaveLength(2))).toMatchInlineSnapshot(`
+    [
+      "expected [ 1, 2 ] to not have a length of 2",
+      "",
+    ]
+  `)
+})
+
 function snapshotError(f: () => unknown) {
   try {
     f()
