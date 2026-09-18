@@ -54,7 +54,7 @@
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "bumpp": "^10.4.1",
+    "bumpp": "^12.3.0",
     "changelogithub": "^14.0.0",
     "eslint": "^10.9.1",
     "knip": "catalog:",
