@@ -64,7 +64,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
         'vitest.environment.vite_environment': environment.viteEnvironment || environment.name,
       },
     },
-    () => environment.setupVM!(ctx.environment.options || ctx.config.environmentOptions || {}),
+    () => environment.setupVM!(ctx.environment.options || ctx.config.environmentOptions || {}, ctx.config.environmentOptions || {}),
   )
 
   state.durations.environment = performance.now() - beforeEnvironmentTime
