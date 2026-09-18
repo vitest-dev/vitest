@@ -29,24 +29,31 @@ const isWindows = process.platform === 'win32'
 // evaluate every module again in each fresh context, but the compiled script
 // holds no per-context state (Vite rewrites dynamic imports to
 // `__vite_ssr_dynamic_import__`, so no per-context import callback is baked
-// in) — only its evaluation has to happen per context. Keyed by module id
-// (`mock:` ids stay distinct from their originals).
-const vmInlineScriptCache = new Map<string, vm.Script>()
+// in) — only its evaluation has to happen per context. Keyed by Vite environment
+// and module id (`mock:` ids stay distinct from their originals).
+const vmInlineScriptCache = new Map<string | undefined, Map<string, vm.Script>>()
 
 function getVmInlineScript(
+  environment: string | undefined,
   id: string,
   wrappedCode: string,
   options: vm.ScriptOptions,
 ): vm.Script {
-  let script = vmInlineScriptCache.get(id)
+  let scripts = vmInlineScriptCache.get(environment)
+  if (!scripts) {
+    scripts = new Map()
+    vmInlineScriptCache.set(environment, scripts)
+  }
+  let script = scripts.get(id)
   if (!script) {
     script = new vm.Script(wrappedCode, options)
-    vmInlineScriptCache.set(id, script)
+    scripts.set(id, script)
   }
   return script
 }
 
 export interface VitestModuleEvaluatorOptions {
+  viteEnvironment?: string
   evaluatedModules?: VitestEvaluatedModules
   metaEnv?: ModuleRunnerImportMeta['env']
   interopDefault?: boolean | undefined
@@ -426,7 +433,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     try {
       const initModule = this.vm
-        ? getVmInlineScript(module.id, wrappedCode, options).runInContext(this.vm.context)
+        ? getVmInlineScript(this.options.viteEnvironment, module.id, wrappedCode, options).runInContext(this.vm.context)
         : vm.runInThisContext(wrappedCode, options)
 
       await initModule(...argumentsValues)
