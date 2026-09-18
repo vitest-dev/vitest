@@ -52,6 +52,12 @@ function withSafeTimers(fn: () => void) {
 }
 
 const promises = new Set<Promise<unknown>>()
+const pendingRpcArgs = new WeakMap<WorkerRPC, Map<string, unknown[][]>>()
+
+export function getPendingRpcArgs(rpc: WorkerRPC, method: string): unknown[] | undefined {
+  const calls = pendingRpcArgs.get(rpc)?.get(method)
+  return calls?.[calls.length - 1]
+}
 
 export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
@@ -79,7 +85,9 @@ export function createRuntimeRpc(
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
 ): WorkerRPC {
-  return createSafeRpc(
+  const pendingCalls = new Map<string, unknown[][]>()
+
+  const rpc = createSafeRpc(
     createBirpc<RuntimeRPC, RunnerRPC>(
       {
         async onCancel(reason) {
@@ -94,10 +102,14 @@ export function createRuntimeRpc(
         ...options,
       },
     ),
+    pendingCalls,
   )
+
+  pendingRpcArgs.set(rpc, pendingCalls)
+  return rpc
 }
 
-function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
+function createSafeRpc(rpc: WorkerRPC, pendingCalls: Map<string, unknown[][]>): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
       // keep $rejectPendingCalls as sync function
@@ -108,13 +120,33 @@ function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(async () => {
-          const result = sendCall(...args)
-          promises.add(result)
+          const method = 'onUserConsoleLog'
+          const calls = p === method ? pendingCalls.get(method) || [] : undefined
+          if (calls) {
+            calls.push(args)
+            pendingCalls.set(method, calls)
+          }
+
           try {
-            return await result
+            const result = sendCall(...args)
+            promises.add(result)
+            try {
+              return await result
+            }
+            finally {
+              promises.delete(result)
+            }
           }
           finally {
-            promises.delete(result)
+            if (calls) {
+              const index = calls.indexOf(args)
+              if (index !== -1) {
+                calls.splice(index, 1)
+              }
+              if (!calls.length) {
+                pendingCalls.delete(method)
+              }
+            }
           }
         })
       safeSendCall.asEvent = sendCall.asEvent
