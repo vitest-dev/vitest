@@ -429,7 +429,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default !process.env.CI
+   * @default !process.env.CI && process.stdin.isTTY && !isAgent
    */
   watch?: boolean
 
@@ -1347,6 +1347,7 @@ export interface ResolvedConfig
     isolate: boolean
     environment: boolean
     fsModuleCache: boolean
+    silent: boolean
   }
 
   cliOptions: CliOptions

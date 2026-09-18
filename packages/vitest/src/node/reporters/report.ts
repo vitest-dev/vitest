@@ -87,13 +87,7 @@ export function createReport(ctx: Vitest, scope: string): Report {
   const vitestDir = resolve(root, '.vitest')
   const reportDir = resolve(vitestDir, scope)
 
-  if (!fsSync.existsSync(vitestDir)) {
-    fsSync.mkdirSync(vitestDir)
-  }
-
-  if (!fsSync.existsSync(reportDir)) {
-    fsSync.mkdirSync(reportDir)
-  }
+  fsSync.mkdirSync(reportDir, { recursive: true })
 
   return {
     root: reportDir,

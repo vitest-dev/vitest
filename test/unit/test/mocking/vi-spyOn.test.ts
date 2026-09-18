@@ -2,6 +2,58 @@ import type { MockContext } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
 
 describe('vi.spyOn() edge cases', () => {
+  test('can spy on Set.prototype.add', () => {
+    const spy = vi.spyOn(Set.prototype, 'add')
+
+    try {
+      const set = new Set([1])
+      expect(spy).toHaveBeenCalledExactlyOnceWith(1)
+      expect(set.has(1)).toBe(true)
+
+      spy.mockClear()
+      set.add(2)
+      expect(spy).toHaveBeenCalledExactlyOnceWith(2)
+
+      vi.clearAllMocks()
+      expect(spy).not.toHaveBeenCalled()
+      set.add(3)
+      expect(spy).toHaveBeenCalledExactlyOnceWith(3)
+
+      vi.resetAllMocks()
+      expect(spy).not.toHaveBeenCalled()
+      set.add(4)
+      expect(spy).toHaveBeenCalledExactlyOnceWith(4)
+      expect(set.has(4)).toBe(true)
+    }
+    finally {
+      spy.mockRestore()
+    }
+  })
+
+  test('can call mocked prototype methods while spying on Set.prototype.add', () => {
+    const { Example } = vi.mockObject({
+      Example: class {
+        method() {}
+      },
+    })
+    const instance = new Example()
+    const spy = vi.spyOn(Set.prototype, 'add')
+
+    try {
+      instance.method()
+      expect(spy).not.toHaveBeenCalled()
+      expect(instance.method).toHaveBeenCalledOnce()
+      expect(Example.prototype.method).toHaveBeenCalledOnce()
+
+      vi.clearAllMocks()
+      expect(instance.method).not.toHaveBeenCalled()
+      expect(Example.prototype.method).not.toHaveBeenCalled()
+    }
+    finally {
+      spy.mockRestore()
+    }
+  })
+
   test('vi.spyOn() has correct length', () => {
     const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
     expect(fn0.length).toBe(0)

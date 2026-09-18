@@ -25,6 +25,7 @@ const MOCK_RESTORE = new Set<() => void>()
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
 const DIRTY_MOCK_STATES = new Set<Mock<Procedure | Constructable>>()
+const addDirtyMock = DIRTY_MOCK_STATES.add.bind(DIRTY_MOCK_STATES)
 const REGISTERED_MOCKS = new Set<WeakRef<Mock<Procedure | Constructable>>>()
 const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constructable>>>((ref) => {
   REGISTERED_MOCKS.delete(ref)
@@ -500,9 +501,9 @@ function createMock(
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: (function (this: any, ...args: any[]) {
-      DIRTY_MOCK_STATES.add(namedObject[name])
+      addDirtyMock(namedObject[name])
       if (prototypeMock) {
-        DIRTY_MOCK_STATES.add(prototypeMock)
+        addDirtyMock(prototypeMock)
       }
       registerCalls(args, state, prototypeState)
       registerInvocationOrder(invocationCallCounter++, state, prototypeState)

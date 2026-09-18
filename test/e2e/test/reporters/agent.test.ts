@@ -64,6 +64,23 @@ describe('agent reporter', async () => {
     `)
   })
 
+  test.each([true, false])('respects global silent: %s', async (silent) => {
+    const { stdout } = await runVitest({
+      config: false,
+      include: ['./fixtures/reporters/console-some-failing.test.ts'],
+      silent,
+      reporters: [['agent', { isTTY: true }]],
+    })
+
+    if (silent) {
+      expect(stdout).not.toContain('Log from')
+    }
+    else {
+      expect(stdout).toContain('Log from passed test')
+      expect(stdout).toContain('Log from failed test')
+    }
+  })
+
   test('does not change silent behavior for other reporters', async () => {
     const { stdout } = await runVitest({
       config: false,

@@ -77,12 +77,15 @@ function asymmetricMatch(a: any, b: any, customTesters: Array<Tester>) {
     return undefined
   }
 
+  // Asymmetric matchers define their own subset semantics.
+  const testers = customTesters.filter(tester => !isSubsetEqualityTester(tester))
+
   if (asymmetricA) {
-    return a.asymmetricMatch(b, customTesters)
+    return a.asymmetricMatch(b, testers)
   }
 
   if (asymmetricB) {
-    return b.asymmetricMatch(a, customTesters)
+    return b.asymmetricMatch(a, testers)
   }
 }
 
@@ -604,6 +607,20 @@ function isObjectWithKeys(a: any) {
   )
 }
 
+// Recursive subset testers are closures, so track them by identity.
+const subsetEqualityTesters = new WeakSet<Tester>()
+
+function registerSubsetEqualityTester<T extends Tester>(
+  tester: T,
+): T {
+  subsetEqualityTesters.add(tester)
+  return tester
+}
+
+function isSubsetEqualityTester(tester: Tester): boolean {
+  return tester === subsetEquality || subsetEqualityTesters.has(tester)
+}
+
 export function subsetEquality(
   object: unknown,
   subset: unknown,
@@ -617,7 +634,7 @@ export function subsetEquality(
   // there are circular references in the subset passed to it.
   const subsetEqualityWithContext
     = (seenReferences: WeakMap<object, boolean> = new WeakMap()) =>
-      (object: any, subset: any): boolean | undefined => {
+      registerSubsetEqualityTester((object: any, subset: any): boolean | undefined => {
         if (!isObjectWithKeys(subset)) {
           return undefined
         }
@@ -645,7 +662,7 @@ export function subsetEquality(
           seenReferences.delete(subset[key])
           return result
         })
-      }
+      })
 
   return subsetEqualityWithContext()(object, subset)
 }

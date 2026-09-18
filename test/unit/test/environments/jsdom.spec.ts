@@ -182,6 +182,13 @@ describe('FormData', () => {
 
     expect(retrievedBlob).toBeInstanceOf(File)
   })
+
+  test('keeps Blob bytes when used as a Request body', async () => {
+    const blob = new Blob(['hello world'], { type: 'text/plain' })
+    const request = new Request('http://localhost/', { method: 'POST', body: blob })
+
+    expect(await request.text()).toBe('hello world')
+  })
 })
 
 test('DOM APIs accept AbortController', () => {

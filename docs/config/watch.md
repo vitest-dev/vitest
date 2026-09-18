@@ -6,7 +6,7 @@ outline: deep
 # watch <CRoot /> {#watch}
 
 - **Type:** `boolean`
-- **Default:** `!process.env.CI && process.stdin.isTTY`
+- **Default:** `!process.env.CI && process.stdin.isTTY`, and `false` when Vitest detects an AI coding agent
 - **CLI:** `-w`, `--watch`, `--watch=false`
 
 Enable watch mode
