@@ -855,6 +855,69 @@ describe('vi.spyOn() restoration', () => {
     expect(object.getter).toBe(42)
     expect(spy2.mock.calls).toHaveLength(1)
   })
+
+  test('vi.spyOn() restores getter and setter spies on the same property', () => {
+    const object = createObject()
+    vi.spyOn(object, 'getter', 'get').mockReturnValue(100)
+    vi.spyOn(object, 'getter', 'set').mockImplementation(() => {})
+
+    vi.restoreAllMocks()
+    object.getter = 33
+
+    expect(object.getter).toBe(33)
+  })
+
+  test('vi.spyOn() restores getter and setter spies created in reverse order', () => {
+    const object = createObject()
+    vi.spyOn(object, 'getter', 'set').mockImplementation(() => {})
+    vi.spyOn(object, 'getter', 'get').mockReturnValue(100)
+
+    vi.restoreAllMocks()
+    object.getter = 33
+
+    expect(object.getter).toBe(33)
+  })
+
+  test('restoring one accessor spy keeps its sibling active', () => {
+    const object = createObject()
+    const getter = vi.spyOn(object, 'getter', 'get').mockReturnValue(100)
+    const setter = vi.spyOn(object, 'getter', 'set').mockImplementation(() => {})
+
+    getter.mockRestore()
+    object.getter = 33
+
+    expect(setter).toHaveBeenCalledWith(33)
+    expect(object.getter).toBe(42)
+
+    setter.mockRestore()
+    object.getter = 33
+
+    expect(object.getter).toBe(33)
+  })
+
+  test('restoring inherited accessor spies removes the temporary own property', () => {
+    class Base {
+      value = 42
+
+      get accessor() {
+        return this.value
+      }
+
+      set accessor(value: number) {
+        this.value = value
+      }
+    }
+
+    const object = new Base()
+    vi.spyOn(object, 'accessor', 'get').mockReturnValue(100)
+    vi.spyOn(object, 'accessor', 'set').mockImplementation(() => {})
+
+    vi.restoreAllMocks()
+
+    expect(Object.hasOwn(object, 'accessor')).toBe(false)
+    object.accessor = 33
+    expect(object.accessor).toBe(33)
+  })
 })
 
 describe('vi.spyOn() on Vite SSR', () => {

@@ -33,6 +33,49 @@ const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constru
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
 
+type AccessorType = 'get' | 'set'
+
+interface AccessorSpyState {
+  originalDescriptorObject: any
+  originalDescriptor?: PropertyDescriptor
+  active: Set<AccessorType>
+}
+
+const ACCESSOR_SPY_STATES = new WeakMap<object, Map<PropertyKey, AccessorSpyState>>()
+
+function getAccessorSpyState(
+  object: object,
+  key: PropertyKey,
+  originalDescriptorObject: any,
+  originalDescriptor?: PropertyDescriptor,
+): AccessorSpyState {
+  let states = ACCESSOR_SPY_STATES.get(object)
+  if (!states) {
+    states = new Map()
+    ACCESSOR_SPY_STATES.set(object, states)
+  }
+
+  let state = states.get(key)
+  if (!state) {
+    state = {
+      originalDescriptorObject,
+      originalDescriptor,
+      active: new Set(),
+    }
+    states.set(key, state)
+  }
+
+  return state
+}
+
+function deleteAccessorSpyState(object: object, key: PropertyKey): void {
+  const states = ACCESSOR_SPY_STATES.get(object)
+  states?.delete(key)
+  if (states?.size === 0) {
+    ACCESSOR_SPY_STATES.delete(object)
+  }
+}
+
 export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
     originalImplementation,
@@ -361,10 +404,17 @@ export function spyOn<T extends object, K extends keyof any>(
     ssr = true
   }
 
+  const existingAccessorState = accessType === 'value'
+    ? undefined
+    : ACCESSOR_SPY_STATES.get(object)?.get(key)
+  const sourceDescriptor = existingAccessorState?.active.has(accessType as AccessorType)
+    ? originalDescriptor
+    : (existingAccessorState?.originalDescriptor ?? originalDescriptor)
+
   let original: Procedure | undefined
 
-  if (originalDescriptor) {
-    original = originalDescriptor[accessType]
+  if (sourceDescriptor) {
+    original = sourceDescriptor[accessType]
     // weird Proxy edge case where descriptor's value is undefined,
     // but there's still a value on the object when called
     // https://github.com/vitest-dev/vitest/issues/9439
@@ -395,8 +445,13 @@ export function spyOn<T extends object, K extends keyof any>(
     return originalImplementation
   }
 
+  const accessorState = accessType === 'value'
+    ? undefined
+    : (existingAccessorState ?? getAccessorSpyState(object, key, originalDescriptorObject, originalDescriptor))
+
   const reassign = (cb: any) => {
-    const { value, ...desc } = originalDescriptor || {
+    const currentDescriptor = Object.getOwnPropertyDescriptor(object, key)
+    const { value, ...desc } = currentDescriptor || originalDescriptor || {
       configurable: true,
       writable: true,
     }
@@ -408,6 +463,30 @@ export function spyOn<T extends object, K extends keyof any>(
   }
 
   const restore = () => {
+    if (accessorState) {
+      const accessorType = accessType as AccessorType
+      if (!accessorState.active.delete(accessorType)) {
+        return
+      }
+
+      if (accessorState.active.size === 0) {
+        if (accessorState.originalDescriptorObject !== object) {
+          Reflect.deleteProperty(object, key)
+        }
+        else if (accessorState.originalDescriptor) {
+          Object.defineProperty(object, key, accessorState.originalDescriptor)
+        }
+        else {
+          Reflect.deleteProperty(object, key)
+        }
+        deleteAccessorSpyState(object, key)
+      }
+      else {
+        reassign(accessorState.originalDescriptor?.[accessorType])
+      }
+      return
+    }
+
     // if method is defined on the prototype, we can just remove it from
     // the current object instead of redefining a copy of it
     if (originalDescriptorObject !== object) {
@@ -419,6 +498,10 @@ export function spyOn<T extends object, K extends keyof any>(
     else {
       reassign(original)
     }
+  }
+
+  if (accessorState) {
+    accessorState.active.add(accessType as AccessorType)
   }
 
   const mock = createMockInstance({
