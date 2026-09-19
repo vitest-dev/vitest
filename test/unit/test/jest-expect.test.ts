@@ -2156,3 +2156,55 @@ it('expected and actual reuse the stringification from the diff', () => {
     expect.objectContaining({ y: 3 }),
   ]))
 })
+
+describe('matchers taking an expected value compare Maps and Sets deeply', () => {
+  const map = () => new Map([['a', 1]])
+  const otherMap = new Map([['b', 2]])
+  const set = () => new Set([1])
+  const otherSet = new Set([2])
+
+  it('toContainEqual', () => {
+    expect([map()]).toContainEqual(map())
+    expect([map()]).not.toContainEqual(otherMap)
+    expect([set()]).toContainEqual(set())
+    expect([set()]).not.toContainEqual(otherSet)
+  })
+
+  it('toHaveProperty', () => {
+    expect({ m: map() }).toHaveProperty('m', map())
+    expect({ m: map() }).not.toHaveProperty('m', otherMap)
+    expect({ s: set() }).toHaveProperty('s', set())
+    expect({ s: set() }).not.toHaveProperty('s', otherSet)
+  })
+
+  it('toBeOneOf', () => {
+    expect(map()).toBeOneOf([map()])
+    expect(map()).not.toBeOneOf([otherMap])
+    expect(set()).toBeOneOf(new Set([set()]))
+    expect(set()).not.toBeOneOf(new Set([otherSet]))
+  })
+
+  it('return matchers', () => {
+    const fn = vi.fn(map)
+    fn()
+
+    expect(fn).toHaveReturnedWith(map())
+    expect(fn).not.toHaveReturnedWith(otherMap)
+    expect(fn).toHaveLastReturnedWith(map())
+    expect(fn).not.toHaveLastReturnedWith(otherMap)
+    expect(fn).toHaveNthReturnedWith(1, map())
+    expect(fn).not.toHaveNthReturnedWith(1, otherMap)
+  })
+
+  it('resolve matchers', async () => {
+    const fn = vi.fn(async () => map())
+    await fn()
+
+    expect(fn).toHaveResolvedWith(map())
+    expect(fn).not.toHaveResolvedWith(otherMap)
+    expect(fn).toHaveLastResolvedWith(map())
+    expect(fn).not.toHaveLastResolvedWith(otherMap)
+    expect(fn).toHaveNthResolvedWith(1, map())
+    expect(fn).not.toHaveNthResolvedWith(1, otherMap)
+  })
+})
