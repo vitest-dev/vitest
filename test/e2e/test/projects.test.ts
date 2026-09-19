@@ -981,6 +981,57 @@ describe('sharedViteServer', () => {
     expect(e2e.sharedViteServer).toBe(true)
   })
 
+  it('a string `extends` pointing at the declaring config keeps the server shared', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          testTimeout: 4321,
+          projects: [
+            { extends: './vitest.config.js', test: { name: 'self' } },
+            { extends: './base.config.js', test: { name: 'other' } },
+          ],
+        },
+      },
+      'base.config.js': {},
+      'basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const root = ctx!.getRootProject()
+    const shared = Object.fromEntries(
+      ctx!.projects.map(project => [project.name, project.vite === root.vite]),
+    )
+    expect(shared).toEqual({
+      self: true,
+      other: false,
+    })
+    const self = ctx!.projects.find(project => project.name === 'self')!
+    expect(self.config.testTimeout).toBe(4321)
+  })
+
+  it('a string `extends` pointing at the container config shares the container server', async () => {
+    const { stderr, ctx } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['./app/vitest.config.js'],
+        },
+      },
+      'app/vitest.config.js': {
+        test: {
+          name: 'app',
+          projects: [
+            { extends: './vitest.config.js', test: { name: 'unit' } },
+          ],
+        },
+      },
+      'app/basic.test.js': basicTest,
+    })
+    expect(stderr).toBe('')
+    const [unit] = ctx!.projects
+    expect(unit.name).toBe('app (unit)')
+    expect(unit.sharedViteServer).toBe(true)
+    expect(unit.vite).not.toBe(ctx!.getRootProject().vite)
+  })
+
   it('vite options that don\'t change the server don\'t prevent sharing', async () => {
     const { stderr, ctx } = await runInlineTests({
       'vitest.config.js': ts`

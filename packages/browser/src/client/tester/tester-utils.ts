@@ -175,7 +175,7 @@ export class CommandsManager {
         if (hasActiveTraceView) {
           // Covers provider-backed actionability/waiting after command dispatch.
           // Local pre-command resolution, such as serializeElement/findElement paths
-          // is not coverd within by this action trace range.
+          // is not covered within by this action trace range.
           await recordBrowserTraceEntry(currentTest, {
             name: actionTraceGroupName,
             kind: 'action',

@@ -29,6 +29,8 @@ const DIRTY_MOCK_STATES = new Set<MockRef>()
 // Mocks whose implementation, once-queue or name changed since their last
 // `mockReset()`, so `resetAllMocks()` only visits mocks that are not already reset
 const DIRTY_MOCK_CONFIGS = new Set<MockRef>()
+// a test may spy on `Set.prototype.add`, and the spy itself marks mocks dirty
+const addToSet = Set.prototype.add
 const MOCK_REFS = new WeakMap<Mock<Procedure | Constructable>, MockRef>()
 const MOCK_FINALIZER = new FinalizationRegistry<MockRef>((ref) => {
   DIRTY_MOCK_STATES.delete(ref)
@@ -44,7 +46,7 @@ function markDirty(set: Set<MockRef>, mock: Mock<Procedure | Constructable>): vo
     MOCK_REFS.set(mock, ref)
     MOCK_FINALIZER.register(mock, ref)
   }
-  set.add(ref)
+  addToSet.call(set, ref)
 }
 
 function unmarkDirty(set: Set<MockRef>, mock: Mock<Procedure | Constructable>): void {
@@ -690,7 +692,7 @@ function reparentMockPrototype(
   // function) reverts the chain to `Object.prototype`, the parent every mock
   // is created with
   const parent = (implementation as Constructable | undefined)?.prototype ?? Object.prototype
-  if (Object.getPrototypeOf(mockPrototype) !== parent) {
+  if (mockPrototype !== parent && Object.getPrototypeOf(mockPrototype) !== parent) {
     Object.setPrototypeOf(mockPrototype, parent)
   }
 }

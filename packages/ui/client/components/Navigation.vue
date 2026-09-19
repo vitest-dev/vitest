@@ -68,10 +68,10 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
 
 <template>
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
-  <Explorer border="r base" :on-item-click="clickOnTask" :nested="true" @run="onRunAll">
+  <Explorer class="border-r border-base" :on-item-click="clickOnTask" :nested="true" @run="onRunAll">
     <template #header="{ filteredFiles }">
-      <img w-6 h-6 :src="logoUrl" alt="Vitest logo">
-      <span font-light text-sm flex-1>Vitest</span>
+      <img class="w-6 h-6" :src="logoUrl" alt="Vitest logo">
+      <span class="font-light text-sm flex-1">Vitest</span>
       <div class="flex text-lg">
         <IconButton
           v-show="!shouldShowExpandAll"
@@ -95,8 +95,7 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
           v-show="(coverageConfigured && !coverageEnabled) || !dashboardVisible"
           v-tooltip.bottom="'Dashboard'"
           title="Show dashboard"
-          class="!animate-100ms"
-          animate-count-1
+          class="!animate-100ms animate-count-1"
           icon="i-carbon:dashboard"
           @click="showDashboard(true)"
         />
@@ -107,7 +106,7 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
         >
           <div class="i-carbon:folder-off ma" />
           <template #popper>
-            <div class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
+            <div class="op100 gap-1 py-1 grid items-center grid-cols-[1.5em_1fr]">
               <div class="i-carbon:information-square w-1.5em h-1.5em" />
               <div>Coverage enabled but missing html reporter.</div>
               <div style="grid-column: 2">
@@ -122,8 +121,7 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
           v-tooltip.bottom="'Coverage'"
           :disabled="disableCoverage"
           title="Show coverage"
-          class="!animate-100ms"
-          animate-count-1
+          class="!animate-100ms animate-count-1"
           icon="i-carbon:folder-details-reference"
           @click="showCoverage()"
         />

@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -176,7 +176,7 @@
     "picomatch": "^4.0.7",
     "std-env": "catalog:",
     "tinybench": "catalog:",
-    "tinyexec": "1.3.0",
+    "tinyexec": "catalog:",
     "tinyglobby": "catalog:",
     "why-is-node-running": "^2.3.0"
   },

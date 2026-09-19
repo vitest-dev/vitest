@@ -10,7 +10,8 @@ export interface BenchmarkUserOptions {
 
   /**
    * Exclude globs for benchmark test files
-   * @default []
+   *
+   * @default ['**\/node_modules/**', '**\/.git/**']
    */
   exclude?: string[]
 
@@ -55,5 +56,5 @@ export interface BenchmarkUserOptions {
 }
 
 export type ResolvedBenchmarkOptions = Omit<Required<BenchmarkUserOptions>, 'provider'> & {
-  provider?: string | undefined
+  provider?: string
 }

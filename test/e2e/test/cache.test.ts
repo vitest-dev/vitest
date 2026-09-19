@@ -89,7 +89,7 @@ test('preserves previous test results', async () => {
 describe('with optimizer enabled', () => {
   const deps = {
     optimizer: {
-      web: {
+      client: {
         enabled: true,
       },
     },
