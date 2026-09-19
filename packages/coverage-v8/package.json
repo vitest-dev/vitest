@@ -57,7 +57,7 @@
     "@bcoe/v8-coverage": "^1.0.2",
     "@vitest/istanbul-lib-coverage": "catalog:",
     "@vitest/istanbul-lib-report": "catalog:",
-    "ast-v8-to-istanbul": "^1.0.5",
+    "ast-v8-to-istanbul": "^1.0.6",
     "magicast": "catalog:",
     "obug": "catalog:",
     "std-env": "catalog:",
