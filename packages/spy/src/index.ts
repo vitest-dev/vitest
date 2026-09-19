@@ -396,12 +396,24 @@ export function spyOn<T extends object, K extends keyof any>(
   }
 
   const reassign = (cb: any) => {
+    if (accessType !== 'value') {
+      // A get and a set spy can be installed on the same property. Each must
+      // only touch its own accessor and preserve whatever the sibling
+      // currently holds (its own mock, or its restored original), so base the
+      // descriptor on the live one rather than this spy's captured snapshot —
+      // otherwise reassigning/restoring one accessor clobbers the other.
+      const current = Object.getOwnPropertyDescriptor(object, key)
+      const { value: _v, writable: _w, ...desc }
+        = current && (current.get || current.set)
+          ? current
+          : originalDescriptor || { configurable: true }
+      ;(desc as PropertyDescriptor)[accessType] = cb
+      Object.defineProperty(object, key, desc)
+      return
+    }
     const { value, ...desc } = originalDescriptor || {
       configurable: true,
       writable: true,
-    }
-    if (accessType !== 'value') {
-      delete desc.writable // getter/setter can't have writable attribute at all
     }
     ;(desc as PropertyDescriptor)[accessType] = cb
     Object.defineProperty(object, key, desc)

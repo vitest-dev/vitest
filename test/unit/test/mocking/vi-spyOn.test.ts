@@ -547,6 +547,31 @@ describe('vi.spyOn() settings', () => {
     expect(spy2.mock.calls).toEqual(spy1.mock.calls)
   })
 
+  test('vi.spyOn() restoring one accessor leaves the sibling accessor spy intact (#11306)', () => {
+    const object = createObject()
+    const getSpy = vi.spyOn(object, 'getter', 'get').mockReturnValue(1)
+    const setSpy = vi.spyOn(object, 'getter', 'set').mockImplementation(() => {})
+
+    getSpy.mockRestore()
+
+    // restoring the getter must not wipe the still-active setter spy
+    object.getter = 5
+    expect(setSpy).toHaveBeenCalledTimes(1)
+    // and the getter must be genuinely restored, not still mocked
+    expect(object.getter).not.toBe(1)
+  })
+
+  test('vi.spyOn() restoring both accessors returns the property to its original state (#11306)', () => {
+    const object = createObject()
+    vi.spyOn(object, 'getter', 'get').mockReturnValue(1)
+    vi.spyOn(object, 'getter', 'set').mockImplementation(() => {})
+
+    vi.restoreAllMocks()
+
+    object.getter = 7
+    expect(object.getter).toBe(7)
+  })
+
   test('vi.spyOn() can spy on multiple class instances without intervention', () => {
     class Example {
       method() {
