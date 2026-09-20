@@ -178,7 +178,7 @@
     "tinybench": "catalog:",
     "tinyexec": "catalog:",
     "tinyglobby": "catalog:",
-    "why-is-node-running": "^2.3.0"
+    "why-is-node-running": "^3.2.1"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^2.0.1",
