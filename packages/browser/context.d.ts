@@ -427,7 +427,7 @@ export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelD
 
 export interface LocatorOptions {
   /**
-   * Whether to find an exact match: case-sensitive and whole-string. Default to false. Ignored when locating by a
+   * Whether to find an exact match: case-sensitive and whole-string. Default to true. Ignored when locating by a
    * regular expression. Note that exact match still trims whitespace.
    */
   exact?: boolean
