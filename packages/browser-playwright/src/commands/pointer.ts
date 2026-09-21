@@ -56,18 +56,22 @@ export const pointer: UserEventCommand<PointerEvent> = async (
 
     // click has its own moving logic, no need to move twice
     if (!hasClickAction) {
-      const x = coords?.x ?? 0
-      const y = coords?.y ?? 0
-
       if (target) {
         await hover(
           context,
           target,
-          { position: coords ? { x, y } : undefined },
+          {
+            position: coords
+              && await resolvePageCoordinates(
+                context,
+                { x: coords.x ?? 0, y: coords.y ?? 0 },
+                true,
+              ),
+          },
         )
       }
       else if (coords) {
-        const pageCoords = await resolvePageCoordinates(context, coords)
+        const pageCoords = await resolvePageCoordinates(context, coords, false)
 
         await context.page.mouse.move(pageCoords.x, pageCoords.y)
       }
@@ -140,27 +144,23 @@ async function keyDefHandler(
       await context.page.mouse.up(mouseOptions)
     }
     else if (releaseSelf) {
-      const clickOptions = {
-        ...mouseOptions,
-        position: pointerAction.coords
-          ? {
+      if (pointerAction.target) {
+        await click(context, pointerAction.target, {
+          ...mouseOptions,
+          position: pointerAction.coords
+            && await resolvePageCoordinates(context, {
               x: pointerAction.coords?.x ?? 0,
               y: pointerAction.coords?.y ?? 0,
-            }
-          : undefined,
-      } satisfies Parameters<typeof click>[2]
-
-      if (pointerAction.target) {
-        await click(context, pointerAction.target, clickOptions)
+            }, true),
+        })
       }
       else {
-        const pageCoords = await resolvePageCoordinates(context, pointerAction.coords)
+        const coords = await resolvePageCoordinates(context, {
+          x: pointerAction.coords?.x ?? 0,
+          y: pointerAction.coords?.y ?? 0,
+        }, false)
 
-        await context.page.mouse.click(
-          pageCoords.x,
-          pageCoords.y,
-          clickOptions,
-        )
+        await context.page.mouse.click(coords.x, coords.y, mouseOptions)
       }
     }
     else {

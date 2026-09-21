@@ -30,8 +30,8 @@ interface Coordinates { x?: number; y?: number }
 
 export async function resolvePageCoordinates(
   context: BrowserCommandContext,
-  coords?: Coordinates,
-  onlyScale = false,
+  coords: Coordinates,
+  onlyScale: boolean,
 ): Promise<Required<Coordinates>> {
   const x = coords?.x ?? 0
   const y = coords?.y ?? 0

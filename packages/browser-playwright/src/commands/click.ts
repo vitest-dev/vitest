@@ -1,17 +1,13 @@
 import type { UserEvent } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
-import { getDescribedLocator, resolvePageCoordinates } from './utils'
+import { getDescribedLocator } from './utils'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
   context,
   selector,
   options = {},
 ) => {
-  await getDescribedLocator(context, selector).click({
-    ...options,
-    position: options.position
-      && await resolvePageCoordinates(context, options.position, true),
-  })
+  await getDescribedLocator(context, selector).click(options)
 }
 
 export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
@@ -19,11 +15,7 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
   selector,
   options = {},
 ) => {
-  await getDescribedLocator(context, selector).dblclick({
-    ...options,
-    position: options.position
-      && await resolvePageCoordinates(context, options.position, true),
-  })
+  await getDescribedLocator(context, selector).dblclick(options)
 }
 
 export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
@@ -33,8 +25,6 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
 ) => {
   await getDescribedLocator(context, selector).click({
     ...options,
-    position: options.position
-      && await resolvePageCoordinates(context, options.position, true),
     clickCount: 3,
   })
 }
