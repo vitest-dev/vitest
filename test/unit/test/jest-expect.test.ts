@@ -226,6 +226,33 @@ describe('jest-expect', () => {
     )
   })
 
+  // https://github.com/vitest-dev/vitest/issues/11071
+  it('asymmetric matchers and toMatchObject equality', () => {
+    expect([{ id: 1 }]).not.toMatchObject(
+      expect.arrayContaining([{ id: 1, required: 'x' }]),
+    )
+    expect({ nested: [{ id: 1 }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1, extra: true }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+    })
+    expect({ nested: [{ id: 1 }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+      extra: true,
+    })
+
+    expect({ nested: [{ id: 1, required: 'x' }] }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1, required: 'x' }, { extra: true }] }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1 }], extra: true }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+    })
+  })
+
   it('asymmetric matchers negate', () => {
     expect('bar').toEqual(expect.not.stringContaining('zoo'))
     expect('bar').toEqual(expect.not.stringMatching(/zoo/))

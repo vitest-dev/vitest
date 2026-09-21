@@ -321,8 +321,9 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
-      const buffer = (blob as any)[implSymbol]._buffer
-      return new NodeBlob_([buffer], { type: blob.type })
+      const impl = (blob as any)[implSymbol]
+      // jsdom 28 renamed `_buffer` to `_bytes`
+      return new NodeBlob_([impl._bytes ?? impl._buffer], { type: blob.type })
     },
   }
   return utils
