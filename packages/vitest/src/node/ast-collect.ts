@@ -12,6 +12,7 @@ import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
 import { calculateSuiteHash, createFileTask as createFileTaskOriginal, createTaskName } from '../utils/tasks'
 import { detectCodeBlock } from '../utils/test-helpers'
+import { toRollupError } from './environments/fetchModule'
 
 interface ParsedFile extends File {
   start: number
@@ -109,6 +110,10 @@ function astParseFile(filepath: string, code: string) {
       return getName(callee.tag)
     }
     if (callee.type === 'MemberExpression') {
+      // A computed access like `it[1].call(it[2])` is not a Vitest call.
+      if (callee.computed) {
+        return null
+      }
       if (
         callee.object?.type === 'Identifier'
         && isVitestFunctionName(callee.object.name)
@@ -286,7 +291,7 @@ function astParseFile(filepath: string, code: string) {
         start,
         end,
         name: message,
-        type: isTestFunctionName(name) ? 'test' : 'suite',
+        type: properties.includes('describe') || properties.includes('suite') || !isTestFunctionName(name) ? 'suite' : 'test',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
@@ -319,28 +324,16 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     end: 0,
     result: {
       state: 'fail',
-      errors: serializeError(project, error),
+      errors: serializeError(error),
     },
   }
   file.file = file
   return file
 }
 
-function serializeError(ctx: TestProject, error: any): TestError[] {
-  if ('errors' in error && 'pluginCode' in error) {
-    const errors = error.errors.map((e: any) => {
-      return {
-        name: error.name,
-        message: e.text,
-        stack: e.location
-          ? `${error.name}: ${e.text}\n  at ${relative(ctx.config.root, e.location.file)}:${e.location.line}:${e.location.column}`
-          : '',
-      }
-    })
-    return errors
-  }
+function serializeError(error: any): TestError[] {
   return [
-    {
+    toRollupError(error) ?? {
       name: error.name,
       stack: error.stack,
       message: error.message,

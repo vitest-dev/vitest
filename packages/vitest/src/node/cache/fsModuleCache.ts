@@ -318,6 +318,24 @@ export class FileSystemModuleCache {
     catch {}
   }
 
+  private async writeMetadata(lockfileHash: string): Promise<void> {
+    try {
+      if (!existsSync(this.rootCache)) {
+        mkdirSync(this.rootCache, { recursive: true })
+      }
+      await writeFile(
+        this.metadataFilePath,
+        JSON.stringify({ lockfileHash }, null, 2),
+        'utf-8',
+      )
+    }
+    catch (error) {
+      // Recording the metadata is best-effort and losing the file shouldn't
+      // abort the entire execution
+      debugFs?.(`failed to write fs cache metadata: ${error}`)
+    }
+  }
+
   // before vitest starts running tests, we check that the lockfile wasn't updated
   // if it was, we nuke the previous cache in case a custom plugin was updated
   // or a new version of vite/vitest is installed
@@ -337,22 +355,7 @@ export class FileSystemModuleCache {
     // no metadata found, just store a new one, don't reset the cache
     if (!metadata) {
       debugFs?.(`fs metadata file was created with hash ${currentLockfileHash}`)
-
-      try {
-        if (!existsSync(this.rootCache)) {
-          mkdirSync(this.rootCache, { recursive: true })
-        }
-        await writeFile(
-          this.metadataFilePath,
-          JSON.stringify({ lockfileHash: currentLockfileHash }, null, 2),
-          'utf-8',
-        )
-      }
-      catch (error) {
-        // Recording the metadata is best-effort and losing the file shouldn't
-        // abort the entire execution
-        debugFs?.(`failed to write fs cache metadata: ${error}`)
-      }
+      await this.writeMetadata(currentLockfileHash)
       return
     }
 
@@ -363,6 +366,7 @@ export class FileSystemModuleCache {
 
     // lockfile changed, let's clear all caches
     await this.clearCache(false)
+    await this.writeMetadata(currentLockfileHash)
     this.vitest.vite.config.logger.info(
       `fs cache was cleared because lockfile has changed`,
       {

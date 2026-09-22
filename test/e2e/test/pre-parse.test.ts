@@ -299,7 +299,7 @@ test('test 4', { meta: { ran: true } }, () => {})
     project.createSpecification(fs.resolveFile('./b.test.js')),
   ]
 
-  await vitest.experimental_parseSpecifications(specifications)
+  await vitest.parseSpecifications(specifications)
 
   expect(buildTree(t => t.task.mode)).toMatchInlineSnapshot(`
     {

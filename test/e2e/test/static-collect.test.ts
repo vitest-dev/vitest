@@ -42,6 +42,67 @@ test('correctly collects a simple test', async () => {
   `)
 })
 
+test('collects test.describe as a suite', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    test.describe('scoped suite', () => {
+      test('nested test', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "scoped suite": {
+        "nested test": {
+          "errors": [],
+          "fullName": "scoped suite > nested test",
+          "id": "1709388417_0_0",
+          "location": "5:7",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('ignores lowered "using" helper calls like it[1].call(it[2])', async () => {
+  // parsers can inject this helper when lowering `using` declarations
+  const testModule = await collectTests(`
+    import { describe, test } from 'vitest'
+
+    var __callDispose = (stack, error, hasError) => {
+      var next = (it) => {
+        while (it = stack.pop()) {
+          var result = it[1] && it[1].call(it[2])
+        }
+      }
+      return next()
+    }
+
+    describe('disposable', () => {
+      test('uses a resource', () => {
+        var _stack = []
+        __callDispose(_stack)
+      })
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "disposable": {
+        "uses a resource": {
+          "errors": [],
+          "fullName": "disposable > uses a resource",
+          "id": "1709388417_0_0",
+          "location": "14:7",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
 test('collects tests starting with "test"', async () => {
   const testModule = await collectTests(`
     import { testSomething, testAnother } from './test-helpers'
@@ -1480,6 +1541,15 @@ test('invalid @module-tag throws and error', async () => {
     - file/slash
     - test"
   `)
+})
+
+test('reports the details of a transform error', async () => {
+  const testModule = await collectTestModule(`it('unterminated', () => {`)
+
+  const [error] = testModule.errors()
+  expect(error.message.split('\n')[0]).toBe('Transform failed with 1 error:')
+  expect(error.__vitest_rollup_error__).toMatchObject({ id: 'simple.test.ts' })
+  expect((error.__vitest_rollup_error__ as any).plugin).toBeTypeOf('string')
 })
 
 test('collects tests with runIf modifier', async () => {

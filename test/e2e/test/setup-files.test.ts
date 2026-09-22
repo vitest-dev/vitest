@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
 test.each(['threads', 'vmThreads'])('%s: print stdout and stderr correctly when called in the setup file', async (pool) => {
   const { stdout, stderr } = await runVitest({
@@ -79,6 +79,55 @@ it('setup files resolution in nested folder with bare name', async () => {
     {
       "basic.test.ts": {
         "basic": "passed",
+      },
+    }
+  `)
+})
+
+it('re-evaluates an extensionless setup file when isolation is disabled', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': `
+      export default {
+        test: {
+          isolate: false,
+          maxWorkers: 1,
+          setupFiles: ['./setup'],
+        },
+      }
+    `,
+    'setup.js': `
+      import { beforeEach } from 'vitest'
+
+      beforeEach(() => {
+        globalThis.setupFileHookCalled = true
+      })
+    `,
+    'a.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('runs setup hook in a', () => {
+        expect(globalThis.setupFileHookCalled).toBe(true)
+        globalThis.setupFileHookCalled = false
+      })
+    `,
+    'b.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('runs setup hook in b', () => {
+        expect(globalThis.setupFileHookCalled).toBe(true)
+        globalThis.setupFileHookCalled = false
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "runs setup hook in a": "passed",
+      },
+      "b.test.js": {
+        "runs setup hook in b": "passed",
       },
     }
   `)

@@ -10,6 +10,7 @@ on:
       - main
 
   pull_request:
+    types: [opened, synchronize, reopened, closed]
 
   workflow_dispatch:
 
@@ -26,6 +27,7 @@ env:
 
 jobs:
   lint:
+    if: github.event.action != 'closed'
     timeout-minutes: 10
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
@@ -68,6 +70,7 @@ jobs:
           ./actionlint -color -shellcheck=""
 
   changed:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     name: 'Diff: node-latest, ubuntu-latest'
     outputs:
@@ -95,6 +98,7 @@ jobs:
   # cannot push a missing tag; changes to the tag inputs must come from a
   # branch in this repository.
   playwright-deps-image:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     name: 'Image: playwright-deps, ubuntu-latest'
     timeout-minutes: 15
@@ -224,6 +228,15 @@ jobs:
             packages/ui/.vitest
           retention-days: 1
           include-hidden-files: true
+
+      - name: Upload Playwright traces
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() && matrix.suite == 'unit' }}
+        with:
+          name: playwright-traces-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: test/ui/test-results/**/trace.zip
+          if-no-files-found: ignore
+          retention-days: 1
 
   # runner.test.ts is the heaviest spec (~28% of the suite, ~70% of whichever
   # shard it lands in). Windows isolates it in its own job and shards the other

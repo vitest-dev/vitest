@@ -180,7 +180,7 @@ body {
         next()
       })
       // strip _vitest_original query added by importActual so that
-      // the plugin pipeline sees the original import id (e.g. virtual modules's load hook).
+      // the plugin pipeline sees the original import id (e.g. virtual modules' load hook).
       server.middlewares.use((req, _res, next) => {
         if (
           req.url?.includes('_vitest_original')

@@ -122,6 +122,37 @@ vitest --pool=forks
 ```
 :::
 
+## Time Zone Does Not Change in Worker Threads
+
+Setting `process.env.TZ` in a setup file or in a test, or setting `TZ` via [`env`](/config/env), has no effect on `Date` in `pool: 'threads'` and `pool: 'vmThreads'`. Node.js applies `TZ` only when the main thread sets it. A worker thread sees the new value on `process.env`, but keeps the time zone of the main process.
+
+```ts
+process.env.TZ = 'Asia/Tokyo'
+new Date('2026-01-01T00:00:00Z').getHours() // 9 in forks, unchanged in threads
+```
+
+Set the time zone before workers start. Use the shell, the config file, or [`globalSetup`](/config/globalsetup); all of them run in the main process and work in every pool.
+
+::: code-group
+```bash [CLI]
+TZ=Asia/Tokyo vitest
+```
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+process.env.TZ = 'Asia/Tokyo'
+
+export default defineConfig({})
+```
+```ts [globalSetup.js]
+export default function () {
+  process.env.TZ = 'Asia/Tokyo'
+}
+```
+:::
+
+If tests need different time zones at runtime, use `pool: 'forks'` or `pool: 'vmForks'`, where each worker is a separate process, or pass the `timeZone` option to `Intl.DateTimeFormat` instead of changing `TZ`.
+
 ## Unhandled Promise Rejection
 
 This error happens when a Promise rejects but no `.catch()` handler or `await` is attached to it before the microtask queue flushes. This behavior comes from JavaScript itself and is not specific to Vitest. Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection).

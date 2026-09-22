@@ -28,7 +28,7 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 npm install -D vitest
 ```
 ```bash [yarn]
-yarn add -D vitest
+yarn add -D vitest vite
 ```
 ```bash [pnpm]
 pnpm add -D vitest

@@ -149,12 +149,12 @@ export function TestConfigPlugin(
           // We inject the defines at runtime in non-browser tests,
           // but keep the original behaviour in the browser mode
           const resolvedTestConfig = testConfig as ResolvedConfig
-          if (sharedServer) {
+          if (isBrowserEnabled) {
+            resolvedTestConfig.defines = {}
+          }
+          else if (sharedServer) {
             resolvedTestConfig.defines = sharedServer.defines
             resolvedTestConfig._scriptDefines = sharedServer.scriptDefines
-          }
-          else if (isBrowserEnabled) {
-            resolvedTestConfig.defines = config.define || {}
           }
           else {
             const { defines, scriptDefines } = deleteDefineConfig(config)

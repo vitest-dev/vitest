@@ -5,6 +5,7 @@ import type {
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
+import type { Logger } from '../logger'
 import type {
   BrowserInstanceOption,
   ConfigResolutionCaptures,
@@ -31,6 +32,7 @@ import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoad
 import { resolveTestOptions, TestConfigPlugin } from '../plugins/testConfig'
 import { WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
+import { withLabel } from '../reporters/renderers/utils'
 import { globProjectTestFiles } from './globProjectFiles'
 
 const debug = createDebugger('vitest:projects')
@@ -65,6 +67,7 @@ const PROJECT_CLI_OVERRIDES = [
   'inspect',
   'inspectBrk',
   'fileParallelism',
+  'maxWorkers',
   'tagsFilter',
   'browser',
   'experimental',
@@ -513,7 +516,13 @@ function getOwnServerReason(
     return 'the raw `test` options of the declaring config are not available'
   }
   if (options.extends !== undefined && options.extends !== true) {
-    return '`extends` doesn\'t point to the declaring config'
+    // a path back to the declaring config means the same as `extends: true`
+    const extendsDeclaringConfig = typeof options.extends === 'string'
+      && context.parentViteConfig.configFile !== undefined
+      && resolve(context.parentConfig.root, options.extends) === context.parentViteConfig.configFile
+    if (!extendsDeclaringConfig) {
+      return '`extends` doesn\'t point to the declaring config'
+    }
   }
   for (const key in options) {
     if (key === 'test' || key === 'extends') {
@@ -562,6 +571,46 @@ function getOwnServerReason(
 function hasNoPlugins(plugins: unknown): boolean {
   return Array.isArray(plugins)
     && plugins.every(plugin => !plugin || (Array.isArray(plugin) && hasNoPlugins(plugin)))
+}
+
+function countPluginNames(plugins: ResolvedViteConfig['plugins']): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const plugin of plugins) {
+    if (plugin.name) {
+      counts.set(plugin.name, (counts.get(plugin.name) || 0) + 1)
+    }
+  }
+  return counts
+}
+
+function warnDuplicateInheritedPlugins(
+  logger: Logger,
+  projectConfig: ResolvedConfig,
+  projectViteConfig: ResolvedViteConfig,
+  parentViteConfig: ResolvedViteConfig,
+  configFile: string,
+  root: string,
+): void {
+  const parentCounts = countPluginNames(parentViteConfig.plugins)
+  const duplicates: string[] = []
+  for (const [name, count] of countPluginNames(projectViteConfig.plugins)) {
+    // a duplicate already present in the declaring config is not caused by `extends`
+    const parentCount = parentCounts.get(name) || 0
+    if (count > 1 && parentCount > 0 && count > parentCount) {
+      duplicates.push(name)
+    }
+  }
+  if (!duplicates.length) {
+    return
+  }
+  logger.warn(
+    withLabel('yellow', 'Vitest', [
+      `The "${projectConfig.name}" project applies the same plugin multiple times: ${duplicates.map(name => `"${name}"`).join(', ')}. `,
+      `Since Vitest 5, an inline project extends the config file that declares it by default, so the plugins from "${relative(root, configFile)}" already apply to this project and don't need to be listed again.\n`,
+      `Remove the duplicated plugins from the project, or set \`extends: false\` to not inherit the declaring config. `,
+      `Setting the \`extends\` option explicitly hides this warning.`,
+    ].join('')),
+  )
 }
 
 // `deleteDefineConfig` always drops these
@@ -764,6 +813,17 @@ async function resolveSingleProjectEntry(
   )
 
   projectViteConfig.test = projectConfig
+
+  if (inheritsParentConfig && options.extends === undefined && configFile) {
+    warnDuplicateInheritedPlugins(
+      harness.logger,
+      projectConfig,
+      projectViteConfig,
+      parentViteConfig,
+      configFile,
+      rootConfig.root,
+    )
+  }
 
   // The browser provider's contribution (captured during this resolution by the
   // `vitest:browser:loader` plugin) is carried on the resolved config + entry so

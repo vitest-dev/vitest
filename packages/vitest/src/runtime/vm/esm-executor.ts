@@ -92,6 +92,7 @@ export class EsmExecutor {
   private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
+  private linkQueue: Promise<void> = Promise.resolve()
   private context: vm.Context
 
   #httpIp = IPnumber('127.0.0.0')
@@ -109,16 +110,7 @@ export class EsmExecutor {
     if (m.status === 'errored') {
       throw m.error
     }
-    if (m.status === 'unlinked') {
-      this.esmLinkMap.set(
-        m,
-        m.link((identifier, referencer) =>
-          this.executor.resolveModule(identifier, referencer.identifier),
-        ),
-      )
-    }
-
-    await this.esmLinkMap.get(m)
+    await this.linkModule(m)
 
     if (m.status === 'linked') {
       await m.evaluate()
@@ -126,6 +118,31 @@ export class EsmExecutor {
 
     return m
   }
+
+  // Roots are linked one at a time: Node's link() does not wait for a
+  // dependency that another root is still linking, and instantiate() then
+  // fails on it. Sharing the queue with all roots keeps cycle handling to
+  // Node's own single-root linker, which never has to wait.
+  private linkModule(m: VMModule): Promise<void> {
+    const pending = this.esmLinkMap.get(m)
+    if (pending) {
+      return pending
+    }
+    if (m.status !== 'unlinked' && m.status !== 'linking') {
+      return Promise.resolve()
+    }
+    const linking = this.linkQueue.then(() => {
+      if (m.status === 'unlinked') {
+        return m.link(this.linker)
+      }
+    })
+    this.esmLinkMap.set(m, linking)
+    this.linkQueue = linking.catch(() => {})
+    return linking
+  }
+
+  private linker = (identifier: string, referencer: VMModule): Promise<VMModule> =>
+    this.executor.resolveModule(identifier, referencer.identifier)
 
   public async createEsModule(
     fileURL: string,

@@ -185,17 +185,21 @@ This method is called automatically by [`startVitest`](/guide/advanced/tests) if
 ## collect
 
 ```ts
-function collect(filters?: string[]): Promise<TestRunResult>
+function collect(
+  filters?: string[],
+  options?: {
+    staticParse?: boolean
+    staticParseConcurrency?: number
+  }
+): Promise<TestRunResult>
 ```
 
-Execute test files without running test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
+Based on `staticParse`, this will either statically analyse test files to collect them (the default) or run the code without executing test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 This method resolves tests specifications based on the config `include`, `exclude`, and `includeSource` values. Read more at [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed.
 
 ::: warning
-Note that Vitest doesn't use static analysis to collect tests. Vitest will run every test file in isolation, just like it runs regular tests.
-
-This makes this method very slow, unless you disable isolation before collecting tests.
+Note that since Vitest 5, the tests are collected by static analysis by default. If disabled via the second option, Vitest will run every test file in isolation, just like it runs regular tests. This would make this method very slow, unless you disable isolation manually before collecting tests.
 :::
 
 ## start
@@ -584,10 +588,10 @@ Vitest will only collect tests defined in the file. It will never follow imports
 Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
 :::
 
-## experimental_parseSpecifications <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecifications}
+## parseSpecifications <Version>5.0.0</Version> {#parsespecifications}
 
 ```ts
-function experimental_parseSpecifications(
+function parseSpecifications(
   specifications: TestSpecification[],
   options?: {
     concurrency?: number
@@ -597,13 +601,15 @@ function experimental_parseSpecifications(
 
 This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.
 
-## experimental_clearCache <Version type="experimental">4.0.11</Version> <Experimental /> {#clearcache}
+## clearCache <Version>5.0.0</Version> {#clearcache}
 
 ```ts
-function experimental_clearCache(): Promise<void>
+function clearCache(): Promise<void>
 ```
 
 Deletes all Vitest caches, including [`fsModuleCache`](/config/fsmodulecache).
+
+This was available since Vitest 4.0.11 as experimental `experimental_clearCache` method.
 
 ## experimental_getSourceModuleDiagnostic <Version type="experimental">4.0.15</Version> <Experimental /> {#getsourcemodulediagnostic}
 

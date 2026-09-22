@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { SplitpanesResizedPayload } from 'splitpanes'
 import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
+import { traceViewSplitSizes } from '~/composables/navigation'
 import { getTraceEntryClass, selectActiveTraceStep, showTraceSelectorHighlight } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -181,17 +183,22 @@ function formatStepName(step: NormalizedBrowserTraceEntry) {
 function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
+
+function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
+  if (panes.length === 2) {
+    traceViewSplitSizes.value = [panes[0].size, panes[1].size]
+  }
+}
 </script>
 
 <template>
   <Splitpanes
     class="h-full min-h-0"
+    @resized="onSplitpanesResized"
   >
-    <Pane :size="30" min-size="20">
+    <Pane :size="traceViewSplitSizes[0]" min-size="20">
       <div
-        class="h-full min-h-0 p-4"
-        flex="~ col gap-1"
-        overflow-auto
+        class="h-full min-h-0 p-4 flex flex-col gap-1 overflow-auto"
         role="listbox"
         aria-label="Trace steps"
       >
@@ -229,7 +236,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
               />
             </span>
             <div class="min-w-0 flex-1">
-              <div truncate data-testid="trace-step-name">
+              <div class="truncate" data-testid="trace-step-name">
                 {{ formatStepName(step) }}
               </div>
               <div class="text-xs opacity-60 truncate">
@@ -246,8 +253,8 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
         </button>
       </div>
     </Pane>
-    <Pane :size="70" min-size="20">
-      <div class="h-full min-h-0" flex="~ col" overflow-auto>
+    <Pane :size="traceViewSplitSizes[1]" min-size="20">
+      <div class="h-full min-h-0 flex flex-col overflow-auto">
         <iframe
           v-if="selectedStep"
           ref="iframeEl"
