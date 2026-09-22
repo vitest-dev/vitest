@@ -1,5 +1,6 @@
 import type { UserConfig, Plugin as VitePlugin } from 'vite'
 import { builtinModules } from 'node:module'
+import { browserExternalId, isBuiltin } from '../../utils/modules'
 import { resolveOptimizerConfig } from './utils'
 
 export function ModuleRunnerTransform(): VitePlugin {
@@ -87,6 +88,24 @@ export function ModuleRunnerTransform(): VitePlugin {
           testConfig?.deps?.optimizer?.[name],
           config.optimizeDeps,
         )
+      },
+    },
+    resolveId: {
+      order: 'pre',
+      async handler(id, importer, options) {
+        const environment = this.environment
+        if (
+          environment.config.consumer !== 'client'
+          || (environment.name === 'client' && testConfig.browser?.enabled)
+          || !isBuiltin(id)
+        ) {
+          return
+        }
+        const resolved = await this.resolve(id, importer, { ...options, skipSelf: true })
+        if (resolved?.id === browserExternalId) {
+          return `${browserExternalId}:${id}`
+        }
+        return resolved
       },
     },
   }

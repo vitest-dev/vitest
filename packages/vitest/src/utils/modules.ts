@@ -31,7 +31,7 @@ function isNodeBuiltin(id: string): boolean {
   return nodeBuiltins.includes(id)
 }
 
-const browserExternalId = '__vite-browser-external'
+export const browserExternalId = '__vite-browser-external'
 const browserExternalLength = browserExternalId.length + 1 // 1 is ":"
 
 export function isBrowserExternal(id: string): boolean {
