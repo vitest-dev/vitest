@@ -86,6 +86,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Update snapshot (accepts boolean, "new", "all" or "none")',
     argument: '[type]',
   },
+  review: {
+    shorthand: 'i',
+    // @todo implement
+    description:
+      'Run tests with soft snapshot assertions to collect all proposed changes, then review each one interactively to accept, reject, or skip it',
+  },
   watch: {
     shorthand: 'w',
     description: 'Enable watch mode',
