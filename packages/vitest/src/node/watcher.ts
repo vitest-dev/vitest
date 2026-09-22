@@ -16,6 +16,7 @@ export class VitestWatcher {
   public readonly changedTests: Set<string> = new Set()
 
   private readonly _onRerun: ((file: string) => void)[] = []
+  private readonly ignoredFileChanges = new Map<string, { content: string; writing: boolean }>()
 
   constructor(private vitest: Vitest) {}
 
@@ -34,6 +35,40 @@ export class VitestWatcher {
     this.vitest.vite.watcher.close()
   }
 
+  /**
+   * Ignore watcher events for a programmatic write while the file has this content.
+   * Call the returned function with whether the write succeeded when it finishes.
+   * @internal
+   */
+  public ignoreFileChange(filepath: string, content: string): (written: boolean) => void {
+    const id = slash(filepath)
+    const change = { content, writing: true }
+    this.ignoredFileChanges.set(id, change)
+    return (written) => {
+      change.writing = false
+      if (!written && this.ignoredFileChanges.get(id) === change) {
+        this.ignoredFileChanges.delete(id)
+      }
+    }
+  }
+
+  private isIgnoredFileChange(id: string): boolean {
+    const change = this.ignoredFileChanges.get(id)
+    if (!change) {
+      return false
+    }
+    if (change.writing) {
+      return true
+    }
+    try {
+      if (readFileSync(id, 'utf-8') === change.content) {
+        return true
+      }
+    } catch {}
+    this.ignoredFileChanges.delete(id)
+    return false
+  }
+
   public unregisterWatcher: () => void = noop
   public registerWatcher(): this {
     const watcher = this.vitest.vite.watcher
@@ -50,6 +85,7 @@ export class VitestWatcher {
       watcher.off('change', this.onFileChange)
       watcher.off('unlink', this.onFileDelete)
       watcher.off('add', this.onFileCreate)
+      this.ignoredFileChanges.clear()
       this.unregisterWatcher = noop
     }
     return this
@@ -84,6 +120,9 @@ export class VitestWatcher {
     id = slash(id)
     this.vitest.logger.clearHighlightCache(id)
     this.vitest.invalidateFile(id)
+    if (this.isIgnoredFileChange(id)) {
+      return
+    }
     const testFiles = this.getTestFilesFromWatcherTrigger(id)
     if (testFiles) {
       this.scheduleRerun(id)
@@ -97,6 +136,7 @@ export class VitestWatcher {
 
   public onFileDelete = (id: string): void => {
     id = slash(id)
+    this.ignoredFileChanges.delete(id)
     this.vitest.logger.clearHighlightCache(id)
     this.invalidates.add(id)
 
@@ -113,6 +153,9 @@ export class VitestWatcher {
   public onFileCreate = (id: string): void => {
     id = slash(id)
     this.vitest.invalidateFile(id)
+    if (this.isIgnoredFileChange(id)) {
+      return
+    }
 
     const testFiles = this.getTestFilesFromWatcherTrigger(id)
     if (testFiles) {

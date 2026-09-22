@@ -315,6 +315,7 @@ async function toMatchFileSnapshotImpl(options: {
     options.filepath,
   )
   const rawSnapshotContent = await snapshotState.environment.readSnapshotFile(rawSnapshotFile)
+  const assertionName = getAssertionName(assertion)
   return getSnapshotClient().match({
     received: options.received,
     message: options.hint,
@@ -322,6 +323,7 @@ async function toMatchFileSnapshotImpl(options: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
     },
+    assertionName,
     ...testNames,
   })
 }
@@ -335,6 +337,7 @@ function assertMatchResult(result: SyncExpectationResult, customMessage?: string
       diffOptions: {
         expand: getWorkerState().config.snapshotOptions.expand,
       },
+      __vitest_error_context__: { meta: result.meta },
     })
   }
 }

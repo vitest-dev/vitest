@@ -59,6 +59,10 @@ export interface CliOptions extends UserConfig {
    * @internal
    */
   benchmarkOnly?: boolean
+  /**
+   * @todo
+   */
+  review?: boolean
 }
 
 /**
