@@ -134,11 +134,19 @@ test('list --related supports files-only and JSON output', async () => {
     "[
       {
         "name": "direct dependency",
-        "file": "<root>/tests/direct.test.ts"
+        "file": "<root>/tests/direct.test.ts",
+        "location": {
+          "line": 5,
+          "column": 5
+        }
       },
       {
         "name": "transitive dependency",
-        "file": "<root>/tests/transitive.test.ts"
+        "file": "<root>/tests/transitive.test.ts",
+        "location": {
+          "line": 5,
+          "column": 5
+        }
       }
     ]
     "
