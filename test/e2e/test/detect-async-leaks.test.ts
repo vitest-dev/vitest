@@ -338,6 +338,40 @@ test('leak in project setup', async () => {
   `)
 })
 
+test('pipe wrap', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'packages/example/test/example.test.ts': `
+      import { spawn } from 'node:child_process'
+
+      test('not a leak', () => {
+        void process.stdin
+      })
+
+      test('leaking pipe', () => {
+        spawn(process.execPath, ['-e', 'process.stdin.resume()'], { stdio: ['pipe', 'ignore', 'ignore'] }).unref()
+      })
+    `,
+  }, { pool: 'forks' })
+
+  expect.soft(stdout).toContain('Leaks  1 leak')
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    PIPEWRAP leaking in packages/example/test/example.test.ts
+      7|
+      8|       test('leaking pipe', () => {
+      9|         spawn(process.execPath, ['-e', 'process.stdin.resume()'], { stdio:…
+       |         ^
+     10|       })
+     11|
+     ❯ packages/example/test/example.test.ts:9:9
+
+    "
+  `)
+})
+
 async function runInlineTests(...params: Parameters<typeof base>) {
   const result = await base(params[0], { globals: true, detectAsyncLeaks: true, pool: 'forks', ...params[1] }, params[2])
 
