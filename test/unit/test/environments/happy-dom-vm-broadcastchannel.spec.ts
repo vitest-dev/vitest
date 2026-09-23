@@ -17,7 +17,8 @@ test('setupVM bridges BroadcastChannel from Node', async () => {
     const win = vmContext.getVmContext()
     expect(win.BroadcastChannel).toBeTypeOf('function')
     expect(win.BroadcastChannel).toBe(BroadcastChannel)
-  } finally {
+  }
+  finally {
     await vmContext.teardown()
   }
 })
