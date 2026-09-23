@@ -114,12 +114,8 @@ export async function resolveTestRunner(
     }
     files.forEach(sanitizeRetryConditions)
 
-    // Ensure the host stores the collected task graph before execution updates
-    // arrive. Otherwise a slow worker can finish before the collection payload,
-    // and the later updates overwrite collection-time errors on the host.
-    const hostCollected = rpc().onCollected(files)
+    rpc().onCollected(files)
     await originalOnCollected?.call(testRunner, files)
-    await hostCollected
   }
 
   const originalOnAfterRun = testRunner.onAfterRunFiles

@@ -35,6 +35,23 @@ const warmExternals = new WeakMap<DevEnvironment, Record<string, FetchResult>>()
 export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
   const vitest = project.vitest
   const cacheFs = methodsOptions.cacheFs ?? false
+  let collectionBarrier = Promise.resolve()
+  let resolveCollectionBarrier: (() => void) | undefined
+
+  function delayTaskUpdatesUntilCollected() {
+    if (!resolveCollectionBarrier) {
+      collectionBarrier = new Promise((resolve) => {
+        resolveCollectionBarrier = resolve
+      })
+    }
+  }
+
+  function resumeTaskUpdates() {
+    resolveCollectionBarrier?.()
+    resolveCollectionBarrier = undefined
+    collectionBarrier = Promise.resolve()
+  }
+
   project.vitest.state.metadata[project.name] ??= {
     externalized: {},
     duration: {},
@@ -327,7 +344,14 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         vitest.state.collectFiles(project, [file])
       }
       else {
-        await vitest._testRun.enqueued(project, file)
+        delayTaskUpdatesUntilCollected()
+        try {
+          await vitest._testRun.enqueued(project, file)
+        }
+        catch (error) {
+          resumeTaskUpdates()
+          throw error
+        }
       }
     },
     async onCollected(files) {
@@ -335,7 +359,12 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         vitest.state.collectFiles(project, files)
       }
       else {
-        await vitest._testRun.collected(project, files)
+        try {
+          await vitest._testRun.collected(project, files)
+        }
+        finally {
+          resumeTaskUpdates()
+        }
       }
     },
     onAfterSuiteRun(meta) {
@@ -358,6 +387,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         vitest.state.updateTasks(packs)
       }
       else {
+        await collectionBarrier
         await vitest._testRun.updated(packs, events)
       }
     },
