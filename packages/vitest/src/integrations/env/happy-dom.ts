@@ -37,6 +37,11 @@ export default <Environment>{
       win.structuredClone = structuredClone
     }
 
+    // inject BroadcastChannel if it exists
+    if (typeof BroadcastChannel !== 'undefined' && !win.BroadcastChannel) {
+      win.BroadcastChannel = BroadcastChannel
+    }
+
     return {
       getVmContext() {
         return win

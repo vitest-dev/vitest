@@ -21,6 +21,12 @@ test('atob and btoa are available', () => {
   expect(btoa('hello world')).toBe('aGVsbG8gd29ybGQ=')
 })
 
+test('BroadcastChannel is available', () => {
+  expect(typeof BroadcastChannel).toBe('function')
+  const channel = new BroadcastChannel('vitest')
+  channel.close()
+})
+
 test('request doesn\'t fail when using absolute url because it supports it', () => {
   expect(() => {
     const _r = new Request('/api', { method: 'GET' })
