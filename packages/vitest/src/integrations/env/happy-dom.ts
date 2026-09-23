@@ -37,6 +37,14 @@ export default <Environment>{
       win.structuredClone = structuredClone
     }
 
+    // happy-dom's Window has no BroadcastChannel (https://github.com/capricorn86/happy-dom/issues/1920),
+    // but Node exposes one globally. Bridge it so code constructing a BroadcastChannel
+    // at import time (e.g. `msw/node`) loads under vm pools the same way it does under
+    // `threads`, where Node's global stays visible.
+    if (typeof BroadcastChannel !== 'undefined' && !win.BroadcastChannel) {
+      win.BroadcastChannel = BroadcastChannel
+    }
+
     return {
       getVmContext() {
         return win
