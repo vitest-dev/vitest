@@ -47,6 +47,10 @@ test('innerWidth and matchMedia', () => {
   expect(window.matchMedia('(max-width: 100px)').matches).toBe(true)
 })
 
+test('BroadcastChannel is available (vm pools bridge Node global)', () => {
+  expect(typeof BroadcastChannel).toBe('function')
+})
+
 test('readonly window assignment throws', ({ task }) => {
   // happy-dom's vmThreads setup returns Window as a Node VM context directly.
   // Node contextification reports this getter-only assignment as successful,

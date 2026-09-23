@@ -37,6 +37,12 @@ export default <Environment>{
       win.structuredClone = structuredClone
     }
 
+    // happy-dom Window lacks BroadcastChannel (capricorn86/happy-dom#1920),
+    // bridge Node's so vm pools match threads behavior
+    if (typeof globalThis.BroadcastChannel !== 'undefined' && !win.BroadcastChannel) {
+      win.BroadcastChannel = globalThis.BroadcastChannel
+    }
+
     return {
       getVmContext() {
         return win
