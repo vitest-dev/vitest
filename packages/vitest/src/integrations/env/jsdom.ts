@@ -120,7 +120,7 @@ export default <Environment>{
 
     const clearWindowErrors = catchWindowErrors(dom.window)
 
-    const utils = createCompatUtils(dom.window)
+    const utils = await createCompatUtils(dom.window)
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
@@ -232,7 +232,7 @@ export default <Environment>{
     })
 
     const clearWindowErrors = catchWindowErrors(global)
-    const utils = createCompatUtils(dom.window)
+    const utils = await createCompatUtils(dom.window)
 
     global.jsdom = dom
     global.Request = createCompatRequest(utils)
@@ -300,12 +300,40 @@ interface CompatUtils {
   makeCompatFormData: (formData: FormData) => FormData
 }
 
-function createCompatUtils(window: DOMWindow): CompatUtils {
-  // this returns a hidden Symbol(impl)
-  // this is cursed, and jsdom should just implement fetch API itself
-  const implSymbol = Object.getOwnPropertySymbols(
-    Object.getOwnPropertyDescriptors(new window.Blob()),
-  )[0]
+interface JSDOMBlobImpl {
+  _buffer?: BlobPart
+  _bytes?: BlobPart
+}
+
+type ImplForWrapper = (wrapper: unknown) => JSDOMBlobImpl | undefined
+
+let implForWrapperPromise: Promise<ImplForWrapper | undefined> | undefined
+
+function loadImplForWrapper(): Promise<ImplForWrapper | undefined> {
+  return implForWrapperPromise ??= (async () => {
+    for (const path of [
+      'jsdom/lib/generated/idl/utils.js',
+      'jsdom/lib/jsdom/living/generated/utils.js',
+    ]) {
+      try {
+        const utils = await import(path)
+        const implForWrapper = utils.implForWrapper ?? utils.default?.implForWrapper
+        if (typeof implForWrapper === 'function') {
+          return implForWrapper as ImplForWrapper
+        }
+      }
+      catch {}
+    }
+  })()
+}
+
+async function createCompatUtils(window: DOMWindow): Promise<CompatUtils> {
+  const implForWrapper = await loadImplForWrapper()
+  const implSymbol = implForWrapper
+    ? undefined
+    : Object.getOwnPropertySymbols(
+      Object.getOwnPropertyDescriptors(new window.Blob()),
+    )[0]
   const utils = {
     window,
     makeCompatFormData(formData: FormData) {
@@ -321,9 +349,15 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
-      const impl = (blob as any)[implSymbol]
+      const impl = implForWrapper
+        ? implForWrapper(blob)
+        : (blob as any)[implSymbol!] as JSDOMBlobImpl | undefined
       // jsdom 28 renamed `_buffer` to `_bytes`
-      return new NodeBlob_([impl._bytes ?? impl._buffer], { type: blob.type })
+      const bytes = impl?._bytes ?? impl?._buffer
+      if (!bytes) {
+        throw new TypeError('Cannot access jsdom Blob implementation')
+      }
+      return new NodeBlob_([bytes], { type: blob.type })
     },
   }
   return utils
