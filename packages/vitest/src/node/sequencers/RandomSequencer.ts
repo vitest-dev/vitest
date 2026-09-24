@@ -6,6 +6,7 @@ export class RandomSequencer extends BaseSequencer {
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const { sequence } = this.ctx.config
 
+    files.sort((a, b) => a.moduleId.localeCompare(b.moduleId) || a.taskId.localeCompare(b.taskId))
     return shuffle(files, sequence.seed)
   }
 }
