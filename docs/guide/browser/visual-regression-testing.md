@@ -858,7 +858,7 @@ Once your visual regression tests finish, it will log a link where you can revie
 
 Running in CI is exactly the same as running locally: first run `vitest`, then run `chromatic`.
 
-To make this even more straightforward, we provide a GitHub Action:
+To make this even more straightforward, Chromatic provides a GitHub Action:
 
 ```yaml [.github/workflows/chromatic.yml]
 name: Chromatic
