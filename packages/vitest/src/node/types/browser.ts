@@ -218,7 +218,7 @@ export interface BrowserConfigOptions {
     testIdAttribute?: string
     /**
      * Should locators match the text exactly by default
-     * @default false
+     * @default true
      */
     exact?: boolean
     /**
