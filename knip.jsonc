@@ -110,8 +110,7 @@
         "@vitest/browser-preview",
         "@vitest/browser-webdriverio",
         "@vitest/ui",
-        "chai",
-        "why-is-node-running"
+        "chai"
       ]
     }
   }
