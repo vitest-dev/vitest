@@ -759,9 +759,17 @@ By default, the Chromatic plugin will automatically capture the end state of eac
 
 First, install the Chromatic plugin:
 
-```bash
-npm install --save-dev @chromatic-com/vitest
+::: code-group
+```bash [npm]
+npm install -D @chromatic-com/vitest
 ```
+```bash [yarn]
+yarn add -D vitest @chromatic-com/vitest
+```
+```bash [pnpm]
+pnpm add -D @chromatic-com/vitest
+```
+:::
 
 Then, add the plugin to your Vitest configuration:
 
@@ -861,23 +869,23 @@ jobs:
   tests:
     name: Run Vitest & Chromatic
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
+
       - uses: actions/setup-node@v7
         with:
-          node-version: 24.20.0
+          node-version: 24
+
+      # ⚠️ See your package manager's documentation for the correct command to install dependencies in a CI environment.
       - name: Install dependencies
-        # ⚠️ See your package manager's documentation for the correct command to install dependencies in a CI environment.
         run: npm ci
+
+      - run: npx playwright install chromium --only-shell
+
       - name: Run Vitest tests
         run: npx vitest run
-        env:
-          HOME: /root
+
       - name: Run Chromatic
         uses: chromaui/action@latest
         with:
@@ -885,12 +893,12 @@ jobs:
           vitest: true
           # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-        # ⚠️ Optionally configure the archive location with env vars
+        # ⚠️ Optionally configure the archive location with env vars to match your outputDirectory https://www.chromatic.com/docs/vitest/configure/#test-run-options
         env:
           CHROMATIC_ARCHIVE_LOCATION: .vitest/chromatic
 ```
 
-If you're not using GitHub Actions, we have [guides for popular CI providers like GitLab, Bitbucket, and CircleCI](https://www.chromatic.com/docs/ci/).
+If you're not using GitHub Actions, Chromatic has [guides for popular CI providers like GitLab, Bitbucket, and CircleCI](https://www.chromatic.com/docs/ci/).
 
 Once you have Chromatic set up in your CI workflow, you'll now be able to [quickly review and collaborate on visual changes directly in the Chromatic app](https://www.chromatic.com/docs/in-pull-request/).
 
