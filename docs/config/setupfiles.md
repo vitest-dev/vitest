@@ -7,7 +7,7 @@ outline: deep
 
 - **Type:** `string | string[]`
 
-Paths to setup files resolved relative to the [`root`](/config/root). They will run before each _test file_ in the same process. By default, all test files run in parallel, but you can configure it with [`sequence.setupFiles`](/config/sequence#sequence-setupfiles) option.
+Paths to setup files resolved relative to the [`root`](/config/root). They will run before each _test file_ in the same process. By default, setup files run one after another in the order they are defined, but you can configure it with [`sequence.setupFiles`](/config/sequence#sequence-setupfiles) option.
 
 Vitest will ignore any exports from these files.
 
