@@ -16,6 +16,26 @@ import { isChildProcess } from '../../runtime/utils'
 
 const RealDate = globalThis.Date
 
+type TemporalNamespace = typeof globalThis extends { Temporal: infer TTemporal }
+  ? TTemporal
+  : Record<never, never>
+
+type TemporalInstance<TKey extends PropertyKey>
+  = TemporalNamespace extends Record<TKey, abstract new (...args: any) => infer TInstance>
+    ? TInstance
+    : never
+
+export type TemporalTime = TemporalInstance<'Instant'> | TemporalInstance<'ZonedDateTime'>
+export type TemporalFakeTimersConfig = Omit<FakeTimersConfig, 'now'> & {
+  now?: number | Date | TemporalTime
+}
+
+function toEpochMilliseconds(time: string | FakeTimersConfig['now']) {
+  return time && typeof time === 'object' && !(time instanceof Date)
+    ? time.epochMilliseconds
+    : time
+}
+
 export class FakeTimers {
   private _global: typeof globalThis
   private _clock!: Clock
@@ -200,8 +220,9 @@ export class FakeTimers {
     }
   }
 
-  setSystemTime(now?: string | number | Date | { epochMilliseconds: number }): void {
-    const date = (typeof now === 'undefined' || now instanceof Date) ? now : new Date(typeof now === 'object' ? now.epochMilliseconds : now)
+  setSystemTime(now?: string | number | Date | TemporalTime): void {
+    const normalized = toEpochMilliseconds(now)
+    const date = (typeof normalized === 'undefined' || normalized instanceof Date) ? normalized : new Date(normalized)
     if (this._fakingTime) {
       this._clock.setSystemTime(date)
     }
