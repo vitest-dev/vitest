@@ -10,7 +10,7 @@
   "devDependencies": {
     "@jridgewell/remapping": "catalog:",
     "@vitest/istanbul-lib-coverage": "catalog:",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.1.1",
     "vitest": "workspace:*"
   }
 }
