@@ -541,6 +541,8 @@ function resolveBrowserOptimizeDeps(
     include.push('@vue/test-utils')
   }
 
+  const hasVueTestUtils = isPackageExists('@vue/test-utils') || isPackageExists('vitest-browser-vue')
+
   const otelConfig = testConfig.experimental?.openTelemetry
   if (otelConfig?.enabled && otelConfig.browserSdkPath) {
     entries.push(otelConfig.browserSdkPath)
@@ -576,8 +578,8 @@ function resolveBrowserOptimizeDeps(
     exclude,
     include,
     ...(rolldownVersion
-      ? { rolldownOptions: { plugins: [rolldownPlugin] } }
-      : { esbuildOptions: { plugins: [esbuildPlugin] } }),
+      ? { rolldownOptions: { plugins: hasVueTestUtils ? [rolldownPlugin] : [] } }
+      : { esbuildOptions: { plugins: hasVueTestUtils ? [esbuildPlugin] : [] } }),
   }
 }
 
