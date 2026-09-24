@@ -42,6 +42,10 @@ test('button renders in default state', async () => {
 
 ## Getting started
 
+::: tip
+**Visual regression tests are most reliable when run in a standardized and tightly controlled environment**. This is also why [Docker containers](https://playwright.dev/docs/docker), [CI-only visual testing workflows, or cloud services](#visual-testing-for-teams) are strongly recommended.
+:::
+
 ### Environmental stability
 
 Visual regression tests are **sensitive to environmental differences** because rendering is not perfectly deterministic across environments and depends on multiple factors:
@@ -54,7 +58,7 @@ Visual regression tests are **sensitive to environmental differences** because r
 - Screen scaling, color profiles, and display settings
 - ...and occasionally what feels like the phase of the moon <MoonPhase />
 
-In practice, even seemingly identical environments can occasionally produce subtle rendering differences. For this reason, **visual regression tests are most reliable when run in a standardized and tightly controlled environment**. This is also why [Docker containers](https://playwright.dev/docs/docker), [CI-only visual testing workflows, or cloud services](#visual-testing-for-teams) are strongly recommended.
+In practice, even seemingly identical environments can occasionally produce subtle rendering differences.
 
 ### Not a replacement for behavior testing
 
