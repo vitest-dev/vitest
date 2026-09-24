@@ -572,6 +572,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/printconsoletrace',
               },
               {
+                text: 'artifactsDir',
+                link: '/config/artifactsdir',
+              },
+              {
                 text: 'attachmentsDir',
                 link: '/config/attachmentsdir',
               },

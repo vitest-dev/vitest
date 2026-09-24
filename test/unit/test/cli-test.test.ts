@@ -201,6 +201,12 @@ test('teardownTimeout is parsed correctly', () => {
   expect(getCLIOptions('--teardown-timeout=1000')).toEqual({ teardownTimeout: 1000 })
 })
 
+test('artifactsDir is parsed correctly', () => {
+  expect(getCLIOptions('--artifactsDir .cache/vitest')).toEqual({ artifactsDir: '.cache/vitest' })
+  expect(getCLIOptions('--artifacts-dir .cache/vitest')).toEqual({ artifactsDir: '.cache/vitest' })
+  expect(getCLIOptions('--artifactsDir=.cache/vitest')).toEqual({ artifactsDir: '.cache/vitest' })
+})
+
 test('slowTestThreshold is parsed correctly', () => {
   expect(getCLIOptions('--slowTestThreshold 1000')).toEqual({ slowTestThreshold: 1000 })
   expect(getCLIOptions('--slow-test-threshold 1000')).toEqual({ slowTestThreshold: 1000 })

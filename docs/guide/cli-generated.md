@@ -868,6 +868,13 @@ Always print console stack traces
 
 Collect test and suite locations in the `location` property
 
+### artifactsDir
+
+- **CLI:** `--artifactsDir <dir>`
+- **Config:** [artifactsDir](/config/artifactsdir)
+
+The root directory where Vitest stores shared artifacts created through `createReport()` (default: `.vitest`)
+
 ### attachmentsDir
 
 - **CLI:** `--attachmentsDir <dir>`
