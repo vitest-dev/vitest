@@ -1,4 +1,5 @@
 import type { MatchersObject } from './types'
+import { iterableEquality } from './jest-utils'
 
 // selectively ported from https://github.com/jest-community/jest-extended
 export const customMatchers: MatchersObject = {
@@ -36,11 +37,15 @@ ${printReceived(actual)}`,
     if (Array.isArray(expected)) {
       pass = expected.length === 0
         || expected.some(item =>
-          equals(item, actual, customTesters),
+          equals(item, actual, [...customTesters, iterableEquality]),
         )
     }
     else if (expected instanceof Set) {
-      pass = expected.size === 0 || expected.has(actual) || [...expected].some(item => equals(item, actual, customTesters))
+      pass = expected.size === 0
+        || expected.has(actual)
+        || [...expected].some(item =>
+          equals(item, actual, [...customTesters, iterableEquality]),
+        )
     }
     else {
       throw new TypeError(

@@ -128,6 +128,27 @@ describe('expect.addEqualityTesters', () => {
     })
   })
 
+  test('spy matchers pass different AnagramComparator objects', async () => {
+    const fn = vi.fn(() => customObject1)
+    fn()
+
+    expect(fn).toHaveBeenCalledWith()
+    expect(fn).toHaveReturnedWith(customObject2)
+    expect(fn).toHaveLastReturnedWith(customObject2)
+    expect(fn).toHaveNthReturnedWith(1, customObject2)
+
+    const asyncFn = vi.fn(async () => customObject1)
+    await asyncFn()
+
+    expect(asyncFn).toHaveResolvedWith(customObject2)
+    expect(asyncFn).toHaveLastResolvedWith(customObject2)
+    expect(asyncFn).toHaveNthResolvedWith(1, customObject2)
+  })
+
+  test('toBeOneOf passes different AnagramComparator objects', () => {
+    expect(customObject1).toBeOneOf([customObject2])
+  })
+
   test('asymmetric matchers pass different AnagramComparator objects', () => {
     expect([customObject1]).toEqual(expect.arrayContaining([customObject1]))
     expect({ a: 1, b: { c: customObject1 } }).toEqual(
