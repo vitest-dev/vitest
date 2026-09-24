@@ -160,6 +160,39 @@ describe('random sequencer', () => {
     const sequencer = new RandomSequencer(ctx)
     const files = workspaced(['b', 'a', 'c'])
     const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['a', 'c', 'b']))
+    expect(sorted).toStrictEqual(workspaced(['b', 'c', 'a']))
+  })
+
+  test('order does not depend on the discovery order', async () => {
+    const a = { ...workspace, name: 'a' } as TestProject
+    const b = { ...workspace, name: 'b' } as TestProject
+    const specs = [
+      new TestSpecification(a, '/x.test.ts', 'forks'),
+      new TestSpecification(a, '/x.test.ts', 'typescript'),
+      new TestSpecification(b, '/x.test.ts', 'forks'),
+      new TestSpecification(a, '/y.test.ts', 'forks'),
+      new TestSpecification(b, '/z.test.ts', 'browser'),
+    ]
+
+    async function sort(files: TestSpecification[], seed: number) {
+      const ctx = buildCtx()
+      ctx.config.sequence.seed = seed
+      const sorted = await new RandomSequencer(ctx).sort(files)
+      return sorted.map(spec => `${spec.project.name}:${spec.moduleId}:${spec.pool}`)
+    }
+
+    const sorted = await sort(specs, 101)
+    expect(sorted).toMatchInlineSnapshot(`
+      [
+        "a:/x.test.ts:forks",
+        "b:/x.test.ts:forks",
+        "a:/y.test.ts:forks",
+        "b:/z.test.ts:browser",
+        "a:/x.test.ts:typescript",
+      ]
+    `)
+    expect(await sort([...specs].reverse(), 101)).toEqual(sorted)
+    expect(await sort([specs[3], specs[1], specs[4], specs[0], specs[2]], 101)).toEqual(sorted)
+    expect(await sort(specs, 102)).not.toEqual(sorted)
   })
 })

@@ -6,6 +6,15 @@ export class RandomSequencer extends BaseSequencer {
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const { sequence } = this.ctx.config
 
-    return shuffle(files, sequence.seed)
+    const sorted = [...files].sort((a, b) =>
+      compare(a.project.name, b.project.name)
+      || compare(a.moduleId, b.moduleId)
+      || compare(a.pool, b.pool),
+    )
+    return shuffle(sorted, sequence.seed)
   }
+}
+
+function compare(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0
 }
