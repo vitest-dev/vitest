@@ -474,7 +474,7 @@ Running the visual regression suite in a shared environment solves this problem.
 
 1. **Self-hosted runners** (e.g., Docker images), complex to set up and maintain
 1. **Generate references in CI**, which requires some setup
-1. **Cloud services**, like [Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/), built to solve this exact problem, but usually restricted to specific providers and browsers
+1. **Cloud services**, like [Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/) or [Chromatic](https://www.chromatic.com/vitest), built to solve this exact problem, but usually restricted to specific providers and browsers
 
 Options 2 and 3 are the quickest to get running, so those are covered below.
 
@@ -741,6 +741,158 @@ env:
 ```
 
 Then run your tests like normal. The service handles the browser infrastructure.
+
+=== Chromatic (Cloud service)
+
+Chromatic offers a plugin to integrate with Vitest for visual regression testing. First, you run your tests as normal and Chromatic captures full DOM archives of your components' visual states. Then you run the Chromatic CLI to upload those archives, compute the visual diffs, and present the results for review in the Chromatic web app.
+
+Because the DOM archives render in a consistent cloud browser environment, visual diffs are more reliable and less prone to false positives caused by local environment variations.
+
+By default, the Chromatic plugin will automatically capture the end state of each test. You can also capture intermediate states by using the `takeSnapshot` function provided by the Chromatic plugin.
+
+### Requirements
+
+- Vitest version 4.0.0 and above
+- Vitest project must use `@vitest/browser-playwright`
+
+### Get started
+
+First, install the Chromatic plugin:
+
+```bash
+npm install --save-dev @chromatic-com/vitest
+```
+
+Then, add the plugin to your Vitest configuration:
+
+```ts{3,6-8} [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser-playwright'
+import { chromaticPlugin } from '@chromatic-com/vitest/plugin'
+
+export default defineConfig({
+  plugins: [chromaticPlugin({
+    // ...options here: https://www.chromatic.com/docs/vitest/configure/
+  })],
+  test: {
+    browser: {
+      provider: playwright(),
+      enabled: true,
+      instances: [{ browser: 'chromium' }],
+    },
+  },
+})
+```
+
+That's it! Your Vitest setup is now integrated with the Chromatic plugin for visual regression testing.
+
+### Configuring tests
+
+You can optionally configure test suites or individual tests. For example, to take additional snapshots at specific points in a test, you can use the `takeSnapshot` function as shown below.
+
+```tsx{4,8-13,24-25,31-34} [accordion.test.tsx]
+import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
+import { render } from 'vitest-browser-react'
+import { configure, takeSnapshot } from '@chromatic-com/vitest'
+import { Accordion } from '../src/components/Accordion'
+
+test('Can open accordion', async () => {
+  // 👇 Configure Chromatic plugin for this test
+  configure({
+    // 👇 Prevent automatic snapshot at the end of the test
+    disableAutoSnapshot: true,
+    // ...more options here: https://www.chromatic.com/docs/vitest/configure/
+  })
+
+  await render(<Accordion header="Example header">Example content</Accordion>)
+
+  const toggle = page.getByRole('button', { name: 'Example header' })
+  const content = page.getByText('Example content')
+
+  // Open accordion, content should become visible
+  await toggle.click()
+  await expect.element(content).toBeInTheDocument()
+
+  // 👇 Call takeSnapshot to capture the component at this point in the test.
+  await takeSnapshot()
+
+  // Close accordion, content should become hidden
+  await toggle.click()
+  await expect.element(content).not.toBeInTheDocument()
+
+  // You can call takeSnapshot multiple times if necessary.
+  // To help disambiguate, you can give the snapshot a name,
+  // which is passed as the first argument to takeSnapshot.
+  await takeSnapshot('closed')
+})
+```
+
+### Running tests
+
+First, [create a Chromatic Vitest project](https://www.chromatic.com/signup) and take note of the token, which will be used in the final step below.
+
+Second, run your Vitest tests as normal:
+
+```bash
+npx vitest
+```
+
+Finally, run the Chromatic CLI to upload your snapshots:
+
+```bash
+npx chromatic --vitest -t=<YOUR_PROJECT_TOKEN>
+```
+
+Once your visual regression tests finish, it will log a link where you can review the results.
+
+### CI setup
+
+Running in CI is exactly the same as running locally: first run `vitest`, then run `chromatic`.
+
+To make this even more straightforward, we provide a GitHub Action:
+
+```yaml [.github/workflows/chromatic.yml]
+name: Chromatic
+
+on: push
+
+jobs:
+  tests:
+    name: Run Vitest & Chromatic
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.20.0
+      - name: Install dependencies
+        # ⚠️ See your package manager's documentation for the correct command to install dependencies in a CI environment.
+        run: npm ci
+      - name: Run Vitest tests
+        run: npx vitest run
+        env:
+          HOME: /root
+      - name: Run Chromatic
+        uses: chromaui/action@latest
+        with:
+          # ⚠️ Enable Vitest
+          vitest: true
+          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        # ⚠️ Optionally configure the archive location with env vars
+        env:
+          CHROMATIC_ARCHIVE_LOCATION: .vitest/chromatic
+```
+
+If you're not using GitHub Actions, we have [guides for popular CI providers like GitLab, Bitbucket, and CircleCI](https://www.chromatic.com/docs/ci/).
+
+Once you have Chromatic set up in your CI workflow, you'll now be able to [quickly review and collaborate on visual changes directly in the Chromatic app](https://www.chromatic.com/docs/in-pull-request/).
 
 ::::
 
