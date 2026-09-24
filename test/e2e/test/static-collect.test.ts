@@ -1705,6 +1705,36 @@ test('properties on test don\'t generate tests', async () => {
   `)
 })
 
+test('unknown properties on test don\'t generate tests', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    test.beforeEach(() => {})
+    test.afterAll(() => {})
+
+    test('actual test', () => {
+      const test = { run(_x) {} }
+      test.run(1)
+      const it = []
+      it.push('item')
+      const describe = { run(_x) {} }
+      describe.run('name')
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "actual test": {
+        "errors": [],
+        "fullName": "actual test",
+        "id": "1709388417_0",
+        "location": "7:5",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 async function collectTestModule(code: string, options?: CliOptions) {
   const vitest = await createVitest(
     'test',

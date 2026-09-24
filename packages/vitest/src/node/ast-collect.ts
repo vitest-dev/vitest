@@ -74,6 +74,16 @@ const INTERMEDIATE_CALL_PROPERTIES = new Set([
   'override',
 ])
 
+const CHAIN_PROPERTIES = new Set([
+  ...INTERMEDIATE_CALL_PROPERTIES,
+  'concurrent',
+  'shuffle',
+  'skip',
+  'only',
+  'todo',
+  'fails',
+])
+
 function isTestFunctionName(name: string) {
   return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
 }
@@ -180,6 +190,11 @@ function astParseFile(filepath: string, code: string) {
         return
       }
       const properties = getProperties(callee)
+      // e.g. `test.beforeEach()` or a local `it.push()`
+      if (properties.some(prop => !CHAIN_PROPERTIES.has(prop) && !isVitestFunctionName(prop) && prop !== 'Vitest')) {
+        verbose?.(`Skipping ${name} (unknown property)`)
+        return
+      }
       const property = callee?.property?.name
       // intermediate calls like .each(), .for() will be picked up in the next iteration
       if (property && INTERMEDIATE_CALL_PROPERTIES.has(property)) {
