@@ -768,7 +768,7 @@ First, install the Chromatic plugin:
 npm install -D @chromatic-com/vitest
 ```
 ```bash [yarn]
-yarn add -D vitest @chromatic-com/vitest
+yarn add -D @chromatic-com/vitest
 ```
 ```bash [pnpm]
 pnpm add -D @chromatic-com/vitest
@@ -847,7 +847,7 @@ First, [create a Chromatic Vitest project](https://www.chromatic.com/signup) and
 Second, run your Vitest tests as normal:
 
 ```bash
-npx vitest
+npm run test # Your test script that runs vitest
 ```
 
 Finally, run the Chromatic CLI to upload your snapshots:
@@ -888,7 +888,7 @@ jobs:
       - run: npx playwright install chromium --only-shell
 
       - name: Run Vitest tests
-        run: npx vitest run
+        run: npm run test
 
       - name: Run Chromatic
         uses: chromaui/action@latest
