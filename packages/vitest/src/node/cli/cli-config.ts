@@ -538,7 +538,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       hooks: {
         description:
-          'Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](https://vitest.dev/config/sequence#sequence-hooks) for more information (default: `"parallel"`)',
+          'Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](https://vitest.dev/config/sequence#sequence-hooks) for more information (default: `"stack"`)',
         argument: '<order>',
       },
       setupFiles: {
@@ -664,7 +664,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<placeholder>',
       },
       expand: {
-        description: 'Expand all common lines (default: `true`)',
+        description: 'Expand all common lines (default: `false`)',
       },
       includeChangeCounts: {
         description: 'Include comparison counts in diff output (default: `false`)',
@@ -673,7 +673,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Omit annotation lines from the output (default: `false`)',
       },
       printBasicPrototype: {
-        description: 'Print basic prototype Object and Array (default: `true`)',
+        description: 'Print basic prototype Object and Array (default: `false`)',
       },
       maxDepth: {
         description: 'Limit the depth to recurse when printing nested objects (default: `20`)',

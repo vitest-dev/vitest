@@ -49,7 +49,7 @@ export type ApiConfig = Pick<
   /**
    * Allow any write operations from the API server.
    *
-   * @default true if `api.host` is exposed to network, false otherwise
+   * @default false if `api.host` is exposed to network, true otherwise
    */
   allowWrite?: boolean
   /**
@@ -57,7 +57,7 @@ export type ApiConfig = Pick<
    * If `api.host` is exposed to network and `allowWrite` is true,
    * anyone connected to the API server can run arbitrary code on your machine.
    *
-   * @default true if `api.host` is exposed to network, false otherwise
+   * @default false if `api.host` is exposed to network, true otherwise
    */
   allowExec?: boolean
 }

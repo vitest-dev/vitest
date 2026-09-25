@@ -57,7 +57,7 @@ export default {
 ## diff.expand
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `false`
 - **CLI:** `--diff.expand=false`
 
 Expand all common lines.
