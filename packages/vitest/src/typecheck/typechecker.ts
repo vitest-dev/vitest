@@ -273,8 +273,17 @@ export class Typechecker {
   }
 
   public async stop(): Promise<void> {
-    this.process?.kill()
+    const child = this.process
     this.process = undefined
+    if (!child) {
+      return
+    }
+
+    // the open pipes keep the main process alive even after the checker is gone
+    child.stdout?.destroy()
+    child.stderr?.destroy()
+
+    await killProcessTree(child)
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string): Promise<void> {
@@ -343,6 +352,7 @@ export class Typechecker {
     const child = x(typecheck.checker, args, {
       nodeOptions: {
         cwd: root,
+        detached: process.platform !== 'win32',
         stdio: 'pipe',
       },
       throwOnError: false,
@@ -522,4 +532,33 @@ function findGeneratedPosition(traceMap: TraceMap, { line, column, source }: { l
     }
   }
   return { line: null, column: null }
+}
+
+async function killProcessTree(child: ChildProcess): Promise<void> {
+  if (child.pid == null || child.exitCode !== null || child.signalCode !== null) {
+    child.kill()
+    return
+  }
+
+  // Windows has no process groups, so `taskkill` walks the tree instead
+  if (process.platform === 'win32') {
+    const killed = await x('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
+      nodeOptions: { stdio: 'ignore' },
+      throwOnError: false,
+      timeout: 5000,
+    }).then(result => result.exitCode === 0, () => false)
+
+    if (!killed) {
+      child.kill()
+    }
+    return
+  }
+
+  // `prepare` spawns detached, which makes the child the leader of its own group
+  try {
+    process.kill(-child.pid)
+  }
+  catch {
+    child.kill()
+  }
 }
