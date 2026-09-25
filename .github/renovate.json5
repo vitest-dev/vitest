@@ -29,6 +29,7 @@
     "@types/chai",
     "@sinonjs/fake-timers",
     "cac",
+    "rrweb-snapshot",
     // Transitive dependency that we patch
     "acorn",
     // Keep using codemirror 5
