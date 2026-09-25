@@ -108,6 +108,29 @@ export default {
   await vitest.waitForStdout('2 passed')
 })
 
+test('editing force rerun trigger reruns all tests when the project path contains a dot-prefixed directory', async () => {
+  const fs = testUtils.useTmpFS({
+    ...Object.fromEntries(Object.entries(baseFixture).map(([file, content]) => [`.worktree/${file}`, content])),
+    '.worktree/force-watch/trigger.js': 'export const trigger = false\n',
+    '.worktree/vitest.config.ts': /* ts */ `
+export default {
+  test: {
+    forceRerunTriggers: ['**/force-watch/**'],
+  },
+}
+`,
+  })
+  const { vitest } = await testUtils.runVitest({ root: resolve(fs.root, '.worktree'), watch: true })
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('.worktree/force-watch/trigger.js', modifyContent)
+
+  await vitest.waitForStdout('RERUN  ../../force-watch/trigger.js')
+  await vitest.waitForStdout('2 passed')
+})
+
 test('editing test file triggers re-run', async () => {
   const { vitest, fs } = await testUtils.runInlineTests(baseFixture, { watch: true })
 
