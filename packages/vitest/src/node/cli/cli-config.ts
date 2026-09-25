@@ -835,6 +835,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeTaskLocation: {
     description: 'Collect test and suite locations in the `location` property',
   },
+  artifactsDir: {
+    description: 'The root directory where Vitest stores shared artifacts created through `createReport()` (default: `.vitest`)',
+    argument: '<dir>',
+  },
   attachmentsDir: {
     description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest/attachments`)',
     argument: '<dir>',

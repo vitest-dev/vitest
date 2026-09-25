@@ -84,7 +84,7 @@ export interface Report {
 
 export function createReport(ctx: Vitest, scope: string): Report {
   const root = ctx.config.root
-  const vitestDir = resolve(root, '.vitest')
+  const vitestDir = resolve(root, ctx.config.artifactsDir)
   const reportDir = resolve(vitestDir, scope)
 
   fsSync.mkdirSync(reportDir, { recursive: true })

@@ -26,7 +26,7 @@ export default class HTMLReporter implements Reporter {
     this.ctx = ctx
     this.reporterDir = resolve(
       this.ctx.config.root,
-      this.options.outputDir || '.vitest',
+      this.options.outputDir || this.ctx.config.artifactsDir,
     )
   }
 

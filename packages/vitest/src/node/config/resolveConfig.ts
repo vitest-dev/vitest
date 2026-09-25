@@ -245,6 +245,7 @@ export function resolveTestConfig(
   // appended to the same exclude list below, keeping them out of the report.
   if (globalConfig) {
     resolved.coverage = globalConfig.coverage
+    resolved.artifactsDir = globalConfig.artifactsDir
     resolved.attachmentsDir = globalConfig.attachmentsDir
     resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
   }
@@ -636,10 +637,11 @@ export function resolveTestConfig(
     resolved.runner = resolvePath(resolved.runner, resolved.root)
   }
 
-  resolved.attachmentsDir = resolve(
-    resolved.root,
-    resolved.attachmentsDir ?? '.vitest/attachments',
-  )
+  resolved.artifactsDir = resolve(resolved.root, resolved.artifactsDir ?? '.vitest')
+
+  resolved.attachmentsDir = resolved.attachmentsDir
+    ? resolve(resolved.root, resolved.attachmentsDir)
+    : resolve(resolved.artifactsDir, 'attachments')
 
   if (resolved.snapshotEnvironment) {
     resolved.snapshotEnvironment = resolvePath(

@@ -932,6 +932,16 @@ export interface InlineConfig {
   includeTaskLocation?: boolean
 
   /**
+   * Root directory for shared artifacts created through
+   * `vitest.createReport()` (blob reports and other reporter outputs).
+   * Explicit output paths (`outputFile`, `attachmentsDir`, etc.) still take
+   * precedence and, when unset, default underneath this directory.
+   *
+   * @default '.vitest'
+   */
+  artifactsDir?: string
+
+  /**
    * Directory path for storing attachments created by `context.annotate`
    *
    * @default '.vitest/attachments'
