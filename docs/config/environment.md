@@ -65,7 +65,7 @@ You can also define a custom environment. When non-builtin environment is used, 
 The custom environment file should export an object with the shape of `Environment`:
 
 ```ts [environment.js]
-import type { Environment } from 'vitest'
+import type { Environment } from 'vitest/runtime'
 
 export default <Environment>{
   name: 'custom',
