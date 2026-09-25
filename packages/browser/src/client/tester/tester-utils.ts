@@ -133,7 +133,6 @@ export class CommandsManager {
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
-    args = args.filter(arg => arg !== undefined) // remove optional fields
 
     const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command)
       ? `vitest:${command.slice('__vitest_'.length)}`
