@@ -124,6 +124,24 @@ test('pre-bundles vite module runner through vitest in browser mode', async () =
   expect(v.vite.config.optimizeDeps.exclude).not.toContain('vite/module-runner')
 })
 
+test('does not rewrite Vue dependencies when Vue test utils is not installed', async () => {
+  const v = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+
+  const plugins = v.vite.config.optimizeDeps.rolldownOptions?.plugins
+    ?? v.vite.config.optimizeDeps.esbuildOptions?.plugins
+    ?? []
+
+  expect(plugins).not.toContainEqual(expect.objectContaining({ name: 'vue-test-utils-rewrite' }))
+})
+
 test('disables pre-transform requests in node mode', async () => {
   expect(await observePreTransformRequests()).toEqual({
     client: false,
