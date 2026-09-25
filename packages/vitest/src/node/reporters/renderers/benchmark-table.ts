@@ -19,6 +19,48 @@ function formatBenchNumber(number: number): string {
   return res[0].replace(/(?=(?:\d{3})+$)\B/g, ',') + (res[1] ? `.${res[1]}` : '')
 }
 
+/**
+ * Slowdown factor of every task against the fastest one in the same table
+ * (`task.mean / fastest.mean` — the same convention as hyperfine, so the
+ * fastest row is `1` and every other row is greater than `1`).
+ * Returns `undefined` for tasks whose mean latency is not a positive finite
+ * number.
+ */
+export function computeRelativeScores(tasks: readonly TestBenchmarkTask[]): (number | undefined)[] {
+  if (tasks.length <= 1) {
+    return tasks.map(() => undefined)
+  }
+  let fastest: number | undefined
+  for (const task of tasks) {
+    const mean = task.latency?.mean
+    if (typeof mean === 'number' && Number.isFinite(mean) && mean > 0) {
+      fastest = fastest == null ? mean : Math.min(fastest, mean)
+    }
+  }
+  if (fastest == null) {
+    return tasks.map(() => undefined)
+  }
+  return tasks.map((task) => {
+    const mean = task.latency?.mean
+    if (typeof mean !== 'number' || !Number.isFinite(mean) || mean <= 0) {
+      return undefined
+    }
+    return mean / fastest
+  })
+}
+
+/**
+ * Formats a slowdown factor as a `1.50x slower` label. Returns `''` for the
+ * fastest task (`1` — it already gets the `fastest` suffix) and when
+ * undefined.
+ */
+export function formatRelativeScore(score: number | undefined): string {
+  if (score == null || score === 1) {
+    return ''
+  }
+  return `${score.toFixed(2)}x slower`
+}
+
 // Plain-text rendering of the benchmark table (no ANSI colors, no indent).
 // Used by the junit reporter to embed benchmark data in <system-out>.
 export function renderBenchmarkTableText(
@@ -37,9 +79,14 @@ export function renderBenchmarkTableText(
     const rows = tasks.map(renderBenchmarkRow)
     const head = [columnName, ...BENCH_TABLE_HEAD]
     const widths = computeBenchColumnWidths(head, rows)
+    const scoreLabels = computeRelativeScores(tasks).map(formatRelativeScore)
+    const scoreWidth = Math.max(...scoreLabels.map(label => label.length))
     lines.push(padBenchRow(head, widths).join('  '))
-    for (const task of tasks) {
+    for (const [index, task] of tasks.entries()) {
       let row = padBenchRow(renderBenchmarkRow(task), widths).join('  ')
+      if (scoreWidth > 0) {
+        row += `  ${scoreLabels[index].padStart(scoreWidth)}`
+      }
       if (task.rank === 1 && tasks.length > 1) {
         row += '   fastest'
       }
