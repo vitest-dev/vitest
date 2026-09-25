@@ -37,6 +37,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     : Math.max(maxThreadsCount, 1)
 
   const projectPools = new WeakMap<TestProject, BrowserPool>()
+  const pools = new Set<BrowserPool>()
 
   const ensurePool = (project: TestProject) => {
     if (projectPools.has(project)) {
@@ -49,6 +50,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       maxWorkers: getThreadsCount(project),
     })
     projectPools.set(project, pool)
+    pools.add(pool)
     vitest.onCancel(() => {
       pool.cancel()
     })
@@ -170,21 +172,31 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       // a frozen or crashed browser never answers the close message;
       // don't wait for it forever, the browser process is killed
       // when this process exits anyway
-      await Promise.all(Array.from(providers, (provider) => {
+      const withTimeout = (promise: Promise<void>, message: string) => {
         let timer: ReturnType<typeof setTimeout>
         return Promise.race([
-          Promise.resolve(provider.close()).finally(() => clearTimeout(timer)),
+          promise.finally(() => clearTimeout(timer)),
           new Promise<void>((resolve) => {
             timer = setTimeout(() => {
-              vitest.logger.warn(`The browser did not close within ${PROVIDER_CLOSE_TIMEOUT}ms. The browser process will be killed when the process exits.`)
+              vitest.logger.warn(message)
               resolve()
             }, PROVIDER_CLOSE_TIMEOUT)
             timer.unref()
           }),
         ])
-      }))
+      }
+
+      await Promise.all(Array.from(pools, pool => withTimeout(
+        pool.waitForClosedPages(),
+        `The browser did not close its pages within ${PROVIDER_CLOSE_TIMEOUT}ms. The browser process will be killed when the process exits.`,
+      )))
+      await Promise.all(Array.from(providers, provider => withTimeout(
+        Promise.resolve(provider.close()),
+        `The browser did not close within ${PROVIDER_CLOSE_TIMEOUT}ms. The browser process will be killed when the process exits.`,
+      )))
       vitest._browserSessions.sessionIds.clear()
       providers.clear()
+      pools.clear()
       vitest.projects.forEach((project) => {
         project.browser?.state.orchestrators.forEach((orchestrator) => {
           orchestrator.$close()
@@ -207,6 +219,7 @@ class BrowserPool {
   private _providedContext: string | undefined
 
   private readySessions: Set<string>
+  private _closingPages: Promise<void>[] = []
 
   private _traces: Traces
   private _otel: {
@@ -344,11 +357,44 @@ class BrowserPool {
     return orchestrator
   }
 
+  public async waitForClosedPages(): Promise<void> {
+    await Promise.all(this._closingPages)
+  }
+
+  // in watch mode the pages are reused by the next run
+  private closePages(): void {
+    const provider = this.project.browser!.provider
+
+    if (this.project.vitest.config.watch || !provider.closePage) {
+      return
+    }
+
+    const sessionIds = [...this.orchestrators.keys()]
+    sessionIds.forEach((sessionId) => {
+      this.readySessions.delete(sessionId)
+      this.orchestrators.delete(sessionId)
+    })
+
+    // not awaited here: a browser that stopped answering would hold up the whole run,
+    // `close` waits for it instead
+    this._closingPages.push(Promise.all(sessionIds.map(async (sessionId) => {
+      try {
+        // the page cannot go away while its results are still being handled
+        await this.project.vitest._browserSessions.waitForUpdates(sessionId)
+        await provider.closePage!(sessionId)
+      }
+      catch (error) {
+        debug?.('[%s] failed to close the page: %s', sessionId, error)
+      }
+    })).then(() => undefined))
+  }
+
   private finishSession(sessionId: string): void {
     this.readySessions.add(sessionId)
 
     // the last worker finished running tests
     if (this.readySessions.size === this.orchestrators.size) {
+      this.closePages()
       this._otel.span.end()
       this._promise?.resolve()
       this._promise = undefined
