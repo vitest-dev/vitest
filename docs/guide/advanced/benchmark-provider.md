@@ -22,7 +22,7 @@ export default defineConfig({
 })
 ```
 
-The module must has a default export with an object that implements `BenchmarkProvider`. This example wraps Tinybench to demonstrate how registrations and results flow through a provider. If you use Tinybench in your provider, add it as a direct dependency of your project.
+The module must have a default export with an object that implements `BenchmarkProvider`. This example wraps Tinybench to demonstrate how registrations and results flow through a provider. If you use Tinybench in your provider, add it as a direct dependency of your project.
 
 ```ts [benchmark-provider.ts]
 import type { BenchmarkProvider } from 'vitest'
