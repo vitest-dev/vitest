@@ -10,7 +10,7 @@
     "types": [
       "vite/client",
       "vitest-browser-react",
-      "vitest/import-meta"
+      "vitest/importMeta"
     ],
     "noEmit": true,
     "esModuleInterop": true
