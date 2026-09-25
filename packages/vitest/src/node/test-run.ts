@@ -47,7 +47,9 @@ export class TestRun {
     await Promise.all(
       files.map((file) => {
         const testModule = this.vitest.state.getReportedEntity(file) as TestModule
-        return this.vitest.report('onTestModuleCollected', testModule)
+        return this.vitest.report('onTestModuleCollected', testModule).catch((error) => {
+          this.vitest.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+        })
       }),
     )
   }

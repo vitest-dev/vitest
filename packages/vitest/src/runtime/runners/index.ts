@@ -114,7 +114,14 @@ export async function resolveTestRunner(
     }
     files.forEach(sanitizeRetryConditions)
 
-    rpc().onCollected(files)
+    // The browser runner sends a second onCollected RPC from its own hook, so
+    // keep the original concurrent ordering there.
+    if (testRunner.pool === 'browser') {
+      rpc().onCollected(files)
+    }
+    else {
+      await rpc().onCollected(files)
+    }
     await originalOnCollected?.call(testRunner, files)
   }
 
