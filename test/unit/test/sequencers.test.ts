@@ -154,12 +154,24 @@ describe('base sequencer', () => {
 })
 
 describe('random sequencer', () => {
+  test('uses the same file order for the same seed regardless of input order', async () => {
+    const ctx = buildCtx()
+    ctx.config.sequence.seed = 101
+    const sequencer = new RandomSequencer(ctx)
+    const files = workspaced(['a', 'b', 'c', 'd'])
+
+    const first = await sequencer.sort([...files])
+    const second = await sequencer.sort([...files].reverse())
+
+    expect(second).toStrictEqual(first)
+  })
+
   test('sorting is the same when seed is defined', async () => {
     const ctx = buildCtx()
     ctx.config.sequence.seed = 101
     const sequencer = new RandomSequencer(ctx)
     const files = workspaced(['b', 'a', 'c'])
     const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['a', 'c', 'b']))
+    expect(sorted).toStrictEqual(workspaced(['b', 'c', 'a']))
   })
 })
