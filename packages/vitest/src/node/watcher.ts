@@ -2,7 +2,7 @@ import type { Vitest } from './core'
 import type { TestProject } from './project'
 import { readFileSync } from 'node:fs'
 import { noop, slash } from '@vitest/utils/helpers'
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 
 export class VitestWatcher {
@@ -173,7 +173,8 @@ export class VitestWatcher {
       return false
     }
 
-    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
+    const isTrigger = pm(this.vitest.config.forceRerunTriggers)
+    if (isTrigger(filepath) || isTrigger(relative(this.vitest.config.root, filepath))) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
       return true
     }

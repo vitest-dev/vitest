@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
-import { runInlineTests, useFS } from '#test-utils'
+import { runInlineTests, runVitest, useFS, useTmpFS } from '#test-utils'
 
 test('custom vcsProvider that returns specific files runs only matching tests', async () => {
   const { testTree, stderr } = await runInlineTests({
@@ -130,6 +130,85 @@ test('custom vcsProvider that returns all files runs all tests', async () => {
       },
     }
   `)
+})
+
+test('forceRerunTriggers match when the project path contains a dot-prefixed directory', async () => {
+  const fs = useTmpFS({
+    '.worktree/vitest.config.js': `
+      import path from 'node:path'
+      export default {
+        test: {
+          forceRerunTriggers: ['**/package.json'],
+          experimental: {
+            vcsProvider: {
+              async findChangedFiles({ root }) {
+                return [path.resolve(root, 'package.json')]
+              },
+            },
+          },
+        },
+      }
+    `,
+    '.worktree/package.json': '{}',
+    '.worktree/basic.test.ts': `
+      import { test, expect } from 'vitest'
+      test('basic test', () => {
+        expect(1).toBe(1)
+      })
+    `,
+  })
+
+  const { testTree, stderr } = await runVitest({
+    root: resolve(fs.root, '.worktree'),
+    changed: true,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic test": "passed",
+      },
+    }
+  `)
+})
+
+test('forceRerunTriggers ignore dot-prefixed directories inside the project', async () => {
+  const { testTree, stderr } = await runInlineTests({
+    'vitest.config.js': `
+      import path from 'node:path'
+      export default {
+        test: {
+          passWithNoTests: true,
+          forceRerunTriggers: ['**/package.json'],
+          experimental: {
+            vcsProvider: {
+              async findChangedFiles({ root }) {
+                return [path.resolve(root, '.output/package.json')]
+              },
+            },
+          },
+        },
+      }
+    `,
+    '.output/package.json': '{}',
+    'basic.test.ts': `
+      import { test, expect } from 'vitest'
+      test('basic test', () => {
+        expect(1).toBe(1)
+      })
+    `,
+  }, {
+    changed: true,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+    exclude:  **/node_modules/**, **/.git/**
+
+    "
+  `)
+  expect(testTree()).toMatchInlineSnapshot('{}')
 })
 
 function createRoot(structure: Record<string, string>) {
