@@ -362,6 +362,10 @@ export function normalizeModuleId(file: string): string {
     return file
   }
 
+  if (file.startsWith('\0')) {
+    return file
+  }
+
   // unix style, but Windows path still starts with the drive letter to check the root
   const unixFile = slash(file)
     .replace(/^\/@fs\//, isWindows ? '' : '/')
