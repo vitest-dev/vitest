@@ -554,7 +554,7 @@ Changes the order in which hooks are executed. Accepted values are: "stack", "li
 - **CLI:** `--sequence.setupFiles <order>`
 - **Config:** [sequence.setupFiles](/config/sequence#sequence-setupfiles)
 
-Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"parallel"`)
+Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"list"`)
 
 ### inspect
 

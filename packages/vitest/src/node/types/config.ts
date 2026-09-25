@@ -128,7 +128,7 @@ interface SequenceOptions {
    * Defines how setup files should be ordered
    * - 'parallel' will run all setup files in parallel
    * - 'list' will run all setup files in the order they are defined in the config file
-   * @default 'parallel'
+   * @default 'list'
    */
   setupFiles?: SequenceSetupFiles
   /**
