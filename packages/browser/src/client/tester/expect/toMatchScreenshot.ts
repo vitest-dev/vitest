@@ -40,6 +40,11 @@ export default async function toMatchScreenshot(
     : `${this.currentTestName} ${counter.current}`
 
   const isPageTarget = isBrowserPage(actual)
+  const isFullPage = isPageTarget && options.screenshotOptions && 'fullPage' in options.screenshotOptions && options.screenshotOptions.fullPage
+
+  if (isFullPage && window.frameElement) {
+    (window.frameElement as HTMLIFrameElement).style.setProperty('--inner-height', `${document.documentElement.scrollHeight}px`)
+  }
 
   const [element, ...mask] = await Promise.all([
     isPageTarget ? undefined : serializeElement(actual, options),
@@ -74,6 +79,10 @@ export default async function toMatchScreenshot(
       },
     ] satisfies ScreenshotMatcherArguments,
   )
+
+  if (isFullPage && window.frameElement) {
+    (window.frameElement as HTMLIFrameElement).style.removeProperty('--inner-height')
+  }
 
   if (result.pass === false) {
     const attachments: VisualRegressionArtifact['attachments'] = []
