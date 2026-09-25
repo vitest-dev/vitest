@@ -121,6 +121,12 @@ tests/test1.test.ts
 tests/test2.test.ts
 ```
 
+Use `--related` to list only the tests that import the specified source files:
+
+```bash
+vitest list --related --filesOnly src/index.ts src/utils.ts
+```
+
 Since Vitest 5, `vitest list` [parses test files](/api/advanced/vitest#parsespecifications) statically instead of running them to collect tests. Pass `--no-static-parse` to run the files instead. Vitest parses test files with limited concurrency, defaulting to `os.availableParallelism()`. You can change it via the `--static-parse-concurrency` option.
 
 ### `vitest doctor`

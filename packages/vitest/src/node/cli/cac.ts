@@ -193,7 +193,13 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   addCliOptions(
     cli
       .command('list [...filters]', undefined, options)
-      .action((filters, options) => collect(filters, options)),
+      .action((filters, options) => {
+        if (options.related === true) {
+          const { related, ...cliOptions } = options
+          return collect([], { ...cliOptions, related: filters })
+        }
+        return collect(filters, options)
+      }),
     collectCliOptionsConfig,
   )
 
@@ -252,6 +258,10 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   if (arrayArgs[2] === 'related') {
     options.related = args
     options.passWithNoTests ??= true
+    args = []
+  }
+  if (arrayArgs[2] === 'list' && options.related === true) {
+    options.related = args
     args = []
   }
   return {
