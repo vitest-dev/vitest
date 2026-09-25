@@ -62,10 +62,6 @@ export async function createVitest(
   try {
     await vitest._start(config)
 
-    if (vitest.config.api.port && vitest.config.ui && vitest.config.open) {
-      vitest.vite.openBrowser()
-    }
-
     return vitest
   }
   // Vitest can fail at any point during setup or inside a custom plugin.
