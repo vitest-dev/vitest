@@ -1,5 +1,17 @@
 # e2e
 
+## Typechecking
+
+The [`./typecheck`](./typecheck) directory contains integration tests for Vitest's typechecker. The `typecheck` project runs tests that start Vitest programmatically, while the `types` script runs the type fixtures directly, including fixtures that intentionally fail.
+
+```bash
+# Run typechecker integration tests
+pnpm -C test/e2e test --project=typecheck
+
+# Run type fixtures directly
+pnpm -C test/e2e types
+```
+
 ## Snapshots
 
 This directory [`./snapshots`](./snapshots) contains integration tests for Vitest's snapshot functionality. It uses a meta-testing approach where integration tests programmatically run fixture tests to validate snapshot behavior, such as, snapshot update, snapshot error formatting, summary reporting, obsolete snapshots handling, etc.
