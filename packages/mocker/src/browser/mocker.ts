@@ -2,6 +2,7 @@ import type { CreateMockInstanceProcedure } from '../automocker'
 import type { MockedModule, MockedModuleType } from '../registry'
 import type { ModuleMockContext, ModuleMockOptions, TestModuleMocker } from '../types'
 import type { ModuleMockerInterceptor } from './interceptor'
+import { withTrailingSlash } from '@vitest/utils/helpers'
 import { extname, join } from 'pathe'
 import { mockObject } from '../automocker'
 import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
@@ -260,11 +261,11 @@ export class ModuleMocker implements TestModuleMocker {
     const fsRoot = join('/@fs/', config.root)
 
     // URL can be /file/path.js, but path is resolved to /file/path
-    if (path.startsWith(config.root)) {
+    if (path.startsWith(withTrailingSlash(config.root))) {
       return path.slice(config.root.length)
     }
 
-    if (path.startsWith(fsRoot)) {
+    if (path.startsWith(withTrailingSlash(fsRoot))) {
       return path.slice(fsRoot.length)
     }
 
