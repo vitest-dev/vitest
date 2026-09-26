@@ -1284,6 +1284,9 @@ importers:
       '@vitest/test-dep-optimizer-optimized':
         specifier: file:./deps/optimizer/optimized
         version: file:test/e2e/deps/optimizer/optimized
+      '@vitest/test-dep-optimizer-unparsable':
+        specifier: file:./deps/optimizer/unparsable
+        version: file:test/e2e/deps/optimizer/unparsable
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -5405,6 +5408,9 @@ packages:
 
   '@vitest/test-dep-optimizer-optimized@file:test/e2e/deps/optimizer/optimized':
     resolution: {directory: test/e2e/deps/optimizer/optimized, type: directory}
+
+  '@vitest/test-dep-optimizer-unparsable@file:test/e2e/deps/optimizer/unparsable':
+    resolution: {directory: test/e2e/deps/optimizer/unparsable, type: directory}
 
   '@vitest/test-dep1@file:test/unit/deps/dep1':
     resolution: {directory: test/unit/deps/dep1, type: directory}
@@ -14047,6 +14053,8 @@ snapshots:
   '@vitest/test-dep-optimizer-external@file:test/e2e/deps/optimizer/external': {}
 
   '@vitest/test-dep-optimizer-optimized@file:test/e2e/deps/optimizer/optimized': {}
+
+  '@vitest/test-dep-optimizer-unparsable@file:test/e2e/deps/optimizer/unparsable': {}
 
   '@vitest/test-dep1@file:test/unit/deps/dep1': {}
 
