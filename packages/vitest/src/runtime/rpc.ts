@@ -8,6 +8,8 @@ import { getWorkerState } from './utils'
 
 const { get } = Reflect
 
+const globalProcess = globalThis.process
+
 function withSafeTimers(fn: () => void) {
   const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate }
     = getSafeTimers()
@@ -17,7 +19,7 @@ function withSafeTimers(fn: () => void) {
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
 
-  const currentNextTick = globalThis.process?.nextTick
+  const currentNextTick = globalProcess?.nextTick
 
   try {
     globalThis.setTimeout = setTimeout
@@ -30,8 +32,8 @@ function withSafeTimers(fn: () => void) {
       globalThis.clearImmediate = clearImmediate
     }
 
-    if (globalThis.process && nextTick) {
-      globalThis.process.nextTick = nextTick
+    if (globalProcess && nextTick) {
+      globalProcess.nextTick = nextTick
     }
 
     const result = fn()
@@ -43,9 +45,9 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process && nextTick) {
+    if (globalProcess && nextTick) {
       nextTick(() => {
-        globalThis.process.nextTick = currentNextTick
+        globalProcess.nextTick = currentNextTick
       })
     }
   }

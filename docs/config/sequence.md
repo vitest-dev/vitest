@@ -156,7 +156,7 @@ This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is 
 ## sequence.setupFiles {#sequence-setupfiles}
 
 - **Type:** `'list' | 'parallel'`
-- **Default:** `'parallel'`
+- **Default:** `'list'`
 - **CLI:** `--sequence.setupFiles=<value>`
 
 Changes the order in which setup files are executed.

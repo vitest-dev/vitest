@@ -132,3 +132,70 @@ it('re-evaluates an extensionless setup file when isolation is disabled', async 
     }
   `)
 })
+
+describe('sequence.setupFiles', () => {
+  function run(expectedOrder: string[], sequence?: { setupFiles: 'list' | 'parallel' }) {
+    return runInlineTests({
+      'vitest.config.js': `
+        export default {
+          test: {
+            setupFiles: ['./first-setup.js', './second-setup.js'],
+            ${sequence ? `sequence: ${JSON.stringify(sequence)},` : ''}
+          },
+        }
+      `,
+      'first-setup.js': `
+        globalThis.setupOrder ??= []
+        await new Promise(resolve => setTimeout(resolve, 100))
+        globalThis.setupOrder.push('first')
+      `,
+      'second-setup.js': `
+        globalThis.setupOrder ??= []
+        globalThis.setupOrder.push('second')
+      `,
+      'order.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('setup order', () => {
+          expect(globalThis.setupOrder).toEqual(${JSON.stringify(expectedOrder)})
+        })
+      `,
+    })
+  }
+
+  it('runs setup files in the defined order by default', async () => {
+    const { stderr, testTree } = await run(['first', 'second'])
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "order.test.js": {
+          "setup order": "passed",
+        },
+      }
+    `)
+  })
+
+  it('runs setup files in the defined order with "list"', async () => {
+    const { stderr, testTree } = await run(['first', 'second'], { setupFiles: 'list' })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "order.test.js": {
+          "setup order": "passed",
+        },
+      }
+    `)
+  })
+
+  it('runs setup files in parallel with "parallel"', async () => {
+    const { stderr, testTree } = await run(['second', 'first'], { setupFiles: 'parallel' })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "order.test.js": {
+          "setup order": "passed",
+        },
+      }
+    `)
+  })
+})
