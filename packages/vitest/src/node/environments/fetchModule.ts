@@ -290,6 +290,16 @@ class ModuleFetcher {
       map = { mappings: '' }
     }
     const moduleType = cachedModule.moduleType
+
+    const importedModules = await Promise.all(cachedModule.importedUrls.map(async (url) => {
+      return environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
+    }))
+    if (importedModules.some(moduleNode => moduleNode?.file && !existsSync(moduleNode.file))) {
+      debugFs?.(`cached module ${moduleGraphModule.id} has a missing dependency, re-transforming`)
+      moduleGraphModule.transformResult = null
+      return undefined
+    }
+
     moduleGraphModule.transformResult = {
       code: cachedModule.code,
       map,
@@ -309,13 +319,12 @@ class ModuleFetcher {
       }
     }
 
-    await Promise.all(cachedModule.importedUrls.map(async (url) => {
-      const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
+    for (const moduleNode of importedModules) {
       if (moduleNode) {
         moduleNode.importers.add(moduleGraphModule)
         moduleGraphModule.importedModules.add(moduleNode)
       }
-    }))
+    }
 
     return {
       cached: true as const,
