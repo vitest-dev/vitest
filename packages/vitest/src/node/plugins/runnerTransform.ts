@@ -57,13 +57,33 @@ export function ModuleRunnerTransform(): VitePlugin {
     configEnvironment: {
       order: 'post',
       handler(name, config) {
-        if (name === '__vitest_vm__' || name === '__vitest__') {
+        if (name === '__vitest__') {
           return
         }
         // In browser mode the `client` environment is browser-managed: don't
         // apply node-runner externalization / `optimizeDeps` to it (that would
         // discard the browser `optimizeDeps.include`, e.g. `vitest > expect-type`).
         if (name === 'client' && testConfig.browser?.enabled) {
+          return
+        }
+
+        // `__vitest_vm__` is a `client` consumer whose tests load modules with
+        // the native import mechanism, so it never uses the dependency
+        // optimizer. It still needs to be configured: otherwise the environment
+        // keeps Vite's browser default and discovers dependencies from every
+        // `index.html` in the project, which can abort the run even when no test
+        // imports them. The user-facing options are deliberately not wired for
+        // it, since their output would never be used.
+        const optimizerOptions = name === '__vitest_vm__'
+          ? undefined
+          : testConfig?.deps?.optimizer?.[name]
+
+        config.optimizeDeps = resolveOptimizerConfig(
+          optimizerOptions,
+          config.optimizeDeps,
+        )
+
+        if (name === '__vitest_vm__') {
           return
         }
 
@@ -82,11 +102,6 @@ export function ModuleRunnerTransform(): VitePlugin {
         // to externalize modules and always resolve static imports
         // in both SSR and Client environments
         config.resolve.noExternal = true
-
-        config.optimizeDeps = resolveOptimizerConfig(
-          testConfig?.deps?.optimizer?.[name],
-          config.optimizeDeps,
-        )
       },
     },
   }
