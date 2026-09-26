@@ -16,6 +16,7 @@ import { VitestProjectResolver } from './vitestResolver'
 export function WorkspaceVitestPlugin(
   harness: PluginHarness,
   globalViteConfig: vite.ResolvedConfig,
+  fileProjectRoot?: string,
 ): VitePlugin[] {
   return [
     {
@@ -26,7 +27,10 @@ export function WorkspaceVitestPlugin(
       },
       config(viteConfig) {
         const testConfig = viteConfig.test || {}
-        const root = testConfig.root || viteConfig.root
+        const viteRoot = fileProjectRoot
+          ? resolve(fileProjectRoot, viteConfig.root || '.')
+          : viteConfig.root
+        const root = testConfig.root || viteRoot
 
         const config: ViteConfig = {
           base: '/',

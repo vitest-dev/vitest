@@ -361,6 +361,34 @@ test('a file-based project uses its config file directory as `root`', async () =
   })
 })
 
+test.each([
+  ['relative', '\'./dir\''],
+  ['absolute', 'resolve(import.meta.dirname, \'./dir\')'],
+])('a file-based project respects the Vite `%s` root', async (_kind, root) => {
+  const fs = useTmpFS({
+    './vitest.config.ts': ts`
+      import { defineConfig } from 'vitest/config'
+
+      export default defineConfig({
+        test: { projects: ['./packages/client/vite.config.ts'] },
+      })
+    `,
+    './packages/client/vite.config.ts': ts`
+      import { resolve } from 'node:path'
+      import { defineConfig } from 'vitest/config'
+
+      export default defineConfig({ root: ${root} })
+    `,
+    './packages/client/dir/.keep': '',
+  })
+
+  const config = await resolveConfig({ root: fs.root })
+  const project = config.test.resolvedProjects[0]
+
+  expect(project.viteConfig.root).toBe(resolve(fs.root, 'packages/client/dir'))
+  expect(project.projectConfig.root).toBe(resolve(fs.root, 'packages/client/dir'))
+})
+
 test('`--root` does not override project roots', async () => {
   const fs = useTmpFS({
     './vitest.config.ts': projectsConfig,
