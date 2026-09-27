@@ -857,6 +857,72 @@ describe('vi.spyOn() restoration', () => {
   })
 })
 
+describe('vi.spyOn() on both accessors of the same property', () => {
+  function createAccessor(target: any = {}) {
+    let value = 'original'
+    Object.defineProperty(target, 'prop', {
+      get() { return value },
+      set(v) { value = v },
+      configurable: true,
+    })
+    return target
+  }
+
+  test.for(['get', 'set'] as const)('restoreAllMocks() restores both when %s is spied first', (first) => {
+    const object = createAccessor()
+    const second = first === 'get' ? 'set' : 'get'
+    vi.spyOn(object, 'prop', first).mockImplementation(() => 'mocked')
+    vi.spyOn(object, 'prop', second).mockImplementation(() => 'mocked')
+    vi.restoreAllMocks()
+
+    object.prop = 'written'
+    expect(object.prop).toBe('written')
+  })
+
+  test.for(['get', 'set'] as const)('restoring the %s spy keeps the other one active', (accessor) => {
+    const object = createAccessor()
+    const getSpy = vi.spyOn(object, 'prop', 'get').mockReturnValue('mocked')
+    const setSpy = vi.spyOn(object, 'prop', 'set').mockImplementation(() => {})
+    ;(accessor === 'get' ? getSpy : setSpy).mockRestore()
+
+    object.prop = 'written'
+    if (accessor === 'get') {
+      expect(setSpy).toHaveBeenCalledWith('written')
+      expect(object.prop).toBe('original')
+    }
+    else {
+      expect(object.prop).toBe('mocked')
+      expect(getSpy).toHaveBeenCalled()
+    }
+    vi.restoreAllMocks()
+    object.prop = 'written'
+    expect(object.prop).toBe('written')
+  })
+
+  test.for(['get', 'set'] as const)('restores an inherited accessor when %s is spied first', (first) => {
+    const proto = createAccessor()
+    const object = Object.create(proto)
+    const second = first === 'get' ? 'set' : 'get'
+    vi.spyOn(object, 'prop', first).mockImplementation(() => 'mocked')
+    vi.spyOn(object, 'prop', second).mockImplementation(() => 'mocked')
+    vi.restoreAllMocks()
+
+    expect(Object.getOwnPropertyDescriptor(object, 'prop')).toBeUndefined()
+    object.prop = 'written'
+    expect(object.prop).toBe('written')
+  })
+
+  test('mockRestore() followed by restoreAllMocks() does not leave an own copy', () => {
+    const proto = createAccessor()
+    const object = Object.create(proto)
+    vi.spyOn(object, 'prop', 'get').mockReturnValue('mocked').mockRestore()
+    vi.restoreAllMocks()
+
+    expect(Object.getOwnPropertyDescriptor(object, 'prop')).toBeUndefined()
+    expect(object.prop).toBe('original')
+  })
+})
+
 describe('vi.spyOn() on Vite SSR', () => {
   test('vi.spyOn() throws an error if a getter returns a non-function value in SSR', () => {
     const module = {
