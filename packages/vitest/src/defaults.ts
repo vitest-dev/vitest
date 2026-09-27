@@ -63,6 +63,7 @@ export const configDefaults: Readonly<{
   include: string[]
   exclude: string[]
   teardownTimeout: number
+  workerStartTimeout: number
   forceRerunTriggers: string[]
   update: boolean
   reporters: string[]
@@ -103,6 +104,7 @@ export const configDefaults: Readonly<{
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,
+  workerStartTimeout: 60000,
   forceRerunTriggers: ['**/package.json', '**/{vitest,vite}.config.*'],
   update: false,
   reporters: [

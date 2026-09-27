@@ -401,6 +401,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/teardowntimeout',
                   },
                   {
+                    text: 'workerStartTimeout',
+                    link: '/config/workerstarttimeout',
+                  },
+                  {
                     text: 'silent',
                     link: '/config/silent',
                   },

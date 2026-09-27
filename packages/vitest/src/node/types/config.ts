@@ -475,6 +475,14 @@ export interface InlineConfig {
   teardownTimeout?: number
 
   /**
+   * How long to wait for a test worker to start and report that it is ready, in milliseconds.
+   * The pool waits an extra 30 seconds on top of it before giving up on the worker altogether.
+   *
+   * @default 60000
+   */
+  workerStartTimeout?: number
+
+  /**
    * Silent mode
    *
    * Use `'passed-only'` to see logs from failing tests only.
@@ -1468,6 +1476,7 @@ type NonProjectOptions =
   | 'reporters'
   | 'outputFile'
   | 'teardownTimeout'
+  | 'workerStartTimeout'
   | 'silent'
   | 'forceRerunTriggers'
   | 'testNamePattern'
