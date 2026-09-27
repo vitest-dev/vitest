@@ -467,6 +467,7 @@ export abstract class BaseReporter implements Reporter {
 
     if (hasFailedSnapshot(files)) {
       hints.unshift(c.dim('press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot'))
+      hints.unshift(c.dim('press ') + c.bold(c.yellow('i')) + c.dim(' to interactively review snapshot failures'))
     }
     else {
       hints.push(c.dim('press ') + c.bold('q') + c.dim(' to quit'))

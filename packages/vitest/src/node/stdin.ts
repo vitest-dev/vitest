@@ -1,4 +1,5 @@
 import type { Writable } from 'node:stream'
+import type { Colors } from 'tinyrainbow'
 import type { File, Task } from '../runtime/runner/types'
 import type { Vitest } from './core'
 import type { FilterObject } from './watch-filter'
@@ -15,14 +16,37 @@ const keys = [
   ['r', 'rerun current pattern tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
+  ['i', 'interactively review snapshot failures'],
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
   ['q', 'quit'],
 ]
-const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
+const reviewKeys: readonly [
+  key: string,
+  color: keyof Colors extends infer C
+    ? C extends keyof Colors
+      ? Colors[C] extends (input: unknown) => string
+        ? C
+        : never
+      : never
+    : never,
+  meaning: string,
+  description: string,
+][] = [
+  ['a', 'green', 'accept', 'keep the new snapshot'],
+  ['r', 'red', 'reject', 'keep the old snapshot'],
+  ['s', 'yellow', 'skip', 'keep both for now'],
+]
+const cancelKeys = [
+  'space',
+  'c',
+  'h',
+  ...keys.map(key => key[0]).flat(),
+  ...reviewKeys.map(key => key[0]),
+]
 
-function printShortcutsHelp(): void {
+function printWatchHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
@@ -34,6 +58,24 @@ ${keys
       + c.dim(` to ${i[1]}`),
   )
   .join('\n')}
+`,
+  )
+}
+
+const REVIEW_DESCRIPTION_PADDING = Math.max(...reviewKeys.map(k => k[2].length)) + 2
+
+function printReviewHelp(): void {
+  stdout().write(
+    `
+${reviewKeys.map(
+  ([key, color, meaning, description]) =>
+    `  ${
+      c[color](key)
+    } ${
+      c.reset(meaning)
+    }${' '.repeat(REVIEW_DESCRIPTION_PADDING - meaning.length)
+    }${c.dim(description)}`,
+).join('\n')}
 `,
   )
 }
@@ -123,11 +165,15 @@ export function registerConsoleShortcuts(
 
     // help
     if (name === 'h') {
-      return printShortcutsHelp()
+      return printWatchHelp()
     }
     // update snapshot
     if (name === 'u') {
       return ctx.updateSnapshot()
+    }
+    // interactive review
+    if (name === 'i') {
+      return reviewSnapshots()
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
@@ -158,6 +204,66 @@ export function registerConsoleShortcuts(
 
   async function keypressHandler(str: string, key: any) {
     await _keypressHandler(str, key)
+  }
+
+  async function reviewSnapshots() {
+    off()
+
+    // @todo get failed snapshots
+    const snapshots: [] = []
+
+    for (const _snapshot of snapshots) {
+      // @todo print snapshot view
+      /*
+      Reviewing [i/n]:
+      isFile?{Snapshot file: path/to/snapshot.ext}
+      Snapshot: snapshot-name
+      Source: path/to/test.spec.ts:line
+      ---
+      snapshotDiff
+      ---
+      */
+
+      printReviewHelp()
+
+      const action: string = /* @todo red input */ await new Promise(resolve => setTimeout(resolve, 5_000, 'a'))
+
+      switch (action) {
+        case 'a': {
+          break
+        }
+
+        case 'r': {
+          break
+        }
+
+        case 's': {
+          break
+        }
+
+        default: {
+          // @todo should these just be ignored?
+          break
+        }
+      }
+    }
+
+    // @todo print summary
+    /*
+    Review Summary
+
+      green{accepted}:
+        path/to/test.spec.ts:line (snapshot-name)
+        path/to/test.spec.ts:line (snapshot-name)
+      red{rejected}:
+        path/to/test.spec.ts:line (snapshot-name)
+        path/to/test.spec.ts:line (snapshot-name)
+      yellow{skipped}:
+        path/to/test.spec.ts:line (snapshot-name)
+        path/to/test.spec.ts:line (snapshot-name)
+    */
+
+    on()
   }
 
   async function inputNamePattern() {
