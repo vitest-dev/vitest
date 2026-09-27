@@ -45,6 +45,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     {
       distPath: ctx.distPath,
       teardownTimeout: ctx.config.teardownTimeout,
+      workerStartTimeout: ctx.config.workerStartTimeout,
       state: ctx.state,
     },
     ctx.logger,

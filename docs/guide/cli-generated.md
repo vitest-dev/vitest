@@ -812,6 +812,13 @@ Threshold in milliseconds for a test or suite to be considered slow (default: `3
 
 Default timeout of a teardown function in milliseconds (default: `10000`)
 
+### workerStartTimeout
+
+- **CLI:** `--workerStartTimeout <timeout>`
+- **Config:** [workerStartTimeout](/config/workerstarttimeout)
+
+Timeout for a test worker to start and report ready in milliseconds (default: `60000`)
+
 ### maxConcurrency
 
 - **CLI:** `--maxConcurrency <number>`

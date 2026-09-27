@@ -213,6 +213,13 @@ test('teardownTimeout is parsed correctly', () => {
   expect(getCLIOptions('--teardown-timeout=1000')).toEqual({ teardownTimeout: 1000 })
 })
 
+test('workerStartTimeout is parsed correctly', () => {
+  expect(getCLIOptions('--workerStartTimeout 120000')).toEqual({ workerStartTimeout: 120000 })
+  expect(getCLIOptions('--worker-start-timeout 120000')).toEqual({ workerStartTimeout: 120000 })
+  expect(getCLIOptions('--workerStartTimeout=120000')).toEqual({ workerStartTimeout: 120000 })
+  expect(getCLIOptions('--worker-start-timeout=120000')).toEqual({ workerStartTimeout: 120000 })
+})
+
 test('slowTestThreshold is parsed correctly', () => {
   expect(getCLIOptions('--slowTestThreshold 1000')).toEqual({ slowTestThreshold: 1000 })
   expect(getCLIOptions('--slow-test-threshold 1000')).toEqual({ slowTestThreshold: 1000 })

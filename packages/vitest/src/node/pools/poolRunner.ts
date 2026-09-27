@@ -42,7 +42,6 @@ interface StopOptions {
   force: boolean
 }
 
-const START_TIMEOUT = 60_000
 const STOP_TIMEOUT = 60_000
 
 /** @experimental */
@@ -209,7 +208,10 @@ export class PoolRunner {
       this.worker.on('message', this.emitWorkerMessage)
 
       startSpan = this.startTracesSpan('vitest.worker.start')
-      const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
+      const startPromise = this.withTimeout(
+        this.waitForStart(),
+        this.project.vitest.config.workerStartTimeout,
+      )
       const globalConfig = this.project.vitest.config.experimental.openTelemetry
       const projectConfig = this.project.config.experimental.openTelemetry
 
