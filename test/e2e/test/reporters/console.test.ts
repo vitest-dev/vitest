@@ -12,10 +12,13 @@ class LogReporter extends DefaultReporter {
 test('should print logs correctly', async () => {
   const filename = resolve('./fixtures/reporters/console.test.ts')
 
-  const { stdout, stderr } = await runVitest({
-    root: './fixtures/reporters',
-    reporters: [new LogReporter() as any],
-  }, [filename])
+  const { stdout, stderr } = await runVitest(
+    {
+      root: './fixtures/reporters',
+      reporters: [new LogReporter() as any],
+    },
+    [filename],
+  )
 
   expect(stdout).toBeTruthy()
   expect(stderr).toBeTruthy()
@@ -65,24 +68,26 @@ global stderr afterAll`,
 
 test.for(['forks', 'threads'])('interleave (pool = %s)', async (pool) => {
   const logs: UserConsoleLog[] = []
-  const { stderr } = await runVitest({
-    root: './fixtures/reporters',
-    pool,
-    reporters: [
-      {
-        onUserConsoleLog(log) {
-          logs.push(log)
-        },
-      } satisfies Reporter,
-    ],
-  }, [resolve('./fixtures/reporters/console-interleave.test.ts')])
+  const { stderr } = await runVitest(
+    {
+      root: './fixtures/reporters',
+      pool,
+      reporters: [
+        {
+          onUserConsoleLog(log) {
+            logs.push(log)
+          },
+        } satisfies Reporter,
+      ],
+    },
+    [resolve('./fixtures/reporters/console-interleave.test.ts')],
+  )
   expect(stderr).toBe('')
-  const formatted = logs.map((log, i) =>
-    ({
-      type: log.type,
-      content: log.content.trim(),
-      timeSign: i > 0 ? Math.sign(log.time - logs[i - 1].time) : undefined,
-    }))
+  const formatted = logs.map((log, i) => ({
+    type: log.type,
+    content: log.content.trim(),
+    timeSign: i > 0 ? Math.sign(log.time - logs[i - 1].time) : undefined,
+  }))
   expect(formatted).toMatchInlineSnapshot(`
     [
       {
@@ -117,12 +122,11 @@ test('console batching', async () => {
     ],
   })
   expect(stderr).toBe('')
-  const formatted = logs.map((log, i) =>
-    ({
-      type: log.type,
-      content: log.content.replace(/\n/g, '_'),
-      timeSign: i > 0 ? Math.sign(log.time - logs[i - 1].time) : undefined,
-    }))
+  const formatted = logs.map((log, i) => ({
+    type: log.type,
+    content: log.content.replace(/\n/g, '_'),
+    timeSign: i > 0 ? Math.sign(log.time - logs[i - 1].time) : undefined,
+  }))
   expect(formatted).toMatchInlineSnapshot(`
     [
       {

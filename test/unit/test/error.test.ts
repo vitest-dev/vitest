@@ -93,7 +93,7 @@ test('error with toJSON has message, stack and name', () => {
   expect(error.stack).toBe(serialisedError.stack)
 })
 
-test('error with toJSON doesn\'t override nessage, stack and name if it\'s there already', () => {
+test("error with toJSON doesn't override nessage, stack and name if it's there already", () => {
   class SerializableError extends Error {
     toJSON() {
       return {

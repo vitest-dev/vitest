@@ -21,7 +21,10 @@ const IGNORED_TYPES = new Set([
 
 const STDIO_TYPES = new Set(['PIPEWRAP', 'TTYWRAP'])
 
-export function detectAsyncLeaks(testFile: string, projectName: string): () => Promise<AsyncLeak[]> {
+export function detectAsyncLeaks(
+  testFile: string,
+  projectName: string,
+): () => Promise<AsyncLeak[]> {
   const resources = new Map<number, PossibleLeak>()
 
   const hook = createHook({
@@ -38,11 +41,9 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
       try {
         Error.stackTraceLimit = 100
         stack = new Error('VITEST_DETECT_ASYNC_LEAKS').stack || ''
-      }
-      catch {
+      } catch {
         return
-      }
-      finally {
+      } finally {
         Error.stackTraceLimit = limit
       }
 
@@ -86,7 +87,7 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
   hook.enable()
 
   return async function collect() {
-    await new Promise<void>(resolve => setImmediate(resolve))
+    await new Promise<void>((resolve) => setImmediate(resolve))
 
     hook.disable()
 
@@ -118,6 +119,7 @@ function isStdioHandle(handle: object | undefined): boolean {
     return false
   }
 
-  return [process.stdin, process.stdout, process.stderr]
-    .some(stream => (stream as { _handle?: object })._handle === handle)
+  return [process.stdin, process.stdout, process.stderr].some(
+    (stream) => (stream as { _handle?: object })._handle === handle,
+  )
 }

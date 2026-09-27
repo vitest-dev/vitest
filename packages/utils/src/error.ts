@@ -17,21 +17,14 @@ export function processError(
   const err = _err as TestError
 
   if (
-    err.showDiff
-    || (err.showDiff === undefined
-      && err.expected !== undefined
-      && err.actual !== undefined)
+    err.showDiff ||
+    (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined)
   ) {
     const options = {
       ...diffOptions,
-      ...err.diffOptions as DiffOptions,
+      ...(err.diffOptions as DiffOptions),
     }
-    err.diff = printDiffOrStringify(
-      err.actual,
-      err.expected,
-      options,
-      err,
-    )
+    err.diff = printDiffOrStringify(err.actual, err.expected, options, err)
 
     err.expected = prettifyValue(err.expected, options)
     err.actual = prettifyValue(err.actual, options)
@@ -44,13 +37,11 @@ export function processError(
       seen.add(err)
       err.cause = processError(err.cause, diffOptions, seen)
     }
-  }
-  catch {}
+  } catch {}
 
   try {
     return serializeValue(err)
-  }
-  catch (e: any) {
+  } catch (e: any) {
     return serializeValue(
       new Error(
         `Failed to fully serialize error: ${e?.message}\nInner error message: ${err?.message}`,

@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  browserState,
-  client,
-  isConnected,
-  isConnecting,
-} from '~/composables/client'
+import { browserState, client, isConnected, isConnecting } from '~/composables/client'
 </script>
 
 <template>
@@ -20,19 +15,15 @@ import {
         <div
           class="text-5xl"
           :class="
-            isConnecting
-              ? 'i-carbon:renew animate-spin animate-reverse'
-              : 'i-carbon-wifi-off'
+            isConnecting ? 'i-carbon:renew animate-spin animate-reverse' : 'i-carbon-wifi-off'
           "
         />
         <div class="text-2xl">
-          {{ isConnecting ? "Connecting..." : "Disconnected" }}
+          {{ isConnecting ? 'Connecting...' : 'Disconnected' }}
         </div>
         <div class="text-lg op50">
           Check your terminal or start a new server with `{{
-            browserState
-              ? `vitest --browser=${browserState.config.browser.name}`
-              : "vitest --ui"
+            browserState ? `vitest --browser=${browserState.config.browser.name}` : 'vitest --ui'
           }}`
         </div>
       </div>

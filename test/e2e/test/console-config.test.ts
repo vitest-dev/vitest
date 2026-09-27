@@ -24,7 +24,7 @@ test('group synchronous console logs', async () => {
   })
   const logs = stdout
     .split('\n')
-    .filter(row => row.length === 0 || row.startsWith('stdout | ') || row.startsWith('__TEST__'))
+    .filter((row) => row.length === 0 || row.startsWith('stdout | ') || row.startsWith('__TEST__'))
     .join('\n')
     .trim()
   expect(logs).toMatchInlineSnapshot(`

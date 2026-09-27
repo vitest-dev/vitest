@@ -24,8 +24,7 @@ describe('vi.spyOn() edge cases', () => {
       set.add(4)
       expect(spy).toHaveBeenCalledExactlyOnceWith(4)
       expect(set.has(4)).toBe(true)
-    }
-    finally {
+    } finally {
       spy.mockRestore()
     }
   })
@@ -48,8 +47,7 @@ describe('vi.spyOn() edge cases', () => {
       vi.clearAllMocks()
       expect(instance.method).not.toHaveBeenCalled()
       expect(Example.prototype.method).not.toHaveBeenCalled()
-    }
-    finally {
+    } finally {
       spy.mockRestore()
     }
   })
@@ -89,8 +87,7 @@ describe('vi.spyOn() edge cases', () => {
       try {
         vi.spyOn(namespace as any, 'answer')
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         return err as Error
       }
     })()
@@ -104,7 +101,7 @@ describe('vi.spyOn() edge cases', () => {
     expect(error.message).not.toContain('/guide/browser')
   })
 
-  test('can spy on a proxy with undefined descriptor\'s value', () => {
+  test("can spy on a proxy with undefined descriptor's value", () => {
     const obj = new Proxy<{ fn: () => number }>({} as any, {
       get(_, prop) {
         if (prop === 'fn') {
@@ -312,12 +309,14 @@ describe('vi.spyOn() state', () => {
   test('vi.spyOn() spies and tracks overridden sync class calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'Class')
-    mock.mockImplementation(class {
-      public value: number
-      constructor() {
-        this.value = 42
-      }
-    })
+    mock.mockImplementation(
+      class {
+        public value: number
+        constructor() {
+          this.value = 42
+        }
+      },
+    )
     const state = mock.mock
 
     assertStateEmpty(state)
@@ -460,7 +459,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() doesn\'t loose context', () => {
+  test("vi.spyOn() doesn't loose context", () => {
     const instances: any[] = []
     const Names = function Names(this: any) {
       instances.push(this)
@@ -701,20 +700,32 @@ describe('vi.spyOn() settings', () => {
 
 describe('vi.spyOn() restoration', () => {
   test('vi.spyOn() cannot spy on undefined or null', () => {
-    expect(() => vi.spyOn(undefined as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
-    expect(() => vi.spyOn(null as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
+    expect(() => vi.spyOn(undefined as any, 'test')).toThrow(
+      'The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.',
+    )
+    expect(() => vi.spyOn(null as any, 'test')).toThrow(
+      'The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.',
+    )
   })
 
   test('vi.spyOn() cannot spy on a primitive value', () => {
-    expect(() => vi.spyOn('string' as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn('string' as any, 'toString')).toThrow(
+      'Vitest cannot spy on a primitive value.',
+    )
     expect(() => vi.spyOn(0 as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(true as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(true as any, 'toString')).toThrow(
+      'Vitest cannot spy on a primitive value.',
+    )
     expect(() => vi.spyOn(1n as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrow(
+      'Vitest cannot spy on a primitive value.',
+    )
   })
 
   test('vi.spyOn() cannot spy on non-existing property', () => {
-    expect(() => vi.spyOn({} as any, 'never')).toThrow('The property "never" is not defined on the object.')
+    expect(() => vi.spyOn({} as any, 'never')).toThrow(
+      'The property "never" is not defined on the object.',
+    )
   })
 
   test('vi.spyOn() restores the original method when .mockRestore() is called', () => {

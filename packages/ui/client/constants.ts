@@ -1,4 +1,4 @@
-const PORT = import.meta.hot ? (import.meta.env.VITE_PORT || '51204') : location.port
+const PORT = import.meta.hot ? import.meta.env.VITE_PORT || '51204' : location.port
 const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'

@@ -319,8 +319,8 @@ describe.each([
 })
 ```
 
-* First row should be column names, separated by `|`;
-* One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
+- First row should be column names, separated by `|`;
+- One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
 
 ```ts
 import { describe, expect, test } from 'vitest'

@@ -46,9 +46,11 @@ describe('mocking class when parent is not mocked', () => {
       doSomething() {}
     }
 
-    const Zoo = vi.mockObject(class Zoo extends Bar {
-      ownMethod() {}
-    })
+    const Zoo = vi.mockObject(
+      class Zoo extends Bar {
+        ownMethod() {}
+      },
+    )
 
     const zoo = new Zoo()
     expect(vi.isMockFunction(zoo.doSomething)).toBe(true)

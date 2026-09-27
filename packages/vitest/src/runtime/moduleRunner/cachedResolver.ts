@@ -36,16 +36,16 @@ export function getCachedVitestImport(
   const relativeRoot = relativeIds[root] ?? (relativeIds[root] = getRelativeDistDir(root))
   if (id.includes(distDir) || id.includes(normalizedDistDir)) {
     const { file, postfix } = splitFileAndPostfix(id)
-    const externalize = id.startsWith('file://')
-      ? id
-      : `${pathToFileURL(file)}${postfix}`
+    const externalize = id.startsWith('file://') ? id : `${pathToFileURL(file)}${postfix}`
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
   if (
     // "relative" to root path:
     // /node_modules/.pnpm/vitest/dist
-    (relativeRoot && relativeRoot !== '/' && id.startsWith(relativeRoot))
+    relativeRoot &&
+    relativeRoot !== '/' &&
+    id.startsWith(relativeRoot)
   ) {
     const { file, postfix } = splitFileAndPostfix(id)
     const path = join(root, file)

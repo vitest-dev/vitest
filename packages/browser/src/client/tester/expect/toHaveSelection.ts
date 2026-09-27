@@ -34,7 +34,10 @@ export default function toHaveSelection(
 
   return {
     pass: expectsSelection
-      ? this.equals(receivedSelection, expectedSelection, [arrayAsSetComparison, ...this.customTesters])
+      ? this.equals(receivedSelection, expectedSelection, [
+          arrayAsSetComparison,
+          ...this.customTesters,
+        ])
       : Boolean(receivedSelection),
     message: () => {
       const to = this.isNot ? 'not to' : 'to'
@@ -70,9 +73,7 @@ function getSelection(element: HTMLElement | SVGElement): string {
     if (input.selectionStart == null || input.selectionEnd == null) {
       return ''
     }
-    return input.value
-      .toString()
-      .substring(input.selectionStart, input.selectionEnd)
+    return input.value.toString().substring(input.selectionStart, input.selectionEnd)
   }
 
   if (selection.anchorNode === null || selection.focusNode === null) {
@@ -88,37 +89,24 @@ function getSelection(element: HTMLElement | SVGElement): string {
     temporaryRange.selectNodeContents(element)
     selection.removeAllRanges()
     selection.addRange(temporaryRange)
-  }
-  else if (
-    element.contains(selection.anchorNode)
-    && element.contains(selection.focusNode)
-  ) {
+  } else if (element.contains(selection.anchorNode) && element.contains(selection.focusNode)) {
     // Element contains selection, nothing to do
-  }
-  else {
+  } else {
     // Element is partially selected
-    const selectionStartsWithinElement
-      = element === originalRange.startContainer
-        || element.contains(originalRange.startContainer)
-    const selectionEndsWithinElement
-      = element === originalRange.endContainer
-        || element.contains(originalRange.endContainer)
+    const selectionStartsWithinElement =
+      element === originalRange.startContainer || element.contains(originalRange.startContainer)
+    const selectionEndsWithinElement =
+      element === originalRange.endContainer || element.contains(originalRange.endContainer)
     selection.removeAllRanges()
 
     if (selectionStartsWithinElement || selectionEndsWithinElement) {
       temporaryRange.selectNodeContents(element)
 
       if (selectionStartsWithinElement) {
-        temporaryRange.setStart(
-          originalRange.startContainer,
-          originalRange.startOffset,
-        )
+        temporaryRange.setStart(originalRange.startContainer, originalRange.startOffset)
       }
       if (selectionEndsWithinElement) {
-        temporaryRange.setEnd(
-          originalRange.endContainer,
-          originalRange.endOffset,
-        )
+        temporaryRange.setEnd(originalRange.endContainer, originalRange.endOffset)
       }
 
       selection.addRange(temporaryRange)

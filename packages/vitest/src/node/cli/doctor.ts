@@ -65,16 +65,17 @@ export function resolveDoctorCandidates(
   // `pool`, `environment` and the fs module cache don't reach the browser
   // runtime, so those candidates are driven by the node-side projects only;
   // isolation applies to browser projects as well
-  const testProjects = projects.filter(project => !project.browser)
+  const testProjects = projects.filter((project) => !project.browser)
 
-  const pools = new Set(testProjects.map(project => project.pool))
+  const pools = new Set(testProjects.map((project) => project.pool))
   const usesVmPool = pools.has('vmThreads') || pools.has('vmForks')
-  const benefitsFromVm = testProjects.some(project =>
-    !ENVIRONMENTS_WITHOUT_VM_UPSIDE.has(project.environment),
+  const benefitsFromVm = testProjects.some(
+    (project) => !ENVIRONMENTS_WITHOUT_VM_UPSIDE.has(project.environment),
   )
   const isolates = projects.some(
-    project => project.isolate
-      && (project.browser || (project.pool !== 'vmThreads' && project.pool !== 'vmForks')),
+    (project) =>
+      project.isolate &&
+      (project.browser || (project.pool !== 'vmThreads' && project.pool !== 'vmForks')),
   )
 
   if (pools.has('forks')) {
@@ -109,7 +110,10 @@ export function resolveDoctorCandidates(
   }
   // jsdom -> happy-dom is the only swap with a speed upside; it is applied per
   // project, so projects running other environments keep them
-  if (options.happyDomAvailable && testProjects.some(project => project.environment === 'jsdom')) {
+  if (
+    options.happyDomAvailable &&
+    testProjects.some((project) => project.environment === 'jsdom')
+  ) {
     candidates.push({
       id: 'happy-dom',
       title: `environment: 'happy-dom'`,
@@ -140,7 +144,7 @@ export function resolveDoctorCandidates(
       validateIsolation: true,
     })
   }
-  if (testProjects.length > 0 && testProjects.every(project => !project.fsModuleCache)) {
+  if (testProjects.length > 0 && testProjects.every((project) => !project.fsModuleCache)) {
     // an untimed priming run populates the cache first: the candidate measures
     // what repeated runs pay, which is what doctor compares everywhere else
     candidates.push({
@@ -186,7 +190,7 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
     undefined,
     cliFilters,
   )
-  const projects: DoctorProjectSummary[] = ctx.projects.map(project => ({
+  const projects: DoctorProjectSummary[] = ctx.projects.map((project) => ({
     name: project.name,
     pool: project.config.pool,
     environment: project.config.environment,
@@ -196,9 +200,10 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
   }))
   const fileCount = (await ctx.getRelevantTestSpecifications(cliFilters)).length
   const configuredMaxWorkers = ctx.config.maxWorkers
-  const effectiveMaxWorkers = typeof configuredMaxWorkers === 'number' && configuredMaxWorkers > 0
-    ? configuredMaxWorkers
-    : Math.max(1, availableParallelism() - 1)
+  const effectiveMaxWorkers =
+    typeof configuredMaxWorkers === 'number' && configuredMaxWorkers > 0
+      ? configuredMaxWorkers
+      : Math.max(1, availableParallelism() - 1)
   await ctx.close()
 
   // the environments import 'happy-dom' relative to the vitest package (it is
@@ -207,8 +212,7 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
   try {
     import.meta.resolve('happy-dom')
     happyDomAvailable = true
-  }
-  catch {}
+  } catch {}
 
   const candidates = resolveDoctorCandidates(projects, { happyDomAvailable })
 
@@ -253,14 +257,10 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
         options: { ...childOptions, ...run.overrides },
         envSwap: run.envSwap,
       })
-      const child = spawn(
-        process.execPath,
-        [runnerPath, payload],
-        {
-          env: { ...process.env, NO_COLOR: '1' },
-          stdio: ['ignore', 'ignore', 'pipe'],
-        },
-      )
+      const child = spawn(process.execPath, [runnerPath, payload], {
+        env: { ...process.env, NO_COLOR: '1' },
+        stdio: ['ignore', 'ignore', 'pipe'],
+      })
       activeChild = child
       let timedOut = false
       const timer = timeoutMs
@@ -288,11 +288,14 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
 
   log()
   if (candidates.length === 0) {
-    log('The configuration already uses the fastest setup Vitest knows how to compare - measuring it for reference.')
-  }
-  else {
+    log(
+      'The configuration already uses the fastest setup Vitest knows how to compare - measuring it for reference.',
+    )
+  } else {
     log('Measuring alternative configurations by running the test suite under each of them.')
-    log(c.dim('Close other heavy programs - the comparison is only as good as the machine is quiet.'))
+    log(
+      c.dim('Close other heavy programs - the comparison is only as good as the machine is quiet.'),
+    )
   }
   log()
 
@@ -302,7 +305,11 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
   const firstRun = await runVitest({})
   if (!firstRun.ok) {
     process.stdout.write('\n')
-    log(c.red('The test suite fails with the current configuration. Fix the failures first - doctor needs a green suite to compare configurations.'))
+    log(
+      c.red(
+        'The test suite fails with the current configuration. Fix the failures first - doctor needs a green suite to compare configurations.',
+      ),
+    )
     if (firstRun.stderr.trim()) {
       log(c.dim(firstRun.stderr.trim()))
     }
@@ -322,7 +329,11 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
     const run = await runVitest({})
     if (!run.ok) {
       process.stdout.write('\n')
-      log(c.red(`The test suite passed once but failed on repetition ${i + 1} with the same configuration - doctor needs a stable green suite to compare configurations.`))
+      log(
+        c.red(
+          `The test suite passed once but failed on repetition ${i + 1} with the same configuration - doctor needs a stable green suite to compare configurations.`,
+        ),
+      )
       if (run.stderr.trim()) {
         log(c.dim(run.stderr.trim()))
       }
@@ -344,7 +355,10 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
     let wall = Number.POSITIVE_INFINITY
     let ok = true
     let stderr = ''
-    const candidateRun: RunOverrides = { overrides: candidate.overrides, envSwap: candidate.envSwap }
+    const candidateRun: RunOverrides = {
+      overrides: candidate.overrides,
+      envSwap: candidate.envSwap,
+    }
     for (let i = 0; i < (candidate.primeRuns ?? 0) && ok; i++) {
       const run = await runVitest(candidateRun, candidateTimeout)
       ok = run.ok
@@ -387,21 +401,20 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
     process.stdout.write(ok ? ` ${formatSeconds(wall)}\n` : ` ${c.red('failed')}\n`)
   }
 
-  const viable = measured.filter(result =>
-    result.ok
-    && result.isolationVerdict !== 'failed'
-    && result.wall < baselineWall * 0.9,
+  const viable = measured.filter(
+    (result) =>
+      result.ok && result.isolationVerdict !== 'failed' && result.wall < baselineWall * 0.9,
   )
 
   // among candidates close to the fastest, prefer the one that keeps per-file
   // isolation - equal speed with stronger guarantees wins
-  const fastest = viable.length > 0
-    ? viable.reduce((a, b) => (b.wall < a.wall ? b : a))
-    : undefined
+  const fastest = viable.length > 0 ? viable.reduce((a, b) => (b.wall < a.wall ? b : a)) : undefined
   const preferred = fastest
     ? viable
-      .filter(result => result.wall <= fastest.wall * 1.05)
-      .sort((a, b) => Number(b.candidate.preservesIsolation) - Number(a.candidate.preservesIsolation))[0]
+        .filter((result) => result.wall <= fastest.wall * 1.05)
+        .sort(
+          (a, b) => Number(b.candidate.preservesIsolation) - Number(a.candidate.preservesIsolation),
+        )[0]
     : undefined
 
   // Past a certain worker count the single main-thread Vite server becomes the
@@ -412,7 +425,10 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
     ? { overrides: preferred.candidate.overrides, envSwap: preferred.candidate.envSwap }
     : {}
   const workerSuffix = preferred ? ` (with ${preferred.candidate.title})` : ''
-  interface WorkerProbe { workers: number; wall: number }
+  interface WorkerProbe {
+    workers: number
+    wall: number
+  }
   const workerProbes: WorkerProbe[] = []
   let bestWorkers: WorkerProbe | undefined
   {
@@ -424,7 +440,10 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
       let ok = true
       for (let i = 0; i < reps && ok; i++) {
         const run = await runVitest(
-          { overrides: { ...workerStack.overrides, maxWorkers: probe }, envSwap: workerStack.envSwap },
+          {
+            overrides: { ...workerStack.overrides, maxWorkers: probe },
+            envSwap: workerStack.envSwap,
+          },
           candidateTimeout,
         )
         wall = Math.min(wall, run.wall)
@@ -448,26 +467,28 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
   log(c.bold('Results') + c.dim(` (min of ${reps} run${reps === 1 ? '' : 's'} each)`))
   log()
   const rowTitles = [
-    ...measured.map(m => m.candidate.title),
-    ...workerProbes.map(p => `maxWorkers: ${p.workers}${workerSuffix}`),
+    ...measured.map((m) => m.candidate.title),
+    ...workerProbes.map((p) => `maxWorkers: ${p.workers}${workerSuffix}`),
   ]
-  const width = Math.max(baselineTitle.length, ...rowTitles.map(title => title.length)) + 2
+  const width = Math.max(baselineTitle.length, ...rowTitles.map((title) => title.length)) + 2
   log(`  ${baselineTitle.padEnd(width)}${formatSeconds(baselineWall)}`)
   for (const result of measured) {
     const title = result.candidate.title.padEnd(width)
     if (!result.ok) {
       log(`  ${title}${c.red('failed')}`)
-    }
-    else if (result.isolationVerdict === 'failed') {
-      log(`  ${title}${formatSeconds(result.wall)} ${c.red('(fails with a shuffled file order - tests depend on isolation)')}`)
-    }
-    else {
+    } else if (result.isolationVerdict === 'failed') {
+      log(
+        `  ${title}${formatSeconds(result.wall)} ${c.red('(fails with a shuffled file order - tests depend on isolation)')}`,
+      )
+    } else {
       log(`  ${title}${formatSeconds(result.wall)} ${formatDelta(result.wall, baselineWall)}`)
     }
   }
   for (const probeResult of workerProbes) {
     const title = `maxWorkers: ${probeResult.workers}${workerSuffix}`.padEnd(width)
-    log(`  ${title}${formatSeconds(probeResult.wall)} ${formatDelta(probeResult.wall, baselineWall)}`)
+    log(
+      `  ${title}${formatSeconds(probeResult.wall)} ${formatDelta(probeResult.wall, baselineWall)}`,
+    )
   }
 
   // failing candidates are as informative as fast ones: show what broke,
@@ -475,19 +496,24 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
   for (const result of measured) {
     if (!result.ok) {
       logFailureExcerpt(`${result.candidate.title} failed with:`, result.stderr)
-    }
-    else if (result.isolationVerdict === 'failed') {
-      logFailureExcerpt(`${result.candidate.title} failed with a shuffled file order:`, result.stderr)
+    } else if (result.isolationVerdict === 'failed') {
+      logFailureExcerpt(
+        `${result.candidate.title} failed with a shuffled file order:`,
+        result.stderr,
+      )
     }
   }
 
   log()
   if (!preferred && !bestWorkers) {
     if (candidates.length === 0) {
-      log(`${c.bold('Recommendation:')} keep the current configuration (${describeProjects(projects)}) - it measured ${c.yellow(formatSeconds(baselineWall))} and Vitest has no faster candidate to suggest for it.`)
-    }
-    else {
-      log(`${c.bold('Recommendation:')} keep the current configuration (${describeProjects(projects)}) - no measured candidate was more than 10% faster.`)
+      log(
+        `${c.bold('Recommendation:')} keep the current configuration (${describeProjects(projects)}) - it measured ${c.yellow(formatSeconds(baselineWall))} and Vitest has no faster candidate to suggest for it.`,
+      )
+    } else {
+      log(
+        `${c.bold('Recommendation:')} keep the current configuration (${describeProjects(projects)}) - no measured candidate was more than 10% faster.`,
+      )
     }
     return
   }
@@ -496,13 +522,17 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
   const recommendationTitle = [
     preferred?.candidate.title,
     bestWorkers ? `maxWorkers: ${bestWorkers.workers}` : undefined,
-  ].filter(Boolean).join(' + ')
+  ]
+    .filter(Boolean)
+    .join(' + ')
   const configLines = [
     ...(preferred ? preferred.candidate.configLines : []),
     ...(bestWorkers ? [`maxWorkers: ${bestWorkers.workers}`] : []),
   ]
 
-  log(`${c.bold('Recommendation:')} ${c.yellow(recommendationTitle)} ${formatDelta(finalWall, baselineWall)}`)
+  log(
+    `${c.bold('Recommendation:')} ${c.yellow(recommendationTitle)} ${formatDelta(finalWall, baselineWall)}`,
+  )
   log()
   log(c.dim('  // vitest.config.ts'))
   log(c.dim(`  import { defineConfig } from 'vitest/config'`))
@@ -510,9 +540,12 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
   log(c.dim('  export default defineConfig({'))
   log(c.dim('    test: {'))
   for (const [index, line] of configLines.entries()) {
-    const comment = index === configLines.length - 1
-      ? c.dim(` // measured ${Math.round(((finalWall - baselineWall) / baselineWall) * 100)}% on this suite`)
-      : ''
+    const comment =
+      index === configLines.length - 1
+        ? c.dim(
+            ` // measured ${Math.round(((finalWall - baselineWall) / baselineWall) * 100)}% on this suite`,
+          )
+        : ''
     log(`      ${line},${comment}`)
   }
   log(c.dim('    },'))
@@ -618,8 +651,10 @@ function candidateNotes(result: MeasuredCandidate): string[] {
 }
 
 function describeProjects(projects: DoctorProjectSummary[]): string {
-  const pools = [...new Set(projects.map(project => project.browser ? 'browser' : project.pool))].join(', ')
-  const isolate = projects.some(project => project.isolate)
+  const pools = [
+    ...new Set(projects.map((project) => (project.browser ? 'browser' : project.pool))),
+  ].join(', ')
+  const isolate = projects.some((project) => project.isolate)
   return `pool: ${pools} · isolate: ${isolate}`
 }
 

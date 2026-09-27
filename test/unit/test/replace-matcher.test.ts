@@ -24,27 +24,36 @@ describe('replace asymmetric matcher', () => {
     expectReplaceAsymmetricMatcher(new Set([1, 2]), expect.anything())
     expectReplaceAsymmetricMatcher(new ArrayBuffer(8), expect.anything())
     expectReplaceAsymmetricMatcher([1, 2], [1, expect.anything()])
-    expectReplaceAsymmetricMatcher({
-      str: 'a',
-      arr: [1, 2],
-    }, {
-      str: expect.any(String),
-      arr: expect.anything(),
-    })
-    expectReplaceAsymmetricMatcher({
-      str: expect.any(String),
-      arr: expect.anything(),
-    }, {
-      str: expect.any(String),
-      arr: expect.anything(),
-    })
-    expectReplaceAsymmetricMatcher({
-      str: 'a',
-      arr: [1, 2],
-    }, {
-      str: expect.any(String),
-      arr: [1, expect.anything()],
-    })
+    expectReplaceAsymmetricMatcher(
+      {
+        str: 'a',
+        arr: [1, 2],
+      },
+      {
+        str: expect.any(String),
+        arr: expect.anything(),
+      },
+    )
+    expectReplaceAsymmetricMatcher(
+      {
+        str: expect.any(String),
+        arr: expect.anything(),
+      },
+      {
+        str: expect.any(String),
+        arr: expect.anything(),
+      },
+    )
+    expectReplaceAsymmetricMatcher(
+      {
+        str: 'a',
+        arr: [1, 2],
+      },
+      {
+        str: expect.any(String),
+        arr: [1, expect.anything()],
+      },
+    )
     const circleObj: any = { name: 'circle', ref: null }
     circleObj.ref = circleObj
     expectReplaceAsymmetricMatcher(circleObj, circleObj)

@@ -1,4 +1,9 @@
-import type { ConfigEnv, ResolveOptions, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
+import type {
+  ConfigEnv,
+  ResolveOptions,
+  Plugin as VitePlugin,
+  UserConfig as ViteUserConfig,
+} from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
@@ -75,7 +80,11 @@ export function TestConfigPlugin(
           config.test = deepMerge({}, config.test ?? {}, options)
 
           // apply browser CLI options only if the config already has the browser config and not disabled manually
-          if (config.test.browser && browser && (config.test.browser.enabled !== false || browser.enabled)) {
+          if (
+            config.test.browser &&
+            browser &&
+            (config.test.browser.enabled !== false || browser.enabled)
+          ) {
             config.test.browser = mergeConfig(
               config.test.browser,
               browser,
@@ -96,9 +105,8 @@ export function TestConfigPlugin(
             : NON_INHERITED_OPTIONS
           for (const key of nonInheritedOptions) {
             if (project.options.test?.[key] !== undefined) {
-              (config.test as any)[key] = project.options.test[key]
-            }
-            else {
+              ;(config.test as any)[key] = project.options.test[key]
+            } else {
               delete config.test[key]
             }
           }
@@ -115,25 +123,23 @@ export function TestConfigPlugin(
 
           const moduleDirectories = testConfig.deps?.moduleDirectories || []
 
-          const envModuleDirectories
-            = process.env.VITEST_MODULE_DIRECTORIES
-              || process.env.npm_config_VITEST_MODULE_DIRECTORIES
+          const envModuleDirectories =
+            process.env.VITEST_MODULE_DIRECTORIES ||
+            process.env.npm_config_VITEST_MODULE_DIRECTORIES
 
           if (envModuleDirectories) {
             moduleDirectories.push(...envModuleDirectories.split(','))
           }
 
-          const normalized = moduleDirectories.map(
-            (dir) => {
-              if (dir[0] !== '/') {
-                dir = `/${dir}`
-              }
-              if (!dir.endsWith('/')) {
-                dir += '/'
-              }
-              return normalize(dir)
-            },
-          )
+          const normalized = moduleDirectories.map((dir) => {
+            if (dir[0] !== '/') {
+              dir = `/${dir}`
+            }
+            if (!dir.endsWith('/')) {
+              dir += '/'
+            }
+            return normalize(dir)
+          })
           if (!normalized.includes('/node_modules/')) {
             normalized.push('/node_modules/')
           }
@@ -151,12 +157,10 @@ export function TestConfigPlugin(
           const resolvedTestConfig = testConfig as ResolvedConfig
           if (isBrowserEnabled) {
             resolvedTestConfig.defines = {}
-          }
-          else if (sharedServer) {
+          } else if (sharedServer) {
             resolvedTestConfig.defines = sharedServer.defines
             resolvedTestConfig._scriptDefines = sharedServer.scriptDefines
-          }
-          else {
+          } else {
             const { defines, scriptDefines } = deleteDefineConfig(config)
             resolvedTestConfig.defines = defines
             resolvedTestConfig._scriptDefines = scriptDefines
@@ -186,15 +190,22 @@ export function TestConfigPlugin(
           }
 
           config.resolve ??= {}
-          const envNoExternal = resolveViteResolveOptions('noExternal', config.resolve, testConfig.deps?.moduleDirectories)
+          const envNoExternal = resolveViteResolveOptions(
+            'noExternal',
+            config.resolve,
+            testConfig.deps?.moduleDirectories,
+          )
           if (envNoExternal === true) {
             noExternalAll = true
-          }
-          else if (envNoExternal.length) {
+          } else if (envNoExternal.length) {
             noExternal.push(...envNoExternal)
           }
 
-          const envExternal = resolveViteResolveOptions('external', config.resolve, testConfig.deps?.moduleDirectories)
+          const envExternal = resolveViteResolveOptions(
+            'external',
+            config.resolve,
+            testConfig.deps?.moduleDirectories,
+          )
           if (envExternal !== true && envExternal.length) {
             external.push(...envExternal)
           }
@@ -203,8 +214,11 @@ export function TestConfigPlugin(
       configResolved: {
         order: 'pre',
         handler(config) {
-          const options = sharedServer?.moduleRunnerOptions
-            ?? { inlineAll: noExternalAll, inline: noExternal, external }
+          const options = sharedServer?.moduleRunnerOptions ?? {
+            inlineAll: noExternalAll,
+            inline: noExternal,
+            external,
+          }
           captures.moduleRunnerOptions = options
 
           const testConfig = config.test!
@@ -214,8 +228,7 @@ export function TestConfigPlugin(
           if (testConfig.server.deps.inline !== true) {
             if (options.inlineAll) {
               testConfig.server.deps.inline = true
-            }
-            else if (options.inline.length) {
+            } else if (options.inline.length) {
               testConfig.server.deps.inline ??= []
               testConfig.server.deps.inline.push(...options.inline)
             }
@@ -258,11 +271,15 @@ export function resolveTestOptions(
   )
   const env: ConfigEnv = { command: 'serve', mode: test.mode || 'test' }
   for (const plugin of plugins) {
-    const config = plugin.config as { handler: (config: ViteUserConfig, env: ConfigEnv) => unknown } | undefined
+    const config = plugin.config as
+      | { handler: (config: ViteUserConfig, env: ConfigEnv) => unknown }
+      | undefined
     config?.handler(viteConfig, env)
     // `configEnvironment` never runs: there are no environments to resolve,
     // `sharedServerOptions` carries what they contributed on the shared server
-    const configResolved = plugin.configResolved as { handler: (config: unknown) => void } | undefined
+    const configResolved = plugin.configResolved as
+      | { handler: (config: unknown) => void }
+      | undefined
     configResolved?.handler(viteConfig)
   }
   return viteConfig.test!
@@ -275,18 +292,13 @@ function resolveViteResolveOptions(
 ): true | (string | RegExp)[] {
   if (Array.isArray(options[key])) {
     // mergeConfig will merge a custom `true` into an array
-    if (options[key].some(p => (p as any) === true)) {
+    if (options[key].some((p) => (p as any) === true)) {
       return true
     }
-    return options[key].map(dep => processWildcard(dep, moduleDirectories))
-  }
-  else if (
-    typeof options[key] === 'string'
-    || options[key] instanceof RegExp
-  ) {
-    return [options[key]].map(dep => processWildcard(dep, moduleDirectories))
-  }
-  else if (typeof options[key] === 'boolean') {
+    return options[key].map((dep) => processWildcard(dep, moduleDirectories))
+  } else if (typeof options[key] === 'string' || options[key] instanceof RegExp) {
+    return [options[key]].map((dep) => processWildcard(dep, moduleDirectories))
+  } else if (typeof options[key] === 'boolean') {
     return true
   }
   return []
@@ -297,10 +309,8 @@ function processWildcard(dep: string | RegExp, moduleDirectories: string[] | und
     return dep
   }
   if (typeof dep === 'string' && dep.includes('*')) {
-    const directories = (moduleDirectories || ['/node_modules/']).map(r => escapeRegExp(r))
-    return new RegExp(
-      `(${directories.join('|')})${dep.replace(/\*/g, '[\\w/]+')}`,
-    )
+    const directories = (moduleDirectories || ['/node_modules/']).map((r) => escapeRegExp(r))
+    return new RegExp(`(${directories.join('|')})${dep.replace(/\*/g, '[\\w/]+')}`)
   }
   return dep
 }

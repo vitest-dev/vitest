@@ -3,7 +3,10 @@ import { dirname, resolve } from 'pathe'
 import { afterEach, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-const testFileName = resolve(import.meta.dirname, './fixtures/custom-snapshot-environment/test/snapshots.test.ts')
+const testFileName = resolve(
+  import.meta.dirname,
+  './fixtures/custom-snapshot-environment/test/snapshots.test.ts',
+)
 const snapshotFile = resolve(dirname(testFileName), './__snapshots__/snapshots.test.ts.snap')
 const testFile = readFileSync(testFileName, 'utf-8')
 
@@ -18,7 +21,10 @@ test('custom environment resolved correctly', async () => {
     update: true,
   })
 
-  const snapshotLogs = stdout.split('\n').filter(i => i.startsWith('## ')).join('\n')
+  const snapshotLogs = stdout
+    .split('\n')
+    .filter((i) => i.startsWith('## '))
+    .join('\n')
   expect(stderr).toBe('')
   expect(snapshotLogs).toMatchInlineSnapshot(`
     "## resolvePath snapshots/fixtures/custom-snapshot-environment/test/snapshots.test.ts

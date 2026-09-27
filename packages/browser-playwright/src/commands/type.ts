@@ -10,7 +10,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   options = {},
 ) => {
   const { skipClick = false, skipAutoClose = false } = options
-  const unreleased = new Set(Reflect.get(options, 'unreleased') as string[] ?? [])
+  const unreleased = new Set((Reflect.get(options, 'unreleased') as string[]) ?? [])
 
   const element = getDescribedLocator(context, selector)
 

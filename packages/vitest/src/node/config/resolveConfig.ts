@@ -20,10 +20,7 @@ import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
-import {
-  configFiles,
-  defaultInspectPort,
-} from '../../constants'
+import { configFiles, defaultInspectPort } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
@@ -51,8 +48,7 @@ function resolvePath(path: string, root: string) {
   // so we ensure passing "/" suffix such as "/some/root/"
   // https://github.com/unjs/mlly/blob/401d42983f6f3a9112658d67b0a92ba4fb1d7efa/src/resolve.ts#L104-L110
   return normalize(
-    /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
-    ?? resolve(root, path),
+    /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] }) ?? resolve(root, path),
   )
 }
 
@@ -77,9 +73,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   }
 
   if (/https?:\//.test(inspect)) {
-    throw new Error(
-      `Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`,
-    )
+    throw new Error(`Inspector host cannot be a URL. Use "host:port" instead of "${inspect}"`)
   }
 
   const [host, port] = inspect.split(':')
@@ -100,11 +94,9 @@ export function resolveApiServerConfig(
 
   if (config.ui && !config.api) {
     api = { port: defaultPort }
-  }
-  else if (config.api === true) {
+  } else if (config.api === true) {
     api = { port: defaultPort }
-  }
-  else if (typeof config.api === 'number') {
+  } else if (typeof config.api === 'number') {
     api = { port: config.api }
   }
 
@@ -119,8 +111,7 @@ export function resolveApiServerConfig(
       if (config.api.host) {
         api.host = config.api.host
       }
-    }
-    else {
+    } else {
       api = { ...config.api }
     }
   }
@@ -129,8 +120,7 @@ export function resolveApiServerConfig(
     if (!api.port && !api.middlewareMode) {
       api.port = defaultPort
     }
-  }
-  else {
+  } else {
     api = { middlewareMode: true }
   }
 
@@ -155,8 +145,7 @@ export function resolveApiServerConfig(
     }
     api.allowWrite ??= false
     api.allowExec ??= false
-  }
-  else {
+  } else {
     api.allowWrite ??= true
     api.allowExec ??= true
   }
@@ -167,8 +156,7 @@ export function resolveApiServerConfig(
 function resolveInlineWorkerOption(value: string | number): number {
   if (typeof value === 'string' && value.trim().endsWith('%')) {
     return getWorkersCountByPercentage(value)
-  }
-  else {
+  } else {
     return Number(value)
   }
 }
@@ -182,13 +170,15 @@ function captureProvidedOptions(
   ...sources: (UserConfig | undefined)[]
 ): ResolvedConfig['providedOptions'] {
   return {
-    pool: sources.some(source => source?.pool != null),
-    isolate: sources.some(source => source?.isolate != null),
-    environment: sources.some(source => source?.environment != null || source?.dom),
-    fsModuleCache: sources.some(source =>
-      source?.fsModuleCache != null
-      || (source?.experimental as { fsModuleCache?: boolean } | undefined)?.fsModuleCache != null),
-    silent: sources.some(source => source?.silent != null),
+    pool: sources.some((source) => source?.pool != null),
+    isolate: sources.some((source) => source?.isolate != null),
+    environment: sources.some((source) => source?.environment != null || source?.dom),
+    fsModuleCache: sources.some(
+      (source) =>
+        source?.fsModuleCache != null ||
+        (source?.experimental as { fsModuleCache?: boolean } | undefined)?.fsModuleCache != null,
+    ),
+    silent: sources.some((source) => source?.silent != null),
   }
 }
 
@@ -211,10 +201,7 @@ export function resolveTestConfig(
   globalConfig?: ResolvedConfig,
 ): ResolvedConfig {
   if (options.dom) {
-    if (
-      viteConfig.test?.environment != null
-      && viteConfig.test!.environment !== 'happy-dom'
-    ) {
+    if (viteConfig.test?.environment != null && viteConfig.test!.environment !== 'happy-dom') {
       logger.warn(
         withLabel(
           'yellow',
@@ -231,10 +218,7 @@ export function resolveTestConfig(
   // is merged in - the merged object cannot distinguish a default from a
   // user-provided value; `viteConfig.test` is not resolved yet at this point,
   // the call sites assign the resolved config to it after this function returns
-  const providedOptions = captureProvidedOptions(
-    options,
-    viteConfig.test as UserConfig | undefined,
-  )
+  const providedOptions = captureProvidedOptions(options, viteConfig.test as UserConfig | undefined)
 
   const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
   resolved.root = viteConfig.root
@@ -256,10 +240,16 @@ export function resolveTestConfig(
 
   resolved.mode ??= viteConfig.mode ?? 'test'
 
-  if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
+  if (
+    resolved.retry &&
+    typeof resolved.retry === 'object' &&
+    typeof resolved.retry.condition === 'function'
+  ) {
     logger.warn(
-      c.yellow('Warning: retry.condition function cannot be used inside a config file. '
-        + 'Use a RegExp pattern instead, or define the function in your test file.'),
+      c.yellow(
+        'Warning: retry.condition function cannot be used inside a config file. ' +
+          'Use a RegExp pattern instead, or define the function in your test file.',
+      ),
     )
 
     resolved.retry = {
@@ -274,11 +264,15 @@ export function resolveTestConfig(
   }
 
   if ('poolOptions' in resolved) {
-    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://v4.vitest.dev/guide/migration#pool-rework')
+    logger.deprecate(
+      '`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://v4.vitest.dev/guide/migration#pool-rework',
+    )
   }
 
   if ('workspace' in resolved) {
-    throw new Error('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
+    throw new Error(
+      'The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.',
+    )
   }
 
   resolved.pool ??= 'forks'
@@ -287,26 +281,36 @@ export function resolveTestConfig(
   resolved.provide ??= {}
 
   // shallow copy tags array to avoid mutating user config
-  resolved.tags = [...resolved.tags || []]
+  resolved.tags = [...(resolved.tags || [])]
   const definedTags = new Set<string>()
   resolved.tags.forEach((tag) => {
     if (!tag.name || typeof tag.name !== 'string') {
-      throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)
+      throw new Error(
+        `Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`,
+      )
     }
     if (definedTags.has(tag.name)) {
-      throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
+      throw new Error(
+        `Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`,
+      )
     }
     if (/\s/.test(tag.name)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
     }
     if (/[!()*|&]/.test(tag.name)) {
-      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
+      throw new Error(
+        `Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`,
+      )
     }
     if (/^\s*(?:and|or|not)\s*$/i.test(tag.name)) {
-      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
+      throw new Error(
+        `Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`,
+      )
     }
     if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
-      throw new TypeError(`Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`)
+      throw new TypeError(
+        `Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`,
+      )
     }
     if (tag.priority != null && (typeof tag.priority !== 'number' || tag.priority < 0)) {
       throw new TypeError(`Tag "${tag.name}": priority must be a non-negative number.`)
@@ -314,14 +318,14 @@ export function resolveTestConfig(
     definedTags.add(tag.name)
   })
 
-  resolved.name = typeof options.name === 'string'
-    ? options.name
-    : (options.name?.label || '')
+  resolved.name = typeof options.name === 'string' ? options.name : options.name?.label || ''
 
   resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
 
   if (resolved.environment === 'browser') {
-    throw new Error(`Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`)
+    throw new Error(
+      `Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`,
+    )
   }
 
   resolved.benchmark = {
@@ -329,10 +333,7 @@ export function resolveTestConfig(
     ...resolved.benchmark,
   }
   if (resolved.benchmark.provider) {
-    resolved.benchmark.provider = resolvePath(
-      resolved.benchmark.provider,
-      resolved.root,
-    )
+    resolved.benchmark.provider = resolvePath(resolved.benchmark.provider, resolved.root)
   }
 
   const inspector = resolved.inspect || resolved.inspectBrk
@@ -341,8 +342,7 @@ export function resolveTestConfig(
     ...resolved.inspector,
     ...parseInspector(inspector),
     enabled: !!inspector,
-    waitForDebugger:
-      options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
+    waitForDebugger: options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
   }
 
   if (viteConfig.base !== '/') {
@@ -365,9 +365,7 @@ export function resolveTestConfig(
     }
 
     if (Number.isNaN(index) || index <= 0 || index > count) {
-      throw new Error(
-        '--shard <index> must be a positive number less then <count>',
-      )
+      throw new Error('--shard <index> must be a positive number less then <count>')
     }
 
     resolved.shard = { index, count }
@@ -388,10 +386,16 @@ export function resolveTestConfig(
   // `browser.fileParallelism` was replaced by the top-level `fileParallelism`. Map
   // it (only when browser is enabled, since it was a browser-only option) so
   // existing configs keep working instead of being silently ignored.
-  const browserOptions = options.browser as { enabled?: boolean; fileParallelism?: boolean } | undefined
-  const browserFileParallelism = browserOptions?.enabled ? browserOptions.fileParallelism : undefined
+  const browserOptions = options.browser as
+    | { enabled?: boolean; fileParallelism?: boolean }
+    | undefined
+  const browserFileParallelism = browserOptions?.enabled
+    ? browserOptions.fileParallelism
+    : undefined
   if (browserFileParallelism !== undefined) {
-    logger.deprecate('`browser.fileParallelism` is deprecated. Use the top-level `fileParallelism` option instead.')
+    logger.deprecate(
+      '`browser.fileParallelism` is deprecated. Use the top-level `fileParallelism` option instead.',
+    )
   }
 
   const fileParallelism = options.fileParallelism ?? browserFileParallelism ?? true
@@ -403,7 +407,9 @@ export function resolveTestConfig(
 
   if (resolved.maxConcurrency === 0) {
     logger.console.warn(
-      c.yellow(`The option "maxConcurrency" cannot be set to 0. Using default value ${configDefaults.maxConcurrency} instead.`),
+      c.yellow(
+        `The option "maxConcurrency" cannot be set to 0. Using default value ${configDefaults.maxConcurrency} instead.`,
+      ),
     )
     resolved.maxConcurrency = configDefaults.maxConcurrency
   }
@@ -411,9 +417,7 @@ export function resolveTestConfig(
   if (resolved.inspect || resolved.inspectBrk) {
     if (resolved.maxWorkers !== 1) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-      throw new Error(
-        `You cannot use ${inspectOption} without "--no-file-parallelism"`,
-      )
+      throw new Error(`You cannot use ${inspectOption} without "--no-file-parallelism"`)
     }
   }
 
@@ -446,11 +450,11 @@ export function resolveTestConfig(
     }
     if (providerNames.size > 1 || providerFactories.size > 1) {
       throw new Error(
-        `All browser instances within a project must use the same provider, but found: ${[...providerNames].join(', ')}. `
-        + `Use a single provider for the project, or move the instances into separate projects.`,
+        `All browser instances within a project must use the same provider, but found: ${[...providerNames].join(', ')}. ` +
+          `Use a single provider for the project, or move the instances into separate projects.`,
       )
     }
-    browser.provider ??= browser.instances.find(instance => instance.provider)?.provider
+    browser.provider ??= browser.instances.find((instance) => instance.provider)?.provider
 
     // use `chromium` by default when the preview provider is specified
     // for a smoother experience. if chromium is not available, it will
@@ -461,31 +465,41 @@ export function resolveTestConfig(
 
     if (browser.name && instances?.length) {
       // --browser=chromium filters configs to a single one
-      browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
+      browser.instances = browser.instances.filter((instance) => instance.browser === browser.name)
 
       // if `instances` were defined, but now they are empty,
       // let's throw an error because the filter is invalid
       if (!browser.instances.length) {
-        throw new Error([
-          `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
-          ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?`,
-        ].join(''))
+        throw new Error(
+          [
+            `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+            ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map((c) => c.browser).join(', ')}). Did you mean to use another name?`,
+          ].join(''),
+        )
       }
     }
 
     browser.instances.forEach((instance) => {
-      instance.name ??= resolved.name
-        ? `${resolved.name} (${instance.browser})`
-        : instance.browser
+      instance.name ??= resolved.name ? `${resolved.name} (${instance.browser})` : instance.browser
     })
   }
 
-  if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {
-    throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
+  if (
+    resolved.coverage.enabled &&
+    resolved.coverage.provider === 'istanbul' &&
+    resolved.experimental?.viteModuleRunner === false
+  ) {
+    throw new Error(
+      `"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`,
+    )
   }
 
   if (browser.enabled && resolved.detectAsyncLeaks) {
-    logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
+    logger.console.warn(
+      c.yellow(
+        'The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.',
+      ),
+    )
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
@@ -494,7 +508,7 @@ export function resolveTestConfig(
     const text = resolved.coverage.reporter.find(([name]) => name === 'text')
     const textSummary = resolved.coverage.reporter.find(([name]) => name === 'text-summary')
     if (text) {
-      (text as any)[1] = { skipFull: true, ...text[1] as any }
+      ;(text as any)[1] = { skipFull: true, ...(text[1] as any) }
       if (!textSummary) {
         resolved.coverage.reporter.push(['text-summary', {}])
       }
@@ -505,38 +519,34 @@ export function resolveTestConfig(
   }
 
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
-    const reportsDirectory = resolve(
-      resolved.root,
-      resolved.coverage.reportsDirectory,
-    )
+    const reportsDirectory = resolve(resolved.root, resolved.coverage.reportsDirectory)
 
-    if (
-      reportsDirectory === resolved.root
-      || reportsDirectory === process.cwd()
-    ) {
+    if (reportsDirectory === resolved.root || reportsDirectory === process.cwd()) {
       throw new Error(
         `You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`,
       )
     }
 
     if (resolved.coverage.htmlDir) {
-      resolved.coverage.htmlDir = resolve(
-        resolved.root,
-        resolved.coverage.htmlDir,
-      )
+      resolved.coverage.htmlDir = resolve(resolved.root, resolved.coverage.htmlDir)
     }
 
     // infer default htmlDir based on builtin reporter's html output location
     if (!resolved.coverage.htmlDir) {
-      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html' || name === 'html-spa')
+      const htmlReporter = resolved.coverage.reporter.find(
+        ([name]) => name === 'html' || name === 'html-spa',
+      )
       if (htmlReporter) {
         const [, options] = htmlReporter
-        const subdir = options && typeof options === 'object' && 'subdir' in options && typeof options.subdir === 'string'
-          ? options.subdir
-          : undefined
+        const subdir =
+          options &&
+          typeof options === 'object' &&
+          'subdir' in options &&
+          typeof options.subdir === 'string'
+            ? options.subdir
+            : undefined
         resolved.coverage.htmlDir = resolve(reportsDirectory, subdir || '.')
-      }
-      else {
+      } else {
         const lcovReporter = resolved.coverage.reporter.find(([name]) => name === 'lcov')
         if (lcovReporter) {
           resolved.coverage.htmlDir = resolve(reportsDirectory, 'lcov-report')
@@ -545,7 +555,11 @@ export function resolveTestConfig(
     }
   }
 
-  if (resolved.coverage.enabled && resolved.coverage.provider === 'custom' && resolved.coverage.customProviderModule) {
+  if (
+    resolved.coverage.enabled &&
+    resolved.coverage.provider === 'custom' &&
+    resolved.coverage.customProviderModule
+  ) {
     resolved.coverage.customProviderModule = resolvePath(
       resolved.coverage.customProviderModule,
       resolved.root,
@@ -577,10 +591,10 @@ export function resolveTestConfig(
   resolved.deps.web.transformCss ??= true
   resolved.deps.web.transformGlobPattern ??= []
 
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map((file) =>
     resolvePath(file, resolved.root),
   )
-  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map((file) =>
     resolvePath(file, resolved.root),
   )
 
@@ -602,31 +616,24 @@ export function resolveTestConfig(
 
     // Exclude setup files
     ...resolved.setupFiles.map(
-      file =>
-        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
-          resolved.root,
-          file,
-        )}`,
+      (file) => `${resolved.coverage.allowExternal ? '**/' : ''}${relative(resolved.root, file)}`,
     ),
 
     // Exclude test files
-    ...resolved.include.filter(pattern => !pattern.startsWith('!')),
+    ...resolved.include.filter((pattern) => !pattern.startsWith('!')),
 
     // Configs
     resolved.config && slash(resolved.config),
     ...configFiles,
 
     // Vite internal
-    '**\/virtual:*',
-    '**\/__x00__*',
+    '**/virtual:*',
+    '**/__x00__*',
 
     '**/node_modules/**',
-  ].filter(pattern => typeof pattern === 'string')
+  ].filter((pattern) => typeof pattern === 'string')
 
-  resolved.forceRerunTriggers = [
-    ...resolved.forceRerunTriggers,
-    ...resolved.setupFiles,
-  ]
+  resolved.forceRerunTriggers = [...resolved.forceRerunTriggers, ...resolved.setupFiles]
 
   if (resolved.cliExclude) {
     resolved.exclude.push(...resolved.cliExclude)
@@ -636,16 +643,10 @@ export function resolveTestConfig(
     resolved.runner = resolvePath(resolved.runner, resolved.root)
   }
 
-  resolved.attachmentsDir = resolve(
-    resolved.root,
-    resolved.attachmentsDir ?? '.vitest/attachments',
-  )
+  resolved.attachmentsDir = resolve(resolved.root, resolved.attachmentsDir ?? '.vitest/attachments')
 
   if (resolved.snapshotEnvironment) {
-    resolved.snapshotEnvironment = resolvePath(
-      resolved.snapshotEnvironment,
-      resolved.root,
-    )
+    resolved.snapshotEnvironment = resolvePath(resolved.snapshotEnvironment, resolved.root)
   }
 
   resolved.testNamePattern = resolved.testNamePattern
@@ -655,7 +656,7 @@ export function resolveTestConfig(
     : undefined
 
   if (resolved.snapshotFormat && 'plugins' in resolved.snapshotFormat) {
-    (resolved.snapshotFormat as any).plugins = []
+    ;(resolved.snapshotFormat as any).plugins = []
     // TODO: support it via separate config (like DiffOptions) or via `Function.toString()`
     if (typeof resolved.snapshotFormat.compareKeys === 'function') {
       throw new TypeError(`"snapshotFormat.compareKeys" function is not supported.`)
@@ -669,14 +670,18 @@ export function resolveTestConfig(
     updateSnapshot:
       UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new' || UPDATE_SNAPSHOT === 'none'
         ? UPDATE_SNAPSHOT
-        : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
+        : isCI && !UPDATE_SNAPSHOT
+          ? 'none'
+          : UPDATE_SNAPSHOT
+            ? 'all'
+            : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
     // resolved inside the worker
     snapshotEnvironment: null as any,
   }
 
   resolved.snapshotSerializers ??= []
-  resolved.snapshotSerializers = resolved.snapshotSerializers.map(file =>
+  resolved.snapshotSerializers = resolved.snapshotSerializers.map((file) =>
     resolvePath(file, resolved.root),
   )
   resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
@@ -689,9 +694,9 @@ export function resolveTestConfig(
   resolved.pool ??= 'threads'
 
   if (
-    resolved.pool === 'vmForks'
-    || resolved.pool === 'vmThreads'
-    || resolved.pool === 'typescript'
+    resolved.pool === 'vmForks' ||
+    resolved.pool === 'vmThreads' ||
+    resolved.pool === 'typescript'
   ) {
     resolved.isolate = false
   }
@@ -718,9 +723,7 @@ export function resolveTestConfig(
   }
 
   if (options.related) {
-    resolved.related = toArray(options.related).map(file =>
-      resolve(resolved.root, file),
-    )
+    resolved.related = toArray(options.related).map((file) => resolve(resolved.root, file))
   }
 
   /*
@@ -751,35 +754,30 @@ export function resolveTestConfig(
       for (const reporter of reporters) {
         if (Array.isArray(reporter)) {
           // Reporter with options, e.g. { reporters: [ [ 'json', { outputFile: 'test.json' } ] ] }
-          resolved.reporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
-        }
-        else if (typeof reporter === 'string') {
+          resolved.reporters.push([reporter[0], (reporter[1] as Record<string, unknown>) || {}])
+        } else if (typeof reporter === 'string') {
           // Reporter name in array, e.g. { reporters: ["html", "json"]}
           resolved.reporters.push([reporter, {}])
-        }
-        else {
+        } else {
           // Inline reporter, e.g. { reporter: [{ onFinish() { method() } }] }
           resolved.reporters.push(reporter)
         }
       }
     }
-  }
-  else {
+  } else {
     resolved.reporters = []
   }
 
   // it is passed down as "vitest --reporter ../reporter.js"
   const reportersFromCLI = options.reporter
 
-  const cliReporters = toArray(reportersFromCLI || []).map(
-    (reporter: string) => {
-      // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
-      if (/^\.\.?\//.test(reporter)) {
-        return resolve(process.cwd(), reporter)
-      }
-      return reporter
-    },
-  )
+  const cliReporters = toArray(reportersFromCLI || []).map((reporter: string) => {
+    // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
+    if (/^\.\.?\//.test(reporter)) {
+      return resolve(process.cwd(), reporter)
+    }
+    return reporter
+  })
 
   if (cliReporters.length) {
     // When CLI reporters are specified, preserve options from config file
@@ -797,7 +795,7 @@ export function resolveTestConfig(
 
     resolved.reporters = Array.from(new Set(toArray(cliReporters)))
       .filter(Boolean)
-      .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
+      .map((reporter) => [reporter, configReportersMap.get(reporter) || {}])
   }
 
   // only the root resolves the label; projects receive the root's value above
@@ -830,7 +828,7 @@ export function resolveTestConfig(
   if (resolved.cache !== false) {
     if (resolved.cache && typeof resolved.cache.dir === 'string') {
       logger.deprecate(
-        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
+        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir/vitest"`,
       )
     }
 
@@ -838,19 +836,14 @@ export function resolveTestConfig(
   }
 
   resolved.sequence ??= {} as any
-  if (
-    resolved.sequence.shuffle
-    && typeof resolved.sequence.shuffle === 'object'
-  ) {
+  if (resolved.sequence.shuffle && typeof resolved.sequence.shuffle === 'object') {
     const { files, tests } = resolved.sequence.shuffle
     resolved.sequence.sequencer ??= files ? RandomSequencer : BaseSequencer
     resolved.sequence.shuffle = tests
   }
   if (!resolved.sequence?.sequencer) {
     // CLI flag has higher priority
-    resolved.sequence.sequencer = resolved.sequence.shuffle
-      ? RandomSequencer
-      : BaseSequencer
+    resolved.sequence.sequencer = resolved.sequence.shuffle ? RandomSequencer : BaseSequencer
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
@@ -868,7 +861,7 @@ export function resolveTestConfig(
     warnedTypeCheck = true
     logger.console.warn(
       c.yellow(
-        'Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.',
+        "Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.",
       ),
     )
   }
@@ -902,27 +895,30 @@ export function resolveTestConfig(
   if (typeof resolved.browser.provider === 'string') {
     const source = `@vitest/browser-${resolved.browser.provider}`
     throw new TypeError(
-      'The `browser.provider` configuration was changed to accept a factory instead of a string. '
-      + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/config/browser/provider`,
+      'The `browser.provider` configuration was changed to accept a factory instead of a string. ' +
+        `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/config/browser/provider`,
     )
   }
 
   const isPreview = resolved.browser.provider?.name === 'preview'
 
   if (!isPreview && resolved.browser.enabled && stdProvider === 'stackblitz') {
-    throw new Error(`stackblitz environment does not support the ${resolved.browser.provider?.name} provider. Please, use "@vitest/browser-preview" instead.`)
+    throw new Error(
+      `stackblitz environment does not support the ${resolved.browser.provider?.name} provider. Please, use "@vitest/browser-preview" instead.`,
+    )
   }
   if (isPreview && resolved.browser.screenshotFailures === true) {
-    console.warn(c.yellow(
-      [
-        `Browser provider "preview" doesn't support screenshots, `,
-        `so "browser.screenshotFailures" option is forcefully disabled. `,
-        `Set "browser.screenshotFailures" to false or remove it from the config to suppress this warning.`,
-      ].join(''),
-    ))
+    console.warn(
+      c.yellow(
+        [
+          `Browser provider "preview" doesn't support screenshots, `,
+          `so "browser.screenshotFailures" option is forcefully disabled. `,
+          `Set "browser.screenshotFailures" to false or remove it from the config to suppress this warning.`,
+        ].join(''),
+      ),
+    )
     resolved.browser.screenshotFailures = false
-  }
-  else {
+  } else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
   }
   if (resolved.browser.provider && resolved.browser.provider.options == null) {
@@ -938,8 +934,7 @@ export function resolveTestConfig(
     if (resolved.browser.ui) {
       resolved.includeTaskLocation ??= true
     }
-  }
-  else if (resolved.ui) {
+  } else if (resolved.ui) {
     resolved.includeTaskLocation ??= true
   }
 
@@ -948,25 +943,23 @@ export function resolveTestConfig(
   }
 
   const traceView = resolved.browser.traceView
-  resolved.browser.traceView = typeof traceView === 'object'
-    ? {
-        enabled: traceView.enabled ?? false,
-        recordCanvas: traceView.recordCanvas ?? false,
-        inlineImages: traceView.inlineImages ?? false,
-      }
-    : {
-        enabled: traceView ?? false,
-        recordCanvas: false,
-        inlineImages: false,
-      }
+  resolved.browser.traceView =
+    typeof traceView === 'object'
+      ? {
+          enabled: traceView.enabled ?? false,
+          recordCanvas: traceView.recordCanvas ?? false,
+          inlineImages: traceView.inlineImages ?? false,
+        }
+      : {
+          enabled: traceView ?? false,
+          recordCanvas: false,
+          inlineImages: false,
+        }
   if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
     resolved.browser.detailsPanelPosition = 'bottom'
   }
   if (resolved.browser.trace.tracesDir != null) {
-    resolved.browser.trace.tracesDir = resolvePath(
-      resolved.browser.trace.tracesDir,
-      resolved.root,
-    )
+    resolved.browser.trace.tracesDir = resolvePath(resolved.browser.trace.tracesDir, resolved.root)
   }
 
   const htmlReporter = toArray(resolved.reporters).some((reporter) => {
@@ -979,15 +972,10 @@ export function resolveTestConfig(
 
   if (htmlReporter) {
     resolved.includeTaskLocation ??= true
-  }
-  else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
+  } else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
     logger.console.warn(
       c.yellow(
-        withLabel(
-          'yellow',
-          'Vitest',
-          '--browser.traceView is enabled without the HTML reporter.',
-        ),
+        withLabel('yellow', 'Vitest', '--browser.traceView is enabled without the HTML reporter.'),
       ),
     )
   }
@@ -999,9 +987,7 @@ export function resolveTestConfig(
     const userFolder = resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP
     resolved.dumpDir = resolve(
       resolved.root,
-      typeof userFolder === 'string' && userFolder !== 'true'
-        ? userFolder
-        : '.vitest-dump',
+      typeof userFolder === 'string' && userFolder !== 'true' ? userFolder : '.vitest-dump',
       resolved.name || 'root',
     )
   }
@@ -1012,10 +998,7 @@ export function resolveTestConfig(
   resolved.experimental ??= {} as any
   resolved.sharedViteServer ??= true
   if (resolved.experimental.openTelemetry?.sdkPath) {
-    const sdkPath = resolve(
-      resolved.root,
-      resolved.experimental.openTelemetry.sdkPath,
-    )
+    const sdkPath = resolve(resolved.root, resolved.experimental.openTelemetry.sdkPath)
     resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
   }
   if (resolved.experimental.openTelemetry?.browserSdkPath) {
@@ -1029,29 +1012,44 @@ export function resolveTestConfig(
   resolved.experimental.importDurations.print ??= false
   resolved.experimental.importDurations.failOnDanger ??= false
   if (resolved.experimental.importDurations.limit == null) {
-    const shouldCollect
-      = resolved.experimental.importDurations.print
-        || resolved.experimental.importDurations.failOnDanger
-        || resolved.ui
+    const shouldCollect =
+      resolved.experimental.importDurations.print ||
+      resolved.experimental.importDurations.failOnDanger ||
+      resolved.ui
     resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
   }
   resolved.experimental.importDurations.thresholds ??= {} as any
   resolved.experimental.importDurations.thresholds.warn ??= 100
   resolved.experimental.importDurations.thresholds.danger ??= 500
 
-  const diagnostics = (resolved.experimental.diagnostics as boolean | { isolate?: boolean; environment?: boolean; import?: boolean; transform?: boolean } | undefined)
-    ?? true
-  resolved.experimental.diagnostics = typeof diagnostics === 'boolean'
-    ? { isolate: diagnostics, environment: diagnostics, import: diagnostics, transform: diagnostics }
-    : {
-        isolate: diagnostics.isolate ?? true,
-        environment: diagnostics.environment ?? true,
-        import: diagnostics.import ?? true,
-        transform: diagnostics.transform ?? true,
-      }
+  const diagnostics =
+    (resolved.experimental.diagnostics as
+      | boolean
+      | { isolate?: boolean; environment?: boolean; import?: boolean; transform?: boolean }
+      | undefined) ?? true
+  resolved.experimental.diagnostics =
+    typeof diagnostics === 'boolean'
+      ? {
+          isolate: diagnostics,
+          environment: diagnostics,
+          import: diagnostics,
+          transform: diagnostics,
+        }
+      : {
+          isolate: diagnostics.isolate ?? true,
+          environment: diagnostics.environment ?? true,
+          import: diagnostics.import ?? true,
+          transform: diagnostics.transform ?? true,
+        }
 
-  if (typeof resolved.experimental.vcsProvider === 'string' && resolved.experimental.vcsProvider !== 'git') {
-    resolved.experimental.vcsProvider = resolvePath(resolved.experimental.vcsProvider, resolved.root)
+  if (
+    typeof resolved.experimental.vcsProvider === 'string' &&
+    resolved.experimental.vcsProvider !== 'git'
+  ) {
+    resolved.experimental.vcsProvider = resolvePath(
+      resolved.experimental.vcsProvider,
+      resolved.root,
+    )
   }
 
   // `experimental.fsModuleCache` / `experimental.fsModuleCachePath` were promoted to
@@ -1060,13 +1058,17 @@ export function resolveTestConfig(
     | { fsModuleCache?: boolean; fsModuleCachePath?: string }
     | undefined
   if (legacyExperimental?.fsModuleCache != null) {
-    logger.deprecate('`experimental.fsModuleCache` is deprecated. Use the top-level `fsModuleCache` option instead.')
+    logger.deprecate(
+      '`experimental.fsModuleCache` is deprecated. Use the top-level `fsModuleCache` option instead.',
+    )
     if (options.fsModuleCache === undefined) {
       resolved.fsModuleCache = legacyExperimental.fsModuleCache
     }
   }
   if (legacyExperimental?.fsModuleCachePath != null) {
-    logger.deprecate('`experimental.fsModuleCachePath` is deprecated. Use the top-level `fsModuleCachePath` option instead.')
+    logger.deprecate(
+      '`experimental.fsModuleCachePath` is deprecated. Use the top-level `fsModuleCachePath` option instead.',
+    )
     if (options.fsModuleCachePath === undefined) {
       resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
     }
@@ -1087,7 +1089,10 @@ export function resolveTestConfig(
  * Must be the first inline plugin. The consumer must clear
  * `captures.rawTestConfig` after storing it because the server retains the plugin.
  */
-export function CaptureRawTestConfig(captures: ConfigResolutionCaptures, capture: boolean | undefined): VitePlugin {
+export function CaptureRawTestConfig(
+  captures: ConfigResolutionCaptures,
+  capture: boolean | undefined,
+): VitePlugin {
   return {
     name: 'vitest:capture-raw-test-config',
     enforce: 'pre',
@@ -1188,8 +1193,7 @@ export async function resolveConfig(
       const url = new URL(rootConfig.uiBase, 'http://localhost')
       url.searchParams.set('token', rootConfig.api.token)
       rootViteConfig.server.open = `${url.pathname}${url.search}`
-    }
-    else {
+    } else {
       // Subsequent runs: open the clean UI base URL (without `?token=`)
       // rather than the authenticated URL printed by the logger. On macOS,
       // `openBrowser` reuses an existing tab whose URL matches via substring
@@ -1234,7 +1238,9 @@ export async function resolveConfig(
   return rootViteConfig
 }
 
-export function resolveCoverageReporters(configReporters: NonNullable<CoverageOptions['reporter']>): CoverageReporterWithOptions[] {
+export function resolveCoverageReporters(
+  configReporters: NonNullable<CoverageOptions['reporter']>,
+): CoverageReporterWithOptions[] {
   // E.g. { reporter: "html" }
   if (!Array.isArray(configReporters)) {
     return [[configReporters, {}]]
@@ -1245,9 +1251,8 @@ export function resolveCoverageReporters(configReporters: NonNullable<CoverageOp
   for (const reporter of configReporters) {
     if (Array.isArray(reporter)) {
       // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
-      resolvedReporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
-    }
-    else {
+      resolvedReporters.push([reporter[0], (reporter[1] as Record<string, unknown>) || {}])
+    } else {
       // E.g. { reporter: ["html", "json"]}
       resolvedReporters.push([reporter, {}])
     }
@@ -1264,10 +1269,13 @@ export function matchesProjectFilter(projects: string[], name: string): boolean 
   if (isExcludedByProjectFilter(projects, name)) {
     return false
   }
-  const positives = projects.filter(project => !project.startsWith('!'))
-  return !positives.length || positives.some((project) => {
-    return wildcardPatternToRegExp(project).test(name)
-  })
+  const positives = projects.filter((project) => !project.startsWith('!'))
+  return (
+    !positives.length ||
+    positives.some((project) => {
+      return wildcardPatternToRegExp(project).test(name)
+    })
+  )
 }
 
 export function isExcludedByProjectFilter(projects: string[], name: string): boolean {

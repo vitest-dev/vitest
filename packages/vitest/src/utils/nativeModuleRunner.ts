@@ -10,7 +10,10 @@ export class NativeModuleRunner extends ModuleRunner {
    */
   public mocker?: TestModuleMocker
 
-  constructor(private root: string, mocker?: TestModuleMocker) {
+  constructor(
+    private root: string,
+    mocker?: TestModuleMocker,
+  ) {
     super({
       hmr: false,
       sourcemapInterceptor: false,
@@ -31,8 +34,7 @@ export class NativeModuleRunner extends ModuleRunner {
   }
 
   override async import(moduleId: string): Promise<any> {
-    const path = resolveModule(moduleId, { paths: [this.root] })
-      ?? resolve(this.root, moduleId)
+    const path = resolveModule(moduleId, { paths: [this.root] }) ?? resolve(this.root, moduleId)
 
     // resolveModule doesn't keep the query params, so we need to add them back
     let queryParams = ''

@@ -1,8 +1,14 @@
+import { __ivyaAriaTypes } from '@vitest/browser/internal/vendor-types'
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions, CDPSession, BrowserCommands, BrowserTraceEntryKind, MarkOptions } from 'vitest/internal/browser'
+import {
+  StringifyOptions,
+  CDPSession,
+  BrowserCommands,
+  BrowserTraceEntryKind,
+  MarkOptions,
+} from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
-import { __ivyaAriaTypes } from '@vitest/browser/internal/vendor-types'
 
 export type BufferEncoding =
   | 'ascii'
@@ -18,7 +24,7 @@ export type BufferEncoding =
   | 'binary'
   | 'hex'
 
-export { BrowserTraceEntryKind, CDPSession, MarkOptions };
+export { BrowserTraceEntryKind, CDPSession, MarkOptions }
 
 export interface ScreenshotOptions extends SelectorOptions {
   /**
@@ -146,7 +152,7 @@ export type NonStandardScreenshotComparators = Omit<
 >
 
 export interface ScreenshotMatcherOptions<
-  ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry
+  ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry,
 > {
   /**
    * The name of the comparator to use for visual diffing.
@@ -320,7 +326,11 @@ export interface UserEvent {
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-set-input-files} Playwright API
    * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
    */
-  upload: (element: Element | Locator, files: File | File[] | string | string[], options?: UserEventUploadOptions) => Promise<void>
+  upload: (
+    element: Element | Locator,
+    files: File | File[] | string | string[],
+    options?: UserEventUploadOptions,
+  ) => Promise<void>
   /**
    * Copies the selected content.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -360,7 +370,11 @@ export interface UserEvent {
    * @see {@link https://playwright.dev/docs/api/class-frame#frame-drag-and-drop} Playwright API
    * @see {@link https://webdriver.io/docs/api/element/dragAndDrop/} WebdriverIO API
    */
-  dragAndDrop: (source: Element | Locator, target: Element | Locator, options?: UserEventDragAndDropOptions) => Promise<void>
+  dragAndDrop: (
+    source: Element | Locator,
+    target: Element | Locator,
+    options?: UserEventDragAndDropOptions,
+  ) => Promise<void>
 }
 
 export interface UserEventFillOptions {}
@@ -851,10 +865,13 @@ export interface BrowserPage extends LocatorSelectors {
     base64: string
   }>
   screenshot(options?: Omit<ScreenshotOptions, 'base64'>): Promise<string>
-  screenshot(options?: ScreenshotOptions): Promise<string | {
-    path: string
-    base64: string
-  }>
+  screenshot(options?: ScreenshotOptions): Promise<
+    | string
+    | {
+        path: string
+        base64: string
+      }
+  >
   /**
    * Add a trace marker when browser tracing is enabled.
    * @see {@link https://vitest.dev/api/browser/context#mark}
@@ -926,7 +943,6 @@ export interface BrowserLocators {
     ) => ReturnType<LocatorSelectors[K]> | string
   }): void
 }
-
 
 export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 

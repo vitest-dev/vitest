@@ -1,9 +1,6 @@
-/* eslint-disable vars-on-top */
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 declare global {
-
   var __defined__: unknown
 
   var __setter__: unknown
@@ -121,13 +118,16 @@ describe('stubbing envs', () => {
     vi.stubEnv(name, 'string')
   })
 
-  it.each(['PROD', 'DEV', 'SSR'] as const)('stubbing boolean env.%s to undefined removes it', (name) => {
-    vi.stubEnv(name, undefined)
-    // removed entirely, not set to an empty string like a `false` boolean stub
-    expect(name in import.meta.env).toBe(false)
-    expect(process.env[name]).toBeUndefined()
-    vi.unstubAllEnvs()
-  })
+  it.each(['PROD', 'DEV', 'SSR'] as const)(
+    'stubbing boolean env.%s to undefined removes it',
+    (name) => {
+      vi.stubEnv(name, undefined)
+      // removed entirely, not set to an empty string like a `false` boolean stub
+      expect(name in import.meta.env).toBe(false)
+      expect(process.env[name]).toBeUndefined()
+      vi.unstubAllEnvs()
+    },
+  )
 
   it('setting boolean casts the value to string', () => {
     // @ts-expect-error value should be a string

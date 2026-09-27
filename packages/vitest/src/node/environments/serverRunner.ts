@@ -35,8 +35,7 @@ export class ServerModuleRunner extends ModuleRunner {
                 return { result: { ...result, code } }
               }
               return { result }
-            }
-            catch (error) {
+            } catch (error) {
               return { error }
             }
           },
@@ -47,10 +46,7 @@ export class ServerModuleRunner extends ModuleRunner {
   }
 
   async import(rawId: string): Promise<any> {
-    const resolved = await this.environment.pluginContainer.resolveId(
-      rawId,
-      this.config.root,
-    )
+    const resolved = await this.environment.pluginContainer.resolveId(rawId, this.config.root)
     if (!resolved) {
       return super.import(rawId)
     }

@@ -13,7 +13,9 @@ import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 import { injectQuery } from './utils'
 
-export type CreateImportMeta = (modulePath: string) => viteModuleRunner.ModuleRunnerImportMeta | Promise<viteModuleRunner.ModuleRunnerImportMeta>
+export type CreateImportMeta = (
+  modulePath: string,
+) => viteModuleRunner.ModuleRunnerImportMeta | Promise<viteModuleRunner.ModuleRunnerImportMeta>
 export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
   if (!viteModuleRunner.createDefaultImportMeta) {
     throw new Error(`createNodeImportMeta is not supported in this version of Vite.`)
@@ -38,14 +40,11 @@ function createImportMetaResolver() {
     return
   }
 
-  return (specifier: string, importer: string) =>
-    import.meta.resolve(specifier, importer)
+  return (specifier: string, importer: string) => import.meta.resolve(specifier, importer)
 }
 
 // @ts-expect-error overriding private method
-export class VitestModuleRunner
-  extends viteModuleRunner.ModuleRunner
-  implements TestModuleRunner {
+export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements TestModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
   private _otel: Traces
@@ -69,26 +68,27 @@ export class VitestModuleRunner
     this._callstacks = callstacks
     this._otel = vitestOptions.traces || new Traces({ enabled: false })
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
-    this.mocker = options.mocker || new VitestMocker(this, {
-      spyModule: options.spyModule,
-      context: options.vm?.context,
-      traces: this._otel,
-      resolveId: options.transport.resolveId,
-      get root() {
-        return options.getWorkerState().config.root
-      },
-      get moduleDirectories() {
-        return options.getWorkerState().config.deps.moduleDirectories || []
-      },
-      getCurrentTestFilepath() {
-        return options.getWorkerState().filepath
-      },
-    })
+    this.mocker =
+      options.mocker ||
+      new VitestMocker(this, {
+        spyModule: options.spyModule,
+        context: options.vm?.context,
+        traces: this._otel,
+        resolveId: options.transport.resolveId,
+        get root() {
+          return options.getWorkerState().config.root
+        },
+        get moduleDirectories() {
+          return options.getWorkerState().config.deps.moduleDirectories || []
+        },
+        getCurrentTestFilepath() {
+          return options.getWorkerState().filepath
+        },
+      })
 
     if (options.vm) {
       options.vm.context.__vitest_mocker__ = this.mocker
-    }
-    else {
+    } else {
       Object.defineProperty(globalThis, '__vitest_mocker__', {
         configurable: true,
         writable: true,
@@ -182,9 +182,10 @@ export class VitestModuleRunner
         return this._cachedRequest(node.url, node, callstack, metadata)
       }
       // - self-import: mock factory/file is importing the module it's mocking
-      const isSelfImport = callstack.includes(mockId)
-        || callstack.includes(url)
-        || ('redirect' in currentMock && callstack.includes(currentMock.redirect))
+      const isSelfImport =
+        callstack.includes(mockId) ||
+        callstack.includes(url) ||
+        ('redirect' in currentMock && callstack.includes(currentMock.redirect))
       if (isSelfImport) {
         const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
         return this._cachedRequest(node.url, node, callstack, metadata)
@@ -193,12 +194,10 @@ export class VitestModuleRunner
       if (isAutoMock && currentMock !== mockedModule) {
         const freshNode = await this.fetchModule(injectQuery(url, '_vitest_original'))
         mocked = await this.mocker.requestWithMockedModule(url, freshNode, callstack, currentMock)
-      }
-      else {
+      } else {
         mocked = await this.mocker.requestWithMockedModule(url, mod, callstack, currentMock)
       }
-    }
-    else {
+    } else {
       mocked = await this.mocker.mockedRequest(url, mod, callstack)
     }
 

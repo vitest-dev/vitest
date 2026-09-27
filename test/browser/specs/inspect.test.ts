@@ -1,52 +1,65 @@
 import type { InspectorNotification } from 'node:inspector'
 import { expect, test, vi } from 'vitest'
 import WebSocket from 'ws'
-
 import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
 
 const REMOTE_DEBUG_URL = '127.0.0.1:9123'
 
-test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (isWorkspace) => {
-  const options = ['--root', 'fixtures/inspect', '--no-file-parallelism', '--inspect-brk', REMOTE_DEBUG_URL]
+test.each(['', 'with workspace'])(
+  '--inspect-brk stops at test file %s',
+  async (isWorkspace) => {
+    const options = [
+      '--root',
+      'fixtures/inspect',
+      '--no-file-parallelism',
+      '--inspect-brk',
+      REMOTE_DEBUG_URL,
+    ]
 
-  if (isWorkspace) {
-    options.push('--config')
-    options.push('vitest.config.with-workspace.ts')
-  }
+    if (isWorkspace) {
+      options.push('--config')
+      options.push('vitest.config.with-workspace.ts')
+    }
 
-  const { vitest, waitForClose } = await runVitestCli(...options)
+    const { vitest, waitForClose } = await runVitestCli(...options)
 
-  await vitest.waitForStdout(`Debugger listening on ws://${REMOTE_DEBUG_URL}`)
+    await vitest.waitForStdout(`Debugger listening on ws://${REMOTE_DEBUG_URL}`)
 
-  const url = await vi.waitFor(() => fetch(`http://${REMOTE_DEBUG_URL}/json/list`)
-    .then(response => response.json())
-    .then(json => json[0].webSocketDebuggerUrl), { timeout: 30_000 })
+    const url = await vi.waitFor(
+      () =>
+        fetch(`http://${REMOTE_DEBUG_URL}/json/list`)
+          .then((response) => response.json())
+          .then((json) => json[0].webSocketDebuggerUrl),
+      { timeout: 30_000 },
+    )
 
-  const { receive, send } = await createChannel(url)
+    const { receive, send } = await createChannel(url)
 
-  const paused = receive('Debugger.paused')
-  send({ method: 'Debugger.enable' })
-  send({ method: 'Runtime.enable' })
+    const paused = receive('Debugger.paused')
+    send({ method: 'Debugger.enable' })
+    send({ method: 'Runtime.enable' })
 
-  await receive('Runtime.executionContextCreated')
-  send({ method: 'Runtime.runIfWaitingForDebugger' })
+    await receive('Runtime.executionContextCreated')
+    send({ method: 'Runtime.runIfWaitingForDebugger' })
 
-  const { params } = await paused
-  const scriptId = params.callFrames[0].functionLocation.scriptId
+    const { params } = await paused
+    const scriptId = params.callFrames[0].functionLocation.scriptId
 
-  // Verify that debugger paused on test file
-  const { result } = await send({ method: 'Debugger.getScriptSource', params: { scriptId } })
+    // Verify that debugger paused on test file
+    const { result } = await send({ method: 'Debugger.getScriptSource', params: { scriptId } })
 
-  expect(result.scriptSource).toContain('test("sum", () => {')
-  expect(result.scriptSource).toContain('expect(1 + 1).toBe(2)')
+    expect(result.scriptSource).toContain('test("sum", () => {')
+    expect(result.scriptSource).toContain('expect(1 + 1).toBe(2)')
 
-  send({ method: 'Debugger.resume' })
+    send({ method: 'Debugger.resume' })
 
-  await vitest.waitForStdout('Test Files  1 passed (1)')
-  await waitForClose()
-}, 60_000)
+    await vitest.waitForStdout('Test Files  1 passed (1)')
+    await waitForClose()
+  },
+  60_000,
+)
 
 async function createChannel(url: string) {
   const ws = new WebSocket(url)
@@ -56,7 +69,7 @@ async function createChannel(url: string) {
 
   ws.onmessage = (message) => {
     const response = JSON.parse(message.data.toString())
-    listeners.forEach(listener => listener(response))
+    listeners.forEach((listener) => listener(response))
   }
 
   async function receive(methodOrId?: string | { id: number }): Promise<Message> {
@@ -72,10 +85,9 @@ async function createChannel(url: string) {
 
       if (methodMatch || idMatch) {
         resolve(message)
-        listeners = listeners.filter(l => l !== listener)
+        listeners = listeners.filter((l) => l !== listener)
         ws.onerror = undefined
-      }
-      else if (!filter.id && !filter.method) {
+      } else if (!filter.id && !filter.method) {
         resolve(message)
       }
     }
@@ -106,7 +118,7 @@ function withResolvers() {
   let resolve: (response: Message) => void
 
   const promise: Promise<Message> = new Promise((...args) => {
-    [resolve, reject] = args
+    ;[resolve, reject] = args
   })
 
   return { promise, resolve, reject }

@@ -37,11 +37,7 @@ export default function toHaveTextContent(
       const to = this.isNot ? 'not to' : 'to'
       return getMessage(
         this,
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toHaveTextContent`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toHaveTextContent`, 'element', ''),
         `Expected element ${to} have text content`,
         expectedText,
         'Received',

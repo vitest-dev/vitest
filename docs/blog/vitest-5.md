@@ -58,19 +58,19 @@ Performance was the main focus of this release. To measure it, we built [vitest-
 
 Here is a selection of cells from the comparison between Vitest 4.1.10 and Vitest 5.0 (Apple M4, 10 cores, Node 24, whole-process wall clock of `vitest run`, median of 3 runs):
 
-| App | Configuration | Vitest 4.1 | Vitest 5.0 | Change |
-| --- | --- | ---: | ---: | ---: |
-| micro-utils (5 test files) | `vmThreads`, `jsdom` | 0.61s | 0.56s | −8% |
-| node-library (40 test files) | `forks`, isolated | 0.86s | 0.75s | −13% |
-| deps-heavy | `vmThreads` | 1.59s | 0.74s | −53% |
-| react-spa (92 modules) | `vmThreads`, `jsdom` | 1.25s | 1.07s | −15% |
-| react-spa (92 modules) | Browser Mode, Chromium | 2.40s | 2.01s | −16% |
-| vue-spa (37 components) | Browser Mode, Chromium | 1.94s | 1.58s | −18% |
-| design-system (80 components) | `vmThreads`, `jsdom` | 2.09s | 1.72s | −18% |
-| barrel-hell (817 modules) | `forks`, isolated, `fsModuleCache` | 1.33s | 1.08s | −18% |
-| enterprise-monolith (1,280 modules) | `forks`, isolated | 7.24s | 5.83s | −19% |
-| long-haul (80 `jsdom` files) | `vmForks`, `happy-dom` | 5.43s | 4.06s | −25% |
-| cpu-bound (30 test files) | `threads`, 100% workers | 0.91s | 0.83s | −8% |
+| App                                 | Configuration                      | Vitest 4.1 | Vitest 5.0 | Change |
+| ----------------------------------- | ---------------------------------- | ---------: | ---------: | -----: |
+| micro-utils (5 test files)          | `vmThreads`, `jsdom`               |      0.61s |      0.56s |    −8% |
+| node-library (40 test files)        | `forks`, isolated                  |      0.86s |      0.75s |   −13% |
+| deps-heavy                          | `vmThreads`                        |      1.59s |      0.74s |   −53% |
+| react-spa (92 modules)              | `vmThreads`, `jsdom`               |      1.25s |      1.07s |   −15% |
+| react-spa (92 modules)              | Browser Mode, Chromium             |      2.40s |      2.01s |   −16% |
+| vue-spa (37 components)             | Browser Mode, Chromium             |      1.94s |      1.58s |   −18% |
+| design-system (80 components)       | `vmThreads`, `jsdom`               |      2.09s |      1.72s |   −18% |
+| barrel-hell (817 modules)           | `forks`, isolated, `fsModuleCache` |      1.33s |      1.08s |   −18% |
+| enterprise-monolith (1,280 modules) | `forks`, isolated                  |      7.24s |      5.83s |   −19% |
+| long-haul (80 `jsdom` files)        | `vmForks`, `happy-dom`             |      5.43s |      4.06s |   −25% |
+| cpu-bound (30 test files)           | `threads`, 100% workers            |      0.91s |      0.83s |    −8% |
 
 The biggest wins are in the vm pools, in Browser Mode, and in large isolated suites. Cells that were already dominated by the environment setup, like `forks` with `jsdom` and isolation, stay within ±3% of Vitest 4.1. The full result set for every cell is in the [benchmarks repository](https://github.com/vitest-dev/benchmarks).
 
@@ -105,6 +105,7 @@ Vitest 5 adds a built-in [Trace View](/guide/browser/trace-view) for Browser Mod
 Select a step to see the reconstructed page at that moment with the interacted element highlighted, and Vitest opens the source location in the editor panel. Failed actions and assertions are highlighted in red. Trace view also supports keyboard navigation and live updates in watch mode.
 
 ::: code-group
+
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
@@ -116,9 +117,11 @@ export default defineConfig({
   },
 })
 ```
+
 ```bash [CLI]
 vitest --browser.traceView
 ```
+
 :::
 
 Unlike [Playwright Traces](/guide/browser/playwright-traces), trace view does not depend on the provider and does not require a separate viewer.

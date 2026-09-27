@@ -1,10 +1,7 @@
 import type { ServerResponse } from 'node:http'
 
 export function disableCache(res: ServerResponse): void {
-  res.setHeader(
-    'Cache-Control',
-    'no-cache, max-age=0, must-revalidate',
-  )
+  res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
 }
 

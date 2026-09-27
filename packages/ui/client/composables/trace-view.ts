@@ -88,7 +88,9 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
   return merged
 }
 
-export function getTraceAttemptMap(artifacts: TestArtifact[]): Map<string, NormalizedBrowserTraceData> {
+export function getTraceAttemptMap(
+  artifacts: TestArtifact[],
+): Map<string, NormalizedBrowserTraceData> {
   const grouped: Record<string, BrowserTraceData[]> = {}
   for (const artifact of artifacts) {
     if (artifact.type !== 'internal:browserTrace') {
@@ -103,7 +105,7 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Map<string, Norma
   const merged = new Map<string, NormalizedBrowserTraceData>()
   for (const [key, traces] of Object.entries(grouped)) {
     const trace = traces[0]
-    const entries = traces.flatMap(trace => trace.entries)
+    const entries = traces.flatMap((trace) => trace.entries)
     merged.set(key, {
       ...trace,
       entries: normalizeTraceEntries(entries),
@@ -112,11 +114,11 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Map<string, Norma
   return merged
 }
 
-export function getSelectedTrace(selection: TraceSelection): NormalizedBrowserTraceData | undefined {
+export function getSelectedTrace(
+  selection: TraceSelection,
+): NormalizedBrowserTraceData | undefined {
   const attempts = getTraceAttemptMap(selection.test.artifacts)
-  return selection.attemptKey
-    ? attempts.get(selection.attemptKey)
-    : [...attempts.values()][0]
+  return selection.attemptKey ? attempts.get(selection.attemptKey) : [...attempts.values()][0]
 }
 
 export function getTraceEditorMarkersForFile(
@@ -125,8 +127,8 @@ export function getTraceEditorMarkersForFile(
 ): TraceEditorMarker[] {
   const trace = getSelectedTrace(selection)
   return getTraceEditorMarkers(trace?.entries ?? [])
-    .filter(marker => marker.file === file)
-    .map(marker => ({
+    .filter((marker) => marker.file === file)
+    .map((marker) => ({
       ...marker,
       active: marker.stepIndex === selection.selectedStepIndex,
     }))
@@ -218,31 +220,31 @@ export function selectActiveTraceAttempt(attemptKey: string) {
 
 // Resolve the URL-selected task only when it can be shown in the trace view.
 const selectedTestTask = computed(() => {
-  const test = selectedTest.value
-    ? client.state.idMap.get(selectedTest.value)
-    : undefined
-  return test?.type === 'test' && isTraceViewEnabled(test.file)
-    ? test
-    : undefined
+  const test = selectedTest.value ? client.state.idMap.get(selectedTest.value) : undefined
+  return test?.type === 'test' && isTraceViewEnabled(test.file) ? test : undefined
 })
 
 // Open/close only on selected-test navigation so the close button can clear the
 // trace view without being auto-opened again for the same selected test.
 // Flush synchronously so traceStep is set before the URL is updated.
 // Vueuse URL watcher pauses while writing and would otherwise miss the change.
-watch(selectedTest, (testId) => {
-  if (testId) {
-    const test = selectedTestTask.value
-    if (test) {
-      // Auto-open trace view when selecting a trace-enabled test.
-      setActiveTrace({ test, selectedStepIndex: 0 })
-      return
+watch(
+  selectedTest,
+  (testId) => {
+    if (testId) {
+      const test = selectedTestTask.value
+      if (test) {
+        // Auto-open trace view when selecting a trace-enabled test.
+        setActiveTrace({ test, selectedStepIndex: 0 })
+        return
+      }
     }
-  }
 
-  // Close trace view when navigation moves away from a trace-enabled test.
-  closeTrace()
-}, { flush: 'sync' })
+    // Close trace view when navigation moves away from a trace-enabled test.
+    closeTrace()
+  },
+  { flush: 'sync' },
+)
 
 // Keep the pane attached to the latest test object after reruns, and reset the
 // attempt selection because retries/repeats belong to one run.
@@ -260,10 +262,10 @@ watchEffect(() => {
 
 export function isTraceViewEnabled(test: RunnerTestFile): boolean {
   const project = getProjectConfigByName(config.value, test.file.projectName)
-  const traceView
-    = browserState?.config.browser?.traceView
-      ?? project?.browser.traceView
-      ?? config.value.browser?.traceView
+  const traceView =
+    browserState?.config.browser?.traceView ??
+    project?.browser.traceView ??
+    config.value.browser?.traceView
   return traceView?.enabled ?? false
 }
 
@@ -295,8 +297,11 @@ function initializeTraceView() {
     }
 
     const attempts = getTraceAttemptMap(test.artifacts)
-    const selectedAttemptKey = attemptKey != null && attempts.has(attemptKey) ? attemptKey : undefined
-    const selectedTrace = selectedAttemptKey ? attempts.get(selectedAttemptKey) : [...attempts.values()][0]
+    const selectedAttemptKey =
+      attemptKey != null && attempts.has(attemptKey) ? attemptKey : undefined
+    const selectedTrace = selectedAttemptKey
+      ? attempts.get(selectedAttemptKey)
+      : [...attempts.values()][0]
     const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
     detailsPosition.value = 'bottom'
     setActiveTrace({

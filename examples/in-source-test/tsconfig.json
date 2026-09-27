@@ -2,9 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "types": [
-      "vitest/importMeta"
-    ],
+    "types": ["vitest/importMeta"],
     "strict": true,
     "declaration": true,
     "declarationMap": true

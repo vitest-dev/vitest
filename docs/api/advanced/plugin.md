@@ -14,6 +14,7 @@ This guide assumes you know how to work with [Vite plugins](https://vite.dev/gui
 Vitest supports a `configureVitest` [plugin](https://vite.dev/guide/api-plugin.html) hook since version 3.1.
 
 ::: code-group
+
 ```ts [only vitest]
 import type { Vite, VitestPluginContext } from 'vitest/node'
 
@@ -26,6 +27,7 @@ export function plugin(): Vite.Plugin {
   }
 }
 ```
+
 ```ts [vite and vitest]
 /// <reference types="vitest/config" />
 
@@ -43,6 +45,7 @@ export function plugin(): Plugin {
   }
 }
 ```
+
 :::
 
 ::: tip TypeScript
@@ -51,6 +54,7 @@ Vitest re-exports all Vite type-only imports via a `Vite` namespace, which you c
 ```ts
 /// <reference types="vitest/config" />
 ```
+
 :::
 
 Unlike [`reporter.onInit`](/api/advanced/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [test project](/guide/projects) if your plugin is defined in the project and not in the global config.

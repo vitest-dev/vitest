@@ -4,17 +4,20 @@ export function groupBy<T, K extends string | number | symbol>(
   collection: T[],
   iteratee: (item: T) => K,
 ): Record<K, T[]> {
-  return collection.reduce((acc, item) => {
-    const key = iteratee(item)
-    acc[key] ||= []
-    acc[key].push(item)
-    return acc
-  }, {} as Record<K, T[]>)
+  return collection.reduce(
+    (acc, item) => {
+      const key = iteratee(item)
+      acc[key] ||= []
+      acc[key].push(item)
+      return acc
+    },
+    {} as Record<K, T[]>,
+  )
 }
 
 export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
-  // eslint-disable-next-line no-console
+  // oxlint-disable-next-line no-console
   return console._stdout || process.stdout
 }
 
@@ -37,8 +40,7 @@ export function createIndexLocationsMap(source: string): Map<number, ModuleDefin
     if (char === '\n' || char === '\r\n') {
       line++
       column = 0
-    }
-    else {
+    } else {
       column++
     }
   }
@@ -55,8 +57,7 @@ export function createLocationsIndexMap(source: string): Map<string, number> {
     if (char === '\n' || char === '\r\n') {
       line++
       column = 0
-    }
-    else {
+    } else {
       column++
     }
   }

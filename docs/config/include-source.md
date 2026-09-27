@@ -51,6 +51,7 @@ if (import.meta.vitest) {
 For your production build, you need to replace the `import.meta.vitest` with `undefined`, letting the bundler do the dead code elimination.
 
 ::: code-group
+
 ```js [vite.config.ts]
 import { defineConfig } from 'vite'
 
@@ -60,6 +61,7 @@ export default defineConfig({
   }, // [!code ++]
 })
 ```
+
 ```js [rolldown.config.js]
 import { defineConfig } from 'rolldown/config'
 
@@ -71,6 +73,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```js [rollup.config.js]
 import replace from '@rollup/plugin-replace' // [!code ++]
 
@@ -83,6 +86,7 @@ export default {
   // other options
 }
 ```
+
 ```js [build.config.js]
 import { defineBuildConfig } from 'unbuild'
 
@@ -93,6 +97,7 @@ export default defineBuildConfig({
   // other options
 })
 ```
+
 ```js [webpack.config.js]
 const webpack = require('webpack')
 
@@ -104,6 +109,7 @@ module.exports = {
   ],
 }
 ```
+
 :::
 
 ::: tip
@@ -116,4 +122,5 @@ To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to y
   }
 }
 ```
+
 :::

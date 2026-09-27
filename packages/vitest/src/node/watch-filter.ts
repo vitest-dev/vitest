@@ -14,8 +14,12 @@ export interface FilterObject {
   toString: () => string
 }
 
-type FilterItemType<T extends 'string' | 'object' = 'string'> = T extends 'string' ? string : FilterObject
-type FilterFuncType<T extends 'string' | 'object' = 'string'> = (keyword: string) => Promise<FilterItemType<T>[]> | FilterItemType<T>[]
+type FilterItemType<T extends 'string' | 'object' = 'string'> = T extends 'string'
+  ? string
+  : FilterObject
+type FilterFuncType<T extends 'string' | 'object' = 'string'> = (
+  keyword: string,
+) => Promise<FilterItemType<T>[]> | FilterItemType<T>[]
 
 export class WatchFilter<T extends 'string' | 'object' = 'string'> {
   private filterRL: readline.Interface
@@ -57,23 +61,18 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
     this.stdin.on('keypress', this.onKeyPress)
     try {
       return await resultPromise
-    }
-    finally {
+    } finally {
       this.close()
     }
   }
 
-  private filterHandler(
-    filterFunc: FilterFuncType<T>,
-    onSubmit: (result?: string) => void,
-  ) {
+  private filterHandler(filterFunc: FilterFuncType<T>, onSubmit: (result?: string) => void) {
     return async (str: string | undefined, key: any) => {
       switch (true) {
         case key.sequence === '\x7F':
           if (this.currentKeyword && this.currentKeyword?.length > 1) {
             this.currentKeyword = this.currentKeyword?.slice(0, -1)
-          }
-          else {
+          } else {
             this.currentKeyword = undefined
           }
 
@@ -86,20 +85,15 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
         case key?.name === 'enter':
         case key?.name === 'return': {
           const selection = this.results[this.selectionIndex]
-          const result = typeof selection === 'string'
-            ? selection
-            : selection?.key
-          onSubmit(
-            result || this.currentKeyword || '',
-          )
+          const result = typeof selection === 'string' ? selection : selection?.key
+          onSubmit(result || this.currentKeyword || '')
           this.currentKeyword = undefined
           break
         }
         case key?.name === 'up':
           if (this.selectionIndex && this.selectionIndex > 0) {
             this.selectionIndex--
-          }
-          else {
+          } else {
             this.selectionIndex = -1
           }
 
@@ -107,8 +101,7 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
         case key?.name === 'down':
           if (this.selectionIndex < this.results.length - 1) {
             this.selectionIndex++
-          }
-          else if (this.selectionIndex >= this.results.length - 1) {
+          } else if (this.selectionIndex >= this.results.length - 1) {
             this.selectionIndex = this.results.length - 1
           }
 
@@ -116,8 +109,7 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
         case !key?.ctrl && !key?.meta:
           if (this.currentKeyword === undefined) {
             this.currentKeyword = str
-          }
-          else {
+          } else {
             this.currentKeyword += str || ''
           }
           break
@@ -135,29 +127,21 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
     let printStr = this.promptLine()
     if (!this.currentKeyword) {
       printStr += '\nPlease input filter pattern'
-    }
-    else if (this.currentKeyword && this.results.length === 0) {
+    } else if (this.currentKeyword && this.results.length === 0) {
       printStr += '\nPattern matches no results'
-    }
-    else {
-      const resultCountLine
-        = this.results.length === 1
+    } else {
+      const resultCountLine =
+        this.results.length === 1
           ? `Pattern matches ${this.results.length} result`
           : `Pattern matches ${this.results.length} results`
 
       let resultBody = ''
 
       if (this.results.length > MAX_RESULT_COUNT) {
-        const offset
-          = this.selectionIndex > SELECTION_MAX_INDEX
-            ? this.selectionIndex - SELECTION_MAX_INDEX
-            : 0
-        const displayResults = this.results.slice(
-          offset,
-          MAX_RESULT_COUNT + offset,
-        )
-        const remainingResultCount
-          = this.results.length - offset - displayResults.length
+        const offset =
+          this.selectionIndex > SELECTION_MAX_INDEX ? this.selectionIndex - SELECTION_MAX_INDEX : 0
+        const displayResults = this.results.slice(offset, MAX_RESULT_COUNT + offset)
+        const remainingResultCount = this.results.length - offset - displayResults.length
 
         resultBody = `${displayResults
           .map((result, index) =>
@@ -167,21 +151,18 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
           )
           .join('\n')}`
         if (remainingResultCount > 0) {
-          resultBody
-            += '\n'
-              + `${c.dim(
-                `   ...and ${remainingResultCount} more ${
-                  remainingResultCount === 1 ? 'result' : 'results'
-                }`,
-              )}`
+          resultBody +=
+            '\n' +
+            `${c.dim(
+              `   ...and ${remainingResultCount} more ${
+                remainingResultCount === 1 ? 'result' : 'results'
+              }`,
+            )}`
         }
-      }
-      else {
+      } else {
         resultBody = this.results
           .map((result, index) =>
-            index === this.selectionIndex
-              ? c.green(` › ${result}`)
-              : c.dim(` › ${result}`),
+            index === this.selectionIndex ? c.green(` › ${result}`) : c.dim(` › ${result}`),
           )
           .join('\n')
       }
@@ -197,9 +178,7 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
   }
 
   private promptLine() {
-    return `${c.cyan('?')} ${c.bold(this.message)} › ${
-      this.currentKeyword || ''
-    }`
+    return `${c.cyan('?')} ${c.bold(this.message)} › ${this.currentKeyword || ''}`
   }
 
   private eraseAndPrint(str: string) {
@@ -230,8 +209,7 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
   }
 
   private restoreCursor() {
-    const cursorPos
-      = this.keywordOffset() + (this.currentKeyword?.length || 0)
+    const cursorPos = this.keywordOffset() + (this.currentKeyword?.length || 0)
     this.write(`${ESC}${cursorPos}G`)
   }
 
@@ -240,6 +218,6 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
   }
 
   public getLastResults(): string[] {
-    return this.results.map(r => (typeof r === 'string' ? r : r.toString()))
+    return this.results.map((r) => (typeof r === 'string' ? r : r.toString()))
   }
 }

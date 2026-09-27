@@ -35,17 +35,24 @@ export async function runBrowserTests(
   viteOverrides?: Partial<ViteUserConfig>,
   runnerOptions?: VitestRunnerCLIOptions,
 ) {
-  const result = await runVitest({
-    watch: false,
-    reporters: 'none',
-    ...config,
-    browser: { headless: true, ...config?.browser },
-    $viteConfig: viteOverrides,
-  }, include, runnerOptions)
+  const result = await runVitest(
+    {
+      watch: false,
+      reporters: 'none',
+      ...config,
+      browser: { headless: true, ...config?.browser },
+      $viteConfig: viteOverrides,
+    },
+    include,
+    runnerOptions,
+  )
 
   return {
     ...result,
     ctx: result.ctx!,
-    stderr: result.stderr.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', ''),
+    stderr: result.stderr.replace(
+      "Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\n",
+      '',
+    ),
   }
 }
