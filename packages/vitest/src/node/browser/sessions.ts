@@ -5,11 +5,46 @@ import { createDefer } from '@vitest/utils/helpers'
 
 export class BrowserSessions {
   private sessions = new Map<string, BrowserServerStateSession>()
+  private pendingUpdates = new Map<string, { count: number; waiters: (() => void)[] }>()
 
   public sessionIds: Set<string> = new Set()
 
   getSession(sessionId: string): BrowserServerStateSession | undefined {
     return this.sessions.get(sessionId)
+  }
+
+  startUpdate(sessionId: string): void {
+    const pending = this.pendingUpdates.get(sessionId)
+    if (pending) {
+      pending.count++
+    }
+    else {
+      this.pendingUpdates.set(sessionId, { count: 1, waiters: [] })
+    }
+  }
+
+  finishUpdate(sessionId: string): void {
+    const pending = this.pendingUpdates.get(sessionId)
+    if (!pending) {
+      return
+    }
+    pending.count--
+    if (pending.count > 0) {
+      return
+    }
+    this.pendingUpdates.delete(sessionId)
+    pending.waiters.forEach(resolve => resolve())
+  }
+
+  // the results of the last test can still be arriving when the session has no tests left
+  waitForUpdates(sessionId: string): Promise<void> {
+    const pending = this.pendingUpdates.get(sessionId)
+    if (!pending) {
+      return Promise.resolve()
+    }
+    return new Promise<void>((resolve) => {
+      pending.waiters.push(resolve)
+    })
   }
 
   destroySession(sessionId: string): void {
