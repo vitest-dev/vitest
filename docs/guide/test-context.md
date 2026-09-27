@@ -456,6 +456,46 @@ test('context must be destructured', ({ database }) => { // [!code ++]
 ```
 :::
 
+### Fixtures and `AsyncLocalStorage` <Version>5.0.0</Version> {#fixtures-async-local-storage}
+
+Application code often reads request-scoped state, such as loggers, tenant configuration, or database clients, from an [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html). A fixture can run every test inside its own store. The test executes while the fixture's `use()` call is pending, so anything that calls `getStore()` during the test sees the fixture's store without it being passed down:
+
+```ts
+import { AsyncLocalStorage } from 'node:async_hooks'
+import { test as baseTest, expect } from 'vitest'
+
+const als = new AsyncLocalStorage<{ role: string }>()
+
+// application code - reads the store, receives no arguments
+function getCurrentRole() {
+  return als.getStore()?.role
+}
+
+const test = baseTest.extend<{ store: { role: string } }>({
+  store: [
+    async ({}, use) => {
+      const store = { role: 'admin' }
+      await als.run(store, () => use(store))
+    },
+    { auto: true },
+  ],
+})
+
+test('application code sees the fixture store', ({ store }) => {
+  expect(getCurrentRole()).toBe('admin')
+  expect(als.getStore()).toBe(store)
+})
+```
+
+The store is also visible in `beforeEach`/`afterEach`, in fixtures that depend on this one, and in `onTestFinished`/`onTestFailed` callbacks. Each test gets its own store, even with `test.concurrent`.
+
+::: warning
+Only test-scoped fixtures propagate their store. Fixtures with `scope: 'file'` or `scope: 'worker'` still provide their **value**, but tests do not run inside their store.
+To set up a store around each test of a suite, register an [`aroundEach`](/api/hooks#aroundeach) hook; to open a single store spanning every test in a suite or file, use [`aroundAll`](/api/hooks#aroundall).
+
+This requires `node:async_hooks` and is not available in browser mode.
+:::
+
 ### Extending Extended Tests
 
 You can extend an already extended test to add more fixtures:

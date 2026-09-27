@@ -1,5 +1,10 @@
 import type { File, FixtureFn, FixtureOptions, Suite, TestContext, VitestRunner } from './types'
 import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils/helpers'
+import {
+  advanceAsyncContextChain,
+  clearAsyncContextChain,
+  getAsyncContextChain,
+} from './async-context'
 import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
@@ -243,11 +248,16 @@ const cleanupFnArrayMap = new WeakMap<
 >()
 
 export async function callFixtureCleanup(context: object): Promise<void> {
-  const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
-  for (const cleanup of cleanupFnArray.reverse()) {
-    await cleanup()
+  try {
+    const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
+    for (const cleanup of cleanupFnArray.reverse()) {
+      await cleanup()
+    }
+    cleanupFnArrayMap.delete(context)
   }
-  cleanupFnArrayMap.delete(context)
+  finally {
+    clearAsyncContextChain(context)
+  }
 }
 
 /**
@@ -325,12 +335,14 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
 
     const fixtures = options?.fixtures || getTestFixtures(context)
     if (!fixtures) {
-      return fn(context)
+      const chain = getAsyncContextChain(context)
+      return chain ? chain(() => fn(context)) : fn(context)
     }
 
     const registrations = fixtures.get(suite)
     if (!registrations.size) {
-      return fn(context)
+      const chain = getAsyncContextChain(context)
+      return chain ? chain(() => fn(context)) : fn(context)
     }
 
     const usedFixtures: TestFixtureItem[] = []
@@ -343,7 +355,8 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     }
 
     if (!usedFixtures.length) {
-      return fn(context)
+      const chain = getAsyncContextChain(context)
+      return chain ? chain(() => fn(context)) : fn(context)
     }
 
     if (!cleanupFnArrayMap.has(context)) {
@@ -354,7 +367,8 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     const pendingFixtures = resolveDeps(usedFixtures, registrations)
 
     if (!pendingFixtures.length) {
-      return fn(context)
+      const chain = getAsyncContextChain(context)
+      return chain ? chain(() => fn(context)) : fn(context)
     }
 
     // Check if suite-level hook is trying to access test-scoped fixtures
@@ -417,7 +431,8 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       }
     }
 
-    return fn(context)
+    const chain = getAsyncContextChain(context)
+    return chain ? chain(() => fn(context)) : fn(context)
   }
 }
 
@@ -450,6 +465,7 @@ function resolveTestFixtureValue(
     fixture.name,
     context,
     cleanupFnArray,
+    context,
   )
 }
 
@@ -504,6 +520,7 @@ async function resolveFixtureFunction(
   fixtureName: string,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
+  chainKey?: object,
 ): Promise<unknown> {
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
@@ -513,7 +530,14 @@ async function resolveFixtureFunction(
       : undefined
   let isUseFnArgResolved = false
 
-  const fixtureReturn = fixtureFn(context, async (useFnArg: unknown) => {
+  let fixtureReturn: Promise<void>
+  const useFn = async (useFnArg: unknown) => {
+    // capture the async context established by the fixture around `use()`,
+    // so the test body and hooks can run inside it (see async-context.ts)
+    if (chainKey) {
+      advanceAsyncContextChain(chainKey)
+    }
+
     // extract `use` argument
     isUseFnArgResolved = true
     useFnArgPromise.resolve(useFnArg)
@@ -527,7 +551,10 @@ async function resolveFixtureFunction(
       await fixtureReturn
     })
     await useReturnPromise
-  }).then(() => {
+  }
+
+  const chain = getAsyncContextChain(chainKey)
+  fixtureReturn = (chain ? chain(() => fixtureFn(context, useFn)) : fixtureFn(context, useFn)).then(() => {
     // fixture returned without calling use()
     if (!isUseFnArgResolved) {
       const error = new Error(

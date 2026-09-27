@@ -16,6 +16,7 @@ const IGNORED_TYPES = new Set([
   'TCPWRAP',
   'TIMERWRAP',
   'TLSWRAP',
+  'VITEST_ASYNC_CONTEXT_CHAIN',
   'ZLIB',
 ])
 
