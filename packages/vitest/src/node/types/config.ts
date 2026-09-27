@@ -1380,6 +1380,11 @@ export interface ResolvedConfig extends Omit<
    * @internal
    */
   _browserContribution?: BrowserServerContribution
+  /**
+   * `api` or `ui` was set by the user. Browser mode always assigns `api.port`.
+   * @internal
+   */
+  _apiRequested?: boolean
 }
 
 /**
