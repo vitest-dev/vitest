@@ -403,6 +403,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
         },
         async triggerCommand(sessionId, command, testPath, payload) {
+          payload = payload.map(value => value === null ? undefined : value)
           debug?.('[%s] Triggering command "%s"', sessionId, command)
           const provider = project.browser!.provider
           if (!provider) {
