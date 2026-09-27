@@ -252,7 +252,8 @@ export class Logger {
 
       this.log(PAD + c.dim(c.green(`UI started at ${url}`)))
     }
-    else if (this.ctx.config.api?.port) {
+    // browser mode always has `api.port`, but only listens on startup for `api`/`ui`
+    else if (this.ctx.config.api?.port && this.ctx.config._apiRequested) {
       const resolvedUrls = this.ctx.vite.resolvedUrls
       // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
       const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`

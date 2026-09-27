@@ -26,6 +26,7 @@ import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
+import { listenClusterServer } from './plugins/browserLoader'
 import { getFilePoolName } from './pool'
 import { globProjectFiles, globProjectTestFiles, isInSourceTestCode } from './projects/globProjectFiles'
 import { VitestResolver } from './resolver'
@@ -552,8 +553,9 @@ export class TestProject {
       return
     }
     // The browser server is created eagerly with the project, so `this.browser`
-    // is already set here; we only need to initialize the provider.
+    // is already set here; bind the port if startup did not, then init the provider.
     if (this.browser) {
+      await listenClusterServer(this.vite)
       await this.vitest.report('onBrowserInit', this)
     }
     await this.browser?.initBrowserProvider(this)
