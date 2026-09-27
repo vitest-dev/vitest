@@ -1,6 +1,7 @@
 import type { ConstructorOptions, DOMWindow, VirtualConsole as IVirtualConsole } from 'jsdom'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import { createRequire } from 'node:module'
 import { URL as NodeURL } from 'node:url'
 import { populateGlobal } from './utils'
 
@@ -306,6 +307,11 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
   const implSymbol = Object.getOwnPropertySymbols(
     Object.getOwnPropertyDescriptors(new window.Blob()),
   )[0]
+  // jsdom 30.1 moved the implementation from the `Symbol(impl)` own property
+  // into a private class field, so `implSymbol` is `undefined` there and
+  // `blob[implSymbol]` cannot unwrap the wrapper anymore;
+  // jsdom's own `implForWrapper` can unwrap both layouts
+  const implForWrapper = getImplForWrapper()
   const utils = {
     window,
     makeCompatFormData(formData: FormData) {
@@ -321,12 +327,33 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
-      const impl = (blob as any)[implSymbol]
+      const impl = (implForWrapper?.(blob) ?? (blob as any)[implSymbol]) as any
       // jsdom 28 renamed `_buffer` to `_bytes`
       return new NodeBlob_([impl._bytes ?? impl._buffer], { type: blob.type })
     },
   }
   return utils
+}
+
+function getImplForWrapper(): ((wrapper: object) => unknown) | undefined {
+  const require = createRequire(import.meta.url)
+  // jsdom 30.1+ exports `implForWrapper` from the new subpath, older
+  // versions from the old one; jsdom has no `exports` map, so both
+  // subpaths can be required directly
+  const subpaths = [
+    'jsdom/lib/generated/idl/utils.js',
+    'jsdom/lib/jsdom/living/generated/utils.js',
+  ]
+  for (const subpath of subpaths) {
+    try {
+      const utils = require(subpath)
+      if (typeof utils?.implForWrapper === 'function') {
+        return utils.implForWrapper
+      }
+    }
+    catch {}
+  }
+  return undefined
 }
 
 function patchAddEventListener(window: DOMWindow) {

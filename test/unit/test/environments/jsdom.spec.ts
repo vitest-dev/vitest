@@ -324,6 +324,8 @@ test('URL.createObjectUrl works properly', () => {
   expect(() => {
     URL.createObjectURL(new File([], 'name.js'))
   }).not.toThrow()
+  expect(URL.createObjectURL(new Blob(['hello']))).toMatch(/^blob:/)
+  expect(URL.createObjectURL(new File(['hello'], 'name.js'))).toMatch(/^blob:/)
 })
 
 test('compat classes preserve their .name property', () => {
