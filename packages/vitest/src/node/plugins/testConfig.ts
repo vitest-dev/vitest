@@ -162,12 +162,14 @@ export function TestConfigPlugin(
             resolvedTestConfig._scriptDefines = scriptDefines
           }
 
+          const apiRequested = !!(testConfig.ui || testConfig.api)
           const api = resolveApiServerConfig(
             testConfig,
             isBrowserEnabled ? harness._browserLastPort++ : defaultPort,
             harness.logger,
           ) as ResolvedApiConfig
           testConfig.api = api
+          resolvedTestConfig._apiRequested = apiRequested
           if (globalConfig) {
             api.token = globalConfig.api.token
             api.tokenCreated = globalConfig.api.tokenCreated

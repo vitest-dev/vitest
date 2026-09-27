@@ -434,7 +434,7 @@ export interface BrowserServerContribution {
    * when the `Vitest` instance exists.
    */
   createParent: (ctx: { config: ResolvedConfig; vitest: Vitest }) => ParentProjectBrowser
-  /** Called by core after `server.listen()` to wire up the browser RPC. */
+  /** Called by core once the server exists to wire up the browser RPC (the port may be bound later). */
   setupRpc: (parent: ParentProjectBrowser) => void
   /**
    * Mutable. Filled by core at server creation; the pushed `BrowserPlugin`

@@ -136,6 +136,25 @@ export function BrowserLoaderPlugin(
   ]
 }
 
+const deferredListen = new WeakMap<ViteDevServer, { port: number | undefined; listening?: Promise<void> }>()
+
+export function listenClusterServer(server: ViteDevServer): Promise<void> {
+  const deferred = deferredListen.get(server)
+  if (!deferred) {
+    return Promise.resolve()
+  }
+  deferred.listening ??= server.listen(deferred.port).then(
+    () => {
+      deferredListen.delete(server)
+    },
+    (error) => {
+      deferred.listening = undefined
+      throw error
+    },
+  )
+  return deferred.listening
+}
+
 export async function createClusterServer(
   vitest: Vitest,
   viteConfig: ResolvedViteConfig,
@@ -173,7 +192,14 @@ export async function createClusterServer(
   }
 
   const server = await createViteServer(viteConfig)
-  await server.listen(config.api.port)
+  // listen on startup only for `api`/`ui`, otherwise on the first browser launch
+  // (collect-only processes never listen, so Vite never starts a dependency scan)
+  if (config._apiRequested) {
+    await server.listen(config.api.port)
+  }
+  else {
+    deferredListen.set(server, { port: config.api.port })
+  }
   contribution.setupRpc(parent)
   return { server, parent }
 }
