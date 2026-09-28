@@ -10,7 +10,8 @@ export interface BenchmarkUserOptions {
 
   /**
    * Exclude globs for benchmark test files
-   * @default []
+   *
+   * @default ['**\/node_modules/**', '**\/.git/**']
    */
   exclude?: string[]
 

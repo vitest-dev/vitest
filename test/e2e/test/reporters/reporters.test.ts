@@ -7,7 +7,7 @@ import { files, getContext, passedFiles } from './utils'
 
 const beautify = (json: string) => JSON.parse(json)
 function getTestModules(_files = files) {
-  return _files.map(task => ({ task }) as TestModule)
+  return _files.map((task) => ({ task }) as TestModule)
 }
 
 beforeEach(() => {
@@ -75,7 +75,11 @@ test('JUnit reporter without classname', async () => {
 
 test('JUnit reporter with custom string classname', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classnameTemplate: 'my-custom-classname', hostname: 'hostname', stdout: true })
+  const reporter = new JUnitReporter({
+    classnameTemplate: 'my-custom-classname',
+    hostname: 'hostname',
+    stdout: true,
+  })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
 
@@ -91,7 +95,7 @@ test('JUnit reporter with custom string classname', async () => {
 test('JUnit reporter with custom function classnameTemplate', async () => {
   // Arrange
   const reporter = new JUnitReporter({
-    classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath}`,
+    classnameTemplate: (task) => `filename:${task.filename} - filepath:${task.filepath}`,
     hostname: 'hostname',
     stdout: true,
   })

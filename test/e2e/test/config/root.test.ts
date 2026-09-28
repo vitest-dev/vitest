@@ -54,7 +54,7 @@ test('watch mode re-resolves `test.root` when the config changes', async () => {
   await vitest.waitForStdout('Waiting for file changes')
   expect(ctx?.config.root).toBe(resolve(fs.root, 'nested'))
 
-  fs.editFile('./vitest.config.ts', content => content.replace(`'./nested'`, `'./nested2'`))
+  fs.editFile('./vitest.config.ts', (content) => content.replace(`'./nested'`, `'./nested2'`))
 
   await vitest.waitForStdout('Restarting due to config changes')
   await expect.poll(() => ctx?.config.root, { timeout: 5000 }).toBe(resolve(fs.root, 'nested2'))
@@ -214,9 +214,12 @@ test('a relative `test.root` is resolved against the current working directory',
 })
 
 test('does not load a config from the current working directory when the root has none', async () => {
-  const fs = useTmpFS({
-    './.keep': '',
-  }, false)
+  const fs = useTmpFS(
+    {
+      './.keep': '',
+    },
+    false,
+  )
 
   const config = await resolveConfig({ root: fs.root })
 
@@ -302,7 +305,7 @@ const projectsConfig = ts`
 
 function getProjectRoots(config: Awaited<ReturnType<typeof resolveConfig>>) {
   return Object.fromEntries(
-    config.test.resolvedProjects.map(p => [p.projectConfig.name, p.projectConfig.root]),
+    config.test.resolvedProjects.map((p) => [p.projectConfig.name, p.projectConfig.root]),
   )
 }
 
@@ -384,7 +387,7 @@ test('the project cache directory is resolved against the project root', async (
 
   const config = await resolveConfig({ config: fs.resolveFile('./vitest.config.ts') })
 
-  const projectA = config.test.resolvedProjects.find(p => p.projectConfig.name === 'a')!
+  const projectA = config.test.resolvedProjects.find((p) => p.projectConfig.name === 'a')!
   const nameHash = createHash('sha1').update('a').digest('hex')
   expect(projectA.viteConfig.cacheDir).toBe(
     resolve(fs.root, 'a/node_modules/.vite/vitest', nameHash),

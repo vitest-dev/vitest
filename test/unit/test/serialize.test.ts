@@ -9,20 +9,22 @@ describe('error serialize', () => {
     expect(serializeValue(null)).toEqual(null)
     expect(serializeValue('hi')).toEqual('hi')
 
-    expect(serializeValue({
-      foo: 'hi',
-      promise: new Promise(() => {}),
-      fn: () => {},
-      null: null,
-      symbol: Symbol('hi'),
-      nested: {
-        false: false,
-        class: class {},
-      },
-      // Intentionally test with a sparse array to verify it remains sparse during serialization.
-      // eslint-disable-next-line no-sparse-arrays
-      array: [1,, 3],
-    })).toMatchSnapshot()
+    expect(
+      serializeValue({
+        foo: 'hi',
+        promise: new Promise(() => {}),
+        fn: () => {},
+        null: null,
+        symbol: Symbol('hi'),
+        nested: {
+          false: false,
+          class: class {},
+        },
+        // Intentionally test with a sparse array to verify it remains sparse during serialization.
+        // oxlint-disable-next-line no-sparse-arrays
+        array: [1, , 3],
+      }),
+    ).toMatchSnapshot()
   })
 
   it('Should skip circular references to prevent hit the call stack limit', () => {
@@ -47,7 +49,7 @@ describe('error serialize', () => {
         return `${this.name} ${this.surname}`
       },
       set fullName(value) {
-        [this.name, this.surname] = value.split(' ')
+        ;[this.name, this.surname] = value.split(' ')
       },
     }
 
@@ -108,11 +110,13 @@ describe('error serialize', () => {
       },
     })
     Object.defineProperty(error, 'array', {
-      value: [{
-        get name() {
-          throw new Error('name cannot be accessed')
+      value: [
+        {
+          get name() {
+            throw new Error('name cannot be accessed')
+          },
         },
-      }],
+      ],
     })
     expect(serializeValue(error)).toEqual({
       array: [

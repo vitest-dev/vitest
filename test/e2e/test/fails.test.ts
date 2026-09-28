@@ -1,5 +1,4 @@
 import { playwright } from '@vitest/browser-playwright'
-
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { expect, it } from 'vitest'
@@ -8,50 +7,68 @@ import { runInlineTests, runVitest, ts } from '../../test-utils'
 const root = resolve(import.meta.dirname, '../fixtures/fails')
 const files = await glob(['**/*.test.{ts,js}'], { cwd: root, dot: true, expandDirectories: false })
 
-it.each(files)('should fail %s', async (file) => {
-  const { stderr } = await runVitest({ root }, [file])
+it.each(files)(
+  'should fail %s',
+  async (file) => {
+    const { stderr } = await runVitest({ root }, [file])
 
-  expect(stderr).toBeTruthy()
-  const msg = String(stderr)
-    .split(/\n/g)
-    .reverse()
-    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest') && !i.includes('at runWithTimeout') && !i.includes('file:'))
-    .map(i => i.trim().replace(root, '<rootDir>'),
-    )
-    .join('\n')
-  expect(msg).toMatchSnapshot()
-}, 30_000)
+    expect(stderr).toBeTruthy()
+    const msg = String(stderr)
+      .split(/\n/g)
+      .reverse()
+      .filter(
+        (i) =>
+          i.includes('Error: ') &&
+          !i.includes('Command failed') &&
+          !i.includes('stackStr') &&
+          !i.includes('at runTest') &&
+          !i.includes('at runWithTimeout') &&
+          !i.includes('file:'),
+      )
+      .map((i) => i.trim().replace(root, '<rootDir>'))
+      .join('\n')
+    expect(msg).toMatchSnapshot()
+  },
+  30_000,
+)
 
 it('should report coverage when "coverage.reportOnFailure: true" and tests fail', async () => {
-  const { stdout } = await runVitest({
-    root,
-    coverage: {
-      enabled: true,
-      provider: 'istanbul',
-      reportOnFailure: true,
-      reporter: ['text'],
+  const { stdout } = await runVitest(
+    {
+      root,
+      coverage: {
+        enabled: true,
+        provider: 'istanbul',
+        reportOnFailure: true,
+        reporter: ['text'],
+      },
     },
-  }, [files[0]])
+    [files[0]],
+  )
 
   expect(stdout).toMatch('Coverage report from istanbul')
 })
 
 it('should not report coverage when "coverage.reportOnFailure" has default value and tests fail', async () => {
-  const { stdout } = await runVitest({
-    root,
-    coverage: {
-      enabled: true,
-      provider: 'istanbul',
-      reporter: ['text'],
+  const { stdout } = await runVitest(
+    {
+      root,
+      coverage: {
+        enabled: true,
+        provider: 'istanbul',
+        reporter: ['text'],
+      },
     },
-  }, [files[0]])
+    [files[0]],
+  )
 
   expect(stdout).not.toMatch('Coverage report from istanbul')
 })
 
 it('fails if the assertion is not awaited', async () => {
-  const { errorTree } = await runInlineTests({
-    'base.test.js': ts`
+  const { errorTree } = await runInlineTests(
+    {
+      'base.test.js': ts`
     import { expect, test } from 'vitest';
 
     test('single not awaited', () => {
@@ -76,9 +93,11 @@ it('fails if the assertion is not awaited', async () => {
       expect.soft(1).toMatchFileSnapshot('./snapshot-soft.txt')
     })
     `,
-  }, {
-    update: true,
-  })
+    },
+    {
+      update: true,
+    },
+  )
   expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
     {
       "base.test.js": {
@@ -243,22 +262,25 @@ it('no async tracking after then/catch/finally', async () => {
 })
 
 it('fails if the assertion is not awaited in the browser mode', async () => {
-  const { errorTree } = await runInlineTests({
-    'base.test.js': ts`
+  const { errorTree } = await runInlineTests(
+    {
+      'base.test.js': ts`
     import { expect, test } from 'vitest';
 
     test('single not awaited', () => {
       expect(Promise.resolve(1)).resolves.toBe(1)
     })
     `,
-  }, {
-    browser: {
-      enabled: true,
-      instances: [{ browser: 'chromium' }],
-      provider: playwright(),
-      headless: true,
     },
-  })
+    {
+      browser: {
+        enabled: true,
+        instances: [{ browser: 'chromium' }],
+        provider: playwright(),
+        headless: true,
+      },
+    },
+  )
   expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
     {
       "base.test.js": {
@@ -276,27 +298,30 @@ it('fails if the assertion is not awaited in the browser mode', async () => {
 
 it('reports test file if it failed to load', async () => {
   const hooks: string[] = []
-  await runInlineTests({
-    'basic.test.js': `throw new Error('fail')`,
-  }, {
-    reporters: [
-      'default',
-      {
-        onTestModuleQueued(testModule) {
-          hooks.push(`onTestModuleQueued:${testModule.relativeModuleId}`)
+  await runInlineTests(
+    {
+      'basic.test.js': `throw new Error('fail')`,
+    },
+    {
+      reporters: [
+        'default',
+        {
+          onTestModuleQueued(testModule) {
+            hooks.push(`onTestModuleQueued:${testModule.relativeModuleId}`)
+          },
+          onTestModuleStart(testModule) {
+            hooks.push(`onTestModuleStart:${testModule.relativeModuleId}`)
+          },
+          onTestModuleCollected(testModule) {
+            hooks.push(`onTestModuleCollected:${testModule.relativeModuleId}`)
+          },
+          onTestModuleEnd(testModule) {
+            hooks.push(`onTestModuleEnd:${testModule.relativeModuleId}`)
+          },
         },
-        onTestModuleStart(testModule) {
-          hooks.push(`onTestModuleStart:${testModule.relativeModuleId}`)
-        },
-        onTestModuleCollected(testModule) {
-          hooks.push(`onTestModuleCollected:${testModule.relativeModuleId}`)
-        },
-        onTestModuleEnd(testModule) {
-          hooks.push(`onTestModuleEnd:${testModule.relativeModuleId}`)
-        },
-      },
-    ],
-  })
+      ],
+    },
+  )
 
   expect(hooks).toMatchInlineSnapshot(`
     [

@@ -95,7 +95,7 @@ const plainTeamMembers: CoreTeam[] = [
     bluesky: 'https://bsky.app/profile/userquin.bsky.social',
     mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
     title: 'A fullstack and android developer',
-    desc: 'Vite\'s fanatical follower',
+    desc: "Vite's fanatical follower",
   },
   {
     avatar: getAvatarUrl('patak-cat'),
@@ -147,7 +147,7 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     avatar: getAvatarUrl('poyoho'),
     name: 'Yoho Po',
     github: 'poyoho',
-    title: 'It\'s no problem in my locall',
+    title: "It's no problem in my locall",
     desc: 'Core team member of Vite & Team member of Vitest',
   },
   {
@@ -161,7 +161,7 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
   },
 ]
 
-const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
-const teamEmeritiMembers = plainTeamEmeritiMembers.map(tm => createLinks(tm))
+const teamMembers = plainTeamMembers.map((tm) => createLinks(tm))
+const teamEmeritiMembers = plainTeamEmeritiMembers.map((tm) => createLinks(tm))
 
 export { teamEmeritiMembers, teamMembers }

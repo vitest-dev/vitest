@@ -47,7 +47,7 @@ it('multiple on-finished', () => {
     multiple.push(2)
   })
   onTestFinished(async () => {
-    await new Promise(r => setTimeout(r, 100))
+    await new Promise((r) => setTimeout(r, 100))
     multiple.push(3)
   })
   onTestFinished(() => {

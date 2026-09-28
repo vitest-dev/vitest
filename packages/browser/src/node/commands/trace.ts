@@ -30,14 +30,14 @@ declare module 'vitest/browser' {
     /**
      * @internal
      */
-    __vitest_recordBrowserTrace: (payload: { testId: string; data: BrowserTraceData }) => Promise<void>
+    __vitest_recordBrowserTrace: (payload: {
+      testId: string
+      data: BrowserTraceData
+    }) => Promise<void>
   }
 }
 
-export const _markTrace: BrowserCommand<[payload: MarkTracePayload]> = async (
-  context,
-  payload,
-) => {
+export const _markTrace: BrowserCommand<[payload: MarkTracePayload]> = async (context, payload) => {
   if (context.provider.name === 'playwright') {
     await context.triggerCommand('__vitest_markTrace', payload)
   }
@@ -52,18 +52,15 @@ export const _groupTraceStart: BrowserCommand<[payload: GroupTracePayload]> = as
   }
 }
 
-export const _groupTraceEnd: BrowserCommand<[]> = async (
-  context,
-) => {
+export const _groupTraceEnd: BrowserCommand<[]> = async (context) => {
   if (context.provider.name === 'playwright') {
     await context.triggerCommand('__vitest_groupTraceEnd')
   }
 }
 
-export const _recordBrowserTrace: BrowserCommand<[payload: { testId: string; data: BrowserTraceData }]> = async (
-  { project },
-  { testId, data },
-) => {
+export const _recordBrowserTrace: BrowserCommand<
+  [payload: { testId: string; data: BrowserTraceData }]
+> = async ({ project }, { testId, data }) => {
   // resolve stack strings → source locations server-side (requires source maps)
   const entries: BrowserTraceEntry[] = data.entries.map((entry) => {
     if (!entry.stack || entry.location) {

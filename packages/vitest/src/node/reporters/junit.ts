@@ -5,7 +5,6 @@ import type { ErrorOptions } from '../logger'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
-
 import { hostname } from 'node:os'
 import { stripVTControlCharacters } from 'node:util'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -157,15 +156,19 @@ type UnhandledError = SerializedError & {
   VITEST_TEST_PATH?: string
 }
 
-function flattenTasks(task: Task, baseName = '', suiteName = '', ancestorSeparator = ' > '): TaskWithMeta[] {
+function flattenTasks(
+  task: Task,
+  baseName = '',
+  suiteName = '',
+  ancestorSeparator = ' > ',
+): TaskWithMeta[] {
   if (task.type === 'suite') {
     const newBase = baseName ? `${baseName}${ancestorSeparator}${task.name}` : task.name
     const newSuiteName = suiteName || task.name
-    return task.tasks.flatMap(child =>
+    return task.tasks.flatMap((child) =>
       flattenTasks(child, newBase, newSuiteName, ancestorSeparator),
     )
-  }
-  else {
+  } else {
     const fullName = baseName ? `${baseName}${ancestorSeparator}${task.name}` : task.name
     const result: TaskWithMeta = {
       ...task,
@@ -179,30 +182,24 @@ function flattenTasks(task: Task, baseName = '', suiteName = '', ancestorSeparat
 }
 
 // https://gist.github.com/john-doherty/b9195065884cdbfd2017a4756e6409cc
-function removeInvalidXMLCharacters(
-  value: any,
-  removeDiscouragedChars: boolean,
-): string {
-  let regex
-    // eslint-disable-next-line no-control-regex
-    = /([\0-\x08\v\f\x0E-\x1F\uFFFD\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])/g
+function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean): string {
+  let regex =
+    // oxlint-disable-next-line no-control-regex
+    /([\0-\x08\v\f\x0E-\x1F\uFFFD\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])/g
   value = String(value || '').replace(regex, '')
 
   if (removeDiscouragedChars) {
     // remove everything discouraged by XML 1.0 specifications
     regex = new RegExp(
-      /* eslint-disable regexp/prefer-character-class, regexp/no-obscure-range, regexp/no-useless-non-capturing-group */
-      '([\\x7F-\\x84]|[\\x86-\\x9F]|[\\uFDD0-\\uFDEF]|\\uD83F[\\uDFFE\\uDFFF]|(?:\\uD87F[\\uDF'
-      + 'FE\\uDFFF])|\\uD8BF[\\uDFFE\\uDFFF]|\\uD8FF[\\uDFFE\\uDFFF]|(?:\\uD93F[\\uDFFE\\uD'
-      + 'FFF])|\\uD97F[\\uDFFE\\uDFFF]|\\uD9BF[\\uDFFE\\uDFFF]|\\uD9FF[\\uDFFE\\uDFFF]'
-      + '|\\uDA3F[\\uDFFE\\uDFFF]|\\uDA7F[\\uDFFE\\uDFFF]|\\uDABF[\\uDFFE\\uDFFF]|(?:\\'
-      + 'uDAFF[\\uDFFE\\uDFFF])|\\uDB3F[\\uDFFE\\uDFFF]|\\uDB7F[\\uDFFE\\uDFFF]|(?:\\uDBBF'
-      + '[\\uDFFE\\uDFFF])|\\uDBFF[\\uDFFE\\uDFFF](?:[\\0-\\t\\v\\f\\x0E-\\u2027\\u202A-\\uD7FF\\'
-      + 'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|'
-      // eslint-disable-next-line regexp/no-useless-assertions
-      + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))',
+      '([\\x7F-\\x84]|[\\x86-\\x9F]|[\\uFDD0-\\uFDEF]|\\uD83F[\\uDFFE\\uDFFF]|(?:\\uD87F[\\uDF' +
+        'FE\\uDFFF])|\\uD8BF[\\uDFFE\\uDFFF]|\\uD8FF[\\uDFFE\\uDFFF]|(?:\\uD93F[\\uDFFE\\uD' +
+        'FFF])|\\uD97F[\\uDFFE\\uDFFF]|\\uD9BF[\\uDFFE\\uDFFF]|\\uD9FF[\\uDFFE\\uDFFF]' +
+        '|\\uDA3F[\\uDFFE\\uDFFF]|\\uDA7F[\\uDFFE\\uDFFF]|\\uDABF[\\uDFFE\\uDFFF]|(?:\\' +
+        'uDAFF[\\uDFFE\\uDFFF])|\\uDB3F[\\uDFFE\\uDFFF]|\\uDB7F[\\uDFFE\\uDFFF]|(?:\\uDBBF' +
+        '[\\uDFFE\\uDFFF])|\\uDBFF[\\uDFFE\\uDFFF](?:[\\0-\\t\\v\\f\\x0E-\\u2027\\u202A-\\uD7FF\\' +
+        'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|' +
+        '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))',
       'g',
-      /* eslint-enable */
     )
 
     value = value.replace(regex, '')
@@ -253,8 +250,7 @@ export class JUnitReporter implements Reporter {
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
 
-    const outputFile
-      = this.options.outputFile ?? getOutputFile(this.ctx.config, 'junit')
+    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'junit')
 
     if (outputFile) {
       this.reportFile = resolve(this.ctx.config.root, outputFile)
@@ -263,8 +259,7 @@ export class JUnitReporter implements Reporter {
       if (!existsSync(outputDirectory)) {
         await fs.mkdir(outputDirectory, { recursive: true })
       }
-    }
-    else if (!this.options.stdout) {
+    } else if (!this.options.stdout) {
       const report = this.ctx.createReport('junit')
       this.reportFile = resolve(report.root, 'output.xml')
     }
@@ -280,8 +275,7 @@ export class JUnitReporter implements Reporter {
 
         await fs.writeFile(this.fileFd, `${text}\n`)
       }
-    }
-    else {
+    } else {
       this.baseLog = async (text: string) => this.ctx.logger.log(text)
     }
 
@@ -304,9 +298,7 @@ export class JUnitReporter implements Reporter {
       pairs.push(`${key}="${escapeXML(attr)}"`)
     }
 
-    await this.logger.log(
-      `<${name}${pairs.length ? ` ${pairs.join(' ')}` : ''}>`,
-    )
+    await this.logger.log(`<${name}${pairs.length ? ` ${pairs.join(' ')}` : ''}>`)
     this.logger.indent()
     await children.call(this)
     this.logger.unindent()
@@ -320,7 +312,7 @@ export class JUnitReporter implements Reporter {
     }
 
     const logType = type === 'err' ? 'stderr' : 'stdout'
-    const logs = task.logs.filter(log => log.type === logType)
+    const logs = task.logs.filter((log) => log.type === logType)
 
     if (logs.length === 0) {
       return
@@ -334,9 +326,9 @@ export class JUnitReporter implements Reporter {
   }
 
   async writeSystemOut(task: Task): Promise<void> {
-    const logs
-      = this.options.includeConsoleOutput && task.logs
-        ? task.logs.filter(log => log.type === 'stdout')
+    const logs =
+      this.options.includeConsoleOutput && task.logs
+        ? task.logs.filter((log) => log.type === 'stdout')
         : []
     const benchmarks = task.type === 'test' ? task.benchmarks : []
 
@@ -452,7 +444,7 @@ export class JUnitReporter implements Reporter {
     }
 
     const fileBasename = basename(file.filepath)
-    const firstSuiteName = file.tasks.find(t => t.type === 'suite')?.name ?? fileBasename
+    const firstSuiteName = file.tasks.find((t) => t.type === 'suite')?.name ?? fileBasename
 
     const vars: SuiteNameTemplateVariables = {
       filepath: file.filepath,
@@ -489,9 +481,7 @@ export class JUnitReporter implements Reporter {
           return
         }
         const result = this.ctx.logger.formatError(error, errorOptions)
-        await this.baseLog(
-          escapeXML(stripVTControlCharacters(result.output.trim())),
-        )
+        await this.baseLog(escapeXML(stripVTControlCharacters(result.output.trim())))
       },
     )
   }
@@ -525,16 +515,17 @@ export class JUnitReporter implements Reporter {
           // multiple projects share a file, errors lack a project identifier and
           // we can't disambiguate without one (tracked for follow-up).
           const matches = error.VITEST_TEST_PATH
-            ? testModules.filter(m => m.task.filepath === error.VITEST_TEST_PATH)
+            ? testModules.filter((m) => m.task.filepath === error.VITEST_TEST_PATH)
             : []
           const owningModule = matches.length === 1 ? matches[0] : undefined
           await this.writeElement(
             'testcase',
             {
               classname: 'vitest unhandled errors',
-              file: this.options.addFileAttribute && error.VITEST_TEST_PATH
-                ? relative(this.ctx.config.root, error.VITEST_TEST_PATH)
-                : undefined,
+              file:
+                this.options.addFileAttribute && error.VITEST_TEST_PATH
+                  ? relative(this.ctx.config.root, error.VITEST_TEST_PATH)
+                  : undefined,
               name: error.message ? `${errorTitle}: ${error.message}` : errorTitle,
               time: '0',
             },
@@ -553,22 +544,22 @@ export class JUnitReporter implements Reporter {
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<UnhandledError> = [],
   ): Promise<void> {
-    const files = testModules.map(testModule => testModule.task)
+    const files = testModules.map((testModule) => testModule.task)
     const separator = this.options.ancestorSeparator ?? ' > '
 
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
     const transformed = files.map((file) => {
-      const tasks: TaskWithMeta[] = file.tasks.flatMap(task => flattenTasks(task, '', '', separator))
+      const tasks: TaskWithMeta[] = file.tasks.flatMap((task) =>
+        flattenTasks(task, '', '', separator),
+      )
 
       const stats = tasks.reduce(
         (stats, task) => {
           return {
             passed: stats.passed + Number(task.result?.state === 'pass'),
             failures: stats.failures + Number(task.result?.state === 'fail'),
-            skipped:
-              stats.skipped
-              + Number(task.mode === 'skip' || task.mode === 'todo'),
+            skipped: stats.skipped + Number(task.mode === 'skip' || task.mode === 'todo'),
           }
         },
         {
@@ -644,32 +635,36 @@ export class JUnitReporter implements Reporter {
         const suiteName = this.resolveSuiteNameTemplate(files[i], filename)
         return { file, filename, suiteName }
       })
-      .sort((a, b) => a.suiteName < b.suiteName ? -1 : a.suiteName > b.suiteName ? 1 : 0)
+      .sort((a, b) => (a.suiteName < b.suiteName ? -1 : a.suiteName > b.suiteName ? 1 : 0))
 
-    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
-      for (const { file, filename, suiteName } of orderedSuites) {
-        await this.writeElement(
-          'testsuite',
-          {
-            name: suiteName,
-            timestamp: new Date().toISOString(),
-            hostname: this.options.hostname || hostname(),
-            tests: file.tasks.length,
-            failures: file.stats.failures,
-            errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.
-            skipped: file.stats.skipped,
-            time: getDuration(file),
-          },
-          async () => {
-            await this.writeTasks(file.tasks, filename, file.filepath)
-          },
-        )
-      }
+    await this.writeElement(
+      'testsuites',
+      { ...stats, time: executionTime(stats.time) },
+      async () => {
+        for (const { file, filename, suiteName } of orderedSuites) {
+          await this.writeElement(
+            'testsuite',
+            {
+              name: suiteName,
+              timestamp: new Date().toISOString(),
+              hostname: this.options.hostname || hostname(),
+              tests: file.tasks.length,
+              failures: file.stats.failures,
+              errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.
+              skipped: file.stats.skipped,
+              time: getDuration(file),
+            },
+            async () => {
+              await this.writeTasks(file.tasks, filename, file.filepath)
+            },
+          )
+        }
 
-      if (unhandledErrors.length) {
-        await this.writeUnhandledErrorsTestsuite(unhandledErrors, testModules)
-      }
-    })
+        if (unhandledErrors.length) {
+          await this.writeUnhandledErrorsTestsuite(unhandledErrors, testModules)
+        }
+      },
+    )
 
     if (this.reportFile) {
       this.ctx.logger.log(`JUNIT report written to ${this.reportFile}`)

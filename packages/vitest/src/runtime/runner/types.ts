@@ -262,21 +262,21 @@ export type TaskEventPack = [
   data: TaskEventData | undefined,
 ]
 
-export type TaskUpdateEvent
-  = | 'test-failed-early'
-    | 'suite-failed-early'
-    | 'test-prepare'
-    | 'test-finished'
-    | 'test-retried'
-    | 'test-cancel'
-    | 'suite-prepare'
-    | 'suite-finished'
-    | 'before-hook-start'
-    | 'before-hook-end'
-    | 'after-hook-start'
-    | 'after-hook-end'
-    | 'test-annotation'
-    | 'test-artifact'
+export type TaskUpdateEvent =
+  | 'test-failed-early'
+  | 'suite-failed-early'
+  | 'test-prepare'
+  | 'test-finished'
+  | 'test-retried'
+  | 'test-cancel'
+  | 'suite-prepare'
+  | 'suite-finished'
+  | 'before-hook-start'
+  | 'before-hook-end'
+  | 'after-hook-start'
+  | 'after-hook-end'
+  | 'test-annotation'
+  | 'test-artifact'
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -458,56 +458,46 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     : 'fallback']
 
 interface EachFunctionReturn<T extends any[]> {
-  (
-    name: string | Function,
-    fn: (...args: T) => Awaitable<void>,
-    options?: number
-  ): void
+  (name: string | Function, fn: (...args: T) => Awaitable<void>, options?: number): void
   (
     name: string | Function,
     options: TestCollectorOptions,
-    fn: (...args: T) => Awaitable<void>
+    fn: (...args: T) => Awaitable<void>,
   ): void
 }
 
 interface TestEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): EachFunctionReturn<T>
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): EachFunctionReturn<
-    ExtractEachCallbackArgs<T>
-  >
+  <T extends ReadonlyArray<any>>(
+    cases: ReadonlyArray<T>,
+  ): EachFunctionReturn<ExtractEachCallbackArgs<T>>
   <T>(cases: ReadonlyArray<T>): EachFunctionReturn<T[]>
   (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
 }
 
 interface TestForFunctionReturn<Arg, Context> {
-  (
-    name: string | Function,
-    fn: (arg: Arg, context: Context) => Awaitable<void>
-  ): void
+  (name: string | Function, fn: (arg: Arg, context: Context) => Awaitable<void>): void
   (
     name: string | Function,
     options: TestCollectorOptions,
-    fn: (args: Arg, context: Context) => Awaitable<void>
+    fn: (args: Arg, context: Context) => Awaitable<void>,
   ): void
 }
 
 interface TestForFunction<ExtraContext> {
   // test.for([1, 2, 3])
   // test.for([[1, 2], [3, 4, 5]])
-  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
-    T,
-    TestContext & ExtraContext
-  >
+  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<T, TestContext & ExtraContext>
 
   // test.for`
   //    a  |  b
   //   {1} | {2}
   //   {3} | {4}
   // `
-  (strings: TemplateStringsArray, ...values: any[]): TestForFunctionReturn<
-    any,
-    TestContext & ExtraContext
-  >
+  (
+    strings: TemplateStringsArray,
+    ...values: any[]
+  ): TestForFunctionReturn<any, TestContext & ExtraContext>
 }
 
 interface SuiteForFunction {
@@ -519,12 +509,12 @@ interface TestCollectorCallable<C = object> {
   <ExtraContext extends C>(
     name: string | Function,
     fn?: TestFunction<ExtraContext>,
-    options?: number
+    options?: number,
   ): void
   <ExtraContext extends C>(
     name: string | Function,
     options?: TestCollectorOptions,
-    fn?: TestFunction<ExtraContext>
+    fn?: TestFunction<ExtraContext>,
   ): void
 }
 
@@ -559,53 +549,57 @@ type TestCollectorOptions = Omit<TestOptions, 'shuffle'>
  * Retry configuration for tests.
  * Can be a number for simple retry count, or an object for advanced retry control.
  */
-type Retry = number | {
-  /**
-   * The number of times to retry the test if it fails.
-   * @default 0
-   */
-  count?: number
-  /**
-   * Delay in milliseconds between retry attempts.
-   * @default 0
-   */
-  delay?: number
-  /**
-   * Condition to determine if a test should be retried based on the error.
-   * - If a RegExp, it is tested against the error message
-   * - If a function, called with the TestError object; return true to retry
-   *
-   * NOTE: Functions can only be used in test files, not in vitest.config.ts,
-   * because the configuration is serialized when passed to worker threads.
-   *
-   * @default undefined (retry on all errors)
-   */
-  condition?: RegExp | ((error: TestError) => boolean)
-}
+type Retry =
+  | number
+  | {
+      /**
+       * The number of times to retry the test if it fails.
+       * @default 0
+       */
+      count?: number
+      /**
+       * Delay in milliseconds between retry attempts.
+       * @default 0
+       */
+      delay?: number
+      /**
+       * Condition to determine if a test should be retried based on the error.
+       * - If a RegExp, it is tested against the error message
+       * - If a function, called with the TestError object; return true to retry
+       *
+       * NOTE: Functions can only be used in test files, not in vitest.config.ts,
+       * because the configuration is serialized when passed to worker threads.
+       *
+       * @default undefined (retry on all errors)
+       */
+      condition?: RegExp | ((error: TestError) => boolean)
+    }
 
 /**
  * Serializable retry configuration (used in config files).
  * Functions cannot be serialized, so only string conditions are allowed.
  */
-export type SerializableRetry = number | {
-  /**
-   * The number of times to retry the test if it fails.
-   * @default 0
-   */
-  count?: number
-  /**
-   * Delay in milliseconds between retry attempts.
-   * @default 0
-   */
-  delay?: number
-  /**
-   * Condition to determine if a test should be retried based on the error.
-   * Must be a RegExp tested against the error message.
-   *
-   * @default undefined (retry on all errors)
-   */
-  condition?: RegExp
-}
+export type SerializableRetry =
+  | number
+  | {
+      /**
+       * The number of times to retry the test if it fails.
+       * @default 0
+       */
+      count?: number
+      /**
+       * Delay in milliseconds between retry attempts.
+       * @default 0
+       */
+      delay?: number
+      /**
+       * Condition to determine if a test should be retried based on the error.
+       * Must be a RegExp tested against the error message.
+       *
+       * @default undefined (retry on all errors)
+       */
+      condition?: RegExp
+    }
 
 export interface TestOptions {
   /**
@@ -665,9 +659,7 @@ export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle'>
   /**
    * The name of the tag. This is what you use in the `tags` array in tests.
    */
-  name: keyof TestTags extends never
-    ? string
-    : TestTags[keyof TestTags]
+  name: keyof TestTags extends never ? string : TestTags[keyof TestTags]
   /**
    * A description for the tag. This will be shown in the CLI help and UI.
    */
@@ -708,8 +700,9 @@ interface Hooks<ExtraContext> {
   aroundEach: typeof aroundEach<ExtraContext>
 }
 
-export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
-  & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & {
+export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
+  ExtendedAPI<ExtraContext> &
+  Hooks<ExtraContext> & {
     /** @internal */
     [kChainableContext]: InternalChainableContext<TestAPI>
     /**
@@ -886,9 +879,7 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
     /**
      * @deprecated Use `test.override()` instead
      */
-    scoped: (
-      fixtures: Partial<Fixtures<ExtraContext>>,
-    ) => TestAPI<ExtraContext>
+    scoped: (fixtures: Partial<Fixtures<ExtraContext>>) => TestAPI<ExtraContext>
     describe: SuiteAPI<ExtraContext>
     suite: SuiteAPI<ExtraContext>
   }
@@ -986,58 +977,66 @@ type BuilderFixtureFn<T, Context> = (
   fixture: { onCleanup: OnCleanup },
 ) => T | Promise<T>
 
-type ExtractSuiteContext<C>
-  = C extends { $__worker?: any } | { $__file?: any } | { $__test?: any }
-    ? ExtractBuilderWorker<C> & ExtractBuilderFile<C>
-    : C
+type ExtractSuiteContext<C> = C extends { $__worker?: any } | { $__file?: any } | { $__test?: any }
+  ? ExtractBuilderWorker<C> & ExtractBuilderFile<C>
+  : C
 
 /**
  * Extracts worker-scoped fixtures from a context that includes scope info.
  */
 type ExtractBuilderWorker<C> = C extends { $__worker?: infer W }
-  ? W extends Record<string, any> ? W : object
+  ? W extends Record<string, any>
+    ? W
+    : object
   : object
 
 /**
  * Extracts file-scoped fixtures from a context that includes scope info.
  */
 type ExtractBuilderFile<C> = C extends { $__file?: infer F }
-  ? F extends Record<string, any> ? F : object
+  ? F extends Record<string, any>
+    ? F
+    : object
   : object
 
 /**
  * Extracts test-scoped fixtures from a context that includes scope info.
  */
 type ExtractBuilderTest<C> = C extends { $__test?: infer T }
-  ? T extends Record<string, any> ? T : object
+  ? T extends Record<string, any>
+    ? T
+    : object
   : object
 
 /**
  * Adds a worker fixture to the context with proper scope tracking.
  */
-type AddBuilderWorker<C, K extends string, V> = Omit<C, '$__worker'> & Record<K, V> & {
-  readonly $__worker?: ExtractBuilderWorker<C> & Record<K, V>
-  readonly $__file?: ExtractBuilderFile<C>
-  readonly $__test?: ExtractBuilderTest<C>
-}
+type AddBuilderWorker<C, K extends string, V> = Omit<C, '$__worker'> &
+  Record<K, V> & {
+    readonly $__worker?: ExtractBuilderWorker<C> & Record<K, V>
+    readonly $__file?: ExtractBuilderFile<C>
+    readonly $__test?: ExtractBuilderTest<C>
+  }
 
 /**
  * Adds a file fixture to the context with proper scope tracking.
  */
-type AddBuilderFile<C, K extends string, V> = Omit<C, '$__file'> & Record<K, V> & {
-  readonly $__worker?: ExtractBuilderWorker<C>
-  readonly $__file?: ExtractBuilderFile<C> & Record<K, V>
-  readonly $__test?: ExtractBuilderTest<C>
-}
+type AddBuilderFile<C, K extends string, V> = Omit<C, '$__file'> &
+  Record<K, V> & {
+    readonly $__worker?: ExtractBuilderWorker<C>
+    readonly $__file?: ExtractBuilderFile<C> & Record<K, V>
+    readonly $__test?: ExtractBuilderTest<C>
+  }
 
 /**
  * Adds a test fixture to the context with proper scope tracking.
  */
-type AddBuilderTest<C, K extends string, V> = Omit<C, '$__test'> & Record<K, V> & {
-  readonly $__worker?: ExtractBuilderWorker<C>
-  readonly $__file?: ExtractBuilderFile<C>
-  readonly $__test?: ExtractBuilderTest<C> & Record<K, V>
-}
+type AddBuilderTest<C, K extends string, V> = Omit<C, '$__test'> &
+  Record<K, V> & {
+    readonly $__worker?: ExtractBuilderWorker<C>
+    readonly $__file?: ExtractBuilderFile<C>
+    readonly $__test?: ExtractBuilderTest<C> & Record<K, V>
+  }
 
 /**
  * Context available to worker-scoped fixtures.
@@ -1063,24 +1062,16 @@ export type FixtureFn<T, K extends keyof T, ExtraContext> = (
   context: Omit<T, K> & ExtraContext,
   use: Use<T[K]>,
 ) => Promise<void>
-type Fixture<T, K extends keyof T, ExtraContext = object> = ((
-  ...args: any
-) => any) extends T[K]
+type Fixture<T, K extends keyof T, ExtraContext = object> = ((...args: any) => any) extends T[K]
   ? T[K] extends any
     ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
     : never
-  : | T[K]
-    | (T[K] extends any
-      ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
-      : never)
+  : T[K] | (T[K] extends any ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>> : never)
 
 /**
  * Fixture function with explicit context type for scoped fixtures.
  */
-type ScopedFixtureFn<Value, Context> = (
-  context: Context,
-  use: Use<Value>,
-) => Promise<void>
+type ScopedFixtureFn<Value, Context> = (context: Context, use: Use<Value>) => Promise<void>
 
 /**
  * Fixtures definition for backward compatibility.
@@ -1116,10 +1107,13 @@ interface ScopedFixturesDef {
  * Extracts fixture types from a ScopedFixturesDef.
  * Handles optional properties by using Exclude to remove undefined.
  */
-type ExtractScopedFixtures<T extends ScopedFixturesDef>
-  = ([Exclude<T['$test'], undefined>] extends [never] ? object : Exclude<T['$test'], undefined>)
-    & ([Exclude<T['$file'], undefined>] extends [never] ? object : Exclude<T['$file'], undefined>)
-    & ([Exclude<T['$worker'], undefined>] extends [never] ? object : Exclude<T['$worker'], undefined>)
+type ExtractScopedFixtures<T extends ScopedFixturesDef> = ([
+  Exclude<T['$test'], undefined>,
+] extends [never]
+  ? object
+  : Exclude<T['$test'], undefined>) &
+  ([Exclude<T['$file'], undefined>] extends [never] ? object : Exclude<T['$file'], undefined>) &
+  ([Exclude<T['$worker'], undefined>] extends [never] ? object : Exclude<T['$worker'], undefined>)
 
 /**
  * Creates the fixtures object type for ScopedFixturesDef with proper scope validation.
@@ -1131,16 +1125,32 @@ type ScopedFixturesObject<T extends ScopedFixturesDef, ExtraContext = object> = 
   // Test fixtures - scope is optional, have access to all fixtures + TestContext
   [K in keyof NonNullable<T['$test']>]:
     | NonNullable<T['$test']>[K]
-    | ScopedFixtureFn<NonNullable<T['$test']>[K], ExtractScopedFixtures<T> & ExtraContext & TestContext>
-    | [ScopedFixtureFn<NonNullable<T['$test']>[K], ExtractScopedFixtures<T> & ExtraContext & TestContext>, TestScopeFixtureOptions?]
+    | ScopedFixtureFn<
+        NonNullable<T['$test']>[K],
+        ExtractScopedFixtures<T> & ExtraContext & TestContext
+      >
+    | [
+        ScopedFixtureFn<
+          NonNullable<T['$test']>[K],
+          ExtractScopedFixtures<T> & ExtraContext & TestContext
+        >,
+        TestScopeFixtureOptions?,
+      ]
 } & {
   // File fixtures - scope: 'file' is REQUIRED, NO TestContext access
-  [K in keyof NonNullable<T['$file']>]:
-  [ScopedFixtureFn<NonNullable<T['$file']>[K], (NonNullable<T['$file']> & NonNullable<T['$worker']>) & ExtraContext>, FileScopeFixtureOptions]
+  [K in keyof NonNullable<T['$file']>]: [
+    ScopedFixtureFn<
+      NonNullable<T['$file']>[K],
+      (NonNullable<T['$file']> & NonNullable<T['$worker']>) & ExtraContext
+    >,
+    FileScopeFixtureOptions,
+  ]
 } & {
   // Worker fixtures - scope: 'worker' is REQUIRED, NO TestContext access
-  [K in keyof NonNullable<T['$worker']>]:
-  [ScopedFixtureFn<NonNullable<T['$worker']>[K], NonNullable<T['$worker']> & ExtraContext>, WorkerScopeFixtureOptions]
+  [K in keyof NonNullable<T['$worker']>]: [
+    ScopedFixtureFn<NonNullable<T['$worker']>[K], NonNullable<T['$worker']> & ExtraContext>,
+    WorkerScopeFixtureOptions,
+  ]
 }
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
@@ -1149,12 +1159,12 @@ interface SuiteCollectorCallable<ExtraContext = object> {
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
     fn?: SuiteFactory<OverrideExtraContext>,
-    options?: number
+    options?: number,
   ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
     options: SuiteOptions,
-    fn?: SuiteFactory<OverrideExtraContext>
+    fn?: SuiteFactory<OverrideExtraContext>,
   ): SuiteCollector<OverrideExtraContext>
 }
 
@@ -1188,24 +1198,18 @@ export interface AfterAllListener<ExtraContext = object> {
 }
 
 export interface BeforeEachListener<ExtraContext = object> {
-  (
-    context: TestContext & ExtraContext,
-    suite: Readonly<Suite>
-  ): Awaitable<unknown>
+  (context: TestContext & ExtraContext, suite: Readonly<Suite>): Awaitable<unknown>
 }
 
 export interface AfterEachListener<ExtraContext = object> {
-  (
-    context: TestContext & ExtraContext,
-    suite: Readonly<Suite>
-  ): Awaitable<unknown>
+  (context: TestContext & ExtraContext, suite: Readonly<Suite>): Awaitable<unknown>
 }
 
 export interface AroundEachListener<ExtraContext = object> {
   (
     runTest: () => Promise<void>,
     context: TestContext & ExtraContext,
-    suite: Readonly<Suite>
+    suite: Readonly<Suite>,
   ): Awaitable<unknown>
 }
 
@@ -1213,7 +1217,7 @@ export interface AroundAllListener<ExtraContext = object> {
   (
     runSuite: () => Promise<void>,
     context: ExtraContext,
-    suite: Readonly<Suite | File>
+    suite: Readonly<Suite | File>,
   ): Awaitable<unknown>
 }
 
@@ -1223,10 +1227,7 @@ interface RegisteredAllListener {
 }
 
 export interface RegisteredAroundAllListener {
-  (
-    runSuite: () => Promise<void>,
-    suite: Readonly<Suite | File>
-  ): Awaitable<unknown>
+  (runSuite: () => Promise<void>, suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
 export interface SuiteHooks<ExtraContext = object> {
@@ -1262,11 +1263,7 @@ export interface SuiteCollector<ExtraContext = object> {
   options?: SuiteOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
-  tasks: (
-    | Suite
-    | Test<ExtraContext>
-    | SuiteCollector<ExtraContext>
-  )[]
+  tasks: (Suite | Test<ExtraContext> | SuiteCollector<ExtraContext>)[]
   file: File
   suite?: Suite
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
@@ -1278,9 +1275,7 @@ export interface SuiteCollector<ExtraContext = object> {
   ) => void
 }
 
-export type SuiteFactory<ExtraContext = object> = (
-  test: TestAPI<ExtraContext>,
-) => Awaitable<void>
+export type SuiteFactory<ExtraContext = object> = (test: TestAPI<ExtraContext>) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
@@ -1581,12 +1576,12 @@ export interface TestArtifactRegistry {}
  *
  * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
  */
-export type TestArtifact
-  = | BrowserTraceArtifact
-    | FailureScreenshotArtifact
-    | TestAnnotationArtifact
-    | VisualRegressionArtifact
-    | TestArtifactRegistry[keyof TestArtifactRegistry]
+export type TestArtifact =
+  | BrowserTraceArtifact
+  | FailureScreenshotArtifact
+  | TestAnnotationArtifact
+  | VisualRegressionArtifact
+  | TestArtifactRegistry[keyof TestArtifactRegistry]
 
 /**
  * Possible options to run a single file in a test.
@@ -1608,10 +1603,7 @@ export interface VitestRunnerConstructor {
   new (config: SerializedConfig): VitestRunner
 }
 
-export type CancelReason
-  = | 'keyboard-input'
-    | 'test-failure'
-    | (string & Record<string, never>)
+export type CancelReason = 'keyboard-input' | 'test-failure' | (string & Record<string, never>)
 
 export interface TestTryOptions {
   retry: number
@@ -1646,10 +1638,7 @@ export interface VitestRunner {
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTask?: (
-    test: Test,
-    options: TestTryOptions,
-  ) => unknown
+  onBeforeTryTask?: (test: Test, options: TestTryOptions) => unknown
   /**
    * When the task has finished running, but before cleanup hooks are called
    */
@@ -1661,18 +1650,12 @@ export interface VitestRunner {
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTask?: (
-    test: Test,
-    options: TestTryOptions,
-  ) => unknown
+  onAfterTryTask?: (test: Test, options: TestTryOptions) => unknown
   /**
    * Called after the retry resolution happened. Unlike `onAfterTryTask`, the test now has a new state.
    * All `after` hooks were also called by this point.
    */
-  onAfterRetryTask?: (
-    test: Test,
-    options: TestTryOptions,
-  ) => unknown
+  onAfterRetryTask?: (test: Test, options: TestTryOptions) => unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
@@ -1709,7 +1692,10 @@ export interface VitestRunner {
    *
    * Called when artifacts are recorded on tests via the `recordArtifact` utility.
    */
-  onTestArtifactRecord?: <Artifact extends TestArtifact>(test: Test, artifact: Artifact) => Promise<Artifact>
+  onTestArtifactRecord?: <Artifact extends TestArtifact>(
+    test: Test,
+    artifact: Artifact,
+  ) => Promise<Artifact>
 
   /**
    * Called before running all tests in collected paths.
@@ -1759,9 +1745,9 @@ export interface VitestRunner {
 
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
 
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   trace?<T>(name: string, cb: () => T): T
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   trace?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
 
   /** @internal */

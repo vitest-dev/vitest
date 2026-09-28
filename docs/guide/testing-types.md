@@ -51,7 +51,7 @@ When types don't match, `.toEqualTypeOf` and `.toExtend` use a special helper ty
 expectTypeOf({ a: 1 }).toEqualTypeOf<{ a: string }>()
 ```
 
-Is an assertion that will fail, since `{a: 1}` has type `{a: number}` and not `{a: string}`.  The error message in this case will read something like this:
+Is an assertion that will fail, since `{a: 1}` has type `{a: number}` and not `{a: string}`. The error message in this case will read something like this:
 
 ```
 test/test.ts:999:999 - error TS2344: Type '{ a: string; }' does not satisfy the constraint '{ a: \\"Expected: string, Actual: number\\"; }'.
@@ -111,7 +111,7 @@ assertType<string>(answer)
 ```
 
 ::: tip
-When using `@ts-expect-error` syntax, you might want to make sure that you didn't make a typo. You can do that by including your type files in [`test.include`](/config/include) config option, so Vitest will also actually *run* these tests and fail with `ReferenceError`.
+When using `@ts-expect-error` syntax, you might want to make sure that you didn't make a typo. You can do that by including your type files in [`test.include`](/config/include) config option, so Vitest will also actually _run_ these tests and fail with `ReferenceError`.
 
 This will pass, because it expects an error, but the word “answer” has a typo, so it's a false positive error:
 
@@ -119,6 +119,7 @@ This will pass, because it expects an error, but the word “answer” has a typ
 // @ts-expect-error answer is not a string
 assertType<string>(answr)
 ```
+
 :::
 
 ## Run Typechecking
@@ -136,18 +137,23 @@ To enable typechecking, just add [`--typecheck`](/config/typecheck) flag to your
 Now you can run typecheck:
 
 ::: code-group
+
 ```bash [npm]
 npm run test
 ```
+
 ```bash [yarn]
 yarn test
 ```
+
 ```bash [pnpm]
 pnpm run test
 ```
+
 ```bash [bun]
 bun test
 ```
+
 :::
 
 Vitest uses `tsc --noEmit` or `vue-tsc --noEmit`, depending on your configuration, so you can remove these scripts from your pipeline.

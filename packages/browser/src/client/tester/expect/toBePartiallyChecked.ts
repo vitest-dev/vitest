@@ -25,9 +25,7 @@ export default function toBePartiallyChecked(
   const htmlElement = getElementFromUserInput(actual, toBePartiallyChecked, this)
 
   const isValidInput = () => {
-    return (
-      isInputElement(htmlElement) && htmlElement.type === 'checkbox'
-    )
+    return isInputElement(htmlElement) && htmlElement.type === 'checkbox'
   }
 
   const isValidAriaElement = () => {
@@ -49,11 +47,7 @@ export default function toBePartiallyChecked(
     message: () => {
       const is = isPartiallyChecked ? 'is' : 'is not'
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBePartiallyChecked`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBePartiallyChecked`, 'element', ''),
         '',
         `Received element ${is} partially checked:`,
         `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
@@ -67,8 +61,8 @@ function isAriaMixed(element: HTMLElement | SVGElement): boolean {
   if (!isMixed) {
     // playwright only looks at aria-checked if element is not a checkbox/radio
     if (
-      isInputElement(element)
-      && ['checkbox', 'radio'].includes((element as HTMLInputElement).type)
+      isInputElement(element) &&
+      ['checkbox', 'radio'].includes((element as HTMLInputElement).type)
     ) {
       const ariaValue = element.getAttribute('aria-checked')
       if (ariaValue === 'mixed') {

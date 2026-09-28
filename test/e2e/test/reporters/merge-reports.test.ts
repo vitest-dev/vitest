@@ -34,7 +34,11 @@ test('merge reports', async () => {
     reporters: [['blob', { outputFile: './.vitest/blob/second-run.json' }]],
   })
 
-  const { stdout: reporterDefault, stderr: stderrDefault, exitCode } = await runVitest({
+  const {
+    stdout: reporterDefault,
+    stderr: stderrDefault,
+    exitCode,
+  } = await runVitest({
     root: './fixtures/reporters/merge-reports',
     mergeReports: reportsDir,
     reporters: [['default', { isTTY: false }]],
@@ -44,10 +48,7 @@ test('merge reports', async () => {
 
   const stdoutCheck = trimReporterOutput(reporterDefault)
   const stderrArr = stderrDefault.split('\n')
-  const stderrCheck = [
-    ...stderrArr.slice(4, 19),
-    ...stderrArr.slice(21, -3),
-  ]
+  const stderrCheck = [...stderrArr.slice(4, 19), ...stderrArr.slice(21, -3)]
 
   expect(stderrDefault).toMatch('Failed Tests 2')
 
@@ -125,10 +126,11 @@ test('merge reports', async () => {
   })
 
   const slash = (r: string) => r.replace(/\\/g, '/')
-  const path = (r: string) => slash(r)
-    .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
+  const path = (r: string) => slash(r).replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
 
-  const json = JSON.parse(readFileSync(resolve(ctx!.config.root, '.vitest/json/output.json'), 'utf-8'))
+  const json = JSON.parse(
+    readFileSync(resolve(ctx!.config.root, '.vitest/json/output.json'), 'utf-8'),
+  )
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'
@@ -346,10 +348,7 @@ it("repro2", () => {
   expect(result2.exitCode).toBe(0)
 })
 
-test.for([
-  'node',
-  'browser',
-])('module graph and html reporter $0', async (mode) => {
+test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) => {
   const root = resolve('./fixtures/reporters/merge-reports-module-graph')
   const reportsDir = resolve(root, '.vitest/blob')
   rmSync(reportsDir, { force: true, recursive: true })
@@ -432,8 +431,7 @@ test.for([
         }
       }"
     `)
-  }
-  else {
+  } else {
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
         "<root>/basic.test.ts": {
@@ -505,17 +503,15 @@ test.for([
 })
 
 async function getSerializedModuleGraph(ctx: Vitest) {
-  const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
+  const files = ctx.state
+    .getFiles()
+    .slice()
+    .sort((a, b) => a.filepath.localeCompare(b.filepath))
   const moduleGraphs = Object.fromEntries(
     await Promise.all(
       files.map(async (file) => {
         const projectName = file.projectName || ''
-        const graph = await getModuleGraph(
-          ctx,
-          projectName,
-          file.filepath,
-          file.viteEnvironment,
-        )
+        const graph = await getModuleGraph(ctx, projectName, file.filepath, file.viteEnvironment)
         return [file.filepath, graph] as const
       }),
     ),
@@ -536,8 +532,11 @@ function trimReporterOutput(report: string) {
     .split('\n')
 
   // Trim start and end, capture just rendered tree
-  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
-  rows.splice(rows.findIndex(row => row.includes('Start at')), 1)
+  rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  rows.splice(
+    rows.findIndex((row) => row.includes('Start at')),
+    1,
+  )
 
   return rows.join('\n').trim()
 }
@@ -586,11 +585,14 @@ test("macos only", () => {})
 `,
   })
   process.env.TEST_LABEL_ENV = 'linux'
-  const result1 = await runVitest({
-    root,
-    globals: true,
-    reporters: [['blob', { label: 'linux' }]],
-  }, ['first', 'second'])
+  const result1 = await runVitest(
+    {
+      root,
+      globals: true,
+      reporters: [['blob', { label: 'linux' }]],
+    },
+    ['first', 'second'],
+  )
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
   expect(result1.errorTree()).toMatchInlineSnapshot(`
     {
@@ -608,15 +610,18 @@ test("macos only", () => {})
   `)
   process.env.TEST_LABEL_ENV = 'macos'
   process.env.VITEST_BLOB_LABEL = 'macos' // test VITEST_BLOB_LABEL
-  const result2 = await runVitest({
-    root,
-    globals: true,
-    reporters: [
-      'blob',
-      // test the original run's reporter doesn't include label
-      'verbose',
-    ],
-  }, ['first', 'third'])
+  const result2 = await runVitest(
+    {
+      root,
+      globals: true,
+      reporters: [
+        'blob',
+        // test the original run's reporter doesn't include label
+        'verbose',
+      ],
+    },
+    ['first', 'third'],
+  )
   delete process.env.VITEST_BLOB_LABEL
   expect(trimReporterOutput(result2.stdout)).toMatchInlineSnapshot(`
     "✓ first.test.ts > always good <time>
@@ -1016,7 +1021,7 @@ test("top-test", () => {})
   `)
   const tree = buildTestTree(
     result.results,
-    t => ({ '@META': t.meta(), 'state': t.result().state }),
+    (t) => ({ '@META': t.meta(), state: t.result().state }),
     (suite, children) => ({ '@META': suite.meta(), ...children }),
     (file, children) => ({ '@META': file.meta(), ...children }),
   )

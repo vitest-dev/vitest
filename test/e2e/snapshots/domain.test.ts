@@ -43,10 +43,12 @@ test('domain snapshot', async () => {
   `)
 
   // hand-edit snapshot
-  editFile(snapshotFile, s => s
-    // match any numbers match for score
-    .replace('score=999', 'score=/\\\\d+/')
-    .replace('age=24\n', ''))
+  editFile(snapshotFile, (s) =>
+    s
+      // match any numbers match for score
+      .replace('score=999', 'score=/\\\\d+/')
+      .replace('age=24\n', ''),
+  )
 
   // re-run without update
   result = await runVitest({ root, update: 'none' })
@@ -79,10 +81,12 @@ test('domain snapshot', async () => {
   `)
 
   // edit test
-  editFile(testFile, s => s
-    .replace(`name: 'alice',`, ``)
-    .replace(`score: '999'`, `score: '42'`)
-    .replace(`status: 'active'`, `status: 'inactive'`))
+  editFile(testFile, (s) =>
+    s
+      .replace(`name: 'alice',`, ``)
+      .replace(`score: '999'`, `score: '42'`)
+      .replace(`status: 'active'`, `status: 'inactive'`),
+  )
 
   // run without update
   // (note that `age` and `score` is not in diff)

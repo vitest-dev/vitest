@@ -25,7 +25,12 @@ describe('agent reporter', async () => {
            × b failed test [...]ms"
     `)
 
-    const summary = stdout.replace(/\d+ms/g, '[...]ms').split('\n').filter(line => /Test Files|^\s*Tests\b/.test(line)).map(line => line.trim()).join('\n')
+    const summary = stdout
+      .replace(/\d+ms/g, '[...]ms')
+      .split('\n')
+      .filter((line) => /Test Files|^\s*Tests\b/.test(line))
+      .map((line) => line.trim())
+      .join('\n')
     expect(summary).toMatchInlineSnapshot(`
       "Test Files  2 failed (2)
       Tests  2 failed | 24 passed (26)"
@@ -55,13 +60,32 @@ describe('agent reporter', async () => {
       reporters: [['agent', { isTTY: true }]],
     })
 
-    const logs = stdout.split('\n').filter(line => line.includes('Log from')).join('\n')
+    const logs = stdout
+      .split('\n')
+      .filter((line) => line.includes('Log from'))
+      .join('\n')
     expect(logs).toMatchInlineSnapshot(`
       "Log from failed test
       Log from failed test
       Log from failed suite
       Log from failed file"
     `)
+  })
+
+  test.each([true, false])('respects global silent: %s', async (silent) => {
+    const { stdout } = await runVitest({
+      config: false,
+      include: ['./fixtures/reporters/console-some-failing.test.ts'],
+      silent,
+      reporters: [['agent', { isTTY: true }]],
+    })
+
+    if (silent) {
+      expect(stdout).not.toContain('Log from')
+    } else {
+      expect(stdout).toContain('Log from passed test')
+      expect(stdout).toContain('Log from failed test')
+    }
   })
 
   test('does not change silent behavior for other reporters', async () => {
@@ -71,7 +95,10 @@ describe('agent reporter', async () => {
       reporters: [new LogReporter(), ['agent', { isTTY: true }]],
     })
 
-    const logs = stdout.split('\n').filter(line => line.includes('Log from')).join('\n')
+    const logs = stdout
+      .split('\n')
+      .filter((line) => line.includes('Log from'))
+      .join('\n')
     expect(logs).toMatchInlineSnapshot(`
       "Log from failed file
       Log from passed test

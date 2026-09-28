@@ -8,21 +8,25 @@ const state = ref(0)
 
 function reset() {
   state.value = 0
-  setTimeout(() => {
-    state.value = Math.random() > 0.9 ? 2 : 1
-    if (state.value === 2) {
-      setTimeout(reset, 1000)
-    }
-  }, Math.round(Math.random() * 3000) + 400)
+  setTimeout(
+    () => {
+      state.value = Math.random() > 0.9 ? 2 : 1
+      if (state.value === 2) {
+        setTimeout(reset, 1000)
+      }
+    },
+    Math.round(Math.random() * 3000) + 400,
+  )
 }
 
 const color = computed(() => {
   return {
-    '--vp-c-brand-1': state.value === 1
-      ? 'var(--color-brand)'
-      : state.value === 2
-        ? 'var(--vp-c-red-1)'
-        : 'var(--vp-c-yellow-1)',
+    '--vp-c-brand-1':
+      state.value === 1
+        ? 'var(--color-brand)'
+        : state.value === 2
+          ? 'var(--vp-c-red-1)'
+          : 'var(--vp-c-yellow-1)',
   } as any
 })
 
@@ -42,8 +46,22 @@ onMounted(async () => {
   <li :style="color">
     <div ref="el" class="icon-container">
       <div class="icon-wrapper" :class="state ? 'flip' : ''">
-        <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 32 32" class="icon-spinner">
-          <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="8 4" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="1.2em"
+          height="1.2em"
+          viewBox="0 0 32 32"
+          class="icon-spinner"
+        >
+          <circle
+            cx="16"
+            cy="16"
+            r="13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-dasharray="8 4"
+          />
         </svg>
       </div>
       <div class="icon-wrapper" :class="state === 2 ? '' : 'flip'">

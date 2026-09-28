@@ -1,4 +1,7 @@
-import type { DoctorCandidateOptions, DoctorProjectSummary } from '../../../packages/vitest/src/node/cli/doctor'
+import type {
+  DoctorCandidateOptions,
+  DoctorProjectSummary,
+} from '../../../packages/vitest/src/node/cli/doctor'
 import { describe, expect, it } from 'vitest'
 import { resolveDoctorCandidates } from '../../../packages/vitest/src/node/cli/doctor'
 
@@ -14,8 +17,11 @@ function project(overrides: Partial<DoctorProjectSummary>): DoctorProjectSummary
   }
 }
 
-function candidateIds(projects: DoctorProjectSummary[], options?: DoctorCandidateOptions): string[] {
-  return resolveDoctorCandidates(projects, options).map(candidate => candidate.id)
+function candidateIds(
+  projects: DoctorProjectSummary[],
+  options?: DoctorCandidateOptions,
+): string[] {
+  return resolveDoctorCandidates(projects, options).map((candidate) => candidate.id)
 }
 
 describe('resolveDoctorCandidates', () => {
@@ -24,31 +30,55 @@ describe('resolveDoctorCandidates', () => {
   })
 
   it('adds the vm pools for DOM environments', () => {
-    expect(candidateIds([project({ environment: 'jsdom' })]))
-      .toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
+    expect(candidateIds([project({ environment: 'jsdom' })])).toEqual([
+      'threads',
+      'vmThreads',
+      'vmForks',
+      'no-isolate',
+      'fs-cache',
+    ])
   })
 
   it('adds the vm pools for custom environments', () => {
-    expect(candidateIds([project({ environment: './happy-dom-env.ts' })]))
-      .toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
-    expect(candidateIds([project({ environment: 'edge-runtime' })]))
-      .toEqual(['threads', 'no-isolate', 'fs-cache'])
+    expect(candidateIds([project({ environment: './happy-dom-env.ts' })])).toEqual([
+      'threads',
+      'vmThreads',
+      'vmForks',
+      'no-isolate',
+      'fs-cache',
+    ])
+    expect(candidateIds([project({ environment: 'edge-runtime' })])).toEqual([
+      'threads',
+      'no-isolate',
+      'fs-cache',
+    ])
   })
 
   it('does not repeat what the config already uses', () => {
-    expect(candidateIds([project({ pool: 'threads', isolate: false, fsModuleCache: true })])).toEqual([])
+    expect(
+      candidateIds([project({ pool: 'threads', isolate: false, fsModuleCache: true })]),
+    ).toEqual([])
   })
 
   it('compares vm pools against reused workers with shared state', () => {
-    expect(candidateIds([project({ pool: 'vmThreads', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
-      .toEqual(['vmForks', 'threads-no-isolate'])
+    expect(
+      candidateIds([
+        project({ pool: 'vmThreads', environment: 'jsdom', isolate: false, fsModuleCache: true }),
+      ]),
+    ).toEqual(['vmForks', 'threads-no-isolate'])
   })
 
   it('offers the other vm pool to a suite already on one', () => {
-    expect(candidateIds([project({ pool: 'vmForks', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
-      .toEqual(['vmThreads', 'threads-no-isolate'])
-    expect(candidateIds([project({ pool: 'vmThreads', environment: 'jsdom', isolate: false, fsModuleCache: true })]))
-      .toEqual(['vmForks', 'threads-no-isolate'])
+    expect(
+      candidateIds([
+        project({ pool: 'vmForks', environment: 'jsdom', isolate: false, fsModuleCache: true }),
+      ]),
+    ).toEqual(['vmThreads', 'threads-no-isolate'])
+    expect(
+      candidateIds([
+        project({ pool: 'vmThreads', environment: 'jsdom', isolate: false, fsModuleCache: true }),
+      ]),
+    ).toEqual(['vmForks', 'threads-no-isolate'])
   })
 
   it('offers no-isolate to isolating browser projects', () => {
@@ -60,47 +90,54 @@ describe('resolveDoctorCandidates', () => {
   })
 
   it('considers every project of a workspace', () => {
-    expect(candidateIds([
-      project({ pool: 'threads', isolate: false }),
-      project({ environment: 'happy-dom' }),
-    ])).toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
+    expect(
+      candidateIds([
+        project({ pool: 'threads', isolate: false }),
+        project({ environment: 'happy-dom' }),
+      ]),
+    ).toEqual(['threads', 'vmThreads', 'vmForks', 'no-isolate', 'fs-cache'])
   })
 
   it('offers happy-dom for a jsdom project when the package is available', () => {
-    expect(candidateIds([project({ environment: 'jsdom' })], { happyDomAvailable: true }))
-      .toEqual(['threads', 'vmThreads', 'vmForks', 'happy-dom', 'no-isolate', 'fs-cache'])
+    expect(candidateIds([project({ environment: 'jsdom' })], { happyDomAvailable: true })).toEqual([
+      'threads',
+      'vmThreads',
+      'vmForks',
+      'happy-dom',
+      'no-isolate',
+      'fs-cache',
+    ])
   })
 
   it('does not offer happy-dom when the package cannot be resolved', () => {
-    expect(candidateIds([project({ environment: 'jsdom' })], { happyDomAvailable: false }))
-      .not
-      .toContain('happy-dom')
+    expect(
+      candidateIds([project({ environment: 'jsdom' })], { happyDomAvailable: false }),
+    ).not.toContain('happy-dom')
   })
 
   it('offers the per-project swap to mixed-environment workspaces', () => {
-    const candidates = resolveDoctorCandidates([
-      project({ environment: 'jsdom' }),
-      project({ environment: 'node' }),
-    ], { happyDomAvailable: true })
-    const happyDom = candidates.find(candidate => candidate.id === 'happy-dom')
+    const candidates = resolveDoctorCandidates(
+      [project({ environment: 'jsdom' }), project({ environment: 'node' })],
+      { happyDomAvailable: true },
+    )
+    const happyDom = candidates.find((candidate) => candidate.id === 'happy-dom')
     expect(happyDom?.envSwap).toEqual({ from: 'jsdom', to: 'happy-dom' })
   })
 
   it('does not offer happy-dom to suites already running it', () => {
-    expect(candidateIds([project({ environment: 'happy-dom' })], { happyDomAvailable: true }))
-      .not
-      .toContain('happy-dom')
+    expect(
+      candidateIds([project({ environment: 'happy-dom' })], { happyDomAvailable: true }),
+    ).not.toContain('happy-dom')
   })
 
   it('does not offer the fs cache when a project already enables it', () => {
-    expect(candidateIds([
-      project({ fsModuleCache: true }),
-      project({}),
-    ])).not.toContain('fs-cache')
+    expect(candidateIds([project({ fsModuleCache: true }), project({})])).not.toContain('fs-cache')
   })
 
   it('primes the fs cache before measuring it', () => {
-    const fsCache = resolveDoctorCandidates([project({})]).find(candidate => candidate.id === 'fs-cache')
+    const fsCache = resolveDoctorCandidates([project({})]).find(
+      (candidate) => candidate.id === 'fs-cache',
+    )
     expect(fsCache?.primeRuns).toBe(1)
     expect(fsCache?.overrides).toEqual({ fsModuleCache: true })
   })

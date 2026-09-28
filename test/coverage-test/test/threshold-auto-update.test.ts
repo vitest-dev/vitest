@@ -36,10 +36,13 @@ test('thresholds.autoUpdate updates thresholds', async () => {
     "
   `)
 
-  await runVitest({
-    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
-    config,
-  }, { throwOnError: false })
+  await runVitest(
+    {
+      include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+      config,
+    },
+    { throwOnError: false },
+  )
 
   expect(readConfig()).toMatchInlineSnapshot(`
     "import { defineConfig } from 'vitest/config'

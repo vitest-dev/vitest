@@ -3,14 +3,7 @@ import type { RunnerTask } from 'vitest'
 import type { Params } from '~/composables/params'
 import { computed, ref } from 'vue'
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
-import {
-  browserState,
-  client,
-  config,
-  current,
-  currentLogs,
-  isReport,
-} from '~/composables/client'
+import { browserState, client, config, current, currentLogs, isReport } from '~/composables/client'
 import { tagsDefinitions } from '~/composables/client/state'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { selectedTest, viewMode } from '~/composables/params'
@@ -26,9 +19,9 @@ import ViewTestReport from './views/ViewTestReport.vue'
 const draft = ref(false)
 
 const selectedTask = computed(() => {
-  return (selectedTest.value
-    ? client.state.idMap.get(selectedTest.value)
-    : undefined) ?? current.value
+  return (
+    (selectedTest.value ? client.state.idMap.get(selectedTest.value) : undefined) ?? current.value
+  )
 })
 
 const failedSnapshot = computed(() => {
@@ -82,7 +75,7 @@ const tags = computed(() => {
     return []
   }
   const node = client.state.idMap.get(testId)
-  return (node?.tags || []).map(tag => ({
+  return (node?.tags || []).map((tag) => ({
     name: tag,
     description: tagsDefinitions.value[tag]?.description,
     bg: getBadgeNameColor(tag, true),
@@ -100,9 +93,23 @@ const tags = computed(() => {
   >
     <div>
       <div class="p-2 h-10 flex gap-2 items-center bg-header border-b border-base">
-        <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
-        <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon flex-shrink-0" />
-        <span v-if="label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 flex-shrink-0">{{ label }}</span>
+        <StatusIcon
+          :state="current.result?.state"
+          :mode="current.mode"
+          :failed-snapshot="failedSnapshot"
+        />
+        <div
+          v-if="isTypecheck"
+          v-tooltip.bottom="
+            'This is a typecheck test. It won\'t report results of the runtime tests'
+          "
+          class="i-logos:typescript-icon flex-shrink-0"
+        />
+        <span
+          v-if="label"
+          class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 flex-shrink-0"
+          >{{ label }}</span
+        >
         <span
           v-if="current?.file.projectName"
           class="rounded-full py-0.5 px-2 text-xs font-light cursor-default"
@@ -164,14 +171,14 @@ const tags = computed(() => {
           @click="changeViewMode('editor')"
         >
           <span class="block w-1.4em h-1.4em i-carbon:code" />
-          {{ draft ? "*&#160;" : "" }}Code
+          {{ draft ? '*&#160;' : '' }}Code
         </button>
         <button
           data-testid="btn-console"
           class="flex items-center gap-2 tab-button"
           :class="{
             'tab-button-active': viewMode === 'console',
-            'op20': viewMode !== 'console' && consoleCount === 0,
+            op20: viewMode !== 'console' && consoleCount === 0,
           }"
           @click="changeViewMode('console')"
         >
@@ -195,13 +202,13 @@ const tags = computed(() => {
         data-testid="editor"
         @draft="onDraft"
       />
-      <ViewConsoleOutput
-        v-else-if="viewMode === 'console'"
-        :file="current"
-        data-testid="console"
-      />
+      <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" data-testid="console" />
       <template v-else-if="!viewMode && selectedTask">
-        <ViewTestReport v-if="selectedTask.type === 'test'" :test="selectedTask" data-testid="report" />
+        <ViewTestReport
+          v-if="selectedTask.type === 'test'"
+          :test="selectedTask"
+          data-testid="report"
+        />
         <ViewReport v-else :suite="selectedTask" data-testid="report" />
       </template>
     </div>

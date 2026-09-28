@@ -56,21 +56,28 @@ export async function startHtmlReportPreview(
   }
 }
 
-export async function assertTestCounts(page: Page, { pass, fail, skip = 0 }: { pass: number; fail: number; skip?: number }) {
+export async function assertTestCounts(
+  page: Page,
+  { pass, fail, skip = 0 }: { pass: number; fail: number; skip?: number },
+) {
   const skipped = skip ? ` ${skip} Skip` : ''
   await expect
     .soft(page.getByTestId('tests-entry'))
-    .toContainText(
-      `${pass} Pass ${fail} Fail${skipped} ${pass + fail + skip} Total`,
-    )
+    .toContainText(`${pass} Pass ${fail} Fail${skipped} ${pass + fail + skip} Total`)
 }
 
 export function getExplorerItem(page: Page, name: string) {
-  return page.locator('[data-testid="explorer-item"]:visible').and(page.getByLabel(name, { exact: true }))
+  // Only rendered rows can be located. The virtual scroller keeps recycled rows in the DOM
+  // with visibility hidden, while items outside its render window have no element to scroll.
+  return page
+    .locator('[data-testid="explorer-item"]:visible')
+    .and(page.getByLabel(name, { exact: true }))
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  await getExplorerItem(page, name).scrollIntoViewIfNeeded()
+  // Direct dispatch is intentional for row navigation. Playwright pointer actionability can race
+  // virtual row recycling and leave the previously selected item active.
+  // TODO: Audit direct explorer click and hover usage, keeping pointer actions only where tested.
   await getExplorerItem(page, name).dispatchEvent('click')
 }
 
@@ -121,7 +128,7 @@ export async function evaluateEditor<T>(
   return editor.evaluate(
     (e, [fnStr, args]) => {
       const codemirror = (e as any).CodeMirror
-      // eslint-disable-next-line no-new-func
+      // oxlint-disable-next-line no-new-func
       const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
       return fn(codemirror, args)
     },

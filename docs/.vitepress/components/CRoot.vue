@@ -3,7 +3,11 @@ import { Icon } from '@iconify/vue'
 </script>
 
 <template>
-  <Badge type="warning" title="This options is only available in the top level config. You cannot specify it as an option of a test project." class="croot-badge">
+  <Badge
+    type="warning"
+    title="This options is only available in the top level config. You cannot specify it as an option of a test project."
+    class="croot-badge"
+  >
     <Icon icon="carbon:document-configuration" class="croot-icon" />
   </Badge>
 </template>

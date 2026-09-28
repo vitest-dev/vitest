@@ -66,16 +66,16 @@ export default defineConfig({
 })
 ```
 
-The parallel batch finishes, *then* the sequential batch starts. Total wall clock stays close to the parallel time plus sum of the sequential test run time.
+The parallel batch finishes, _then_ the sequential batch starts. Total wall clock stays close to the parallel time plus sum of the sequential test run time.
 
 ## File scope vs. test scope
 
 There are two different "parallel" knobs in Vitest. Don't confuse them:
 
-| Scope | Knob | Controls |
-| --- | --- | --- |
-| Across files | [`fileParallelism`](/config/fileparallelism) | Whether two test *files* run in parallel workers |
-| Within a file | `describe.concurrent` / `test.concurrent` | Whether tests *inside one file* run concurrently |
+| Scope         | Knob                                         | Controls                                         |
+| ------------- | -------------------------------------------- | ------------------------------------------------ |
+| Across files  | [`fileParallelism`](/config/fileparallelism) | Whether two test _files_ run in parallel workers |
+| Within a file | `describe.concurrent` / `test.concurrent`    | Whether tests _inside one file_ run concurrently |
 
 `fileParallelism: false` doesn't make tests inside a file concurrent; tests inside a file are sequential by default. And `concurrent` on a `describe` or `test` doesn't affect how files are scheduled.
 

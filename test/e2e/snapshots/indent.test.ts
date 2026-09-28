@@ -10,7 +10,7 @@ test('white space sensitive', async () => {
   expect(vitest.exitCode).toBe(0)
 
   // check diff of wrong snapshot
-  editFile(join(root, 'basic.test.ts'), s => s.replace('1111', 'aaaa').replace('2222', 'bbbb'))
+  editFile(join(root, 'basic.test.ts'), (s) => s.replace('1111', 'aaaa').replace('2222', 'bbbb'))
   vitest = await runVitest({ root })
   expect(vitest.stderr).toContain(`
 - 1111

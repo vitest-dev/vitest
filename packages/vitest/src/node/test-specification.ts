@@ -59,18 +59,18 @@ export class TestSpecification {
     taskIdOverride?: string,
   ) {
     const projectName = project.config.name
-    this.taskId = taskIdOverride ?? generateFileHash(
-      relative(project.config.root, moduleId),
-      projectName,
-      { typecheck: pool === 'typescript', __vitest_label__: project.config.mergeReportsLabel },
-    )
+    this.taskId =
+      taskIdOverride ??
+      generateFileHash(relative(project.config.root, moduleId), projectName, {
+        typecheck: pool === 'typescript',
+        __vitest_label__: project.config.mergeReportsLabel,
+      })
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
     if (Array.isArray(testLinesOrOptions)) {
       this.testLines = testLinesOrOptions
-    }
-    else if (testLinesOrOptions && typeof testLinesOrOptions === 'object') {
+    } else if (testLinesOrOptions && typeof testLinesOrOptions === 'object') {
       this.testLines = testLinesOrOptions.testLines
       this.testNamePattern = testLinesOrOptions.testNamePattern
       this.testIds = testLinesOrOptions.testIds

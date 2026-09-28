@@ -64,11 +64,7 @@ test('all reporter variants mixed', async () => {
   await runVitest({
     include,
     coverage: {
-      reporter: [
-        'json',
-        ['lcov'],
-        ['text', { file: 'custom-text-report' }],
-      ],
+      reporter: ['json', ['lcov'], ['text', { file: 'custom-text-report' }]],
     },
   })
 

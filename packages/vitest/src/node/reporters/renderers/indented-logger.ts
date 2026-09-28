@@ -8,10 +8,7 @@ export class IndentedLogger<T = any> {
   }
 
   unindent(): void {
-    this.currentIndent = this.currentIndent.substring(
-      0,
-      this.currentIndent.length - 4,
-    )
+    this.currentIndent = this.currentIndent.substring(0, this.currentIndent.length - 4)
   }
 
   log(text: string): T {

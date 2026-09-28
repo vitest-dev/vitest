@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-const delay = (timeout: number) => new Promise(resolve => setTimeout(resolve, timeout))
+const delay = (timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout))
 
 function assertSequential() {
   let count = 0

@@ -7,11 +7,8 @@ test('viewport', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(
-    Object.fromEntries(
-      ctx.state.getFiles().map(f => [f.name, f.result.state]),
-    ),
-  ).toMatchInlineSnapshot(`
+  expect(Object.fromEntries(ctx.state.getFiles().map((f) => [f.name, f.result.state])))
+    .toMatchInlineSnapshot(`
     {
       "basic.test.ts": "pass",
     }

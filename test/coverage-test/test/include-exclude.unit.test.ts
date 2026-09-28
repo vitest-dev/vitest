@@ -165,16 +165,21 @@ test('files with almost matching name, outside project when allowExternal: false
 })
 
 async function init(options: Partial<CoverageOptions> & { testInclude?: string[]; root?: string }) {
-  const vitest = await createVitest('test', {
-    config: false,
-    include: ['dont-match-anything', ...(options.testInclude || [])],
-    root: options.root,
-    coverage: {
-      ...options,
-      enabled: true,
-      provider: 'v8',
+  const vitest = await createVitest(
+    'test',
+    {
+      config: false,
+      include: ['dont-match-anything', ...(options.testInclude || [])],
+      root: options.root,
+      coverage: {
+        ...options,
+        enabled: true,
+        provider: 'v8',
+      },
     },
-  }, {}, { stdout: new Writable() })
+    {},
+    { stdout: new Writable() },
+  )
 
   onTestFinished(() => vitest.close())
   await vitest.standalone()
