@@ -42,7 +42,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.7'
+  private version = '1.0.0-beta.8'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -142,7 +142,7 @@ export class FileSystemModuleCache {
       url: meta.url,
       file: meta.file,
       code,
-      importedUrls: meta.importedUrls,
+      imports: meta.imports,
       mappings: meta.mappings,
       moduleType: meta.moduleType,
       deps: meta.deps,
@@ -155,7 +155,7 @@ export class FileSystemModuleCache {
     cachedFilePath: string,
     fetchResult: VitestFetchResult,
     transformResult: TransformResult | null,
-    importedUrls: string[] = [],
+    imports: CachedModuleImports = { urls: [], ids: {} },
     mappings: boolean = false,
   ): Promise<void> {
     if ('code' in fetchResult) {
@@ -163,7 +163,7 @@ export class FileSystemModuleCache {
         file: fetchResult.file,
         id: fetchResult.id,
         url: fetchResult.url,
-        importedUrls,
+        imports,
         mappings,
         moduleType: fetchResult.moduleType,
         deps: transformResult?.deps,
@@ -407,11 +407,17 @@ export interface CachedInlineModuleMeta {
   file: string | null
   code: string
   mappings: boolean
-  importedUrls: string[]
+  imports: CachedModuleImports
   moduleType?: ModuleType
   deps?: string[]
   dynamicDeps?: string[]
   staticMocks?: StaticMockCall[] | null
+}
+
+export interface CachedModuleImports {
+  urls: string[]
+  // resolved ids that differ from the id derived from the url
+  ids: Record<string, string>
 }
 
 /**
