@@ -1,7 +1,9 @@
 import type { DOMWindow, VirtualConsole as IVirtualConsole } from 'jsdom'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import { createRequire } from 'node:module'
 import { URL as NodeURL } from 'node:url'
+import { dirname, join } from 'pathe'
 import { populateGlobal } from './utils'
 
 function catchWindowErrors(window: DOMWindow) {
@@ -280,12 +282,43 @@ interface CompatUtils {
   makeCompatFormData: (formData: FormData) => FormData
 }
 
+// jsdom keeps Blob bytes on an internal "impl" object and exposes no synchronous
+// public way to read them, so this reaches into its generated bindings
+function createBlobImplGetter(window: DOMWindow): (blob: Blob) => any {
+  const _require = createRequire(import.meta.url)
+  // Resolve the bindings inside the same jsdom copy the environment imported.
+  // A bare subpath is resolved from Vitest's own location and through NODE_PATH,
+  // which pnpm points at its store, so it can land in a different jsdom whose
+  // `implForWrapper` doesn't recognise these wrappers.
+  let jsdomRoot: string | undefined
+  try {
+    jsdomRoot = dirname(_require.resolve('jsdom/package.json'))
+  }
+  catch {}
+  if (jsdomRoot) {
+    // jsdom 28.1 moved the generated bindings; jsdom has no "exports" map, so both paths are reachable
+    for (const file of [
+      'lib/generated/idl/utils.js',
+      'lib/jsdom/living/generated/utils.js',
+    ]) {
+      try {
+        const { implForWrapper } = _require(join(jsdomRoot, file))
+        if (typeof implForWrapper === 'function') {
+          return implForWrapper
+        }
+      }
+      catch {}
+    }
+  }
+  // jsdom < 30.1 also stores the impl under an own Symbol("impl")
+  const implSymbol = Object.getOwnPropertySymbols(new window.Blob())[0]
+  return blob => (blob as any)[implSymbol]
+}
+
+let getBlobImpl: (blob: Blob) => any
+
 function createCompatUtils(window: DOMWindow): CompatUtils {
-  // this returns a hidden Symbol(impl)
-  // this is cursed, and jsdom should just implement fetch API itself
-  const implSymbol = Object.getOwnPropertySymbols(
-    Object.getOwnPropertyDescriptors(new window.Blob()),
-  )[0]
+  getBlobImpl ??= createBlobImplGetter(window)
   const utils = {
     window,
     makeCompatFormData(formData: FormData) {
@@ -301,8 +334,14 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
-      const buffer = (blob as any)[implSymbol]._buffer
-      return new NodeBlob_([buffer], { type: blob.type })
+      const impl = getBlobImpl(blob)
+      if (!impl) {
+        throw new TypeError(
+          'Vitest cannot read the bytes of a jsdom Blob. This is a Vitest bug, please report it with your jsdom version.',
+        )
+      }
+      // jsdom 28 renamed `_buffer` to `_bytes`
+      return new NodeBlob_([impl._bytes ?? impl._buffer], { type: blob.type })
     },
   }
   return utils
