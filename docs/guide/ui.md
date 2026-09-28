@@ -67,6 +67,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ### Preview Locally

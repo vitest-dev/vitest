@@ -27,14 +27,31 @@ import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
-import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
-import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount, TestFixtures } from './fixture'
-import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
+import {
+  AroundHookMultipleCallsError,
+  AroundHookSetupError,
+  AroundHookTeardownError,
+  PendingError,
+  TestRunAbortError,
+} from './errors'
+import {
+  callFixtureCleanup,
+  callFixtureCleanupFrom,
+  getFixtureCleanupCount,
+  TestFixtures,
+} from './fixture'
+import {
+  getAroundHookStackTrace,
+  getAroundHookTimeout,
+  getBeforeHookCleanupCallback,
+} from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
-const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
+const now = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
 let limitMaxConcurrency: ConcurrencyLimiter
@@ -98,19 +115,11 @@ function updateSuiteHookState(
       event = state === 'run' ? 'after-hook-start' : 'after-hook-end'
     }
 
-    updateTask(
-      event,
-      task,
-      runner,
-    )
+    updateTask(event, task, runner)
   }
 }
 
-function getSuiteHooks(
-  suite: Suite,
-  name: keyof SuiteHooks,
-  sequence: SequenceHooks,
-) {
+function getSuiteHooks(suite: Suite, name: keyof SuiteHooks, sequence: SequenceHooks) {
   const hooks = getHooks(suite)[name]
   if (sequence === 'stack' && (name === 'afterAll' || name === 'afterEach')) {
     return hooks.slice().reverse()
@@ -145,18 +154,15 @@ async function callTestHooks(
 
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map(fn => limitMaxConcurrency(() => fn(test.context))))
-    }
-    catch (e) {
+      await Promise.all(hooks.map((fn) => limitMaxConcurrency(() => fn(test.context))))
+    } catch (e) {
       failTask(test.result!, e, runner.config._diffOptions)
     }
-  }
-  else {
+  } else {
     for (const fn of hooks) {
       try {
         await limitMaxConcurrency(() => fn(test.context))
-      }
-      catch (e) {
+      } catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)
       }
     }
@@ -180,9 +186,7 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   const parentSuite: Suite | null = 'filepath' in suite ? null : suite.suite || suite.file
 
   if (name === 'beforeEach' && parentSuite) {
-    callbacks.push(
-      ...(await callSuiteHook(parentSuite, currentTask, name, runner, args)),
-    )
+    callbacks.push(...(await callSuiteHook(parentSuite, currentTask, name, runner, args)))
   }
 
   const hooks = getSuiteHooks(suite, name, sequence)
@@ -196,17 +200,14 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
       return getBeforeHookCleanupCallback(
         hook,
         await hook(...args),
-        name === 'beforeEach' ? args[0] as TestContext : undefined,
+        name === 'beforeEach' ? (args[0] as TestContext) : undefined,
       )
     })
   }
 
   if (sequence === 'parallel') {
-    callbacks.push(
-      ...(await Promise.all(hooks.map(hook => runHook(hook)))),
-    )
-  }
-  else {
+    callbacks.push(...(await Promise.all(hooks.map((hook) => runHook(hook)))))
+  } else {
     for (const hook of hooks) {
       callbacks.push(await runHook(hook))
     }
@@ -217,9 +218,7 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   if (name === 'afterEach' && parentSuite) {
-    callbacks.push(
-      ...(await callSuiteHook(parentSuite, currentTask, name, runner, args)),
-    )
+    callbacks.push(...(await callSuiteHook(parentSuite, currentTask, name, runner, args)))
   }
 
   return callbacks
@@ -351,8 +350,8 @@ async function callAroundHooks<THook extends Function>(
 
       if (useCalled) {
         throw new AroundHookMultipleCallsError(
-          `The \`${callbackName}\` callback was called multiple times in the \`${hookName}\` hook. `
-          + `The callback can only be called once per hook.`,
+          `The \`${callbackName}\` callback was called multiple times in the \`${hookName}\` hook. ` +
+            `The callback can only be called once per hook.`,
         )
       }
       useCalled = true
@@ -363,7 +362,7 @@ async function callAroundHooks<THook extends Function>(
       setupLimitConcurrencyRelease?.()
 
       // Run inner hooks - don't time this against our teardown timeout
-      await runNextHook(index + 1).catch(e => hookErrors.push(e))
+      await runNextHook(index + 1).catch((e) => hookErrors.push(e))
 
       teardownLimitConcurrencyRelease = await limitMaxConcurrency.acquire()
 
@@ -385,16 +384,14 @@ async function callAroundHooks<THook extends Function>(
         await invokeHook(hook, use)
         if (!useCalled) {
           throw new AroundHookSetupError(
-            `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
-            + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
+            `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. ` +
+              `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
           )
         }
         resolveHookComplete()
-      }
-      catch (error) {
+      } catch (error) {
         rejectHookComplete(error as Error)
-      }
-      finally {
+      } finally {
         setupLimitConcurrencyRelease?.()
         teardownLimitConcurrencyRelease?.()
       }
@@ -402,48 +399,33 @@ async function callAroundHooks<THook extends Function>(
 
     // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
     try {
-      await Promise.race([
-        useCalledPromise,
-        hookCompletePromise,
-        setupTimeout.promise,
-      ])
-    }
-    finally {
+      await Promise.race([useCalledPromise, hookCompletePromise, setupTimeout.promise])
+    } finally {
       setupLimitConcurrencyRelease?.()
       setupTimeout.clear()
     }
 
     // Wait for use() to return (inner hooks complete) OR hook to complete (error during inner hooks)
-    await Promise.race([
-      useReturnedPromise,
-      hookCompletePromise,
-    ])
+    await Promise.race([useReturnedPromise, hookCompletePromise])
 
     // Now teardownTimeout is guaranteed to be set
     // Wait for hook to complete (teardown) OR teardown timeout
     try {
-      await Promise.race([
-        hookCompletePromise,
-        teardownTimeout?.promise,
-      ])
-    }
-    finally {
+      await Promise.race([hookCompletePromise, teardownTimeout?.promise])
+    } finally {
       teardownLimitConcurrencyRelease?.()
       teardownTimeout?.clear()
     }
   }
 
-  await runNextHook(0).catch(e => hookErrors.push(e))
+  await runNextHook(0).catch((e) => hookErrors.push(e))
 
   if (hookErrors.length > 0) {
     throw hookErrors
   }
 }
 
-async function callAroundAllHooks(
-  suite: Suite,
-  runSuiteInner: () => Promise<void>,
-): Promise<void> {
+async function callAroundAllHooks(suite: Suite, runSuiteInner: () => Promise<void>): Promise<void> {
   await callAroundHooks(runSuiteInner, {
     hooks: getAroundAllHooks(suite),
     hookName: 'aroundAll',
@@ -466,7 +448,7 @@ async function callAroundEachHooks(
       hooks: getAroundEachHooks(suite),
       hookName: 'aroundEach',
       callbackName: 'runTest()',
-      onTimeout: error => abortContextSignal(test.context, error),
+      onTimeout: (error) => abortContextSignal(test.context, error),
       invokeHook: (hook, use) => hook(use, test.context, suite),
     },
   )
@@ -546,8 +528,7 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
         await limitMaxConcurrency(() => fn())
       }),
     )
-  }
-  else {
+  } else {
     for (const fn of cleanups) {
       if (typeof fn !== 'function') {
         continue
@@ -575,8 +556,7 @@ function passesRetryCondition(test: Test, errors: TestError[] | undefined): bool
 
   if (condition instanceof RegExp) {
     return condition.test(error.message || '')
-  }
-  else if (typeof condition === 'function') {
+  } else if (typeof condition === 'function') {
     return condition(error)
   }
 
@@ -633,23 +613,16 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
           test.result!.repeatCount = repeatCount
 
-          beforeEachCleanups = await $('test.beforeEach', () => callSuiteHook(
-            suite,
-            test,
-            'beforeEach',
-            runner,
-            [test.context, suite],
-          ))
+          beforeEachCleanups = await $('test.beforeEach', () =>
+            callSuiteHook(suite, test, 'beforeEach', runner, [test.context, suite]),
+          )
 
           if (runner.runTask) {
             await $('test.callback', () => limitMaxConcurrency(() => runner.runTask!(test)))
-          }
-          else {
+          } else {
             const fn = getFn(test)
             if (!fn) {
-              throw new Error(
-                'Test function is not found. Did you add it using `setFn`?',
-              )
+              throw new Error('Test function is not found. Did you add it using `setFn`?')
             }
             await $('test.callback', () => limitMaxConcurrency(() => fn()))
           }
@@ -662,31 +635,27 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           if (test.result!.state !== 'fail') {
             test.result!.state = 'pass'
           }
-        }
-        catch (e) {
+        } catch (e) {
           failTask(test.result!, e, runner.config._diffOptions)
         }
 
         try {
           await runner.onTaskFinished?.(test)
-        }
-        catch (e) {
+        } catch (e) {
           failTask(test.result!, e, runner.config._diffOptions)
         }
 
         try {
-          await $('test.afterEach', () => callSuiteHook(suite, test, 'afterEach', runner, [
-            test.context,
-            suite,
-          ]))
+          await $('test.afterEach', () =>
+            callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite]),
+          )
           if (beforeEachCleanups.length) {
             await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
           }
           // Only clean up fixtures created inside runTest (after the checkpoint)
           // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
           await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
-        }
-        catch (e) {
+        } catch (e) {
           failTask(test.result!, e, runner.config._diffOptions)
         }
 
@@ -695,12 +664,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
 
         if (test.result!.state === 'fail' && test.onFailed?.length) {
-          await $('test.onFailed', () => callTestHooks(
-            runner,
-            test,
-            test.onFailed!,
-            runner.config.sequence.hooks,
-          ))
+          await $('test.onFailed', () =>
+            callTestHooks(runner, test, test.onFailed!, runner.config.sequence.hooks),
+          )
         }
 
         test.onFailed = undefined
@@ -718,8 +684,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       // This runs after aroundEach teardown has completed
       try {
         await callFixtureCleanup(test.context)
-      }
-      catch (e) {
+      } catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)
       }
 
@@ -754,7 +719,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
         const delay = getRetryDelay(test.retry)
         if (delay > 0) {
-          await new Promise(resolve => setTimeout(resolve, delay))
+          await new Promise((resolve) => setTimeout(resolve, delay))
         }
       }
 
@@ -769,8 +734,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       const error = processError(new Error('Expect test to fail'))
       test.result.state = 'fail'
       test.result.errors = [error]
-    }
-    else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
+    } else if (!test.result.errors?.some((e) => e.__vitest_test_syntax_error__)) {
       test.result.state = 'pass'
       test.result.errors = undefined
     }
@@ -803,9 +767,10 @@ function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | u
   result.state = 'fail'
   const errors = Array.isArray(err) ? err : [err]
   for (const e of errors) {
-    const errors = e instanceof AggregateError
-      ? e.errors.map(e => processError(e, diffOptions))
-      : [processError(e, diffOptions)]
+    const errors =
+      e instanceof AggregateError
+        ? e.errors.map((e) => processError(e, diffOptions))
+        : [processError(e, diffOptions)]
     result.errors ??= []
     result.errors.push(...errors)
   }
@@ -864,13 +829,11 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
     suite.result.state = 'skip'
 
     updateTask('suite-finished', suite, runner)
-  }
-  else if (suite.mode === 'todo') {
+  } else if (suite.mode === 'todo') {
     suite.result.state = 'todo'
 
     updateTask('suite-finished', suite, runner)
-  }
-  else {
+  } else {
     let suiteRan = false
 
     try {
@@ -879,15 +842,10 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
         try {
           // beforeAll
           try {
-            beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
-              suite,
-              suite,
-              'beforeAll',
-              runner,
-              [suite],
-            ))
-          }
-          catch (e) {
+            beforeAllCleanups = await $('suite.beforeAll', () =>
+              callSuiteHook(suite, suite, 'beforeAll', runner, [suite]),
+            )
+          } catch (e) {
             failTask(suite.result!, e, runner.config._diffOptions)
             markTasksAsSkipped(suite, runner)
             return
@@ -896,25 +854,21 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
           // run suite children
           if (runner.runSuite) {
             await runner.runSuite(suite)
-          }
-          else {
+          } else {
             for (let tasksGroup of partitionSuiteChildren(suite)) {
               if (tasksGroup[0].concurrent === true) {
                 const groupLimiter = limitConcurrency(runner.config.maxConcurrency)
-                await Promise.all(tasksGroup.map(c => groupLimiter(() => runSuiteChild(c, runner))))
-              }
-              else {
+                await Promise.all(
+                  tasksGroup.map((c) => groupLimiter(() => runSuiteChild(c, runner))),
+                )
+              } else {
                 const { sequence } = runner.config
                 if (suite.shuffle) {
                   // run describe block independently from tests
-                  const suites = tasksGroup.filter(
-                    group => group.type === 'suite',
-                  )
-                  const tests = tasksGroup.filter(group => group.type === 'test')
+                  const suites = tasksGroup.filter((group) => group.type === 'suite')
+                  const tests = tasksGroup.filter((group) => group.type === 'test')
                   const groups = shuffle<Task[]>([suites, tests], sequence.seed)
-                  tasksGroup = groups.flatMap(group =>
-                    shuffle(group, sequence.seed),
-                  )
+                  tasksGroup = groups.flatMap((group) => shuffle(group, sequence.seed))
                 }
                 for (const c of tasksGroup) {
                   await runSuiteChild(c, runner)
@@ -922,26 +876,25 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
               }
             }
           }
-        }
-        finally {
+        } finally {
           // afterAll runs even if beforeAll or suite children fail
           try {
-            await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
+            await $('suite.afterAll', () =>
+              callSuiteHook(suite, suite, 'afterAll', runner, [suite]),
+            )
             if (beforeAllCleanups.length) {
               await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
             }
             if (suite.file === suite) {
               const contexts = TestFixtures.getFileContexts(suite.file)
-              await Promise.all(contexts.map(context => callFixtureCleanup(context)))
+              await Promise.all(contexts.map((context) => callFixtureCleanup(context)))
             }
-          }
-          catch (e) {
+          } catch (e) {
             failTask(suite.result!, e, runner.config._diffOptions)
           }
         }
       })
-    }
-    catch (e) {
+    } catch (e) {
       // mark tasks as skipped if aroundAll failed before the suite callback was executed
       if (!suiteRan) {
         markTasksAsSkipped(suite, runner)
@@ -953,16 +906,12 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
       if (!runner.config.passWithNoTests && !suite.containsTest) {
         suite.result.state = 'fail'
         if (!suite.result.errors?.length) {
-          const error = processError(
-            new Error(`No test found in suite ${suite.name}`),
-          )
+          const error = processError(new Error(`No test found in suite ${suite.name}`))
           suite.result.errors = [error]
         }
-      }
-      else if (hasFailed(suite)) {
+      } else if (hasFailed(suite)) {
         suite.result.state = 'fail'
-      }
-      else {
+      } else {
         suite.result.state = 'pass'
       }
     }
@@ -991,8 +940,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
       },
       () => limitTestConcurrency(() => runTest(c, runner)),
     )
-  }
-  else if (c.type === 'suite') {
+  } else if (c.type === 'suite') {
     return $(
       'run.suite',
       {
@@ -1015,9 +963,7 @@ async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
   for (const file of files) {
     if (!file.tasks.length && !runner.config.passWithNoTests) {
       if (!file.result?.errors?.length) {
-        const error = processError(
-          new Error(`No test suite found in file ${file.filepath}`),
-        )
+        const error = processError(new Error(`No test suite found in file ${file.filepath}`))
         file.result = {
           state: 'fail',
           errors: [error],
@@ -1044,7 +990,10 @@ function defaultTrace<T>(_: string, attributes: any, cb?: () => T): T {
   return cb!()
 }
 
-export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
+export async function startTests(
+  specs: string[] | FileSpecification[],
+  runner: VitestRunner,
+): Promise<File[]> {
   runner.trace ??= defaultTrace
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
@@ -1055,15 +1004,14 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
     getRunningTests().forEach((test) => {
       abortContextSignal(test.context, error)
       markPendingTasksAsSkipped(test.file, runner, error.message)
-    },
-    )
+    })
     return cancel?.(reason)
   }
 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
       await Promise.all(
-        Array.from(TestFixtures.getWorkerContexts(), context => callFixtureCleanup(context)),
+        Array.from(TestFixtures.getWorkerContexts(), (context) => callFixtureCleanup(context)),
       ).finally(() => {
         TestFixtures.clearDefinitions()
       })
@@ -1072,7 +1020,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   }
 
   try {
-    const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
+    const paths = specs.map((f) => (typeof f === 'string' ? f : f.filepath))
     await runner.onBeforeCollect?.(paths)
 
     const files = await collectTests(specs, runner)
@@ -1087,16 +1035,18 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
     await finishSendTasksUpdate(runner)
 
     return files
-  }
-  finally {
+  } finally {
     runner.cancel = cancel
   }
 }
 
-async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
+async function publicCollect(
+  specs: string[] | FileSpecification[],
+  runner: VitestRunner,
+): Promise<File[]> {
   runner.trace ??= defaultTrace
 
-  const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
+  const paths = specs.map((f) => (typeof f === 'string' ? f : f.filepath))
 
   await runner.onBeforeCollect?.(paths)
 

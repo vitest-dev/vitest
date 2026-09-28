@@ -130,7 +130,9 @@ export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error not typed global
   const state = window.__vitest_worker__
   if (!state) {
-    throw new Error('Worker state is not found. This is an issue with Vitest. Please, open an issue.')
+    throw new Error(
+      'Worker state is not found. This is an issue with Vitest. Please, open an issue.',
+    )
   }
   return state
 }

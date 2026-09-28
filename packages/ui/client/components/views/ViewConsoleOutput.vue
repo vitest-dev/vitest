@@ -11,7 +11,12 @@ const formattedLogs = computed(() => {
   const data = logs.value
   if (data) {
     const filter = createAnsiToHtmlFilter(isDark.value)
-    return data.map(({ taskId, type, time, content }) => ({ taskId, type, time, content: filter.toHtml(escapeHtml(content)) }))
+    return data.map(({ taskId, type, time, content }) => ({
+      taskId,
+      type,
+      time,
+      content: filter.toHtml(escapeHtml(content)),
+    }))
   }
 
   return undefined
@@ -38,6 +43,7 @@ function getTaskName(id?: string) {
     </div>
   </div>
   <div v-else class="p6">
-    Log something in your test and it would print here. (e.g. <pre class="inline">console.log(foo)</pre>)
+    Log something in your test and it would print here, e.g.
+    <pre class="inline">console.log(foo)</pre>
   </div>
 </template>

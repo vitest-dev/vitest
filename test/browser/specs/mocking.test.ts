@@ -4,7 +4,7 @@ import { instances } from '../settings'
 
 // TODO: investigate `isolate: false` tests.
 // Doesn't seem like we can run things in parallel if there are mocks
-test.each([true/* , false */])('mocking works correctly - isolated %s', async (isolate) => {
+test.each([true /* , false */])('mocking works correctly - isolated %s', async (isolate) => {
   const result = await runVitest({
     root: 'fixtures/mocking',
     isolate,
@@ -39,9 +39,12 @@ test.each([true/* , false */])('mocking works correctly - isolated %s', async (i
 })
 
 test('manual mocks do not leak across browser files when alias and relative ids resolve to the same module', async () => {
-  const result = await runVitest({
-    root: 'fixtures/mocking',
-  }, ['src/aaa-dual-id-probe.test.ts', 'src/zzz-dual-id-target.test.ts'])
+  const result = await runVitest(
+    {
+      root: 'fixtures/mocking',
+    },
+    ['src/aaa-dual-id-probe.test.ts', 'src/zzz-dual-id-target.test.ts'],
+  )
 
   onTestFailed(() => {
     console.error(result.stdout)
@@ -77,7 +80,7 @@ test('mocking dependency correctly invalidates it on rerun', async () => {
   })
 
   vitest.resetOutput()
-  editFile('./fixtures/mocking-watch/1_mocked-on-watch-change.test.ts', content => `${content}\n`)
+  editFile('./fixtures/mocking-watch/1_mocked-on-watch-change.test.ts', (content) => `${content}\n`)
 
   await vitest.waitForStdout('Waiting for file changes...')
 

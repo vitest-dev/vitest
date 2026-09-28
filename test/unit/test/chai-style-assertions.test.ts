@@ -1,4 +1,4 @@
-/* eslint-disable ts/no-unused-expressions */
+/* oxlint-disable typescript/no-unused-expressions */
 import { describe, expect, it, vi } from 'vitest'
 
 describe('Chai-style assertions', () => {
@@ -210,13 +210,14 @@ describe('Chai-style assertions', () => {
     })
 
     it('fails when spy threw an error', () => {
-      const spy = vi.fn(() => {
-        throw new Error('test error')
-      }).mockName('testSpy')
+      const spy = vi
+        .fn(() => {
+          throw new Error('test error')
+        })
+        .mockName('testSpy')
       try {
         spy()
-      }
-      catch {}
+      } catch {}
       expect(() => {
         expect(spy).to.have.returned('value')
       }).toThrow(/expected "testSpy" to be successfully called at least once/)
@@ -228,8 +229,7 @@ describe('Chai-style assertions', () => {
       })
       try {
         spy()
-      }
-      catch {}
+      } catch {}
       expect(spy).to.not.have.returned
     })
   })
@@ -359,7 +359,8 @@ describe('Chai-style assertions', () => {
 
   describe('lastReturnedWith', () => {
     it('passes when last return value matches', () => {
-      const spy = vi.fn()
+      const spy = vi
+        .fn()
         .mockReturnValueOnce('first')
         .mockReturnValueOnce('second')
         .mockReturnValueOnce('last')
@@ -386,7 +387,8 @@ describe('Chai-style assertions', () => {
 
   describe('nthReturnedWith', () => {
     it('passes when nth return value matches', () => {
-      const spy = vi.fn()
+      const spy = vi
+        .fn()
         .mockReturnValueOnce('first')
         .mockReturnValueOnce('second')
         .mockReturnValueOnce('third')
@@ -406,9 +408,7 @@ describe('Chai-style assertions', () => {
     })
 
     it('negated: passes when nth return value does not match', () => {
-      const spy = vi.fn()
-        .mockReturnValueOnce('first')
-        .mockReturnValueOnce('second')
+      const spy = vi.fn().mockReturnValueOnce('first').mockReturnValueOnce('second')
       spy()
       spy()
       expect(spy).to.not.have.nthReturnedWith(2, 'different')

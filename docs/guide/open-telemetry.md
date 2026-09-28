@@ -29,6 +29,7 @@ npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentel
 ```
 
 ::: code-group
+
 ```js{12} [otel.js]
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
@@ -43,6 +44,7 @@ const sdk = new NodeSDK({
 sdk.start()
 export default sdk
 ```
+
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -57,6 +59,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ::: danger FAKE TIMERS
@@ -95,6 +98,7 @@ npm i @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-proto
 ```
 
 ::: code-group
+
 ```js [otel-browser.js]
 import {
   BatchSpanProcessor,
@@ -111,6 +115,7 @@ const provider = new WebTracerProvider({
 provider.register()
 export default provider
 ```
+
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -131,6 +136,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ::: warning ASYNC CONTEXT

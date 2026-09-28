@@ -8,7 +8,7 @@ export function onCleanup(cb: () => unknown): void {
 }
 
 export async function cleanup(): Promise<void> {
-  await Promise.all(Array.from(cleanupListeners, l => l()))
+  await Promise.all(Array.from(cleanupListeners, (l) => l()))
 }
 
 export function onModuleRunner(cb: (runner: ModuleRunner) => unknown): void {
@@ -16,5 +16,5 @@ export function onModuleRunner(cb: (runner: ModuleRunner) => unknown): void {
 }
 
 export function emitModuleRunner(moduleRunner: ModuleRunner): void {
-  moduleRunnerListeners.forEach(l => l(moduleRunner))
+  moduleRunnerListeners.forEach((l) => l(moduleRunner))
 }

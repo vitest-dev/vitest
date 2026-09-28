@@ -13,14 +13,12 @@ export class BenchmarkManager {
   // the workspace.
   public resolve(relativePath: string): string {
     const root = this.project.config.root
-    const absolute = isAbsolute(relativePath)
-      ? resolve(relativePath)
-      : resolve(root, relativePath)
+    const absolute = isAbsolute(relativePath) ? resolve(relativePath) : resolve(root, relativePath)
     const rootWithSep = root.endsWith('/') ? root : `${root}/`
     if (absolute !== root && !absolute.startsWith(rootWithSep)) {
       throw new Error(
-        `Benchmark artifact path "${relativePath}" resolves outside the project root (${root}). `
-        + `Paths passed to \`writeResult\` and \`bench.from()\` must point inside the project.`,
+        `Benchmark artifact path "${relativePath}" resolves outside the project root (${root}). ` +
+          `Paths passed to \`writeResult\` and \`bench.from()\` must point inside the project.`,
       )
     }
     return absolute

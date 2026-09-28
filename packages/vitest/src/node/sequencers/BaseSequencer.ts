@@ -35,7 +35,8 @@ export class BaseSequencer implements TestSequencer {
     const cache = this.ctx.cache
     return [...files].sort((a, b) => {
       // "sequence.groupOrder" is higher priority
-      const groupOrderDiff = a.project.config.sequence.groupOrder - b.project.config.sequence.groupOrder
+      const groupOrderDiff =
+        a.project.config.sequence.groupOrder - b.project.config.sequence.groupOrder
       if (groupOrderDiff !== 0) {
         return groupOrderDiff
       }
@@ -96,7 +97,9 @@ export class BaseSequencer implements TestSequencer {
       return [shardStart, shardEnd]
     }
 
-    const shardStart = remainderTestFilesCount * (baseShardSize + 1) + (index - remainderTestFilesCount - 1) * baseShardSize
+    const shardStart =
+      remainderTestFilesCount * (baseShardSize + 1) +
+      (index - remainderTestFilesCount - 1) * baseShardSize
     const shardEnd = shardStart + baseShardSize
     return [shardStart, shardEnd]
   }

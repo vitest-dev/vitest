@@ -64,7 +64,12 @@ test('can run custom pools with Vitest', async () => {
   expect(stackStderr).not.toMatch('❯ ')
   if (process.platform !== 'win32') {
     const root = resolve(process.cwd(), '../..')
-    const trace = stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl').split('\n').slice(0, 3).join('\n')
+    const trace = stackStderr
+      .replace(new RegExp(root, 'g'), '<root>')
+      .replace(/\d+:\d+/g, 'ln:cl')
+      .split('\n')
+      .slice(0, 3)
+      .join('\n')
     expect(trace).toMatchInlineSnapshot(`
       "stderr | trace.test.ts > logging to stdout
       Trace: trace with trace
@@ -104,9 +109,10 @@ test('onConsoleLog receives the entity', async () => {
           entity: entity
             ? {
                 type: entity.type,
-                name: entity.type === 'module'
-                  ? relative(entity.project.config.root, entity.moduleId)
-                  : entity.name,
+                name:
+                  entity.type === 'module'
+                    ? relative(entity.project.config.root, entity.moduleId)
+                    : entity.name,
               }
             : undefined,
         })

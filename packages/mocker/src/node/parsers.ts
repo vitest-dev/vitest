@@ -7,14 +7,12 @@ import { init as initCjsLexer, parse as parseCjsSyntax } from 'cjs-module-lexer'
 import { init as initModuleLexer, parse as parseModuleSyntax } from 'es-module-lexer'
 
 export async function initSyntaxLexers(): Promise<void> {
-  await Promise.all([
-    initCjsLexer(),
-    initModuleLexer,
-  ])
+  await Promise.all([initCjsLexer(), initModuleLexer])
 }
 
-const isTransform = process.execArgv.includes('--experimental-transform-types')
-  || process.env.NODE_OPTIONS?.includes('--experimental-transform-types')
+const isTransform =
+  process.execArgv.includes('--experimental-transform-types') ||
+  process.env.NODE_OPTIONS?.includes('--experimental-transform-types')
 
 export function transformCode(code: string, filename: string): string {
   const ext = extname(filename.split('?')[0])
@@ -23,7 +21,9 @@ export function transformCode(code: string, filename: string): string {
     return code
   }
   if (!module.stripTypeScriptTypes) {
-    throw new Error(`Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`)
+    throw new Error(
+      `Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`,
+    )
   }
   return module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' })
 }
@@ -38,7 +38,7 @@ export function collectModuleExports(
 ): string[] {
   if (format === 'module') {
     const [imports_, exports_] = parseModuleSyntax(code, filename)
-    const fileExports = [...exports_.map(p => p.n)]
+    const fileExports = exports_.map((p) => p.n)
     imports_.forEach(({ ss: start, se: end, n: name }) => {
       const substring = code.substring(start, end).replace(/ +/g, ' ')
       if (name && substring.startsWith('export *') && !substring.startsWith('export * as')) {
@@ -47,8 +47,7 @@ export function collectModuleExports(
     })
     cachedFileExports.set(filename, fileExports)
     exports.push(...fileExports)
-  }
-  else {
+  } else {
     const { exports: exports_, reexports } = parseCjsSyntax(code, filename)
     const fileExports = [...exports_]
     reexports.forEach((name) => {
@@ -61,8 +60,7 @@ export function collectModuleExports(
   function tryParseModule(name: string): string[] {
     try {
       return parseModule(name)
-    }
-    catch (error) {
+    } catch (error) {
       console.warn(`[module mocking] Failed to parse '${name}' imported from ${filename}:`, error)
       return []
     }
@@ -86,13 +84,13 @@ export function collectModuleExports(
       return builtinExports
     }
 
-    const resolvedModuleUrl = format === 'module'
-      ? import.meta.resolve(name, pathToFileURL(filename).toString())
-      : getModuleRequire().resolve(name)
+    const resolvedModuleUrl =
+      format === 'module'
+        ? import.meta.resolve(name, pathToFileURL(filename).toString())
+        : getModuleRequire().resolve(name)
 
-    const resolvedModulePath = format === 'commonjs'
-      ? resolvedModuleUrl
-      : fileURLToPath(resolvedModuleUrl)
+    const resolvedModulePath =
+      format === 'commonjs' ? resolvedModuleUrl : fileURLToPath(resolvedModuleUrl)
 
     if (cachedFileExports.has(resolvedModulePath)) {
       return cachedFileExports.get(resolvedModulePath)!
@@ -109,10 +107,11 @@ export function collectModuleExports(
     const resolvedModuleFormat = resolveModuleFormat(resolvedModulePath, code)
     if (ext === '.json') {
       return ['default']
-    }
-    else {
+    } else {
       // can't do wasm, for example
-      console.warn(`Cannot process '${resolvedModuleFormat}' imported from ${filename} because of unknown file extension: ${ext}.`)
+      console.warn(
+        `Cannot process '${resolvedModuleFormat}' imported from ${filename} because of unknown file extension: ${ext}.`,
+      )
     }
     if (resolvedModuleFormat) {
       return collectModuleExports(resolvedModulePath, code, resolvedModuleFormat, exports)
@@ -128,30 +127,28 @@ export function resolveModuleFormat(url: string, code: string): 'module' | 'comm
 
   if (ext === '.cjs' || ext === '.cts') {
     return 'commonjs'
-  }
-  else if (ext === '.mjs' || ext === '.mts') {
+  } else if (ext === '.mjs' || ext === '.mts') {
     return 'module'
   }
   // https://nodejs.org/api/packages.html#syntax-detection
   else if (ext === '.js' || ext === '.ts' || ext === '') {
     if (!module.findPackageJSON) {
-      throw new Error(`Cannot parse the module format of '${url}' because "module.findPackageJSON" is not available. Upgrade to Node 22.14 to use this feature. This is NOT a bug of Vitest.`)
+      throw new Error(
+        `Cannot parse the module format of '${url}' because "module.findPackageJSON" is not available. Upgrade to Node 22.14 to use this feature. This is NOT a bug of Vitest.`,
+      )
     }
     const pkgJsonPath = module.findPackageJSON(url)
     const pkgJson = pkgJsonPath ? JSON.parse(readFileSync(pkgJsonPath, 'utf-8')) : {}
     if (pkgJson?.type === 'module') {
       return 'module'
-    }
-    else if (pkgJson?.type === 'commonjs') {
+    } else if (pkgJson?.type === 'commonjs') {
       return 'commonjs'
-    }
-    else {
+    } else {
       // Ambiguous input! Check if it has ESM syntax. Node.js is much smarter here,
       // but we don't need to run the code, so we can be more relaxed
       if (hasESM(filterOutComments(code))) {
         return 'module'
-      }
-      else {
+      } else {
         return 'commonjs'
       }
     }
@@ -165,8 +162,8 @@ function getBuiltinModule(moduleId: string) {
   return __globalRequire(moduleId)
 }
 
-const ESM_RE
-  = /(?:[\s;]|^)(?:import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
+const ESM_RE =
+  /(?:[\s;]|^)(?:import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
 
 function hasESM(code: string) {
   return ESM_RE.test(code)

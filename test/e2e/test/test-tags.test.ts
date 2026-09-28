@@ -211,54 +211,52 @@ test('throws an error if tag is not defined in the config, but in --tags-filter 
     },
     { fails: true },
   )
-  expect(stderr).toContain('The Vitest config doesn\'t define any "tags", cannot apply "unknown" tag pattern for this test. See: https://vitest.dev/guide/test-tags')
+  expect(stderr).toContain(
+    'The Vitest config doesn\'t define any "tags", cannot apply "unknown" tag pattern for this test. See: https://vitest.dev/guide/test-tags',
+  )
 })
 
 test('defining a tag available only in one project', async () => {
-  const { stderr, buildTree, ctx } = await runInlineTests({
-    'basic-1.test.js': `
+  const { stderr, buildTree, ctx } = await runInlineTests(
+    {
+      'basic-1.test.js': `
       test('test 1', { tags: ['project-1-tag'] }, () => {})
     `,
-    'basic-2.test.js': `
+      'basic-2.test.js': `
       test('test 2', { tags: ['global-tag', 'project-2-tag'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'global-tag' },
-        ],
-        projects: [
-          {
-            extends: true,
-            test: {
-              name: 'project-1',
-              include: ['basic-1.test.js'],
-              tags: [
-                { name: 'project-1-tag' },
-                { name: 'override', timeout: 100 },
-              ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [{ name: 'global-tag' }],
+          projects: [
+            {
+              extends: true,
+              test: {
+                name: 'project-1',
+                include: ['basic-1.test.js'],
+                tags: [{ name: 'project-1-tag' }, { name: 'override', timeout: 100 }],
+              },
             },
-          },
-          {
-            extends: true,
-            test: {
-              name: 'project-2',
-              include: ['basic-2.test.js'],
-              tags: [
-                { name: 'project-2-tag' },
-                { name: 'override', timeout: 200 },
-              ],
+            {
+              extends: true,
+              test: {
+                name: 'project-2',
+                include: ['basic-2.test.js'],
+                tags: [{ name: 'project-2-tag' }, { name: 'override', timeout: 200 }],
+              },
             },
-          },
-        ],
+          ],
+        },
       },
     },
-  }, {
-    tagsFilter: ['project-2-tag'],
-  })
+    {
+      tagsFilter: ['project-2-tag'],
+    },
+  )
   expect(stderr).toBe('')
-  expect(Object.fromEntries(ctx!.projects.map(p => [p.name, p.config.tags]))).toMatchInlineSnapshot(`
+  expect(Object.fromEntries(ctx!.projects.map((p) => [p.name, p.config.tags])))
+    .toMatchInlineSnapshot(`
     {
       "project-1": [
         {
@@ -470,20 +468,18 @@ test('custom options override tag options', async () => {
 })
 
 test('strictFlag: false does not throw an error if test has an undefined tag', async () => {
-  const { stderr } = await runInlineTests(
-    {
-      'basic.test.js': `
+  const { stderr } = await runInlineTests({
+    'basic.test.js': `
         test('test 1', { tags: ['unknown'] }, () => {})
       `,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          strictTags: false,
-          tags: [{ name: 'known' }],
-        },
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        strictTags: false,
+        tags: [{ name: 'known' }],
       },
     },
-  )
+  })
 
   expect(stderr).toBe('')
 })
@@ -493,12 +489,7 @@ test('@module-tag docs inject test tags', async () => {
     config: false,
     root: './fixtures/file-tags',
     include: ['./valid-file-tags.test.ts'],
-    tags: [
-      { name: 'file' },
-      { name: 'file-2' },
-      { name: 'file/slash' },
-      { name: 'test' },
-    ],
+    tags: [{ name: 'file' }, { name: 'file-2' }, { name: 'file/slash' }, { name: 'test' }],
   })
   expect(stderr).toBe('')
   expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
@@ -522,12 +513,7 @@ test('invalid @module-tag throws and error', async () => {
     config: false,
     root: './fixtures/file-tags',
     include: ['./error-file-tags.test.ts'],
-    tags: [
-      { name: 'file' },
-      { name: 'file-2' },
-      { name: 'file/slash' },
-      { name: 'test' },
-    ],
+    tags: [{ name: 'file' }, { name: 'file-2' }, { name: 'file/slash' }, { name: 'test' }],
   })
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -550,12 +536,7 @@ test('@module-tag on one line docs inject test tags', async () => {
     config: false,
     root: './fixtures/file-tags',
     include: ['./valid-file-one-line-comment.test.ts'],
-    tags: [
-      { name: 'file' },
-      { name: 'file-2' },
-      { name: 'file/slash' },
-      { name: 'test' },
-    ],
+    tags: [{ name: 'file' }, { name: 'file-2' }, { name: 'file/slash' }, { name: 'test' }],
   })
   expect(stderr).toBe('')
   expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
@@ -579,12 +560,7 @@ test('invalid @module-tag on one line throws and error', async () => {
     config: false,
     root: './fixtures/file-tags',
     include: ['./error-file-one-line-comment.test.ts'],
-    tags: [
-      { name: 'file' },
-      { name: 'file-2' },
-      { name: 'file/slash' },
-      { name: 'test' },
-    ],
+    tags: [{ name: 'file' }, { name: 'file-2' }, { name: 'file/slash' }, { name: 'test' }],
   })
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -608,12 +584,7 @@ test('@module-tag with strictTags: false allows undefined tags', async () => {
     root: './fixtures/file-tags',
     include: ['./error-file-tags.test.ts'],
     strictTags: false,
-    tags: [
-      { name: 'file' },
-      { name: 'file-2' },
-      { name: 'file/slash' },
-      { name: 'test' },
-    ],
+    tags: [{ name: 'file' }, { name: 'file-2' }, { name: 'file/slash' }, { name: 'test' }],
   })
   expect(stderr).toBe('')
   expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
@@ -643,9 +614,7 @@ test('concurrent false tag option opts out of sequence.concurrent', async () => 
         sequence: {
           concurrent: true,
         },
-        tags: [
-          { name: 'non-concurrent-tag', concurrent: false },
-        ],
+        tags: [{ name: 'non-concurrent-tag', concurrent: false }],
       },
     },
   })
@@ -681,9 +650,7 @@ test('only tag option marks tests as only', async () => {
     'vitest.config.js': {
       test: {
         globals: true,
-        tags: [
-          { name: 'only-tag', only: true },
-        ],
+        tags: [{ name: 'only-tag', only: true }],
         allowOnly: true,
       },
     },
@@ -752,87 +719,93 @@ test('equal priority tags use definition order (last wins)', async () => {
 })
 
 test('negative priority values is not allowed', async () => {
-  const { stderr } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('test 1', { tags: ['low-priority', 'high-priority'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'low-priority', timeout: 1000, priority: -10 },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [{ name: 'low-priority', timeout: 1000, priority: -10 }],
+        },
       },
     },
-  }, {}, { fails: true })
+    {},
+    { fails: true },
+  )
   expect(stderr).toContain('Tag "low-priority": priority must be a non-negative number.')
 })
 
-test.for([
-  '!invalid',
-  'inv*alid',
-  'inv&alid',
-  'inv|alid',
-  'inv(alid',
-  'inv)alid',
-])('tag name "%s" containing special character "%s" is not allowed', async (tagName) => {
-  const { stderr } = await runInlineTests({
-    'basic.test.js': `
+test.for(['!invalid', 'inv*alid', 'inv&alid', 'inv|alid', 'inv(alid', 'inv)alid'])(
+  'tag name "%s" containing special character "%s" is not allowed',
+  async (tagName) => {
+    const { stderr } = await runInlineTests(
+      {
+        'basic.test.js': `
       test('test 1', () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: tagName },
-        ],
+        'vitest.config.js': {
+          test: {
+            globals: true,
+            tags: [{ name: tagName }],
+          },
+        },
       },
-    },
-  }, {}, { fails: true })
-  expect(stderr).toContain(`Tag name "${tagName}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
-})
+      {},
+      { fails: true },
+    )
+    expect(stderr).toContain(
+      `Tag name "${tagName}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`,
+    )
+  },
+)
 
-test.for([
-  'and',
-  'or',
-  'not',
-  'AND',
-  'OR',
-  'NOT',
-])('tag name "%s" is a reserved keyword and is not allowed', async (tagName) => {
-  const { stderr } = await runInlineTests({
-    'basic.test.js': `
+test.for(['and', 'or', 'not', 'AND', 'OR', 'NOT'])(
+  'tag name "%s" is a reserved keyword and is not allowed',
+  async (tagName) => {
+    const { stderr } = await runInlineTests(
+      {
+        'basic.test.js': `
       test('test 1', () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: tagName },
-        ],
+        'vitest.config.js': {
+          test: {
+            globals: true,
+            tags: [{ name: tagName }],
+          },
+        },
       },
-    },
-  }, {}, { fails: true })
-  expect(stderr).toContain(`Tag name "${tagName}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
-})
+      {},
+      { fails: true },
+    )
+    expect(stderr).toContain(
+      `Tag name "${tagName}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`,
+    )
+  },
+)
 
 test('strictTags: false does not allow undefined tags in filter, it only affects test definition', async () => {
-  const { stderr } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('test 1', { tags: ['known'] }, () => {})
       test('test 2', () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        strictTags: false,
-        tags: [{ name: 'known' }],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          strictTags: false,
+          tags: [{ name: 'known' }],
+        },
       },
     },
-  }, {
-    tagsFilter: ['unknown'],
-  })
-  expect(stderr).toContain(`The tag pattern "unknown" is not defined in the configuration. Available tags are:
+    {
+      tagsFilter: ['unknown'],
+    },
+  )
+  expect(stderr)
+    .toContain(`The tag pattern "unknown" is not defined in the configuration. Available tags are:
 - known`)
 })
 
@@ -853,11 +826,7 @@ test('--list-tags prints tags defined in config', async () => {
   const { stdout, stderr } = await runVitest({
     config: false,
     listTags: true,
-    tags: [
-      { name: 'unit' },
-      { name: 'e2e', description: 'End-to-end tests' },
-      { name: 'slow' },
-    ],
+    tags: [{ name: 'unit' }, { name: 'e2e', description: 'End-to-end tests' }, { name: 'slow' }],
   })
   expect(stderr).toBe('')
   expect(`\n${stdout}`).toMatchInlineSnapshot(`
@@ -870,38 +839,37 @@ test('--list-tags prints tags defined in config', async () => {
 })
 
 test('--list-tags prints tags from multiple projects', async () => {
-  const { stdout, stderr } = await runInlineTests({
-    'vitest.config.js': {
-      test: {
-        tags: [
-          { name: 'global-tag', description: 'Available in all projects' },
-        ],
-        projects: [
-          {
-            extends: true,
-            test: {
-              name: 'project-1',
-              tags: [
-                { name: 'project-1-tag' },
-              ],
+  const { stdout, stderr } = await runInlineTests(
+    {
+      'vitest.config.js': {
+        test: {
+          tags: [{ name: 'global-tag', description: 'Available in all projects' }],
+          projects: [
+            {
+              extends: true,
+              test: {
+                name: 'project-1',
+                tags: [{ name: 'project-1-tag' }],
+              },
             },
-          },
-          {
-            extends: true,
-            test: {
-              name: 'project-2',
-              tags: [
-                { name: 'project-2-tag', description: 'Only in project 2' },
-                { name: 'project-2-again' },
-              ],
+            {
+              extends: true,
+              test: {
+                name: 'project-2',
+                tags: [
+                  { name: 'project-2-tag', description: 'Only in project 2' },
+                  { name: 'project-2-again' },
+                ],
+              },
             },
-          },
-        ],
+          ],
+        },
       },
     },
-  }, {
-    listTags: true,
-  })
+    {
+      listTags: true,
+    },
+  )
   expect(stderr).toBe('')
   expect(`\n${stdout}`).toMatchInlineSnapshot(`
     "
@@ -916,31 +884,28 @@ test('--list-tags prints tags from multiple projects', async () => {
 })
 
 test('--list-tags prints tags with named root project', async () => {
-  const { stdout, stderr } = await runInlineTests({
-    'vitest.config.js': {
-      test: {
-        name: 'root',
-        tags: [
-          { name: 'root-tag' },
-          { name: 'another-tag', description: 'From root' },
-        ],
-        projects: [
-          {
-            extends: true,
-            test: {
-              name: 'child',
-              tags: [
-                { name: 'child-tag' },
-                { name: 'child-2-tag' },
-              ],
+  const { stdout, stderr } = await runInlineTests(
+    {
+      'vitest.config.js': {
+        test: {
+          name: 'root',
+          tags: [{ name: 'root-tag' }, { name: 'another-tag', description: 'From root' }],
+          projects: [
+            {
+              extends: true,
+              test: {
+                name: 'child',
+                tags: [{ name: 'child-tag' }, { name: 'child-2-tag' }],
+              },
             },
-          },
-        ],
+          ],
+        },
       },
     },
-  }, {
-    listTags: true,
-  })
+    {
+      listTags: true,
+    },
+  )
   expect(stderr).toBe('')
   expect(`\n${stdout}`).toMatchInlineSnapshot(`
     "
@@ -962,27 +927,19 @@ test('--list-tags aligns tags with different project name lengths', async () => 
       {
         test: {
           name: 'a',
-          tags: [
-            { name: 'tag-1' },
-            { name: 'tag-2' },
-          ],
+          tags: [{ name: 'tag-1' }, { name: 'tag-2' }],
         },
       },
       {
         test: {
           name: 'long-project-name',
-          tags: [
-            { name: 'tag-3' },
-            { name: 'tag-4' },
-          ],
+          tags: [{ name: 'tag-3' }, { name: 'tag-4' }],
         },
       },
       {
         test: {
           name: 'medium',
-          tags: [
-            { name: 'tag-5' },
-          ],
+          tags: [{ name: 'tag-5' }],
         },
       },
     ],
@@ -1015,18 +972,12 @@ test('--list-tags=json prints tags as JSON', async () => {
   const { stdout, stderr } = await runVitest({
     config: false,
     listTags: 'json',
-    tags: [
-      { name: 'unit' },
-      { name: 'e2e', description: 'End-to-end tests' },
-    ],
+    tags: [{ name: 'unit' }, { name: 'e2e', description: 'End-to-end tests' }],
   })
   expect(stderr).toBe('')
   const json = JSON.parse(stdout)
   expect(json).toEqual({
-    tags: [
-      { name: 'unit' },
-      { name: 'e2e', description: 'End-to-end tests' },
-    ],
+    tags: [{ name: 'unit' }, { name: 'e2e', description: 'End-to-end tests' }],
     projects: [],
   })
 })
@@ -1035,24 +986,18 @@ test('--list-tags=json prints tags from multiple projects', async () => {
   const { stdout, stderr } = await runVitest({
     config: false,
     listTags: 'json',
-    tags: [
-      { name: 'global-tag' },
-    ],
+    tags: [{ name: 'global-tag' }],
     projects: [
       {
         test: {
           name: 'project-1',
-          tags: [
-            { name: 'project-1-tag' },
-          ],
+          tags: [{ name: 'project-1-tag' }],
         },
       },
       {
         test: {
           name: 'project-2',
-          tags: [
-            { name: 'project-2-tag', description: 'Only in project 2' },
-          ],
+          tags: [{ name: 'project-2-tag', description: 'Only in project 2' }],
         },
       },
     ],
@@ -1060,21 +1005,15 @@ test('--list-tags=json prints tags from multiple projects', async () => {
   expect(stderr).toBe('')
   const json = JSON.parse(stdout)
   expect(json).toEqual({
-    tags: [
-      { name: 'global-tag' },
-    ],
+    tags: [{ name: 'global-tag' }],
     projects: [
       {
         name: 'project-1',
-        tags: [
-          { name: 'project-1-tag' },
-        ],
+        tags: [{ name: 'project-1-tag' }],
       },
       {
         name: 'project-2',
-        tags: [
-          { name: 'project-2-tag', description: 'Only in project 2' },
-        ],
+        tags: [{ name: 'project-2-tag', description: 'Only in project 2' }],
       },
     ],
   })
@@ -1090,10 +1029,7 @@ test('duplicate tags from suite and test are deduplicated', async () => {
     'vitest.config.js': {
       test: {
         globals: true,
-        tags: [
-          { name: 'shared' },
-          { name: 'unique' },
-        ],
+        tags: [{ name: 'shared' }, { name: 'unique' }],
       },
     },
   })
@@ -1135,27 +1071,25 @@ test('empty tags array on test is handled correctly', async () => {
 })
 
 test('filters tests with complex AND/OR expressions', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('test 1', { tags: ['unit', 'fast'] }, () => {})
       test('test 2', { tags: ['unit', 'slow'] }, () => {})
       test('test 3', { tags: ['e2e', 'fast'] }, () => {})
       test('test 4', { tags: ['e2e', 'slow'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'unit' },
-          { name: 'e2e' },
-          { name: 'fast' },
-          { name: 'slow' },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [{ name: 'unit' }, { name: 'e2e' }, { name: 'fast' }, { name: 'slow' }],
+        },
       },
     },
-  }, {
-    tagsFilter: ['(unit || e2e) && fast'],
-  })
+    {
+      tagsFilter: ['(unit || e2e) && fast'],
+    },
+  )
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -1170,28 +1104,31 @@ test('filters tests with complex AND/OR expressions', async () => {
 })
 
 test('filters tests with NOT and parentheses', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('test 1', { tags: ['browser', 'chrome'] }, () => {})
       test('test 2', { tags: ['browser', 'firefox'] }, () => {})
       test('test 3', { tags: ['browser', 'edge'] }, () => {})
       test('test 4', { tags: ['node'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'browser' },
-          { name: 'chrome' },
-          { name: 'firefox' },
-          { name: 'edge' },
-          { name: 'node' },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [
+            { name: 'browser' },
+            { name: 'chrome' },
+            { name: 'firefox' },
+            { name: 'edge' },
+            { name: 'node' },
+          ],
+        },
       },
     },
-  }, {
-    tagsFilter: ['browser && !(edge)'],
-  })
+    {
+      tagsFilter: ['browser && !(edge)'],
+    },
+  )
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -1206,45 +1143,49 @@ test('filters tests with NOT and parentheses', async () => {
 })
 
 test('throws an error when several tags with the same name are defined', async () => {
-  const { stderr } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('test 1', () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'duplicate', timeout: 1000 },
-          { name: 'unique' },
-          { name: 'duplicate', timeout: 2000 },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [
+            { name: 'duplicate', timeout: 1000 },
+            { name: 'unique' },
+            { name: 'duplicate', timeout: 2000 },
+          ],
+        },
       },
     },
-  }, {}, { fails: true })
-  expect(stderr).toContain('Tag name "duplicate" is already defined in "test.tags". Tag names must be unique.')
+    {},
+    { fails: true },
+  )
+  expect(stderr).toContain(
+    'Tag name "duplicate" is already defined in "test.tags". Tag names must be unique.',
+  )
 })
 
 test('multiple filter expressions act as AND', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('test 1', { tags: ['unit', 'fast'] }, () => {})
       test('test 2', { tags: ['unit', 'slow'] }, () => {})
       test('test 3', { tags: ['e2e', 'fast'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'unit' },
-          { name: 'e2e' },
-          { name: 'fast' },
-          { name: 'slow' },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [{ name: 'unit' }, { name: 'e2e' }, { name: 'fast' }, { name: 'slow' }],
+        },
       },
     },
-  }, {
-    tagsFilter: ['unit || e2e', '!slow'],
-  })
+    {
+      tagsFilter: ['unit || e2e', '!slow'],
+    },
+  )
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -1345,9 +1286,7 @@ test('test meta overrides tag meta', async () => {
     'vitest.config.js': {
       test: {
         globals: true,
-        tags: [
-          { name: 'tagged', meta: { key: 'fromTag', tagOnly: true } },
-        ],
+        tags: [{ name: 'tagged', meta: { key: 'fromTag', tagOnly: true } }],
       },
     },
   })
@@ -1395,8 +1334,9 @@ test('matchesTags returns true when no filter is configured', async () => {
 })
 
 test('matchesTags returns true when tags match the filter', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
 
       let matchUnit, matchE2e
@@ -1411,14 +1351,16 @@ test('matchesTags returns true when tags match the filter', async () => {
         expect(matchE2e).toBe(false)
       })
     `,
-    'vitest.config.js': {
-      test: {
-        tags: [{ name: 'unit' }, { name: 'e2e' }],
+      'vitest.config.js': {
+        test: {
+          tags: [{ name: 'unit' }, { name: 'e2e' }],
+        },
       },
     },
-  }, {
-    tagsFilter: ['unit'],
-  })
+    {
+      tagsFilter: ['unit'],
+    },
+  )
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -1430,8 +1372,9 @@ test('matchesTags returns true when tags match the filter', async () => {
 })
 
 test('matchesTags supports NOT expressions', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
 
       let matchUnit, matchSlow
@@ -1446,14 +1389,16 @@ test('matchesTags supports NOT expressions', async () => {
         expect(matchSlow).toBe(false)
       })
     `,
-    'vitest.config.js': {
-      test: {
-        tags: [{ name: 'unit' }, { name: 'slow' }],
+      'vitest.config.js': {
+        test: {
+          tags: [{ name: 'unit' }, { name: 'slow' }],
+        },
       },
     },
-  }, {
-    tagsFilter: ['!slow'],
-  })
+    {
+      tagsFilter: ['!slow'],
+    },
+  )
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -1465,8 +1410,9 @@ test('matchesTags supports NOT expressions', async () => {
 })
 
 test('matchesTags supports AND/OR expressions', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
 
       let matchUnitFast, matchUnitSlow, matchE2eFast, matchEmpty
@@ -1485,19 +1431,16 @@ test('matchesTags supports AND/OR expressions', async () => {
         expect(matchEmpty).toBe(false)
       })
     `,
-    'vitest.config.js': {
-      test: {
-        tags: [
-          { name: 'unit' },
-          { name: 'e2e' },
-          { name: 'fast' },
-          { name: 'slow' },
-        ],
+      'vitest.config.js': {
+        test: {
+          tags: [{ name: 'unit' }, { name: 'e2e' }, { name: 'fast' }, { name: 'slow' }],
+        },
       },
     },
-  }, {
-    tagsFilter: ['(unit || e2e) && fast'],
-  })
+    {
+      tagsFilter: ['(unit || e2e) && fast'],
+    },
+  )
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -1509,8 +1452,9 @@ test('matchesTags supports AND/OR expressions', async () => {
 })
 
 test('matchesTags supports wildcard patterns', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
 
       let matchBrowserChrome, matchNode
@@ -1525,18 +1469,16 @@ test('matchesTags supports wildcard patterns', async () => {
         expect(matchNode).toBe(false)
       })
     `,
-    'vitest.config.js': {
-      test: {
-        tags: [
-          { name: 'browser-chrome' },
-          { name: 'browser-firefox' },
-          { name: 'node' },
-        ],
+      'vitest.config.js': {
+        test: {
+          tags: [{ name: 'browser-chrome' }, { name: 'browser-firefox' }, { name: 'node' }],
+        },
       },
     },
-  }, {
-    tagsFilter: ['browser-*'],
-  })
+    {
+      tagsFilter: ['browser-*'],
+    },
+  )
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -1579,29 +1521,27 @@ test('matchesTags with empty tags array and no filter returns true', async () =>
 })
 
 test('per-specification testTagsFilter overrides global tagsFilter', async () => {
-  const { fs, ctx, errorTree } = await runInlineTests({
-    'basic.test.js': `
+  const { fs, ctx, errorTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('unit-test', { tags: ['unit'] }, () => {})
       test('e2e-test', { tags: ['e2e'] }, () => {})
       test('integration-test', { tags: ['integration'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'unit' },
-          { name: 'e2e' },
-          { name: 'integration' },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [{ name: 'unit' }, { name: 'e2e' }, { name: 'integration' }],
+        },
       },
     },
-  }, { standalone: true, watch: true, tagsFilter: ['unit'] })
+    { standalone: true, watch: true, tagsFilter: ['unit'] },
+  )
   const vitest = ctx!
 
-  const specification = vitest.getRootProject().createSpecification(
-    fs.resolveFile('./basic.test.js'),
-    { testTagsFilter: ['e2e'] },
-  )
+  const specification = vitest
+    .getRootProject()
+    .createSpecification(fs.resolveFile('./basic.test.js'), { testTagsFilter: ['e2e'] })
 
   await vitest.runTestSpecifications([specification])
 
@@ -1615,31 +1555,28 @@ test('per-specification testTagsFilter overrides global tagsFilter', async () =>
 })
 
 test('per-specification testTagsFilter with complex expression', async () => {
-  const { fs, ctx, errorTree } = await runInlineTests({
-    'basic.test.js': `
+  const { fs, ctx, errorTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('test 1', { tags: ['unit', 'fast'] }, () => {})
       test('test 2', { tags: ['unit', 'slow'] }, () => {})
       test('test 3', { tags: ['e2e', 'fast'] }, () => {})
       test('test 4', { tags: ['e2e', 'slow'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'unit' },
-          { name: 'e2e' },
-          { name: 'fast' },
-          { name: 'slow' },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [{ name: 'unit' }, { name: 'e2e' }, { name: 'fast' }, { name: 'slow' }],
+        },
       },
     },
-  }, { standalone: true, watch: true })
+    { standalone: true, watch: true },
+  )
   const vitest = ctx!
 
-  const specification = vitest.getRootProject().createSpecification(
-    fs.resolveFile('./basic.test.js'),
-    { testTagsFilter: ['unit && fast'] },
-  )
+  const specification = vitest
+    .getRootProject()
+    .createSpecification(fs.resolveFile('./basic.test.js'), { testTagsFilter: ['unit && fast'] })
 
   await vitest.runTestSpecifications([specification])
 
@@ -1654,8 +1591,9 @@ test('per-specification testTagsFilter with complex expression', async () => {
 })
 
 test('matchesTags uses per-specification filter instead of global filter', async () => {
-  const { fs, ctx, errorTree } = await runInlineTests({
-    'basic.test.js': `
+  const { fs, ctx, errorTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
 
       let matchUnit, matchE2e
@@ -1670,21 +1608,19 @@ test('matchesTags uses per-specification filter instead of global filter', async
         expect(matchE2e).toBe(true)
       })
     `,
-    'vitest.config.js': {
-      test: {
-        tags: [
-          { name: 'unit' },
-          { name: 'e2e' },
-        ],
+      'vitest.config.js': {
+        test: {
+          tags: [{ name: 'unit' }, { name: 'e2e' }],
+        },
       },
     },
-  }, { standalone: true, watch: true, tagsFilter: ['unit'] })
+    { standalone: true, watch: true, tagsFilter: ['unit'] },
+  )
   const vitest = ctx!
 
-  const specification = vitest.getRootProject().createSpecification(
-    fs.resolveFile('./basic.test.js'),
-    { testTagsFilter: ['e2e'] },
-  )
+  const specification = vitest
+    .getRootProject()
+    .createSpecification(fs.resolveFile('./basic.test.js'), { testTagsFilter: ['e2e'] })
 
   await vitest.runTestSpecifications([specification])
 
@@ -1696,27 +1632,26 @@ test('matchesTags uses per-specification filter instead of global filter', async
 })
 
 test('per-specification testTagsFilter with no global filter', async () => {
-  const { fs, ctx, errorTree } = await runInlineTests({
-    'basic.test.js': `
+  const { fs, ctx, errorTree } = await runInlineTests(
+    {
+      'basic.test.js': `
       test('unit-test', { tags: ['unit'] }, () => {})
       test('e2e-test', { tags: ['e2e'] }, () => {})
     `,
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        tags: [
-          { name: 'unit' },
-          { name: 'e2e' },
-        ],
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          tags: [{ name: 'unit' }, { name: 'e2e' }],
+        },
       },
     },
-  }, { standalone: true, watch: true })
+    { standalone: true, watch: true },
+  )
   const vitest = ctx!
 
-  const specification = vitest.getRootProject().createSpecification(
-    fs.resolveFile('./basic.test.js'),
-    { testTagsFilter: ['unit'] },
-  )
+  const specification = vitest
+    .getRootProject()
+    .createSpecification(fs.resolveFile('./basic.test.js'), { testTagsFilter: ['unit'] })
 
   await vitest.runTestSpecifications([specification])
 
@@ -1811,11 +1746,11 @@ test('tag options override inherited suite options', async () => {
 })
 
 function getTestTree(builder: (fn: (test: TestCase) => any) => any) {
-  return builder(test => test.options.tags)
+  return builder((test) => test.options.tags)
 }
 
 function buildOptionsTree(builder: (fn: (test: TestCase) => any) => any) {
-  return builder(test => removeUndefined(test.options))
+  return builder((test) => removeUndefined(test.options))
 }
 
 function removeUndefined<T extends Record<string, any>>(obj: T): Partial<T> {

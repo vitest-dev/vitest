@@ -15,7 +15,7 @@ test('browser coverage works when browser api write and exec are disabled', asyn
   })
 
   const coverageMap = await readCoverageMap()
-  const fileCoverages = coverageMap.files().map(file => coverageMap.fileCoverageFor(file))
+  const fileCoverages = coverageMap.files().map((file) => coverageMap.fileCoverageFor(file))
 
   expect(fileCoverages).toMatchInlineSnapshot(`
     {

@@ -25,7 +25,7 @@ describe('userEvent.click', () => {
     const dblClick = vi.fn()
     // Make sure a contextmenu doesn't actually appear, as it may make some
     // tests fail later.
-    const onContextmenu = vi.fn(e => e.preventDefault())
+    const onContextmenu = vi.fn((e) => e.preventDefault())
     button.addEventListener('click', onClick)
     button.addEventListener('dblclick', onClick)
     button.addEventListener('contextmenu', onContextmenu)
@@ -42,7 +42,7 @@ describe('userEvent.click', () => {
     expect(onContextmenu).toHaveBeenCalled()
   })
 
-  test('correctly doesn\'t click on a disabled button', async () => {
+  test("correctly doesn't click on a disabled button", async () => {
     const button = document.createElement('button')
     button.textContent = 'Click me'
     button.disabled = true
@@ -130,8 +130,7 @@ describe('userEvent.click', () => {
         }
         if (ctx.fillStyle === '#ff0000') {
           ctx.fillStyle = 'blue'
-        }
-        else {
+        } else {
           ctx.fillStyle = 'red'
         }
 
@@ -164,9 +163,9 @@ describe('userEvent.click', () => {
     document.body.append(button1, button2)
 
     await expect(() => page.getByRole('button').click()).rejects.toThrow(
-      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
-      + `    1) <button></button> aka getByRole('button').first()\n`
-      + `    2) <button></button> aka getByRole('button').nth(1)`,
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n` +
+        `    1) <button></button> aka getByRole('button').first()\n` +
+        `    2) <button></button> aka getByRole('button').nth(1)`,
     )
   })
 })
@@ -187,7 +186,7 @@ describe('userEvent.dblClick', () => {
     expect(dblClick).toHaveBeenCalledTimes(1)
   })
 
-  test('correctly doesn\'t click on a disabled button', async () => {
+  test("correctly doesn't click on a disabled button", async () => {
     const button = document.createElement('button')
     button.textContent = 'Click me'
     button.disabled = true
@@ -212,9 +211,9 @@ describe('userEvent.dblClick', () => {
     document.body.append(button1, button2)
 
     await expect(() => page.getByRole('button').dblClick()).rejects.toThrow(
-      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
-      + `    1) <button></button> aka getByRole('button').first()\n`
-      + `    2) <button></button> aka getByRole('button').nth(1)`,
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n` +
+        `    1) <button></button> aka getByRole('button').first()\n` +
+        `    2) <button></button> aka getByRole('button').nth(1)`,
     )
   })
 })
@@ -237,12 +236,12 @@ describe('userEvent.tripleClick', () => {
     expect(dblClick).toHaveBeenCalledTimes(1)
     expect(tripleClick).toHaveBeenCalledTimes(3)
     expect(tripleClick.mock.calls.length).toBe(3)
-    expect(tripleClick.mock.calls
-      .map(c => c[0] as MouseEvent)
-      .filter(c => c.detail === 3)).toHaveLength(1)
+    expect(
+      tripleClick.mock.calls.map((c) => c[0] as MouseEvent).filter((c) => c.detail === 3),
+    ).toHaveLength(1)
   })
 
-  test('correctly doesn\'t click on a disabled button', async () => {
+  test("correctly doesn't click on a disabled button", async () => {
     const button = document.createElement('button')
     button.textContent = 'Click me'
     button.disabled = true
@@ -270,9 +269,9 @@ describe('userEvent.tripleClick', () => {
     document.body.append(button1, button2)
 
     await expect(() => page.getByRole('button').tripleClick()).rejects.toThrow(
-      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
-      + `    1) <button></button> aka getByRole('button').first()\n`
-      + `    2) <button></button> aka getByRole('button').nth(1)`,
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n` +
+        `    1) <button></button> aka getByRole('button').first()\n` +
+        `    2) <button></button> aka getByRole('button').nth(1)`,
     )
   })
 })
@@ -318,51 +317,57 @@ describe('userEvent.hover, userEvent.unhover', () => {
     document.body.append(button1, button2)
 
     await expect(() => page.getByRole('button').hover()).rejects.toThrow(
-      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
-      + `    1) <button></button> aka getByRole('button').first()\n`
-      + `    2) <button></button> aka getByRole('button').nth(1)`,
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n` +
+        `    1) <button></button> aka getByRole('button').first()\n` +
+        `    2) <button></button> aka getByRole('button').nth(1)`,
     )
   })
 
-  test.runIf(server.provider === 'playwright')('hover, unhover correctly pass options', async () => {
-    interface ModifiersDetected { shift: boolean; control: boolean }
-    type ModifierKeys = 'Shift' | 'Control' | 'Alt' | 'ControlOrMeta' | 'Meta'
+  test.runIf(server.provider === 'playwright')(
+    'hover, unhover correctly pass options',
+    async () => {
+      interface ModifiersDetected {
+        shift: boolean
+        control: boolean
+      }
+      type ModifierKeys = 'Shift' | 'Control' | 'Alt' | 'ControlOrMeta' | 'Meta'
 
-    const hoverOptions = { modifiers: ['Shift'] as ModifierKeys[] }
-    const unhoverOptions = { modifiers: ['Control'] as ModifierKeys[] }
+      const hoverOptions = { modifiers: ['Shift'] as ModifierKeys[] }
+      const unhoverOptions = { modifiers: ['Control'] as ModifierKeys[] }
 
-    const target = document.createElement('div')
-    target.style.width = '100px'
-    target.style.height = '100px'
+      const target = document.createElement('div')
+      target.style.width = '100px'
+      target.style.height = '100px'
 
-    let modifiersDetected: ModifiersDetected = {
-      shift: false,
-      control: false,
-    }
+      let modifiersDetected: ModifiersDetected = {
+        shift: false,
+        control: false,
+      }
 
-    target.addEventListener('mouseover', (e) => {
-      modifiersDetected.shift = e.shiftKey
-      modifiersDetected.control = e.ctrlKey
-    })
+      target.addEventListener('mouseover', (e) => {
+        modifiersDetected.shift = e.shiftKey
+        modifiersDetected.control = e.ctrlKey
+      })
 
-    target.addEventListener('mouseout', (e) => {
-      modifiersDetected.shift = e.shiftKey
-      modifiersDetected.control = e.ctrlKey
-    })
+      target.addEventListener('mouseout', (e) => {
+        modifiersDetected.shift = e.shiftKey
+        modifiersDetected.control = e.ctrlKey
+      })
 
-    document.body.appendChild(target)
+      document.body.appendChild(target)
 
-    await userEvent.hover(target, hoverOptions)
+      await userEvent.hover(target, hoverOptions)
 
-    expect(modifiersDetected.shift).toEqual(hoverOptions.modifiers.includes('Shift'))
-    expect(modifiersDetected.control).toEqual(hoverOptions.modifiers.includes('Control'))
-    modifiersDetected = { shift: false, control: false }
+      expect(modifiersDetected.shift).toEqual(hoverOptions.modifiers.includes('Shift'))
+      expect(modifiersDetected.control).toEqual(hoverOptions.modifiers.includes('Control'))
+      modifiersDetected = { shift: false, control: false }
 
-    await userEvent.unhover(target, unhoverOptions)
+      await userEvent.unhover(target, unhoverOptions)
 
-    expect(modifiersDetected.shift).toEqual(unhoverOptions.modifiers.includes('Shift'))
-    expect(modifiersDetected.control).toEqual(unhoverOptions.modifiers.includes('Control'))
-  })
+      expect(modifiersDetected.shift).toEqual(unhoverOptions.modifiers.includes('Shift'))
+      expect(modifiersDetected.control).toEqual(unhoverOptions.modifiers.includes('Control'))
+    },
+  )
 
   test('hover works with shadow root', async () => {
     const shadowRoot = createShadowRoot()
@@ -463,9 +468,9 @@ test('type throws an error with multiple elements', async () => {
   document.body.append(button1, button2)
 
   await expect(() => userEvent.type(page.getByRole('button'), 'Hello World')).rejects.toThrow(
-    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
-    + `    1) <button></button> aka getByRole('button').first()\n`
-    + `    2) <button></button> aka getByRole('button').nth(1)`,
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n` +
+      `    1) <button></button> aka getByRole('button').first()\n` +
+      `    2) <button></button> aka getByRole('button').nth(1)`,
   )
 })
 
@@ -475,9 +480,9 @@ test('fill throws an error with multiple elements', async () => {
   document.body.append(button1, button2)
 
   await expect(() => page.getByRole('button').fill('Hello World')).rejects.toThrow(
-    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
-    + `    1) <button></button> aka getByRole('button').first()\n`
-    + `    2) <button></button> aka getByRole('button').nth(1)`,
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n` +
+      `    1) <button></button> aka getByRole('button').first()\n` +
+      `    2) <button></button> aka getByRole('button').nth(1)`,
   )
 })
 
@@ -487,34 +492,8 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
 
     await userEvent.type(input, 'Hello World!')
     expect(value()).toBe('Hello World!')
-    expect(keydown).toEqual([
-      'H',
-      'e',
-      'l',
-      'l',
-      'o',
-      ' ',
-      'W',
-      'o',
-      'r',
-      'l',
-      'd',
-      '!',
-    ])
-    expect(keyup).toEqual([
-      'H',
-      'e',
-      'l',
-      'l',
-      'o',
-      ' ',
-      'W',
-      'o',
-      'r',
-      'l',
-      'd',
-      '!',
-    ])
+    expect(keydown).toEqual(['H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'])
+    expect(keyup).toEqual(['H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'])
     keydown.length = 0
     keyup.length = 0
 
@@ -528,13 +507,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     await userEvent.type(input, '{/a}')
     expect(value()).toBe('Hello World!aaa')
 
-    expect(keydown).toEqual([
-      'a',
-      'a',
-      'a',
-      '4',
-      'Backspace',
-    ])
+    expect(keydown).toEqual(['a', 'a', 'a', '4', 'Backspace'])
 
     await userEvent.type(input, '{Shift}b{/Shift}')
 
@@ -553,16 +526,9 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     await userEvent.type(input, '{a>2}4')
     expect(value()).toBe('aa4')
 
-    expect(keydown).toEqual([
-      'a',
-      'a',
-      '4',
-    ])
+    expect(keydown).toEqual(['a', 'a', '4'])
     // keyup is released at the end by userEvent
-    expect(keyup).toEqual([
-      '4',
-      'a',
-    ])
+    expect(keyup).toEqual(['4', 'a'])
   })
 
   test('repeating with manual up works correctly', async () => {
@@ -572,17 +538,9 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     await userEvent.type(input, '{a>3/}4')
     expect(value()).toBe('aaa4')
 
-    expect(keydown).toEqual([
-      'a',
-      'a',
-      'a',
-      '4',
-    ])
+    expect(keydown).toEqual(['a', 'a', 'a', '4'])
     // keyup is released with "/" syntax
-    expect(keyup).toEqual([
-      'a',
-      '4',
-    ])
+    expect(keyup).toEqual(['a', '4'])
   })
 
   test('repeating with disabled up works correctly', async () => {
@@ -594,16 +552,9 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     })
     expect(value()).toBe('aaa4')
 
-    expect(keydown).toEqual([
-      'a',
-      'a',
-      'a',
-      '4',
-    ])
+    expect(keydown).toEqual(['a', 'a', 'a', '4'])
     // keyup is not released at the end by userEvent
-    expect(keyup).toEqual([
-      '4',
-    ])
+    expect(keyup).toEqual(['4'])
   })
 
   test('types into a shadow root input', async () => {
@@ -613,13 +564,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     const userEvent = _uE.setup()
     await userEvent.type(input, 'Hello')
     expect(value()).toBe('Hello')
-    expect(keydown).toEqual([
-      'H',
-      'e',
-      'l',
-      'l',
-      'o',
-    ])
+    expect(keydown).toEqual(['H', 'e', 'l', 'l', 'o'])
   })
 
   // strangely enough, original userEvent doesn't support this,
@@ -710,7 +655,11 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     }
 
     await userEvent.fill(input, 'Hello')
-    if (input.tagName === 'DIV' && server.provider === 'playwright' && server.browser === 'webkit') {
+    if (
+      input.tagName === 'DIV' &&
+      server.provider === 'playwright' &&
+      server.browser === 'webkit'
+    ) {
       // broken since playwright 1.59.0 https://github.com/microsoft/playwright/issues/39983
       expect(value()).toBe('')
       return
@@ -727,13 +676,7 @@ describe('userEvent.keyboard', async () => {
     })
     expect(document.activeElement).toBe(document.body)
     await userEvent.keyboard('Hello')
-    expect(pressed).toEqual([
-      'H',
-      'e',
-      'l',
-      'l',
-      'o',
-    ])
+    expect(pressed).toEqual(['H', 'e', 'l', 'l', 'o'])
   })
 
   test('standalone keyboard works correctly with an active non-input', async () => {
@@ -757,14 +700,7 @@ describe('userEvent.keyboard', async () => {
     expect(document.activeElement).toBe(div)
     await userEvent.keyboard('Hello{backspace}')
     expect(documentKeydown).toEqual([])
-    expect(divKeydown).toEqual([
-      'H',
-      'e',
-      'l',
-      'l',
-      'o',
-      'Backspace',
-    ])
+    expect(divKeydown).toEqual(['H', 'e', 'l', 'l', 'o', 'Backspace'])
   })
 
   test('should not auto release', async () => {
@@ -802,14 +738,7 @@ describe('userEvent.keyboard', async () => {
 
     expect(input.value).toBe('Hell')
     expect(documentKeydown).toEqual([])
-    expect(inputKeydown).toEqual([
-      'H',
-      'e',
-      'l',
-      'l',
-      'o',
-      'Backspace',
-    ])
+    expect(inputKeydown).toEqual(['H', 'e', 'l', 'l', 'o', 'Backspace'])
   })
 })
 
@@ -897,9 +826,9 @@ describe.each([
     document.body.append(button1, button2)
 
     await expect(() => page.getByRole('button').selectOptions('Hello World')).rejects.toThrow(
-      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
-      + `    1) <button></button> aka getByRole('button').first()\n`
-      + `    2) <button></button> aka getByRole('button').nth(1)`,
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n` +
+        `    1) <button></button> aka getByRole('button').first()\n` +
+        `    2) <button></button> aka getByRole('button').nth(1)`,
     )
   })
 

@@ -15,7 +15,7 @@ export const myTest = test.extend<MyFixtures>({
   // [repro] fixture order must be { a, b } and not { b, a }
   a: async ({}, use) => {
     globalA++
-    await new Promise<void>(resolve => setTimeout(resolve, 200)) // [repro] async fixture
+    await new Promise<void>((resolve) => setTimeout(resolve, 200)) // [repro] async fixture
     await use(globalA)
   },
   b: async ({}, use) => {

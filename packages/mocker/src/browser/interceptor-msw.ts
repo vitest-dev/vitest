@@ -37,9 +37,7 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
   private startPromise: undefined | Promise<SetupWorker>
   private worker: undefined | SetupWorker
 
-  constructor(
-    private readonly options: ModuleMockerMSWInterceptorOptions = {},
-  ) {
+  constructor(private readonly options: ModuleMockerMSWInterceptorOptions = {}) {
     if (!options.globalThisAccessor) {
       options.globalThisAccessor = '"__vitest_mocker__"'
     }
@@ -87,34 +85,36 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
           }
         : import('msw/browser'),
       import('msw/core/http'),
-    ]).then(([{ setupWorker }, { http }]) => {
-      const worker = setupWorker(
-        http.get(/.+/, async ({ request }) => {
-          const path = cleanQuery(request.url.slice(location.origin.length))
-          if (!this.mocks.has(path)) {
-            return passthrough()
-          }
+    ])
+      .then(([{ setupWorker }, { http }]) => {
+        const worker = setupWorker(
+          http.get(/.+/, async ({ request }) => {
+            const path = cleanQuery(request.url.slice(location.origin.length))
+            if (!this.mocks.has(path)) {
+              return passthrough()
+            }
 
-          const mock = this.mocks.get(path)!
+            const mock = this.mocks.get(path)!
 
-          switch (mock.type) {
-            case 'manual':
-              return this.resolveManualMock(mock)
-            case 'automock':
-            case 'autospy':
-              return Response.redirect(injectQuery(path, `mock=${mock.type}`))
-            case 'redirect':
-              return Response.redirect(mock.redirect)
-            default:
-              throw new Error(`Unknown mock type: ${(mock as any).type}`)
-          }
-        }),
-      )
-      return worker.start(this.options.mswOptions).then(() => worker)
-    }).finally(() => {
-      this.worker = worker
-      this.startPromise = undefined
-    })
+            switch (mock.type) {
+              case 'manual':
+                return this.resolveManualMock(mock)
+              case 'automock':
+              case 'autospy':
+                return Response.redirect(injectQuery(path, `mock=${mock.type}`))
+              case 'redirect':
+                return Response.redirect(mock.redirect)
+              default:
+                throw new Error(`Unknown mock type: ${(mock as any).type}`)
+            }
+          }),
+        )
+        return worker.start(this.options.mswOptions).then(() => worker)
+      })
+      .finally(() => {
+        this.worker = worker
+        this.startPromise = undefined
+      })
     return await this.startPromise
   }
 }
@@ -140,13 +140,8 @@ const replacePercentageRE = /%/g
 function injectQuery(url: string, queryToInject: string): string {
   // encode percents for consistent behavior with pathToFileURL
   // see #2614 for details
-  const resolvedUrl = new URL(
-    url.replace(replacePercentageRE, '%25'),
-    location.href,
-  )
+  const resolvedUrl = new URL(url.replace(replacePercentageRE, '%25'), location.href)
   const { search, hash } = resolvedUrl
   const pathname = cleanUrl(url)
-  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${
-    hash ?? ''
-  }`
+  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${hash ?? ''}`
 }

@@ -5,9 +5,7 @@ import utilsContent from '../fixtures/expect-dom/utils?raw'
 
 const testFilename = 'basic.test.ts'
 
-async function runBrowserTests(
-  structure: TestFsStructure,
-) {
+async function runBrowserTests(structure: TestFsStructure) {
   return runInlineTests({
     ...structure,
     'vitest.config.js': `
@@ -37,9 +35,8 @@ function extractScreenshotPath(string: string): string | undefined {
 describe('failure screenshots', () => {
   describe('`toMatchScreenshot`', () => {
     test('usually does NOT produce a failure screenshot', async () => {
-      const { stderr } = await runBrowserTests(
-        {
-          [testFilename]: /* ts */`
+      const { stderr } = await runBrowserTests({
+        [testFilename]: /* ts */ `
             import { page } from 'vitest/browser'
             import { test } from 'vitest'
             import { render } from './utils'
@@ -49,18 +46,16 @@ describe('failure screenshots', () => {
               await expect(page.getByTestId('el')).toMatchScreenshot()
             })
           `,
-          'utils.ts': utilsContent,
-        },
-      )
+        'utils.ts': utilsContent,
+      })
 
       expect(stderr).toContain('No existing reference screenshot found; a new one was created.')
       expect(stderr).not.toContain('Failure screenshot:')
     })
 
     test('unstable screenshot fails produces a failure screenshot', async () => {
-      const { stderr } = await runBrowserTests(
-        {
-          [testFilename]: /* ts */`
+      const { stderr } = await runBrowserTests({
+        [testFilename]: /* ts */ `
             import { page } from 'vitest/browser'
             import { test } from 'vitest'
             import { render } from './utils'
@@ -70,22 +65,22 @@ describe('failure screenshots', () => {
               await expect(page.getByTestId('el')).toMatchScreenshot({ timeout: 1 })
             })
           `,
-          'utils.ts': utilsContent,
-        },
-      )
+        'utils.ts': utilsContent,
+      })
 
       expect(stderr).toContain('Could not capture a stable screenshot within 1ms.')
       expect(stderr).toContain('Failure screenshot:')
 
       const screenshotPath = extractScreenshotPath(stderr)
 
-      expect(screenshotPath).toContain('.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-unstable.png')
+      expect(screenshotPath).toContain(
+        '.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-unstable.png',
+      )
     })
 
     test('`expect.soft` produces a failure screenshot', async () => {
-      const { stderr } = await runBrowserTests(
-        {
-          [testFilename]: /* ts */`
+      const { stderr } = await runBrowserTests({
+        [testFilename]: /* ts */ `
             import { page } from 'vitest/browser'
             import { test } from 'vitest'
             import { render } from './utils'
@@ -96,9 +91,8 @@ describe('failure screenshots', () => {
               expect(1).toBe(2)
             })
           `,
-          'utils.ts': utilsContent,
-        },
-      )
+        'utils.ts': utilsContent,
+      })
 
       expect(stderr).toContain('No existing reference screenshot found; a new one was created.')
       expect(stderr).toContain('expected 1 to be 2')
@@ -106,7 +100,9 @@ describe('failure screenshots', () => {
 
       const screenshotPath = extractScreenshotPath(stderr)
 
-      expect(screenshotPath).toContain('.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-soft-then-fail.png')
+      expect(screenshotPath).toContain(
+        '.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-soft-then-fail.png',
+      )
     })
   })
 })

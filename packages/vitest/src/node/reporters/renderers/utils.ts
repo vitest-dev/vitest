@@ -55,8 +55,7 @@ export function divider(
     const textLength = stripVTControlCharacters(text).length
     if (left == null && right != null) {
       left = cols - textLength - right
-    }
-    else {
+    } else {
       left = left ?? Math.floor((cols - textLength) / 2)
       right = cols - textLength - left
     }
@@ -79,10 +78,7 @@ function formatTestPath(root: string, path: string): string {
   return slash(c.dim(`${dir}/`) + c.bold(base)) + c.dim(ext)
 }
 
-export function renderSnapshotSummary(
-  rootDir: string,
-  snapshots: SnapshotSummary,
-): string[] {
+export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummary): string[] {
   const summary: string[] = []
 
   if (snapshots.added) {
@@ -98,11 +94,8 @@ export function renderSnapshotSummary(
   if (snapshots.filesRemoved) {
     if (snapshots.didUpdate) {
       summary.push(c.bold(c.green(`${snapshots.filesRemoved} files removed `)))
-    }
-    else {
-      summary.push(
-        c.bold(c.yellow(`${snapshots.filesRemoved} files obsolete `)),
-      )
+    } else {
+      summary.push(c.bold(c.yellow(`${snapshots.filesRemoved} files obsolete `)))
     }
   }
 
@@ -118,21 +111,13 @@ export function renderSnapshotSummary(
   if (snapshots.unchecked) {
     if (snapshots.didUpdate) {
       summary.push(c.bold(c.green(`${snapshots.unchecked} removed`)))
-    }
-    else {
+    } else {
       summary.push(c.bold(c.yellow(`${snapshots.unchecked} obsolete`)))
     }
 
     snapshots.uncheckedKeysByFile.forEach((uncheckedFile) => {
-      summary.push(
-        `${c.gray(F_DOWN_RIGHT)} ${formatTestPath(
-          rootDir,
-          uncheckedFile.filePath,
-        )}`,
-      )
-      uncheckedFile.keys.forEach(key =>
-        summary.push(`  ${c.gray(F_DOT)} ${key}`),
-      )
+      summary.push(`${c.gray(F_DOWN_RIGHT)} ${formatTestPath(rootDir, uncheckedFile.filePath)}`)
+      uncheckedFile.keys.forEach((key) => summary.push(`  ${c.gray(F_DOT)} ${key}`))
     })
   }
 
@@ -143,11 +128,7 @@ export function countTestErrors(tasks: Task[]): number {
   return tasks.reduce((c, i) => c + (i.result?.errors?.length || 0), 0)
 }
 
-export function getStateString(
-  tasks: Task[],
-  name = 'tests',
-  showTotal = true,
-): string {
+export function getStateString(tasks: Task[], name = 'tests', showTotal = true): string {
   if (tasks.length === 0) {
     return c.dim(`no ${name}`)
   }
@@ -159,9 +140,9 @@ export function getStateString(
     }
     return i.result?.state === 'pass' ? acc + 1 : acc
   }, 0)
-  const failed = tasks.reduce((acc, i) => i.result?.state === 'fail' ? acc + 1 : acc, 0)
-  const skipped = tasks.reduce((acc, i) => i.mode === 'skip' ? acc + 1 : acc, 0)
-  const todo = tasks.reduce((acc, i) => i.mode === 'todo' ? acc + 1 : acc, 0)
+  const failed = tasks.reduce((acc, i) => (i.result?.state === 'fail' ? acc + 1 : acc), 0)
+  const skipped = tasks.reduce((acc, i) => (i.mode === 'skip' ? acc + 1 : acc), 0)
+  const todo = tasks.reduce((acc, i) => (i.mode === 'todo' ? acc + 1 : acc), 0)
   const expectedFail = tasks.reduce((acc, i) => {
     // Count tests that are marked as .fails and passed (which means they failed as expected)
     if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
@@ -224,7 +205,10 @@ export function formatTime(time: number): string {
   return `${Math.round(time)}ms`
 }
 
-export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>, suffix = ' '): string {
+export function formatProjectName(
+  project?: Pick<TestProject, 'name' | 'color'>,
+  suffix = ' ',
+): string {
   if (!project?.name) {
     return ''
   }
@@ -235,9 +219,7 @@ export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>,
   let background = project.color && c[`bg${capitalize(project.color)}`]
 
   if (!background) {
-    const index = project.name
-      .split('')
-      .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+    const index = project.name.split('').reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
 
     background = labelDefaultColors[index % labelDefaultColors.length]
   }
@@ -245,8 +227,13 @@ export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>,
   return c.black(background(` ${project.name} `)) + suffix
 }
 
-export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
-  const bgColor = `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
+export function withLabel(
+  color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow',
+  label: string,
+  message?: string,
+) {
+  const bgColor =
+    `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
   return `${c.bold(c.black(c[bgColor](` ${label} `)))} ${message ? c[color](message) : ''}`
 }
 

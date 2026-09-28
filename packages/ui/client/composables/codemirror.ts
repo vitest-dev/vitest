@@ -1,9 +1,7 @@
 import type { RunnerTestCase, RunnerTask as Task, TestArtifactLocation } from 'vitest'
 import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
-
 import { markRaw, onUnmounted, shallowRef, watch } from 'vue'
-
 import { navigateTo } from '~/composables/navigation'
 import { openInEditor } from './error'
 import { selectedTest } from './params'
@@ -46,11 +44,7 @@ export function useCodeMirror(
       if (v !== cm.getValue()) {
         skip = true
         const selections = cm.listSelections()
-        cm.replaceRange(
-          v,
-          cm.posFromIndex(0),
-          cm.posFromIndex(Number.POSITIVE_INFINITY),
-        )
+        cm.replaceRange(v, cm.posFromIndex(0), cm.posFromIndex(Number.POSITIVE_INFINITY))
         cm.setSelections(selections)
       }
     },

@@ -12,6 +12,7 @@ If you are using [TypeScript](/guide/browser/#typescript) or want to have correc
 ```ts
 /// <reference types="vitest/browser" />
 ```
+
 :::
 
 Tests in the browser might fail inconsistently due to their asynchronous nature. Because of this, it is important to have a way to guarantee that assertions succeed even if the condition is delayed (by a timeout, network request, or animation, for example). For this purpose, Vitest provides retriable assertions out of the box via the [`expect.poll`](/api/expect#poll) and `expect.element` APIs:
@@ -62,6 +63,7 @@ Like [`expect.poll`](/api/expect#poll), `expect.element` retries DOM assertions 
 // will fail immediately if .textContent is not `'Error!'`
 expect(banner).toMatchTextContent('Error!')
 ```
+
 :::
 
 ## toBeDisabled
@@ -1026,6 +1028,7 @@ Also note that unlike `testing-library`, Vitest ignores all custom roles except 
 await expect.element(getByTestId('switch')).toHaveRole('switch') // ✅
 await expect.element(getByTestId('switch')).toHaveRole('alert') // ❌
 ```
+
 :::
 
 ## toHaveSelection
@@ -1213,6 +1216,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
     },
   })
   ```
+
   :::
 
 - `screenshotOptions: object`

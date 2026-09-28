@@ -1,4 +1,4 @@
-/* eslint-disable ts/ban-ts-comment */
+/* oxlint-disable typescript/ban-ts-comment */
 
 import { describe, expectTypeOf, test, vi } from 'vitest'
 
@@ -9,7 +9,10 @@ describe('test', () => {
 
     type ResponsiveProp<T> = T | T[] | { xs?: T; sm?: T; md?: T }
     const getResponsiveProp = <T>(_props: T): ResponsiveProp<T> => ({})
-    interface CSSProperties { margin?: string; padding?: string }
+    interface CSSProperties {
+      margin?: string
+      padding?: string
+    }
     const cssProperties: CSSProperties = { margin: '1px', padding: '2px' }
     expectTypeOf(getResponsiveProp(cssProperties))
       .exclude<unknown[] | { xs?: unknown }>()
@@ -36,6 +39,7 @@ describe('test', () => {
 
   test('spyOn googleapis compiles', () => {
     // googleapis-like typing to reproduce https://github.com/vitest-dev/vitest/issues/3141
+    // oxlint-disable-next-line no-unassigned-vars
     let google!: {
       [key: string]: unknown
       sheets: () => { foo: string }

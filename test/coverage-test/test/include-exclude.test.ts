@@ -1,6 +1,13 @@
 import assert from 'node:assert'
 import { expect, onTestFinished, vi } from 'vitest'
-import { cleanupCoverageJson, isBrowser, isNativeRunner, readCoverageMap, runVitest, test } from '../utils'
+import {
+  cleanupCoverageJson,
+  isBrowser,
+  isNativeRunner,
+  readCoverageMap,
+  runVitest,
+  test,
+} from '../utils'
 
 test('default include should show only covered files', async () => {
   await runVitest({
@@ -108,7 +115,7 @@ test('exclude can exclude covered files #2', async () => {
   `)
 })
 
-test('exclude globs don\'t filter out cwd', async () => {
+test("exclude globs don't filter out cwd", async () => {
   await runVitest({
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
     coverage: {
@@ -135,11 +142,7 @@ test('uncovered files are included after watch-mode re-run', async () => {
     watch: true,
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
     coverage: {
-      include: [
-        'fixtures/src/math.ts',
-        'fixtures/src/even.ts',
-        'fixtures/src/untested-file.ts',
-      ],
+      include: ['fixtures/src/math.ts', 'fixtures/src/even.ts', 'fixtures/src/untested-file.ts'],
       reporter: ['json', 'text-summary'],
     },
   })
@@ -239,10 +242,7 @@ test('workspace projects test, setup and configuration files should never be sho
 
 test('overridden exclude should still apply defaults', async () => {
   await runVitest({
-    include: [
-      'fixtures/test/math.test.ts',
-      'fixtures/src/test-that-looks-like-source-file.ts',
-    ],
+    include: ['fixtures/test/math.test.ts', 'fixtures/src/test-that-looks-like-source-file.ts'],
     coverage: {
       reporter: 'json',
       include: ['fixtures/test/math.test.ts'],
@@ -276,8 +276,7 @@ test('uncovered files are transformed correctly (node and browser)', async ({ sk
         "<process-cwd>/fixtures/src/conditional/web.ts",
       ]
     `)
-  }
-  else {
+  } else {
     expect(files).toMatchInlineSnapshot(`
       [
         "<process-cwd>/fixtures/src/math.ts",
@@ -312,7 +311,7 @@ test('uncovered files are transformed correctly (jsdom)', async ({ skip }) => {
     `)
 })
 
-test('files included and excluded in plugin\'s configureVitest are excluded', async ({ skip }) => {
+test("files included and excluded in plugin's configureVitest are excluded", async ({ skip }) => {
   skip(isNativeRunner(), 'native runner does not support plugins')
 
   await runVitest({
@@ -336,7 +335,9 @@ test('files included and excluded in plugin\'s configureVitest are excluded', as
   `)
 })
 
-test('files included and excluded in project\'s plugin\'s configureVitest are excluded', async ({ skip }) => {
+test("files included and excluded in project's plugin's configureVitest are excluded", async ({
+  skip,
+}) => {
   skip(isNativeRunner(), 'native runner does not support plugins')
 
   await runVitest({
@@ -351,33 +352,37 @@ test('files included and excluded in project\'s plugin\'s configureVitest are ex
           name: 'first',
           include: ['fixtures/test/math.test.ts'],
         },
-        plugins: [{
-          name: 'coverage-options-by-runtime-plugin',
-          configureVitest(context) {
-            const coverage = context.vitest.config.coverage
-            assert(coverage.provider === 'v8' || coverage.provider === 'istanbul')
+        plugins: [
+          {
+            name: 'coverage-options-by-runtime-plugin',
+            configureVitest(context) {
+              const coverage = context.vitest.config.coverage
+              assert(coverage.provider === 'v8' || coverage.provider === 'istanbul')
 
-            coverage.include ||= []
-            coverage.include.push('**/even.ts')
+              coverage.include ||= []
+              coverage.include.push('**/even.ts')
+            },
           },
-        }],
+        ],
       },
       {
         test: {
           name: 'second',
           include: ['fixtures/test/even.test.ts'],
         },
-        plugins: [{
-          name: 'coverage-options-by-runtime-plugin',
-          configureVitest(context) {
-            const coverage = context.vitest.config.coverage
-            assert(coverage.provider === 'v8' || coverage.provider === 'istanbul')
+        plugins: [
+          {
+            name: 'coverage-options-by-runtime-plugin',
+            configureVitest(context) {
+              const coverage = context.vitest.config.coverage
+              assert(coverage.provider === 'v8' || coverage.provider === 'istanbul')
 
-            coverage.include ||= []
-            coverage.include.push('**/untested-file.ts')
-            coverage.exclude.push('**/math.ts')
+              coverage.include ||= []
+              coverage.include.push('**/untested-file.ts')
+              coverage.exclude.push('**/math.ts')
+            },
           },
-        }],
+        ],
       },
     ],
   })
@@ -399,7 +404,6 @@ test('includes covered and uncovered with ] in filenames', async () => {
     coverage: {
       reporter: 'json',
       include: ['**/untested-with-*', '**/tested-with-*'],
-
     },
   })
 

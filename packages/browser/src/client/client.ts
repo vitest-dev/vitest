@@ -12,10 +12,8 @@ const PAGE_TYPE = getBrowserState().type
 
 export const PORT: string = location.port
 export const HOST: string = [location.hostname, PORT].filter(Boolean).join(':')
-export const RPC_ID: string
-  = PAGE_TYPE === 'orchestrator'
-    ? getBrowserState().sessionId
-    : getBrowserState().testerId
+export const RPC_ID: string =
+  PAGE_TYPE === 'orchestrator' ? getBrowserState().sessionId : getBrowserState().testerId
 const METHOD = getBrowserState().method
 export const ENTRY_URL: string = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -45,10 +43,7 @@ export interface VitestBrowserClient {
   waitForConnection: () => Promise<void>
 }
 
-export type BrowserRPC = BirpcReturn<
-  WebSocketBrowserHandlers,
-  WebSocketBrowserEvents
->
+export type BrowserRPC = BirpcReturn<WebSocketBrowserHandlers, WebSocketBrowserEvents>
 
 // ws connection can be established before the orchestrator is fully loaded
 // in very rare cases in the preview provider
@@ -89,7 +84,7 @@ function createClient() {
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
       async onCancel(reason) {
-        await Promise.all(onCancelCallbacks.map(fn => fn(reason)))
+        await Promise.all(onCancelCallbacks.map((fn) => fn(reason)))
       },
       async createTesters(options) {
         const orchestrator = await waitForOrchestrator()
@@ -128,9 +123,9 @@ function createClient() {
       },
     },
     {
-      post: msg => ctx.ws.send(msg),
-      on: fn => (onMessage = fn),
-      serialize: e =>
+      post: (msg) => ctx.ws.send(msg),
+      on: (fn) => (onMessage = fn),
+      serialize: (e) =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {
             return {
@@ -159,11 +154,7 @@ function createClient() {
   function registerWS() {
     openPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(
-          new Error(
-            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
-          ),
-        )
+        reject(new Error(`Cannot connect to the server in ${connectTimeout / 1000} seconds`))
       }, connectTimeout)
       if (ctx.ws.OPEN === ctx.ws.readyState) {
         resolve()

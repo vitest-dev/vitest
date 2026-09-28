@@ -32,27 +32,25 @@ const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
 const AROUND_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_TIMEOUT')
 const AROUND_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_STACK_TRACE')
 
-export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
+export function getBeforeHookCleanupCallback(
+  hook: Function,
+  result: any,
+  context?: TestContext,
+): Function | undefined {
   if (typeof result === 'function') {
-    const timeout
-      = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
+    const timeout =
+      CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
         ? hook[CLEANUP_TIMEOUT_KEY]
         : getDefaultHookTimeout()
-    const stackTraceError
-      = CLEANUP_STACK_TRACE_KEY in hook && hook[CLEANUP_STACK_TRACE_KEY] instanceof Error
+    const stackTraceError =
+      CLEANUP_STACK_TRACE_KEY in hook && hook[CLEANUP_STACK_TRACE_KEY] instanceof Error
         ? hook[CLEANUP_STACK_TRACE_KEY]
         : undefined
-    return withTimeout(
-      result,
-      timeout,
-      true,
-      stackTraceError,
-      (_, error) => {
-        if (context) {
-          abortContextSignal(context, error)
-        }
-      },
-    )
+    return withTimeout(result, timeout, true, stackTraceError, (_, error) => {
+      if (context) {
+        abortContextSignal(context, error)
+      }
+    })
   }
 }
 
@@ -392,13 +390,10 @@ export function aroundEach<ExtraContext = object>(
 
   return getCurrentSuite<ExtraContext>().on(
     'aroundEach',
-    Object.assign(
-      wrapper,
-      {
-        [AROUND_TIMEOUT_KEY]: resolvedTimeout,
-        [AROUND_STACK_TRACE_KEY]: stackTraceError,
-      },
-    ),
+    Object.assign(wrapper, {
+      [AROUND_TIMEOUT_KEY]: resolvedTimeout,
+      [AROUND_STACK_TRACE_KEY]: stackTraceError,
+    }),
   )
 }
 

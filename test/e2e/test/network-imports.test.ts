@@ -11,21 +11,25 @@ const [major] = process.version.slice(1).split('.')
 
 // TODO: remove when we drop support for Node 20
 // --experimental-network-imports was removed in Node 22 in favor of module loaders
-it.runIf(Number(major) <= 20).each([
-  'threads',
-  'forks',
-  'vmThreads',
-])('importing from network in %s', async (pool) => {
-  const { ctx, stderr, exitCode } = await runVitest({
-    ...config,
-    root: './fixtures/network-imports',
-    pool,
-  }, [], { printExitCode: true })
-  expect([...ctx!.state.errorsSet]).toStrictEqual([])
-  expect(stderr.replace(/\(node:\d+\)/, '(node:\d+)')).toBe(`(node:d+) ExperimentalWarning: Network Imports is an experimental feature and might change at any time
+it.runIf(Number(major) <= 20).each(['threads', 'forks', 'vmThreads'])(
+  'importing from network in %s',
+  async (pool) => {
+    const { ctx, stderr, exitCode } = await runVitest(
+      {
+        ...config,
+        root: './fixtures/network-imports',
+        pool,
+      },
+      [],
+      { printExitCode: true },
+    )
+    expect([...ctx!.state.errorsSet]).toStrictEqual([])
+    expect(stderr.replace(/\(node:\d+\)/, '(node:\\d+)'))
+      .toBe(`(node:\\d+) ExperimentalWarning: Network Imports is an experimental feature and might change at any time
 (Use \`node --trace-warnings ...\` to show where the warning was created)
 `)
-  expect(ctx!.state.getTestModules()).toHaveLength(1)
-  expect(ctx!.state.getTestModules()[0].state()).toBe('passed')
-  expect(exitCode).toBe(0)
-})
+    expect(ctx!.state.getTestModules()).toHaveLength(1)
+    expect(ctx!.state.getTestModules()[0].state()).toBe('passed')
+    expect(exitCode).toBe(0)
+  },
+)

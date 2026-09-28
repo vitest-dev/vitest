@@ -25,10 +25,10 @@ export function printProps(
       const value = props[key]
       // hidden injected value that should not be printed
       if (
-        typeof value === 'string'
-        && value[0] === '_'
-        && value.startsWith('__vitest_')
-        && /__vitest_\d+__/.test(value)
+        typeof value === 'string' &&
+        value[0] === '_' &&
+        value.startsWith('__vitest_') &&
+        /__vitest_\d+__/.test(value)
       ) {
         return ''
       }
@@ -37,55 +37,54 @@ export function printProps(
 
       if (typeof value !== 'string') {
         if (printed.includes('\n')) {
-          printed
-            = config.spacingOuter
-              + indentationNext
-              + printed
-              + config.spacingOuter
-              + indentation
+          printed =
+            config.spacingOuter + indentationNext + printed + config.spacingOuter + indentation
         }
         printed = `{${printed}}`
       }
 
       return `${
-        config.spacingInner
-        + indentation
-        + colors.prop.open
-        + key
-        + colors.prop.close
+        config.spacingInner + indentation + colors.prop.open + key + colors.prop.close
       }=${colors.value.open}${printed}${colors.value.close}`
     })
     .join('')
 }
 
 // Return empty string if children is empty.
-export function printChildren(children: Array<unknown>, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
+export function printChildren(
+  children: Array<unknown>,
+  config: Config,
+  indentation: string,
+  depth: number,
+  refs: Refs,
+  printer: Printer,
+): string {
   return children
     .map(
-      child =>
-        config.spacingOuter
-        + indentation
-        + (typeof child === 'string'
+      (child) =>
+        config.spacingOuter +
+        indentation +
+        (typeof child === 'string'
           ? printText(child, config)
           : printer(child, config, indentation, depth, refs)),
     )
     .join('')
 }
 
-export function printShadowRoot(children: Array<unknown>, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
+export function printShadowRoot(
+  children: Array<unknown>,
+  config: Config,
+  indentation: string,
+  depth: number,
+  refs: Refs,
+  printer: Printer,
+): string {
   if (config.printShadowRoot === false) {
     return ''
   }
   return [
     `${config.spacingOuter + indentation}#shadow-root`,
-    printChildren(
-      children,
-      config,
-      indentation + config.indent,
-      depth,
-      refs,
-      printer,
-    ),
+    printChildren(children, config, indentation + config.indent, depth, refs, printer),
   ].join('')
 }
 
@@ -96,24 +95,24 @@ export function printText(text: string, config: Config): string {
 
 export function printComment(comment: string, config: Config): string {
   const commentColor = config.colors.comment
-  return `${commentColor.open}<!--${escapeHTML(comment)}-->${
-    commentColor.close
-  }`
+  return `${commentColor.open}<!--${escapeHTML(comment)}-->${commentColor.close}`
 }
 
 // Separate the functions to format props, children, and element,
 // so a plugin could override a particular function, if needed.
 // Too bad, so sad: the traditional (but unnecessary) space
 // in a self-closing tagColor requires a second test of printedProps.
-export function printElement(type: string, printedProps: string, printedChildren: string, config: Config, indentation: string): string {
+export function printElement(
+  type: string,
+  printedProps: string,
+  printedChildren: string,
+  config: Config,
+  indentation: string,
+): string {
   const tagColor = config.colors.tag
   return `${tagColor.open}<${type}${
-    printedProps
-    && tagColor.close
-    + printedProps
-    + config.spacingOuter
-    + indentation
-    + tagColor.open
+    printedProps &&
+    tagColor.close + printedProps + config.spacingOuter + indentation + tagColor.open
   }${
     printedChildren
       ? `>${tagColor.close}${printedChildren}${config.spacingOuter}${indentation}${tagColor.open}</${type}`

@@ -28,7 +28,9 @@ test.describe('orchestrator UI on preview provider', () => {
     const res1 = await page.request.get(new URL('/__vitest_test__/', previewUrl!).toString())
     expect(res1.status()).toBe(404)
     expect(await res1.text()).toBe('Not found')
-    const res2 = await page.request.get(new URL('/__vitest_test__/?sessionId=invalid', previewUrl!).toString())
+    const res2 = await page.request.get(
+      new URL('/__vitest_test__/?sessionId=invalid', previewUrl!).toString(),
+    )
     expect(res2.status()).toBe(404)
     expect(await res2.text()).toBe('Not found')
 

@@ -21,7 +21,9 @@ test('module offset is set correctly when module import is pending (#10581)', as
     ]
   `)
 
-  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/slow-module-imported.ts')
+  const fileCoverage = coverageMap.fileCoverageFor(
+    '<process-cwd>/fixtures/src/slow-module-imported.ts',
+  )
 
   /** {@link file://./../fixtures/src/slow-module-imported.ts} */
   const lineCoverage = fileCoverage.getLineCoverage()

@@ -5,13 +5,17 @@ import { expect, test } from 'vitest'
 import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 
 test('states of running tests are reported', async () => {
-  const { stdout } = await runVitest({
-    root: 'fixtures/reporters/summary',
-    reporters: [['default', { summary: true, summaryOptions: { threshold: 0 }, isTTY: true }]],
-    config: false,
-    fileParallelism: false,
-    sequence: { sequencer: StableTestFileOrderSorter },
-  }, undefined, { preserveAnsi: true, tty: true })
+  const { stdout } = await runVitest(
+    {
+      root: 'fixtures/reporters/summary',
+      reporters: [['default', { summary: true, summaryOptions: { threshold: 0 }, isTTY: true }]],
+      config: false,
+      fileParallelism: false,
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+    undefined,
+    { preserveAnsi: true, tty: true },
+  )
 
   const frames = await renderString(stdout).then(trimFrames)
 
@@ -182,15 +186,17 @@ test('states of running tests are reported', async () => {
 })
 
 function trimFrames(frames: Renderer) {
-  return Array.from(frames)
-  // Make each frame stable
-    .map(trimReporterOutput)
+  return (
+    Array.from(frames)
+      // Make each frame stable
+      .map(trimReporterOutput)
 
-  // Filter possible duplicate frames. Maybe just duration changed (that we stabilized to <time>, so frame is duplicate)
-    .filter((item, index, all) => all.indexOf(item) === index)
+      // Filter possible duplicate frames. Maybe just duration changed (that we stabilized to <time>, so frame is duplicate)
+      .filter((item, index, all) => all.indexOf(item) === index)
 
-  // Separate frames with divider
-    .join(`\n${'-'.repeat(55)}\n`)
+      // Separate frames with divider
+      .join(`\n${'-'.repeat(55)}\n`)
+  )
 }
 
 function trimReporterOutput(report: string) {

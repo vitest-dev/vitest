@@ -34,6 +34,7 @@ const deleteButton = page
 await deleteButton.click()
 await expect.element(deleteButton).toBeEnabled()
 ```
+
 :::
 
 ## getByRole
@@ -92,7 +93,7 @@ Providing roles via `role` or `aria-*` attributes to built-in elements that alre
 
 - `exact: boolean`
 
-  Whether the `name` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `name` is matched exactly: case-sensitive and whole-string. Defaults to [`browser.locators.exact`](/config/browser/locators#browser-locators-exact), which is `true` by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
 
   ```tsx
   <button>Hello World</button>
@@ -240,7 +241,7 @@ page.getByAltText('non existing alt text') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Defaults to [`browser.locators.exact`](/config/browser/locators#browser-locators-exact), which is `true` by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 **See also**
 
@@ -287,7 +288,7 @@ The `page.getByLabelText('Username')` locator will find every input in the examp
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Defaults to [`browser.locators.exact`](/config/browser/locators#browser-locators-exact), which is `true` by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 **See also**
 
@@ -319,7 +320,7 @@ It is generally better to rely on a label using [`getByLabelText`](#getbylabelte
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Defaults to [`browser.locators.exact`](/config/browser/locators#browser-locators-exact), which is `true` by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 **See also**
 
@@ -351,7 +352,7 @@ This locator is useful for locating non-interactive elements. If you need to loc
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Defaults to [`browser.locators.exact`](/config/browser/locators#browser-locators-exact), which is `true` by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 **See also**
 
@@ -379,7 +380,7 @@ page.getByTitle('Create') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Defaults to [`browser.locators.exact`](/config/browser/locators#browser-locators-exact), which is `true` by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 **See also**
 
@@ -403,12 +404,6 @@ page.getByTestId('non-existing-element') // ❌
 ::: warning
 It is recommended to use this only after the other locators don't work for your use case. Using `data-testid` attributes does not resemble how your software is used and should be avoided if possible.
 :::
-
-**Options**
-
-- `exact: boolean`
-
-  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 **See also**
 
@@ -510,6 +505,7 @@ page.getByRole('button')
   .or(page.getByRole('link'))
   .click() // ❌ matches multiple elements
 ```
+
 :::
 
 ## filter
@@ -561,6 +557,7 @@ page.getByRole('article')
   .filter({ has: page.getByRole('button', { name: 'delete row' }) })
   .filter({ has: page.getByText('Vitest') })
 ```
+
 :::
 
 ### hasNot
@@ -877,7 +874,7 @@ function query(): Element | null
 
 This method returns a single element matching the locator's selector or `null` if no element is found.
 
-If multiple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
+If multiple elements match the selector, this method will throw an error. Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
 ::: danger
 This is an escape hatch for external APIs that do not support locators. Prefer using locator methods instead.
@@ -927,6 +924,7 @@ It is called automatically when locator is used with `expect.element` every time
 ```ts
 await expect.element(page.getByRole('button')).toBeDisabled()
 ```
+
 :::
 
 Consider the following DOM structure:
@@ -1134,6 +1132,7 @@ test('works correctly', async () => {
   await commands.test(page.getByText('Hello')) // ✅
 })
 ```
+
 :::
 
 ### length

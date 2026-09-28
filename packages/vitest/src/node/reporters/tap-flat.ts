@@ -7,11 +7,8 @@ function flattenTasks(task: Task, baseName = ''): Task[] {
   const base = baseName ? `${baseName} > ` : ''
 
   if (task.type === 'suite' && task.tasks.length > 0) {
-    return task.tasks.flatMap(child =>
-      flattenTasks(child, `${base}${task.name}`),
-    )
-  }
-  else {
+    return task.tasks.flatMap((child) => flattenTasks(child, `${base}${task.name}`))
+  } else {
     return [
       {
         ...task,
@@ -29,7 +26,7 @@ export class TapFlatReporter extends TapReporter {
   onTestRunEnd(testModules: ReadonlyArray<TestModule>): void {
     this.ctx.logger.log('TAP version 13')
 
-    const flatTasks = testModules.flatMap(testModule => flattenTasks(testModule.task))
+    const flatTasks = testModules.flatMap((testModule) => flattenTasks(testModule.task))
 
     this.logTasks(flatTasks)
   }

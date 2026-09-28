@@ -23,13 +23,7 @@ test('basic', () => {
   // with custom serializer
   expect.addSnapshotSerializer({
     serialize(val, config, indentation, depth, refs, printer) {
-      return `Pretty foo: ${printer(
-        val.foo,
-        config,
-        indentation,
-        depth,
-        refs,
-      )}`
+      return `Pretty foo: ${printer(val.foo, config, indentation, depth, refs)}`
     },
     test(val) {
       return val && Object.hasOwn(val, 'foo')
@@ -69,13 +63,7 @@ test('throwing snapshot', () => {
   expect.addSnapshotSerializer({
     serialize(val, config, indentation, depth, refs, printer) {
       const error = val as ErrorWithDetails
-      return `Pretty ${error.message}: ${printer(
-        error.details,
-        config,
-        indentation,
-        depth,
-        refs,
-      )}`
+      return `Pretty ${error.message}: ${printer(error.details, config, indentation, depth, refs)}`
     },
     test(val) {
       return val && val instanceof ErrorWithDetails

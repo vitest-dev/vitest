@@ -22,11 +22,7 @@ const failed = computed(() => {
 
 // filter out internal TaskMeta
 // packages/vitest/src/types/global.ts
-const kWellKnownMeta = new Set([
-  'benchmark',
-  'typecheck',
-  '__vitest_label__',
-])
+const kWellKnownMeta = new Set(['benchmark', 'typecheck', '__vitest_label__'])
 const meta = computed(() => {
   return Object.entries(props.test.meta).filter(([name]) => {
     return !kWellKnownMeta.has(name)
@@ -37,9 +33,7 @@ const meta = computed(() => {
 <template>
   <div class="scrolls h-full">
     <div v-if="failed">
-      <div
-        class="bg-red-500/10 text-sm text-red-500 px-3 py-2 m-2 rounded"
-      >
+      <div class="bg-red-500/10 text-sm text-red-500 px-3 py-2 m-2 rounded">
         <FailureScreenshot :task="test" />
         <template v-if="test.result?.errors && config.root">
           <ViewReportError
@@ -59,9 +53,7 @@ const meta = computed(() => {
       </div>
     </template>
     <template v-if="test.annotations.length">
-      <h1 class="m-2">
-        Test Annotations
-      </h1>
+      <h1 class="m-2">Test Annotations</h1>
       <div
         v-for="annotation of test.annotations"
         :key="annotation.type + annotation.message"
@@ -82,7 +74,9 @@ const meta = computed(() => {
               Open
             </button>
             <a
-              v-if="annotation.attachment && !annotation.attachment.contentType?.startsWith('image/')"
+              v-if="
+                annotation.attachment && !annotation.attachment.contentType?.startsWith('image/')
+              "
               class="flex gap-1 items-center text-yellow-500/80 cursor-pointer"
               :href="getAttachmentUrl(annotation.attachment)"
               :download="sanitizeFilePath(annotation.message, annotation.attachment.contentType)"
@@ -110,10 +104,7 @@ const meta = computed(() => {
           </div>
         </div>
 
-        <div
-          class="scrolls scrolls-rounded task-error"
-          data-testid="task-error"
-        >
+        <div class="scrolls scrolls-rounded task-error" data-testid="task-error">
           {{ annotation.message }}
         </div>
 
@@ -122,13 +113,11 @@ const meta = computed(() => {
     </template>
     <Artifacts :test="test" />
     <template v-if="meta.length">
-      <h1 class="m-2">
-        Test Meta
-      </h1>
+      <h1 class="m-2">Test Meta</h1>
       <div
         class="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 bg-gray/10 text-sm px-3 py-2 m-2 rounded overflow-hidden"
       >
-        <template v-for="([name, content]) of meta" :key="name">
+        <template v-for="[name, content] of meta" :key="name">
           <div class="font-bold ws-nowrap truncate py-2">
             {{ name }}
           </div>

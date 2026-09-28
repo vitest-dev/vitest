@@ -8,8 +8,9 @@ test('domain inline snapshot', async () => {
   const testFile = join(root, 'basic.test.ts')
 
   // purge inline snapshots to empty strings, restore test values
-  editFile(testFile, s => s
-    .replace(/toMatchKvInlineSnapshot\(`[^`]*`/g, 'toMatchKvInlineSnapshot('))
+  editFile(testFile, (s) =>
+    s.replace(/toMatchKvInlineSnapshot\(`[^`]*`/g, 'toMatchKvInlineSnapshot('),
+  )
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
@@ -42,8 +43,7 @@ test('domain inline snapshot', async () => {
 
   // hand-edit inline snapshot to introduce regex pattern
   //    score=999 -> score=/\\d+/
-  editFile(testFile, s => s
-    .replace('score=999', 'score=/\\\\d+/'))
+  editFile(testFile, (s) => s.replace('score=999', 'score=/\\\\d+/'))
 
   // run without update — regex matches, all pass
   result = await runVitest({ root, update: 'none' })
@@ -60,10 +60,12 @@ test('domain inline snapshot', async () => {
 
   // edit test values: score '999' -> '42' (regex still matches),
   //    status 'active' -> 'inactive' (literal mismatch)
-  editFile(testFile, s => s
-    .replace(`name: 'alice',`, ``)
-    .replace(`score: '999'`, `score: '42'`)
-    .replace(`status: 'active'`, `status: 'inactive'`))
+  editFile(testFile, (s) =>
+    s
+      .replace(`name: 'alice',`, ``)
+      .replace(`score: '999'`, `score: '42'`)
+      .replace(`status: 'active'`, `status: 'inactive'`),
+  )
 
   // run without update — status mismatch causes failure
   result = await runVitest({ root, update: 'none' })

@@ -229,19 +229,15 @@ export class SummaryReporter implements Reporter {
       // Check if this is an expected failure (test.fails && passed)
       if (test.options.fails) {
         this.tests.expectedFail++
-      }
-      else {
+      } else {
         this.tests.passed++
       }
-    }
-    else if (result?.state === 'failed') {
+    } else if (result?.state === 'failed') {
       this.tests.failed++
-    }
-    else if (!result?.state || result?.state === 'skipped') {
+    } else if (!result?.state || result?.state === 'skipped') {
       if (test.options.mode === 'todo') {
         this.tests.todo++
-      }
-      else {
+      } else {
         this.tests.skipped++
       }
     }
@@ -255,14 +251,11 @@ export class SummaryReporter implements Reporter {
 
     if (state === 'passed') {
       this.modules.passed++
-    }
-    else if (state === 'failed') {
+    } else if (state === 'failed') {
       this.modules.failed++
-    }
-    else if (module.task.mode === 'todo' && state === 'skipped') {
+    } else if (module.task.mode === 'todo' && state === 'skipped') {
       this.modules.todo++
-    }
-    else if (state === 'skipped') {
+    } else if (state === 'skipped') {
       this.modules.skipped++
     }
 
@@ -272,11 +265,13 @@ export class SummaryReporter implements Reporter {
     // When a new test starts in onTestModuleQueued it will take this ones place.
     // This reduces flickering by making summary more stable.
     if (left > this.maxParallelTests) {
-      this.finishedModules.set(module.id, setTimeout(() => {
-        this.removeTestModule(module.id)
-      }, FINISHED_TEST_CLEANUP_TIME_MS).unref())
-    }
-    else {
+      this.finishedModules.set(
+        module.id,
+        setTimeout(() => {
+          this.removeTestModule(module.id)
+        }, FINISHED_TEST_CLEANUP_TIME_MS).unref(),
+      )
+    } else {
       // Run is about to end as there are less tests left than whole run had parallel at max.
       // Remove finished test immediately.
       this.removeTestModule(module.id)
@@ -306,31 +301,35 @@ export class SummaryReporter implements Reporter {
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
       const typecheck = testFile.meta.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
-      const label = this.ctx.state.blobs && testFile.meta.__vitest_label__ ? `${c.bgCyan(c.bold(` ${testFile.meta.__vitest_label__} `))} ` : ''
+      const label =
+        this.ctx.state.blobs && testFile.meta.__vitest_label__
+          ? `${c.bgCyan(c.bold(` ${testFile.meta.__vitest_label__} `))} `
+          : ''
       summary.push(
-        c.bold(c.yellow(` ${F_POINTER} `))
-        + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
-        + typecheck
-        + label
-        + testFile.filename
-        + c.dim(!testFile.completed && !testFile.total
-          ? ' [queued]'
-          : ` ${testFile.completed}/${testFile.total}`),
+        c.bold(c.yellow(` ${F_POINTER} `)) +
+          formatProjectName({ name: testFile.projectName, color: testFile.projectColor }) +
+          typecheck +
+          label +
+          testFile.filename +
+          c.dim(
+            !testFile.completed && !testFile.total
+              ? ' [queued]'
+              : ` ${testFile.completed}/${testFile.total}`,
+          ),
       )
 
-      const slowTasks = [
-        testFile.step,
-        ...testFile.tests.values(),
-      ].filter((t): t is SlowTask => t != null && t.visible)
+      const slowTasks = [testFile.step, ...testFile.tests.values()].filter(
+        (t): t is SlowTask => t != null && t.visible,
+      )
 
       for (const [index, task] of slowTasks.entries()) {
         const elapsed = this.currentTime - task.startTime
         const icon = index === slowTasks.length - 1 ? F_TREE_NODE_END : F_TREE_NODE_MIDDLE
 
         summary.push(
-          c.bold(c.yellow(`   ${icon} `))
-          + task.name
-          + c.bold(c.yellow(` ${formatTime(Math.max(0, elapsed))}`)),
+          c.bold(c.yellow(`   ${icon} `)) +
+            task.name +
+            c.bold(c.yellow(` ${formatTime(Math.max(0, elapsed))}`)),
         )
 
         if (task.step?.visible) {
@@ -370,7 +369,7 @@ export class SummaryReporter implements Reporter {
 
     const testFile = this.runningModules.get(id)
     testFile?.step?.onFinish()
-    testFile?.tests?.forEach(test => test.onFinish())
+    testFile?.tests?.forEach((test) => test.onFinish())
 
     this.runningModules.delete(id)
 

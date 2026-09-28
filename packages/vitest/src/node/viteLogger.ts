@@ -43,8 +43,7 @@ export function createViteLogger(
   const loggedErrors = new WeakSet<Error | Rollup.RollupError>()
   const { prefix = '[vite]', allowClearScreen = true } = options
   const thresh = LogLevels[level]
-  const canClearScreen
-    = allowClearScreen && process.stdout.isTTY && !process.env.CI
+  const canClearScreen = allowClearScreen && process.stdout.isTTY && !process.env.CI
   const clear = canClearScreen ? clearScreen : () => {}
 
   function format(type: LogType, msg: string, options: LogErrorOptions = {}) {
@@ -52,17 +51,14 @@ export function createViteLogger(
       let tag = ''
       if (type === 'info') {
         tag = colors.cyan(colors.bold(prefix))
-      }
-      else if (type === 'warn') {
+      } else if (type === 'warn') {
         tag = colors.yellow(colors.bold(prefix))
-      }
-      else {
+      } else {
         tag = colors.red(colors.bold(prefix))
       }
       const environment = (options as any).environment ? `${(options as any).environment} ` : ''
       return `${colors.dim(getTimeFormatter().format(new Date()))} ${tag} ${environment}${msg}`
-    }
-    else {
+    } else {
       return msg
     }
   }
@@ -78,12 +74,8 @@ export function createViteLogger(
         if (type === lastType && msg === lastMsg) {
           sameCount++
           clear(console)
-          console[method](
-            format(type, msg, options),
-            colors.yellow(`(x${sameCount + 1})`),
-          )
-        }
-        else {
+          console[method](format(type, msg, options), colors.yellow(`(x${sameCount + 1})`))
+        } else {
           sameCount = 0
           lastMsg = msg
           lastType = type
@@ -92,8 +84,7 @@ export function createViteLogger(
           }
           console[method](format(type, msg, options))
         }
-      }
-      else {
+      } else {
         console[method](format(type, msg, options))
       }
     }

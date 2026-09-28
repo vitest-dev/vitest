@@ -46,7 +46,9 @@ test('vi.mockRestore() does not affect mocks', () => {
   expect(new mocked.Class()).toBeInstanceOf(mocked.Class)
 })
 
-test('vi.mockRestore() on respied method does not restore it to the original', async ({ annotate }) => {
+test('vi.mockRestore() on respied method does not restore it to the original', async ({
+  annotate,
+}) => {
   await annotate('https://github.com/vitest-dev/vitest/issues/8319', 'issue')
 
   const mocked = mockModule()
@@ -245,16 +247,19 @@ test('the array is not empty when spying', () => {
 })
 
 function mockModule(type: 'automock' | 'autospy' = 'automock') {
-  return vi.mockObject({
-    [Symbol.toStringTag]: 'Module',
-    __esModule: true,
-    method(..._args: any[]) {
-      return 42
-    },
-    Class: class {
+  return vi.mockObject(
+    {
+      [Symbol.toStringTag]: 'Module',
+      __esModule: true,
       method(..._args: any[]) {
         return 42
-      }
+      },
+      Class: class {
+        method(..._args: any[]) {
+          return 42
+        }
+      },
     },
-  }, { spy: type === 'autospy' })
+    { spy: type === 'autospy' },
+  )
 }

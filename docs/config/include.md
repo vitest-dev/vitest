@@ -72,4 +72,5 @@ export default defineConfig({
   },
 })
 ```
+
 :::

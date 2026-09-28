@@ -44,11 +44,7 @@ export default function toHaveAttribute(
           secondArgument: isExpectedValuePresent
             ? this.utils.printExpected(expectedValue)
             : undefined,
-          comment: getAttributeComment(
-            this.utils.stringify,
-            attribute,
-            expectedValue,
-          ),
+          comment: getAttributeComment(this.utils.stringify, attribute, expectedValue),
         },
       )
       return getMessage(
