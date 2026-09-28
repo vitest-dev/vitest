@@ -278,7 +278,7 @@ export class FakeTimers {
 }
 
 function toEpochMilliseconds(time: string | FakeTimersConfig['now']) {
-  return time && typeof time === 'object' && !(time instanceof Date)
+  return time && typeof time === 'object' && 'epochMilliseconds' in time
     ? time.epochMilliseconds
     : time
 }
