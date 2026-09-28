@@ -1170,7 +1170,7 @@ If fake timers are enabled, this method simulates a user changing the system clo
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
-Accepts the same string and number arguments as the `Date`, or a `Temporal.Instant` or `Temporal.ZonedDateTime`. A `ZonedDateTime` sets the instant but does not change the system time zone.
+Accepts the same string and number arguments as the `Date`, or a `Temporal.Instant` or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
 
 ```ts
 const date = new Date(1998, 11, 19)
@@ -1195,7 +1195,7 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
-The `now` option accepts a `Date`, number, `Temporal.Instant`, or `Temporal.ZonedDateTime`. A `ZonedDateTime` sets the instant but does not change the system time zone.
+The `now` option accepts a `Date`, number, `Temporal.Instant`, or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
 
 ::: tip
 `vi.useFakeTimers()` does not automatically mock `process.nextTick` and `queueMicrotask`.
