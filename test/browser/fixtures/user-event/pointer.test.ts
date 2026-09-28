@@ -35,7 +35,7 @@ expect.extend({
     const tolerance = server.config.browser.ui
       // the test is running in a scaled frame, compute how many "iframe pixels" correspond
       //  to a "browser pixel", ceil the result, and add an extra buffer for safety
-      ? Math.ceil(1 / IFRAME_SCALE_TARGET) + 1
+      ? Math.ceil(1 / IFRAME_SCALE_TARGET)
       // the test is running at full scale so the provided coordinates should match exactly
       : 0
 
