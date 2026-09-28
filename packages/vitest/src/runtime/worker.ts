@@ -11,7 +11,12 @@ import { EnvironmentTeardownError } from './utils'
 
 const resolvingModules = new Set<string>()
 
-async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker, traces: Traces) {
+async function execute(
+  method: 'run' | 'collect',
+  ctx: ContextRPC,
+  worker: VitestWorker,
+  traces: Traces,
+) {
   const prepareStart = performance.now()
 
   const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
@@ -22,9 +27,15 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
   try {
     // do not close the RPC channel so that we can get the error messages sent to the main thread
     cleanups.push(async () => {
-      await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
-        reject(new EnvironmentTeardownError(`[vitest-worker]: Closing rpc while "${method}" was pending`))
-      }))
+      await Promise.all(
+        rpc.$rejectPendingCalls(({ method, reject }) => {
+          reject(
+            new EnvironmentTeardownError(
+              `[vitest-worker]: Closing rpc while "${method}" was pending`,
+            ),
+          )
+        }),
+      )
     })
 
     const state = {
@@ -49,9 +60,10 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
         return createStackString(parseStacktrace(stack))
       },
       metaEnv: ctx.metaEnv,
-      getterTracker: ctx.config.benchmark.enabled && !ctx.config.benchmark.suppressExportGetterWarnings
-        ? new GetterTracker()
-        : undefined,
+      getterTracker:
+        ctx.config.benchmark.enabled && !ctx.config.benchmark.suppressExportGetterWarnings
+          ? new GetterTracker()
+          : undefined,
     } satisfies WorkerGlobalState
 
     const methodName = method === 'collect' ? 'collectTests' : 'runTests'
@@ -63,10 +75,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
     }
 
     await worker[methodName](state, traces)
-  }
-  finally {
+  } finally {
     await rpcDone().catch(() => {})
-    await Promise.all(cleanups.map(fn => fn())).catch(() => {})
+    await Promise.all(cleanups.map((fn) => fn())).catch(() => {})
   }
 }
 

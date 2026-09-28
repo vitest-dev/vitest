@@ -16,7 +16,12 @@
 import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { cssEscape } from 'ivya/utils'
-import { arrayAsSetComparison, getElementFromUserInput, getSingleElementValue, getTag } from './utils'
+import {
+  arrayAsSetComparison,
+  getElementFromUserInput,
+  getSingleElementValue,
+  getTag,
+} from './utils'
 
 export default function toHaveFormValues(
   this: MatcherState,
@@ -27,8 +32,13 @@ export default function toHaveFormValues(
 
   const defaultView = formElement.ownerDocument.defaultView || window
 
-  if (!(formElement instanceof defaultView.HTMLFieldSetElement) && !(formElement instanceof defaultView.HTMLFormElement)) {
-    throw new TypeError(`toHaveFormValues must be called on a form or a fieldset, instead got ${getTag(formElement)}`)
+  if (
+    !(formElement instanceof defaultView.HTMLFieldSetElement) &&
+    !(formElement instanceof defaultView.HTMLFormElement)
+  ) {
+    throw new TypeError(
+      `toHaveFormValues must be called on a form or a fieldset, instead got ${getTag(formElement)}`,
+    )
   }
 
   if (!expectedValues || typeof expectedValues !== 'object') {
@@ -69,24 +79,20 @@ function getMultiElementValue(elements: HTMLInputElement[]) {
   let type = ''
   for (const element of elements) {
     if (type && type !== element.type) {
-      throw new Error(
-        'Multiple form elements with the same name must be of the same type',
-      )
+      throw new Error('Multiple form elements with the same name must be of the same type')
     }
     type = element.type
   }
   switch (type) {
     case 'radio': {
-      const selected = elements.find(radio => radio.checked)
+      const selected = elements.find((radio) => radio.checked)
       return selected ? selected.value : undefined
     }
     case 'checkbox':
-      return elements
-        .filter(checkbox => checkbox.checked)
-        .map(checkbox => checkbox.value)
+      return elements.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value)
     default:
       // NOTE: Not even sure this is a valid use case, but just in case...
-      return elements.map(element => element.value)
+      return elements.map((element) => element.value)
   }
 }
 
@@ -106,7 +112,7 @@ function getFormValue(container: HTMLFormElement | HTMLFieldSetElement, name: st
 
 // Strips the `[]` suffix off a form value name
 function getPureName(name: string) {
-  return /\[\]$/.test(name) ? name.slice(0, -2) : name
+  return name.endsWith('[]') ? name.slice(0, -2) : name
 }
 
 function getAllFormValues(container: HTMLFormElement | HTMLFieldSetElement) {

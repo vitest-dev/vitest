@@ -10,9 +10,7 @@ function getDateTime(time: number) {
   <ul class="blog-list">
     <li v-for="post of posts" :key="post.url" class="blog-entry">
       <article>
-        <time :datetime="getDateTime(post.date.time)">{{
-          post.date.string
-        }}</time>
+        <time :datetime="getDateTime(post.date.time)">{{ post.date.string }}</time>
         <h2 class="title">
           <a :href="post.url">{{ post.title }}</a>
         </h2>

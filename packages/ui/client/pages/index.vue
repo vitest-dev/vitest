@@ -85,37 +85,30 @@ function allowBrowserEvents() {
   <ProgressBar v-if="layoutMode !== 'trace'" />
   <div v-if="layoutMode === 'trace'" class="h-screen w-screen overflow-hidden">
     <TraceViewPane v-if="activeTraceView" :selection="activeTraceView" />
-    <div v-else class="h-full flex items-center justify-center text-sm op-50">
-      No trace found
-    </div>
+    <div v-else class="h-full flex items-center justify-center text-sm op-50">No trace found</div>
   </div>
   <div v-else class="h-screen w-screen overflow-hidden">
-    <Splitpanes
-      class="pt-4px"
-      @resized="onMainResized"
-      @resize="resizingMain"
-    >
+    <Splitpanes class="pt-4px" @resized="onMainResized" @resize="resizingMain">
       <Pane :size="mainSizes[0]">
         <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
         <transition v-if="!browserState && !activeTraceView" key="ui-detail">
           <Dashboard v-if="dashboardVisible" key="summary" />
-          <Coverage
-            v-else-if="coverageVisible"
-            key="coverage"
-          />
+          <Coverage v-else-if="coverageVisible" key="coverage" />
           <FileDetails v-else key="details" />
         </transition>
         <template v-else>
-          <div
-            class="flex flex-col h-full"
-          >
+          <div class="flex flex-col h-full">
             <Splitpanes
               id="details-splitpanes"
               key="browser-detail"
               :horizontal="detailsPosition === 'bottom'"
-              :class="detailsPosition === 'bottom' && !detailsPanelVisible ? 'flex-1 min-h-0 overflow-hidden' : 'h-full'"
+              :class="
+                detailsPosition === 'bottom' && !detailsPanelVisible
+                  ? 'flex-1 min-h-0 overflow-hidden'
+                  : 'h-full'
+              "
               @resize="onBrowserPanelResizing"
               @resized="onModuleResized"
             >
@@ -137,24 +130,15 @@ function allowBrowserEvents() {
                 </template>
                 <TraceViewPane v-else-if="activeTraceView" :selection="activeTraceView" />
               </Pane>
-              <Pane
-                v-if="detailsPanelVisible"
-                :size="detailSizes[1]"
-                min-size="10"
-              >
+              <Pane v-if="detailsPanelVisible" :size="detailSizes[1]" min-size="10">
                 <div class="h-full overflow-hidden">
                   <Dashboard v-if="dashboardVisible" key="summary" />
-                  <Coverage
-                    v-else-if="coverageVisible"
-                    key="coverage"
-                  />
+                  <Coverage v-else-if="coverageVisible" key="coverage" />
                   <FileDetails v-else key="details" />
                 </div>
               </Pane>
             </Splitpanes>
-            <ClosedDetailsHeader
-              v-if="detailsPosition === 'bottom' && !detailsPanelVisible"
-            />
+            <ClosedDetailsHeader v-if="detailsPosition === 'bottom' && !detailsPanelVisible" />
           </div>
         </template>
       </Pane>

@@ -1,10 +1,6 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "ignoreWorkspaces": [
-    "examples/*",
-    "test/e2e/dts/*",
-    "test/e2e/fixtures/conditions-pkg"
-  ],
+  "ignoreWorkspaces": ["examples/*", "test/e2e/dts/*", "test/e2e/fixtures/conditions-pkg"],
   "ignoreIssues": {
     "docs/.vitepress/blog.data.ts": ["files"],
     "docs/.vitepress/components/*.vue": ["files"],
@@ -14,23 +10,13 @@
     "docs/.vitepress/theme/*.vue": ["files"],
     // Test workspaces are package API consumers, not Knip lint targets; many
     // intentionally contain dead, virtual, and unresolved fixture modules.
-    "test/**": [
-      "files",
-      "devDependencies",
-      "unlisted",
-      "binaries",
-      "unresolved",
-      "exports"
-    ],
+    "test/**": ["files", "devDependencies", "unlisted", "binaries", "unresolved", "exports"],
     "packages/vitest/src/integrations/vi.ts": ["duplicates"],
-    "packages/vitest/src/runtime/runner/suite.ts": ["duplicates"]
+    "packages/vitest/src/runtime/runner/suite.ts": ["duplicates"],
   },
   "workspaces": {
     ".": {
-      "entry": [
-        "scripts/*.{js,ts}",
-        "shims.d.ts"
-      ]
+      "entry": ["scripts/*.{js,ts}", "shims.d.ts"],
     },
     "docs": {
       // VitePress resolves these build integrations dynamically.
@@ -41,8 +27,8 @@
         "@vitejs/plugin-vue",
         "@vueuse/core",
         "tinyglobby",
-        "unocss"
-      ]
+        "unocss",
+      ],
     },
     "packages/browser": {
       "entry": [
@@ -50,44 +36,37 @@
         "src/client/orchestrator.ts",
         "src/client/public/*.js",
         "src/client/tester/tester.ts",
-        "src/node/index.ts"
+        "src/node/index.ts",
       ],
       "vite": {
-        "config": "src/client/vite.config.ts"
-      }
+        "config": "src/client/vite.config.ts",
+      },
     },
     "packages/browser-preview": {
       "entry": ["src/{index,locators}.ts"],
-      "ignoreDependencies": [
-        "@testing-library/dom",
-        "@testing-library/user-event"
-      ]
+      "ignoreDependencies": ["@testing-library/dom", "@testing-library/user-event"],
     },
     "packages/coverage-istanbul": {
-      "entry": ["src/{browser,index,provider}.ts"]
+      "entry": ["src/{browser,index,provider}.ts"],
     },
     "packages/coverage-v8": {
       "entry": ["src/{browser,index,provider}.ts"],
-      "ignoreDependencies": ["@vitest/browser"]
+      "ignoreDependencies": ["@vitest/browser"],
     },
     "packages/mocker": {
       "entry": [
         "src/browser/{auto-register,index,register}.ts",
-        "src/node/{automock,index,redirect,transforms}.ts"
-      ]
+        "src/node/{automock,index,redirect,transforms}.ts",
+      ],
     },
     "packages/snapshot": {
-      "entry": ["*.d.ts"]
+      "entry": ["*.d.ts"],
     },
     "packages/utils": {
-      "entry": ["*.{d.ts,ts}"]
+      "entry": ["*.{d.ts,ts}"],
     },
     "packages/ui": {
-      "ignoreDependencies": [
-        "@iconify-json/carbon",
-        "@iconify-json/logos",
-        "uno.css"
-      ]
+      "ignoreDependencies": ["@iconify-json/carbon", "@iconify-json/logos", "uno.css"],
     },
     "packages/vitest": {
       // Keep src entries in sync with rollup.config.js: Knip does not read
@@ -102,7 +81,7 @@
         "src/runtime/nodejsWorkerLoader.ts",
         "src/runtime/runVmTests.ts",
         "src/runtime/workers/*.ts",
-        "src/utils/tasks.ts"
+        "src/utils/tasks.ts",
       ],
       "ignoreDependencies": [
         // Dynamically imported providers remain optional for Vitest users.
@@ -110,8 +89,8 @@
         "@vitest/browser-preview",
         "@vitest/browser-webdriverio",
         "@vitest/ui",
-        "chai"
-      ]
-    }
-  }
+        "chai",
+      ],
+    },
+  },
 }

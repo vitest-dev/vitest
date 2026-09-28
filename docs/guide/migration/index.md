@@ -571,22 +571,22 @@ This has now been fixed by introducing a dedicated option: [`browser.expect.toMa
 - If you did not set `browser.screenshotDirectory`, no changes are required.
 - If you did set `browser.screenshotDirectory`, you must now explicitly configure the new option:
 
-    ```ts [vitest.config.ts]
-    export default defineConfig({
-      test: {
-        browser: {
-          screenshotDirectory: 'my-screenshots',
-          expect: { // [!code ++]
-            toMatchScreenshot: { // [!code ++]
-              screenshotDirectory: 'my-screenshots', // [!code ++]
-            }, // [!code ++]
+  ```ts [vitest.config.ts]
+  export default defineConfig({
+    test: {
+      browser: {
+        screenshotDirectory: 'my-screenshots',
+        expect: { // [!code ++]
+          toMatchScreenshot: { // [!code ++]
+            screenshotDirectory: 'my-screenshots', // [!code ++]
           }, // [!code ++]
-        },
+        }, // [!code ++]
       },
-    })
-    ```
+    },
+  })
+  ```
 
-    Then either move existing reference screenshots to the new location or regenerate them.
+  Then either move existing reference screenshots to the new location or regenerate them.
 
 ## Worker and Concurrency Ids Are 1-based
 

@@ -7,7 +7,7 @@ const hot: ViteHotContext = import.meta.hot! || {
 }
 
 function warn() {
-  console.warn('Vitest mocker cannot work if Vite didn\'t establish WS connection.')
+  console.warn("Vitest mocker cannot work if Vite didn't establish WS connection.")
 }
 
 export { hot }

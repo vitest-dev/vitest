@@ -1,6 +1,11 @@
 import type { PreviewServer } from 'vite'
 import { expect, test } from '@playwright/test'
-import { assertDownloadAttachment, assertTestCounts, openExplorerItem, startHtmlReportPreview } from './helper'
+import {
+  assertDownloadAttachment,
+  assertTestCounts,
+  openExplorerItem,
+  startHtmlReportPreview,
+} from './helper'
 
 test.describe('html singleFile', () => {
   let previewServer: PreviewServer
@@ -31,7 +36,7 @@ test.describe('html singleFile', () => {
     const IGNORED_URLS = ['https://fonts.googleapis.com/', 'https://fonts.gstatic.com/']
     page.on('request', (request) => {
       const url = request.url()
-      if (!IGNORED_URLS.some(ignored => url.startsWith(ignored))) {
+      if (!IGNORED_URLS.some((ignored) => url.startsWith(ignored))) {
         requestUrls.push(url)
       }
     })

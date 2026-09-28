@@ -35,14 +35,8 @@ provide(SMALL_TABS_CONTEXT, {
 </script>
 
 <template>
-  <div
-    class="flex flex-col items-center gap-6"
-  >
-    <div
-      role="tablist"
-      aria-orientation="horizontal"
-      class="flex gap-4"
-    >
+  <div class="flex flex-col items-center gap-6">
+    <div role="tablist" aria-orientation="horizontal" class="flex gap-4">
       <button
         v-for="tab in tabs"
         :id="idFor.tab(tab.id, id)"

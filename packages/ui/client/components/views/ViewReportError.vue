@@ -27,14 +27,10 @@ const isDiffShowable = computed(() => {
 })
 
 const diff = computed(() =>
-  props.error.diff
-    ? filter.value.toHtml(escapeHtml(props.error.diff))
-    : undefined,
+  props.error.diff ? filter.value.toHtml(escapeHtml(props.error.diff)) : undefined,
 )
 
-const message = computed(() =>
-  filter.value.toHtml(escapeHtml(props.error.message || '')),
-)
+const message = computed(() => filter.value.toHtml(escapeHtml(props.error.message || '')))
 
 function showCode(stack: ParsedStack) {
   if (isTestFile(stack.file, props.filename)) {
@@ -53,8 +49,7 @@ function showCode(stack: ParsedStack) {
       class="op80 flex gap-x-2 items-center"
       data-testid="stack"
     >
-      <pre>
- - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+      <pre> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
       <div
         v-tooltip.bottom="'Open in Editor'"
         class="i-carbon-launch c-red-700 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"

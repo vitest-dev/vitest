@@ -7,9 +7,11 @@ function automock(code: string) {
 }
 
 it('correctly parses function declaration', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export function test() {}
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     function test() {}
       
@@ -27,9 +29,11 @@ export function test() {}
 })
 
 it('correctly parses class declaration', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export class Test {}
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     class Test {}
       
@@ -47,9 +51,11 @@ export class Test {}
 })
 
 it('correctly parses default export', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export default class Test {}
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const __vitest_default = class Test {}
       
@@ -65,9 +71,11 @@ export default class Test {}
     "
   `)
 
-  expect(automock(`
+  expect(
+    automock(`
 export default function test() {}
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const __vitest_default = function test() {}
       
@@ -83,9 +91,11 @@ export default function test() {}
     "
   `)
 
-  expect(automock(`
+  expect(
+    automock(`
 export default someVariable
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const __vitest_default = someVariable
       
@@ -101,9 +111,11 @@ export default someVariable
     "
   `)
 
-  expect(automock(`
+  expect(
+    automock(`
 export default 'test'
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const __vitest_default = 'test'
       
@@ -119,9 +131,11 @@ export default 'test'
     "
   `)
 
-  expect(automock(`
+  expect(
+    automock(`
 export default null
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const __vitest_default = null
       
@@ -137,10 +151,12 @@ export default null
     "
   `)
 
-  expect(automock(`
+  expect(
+    automock(`
 const test = '123'
 export default test
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const test = '123'
     const __vitest_default = test
@@ -159,11 +175,13 @@ export default test
 })
 
 it('correctly parses const export', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export const test = 'test'
 export const test2 = () => {}
 export const test3 = function test4() {}
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const test = 'test'
     const test2 = () => {}
@@ -189,10 +207,12 @@ export const test3 = function test4() {}
 })
 
 it('correctly parses const array pattern', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export const [test, ...rest] = []
 export const [...rest2] = []
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const [test, ...rest] = []
     const [...rest2] = []
@@ -217,9 +237,11 @@ export const [...rest2] = []
 })
 
 it('correctly parses several declarations', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export const test = 2, test2 = 3, test4 = () => {}, test5 = function() {};
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const test = 2, test2 = 3, test4 = () => {}, test5 = function() {};
       
@@ -246,11 +268,13 @@ export const test = 2, test2 = 3, test4 = () => {}, test5 = function() {};
 })
 
 it('correctly parses object pattern', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export const { test, ...rest } = {}
 export const { test: alias } = {}
 export const { ...rest2 } = {}
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     const { test, ...rest } = {}
     const { test: alias } = {}
@@ -279,10 +303,12 @@ export const { ...rest2 } = {}
 })
 
 it('correctly parses export specifiers', () => {
-  expect(automock(`
+  expect(
+    automock(`
   export const test = '1'
   export { test as "test3", test as test4 }
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
       const test = '1'
       
@@ -307,11 +333,13 @@ it('correctly parses export specifiers', () => {
 })
 
 it('correctly parses exports from sources', () => {
-  expect(automock(`
+  expect(
+    automock(`
 export { test, test as test3, name as "name3" } from './module'
 import { testing as name4 } from './another-module'
 export { testing as name4 } from './another-module'
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "
     import { test as __vitest_imported_0__, test as __vitest_imported_1__, name as __vitest_imported_2__ } from './module'
     import { testing as name4 } from './another-module'

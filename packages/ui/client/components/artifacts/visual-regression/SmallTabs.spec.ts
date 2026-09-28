@@ -7,19 +7,13 @@ import SmallTabsPane from './SmallTabsPane.vue'
 
 function createSmallTabs(children: number) {
   return defineComponent({
-    setup: () =>
-      () =>
-        h(
-          SmallTabs,
-          null,
-          {
-            default: () => Array.from({ length: children }, (_, i) => h(
-              SmallTabsPane,
-              { title: `title-${i}` },
-              () => `content-${i}`,
-            )),
-          },
-        ),
+    setup: () => () =>
+      h(SmallTabs, null, {
+        default: () =>
+          Array.from({ length: children }, (_, i) =>
+            h(SmallTabsPane, { title: `title-${i}` }, () => `content-${i}`),
+          ),
+      }),
   })
 }
 
@@ -56,23 +50,19 @@ describe('SmallTabs', () => {
     await expect.element(secondPanel).toHaveAttribute('hidden')
 
     // panels should be labelled by their tab button
-    await expect.element(firstPanel).toHaveAttribute(
-      'aria-labelledby',
-      firstTab.element().getAttribute('id'),
-    )
-    await expect.element(secondPanel).toHaveAttribute(
-      'aria-labelledby',
-      secondTab.element().getAttribute('id'),
-    )
+    await expect
+      .element(firstPanel)
+      .toHaveAttribute('aria-labelledby', firstTab.element().getAttribute('id'))
+    await expect
+      .element(secondPanel)
+      .toHaveAttribute('aria-labelledby', secondTab.element().getAttribute('id'))
 
-    await expect.element(firstTab).toHaveAttribute(
-      'aria-controls',
-      firstPanel.element().getAttribute('id'),
-    )
-    await expect.element(secondTab).toHaveAttribute(
-      'aria-controls',
-      secondPanel.element().getAttribute('id'),
-    )
+    await expect
+      .element(firstTab)
+      .toHaveAttribute('aria-controls', firstPanel.element().getAttribute('id'))
+    await expect
+      .element(secondTab)
+      .toHaveAttribute('aria-controls', secondPanel.element().getAttribute('id'))
   })
 
   it('opens one panel at a time', async () => {
@@ -88,12 +78,10 @@ describe('SmallTabs', () => {
       const activePanel = panels.nth(tabIndex)
 
       await userEvent.click(activeTab)
-      await expect.element(
-        tabs.and(page.getByRole('tab', { selected: true })),
-      ).toBe(activeTab.element())
-      await expect.element(
-        page.getByRole('tabpanel'),
-      ).toBe(activePanel.element())
+      await expect
+        .element(tabs.and(page.getByRole('tab', { selected: true })))
+        .toBe(activeTab.element())
+      await expect.element(page.getByRole('tabpanel')).toBe(activePanel.element())
     }
 
     expect(result.container).toMatchAriaInlineSnapshot(`

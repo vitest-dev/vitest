@@ -3,10 +3,13 @@ import { instances, runInlineBrowserTests } from './utils'
 
 // clicking <a href="" target="_blank"> opens the tester URL (query string included)
 // as a top-level window — the duplicate tester must not join the iframe channel
-test('a popup opened at the tester URL does not corrupt the iframe channel', { timeout: 60_000 }, async () => {
-  const { stderr, exitCode, testTree } = await runInlineBrowserTests(
-    {
-      'popup.test.ts': `
+test(
+  'a popup opened at the tester URL does not corrupt the iframe channel',
+  { timeout: 60_000 },
+  async () => {
+    const { stderr, exitCode, testTree } = await runInlineBrowserTests(
+      {
+        'popup.test.ts': `
         import { expect, test } from 'vitest'
         import { userEvent } from 'vitest/browser'
 
@@ -27,27 +30,27 @@ test('a popup opened at the tester URL does not corrupt the iframe channel', { t
           expect(anchor.target).toBe('_blank')
         })
       `,
-      // more execute/cleanup events after the duplicate tester exists
-      'second.test.ts': `
+        // more execute/cleanup events after the duplicate tester exists
+        'second.test.ts': `
         import { expect, test } from 'vitest'
 
         test('a following test file still runs cleanly', () => {
           expect(1 + 1).toBe(2)
         })
       `,
-    },
-    {
-      // fail fast: a corrupted channel loses the real tester's `ack:cleanup`
-      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '10000' },
-      browser: {
-        instances: [instances[0]],
       },
-    },
-  )
+      {
+        // fail fast: a corrupted channel loses the real tester's `ack:cleanup`
+        env: { VITEST_BROWSER_IFRAME_TIMEOUT: '10000' },
+        browser: {
+          instances: [instances[0]],
+        },
+      },
+    )
 
-  expect(stderr).not.toContain('Unknown event')
-  expect(exitCode).toBe(0)
-  expect(testTree()).toMatchInlineSnapshot(`
+    expect(stderr).not.toContain('Unknown event')
+    expect(exitCode).toBe(0)
+    expect(testTree()).toMatchInlineSnapshot(`
     {
       "popup.test.ts": {
         "clicking a target="_blank" anchor": "passed",
@@ -57,4 +60,5 @@ test('a popup opened at the tester URL does not corrupt the iframe channel', { t
       },
     }
   `)
-})
+  },
+)

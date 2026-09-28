@@ -206,6 +206,7 @@ await expect.element(
 For simple snippets, you can use a wrapper component and "dummy" children to test them. Setting `data-testid` attributes can be helpful when testing slots in this manner.
 
 ::: code-group
+
 ```ts [basic.test.js]
 import { render } from 'vitest-browser-svelte'
 import { expect, test } from 'vitest'
@@ -221,6 +222,7 @@ test('basic snippet', async () => {
   await expect.element(child).toBeInTheDocument()
 })
 ```
+
 ```svelte [basic-snippet.svelte]
 <script>
   let { children } = $props()
@@ -230,6 +232,7 @@ test('basic snippet', async () => {
   {@render children?.()}
 </h1>
 ```
+
 ```svelte [basic-snippet.test.svelte]
 <script>
   import Subject from './basic-snippet.svelte'
@@ -239,11 +242,13 @@ test('basic snippet', async () => {
   <span data-testid="child"></span>
 </Subject>
 ```
+
 :::
 
 For more complex snippets, e.g. where you want to check arguments, you can use Svelte's [`createRawSnippet`](https://svelte.dev/docs/svelte/svelte#createRawSnippet) API.
 
 ::: code-group
+
 ```js [complex-snippet.test.js]
 import { render } from 'vitest-browser-svelte'
 import { createRawSnippet } from 'svelte'
@@ -264,6 +269,7 @@ test('renders greeting in message snippet', async () => {
   await expect.element(message).toHaveTextContent('Hello, Alice!')
 })
 ```
+
 ```svelte [complex-snippet.svelte]
 <script>
   let { name, message } = $props()
@@ -275,6 +281,7 @@ test('renders greeting in message snippet', async () => {
   {@render message?.(greeting)}
 </p>
 ```
+
 :::
 
 ## See also

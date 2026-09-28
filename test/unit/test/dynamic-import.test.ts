@@ -4,8 +4,7 @@ test('dynamic import', async () => {
   try {
     await import('non-existing-module' as any)
     expect.unreachable()
-  }
-  catch (err: any) {
+  } catch (err: any) {
     expect(err.message).toBe(
       `Cannot find package 'non-existing-module' imported from ${import.meta.filename.replace(/\\/g, '/')}`,
     )

@@ -20,22 +20,29 @@ You write comprehensive, high-quality tests that follow the established patterns
 ## Testing Patterns You Must Follow
 
 ### Use runInlineTests Utility
+
 For integration tests, always use the `runInlineTests` utility to create and run test scenarios. This utility allows you to define inline test files and validate their output.
 
 ### Snapshot Validation with toMatchInlineSnapshot
+
 Always validate output using `toMatchInlineSnapshot()`. The snapshot is automatically generated on the first run. This is the preferred method because it:
+
 - Captures the exact expected output
 - Makes changes visible in code review
 - Catches regressions precisely
 
 ### Avoid toContain
+
 Do NOT use `toContain()` for output validation. This method fails to catch:
+
 - Extra unexpected output
 - Repeated output that shouldn't occur
 - Subtle formatting differences
 
 ### Handle Dynamic Content
+
 When output contains dynamic content (timestamps, absolute paths, durations, etc.):
+
 1. First check `test-utils` for existing utilities that normalize this content
 2. If no utility exists, manually process with `stdout.replace(regexp, 'normalized-value')`
 3. Common patterns to normalize:
@@ -44,7 +51,9 @@ When output contains dynamic content (timestamps, absolute paths, durations, etc
    - Process IDs or temporary file paths
 
 ### Validate Test Results with testTree or errorTree
+
 To ensure all tests actually passed (not just that they ran), use `testTree` or `errorTree` helpers. Pass the result to `toMatchInlineSnapshot()` to verify:
+
 - The correct number of tests ran
 - Tests are organized in the expected suites
 - No unexpected failures or skipped tests
@@ -52,6 +61,7 @@ To ensure all tests actually passed (not just that they ran), use `testTree` or 
 ## Writing Unit Tests
 
 For unit tests in `test/unit/`:
+
 1. Import the function directly from its source package
 2. Test pure functionality without process spawning
 3. Cover edge cases, error conditions, and typical usage
@@ -60,6 +70,7 @@ For unit tests in `test/unit/`:
 ## Writing Integration Tests
 
 For integration tests in `test/e2e/`:
+
 1. Use `runInlineTests` to define test scenarios
 2. Create realistic test file content
 3. Validate both stderr and the test results structure
@@ -86,6 +97,7 @@ For integration tests in `test/e2e/`:
 ## Output Format
 
 When writing tests, provide:
+
 1. The complete test file with all imports
 2. Explanations of what each test verifies
 3. Notes on any dynamic content normalization applied

@@ -1,4 +1,4 @@
-/* eslint-disable ts/method-signature-style */
+/* oxlint-disable typescript/method-signature-style */
 
 import type { CustomComparatorsRegistry } from '@vitest/browser'
 import type { MockedModule } from '@vitest/mocker'
@@ -50,10 +50,7 @@ export interface PlaywrightProviderOptions {
    * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) method.
    * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch}
    */
-  launchOptions?: Omit<
-    LaunchOptions,
-    'tracesDir'
-  >
+  launchOptions?: Omit<LaunchOptions, 'tracesDir'>
   /**
    * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect) method.
    *
@@ -67,10 +64,7 @@ export interface PlaywrightProviderOptions {
    * The options passed down to [`browser.newContext`](https://playwright.dev/docs/api/class-browser#browser-new-context) method.
    * @see {@link https://playwright.dev/docs/api/class-browser#browser-new-context}
    */
-  contextOptions?: Omit<
-    BrowserContextOptions,
-    'ignoreHTTPSErrors' | 'serviceWorkers'
-  >
+  contextOptions?: Omit<BrowserContextOptions, 'ignoreHTTPSErrors' | 'serviceWorkers'>
   /**
    * The maximum time in milliseconds to wait for `userEvent` action to complete.
    * @default 0 (no timeout)
@@ -91,7 +85,9 @@ export interface PlaywrightProviderOptions {
   persistentContext?: boolean | string
 }
 
-export function playwright(options: PlaywrightProviderOptions = {}): BrowserProviderOption<PlaywrightProviderOptions> {
+export function playwright(
+  options: PlaywrightProviderOptions = {},
+): BrowserProviderOption<PlaywrightProviderOptions> {
   return defineBrowserProvider({
     name: 'playwright',
     supportedBrowser: playwrightBrowsers,
@@ -131,10 +127,10 @@ const pendingWarmBrowsers = new WeakMap<LaunchContext['vitest'], Set<WarmBrowser
 function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptions): void {
   const browserName = project.config.browser.name
   if (
-    options.connectOptions
-    || options.persistentContext
+    options.connectOptions ||
+    options.persistentContext ||
     // don't speculate on debugging flows
-    || project.vitest.config.inspector.enabled
+    project.vitest.config.inspector.enabled
   ) {
     return
   }
@@ -153,7 +149,12 @@ function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptio
     // files to run) are cleaned up when Vitest closes.
     project.vitest.onClose(() => closeWarmBrowsers(pendingBrowsers))
   }
-  const launchOptions = resolveLaunchOptions(project.config.browser, project.vitest.config.inspector, options, browserName)
+  const launchOptions = resolveLaunchOptions(
+    project.config.browser,
+    project.vitest.config.inspector,
+    options,
+    browserName,
+  )
   const entry: WarmBrowser = {
     launchOptionsJson: JSON.stringify(launchOptions),
     pending,
@@ -185,7 +186,9 @@ function takeWarmBrowser(config: LaunchContext['config']): WarmBrowser | undefin
 }
 
 async function closeWarmBrowsers(pending: Set<WarmBrowser>): Promise<void> {
-  const closing = Array.from(pending, warm => warm.promise.then(browser => browser.close()).catch(() => {}))
+  const closing = Array.from(pending, (warm) =>
+    warm.promise.then((browser) => browser.close()).catch(() => {}),
+  )
   pending.clear()
   await Promise.all(closing)
 }
@@ -218,7 +221,10 @@ function resolveLaunchOptions(
     if (!launchOptions.args) {
       launchOptions.args = []
     }
-    if (!launchOptions.args.includes('--start-maximized') && !launchOptions.args.includes('--start-fullscreen')) {
+    if (
+      !launchOptions.args.includes('--start-maximized') &&
+      !launchOptions.args.includes('--start-fullscreen')
+    ) {
       launchOptions.args.push('--start-maximized')
     }
   }
@@ -245,9 +251,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public tracingContexts: Set<string> = new Set()
   public pendingTraces: Map<string, string> = new Map()
 
-  public initScripts: string[] = [
-    resolve(distRoot, 'locators.js'),
-  ]
+  public initScripts: string[] = [resolve(distRoot, 'locators.js')]
 
   constructor(
     private project: TestProject,
@@ -270,10 +274,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const promises = []
     for (const [trace, contextId] of this.pendingTraces.entries()) {
-      promises.push((() => {
-        const context = this.contexts.get(contextId)
-        return context?.tracing.stopChunk({ path: trace })
-      })())
+      promises.push(
+        (() => {
+          const context = this.contexts.get(contextId)
+          return context?.tracing.stopChunk({ path: trace })
+        })(),
+      )
     }
     return Promise.allSettled(promises)
   }
@@ -307,12 +313,18 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         const host = inspector.host || '127.0.0.1'
 
         if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
-          this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chromium only allows remote debugging on localhost.`)
+          this.project.vitest.logger.warn(
+            `Custom inspector host "${host}" will be ignored. Chromium only allows remote debugging on localhost.`,
+          )
         }
         this.project.vitest.logger.log(`Debugger listening on ws://127.0.0.1:${port}`)
       }
 
-      debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
+      debug?.(
+        '[%s] initializing the browser with launch options: %O',
+        this.browserName,
+        launchOptions,
+      )
 
       if (this.options.connectOptions) {
         let { wsEndpoint, headers = {}, ...connectOptions } = this.options.connectOptions
@@ -322,8 +334,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
               'Detected "x-playwright-launch-options" in connectOptions.headers. Provider config launchOptions is ignored.',
             ),
           )
-        }
-        else {
+        } else {
           headers = { ...headers, 'x-playwright-launch-options': JSON.stringify(launchOptions) }
         }
         this.browser = await playwright[this.browserName].connect(wsEndpoint, {
@@ -338,12 +349,14 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       if (persistentContextOption && openBrowserOptions.parallel) {
         persistentContextOption = false
         this.project.vitest.logger.warn(
-          c.yellow(`The persistentContext option is ignored because tests are running in parallel.`),
+          c.yellow(
+            `The persistentContext option is ignored because tests are running in parallel.`,
+          ),
         )
       }
       if (persistentContextOption) {
-        const userDataDir
-          = typeof this.options.persistentContext === 'string'
+        const userDataDir =
+          typeof this.options.persistentContext === 'string'
             ? this.options.persistentContext
             : './node_modules/.cache/vitest-playwright-user-data'
         // TODO: how to avoid default "about" page?
@@ -355,8 +368,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           },
         )
         this.browser = this.persistentContext.browser()!
-      }
-      else {
+      } else {
         const warm = takeWarmBrowser(this.project.config)
         if (warm && warm.launchOptionsJson === JSON.stringify(launchOptions)) {
           const browser = await warm.promise.catch(() => null)
@@ -366,10 +378,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
             this.browserPromise = null
             return this.browser
           }
-        }
-        else if (warm) {
+        } else if (warm) {
           debug?.('[%s] discarding the prewarmed browser, launch options changed', this.browserName)
-          void warm.promise.then(browser => browser.close()).catch(() => {})
+          void warm.promise.then((browser) => browser.close()).catch(() => {})
         }
         this.browser = await playwright[this.browserName].launch(launchOptions)
       }
@@ -490,8 +501,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
             if (module.type === 'redirect') {
               const redirect = new URL(module.redirect)
               url = redirect.href.slice(redirect.origin.length)
-            }
-            else {
+            } else {
               const request = new URL(route.request().url())
               request.searchParams.set('mock', module.type)
               url = request.href.slice(request.origin.length)
@@ -519,8 +529,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
                 Location: module.redirect,
               },
             })
-          }
-          else if (module.type === 'automock' || module.type === 'autospy') {
+          } else if (module.type === 'automock' || module.type === 'autospy') {
             const url = new URL(route.request().url())
             url.searchParams.set('mock', module.type)
             return route.fulfill({
@@ -529,8 +538,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
                 Location: url.href,
               },
             })
-          }
-          else {
+          } else {
             // all types are exhausted
             const _module: never = module
           }
@@ -541,7 +549,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         const key = predicateKey(sessionId, id)
         const predicate = idPredicates.get(key)
         if (predicate) {
-          await page.context().unroute(predicate).finally(() => idPredicates.delete(key))
+          await page
+            .context()
+            .unroute(predicate)
+            .finally(() => idPredicates.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
@@ -551,7 +562,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           const key = predicateKey(sessionId, id)
           const predicate = idPredicates.get(key)
           if (predicate) {
-            return page.context().unroute(predicate).finally(() => idPredicates.delete(key))
+            return page
+              .context()
+              .unroute(predicate)
+              .finally(() => idPredicates.delete(key))
           }
           return null
         })
@@ -577,7 +591,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     // if UI is disabled, keep the iframe scale to 1
     // options.viewport ??= this.project.config.browser.viewport
     // }
-    const context = this.persistentContext ?? await browser.newContext(options)
+    const context = this.persistentContext ?? (await browser.newContext(options))
     await this._throwIfClosing(context)
     if (actionTimeout != null) {
       context.setDefaultTimeout(actionTimeout)
@@ -629,7 +643,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           }
 
           const timeout = setTimeout(() => {
-            const err = new Error(`Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`)
+            const err = new Error(
+              `Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`,
+            )
             reject(err)
           }, 1000).unref()
           page.on('frameattached', (frame) => {
@@ -665,7 +681,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     page.on('crash', () => {
       debug?.('[%s][%s] the page crashed', sessionId, this.browserName)
       const session = this.project.vitest._browserSessions.getSession(sessionId)
-      session?.fail(new Error(`The ${this.browserName} page crashed while running tests. This can happen if the browser ran out of memory.`))
+      session?.fail(
+        new Error(
+          `The ${this.browserName} page crashed while running tests. This can happen if the browser ran out of memory.`,
+        ),
+      )
     })
 
     if (process.env.VITEST_PW_DEBUG) {
@@ -694,7 +714,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private async _throwIfClosing(disposable?: { close: () => Promise<void> }) {
     if (this.closing) {
-      debug?.('[%s] provider was closed, cannot perform the action on %s', this.browserName, String(disposable))
+      debug?.(
+        '[%s] provider was closed, cannot perform the action on %s',
+        this.browserName,
+        String(disposable),
+      )
       await disposable?.close()
       this.pages.clear()
       this.contexts.clear()
@@ -725,7 +749,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     // a prewarmed browser that was never adopted must not outlive the provider
     const warm = takeWarmBrowser(this.project.config)
     if (warm) {
-      void warm.promise.then(browser => browser.close()).catch(() => {})
+      void warm.promise.then((browser) => browser.close()).catch(() => {})
     }
     if (this.browserPromise) {
       await this.browserPromise
@@ -733,13 +757,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const browser = this.browser
     this.browser = null
-    await Promise.all(Array.from(this.pages.values(), p => p.close()))
+    await Promise.all(Array.from(this.pages.values(), (p) => p.close()))
     this.pages.clear()
     if (this.persistentContext) {
       await this.persistentContext.close()
-    }
-    else {
-      await Promise.all(Array.from(this.contexts.values(), c => c.close()))
+    } else {
+      await Promise.all(Array.from(this.contexts.values(), (c) => c.close()))
     }
     this.contexts.clear()
     await browser?.close()
@@ -758,15 +781,10 @@ function getHeaders(config: ResolvedConfig) {
   return headers
 }
 
-function getCodeWithSourcemap(
-  type: 'js' | 'css',
-  code: string,
-  map: SourceMap,
-): string {
+function getCodeWithSourcemap(type: 'js' | 'css', code: string, map: SourceMap): string {
   if (type === 'js') {
     code += `\n//# sourceMappingURL=${genSourceMapUrl(map)}`
-  }
-  else if (type === 'css') {
+  } else if (type === 'css') {
     code += `\n/*# sourceMappingURL=${genSourceMapUrl(map)} */`
   }
 
@@ -799,13 +817,11 @@ declare module 'vitest/node' {
   }
 
   export interface ToMatchScreenshotOptions
-    extends Omit<
-      ScreenshotMatcherOptions,
-      'comparatorName' | 'comparatorOptions'
-    >, CustomComparatorsRegistry {}
+    extends
+      Omit<ScreenshotMatcherOptions, 'comparatorName' | 'comparatorOptions'>,
+      CustomComparatorsRegistry {}
 
-  export interface ToMatchScreenshotComparators
-    extends ScreenshotComparatorRegistry {}
+  export interface ToMatchScreenshotComparators extends ScreenshotComparatorRegistry {}
 }
 
 type PWHoverOptions = NonNullable<Parameters<Page['hover']>[1]>

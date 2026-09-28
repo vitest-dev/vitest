@@ -67,11 +67,7 @@ test.describe('editor', () => {
     // edit to fix test
     await editor.click()
     await page.waitForTimeout(300)
-    await evaluateEditor(
-      page,
-      (editor, source) => editor.setValue(source),
-      testFileContent,
-    )
+    await evaluateEditor(page, (editor, source) => editor.setValue(source), testFileContent)
     await expect(editorTabButton).toHaveText('* Code')
     await page.keyboard.press('ControlOrMeta+S')
 

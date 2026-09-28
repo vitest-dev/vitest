@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { getEnvironmentDiagnostics, isSavingWorthHinting } from '../../../packages/vitest/src/node/reporters/diagnostics'
+import {
+  getEnvironmentDiagnostics,
+  isSavingWorthHinting,
+} from '../../../packages/vitest/src/node/reporters/diagnostics'
 
 const domProject = {
   name: 'dom',
@@ -51,13 +54,17 @@ describe('getEnvironmentDiagnostics', () => {
   it('fires exactly at the minimum time and share thresholds', () => {
     // 2s of setups over 8s of tracked time is exactly the 2s / 25% minimum;
     // saving: 2s/4 - 2s/40 = 450ms, above the 200ms (5% of 4s) floor
-    expect(getEnvironmentDiagnostics([{
-      ...domProject,
-      environmentTime: 2_000,
-      trackedTime: 8_000,
-      parallelism: 4,
-      executionTime: 4_000,
-    }])).toHaveLength(1)
+    expect(
+      getEnvironmentDiagnostics([
+        {
+          ...domProject,
+          environmentTime: 2_000,
+          trackedTime: 8_000,
+          parallelism: 4,
+          executionTime: 4_000,
+        },
+      ]),
+    ).toHaveLength(1)
   })
 
   it('fires for a serial run - all setups but one are avoidable', () => {
@@ -104,7 +111,9 @@ describe('getEnvironmentDiagnostics', () => {
   })
 
   it('stays quiet for vm pools - the environment is already per worker', () => {
-    expect(getEnvironmentDiagnostics([{ ...domProject, pool: 'vmThreads', isolate: false }])).toEqual([])
+    expect(
+      getEnvironmentDiagnostics([{ ...domProject, pool: 'vmThreads', isolate: false }]),
+    ).toEqual([])
   })
 
   it('stays quiet without isolation - the environment is already per worker', () => {
@@ -120,19 +129,27 @@ describe('getEnvironmentDiagnostics', () => {
   })
 
   it('stays quiet when the setup cost is small in absolute terms', () => {
-    expect(getEnvironmentDiagnostics([{
-      ...domProject,
-      environmentTime: 1_000,
-      trackedTime: 1_200,
-    }])).toEqual([])
+    expect(
+      getEnvironmentDiagnostics([
+        {
+          ...domProject,
+          environmentTime: 1_000,
+          trackedTime: 1_200,
+        },
+      ]),
+    ).toEqual([])
   })
 
   it('stays quiet when the setup cost is small relative to the run', () => {
-    expect(getEnvironmentDiagnostics([{
-      ...domProject,
-      environmentTime: 3_000,
-      trackedTime: 60_000,
-    }])).toEqual([])
+    expect(
+      getEnvironmentDiagnostics([
+        {
+          ...domProject,
+          environmentTime: 3_000,
+          trackedTime: 60_000,
+        },
+      ]),
+    ).toEqual([])
   })
 
   it('stays quiet for a single file - there is nothing to amortize', () => {
@@ -146,13 +163,17 @@ describe('getEnvironmentDiagnostics', () => {
 
   it('fires on long runs when the absolute saving is large', () => {
     // 100s/8 - 100s/50 = 10.5s: only 2.6% of the run, but 10s+ is worth attention
-    expect(getEnvironmentDiagnostics([{
-      ...domProject,
-      environmentTime: 100_000,
-      environmentCount: 50,
-      trackedTime: 150_000,
-      executionTime: 400_000,
-    }])).toHaveLength(1)
+    expect(
+      getEnvironmentDiagnostics([
+        {
+          ...domProject,
+          environmentTime: 100_000,
+          environmentCount: 50,
+          trackedTime: 150_000,
+          executionTime: 400_000,
+        },
+      ]),
+    ).toHaveLength(1)
   })
 
   it('reports only the affected projects', () => {
@@ -160,7 +181,7 @@ describe('getEnvironmentDiagnostics', () => {
       domProject,
       { ...domProject, name: 'unit', environment: 'node' },
     ])
-    expect(diagnostics.map(diagnostic => diagnostic.name)).toEqual(['dom'])
+    expect(diagnostics.map((diagnostic) => diagnostic.name)).toEqual(['dom'])
   })
 })
 

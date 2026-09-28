@@ -13,21 +13,14 @@ export async function loadGlobalSetupFiles(
   globalSetup: string | string[],
 ): Promise<GlobalSetupFile[]> {
   const globalSetupFiles = toArray(globalSetup)
-  return Promise.all(
-    globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)),
-  )
+  return Promise.all(globalSetupFiles.map((file) => loadGlobalSetupFile(file, runner)))
 }
 
-async function loadGlobalSetupFile(
-  file: string,
-  runner: ModuleRunner,
-): Promise<GlobalSetupFile> {
+async function loadGlobalSetupFile(file: string, runner: ModuleRunner): Promise<GlobalSetupFile> {
   const m = await runner.import(file)
   for (const exp of ['default', 'setup', 'teardown']) {
     if (m[exp] != null && typeof m[exp] !== 'function') {
-      throw new Error(
-        `invalid export in globalSetup file ${file}: ${exp} must be a function`,
-      )
+      throw new Error(`invalid export in globalSetup file ${file}: ${exp} must be a function`)
     }
   }
   if (m.default) {
@@ -35,15 +28,13 @@ async function loadGlobalSetupFile(
       file,
       setup: m.default,
     }
-  }
-  else if (m.setup || m.teardown) {
+  } else if (m.setup || m.teardown) {
     return {
       file,
       setup: m.setup,
       teardown: m.teardown,
     }
-  }
-  else {
+  } else {
     throw new Error(
       `invalid globalSetup file ${file}. Must export setup, teardown or have a default export`,
     )

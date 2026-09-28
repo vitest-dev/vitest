@@ -63,10 +63,11 @@ test('editing source file triggers re-run', async () => {
 })
 
 test('editing file that was imported with a query reruns suite', async () => {
-  const { vitest, fs } = await testUtils.runInlineTests({
-    ...baseFixture,
-    '42.txt': '42\n',
-    'answer.test.ts': /* ts */ `
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      ...baseFixture,
+      '42.txt': '42\n',
+      'answer.test.ts': /* ts */ `
 import { expect, test } from 'vitest'
 
 // @ts-expect-error not typed txt
@@ -76,26 +77,31 @@ test('answer is 42', () => {
   expect(answer).toContain('42')
 })
 `,
-  }, { watch: true })
+    },
+    { watch: true },
+  )
 
-  fs.editFile('42.txt', file => `${file}\n`)
+  fs.editFile('42.txt', (file) => `${file}\n`)
 
   await vitest.waitForStdout('RERUN  ../42.txt')
   await vitest.waitForStdout('1 passed')
 })
 
 test('editing force rerun trigger reruns all tests', async () => {
-  const { vitest, fs } = await testUtils.runInlineTests({
-    ...baseFixture,
-    'force-watch/trigger.js': 'export const trigger = false\n',
-    'vitest.config.ts': /* ts */ `
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      ...baseFixture,
+      'force-watch/trigger.js': 'export const trigger = false\n',
+      'vitest.config.ts': /* ts */ `
 export default {
   test: {
     forceRerunTriggers: ['**/force-watch/**'],
   },
 }
 `,
-  }, { watch: true })
+    },
+    { watch: true },
+  )
 
   await vitest.waitForStdout('Waiting for file changes...')
   vitest.resetOutput()
@@ -119,16 +125,19 @@ test('editing test file triggers re-run', async () => {
 })
 
 test('editing config file triggers re-run', async () => {
-  const { vitest, fs } = await testUtils.runInlineTests({
-    ...baseFixture,
-    'vitest.config.ts': /* ts */ `
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      ...baseFixture,
+      'vitest.config.ts': /* ts */ `
 export default {
   test: {
     reporters: 'verbose',
   },
 }
 `,
-  }, { watch: true, reporters: 'none' })
+    },
+    { watch: true, reporters: 'none' },
+  )
 
   await vitest.waitForStdout('Waiting for file changes...')
   vitest.resetOutput()
@@ -140,27 +149,35 @@ export default {
 })
 
 test('editing config file reloads new changes', async () => {
-  const { vitest, fs } = await testUtils.runInlineTests({
-    ...baseFixture,
-    'vitest.config.ts': /* ts */ `
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      ...baseFixture,
+      'vitest.config.ts': /* ts */ `
 export default {
   test: {
     reporters: 'verbose',
   },
 }
 `,
-  }, { watch: true, reporters: 'none' })
+    },
+    { watch: true, reporters: 'none' },
+  )
 
-  fs.editFile('vitest.config.ts', content => content.replace('reporters: \'verbose\'', 'reporters: \'tap\''))
+  fs.editFile('vitest.config.ts', (content) =>
+    content.replace("reporters: 'verbose'", "reporters: 'tap'"),
+  )
 
   await vitest.waitForStdout('TAP version')
   await vitest.waitForStdout('ok 2')
 })
 
 test('adding a new test file triggers re-run', async () => {
-  const { vitest, fs } = await testUtils.runInlineTests({
-    'base.test.js': /* js */`test("base test", () => {})`,
-  }, { watch: true, globals: true })
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      'base.test.js': /* js */ `test("base test", () => {})`,
+    },
+    { watch: true, globals: true },
+  )
 
   await vitest.waitForStdout('press h to show help')
 
@@ -181,8 +198,9 @@ test("dynamic test case", () => {
 })
 
 test('renaming an existing test file', { retry: 3 }, async () => {
-  const { vitest, ctx, fs } = await testUtils.runInlineTests({
-    'before.test.js': /* js */`
+  const { vitest, ctx, fs } = await testUtils.runInlineTests(
+    {
+      'before.test.js': /* js */ `
       import { expect, test } from "vitest";
 
       test("test case", () => {
@@ -190,7 +208,9 @@ test('renaming an existing test file', { retry: 3 }, async () => {
         expect(true).toBeTruthy()
       })
     `,
-  }, { watch: true })
+    },
+    { watch: true },
+  )
 
   await vitest.waitForStdout('Running existing test')
   await vitest.waitForStdout('press h to show help')
@@ -247,23 +267,27 @@ test('editing source file generates new test report to file system', async () =>
 })
 
 describe('browser', () => {
-  test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', { retry: 3 }, async () => {
-    const { vitest, fs } = await testUtils.runInlineTests(baseFixture, {
-      watch: true,
-      browser: {
-        instances: [{ browser: 'chromium' }],
-        provider: playwright(),
-        enabled: true,
-        headless: true,
-      },
-    })
+  test.runIf(process.platform !== 'win32')(
+    'editing source file triggers re-run',
+    { retry: 3 },
+    async () => {
+      const { vitest, fs } = await testUtils.runInlineTests(baseFixture, {
+        watch: true,
+        browser: {
+          instances: [{ browser: 'chromium' }],
+          provider: playwright(),
+          enabled: true,
+          headless: true,
+        },
+      })
 
-    fs.editFile('math.ts', modifyContent)
+      fs.editFile('math.ts', modifyContent)
 
-    await vitest.waitForStdout('New code running')
-    await vitest.waitForStdout('RERUN  ../math.ts')
-    await vitest.waitForStdout('1 passed')
+      await vitest.waitForStdout('New code running')
+      await vitest.waitForStdout('RERUN  ../math.ts')
+      await vitest.waitForStdout('1 passed')
 
-    vitest.write('q')
-  })
+      vitest.write('q')
+    },
+  )
 })

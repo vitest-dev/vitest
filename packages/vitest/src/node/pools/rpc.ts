@@ -32,7 +32,10 @@ interface MethodsOptions {
 // drops the verdicts on a server restart, since environments are recreated.
 const warmExternals = new WeakMap<DevEnvironment, Record<string, FetchResult>>()
 
-export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
+export function createMethodsRPC(
+  project: TestProject,
+  methodsOptions: MethodsOptions = {},
+): RuntimeRPC {
   const vitest = project.vitest
   const cacheFs = methodsOptions.cacheFs ?? false
   project.vitest.state.metadata[project.name] ??= {
@@ -67,41 +70,37 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     const state = project.vitest.state
     const start = performance.now()
 
-    return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
-      const metadata = state.metadata[project.name]
-      if ('externalize' in result) {
-        metadata.externalized[url] = result.externalize
-        // builtins and network urls are already resolved inside the worker
-        // without a round-trip, only module externalizations are worth sharing
-        if (result.type === 'module' && url[0] === '/') {
-          let externals = warmExternals.get(environment)
-          if (!externals) {
-            externals = Object.create(null) as Record<string, FetchResult>
-            warmExternals.set(environment, externals)
+    return await project
+      ._fetcher(url, importer, environment, cacheFs, options, otelCarrier)
+      .then((result) => {
+        const metadata = state.metadata[project.name]
+        if ('externalize' in result) {
+          metadata.externalized[url] = result.externalize
+          // builtins and network urls are already resolved inside the worker
+          // without a round-trip, only module externalizations are worth sharing
+          if (result.type === 'module' && url[0] === '/') {
+            let externals = warmExternals.get(environment)
+            if (!externals) {
+              externals = Object.create(null) as Record<string, FetchResult>
+              warmExternals.set(environment, externals)
+            }
+            externals[url] = result
           }
-          externals[url] = result
         }
-      }
-      if ('tmp' in result) {
-        metadata.tmps[url] = result.tmp
-      }
-      if (accountModuleDuration) {
-        const duration = performance.now() - start
-        metadata.duration[url] ??= []
-        metadata.duration[url].push(duration)
-      }
-      return result
-    })
+        if ('tmp' in result) {
+          metadata.tmps[url] = result.tmp
+        }
+        if (accountModuleDuration) {
+          const duration = performance.now() - start
+          metadata.duration[url] ??= []
+          metadata.duration[url].push(duration)
+        }
+        return result
+      })
   }
 
   return {
-    async fetch(
-      url,
-      importer,
-      environmentName,
-      options,
-      otelCarrier,
-    ) {
+    async fetch(url, importer, environmentName, options, otelCarrier) {
       return fetchModule(url, importer, getEnvironment(environmentName), options, otelCarrier)
     },
     async fetchWarmModules(environmentName, files) {
@@ -174,23 +173,29 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       const moduleGraph = environment.moduleGraph
 
       function getStaticMocks(node: EnvironmentModuleNode): StaticMockCall[] | null | undefined {
-        return node.transformResult?.__vitestStaticMocks
-          ?? environment.pluginContainer.getModuleInfo(node.id!)?.meta?.vitestStaticMocks
+        return (
+          node.transformResult?.__vitestStaticMocks ??
+          environment.pluginContainer.getModuleInfo(node.id!)?.meta?.vitestStaticMocks
+        )
       }
 
       // modules the root replaces with an inline factory are never requested
       async function resolveMockedIds(root: EnvironmentModuleNode): Promise<Set<string>> {
         const ids = new Set<string>()
         const mocks = getStaticMocks(root)?.filter(
-          mock => mock.method === 'mock' && mock.hasFactory && !mock.factoryLoadsOriginal,
+          (mock) => mock.method === 'mock' && mock.hasFactory && !mock.factoryLoadsOriginal,
         )
         if (mocks?.length) {
-          await Promise.all(mocks.map(async (mock) => {
-            const resolved = await environment.pluginContainer.resolveId(mock.specifier, root.id ?? undefined).catch(() => null)
-            if (resolved) {
-              ids.add(resolved.id)
-            }
-          }))
+          await Promise.all(
+            mocks.map(async (mock) => {
+              const resolved = await environment.pluginContainer
+                .resolveId(mock.specifier, root.id ?? undefined)
+                .catch(() => null)
+              if (resolved) {
+                ids.add(resolved.id)
+              }
+            }),
+          )
         }
         return ids
       }
@@ -203,7 +208,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           return undefined
         }
         const staticDeps = new Set(result.deps)
-        const dynamicOnly = new Set(result.dynamicDeps.filter(dep => !staticDeps.has(dep)))
+        const dynamicOnly = new Set(result.dynamicDeps.filter((dep) => !staticDeps.has(dep)))
         if (!dynamicOnly.size) {
           return undefined
         }
@@ -216,14 +221,23 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         return ids
       }
 
-      async function load(url: string, importer: string | undefined): Promise<EnvironmentModuleNode | undefined> {
+      async function load(
+        url: string,
+        importer: string | undefined,
+      ): Promise<EnvironmentModuleNode | undefined> {
         try {
-          const fetchResult = await fetchModule(url, importer, environment, undefined, undefined, false)
+          const fetchResult = await fetchModule(
+            url,
+            importer,
+            environment,
+            undefined,
+            undefined,
+            false,
+          )
           if ('id' in fetchResult) {
             return moduleGraph.getModuleById(fetchResult.id)
           }
-        }
-        catch {
+        } catch {
           // the worker's own fetch will surface the error with the proper import context
         }
         return undefined
@@ -239,11 +253,11 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           skip.add(child.id)
           if (child.transformResult) {
             children.push(walkNode(child, skip))
-          }
-          else {
+          } else {
             children.push(
-              load(child.url, node.id ?? undefined)
-                .then(loaded => loaded && walkNode(loaded, skip)),
+              load(child.url, node.id ?? undefined).then(
+                (loaded) => loaded && walkNode(loaded, skip),
+              ),
             )
           }
         }
@@ -265,16 +279,20 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         }
       }
 
-      await Promise.all([...files, ...project.config.setupFiles].map(async (file) => {
-        const nodes = moduleGraph.getModulesByFile(file)
-        if (nodes?.size) {
-          await Promise.all(Array.from(nodes, node =>
-            node.transformResult ? walkRoot(node) : loadRoot(node.url)))
-        }
-        else {
-          await loadRoot(file)
-        }
-      }))
+      await Promise.all(
+        [...files, ...project.config.setupFiles].map(async (file) => {
+          const nodes = moduleGraph.getModulesByFile(file)
+          if (nodes?.size) {
+            await Promise.all(
+              Array.from(nodes, (node) =>
+                node.transformResult ? walkRoot(node) : loadRoot(node.url),
+              ),
+            )
+          } else {
+            await loadRoot(file)
+          }
+        }),
+      )
     },
     async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]
@@ -291,9 +309,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
           file,
           // this is only used by the module mocker and it always
           // standardizes the id to mock "node:url" and "url" at the same time
-          url: isBuiltin(resolved.id)
-            ? toBuiltin(resolved.id)
-            : resolved.id,
+          url: isBuiltin(resolved.id) ? toBuiltin(resolved.id) : resolved.id,
           id: resolved.id,
         }
       }
@@ -315,7 +331,9 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     async transform(id) {
       const environment = project.vite.environments.__vitest_vm__
       if (!environment) {
-        throw new Error(`The VM environment was not defined in the Vite config. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+        throw new Error(
+          `The VM environment was not defined in the Vite config. This is a bug in Vitest. Please, open a new issue with reproduction.`,
+        )
       }
 
       const url = normalizeResolvedIdToUrl(environment, fileURLToPath(id))
@@ -325,16 +343,14 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     async onQueued(file) {
       if (methodsOptions.collect) {
         vitest.state.collectFiles(project, [file])
-      }
-      else {
+      } else {
         await vitest._testRun.enqueued(project, file)
       }
     },
     async onCollected(files) {
       if (methodsOptions.collect) {
         vitest.state.collectFiles(project, files)
-      }
-      else {
+      } else {
         await vitest._testRun.collected(project, files)
       }
     },
@@ -356,16 +372,14 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     async onTaskUpdate(packs, events) {
       if (methodsOptions.collect) {
         vitest.state.updateTasks(packs)
-      }
-      else {
+      } else {
         await vitest._testRun.updated(packs, events)
       }
     },
     async onUserConsoleLog(log) {
       if (methodsOptions.collect) {
         vitest.state.updateUserLog(log)
-      }
-      else {
+      } else {
         await vitest._testRun.log(log)
       }
     },
@@ -392,8 +406,10 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
         console.error('no module graph for', id)
         return
       }
-      const importerNode = moduleGraph.getModuleById(importerPath) || moduleGraph.createFileOnlyEntry(importerPath)
-      const moduleNode = moduleGraph.getModuleById(filepath) || moduleGraph.createFileOnlyEntry(filepath)
+      const importerNode =
+        moduleGraph.getModuleById(importerPath) || moduleGraph.createFileOnlyEntry(importerPath)
+      const moduleNode =
+        moduleGraph.getModuleById(filepath) || moduleGraph.createFileOnlyEntry(filepath)
 
       if (!moduleGraph.idToModuleMap.has(importerPath)) {
         importerNode.id = importerPath

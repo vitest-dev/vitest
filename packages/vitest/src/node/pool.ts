@@ -19,10 +19,7 @@ import { Pool } from './pools/pool'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-type RunWithFiles = (
-  files: TestSpecification[],
-  invalidates?: string[],
-) => Promise<void>
+type RunWithFiles = (files: TestSpecification[], invalidates?: string[]) => Promise<void>
 
 export interface ProcessPool {
   name: string
@@ -44,11 +41,14 @@ export function getFilePoolName(project: TestProject): ResolvedConfig['pool'] {
 }
 
 export function createPool(ctx: Vitest): ProcessPool {
-  const pool = new Pool({
-    distPath: ctx.distPath,
-    teardownTimeout: ctx.config.teardownTimeout,
-    state: ctx.state,
-  }, ctx.logger)
+  const pool = new Pool(
+    {
+      distPath: ctx.distPath,
+      teardownTimeout: ctx.config.teardownTimeout,
+      state: ctx.state,
+    },
+    ctx.logger,
+  )
 
   const options = resolveOptions(ctx)
 
@@ -57,14 +57,18 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   let browserPool: ProcessPool | undefined
 
-  async function executeTests(method: 'run' | 'collect', specs: TestSpecification[], invalidates?: string[]): Promise<void> {
+  async function executeTests(
+    method: 'run' | 'collect',
+    specs: TestSpecification[],
+    invalidates?: string[],
+  ): Promise<void> {
     ctx.onCancel(() => pool.cancel())
 
     if (ctx.config.shard) {
       if (!ctx.config.passWithNoTests && ctx.config.shard.count > specs.length) {
         throw new Error(
-          '--shard <count> must be a smaller than count of test files. '
-          + `Resolved ${specs.length} test files for --shard=${ctx.config.shard.index}/${ctx.config.shard.count}.`,
+          '--shard <count> must be a smaller than count of test files. ' +
+            `Resolved ${specs.length} test files for --shard=${ctx.config.shard.index}/${ctx.config.shard.count}.`,
         )
       }
       specs = await sequencer.shard(Array.from(specs))
@@ -142,17 +146,13 @@ export function createPool(ctx: Vitest): ProcessPool {
         let execArgv = projectExecArgvs.get(project)
         if (!execArgv) {
           const conditions = resolveConditions(project)
-          execArgv = [
-            ...options.execArgv,
-            ...conditions,
-            ...project.config.execArgv,
-          ]
+          execArgv = [...options.execArgv, ...conditions, ...project.config.execArgv]
           projectExecArgvs.set(project, execArgv)
         }
 
         taskGroup.push({
           context: {
-            files: specs.map(spec => ({
+            files: specs.map((spec) => ({
               filepath: spec.moduleId,
               fileTags: tags.get(spec),
               testLocations: spec.testLines,
@@ -187,13 +187,11 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         try {
           await pool.run(task, method)
-        }
-        catch (error) {
+        } catch (error) {
           // Intentionally cancelled
           if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
             ctx.state.cancelFiles(task.context.files, task.project)
-          }
-          else {
+          } else {
             throw error
           }
         }
@@ -203,8 +201,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         browserPool ??= createBrowserPool(ctx)
         if (method === 'collect') {
           promises.push(browserPool.collectTests(browserSpecs))
-        }
-        else {
+        } else {
           promises.push(browserPool.runTests(browserSpecs))
         }
       }
@@ -215,8 +212,8 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     const errors = results
-      .filter(result => result.status === 'rejected')
-      .map(result => result.reason)
+      .filter((result) => result.status === 'rejected')
+      .map((result) => result.reason)
 
     if (errors.length > 0) {
       throw new AggregateError(
@@ -234,7 +231,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       await Promise.all([
         pool.close(),
         browserPool?.close?.(),
-        ...ctx.projects.map(project => project.typechecker?.stop()),
+        ...ctx.projects.map((project) => project.typechecker?.stop()),
       ])
     },
   }
@@ -244,10 +241,10 @@ function resolveOptions(ctx: Vitest) {
   // Instead of passing whole process.execArgv to the workers, pick allowed options.
   // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
   const execArgv = process.execArgv.filter(
-    execArg =>
-      execArg.startsWith('--cpu-prof')
-      || execArg.startsWith('--heap-prof')
-      || execArg.startsWith('--diagnostic-dir'),
+    (execArg) =>
+      execArg.startsWith('--cpu-prof') ||
+      execArg.startsWith('--heap-prof') ||
+      execArg.startsWith('--diagnostic-dir'),
   )
 
   const options: PoolProcessOptions = {
@@ -255,7 +252,9 @@ function resolveOptions(ctx: Vitest) {
       ...execArgv,
       '--experimental-import-meta-resolve',
       // https://github.com/vitest-dev/vitest/issues/8896
-      ...((globalThis as any).Deno || process.versions.pnp ? [] : ['--require', suppressWarningsPath]),
+      ...((globalThis as any).Deno || process.versions.pnp
+        ? []
+        : ['--require', suppressWarningsPath]),
     ],
     env: {
       TEST: 'true',
@@ -275,13 +274,11 @@ function resolveConditions(project: TestProject) {
   const viteMajor = Number(viteVersion.split('.')[0])
   const viteConfig = project.vite.config
 
-  const potentialConditions = new Set(viteMajor >= 6
-    ? (viteConfig.ssr.resolve?.conditions ?? [])
-    : [
-        'production',
-        'development',
-        ...(viteConfig.resolve.conditions ?? []),
-      ])
+  const potentialConditions = new Set(
+    viteMajor >= 6
+      ? (viteConfig.ssr.resolve?.conditions ?? [])
+      : ['production', 'development', ...(viteConfig.resolve.conditions ?? [])],
+  )
 
   return [...potentialConditions]
     .filter((condition) => {
@@ -299,7 +296,7 @@ function resolveConditions(project: TestProject) {
       }
       return condition
     })
-    .flatMap(c => ['--conditions', c])
+    .flatMap((c) => ['--conditions', c])
 }
 
 function resolveMaxWorkers(project: TestProject) {
@@ -311,9 +308,10 @@ function resolveMaxWorkers(project: TestProject) {
     return project.vitest.config.maxWorkers
   }
 
-  const numCpus = typeof nodeos.availableParallelism === 'function'
-    ? nodeos.availableParallelism()
-    : nodeos.cpus().length
+  const numCpus =
+    typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
 
   if (project.vitest.config.watch) {
     return Math.max(Math.floor(numCpus / 2), 1)
@@ -336,8 +334,8 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
 
   // If totalmem is not supported we cannot resolve percentage based values like 0.5, "50%"
   if (
-    (typeof limit === 'number' && limit > 1)
-    || (typeof limit === 'string' && limit.at(-1) !== '%')
+    (typeof limit === 'number' && limit > 1) ||
+    (typeof limit === 'string' && limit.at(-1) !== '%')
   ) {
     return stringToBytes(limit)
   }
@@ -346,13 +344,20 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
   return null
 }
 
-function groupSpecs(specs: TestSpecification[], environments: WeakMap<TestSpecification, ContextTestEnvironment>) {
+function groupSpecs(
+  specs: TestSpecification[],
+  environments: WeakMap<TestSpecification, ContextTestEnvironment>,
+) {
   // Test files are passed to test runner one at a time, except for Typechecker or when "--maxWorker=1 --no-isolate"
   type SpecsForRunner = TestSpecification[]
 
   // Tests in a single group are executed with `maxWorkers` parallelism.
   // Next group starts running after previous finishes - allows real sequential tests.
-  interface Groups { specs: SpecsForRunner[]; maxWorkers: number; typecheck?: boolean }
+  interface Groups {
+    specs: SpecsForRunner[]
+    maxWorkers: number
+    typecheck?: boolean
+  }
   const groups: Groups[] = []
 
   // Files without file parallelism but without explicit sequence.groupOrder
@@ -420,7 +425,9 @@ function groupSpecs(specs: TestSpecification[], environments: WeakMap<TestSpecif
     if (groups[order].maxWorkers !== maxWorkers) {
       const last = groups[order].specs.at(-1)?.at(-1)?.project.name
 
-      throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`)
+      throw new Error(
+        `Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`,
+      )
     }
 
     // Non-isolated single worker can receive all files at once.
@@ -428,10 +435,19 @@ function groupSpecs(specs: TestSpecification[], environments: WeakMap<TestSpecif
     // resolution rather than the user, because their isolation is a fresh VM
     // context per run request — batching files into a single run request
     // would share one context across all of them.
-    if (isolate === false && maxWorkers === 1 && spec.pool !== 'vmThreads' && spec.pool !== 'vmForks') {
+    if (
+      isolate === false &&
+      maxWorkers === 1 &&
+      spec.pool !== 'vmThreads' &&
+      spec.pool !== 'vmForks'
+    ) {
       const previous = groups[order].specs[0]?.[0]
 
-      if (previous && previous.project.name === spec.project.name && isEqualEnvironments(spec, previous)) {
+      if (
+        previous &&
+        previous.project.name === spec.project.name &&
+        isEqualEnvironments(spec, previous)
+      ) {
         return groups[order].specs[0].push(spec)
       }
     }

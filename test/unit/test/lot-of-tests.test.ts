@@ -14,8 +14,7 @@ describe(`Suite of ${SUITES * TASKS} tests for UI performance tests`, () => {
         }
       })
     }
-  }
-  else {
+  } else {
     it('skipped in ci', () => {})
   }
 })

@@ -11,9 +11,7 @@ const custom = it.extend({
 custom('provided config value is injected', ({ providedConfigValue }) => {
   expect(providedConfigValue).toBe(
     // happy-dom provides the value in the workspace config
-    expect.getState().environment === 'node'
-      ? 'default value'
-      : 'actual config value',
+    expect.getState().environment === 'node' ? 'default value' : 'actual config value',
   )
 })
 

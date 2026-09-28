@@ -9,11 +9,8 @@ import type { Diff } from './cleanupSemantic'
 import type { DiffOptionsColor, DiffOptionsNormalized } from './types'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 
-function formatTrailingSpaces(
-  line: string,
-  trailingSpaceFormatter: DiffOptionsColor,
-): string {
-  return line.replace(/\s+$/, match => trailingSpaceFormatter(match))
+function formatTrailingSpaces(line: string, trailingSpaceFormatter: DiffOptionsColor): string {
+  return line.replace(/\s+$/, (match) => trailingSpaceFormatter(match))
 }
 
 function printDiffLine(
@@ -25,9 +22,7 @@ function printDiffLine(
   emptyFirstOrLastLinePlaceholder: string,
 ): string {
   return line.length !== 0
-    ? color(
-        `${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`,
-      )
+    ? color(`${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`)
     : indicator !== ' '
       ? color(indicator)
       : isFirstOrLast && emptyFirstOrLastLinePlaceholder.length !== 0
@@ -103,9 +98,7 @@ function createPatchMark(
   bEnd: number,
   { patchColor }: DiffOptionsNormalized,
 ): string {
-  return patchColor(
-    `@@ -${aStart + 1},${aEnd - aStart} +${bStart + 1},${bEnd - bStart} @@`,
-  )
+  return patchColor(`@@ -${aStart + 1},${aEnd - aStart} +${bStart + 1},${bEnd - bStart} @@`)
 }
 
 // jest --no-expand
@@ -138,16 +131,14 @@ export function joinAlignedDiffsNoExpand(
           jLength -= i - nContextLines // subtract excess common lines
           hasExcessAtStartOrEnd = true
         }
-      }
-      else if (i === iLength) {
+      } else if (i === iLength) {
         // at end
         const n = i - iStart
         if (n > nContextLines) {
           jLength -= n - nContextLines // subtract excess common lines
           hasExcessAtStartOrEnd = true
         }
-      }
-      else {
+      } else {
         // between changes
         const n = i - iStart
         if (n > nContextLines2) {
@@ -226,16 +217,14 @@ export function joinAlignedDiffsNoExpand(
         for (let iCommon = iStart; iCommon !== i; iCommon += 1) {
           pushCommonLine(diffs[iCommon][1])
         }
-      }
-      else if (i === iLength) {
+      } else if (i === iLength) {
         // at end
         const iEnd = i - iStart > nContextLines ? iStart + nContextLines : i
 
         for (let iCommon = iStart; iCommon !== iEnd; iCommon += 1) {
           pushCommonLine(diffs[iCommon][1])
         }
-      }
-      else {
+      } else {
         // between changes
         const nCommon = i - iStart
 
@@ -246,13 +235,7 @@ export function joinAlignedDiffsNoExpand(
             pushCommonLine(diffs[iCommon][1])
           }
 
-          lines[jPatchMark] = createPatchMark(
-            aStart,
-            aEnd,
-            bStart,
-            bEnd,
-            options,
-          )
+          lines[jPatchMark] = createPatchMark(aStart, aEnd, bStart, bEnd, options)
           jPatchMark = lines.length
           lines.push('') // placeholder line for next patch mark
 
@@ -265,8 +248,7 @@ export function joinAlignedDiffsNoExpand(
           for (let iCommon = i - nContextLines; iCommon !== i; iCommon += 1) {
             pushCommonLine(diffs[iCommon][1])
           }
-        }
-        else {
+        } else {
           for (let iCommon = iStart; iCommon !== i; iCommon += 1) {
             pushCommonLine(diffs[iCommon][1])
           }
@@ -296,10 +278,7 @@ export function joinAlignedDiffsNoExpand(
 //
 // Given array of aligned strings with inverse highlight formatting,
 // return joined lines with diff formatting.
-export function joinAlignedDiffsExpand(
-  diffs: Array<Diff>,
-  options: DiffOptionsNormalized,
-): string {
+export function joinAlignedDiffsExpand(diffs: Array<Diff>, options: DiffOptionsNormalized): string {
   return diffs
     .map((diff: Diff, i: number, diffs: Array<Diff>): string => {
       const line = diff[1]

@@ -61,10 +61,7 @@ export class ThreadsPoolWorker implements PoolWorker {
     // `terminate()` makes node drain the stdio still queued on the worker's
     // message port into these readables; keep the pipes attached until the
     // streams end so late output still reaches the logger streams
-    const flushed = Promise.all([
-      streamFlushed(thread.stdout),
-      streamFlushed(thread.stderr),
-    ])
+    const flushed = Promise.all([streamFlushed(thread.stdout), streamFlushed(thread.stderr)])
     await thread.terminate()
     await flushed
 
@@ -83,7 +80,9 @@ export class ThreadsPoolWorker implements PoolWorker {
 
   private get thread() {
     if (!this._thread) {
-      throw new Error(`The worker thread was torn down or never initialized. This is a bug in Vitest.`)
+      throw new Error(
+        `The worker thread was torn down or never initialized. This is a bug in Vitest.`,
+      )
     }
     return this._thread
   }

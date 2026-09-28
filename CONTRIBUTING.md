@@ -16,7 +16,8 @@ To develop and test `vitest` package:
 1. Run `pnpm install` in `vitest`'s root folder
 
 2. Run `pnpm run build` to build all monorepo packages
-  - after this, you can use `pnpm run dev` to rebuild packages as you modify code
+
+- after this, you can use `pnpm run dev` to rebuild packages as you modify code
 
 3. Run
    - `pnpm run test` to run core tests

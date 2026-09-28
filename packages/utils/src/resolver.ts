@@ -7,9 +7,7 @@ const packageScopeTypeCache = new Map<string, 'cjs' | 'esm' | 'none'>()
 // the lookup stops at the first package.json and never crosses
 // the "node_modules" boundary, so typeless dependencies don't
 // inherit the `type` field of the user's project
-export function lookupPackageScopeType(
-  directory: string,
-): 'cjs' | 'esm' | 'none' {
+export function lookupPackageScopeType(directory: string): 'cjs' | 'esm' | 'none' {
   const visited: string[] = []
   let result: 'cjs' | 'esm' | 'none' = 'none'
   let current = directory
@@ -29,12 +27,10 @@ export function lookupPackageScopeType(
         const packageJson = JSON.parse(stripBomTag(fs.readFileSync(packageJsonPath, 'utf8')))
         if (packageJson.type === 'module') {
           result = 'esm'
-        }
-        else if (packageJson.type === 'commonjs') {
+        } else if (packageJson.type === 'commonjs') {
           result = 'cjs'
         }
-      }
-      catch {
+      } catch {
         // ignore malformed package.json and fall back to "none"
       }
       break
@@ -47,12 +43,12 @@ export function lookupPackageScopeType(
     current = parent
   }
 
-  visited.forEach(dir => packageScopeTypeCache.set(dir, result))
+  visited.forEach((dir) => packageScopeTypeCache.set(dir, result))
   return result
 }
 
 function stripBomTag(content: string): string {
-  if (content.charCodeAt(0) === 0xFEFF) {
+  if (content.charCodeAt(0) === 0xfeff) {
     return content.slice(1)
   }
 
@@ -63,8 +59,7 @@ function tryStatSync(file: string): fs.Stats | undefined {
   try {
     // The "throwIfNoEntry" is a performance optimization for cases where the file does not exist
     return fs.statSync(file, { throwIfNoEntry: false })
-  }
-  catch {
+  } catch {
     // Ignore errors
   }
 }

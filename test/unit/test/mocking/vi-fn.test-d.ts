@@ -41,8 +41,8 @@ test('spy.mock when implementation is a class-like function', () => {
 
   expectTypeOf(Mock.mock.calls).toEqualTypeOf<[a: string, b?: number][]>()
   expectTypeOf(Mock.mock.results).toEqualTypeOf<MockResult<void>[]>()
-  expectTypeOf(Mock.mock.contexts).toEqualTypeOf<typeof Klass[]>()
-  expectTypeOf(Mock.mock.instances).toEqualTypeOf<typeof Klass[]>()
+  expectTypeOf(Mock.mock.contexts).toEqualTypeOf<(typeof Klass)[]>()
+  expectTypeOf(Mock.mock.instances).toEqualTypeOf<(typeof Klass)[]>()
   expectTypeOf(Mock.mock.invocationCallOrder).toEqualTypeOf<number[]>()
   expectTypeOf(Mock.mock.settledResults).toEqualTypeOf<MockSettledResult<void>[]>()
   expectTypeOf(Mock.mock.lastCall).toEqualTypeOf<[a: string, b?: number] | undefined>()
@@ -103,34 +103,55 @@ test('spying on a function that supports new', () => {
 test('withImplementation returns correct type', () => {
   const spy = vi.fn()
 
-  const result42 = spy.withImplementation(() => {}, () => {
-    return 42
-  })
+  const result42 = spy.withImplementation(
+    () => {},
+    () => {
+      return 42
+    },
+  )
   expectTypeOf(result42).toEqualTypeOf<Mock<Procedure>>()
 
-  const resultObject = spy.withImplementation(() => {}, () => {
-    return { then: () => 42 }
-  })
+  const resultObject = spy.withImplementation(
+    () => {},
+    () => {
+      return { then: () => 42 }
+    },
+  )
   expectTypeOf(resultObject).toEqualTypeOf<Mock<Procedure>>()
 
-  const resultVoid = spy.withImplementation(() => {}, () => {})
+  const resultVoid = spy.withImplementation(
+    () => {},
+    () => {},
+  )
   expectTypeOf(resultVoid).toEqualTypeOf<Mock<Procedure>>()
 
-  const promise42 = spy.withImplementation(() => {}, async () => {
-    return 42
-  })
+  const promise42 = spy.withImplementation(
+    () => {},
+    async () => {
+      return 42
+    },
+  )
   expectTypeOf(promise42).toEqualTypeOf<Promise<Mock<Procedure>>>()
 
-  const promiseObject = spy.withImplementation(() => {}, async () => {
-    return { hello: () => 42 }
-  })
+  const promiseObject = spy.withImplementation(
+    () => {},
+    async () => {
+      return { hello: () => 42 }
+    },
+  )
   expectTypeOf(promiseObject).toEqualTypeOf<Promise<Mock<Procedure>>>()
 
-  const promiseVoid = spy.withImplementation(() => {}, async () => {})
+  const promiseVoid = spy.withImplementation(
+    () => {},
+    async () => {},
+  )
   expectTypeOf(promiseVoid).toEqualTypeOf<Promise<Mock<Procedure>>>()
 
-  const promisePromise = spy.withImplementation(() => {}, () => {
-    return Promise.resolve()
-  })
+  const promisePromise = spy.withImplementation(
+    () => {},
+    () => {
+      return Promise.resolve()
+    },
+  )
   expectTypeOf(promisePromise).toEqualTypeOf<Promise<Mock<Procedure>>>()
 })

@@ -24,6 +24,7 @@ You should use mock assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebee
 Vitest spies inherit implementation's [`length`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length) property when initialized, but it doesn't override it if the implementation was changed later:
 
 ::: code-group
+
 ```ts [vi.fn]
 const fn = vi.fn((arg1) => {})
 fn.length // == 1
@@ -31,6 +32,7 @@ fn.length // == 1
 fn.mockImplementation(() => {})
 fn.length // == 1
 ```
+
 ```ts [vi.spyOn]
 const example = {
   fn(arg1, arg2) {
@@ -44,6 +46,7 @@ fn.length // == 2
 fn.mockImplementation(() => {})
 fn.length // == 2
 ```
+
 :::
 
 ::: tip
@@ -89,6 +92,7 @@ mock.mockImplementation(class {
   }
 })
 ```
+
 :::
 
 ## getMockImplementation
@@ -505,6 +509,7 @@ const fn = vi.fn((arg) => {
 
 expect(calledArguments[0]).toEqual({ value: 0 })
 ```
+
 :::
 
 ## mock.lastCall
@@ -704,4 +709,5 @@ const a = new Spy()
 Spy.mock.instances[0] !== a
 Spy.mock.results[0] === a
 ```
+
 :::

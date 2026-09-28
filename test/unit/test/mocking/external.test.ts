@@ -1,4 +1,4 @@
-/* eslint-disable perfectionist/sort-imports */
+// the import order matters: external.mjs must run before http-client is imported
 import { expect, test, vi } from 'vitest'
 import '../../src/mocks/external/external.mjs'
 import httpClient from 'http-client'

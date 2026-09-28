@@ -94,6 +94,7 @@ declare module 'vitest' {
 
 await expect('foo').toBeAsyncAssertion()
 ```
+
 :::
 
 The first argument inside a matcher's function is the received value (the one inside `expect(received)`). The rest are arguments passed directly to the matcher. Since version 4.1, Vitest exposes several types that can be used by your custom matcher:

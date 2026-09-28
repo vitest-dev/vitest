@@ -11,7 +11,11 @@ export default defineConfig({
     {
       name: 'example',
       resolveId(source) {
-        if (source === 'virtual-module' || source === 'virtual-module-direct' || source === 'virtual-module-indirect') {
+        if (
+          source === 'virtual-module' ||
+          source === 'virtual-module-direct' ||
+          source === 'virtual-module-indirect'
+        ) {
           return source
         }
       },
@@ -35,41 +39,41 @@ export default defineConfig({
     },
     // Use babel plugin since Oxc (Vite 8) doesn't support ecma decorators out of the box
     // https://github.com/oxc-project/oxc/issues/9170#issuecomment-4072166491
-    !!rolldownVersion
-    && (import('@rolldown/plugin-babel').then(({ default: babel }) =>
-      babel({
-        presets: [
-          {
-            preset: () => ({
-              plugins: [['@babel/plugin-proposal-decorators', { version: '2023-11' }]],
-            }),
-            rolldown: {
-              filter: {
-                id: ['**/esnext-decorator.test.ts'],
+    !!rolldownVersion &&
+      (import('@rolldown/plugin-babel').then(({ default: babel }) =>
+        babel({
+          presets: [
+            {
+              preset: () => ({
+                plugins: [['@babel/plugin-proposal-decorators', { version: '2023-11' }]],
+              }),
+              rolldown: {
+                filter: {
+                  id: ['**/esnext-decorator.test.ts'],
+                },
               },
             },
-          },
-        ],
-      }),
-    ) as any),
+          ],
+        }),
+      ) as any),
   ],
   define: {
-    'process': {},
-    'global': {},
+    process: {},
+    global: {},
     'import.meta.env.TEST_NAME': '"hello world"',
     'process.env.HELLO_PROCESS': '"hello process"',
     // can reassign
-    '__DEFINE__': '"defined"',
-    '__JSON__': JSON.stringify({ hello: 'world' }),
+    __DEFINE__: '"defined"',
+    __JSON__: JSON.stringify({ hello: 'world' }),
     // edge cases
     // evaluated once when the worker starts
-    '__MODE__': 'process.env.MODE',
+    __MODE__: 'process.env.MODE',
     'SOME.VARIABLE': '"variable"',
     'SOME.SOME.VARIABLE': '"nested variable"',
-    '__UNDEFINED__': undefined,
-    '__NULL__': null,
-    '__ZERO__': 0,
-    '__FALSE__': false,
+    __UNDEFINED__: undefined,
+    __NULL__: null,
+    __ZERO__: 0,
+    __FALSE__: false,
     'import.meta.vitest': false,
   },
   resolve: {
@@ -97,18 +101,11 @@ export default defineConfig({
       allowWrite: false,
     },
     name: 'core',
-    includeSource: [
-      'src/in-source/*.ts',
-    ],
-    exclude: [
-      '**/fixtures/**',
-      ...defaultExclude,
-    ],
+    includeSource: ['src/in-source/*.ts'],
+    exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
-    setupFiles: [
-      './test/setup.ts',
-    ],
+    setupFiles: ['./test/setup.ts'],
     server: {
       deps: {
         external: [
@@ -131,9 +128,7 @@ export default defineConfig({
       ...(process.env.VITEST_CI_BLOB_LABEL
         ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]]
         : []),
-      process.env.VITEST_CI_MERGE_REPORTS
-        ? ['html', { singleFile: true }]
-        : {},
+      process.env.VITEST_CI_MERGE_REPORTS ? ['html', { singleFile: true }] : {},
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
@@ -188,18 +183,17 @@ export default defineConfig({
       if (log.includes('Cannot find module') && log.includes('/web-worker/workerInvalid-path.ts')) {
         return false
       }
-      if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
+      if (
+        log.startsWith(`[vitest]`) &&
+        log.includes(`did not use 'function' or 'class' in its implementation`)
+      ) {
         return false
       }
       if (log.startsWith('Importing from') && log.includes('is deprecated since Vitest 4.1')) {
         return false
       }
     },
-    projects: [
-      project('threads', 'red'),
-      project('forks', 'green'),
-      project('vmThreads', 'blue'),
-    ],
+    projects: [project('threads', 'red'), project('forks', 'green'), project('vmThreads', 'blue')],
   },
 })
 

@@ -13,13 +13,15 @@ test('cancels previous run before starting new one', async () => {
     bail: 1,
     root: resolve(import.meta.dirname, '../fixtures/bail-race'),
     sequence: { sequencer: StableTestFileOrderSorter },
-    reporters: [{
-      onTestRunEnd(_, unhandledErrors) {
-        if (unhandledErrors.length) {
-          errors.push(...unhandledErrors)
-        }
+    reporters: [
+      {
+        onTestRunEnd(_, unhandledErrors) {
+          if (unhandledErrors.length) {
+            errors.push(...unhandledErrors)
+          }
+        },
       },
-    }],
+    ],
   })
   onTestFinished(() => vitest.close())
 

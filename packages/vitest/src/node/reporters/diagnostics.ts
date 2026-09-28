@@ -108,22 +108,20 @@ export interface ImportDiagnostic {
  * fetch counts, so suites with disjoint per-file graphs - where reusing
  * workers would not help - stay quiet.
  */
-export function getImportDiagnostics(
-  projects: ImportDiagnosticInput[],
-): ImportDiagnostic[] {
+export function getImportDiagnostics(projects: ImportDiagnosticInput[]): ImportDiagnostic[] {
   const diagnostics: ImportDiagnostic[] = []
   for (const project of projects) {
     if (
       // vm pools re-create the module graph per VM context regardless of
       // `isolate`, so reusing workers would not reduce the import work
-      (project.pool !== 'forks' && project.pool !== 'threads')
-      || !project.isolate
-      || project.isolateProvided
-      || project.browser
-      || project.fileCount <= project.parallelism
-      || project.importTime < MIN_IMPORT_TIME
-      || project.trackedTime <= 0
-      || project.importTime / project.trackedTime < MIN_IMPORT_SHARE
+      (project.pool !== 'forks' && project.pool !== 'threads') ||
+      !project.isolate ||
+      project.isolateProvided ||
+      project.browser ||
+      project.fileCount <= project.parallelism ||
+      project.importTime < MIN_IMPORT_TIME ||
+      project.trackedTime <= 0 ||
+      project.importTime / project.trackedTime < MIN_IMPORT_SHARE
     ) {
       continue
     }
@@ -226,11 +224,11 @@ export function getTransformDiagnostics(
   return projects
     .filter((project) => {
       if (
-        project.fsModuleCache
-        || project.fsModuleCacheProvided
-        || project.transformTime < MIN_TRANSFORM_TIME
-        || project.trackedTime <= 0
-        || project.transformTime / project.trackedTime < MIN_TRANSFORM_SHARE
+        project.fsModuleCache ||
+        project.fsModuleCacheProvided ||
+        project.transformTime < MIN_TRANSFORM_TIME ||
+        project.trackedTime <= 0 ||
+        project.transformTime / project.trackedTime < MIN_TRANSFORM_SHARE
       ) {
         return false
       }
@@ -238,7 +236,7 @@ export function getTransformDiagnostics(
       // main-thread) transform time itself bounds the saving
       return isSavingWorthHinting(project.transformTime, project.executionTime)
     })
-    .map(project => ({
+    .map((project) => ({
       name: project.name,
       transformTime: project.transformTime,
       share: project.transformTime / project.trackedTime,
@@ -257,27 +255,26 @@ export function getEnvironmentDiagnostics(
   return projects
     .filter((project) => {
       if (
-        !DOM_ENVIRONMENTS.has(project.environment)
-        || (project.pool !== 'forks' && project.pool !== 'threads')
-        || !project.isolate
-        || project.browser
-        || project.poolProvided
-        || project.environmentCount <= 1
-        || project.environmentTime < MIN_ENVIRONMENT_TIME
-        || project.trackedTime <= 0
-        || project.environmentTime / project.trackedTime < MIN_ENVIRONMENT_SHARE
+        !DOM_ENVIRONMENTS.has(project.environment) ||
+        (project.pool !== 'forks' && project.pool !== 'threads') ||
+        !project.isolate ||
+        project.browser ||
+        project.poolProvided ||
+        project.environmentCount <= 1 ||
+        project.environmentTime < MIN_ENVIRONMENT_TIME ||
+        project.trackedTime <= 0 ||
+        project.environmentTime / project.trackedTime < MIN_ENVIRONMENT_SHARE
       ) {
         return false
       }
       // setups are spread across the worker lanes; a vm pool would still pay
       // one setup per lane, so the reducible wall time is the rest
       const parallelism = Math.max(1, project.parallelism)
-      const saving
-        = project.environmentTime / parallelism
-          - project.environmentTime / project.environmentCount
+      const saving =
+        project.environmentTime / parallelism - project.environmentTime / project.environmentCount
       return isSavingWorthHinting(saving, project.executionTime)
     })
-    .map(project => ({
+    .map((project) => ({
       name: project.name,
       environment: project.environment,
       environmentTime: project.environmentTime,

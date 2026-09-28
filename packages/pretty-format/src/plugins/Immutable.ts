@@ -36,13 +36,13 @@ function printImmutableEntries(
   return ++depth > config.maxDepth
     ? printAsLeaf(getImmutableName(type))
     : `${getImmutableName(type) + SPACE}{${printIteratorEntries(
-      val.entries(),
-      config,
-      indentation,
-      depth,
-      refs,
-      printer,
-    )}}`
+        val.entries(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
 }
 
 // Record has an entries method because it is a collection in immutable v3.
@@ -60,23 +60,37 @@ function getRecordEntries(val: any): Iterator<any> {
   }
 }
 
-function printImmutableRecord(val: any, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
+function printImmutableRecord(
+  val: any,
+  config: Config,
+  indentation: string,
+  depth: number,
+  refs: Refs,
+  printer: Printer,
+): string {
   // _name property is defined only for an Immutable Record instance
   // which was constructed with a second optional descriptive name arg
   const name = getImmutableName(val._name || 'Record')
   return ++depth > config.maxDepth
     ? printAsLeaf(name)
     : `${name + SPACE}{${printIteratorEntries(
-      getRecordEntries(val),
-      config,
-      indentation,
-      depth,
-      refs,
-      printer,
-    )}}`
+        getRecordEntries(val),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
 }
 
-function printImmutableSeq(val: any, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
+function printImmutableSeq(
+  val: any,
+  config: Config,
+  indentation: string,
+  depth: number,
+  refs: Refs,
+  printer: Printer,
+): string {
   const name = getImmutableName('Seq')
 
   if (++depth > config.maxDepth) {
@@ -87,46 +101,40 @@ function printImmutableSeq(val: any, config: Config, indentation: string, depth:
     return `${name + SPACE}{${
       // from Immutable collection of entries or from ECMAScript object
       val._iter || val._object
-        ? printIteratorEntries(
-            val.entries(),
-            config,
-            indentation,
-            depth,
-            refs,
-            printer,
-          )
+        ? printIteratorEntries(val.entries(), config, indentation, depth, refs, printer)
         : LAZY
     }}`
   }
 
   return `${name + SPACE}[${
-    val._iter // from Immutable collection of values
-    || val._array // from ECMAScript array
-    || val._collection // from ECMAScript collection in immutable v4
-    || val._iterable // from ECMAScript collection in immutable v3
-      ? printIteratorValues(
-          val.values(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )
+    val._iter || // from Immutable collection of values
+    val._array || // from ECMAScript array
+    val._collection || // from ECMAScript collection in immutable v4
+    val._iterable // from ECMAScript collection in immutable v3
+      ? printIteratorValues(val.values(), config, indentation, depth, refs, printer)
       : LAZY
   }]`
 }
 
-function printImmutableValues(val: any, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer, type: string): string {
+function printImmutableValues(
+  val: any,
+  config: Config,
+  indentation: string,
+  depth: number,
+  refs: Refs,
+  printer: Printer,
+  type: string,
+): string {
   return ++depth > config.maxDepth
     ? printAsLeaf(getImmutableName(type))
     : `${getImmutableName(type) + SPACE}[${printIteratorValues(
-      val.values(),
-      config,
-      indentation,
-      depth,
-      refs,
-      printer,
-    )}]`
+        val.values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}]`
 }
 
 const serialize: NewPlugin['serialize'] = (
@@ -150,15 +158,7 @@ const serialize: NewPlugin['serialize'] = (
   }
 
   if (val[IS_LIST_SENTINEL]) {
-    return printImmutableValues(
-      val,
-      config,
-      indentation,
-      depth,
-      refs,
-      printer,
-      'List',
-    )
+    return printImmutableValues(val, config, indentation, depth, refs, printer, 'List')
   }
   if (val[IS_SET_SENTINEL]) {
     return printImmutableValues(
@@ -172,15 +172,7 @@ const serialize: NewPlugin['serialize'] = (
     )
   }
   if (val[IS_STACK_SENTINEL]) {
-    return printImmutableValues(
-      val,
-      config,
-      indentation,
-      depth,
-      refs,
-      printer,
-      'Stack',
-    )
+    return printImmutableValues(val, config, indentation, depth, refs, printer, 'Stack')
   }
 
   if (val[IS_SEQ_SENTINEL]) {
@@ -194,8 +186,7 @@ const serialize: NewPlugin['serialize'] = (
 // Explicitly comparing sentinel properties to true avoids false positive
 // when mock identity-obj-proxy returns the key as the value for any key.
 const test: NewPlugin['test'] = (val: any) =>
-  val
-  && (val[IS_ITERABLE_SENTINEL] === true || val[IS_RECORD_SENTINEL] === true)
+  val && (val[IS_ITERABLE_SENTINEL] === true || val[IS_RECORD_SENTINEL] === true)
 
 const plugin: NewPlugin = { serialize, test }
 

@@ -1,5 +1,4 @@
 import { expect, test, vi } from 'vitest'
-
 import { MockedE } from '../src/mockedE'
 
 vi.mock('../src/mockedE')

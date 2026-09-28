@@ -158,14 +158,18 @@ describe('TestModule', () => {
 
 describe('TestCase', () => {
   test('single test case', async () => {
-    const report = await run({
-      'example.test.ts': ts`
+    const report = await run(
+      {
+        'example.test.ts': ts`
         test('single test case', async () => {
           await new Promise(resolve => setTimeout(resolve, 300))
           console.log("Test running!")
         });
       `,
-    }, {}, { printTestRunEvents: true })
+      },
+      {},
+      { printTestRunEvents: true },
+    )
 
     // console.log is reported outside of the test run cycle
     expect(report).toMatchInlineSnapshot(`
@@ -841,17 +845,20 @@ describe('merge reports', () => {
       rmSync(blobOutputFile)
     })
 
-    const { root } = await runInlineTests({
-      'example.test.ts': ts`
+    const { root } = await runInlineTests(
+      {
+        'example.test.ts': ts`
         test('first', () => {});
         describe('suite', () => {
           test('second', () => {});
         });
       `,
-    }, {
-      globals: true,
-      reporters: [['blob', { outputFile: blobOutputFile }]],
-    })
+      },
+      {
+        globals: true,
+        reporters: [['blob', { outputFile: blobOutputFile }]],
+      },
+    )
 
     const report = await run(
       {},
@@ -887,21 +894,25 @@ describe('merge reports', () => {
       rmSync(blobOutputFile2)
     })
 
-    const { root: root1 } = await runInlineTests({
-      'example-1.test.ts': ts`
+    const { root: root1 } = await runInlineTests(
+      {
+        'example-1.test.ts': ts`
         test('first', () => {});
         describe('suite', () => {
           test('second', () => {});
         });
       `,
-    }, {
-      globals: true,
-      reporters: [['blob', { outputFile: blobOutputFile1 }]],
-      watch: false,
-    })
+      },
+      {
+        globals: true,
+        reporters: [['blob', { outputFile: blobOutputFile1 }]],
+        watch: false,
+      },
+    )
 
-    const { root: root2 } = await runInlineTests({
-      'example-2.test.ts': ts`
+    const { root: root2 } = await runInlineTests(
+      {
+        'example-2.test.ts': ts`
         test('first', () => {});
         describe.skip('suite', () => {
           test('second', () => {});
@@ -910,18 +921,24 @@ describe('merge reports', () => {
         test.skip('fourth', () => {});
         test('fifth', () => {});
         `,
-    }, {
-      globals: true,
-      reporters: [['blob', { outputFile: blobOutputFile2 }]],
-      watch: false,
-    })
+      },
+      {
+        globals: true,
+        reporters: [['blob', { outputFile: blobOutputFile2 }]],
+        watch: false,
+      },
+    )
 
-    const report = await run({}, {
-      mergeReports: blobsOutputDirectory,
-      watch: false,
-    }, {
-      roots: [root1, root2],
-    })
+    const report = await run(
+      {},
+      {
+        mergeReports: blobsOutputDirectory,
+        watch: false,
+      },
+      {
+        roots: [root1, root2],
+      },
+    )
 
     expect(report).toMatchInlineSnapshot(`
       "
@@ -958,14 +975,15 @@ describe('merge reports', () => {
 
 describe('type checking', () => {
   test('typechecking is reported correctly', async () => {
-    const report = await run({
-      'example-1.test-d.ts': ts`
+    const report = await run(
+      {
+        'example-1.test-d.ts': ts`
         test('first', () => {});
         describe('suite', () => {
           test('second', () => {});
         });
       `,
-      'example-2.test-d.ts': ts`
+        'example-2.test-d.ts': ts`
         test('first', () => {});
         describe.skip('suite', () => {
           test('second', () => {});
@@ -974,17 +992,20 @@ describe('type checking', () => {
         test.skip('fourth', () => {});
         test('fifth', () => {});
       `,
-      'tsconfig.json': JSON.stringify({
-        compilerOptions: {
-          strict: true,
-        },
-        include: ['./*.test-d.ts'],
-      }),
-    }, {
-      typecheck: {
-        enabled: true,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+          },
+          include: ['./*.test-d.ts'],
+        }),
       },
-    }, { printTestRunEvents: true })
+      {
+        typecheck: {
+          enabled: true,
+        },
+      },
+      { printTestRunEvents: true },
+    )
 
     // NOTE: typechecker reports test modules in bulk, so the order of queued and collect
     // is different from the normal test run, this is because the typechecker runs everything together
@@ -1030,26 +1051,29 @@ describe('test run result', () => {
     let vitest: Vitest
     let reason: TestRunEndReason | undefined
 
-    await runInlineTests({
-      'example.test.js': `
+    await runInlineTests(
+      {
+        'example.test.js': `
         test('basic', () => new Promise(() => {}))
       `,
-    }, {
-      globals: true,
-      reporters: [
-        {
-          onInit(ctx) {
-            vitest = ctx
+      },
+      {
+        globals: true,
+        reporters: [
+          {
+            onInit(ctx) {
+              vitest = ctx
+            },
+            onTestModuleCollected() {
+              vitest.cancelCurrentRun('keyboard-input')
+            },
+            onTestRunEnd(_, __, reason_) {
+              reason = reason_
+            },
           },
-          onTestModuleCollected() {
-            vitest.cancelCurrentRun('keyboard-input')
-          },
-          onTestRunEnd(_, __, reason_) {
-            reason = reason_
-          },
-        },
-      ],
-    })
+        ],
+      },
+    )
 
     expect(reason).toBe('interrupted')
   })
@@ -1057,27 +1081,30 @@ describe('test run result', () => {
   test('test run failed, but passed afterwards', async () => {
     let reason: TestRunEndReason | undefined
 
-    const { fs } = await runInlineTests({
-      'example.test.js': `
+    const { fs } = await runInlineTests(
+      {
+        'example.test.js': `
         test('basic', () => {
           expect(1).toBe(2)
         })
       `,
-    }, {
-      globals: true,
-      watch: true,
-      reporters: [
-        {
-          onTestRunEnd(_, __, reason_) {
-            reason = reason_
+      },
+      {
+        globals: true,
+        watch: true,
+        reporters: [
+          {
+            onTestRunEnd(_, __, reason_) {
+              reason = reason_
+            },
           },
-        },
-      ],
-    })
+        ],
+      },
+    )
 
     expect(reason).toBe('failed')
 
-    fs.editFile('./example.test.js', c => c.replace('toBe(2)', 'toBe(1)'))
+    fs.editFile('./example.test.js', (c) => c.replace('toBe(2)', 'toBe(1)'))
 
     await expect.poll(() => reason).toBe('passed')
   })
@@ -1085,23 +1112,26 @@ describe('test run result', () => {
   test('test run passed', async () => {
     let reason: TestRunEndReason | undefined
 
-    await runInlineTests({
-      'example.test.js': `
+    await runInlineTests(
+      {
+        'example.test.js': `
         test('basic', () => {
           expect(1).toBe(1)
         })
       `,
-    }, {
-      globals: true,
-      watch: true,
-      reporters: [
-        {
-          onTestRunEnd(_, __, reason_) {
-            reason = reason_
+      },
+      {
+        globals: true,
+        watch: true,
+        reporters: [
+          {
+            onTestRunEnd(_, __, reason_) {
+              reason = reason_
+            },
           },
-        },
-      ],
-    })
+        ],
+      },
+    )
 
     expect(reason).toBe('passed')
   })
@@ -1166,9 +1196,15 @@ class CustomReporter implements Reporter {
     }
   }
 
-  onTestRunEnd(modules: ReadonlyArray<TestModule>, errors: ReadonlyArray<SerializedError>, state: TestRunEndReason) {
+  onTestRunEnd(
+    modules: ReadonlyArray<TestModule>,
+    errors: ReadonlyArray<SerializedError>,
+    state: TestRunEndReason,
+  ) {
     if (this.options.printTestRunEvents) {
-      this.calls.push(`onTestRunEnd   (${state}, ${modules.length} modules, ${errors.length} errors)`)
+      this.calls.push(
+        `onTestRunEnd   (${state}, ${modules.length} modules, ${errors.length} errors)`,
+      )
       if (this.logs.length) {
         this.calls.push('', ...this.logs)
       }
@@ -1184,11 +1220,15 @@ class CustomReporter implements Reporter {
   }
 
   onTestSuiteReady(testSuite: TestSuite) {
-    this.calls.push(`${padded(testSuite, 'onTestSuiteReady')} (${this.normalizeFilename(testSuite.module)}) |${testSuite.name}|`)
+    this.calls.push(
+      `${padded(testSuite, 'onTestSuiteReady')} (${this.normalizeFilename(testSuite.module)}) |${testSuite.name}|`,
+    )
   }
 
   onTestSuiteResult(testSuite: TestSuite) {
-    this.calls.push(`${padded(testSuite, 'onTestSuiteResult')} (${this.normalizeFilename(testSuite.module)}) |${testSuite.name}|`)
+    this.calls.push(
+      `${padded(testSuite, 'onTestSuiteResult')} (${this.normalizeFilename(testSuite.module)}) |${testSuite.name}|`,
+    )
   }
 
   onTestModuleStart(module: TestModule) {
@@ -1200,30 +1240,40 @@ class CustomReporter implements Reporter {
   }
 
   onTestCaseReady(test: TestCase) {
-    this.calls.push(`${padded(test, 'onTestCaseReady')} (${this.normalizeFilename(test.module)}) |${test.name}|`)
+    this.calls.push(
+      `${padded(test, 'onTestCaseReady')} (${this.normalizeFilename(test.module)}) |${test.name}|`,
+    )
   }
 
   onTestCaseResult(test: TestCase) {
-    this.calls.push(`${padded(test, 'onTestCaseResult')} (${this.normalizeFilename(test.module)}) |${test.name}|`)
+    this.calls.push(
+      `${padded(test, 'onTestCaseResult')} (${this.normalizeFilename(test.module)}) |${test.name}|`,
+    )
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
     const task = this.ctx.state.idMap.get(log.taskId!)
-    const test = task && this.ctx.state.getReportedEntity(task) as TestCase
+    const test = task && (this.ctx.state.getReportedEntity(task) as TestCase)
 
-    this.logs.push(`onUserConsoleLog (${this.normalizeFilename(test!.module)}) |${test!.name}| > ${log.content.replaceAll('\n', '')}`)
+    this.logs.push(
+      `onUserConsoleLog (${this.normalizeFilename(test!.module)}) |${test!.name}| > ${log.content.replaceAll('\n', '')}`,
+    )
   }
 
   onHookStart(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type !== 'module' ? ` |${hook.entity.name}|` : ''
-    this.calls.push(`  ${padded(hook.entity, 'onHookStart', 19)} (${this.normalizeFilename(module)})${name} [${hook.name}]`)
+    this.calls.push(
+      `  ${padded(hook.entity, 'onHookStart', 19)} (${this.normalizeFilename(module)})${name} [${hook.name}]`,
+    )
   }
 
   onHookEnd(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type !== 'module' ? ` |${hook.entity.name}|` : ''
-    this.calls.push(`  ${padded(hook.entity, 'onHookEnd', 19)} (${this.normalizeFilename(module)})${name} [${hook.name}]`)
+    this.calls.push(
+      `  ${padded(hook.entity, 'onHookEnd', 19)} (${this.normalizeFilename(module)})${name} [${hook.name}]`,
+    )
   }
 
   normalizeFilename(module: TestModule) {
@@ -1235,8 +1285,7 @@ function normalizeFilename(module: TestModule, roots?: string[]) {
   const relative = (roots || [module.project.config.root]).reduce((acc, root) => {
     return acc.replace(root, '')
   }, module.moduleId)
-  return relative.replaceAll(sep, '/')
-    .substring(1)
+  return relative.replaceAll(sep, '/').substring(1)
 }
 
 function padded(entity: TestSuite | TestCase | TestModule, name: string, pad = 21) {
@@ -1255,8 +1304,7 @@ function getDepth(entity: TestSuite | TestCase | TestModule) {
     depth += 2
     if (parent.type !== 'module') {
       parent = parent.parent
-    }
-    else {
+    } else {
       break
     }
   }

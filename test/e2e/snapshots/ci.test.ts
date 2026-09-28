@@ -9,14 +9,18 @@ test('CI behavior', async () => {
   fs.rmSync(path.join(root, '__snapshots__'), { recursive: true, force: true })
 
   // snapshot fails with CI
-  let result = await runVitestCli({
-    nodeOptions: {
-      env: {
-        CI: 'true',
-        GITHUB_ACTIONS: 'true',
+  let result = await runVitestCli(
+    {
+      nodeOptions: {
+        env: {
+          CI: 'true',
+          GITHUB_ACTIONS: 'true',
+        },
       },
     },
-  }, '--root', root)
+    '--root',
+    root,
+  )
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯

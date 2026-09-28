@@ -3,8 +3,9 @@ import { runInlineTests, StableTestFileOrderSorter, ts } from '../../test-utils'
 
 // https://github.com/vitest-dev/vitest/issues/10577
 test('in-source tests are collected when another test file has already put the source file in the module cache', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    '1-math.test.ts': ts`
+  const { stderr, testTree } = await runInlineTests(
+    {
+      '1-math.test.ts': ts`
       import { expect, test } from 'vitest'
       import { add } from './2-math.js'
 
@@ -12,7 +13,7 @@ test('in-source tests are collected when another test file has already put the s
         expect(add(1, 2)).toBe(3)
       })
     `,
-    '2-math.ts': ts`
+      '2-math.ts': ts`
       export function add(a: number, b: number): number {
         return a + b
       }
@@ -24,17 +25,19 @@ test('in-source tests are collected when another test file has already put the s
         })
       }
     `,
-    'vitest.config.ts': {
-      test: {
-        includeSource: ['**/*.ts'],
-        // keep all files in a single worker so `2-math.ts` stays in the module cache
-        isolate: false,
-        maxWorkers: 1,
+      'vitest.config.ts': {
+        test: {
+          includeSource: ['**/*.ts'],
+          // keep all files in a single worker so `2-math.ts` stays in the module cache
+          isolate: false,
+          maxWorkers: 1,
+        },
       },
     },
-  }, {
-    sequence: { sequencer: StableTestFileOrderSorter },
-  })
+    {
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+  )
 
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
@@ -50,8 +53,9 @@ test('in-source tests are collected when another test file has already put the s
 })
 
 test('in-source tests in non-js files are transformed by extension-checking plugins when the module is cached', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    '1-math.test.ts': ts`
+  const { stderr, testTree } = await runInlineTests(
+    {
+      '1-math.test.ts': ts`
       import { expect, test } from 'vitest'
       import { add } from './2-math.custom'
 
@@ -59,7 +63,7 @@ test('in-source tests in non-js files are transformed by extension-checking plug
         expect(add(1, 2)).toBe(3)
       })
     `,
-    '2-math.custom': ts`
+      '2-math.custom': ts`
       lang custom
       export function add(a, b) {
         return a + b
@@ -72,7 +76,7 @@ test('in-source tests in non-js files are transformed by extension-checking plug
         })
       }
     `,
-    'vitest.config.ts': `
+      'vitest.config.ts': `
       import { defineConfig } from 'vitest/config'
 
       export default defineConfig({
@@ -94,9 +98,11 @@ test('in-source tests in non-js files are transformed by extension-checking plug
         },
       })
     `,
-  }, {
-    sequence: { sequencer: StableTestFileOrderSorter },
-  })
+    },
+    {
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+  )
 
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`

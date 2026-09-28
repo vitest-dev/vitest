@@ -11,56 +11,53 @@ import { runInlineTests, runVitest } from '#test-utils'
 const restore: Array<() => void> = []
 
 afterEach(() => {
-  restore.splice(0).forEach(fn => fn())
+  restore.splice(0).forEach((fn) => fn())
 })
 
 // Windows ignores the POSIX mode bits `chmodSync` sets on a directory, so there
 // the cache stays writable and this scenario cannot be staged at all.
-test.skipIf(process.platform === 'win32')('a cache directory that cannot be written to does not fail the run', async () => {
-  const cachePath = join(
-    import.meta.dirname,
-    '../fixtures/.tmp-readonly-module-cache',
-  )
-  rmSync(cachePath, { force: true, recursive: true })
-  mkdirSync(cachePath, { recursive: true })
-  chmodSync(cachePath, 0o555)
-  restore.push(() => {
-    chmodSync(cachePath, 0o755)
+test.skipIf(process.platform === 'win32')(
+  'a cache directory that cannot be written to does not fail the run',
+  async () => {
+    const cachePath = join(import.meta.dirname, '../fixtures/.tmp-readonly-module-cache')
     rmSync(cachePath, { force: true, recursive: true })
-  })
+    mkdirSync(cachePath, { recursive: true })
+    chmodSync(cachePath, 0o555)
+    restore.push(() => {
+      chmodSync(cachePath, 0o755)
+      rmSync(cachePath, { force: true, recursive: true })
+    })
 
-  const { stderr, testTree } = await runInlineTests(
-    {
-      'sum.js': `export const sum = (a, b) => a + b`,
-      'basic.test.js': /* js */ `
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'sum.js': `export const sum = (a, b) => a + b`,
+        'basic.test.js': /* js */ `
       import { expect, test } from "vitest"
       import { sum } from "./sum.js"
       test("still runs without a writable cache", () => {
         expect(sum(1, 2)).toBe(3)
       })
     `,
-    },
-    {
-      fsModuleCache: true,
-      fsModuleCachePath: cachePath,
-    },
-  )
+      },
+      {
+        fsModuleCache: true,
+        fsModuleCachePath: cachePath,
+      },
+    )
 
-  expect(stderr).toBe('')
-  expect(testTree()).toMatchObject({
-    'basic.test.js': {
-      'still runs without a writable cache': 'passed',
-    },
-  })
-  // nothing could be written, and that is fine
-  expect(readdirSync(cachePath)).toEqual([])
-})
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchObject({
+      'basic.test.js': {
+        'still runs without a writable cache': 'passed',
+      },
+    })
+    // nothing could be written, and that is fine
+    expect(readdirSync(cachePath)).toEqual([])
+  },
+)
 
 test('a cached file removed mid-run is re-transformed instead of failing', async () => {
-  const cachePath = join(
-    import.meta.dirname,
-    '../fixtures/.tmp-swept-module-cache',
-  )
+  const cachePath = join(import.meta.dirname, '../fixtures/.tmp-swept-module-cache')
   rmSync(cachePath, { force: true, recursive: true })
   restore.push(() => rmSync(cachePath, { force: true, recursive: true }))
 
@@ -112,10 +109,7 @@ test('a cached file removed mid-run is re-transformed instead of failing', async
 })
 
 test('the cache is still populated and reused when nothing interferes', async () => {
-  const cachePath = join(
-    import.meta.dirname,
-    '../fixtures/.tmp-healthy-module-cache',
-  )
+  const cachePath = join(import.meta.dirname, '../fixtures/.tmp-healthy-module-cache')
   rmSync(cachePath, { force: true, recursive: true })
   restore.push(() => rmSync(cachePath, { force: true, recursive: true }))
 
@@ -216,11 +210,7 @@ test('cached modules are invalidated after every lockfile change', async () => {
   const third = await run()
 
   expect([first.stderr, second.stderr, third.stderr]).toEqual(['', '', ''])
-  expect([
-    first.errorTree,
-    second.errorTree,
-    third.errorTree,
-  ]).toMatchInlineSnapshot(`
+  expect([first.errorTree, second.errorTree, third.errorTree]).toMatchInlineSnapshot(`
     [
       {
         "basic.test.js": {
