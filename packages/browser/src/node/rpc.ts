@@ -32,6 +32,7 @@ import {
   isValidApiRequest,
 } from 'vitest/node'
 import { WebSocketServer } from 'ws'
+import { slash } from './utils'
 
 const debug = createDebugger('vitest:browser:api')
 
@@ -293,7 +294,7 @@ export function setupBrowserRpc(
             for (const attachment of attachments) {
               const path = attachment.path
               if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
-                checkFileAccess(resolve(project.config.root, path))
+                checkFileAccess(resolve(project.config.root, slash(path)))
               }
             }
           }
@@ -304,7 +305,7 @@ export function setupBrowserRpc(
           return vitest._testRun.recordBenchmark(testId, benchmark)
         },
         async readBenchmarkResult(relativePath) {
-          checkFileAccess(project.benchmark.resolve(relativePath))
+          checkFileAccess(project.benchmark.resolve(slash(relativePath)))
           return project.benchmark.readResult(relativePath)
         },
         async writeBenchmarkResult(relativePath, data) {
@@ -314,7 +315,7 @@ export function setupBrowserRpc(
             )
             return
           }
-          checkFileAccess(project.benchmark.resolve(relativePath))
+          checkFileAccess(project.benchmark.resolve(slash(relativePath)))
           return project.benchmark.writeResult(relativePath, data)
         },
         async onTaskUpdate(method, packs, events) {
@@ -479,8 +480,9 @@ export function setupBrowserRpc(
             } else {
               if (module.type === 'redirect') {
                 const redirectUrl = new URL(module.redirect)
-                module.redirect = join(vite.config.root, redirectUrl.pathname)
-                checkFileAccess(module.redirect)
+                const redirect = join(vite.config.root, slash(redirectUrl.pathname))
+                checkFileAccess(redirect)
+                module.redirect = redirect
               }
               defaultMockerRegistry.register(module)
             }
