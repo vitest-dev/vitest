@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { expect, test, TestRunner } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runVitest, runVitestCli } from '#test-utils'
+import { runInlineTests, runVitest, runVitestCli } from '#test-utils'
 import { getDuration } from '../../../../packages/vitest/src/node/reporters/junit'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
@@ -385,4 +385,44 @@ test('resolves unhandled errors to the owning project in a multi-project workspa
     root: './fixtures/reporters/unhandled-errors-multi-project',
   })
   expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+})
+
+const failureScreenshotTest = /* ts */`
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { expect, recordArtifact, test } from 'vitest'
+
+test('failing test', async ({ task }) => {
+  const dir = resolve(import.meta.dirname, 'failure-screenshots')
+  mkdirSync(dir, { recursive: true })
+  const screenshot = resolve(dir, 'basic-test-failing-test-1.png')
+  writeFileSync(screenshot, 'not-a-real-png')
+  await recordArtifact(task, {
+    type: 'internal:failureScreenshot',
+    attachments: [{ contentType: 'image/png', path: screenshot, originalPath: screenshot }],
+  })
+  expect(1).toBe(2)
+})
+`
+
+test('emits [[ATTACHMENT]] for the failure screenshot', async () => {
+  const { ctx } = await runInlineTests(
+    { 'basic.test.ts': failureScreenshotTest },
+    { reporters: [['junit', { stackTrace: false }]] },
+  )
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchInlineSnapshot(`
+    "<?xml version="1.0" encoding="UTF-8" ?>
+    <testsuites name="vitest tests" tests="1" failures="1" errors="0" time="...">
+        <testsuite name="basic.test.ts" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">
+            <testcase classname="basic.test.ts" name="failing test" time="...">
+                <system-out>
+    [[ATTACHMENT|failure-screenshots/basic-test-failing-test-1.png]]
+                </system-out>
+                <failure message="expected 1 to be 2 // Object.is equality" type="AssertionError">
+                </failure>
+            </testcase>
+        </testsuite>
+    </testsuites>
+    "
+  `)
 })

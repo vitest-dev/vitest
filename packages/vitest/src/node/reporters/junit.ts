@@ -333,14 +333,32 @@ export class JUnitReporter implements Reporter {
     })
   }
 
+  private getFailureScreenshots(task: Task): string[] {
+    if (task.type !== 'test') {
+      return []
+    }
+
+    const screenshots: string[] = []
+    for (const artifact of task.artifacts) {
+      if (artifact.type !== 'internal:failureScreenshot') {
+        continue
+      }
+      for (const attachment of artifact.attachments) {
+        screenshots.push(relative(this.ctx.config.root, attachment.originalPath))
+      }
+    }
+    return screenshots
+  }
+
   async writeSystemOut(task: Task): Promise<void> {
     const logs
       = this.options.includeConsoleOutput && task.logs
         ? task.logs.filter(log => log.type === 'stdout')
         : []
     const benchmarks = task.type === 'test' ? task.benchmarks : []
+    const screenshots = this.getFailureScreenshots(task)
 
-    if (logs.length === 0 && benchmarks.length === 0) {
+    if (logs.length === 0 && benchmarks.length === 0 && screenshots.length === 0) {
       return
     }
 
@@ -353,6 +371,11 @@ export class JUnitReporter implements Reporter {
           await this.baseLog('')
         }
         await this.baseLog(escapeXML(renderBenchmarkTableText(benchmarks)))
+      }
+      // `[[ATTACHMENT|path]]` is the convention CI systems use to pick up files
+      // referenced from a test report.
+      for (const screenshot of screenshots) {
+        await this.baseLog(escapeXML(`[[ATTACHMENT|${screenshot}]]`))
       }
     })
   }
