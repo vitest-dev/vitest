@@ -277,6 +277,7 @@ export class FakeTimers {
   }
 }
 
+// Like fake-timers, read epochMilliseconds from Instant or ZonedDateTime without requiring built-in Temporal types.
 function toEpochMilliseconds(time?: string | number | Date | TemporalTimelike) {
   return time && typeof time === 'object' && 'epochMilliseconds' in time
     ? time.epochMilliseconds
