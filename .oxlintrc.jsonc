@@ -262,7 +262,22 @@
     {
       "files": ["packages/**"],
       "rules": {
-        "no-restricted-imports": ["error", { "paths": ["vitest", "path", "vitest/node"] }],
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "vitest",
+                "message": "Importing from vitest is restricted. Re-check the import and import the source directly instead if it's really needed.",
+              },
+              { "name": "path", "message": "Import from pathe instead" },
+              {
+                "name": "vitest/node",
+                "message": "Importing from vitest/node is restricted. Re-check the import and import the source directly instead if it's really needed.",
+              },
+            ],
+          },
+        ],
       },
     },
     {
