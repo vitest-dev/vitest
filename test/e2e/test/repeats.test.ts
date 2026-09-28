@@ -16,11 +16,11 @@ test('repeats config option is exposed to tests and repeats execution', async ()
   const testModule = ctx!.state.getReportedEntity(file)! as TestModule
   const tests = [...testModule.children.allTests()]
 
-  const fromConfig = tests.find(t => t.name === 'uses repeats from config')!
+  const fromConfig = tests.find((t) => t.name === 'uses repeats from config')!
   expect(fromConfig.options.repeats).toBe(3)
   expect(fromConfig.diagnostic()!.repeatCount).toBe(3)
 
-  const overridden = tests.find(t => t.name === 'test option overrides config')!
+  const overridden = tests.find((t) => t.name === 'test option overrides config')!
   expect(overridden.options.repeats).toBe(1)
   expect(overridden.diagnostic()!.repeatCount).toBe(1)
 })
@@ -62,7 +62,7 @@ test('retry count and errors are retained across repeats', async () => {
     }
   `)
   const [test] = results[0].children.allTests()
-  expect(test.result().errors?.map(error => error.message)).toMatchInlineSnapshot(`
+  expect(test.result().errors?.map((error) => error.message)).toMatchInlineSnapshot(`
     [
       "repeat 0, retry 0 failed",
       "repeat 1, retry 1 failed",

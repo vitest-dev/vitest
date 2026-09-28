@@ -4,17 +4,20 @@ import { runVitest, StableTestFileOrderSorter } from '../../test-utils'
 // Test to detect that there are no unexpected logs, like NodeJS MaxListenersExceededWarning
 
 describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool) => {
-  test.each([true, false])(`should not log anything unexpected { isolate: %s }`, async (isolate) => {
-    const { stdout, stderr } = await runVitest({
-      root: './fixtures/no-unexpected-logging',
-      pool,
-      isolate,
-      sequence: { sequencer: StableTestFileOrderSorter },
-    })
+  test.each([true, false])(
+    `should not log anything unexpected { isolate: %s }`,
+    async (isolate) => {
+      const { stdout, stderr } = await runVitest({
+        root: './fixtures/no-unexpected-logging',
+        pool,
+        isolate,
+        sequence: { sequencer: StableTestFileOrderSorter },
+      })
 
-    expect(stderr).toBe('')
+      expect(stderr).toBe('')
 
-    expect(normalizeOutput(stdout)).toBe(`
+      expect(normalizeOutput(stdout)).toBe(
+        `
  RUN  v[...]
 
  ✓ fixture-1.test.ts > test 1 [...]ms
@@ -35,8 +38,10 @@ describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool
    Start at  [...]
    Duration  [...]ms (<breakdown>)
 
-   `.trim())
-  })
+   `.trim(),
+      )
+    },
+  )
 })
 
 function normalizeOutput(stdtout: string) {

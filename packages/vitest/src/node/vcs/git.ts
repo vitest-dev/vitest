@@ -12,8 +12,7 @@ export class GitVCSProvider implements VCSProvider {
 
     try {
       result = await x('git', args, { nodeOptions: { cwd: this.root } })
-    }
-    catch (e: any) {
+    } catch (e: any) {
       e.message = e.stderr
 
       throw e
@@ -21,12 +20,12 @@ export class GitVCSProvider implements VCSProvider {
 
     return result.stdout
       .split('\n')
-      .filter(s => s !== '')
-      .map(changedPath => resolve(this.root, changedPath))
+      .filter((s) => s !== '')
+      .map((changedPath) => resolve(this.root, changedPath))
   }
 
   async findChangedFiles(options: VCSProviderOptions): Promise<string[]> {
-    const root = this.root || await this.getRoot(options.root)
+    const root = this.root || (await this.getRoot(options.root))
     if (!root) {
       throw new GitNotFoundError()
     }
@@ -42,19 +41,12 @@ export class GitVCSProvider implements VCSProvider {
       ])
       return [...committed, ...staged, ...unstaged]
     }
-    const [staged, unstaged] = await Promise.all([
-      this.getStagedFiles(),
-      this.getUnstagedFiles(),
-    ])
+    const [staged, unstaged] = await Promise.all([this.getStagedFiles(), this.getUnstagedFiles()])
     return [...staged, ...unstaged]
   }
 
   private getFilesSince(hash: string) {
-    return this.resolveFilesWithGitCommand([
-      'diff',
-      '--name-only',
-      `${hash}...HEAD`,
-    ])
+    return this.resolveFilesWithGitCommand(['diff', '--name-only', `${hash}...HEAD`])
   }
 
   private getStagedFiles() {
@@ -77,8 +69,7 @@ export class GitVCSProvider implements VCSProvider {
       const result = await x('git', args, { nodeOptions: { cwd } })
 
       return resolve(cwd, result.stdout.trim())
-    }
-    catch {
+    } catch {
       return null
     }
   }

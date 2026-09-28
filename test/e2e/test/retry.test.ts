@@ -160,12 +160,14 @@ test('expected failures can recover through a retry in every repeat', async () =
 
   const [test] = results[0].children.allTests()
   const attempts = test.attempts()
-  expect(attempts.map(attempt => ({
-    state: attempt.state,
-    errors: attempt.errors?.map(error => error.message) || [],
-    retryIndex: attempt.retryIndex,
-    repeatIndex: attempt.repeatIndex,
-  }))).toMatchInlineSnapshot(`
+  expect(
+    attempts.map((attempt) => ({
+      state: attempt.state,
+      errors: attempt.errors?.map((error) => error.message) || [],
+      retryIndex: attempt.retryIndex,
+      repeatIndex: attempt.repeatIndex,
+    })),
+  ).toMatchInlineSnapshot(`
     [
       {
         "errors": [

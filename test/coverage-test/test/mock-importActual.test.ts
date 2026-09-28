@@ -22,8 +22,7 @@ test('vi.importActual() collects coverage of original module', async () => {
         "statements": "2/2 (100%)",
       }
     `)
-  }
-  else {
+  } else {
     expect(coverageMap).toMatchInlineSnapshot(`
       {
         "branches": "0/0 (100%)",
@@ -35,7 +34,7 @@ test('vi.importActual() collects coverage of original module', async () => {
 
     const coverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/mock-target.ts')
     const functionCoverage = Object.keys(coverage.fnMap)
-      .map(index => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
+      .map((index) => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
       .sort((a, b) => a.name.localeCompare(b.name))
 
     expect(functionCoverage).toMatchInlineSnapshot(`

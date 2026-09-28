@@ -41,10 +41,7 @@ class ReportedTaskImplementation {
   public readonly location: { line: number; column: number } | undefined
 
   /** @internal */
-  protected constructor(
-    task: RunnerTask,
-    project: TestProject,
-  ) {
+  protected constructor(task: RunnerTask, project: TestProject) {
     this.task = task
     this.project = project
     this.id = task.id
@@ -71,7 +68,7 @@ class ReportedTaskImplementation {
    * Console logs recorded during the test execution.
    */
   public logs(): ReadonlyArray<UserConsoleLog> {
-    return [...this.task.logs || []]
+    return [...(this.task.logs || [])]
   }
 
   /**
@@ -126,8 +123,7 @@ export class TestCase extends ReportedTaskImplementation {
     const suite = this.task.suite
     if (suite) {
       this.parent = getReportedTask(project, suite) as TestSuite
-    }
-    else {
+    } else {
       this.parent = this.module
     }
     this.options = buildOptions(task)
@@ -141,8 +137,7 @@ export class TestCase extends ReportedTaskImplementation {
     if (this.#fullName === undefined) {
       if (this.parent.type !== 'module') {
         this.#fullName = `${this.parent.fullName} > ${this.name}`
-      }
-      else {
+      } else {
         this.#fullName = this.name
       }
     }
@@ -174,11 +169,12 @@ export class TestCase extends ReportedTaskImplementation {
         errors: undefined,
       }
     }
-    const state = result.state === 'fail'
-      ? 'failed' as const
-      : result.state === 'pass'
-        ? 'passed' as const
-        : 'skipped' as const
+    const state =
+      result.state === 'fail'
+        ? ('failed' as const)
+        : result.state === 'pass'
+          ? ('passed' as const)
+          : ('skipped' as const)
     if (state === 'skipped') {
       return {
         state,
@@ -202,12 +198,8 @@ export class TestCase extends ReportedTaskImplementation {
    * Individual results for every retry and repeat attempt.
    */
   public attempts(): ReadonlyArray<TestAttempt> {
-    return (this.task.result?.attempts || []).map(attempt => ({
-      state: attempt.state === 'pass'
-        ? 'passed'
-        : attempt.state === 'fail'
-          ? 'failed'
-          : 'skipped',
+    return (this.task.result?.attempts || []).map((attempt) => ({
+      state: attempt.state === 'pass' ? 'passed' : attempt.state === 'fail' ? 'failed' : 'skipped',
       errors: attempt.errors as TestError[] | undefined,
       duration: attempt.duration,
       startTime: attempt.startTime,
@@ -293,7 +285,10 @@ class TestCollection {
     if (index < 0) {
       index = this.size + index
     }
-    return getReportedTask(this.#project, this.#task.tasks[index]) as TestCase | TestSuite | undefined
+    return getReportedTask(this.#project, this.#task.tasks[index]) as
+      | TestCase
+      | TestSuite
+      | undefined
   }
 
   /**
@@ -313,18 +308,16 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  * allTests(state?: TestState): Generator<TestCase, undefined, void> {
+  *allTests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield* child.children.allTests(state)
-      }
-      else if (state) {
+      } else if (state) {
         const testState = child.result().state
         if (state === testState) {
           yield child
         }
-      }
-      else {
+      } else {
         yield child
       }
     }
@@ -333,7 +326,7 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  * tests(state?: TestState): Generator<TestCase, undefined, void> {
+  *tests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
@@ -344,8 +337,7 @@ class TestCollection {
         if (state === testState) {
           yield child
         }
-      }
-      else {
+      } else {
         yield child
       }
     }
@@ -354,7 +346,7 @@ class TestCollection {
   /**
    * Filters only the suites that are part of this collection.
    */
-  * suites(): Generator<TestSuite, undefined, void> {
+  *suites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -365,7 +357,7 @@ class TestCollection {
   /**
    * Filters all suites that are part of this collection and its children.
    */
-  * allSuites(): Generator<TestSuite, undefined, void> {
+  *allSuites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -374,7 +366,7 @@ class TestCollection {
     }
   }
 
-  * [Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
+  *[Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
     for (const task of this.#task.tasks) {
       yield getReportedTask(this.#project, task) as TestSuite | TestCase
     }
@@ -383,13 +375,15 @@ class TestCollection {
 
 export type { TestCollection }
 
-export type ReportedHookContext = {
-  readonly name: 'beforeAll' | 'afterAll'
-  readonly entity: TestSuite | TestModule
-} | {
-  readonly name: 'beforeEach' | 'afterEach'
-  readonly entity: TestCase
-}
+export type ReportedHookContext =
+  | {
+      readonly name: 'beforeAll' | 'afterAll'
+      readonly entity: TestSuite | TestModule
+    }
+  | {
+      readonly name: 'beforeEach' | 'afterEach'
+      readonly entity: TestCase
+    }
 
 abstract class SuiteImplementation extends ReportedTaskImplementation {
   /** @internal */
@@ -450,8 +444,7 @@ export class TestSuite extends SuiteImplementation {
     const suite = this.task.suite
     if (suite) {
       this.parent = getReportedTask(project, suite) as TestSuite
-    }
-    else {
+    } else {
       this.parent = this.module
     }
     this.options = buildOptions(task)
@@ -480,7 +473,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public toTestSpecification(): TestSpecification {
     const isTypecheck = this.task.meta.typecheck === true
-    const testIds = Array.from(this.children.allTests(), test => test.id)
+    const testIds = Array.from(this.children.allTests(), (test) => test.id)
     return this.project.createSpecification(
       this.module.moduleId,
       { testIds },
@@ -495,8 +488,7 @@ export class TestSuite extends SuiteImplementation {
     if (this.#fullName === undefined) {
       if (this.parent.type !== 'module') {
         this.#fullName = `${this.parent.fullName} > ${this.name}`
-      }
-      else {
+      } else {
         this.#fullName = this.name
       }
     }
@@ -546,7 +538,7 @@ export class TestModule extends SuiteImplementation {
     const isTypecheck = this.task.meta.typecheck === true
     return this.project.createSpecification(
       this.moduleId,
-      testCases?.length ? { testIds: testCases.map(t => t.id) } : undefined,
+      testCases?.length ? { testIds: testCases.map((t) => t.id) } : undefined,
       isTypecheck ? 'typecheck' : undefined,
     )
   }
@@ -614,9 +606,7 @@ export interface TaskOptions {
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
-function buildOptions(
-  task: RunnerTestCase | RunnerTestSuite,
-): TaskOptions {
+function buildOptions(task: RunnerTestCase | RunnerTestSuite): TaskOptions {
   return {
     each: task.each,
     fails: task.type === 'test' && task.fails,
@@ -655,11 +645,7 @@ export interface TestAttempt {
   readonly repeatIndex: number
 }
 
-export type TestResult
-  = | TestResultPassed
-    | TestResultFailed
-    | TestResultSkipped
-    | TestResultPending
+export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped | TestResultPending
 
 export interface TestResultPending {
   /**
@@ -812,9 +798,7 @@ function getReportedTask(
 ): TestCase | TestSuite | TestModule {
   const reportedTask = project.vitest.state.getReportedEntity(runnerTask)
   if (!reportedTask) {
-    throw new Error(
-      `Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`,
-    )
+    throw new Error(`Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`)
   }
   return reportedTask
 }
@@ -840,7 +824,11 @@ function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {
 export function experimental_getRunnerTask(entity: TestCase): RunnerTestCase
 export function experimental_getRunnerTask(entity: TestSuite): RunnerTestSuite
 export function experimental_getRunnerTask(entity: TestModule): RunnerTestFile
-export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase
-export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase {
+export function experimental_getRunnerTask(
+  entity: TestCase | TestSuite | TestModule,
+): RunnerTestSuite | RunnerTestFile | RunnerTestCase
+export function experimental_getRunnerTask(
+  entity: TestCase | TestSuite | TestModule,
+): RunnerTestSuite | RunnerTestFile | RunnerTestCase {
   return entity.task
 }

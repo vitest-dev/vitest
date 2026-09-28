@@ -21,16 +21,11 @@ export function setupInspect(ctx: ContextRPC) {
     const isOpen = inspector.url() !== undefined
 
     if (!isOpen) {
-      inspector.open(
-        config.inspector.port,
-        config.inspector.host,
-        config.inspector.waitForDebugger,
-      )
+      inspector.open(config.inspector.port, config.inspector.host, config.inspector.waitForDebugger)
 
       if (config.inspectBrk) {
-        const firstTestFile = typeof ctx.files[0] === 'string'
-          ? ctx.files[0]
-          : ctx.files[0].filepath
+        const firstTestFile =
+          typeof ctx.files[0] === 'string' ? ctx.files[0] : ctx.files[0].filepath
 
         // Stop at first test file
         if (firstTestFile) {

@@ -11,7 +11,7 @@ test('same snapshots in single test', async () => {
   // reset snapshot
   const root = join(import.meta.dirname, 'fixtures/inline-multiple-calls')
   const testFile = join(root, 'same.test.ts')
-  editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
+  editFile(testFile, (s) => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
 
   // initial run (create snapshot)
   let vitest = await runVitest({
@@ -38,7 +38,9 @@ test('same snapshots in single test', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   // no-update run
   vitest = await runVitest({
@@ -65,7 +67,9 @@ test('same snapshots in single test', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   // update run
   vitest = await runVitest({
@@ -91,7 +95,9 @@ test('same snapshots in single test', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 })
 
 test('same snapshots in multiple tests', async () => {
@@ -100,7 +106,7 @@ test('same snapshots in multiple tests', async () => {
   // reset snapshot
   const root = join(import.meta.dirname, 'fixtures/inline-multiple-calls')
   const testFile = join(root, 'same2.test.ts')
-  editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
+  editFile(testFile, (s) => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
 
   // initial run (create snapshot)
   let vitest = await runVitest({
@@ -127,7 +133,9 @@ test('same snapshots in multiple tests', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   // no-update run
   vitest = await runVitest({
@@ -154,7 +162,9 @@ test('same snapshots in multiple tests', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   // update run
   vitest = await runVitest({
@@ -180,7 +190,9 @@ test('same snapshots in multiple tests', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 })
 
 test('different snapshots in single test', async () => {
@@ -189,7 +201,7 @@ test('different snapshots in single test', async () => {
   // reset snapshot
   const root = join(import.meta.dirname, 'fixtures/inline-multiple-calls')
   const testFile = join(root, 'different.test.ts')
-  editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
+  editFile(testFile, (s) => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
 
   // update run should fail
   let vitest = await runVitest({
@@ -216,8 +228,7 @@ Received: ""test2""
     expect(vitest.stderr).toContain(`
 Error: Snapshot \`single 1\` mismatched
 `)
-  }
-  else {
+  } else {
     expect(vitest.stderr).toContain(`
 Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
 
@@ -228,7 +239,12 @@ Received: ""test2""
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot()')
 
   // current snapshot is "test1"
-  editFile(testFile, s => s.replace('expect(value).toMatchInlineSnapshot()', 'expect(value).toMatchInlineSnapshot(`"test1"`)'))
+  editFile(testFile, (s) =>
+    s.replace(
+      'expect(value).toMatchInlineSnapshot()',
+      'expect(value).toMatchInlineSnapshot(`"test1"`)',
+    ),
+  )
   vitest = await runVitest({
     root,
     include: [testFile],
@@ -240,7 +256,9 @@ Error: toMatchInlineSnapshot with different snapshots cannot be called at the sa
 Expected: ""test1""
 Received: ""test2""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   vitest = await runVitest({
     root,
@@ -253,10 +271,17 @@ Error: toMatchInlineSnapshot with different snapshots cannot be called at the sa
 Expected: ""test1""
 Received: ""test2""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   // current snapshot is "test2"
-  editFile(testFile, s => s.replace('expect(value).toMatchInlineSnapshot(`"test1"`)', 'expect(value).toMatchInlineSnapshot(`"test2"`)'))
+  editFile(testFile, (s) =>
+    s.replace(
+      'expect(value).toMatchInlineSnapshot(`"test1"`)',
+      'expect(value).toMatchInlineSnapshot(`"test2"`)',
+    ),
+  )
   vitest = await runVitest({
     root,
     include: [testFile],
@@ -268,7 +293,9 @@ Error: toMatchInlineSnapshot with different snapshots cannot be called at the sa
 Expected: ""test1""
 Received: ""test2""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test2"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test2"`)',
+  )
 
   vitest = await runVitest({
     root,
@@ -281,7 +308,9 @@ Error: Snapshot \`single 1\` mismatched
 Expected: ""test2""
 Received: ""test1""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test2"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test2"`)',
+  )
 })
 
 test('different snapshots in multiple tests', async () => {
@@ -290,7 +319,7 @@ test('different snapshots in multiple tests', async () => {
   // reset snapshot
   const root = join(import.meta.dirname, 'fixtures/inline-multiple-calls')
   const testFile = join(root, 'different2.test.ts')
-  editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
+  editFile(testFile, (s) => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
 
   // update run should fail
   let vitest = await runVitest({
@@ -317,8 +346,7 @@ Received: ""test2""
     expect(vitest.stderr).toContain(`
 Error: Snapshot \`a 1\` mismatched
 `)
-  }
-  else {
+  } else {
     expect(vitest.stderr).toContain(`
 Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
 
@@ -329,7 +357,12 @@ Received: ""test2""
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot()')
 
   // current snapshot is "test1"
-  editFile(testFile, s => s.replace('expect(value).toMatchInlineSnapshot()', 'expect(value).toMatchInlineSnapshot(`"test1"`)'))
+  editFile(testFile, (s) =>
+    s.replace(
+      'expect(value).toMatchInlineSnapshot()',
+      'expect(value).toMatchInlineSnapshot(`"test1"`)',
+    ),
+  )
   vitest = await runVitest({
     root,
     include: [testFile],
@@ -341,7 +374,9 @@ Error: toMatchInlineSnapshot with different snapshots cannot be called at the sa
 Expected: ""test1""
 Received: ""test2""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   vitest = await runVitest({
     root,
@@ -354,10 +389,17 @@ Error: toMatchInlineSnapshot with different snapshots cannot be called at the sa
 Expected: ""test1""
 Received: ""test2""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test1"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test1"`)',
+  )
 
   // current snapshot is "test2"
-  editFile(testFile, s => s.replace('expect(value).toMatchInlineSnapshot(`"test1"`)', 'expect(value).toMatchInlineSnapshot(`"test2"`)'))
+  editFile(testFile, (s) =>
+    s.replace(
+      'expect(value).toMatchInlineSnapshot(`"test1"`)',
+      'expect(value).toMatchInlineSnapshot(`"test2"`)',
+    ),
+  )
   vitest = await runVitest({
     root,
     include: [testFile],
@@ -369,7 +411,9 @@ Error: toMatchInlineSnapshot with different snapshots cannot be called at the sa
 Expected: ""test1""
 Received: ""test2""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test2"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test2"`)',
+  )
 
   vitest = await runVitest({
     root,
@@ -382,7 +426,9 @@ Error: Snapshot \`a 1\` mismatched
 Expected: ""test2""
 Received: ""test1""
 `)
-  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(value).toMatchInlineSnapshot(`"test2"`)')
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain(
+    'expect(value).toMatchInlineSnapshot(`"test2"`)',
+  )
 })
 
 test('test.each/for', async () => {
@@ -390,9 +436,14 @@ test('test.each/for', async () => {
   const testFile = join(root, 'each.test.ts')
 
   // remove inline snapshots
-  editFile(testFile, s => s
-    .replace(/toMatchInlineSnapshot\(`[^`]*`\)/g, 'toMatchInlineSnapshot()')
-    .replace(/toThrowErrorMatchingInlineSnapshot\(`[^`]*`\)/g, 'toThrowErrorMatchingInlineSnapshot()'))
+  editFile(testFile, (s) =>
+    s
+      .replace(/toMatchInlineSnapshot\(`[^`]*`\)/g, 'toMatchInlineSnapshot()')
+      .replace(
+        /toThrowErrorMatchingInlineSnapshot\(`[^`]*`\)/g,
+        'toThrowErrorMatchingInlineSnapshot()',
+      ),
+  )
 
   // create snapshots from scratch
   let result = await runVitest({ root, include: [testFile], update: 'new' })
@@ -453,7 +504,7 @@ test('test.each/for', async () => {
   `)
 
   // edit tests to introduce errors
-  editFile(testFile, s => s.replaceAll(`"hello"`, `"hey"`))
+  editFile(testFile, (s) => s.replaceAll(`"hello"`, `"hey"`))
 
   // fails with update=false
   result = await runVitest({ root, include: [testFile], update: false })

@@ -32,14 +32,11 @@ export class TapReporter implements Reporter {
   static getComment(task: Task): string {
     if (task.mode === 'skip') {
       return ' # SKIP'
-    }
-    else if (task.mode === 'todo') {
+    } else if (task.mode === 'todo') {
       return ' # TODO'
-    }
-    else if (task.result?.duration != null) {
+    } else if (task.result?.duration != null) {
       return ` # time=${task.result.duration.toFixed(2)}ms`
-    }
-    else {
+    } else {
       return ''
     }
   }
@@ -51,9 +48,7 @@ export class TapReporter implements Reporter {
 
     if (stack) {
       // For compatibility with tap-mocha-reporter
-      this.logger.log(
-        `stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`,
-      )
+      this.logger.log(`stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
     }
   }
 
@@ -63,10 +58,8 @@ export class TapReporter implements Reporter {
     for (const [i, task] of tasks.entries()) {
       const id = i + 1
 
-      const ok
-        = task.result?.state === 'pass'
-          || task.mode === 'skip'
-          || task.mode === 'todo'
+      const ok =
+        task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo'
           ? 'ok'
           : 'not ok'
 
@@ -80,8 +73,7 @@ export class TapReporter implements Reporter {
         this.logger.unindent()
 
         this.logger.log('}')
-      }
-      else {
+      } else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
         const project = this.ctx.getProjectByName(task.file.projectName || '')
@@ -98,11 +90,12 @@ export class TapReporter implements Reporter {
           this.logger.indent()
 
           task.result.errors.forEach((error) => {
-            const stacks = task.file.pool === 'browser'
-              ? (project.browser?.parseErrorStacktrace(error) || [])
-              : parseErrorStacktrace(error, {
-                  frameFilter: this.ctx.config.onStackTrace,
-                })
+            const stacks =
+              task.file.pool === 'browser'
+                ? project.browser?.parseErrorStacktrace(error) || []
+                : parseErrorStacktrace(error, {
+                    frameFilter: this.ctx.config.onStackTrace,
+                  })
             const stack = stacks[0]
 
             this.logger.log('---')
@@ -113,11 +106,7 @@ export class TapReporter implements Reporter {
             this.logger.unindent()
 
             if (stack) {
-              this.logger.log(
-                `at: ${yamlString(
-                  `${stack.file}:${stack.line}:${stack.column}`,
-                )}`,
-              )
+              this.logger.log(`at: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
             }
 
             if (error.showDiff) {
@@ -134,7 +123,7 @@ export class TapReporter implements Reporter {
   }
 
   onTestRunEnd(testModules: ReadonlyArray<TestModule>): void {
-    const files = testModules.map(testModule => testModule.task)
+    const files = testModules.map((testModule) => testModule.task)
 
     this.logger.log('TAP version 13')
 

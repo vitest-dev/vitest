@@ -38,20 +38,15 @@ const checkedResult = computed(() => {
 
   const satisfies = (targetVersion: string) => {
     const compared = parseVersion(targetVersion)!
-    return (
-      parsedVersion.major === compared.major
-      && parsedVersion.minor >= compared.minor
-    )
+    return parsedVersion.major === compared.major && parsedVersion.minor >= compared.minor
   }
-  const satisfiesOneSupportedVersion
-    = parsedVersion.major >= parsedViteVersion.major // Treat future major versions as supported
-      || supportInfo.regularPatches.some(satisfies)
-      || supportInfo.importantFixes.some(satisfies)
-      || supportInfo.securityPatches.some(satisfies)
+  const satisfiesOneSupportedVersion =
+    parsedVersion.major >= parsedViteVersion.major || // Treat future major versions as supported
+    supportInfo.regularPatches.some(satisfies) ||
+    supportInfo.importantFixes.some(satisfies) ||
+    supportInfo.securityPatches.some(satisfies)
 
-  return satisfiesOneSupportedVersion
-    ? supportedVersionMessage
-    : notSupportedVersionMessage
+  return satisfiesOneSupportedVersion ? supportedVersionMessage : notSupportedVersionMessage
 })
 
 function parseVersion(version: string) {
@@ -68,13 +63,11 @@ function parseVersion(version: string) {
   return { major, minor, patch }
 }
 
-function computeSupportInfo(
-  version: NonNullable<ReturnType<typeof parseVersion>>,
-) {
+function computeSupportInfo(version: NonNullable<ReturnType<typeof parseVersion>>) {
   const { major, minor } = version
   const f = (versions: string[]) => {
     return versions
-      .map(v => previousMajorLatestMinors[v] ?? v)
+      .map((v) => previousMajorLatestMinors[v] ?? v)
       .filter((version) => {
         if (!isValidVitestVersion(version)) {
           return false
@@ -96,16 +89,14 @@ function computeSupportInfo(
 }
 
 function versionsToText(versions: string[]) {
-  versions = versions.map(v => `<code>vitest@${v}</code>`)
+  versions = versions.map((v) => `<code>vitest@${v}</code>`)
   if (versions.length === 0) {
     return ''
   }
   if (versions.length === 1) {
     return versions[0]
   }
-  return (
-    `${versions.slice(0, -1).join(', ')} and ${versions.at(-1)}`
-  )
+  return `${versions.slice(0, -1).join(', ')} and ${versions.at(-1)}`
 }
 
 function isValidVitestVersion(version: string) {
@@ -132,21 +123,14 @@ function isValidVitestVersion(version: string) {
         <span v-html="versionsToText(supportInfo.importantFixes)" />.
       </li>
       <li>
-        All versions before these are no longer supported. Users should upgrade
-        to receive updates.
+        All versions before these are no longer supported. Users should upgrade to receive updates.
       </li>
     </ul>
     <p>
       If you're using Vitest
-      <input
-        v-model="checkedVersion"
-        class="checked-input"
-        type="text"
-        placeholder="0.0.0"
-      >, it is
-      <strong :style="{ color: checkedResult.color }">{{
-        checkedResult.text
-      }}</strong>.
+      <input v-model="checkedVersion" class="checked-input" type="text" placeholder="0.0.0" />, it
+      is <strong :style="{ color: checkedResult.color }">{{ checkedResult.text }}</strong
+      >.
     </p>
   </div>
 </template>

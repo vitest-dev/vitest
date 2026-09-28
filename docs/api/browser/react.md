@@ -49,6 +49,7 @@ import { render } from 'vitest-browser-react'
 const screen = render(<Component />) // [!code --]
 const screen = await render(<Component />) // [!code ++]
 ```
+
 :::
 
 ### Options
@@ -258,6 +259,7 @@ await renderHook(() => {}, {
   wrapper: createWrapper(Wrapper, { value: 'foo' }),
 })
 ```
+
 :::
 
 `renderHook` returns a few useful methods and properties:

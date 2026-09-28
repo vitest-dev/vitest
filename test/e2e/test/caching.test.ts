@@ -1,11 +1,15 @@
 import { expect, test } from 'vitest'
 import { runVitest, useFS } from '../../test-utils'
 
-test('if file has import.meta.glob, it\'s not cached', async () => {
-  const { createFile } = useFS('./fixtures/caching/import-meta-glob/generated', {
-    1: '1',
-    2: '2',
-  }, false)
+test("if file has import.meta.glob, it's not cached", async () => {
+  const { createFile } = useFS(
+    './fixtures/caching/import-meta-glob/generated',
+    {
+      1: '1',
+      2: '2',
+    },
+    false,
+  )
 
   const { errorTree: errorTree1 } = await runVitest({
     root: './fixtures/caching/import-meta-glob',
@@ -29,11 +33,7 @@ test('if file has import.meta.glob, it\'s not cached', async () => {
   const { errorTree: errorTree2 } = await runVitest({
     root: './fixtures/caching/import-meta-glob',
     provide: {
-      generated: [
-        './generated/1',
-        './generated/2',
-        './generated/3',
-      ],
+      generated: ['./generated/1', './generated/2', './generated/3'],
     },
     fsModuleCache: true,
     fsModuleCachePath: './node_modules/.vitest-fs-cache',

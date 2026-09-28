@@ -33,11 +33,7 @@ export default function toHaveRole(
       const to = this.isNot ? 'not to' : 'to'
       return getMessage(
         this,
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toHaveRole`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toHaveRole`, 'element', ''),
         `Expected element ${to} have role`,
         expectedRole,
         'Received',

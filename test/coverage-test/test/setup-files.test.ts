@@ -24,7 +24,7 @@ test('tests with multiple suites are covered (#3514)', async () => {
   const files = coverageMap.files()
 
   // Setup files should be excluded from report
-  expect(files.find(file => file.includes('setup.ts'))).toBeFalsy()
+  expect(files.find((file) => file.includes('setup.ts'))).toBeFalsy()
 
   // Some valid coverage should be reported
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')

@@ -35,7 +35,10 @@ function triggerCommand<T>(command: string, args: any[], error?: Error) {
   return getBrowserState().commands.triggerCommand<T>(command, args, error)
 }
 
-export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
+export function createUserEvent(
+  __tl_user_event_base__?: TestingLibraryUserEvent,
+  options?: TestingLibraryOptions,
+): UserEvent {
   if (__tl_user_event_base__) {
     return createPreviewUserEvent(__tl_user_event_base__, options ?? {})
   }
@@ -46,11 +49,8 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
 
   // https://playwright.dev/docs/api/class-keyboard
   // https://webdriver.io/docs/api/browser/keys/
-  const modifier = provider === 'playwright'
-    ? 'ControlOrMeta'
-    : provider === 'webdriverio'
-      ? 'Ctrl'
-      : 'Control'
+  const modifier =
+    provider === 'playwright' ? 'ControlOrMeta' : provider === 'webdriverio' ? 'Ctrl' : 'Control'
 
   const userEvent: UserEvent = {
     setup() {
@@ -110,18 +110,14 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         const serializedElement = await serializeElement(element, options)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_type',
-          [
-            serializedElement,
-            text,
-            { ...options, unreleased: keyboard.unreleased },
-          ],
+          [serializedElement, text, { ...options, unreleased: keyboard.unreleased }],
           error,
         )
         keyboard.unreleased = unreleased
       })
     },
     tab(options = {}) {
-      return ensureAwaited(error => triggerCommand('__vitest_tab', [options], error))
+      return ensureAwaited((error) => triggerCommand('__vitest_tab', [options], error))
     },
     keyboard(text) {
       return ensureAwaited(async (error) => {
@@ -146,9 +142,12 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
   return userEvent
 }
 
-function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
+function createPreviewUserEvent(
+  userEventBase: TestingLibraryUserEvent,
+  options?: TestingLibraryOptions,
+): UserEvent {
   let userEvent = userEventBase.setup({
-    advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
+    advanceTimers: (delay) => vi.advanceTimersByTimeAsync(delay),
     ...options,
   })
   let clipboardData: DataTransfer | undefined
@@ -163,7 +162,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
     },
     async cleanup() {
       userEvent = userEventBase.setup({
-        advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
+        advanceTimers: (delay) => vi.advanceTimersByTimeAsync(delay),
         ...options,
       })
     },
@@ -183,10 +182,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
         }
         return option
       })
-      await userEvent.selectOptions(
-        toElement(element),
-        options as string[] | HTMLElement[],
-      )
+      await userEvent.selectOptions(toElement(element), options as string[] | HTMLElement[])
     },
     async clear(element) {
       await userEvent.clear(toElement(element))
@@ -203,15 +199,19 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
           return file
         }
 
-        const { content: base64, basename, mime } = await triggerCommand<{
+        const {
+          content: base64,
+          basename,
+          mime,
+        } = await triggerCommand<{
           content: string
           basename: string
           mime: string
         }>('__vitest_fileInfo', [file, 'base64'])
 
         const fileInstance = fetch(`data:${mime};base64,${base64}`)
-          .then(r => r.blob())
-          .then(blob => new File([blob], basename, { type: mime }))
+          .then((r) => r.blob())
+          .then((blob) => new File([blob], basename, { type: mime }))
         return fileInstance
       })
       const uploadFiles = await Promise.all(uploadPromise)
@@ -274,7 +274,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
 
   for (const [name, fn] of Object.entries(vitestUserEvent)) {
     if (name !== 'setup') {
-      (vitestUserEvent as any)[name] = function (this: any, ...args: any[]) {
+      ;(vitestUserEvent as any)[name] = function (this: any, ...args: any[]) {
         return ensureAwaited(() => fn.apply(this, args))
       }
     }
@@ -318,9 +318,9 @@ export const page: BrowserPage = {
 
     if (currentTest.concurrent) {
       throw new Error(
-        'Cannot take a screenshot in a concurrent test because '
-        + 'concurrent tests run at the same time in the same iframe and affect each other\'s environment. '
-        + 'Use a non-concurrent test to take a screenshot.',
+        'Cannot take a screenshot in a concurrent test because ' +
+          "concurrent tests run at the same time in the same iframe and affect each other's environment. " +
+          'Use a non-concurrent test to take a screenshot.',
       )
     }
 
@@ -331,14 +331,13 @@ export const page: BrowserPage = {
     screenshotIds[repeatCount] ??= {}
     screenshotIds[repeatCount][taskName] = number + 1
 
-    const name
-      = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
+    const name = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
     return new ScreenshotAction(name, options, async () => {
       const [element, ...mask] = await Promise.all([
         options.element ? serializeElement(options.element, options) : undefined,
         ...('mask' in options
-          ? (options.mask as Array<Element | Locator>).map(el => serializeElement(el, options))
+          ? (options.mask as Array<Element | Locator>).map((el) => serializeElement(el, options))
           : []),
       ])
       return 'mask' in options ? { element, mask } : { element }
@@ -351,7 +350,8 @@ export const page: BrowserPage = {
   ): any {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const hasActiveTraceView = !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
+    const hasActiveTraceView =
+      !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
 
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
@@ -360,10 +360,12 @@ export const page: BrowserPage = {
         if (hasActiveTrace) {
           await triggerCommand(
             '__vitest_groupTraceStart',
-            [{
-              name,
-              stack: options?.stack ?? error?.stack,
-            }],
+            [
+              {
+                name,
+                stack: options?.stack ?? error?.stack,
+              },
+            ],
             error,
           )
         }
@@ -377,12 +379,10 @@ export const page: BrowserPage = {
         }
         try {
           return await bodyOrOptions()
-        }
-        catch (err) {
+        } catch (err) {
           status = 'fail'
           throw err
-        }
-        finally {
+        } finally {
           if (hasActiveTraceView) {
             await recordBrowserTraceEntry(currentTest, {
               name,
@@ -416,10 +416,12 @@ export const page: BrowserPage = {
       }
       return triggerCommand(
         '__vitest_markTrace',
-        [{
-          name,
-          stack: bodyOrOptions?.stack ?? error?.stack,
-        }],
+        [
+          {
+            name,
+            stack: bodyOrOptions?.stack ?? error?.stack,
+          },
+        ],
         error,
       )
     })
@@ -453,7 +455,7 @@ export const page: BrowserPage = {
   },
   extend(methods) {
     for (const key in methods) {
-      (page as any)[key] = (methods as any)[key].bind(page)
+      ;(page as any)[key] = (methods as any)[key].bind(page)
     }
     return page
   },
@@ -501,9 +503,10 @@ function getElementLocatorSelectors(element: Element): LocatorSelectors {
   return {
     getByAltText: (altText, options) => locator.getByAltText(altText, options),
     getByLabelText: (labelText, options) => locator.getByLabelText(labelText, options),
-    getByPlaceholder: (placeholderText, options) => locator.getByPlaceholder(placeholderText, options),
+    getByPlaceholder: (placeholderText, options) =>
+      locator.getByPlaceholder(placeholderText, options),
     getByRole: (role, options) => locator.getByRole(role, options),
-    getByTestId: testId => locator.getByTestId(testId),
+    getByTestId: (testId) => locator.getByTestId(testId),
     getByText: (text, options) => locator.getByText(text, options),
     getByTitle: (title, options) => locator.getByTitle(title, options),
     ...Array.from(__INTERNAL._extendedMethods).reduce((methods, method) => {
@@ -523,18 +526,19 @@ function debug(
   options?: PrettyDOMOptions,
 ): void {
   if (Array.isArray(el)) {
-    // eslint-disable-next-line no-console
-    el.forEach(e => console.log(prettyDOM(e, maxLength, options)))
-  }
-  else {
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
+    el.forEach((e) => console.log(prettyDOM(e, maxLength, options)))
+  } else {
+    // oxlint-disable-next-line no-console
     console.log(prettyDOM(el, maxLength, options))
   }
 }
 
 function prettyDOM(
   dom?: Element | Locator | undefined | null,
-  maxLength: number = Number(defaultOptions?.maxLength ?? import.meta.env.DEBUG_PRINT_LIMIT ?? 7000),
+  maxLength: number = Number(
+    defaultOptions?.maxLength ?? import.meta.env.DEBUG_PRINT_LIMIT ?? 7000,
+  ),
   prettyFormatOptions: PrettyDOMOptions = {},
 ): string {
   if (maxLength === 0) {
@@ -561,13 +565,14 @@ function prettyDOM(
     ...defaultOptions,
     ...prettyFormatOptions,
   })
-  return dom.outerHTML.length > maxLength
-    ? `${pretty.slice(0, maxLength)}...`
-    : pretty
+  return dom.outerHTML.length > maxLength ? `${pretty.slice(0, maxLength)}...` : pretty
 }
 
 function getElementError(selector: string | Locator, container: Element): Error {
-  const locator = typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()
+  const locator =
+    typeof selector === 'string'
+      ? __INTERNAL._asLocator('javascript', selector)
+      : selector.asLocator()
   const formatted = formatDOM(container)
   const error = new Error(`Cannot find element with locator: ${locator}\n\n${formatted}`)
   error.name = 'VitestBrowserElementError'

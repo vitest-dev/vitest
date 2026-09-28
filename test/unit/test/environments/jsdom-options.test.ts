@@ -13,8 +13,7 @@ test.runIf(isThreads)('sets userAgent during global setup', async () => {
 
   try {
     expect(global.navigator.userAgent).toBe(userAgent)
-  }
-  finally {
+  } finally {
     await environment.teardown(global)
   }
 })
@@ -27,8 +26,7 @@ test.runIf(isThreads)('sets userAgent during VM setup', async () => {
 
   try {
     expect(environment.getVmContext().navigator.userAgent).toBe(userAgent)
-  }
-  finally {
+  } finally {
     await environment.teardown()
   }
 })

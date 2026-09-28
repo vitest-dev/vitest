@@ -33,8 +33,9 @@ describe('dangerouslyIgnoreUnhandledErrors', () => {
   })
 
   function runUnhandledTest(config: RunVitestConfig) {
-    return runInlineTests({
-      'throw-errors.test.js': /* js */`
+    return runInlineTests(
+      {
+        'throw-errors.test.js': /* js */ `
         import { test } from "vitest"
 
         test("Some test", () => {
@@ -43,23 +44,30 @@ describe('dangerouslyIgnoreUnhandledErrors', () => {
 
         new Promise((_, reject) => reject(new Error("intentional unhandled error")))
       `,
-    }, config, { fails: true })
+      },
+      config,
+      { fails: true },
+    )
   }
 })
 
 test('unhandled rejections of main thread are reported even when no reporter is used', async () => {
-  const { stderr, exitCode } = await runInlineTests({
-    'setup-unhandled-rejections.js': /* ts */`
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'setup-unhandled-rejections.js': /* ts */ `
       export function setup() {
         void new Promise((_, reject) => reject(new Error('intentional unhandled rejection')))
       }
     `,
-    'example.test.js': '', // won't run
-  }, {
-    config: false,
-    globalSetup: ['setup-unhandled-rejections.js'],
-    reporters: [{ onInit: () => {} }],
-  }, { fails: true })
+      'example.test.js': '', // won't run
+    },
+    {
+      config: false,
+      globalSetup: ['setup-unhandled-rejections.js'],
+      reporters: [{ onInit: () => {} }],
+    },
+    { fails: true },
+  )
 
   expect(exitCode).toBe(1)
   expect(stderr).toContain('Unhandled Rejection')

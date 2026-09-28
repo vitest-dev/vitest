@@ -10,7 +10,9 @@ const fastBenchOptions = {
   warmupIterations: 0,
 }
 
-test('perProject registrations flow through the browser RPC (onTestBenchmark)', async ({ bench }) => {
+test('perProject registrations flow through the browser RPC (onTestBenchmark)', async ({
+  bench,
+}) => {
   await bench('1 + 1', { perProject: true }, () => {
     const result = 1 + 1
     expect.assert(result === 2)
@@ -23,8 +25,12 @@ test('perProject registrations flow through the browser RPC (onTestBenchmark)', 
 
 test('bench.compare resolves a BenchStorage in the browser', async ({ bench }) => {
   const storage = await bench.compare(
-    bench('a', () => { const _ = 1 + 1 }),
-    bench('b', () => { const _ = 1 + 2 }),
+    bench('a', () => {
+      const _ = 1 + 1
+    }),
+    bench('b', () => {
+      const _ = 1 + 2
+    }),
     fastBenchOptions,
   )
   // runtime smoke — every registration is accessible with a valid BenchResult

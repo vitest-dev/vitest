@@ -24,8 +24,7 @@ export class FilesStatsCache {
     try {
       const stats = await fs.promises.stat(fsPath)
       this.cache.set(key, { size: stats.size })
-    }
-    catch {
+    } catch {
       // the file can be deleted while the stat is in flight; a file
       // without stats only loses sorting heuristics
     }

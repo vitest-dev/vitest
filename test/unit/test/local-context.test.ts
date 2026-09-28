@@ -58,12 +58,12 @@ describe('custom matcher are inherited by local context', () => {
     expect(expect).toHaveProperty('toEqual_testCustom')
     expect(expect.not).toHaveProperty('toEqual_testCustom')
     expect(localExpect).toHaveProperty('toEqual_testCustom')
-    expect(localExpect.not).toHaveProperty('toEqual_testCustom');
+    expect(localExpect.not).toHaveProperty('toEqual_testCustom')
 
-    (expect(0) as any).toEqual_testCustom(0);
-    (expect(0) as any).not.toEqual_testCustom(1);
-    (localExpect(0) as any).toEqual_testCustom(0);
-    (localExpect(0) as any).not.toEqual_testCustom(1)
+    ;(expect(0) as any).toEqual_testCustom(0)
+    ;(expect(0) as any).not.toEqual_testCustom(1)
+    ;(localExpect(0) as any).toEqual_testCustom(0)
+    ;(localExpect(0) as any).not.toEqual_testCustom(1)
 
     expect(0).toEqual((expect as any).toEqual_testCustom(0))
     localExpect(0).toEqual((localExpect as any).toEqual_testCustom(0))

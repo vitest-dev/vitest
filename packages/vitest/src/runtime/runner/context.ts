@@ -1,6 +1,14 @@
 import type { Awaitable } from '@vitest/utils'
 import type { PendingOperation } from './deadline'
-import type { RuntimeContext, SuiteCollector, Test, TestAnnotation, TestContext, VitestRunner, WriteableTestContext } from './types'
+import type {
+  RuntimeContext,
+  SuiteCollector,
+  Test,
+  TestAnnotation,
+  TestContext,
+  VitestRunner,
+  WriteableTestContext,
+} from './types'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { TaskDeadline } from './deadline'
 import { PendingError } from './errors'
@@ -38,7 +46,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
   }
 
   // this function name is used to filter error in test/e2e/test/fails.test.ts
-  return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
+  return function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     const runner = getRunner()
     const previousDeadline = runner._deadline
     return new Promise((resolve_, reject_) => {
@@ -96,8 +104,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
         // to avoid creating new promises
         if (typeof result === 'object' && result != null && typeof result.then === 'function') {
           result.then(resolve, reject)
-        }
-        else {
+        } else {
           resolve(result)
         }
       }
@@ -106,14 +113,11 @@ export function withTimeout<T extends (...args: any[]) => any>(
         reject(error)
       }
     })
-  }) as T
+  } as T
 }
 
-export function withCancel<T extends (...args: any[]) => any>(
-  fn: T,
-  signal: AbortSignal,
-): T {
-  return (function runWithCancel(...args: T extends (...args: infer A) => any ? A : never) {
+export function withCancel<T extends (...args: any[]) => any>(fn: T, signal: AbortSignal): T {
+  return function runWithCancel(...args: T extends (...args: infer A) => any ? A : never) {
     return new Promise((resolve, reject) => {
       const onAbort = () => reject(signal.reason)
       signal.addEventListener('abort', onAbort, { once: true })
@@ -134,18 +138,16 @@ export function withCancel<T extends (...args: any[]) => any>(
               reject(error)
             },
           )
-        }
-        else {
+        } else {
           cleanup()
           resolve(result)
         }
-      }
-      catch (error) {
+      } catch (error) {
         cleanup()
         reject(error)
       }
     })
-  }) as T
+  } as T
 }
 
 const abortControllers = new WeakMap<TestContext, AbortController>()
@@ -161,10 +163,7 @@ export function abortContextSignal(context: TestContext, error: Error): void {
   abortController?.abort(error)
 }
 
-export function createTestContext(
-  test: Test,
-  runner: VitestRunner,
-): TestContext {
+export function createTestContext(test: Test, runner: VitestRunner): TestContext {
   const context = function () {
     throw new Error('done() callback is deprecated, use promise instead')
   } as unknown as WriteableTestContext
@@ -195,7 +194,9 @@ export function createTestContext(
 
   context.annotate = ((message, type, attachment) => {
     if (test.result && test.result.state !== 'run') {
-      throw new Error(`Cannot annotate tests outside of the test run. The test "${test.name}" finished running with the "${test.result.state}" state already.`)
+      throw new Error(
+        `Cannot annotate tests outside of the test run. The test "${test.name}" finished running with the "${test.result.state}" state already.`,
+      )
     }
 
     const annotation: TestAnnotation = {
@@ -212,17 +213,19 @@ export function createTestContext(
 
     return recordAsyncOperation(
       test,
-      recordArtifact(test, { type: 'internal:annotation', annotation }).then(async ({ annotation }) => {
-        if (!runner.onTestAnnotate) {
-          throw new Error(`Test runner doesn't support test annotations.`)
-        }
+      recordArtifact(test, { type: 'internal:annotation', annotation }).then(
+        async ({ annotation }) => {
+          if (!runner.onTestAnnotate) {
+            throw new Error(`Test runner doesn't support test annotations.`)
+          }
 
-        await finishSendTasksUpdate(runner)
+          await finishSendTasksUpdate(runner)
 
-        const resolvedAnnotation = await runner.onTestAnnotate(test, annotation)
-        test.annotations.push(resolvedAnnotation)
-        return resolvedAnnotation
-      }),
+          const resolvedAnnotation = await runner.onTestAnnotate(test, annotation)
+          test.annotations.push(resolvedAnnotation)
+          return resolvedAnnotation
+        },
+      ),
     )
   }) as TestContext['annotate']
 
@@ -255,8 +258,15 @@ export function createTestContext(
   return runner.extendTaskContext?.(context) || context
 }
 
-function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Error, pending?: PendingOperation[]) {
-  const waiting = pending?.length ? ` while waiting for ${pending.map(operation => operation.name).join(', ')}` : ''
+function makeTimeoutError(
+  isHook: boolean,
+  timeout: number,
+  stackTraceError?: Error,
+  pending?: PendingOperation[],
+) {
+  const waiting = pending?.length
+    ? ` while waiting for ${pending.map((operation) => operation.name).join(', ')}`
+    : ''
   // point at the action the task is stuck on rather than at the task itself
   const lastOperationSource = pending?.at(-1)?.source
   if (lastOperationSource) {

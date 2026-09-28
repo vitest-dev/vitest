@@ -10,7 +10,7 @@ import type {
 } from '../types/module-locations'
 import '../types/global'
 
-// eslint-disable-next-line ts/no-namespace
+// oxlint-disable-next-line typescript/no-namespace
 export declare namespace Experimental {
   export {
     ModuleDefinitionDiagnostic,
@@ -74,12 +74,7 @@ export {
   onTestFailed,
   onTestFinished,
 } from '../runtime/runner/hooks'
-export {
-  describe,
-  it,
-  suite,
-  test,
-} from '../runtime/runner/suite'
+export { describe, it, suite, test } from '../runtime/runner/suite'
 export type {
   BaselineData,
   BrowserTraceArtifact,
@@ -121,7 +116,6 @@ export type {
   TestTagDefinition,
   TestTags,
   TestTryOptions,
-
   VisualRegressionArtifact,
 } from '../runtime/runner/types'
 
@@ -145,10 +139,7 @@ export type {
   TestError,
   UserConsoleLog,
 } from '../types/general'
-export type {
-  RunnerRPC,
-  RuntimeRPC,
-} from '../types/rpc'
+export type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 export type { BrowserUI } from '../types/ui'
 export type {
   ContextRPC,

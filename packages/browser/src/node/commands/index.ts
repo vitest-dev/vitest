@@ -1,9 +1,4 @@
-import {
-  _fileInfo,
-  readFile,
-  removeFile,
-  writeFile,
-} from './fs'
+import { _fileInfo, readFile, removeFile, writeFile } from './fs'
 import { screenshot } from './screenshot'
 import { screenshotMatcher } from './screenshotMatcher'
 import { _groupTraceEnd, _groupTraceStart, _markTrace, _recordBrowserTrace } from './trace'

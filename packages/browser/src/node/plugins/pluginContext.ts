@@ -32,10 +32,7 @@ export default function BrowserContext(contribution: BrowserServerContribution):
   }
 }
 
-async function generateContextFile(
-  this: Rollup.PluginContext,
-  globalServer: ParentBrowserProject,
-) {
+async function generateContextFile(this: Rollup.PluginContext, globalServer: ParentBrowserProject) {
   const commands = Object.keys(globalServer.commands)
   // The provider instance is initialized lazily when a page opens, so reading
   // `child.provider` here races and can be `undefined` before the first page is
@@ -53,16 +50,13 @@ async function generateContextFile(
   }
 
   const commandsCode = commands
-    .filter(command => !command.startsWith('__vitest'))
+    .filter((command) => !command.startsWith('__vitest'))
     .map((command) => {
       return `    ["${command}"]: (...args) => __vitest_browser_runner__.commands.triggerCommand("${command}", args),`
     })
     .join('\n')
 
-  const userEventNonProviderImport = await getUserEventImport(
-    provider,
-    this.resolve.bind(this),
-  )
+  const userEventNonProviderImport = await getUserEventImport(provider, this.resolve.bind(this))
   const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
 
   return `
@@ -85,7 +79,10 @@ export { page, cdp, locators, utils }
 `
 }
 
-async function getUserEventImport(provider: BrowserProvider | undefined, resolve: (id: string, importer: string) => Promise<null | { id: string }>) {
+async function getUserEventImport(
+  provider: BrowserProvider | undefined,
+  resolve: (id: string, importer: string) => Promise<null | { id: string }>,
+) {
   if (!provider || provider.name !== 'preview') {
     return 'const _userEventSetup = undefined'
   }

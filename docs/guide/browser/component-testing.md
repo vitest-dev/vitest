@@ -28,6 +28,7 @@ Browser Mode is the recommended approach for component testing because it provid
 
 ::: tip
 Browser Mode catches issues that DOM simulation libraries might miss, including:
+
 - CSS layout and styling problems
 - Real browser API behavior
 - Accurate event handling and propagation
@@ -178,9 +179,11 @@ If your framework gets official Vitest support later, you can gradually migrate 
 ## Best Practices
 
 ### 1. Use Browser Mode for CI/CD
+
 Ensure tests run in real browser environments for the most accurate testing. Browser Mode provides accurate CSS rendering, real browser APIs, and proper event handling.
 
 ### 2. Test User Interactions
+
 Simulate real user behavior using Vitest's [Interactivity API](/api/browser/interactivity). Use `page.getByRole()` and `userEvent` methods as shown in our [Advanced Testing Patterns](#advanced-testing-patterns):
 
 ```tsx
@@ -193,6 +196,7 @@ await page.getByLabelText(/email/i).fill('user@example.com')
 ```
 
 ### 3. Test Accessibility
+
 Ensure components work for all users by testing keyboard navigation, focus management, and ARIA attributes. See our [Testing Accessibility](#testing-accessibility) example for practical patterns:
 
 ```tsx
@@ -205,6 +209,7 @@ await expect.element(modal).toHaveAttribute('aria-modal', 'true')
 ```
 
 ### 4. Mock External Dependencies
+
 Focus tests on component logic by mocking APIs and external services. This makes tests faster and more reliable. See our [Isolation Strategy](#isolation-strategy) for examples:
 
 ```tsx
@@ -219,6 +224,7 @@ vi.mock(import('../components/UserCard'), () => ({
 ```
 
 ### 5. Use Meaningful Test Descriptions
+
 Write test descriptions that explain the expected behavior, not implementation details:
 
 ```tsx
@@ -482,11 +488,13 @@ test('debug form validation', async () => {
 When components don't render as expected, investigate systematically:
 
 **Use Vitest's browser UI:**
+
 - Run tests with browser mode enabled
 - Open the browser URL shown in the terminal to see tests running
 - Visual inspection helps identify CSS issues, layout problems, or missing elements
 
 **Test element queries:**
+
 ```tsx
 // Debug why elements can't be found
 const button = page.getByRole('button', { name: /submit/i })
@@ -504,6 +512,7 @@ if (button.length === 0) {
 Selector issues are common causes of test failures. Debug them systematically:
 
 **Check accessible names:**
+
 ```tsx
 // If getByRole fails, check what roles/names are available
 const buttons = page.getByRole('button').all()
@@ -516,6 +525,7 @@ for (const button of buttons) {
 ```
 
 **Test different query strategies:**
+
 ```tsx
 // Multiple ways to find the same element using .or for auto-retrying
 const submitButton = page.getByRole('button', { name: /submit/i }) // By accessible name
@@ -525,6 +535,7 @@ const submitButton = page.getByRole('button', { name: /submit/i }) // By accessi
 ```
 
 **Common selector debugging patterns:**
+
 ```tsx
 test('debug element queries', async () => {
   render(<LoginForm />)

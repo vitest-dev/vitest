@@ -14,4 +14,4 @@ describe('suite name', () => {
   })
 })
 
-it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
+it('timeout', () => new Promise((resolve) => setTimeout(resolve, 500)))

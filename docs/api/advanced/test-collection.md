@@ -12,6 +12,7 @@ for (const child of module.children) {
   console.log(child.type, child.name)
 }
 ```
+
 :::
 
 ## size

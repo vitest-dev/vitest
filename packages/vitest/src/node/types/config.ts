@@ -3,25 +3,38 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
-import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ResolvedConfig as ResolvedViteConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
+import type {
+  AliasOptions,
+  ConfigEnv,
+  DepOptimizationConfig,
+  ResolvedConfig as ResolvedViteConfig,
+  ServerOptions,
+  UserConfig as ViteUserConfig,
+} from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '../../runtime/runner/types'
+import type {
+  SequenceHooks,
+  SequenceSetupFiles,
+  SerializableRetry,
+  TestTagDefinition,
+} from '../../runtime/runner/types'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import type { CliOptions } from '../cli/cli-api'
 import type { PoolRunnerInitializer } from '../pools/types'
-import type {
-  BuiltinReporterOptions,
-  BuiltinReporters,
-} from '../reporters'
+import type { BuiltinReporterOptions, BuiltinReporters } from '../reporters'
 import type { TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions, ResolvedBenchmarkOptions } from './benchmark'
-import type { BrowserConfigOptions, BrowserServerContribution, ResolvedBrowserOptions } from './browser'
+import type {
+  BrowserConfigOptions,
+  BrowserServerContribution,
+  ResolvedBrowserOptions,
+} from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Reporter } from './reporter'
 
@@ -31,25 +44,16 @@ export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
 export type { SequenceHooks, SequenceSetupFiles } from '../../runtime/runner/types'
 export type { BrowserInstanceOption } from './browser'
 
-export type BuiltinEnvironment
-  = | 'node'
-    | 'jsdom'
-    | 'happy-dom'
-    | 'edge-runtime'
+export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
-export type VitestEnvironment
-  = | BuiltinEnvironment
-    | (string & Record<never, never>)
+export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
-export type ApiConfig = Pick<
-  ServerOptions,
-  'port' | 'strictPort' | 'host' | 'middlewareMode'
-> & {
+export type ApiConfig = Pick<ServerOptions, 'port' | 'strictPort' | 'host' | 'middlewareMode'> & {
   /**
    * Allow any write operations from the API server.
    *
-   * @default true if `api.host` is exposed to network, false otherwise
+   * @default false if `api.host` is exposed to network, true otherwise
    */
   allowWrite?: boolean
   /**
@@ -57,7 +61,7 @@ export type ApiConfig = Pick<
    * If `api.host` is exposed to network and `allowWrite` is true,
    * anyone connected to the API server can run arbitrary code on your machine.
    *
-   * @default true if `api.host` is exposed to network, false otherwise
+   * @default false if `api.host` is exposed to network, true otherwise
    */
   allowExec?: boolean
 }
@@ -107,18 +111,18 @@ interface SequenceOptions {
   shuffle?:
     | boolean
     | {
-      /**
-       * Should files run in random order. Long running tests will not start
-       * earlier if you enable this option.
-       * @default false
-       */
-      files?: boolean
-      /**
-       * Should tests run in random order.
-       * @default false
-       */
-      tests?: boolean
-    }
+        /**
+         * Should files run in random order. Long running tests will not start
+         * earlier if you enable this option.
+         * @default false
+         */
+        files?: boolean
+        /**
+         * Should tests run in random order.
+         * @default false
+         */
+        tests?: boolean
+      }
   /**
    * Should tests run in parallel.
    * @default false
@@ -128,7 +132,7 @@ interface SequenceOptions {
    * Defines how setup files should be ordered
    * - 'parallel' will run all setup files in parallel
    * - 'list' will run all setup files in the order they are defined in the config file
-   * @default 'parallel'
+   * @default 'list'
    */
   setupFiles?: SequenceSetupFiles
   /**
@@ -146,10 +150,7 @@ interface SequenceOptions {
   hooks?: SequenceHooks
 }
 
-export type DepsOptimizationOptions = Omit<
-  DepOptimizationConfig,
-  'disabled' | 'noDiscovery'
-> & {
+export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
   enabled?: boolean
 }
 
@@ -208,14 +209,16 @@ interface DepsOptions {
 
 type InlineReporter = Reporter
 type ReporterName = BuiltinReporters | 'html' | (string & {})
-type ReporterWithOptions<Name extends ReporterName = ReporterName>
-  = Name extends keyof BuiltinReporterOptions
+type ReporterWithOptions<Name extends ReporterName = ReporterName> =
+  Name extends keyof BuiltinReporterOptions
     ? BuiltinReporterOptions[Name] extends never
       ? [Name, object]
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
 
-export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
+export interface ResolveSnapshotPathHandlerContext {
+  config: SerializedConfig
+}
 
 export type ResolveSnapshotPathHandler = (
   testPath: string,
@@ -223,13 +226,7 @@ export type ResolveSnapshotPathHandler = (
   context: ResolveSnapshotPathHandlerContext,
 ) => string
 
-type BuiltinPool
-  = | 'browser'
-    | 'threads'
-    | 'forks'
-    | 'vmThreads'
-    | 'vmForks'
-    | 'typescript'
+type BuiltinPool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'
 
 export type Pool = BuiltinPool | (string & {})
 
@@ -429,7 +426,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default !process.env.CI
+   * @default !process.env.CI && process.stdin.isTTY && !isAgent
    */
   watch?: boolean
 
@@ -448,19 +445,13 @@ export interface InlineConfig {
    */
   reporters?:
     | Arrayable<ReporterName | InlineReporter>
-    | (
-        | (ReporterName | InlineReporter)
-        | [ReporterName]
-        | ReporterWithOptions
-    )[]
+    | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
    */
-  outputFile?:
-    | string
-    | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
+  outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
    * Default timeout of a test in milliseconds
@@ -667,7 +658,11 @@ export interface InlineConfig {
    *
    * Return `false` to ignore the log.
    */
-  onConsoleLog?: (log: string, type: 'stdout' | 'stderr', entity: TestModule | TestCase | TestSuite | undefined) => boolean | void
+  onConsoleLog?: (
+    log: string,
+    type: 'stdout' | 'stderr',
+    entity: TestModule | TestCase | TestSuite | undefined,
+  ) => boolean | void
 
   /**
    * Enable stack trace filtering. If absent, all stack trace frames
@@ -692,12 +687,12 @@ export interface InlineConfig {
   css?:
     | boolean
     | {
-      include?: RegExp | RegExp[]
-      exclude?: RegExp | RegExp[]
-      modules?: {
-        classNameStrategy?: CSSModuleScopeStrategy
+        include?: RegExp | RegExp[]
+        exclude?: RegExp | RegExp[]
+        modules?: {
+          classNameStrategy?: CSSModuleScopeStrategy
+        }
       }
-    }
   /**
    * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
    * @default 5
@@ -711,11 +706,11 @@ export interface InlineConfig {
   cache?:
     | false
     | {
-      /**
-       * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
-       */
-      dir: string
-    }
+        /**
+         * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
+         */
+        dir: string
+      }
 
   /**
    * Cache transformed modules on the file system and reuse them between reruns
@@ -1046,16 +1041,18 @@ export interface InlineConfig {
      *   `fsModuleCache` would persist the results across runs.
      * @default true
      */
-    diagnostics?: boolean | {
-      /** @default true */
-      isolate?: boolean
-      /** @default true */
-      environment?: boolean
-      /** @default true */
-      import?: boolean
-      /** @default true */
-      transform?: boolean
-    }
+    diagnostics?:
+      | boolean
+      | {
+          /** @default true */
+          isolate?: boolean
+          /** @default true */
+          environment?: boolean
+          /** @default true */
+          import?: boolean
+          /** @default true */
+          transform?: boolean
+        }
   }
 
   /**
@@ -1103,7 +1100,7 @@ export interface TypecheckConfig {
   /**
    * Pattern for files that should not be treated as test files
    *
-   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
+   * @default ['**\/node_modules/**', '**\/.git/**']
    */
   exclude: string[]
   /**
@@ -1213,39 +1210,40 @@ export interface UserConfig extends InlineConfig {
   reporter?: string | string[]
 }
 
-export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
+export type OnUnhandledErrorCallback = (
+  error: (TestError | Error) & { type: string },
+) => boolean | void
 
-export interface ResolvedConfig
-  extends Omit<
-    Required<UserConfig>,
-    | 'project'
-    | 'config'
-    | 'filters'
-    | 'browser'
-    | 'coverage'
-    | 'testNamePattern'
-    | 'related'
-    | 'api'
-    | 'reporters'
-    | 'resolveSnapshotPath'
-    | 'benchmark'
-    | 'shard'
-    | 'cache'
-    | 'sequence'
-    | 'typecheck'
-    | 'runner'
-    | 'pool'
-    | 'cliExclude'
-    | 'diff'
-    | 'setupFiles'
-    | 'snapshotEnvironment'
-    | 'bail'
-    | 'name'
-    | 'vmMemoryLimit'
-    | 'fileParallelism'
-    | 'tagsFilter'
-    | 'reporter'
-  > {
+export interface ResolvedConfig extends Omit<
+  Required<UserConfig>,
+  | 'project'
+  | 'config'
+  | 'filters'
+  | 'browser'
+  | 'coverage'
+  | 'testNamePattern'
+  | 'related'
+  | 'api'
+  | 'reporters'
+  | 'resolveSnapshotPath'
+  | 'benchmark'
+  | 'shard'
+  | 'cache'
+  | 'sequence'
+  | 'typecheck'
+  | 'runner'
+  | 'pool'
+  | 'cliExclude'
+  | 'diff'
+  | 'setupFiles'
+  | 'snapshotEnvironment'
+  | 'bail'
+  | 'name'
+  | 'vmMemoryLimit'
+  | 'fileParallelism'
+  | 'tagsFilter'
+  | 'reporter'
+> {
   name: ProjectName['label']
   color?: ProjectName['color']
   base?: string
@@ -1289,11 +1287,11 @@ export interface ResolvedConfig
 
   cache:
     | {
-      /**
-       * @deprecated
-       */
-      dir: string
-    }
+        /**
+         * @deprecated
+         */
+        dir: string
+      }
     | false
 
   sequence: {
@@ -1347,6 +1345,7 @@ export interface ResolvedConfig
     isolate: boolean
     environment: boolean
     fsModuleCache: boolean
+    silent: boolean
   }
 
   cliOptions: CliOptions
@@ -1381,6 +1380,11 @@ export interface ResolvedConfig
    * @internal
    */
   _browserContribution?: BrowserServerContribution
+  /**
+   * `api` or `ui` was set by the user. Browser mode always assigns `api.port`.
+   * @internal
+   */
+  _apiRequested?: boolean
 }
 
 /**
@@ -1454,35 +1458,35 @@ export interface ResolvedProjectEntry {
   sharedServer?: boolean
 }
 
-type NonProjectOptions
-  = | 'shard'
-    | 'watch'
-    | 'run'
-    | 'cache'
-    | 'update'
-    | 'reporters'
-    | 'outputFile'
-    | 'teardownTimeout'
-    | 'silent'
-    | 'forceRerunTriggers'
-    | 'testNamePattern'
-    | 'ui'
-    | 'open'
-    | 'uiBase'
-    // TODO: allow snapshot options
-    | 'snapshotFormat'
-    | 'resolveSnapshotPath'
-    | 'passWithNoTests'
-    | 'onConsoleLog'
-    | 'onStackTrace'
-    | 'dangerouslyIgnoreUnhandledErrors'
-    | 'slowTestThreshold'
-    | 'inspect'
-    | 'inspectBrk'
-    | 'coverage'
-    | 'watchTriggerPatterns'
-    | 'tagsFilter' // CLI option only
-    | 'sharedViteServer'
+type NonProjectOptions =
+  | 'shard'
+  | 'watch'
+  | 'run'
+  | 'cache'
+  | 'update'
+  | 'reporters'
+  | 'outputFile'
+  | 'teardownTimeout'
+  | 'silent'
+  | 'forceRerunTriggers'
+  | 'testNamePattern'
+  | 'ui'
+  | 'open'
+  | 'uiBase'
+  // TODO: allow snapshot options
+  | 'snapshotFormat'
+  | 'resolveSnapshotPath'
+  | 'passWithNoTests'
+  | 'onConsoleLog'
+  | 'onStackTrace'
+  | 'dangerouslyIgnoreUnhandledErrors'
+  | 'slowTestThreshold'
+  | 'inspect'
+  | 'inspectBrk'
+  | 'coverage'
+  | 'watchTriggerPatterns'
+  | 'tagsFilter' // CLI option only
+  | 'sharedViteServer'
 
 export interface ServerDepsOptions {
   /**
@@ -1511,7 +1515,7 @@ export interface ServerDepsOptions {
 
 export type ProjectConfig = Omit<
   InlineConfig,
-  NonProjectOptions
+  | NonProjectOptions
   // `projects` is only respected in config files; a container config is
   // root-like and should be authored with `defineConfig`/`defineProject`
   | 'projects'
@@ -1540,12 +1544,12 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 export type UserProjectConfigFn = (
   env: ConfigEnv,
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
-export type UserProjectConfigExport
-  = | UserWorkspaceConfig
-    | Promise<UserWorkspaceConfig>
-    | UserProjectConfigFn
+export type UserProjectConfigExport =
+  | UserWorkspaceConfig
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn
 
-export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
+export type TestProjectInlineConfiguration = UserWorkspaceConfig & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * If `true`, the project will inherit all options from the root config.
@@ -1554,10 +1558,10 @@ export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
    * @example '../vite.config.ts'
    */
   extends?: string | boolean
-})
+}
 
-export type TestProjectConfiguration
-  = string
-    | TestProjectInlineConfiguration
-    | Promise<UserWorkspaceConfig>
-    | UserProjectConfigFn
+export type TestProjectConfiguration =
+  | string
+  | TestProjectInlineConfiguration
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn

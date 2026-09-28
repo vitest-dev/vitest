@@ -20,19 +20,26 @@ export function getAttachmentUrl(attachment: TestAttachment): string {
 
 export function sanitizeFilePath(s: string, contentType: string | undefined): string {
   const extension = contentType ? mime.getExtension(contentType) : null
-  // eslint-disable-next-line no-control-regex
-  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-') + (extension ? `.${extension}` : '')
+  // oxlint-disable-next-line no-control-regex
+  const unsafeCharacters = /[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g
+  return s.replace(unsafeCharacters, '-') + (extension ? `.${extension}` : '')
 }
 
 export function isExternalAttachment(attachment: TestAttachment): boolean {
   const potentialUrl = attachment.path || attachment.body
-  return typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))
+  return (
+    typeof potentialUrl === 'string' &&
+    (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))
+  )
 }
 
 export function internalOrExternalUrl(attachment: TestAttachment): string {
   const potentialUrl = attachment.path || attachment.body
 
-  if (typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))) {
+  if (
+    typeof potentialUrl === 'string' &&
+    (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))
+  ) {
     return potentialUrl
   }
 
@@ -42,12 +49,14 @@ export function internalOrExternalUrl(attachment: TestAttachment): string {
 export async function openPlaywrightTrace(attachment: TestAttachment): Promise<void> {
   const popup = window.open('', '_blank')
   if (!popup) {
-    // eslint-disable-next-line no-alert
+    // oxlint-disable-next-line no-alert
     window.alert('Unable to open Playwright Trace Viewer. Please allow pop-ups and try again.')
     return
   }
 
-  popup.document.write('<!doctype html><title>Opening Playwright Trace</title><body>Opening Playwright trace...</body>')
+  popup.document.write(
+    '<!doctype html><title>Opening Playwright Trace</title><body>Opening Playwright trace...</body>',
+  )
   popup.document.close()
   popup.focus()
 
@@ -68,7 +77,11 @@ export async function openPlaywrightTrace(attachment: TestAttachment): Promise<v
         reject(new Error('Timed out waiting for Playwright Trace Viewer'))
       }, 10_000)
       function onMessage(event: MessageEvent) {
-        if (event.origin !== 'https://trace.playwright.dev' || event.source !== popup || event.data?.method !== 'ready') {
+        if (
+          event.origin !== 'https://trace.playwright.dev' ||
+          event.source !== popup ||
+          event.data?.method !== 'ready'
+        ) {
           return
         }
         clearTimeout(timeout)
@@ -82,10 +95,14 @@ export async function openPlaywrightTrace(attachment: TestAttachment): Promise<v
     if (!popup.closed) {
       popup.postMessage({ method: 'load', params: { trace } }, 'https://trace.playwright.dev')
     }
-  }
-  catch {
+  } catch {
     if (!popup.closed) {
-      const errorPage = new Blob(['<!doctype html><title>Failed to Open Playwright Trace</title><body>Failed to load Playwright trace attachment.</body>'], { type: 'text/html' })
+      const errorPage = new Blob(
+        [
+          '<!doctype html><title>Failed to Open Playwright Trace</title><body>Failed to load Playwright trace attachment.</body>',
+        ],
+        { type: 'text/html' },
+      )
       popup.location.href = URL.createObjectURL(errorPage)
     }
   }

@@ -1,8 +1,6 @@
 // @ts-expect-error virtual module
 import * as virtual from 'virtual-module'
-
 import { expect, it, vi } from 'vitest'
-
 // @ts-expect-error vscode is not installed
 import * as vscodeFactory from 'vscode-factory'
 // @ts-expect-error vscode is not installed

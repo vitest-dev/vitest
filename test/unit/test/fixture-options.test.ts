@@ -7,15 +7,21 @@ const myTest = test.extend<{
   autoFixture: void
   normalFixture: any[]
 }>({
-  autoFixture: [async ({}, use) => {
-    await mockServer.setup()
-    await use()
-    await mockServer.teardown()
-  }, { auto: true }],
+  autoFixture: [
+    async ({}, use) => {
+      await mockServer.setup()
+      await use()
+      await mockServer.teardown()
+    },
+    { auto: true },
+  ],
 
-  normalFixture: [async () => {
-    await FnA()
-  }, {}],
+  normalFixture: [
+    async () => {
+      await FnA()
+    },
+    {},
+  ],
 })
 
 describe('fixture with options', () => {

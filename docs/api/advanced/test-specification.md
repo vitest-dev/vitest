@@ -55,12 +55,14 @@ This is an array of lines in the source code where the test files are defined. T
 Note that if there is no test on at least one of the lines, the whole suite will fail. An example of a correct `testLines` configuration:
 
 ::: code-group
+
 ```ts [script.js]
 const specification = project.createSpecification(
   resolve('./example.test.ts'),
   [3, 8, 9],
 )
 ```
+
 ```ts:line-numbers{3,8,9} [example.test.js]
 import { test, describe } from 'vitest'
 
@@ -73,6 +75,7 @@ describe('a group of tests', () => { // [!code error]
   test.skip('skipped test')
 })
 ```
+
 :::
 
 ## testNamePattern <Version>4.1.0</Version> {#testnamepattern}

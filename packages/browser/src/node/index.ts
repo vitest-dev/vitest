@@ -1,6 +1,13 @@
 import type { ServerResponse } from 'node:http'
 import type { HtmlTagDescriptor, UserConfig, UserConfig as ViteUserConfig } from 'vite'
-import type { BrowserCommand, BrowserProviderOption, BrowserServerContribution, BrowserServerFactory, PluginHarness, ResolvedConfig } from 'vitest/node'
+import type {
+  BrowserCommand,
+  BrowserProviderOption,
+  BrowserServerContribution,
+  BrowserServerFactory,
+  PluginHarness,
+  ResolvedConfig,
+} from 'vitest/node'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { MockerRegistry } from '@vitest/mocker'
@@ -10,7 +17,13 @@ import { cleanUrl, toArray } from '@vitest/utils/helpers'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
-import { isCSSRequest, isFileServingAllowed, isValidApiRequest, rolldownVersion, distDir as vitestDist } from 'vitest/node'
+import {
+  isCSSRequest,
+  isFileServingAllowed,
+  isValidApiRequest,
+  rolldownVersion,
+  distDir as vitestDist,
+} from 'vitest/node'
 import { version } from '../../package.json'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
@@ -33,7 +46,12 @@ export function defineBrowserCommand<T extends unknown[]>(
 }
 
 // export type { ProjectBrowser } from './project'
-export { assertBrowserApiWrite, assertBrowserFileAccess, parseKeyDef, resolveScreenshotPath } from './utils'
+export {
+  assertBrowserApiWrite,
+  assertBrowserFileAccess,
+  parseKeyDef,
+  resolveScreenshotPath,
+} from './utils'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
 
@@ -68,17 +86,18 @@ export const createBrowserServer: BrowserServerFactory = async () => {
         return
       }
 
-      const stateJs = typeof parentServer.stateJs === 'string'
-        ? parentServer.stateJs
-        : await parentServer.stateJs
+      const stateJs =
+        typeof parentServer.stateJs === 'string' ? parentServer.stateJs : await parentServer.stateJs
 
       const testerTags: HtmlTagDescriptor[] = []
 
-      const isDefaultTemplate = resolve(distRoot, 'client/tester/tester.html') === projectBrowser.testerFilepath
+      const isDefaultTemplate =
+        resolve(distRoot, 'client/tester/tester.html') === projectBrowser.testerFilepath
       if (!isDefaultTemplate) {
-        const manifestContent = parentServer.manifest instanceof Promise
-          ? await parentServer.manifest
-          : parentServer.manifest
+        const manifestContent =
+          parentServer.manifest instanceof Promise
+            ? await parentServer.manifest
+            : parentServer.manifest
         const testerEntry = manifestContent['tester/tester.html']
 
         testerTags.push({
@@ -94,21 +113,18 @@ export const createBrowserServer: BrowserServerFactory = async () => {
         for (const importName of testerEntry.imports || []) {
           const entryManifest = manifestContent[importName]
           if (entryManifest) {
-            testerTags.push(
-              {
-                tag: 'link',
-                attrs: {
-                  href: `${parentServer.base}${entryManifest.file}`,
-                  rel: 'modulepreload',
-                  crossorigin: '',
-                },
-                injectTo: 'head',
+            testerTags.push({
+              tag: 'link',
+              attrs: {
+                href: `${parentServer.base}${entryManifest.file}`,
+                rel: 'modulepreload',
+                crossorigin: '',
               },
-            )
+              injectTo: 'head',
+            })
           }
         }
-      }
-      else {
+      } else {
         // inject the reset style only in the default template,
         // allowing users to customize the style in their own template
         testerTags.push({
@@ -154,22 +170,25 @@ body {
           },
           injectTo: 'head' as const,
         },
-        ...parentServer.initScripts.map(script => ({
-          tag: 'script',
-          attrs: {
-            type: 'module',
-            src: join('/@fs/', script),
-          },
-          injectTo: 'head',
-        } as const)),
+        ...parentServer.initScripts.map(
+          (script) =>
+            ({
+              tag: 'script',
+              attrs: {
+                type: 'module',
+                src: join('/@fs/', script),
+              },
+              injectTo: 'head',
+            }) as const,
+        ),
         ...testerTags,
-      ].filter(s => s != null)
+      ].filter((s) => s != null)
     },
     configureServer(server) {
       const parentServer = contribution.parent as ParentBrowserProject
       parentServer.setServer(server)
 
-      // eslint-disable-next-line prefer-arrow-callback
+      // oxlint-disable-next-line prefer-arrow-callback
       server.middlewares.use(function vitestHeaders(_req, res, next) {
         const headers = server.config.server.headers
         if (headers) {
@@ -183,8 +202,8 @@ body {
       // the plugin pipeline sees the original import id (e.g. virtual modules' load hook).
       server.middlewares.use((req, _res, next) => {
         if (
-          req.url?.includes('_vitest_original')
-          && parentServer.config.browser.provider?.name === 'playwright'
+          req.url?.includes('_vitest_original') &&
+          parentServer.config.browser.provider?.name === 'playwright'
         ) {
           req.url = req.url
             .replace(/[?&]_vitest_original(?=[&#]|$)/, '')
@@ -196,14 +215,11 @@ body {
       server.middlewares.use(createOrchestratorMiddleware(parentServer))
       server.middlewares.use(createTesterMiddleware(parentServer))
 
-      server.middlewares.use(
-        `/favicon.svg`,
-        (_, res) => {
-          const content = readFileSync(resolve(distRoot, 'client/favicon.svg'))
-          res.write(content, 'utf-8')
-          res.end()
-        },
-      )
+      server.middlewares.use(`/favicon.svg`, (_, res) => {
+        const content = readFileSync(resolve(distRoot, 'client/favicon.svg'))
+        res.write(content, 'utf-8')
+        res.end()
+      })
 
       // Serve coverage HTML at ./coverage if configured
       const coverageHtmlDir = parentServer.vitest.config.coverage?.htmlDir
@@ -223,10 +239,7 @@ body {
                   csp.replace(/frame-ancestors [^;]+/, 'frame-ancestors *'),
                 )
               }
-              res.setHeader(
-                'Cache-Control',
-                'public,max-age=0,must-revalidate',
-              )
+              res.setHeader('Cache-Control', 'public,max-age=0,must-revalidate')
             },
           }),
         )
@@ -236,15 +249,18 @@ body {
       // browser contexts don't outlive the process, so there is no reason
       // to revalidate them in every tester iframe. Skipped for persistent
       // contexts and preview providers — their disk cache would survive a vitest upgrade
-      const persistentContext = (parentServer.config.browser.provider?.options as { persistentContext?: unknown } | undefined)?.persistentContext
-      const immutablePrefixes = persistentContext || parentServer.config.browser.provider?.name === 'preview'
-        ? []
-        : ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
+      const persistentContext = (
+        parentServer.config.browser.provider?.options as { persistentContext?: unknown } | undefined
+      )?.persistentContext
+      const immutablePrefixes =
+        persistentContext || parentServer.config.browser.provider?.name === 'preview'
+          ? []
+          : ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
 
       server.middlewares.use((req, res, next) => {
         const url = req.url
         if (url) {
-          if (immutablePrefixes.some(prefix => url.startsWith(prefix))) {
+          if (immutablePrefixes.some((prefix) => url.startsWith(prefix))) {
             pinCacheControl(res, 'public,max-age=31536000,immutable')
           }
           // 9000 mega head move
@@ -284,16 +300,12 @@ body {
         }
 
         try {
-          res.setHeader(
-            'content-type',
-            contentType,
-          )
+          res.setHeader('content-type', contentType)
 
           return createReadStream(fsPath)
             .pipe(res)
             .on('close', () => res.end())
-        }
-        catch (err) {
+        } catch (err) {
           return next(err)
         }
       })
@@ -302,10 +314,7 @@ body {
       // `/__vitest__` (including the token-injected index.html and its assets),
       // so registering sirv here would shadow it and serve the page without a token.
       if (!parentServer.vitest.config.ui) {
-        server.middlewares.use(
-          '/__vitest__',
-          sirv(uiClientRoot),
-        )
+        server.middlewares.use('/__vitest__', sirv(uiClientRoot))
       }
     },
     // Resolution-time config: only what is derivable from the (partial) user
@@ -351,9 +360,9 @@ body {
       if (vitest.version !== version) {
         vitest.logger.warn(
           c.yellow(
-            `Loaded ${c.inverse(c.yellow(` vitest@${vitest.version} `))} and ${c.inverse(c.yellow(` @vitest/browser@${version} `))}.`
-            + '\nRunning mixed versions is not supported and may lead into bugs'
-            + '\nUpdate your dependencies and make sure the versions match.',
+            `Loaded ${c.inverse(c.yellow(` vitest@${vitest.version} `))} and ${c.inverse(c.yellow(` @vitest/browser@${version} `))}.` +
+              '\nRunning mixed versions is not supported and may lead into bugs' +
+              '\nUpdate your dependencies and make sure the versions match.',
           ),
         )
       }
@@ -380,9 +389,9 @@ body {
         // Sourcemaps of user files and (by default) their dependencies are
         // kept — they point error stacks and devtools at original sources.
         if (
-          !parentServer
-          || !isHeadlessServer(parentServer)
-          || parentServer.vitest.config.inspector.enabled
+          !parentServer ||
+          !isHeadlessServer(parentServer) ||
+          parentServer.vitest.config.inspector.enabled
         ) {
           return null
         }
@@ -399,9 +408,9 @@ body {
         // `preserveSymlinks` where workspace code keeps its node_modules
         // path and would be wrongly treated as a dependency
         if (
-          parentServer.config.browser.dependencySourcemaps === false
-          && path.includes('/node_modules/')
-          && (parentServer.vite.config.server.sourcemapIgnoreList(path, path) ?? true)
+          parentServer.config.browser.dependencySourcemaps === false &&
+          path.includes('/node_modules/') &&
+          (parentServer.vite.config.server.sourcemapIgnoreList(path, path) ?? true)
         ) {
           return { code, map: { mappings: '' } as any }
         }
@@ -422,7 +431,7 @@ function isHeadlessServer(parentServer: ParentBrowserProject): boolean {
   // override `headless` — check the static instance options instead of the
   // lazily populated `children` to stay deterministic across runs
   const instances = parentServer.config.browser.instances ?? []
-  return instances.every(instance => instance.headless !== false)
+  return instances.every((instance) => instance.headless !== false)
 }
 
 function resolveBrowserOptimizeDeps(
@@ -437,9 +446,7 @@ function resolveBrowserOptimizeDeps(
   const testConfig = projectConfigs[0]
   const root = testConfig.root || process.cwd()
 
-  const setupFiles = new Set(
-    projectConfigs.flatMap(config => toArray(config.setupFiles || [])),
-  )
+  const setupFiles = new Set(projectConfigs.flatMap((config) => toArray(config.setupFiles || [])))
 
   const entries: string[] = [
     ...testFiles,
@@ -483,15 +490,13 @@ function resolveBrowserOptimizeDeps(
         entries.push(path)
         exclude.push('@vitest/coverage-v8/browser')
       }
-    }
-    else if (provider === 'istanbul') {
+    } else if (provider === 'istanbul') {
       const path = tryResolve('@vitest/coverage-istanbul', [root])
       if (path) {
         entries.push(path)
         exclude.push('@vitest/coverage-istanbul')
       }
-    }
-    else if (provider === 'custom' && testConfig.coverage.customProviderModule) {
+    } else if (provider === 'custom' && testConfig.coverage.customProviderModule) {
       entries.push(testConfig.coverage.customProviderModule)
     }
   }
@@ -545,8 +550,7 @@ function resolveBrowserOptimizeDeps(
   if (otelConfig?.enabled && otelConfig.browserSdkPath) {
     entries.push(otelConfig.browserSdkPath)
     include.push('@opentelemetry/api')
-  }
-  else {
+  } else {
     exclude.push('@opentelemetry/api')
   }
 
@@ -584,8 +588,7 @@ function resolveBrowserOptimizeDeps(
 function tryResolve(path: string, paths: string[]) {
   try {
     return getRequire().resolve(path, { paths })
-  }
-  catch {
+  } catch {
     return undefined
   }
 }
@@ -598,10 +601,9 @@ function getRequire(): ReturnType<typeof createRequire> {
   return _require
 }
 
-export function defineBrowserProvider<T extends object = object>(options: Omit<
-  BrowserProviderOption<T>,
-  'serverFactory' | 'options'
-> & { options?: T }): BrowserProviderOption {
+export function defineBrowserProvider<T extends object = object>(
+  options: Omit<BrowserProviderOption<T>, 'serverFactory' | 'options'> & { options?: T },
+): BrowserProviderOption {
   return {
     ...options,
     options: options.options || {},

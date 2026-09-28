@@ -8,8 +8,9 @@ test('domain inline snapshot with poll', async () => {
   const testFile = join(root, 'basic.test.ts')
 
   // purge inline snapshots to empty strings
-  editFile(testFile, s => s
-    .replace(/toMatchKvInlineSnapshot\(`[^`]*`/g, 'toMatchKvInlineSnapshot('))
+  editFile(testFile, (s) =>
+    s.replace(/toMatchKvInlineSnapshot\(`[^`]*`/g, 'toMatchKvInlineSnapshot('),
+  )
 
   // --- create snapshots (update: new) ---
   let result = await runVitest({ root, update: 'new' })
@@ -92,8 +93,7 @@ test('domain inline snapshot with poll', async () => {
   `)
 
   // --- mismatch — stable on wrong value ---
-  editFile(testFile, s => s
-    .replace('name=a\n', 'name=a-changed\n'))
+  editFile(testFile, (s) => s.replace('name=a\n', 'name=a-changed\n'))
 
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -205,8 +205,7 @@ test('domain inline snapshot with poll', async () => {
   `)
 
   // --- pattern-preserving update ---
-  editFile(testFile, s => s
-    .replace('name=a\n', 'name=/\\\\w/\n'))
+  editFile(testFile, (s) => s.replace('name=a\n', 'name=/\\\\w/\n'))
 
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
@@ -273,8 +272,9 @@ test('domain inline snapshot with poll', async () => {
 })
 
 test('poll until stable match when "none"', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { expect, test } from 'vitest'
 import '../snapshots/fixtures/domain/basic-extend'
 
@@ -290,9 +290,11 @@ test('stable wrong then right', async () => {
   expect(trial).toBe(6)
 })
 `,
-  }, {
-    update: 'none',
-  })
+    },
+    {
+      update: 'none',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -304,8 +306,9 @@ test('stable wrong then right', async () => {
 })
 
 test('poll until stable when "all"', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { expect, test } from 'vitest'
 import '../snapshots/fixtures/domain/basic-extend'
 
@@ -321,9 +324,11 @@ test('stable wrong then right', async () => {
   expect(trial).toBe(2)
 })
 `,
-  }, {
-    update: 'all',
-  })
+    },
+    {
+      update: 'all',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -351,8 +356,9 @@ test('stable wrong then right', async () => {
 })
 
 test('errors', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { expect, test } from 'vitest'
 import '../snapshots/fixtures/domain/basic-extend'
 
@@ -380,9 +386,11 @@ test('throwing', async () => {
   }, { timeout: 100, interval: 10 }).toMatchKvInlineSnapshot(\`\`)
 })
 `,
-  }, {
-    update: 'all',
-  })
+    },
+    {
+      update: 'all',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
