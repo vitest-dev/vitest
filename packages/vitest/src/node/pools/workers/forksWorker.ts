@@ -40,8 +40,7 @@ export class ForksPoolWorker implements PoolWorker {
   on(event: string, callback: (...args: any[]) => void): void {
     if (event === 'error') {
       this._errorEmitter.on('error', callback)
-    }
-    else {
+    } else {
       this.fork.on(event, callback)
     }
   }
@@ -49,8 +48,7 @@ export class ForksPoolWorker implements PoolWorker {
   off(event: string, callback: (...args: any[]) => void): void {
     if (event === 'error') {
       this._errorEmitter.off('error', callback)
-    }
-    else {
+    } else {
       this.fork.off(event, callback)
     }
   }
@@ -87,8 +85,7 @@ export class ForksPoolWorker implements PoolWorker {
     const waitForExit = new Promise<void>((resolve) => {
       if (fork.exitCode != null) {
         resolve()
-      }
-      else {
+      } else {
         fork.once('exit', resolve)
       }
     })
@@ -99,10 +96,7 @@ export class ForksPoolWorker implements PoolWorker {
      * - https://github.com/jestjs/jest/blob/25a8785584c9d54a05887001ee7f498d489a5441/packages/jest-worker/src/workers/ChildProcessWorker.ts#L463-L477
      * - https://github.com/tinylibs/tinypool/blob/40b4b3eb926dabfbfd3d0a7e3d1222d4dd1c0d2d/src/runtime/process-worker.ts#L56
      */
-    const sigkillTimeout = setTimeout(
-      () => fork.kill('SIGKILL'),
-      SIGKILL_TIMEOUT,
-    )
+    const sigkillTimeout = setTimeout(() => fork.kill('SIGKILL'), SIGKILL_TIMEOUT)
 
     fork.kill()
     await waitForExit
@@ -146,10 +140,10 @@ export class ForksPoolWorker implements PoolWorker {
         this._pipeErrorTimer = undefined
         const fork = this._fork
         if (
-          fork
-          && fork.exitCode == null
-          && fork.signalCode == null
-          && this._errorEmitter.listenerCount('error')
+          fork &&
+          fork.exitCode == null &&
+          fork.signalCode == null &&
+          this._errorEmitter.listenerCount('error')
         ) {
           this._errorEmitter.emit('error', error)
         }
@@ -163,7 +157,9 @@ export class ForksPoolWorker implements PoolWorker {
 
   private get fork() {
     if (!this._fork) {
-      throw new Error(`The child process was torn down or never initialized. This is a bug in Vitest.`)
+      throw new Error(
+        `The child process was torn down or never initialized. This is a bug in Vitest.`,
+      )
     }
     return this._fork
   }

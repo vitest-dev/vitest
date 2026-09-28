@@ -8,21 +8,21 @@ import { coverageTest, normalizeURL, runVitest, test } from '../utils'
 // true branch of the `if` is taken, so branches are 1/2 (50%).
 
 test('per-file object thresholds fail while global thresholds pass', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        functions: 40,
-        perFile: {
-          functions: 50,
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/even.ts', '**/fixtures/src/math.ts'],
+        thresholds: {
+          functions: 40,
+          perFile: {
+            functions: 50,
+          },
         },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(1)
   expect(stderr).toMatchInlineSnapshot(`
@@ -32,21 +32,21 @@ test('per-file object thresholds fail while global thresholds pass', async () =>
 })
 
 test('global thresholds fail while per-file object thresholds pass', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        functions: 70,
-        perFile: {
-          functions: 20,
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/even.ts', '**/fixtures/src/math.ts'],
+        thresholds: {
+          functions: 70,
+          perFile: {
+            functions: 20,
+          },
         },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(1)
   expect(stderr).toMatchInlineSnapshot(`
@@ -56,43 +56,46 @@ test('global thresholds fail while per-file object thresholds pass', async () =>
 })
 
 test('both global and per-file object thresholds pass', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        functions: 40,
-        perFile: {
-          functions: 20,
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/even.ts', '**/fixtures/src/math.ts'],
+        thresholds: {
+          functions: 40,
+          perFile: {
+            functions: 20,
+          },
         },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(0)
   expect(stderr).toMatchInlineSnapshot(`""`)
 })
 
 test('per-file object thresholds with { 100: true }', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/branch.ts',
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        functions: 40,
-        perFile: {
-          100: true,
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: [
+          '**/fixtures/src/branch.ts',
+          '**/fixtures/src/even.ts',
+          '**/fixtures/src/math.ts',
+        ],
+        thresholds: {
+          functions: 40,
+          perFile: {
+            100: true,
+          },
         },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(1)
   expect(stderr).toMatchInlineSnapshot(`
@@ -107,21 +110,21 @@ test('per-file object thresholds with { 100: true }', async () => {
 })
 
 test('per-file object thresholds with negative threshold', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        functions: 40,
-        perFile: {
-          functions: -1,
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/even.ts', '**/fixtures/src/math.ts'],
+        thresholds: {
+          functions: 40,
+          perFile: {
+            functions: -1,
+          },
         },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(1)
   expect(stderr).toMatchInlineSnapshot(`
@@ -131,62 +134,62 @@ test('per-file object thresholds with negative threshold', async () => {
 })
 
 test('per-file object thresholds with empty object are a no-op', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        functions: 40,
-        perFile: {},
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/even.ts', '**/fixtures/src/math.ts'],
+        thresholds: {
+          functions: 40,
+          perFile: {},
+        },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(0)
   expect(stderr).toMatchInlineSnapshot(`""`)
 })
 
 test('top-level perFile does not cascade to glob thresholds', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        'perFile': true,
-        '**/fixtures/src/*.ts': {
-          functions: 40,
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/even.ts', '**/fixtures/src/math.ts'],
+        thresholds: {
+          perFile: true,
+          '**/fixtures/src/*.ts': {
+            functions: 40,
+          },
         },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(0)
   expect(stderr).toMatchInlineSnapshot(`""`)
 })
 
 test('top-level perFile applies globally but not to a glob without its own perFile', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        'functions': 30,
-        'perFile': true,
-        '**/fixtures/src/even.ts': {
-          functions: 40,
+  const { exitCode, stderr } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/even.ts', '**/fixtures/src/math.ts'],
+        thresholds: {
+          functions: 30,
+          perFile: true,
+          '**/fixtures/src/even.ts': {
+            functions: 40,
+          },
         },
       },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(exitCode).toBe(1)
   expect(stderr).toMatchInlineSnapshot(`

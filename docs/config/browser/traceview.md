@@ -37,11 +37,11 @@ export default defineConfig({
 })
 ```
 
-| Option | Default | Description |
-| --- | --- | --- |
-| `enabled` | `false` | Enables Vitest trace-view artifact collection. |
+| Option         | Default | Description                                                                                         |
+| -------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `enabled`      | `false` | Enables Vitest trace-view artifact collection.                                                      |
 | `inlineImages` | `false` | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter. |
-| `recordCanvas` | `false` | Captures canvas pixels in snapshots. |
+| `recordCanvas` | `false` | Captures canvas pixels in snapshots.                                                                |
 
 ## browser.traceView.enabled {#traceview-enabled}
 

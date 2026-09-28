@@ -156,6 +156,7 @@ By default, screenshots are organized as:
 ```
 
 The naming convention includes:
+
 - **Test name**: either the first argument of the `toMatchScreenshot()` call, or automatically generated from the test's name.
 - **Browser name**: depends on the configured browser provider, for example `chrome`, `chromium`, `firefox` or `webkit`.
 - **Platform**: `aix`, `darwin`, `freebsd`, `linux`, `openbsd`, `sunos`, or `win32`.
@@ -208,7 +209,7 @@ While in UI mode, Vitest shows a tabbed diff view with an A/B slider as shown be
   <img alt="Animated demo of the visual regression diff view, switching tabs and using the slider to reveal differences" img-light src="/visual-regression/diff-view-light.avif">
   <img alt="Animated demo of the visual regression diff view, switching tabs and using the slider to reveal differences" img-dark src="/visual-regression/diff-view-dark.avif">
 
-  <sup>An example of the visual regression diff UI, showing the "Diff", "Reference", "Actual", and "Slider" tabs, and how the slider reveals unexpected visual changes in a component.</sup>
+<sup>An example of the visual regression diff UI, showing the "Diff", "Reference", "Actual", and "Slider" tabs, and how the slider reveals unexpected visual changes in a component.</sup>
 </center>
 
 #### Understanding the diff image
@@ -524,9 +525,10 @@ Then in your existing workflow run the visual tests:
 
 Running `vitest --update` locally would generate screenshots on your machine, defeating the whole point of a controlled environment. Instead, you need a way to trigger the update in CI where the environment matches the one that runs the tests.
 
-You don't want this to happen automatically on every PR <small>*(chaos!)*</small>. Instead, create a manually-triggered workflow that runs when there are intentional changes to the UI.
+You don't want this to happen automatically on every PR <small>_(chaos!)_</small>. Instead, create a manually-triggered workflow that runs when there are intentional changes to the UI.
 
 The workflow below:
+
 - Only runs on feature branches (never on main)
 - Credits the person who triggered it as co-author
 - Prevents concurrent runs on the same branch
@@ -764,15 +766,19 @@ By default, the Chromatic plugin will automatically capture the end state of eac
 First, install the Chromatic plugin:
 
 ::: code-group
+
 ```bash [npm]
 npm install -D @chromatic-com/vitest
 ```
+
 ```bash [yarn]
 yarn add -D @chromatic-com/vitest
 ```
+
 ```bash [pnpm]
 pnpm add -D @chromatic-com/vitest
 ```
+
 :::
 
 Then, add the plugin to your Vitest configuration:
@@ -928,8 +934,8 @@ Visual regression tests rely on screenshots remaining stable across runs. In pra
 
 1. It takes an initial screenshot (or uses the reference screenshot if available) as baseline
 1. It takes another screenshot and compares it with the baseline
-    - If the screenshots match, the page is stable and testing continues
-    - If they differ, Vitest uses the newest screenshot as the baseline and repeats
+   - If the screenshots match, the page is stable and testing continues
+   - If they differ, Vitest uses the newest screenshot as the baseline and repeats
 1. This continues until stability is achieved or the timeout is reached
 
 This ensures that transient visual changes (like loading spinners or animations) don't cause false positives. If something never stops animating, though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).

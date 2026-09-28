@@ -149,7 +149,7 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
   }
   for (const className of PSEUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)
-    const ids = Array.from(elements, el => mirror.getId(el)).filter(id => id !== -1)
+    const ids = Array.from(elements, (el) => mirror.getId(el)).filter((id) => id !== -1)
     result.pseudoClassIds[className] = ids
   }
   if (serializedLocator) {
@@ -161,19 +161,16 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
       )
       if (!el) {
         result.selectorResolution = 'missing'
-      }
-      else {
+      } else {
         const id = mirror.getId(el)
         if (id !== -1) {
           result.selectorId = id
           result.selectorResolution = 'matched'
-        }
-        else {
+        } else {
           result.selectorResolution = 'missing'
         }
       }
-    }
-    catch (error) {
+    } catch (error) {
       result.selectorResolution = 'error'
       result.selectorError = error instanceof Error ? error.message : String(error)
     }

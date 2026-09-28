@@ -60,12 +60,14 @@ export class VitestResolver {
       return this.externalizeCache.get(normalizedFile)!
     }
 
-    return shouldExternalize(normalizeId(file), this.options, this.externalizeConcurrentCache).then((result) => {
-      this.externalizeCache.set(normalizedFile, result)
-      return result
-    }).finally(() => {
-      this.externalizeConcurrentCache.delete(normalizedFile)
-    })
+    return shouldExternalize(normalizeId(file), this.options, this.externalizeConcurrentCache)
+      .then((result) => {
+        this.externalizeCache.set(normalizedFile, result)
+        return result
+      })
+      .finally(() => {
+        this.externalizeConcurrentCache.delete(normalizedFile)
+      })
   }
 }
 
@@ -102,10 +104,7 @@ const defaultInline = [
   /vite\w*\/dist\/client\/env.mjs/,
 ]
 
-const depsExternal = [
-  /\/node_modules\/.*\.cjs\.js$/,
-  /\/node_modules\/.*\.mjs$/,
-]
+const depsExternal = [/\/node_modules\/.*\.cjs\.js$/, /\/node_modules\/.*\.mjs$/]
 
 function guessCJSversion(id: string): string | undefined {
   if (ESM_EXT_RE.test(id)) {
@@ -165,8 +164,7 @@ async function isValidNodeImport(id: string) {
     const code = await fsp.readFile(id, 'utf8')
     const [, , , hasModuleSyntax] = esModuleLexer.parse(code)
     return !hasModuleSyntax
-  }
-  catch {
+  } catch {
     return false
   }
 }
@@ -210,7 +208,7 @@ export async function detectModuleType(
       return scopeType
     }
   }
-  if (!ESM_SYNTAX_MARKERS.some(marker => code.includes(marker))) {
+  if (!ESM_SYNTAX_MARKERS.some((marker) => code.includes(marker))) {
     return 'cjs'
   }
   // a false "esm" verdict can only break modules that reference the CommonJS
@@ -226,8 +224,7 @@ export async function detectModuleType(
       if (!hasModuleSyntax) {
         return 'cjs'
       }
-    }
-    catch {
+    } catch {
       // the lexer cannot parse TypeScript types or non-JS sources,
       // trust the markers
     }
@@ -279,7 +276,7 @@ async function _shouldExternalize(
     return id
   }
 
-  const isLibraryModule = moduleDirectories.some(dir => id.includes(dir))
+  const isLibraryModule = moduleDirectories.some((dir) => id.includes(dir))
   const guessCJS = isLibraryModule && options?.fallbackCJS
   id = guessCJS ? guessCJSversion(id) || id : id
 
@@ -308,11 +305,10 @@ function matchPattern(
   }
   for (const ex of patterns) {
     if (typeof ex === 'string') {
-      if (moduleDirectories.some(dir => id.includes(join(dir, ex)))) {
+      if (moduleDirectories.some((dir) => id.includes(join(dir, ex)))) {
         return true
       }
-    }
-    else {
+    } else {
       if (ex.test(id)) {
         return true
       }

@@ -34,10 +34,9 @@ export default function toHaveAccessibleErrorMessage(
     // When called without an expected value we only want to validate that the element has an
     // accessible description, whatever it may be.
     pass = actualAccessibleErrorMessage !== ''
-  }
-  else {
-    pass
-      = expectedAccessibleErrorMessage instanceof defaultView.RegExp
+  } else {
+    pass =
+      expectedAccessibleErrorMessage instanceof defaultView.RegExp
         ? expectedAccessibleErrorMessage.test(actualAccessibleErrorMessage)
         : this.equals(
             actualAccessibleErrorMessage,
@@ -60,7 +59,9 @@ export default function toHaveAccessibleErrorMessage(
           ),
           `Expected element ${to} have accessible error message, but got${!this.isNot ? ' nothing' : ''}`,
           this.isNot ? this.utils.RECEIVED_COLOR(redent(actualAccessibleErrorMessage, 2)) : '',
-        ].filter(Boolean).join('\n\n')
+        ]
+          .filter(Boolean)
+          .join('\n\n')
       }
       return getMessage(
         this,

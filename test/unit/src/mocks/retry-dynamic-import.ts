@@ -3,8 +3,7 @@ export async function retryDynamicImport() {
   const load = async (): Promise<unknown> => {
     try {
       return await import('./dynamic-module')
-    }
-    catch {
+    } catch {
       if (retryTimes === 3) {
         throw new Error('import dynamic module failed.')
       }

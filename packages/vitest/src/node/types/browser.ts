@@ -1,7 +1,13 @@
 import type { MockedModule } from '@vitest/mocker'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { IndexHtmlTransformContext, IndexHtmlTransformResult, Plugin, ViteDevServer, UserConfig as ViteUserConfig } from 'vite'
+import type {
+  IndexHtmlTransformContext,
+  IndexHtmlTransformResult,
+  Plugin,
+  ViteDevServer,
+  UserConfig as ViteUserConfig,
+} from 'vite'
 import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { CancelReason } from '../../runtime/runner/types'
@@ -30,10 +36,7 @@ export interface BrowserProviderOption<Options extends object = object> {
    * (e.g. launching it) concurrently. Optional, fire-and-forget: errors must
    * surface through the normal provider flow.
    */
-  prewarm?: (ctx: {
-    config: ResolvedConfig
-    vitest: Vitest
-  }) => void
+  prewarm?: (ctx: { config: ResolvedConfig; vitest: Vitest }) => void
   providerFactory: (project: TestProject) => BrowserProvider
   serverFactory: BrowserServerFactory
 }
@@ -93,41 +96,40 @@ export interface BrowserTraceViewOptions {
   inlineImages?: boolean
 }
 
-type UnsupportedProperties
-  = | 'browser'
-    | 'typecheck'
-    | 'alias'
-    | 'sequence'
-    | 'root'
-    | 'pool'
+type UnsupportedProperties =
+  | 'browser'
+  | 'typecheck'
+  | 'alias'
+  | 'sequence'
+  | 'root'
+  | 'pool'
   // browser mode doesn't support a custom runner
-    | 'runner'
+  | 'runner'
   // non-browser options
-    | 'api'
-    | 'deps'
-    | 'environment'
-    | 'environmentOptions'
-    | 'server'
-    | 'benchmark'
-    | 'name'
+  | 'api'
+  | 'deps'
+  | 'environment'
+  | 'environmentOptions'
+  | 'server'
+  | 'benchmark'
+  | 'name'
 
-export interface BrowserInstanceOption extends
-  Omit<ProjectConfig, UnsupportedProperties>,
-  Pick<
-    BrowserConfigOptions,
-    | 'headless'
-    | 'locators'
-    | 'viewport'
-    | 'testerHtmlPath'
-    | 'screenshotDirectory'
-    | 'screenshotFailures'
-  > {
+export interface BrowserInstanceOption
+  extends
+    Omit<ProjectConfig, UnsupportedProperties>,
+    Pick<
+      BrowserConfigOptions,
+      | 'headless'
+      | 'locators'
+      | 'viewport'
+      | 'testerHtmlPath'
+      | 'screenshotDirectory'
+      | 'screenshotFailures'
+    > {
   /**
    * Name of the browser
    */
-  browser: keyof _BrowserNames extends never
-    ? string
-    : _BrowserNames[keyof _BrowserNames]
+  browser: keyof _BrowserNames extends never ? string : _BrowserNames[keyof _BrowserNames]
 
   name?: string
   provider?: BrowserProviderOption
@@ -234,26 +236,28 @@ export interface BrowserConfigOptions {
    *
    * This option is supported only by **playwright** provider.
    */
-  trace?: BrowserTraceViewMode | {
-    mode: BrowserTraceViewMode
-    /**
-     * The directory where all traces will be stored. By default, Vitest
-     * stores all traces in `__traces__` folder close to the test file.
-     */
-    tracesDir?: string
-    /**
-     * Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
-     * @default true
-     */
-    screenshots?: boolean
-    /**
-     * If this option is true tracing will
-     * - capture DOM snapshot on every action
-     * - record network activity
-     * @default true
-     */
-    snapshots?: boolean
-  }
+  trace?:
+    | BrowserTraceViewMode
+    | {
+        mode: BrowserTraceViewMode
+        /**
+         * The directory where all traces will be stored. By default, Vitest
+         * stores all traces in `__traces__` folder close to the test file.
+         */
+        tracesDir?: string
+        /**
+         * Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
+         * @default true
+         */
+        screenshots?: boolean
+        /**
+         * If this option is true tracing will
+         * - capture DOM snapshot on every action
+         * - record network activity
+         * @default true
+         */
+        snapshots?: boolean
+      }
 
   /**
    *
@@ -327,8 +331,7 @@ export interface BrowserConfigOptions {
 
   expect?: {
     toMatchScreenshot?: {
-      [ComparatorName in keyof ToMatchScreenshotComparators]:
-      {
+      [ComparatorName in keyof ToMatchScreenshotComparators]: {
         /**
          * The name of the comparator to use for visual diffing.
          *
@@ -337,7 +340,8 @@ export interface BrowserConfigOptions {
         comparatorName?: ComparatorName
         comparatorOptions?: ToMatchScreenshotComparators[ComparatorName]
       }
-    }[keyof ToMatchScreenshotComparators] & ToMatchScreenshotOptions
+    }[keyof ToMatchScreenshotComparators] &
+      ToMatchScreenshotOptions
   }
 
   /**
@@ -403,7 +407,9 @@ export interface ParentProjectBrowser {
 }
 
 export interface BrowserServerContribution {
-  transformIndexHtml: (ctx: IndexHtmlTransformContext) => Awaitable<IndexHtmlTransformResult | undefined>
+  transformIndexHtml: (
+    ctx: IndexHtmlTransformContext,
+  ) => Awaitable<IndexHtmlTransformResult | undefined>
   configureServer: (server: ViteDevServer) => Awaitable<void>
   /**
    * Browser-specific Vite config (`resolve.alias`, `define`, esbuild). Applied
@@ -422,7 +428,11 @@ export interface BrowserServerContribution {
    * `optimizeDeps`. `testFiles` is the aggregated, already-globbed set of test
    * files for the server (globbing lives in the core package).
    */
-  resolveOptimizeDeps: (projectConfigs: ResolvedConfig[], testFiles: string[], harness: PluginHarness) => Awaitable<NonNullable<ViteUserConfig['optimizeDeps']>>
+  resolveOptimizeDeps: (
+    projectConfigs: ResolvedConfig[],
+    testFiles: string[],
+    harness: PluginHarness,
+  ) => Awaitable<NonNullable<ViteUserConfig['optimizeDeps']>>
   /**
    * Runtime plugins. Injected into the browser (`client`) environment by the
    * loader's `applyToEnvironment`; their `configureServer`/`transformIndexHtml`
@@ -453,10 +463,7 @@ export interface ProjectBrowser {
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
   registerCommand: <K extends keyof BrowserCommands>(
     name: K,
-    cb: BrowserCommand<
-      Parameters<BrowserCommands[K]>,
-      ReturnType<BrowserCommands[K]>
-    >,
+    cb: BrowserCommand<Parameters<BrowserCommands[K]>, ReturnType<BrowserCommands[K]>>,
   ) => void
   triggerCommand: <K extends keyof BrowserCommands>(
     name: K,

@@ -8,10 +8,7 @@
 import type { DiffOptions, DiffOptionsNormalized } from './types'
 import diffSequences from 'diff-sequences'
 import { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
-import {
-  joinAlignedDiffsExpand,
-  joinAlignedDiffsNoExpand,
-} from './joinAlignedDiffs'
+import { joinAlignedDiffsExpand, joinAlignedDiffsNoExpand } from './joinAlignedDiffs'
 import { normalizeDiffOptions } from './normalizeDiffOptions'
 
 function isEmptyString(lines: Array<string>) {
@@ -91,13 +88,11 @@ export function printDiffLines(
   options: DiffOptionsNormalized,
 ): string {
   return (
-    printAnnotation(options, countChanges(diffs))
-    + (options.expand
+    printAnnotation(options, countChanges(diffs)) +
+    (options.expand
       ? joinAlignedDiffsExpand(diffs, options)
-      : joinAlignedDiffsNoExpand(diffs, options))
-    + (truncated
-      ? options.truncateAnnotationColor(`\n${options.truncateAnnotation}`)
-      : '')
+      : joinAlignedDiffsNoExpand(diffs, options)) +
+    (truncated ? options.truncateAnnotationColor(`\n${options.truncateAnnotation}`) : '')
   )
 }
 
@@ -136,18 +131,14 @@ export function diffLinesUnified2(
   }
 
   if (
-    aLinesDisplay.length !== aLinesCompare.length
-    || bLinesDisplay.length !== bLinesCompare.length
+    aLinesDisplay.length !== aLinesCompare.length ||
+    bLinesDisplay.length !== bLinesCompare.length
   ) {
     // Fall back to diff of display lines.
     return diffLinesUnified(aLinesDisplay, bLinesDisplay, options)
   }
 
-  const [diffs, truncated] = diffLinesRaw(
-    aLinesCompare,
-    bLinesCompare,
-    options,
-  )
+  const [diffs, truncated] = diffLinesRaw(aLinesCompare, bLinesCompare, options)
 
   // Replace comparison lines with displayable lines.
   let aIndex = 0
@@ -181,30 +172,18 @@ export function diffLinesRaw(
   options?: DiffOptions,
 ): [Array<Diff>, boolean] {
   const truncate = options?.truncateThreshold ?? false
-  const truncateThreshold = Math.max(
-    Math.floor(options?.truncateThreshold ?? 0),
-    0,
-  )
-  const aLength = truncate
-    ? Math.min(aLines.length, truncateThreshold)
-    : aLines.length
-  const bLength = truncate
-    ? Math.min(bLines.length, truncateThreshold)
-    : bLines.length
+  const truncateThreshold = Math.max(Math.floor(options?.truncateThreshold ?? 0), 0)
+  const aLength = truncate ? Math.min(aLines.length, truncateThreshold) : aLines.length
+  const bLength = truncate ? Math.min(bLines.length, truncateThreshold) : bLines.length
   const truncated = aLength !== aLines.length || bLength !== bLines.length
 
-  const isCommon = (aIndex: number, bIndex: number) =>
-    aLines[aIndex] === bLines[bIndex]
+  const isCommon = (aIndex: number, bIndex: number) => aLines[aIndex] === bLines[bIndex]
 
   const diffs: Array<Diff> = []
   let aIndex = 0
   let bIndex = 0
 
-  const foundSubsequence = (
-    nCommon: number,
-    aCommon: number,
-    bCommon: number,
-  ) => {
+  const foundSubsequence = (nCommon: number, aCommon: number, bCommon: number) => {
     for (; aIndex !== aCommon; aIndex += 1) {
       diffs.push(new Diff(DIFF_DELETE, aLines[aIndex]))
     }

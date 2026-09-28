@@ -60,7 +60,8 @@ const mod: CoverageProviderModule & {
     // Reduce amount of data sent over rpc by doing some early result filtering
     for (const entry of coverage.result as ScriptCoverageWithOffset[]) {
       if (filterResult(entry)) {
-        entry.startOffset = options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0
+        entry.startOffset =
+          options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0
 
         result.push(entry)
       }
@@ -70,7 +71,7 @@ const mod: CoverageProviderModule & {
       const filenames = await readdir(this.extendedContextCoverageDir)
       const contents = await Promise.all(
         filenames
-          .filter(filename => filename.endsWith('.json'))
+          .filter((filename) => filename.endsWith('.json'))
           .map(async (filename) => {
             const path = `${this.extendedContextCoverageDir}/${filename}`
 

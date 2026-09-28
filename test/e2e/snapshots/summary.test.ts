@@ -12,7 +12,7 @@ test('summary', async () => {
   const dir = join(import.meta.dirname, 'fixtures/summary')
   const testFile = join(dir, 'basic.test.ts')
   const snapshotFile = join(dir, '__snapshots__/basic.test.ts.snap')
-  fsUpdate(testFile, s => s.replace(/`"@SNAP\d"`/g, ''))
+  fsUpdate(testFile, (s) => s.replace(/`"@SNAP\d"`/g, ''))
   fs.rmSync(snapshotFile, { recursive: true, force: true })
 
   // write everything
@@ -23,8 +23,8 @@ test('summary', async () => {
   expect(vitest.stdout).toContain('Snapshots  12 written')
 
   // write partially
-  fsUpdate(testFile, s => s.replace('`"@SNAP2"`', ''))
-  fsUpdate(snapshotFile, s => s.replace('exports[`file repeats 1`] = `"@SNAP5"`;', ''))
+  fsUpdate(testFile, (s) => s.replace('`"@SNAP2"`', ''))
+  fsUpdate(snapshotFile, (s) => s.replace('exports[`file repeats 1`] = `"@SNAP5"`;', ''))
   vitest = await runVitest({
     root: dir,
     update: true,
@@ -32,8 +32,8 @@ test('summary', async () => {
   expect(vitest.stdout).toContain('Snapshots  2 written')
 
   // update partially
-  fsUpdate(testFile, s => s.replace('`"@SNAP2"`', '`"@WRONG"`'))
-  fsUpdate(snapshotFile, s => s.replace('`"@SNAP5"`', '`"@WRONG"`'))
+  fsUpdate(testFile, (s) => s.replace('`"@SNAP2"`', '`"@WRONG"`'))
+  fsUpdate(snapshotFile, (s) => s.replace('`"@SNAP5"`', '`"@WRONG"`'))
   vitest = await runVitest({
     root: dir,
     update: true,
@@ -62,12 +62,10 @@ test('first obsolete then remove', async () => {
   `)
 
   // watch run
-  const { ctx, ...result } = await runVitest(
-    {
-      watch: true,
-      root,
-    },
-  )
+  const { ctx, ...result } = await runVitest({
+    watch: true,
+    root,
+  })
   assert(ctx)
   onTestFinished(() => {
     ctx.close()
@@ -78,7 +76,7 @@ test('first obsolete then remove', async () => {
   })
 
   // remove `toMatchSnapshot()` and rerun -> obsolete snapshot
-  editFile(testFile, s => s.replace(/REMOVE-START.*REMOVE-END/s, ''))
+  editFile(testFile, (s) => s.replace(/REMOVE-START.*REMOVE-END/s, ''))
   await result.vitest.waitForStdout('1 obsolete')
 
   // rerun with update -> remove snapshot

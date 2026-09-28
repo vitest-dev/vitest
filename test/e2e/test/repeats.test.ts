@@ -16,11 +16,11 @@ test('repeats config option is exposed to tests and repeats execution', async ()
   const testModule = ctx!.state.getReportedEntity(file)! as TestModule
   const tests = [...testModule.children.allTests()]
 
-  const fromConfig = tests.find(t => t.name === 'uses repeats from config')!
+  const fromConfig = tests.find((t) => t.name === 'uses repeats from config')!
   expect(fromConfig.options.repeats).toBe(3)
   expect(fromConfig.diagnostic()!.repeatCount).toBe(3)
 
-  const overridden = tests.find(t => t.name === 'test option overrides config')!
+  const overridden = tests.find((t) => t.name === 'test option overrides config')!
   expect(overridden.options.repeats).toBe(1)
   expect(overridden.diagnostic()!.repeatCount).toBe(1)
 })

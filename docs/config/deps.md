@@ -38,7 +38,7 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 
 Enable dependency optimization.
 
-## deps.client  {#deps-client}
+## deps.client {#deps-client}
 
 - **Type:** `{ transformAssets?, ... }`
 

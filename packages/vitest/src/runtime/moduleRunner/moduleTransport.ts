@@ -1,4 +1,9 @@
-import type { EvaluatedModuleNode, EvaluatedModules, FetchFunction, ModuleRunnerTransport } from 'vite/module-runner'
+import type {
+  EvaluatedModuleNode,
+  EvaluatedModules,
+  FetchFunction,
+  ModuleRunnerTransport,
+} from 'vite/module-runner'
 import type { ResolveFunctionResult } from '../../types/general'
 import { EnvironmentTeardownError } from '../utils'
 
@@ -31,14 +36,14 @@ export class VitestTransport implements ModuleRunnerTransport {
       return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
     }
     try {
-      const result = await this.options.fetchModule(...data as Parameters<FetchFunction>)
+      const result = await this.options.fetchModule(...(data as Parameters<FetchFunction>))
       return { result }
-    }
-    catch (cause) {
+    } catch (cause) {
       if (cause instanceof EnvironmentTeardownError) {
         const [id, importer] = data as Parameters<FetchFunction>
-        let message = `Cannot load '${id}'${importer ? ` imported from ${importer}` : ''} after the environment was torn down. `
-          + `This is not a bug in Vitest.`
+        let message =
+          `Cannot load '${id}'${importer ? ` imported from ${importer}` : ''} after the environment was torn down. ` +
+          `This is not a bug in Vitest.`
 
         const moduleNode = importer ? this.evaluatedModules.getModuleById(importer) : undefined
         const callstack = moduleNode ? this.callstacks.get(moduleNode) : undefined

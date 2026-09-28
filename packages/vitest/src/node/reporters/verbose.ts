@@ -18,7 +18,11 @@ export class VerboseReporter extends DefaultReporter {
 
     const testResult = test.result()
 
-    if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
+    if (
+      this.ctx.config.hideSkippedTests &&
+      testResult.state === 'skipped' &&
+      test.options.mode !== 'todo'
+    ) {
       return
     }
 
@@ -36,7 +40,7 @@ export class VerboseReporter extends DefaultReporter {
     this.log(title)
 
     if (testResult.state === 'failed') {
-      testResult.errors.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error.message}`)))
+      testResult.errors.forEach((error) => this.log(c.red(`   ${F_RIGHT} ${error.message}`)))
     }
 
     if (test.annotations().length) {
@@ -46,7 +50,7 @@ export class VerboseReporter extends DefaultReporter {
     }
 
     const benchmarks = test.benchmarks()
-    const inlineBenchmarks = benchmarks.filter(b => b.tasks.length > 0)
+    const inlineBenchmarks = benchmarks.filter((b) => b.tasks.length > 0)
     if (inlineBenchmarks.length > 0) {
       this.printBenchmarkTable(inlineBenchmarks, '')
     }

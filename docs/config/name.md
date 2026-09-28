@@ -32,6 +32,7 @@ The displayed colors depend on your terminal’s color scheme. In the UI, colors
 ## Example
 
 ::: code-group
+
 ```js [string]
 import { defineConfig } from 'vitest/config'
 
@@ -41,6 +42,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```js [object]
 import { defineConfig } from 'vitest/config'
 
@@ -53,6 +55,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 This property is mostly useful if you have several projects as it helps distinguish them in your terminal:
@@ -82,6 +85,7 @@ Vitest automatically assigns a name when none is provided. Resolution order:
 - If the project is specified by a config file or directory, Vitest uses the package.json's `name` field.
 - If there is no `package.json`, Vitest falls back to the project folder's basename.
 - If the project is defined inline in the `projects` array (an object), Vitest assigns a numeric name equal to that project's array index (0-based).
+
 :::
 
 ::: warning

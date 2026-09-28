@@ -49,8 +49,7 @@ describe('waitFor', () => {
     await vi.waitFor(async () => {
       if (finished) {
         return Promise.resolve(true)
-      }
-      else {
+      } else {
         return Promise.reject(new Error('async function error'))
       }
     })
@@ -62,8 +61,7 @@ describe('waitFor', () => {
     }
     try {
       await vi.waitFor(check, 100)
-    }
-    catch (error) {
+    } catch (error) {
       expect((error as Error).message).toMatchInlineSnapshot('"Fail."')
       expect.soft((error as Error).stack).toMatch(/at check/)
     }
@@ -77,8 +75,7 @@ describe('waitFor', () => {
     }
     try {
       await vi.waitFor(check, 50)
-    }
-    catch (error) {
+    } catch (error) {
       expect(error).toMatchInlineSnapshot('[Error: Timed out in waitFor!]')
       expect((error as Error).stack?.split('\n')[1]).toMatch(/waitFor\s*\(.*/)
     }
@@ -106,15 +103,17 @@ describe('waitFor', () => {
     let timedOut = false
     let callbackRanAfterTimeout = false
     try {
-      await vi.waitFor(() => {
-        callbackRanAfterTimeout = timedOut
-        throw new Error('waitFor error')
-      }, {
-        interval: 10,
-        timeout: 50,
-      })
-    }
-    catch {
+      await vi.waitFor(
+        () => {
+          callbackRanAfterTimeout = timedOut
+          throw new Error('waitFor error')
+        },
+        {
+          interval: 10,
+          timeout: 50,
+        },
+      )
+    } catch {
       timedOut = true
     }
     expect(timedOut).toBe(true)
@@ -177,8 +176,7 @@ describe('waitUntil', () => {
     }
     try {
       await vi.waitUntil(check, 20)
-    }
-    catch (error) {
+    } catch (error) {
       expect((error as Error).message).toMatchInlineSnapshot('"Fail."')
       expect.soft((error as Error).stack).toMatch(/at check/)
     }
@@ -206,15 +204,17 @@ describe('waitUntil', () => {
     let timedOut = false
     let callbackRanAfterTimeout = false
     try {
-      await vi.waitUntil(() => {
-        callbackRanAfterTimeout = timedOut
-        return false
-      }, {
-        interval: 10,
-        timeout: 50,
-      })
-    }
-    catch {
+      await vi.waitUntil(
+        () => {
+          callbackRanAfterTimeout = timedOut
+          return false
+        },
+        {
+          interval: 10,
+          timeout: 50,
+        },
+      )
+    } catch {
       timedOut = true
     }
     expect(timedOut).toBe(true)

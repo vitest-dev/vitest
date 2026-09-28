@@ -41,11 +41,7 @@ const error = {
   diff,
 }
 
-const fileWithTextStacks = TestRunner.createFileTask(
-  'test/plain-stack-trace.ts',
-  '',
-  '',
-)
+const fileWithTextStacks = TestRunner.createFileTask('test/plain-stack-trace.ts', '', '')
 fileWithTextStacks.mode = 'run'
 fileWithTextStacks.result = {
   state: 'fail',
@@ -109,28 +105,15 @@ describe.todo('ViewReport', () => {
     expect(preElements[0].textContent, 'error has the correct plain text').toBe(
       'Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts',
     )
-    expect(
-      preElements[0].children,
-      'the pre container has the correct children',
-    ).toHaveLength(2)
+    expect(preElements[0].children, 'the pre container has the correct children').toHaveLength(2)
 
     const [bold, stack] = preElements[0].children
     expect(bold.tagName, 'error contains <b> element').toBe('B')
-    expect(bold.textContent, 'the <b> error element is correct').toBe(
-      'Do some test',
-    )
+    expect(bold.textContent, 'the <b> error element is correct').toBe('Do some test')
 
-    expect(
-      stack.children,
-      'the stack children elements is correct',
-    ).toHaveLength(0)
-    expect(stack.innerHTML, 'stack has the correct message').toBe(
-      'test/plain-stack-trace.ts',
-    )
-    expect(
-      stack.getAttribute('style'),
-      'the stack has the correct text color',
-    ).toBe('color:#A50')
+    expect(stack.children, 'the stack children elements is correct').toHaveLength(0)
+    expect(stack.innerHTML, 'stack has the correct message').toBe('test/plain-stack-trace.ts')
+    expect(stack.getAttribute('style'), 'the stack has the correct text color').toBe('color:#A50')
   })
 
   it('test html stack trace and message', async () => {
@@ -158,36 +141,22 @@ describe.todo('ViewReport', () => {
     expect(preElements[0].textContent, 'error has the correct plain text').toBe(
       'Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts',
     )
-    expect(
-      preElements[0].children,
-      'the pre container has the correct children',
-    ).toHaveLength(3)
+    expect(preElements[0].children, 'the pre container has the correct children').toHaveLength(3)
 
     const [bold, error, stack] = preElements[0].children
     expect(bold.tagName, 'error contains <b> element').toBe('B')
-    expect(bold.textContent, 'the <b> error element is correct').toBe(
-      'Do some test',
-    )
+    expect(bold.textContent, 'the <b> error element is correct').toBe('Do some test')
 
     expect(error.innerHTML, 'the error has the correct message').toBe(
       'Error: Transform failed with 1 error:',
     )
-    expect(
-      error.getAttribute('style'),
-      'the error has the correct background color',
-    ).toBe('background-color:#00A')
-
-    expect(
-      stack.children,
-      'the stack children elements is correct',
-    ).toHaveLength(0)
-    expect(stack.innerHTML, 'stack has the correct message').toBe(
-      'test/plain-stack-trace.ts',
+    expect(error.getAttribute('style'), 'the error has the correct background color').toBe(
+      'background-color:#00A',
     )
-    expect(
-      stack.getAttribute('style'),
-      'the stack has the correct text color',
-    ).toBe('color:#A50')
+
+    expect(stack.children, 'the stack children elements is correct').toHaveLength(0)
+    expect(stack.innerHTML, 'stack has the correct message').toBe('test/plain-stack-trace.ts')
+    expect(stack.getAttribute('style'), 'the stack has the correct text color').toBe('color:#A50')
   })
 
   it('test diff display', async () => {

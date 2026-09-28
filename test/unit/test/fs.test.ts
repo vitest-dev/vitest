@@ -27,4 +27,4 @@ describe('fs', () => {
   })
 })
 
-it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
+it('timeout', () => new Promise((resolve) => setTimeout(resolve, timeout)))

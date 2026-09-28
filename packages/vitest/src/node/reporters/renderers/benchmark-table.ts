@@ -70,11 +70,11 @@ export function renderBenchmarkRow(task: TestBenchmarkTask): string[] {
 
 export function computeBenchColumnWidths(header: string[], rows: string[][]): number[] {
   const allRows = [header, ...rows]
-  return Array.from(header, (_, i) => Math.max(...allRows.map(row => stripVTControlCharacters(row[i]).length)))
+  return Array.from(header, (_, i) =>
+    Math.max(...allRows.map((row) => stripVTControlCharacters(row[i]).length)),
+  )
 }
 
 export function padBenchRow(row: string[], widths: number[]): string[] {
-  return row.map(
-    (v, i) => (i === 0 ? v.padEnd(widths[i]) : v.padStart(widths[i])),
-  )
+  return row.map((v, i) => (i === 0 ? v.padEnd(widths[i]) : v.padStart(widths[i])))
 }

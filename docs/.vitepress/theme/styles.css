@@ -1,9 +1,9 @@
-@import "@voidzero-dev/vitepress-theme/src/styles/index.css";
+@import '@voidzero-dev/vitepress-theme/src/styles/index.css';
 
 @source "./**/*.vue";
 
 /* Vitest */
-:root[data-variant="vitest"] {
+:root[data-variant='vitest'] {
   --color-brand: #008039;
   /* TODO: home page wcag-aa color contrast (remove this once fixed at void0 theme):
    * - why vitest section and texts
@@ -13,18 +13,17 @@
   --color-grey: #867e8e;
 }
 
-:root.dark:not([data-theme])[data-variant="vitest"],
-:root[data-theme="dark"][data-variant="vitest"] {
+:root.dark:not([data-theme])[data-variant='vitest'],
+:root[data-theme='dark'][data-variant='vitest'] {
   --color-brand: var(--color-zest);
 }
 
-:root[data-variant="vitest"]:not(.dark):not([data-theme="light"]),
-:root[data-theme="light"][data-variant="vitest"] {
+:root[data-variant='vitest']:not(.dark):not([data-theme='light']),
+:root[data-theme='light'][data-variant='vitest'] {
   --color-brand: #008039;
   /* TODO: code block (remove this once fixed at void0 theme) */
   --vp-code-color: #007d38;
 }
-
 
 .highlighted-word {
   background-color: var(--vp-code-line-highlight-color);

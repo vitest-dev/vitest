@@ -1,7 +1,7 @@
 html,
 body {
   height: 100%;
-  font-family: "Readex Pro", sans-serif;
+  font-family: 'Readex Pro', sans-serif;
   scroll-behavior: smooth;
 }
 
@@ -111,7 +111,7 @@ html.dark {
 }
 
 .splitpanes__splitter:before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 0;
@@ -231,13 +231,13 @@ html.dark {
 }
 
 @property --viewport-width {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: true;
   initial-value: 0px;
 }
 
 @property --viewport-height {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: true;
   initial-value: 0px;
 }
@@ -247,13 +247,13 @@ html.dark {
   Registering as a typed `<length>` property forces Firefox to resolve the unit to an absolute pixel value at computed-value time, before it reaches the function
 */
 @property --container-width {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: false;
   initial-value: 0px;
 }
 
 @property --container-height {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: false;
   initial-value: 0px;
 }

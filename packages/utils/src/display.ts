@@ -37,9 +37,8 @@ export function stringify(
   let result
 
   // Convert string selector to filter function
-  const filterFn = typeof filterNode === 'string'
-    ? createNodeFilterFromSelector(filterNode)
-    : filterNode
+  const filterFn =
+    typeof filterNode === 'string' ? createNodeFilterFromSelector(filterNode) : filterNode
 
   const plugins = filterFn
     ? [
@@ -60,8 +59,7 @@ export function stringify(
       plugins,
       ...options,
     })
-  }
-  catch {
+  } catch {
     result = prettyFormat(object, {
       callToJSON: false,
       maxDepth,
@@ -74,7 +72,11 @@ export function stringify(
 
   // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, filterNode, ...options })
+    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), {
+        maxLength,
+        filterNode,
+        ...options,
+      })
     : result
 }
 
@@ -92,8 +94,7 @@ function createNodeFilterFromSelector(selector: string): (node: any) => boolean 
     if (node.nodeType === ELEMENT_NODE && node.matches) {
       try {
         return !node.matches(selector)
-      }
-      catch {
+      } catch {
         return true
       }
     }
@@ -135,7 +136,10 @@ export function format(args: unknown[], options: InspectOptions = {}): string {
           return '-0'
         }
         if (typeof value === 'object' && value !== null) {
-          if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
+          if (
+            typeof value.toString === 'function' &&
+            value.toString !== Object.prototype.toString
+          ) {
             return value.toString()
           }
           return formatArg(value)
@@ -171,16 +175,15 @@ export function format(args: unknown[], options: InspectOptions = {}): string {
       case '%j':
         try {
           return JSON.stringify(args[i++])
-        }
-        catch (err: any) {
+        } catch (err: any) {
           const m = err.message
           if (
             // chromium
-            m.includes('circular structure')
+            m.includes('circular structure') ||
             // safari
-            || m.includes('cyclic structures')
+            m.includes('cyclic structures') ||
             // firefox
-            || m.includes('cyclic object')
+            m.includes('cyclic object')
           ) {
             return '[Circular]'
           }
@@ -194,8 +197,7 @@ export function format(args: unknown[], options: InspectOptions = {}): string {
   for (let x = args[i]; i < len; x = args[++i]) {
     if (x === null || typeof x !== 'object') {
       str += ` ${typeof x === 'symbol' ? x.toString() : x}`
-    }
-    else {
+    } else {
       str += ` ${formatArg(x)}`
     }
   }
@@ -207,10 +209,7 @@ export interface InspectOptions extends StringifyOptions {
   multiline?: boolean
 }
 
-export function inspect(
-  obj: unknown,
-  options?: InspectOptions,
-): string {
+export function inspect(obj: unknown, options?: InspectOptions): string {
   const { truncate, multiline, ...stringifyOptions } = options ?? {}
   const prettyFormatOptions: PrettyFormatOptions = {
     singleQuote: true,
@@ -246,10 +245,10 @@ export function inspect(
     return `'${formatted.slice(1, end)}…'`
   }
   if (
-    type === '[object Array]'
-    || type === '[object Object]'
-    || type === '[object Set]'
-    || type === '[object Map]'
+    type === '[object Array]' ||
+    type === '[object Object]' ||
+    type === '[object Set]' ||
+    type === '[object Map]'
   ) {
     return stringifyByMaxWidth(obj, threshold, {
       ...prettyFormatOptions,
@@ -276,18 +275,18 @@ export function truncateString(string: string, maxLength: number): string {
   return `${string.slice(0, end)}…`
 }
 
-function stringifyByMaxWidth(object: unknown, threshold: number, options: StringifyOptions): string {
+function stringifyByMaxWidth(
+  object: unknown,
+  threshold: number,
+  options: StringifyOptions,
+): string {
   function evaluate(x: number) {
     return stringify(object, undefined, {
       ...options,
       maxWidth: x,
     })
   }
-  const opt = binarySearch(
-    0,
-    threshold,
-    x => evaluate(x).length <= threshold,
-  )
+  const opt = binarySearch(0, threshold, (x) => evaluate(x).length <= threshold)
   return evaluate(opt)
 }
 
@@ -298,8 +297,7 @@ function binarySearch(x0: number, x1: number, f: (x: number) => boolean): number
     const x = Math.floor((x0 + x1) / 2)
     if (f(x)) {
       x0 = x
-    }
-    else {
+    } else {
       x1 = x
     }
   }

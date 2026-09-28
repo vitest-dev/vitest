@@ -3,7 +3,15 @@
 // so it is important to keep it small and not rely on any Node APIs
 
 import type { Arrayable } from '@vitest/utils'
-import type { File, Suite, Task, TaskBase, TaskEventPack, TaskResultPack, Test } from '../runtime/runner/types'
+import type {
+  File,
+  Suite,
+  Task,
+  TaskBase,
+  TaskEventPack,
+  TaskResultPack,
+  Test,
+} from '../runtime/runner/types'
 import { toArray } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
 
@@ -19,13 +27,11 @@ export function getTests(suite: Arrayable<Task>): Test[] {
   for (const s of arraySuites) {
     if (isTestCase(s)) {
       tests.push(s)
-    }
-    else {
+    } else {
       for (const task of s.tasks) {
         if (isTestCase(task)) {
           tests.push(task)
-        }
-        else {
+        } else {
           const taskTests = getTests(task)
           for (const test of taskTests) {
             tests.push(test)
@@ -39,23 +45,18 @@ export function getTests(suite: Arrayable<Task>): Test[] {
 
 /* @__NO_SIDE_EFFECTS__ */
 export function getTasks(tasks: Arrayable<Task> = []): Task[] {
-  return toArray(tasks).flatMap(s =>
-    isTestCase(s) ? [s] : [s, ...getTasks(s.tasks)],
-  )
+  return toArray(tasks).flatMap((s) => (isTestCase(s) ? [s] : [s, ...getTasks(s.tasks)]))
 }
 
 /* @__NO_SIDE_EFFECTS__ */
 export function getSuites(suite: Arrayable<Task>): Suite[] {
-  return toArray(suite).flatMap(s =>
-    s.type === 'suite' ? [s, ...getSuites(s.tasks)] : [],
-  )
+  return toArray(suite).flatMap((s) => (s.type === 'suite' ? [s, ...getSuites(s.tasks)] : []))
 }
 
 /* @__NO_SIDE_EFFECTS__ */
 export function hasFailed(suite: Arrayable<Task>): boolean {
   return toArray(suite).some(
-    s =>
-      s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)),
+    (s) => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)),
   )
 }
 
@@ -90,22 +91,23 @@ export function getTestName(task: Task, separator = ' > '): string {
 
 /* @__NO_SIDE_EFFECTS__ */
 export function createTaskName(names: readonly (string | undefined)[], separator = ' > '): string {
-  return names.filter(name => name !== undefined).join(separator)
+  return names.filter((name) => name !== undefined).join(separator)
 }
 
 /* @__NO_SIDE_EFFECTS__ */
 export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
   return getTests(suite).some((s) => {
     return s.result?.errors?.some(
-      e =>
-        typeof e?.message === 'string'
-        && e.message.match(/Snapshot .* mismatched/),
+      (e) => typeof e?.message === 'string' && e.message.match(/Snapshot .* mismatched/),
     )
   })
 }
 
 /* @__NO_SIDE_EFFECTS__ */
-export function convertTasksToEvents(file: File, onTask?: (task: Task) => void): {
+export function convertTasksToEvents(
+  file: File,
+  onTask?: (task: Task) => void,
+): {
   packs: TaskResultPack[]
   events: TaskEventPack[]
 } {
@@ -120,8 +122,7 @@ export function convertTasksToEvents(file: File, onTask?: (task: Task) => void):
     suite.tasks.forEach((task) => {
       if (task.type === 'suite') {
         visit(task)
-      }
-      else {
+      } else {
         onTask?.(task)
         if (suite.mode !== 'skip' && suite.mode !== 'todo') {
           packs.push([task.id, task.result, task.meta])
@@ -239,12 +240,15 @@ export function interpretTaskModes(
   allowOnly?: boolean,
 ): void {
   const matchedLocations: number[] = []
-  const testLocationsSet = testLocations !== undefined && testLocations.length !== 0
-    ? new Set(testLocations)
-    : undefined
+  const testLocationsSet =
+    testLocations !== undefined && testLocations.length !== 0 ? new Set(testLocations) : undefined
   const testIdsSet = testIds ? new Set(testIds) : undefined
 
-  const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
+  const traverseSuite = (
+    suite: Suite,
+    parentIsOnly?: boolean,
+    parentMatchedWithLocation?: boolean,
+  ) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
     // Check if any tasks in this suite have `.only` - if so, only those should run.
@@ -255,8 +259,8 @@ export function interpretTaskModes(
       // Check if either the parent suite or the task itself are marked as included
       // If there are tasks with `.only` in this suite, only include those (not all tasks from describe.only)
       const includeTask = hasSomeTasksOnly
-        ? (t.mode === 'only' || (t.type === 'suite' && !!t.containsOnly))
-        : (suiteIsOnly || t.mode === 'only')
+        ? t.mode === 'only' || (t.type === 'suite' && !!t.containsOnly)
+        : suiteIsOnly || t.mode === 'only'
       if (onlyMode) {
         if (t.type === 'suite' && (includeTask || t.containsOnly)) {
           // Don't skip this suite
@@ -264,11 +268,9 @@ export function interpretTaskModes(
             checkAllowOnly(t, allowOnly)
             t.mode = 'run'
           }
-        }
-        else if (t.mode === 'run' && !includeTask) {
+        } else if (t.mode === 'run' && !includeTask) {
           t.mode = 'skip'
-        }
-        else if (t.mode === 'only') {
+        } else if (t.mode === 'only') {
           checkAllowOnly(t, allowOnly)
           t.mode = 'run'
         }
@@ -283,16 +285,15 @@ export function interpretTaskModes(
           t.mode = 'run'
           matchedLocations.push(t.location.line)
           hasLocationMatch = true
-        }
-        else if (parentMatchedWithLocation) {
+        } else if (parentMatchedWithLocation) {
           t.mode = 'run'
-        }
-        else if (t.type === 'test') {
+        } else if (t.type === 'test') {
           t.mode = 'skip'
         }
       }
 
       if (t.type === 'test') {
+        // oxlint-disable-next-line unicorn/prefer-regexp-test -- namePattern can be a string
         if (namePattern && !t.fullTestName.match(namePattern)) {
           t.mode = 'skip'
         }
@@ -302,15 +303,12 @@ export function interpretTaskModes(
         if (testTagsFilter && !testTagsFilter(t.tags || [])) {
           t.mode = 'skip'
         }
-      }
-      else if (t.type === 'suite') {
+      } else if (t.type === 'suite') {
         if (t.mode === 'skip') {
           skipAllTasks(t)
-        }
-        else if (t.mode === 'todo') {
+        } else if (t.mode === 'todo') {
           todoAllTasks(t)
-        }
-        else {
+        } else {
           traverseSuite(t, includeTask, hasLocationMatch)
         }
       }
@@ -318,7 +316,7 @@ export function interpretTaskModes(
 
     // if all subtasks are skipped, mark as skip
     if (suite.mode === 'run' || suite.mode === 'queued') {
-      if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run' && i.mode !== 'queued')) {
+      if (suite.tasks.length && suite.tasks.every((i) => i.mode !== 'run' && i.mode !== 'queued')) {
         suite.mode = 'skip'
       }
     }
@@ -326,11 +324,10 @@ export function interpretTaskModes(
 
   traverseSuite(file, parentIsOnly, false)
 
-  const nonMatching = testLocations?.filter(loc => !matchedLocations.includes(loc))
+  const nonMatching = testLocations?.filter((loc) => !matchedLocations.includes(loc))
   if (nonMatching && nonMatching.length !== 0) {
-    const message = nonMatching.length === 1
-      ? `line ${nonMatching[0]}`
-      : `lines ${nonMatching.join(', ')}`
+    const message =
+      nonMatching.length === 1 ? `line ${nonMatching[0]}` : `lines ${nonMatching.join(', ')}`
 
     if (file.result === undefined) {
       file.result = {

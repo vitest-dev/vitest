@@ -3,7 +3,14 @@ import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
 import { layoutMode, params } from '~/composables/params'
-import { closeTrace, getSelectedTrace, getTraceAttemptLabel, getTraceAttemptMap, selectActiveTraceAttempt, showTraceSelectorHighlight } from '~/composables/trace-view'
+import {
+  closeTrace,
+  getSelectedTrace,
+  getTraceAttemptLabel,
+  getTraceAttemptMap,
+  selectActiveTraceAttempt,
+  showTraceSelectorHighlight,
+} from '~/composables/trace-view'
 import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
 
@@ -12,11 +19,13 @@ const props = defineProps<{
 }>()
 
 const trace = computed(() => getSelectedTrace(props.selection))
-const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
-const traceAttempts = computed(() => [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
-  key,
-  label: getTraceAttemptLabel(trace) || 'Initial run',
-})))
+const attemptLabel = computed(() => (trace.value ? getTraceAttemptLabel(trace.value) : ''))
+const traceAttempts = computed(() =>
+  [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
+    key,
+    label: getTraceAttemptLabel(trace) || 'Initial run',
+  })),
+)
 const selectedAttemptKey = computed({
   get: () => props.selection.attemptKey ?? '0:0',
   set: selectActiveTraceAttempt,
@@ -48,32 +57,24 @@ const traceLayoutPageUrl = computed(() => {
         <span class="font-bold">{{ selection.test.name }}</span>
         <span v-if="ancestorNames" class="ml-2 op-50">{{ ancestorNames }}</span>
       </div>
-      <span v-else data-testid="trace-view-title" class="flex-auto pl-1 text-sm font-bold">Trace Viewer</span>
+      <span v-else data-testid="trace-view-title" class="flex-auto pl-1 text-sm font-bold"
+        >Trace Viewer</span
+      >
       <select
         v-if="traceAttempts.length > 1"
         v-model="selectedAttemptKey"
         aria-label="Trace attempt"
         class="max-w-40 cursor-pointer border border-base rounded bg-base px-2 py-1 text-xs"
       >
-        <option
-          v-for="attempt in traceAttempts"
-          :key="attempt.key"
-          :value="attempt.key"
-        >
+        <option v-for="attempt in traceAttempts" :key="attempt.key" :value="attempt.key">
           {{ attempt.label }}
         </option>
       </select>
-      <span
-        v-else-if="attemptLabel"
-        class="text-xs opacity-70"
-      >
+      <span v-else-if="attemptLabel" class="text-xs opacity-70">
         {{ attemptLabel }}
       </span>
       <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
-        <input
-          v-model="showTraceSelectorHighlight"
-          type="checkbox"
-        >
+        <input v-model="showTraceSelectorHighlight" type="checkbox" />
         <span>Show highlight</span>
       </label>
       <a
@@ -95,13 +96,7 @@ const traceLayoutPageUrl = computed(() => {
         @click="closeTrace()"
       />
     </div>
-    <TraceView
-      v-if="trace"
-      :trace="trace"
-      :selection="selection"
-    />
-    <div v-else class="text-sm opacity-50 p-4">
-      No trace found
-    </div>
+    <TraceView v-if="trace" :trace="trace" :selection="selection" />
+    <div v-else class="text-sm opacity-50 p-4">No trace found</div>
   </div>
 </template>

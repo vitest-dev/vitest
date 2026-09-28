@@ -10,11 +10,7 @@
       "~/*": ["src/*"]
     },
     "resolveJsonModule": true,
-    "types": [
-      "vite/client",
-      "vite-plugin-pwa/client",
-      "vitepress"
-    ],
+    "types": ["vite/client", "vite-plugin-pwa/client", "vitepress"],
     "strict": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
@@ -22,10 +18,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": [
-    "./*.ts",
-    "./.vitepress/**/*.ts",
-    "./.vitepress/**/*.vue"
-  ],
+  "include": ["./*.ts", "./.vitepress/**/*.ts", "./.vitepress/**/*.vue"],
   "exclude": ["dist", "node_modules"]
 }

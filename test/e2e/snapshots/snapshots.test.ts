@@ -1,13 +1,15 @@
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-
 import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
 test('--update works for workspace project', async () => {
   // setup wrong snapshot value
   editFile(
-    join(import.meta.dirname, 'fixtures/workspace/packages/space/test/__snapshots__/basic.test.ts.snap'),
-    data => data.replace('`1`', '`2`'),
+    join(
+      import.meta.dirname,
+      'fixtures/workspace/packages/space/test/__snapshots__/basic.test.ts.snap',
+    ),
+    (data) => data.replace('`1`', '`2`'),
   )
 
   // run with --update

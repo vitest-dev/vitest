@@ -28,12 +28,15 @@ function createVitestClient(): VitestClient {
   let client: VitestClient
   if (isReport) {
     client = createStaticClient()
-  }
-  else {
+  } else {
     client = createWsClient(ENTRY_URL, {
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
-          explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
+          explorerTree.recordTestArtifact(testId, {
+            type: 'internal:annotation',
+            annotation,
+            location: annotation.location,
+          })
         },
         onTestArtifactRecord(testId, artifact) {
           explorerTree.recordTestArtifact(testId, artifact)
@@ -87,17 +90,24 @@ export const client: VitestClient = createVitestClient()
 
 export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
 const status = ref<WebSocketStatus>('CONNECTING')
-export const availableProjects = computed(() => config.value.projects?.map(project => project.name || '') || [])
+export const availableProjects = computed(
+  () => config.value.projects?.map((project) => project.name || '') || [],
+)
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
   return currentFileId ? findById(currentFileId) : undefined
 })
-export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
+export const currentLogs = computed(
+  () =>
+    getTasks(current.value)
+      .map((i) => i?.logs || [])
+      .flat() || [],
+)
 
 export function findById(id: string) {
   const file = client.state.idMap.get(id)
-  return file ? file as RunnerTestFile : undefined
+  return file as RunnerTestFile | undefined
 }
 
 export const isConnected = computed(() => status.value === 'OPEN')
@@ -155,7 +165,10 @@ export function runFiles(useFiles: RunnerTestFile[]) {
 
   explorerTree.startRun()
 
-  return client.rpc.rerun(useFiles.map(i => i.filepath), true)
+  return client.rpc.rerun(
+    useFiles.map((i) => i.filepath),
+    true,
+  )
 }
 
 export function runTask(task: RunnerTask) {
@@ -167,9 +180,7 @@ export function runTask(task: RunnerTask) {
 }
 
 // @ts-expect-error not typed global
-export const browserState = window.__vitest_browser_runner__ as
-  | BrowserRunnerState
-  | undefined
+export const browserState = window.__vitest_browser_runner__ as BrowserRunnerState | undefined
 
 // @ts-expect-error not typed global
 window.__vitest_ui_api__ = ui

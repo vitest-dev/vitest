@@ -9,8 +9,7 @@ export function partitionSuiteChildren(suite: Suite): Task[][] {
   for (const c of suite.tasks) {
     if (tasksGroup.length === 0 || c.concurrent === tasksGroup[0].concurrent) {
       tasksGroup.push(c)
-    }
-    else {
+    } else {
       tasksGroups.push(tasksGroup)
       tasksGroup = [c]
     }

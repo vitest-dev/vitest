@@ -46,7 +46,7 @@ export class Logger {
     this._highlights.clear()
 
     if ((this.outputStream as typeof process.stdout).isTTY) {
-      (this.outputStream as Writable).write(HIDE_CURSOR)
+      ;(this.outputStream as Writable).write(HIDE_CURSOR)
     }
   }
 
@@ -80,9 +80,8 @@ export class Logger {
 
     if (message) {
       this.console.log(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}${message}`)
-    }
-    else {
-      (this.outputStream as Writable).write(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}`)
+    } else {
+      ;(this.outputStream as Writable).write(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}`)
     }
   }
 
@@ -123,8 +122,7 @@ export class Logger {
   clearHighlightCache(filename?: string): void {
     if (filename) {
       this._highlights.delete(filename)
-    }
-    else {
+    } else {
       this._highlights.clear()
     }
   }
@@ -145,12 +143,9 @@ export class Logger {
   printTags(): void {
     const vitest = this.ctx
     const rootProject = vitest.getRootProject()
-    const projects = [
-      rootProject,
-      ...vitest.projects.filter(p => p !== rootProject),
-    ]
+    const projects = [rootProject, ...vitest.projects.filter((p) => p !== rootProject)]
 
-    const hasTags = projects.some(p => p.config.tags && p.config.tags.length > 0)
+    const hasTags = projects.some((p) => p.config.tags && p.config.tags.length > 0)
 
     if (!hasTags) {
       process.exitCode = 1
@@ -174,20 +169,13 @@ export class Logger {
 
     if (config.watch && (config.changed || config.related?.length)) {
       this.log(`No affected test files found\n`)
-    }
-    else if (config.watch) {
-      this.log(
-        c.red(`No test files found. You can change the file name pattern by pressing "p"\n`),
-      )
-    }
-    else {
+    } else if (config.watch) {
+      this.log(c.red(`No test files found. You can change the file name pattern by pressing "p"\n`))
+    } else {
       if (config.passWithNoTests) {
         this.log(`No test files found, exiting with code 0\n`)
-      }
-      else {
-        this.error(
-          c.red(`No test files found, exiting with code 1\n`),
-        )
+      } else {
+        this.error(c.red(`No test files found, exiting with code 1\n`))
       }
     }
 
@@ -197,9 +185,7 @@ export class Logger {
     }
     const projectsFilter = toArray(config.project)
     if (projectsFilter.length) {
-      this.console.error(
-        c.dim('projects: ') + c.yellow(projectsFilter.join(comma)),
-      )
+      this.console.error(c.dim('projects: ') + c.yellow(projectsFilter.join(comma)))
     }
     this.ctx.projects.forEach((project) => {
       const config = project.config
@@ -208,23 +194,17 @@ export class Logger {
         this.console.error(`\n${formatProjectName(project)}\n`)
       }
       if (config.include) {
-        this.console.error(
-          c.dim('include: ') + c.yellow(config.include.join(comma)),
-        )
+        this.console.error(c.dim('include: ') + c.yellow(config.include.join(comma)))
       }
       if (config.exclude) {
-        this.console.error(
-          c.dim('exclude:  ') + c.yellow(config.exclude.join(comma)),
-        )
+        this.console.error(c.dim('exclude:  ') + c.yellow(config.exclude.join(comma)))
       }
       if (config.typecheck.enabled) {
         this.console.error(
-          c.dim('typecheck include: ')
-          + c.yellow(config.typecheck.include.join(comma)),
+          c.dim('typecheck include: ') + c.yellow(config.typecheck.include.join(comma)),
         )
         this.console.error(
-          c.dim('typecheck exclude: ')
-          + c.yellow(config.typecheck.exclude.join(comma)),
+          c.dim('typecheck exclude: ') + c.yellow(config.typecheck.exclude.join(comma)),
         )
       }
     })
@@ -267,9 +247,10 @@ export class Logger {
     }
 
     if (this.ctx.config.standalone) {
-      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.\n`))
-    }
-    else {
+      this.log(
+        c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.\n`),
+      )
+    } else {
       this.log()
     }
   }
@@ -279,8 +260,8 @@ export class Logger {
       c.bold(
         `\nVitest caught ${errors.length} unhandled error${
           errors.length > 1 ? 's' : ''
-        } during the test run.`
-        + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
+        } during the test run.` +
+          '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
       ),
     )
     this.error(errorBanner('Unhandled Errors'))
@@ -320,10 +301,10 @@ export class Logger {
 
   private addCleanupListeners() {
     const cleanup = () => {
-      this.cleanupListeners.forEach(fn => fn())
+      this.cleanupListeners.forEach((fn) => fn())
 
       if ((this.outputStream as typeof process.stdout).isTTY) {
-        (this.outputStream as Writable).write(SHOW_CURSOR)
+        ;(this.outputStream as Writable).write(SHOW_CURSOR)
       }
     }
 
@@ -333,7 +314,7 @@ export class Logger {
       // Interrupted signals don't set exit code automatically.
       // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
       if (process.exitCode === undefined) {
-        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
+        process.exitCode = exitCode !== undefined ? 128 + exitCode : Number(signal)
       }
 
       // Timeout to flush stderr
