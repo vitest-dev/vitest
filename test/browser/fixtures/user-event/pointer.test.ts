@@ -566,4 +566,33 @@ describe('keeps using previous target or coordinates', () => {
     expect(click).toHaveBeenCalledTimes(3)
     expect(click.mock.calls).toEqual(expectedCalls)
   })
+
+  test('reuses previous target even after other user events', async ({ expect }) => {
+    document.body.innerHTML = /* html */`
+      <button id="a">A</button>
+      <button id="b">B</button>
+    `
+
+    const aButton = document.getElementById('a')!
+    const bButton = document.getElementById('b')!
+    const aSpy = vi.fn<PointerAction>()
+    const bSpy = vi.fn<PointerAction>()
+
+    aButton.addEventListener('click', aSpy)
+    bButton.addEventListener('click', bSpy)
+
+    await userEvent.pointer({ target: aButton, keys: '[MouseLeft]' })
+
+    expect(aSpy).toHaveBeenCalledOnce()
+
+    await userEvent.click(bButton)
+
+    expect(aSpy).toHaveBeenCalledOnce()
+    expect(bSpy).toHaveBeenCalledOnce()
+
+    await userEvent.pointer('[MouseLeft]')
+
+    expect(aSpy).toHaveBeenCalledTimes(2)
+    expect(bSpy).toHaveBeenCalledOnce()
+  })
 })
