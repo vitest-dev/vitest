@@ -3,7 +3,12 @@ import { findById } from '~/composables/client'
 import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
-import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
+import {
+  createOrUpdateNode,
+  createOrUpdateSuiteTask,
+  isFileNode,
+  isParentNode,
+} from '~/composables/explorer/utils'
 
 /**
  * Expand the node: only direct children will be expanded
@@ -23,15 +28,8 @@ import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode }
  * @param search The search applied.
  * @param filter The filter applied.
  */
-export function runExpandNode(
-  id: string,
-  search: SearchMatcher,
-  filter: Filter,
-) {
-  const entry = createOrUpdateSuiteTask(
-    id,
-    false,
-  )
+export function runExpandNode(id: string, search: SearchMatcher, filter: Filter) {
+  const entry = createOrUpdateSuiteTask(id, false)
   if (!entry) {
     return
   }
@@ -50,11 +48,7 @@ export function runExpandNode(
   treeItems.add(node.id)
   // collect children
   // the first node is itself only when it is a file
-  const children = new Set(filterNode(
-    node,
-    search,
-    filter,
-  ))
+  const children = new Set(filterNode(node, search, filter))
 
   const entries = [...collectExpandedNode(node, children)]
   openedTreeItems.value = Array.from(treeItems)
@@ -85,33 +79,23 @@ export function runExpandNode(
  * @param search The search applied.
  * @param filter The filter applied.
  */
-export function runExpandAll(
-  search: SearchMatcher,
-  filter: Filter,
-) {
+export function runExpandAll(search: SearchMatcher, filter: Filter) {
   expandAllNodes(explorerTree.root.tasks, false)
-  const entries = [...filterAll(
-    search,
-    filter,
-  )]
+  const entries = [...filterAll(search, filter)]
   treeFilter.value.expandAll = false
   openedTreeItems.value = []
   uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
 }
 
-export function expandNodesOnEndRun(
-  ids: Set<string>,
-  end: boolean,
-) {
+export function expandNodesOnEndRun(ids: Set<string>, end: boolean) {
   if (ids.size) {
     for (const node of uiEntries.value) {
       if (ids.has(node.id)) {
         node.expanded = true
       }
     }
-  }
-  else if (end) {
+  } else if (end) {
     expandAllNodes(uiEntries.value.filter(isFileNode), true)
   }
 }
@@ -142,12 +126,9 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
  * TODO: Make this a pure splice over explicit entries and keep expansion state changes in
  * `runExpandNode`.
  */
-function* collectExpandedNode(
-  node: UITaskTreeNode,
-  children: Set<UITaskTreeNode>,
-) {
+function* collectExpandedNode(node: UITaskTreeNode, children: Set<UITaskTreeNode>) {
   const id = node.id
-  const ids = new Set(Array.from(children).map(n => n.id))
+  const ids = new Set(Array.from(children).map((n) => n.id))
 
   for (const child of uiEntries.value) {
     if (child.id === id) {
@@ -156,8 +137,7 @@ function* collectExpandedNode(
         yield node
       }
       yield* children
-    }
-    else if (!ids.has(child.id)) {
+    } else if (!ids.has(child.id)) {
       yield child
     }
   }

@@ -5,10 +5,14 @@ import { readCoverageMap, runVitest, test } from '../utils'
 test('custom `viteOverrides.plugins` work with `vitest:coverage-transform` plugin (#8468)', async () => {
   const viteOverrides = { plugins: [customFilePlugin('1')] }
 
-  await runVitest({
-    include: ['fixtures/test/custom-1-syntax.test.ts'],
-    coverage: { reporter: 'json' },
-  }, undefined, viteOverrides)
+  await runVitest(
+    {
+      include: ['fixtures/test/custom-1-syntax.test.ts'],
+      coverage: { reporter: 'json' },
+    },
+    undefined,
+    viteOverrides,
+  )
 
   const coverageMap = await readCoverageMap()
   expect(coverageMap.files()).toMatchInlineSnapshot(`

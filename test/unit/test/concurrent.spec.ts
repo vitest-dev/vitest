@@ -1,7 +1,7 @@
 import { test } from 'vitest'
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 test.concurrent('test1', async ({ expect }) => {

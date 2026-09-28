@@ -25,7 +25,8 @@ describe('vi.when()', () => {
         { args: ['b', 1], value: 99 },
       ]
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...entries[0].args)
         .thenReturn(entries[0].value)
         .calledWith(...entries[1].args)
@@ -50,13 +51,14 @@ describe('vi.when()', () => {
       expect(w).toHaveBeenExhausted()
     })
 
-    test('falls through to original implementation when arguments don\'t match', () => {
+    test("falls through to original implementation when arguments don't match", () => {
       const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
 
       const args: FnData['args'] = ['a', 0]
       const value: FnData['value'] = 97
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(value)
 
@@ -78,7 +80,8 @@ describe('vi.when()', () => {
       const args: FnData['args'] = [expect.stringContaining('--'), expect.any(Number)]
       const value: FnData['value'] = 0
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(value)
 
@@ -99,7 +102,8 @@ describe('vi.when()', () => {
       const args: FnData['args'] = ['a', 0]
       const error = new TypeError('Expected second argument > 0')
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenThrow(error)
 
@@ -120,7 +124,8 @@ describe('vi.when()', () => {
       const args: FnData['args'] = ['a', 0]
       const value: FnData['value'] = 97
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenResolve(value)
 
@@ -142,7 +147,8 @@ describe('vi.when()', () => {
       const args: FnData['args'] = ['a', 0]
       const value: FnData['value'] = 97
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenResolve(value)
         .thenResolveOnce(value)
@@ -163,7 +169,8 @@ describe('vi.when()', () => {
       const args: FnData['args'] = ['a', 0]
       const error = new TypeError('Expected second argument > 0')
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReject(error)
 
@@ -186,7 +193,8 @@ describe('vi.when()', () => {
       const value: FnData['value'] = 97
 
       {
-        using w = vi.when(firstSpy)
+        using w = vi
+          .when(firstSpy)
           .calledWith(...args)
           .thenReturn(value)
 
@@ -199,7 +207,8 @@ describe('vi.when()', () => {
       expect(firstSpy(...args)).toBe(0)
 
       {
-        using w = vi.when(secondSpy)
+        using w = vi
+          .when(secondSpy)
           .calledWith(...args)
           .thenReturn(value)
 
@@ -217,9 +226,7 @@ describe('vi.when()', () => {
     test('falls through to original implementation when `onUnmatched` is set to "passthrough"', () => {
       const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
 
-      vi.when(spy, { onUnmatched: 'passthrough' })
-        .calledWith('a', 0)
-        .thenReturn(97)
+      vi.when(spy, { onUnmatched: 'passthrough' }).calledWith('a', 0).thenReturn(97)
 
       expect(spy('b', 1)).toBe(98)
     })
@@ -235,7 +242,9 @@ describe('vi.when()', () => {
         .thenReturn(value)
 
       expect(spy(...args)).toBe(value)
-      expect(() => spy('b', 1)).toThrowErrorMatchingInlineSnapshot(`[Error: vi.when: no behavior defined when called with ["b", 1]]`)
+      expect(() => spy('b', 1)).toThrowErrorMatchingInlineSnapshot(
+        `[Error: vi.when: no behavior defined when called with ["b", 1]]`,
+      )
     })
 
     test('calls the provided function when `onUnmatched` is a function', () => {
@@ -260,17 +269,14 @@ describe('vi.when()', () => {
       const spy = vi.fn<Fn>()
 
       const args: FnData['args'] = ['a', 0]
-      const values: FnData['value'][] = [
-        97,
-        98,
-        99,
-      ]
+      const values: FnData['value'][] = [97, 98, 99]
       const throwError = new TypeError('[throw] Expected second argument > 0')
       const rejectError = new TypeError('[reject] Expected second argument > 0')
 
       const times = 2
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(values[0])
         .calledWith(...args)
@@ -322,12 +328,10 @@ describe('vi.when()', () => {
       const spy = vi.fn<Fn>()
 
       const args: FnData['args'] = ['a', 0]
-      const values: FnData['value'][] = [
-        97,
-        98,
-      ]
+      const values: FnData['value'][] = [97, 98]
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(values[0])
         .thenReturn(values[1], { times: 2 })
@@ -352,7 +356,8 @@ describe('vi.when()', () => {
       const value: FnData['value'] = 0
       const once: FnData['value'] = 1
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(expect.stringContaining('--'), expect.any(Number))
         .thenReturn(value)
         .calledWith(expect.stringContaining('--'), expect.any(Number))
@@ -371,15 +376,12 @@ describe('vi.when()', () => {
       const spy = vi.fn<Fn>()
 
       const args: FnData['args'] = ['a', 0]
-      const values: FnData['value'][] = [
-        97,
-        98,
-        99,
-      ]
+      const values: FnData['value'][] = [97, 98, 99]
       const throwError = new TypeError('[throw] Expected second argument > 0')
       const rejectError = new TypeError('[reject] Expected second argument > 0')
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(values[0])
         .thenReturnOnce(values[1])
@@ -411,13 +413,10 @@ describe('vi.when()', () => {
       const spy = vi.fn<Fn>()
 
       const args: FnData['args'] = ['a', 0]
-      const values: FnData['value'][] = [
-        97,
-        98,
-        99,
-      ]
+      const values: FnData['value'][] = [97, 98, 99]
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(values[0])
         .thenReturnOnce(values[1])
@@ -462,7 +461,8 @@ describe('vi.when()', () => {
       const message = 'ResizeObserver loop completed with undelivered notifications.'
       const value = 'not undefined'
 
-      const w = vi.when(vi.spyOn(console, 'error'))
+      const w = vi
+        .when(vi.spyOn(console, 'error'))
         .calledWith(expect.objectContaining({ message }))
         .thenReturn(value as never)
 
@@ -484,7 +484,8 @@ describe('vi.when()', () => {
         { args: ['b', 1], value: 99 },
       ]
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...entries[0].args)
         .thenReturn(entries[0].value)
         .thenReturnOnce(entries[0].value)
@@ -578,7 +579,8 @@ describe('vi.when()', () => {
       const args: FnData['args'] = ['a', 0]
       const value: FnData['value'] = 97
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(value)
         .thenReturn(value + 1)
@@ -613,7 +615,8 @@ describe('vi.when()', () => {
 
       const times = 2
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(value, { times })
         .thenThrow(error, { times })
@@ -637,7 +640,8 @@ describe('vi.when()', () => {
       const args: FnData['args'] = [expect.stringContaining('--'), expect.any(Number)]
       const value: FnData['value'] = 0
 
-      const w = vi.when(spy)
+      const w = vi
+        .when(spy)
         .calledWith(...args)
         .thenReturn(value)
 
@@ -691,17 +695,23 @@ describe('vi.when()', () => {
     test('throws when not used with a mock', () => {
       expect(() => {
         vi.when(() => {})
-      }).toThrowErrorMatchingInlineSnapshot(`[TypeError: vi.when: the argument must be a mock function created with \`vi.fn()\` or \`vi.spyOn()\`]`)
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[TypeError: vi.when: the argument must be a mock function created with \`vi.fn()\` or \`vi.spyOn()\`]`,
+      )
     })
 
     test('throws error when `times` option is not greater than 0', () => {
       expect(() => {
         vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: 0 })
-      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[RangeError: vi.when: \`times\` option must be greater than 0]`,
+      )
 
       expect(() => {
         vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: -1 })
-      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[RangeError: vi.when: \`times\` option must be greater than 0]`,
+      )
     })
   })
 })

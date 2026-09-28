@@ -63,24 +63,15 @@ test.each([
   },
   {
     filter: '/basic',
-    files: [
-      'test/basic.test.ts',
-      'test/basic/a.test.ts',
-      'test/basic-foo/a.test.ts',
-    ],
+    files: ['test/basic.test.ts', 'test/basic/a.test.ts', 'test/basic-foo/a.test.ts'],
   },
   {
     filter: 'basic/',
-    files: [
-      'test/foo-basic/a.test.ts',
-      'test/basic/a.test.ts',
-    ],
+    files: ['test/foo-basic/a.test.ts', 'test/basic/a.test.ts'],
   },
   {
     filter: '/basic/',
-    files: [
-      'test/basic/a.test.ts',
-    ],
+    files: ['test/basic/a.test.ts'],
   },
 ])('filter with slash $filter', async ({ filter, files }) => {
   const { stdout } = await runVitest({ root: './fixtures/filters-slash' }, [filter])

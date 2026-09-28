@@ -97,4 +97,5 @@ jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](h
   }
 }
 ```
+
 :::

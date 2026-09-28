@@ -24,7 +24,7 @@ test('uncovered files that require custom transform', async () => {
     ]
   `)
 
-  const fileCoverages = coverageMap.files().map(file => coverageMap.fileCoverageFor(file))
+  const fileCoverages = coverageMap.files().map((file) => coverageMap.fileCoverageFor(file))
 
   expect(fileCoverages).toMatchInlineSnapshot(`
     {

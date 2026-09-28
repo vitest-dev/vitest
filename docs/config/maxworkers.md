@@ -20,6 +20,7 @@ Defines the maximum concurrency for test workers. Accepts either a number or a p
 ### Number
 
 ::: code-group
+
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -29,14 +30,17 @@ export default defineConfig({
   },
 })
 ```
+
 ```bash [CLI]
 vitest --maxWorkers=4
 ```
+
 :::
 
 ### Percent
 
 ::: code-group
+
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -46,9 +50,11 @@ export default defineConfig({
   },
 })
 ```
+
 ```bash [CLI]
 vitest --maxWorkers=50%
 ```
+
 :::
 
 Vitest uses [`os.availableParallelism`](https://nodejs.org/api/os.html#osavailableparallelism) to know the maximum amount of parallelism available.

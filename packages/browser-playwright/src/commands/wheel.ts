@@ -2,13 +2,12 @@ import type { Locator, UserEventWheelDeltaOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 import { hover } from './hover'
 
-type WheelCommand = (element: Locator | Element, options: UserEventWheelDeltaOptions) => Promise<void>
+type WheelCommand = (
+  element: Locator | Element,
+  options: UserEventWheelDeltaOptions,
+) => Promise<void>
 
-export const wheel: UserEventCommand<WheelCommand> = async (
-  context,
-  selector,
-  options,
-) => {
+export const wheel: UserEventCommand<WheelCommand> = async (context, selector, options) => {
   await hover(context, selector)
 
   const times = options.times ?? 1

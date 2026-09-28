@@ -31,18 +31,20 @@ test('keeps browser stack trace source maps fresh after watch rerun', async () =
 
   // modify test file and trigger re-run
   result.vitest.resetOutput()
-  editFile(testFile, content => content.replace(
-    `\
+  editFile(testFile, (content) =>
+    content.replace(
+      `\
   // a
 `,
-    `\
+      `\
   // a
   // b
   // c
   // b
   // e
 `,
-  ))
+    ),
+  )
   await result.vitest.waitForStderr('Failed Tests 1')
 
   // verify new stack trace

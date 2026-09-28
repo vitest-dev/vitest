@@ -1,6 +1,5 @@
 import type { TestUserConfig } from 'vitest/node'
 import { expect, test } from 'vitest'
-
 import { runVitest } from '../../test-utils'
 
 const configs: TestUserConfig[] = [

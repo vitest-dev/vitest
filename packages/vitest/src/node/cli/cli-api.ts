@@ -8,7 +8,13 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
-import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
+import {
+  FilesNotFoundError,
+  GitNotFoundError,
+  IncludeTaskLocationDisabledError,
+  LocationFilterFileNotFoundError,
+  RangeLocationFilterProvidedError,
+} from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
 
 export interface CliOptions extends UserConfig {
@@ -92,8 +98,7 @@ export async function startVitest(
     options = (optionsOrViteOverrides as CliOptions | undefined) ?? {}
     viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig | undefined
     vitestOptions = maybeVitestOptions
-  }
-  else {
+  } else {
     cliFilters = modeOrCliFilters ?? []
     options = (cliFiltersOrOptions as CliOptions | undefined) ?? {}
     viteOverrides = optionsOrViteOverrides as ViteUserConfig | undefined
@@ -101,21 +106,14 @@ export async function startVitest(
   }
   const root = resolve(options.root || process.cwd())
 
-  const ctx = await prepareVitest(
-    options,
-    viteOverrides,
-    vitestOptions,
-    cliFilters,
-  )
+  const ctx = await prepareVitest(options, viteOverrides, vitestOptions, cliFilters)
 
   if (ctx._coverageOptions.enabled) {
     const provider = ctx._coverageOptions.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
-      if (
-        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))
-      ) {
+      if (!(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))) {
         process.exitCode = 1
         return ctx
       }
@@ -136,12 +134,10 @@ export async function startVitest(
     try {
       if (ctx.config.standalone) {
         await ctx.standalone()
-      }
-      else {
+      } else {
         await ctx.start(cliFilters)
       }
-    }
-    catch (error) {
+    } catch (error) {
       reportStartError(ctx, error)
     }
   })
@@ -149,26 +145,20 @@ export async function startVitest(
   try {
     if (ctx.config.listTags) {
       await ctx.listTags()
-    }
-    else if (ctx.config.clearCache) {
+    } else if (ctx.config.clearCache) {
       await ctx.clearCache()
-    }
-    else if (ctx.config.mergeReports) {
+    } else if (ctx.config.mergeReports) {
       await ctx.mergeReports()
-    }
-    else if (ctx.config.standalone) {
+    } else if (ctx.config.standalone) {
       await ctx.standalone()
-    }
-    else {
+    } else {
       await ctx.start(cliFilters)
     }
     return ctx
-  }
-  catch (e) {
+  } catch (e) {
     reportStartError(ctx, e)
     return ctx
-  }
-  finally {
+  } finally {
     if (!ctx?.shouldKeepServer()) {
       stdinCleanup?.()
       await ctx.close()
@@ -187,9 +177,9 @@ function reportStartError(ctx: Vitest, error: unknown): void {
   }
 
   if (
-    error instanceof IncludeTaskLocationDisabledError
-    || error instanceof RangeLocationFilterProvidedError
-    || error instanceof LocationFilterFileNotFoundError
+    error instanceof IncludeTaskLocationDisabledError ||
+    error instanceof RangeLocationFilterProvidedError ||
+    error instanceof LocationFilterFileNotFoundError
   ) {
     ctx.logger.printError(error, { verbose: false })
     return
@@ -232,8 +222,7 @@ export async function prepareVitest(
     viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig | undefined
     vitestOptions = vitestOptionsOrCliFilters as VitestOptions | undefined
     cliFilters = maybeCliFilters
-  }
-  else {
+  } else {
     options = modeOrOptions ?? {}
     viteOverrides = optionsOrViteOverrides as ViteUserConfig | undefined
     vitestOptions = viteOverridesOrVitestOptions as VitestOptions | undefined
@@ -259,8 +248,8 @@ export async function prepareVitest(
   const environmentPackage = getEnvPackageName(ctx.config.environment)
 
   if (
-    environmentPackage
-    && !(await ctx.packageInstaller.ensureInstalled(environmentPackage, root))
+    environmentPackage &&
+    !(await ctx.packageInstaller.ensureInstalled(environmentPackage, root))
   ) {
     process.exitCode = 1
     return ctx
@@ -289,7 +278,7 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
     return processJsonOutput(files, options)
   }
 
-  return formatCollectedAsString(files).forEach(test => console.log(test))
+  return formatCollectedAsString(files).forEach((test) => console.log(test))
 }
 
 export function outputFileList(files: TestSpecification[], options: CliOptions): void {
@@ -297,7 +286,7 @@ export function outputFileList(files: TestSpecification[], options: CliOptions):
     return outputJsonFileList(files, options)
   }
 
-  formatFilesAsString(files, options).map(file => console.log(file))
+  formatFilesAsString(files, options).map((file) => console.log(file))
 }
 
 function outputJsonFileList(files: TestSpecification[], options: CliOptions) {
@@ -395,20 +384,15 @@ function formatCollectedAsString(testModules: TestModule[]): string[] {
         continue
       }
       const fullName = `${test.module.task.name} > ${test.fullName}`
-      results.push(
-        (test.project.name ? `[${test.project.name}] ` : '') + fullName,
-      )
+      results.push((test.project.name ? `[${test.project.name}] ` : '') + fullName)
     }
   })
 
   return results
 }
 
-const envPackageNames: Record<
-  Exclude<keyof typeof environments, 'node'>,
-  string
-> = {
-  'jsdom': 'jsdom',
+const envPackageNames: Record<Exclude<keyof typeof environments, 'node'>, string> = {
+  jsdom: 'jsdom',
   'happy-dom': 'happy-dom',
   'edge-runtime': '@edge-runtime/vm',
 }

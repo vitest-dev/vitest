@@ -28,9 +28,7 @@ function makeFile(overrides: {
 describe('computeDurationBreakdown', () => {
   it('computes shares relative to the sum of tracked phases', () => {
     const breakdown = computeDurationBreakdown({
-      files: [
-        makeFile({ environment: 600, import: 200, tests: 50, setup: 150 }),
-      ],
+      files: [makeFile({ environment: 600, import: 200, tests: 50, setup: 150 })],
       typecheckTime: 0,
     })
 
@@ -45,9 +43,7 @@ describe('computeDurationBreakdown', () => {
 
   it('reports the transform wait as its own phase, excluded from setup and import', () => {
     const breakdown = computeDurationBreakdown({
-      files: [
-        makeFile({ setup: 200, setupFetch: 100, import: 500, importFetch: 300, tests: 100 }),
-      ],
+      files: [makeFile({ setup: 200, setupFetch: 100, import: 500, importFetch: 300, tests: 100 })],
       typecheckTime: 0,
     })
 
@@ -62,9 +58,7 @@ describe('computeDurationBreakdown', () => {
 
   it('never reports negative setup and import times', () => {
     const breakdown = computeDurationBreakdown({
-      files: [
-        makeFile({ setup: 100, setupFetch: 150, import: 200, importFetch: 250, tests: 100 }),
-      ],
+      files: [makeFile({ setup: 100, setupFetch: 150, import: 200, importFetch: 250, tests: 100 })],
       typecheckTime: 0,
     })
 
@@ -94,7 +88,7 @@ describe('computeDurationBreakdown', () => {
       typecheckTime: 0,
     })
 
-    expect(breakdown.phases.map(phase => phase.name)).toEqual(['import'])
+    expect(breakdown.phases.map((phase) => phase.name)).toEqual(['import'])
   })
 
   it('includes worker preparation time', () => {

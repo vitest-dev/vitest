@@ -3,10 +3,10 @@ import type { BenchResult } from '../../runtime/benchmark'
 
 function isBenchResult(value: unknown): value is BenchResult {
   return (
-    typeof value === 'object'
-    && value !== null
-    && 'latency' in value
-    && typeof (value as any).latency?.mean === 'number'
+    typeof value === 'object' &&
+    value !== null &&
+    'latency' in value &&
+    typeof (value as any).latency?.mean === 'number'
   )
 }
 
@@ -36,14 +36,17 @@ export const benchMatchers: MatchersObject = {
     return {
       pass,
       message: () => {
-        const relation = ((actual.latency.mean - expected.latency.mean) / expected.latency.mean * 100).toFixed(2)
+        const relation = (
+          ((actual.latency.mean - expected.latency.mean) / expected.latency.mean) *
+          100
+        ).toFixed(2)
         return pass
-          ? `${matcherHint('.not.toBeFasterThan')}\n\nExpected to not be faster, but was ${Math.abs(Number(relation))}% faster.\n\n`
-          + `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n`
-          + `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
-          : `${matcherHint('.toBeFasterThan')}\n\nExpected to be faster${delta > 0 ? ` by at least ${(delta * 100).toFixed(0)}%` : ''}, but was ${Number(relation) > 0 ? `${relation}% slower` : `only ${Math.abs(Number(relation))}% faster`}.\n\n`
-            + `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n`
-            + `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
+          ? `${matcherHint('.not.toBeFasterThan')}\n\nExpected to not be faster, but was ${Math.abs(Number(relation))}% faster.\n\n` +
+              `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n` +
+              `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
+          : `${matcherHint('.toBeFasterThan')}\n\nExpected to be faster${delta > 0 ? ` by at least ${(delta * 100).toFixed(0)}%` : ''}, but was ${Number(relation) > 0 ? `${relation}% slower` : `only ${Math.abs(Number(relation))}% faster`}.\n\n` +
+              `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n` +
+              `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
       },
     }
   },
@@ -69,14 +72,17 @@ export const benchMatchers: MatchersObject = {
     return {
       pass,
       message: () => {
-        const relation = ((actual.latency.mean - expected.latency.mean) / expected.latency.mean * 100).toFixed(2)
+        const relation = (
+          ((actual.latency.mean - expected.latency.mean) / expected.latency.mean) *
+          100
+        ).toFixed(2)
         return pass
-          ? `${matcherHint('.not.toBeSlowerThan')}\n\nExpected to not be slower, but was ${relation}% slower.\n\n`
-          + `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n`
-          + `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
-          : `${matcherHint('.toBeSlowerThan')}\n\nExpected to be slower${delta > 0 ? ` by at least ${(delta * 100).toFixed(0)}%` : ''}, but was ${Number(relation) < 0 ? `${Math.abs(Number(relation))}% faster` : `only ${relation}% slower`}.\n\n`
-            + `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n`
-            + `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
+          ? `${matcherHint('.not.toBeSlowerThan')}\n\nExpected to not be slower, but was ${relation}% slower.\n\n` +
+              `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n` +
+              `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
+          : `${matcherHint('.toBeSlowerThan')}\n\nExpected to be slower${delta > 0 ? ` by at least ${(delta * 100).toFixed(0)}%` : ''}, but was ${Number(relation) < 0 ? `${Math.abs(Number(relation))}% faster` : `only ${relation}% slower`}.\n\n` +
+              `Received: ${RECEIVED_COLOR(formatOps(actual.throughput.mean))} ops/sec\n` +
+              `Expected: ${EXPECTED_COLOR(formatOps(expected.throughput.mean))} ops/sec\n`
       },
     }
   },

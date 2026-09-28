@@ -59,10 +59,7 @@ export class ServerMockResolver {
   }
 
   public async resolveId(id: string, importer?: string): Promise<ServerIdResolution | null> {
-    const resolved = await this.server.environments.client.pluginContainer.resolveId(
-      id,
-      importer,
-    )
+    const resolved = await this.server.environments.client.pluginContainer.resolveId(id, importer)
     if (!resolved) {
       return null
     }
@@ -77,15 +74,13 @@ export class ServerMockResolver {
     const root = this.server.config.root
     if (resolved.id.startsWith(withTrailingSlash(root))) {
       url = resolved.id.slice(root.length)
-    }
-    else if (
-      resolved.id !== '/@react-refresh'
-      && isAbsolute(resolved.id)
-      && existsSync(cleanUrl(resolved.id))
+    } else if (
+      resolved.id !== '/@react-refresh' &&
+      isAbsolute(resolved.id) &&
+      existsSync(cleanUrl(resolved.id))
     ) {
       url = join('/@fs/', resolved.id)
-    }
-    else {
+    } else {
       url = resolved.id
     }
     if (url[0] !== '.' && url[0] !== '/') {
@@ -102,25 +97,20 @@ export class ServerMockResolver {
 
   private async resolveMockId(rawId: string, importer: string) {
     if (
-      !this.server.moduleGraph.getModuleById(importer)
-      && !importer.startsWith(this.server.config.root)
+      !this.server.moduleGraph.getModuleById(importer) &&
+      !importer.startsWith(this.server.config.root)
     ) {
       importer = join(this.server.config.root, importer)
     }
-    const resolved = await this.server.pluginContainer.resolveId(
-      rawId,
-      importer,
-      {
-        ssr: false,
-      },
-    )
+    const resolved = await this.server.pluginContainer.resolveId(rawId, importer, {
+      ssr: false,
+    })
     return this.resolveModule(rawId, resolved)
   }
 
   private resolveModule(rawId: string, resolved: Rollup.PartialResolvedId | null) {
     const id = resolved?.id || rawId
-    const external
-      = !isAbsolute(id) || isModuleDirectory(this.options, id) ? rawId : null
+    const external = !isAbsolute(id) || isModuleDirectory(this.options, id) ? rawId : null
     return {
       id,
       fsPath: cleanUrl(id),
@@ -130,9 +120,7 @@ export class ServerMockResolver {
 }
 
 function isModuleDirectory(config: ServerResolverOptions, path: string) {
-  const moduleDirectories = config.moduleDirectories || [
-    '/node_modules/',
-  ]
+  const moduleDirectories = config.moduleDirectories || ['/node_modules/']
   return moduleDirectories.some((dir: string) => path.includes(dir))
 }
 

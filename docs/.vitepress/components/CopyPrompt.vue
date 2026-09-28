@@ -7,14 +7,13 @@ const props = defineProps<{
 }>()
 
 const state = ref<'idle' | 'copied' | 'error'>('idle')
-const label = computed(() => state.value === 'copied' ? 'Copied' : 'Copy prompt')
+const label = computed(() => (state.value === 'copied' ? 'Copied' : 'Copy prompt'))
 
 async function copyPrompt() {
   try {
     await navigator.clipboard.writeText(props.prompt)
     state.value = 'copied'
-  }
-  catch {
+  } catch {
     state.value = 'error'
   }
 }
@@ -26,6 +25,12 @@ async function copyPrompt() {
     <span>{{ label }}</span>
   </button>
   <span class="sr-only" role="status" aria-live="polite">
-    {{ state === 'copied' ? 'Prompt copied to clipboard.' : state === 'error' ? 'Could not copy prompt.' : '' }}
+    {{
+      state === 'copied'
+        ? 'Prompt copied to clipboard.'
+        : state === 'error'
+          ? 'Could not copy prompt.'
+          : ''
+    }}
   </span>
 </template>

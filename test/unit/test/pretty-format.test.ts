@@ -142,7 +142,7 @@ describe('maxOutputLength', () => {
 
   test('budget prevents blowup on large graphs', () => {
     // quickly hit the kill switch due to quadratic growth
-    expect([10, 20, 30, 1000, 2000, 3000].map(n => format(createObjectGraph(n).cats).length))
+    expect([10, 20, 30, 1000, 2000, 3000].map((n) => format(createObjectGraph(n).cats).length))
       .toMatchInlineSnapshot(`
         [
           9729,
@@ -275,8 +275,7 @@ describe('basic types', () => {
   })
 
   test('string with double quotes and backslash (escapeString default)', () => {
-    expect(format('"\'\\'))
-      .toMatchInlineSnapshot(`""\\"'\\\\""`)
+    expect(format('"\'\\')).toMatchInlineSnapshot(`""\\"'\\\\""`)
   })
 
   test('multiline string', () => {
@@ -365,7 +364,7 @@ describe('arrays', () => {
   })
 
   test('sparse with only holes', () => {
-    // eslint-disable-next-line no-sparse-arrays
+    // oxlint-disable-next-line no-sparse-arrays
     expect(format([, , ,])).toMatchInlineSnapshot(`
       "Array [
         ,
@@ -376,7 +375,7 @@ describe('arrays', () => {
   })
 
   test('sparse with items', () => {
-    // eslint-disable-next-line no-sparse-arrays
+    // oxlint-disable-next-line no-sparse-arrays
     expect(format([1, , , 4])).toMatchInlineSnapshot(`
       "Array [
         1,
@@ -388,7 +387,7 @@ describe('arrays', () => {
   })
 
   test('sparse with undefined', () => {
-    // eslint-disable-next-line no-sparse-arrays
+    // oxlint-disable-next-line no-sparse-arrays
     expect(format([1, , undefined, , 4])).toMatchInlineSnapshot(
       `
       "Array [
@@ -502,7 +501,9 @@ describe('objects', () => {
   })
 
   test('custom constructor name', () => {
-    class Foo { x = 1 }
+    class Foo {
+      x = 1
+    }
     expect(format(new Foo())).toMatchInlineSnapshot(`
       "Foo {
         "x": 1,
@@ -572,7 +573,10 @@ describe('Map', () => {
   })
 
   test('with string keys', () => {
-    const val = new Map([['a', 1], ['b', 2]])
+    const val = new Map([
+      ['a', 1],
+      ['b', 2],
+    ])
     expect(format(val)).toMatchInlineSnapshot(
       `
       "Map {
@@ -622,7 +626,7 @@ describe('Set', () => {
 
 describe('Arguments', () => {
   function returnArguments(..._args: Array<unknown>) {
-    // eslint-disable-next-line prefer-rest-params
+    // oxlint-disable-next-line prefer-rest-params
     return arguments
   }
 
@@ -749,7 +753,12 @@ describe('maxWidth option', () => {
   })
 
   test('truncates maps', () => {
-    const val = new Map([['a', 1], ['b', 2], ['c', 3], ['d', 4]])
+    const val = new Map([
+      ['a', 1],
+      ['b', 2],
+      ['c', 3],
+      ['d', 4],
+    ])
     expect(format(val, { maxWidth: 2 })).toMatchInlineSnapshot(
       `
       "Map {
@@ -770,17 +779,14 @@ describe('min option', () => {
   })
 
   test('Map and Set', () => {
-    expect(format(new Map([['k', 'v']]), { min: true })).toMatchInlineSnapshot(
-      `"Map {"k" => "v"}"`,
-    )
-    expect(format(new Set([1, 2]), { min: true })).toMatchInlineSnapshot(
-      `"Set {1, 2}"`,
-    )
+    expect(format(new Map([['k', 'v']]), { min: true })).toMatchInlineSnapshot(`"Map {"k" => "v"}"`)
+    expect(format(new Set([1, 2]), { min: true })).toMatchInlineSnapshot(`"Set {1, 2}"`)
   })
 
   test('does not allow indent !== 0 with min', () => {
-    expect(() => format(1, { indent: 1, min: true }))
-      .toThrowErrorMatchingInlineSnapshot(`[Error: pretty-format: Options "min" and "indent" cannot be used together.]`)
+    expect(() => format(1, { indent: 1, min: true })).toThrowErrorMatchingInlineSnapshot(
+      `[Error: pretty-format: Options "min" and "indent" cannot be used together.]`,
+    )
   })
 })
 
@@ -865,7 +871,9 @@ describe('printBasicPrototype option', () => {
 
   test('still shows custom constructor names when false', () => {
     class Custom {}
-    expect(format(new Custom(), { printBasicPrototype: false })).toMatchInlineSnapshot(`"Custom {}"`)
+    expect(format(new Custom(), { printBasicPrototype: false })).toMatchInlineSnapshot(
+      `"Custom {}"`,
+    )
   })
 })
 
@@ -911,7 +919,7 @@ describe('singleQuote option', () => {
   })
 
   test('escapes single quotes inside string when singleQuote + escapeString', () => {
-    expect(format('it\'s', { singleQuote: true })).toMatchInlineSnapshot(`"'it\\'s'"`)
+    expect(format("it's", { singleQuote: true })).toMatchInlineSnapshot(`"'it\\'s'"`)
   })
 
   test('escapes backslash when singleQuote + escapeString', () => {
@@ -939,9 +947,9 @@ describe('quoteKeys option', () => {
   test('forced quote', () => {
     const input = {
       '': 0,
-      '$a': 0,
+      $a: 0,
       '0a': 0,
-      'a$': 0,
+      a$: 0,
       'a-b': 0,
     }
     expect(format(input, { quoteKeys: false })).toMatchInlineSnapshot(`
@@ -972,7 +980,7 @@ describe('quoteKeys option', () => {
 
   test('prototype', () => {
     const input = Object.create(null)
-    // eslint-disable-next-line
+    // oxlint-disable-next-line
     input.__proto__ = 0
     expect(format(input, { quoteKeys: false })).toMatchInlineSnapshot(`
       "Object {
@@ -1061,12 +1069,16 @@ describe('ErrorPlugin', () => {
 
 describe('plugins', () => {
   test('custom plugin with test/print', () => {
-    class Foo { value = 42 }
+    class Foo {
+      value = 42
+    }
     const result = format(new Foo(), {
-      plugins: [{
-        test: (val: unknown) => val instanceof Foo,
-        print: (val: any) => `Foo(${val.value})`,
-      }],
+      plugins: [
+        {
+          test: (val: unknown) => val instanceof Foo,
+          print: (val: any) => `Foo(${val.value})`,
+        },
+      ],
     })
     expect(result).toMatchInlineSnapshot(`"Foo(42)"`)
   })
@@ -1074,32 +1086,42 @@ describe('plugins', () => {
   test('custom plugin with test/serialize', () => {
     class Bar {}
     const result = format(new Bar(), {
-      plugins: [{
-        test: (val: unknown) => val instanceof Bar,
-        serialize: () => 'serialized Bar',
-      }],
+      plugins: [
+        {
+          test: (val: unknown) => val instanceof Bar,
+          serialize: () => 'serialized Bar',
+        },
+      ],
     })
     expect(result).toMatchInlineSnapshot(`"serialized Bar"`)
   })
 
   test('plugin returning empty string', () => {
     const result = format('x', {
-      plugins: [{
-        test: () => true,
-        print: () => '',
-      }],
+      plugins: [
+        {
+          test: () => true,
+          print: () => '',
+        },
+      ],
     })
     expect(result).toMatchInlineSnapshot(`""`)
   })
 
   test('throws if plugin returns non-string', () => {
-    expect(() => format(1, {
-      plugins: [{
-        test: () => true,
-        // @ts-expect-error testing runtime
-        print: (val: unknown) => val,
-      }],
-    })).toThrowErrorMatchingInlineSnapshot(`[TypeError: pretty-format: Plugin must return type "string" but instead returned "number".]`)
+    expect(() =>
+      format(1, {
+        plugins: [
+          {
+            test: () => true,
+            // @ts-expect-error testing runtime
+            print: (val: unknown) => val,
+          },
+        ],
+      }),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: pretty-format: Plugin must return type "string" but instead returned "number".]`,
+    )
   })
 })
 
@@ -1132,30 +1154,66 @@ describe('prettyInspect', () => {
 
   test('truncates surragete pair correctly', () => {
     expect(prettyInspect('😀'.repeat(5), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀'"`)
-    expect(prettyInspect('😀'.repeat(6), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀'"`)
-    expect(prettyInspect('😀'.repeat(7), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀…'"`)
-    expect(prettyInspect('😀'.repeat(8), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀…'"`)
-    expect(prettyInspect(`a${'😀'.repeat(5)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀'"`)
-    expect(prettyInspect(`a${'😀'.repeat(6)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀…'"`)
-    expect(prettyInspect(`a${'😀'.repeat(7)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀…'"`)
-    expect(prettyInspect(`a${'😀'.repeat(8)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀…'"`)
+    expect(prettyInspect('😀'.repeat(6), { truncate: 14 })).toMatchInlineSnapshot(
+      `"'😀😀😀😀😀😀'"`,
+    )
+    expect(prettyInspect('😀'.repeat(7), { truncate: 14 })).toMatchInlineSnapshot(
+      `"'😀😀😀😀😀😀…'"`,
+    )
+    expect(prettyInspect('😀'.repeat(8), { truncate: 14 })).toMatchInlineSnapshot(
+      `"'😀😀😀😀😀😀…'"`,
+    )
+    expect(prettyInspect(`a${'😀'.repeat(5)}`, { truncate: 14 })).toMatchInlineSnapshot(
+      `"'a😀😀😀😀😀'"`,
+    )
+    expect(prettyInspect(`a${'😀'.repeat(6)}`, { truncate: 14 })).toMatchInlineSnapshot(
+      `"'a😀😀😀😀😀…'"`,
+    )
+    expect(prettyInspect(`a${'😀'.repeat(7)}`, { truncate: 14 })).toMatchInlineSnapshot(
+      `"'a😀😀😀😀😀…'"`,
+    )
+    expect(prettyInspect(`a${'😀'.repeat(8)}`, { truncate: 14 })).toMatchInlineSnapshot(
+      `"'a😀😀😀😀😀…'"`,
+    )
   })
 
   test('truncates array', () => {
-    expect(prettyInspect([1, 2, 3, 4, 5, 6], { truncate: 20 })).toMatchInlineSnapshot(`"[ 1, 2, 3, 4, 5, 6 ]"`)
-    expect(prettyInspect([1, 2, 3, 4, 5, 6, 7], { truncate: 20 })).toMatchInlineSnapshot(`"[ 1, 2, 3, 4, …(3) ]"`)
+    expect(prettyInspect([1, 2, 3, 4, 5, 6], { truncate: 20 })).toMatchInlineSnapshot(
+      `"[ 1, 2, 3, 4, 5, 6 ]"`,
+    )
+    expect(prettyInspect([1, 2, 3, 4, 5, 6, 7], { truncate: 20 })).toMatchInlineSnapshot(
+      `"[ 1, 2, 3, 4, …(3) ]"`,
+    )
   })
 
   test('truncates object', () => {
-    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: 1, b: 2, c: 3 }"`)
-    expect(prettyInspect({ a: 1, b: 2, c: 3, d: 4 }, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: 1, b: 2, …(2) }"`)
+    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 20 })).toMatchInlineSnapshot(
+      `"{ a: 1, b: 2, c: 3 }"`,
+    )
+    expect(prettyInspect({ a: 1, b: 2, c: 3, d: 4 }, { truncate: 20 })).toMatchInlineSnapshot(
+      `"{ a: 1, b: 2, …(2) }"`,
+    )
   })
 
   test('truncate other types', () => {
-    expect(prettyInspect(new Map([['a', 1]]), { truncate: 25 })).toMatchInlineSnapshot(`"Map { 'a' => 1 }"`)
-    expect(prettyInspect(new Map([['a', 1], ['b', 2]]), { truncate: 25 })).toMatchInlineSnapshot(`"Map { 'a' => 1, …(1) }"`)
-    expect(prettyInspect(new Set([1, 2, 3, 4]), { truncate: 20 })).toMatchInlineSnapshot(`"Set { 1, 2, 3, 4 }"`)
-    expect(prettyInspect(new Set([1, 2, 3, 4, 5]), { truncate: 20 })).toMatchInlineSnapshot(`"Set { 1, 2, …(3) }"`)
+    expect(prettyInspect(new Map([['a', 1]]), { truncate: 25 })).toMatchInlineSnapshot(
+      `"Map { 'a' => 1 }"`,
+    )
+    expect(
+      prettyInspect(
+        new Map([
+          ['a', 1],
+          ['b', 2],
+        ]),
+        { truncate: 25 },
+      ),
+    ).toMatchInlineSnapshot(`"Map { 'a' => 1, …(1) }"`)
+    expect(prettyInspect(new Set([1, 2, 3, 4]), { truncate: 20 })).toMatchInlineSnapshot(
+      `"Set { 1, 2, 3, 4 }"`,
+    )
+    expect(prettyInspect(new Set([1, 2, 3, 4, 5]), { truncate: 20 })).toMatchInlineSnapshot(
+      `"Set { 1, 2, …(3) }"`,
+    )
   })
 
   test('multiline', () => {
@@ -1220,7 +1278,9 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
       }
     }
     expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
-    expect(nodeInspect(new CustomClass(), nodeOpts)).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
+    expect(nodeInspect(new CustomClass(), nodeOpts)).toMatchInlineSnapshot(
+      `"CustomClass { key: 'value' }"`,
+    )
     expect(loupeInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass{ key: 'value' }"`)
   })
 
@@ -1248,9 +1308,9 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
   // -- prettyInspect diverges from both --
 
   test('string with single quotes — no escaping (escapeString: false)', () => {
-    expect(prettyInspect('it\'s')).toMatchInlineSnapshot(`"'it's'"`)
-    expect(nodeInspect('it\'s')).toMatchInlineSnapshot(`""it's""`)
-    expect(loupeInspect('it\'s')).toMatchInlineSnapshot(`"'it\\'s'"`)
+    expect(prettyInspect("it's")).toMatchInlineSnapshot(`"'it's'"`)
+    expect(nodeInspect("it's")).toMatchInlineSnapshot(`""it's""`)
+    expect(loupeInspect("it's")).toMatchInlineSnapshot(`"'it\\'s'"`)
   })
 
   test('named function — format differences', () => {
@@ -1289,7 +1349,10 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
   })
 
   test('Map — space before brace, no size prefix', () => {
-    const m = new Map([['a', 1], ['b', 2]])
+    const m = new Map([
+      ['a', 1],
+      ['b', 2],
+    ])
     expect(prettyInspect(m)).toMatchInlineSnapshot(`"Map { 'a' => 1, 'b' => 2 }"`)
     expect(nodeInspect(m)).toMatchInlineSnapshot(`"Map(2) { 'a' => 1, 'b' => 2 }"`)
     expect(loupeInspect(m)).toMatchInlineSnapshot(`"Map{ 'a' => 1, 'b' => 2 }"`)
@@ -1357,8 +1420,12 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('array with long string values', () => {
       const arr = ['one', 'two', 'three', 'four', 'five']
-      expect(prettyInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ 'one', 'two', 'three', 'four', …(1) ]"`)
-      expect(loupeInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ 'one', 'two', 'three', 'four', …(1) ]"`)
+      expect(prettyInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(
+        `"[ 'one', 'two', 'three', 'four', …(1) ]"`,
+      )
+      expect(loupeInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(
+        `"[ 'one', 'two', 'three', 'four', …(1) ]"`,
+      )
     })
 
     test('short object — both fit', () => {
@@ -1368,8 +1435,12 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('long object', () => {
       const obj = { one: 1, two: 2, three: 3, four: 4, five: 5 }
-      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, …(2) }"`)
-      expect(loupeInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, …(2) }"`)
+      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(
+        `"{ one: 1, two: 2, three: 3, …(2) }"`,
+      )
+      expect(loupeInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(
+        `"{ one: 1, two: 2, three: 3, …(2) }"`,
+      )
     })
 
     test('nested object — stringify adaptive maxDepth halves depth until it fits', () => {
@@ -1381,7 +1452,11 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
     })
 
     test('Map', () => {
-      const m = new Map([['a', 1], ['b', 2], ['c', 3]])
+      const m = new Map([
+        ['a', 1],
+        ['b', 2],
+        ['c', 3],
+      ])
       expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map { …(3) }"`)
       expect(loupeInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map{ …(3) }"`)
     })
@@ -1394,8 +1469,12 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('function', () => {
       function myLongFunctionName() {}
-      expect(prettyInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function myLongFunctionName]"`)
-      expect(loupeInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function …]"`)
+      expect(prettyInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(
+        `"[Function myLongFunctionName]"`,
+      )
+      expect(loupeInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(
+        `"[Function …]"`,
+      )
     })
   })
 })

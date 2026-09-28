@@ -57,7 +57,10 @@ export class TypecheckPoolWorker implements PoolWorker {
 const __vitest_worker_response__ = true
 const runners = new WeakMap<Vitest, ReturnType<typeof createRunner>>()
 
-async function onMessage(message: WorkerRequest, project: TestProject): Promise<WorkerResponse | void> {
+async function onMessage(
+  message: WorkerRequest,
+  project: TestProject,
+): Promise<WorkerResponse | void> {
   if (message?.__vitest_worker_request__ !== true) {
     return undefined
   }
@@ -76,16 +79,14 @@ async function onMessage(message: WorkerRequest, project: TestProject): Promise<
     }
 
     case 'run': {
-      runPromise = runner.runTests(message.context.files, project)
-        .catch(error => error)
+      runPromise = runner.runTests(message.context.files, project).catch((error) => error)
       const error = await runPromise
 
       return { type: 'testfileFinished', error, __vitest_worker_response__ }
     }
 
     case 'collect': {
-      runPromise = runner.collectTests(message.context.files, project)
-        .catch(error => error)
+      runPromise = runner.collectTests(message.context.files, project).catch((error) => error)
       const error = await runPromise
 
       return { type: 'testfileFinished', error, __vitest_worker_response__ }
@@ -104,19 +105,14 @@ function createRunner(vitest: Vitest) {
   const promisesMap = new WeakMap<TestProject, DeferPromise<void>>()
   const rerunTriggered = new WeakSet<TestProject>()
 
-  async function onParseEnd(
-    project: TestProject,
-    { files, sourceErrors }: TypecheckResults,
-  ) {
+  async function onParseEnd(project: TestProject, { files, sourceErrors }: TypecheckResults) {
     const checker = project.typechecker!
 
     const { packs, events } = checker.getTestPacksAndEvents()
     await vitest._testRun.updated(packs, events)
 
     if (!project.config.typecheck.ignoreSourceErrors) {
-      sourceErrors.forEach(error =>
-        vitest.state.catchError(error, 'Unhandled Source Error'),
-      )
+      sourceErrors.forEach((error) => vitest.state.catchError(error, 'Unhandled Source Error'))
     }
 
     // The typechecker child process (tsc/vue-tsc) can terminate without producing
@@ -139,14 +135,14 @@ function createRunner(vitest: Vitest) {
             : `exited with code ${exitCode}`
           message = `The ${checker.getChecker()} process ${reason} before type checking finished.`
           if (looksLikeOom) {
-            message += ` This usually means it ran out of memory — try increasing the `
-              + `limit with NODE_OPTIONS=--max-old-space-size.`
+            message +=
+              ` This usually means it ran out of memory — try increasing the ` +
+              `limit with NODE_OPTIONS=--max-old-space-size.`
           }
           if (output) {
             message += `\n\n${output}`
           }
-        }
-        else {
+        } else {
           // a plain non-zero exit with diagnostics we couldn't attribute to a
           // file (e.g. a tsconfig error) — surface the checker output as-is
           message = output
@@ -164,11 +160,13 @@ function createRunner(vitest: Vitest) {
 
     // triggered by TSC watcher, not Vitest watcher, so we need to emulate what Vitest does in this case
     if (vitest.config.watch && !vitest.runningPromise) {
-      const modules = files.map(file => vitest.state.getReportedEntity(file)).filter(e => e?.type === 'module')
+      const modules = files
+        .map((file) => vitest.state.getReportedEntity(file))
+        .filter((e) => e?.type === 'module')
 
       const state: TestRunEndReason = vitest.isCancelling
         ? 'interrupted'
-        : modules.some(m => !m.ok())
+        : modules.some((m) => !m.ok())
           ? 'failed'
           : 'passed'
 
@@ -180,10 +178,7 @@ function createRunner(vitest: Vitest) {
     }
   }
 
-  async function createWorkspaceTypechecker(
-    project: TestProject,
-    files: string[],
-  ) {
+  async function createWorkspaceTypechecker(project: TestProject, files: string[]) {
     const checker = project.typechecker ?? new Typechecker(project)
     if (project.typechecker) {
       return checker
@@ -200,18 +195,14 @@ function createRunner(vitest: Vitest) {
       await vitest._testRun.collected(project, files)
     })
 
-    checker.onParseEnd(result => onParseEnd(project, result))
+    checker.onParseEnd((result) => onParseEnd(project, result))
 
     checker.onWatcherRerun(async () => {
       rerunTriggered.add(project)
 
       if (!vitest.runningPromise) {
         vitest.state.clearErrors()
-        await vitest.report(
-          'onWatcherRerun',
-          files,
-          'File change detected. Triggering rerun.',
-        )
+        await vitest.report('onWatcherRerun', files, 'File change detected. Triggering rerun.')
       }
 
       await checker.collectTests()
@@ -239,7 +230,7 @@ function createRunner(vitest: Vitest) {
   }
 
   async function collectTests(specs: FileSpecification[], project: TestProject) {
-    const files = specs.map(spec => spec.filepath)
+    const files = specs.map((spec) => spec.filepath)
     const checker = await createWorkspaceTypechecker(project, files)
     checker.setFiles(files)
     await checker.collectTests()
@@ -250,7 +241,7 @@ function createRunner(vitest: Vitest) {
   async function runTests(specs: FileSpecification[], project: TestProject) {
     const promises: Promise<void>[] = []
 
-    const files = specs.map(spec => spec.filepath)
+    const files = specs.map((spec) => spec.filepath)
     const promise = createDefer<void>()
 
     // check that watcher actually triggered rerun

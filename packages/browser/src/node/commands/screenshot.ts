@@ -12,7 +12,10 @@ declare module 'vitest/browser' {
     /**
      * @internal
      */
-    __vitest_takeScreenshot: (name: string, options: ScreenshotCommandOptions) => Promise<{
+    __vitest_takeScreenshot: (
+      name: string,
+      options: ScreenshotCommandOptions,
+    ) => Promise<{
       buffer: Buffer
       path: string
     }>
@@ -35,11 +38,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotCommandOptions]> = as
   return returnResult(options, path, buffer)
 }
 
-function returnResult(
-  options: ScreenshotCommandOptions,
-  path: string,
-  buffer: Buffer,
-) {
+function returnResult(options: ScreenshotCommandOptions, path: string, buffer: Buffer) {
   if (!options.save) {
     return buffer.toString('base64')
   }

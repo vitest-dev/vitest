@@ -42,7 +42,8 @@ export function setupConsoleLogSpy(): void {
     trace(...args)
     const content = processLog(args)
     const error = new Error('$$Trace')
-    const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
+    const processor =
+      (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
     const stack = processor(error.stack || '')
     sendLog('stderr', `${content}\n${stack}`, true)
   }
@@ -59,8 +60,7 @@ export function setupConsoleLogSpy(): void {
     timeLog(label)
     if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
-    }
-    else {
+    } else {
       sendLog('stdout', `${label}: ${timeLabels[label]} ms`)
     }
   }
@@ -71,8 +71,7 @@ export function setupConsoleLogSpy(): void {
     const start = timeLabels[label]
     if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
-    }
-    else if (typeof start !== 'undefined') {
+    } else if (typeof start !== 'undefined') {
       const duration = end - start
       sendLog('stdout', `${label}: ${duration} ms`)
     }
@@ -117,19 +116,15 @@ function processLog(args: unknown[]) {
   return format(args, { multiline: true })
 }
 
-function sendLog(
-  type: 'stdout' | 'stderr',
-  content: string,
-  disableStack?: boolean,
-) {
+function sendLog(type: 'stdout' | 'stderr', content: string, disableStack?: boolean) {
   if (content.startsWith('[vite]')) {
     return
   }
   const unknownTestId = '__vitest__unknown_test__'
   // @ts-expect-error untyped global
   const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
-  const origin
-    = getConfig().printConsoleTrace && !disableStack
+  const origin =
+    getConfig().printConsoleTrace && !disableStack
       ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
       : undefined
   const runner = getBrowserRunner()

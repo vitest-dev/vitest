@@ -27,7 +27,7 @@ export class MockedC {
 }
 
 export async function asyncFunc(): Promise<string> {
-  await new Promise<void>(resolve => resolve())
+  await new Promise<void>((resolve) => resolve())
   return '1234'
 }
 

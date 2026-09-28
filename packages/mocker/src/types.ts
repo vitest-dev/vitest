@@ -1,4 +1,4 @@
-/* eslint-disable ts/method-signature-style */
+/* oxlint-disable typescript/method-signature-style */
 
 type Awaitable<T> = T | PromiseLike<T>
 
@@ -38,11 +38,7 @@ export interface TestModuleMocker {
     factoryOrOptions?: ModuleMockFactory | ModuleMockOptions,
   ): void
   queueUnmock(id: string, importer: string): void
-  importActual<T>(
-    rawId: string,
-    importer: string,
-    callstack?: string[] | null,
-  ): Promise<T>
+  importActual<T>(rawId: string, importer: string, callstack?: string[] | null): Promise<T>
   importMock(rawId: string, importer: string): Promise<any>
   mockObject(
     object: Record<string | symbol, any>,

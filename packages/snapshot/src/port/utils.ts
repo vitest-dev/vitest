@@ -28,21 +28,16 @@ export function keyToTestName(key: string): string {
 }
 
 // Evaluate a snapshot file's content into its snapshot key/value pairs.
-export function evaluateSnapshotFile(
-  filepath: string,
-  content: string,
-): SnapshotData {
+export function evaluateSnapshotFile(filepath: string, content: string): SnapshotData {
   const data = Object.create(null)
   try {
-    // eslint-disable-next-line no-new-func
+    // oxlint-disable-next-line no-new-func
     const populate = new Function('exports', content)
     populate(data)
-  }
-  catch (cause) {
-    throw new Error(
-      `Invalid snapshot file, please manually fix or delete it: ${filepath}`,
-      { cause },
-    )
+  } catch (cause) {
+    throw new Error(`Invalid snapshot file, please manually fix or delete it: ${filepath}`, {
+      cause,
+    })
   }
   return data
 }
@@ -114,7 +109,7 @@ export async function saveSnapshotFile(
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(
-      key =>
+      (key) =>
         `exports[${printBacktickString(key)}] = ${printBacktickString(
           normalizeNewlines(snapshotData[key]),
         )};`,
@@ -139,11 +134,9 @@ function deepMergeArray(target: any[] = [], source: any[] = []) {
 
     if (Array.isArray(target[index])) {
       mergedOutput[index] = deepMergeArray(target[index], sourceElement)
-    }
-    else if (isObject(targetElement)) {
+    } else if (isObject(targetElement)) {
       mergedOutput[index] = deepMergeSnapshot(target[index], sourceElement)
-    }
-    else {
+    } else {
       // Source does not exist in target or target is primitive and cannot be deep merged
       mergedOutput[index] = sourceElement
     }
@@ -171,22 +164,18 @@ export function deepMergeSnapshot(target: any, source: any): any {
       if (isObject(source[key]) && !source[key].$$typeof) {
         if (!(key in target)) {
           Object.assign(mergedOutput, { [key]: source[key] })
-        }
-        else {
+        } else {
           mergedOutput[key] = deepMergeSnapshot(target[key], source[key])
         }
-      }
-      else if (Array.isArray(source[key])) {
+      } else if (Array.isArray(source[key])) {
         mergedOutput[key] = deepMergeArray(target[key], source[key])
-      }
-      else {
+      } else {
         Object.assign(mergedOutput, { [key]: source[key] })
       }
     })
 
     return mergedOutput
-  }
-  else if (Array.isArray(target) && Array.isArray(source)) {
+  } else if (Array.isArray(target) && Array.isArray(source)) {
     return deepMergeArray(target, source)
   }
   return target
@@ -221,7 +210,7 @@ export class CounterMap<K> extends DefaultMap<K, number> {
   _total: number | undefined
 
   valueOf(): number {
-    return this._total = this.total()
+    return (this._total = this.total())
   }
 
   increment(key: K): void {

@@ -85,7 +85,8 @@ You can also use [Vitest UI](/guide/ui) to debug slowness caused by barrel file.
 The example below shows how importing files without barrel file reduces amount of transformed files by ~85%.
 
 ::: code-group
-``` [File tree]
+
+```[File tree]
 ├── src
 │   └── utils
 │       ├── currency.ts
@@ -99,6 +100,7 @@ The example below shows how importing files without barrel file reduces amount o
 │   └── formatters.test.ts
 └── vitest.config.ts
 ```
+
 ```ts [example.test.ts]
 import { expect, test } from 'vitest'
 import { formatter } from '../src/utils' // [!code --]
@@ -108,6 +110,7 @@ test('formatter works', () => {
   expect(formatter).not.toThrow()
 })
 ```
+
 :::
 
 <img src="/module-graph-barrel-file.png" alt="Vitest UI demonstrating barrel file issues" />

@@ -13,16 +13,18 @@ export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async
   const value = userValues as any as (string | { element: SerializedLocator })[]
   const selectElement = getDescribedLocator(context, selector)
 
-  const values = await Promise.all(value.map(async (v) => {
-    if (typeof v === 'string') {
-      return v
-    }
-    const elementHandler = await getDescribedLocator(context, v.element).elementHandle()
-    if (!elementHandler) {
-      throw new Error(`Element not found: ${v.element}`)
-    }
-    return elementHandler
-  })) as (readonly string[]) | (readonly ElementHandle[])
+  const values = (await Promise.all(
+    value.map(async (v) => {
+      if (typeof v === 'string') {
+        return v
+      }
+      const elementHandler = await getDescribedLocator(context, v.element).elementHandle()
+      if (!elementHandler) {
+        throw new Error(`Element not found: ${v.element}`)
+      }
+      return elementHandler
+    }),
+  )) as readonly string[] | readonly ElementHandle[]
 
   await selectElement.selectOption(values, options)
 }

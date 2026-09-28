@@ -6,7 +6,9 @@ import type { TestProjectConfiguration } from './config'
 export interface VitestPluginContext {
   vitest: Vitest
   project: TestProject
-  injectTestProjects: (config: TestProjectConfiguration | TestProjectConfiguration[]) => Promise<TestProject[]>
+  injectTestProjects: (
+    config: TestProjectConfiguration | TestProjectConfiguration[],
+  ) => Promise<TestProject[]>
   /**
    * Define a generator that will be applied before hashing the cache key.
    *

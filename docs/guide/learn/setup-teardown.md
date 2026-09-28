@@ -251,5 +251,5 @@ expect.extend(customMatchers)
 Unlike `beforeAll`, which runs once per file, setup files run in a separate phase before the test file even starts being collected. This makes them the right place for things like extending the `expect` API or configuring global polyfills.
 
 ::: tip
-For advanced cases where your test needs to run *inside* a wrapping context (like a database transaction or a tracing span), see the [`aroundEach`](/api/hooks#aroundeach) and [`aroundAll`](/api/hooks#aroundall) hooks. For the complete lifecycle picture, see [Test Run Lifecycle](/guide/lifecycle).
+For advanced cases where your test needs to run _inside_ a wrapping context (like a database transaction or a tracing span), see the [`aroundEach`](/api/hooks#aroundeach) and [`aroundAll`](/api/hooks#aroundall) hooks. For the complete lifecycle picture, see [Test Run Lifecycle](/guide/lifecycle).
 :::

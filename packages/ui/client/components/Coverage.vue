@@ -7,7 +7,9 @@ import { browserState } from '~/composables/client'
   <div class="h-full flex flex-col">
     <div class="p-3 h-10 flex gap-2 items-center bg-header border-b border-base">
       <div class="i-carbon:folder-details-reference" />
-      <span class="pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate">Coverage</span>
+      <span class="pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate"
+        >Coverage</span
+      >
       <DetailsHeaderButtons v-if="browserState" />
     </div>
     <div class="flex-auto py-1 bg-white">

@@ -55,20 +55,16 @@ export interface IframePrepareEvent {
 
 export type GlobalChannelIncomingEvent = GlobalChannelTestRunCanceledEvent
 
-export type IframeChannelIncomingEvent
-  = | IframeViewportEvent
-    | IframeReadyEvent
+export type IframeChannelIncomingEvent = IframeViewportEvent | IframeReadyEvent
 
-export type IframeChannelOutgoingEvent
-  = | IframeExecuteEvent
-    | IframeCleanupEvent
-    | IframePrepareEvent
-    | IframeViewportFailEvent
-    | IframeViewportDoneEvent
+export type IframeChannelOutgoingEvent =
+  | IframeExecuteEvent
+  | IframeCleanupEvent
+  | IframePrepareEvent
+  | IframeViewportFailEvent
+  | IframeViewportDoneEvent
 
-export type IframeChannelEvent
-  = | IframeChannelIncomingEvent
-    | IframeChannelOutgoingEvent
+export type IframeChannelEvent = IframeChannelIncomingEvent | IframeChannelOutgoingEvent
 
 export type IframeReceivedEvent = IframeChannelEvent & { messageId: number }
 

@@ -32,13 +32,7 @@ export class FakeTimers {
   private _userConfig?: FakeTimersConfig
   private _now = RealDate.now
 
-  constructor({
-    global,
-    config,
-  }: {
-    global: typeof globalThis
-    config: FakeTimersConfig
-  }) {
+  constructor({ global, config }: { global: typeof globalThis; config: FakeTimersConfig }) {
     this._userConfig = config
 
     this._fakingDate = null
@@ -159,18 +153,16 @@ export class FakeTimers {
 
     let toFake = this._userConfig?.toFake
     if (isChildProcess() && toFake?.includes('nextTick')) {
-      throw new Error(
-        'process.nextTick cannot be mocked inside child_process',
-      )
+      throw new Error('process.nextTick cannot be mocked inside child_process')
     }
 
     let toNotFake = this._userConfig?.toNotFake
     if (toFake === undefined && toNotFake === undefined) {
       // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
-      toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])
-        .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
-    }
-    else if (toFake === undefined && toNotFake !== undefined) {
+      toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[]).filter(
+        (timer) => timer !== 'nextTick' && timer !== 'queueMicrotask',
+      )
+    } else if (toFake === undefined && toNotFake !== undefined) {
       // Do not mock timers internally used by node via `toNotFake`
       for (const timer of ['nextTick', 'queueMicrotask'] as const) {
         if (!toNotFake.includes(timer)) {
@@ -203,17 +195,18 @@ export class FakeTimers {
 
   setSystemTime(now?: string | number | Date | TemporalTimelike): void {
     const normalized = normalizeSystemTime(now)
-    const date = (typeof normalized === 'undefined' || normalized instanceof Date) ? normalized : new Date(normalized)
+    const date =
+      typeof normalized === 'undefined' || normalized instanceof Date
+        ? normalized
+        : new Date(normalized)
     if (this._fakingTime) {
       this._clock.setSystemTime(date)
-    }
-    else {
+    } else {
       const newFakingDate = date ?? new Date(this.getRealSystemTime())
       if (this._fakingDate) {
         this._fakingDate = newFakingDate
         this._clock.setSystemTime(newFakingDate)
-      }
-      else {
+      } else {
         this._fakingDate = newFakingDate
         this._clock = this._fakeTimers.install({
           now: newFakingDate,
@@ -244,14 +237,11 @@ export class FakeTimers {
     if (this._checkFakeTimers()) {
       if (mode === 'manual') {
         this._clock.setTickMode({ mode: 'manual' })
-      }
-      else if (mode === 'nextTimerAsync') {
+      } else if (mode === 'nextTimerAsync') {
         this._clock.setTickMode({ mode: 'nextAsync' })
-      }
-      else if (mode === 'interval') {
+      } else if (mode === 'interval') {
         this._clock.setTickMode({ mode: 'interval', delta: interval })
-      }
-      else {
+      } else {
         throw new Error(`Invalid tick mode: ${mode}`)
       }
     }
@@ -268,8 +258,8 @@ export class FakeTimers {
   private _checkFakeTimers() {
     if (!this._fakingTime) {
       throw new Error(
-        'A function to advance timers was called but the timers APIs are not mocked. '
-        + 'Call `vi.useFakeTimers()` in the test file first.',
+        'A function to advance timers was called but the timers APIs are not mocked. ' +
+          'Call `vi.useFakeTimers()` in the test file first.',
       )
     }
 
@@ -278,7 +268,9 @@ export class FakeTimers {
 }
 
 // Like fake-timers, read epochMilliseconds from Instant or ZonedDateTime without requiring built-in Temporal types.
-function normalizeSystemTime(time?: string | number | Date | TemporalTimelike): string | number | Date | undefined {
+function normalizeSystemTime(
+  time?: string | number | Date | TemporalTimelike,
+): string | number | Date | undefined {
   return time && typeof time === 'object' && 'epochMilliseconds' in time
     ? time.epochMilliseconds
     : time

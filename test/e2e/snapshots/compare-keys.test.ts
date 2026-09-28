@@ -16,7 +16,8 @@ test('compareKeys', async () => {
     },
   })
   expect(vitest.stderr).toBe('')
-  expect(fs.readFileSync(join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8'))
+    .toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`compareKeys 1\`] = \`
@@ -54,7 +55,8 @@ test('compareKeys', async () => {
     },
   })
   expect(vitest.stderr).toBe('')
-  expect(fs.readFileSync(join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8'))
+    .toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`compareKeys 1\`] = \`

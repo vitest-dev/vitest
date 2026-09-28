@@ -11,10 +11,15 @@ import { runVitest } from '#test-utils'
 
 describe(GithubActionsReporter, () => {
   it('uses absolute path by default', async () => {
-    let { stdout, stderr } = await runVitest(
-      { reporters: new GithubActionsReporter(), root: './fixtures/reporters', include: ['**/some-failing.test.ts'] },
+    let { stdout, stderr } = await runVitest({
+      reporters: new GithubActionsReporter(),
+      root: './fixtures/reporters',
+      include: ['**/some-failing.test.ts'],
+    })
+    stdout = stdout.replace(
+      resolve(import.meta.dirname, '../..').replace(/:/g, '%3A'),
+      '__TEST_DIR__',
     )
-    stdout = stdout.replace(resolve(import.meta.dirname, '../..').replace(/:/g, '%3A'), '__TEST_DIR__')
     expect(stdout).toMatchInlineSnapshot(`
     "
     ::error file=__TEST_DIR__/fixtures/reporters/some-failing.test.ts,title=some-failing.test.ts > 3 + 3 = 7,line=8,column=17::AssertionError: expected 6 to be 7 // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- 7%0A+ 6%0A%0A ❯ some-failing.test.ts:8:17%0A%0A
@@ -24,15 +29,16 @@ describe(GithubActionsReporter, () => {
   })
 
   it('prints the project name when there is one', async () => {
-    let { stdout, stderr } = await runVitest(
-      {
-        name: 'test-project',
-        reporters: new GithubActionsReporter(),
-        root: './fixtures/reporters',
-        include: ['**/some-failing.test.ts'],
-      },
+    let { stdout, stderr } = await runVitest({
+      name: 'test-project',
+      reporters: new GithubActionsReporter(),
+      root: './fixtures/reporters',
+      include: ['**/some-failing.test.ts'],
+    })
+    stdout = stdout.replace(
+      resolve(import.meta.dirname, '../..').replace(/:/g, '%3A'),
+      '__TEST_DIR__',
     )
-    stdout = stdout.replace(resolve(import.meta.dirname, '../..').replace(/:/g, '%3A'), '__TEST_DIR__')
     expect(stdout).toMatchInlineSnapshot(`
       "
       ::error file=__TEST_DIR__/fixtures/reporters/some-failing.test.ts,title=[test-project] some-failing.test.ts > 3 + 3 = 7,line=8,column=17::AssertionError: expected 6 to be 7 // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- 7%0A+ 6%0A%0A ❯ some-failing.test.ts:8:17%0A%0A
@@ -42,21 +48,19 @@ describe(GithubActionsReporter, () => {
   })
 
   it('uses onWritePath to format path', async () => {
-    const { stdout, stderr } = await runVitest(
-      {
-        reporters: new GithubActionsReporter({
-          onWritePath(path) {
-            const normalized = path
-              .replace(resolve(import.meta.dirname, '../..'), '')
-              .replaceAll(sep, '/')
+    const { stdout, stderr } = await runVitest({
+      reporters: new GithubActionsReporter({
+        onWritePath(path) {
+          const normalized = path
+            .replace(resolve(import.meta.dirname, '../..'), '')
+            .replaceAll(sep, '/')
 
-            return `/some-custom-path${normalized}`
-          },
-        }),
-        root: './fixtures/reporters',
-        include: ['**/some-failing.test.ts'],
-      },
-    )
+          return `/some-custom-path${normalized}`
+        },
+      }),
+      root: './fixtures/reporters',
+      include: ['**/some-failing.test.ts'],
+    })
     expect(stdout).toMatchInlineSnapshot(`
       "
       ::error file=/some-custom-path/fixtures/reporters/some-failing.test.ts,title=some-failing.test.ts > 3 + 3 = 7,line=8,column=17::AssertionError: expected 6 to be 7 // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- 7%0A+ 6%0A%0A ❯ some-failing.test.ts:8:17%0A%0A
@@ -149,52 +153,62 @@ describe(GithubActionsReporter, () => {
     it.for([
       { title: 'Custom Test Report', expectedTitle: 'Custom Test Report' },
       { title: undefined, expectedTitle: '(suite-name) Vitest Test Report' },
-    ] as const)('displays `test.name` when not using a custom title', async ({ title, expectedTitle }, ctx) => {
-      const summary = await createSummary({
-        summaryConfig: { title },
-        vitestConfig: { name: 'suite-name' },
-        ctx,
-      })
+    ] as const)(
+      'displays `test.name` when not using a custom title',
+      async ({ title, expectedTitle }, ctx) => {
+        const summary = await createSummary({
+          summaryConfig: { title },
+          vitestConfig: { name: 'suite-name' },
+          ctx,
+        })
 
-      expect(summary.startsWith(`## ${expectedTitle}\n\n`)).toBe(true)
-    })
+        expect(summary.startsWith(`## ${expectedTitle}\n\n`)).toBe(true)
+      },
+    )
 
-    it.for([{ enabled: false }, { outputPath: undefined }] as const)('does not write one when disabled or without `outputPath`', async (options, ctx) => {
-      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
-      const summary = await createSummary({
-        summaryConfig: {
-          ...options,
-          fileLinks: {
-            commitHash: 'aaa',
-            repository: 'owner/repo',
-            workspacePath,
+    it.for([{ enabled: false }, { outputPath: undefined }] as const)(
+      'does not write one when disabled or without `outputPath`',
+      async (options, ctx) => {
+        const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
+        const summary = await createSummary({
+          summaryConfig: {
+            ...options,
+            fileLinks: {
+              commitHash: 'aaa',
+              repository: 'owner/repo',
+              workspacePath,
+            },
           },
-        },
-        ctx,
-      }).then(() => true).catch(() => false)
+          ctx,
+        })
+          .then(() => true)
+          .catch(() => false)
 
-      expect(summary).toBe(false)
-    })
+        expect(summary).toBe(false)
+      },
+    )
 
     it.for([
       { commitHash: undefined },
       { repository: undefined },
       { workspacePath: undefined },
-    ] as const)('writes one without links when one of `commitHash`, `repository` or `workspacePath` are not provided', async (options, ctx) => {
-      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
-      const summary = await createSummary({
-        summaryConfig: {
-          fileLinks: {
-            commitHash: 'aaa',
-            repository: 'owner/repo',
-            workspacePath,
-            ...options,
+    ] as const)(
+      'writes one without links when one of `commitHash`, `repository` or `workspacePath` are not provided',
+      async (options, ctx) => {
+        const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
+        const summary = await createSummary({
+          summaryConfig: {
+            fileLinks: {
+              commitHash: 'aaa',
+              repository: 'owner/repo',
+              workspacePath,
+              ...options,
+            },
           },
-        },
-        ctx,
-      })
+          ctx,
+        })
 
-      expect(summary).toMatchInlineSnapshot(`
+        expect(summary).toMatchInlineSnapshot(`
         "## Vitest Test Report
 
         ### Summary
@@ -222,6 +236,7 @@ describe(GithubActionsReporter, () => {
         - \`network > should retry failed requests\` (passed on retry 1 out of 3)
         "
       `)
-    })
+      },
+    )
   })
 })

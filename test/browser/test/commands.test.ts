@@ -11,13 +11,11 @@ it('can manipulate files', async () => {
   try {
     await readFile(file)
     expect.unreachable()
-  }
-  catch (err) {
+  } catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
       expect(err.message).toMatch(`test\\browser\\test-${server.browser}.txt`)
-    }
-    else {
+    } else {
       expect(err.message).toMatch(`test/browser/test-${server.browser}.txt`)
     }
   }
@@ -32,13 +30,11 @@ it('can manipulate files', async () => {
   try {
     await readFile(file)
     expect.unreachable()
-  }
-  catch (err) {
+  } catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
       expect(err.message).toMatch(`test\\browser\\test-${server.browser}.txt`)
-    }
-    else {
+    } else {
       expect(err.message).toMatch(`test/browser/test-${server.browser}.txt`)
     }
   }
@@ -55,7 +51,10 @@ it('can run custom commands', async () => {
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
-    myCustomCommand: (arg1: string, arg2: string) => Promise<{
+    myCustomCommand: (
+      arg1: string,
+      arg2: string,
+    ) => Promise<{
       testPath: string
       arg1: string
       arg2: string
