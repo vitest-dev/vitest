@@ -66,7 +66,7 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
     },
   }
 
-  if (options.registerWebSocketEvents) {
+  if (options.registerWebSocketEvents !== false) {
     plugin.configureServer = (server) => {
       server.ws.on('vitest:interceptor:register', (event: MockedModuleSerialized) => {
         if (event.type === 'manual') {
