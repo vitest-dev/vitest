@@ -129,7 +129,7 @@ Behavior you must know:
 
 ### Formatting and Linting
 
-- Linting is done by [oxlint](https://oxc.rs/docs/guide/usage/linter) (`.oxlintrc.json`). Formatting, including import order, is done only by [oxfmt](https://oxc.rs/docs/guide/usage/formatter) (`.oxfmtrc.json`); there are no stylistic lint rules
+- Linting is done by [oxlint](https://oxc.rs/docs/guide/usage/linter) (`.oxlintrc.jsonc`). Formatting, including import order, is done only by [oxfmt](https://oxc.rs/docs/guide/usage/formatter) (`.oxfmtrc.jsonc`); there are no stylistic lint rules
 - **Always run** `pnpm lint:fix` after making changes; it runs `oxlint --fix` and then `oxfmt`
 - `pnpm lint` runs `oxlint` and `oxfmt --check`; both must pass in CI
 - Fix non-auto-fixable errors manually
