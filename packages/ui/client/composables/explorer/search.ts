@@ -41,15 +41,22 @@ export function useSearch(
   const disableClearProjectSort = computed(() => projectSort.value === 'default')
 
   // Reset project-specific sort when multiple projects are no longer available
-  watch(() => enableProjects.value, (enabled) => {
-    if (!enabled && (projectSort.value === 'asc' || projectSort.value === 'desc')) {
-      projectSort.value = 'default'
-    }
-  })
+  watch(
+    () => enableProjects.value,
+    (enabled) => {
+      if (!enabled && (projectSort.value === 'asc' || projectSort.value === 'desc')) {
+        projectSort.value = 'default'
+      }
+    },
+  )
 
-  debouncedWatch(() => search.value, (value) => {
-    debouncedSearch.value = value?.trim() ?? ''
-  }, { debounce: 256 })
+  debouncedWatch(
+    () => search.value,
+    (value) => {
+      debouncedSearch.value = value?.trim() ?? ''
+    },
+    { debounce: 256 },
+  )
 
   function clearSearch(focus: boolean) {
     search.value = ''
@@ -115,37 +122,33 @@ export function useSearch(
   }
 
   watch(
-    () => [
-      debouncedSearch.value,
-      filter.failed,
-      filter.success,
-      filter.skipped,
-      filter.slow,
-      filter.onlyTests,
-      currentProject.value,
-      projectSort.value,
-    ] as const,
+    () =>
+      [
+        debouncedSearch.value,
+        filter.failed,
+        filter.success,
+        filter.skipped,
+        filter.slow,
+        filter.onlyTests,
+        currentProject.value,
+        projectSort.value,
+      ] as const,
     ([search, failed, success, skipped, slow, onlyTests, project, projectSort]) => {
-      updateFilterStorage(
-        search,
-        failed,
-        success,
-        skipped,
-        slow,
-        onlyTests,
-        project,
-        projectSort,
-      )
+      updateFilterStorage(search, failed, success, skipped, slow, onlyTests, project, projectSort)
       explorerTree.filterNodes()
     },
     { flush: 'post' },
   )
 
-  watch(() => openedTreeItems.value.length, (size) => {
-    if (size) {
-      treeFilter.value.expandAll = undefined
-    }
-  }, { flush: 'post' })
+  watch(
+    () => openedTreeItems.value.length,
+    (size) => {
+      if (size) {
+        treeFilter.value.expandAll = undefined
+      }
+    },
+    { flush: 'post' },
+  )
 
   return {
     initialized,

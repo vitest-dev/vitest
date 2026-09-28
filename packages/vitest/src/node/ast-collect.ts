@@ -10,8 +10,13 @@ import { parseAst } from 'vite'
 import { validateTags } from '../runtime/runner/utils/tags'
 import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
-import { calculateSuiteHash, createFileTask as createFileTaskOriginal, createTaskName } from '../utils/tasks'
+import {
+  calculateSuiteHash,
+  createFileTask as createFileTaskOriginal,
+  createTaskName,
+} from '../utils/tasks'
 import { detectCodeBlock } from '../utils/test-helpers'
+import { toRollupError } from './environments/fetchModule'
 
 interface ParsedFile extends File {
   start: number
@@ -85,13 +90,8 @@ function astParseFile(filepath: string, code: string) {
   const ast = parseAst(code)
 
   if (verbose) {
-    verbose(
-      'Collecting',
-      filepath,
-      code,
-    )
-  }
-  else {
+    verbose('Collecting', filepath, code)
+  } else {
     debug?.('Collecting', filepath)
   }
   const definitions: LocalCallDefinition[] = []
@@ -113,21 +113,19 @@ function astParseFile(filepath: string, code: string) {
       if (callee.computed) {
         return null
       }
-      if (
-        callee.object?.type === 'Identifier'
-        && isVitestFunctionName(callee.object.name)
-      ) {
+      if (callee.object?.type === 'Identifier' && isVitestFunctionName(callee.object.name)) {
         return callee.object?.name
       }
       if (
         // direct call as `__vite_ssr_exports_0__.test()`
-        callee.object?.name?.startsWith('__vite_ssr_')
+        callee.object?.name?.startsWith('__vite_ssr_') ||
         // Vitest's module mocker uses `__vi_import_N__` for mocked/dynamic imports
         // e.g. `__vi_import_0__.it()` when vi.mock is present in the file
-        || callee.object?.name?.startsWith('__vi_import_')
+        callee.object?.name?.startsWith('__vi_import_') ||
         // call as `__vite_ssr_exports_0__.Vitest.test`,
         // this is a special case for using Vitest namespaces popular in Effect
-        || (callee.object?.object?.name?.startsWith('__vite_ssr_') && callee.object?.property?.name === 'Vitest')
+        (callee.object?.object?.name?.startsWith('__vite_ssr_') &&
+          callee.object?.property?.name === 'Vitest')
       ) {
         return getName(callee.property)
       }
@@ -193,8 +191,7 @@ function astParseFile(filepath: string, code: string) {
       for (const prop of properties) {
         if (prop === 'skip' || prop === 'only' || prop === 'todo') {
           mode = prop
-        }
-        else if (prop === 'skipIf' || prop === 'runIf') {
+        } else if (prop === 'skipIf' || prop === 'runIf') {
           mode = 'skip'
         }
       }
@@ -204,13 +201,12 @@ function astParseFile(filepath: string, code: string) {
       const end = node.end
       // .each or (0, __vite_ssr_exports_0__.test)()
       if (
-        callee.type === 'CallExpression'
-        || callee.type === 'SequenceExpression'
-        || callee.type === 'TaggedTemplateExpression'
+        callee.type === 'CallExpression' ||
+        callee.type === 'SequenceExpression' ||
+        callee.type === 'TaggedTemplateExpression'
       ) {
         start = callee.end
-      }
-      else {
+      } else {
         start = node.start
       }
 
@@ -224,8 +220,7 @@ function astParseFile(filepath: string, code: string) {
       let message: string
       if (messageNode?.type === 'Literal' || messageNode?.type === 'TemplateLiteral') {
         message = code.slice(messageNode.start + 1, messageNode.end - 1)
-      }
-      else {
+      } else {
         message = code.slice(messageNode.start, messageNode.end)
 
         if (message.endsWith('.name')) {
@@ -245,7 +240,10 @@ function astParseFile(filepath: string, code: string) {
         // Vitest module mocker injects these
         .replace(/__vi_import_\d+__\./g, '')
 
-      const parentCalleeName = typeof callee?.callee === 'object' && callee?.callee.type === 'MemberExpression' && callee?.callee.property?.name
+      const parentCalleeName =
+        typeof callee?.callee === 'object' &&
+        callee?.callee.type === 'MemberExpression' &&
+        callee?.callee.property?.name
       let isDynamicEach = parentCalleeName === 'each' || parentCalleeName === 'for'
       if (!isDynamicEach && callee.type === 'TaggedTemplateExpression') {
         const property = callee.tag?.property?.name
@@ -265,20 +263,20 @@ function astParseFile(filepath: string, code: string) {
             const tagsValue = prop.value
             if (tagsValue?.type === 'Literal' && typeof tagsValue.value === 'string') {
               tags.push(tagsValue.value)
-            }
-            else if (tagsValue?.type === 'ArrayExpression') {
+            } else if (tagsValue?.type === 'ArrayExpression') {
               for (const element of tagsValue.elements || []) {
                 if (element?.type === 'Literal' && typeof element.value === 'string') {
                   tags.push(element.value)
                 }
               }
             }
-          }
-          else if (prop.value?.type === 'Literal') {
-            if ((keyName === 'skip' || keyName === 'only' || keyName === 'todo') && prop.value.value === true) {
+          } else if (prop.value?.type === 'Literal') {
+            if (
+              (keyName === 'skip' || keyName === 'only' || keyName === 'todo') &&
+              prop.value.value === true
+            ) {
               mode = keyName
-            }
-            else if (keyName === 'concurrent' && typeof prop.value.value === 'boolean') {
+            } else if (keyName === 'concurrent' && typeof prop.value.value === 'boolean') {
               concurrent = prop.value.value
             }
           }
@@ -290,7 +288,12 @@ function astParseFile(filepath: string, code: string) {
         start,
         end,
         name: message,
-        type: isTestFunctionName(name) ? 'test' : 'suite',
+        type:
+          properties.includes('describe') ||
+          properties.includes('suite') ||
+          !isTestFunctionName(name)
+            ? 'suite'
+            : 'test',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
@@ -305,17 +308,18 @@ function astParseFile(filepath: string, code: string) {
   }
 }
 
-export function createFailedFileTask(project: TestProject, filepath: string, error: Error, options?: AstCollectOptions): File {
+export function createFailedFileTask(
+  project: TestProject,
+  filepath: string,
+  error: Error,
+  options?: AstCollectOptions,
+): File {
   const config = project.serializedConfig
   const pool = options?.pool ?? config.pool
-  const baseFile = createFileTaskOriginal(
-    filepath,
-    config.root,
-    config.name,
-    pool,
-    undefined,
-    { typecheck: pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
-  )
+  const baseFile = createFileTaskOriginal(filepath, config.root, config.name, pool, undefined, {
+    typecheck: pool === 'typescript',
+    __vitest_label__: config.mergeReportsLabel,
+  })
   const file: ParsedFile = {
     ...baseFile,
     mode: 'run',
@@ -323,28 +327,16 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     end: 0,
     result: {
       state: 'fail',
-      errors: serializeError(project, error),
+      errors: serializeError(error),
     },
   }
   file.file = file
   return file
 }
 
-function serializeError(ctx: TestProject, error: any): TestError[] {
-  if ('errors' in error && 'pluginCode' in error) {
-    const errors = error.errors.map((e: any) => {
-      return {
-        name: error.name,
-        message: e.text,
-        stack: e.location
-          ? `${error.name}: ${e.text}\n  at ${relative(ctx.config.root, e.location.file)}:${e.location.line}:${e.location.column}`
-          : '',
-      }
-    })
-    return errors
-  }
+function serializeError(error: any): TestError[] {
   return [
-    {
+    toRollupError(error) ?? {
       name: error.name,
       stack: error.stack,
       message: error.message,
@@ -364,14 +356,10 @@ function createFileTask(
   const { definitions, ast } = astParseFile(testFilepath, code)
   const config = project.serializedConfig
   const pool = options?.pool ?? config.pool
-  const baseFile = createFileTaskOriginal(
-    filepath,
-    config.root,
-    config.name,
-    pool,
-    undefined,
-    { typecheck: pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
-  )
+  const baseFile = createFileTaskOriginal(filepath, config.root, config.name, pool, undefined, {
+    typecheck: pool === 'typescript',
+    __vitest_label__: config.mergeReportsLabel,
+  })
   const file: ParsedFile = {
     ...baseFile,
     mode: 'run',
@@ -418,8 +406,7 @@ function createFileTask(
             line: originalLocation.line,
             column: originalLocation.column + 1,
           }
-        }
-        else {
+        } else {
           debug?.(
             'Cannot find original location for',
             definition.type,
@@ -427,8 +414,7 @@ function createFileTask(
             `${processedLocation.column}:${processedLocation.line}`,
           )
         }
-      }
-      else {
+      } else {
         debug?.(
           'Cannot find original location for',
           definition.type,
@@ -515,10 +501,7 @@ function createFileTask(
   return { file, definitions }
 }
 
-export async function astCollectTests(
-  project: TestProject,
-  filepath: string,
-): Promise<File> {
+export async function astCollectTests(project: TestProject, filepath: string): Promise<File> {
   const information = await astCollectFileInformation(project, filepath)
   return information.file
 }
@@ -531,7 +514,7 @@ export async function astCollectFileInformation(
   const request = await transformSSR(project, filepath)
   const testFilepath = relative(project.config.root, filepath)
   if (!request) {
-    debug?.('Cannot parse', testFilepath, '(vite didn\'t return anything)')
+    debug?.('Cannot parse', testFilepath, "(vite didn't return anything)")
     return {
       file: createFailedFileTask(
         project,
@@ -570,9 +553,10 @@ async function transformSSR(project: TestProject, filepath: string) {
 
   // Use environment from pragma if defined, otherwise fall back to config
   const environment = pragmaEnv || project.config.environment
-  const env = environment === 'jsdom' || environment === 'happy-dom'
-    ? project.vite.environments.client
-    : project.vite.environments.ssr
+  const env =
+    environment === 'jsdom' || environment === 'happy-dom'
+      ? project.vite.environments.client
+      : project.vite.environments.ssr
 
   const transformResult = await env.transformRequest(filepath)
 
@@ -625,6 +609,6 @@ export function escapeTestName(label: string, dynamic: boolean): string {
   let pattern = label.replace(/\$[a-z_.]+/gi, '%s')
   pattern = escapeRegex(pattern)
   // Replace percent placeholders with their respective regex
-  pattern = pattern.replace(/%[i#dfsjo%]/g, m => kReplacers.get(m) || m)
+  pattern = pattern.replace(/%[i#dfsjo%]/g, (m) => kReplacers.get(m) || m)
   return pattern
 }

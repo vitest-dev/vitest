@@ -44,8 +44,7 @@ export async function setupGlobalEnv(
       _require.extensions[`.${type}`] = resolveAsset
     })
     process.env.SSR = ''
-  }
-  else {
+  } else {
     process.env.SSR = '1'
   }
 

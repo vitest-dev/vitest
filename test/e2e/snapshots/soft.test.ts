@@ -41,13 +41,15 @@ test('soft', async () => {
   `)
 
   // edit tests to introduce snapshot errors
-  editFile(testFile, s => s
-    .replace(`--snap-1--`, `--snap-1-edit--`)
-    .replace(`--snap-2--`, `--snap-2-edit--`)
-    .replace(`--file-1--`, `--file-1-edit--`)
-    .replace(`--file-2--`, `--file-2-edit--`)
-    .replace(`--error-1--`, `--error-1-edit--`)
-    .replace(`--error-2--`, `--error-2-edit--`))
+  editFile(testFile, (s) =>
+    s
+      .replace(`--snap-1--`, `--snap-1-edit--`)
+      .replace(`--snap-2--`, `--snap-2-edit--`)
+      .replace(`--file-1--`, `--file-1-edit--`)
+      .replace(`--file-2--`, `--file-2-edit--`)
+      .replace(`--error-1--`, `--error-1-edit--`)
+      .replace(`--error-2--`, `--error-2-edit--`),
+  )
 
   result = await runVitest({ root, update: false })
   expect(result.stderr).toMatchInlineSnapshot(`

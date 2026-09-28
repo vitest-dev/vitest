@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { expect } from 'vitest'
 import { runVitest, test } from '../utils'
 
-test('coverage provider does not conflict with built-in reporter\'s outputFile (#3330)', async () => {
+test("coverage provider does not conflict with built-in reporter's outputFile (#3330)", async () => {
   await runVitest({
     include: ['fixtures/test/math.test.ts'],
     coverage: { reporter: ['html'] },

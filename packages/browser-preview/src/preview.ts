@@ -21,9 +21,7 @@ export class PreviewBrowserProvider implements BrowserProvider {
 
   public distRoot: string = distRoot
 
-  public initScripts: string[] = [
-    resolve(distRoot, 'locators.js'),
-  ]
+  public initScripts: string[] = [resolve(distRoot, 'locators.js')]
 
   constructor(project: TestProject) {
     this.project = project

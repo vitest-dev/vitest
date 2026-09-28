@@ -20,18 +20,14 @@ function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
 
   if (task.type === 'test') {
     return [{ ...task, level }]
-  }
-  else {
-    return [
-      { ...task, level },
-      ...task.tasks.flatMap(t => collectFailed(t, level + 1)),
-    ]
+  } else {
+    return [{ ...task, level }, ...task.tasks.flatMap((t) => collectFailed(t, level + 1))]
   }
 }
 
 const failed = computed(() => {
   const suite = props.suite
-  const failedFlatMap = suite.tasks.flatMap(t => collectFailed(t, 0))
+  const failedFlatMap = suite.tasks.flatMap((t) => collectFailed(t, 0))
   // prepend suite level errors as same indent level as children errors
   if (suite.result?.errors?.length) {
     const taskError: LeveledTask = {
@@ -48,20 +44,16 @@ const isFile = computed(() => 'filepath' in props.suite)
 </script>
 
 <template>
-  <div h-full class="scrolls">
+  <div class="scrolls h-full">
     <template v-if="failed.length">
       <div v-for="task of failed" :id="task.id" :key="task.id">
         <div
-          bg="red-500/10"
-          text="red-500 sm"
-          p="x3 y2"
-          m-2
-          rounded
+          class="bg-red-500/10 text-sm text-red-500 px-3 py-2 m-2 rounded"
           :style="{
             'margin-left': `${2 * (task as LeveledTask).level + 0.5}rem`,
           }"
         >
-          <div flex="~ gap-2 items-center">
+          <div class="flex gap-2 items-center">
             <span>{{ task.name }}</span>
             <FailureScreenshot :task="task" />
           </div>
@@ -79,7 +71,7 @@ const isFile = computed(() => 'filepath' in props.suite)
       </div>
     </template>
     <template v-else>
-      <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
+      <div class="bg-green-500/10 text-sm text-green-500 px-4 py-2 m-2 rounded">
         All tests passed in this {{ isFile ? 'file' : 'suite' }}
       </div>
     </template>

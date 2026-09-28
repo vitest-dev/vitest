@@ -7,7 +7,7 @@ test('fixture parsing works for lowered async syntax', async () => {
     root: path.resolve('fixtures/fixture-no-async'),
     reporters: ['tap-flat'],
   })
-  expect(ctx?.state.getFiles().map(f => [f.name, f.result?.state])).toMatchInlineSnapshot(`
+  expect(ctx?.state.getFiles().map((f) => [f.name, f.result?.state])).toMatchInlineSnapshot(`
     [
       [
         "basic.test.ts",

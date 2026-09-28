@@ -16,10 +16,13 @@ async function getSourceModuleDiagnostic(
   dependencies: Record<string, string>,
   targetModuleFile = './source.test.js',
 ) {
-  const { fs, root, ctx, stderr } = await runInlineTests({
-    'source.test.js': source,
-    ...dependencies,
-  }, importDurationsConfig)
+  const { fs, root, ctx, stderr } = await runInlineTests(
+    {
+      'source.test.js': source,
+      ...dependencies,
+    },
+    importDurationsConfig,
+  )
 
   expect(stderr).toBe('')
   expect(ctx).toBeDefined()
@@ -34,7 +37,7 @@ async function getSourceModuleDiagnostic(
   const testModule = ctx!.state.getReportedEntity(testFile[0]) as TestModule
   const moduleId = fs.resolveFile(targetModuleFile)
   const diagnostic = await ctx!.experimental_getSourceModuleDiagnostic(moduleId, testModule)
-  const localModules = diagnostic.modules.filter(module => module.rawUrl.startsWith('./'))
+  const localModules = diagnostic.modules.filter((module) => module.rawUrl.startsWith('./'))
 
   return {
     diagnostic,
@@ -78,7 +81,10 @@ function normalizeUntrackedModules(
 }
 
 describe('experimental_getSourceModuleDiagnostic', () => {
-  test('Static imports and re-exports should receive source locations and duration information', async ({ skip, task }) => {
+  test('Static imports and re-exports should receive source locations and duration information', async ({
+    skip,
+    task,
+  }) => {
     skip(task.file.pool !== 'threads', 'run only once inside threads')
 
     const source = `
@@ -97,9 +103,9 @@ test('uses an imported value', () => {
 
     expect(diagnostic.untrackedModules).toEqual([])
     expect(localModules).toHaveLength(2)
-    expect(localModules.map(module => source.slice(module.startIndex, module.endIndex))).toEqual([
-      '\'./dependency.js\'',
-      '\'./reexported.js\'',
+    expect(localModules.map((module) => source.slice(module.startIndex, module.endIndex))).toEqual([
+      "'./dependency.js'",
+      "'./reexported.js'",
     ])
     expect(normalizeModules(localModules, root)).toMatchInlineSnapshot(`
       [
@@ -151,7 +157,10 @@ test('uses an imported value', () => {
     `)
   })
 
-  test('Importing the same resolved module twice should not count its loading cost twice.', async ({ skip, task }) => {
+  test('Importing the same resolved module twice should not count its loading cost twice.', async ({
+    skip,
+    task,
+  }) => {
     skip(task.file.pool !== 'threads', 'run only once inside threads')
 
     const source = `
@@ -167,7 +176,9 @@ test('uses both imports', () => {
       'dependency.js': 'export const value = 42',
     })
 
-    const dependencyModules = diagnostic.modules.filter(module => module.rawUrl === './dependency.js')
+    const dependencyModules = diagnostic.modules.filter(
+      (module) => module.rawUrl === './dependency.js',
+    )
     const [firstImport, secondImport] = dependencyModules
 
     expect(dependencyModules).toHaveLength(2)
@@ -239,10 +250,14 @@ test('uses an imported value', () => {
   expect(value).toBe(42)
 })
 `
-    const { diagnostic } = await getSourceModuleDiagnostic(source, {
-      'used.js': 'export const value = 42',
-      'unused.js': 'export const used = false',
-    }, './unused.js')
+    const { diagnostic } = await getSourceModuleDiagnostic(
+      source,
+      {
+        'used.js': 'export const value = 42',
+        'unused.js': 'export const used = false',
+      },
+      './unused.js',
+    )
 
     expect(diagnostic).toEqual({
       modules: [],
@@ -250,27 +265,33 @@ test('uses an imported value', () => {
     })
   })
 
-  test('should aggregate durations from all test modules when no testModule is provided', async ({ skip, task }) => {
+  test('should aggregate durations from all test modules when no testModule is provided', async ({
+    skip,
+    task,
+  }) => {
     skip(task.file.pool !== 'threads', 'run only once inside threads')
 
     const sharedSource = `
 import { value } from './dependency.js'
 export const shared = value
 `
-    const { fs, root, ctx, stderr } = await runInlineTests({
-      'shared.js': sharedSource,
-      'dependency.js': 'export const value = 42',
-      'first.test.js': `
+    const { fs, root, ctx, stderr } = await runInlineTests(
+      {
+        'shared.js': sharedSource,
+        'dependency.js': 'export const value = 42',
+        'first.test.js': `
 import { expect, test } from 'vitest'
 import { shared } from './shared.js'
 test('first test', () => expect(shared).toBe(42))
 `,
-      'second.test.js': `
+        'second.test.js': `
 import { expect, test } from 'vitest'
 import { shared } from './shared.js'
 test('second test', () => expect(shared).toBe(42))
 `,
-    }, importDurationsConfig)
+      },
+      importDurationsConfig,
+    )
 
     expect(stderr).toBe('')
     expect(ctx).toBeDefined()
@@ -295,18 +316,26 @@ test('second test', () => expect(shared).toBe(42))
     )
     const aggregatedDiagnostic = await ctx!.experimental_getSourceModuleDiagnostic(sharedId)
 
-    const firstDependency = firstDiagnostic.modules.find(module => module.rawUrl === './dependency.js')
-    const secondDependency = secondDiagnostic.modules.find(module => module.rawUrl === './dependency.js')
-    const aggregatedDependency = aggregatedDiagnostic.modules.find(module => module.rawUrl === './dependency.js')
+    const firstDependency = firstDiagnostic.modules.find(
+      (module) => module.rawUrl === './dependency.js',
+    )
+    const secondDependency = secondDiagnostic.modules.find(
+      (module) => module.rawUrl === './dependency.js',
+    )
+    const aggregatedDependency = aggregatedDiagnostic.modules.find(
+      (module) => module.rawUrl === './dependency.js',
+    )
 
     if (!firstDependency || !secondDependency || !aggregatedDependency) {
       throw new Error('Expected dependency diagnostic was not collected')
     }
 
     expect(aggregatedDependency.selfTime).toBe(firstDependency.selfTime + secondDependency.selfTime)
-    expect(aggregatedDependency.totalTime).toBe(firstDependency.totalTime + secondDependency.totalTime)
+    expect(aggregatedDependency.totalTime).toBe(
+      firstDependency.totalTime + secondDependency.totalTime,
+    )
     expect(sharedSource.slice(aggregatedDependency.startIndex, aggregatedDependency.endIndex)).toBe(
-      '\'./dependency.js\'',
+      "'./dependency.js'",
     )
     expect(normalizeModules([aggregatedDependency], root)).toMatchInlineSnapshot(`
       [
@@ -336,56 +365,63 @@ test('second test', () => expect(shared).toBe(42))
     `)
   })
 
-  test('should report imports that are injected during transformation as untracked', async ({ skip, task }) => {
+  test('should report imports that are injected during transformation as untracked', async ({
+    skip,
+    task,
+  }) => {
     skip(task.file.pool !== 'threads', 'run only once inside threads')
 
-    const originalImport = 'import \'./original.js\''
+    const originalImport = "import './original.js'"
     const source = `
 ${originalImport}
 import { test } from 'vitest'
 test('loads injected modules', () => {})
 `
-    const { fs, root, ctx, stderr } = await runInlineTests({
-      'source.test.js': source,
-      'original.js': '',
-      'injected-first.js': '',
-    }, {
-      ...importDurationsConfig,
-      $viteConfig: {
-        plugins: [
-          {
-            name: 'inject-module-imports',
-            enforce: 'pre',
-            transform(code, id) {
-              if (!id.endsWith('/source.test.js')) {
-                return
-              }
-
-              const importIndex = code.indexOf(originalImport)
-              if (importIndex === -1) {
-                throw new Error(`Expected source.test.js to contain ${originalImport}`)
-              }
-              const transformed = new MagicString(code)
-              const injectedImports = [
-                'import \'./injected-first.js\'',
-                originalImport,
-              ].join('\n')
-              transformed.overwrite(importIndex, importIndex + originalImport.length, injectedImports)
-              const map = transformed.generateMap({
-                hires: true,
-                includeContent: true,
-                source: id,
-              })
-
-              return {
-                code: transformed.toString(),
-                map,
-              }
-            },
-          },
-        ],
+    const { fs, root, ctx, stderr } = await runInlineTests(
+      {
+        'source.test.js': source,
+        'original.js': '',
+        'injected-first.js': '',
       },
-    })
+      {
+        ...importDurationsConfig,
+        $viteConfig: {
+          plugins: [
+            {
+              name: 'inject-module-imports',
+              enforce: 'pre',
+              transform(code, id) {
+                if (!id.endsWith('/source.test.js')) {
+                  return
+                }
+
+                const importIndex = code.indexOf(originalImport)
+                if (importIndex === -1) {
+                  throw new Error(`Expected source.test.js to contain ${originalImport}`)
+                }
+                const transformed = new MagicString(code)
+                const injectedImports = ["import './injected-first.js'", originalImport].join('\n')
+                transformed.overwrite(
+                  importIndex,
+                  importIndex + originalImport.length,
+                  injectedImports,
+                )
+                const map = transformed.generateMap({
+                  hires: true,
+                  includeContent: true,
+                  source: id,
+                })
+
+                return {
+                  code: transformed.toString(),
+                  map,
+                }
+              },
+            },
+          ],
+        },
+      },
+    )
 
     expect(stderr).toBe('')
     expect(ctx).toBeDefined()
@@ -398,11 +434,13 @@ test('loads injected modules', () => {})
 
     const testModule = ctx!.state.getReportedEntity(testFiles[0]) as TestModule
     const diagnostic = await ctx!.experimental_getSourceModuleDiagnostic(file, testModule)
-    const originalModule = diagnostic.modules.find(module => module.rawUrl === './original.js')
+    const originalModule = diagnostic.modules.find((module) => module.rawUrl === './original.js')
 
     expect(originalModule).toBeDefined()
     expect(replaceRoot(originalModule!.resolvedId, root)).toBe('<root>/original.js')
-    expect(source.slice(originalModule!.startIndex, originalModule!.endIndex)).toBe('\'./original.js\'')
+    expect(source.slice(originalModule!.startIndex, originalModule!.endIndex)).toBe(
+      "'./original.js'",
+    )
     expect(diagnostic.untrackedModules).toHaveLength(1)
     expect(normalizeUntrackedModules(diagnostic.untrackedModules, root)).toMatchInlineSnapshot(`
       [

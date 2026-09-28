@@ -4,9 +4,7 @@ import { expect, test } from 'vitest'
 import Link from '../components/Link.js'
 
 test('Link changes the state when hovered', async () => {
-  render(
-    <Link page="http://antfu.me">Anthony Fu</Link>,
-  )
+  render(<Link page="http://antfu.me">Anthony Fu</Link>)
 
   const link = screen.getByText('Anthony Fu')
 

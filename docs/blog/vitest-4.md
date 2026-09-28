@@ -38,8 +38,8 @@ Today, we are thrilled to announce Vitest 4!
 Quick links:
 
 - [Docs](/)
-- Translations: [简体中文](https://cn.vitest.dev/)
-- [Migration Guide](/guide/migration#vitest-4)
+- Translations: [简体中文](https://v4.cn.vitest.dev/)
+- [Migration Guide](https://v4.vitest.dev/guide/migration)
 - [GitHub Changelog](https://github.com/vitest-dev/vitest/releases/tag/v4.0.0)
 
 If you've not used Vitest before, we suggest reading the [Getting Started](/guide/) and [Features](/guide/features) guides first.
@@ -59,6 +59,7 @@ With this release we are removing the `experimental` tag from [Browser Mode](/gu
 To define a provider, you now need to install a separate package: [`@vitest/browser-playwright`](https://npmx.dev/package/@vitest/browser-playwright), [`@vitest/browser-webdriverio`](https://npmx.dev/package/@vitest/browser-webdriverio), or [`@vitest/browser-preview`](https://npmx.dev/package/@vitest/browser-preview). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
 
 ::: code-group
+
 ```ts [playwright]
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright' // [!code ++]
@@ -85,6 +86,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```ts [webdriverio]
 import { defineConfig } from 'vitest/config'
 import { webdriverio } from '@vitest/browser-webdriverio' // [!code ++]
@@ -111,6 +113,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```ts [preview]
 import { defineConfig } from 'vitest/config'
 import { preview } from '@vitest/browser-preview' // [!code ++]
@@ -127,6 +130,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 The context is no longer imported from `@vitest/browser/context` (but it will keep working until the next major version for better compatibility with tools that did not update yet), now just import from `vitest/browser`:
@@ -329,7 +333,7 @@ Vitest 4 comes with new advanced public [API methods](/api/advanced/vitest):
 
 ## Breaking changes
 
-Vitest 4 has a few breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](/guide/migration#vitest-4) before upgrading.
+Vitest 4 has a few breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](https://v4.vitest.dev/guide/migration) before upgrading.
 
 The complete list of changes is at the [Vitest 4 Changelog](https://github.com/vitest-dev/vitest/releases/tag/v4.0.0).
 

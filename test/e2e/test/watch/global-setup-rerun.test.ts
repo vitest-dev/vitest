@@ -47,7 +47,7 @@ test('global setup calls hooks correctly when file changes', async () => {
   const calls = (globalThis as any).__CALLS as string[]
   expect(calls).toEqual(['start'])
 
-  fs.editFile('math.test.ts', testFileContent => `${testFileContent}\n\n`)
+  fs.editFile('math.test.ts', (testFileContent) => `${testFileContent}\n\n`)
 
   await vitest.waitForStdout('RERUN')
   expect(calls).toEqual(['start', 'rerun'])

@@ -13,7 +13,7 @@ test('vi.fn() calls implementation if it was passed down', () => {
 
 test('vi.fn().mock cannot be overridden', () => {
   const mock = vi.fn()
-  expect(() => mock.mock = {} as any).toThrow()
+  expect(() => (mock.mock = {} as any)).toThrow()
   expect(() => {
     // @ts-expect-error mock is not optional
     delete mock.mock
@@ -86,9 +86,12 @@ describe('fn.length is consistent', () => {
     fn(1)
     expect(fn.length).toBe(1)
 
-    fn.withImplementation((_arg1, _arg2, _arg3) => {}, () => {
-      expect(fn.length).toBe(1)
-    })
+    fn.withImplementation(
+      (_arg1, _arg2, _arg3) => {},
+      () => {
+        expect(fn.length).toBe(1)
+      },
+    )
   })
 })
 
@@ -100,6 +103,25 @@ test('vi.fn() has overridable length', () => {
 })
 
 describe('vi.fn() state', () => {
+  test('vi.clearAllMocks() only clears mocks with dirty state', () => {
+    const mocks = Array.from({ length: 100 }, () => vi.fn())
+    mocks[49]()
+    mocks.at(-1)!()
+
+    const cleared: number[] = []
+    for (const [index, mock] of mocks.entries()) {
+      const mockClear = mock.mockClear
+      mock.mockClear = function () {
+        cleared.push(index)
+        return mockClear.call(this)
+      }
+    }
+
+    vi.clearAllMocks()
+
+    expect(cleared).toEqual([49, 99])
+  })
+
   // TODO: test when calls is not empty
   test('vi.fn() clears calls without a custom implementation', () => {
     const mock = vi.fn()
@@ -237,12 +259,14 @@ describe('vi.fn() state', () => {
   })
 
   test('vi.fn() clears calls with a custom sync class implementation', () => {
-    const Mock = vi.fn(class {
-      public value: number
-      constructor() {
-        this.value = 42
-      }
-    })
+    const Mock = vi.fn(
+      class {
+        public value: number
+        constructor() {
+          this.value = 42
+        }
+      },
+    )
     const state = Mock.mock
 
     assertStateEmpty(state)
@@ -318,6 +342,14 @@ describe('vi.fn() state', () => {
 })
 
 describe('vi.fn() configuration', () => {
+  test('vi.resetAllMocks() resets an uncalled once implementation', () => {
+    const mock = vi.fn().mockReturnValueOnce(42)
+
+    vi.resetAllMocks()
+
+    expect(mock()).toBe(undefined)
+  })
+
   test('vi.fn() resets the original mock implementation', () => {
     const mock = vi.fn(() => 42)
     expect(mock()).toBe(42)
@@ -379,8 +411,7 @@ describe('vi.fn() configuration', () => {
   test('vi.fn() can reassign different implementations', () => {
     const mock = vi.fn(() => 42)
     expect(mock()).toBe(42)
-    mock.mockReturnValueOnce(100)
-      .mockReturnValueOnce(55)
+    mock.mockReturnValueOnce(100).mockReturnValueOnce(55)
     expect(mock()).toBe(100)
     expect(mock()).toBe(55)
     expect(mock()).toBe(42)
@@ -397,21 +428,21 @@ describe('vi.fn() restoration', () => {
     expect(mock()).toBe('hello')
   })
 
-  test('vi.fn() doesn\'t resets the added implementation in mock.mockRestore()', () => {
+  test("vi.fn() doesn't resets the added implementation in mock.mockRestore()", () => {
     const mock = vi.fn().mockImplementation(() => 'hello')
     expect(mock()).toBe('hello')
     mock.mockRestore()
     expect(mock()).toBe(undefined)
   })
 
-  test('vi.fn() doesn\'t restore the original implementation in vi.restoreAllMocks()', () => {
+  test("vi.fn() doesn't restore the original implementation in vi.restoreAllMocks()", () => {
     const mock = vi.fn(() => 'hello')
     expect(mock()).toBe('hello')
     vi.restoreAllMocks()
     expect(mock()).toBe('hello')
   })
 
-  test('vi.fn() doesn\'t restore the added implementation in vi.restoreAllMocks()', () => {
+  test("vi.fn() doesn't restore the added implementation in vi.restoreAllMocks()", () => {
     const mock = vi.fn().mockImplementation(() => 'hello')
     expect(mock()).toBe('hello')
     vi.restoreAllMocks()
@@ -426,9 +457,7 @@ describe('vi.fn() implementations', () => {
     })
 
     expect(() => mock()).toThrow('hello world')
-    expect(mock.mock.results).toEqual([
-      { type: 'throw', value: new Error('hello world') },
-    ])
+    expect(mock.mock.results).toEqual([{ type: 'throw', value: new Error('hello world') }])
   })
 
   test('vi.fn() can throw an error in custom implementation', () => {
@@ -437,9 +466,7 @@ describe('vi.fn() implementations', () => {
     })
 
     expect(() => mock()).toThrow('hello world')
-    expect(mock.mock.results).toEqual([
-      { type: 'throw', value: new Error('hello world') },
-    ])
+    expect(mock.mock.results).toEqual([{ type: 'throw', value: new Error('hello world') }])
   })
 
   test('vi.fn() with mockReturnThis on a function', () => {
@@ -766,9 +793,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() throws an error if new is not called on a class', () => {
     const Mock = vi.fn(class _Mock {})
     // @ts-expect-error value is not callable
-    expect(() => Mock()).toThrow(
-      `Class constructor _Mock cannot be invoked without 'new'`,
-    )
+    expect(() => Mock()).toThrow(`Class constructor _Mock cannot be invoked without 'new'`)
   })
 
   test('vi.fn() respects new target in a function', () => {
@@ -787,12 +812,14 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() respects new target in a class', () => {
     let target!: unknown
     let callArgs!: unknown[]
-    const Mock = vi.fn(class {
-      constructor(...args: any[]) {
-        target = new.target
-        callArgs = args
-      }
-    })
+    const Mock = vi.fn(
+      class {
+        constructor(...args: any[]) {
+          target = new.target
+          callArgs = args
+        }
+      },
+    )
     const _example = new Mock('test', 42)
     expect(target).toBeTypeOf('function')
     expect(callArgs).toEqual(['test', 42])
@@ -933,8 +960,9 @@ describe('vi.fn() implementations', () => {
     const Mock: any = vi.fn()
     // constructing such a mock would call the implementation, whose super()
     // re-enters the mock, so it could never be constructed anyway
-    expect(() => Mock.mockImplementation(class extends Mock {}))
-      .toThrowErrorMatchingInlineSnapshot(`[TypeError: Cyclic __proto__ value]`)
+    expect(() => Mock.mockImplementation(class extends Mock {})).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: Cyclic __proto__ value]`,
+    )
   })
 
   test('vi.fn() implementation can inherit from another mock', () => {
@@ -972,9 +1000,7 @@ describe('vi.fn() implementations', () => {
       }
     }
 
-    const Mock = vi.fn<any>()
-      .mockImplementationOnce(First)
-      .mockImplementation(Second)
+    const Mock = vi.fn<any>().mockImplementationOnce(First).mockImplementation(Second)
 
     const first = new Mock()
     expect(first.first()).toBe('first')

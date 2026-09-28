@@ -44,14 +44,7 @@ export interface ExternalModulesExecutorOptions {
 }
 
 export interface ModuleInformation {
-  type:
-    | 'data'
-    | 'builtin'
-    | 'vite'
-    | 'wasm'
-    | 'module'
-    | 'commonjs'
-    | 'network'
+  type: 'data' | 'builtin' | 'vite' | 'wasm' | 'module' | 'commonjs' | 'network'
   url: string
   path: string
   exists?: boolean
@@ -60,10 +53,10 @@ export interface ModuleInformation {
 // how the sync require(esm) graph walker should treat a resolved module:
 // 'ready' modules are complete synthetic modules (builtins, CJS files),
 // 'source'/'json' carry the raw content for the walker to build itself
-export type SyncModuleDisposition
-  = | { kind: 'ready'; module: VMModule }
-    | { kind: 'json'; code: string }
-    | { kind: 'source'; code: string }
+export type SyncModuleDisposition =
+  | { kind: 'ready'; module: VMModule }
+  | { kind: 'json'; code: string }
+  | { kind: 'source'; code: string }
 
 // TODO: improve Node.js strict mode support in #2854
 export class ExternalModulesExecutor {
@@ -73,8 +66,7 @@ export class ExternalModulesExecutor {
   private context: vm.Context
   private fs: FileMap
   public readonly codeCache: CodeCache | undefined
-  private resolvers: ((id: string, parent: string) => string | undefined)[]
-    = []
+  private resolvers: ((id: string, parent: string) => string | undefined)[] = []
 
   #networkSupported: boolean | null = null
 
@@ -158,18 +150,11 @@ export class ExternalModulesExecutor {
     const namespace = module.namespace as Record<string, unknown>
     // Node parity: an ES module can define its own require() result with an
     // export named "module.exports"
-    return 'module.exports' in namespace
-      ? namespace['module.exports']
-      : namespace
+    return 'module.exports' in namespace ? namespace['module.exports'] : namespace
   }
 
-  public resolveSyncSpecifier = (
-    specifier: string,
-    referencer: string,
-  ): string => {
-    const resolved = this.resolve(specifier, referencer) as
-      | string
-      | Promise<string>
+  public resolveSyncSpecifier = (specifier: string, referencer: string): string => {
+    const resolved = this.resolve(specifier, referencer) as string | Promise<string>
     if (resolved instanceof Promise) {
       throw createRequireAsyncModuleError(
         referencer,
@@ -248,9 +233,7 @@ export class ExternalModulesExecutor {
   }
 
   public resolveModule = async (specifier: string, referencer: string): Promise<VMModule> => {
-    let identifier = this.resolve(specifier, referencer) as
-      | string
-      | Promise<string>
+    let identifier = this.resolve(specifier, referencer) as string | Promise<string>
 
     if (identifier instanceof Promise) {
       identifier = await identifier
@@ -267,10 +250,7 @@ export class ExternalModulesExecutor {
       }
     }
 
-    if (
-      SIMPLE_RELATIVE_SPECIFIER_RE.test(specifier)
-      && parent.startsWith('file://')
-    ) {
+    if (SIMPLE_RELATIVE_SPECIFIER_RE.test(specifier) && parent.startsWith('file://')) {
       return new URL(specifier, parent).href
     }
 
@@ -316,8 +296,8 @@ export class ExternalModulesExecutor {
     }
 
     if (
-      this.isNetworkSupported
-      && (identifier.startsWith('http:') || identifier.startsWith('https:'))
+      this.isNetworkSupported &&
+      (identifier.startsWith('http:') || identifier.startsWith('https:'))
     ) {
       return { type: 'network', url: identifier, path: identifier }
     }
@@ -329,19 +309,15 @@ export class ExternalModulesExecutor {
     let type: 'module' | 'commonjs' | 'vite' | 'wasm'
     if (this.vite.canResolve(fileUrl)) {
       type = 'vite'
-    }
-    else if (extension === '.mjs') {
+    } else if (extension === '.mjs') {
       type = 'module'
-    }
-    else if (extension === '.cjs') {
+    } else if (extension === '.cjs') {
       type = 'commonjs'
-    }
-    else if (extension === '.wasm') {
+    } else if (extension === '.wasm') {
       // still experimental on NodeJS --experimental-wasm-modules
       // cf. ESM_FILE_FORMAT(url) in https://nodejs.org/docs/latest-v20.x/api/esm.html#resolution-algorithm
       type = 'wasm'
-    }
-    else {
+    } else {
       type = lookupPackageScopeType(normalize(pathUrl)) === 'esm' ? 'module' : 'commonjs'
     }
 
@@ -356,7 +332,9 @@ export class ExternalModulesExecutor {
       information.exists ??= existsSync(path)
     }
     if (information.exists === false) {
-      const error: NodeJS.ErrnoException = new Error(`Cannot find ${isBareImport(path) ? 'package' : 'module'} '${path}'`)
+      const error: NodeJS.ErrnoException = new Error(
+        `Cannot find ${isBareImport(path) ? 'package' : 'module'} '${path}'`,
+      )
       error.code = 'ERR_MODULE_NOT_FOUND'
       throw error
     }
@@ -394,13 +372,9 @@ export class ExternalModulesExecutor {
     if (this.#networkSupported == null) {
       if (process.execArgv.includes('--experimental-network-imports')) {
         this.#networkSupported = true
-      }
-      else if (
-        process.env.NODE_OPTIONS?.includes('--experimental-network-imports')
-      ) {
+      } else if (process.env.NODE_OPTIONS?.includes('--experimental-network-imports')) {
         this.#networkSupported = true
-      }
-      else {
+      } else {
         this.#networkSupported = false
       }
     }

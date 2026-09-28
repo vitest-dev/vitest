@@ -74,17 +74,11 @@ export class SnapshotClient {
 
   constructor(private options: SnapshotClientOptions = {}) {}
 
-  async setup(
-    filepath: string,
-    options: SnapshotStateOptions,
-  ): Promise<void> {
+  async setup(filepath: string, options: SnapshotStateOptions): Promise<void> {
     if (this.snapshotStateMap.has(filepath)) {
       return
     }
-    this.snapshotStateMap.set(
-      filepath,
-      await SnapshotState.create(filepath, options),
-    )
+    this.snapshotStateMap.set(filepath, await SnapshotState.create(filepath, options))
   }
 
   async finish(filepath: string): Promise<SnapshotResult> {
@@ -156,16 +150,13 @@ export class SnapshotClient {
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received) {
         expectedSnapshot.markAsChecked()
-        throw new Error(
-          'Received value must be an object when the matcher has properties',
-        )
+        throw new Error('Received value must be an object when the matcher has properties')
       }
 
       let propertiesPass: boolean
       try {
         propertiesPass = this.options.isEqual?.(received, properties) ?? false
-      }
-      catch (err) {
+      } catch (err) {
         expectedSnapshot.markAsChecked()
         throw err
       }
@@ -243,9 +234,10 @@ export class SnapshotClient {
       inlineSnapshot,
     })
     expectedSnapshot.markAsChecked()
-    const matchResult = expectedSnapshot.data !== undefined
-      ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
-      : undefined
+    const matchResult =
+      expectedSnapshot.data !== undefined
+        ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
+        : undefined
     const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
       testId,
       received: rendered,
@@ -293,24 +285,26 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    const reference = expectedSnapshot.data !== undefined && snapshotState.snapshotUpdateState !== 'all'
-      ? adapter.parseExpected(expectedSnapshot.data)
-      : undefined
+    const reference =
+      expectedSnapshot.data !== undefined && snapshotState.snapshotUpdateState !== 'all'
+        ? adapter.parseExpected(expectedSnapshot.data)
+        : undefined
     const timeoutController = new AbortController()
-    const timedOut = timeout > 0
-      ? new Promise<void>(r => setTimeout(() => {
-          timeoutController.abort()
-          r()
-        }, timeout))
-      : undefined
+    const timedOut =
+      timeout > 0
+        ? new Promise<void>((r) =>
+            setTimeout(() => {
+              timeoutController.abort()
+              r()
+            }, timeout),
+          )
+        : undefined
     const stableResult = await getStableSnapshot({
       adapter,
       poll: () => poll({ signal: timeoutController.signal }),
       interval,
       timedOut,
-      match: reference
-        ? captured => adapter.match(captured, reference).pass
-        : undefined,
+      match: reference ? (captured) => adapter.match(captured, reference).pass : undefined,
     })
 
     expectedSnapshot.markAsChecked()
@@ -328,11 +322,12 @@ export class SnapshotClient {
     }
 
     // TODO: should `all` mode ignore parse error?
-    // Sielently hiding the error and creating snaphsot full scratch isn't good either.
+    // Silently hiding the error and creating snapshot full scratch isn't good either.
     // Users can fix or purge the broken snapshot manually and that decision affects how domain snapshot gets updated.
-    const matchResult = expectedSnapshot.data !== undefined
-      ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
-      : undefined
+    const matchResult =
+      expectedSnapshot.data !== undefined
+        ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
+        : undefined
     const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
       testId,
       received: stableResult.rendered,
@@ -368,13 +363,9 @@ export class SnapshotClient {
       // save the filepath, so it don't lose even if the await make it out-of-context
       options.filepath ||= filepath
       // resolve and read the raw snapshot file
-      rawSnapshot.file = await snapshotState.environment.resolveRawPath(
-        filepath,
-        rawSnapshot.file,
-      )
-      rawSnapshot.content
-        = (await snapshotState.environment.readSnapshotFile(rawSnapshot.file))
-          ?? undefined
+      rawSnapshot.file = await snapshotState.environment.resolveRawPath(filepath, rawSnapshot.file)
+      rawSnapshot.content =
+        (await snapshotState.environment.readSnapshotFile(rawSnapshot.file)) ?? undefined
     }
 
     return this.assert(options)
@@ -395,15 +386,19 @@ export class SnapshotClient {
  * Every `await` (poll call, interval delay) races against `timedOut`
  * so that hanging polls and delays are interrupted.
  */
-async function getStableSnapshot(
-  { adapter, poll, interval, timedOut, match }: {
-    adapter: DomainSnapshotAdapter<any, any>
-    poll: () => Promise<unknown> | unknown
-    interval: number
-    timedOut?: Promise<void>
-    match?: (captured: unknown) => boolean
-  },
-) {
+async function getStableSnapshot({
+  adapter,
+  poll,
+  interval,
+  timedOut,
+  match,
+}: {
+  adapter: DomainSnapshotAdapter<any, any>
+  poll: () => Promise<unknown> | unknown
+  interval: number
+  timedOut?: Promise<void>
+  match?: (captured: unknown) => boolean
+}) {
   let lastRendered: string | undefined
   let lastPollError: unknown
   let lastStable: { captured: unknown; rendered: string } | undefined
@@ -421,22 +416,17 @@ async function getStableSnapshot(
         if (!match || match(captured)) {
           break
         }
-      }
-      else {
+      } else {
         lastRendered = rendered
         lastStable = undefined
       }
-    }
-    catch (pollError) {
+    } catch (pollError) {
       // poll() threw — reset stability baseline and retry
       lastRendered = undefined
       lastStable = undefined
       lastPollError = pollError
     }
-    const delayed = await raceWith(
-      new Promise<void>(r => setTimeout(r, interval)),
-      timedOut,
-    )
+    const delayed = await raceWith(new Promise<void>((r) => setTimeout(r, interval)), timedOut)
     if (!delayed.ok) {
       break
     }
@@ -450,12 +440,9 @@ function raceWith<A, B>(
   promise: Promise<A>,
   other?: Promise<B>,
 ): Promise<{ ok: true; value: A } | { ok: false; value: B }> {
-  const left = promise.then(value => ({ ok: true as const, value }))
+  const left = promise.then((value) => ({ ok: true as const, value }))
   if (!other) {
     return left
   }
-  return Promise.race([
-    left,
-    other.then(value => ({ ok: false as const, value })),
-  ])
+  return Promise.race([left, other.then((value) => ({ ok: false as const, value }))])
 }

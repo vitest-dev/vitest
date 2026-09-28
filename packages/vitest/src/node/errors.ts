@@ -22,8 +22,10 @@ export class LocationFilterFileNotFoundError extends Error {
   code = 'VITEST_LOCATION_FILTER_FILE_NOT_FOUND'
 
   constructor(filename: string) {
-    super(`Couldn\'t find file ${filename}. Note when specifying the test `
-      + 'location you have to specify the full test filename.')
+    super(
+      `Couldn't find file ${filename}. Note when specifying the test ` +
+        'location you have to specify the full test filename.',
+    )
   }
 }
 
@@ -39,7 +41,9 @@ export class RangeLocationFilterProvidedError extends Error {
   code = 'VITEST_RANGE_LOCATION_FILTER_PROVIDED'
 
   constructor(filter: string) {
-    super(`Found "-" in location filter ${filter}.  Note that range location filters `
-      + `are not supported.  Consider specifying the exact line numbers of your tests.`)
+    super(
+      `Found "-" in location filter ${filter}.  Note that range location filters ` +
+        `are not supported.  Consider specifying the exact line numbers of your tests.`,
+    )
   }
 }

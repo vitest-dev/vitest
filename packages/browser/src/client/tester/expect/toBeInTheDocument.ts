@@ -27,8 +27,8 @@ export default function toBeInTheDocument(
     htmlElement = queryElementFromUserInput(actual, toBeInTheDocument, this)
   }
 
-  const pass
-    = htmlElement === null
+  const pass =
+    htmlElement === null
       ? false
       : htmlElement.ownerDocument === htmlElement.getRootNode({ composed: true })
 
@@ -45,11 +45,7 @@ export default function toBeInTheDocument(
     pass,
     message: () => {
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeInTheDocument`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeInTheDocument`, 'element', ''),
         '',
 
         this.utils.RECEIVED_COLOR(this.isNot ? errorFound() : errorNotFound()),

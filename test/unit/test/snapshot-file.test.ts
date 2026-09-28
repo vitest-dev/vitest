@@ -15,9 +15,10 @@ describe('snapshots', () => {
 
   for (const [path, file] of Object.entries(files)) {
     test(path, async () => {
-      const entries = JSON.parse(await file() as string) as any[]
-      await expect(entries.map(i => objectToCSS(i[0], i[1])).join('\n'))
-        .toMatchFileSnapshot(path.replace('input.json', 'output.css'))
+      const entries = JSON.parse((await file()) as string) as any[]
+      await expect(entries.map((i) => objectToCSS(i[0], i[1])).join('\n')).toMatchFileSnapshot(
+        path.replace('input.json', 'output.css'),
+      )
     })
   }
 })

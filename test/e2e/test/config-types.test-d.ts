@@ -2,8 +2,14 @@ import type { TestUserConfig } from 'vitest/config'
 import { assertType, describe, expectTypeOf, test } from 'vitest'
 import { defineConfig, defineProject, mergeConfig } from 'vitest/config'
 
-const expectMainTestConfig = expectTypeOf(defineConfig).parameter(0).resolves.toHaveProperty('test').exclude<undefined>()
-const expectProjectTestConfig = expectTypeOf(defineProject).parameter(0).resolves.toHaveProperty('test').exclude<undefined>()
+const expectMainTestConfig = expectTypeOf(defineConfig)
+  .parameter(0)
+  .resolves.toHaveProperty('test')
+  .exclude<undefined>()
+const expectProjectTestConfig = expectTypeOf(defineProject)
+  .parameter(0)
+  .resolves.toHaveProperty('test')
+  .exclude<undefined>()
 
 describe('define project helper', () => {
   test('cannot define non-project fields on a project config', () => {
@@ -24,10 +30,9 @@ describe('define project helper', () => {
 
 describe('merge config helper', () => {
   test('types are not conflicting', () => {
-    expectTypeOf(mergeConfig(
-      defineConfig({}),
-      defineProject({ test: { name: 'test' } }),
-    )).toExtend<Record<string, unknown>>()
+    expectTypeOf(mergeConfig(defineConfig({}), defineProject({ test: { name: 'test' } }))).toExtend<
+      Record<string, unknown>
+    >()
   })
 })
 
@@ -39,15 +44,17 @@ describe('define workspace helper', () => {
   })
 
   test('allows config object', () => {
-    assertType<DefineWorkspaceParameter>([{
-      test: {
-        name: 'Workspace Project #1',
-        include: ['string'],
+    assertType<DefineWorkspaceParameter>([
+      {
+        test: {
+          name: 'Workspace Project #1',
+          include: ['string'],
 
-        // @ts-expect-error -- Not allowed here
-        coverage: {},
+          // @ts-expect-error -- Not allowed here
+          coverage: {},
+        },
       },
-    }])
+    ])
   })
 
   test('allows mixing strings and config objects', () => {

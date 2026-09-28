@@ -5,7 +5,7 @@ import { highlight } from 'tinyhighlight'
 import c from 'tinyrainbow'
 
 const HIGHLIGHT_SUPPORTED_EXTS = new Set(
-  ['js', 'ts'].flatMap(lang => [
+  ['js', 'ts'].flatMap((lang) => [
     `.${lang}`,
     `.m${lang}`,
     `.c${lang}`,
@@ -36,15 +36,12 @@ function getDefs(c: Colors): TokenColors {
     SingleLineComment: c.gray,
     RegularExpressionLiteral: c.cyan,
     NumericLiteral: c.blue,
-    TemplateHead: text =>
-      c.green(text.slice(0, text.length - 2)) + c.cyan(text.slice(-2)),
-    TemplateTail: text => c.cyan(text.slice(0, 1)) + c.green(text.slice(1)),
-    TemplateMiddle: text =>
-      c.cyan(text.slice(0, 1))
-      + c.green(text.slice(1, text.length - 2))
-      + c.cyan(text.slice(-2)),
+    TemplateHead: (text) => c.green(text.slice(0, text.length - 2)) + c.cyan(text.slice(-2)),
+    TemplateTail: (text) => c.cyan(text.slice(0, 1)) + c.green(text.slice(1)),
+    TemplateMiddle: (text) =>
+      c.cyan(text.slice(0, 1)) + c.green(text.slice(1, text.length - 2)) + c.cyan(text.slice(-2)),
     IdentifierCallable: c.blue,
-    PrivateIdentifierCallable: text => `#${c.blue(text.slice(1))}`,
+    PrivateIdentifierCallable: (text) => `#${c.blue(text.slice(1))}`,
     Invalid,
 
     JSXString: c.green,

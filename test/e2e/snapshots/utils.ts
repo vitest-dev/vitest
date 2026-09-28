@@ -5,9 +5,7 @@ export function readInlineSnapshots(file: string) {
 }
 
 export function extractInlineSnaphsots(code: string) {
-  const matches = Array.from(
-    code.matchAll(/\.toMatch(\w*)InlineSnapshot\(\s*`[\s\S]*?`\s*\)/g),
-  )
+  const matches = Array.from(code.matchAll(/\.toMatch(\w*)InlineSnapshot\(\s*`[\s\S]*?`\s*\)/g))
   const snapshots = matches.map((match) => {
     const end = match.index! + match[0].length
     const start = code.lastIndexOf('expect', match.index)

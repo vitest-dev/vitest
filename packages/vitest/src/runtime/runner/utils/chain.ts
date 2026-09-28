@@ -1,22 +1,14 @@
 import type { InternalChainableContext, SuiteAPI, TestAPI } from '../types'
 
-export type ChainableFunction<
-  T extends string,
-  F extends (...args: any) => any,
-  C = object,
-> = F & {
-  [x in T]: ChainableFunction<T, F, C>;
+export type ChainableFunction<T extends string, F extends (...args: any) => any, C = object> = F & {
+  [x in T]: ChainableFunction<T, F, C>
 } & {
   fn: (this: Record<T, any>, ...args: Parameters<F>) => ReturnType<F>
 } & C
 
 // this uses mapped type technique to preserve T's jsdoc for chained property function
-export type TypedChainableFunction<
-  T,
-  F extends (...args: any) => any,
-  C = object,
-> = F & {
-  [x in keyof T]: TypedChainableFunction<T, F, C>;
+export type TypedChainableFunction<T, F extends (...args: any) => any, C = object> = F & {
+  [x in keyof T]: TypedChainableFunction<T, F, C>
 } & {
   fn: (this: Record<keyof T, any>, ...args: Parameters<F>) => ReturnType<F>
 } & C
@@ -63,7 +55,7 @@ export function createChainable<T extends string, Args extends any[], R = any>(
     return chain
   }
 
-  const chain = create(context ?? {} as any) as any
+  const chain = create(context ?? ({} as any)) as any
   Object.defineProperty(chain, 'fn', {
     value: fn,
     enumerable: false,

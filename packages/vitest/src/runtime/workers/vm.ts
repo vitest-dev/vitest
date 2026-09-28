@@ -14,7 +14,10 @@ import { emitModuleRunner } from '../listeners'
 import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
-import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
+import {
+  startVitestModuleRunner,
+  VITEST_VM_CONTEXT_SYMBOL,
+} from '../moduleRunner/startVitestModuleRunner'
 import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
 import { CodeCache } from '../vm/code-cache'
@@ -29,30 +32,41 @@ const codeCache = new CodeCache()
 const resolveCache = new Map<string, string>()
 const moduleInfoCache = new Map<string, ModuleInformation>()
 
-export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
+export async function runVmTests(
+  method: 'run' | 'collect',
+  state: WorkerGlobalState,
+  traces: Traces,
+): Promise<void> {
   const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
-  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces, true)
+  const { environment } = await loadEnvironment(
+    ctx.environment.name,
+    ctx.config.root,
+    rpc,
+    traces,
+    true,
+  )
   state.environment = environment
 
   // let the server transform this file's import graph while this worker is
   // busy setting up the environment (jsdom takes ~0.5s per worker) —
   // the server is otherwise idle during that window on a cold start.
   if (environment.prewarmModules !== false) {
-    rpc.prewarmModuleGraph(
-      environment.viteEnvironment || environment.name,
-      ctx.files.map(file => file.filepath),
-    ).catch(() => {})
+    rpc
+      .prewarmModuleGraph(
+        environment.viteEnvironment || environment.name,
+        ctx.files.map((file) => file.filepath),
+      )
+      .catch(() => {})
   }
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
-    const packageId
-      = envName[0] === '.' ? envName : `vitest-environment-${envName}`
+    const packageId = envName[0] === '.' ? envName : `vitest-environment-${envName}`
     throw new TypeError(
-      `Environment "${ctx.environment.name}" is not a valid environment. `
-      + `Path "${packageId}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
+      `Environment "${ctx.environment.name}" is not a valid environment. ` +
+        `Path "${packageId}" doesn't support vm environment because it doesn't provide "setupVM" method.`,
     )
   }
 
@@ -97,9 +111,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   // because browser doesn't provide these globals
   context.process = process
   context.global = context
-  context.console = state.config.disableConsoleIntercept
-    ? console
-    : createCustomConsole(state)
+  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
   // TODO: don't hardcode setImmediate in fake timers defaults
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
@@ -119,7 +131,9 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
 
   process.exit = (code = process.exitCode || 0): never => {
     const filepath = state.filepath
-    throw new Error(`process.exit unexpectedly called with "${code}"${filepath ? ` (test file: ${filepath})` : ''}`)
+    throw new Error(
+      `process.exit unexpectedly called with "${code}"${filepath ? ` (test file: ${filepath})` : ''}`,
+    )
   }
 
   listenForErrors(() => state)
@@ -153,32 +167,20 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       runInContext(ctx.config.serializedDefines, context, {
         filename: 'virtual:load-defines.js',
       })
-    }
-    catch (error: any) {
+    } catch (error: any) {
       throw new Error(`Failed to load custom "defines": ${error.message}`)
     }
   }
   await moduleRunner.mocker.initializeSpyModule()
 
-  const { run } = (await moduleRunner.import(
-    entryFile,
-  )) as typeof import('../runVmTests')
+  const { run } = (await moduleRunner.import(entryFile)) as typeof import('../runVmTests')
 
   try {
-    await run(
-      method,
-      ctx.files,
-      ctx.config,
-      moduleRunner,
-      traces,
-      () => externalModulesExecutor.syncBuiltinESMExports(),
+    await run(method, ctx.files, ctx.config, moduleRunner, traces, () =>
+      externalModulesExecutor.syncBuiltinESMExports(),
     )
-  }
-  finally {
-    await traces.$(
-      'vitest.runtime.environment.teardown',
-      () => vm.teardown?.(),
-    )
+  } finally {
+    await traces.$('vitest.runtime.environment.teardown', () => vm.teardown?.())
     // unregisters the runner from Vite's `Error.prepareStackTrace` interceptor:
     // its module-level cache holds `evaluatedModules` of every runner it has
     // seen, which would otherwise keep each test file's entire module graph
@@ -191,7 +193,9 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
 
 export function setupVmWorker(context: WorkerSetupContext): void {
   if (context.config.experimental.viteModuleRunner === false) {
-    throw new Error(`Pool "${context.pool}" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
+    throw new Error(
+      `Pool "${context.pool}" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`,
+    )
   }
   // V8's isolate-level compilation cache keeps evaluated `vm.SourceTextModule`s
   // (and everything their module state references) alive until a

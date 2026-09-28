@@ -18,7 +18,10 @@ export interface VitestMockerOptions extends BareModuleMockerOptions {
 export class VitestMocker extends BareModuleMocker {
   private filterPublicKeys: (symbol | string)[]
 
-  constructor(public moduleRunner: VitestModuleRunner, protected options: VitestMockerOptions) {
+  constructor(
+    public moduleRunner: VitestModuleRunner,
+    protected options: VitestMockerOptions,
+  ) {
     super(options)
 
     const context = this.options.context
@@ -97,15 +100,14 @@ export class VitestMocker extends BareModuleMocker {
           if (target instanceof Promise) {
             return target.then.bind(target)
           }
-        }
-        else if (!(prop in target)) {
+        } else if (!(prop in target)) {
           if (this.filterPublicKeys.includes(prop)) {
             return undefined
           }
           throw this.createError(
-            `[vitest] No "${String(prop)}" export is defined on the "${mock.raw}" mock. `
-            + 'Did you forget to return it from "vi.mock"?'
-            + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n',
+            `[vitest] No "${String(prop)}" export is defined on the "${mock.raw}" mock. ` +
+              'Did you forget to return it from "vi.mock"?' +
+              '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n',
             `vi.mock(import("${mock.raw}"), async (importOriginal) => {
   const actual = await importOriginal()
   return {
@@ -152,8 +154,7 @@ export class VitestMocker extends BareModuleMocker {
       const redirect = this.findMockRedirect(id, external)
       if (redirect) {
         mock = new RedirectedModule(rawId, id, rawId, redirect)
-      }
-      else {
+      } else {
         mock = new AutomockedModule(rawId, id, rawId)
       }
     }
@@ -169,13 +170,7 @@ export class VitestMocker extends BareModuleMocker {
       return this.callFunctionMock(id, url, mock)
     }
     const node = await this.moduleRunner.fetchModule(mock.redirect)
-    return this.moduleRunner.cachedRequest(
-      mock.redirect,
-      node,
-      [importer],
-      undefined,
-      true,
-    )
+    return this.moduleRunner.cachedRequest(mock.redirect, node, [importer], undefined, true)
   }
 
   public async requestWithMockedModule(
@@ -214,21 +209,11 @@ export class VitestMocker extends BareModuleMocker {
         node.file = evaluatedNode.file
         node.mockedExports = exports
 
-        const mod = await this.moduleRunner.cachedRequest(
-          url,
-          node,
-          callstack,
-          undefined,
-          true,
-        )
+        const mod = await this.moduleRunner.cachedRequest(url, node, callstack, undefined, true)
         this.mockObject(mod, exports, mock.type)
         return exports
       }
-      if (
-        mock.type === 'manual'
-        && !callstack.includes(mockId)
-        && !callstack.includes(url)
-      ) {
+      if (mock.type === 'manual' && !callstack.includes(mockId) && !callstack.includes(url)) {
         try {
           callstack.push(mockId)
           // this will not work if user does Promise.all(import(), import())
@@ -236,21 +221,23 @@ export class VitestMocker extends BareModuleMocker {
           // maybe we should improve mock API in the future?
           this.mockContext.callstack = callstack
           return await this.callFunctionMock(mockId, this.getMockPath(url), mock)
-        }
-        finally {
+        } finally {
           this.mockContext.callstack = null
           const indexMock = callstack.indexOf(mockId)
           callstack.splice(indexMock, 1)
         }
-      }
-      else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
+      } else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
         span.setAttribute('vitest.mock.redirect', mock.redirect)
         return mock.redirect
       }
     })
   }
 
-  public async mockedRequest(url: string, evaluatedNode: EvaluatedModuleNode, callstack: string[]): Promise<any> {
+  public async mockedRequest(
+    url: string,
+    evaluatedNode: EvaluatedModuleNode,
+    callstack: string[],
+  ): Promise<any> {
     const mock = this.getDependencyMock(evaluatedNode.id)
 
     if (!mock) {

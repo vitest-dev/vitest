@@ -1,6 +1,4 @@
-import type {
-  BuiltinReporters,
-} from '../node/reporters'
+import type { BuiltinReporters } from '../node/reporters'
 
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>

@@ -13,10 +13,12 @@ const FIXTURES = '**/fixtures/**'
 export default defineConfig({
   test: {
     fsModuleCache: true,
-    watchTriggerPatterns: [{
-      pattern: /test\/coverage-test\/fixtures/,
-      testsToRun: () => [],
-    }],
+    watchTriggerPatterns: [
+      {
+        pattern: /test\/coverage-test\/fixtures/,
+        testsToRun: () => [],
+      },
+    ],
     reporters: process.env.CI ? 'minimal' : 'verbose',
     isolate: false,
     setupFiles: ['./setup.ts'],
@@ -28,13 +30,7 @@ export default defineConfig({
           name: { label: 'v8', color: 'green' },
           env: { COVERAGE_PROVIDER: 'v8' },
           include: [GENERIC_TESTS, V8_TESTS],
-          exclude: [
-            ISTANBUL_TESTS,
-            UNIT_TESTS,
-            CUSTOM_TESTS,
-            BROWSER_TESTS,
-            FIXTURES,
-          ],
+          exclude: [ISTANBUL_TESTS, UNIT_TESTS, CUSTOM_TESTS, BROWSER_TESTS, FIXTURES],
         },
       },
 
@@ -45,13 +41,7 @@ export default defineConfig({
           name: { label: 'istanbul', color: 'magenta' },
           env: { COVERAGE_PROVIDER: 'istanbul' },
           include: [GENERIC_TESTS, ISTANBUL_TESTS],
-          exclude: [
-            V8_TESTS,
-            UNIT_TESTS,
-            CUSTOM_TESTS,
-            BROWSER_TESTS,
-            FIXTURES,
-          ],
+          exclude: [V8_TESTS, UNIT_TESTS, CUSTOM_TESTS, BROWSER_TESTS, FIXTURES],
         },
       },
 
@@ -97,6 +87,7 @@ export default defineConfig({
             '**/test/source-maps.test.ts',
             '**/test/mock-autospy.test.ts',
             '**/test/mock-importActual.test.ts',
+            '**/virtual-files.test.ts',
           ],
           exclude: [FIXTURES],
         },
@@ -131,6 +122,7 @@ export default defineConfig({
             '**/test/source-maps.test.ts',
             '**/test/mock-autospy.test.ts',
             '**/test/mock-importActual.test.ts',
+            '**/virtual-files.test.ts',
           ],
           exclude: [FIXTURES],
         },

@@ -266,17 +266,39 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * await expect.element(noClasses).not.toHaveClass()
    * @see https://vitest.dev/api/browser/assertions#tohaveclass
    */
-  toHaveClass(...classNames:
-   | (string | RegExp)[]
-   | [string, options?: {exact: boolean}]
-   | [string, string, options?: {exact: boolean}]
-   | [string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, string, string, string, options?: {exact: boolean}]
+  toHaveClass(
+    ...classNames:
+      | (string | RegExp)[]
+      | [string, options?: { exact: boolean }]
+      | [string, string, options?: { exact: boolean }]
+      | [string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, string, string, string, options?: { exact: boolean }]
+      | [
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          options?: { exact: boolean },
+        ]
+      | [
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          options?: { exact: boolean },
+        ]
   ): R
   /**
    * @description
@@ -392,10 +414,7 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * await expect.element(element).not.toHaveTextContent('Content')
    * @see https://vitest.dev/api/browser/assertions#tohavetextcontent
    */
-  toHaveTextContent(
-    text: string | number,
-    options?: {normalizeWhitespace: boolean},
-  ): R
+  toHaveTextContent(text: string | number, options?: { normalizeWhitespace: boolean }): R
   /**
    * @description
    * Check whether the given element has a text content or not.
@@ -418,10 +437,7 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * await expect.element(element).not.toMatchTextContent('content')
    * @see https://vitest.dev/api/browser/assertions#tomatchtextcontent
    */
-  toMatchTextContent(
-    text: string | number | RegExp,
-    options?: {normalizeWhitespace: boolean},
-  ): R
+  toMatchTextContent(text: string | number | RegExp, options?: { normalizeWhitespace: boolean }): R
   /**
    * @description
    * Check whether the given form element has the specified value.
@@ -771,7 +787,7 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * @see https://vitest.dev/guide/browser/aria-snapshots
    * @see https://vitest.dev/api/expect#tomatchariasnapshot
    */
-  toMatchAriaSnapshot: () => void
+  toMatchAriaSnapshot(): R
   /**
    * @experimental
    * @description
@@ -802,5 +818,5 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * @see https://vitest.dev/guide/browser/aria-snapshots
    * @see https://vitest.dev/api/expect#tomatchariaInlinesnapshot
    */
-  toMatchAriaInlineSnapshot: (inlineSnapshot?: string) => void
+  toMatchAriaInlineSnapshot(inlineSnapshot?: string): R
 }

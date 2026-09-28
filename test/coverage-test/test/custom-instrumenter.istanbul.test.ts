@@ -16,14 +16,17 @@ test('custom instrumenter receives correct options', async () => {
     }),
   })
 
-  await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      reporter: 'json',
-      ignoreClassMethods: ['test-method'],
-      instrumenter,
+  await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        reporter: 'json',
+        ignoreClassMethods: ['test-method'],
+        instrumenter,
+      },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(instrumenter).toHaveBeenCalledWith({
     coverageVariable: '__VITEST_COVERAGE__',

@@ -88,11 +88,13 @@ export interface SerializedConfig {
   }
   pool: string
   snapshotSerializers: string[]
-  chaiConfig: {
-    includeStack?: boolean
-    showDiff?: boolean
-    truncateThreshold?: number
-  } | undefined
+  chaiConfig:
+    | {
+        includeStack?: boolean
+        showDiff?: boolean
+        truncateThreshold?: number
+      }
+    | undefined
   taskTitleValueFormatTruncate: number
   api: {
     allowExec: boolean | undefined
@@ -161,11 +163,13 @@ export interface SerializedConfig {
     }
     viteModuleRunner: boolean
     nodeLoader: boolean
-    openTelemetry: {
-      enabled: boolean
-      sdkPath?: string
-      browserSdkPath?: string
-    } | undefined
+    openTelemetry:
+      | {
+          enabled: boolean
+          sdkPath?: string
+          browserSdkPath?: string
+        }
+      | undefined
   }
   mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
@@ -207,4 +211,9 @@ export type RuntimeConfig = Pick<
 }
 
 export type RuntimeOptions = Partial<RuntimeConfig>
-export type BrowserTraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'
+export type BrowserTraceViewMode =
+  | 'on'
+  | 'off'
+  | 'on-first-retry'
+  | 'on-all-retries'
+  | 'retain-on-failure'

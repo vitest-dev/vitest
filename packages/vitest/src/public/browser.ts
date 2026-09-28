@@ -13,17 +13,10 @@ export {
 } from '../runtime/setup-common'
 export * as SpyModule from '@vitest/spy'
 export type { ParsedStack, StringifyOptions } from '@vitest/utils'
-export {
-  format,
-  inspect,
-  stringify,
-} from '@vitest/utils/display'
+export { format, inspect, stringify } from '@vitest/utils/display'
 export { processError } from '@vitest/utils/error'
 export { getType } from '@vitest/utils/helpers'
-export {
-  DecodedMap,
-  getOriginalPosition,
-} from '@vitest/utils/source-map'
+export { DecodedMap, getOriginalPosition } from '@vitest/utils/source-map'
 export { getSafeTimers, setSafeTimers } from '@vitest/utils/timers'
 
 export interface FsOptions {
@@ -32,10 +25,7 @@ export interface FsOptions {
 }
 
 export interface BrowserCommands {
-  readFile: (
-    path: string,
-    options?: BufferEncoding | FsOptions,
-  ) => Promise<string>
+  readFile: (path: string, options?: BufferEncoding | FsOptions) => Promise<string>
   writeFile: (
     path: string,
     content: string,
@@ -46,6 +36,22 @@ export interface BrowserCommands {
 
 export interface CDPSession {
   // methods are defined by the provider type augmentation
+}
+
+export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
+
+export interface MarkOptions {
+  /**
+   * Optional stack string used to resolve marker location.
+   * Useful for wrapper libraries that need to forward the end-user callsite.
+   */
+  stack?: string
+
+  /**
+   * Optional marker kind that's used to categorize the marker in the trace viewer.
+   * @default 'mark'
+   */
+  kind?: BrowserTraceEntryKind
 }
 
 /**

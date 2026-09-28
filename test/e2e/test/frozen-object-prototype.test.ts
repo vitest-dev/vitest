@@ -16,7 +16,7 @@ test('collects tests with includeTaskLocation when the test froze Object.prototy
   expect(files).toHaveLength(1)
   expect(files[0].result?.state).toBe('pass')
 
-  const tests = files[0].tasks.flatMap(suite => suite.type === 'suite' ? suite.tasks : [suite])
+  const tests = files[0].tasks.flatMap((suite) => (suite.type === 'suite' ? suite.tasks : [suite]))
   expect(tests).toHaveLength(1)
   expect(tests[0].result?.state).toBe('pass')
 })

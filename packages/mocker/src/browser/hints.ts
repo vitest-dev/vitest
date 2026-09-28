@@ -21,9 +21,15 @@ export interface CompilerHintsOptions {
 
 export interface ModuleMockerCompilerHints {
   hoisted: <T>(factory: () => T) => T
-  mock: (path: string | Promise<unknown>, factory?: ModuleMockOptions | ModuleMockFactoryWithHelper) => void
+  mock: (
+    path: string | Promise<unknown>,
+    factory?: ModuleMockOptions | ModuleMockFactoryWithHelper,
+  ) => void
   unmock: (path: string | Promise<unknown>) => void
-  doMock: (path: string | Promise<unknown>, factory?: ModuleMockOptions | ModuleMockFactoryWithHelper) => void
+  doMock: (
+    path: string | Promise<unknown>,
+    factory?: ModuleMockOptions | ModuleMockFactoryWithHelper,
+  ) => void
   doUnmock: (path: string | Promise<unknown>) => void
   importActual: <T>(path: string) => Promise<T>
   importMock: <T>(path: string) => Promise<MaybeMockedDeep<T>>
@@ -34,98 +40,76 @@ export function createCompilerHints(options?: CompilerHintsOptions): ModuleMocke
   function _mocker(): ModuleMocker {
     // @ts-expect-error injected by the plugin
     return typeof globalThis[globalThisAccessor] !== 'undefined'
-      // @ts-expect-error injected by the plugin
-      ? globalThis[globalThisAccessor]
-      : new Proxy(
-          {} as any,
-          {
-            get(_, name) {
-              throw new Error(
-                'Vitest mocker was not initialized in this environment. '
-                + `vi.${String(name)}() is forbidden.`,
-              )
-            },
+      ? // @ts-expect-error injected by the plugin
+        globalThis[globalThisAccessor]
+      : new Proxy({} as any, {
+          get(_, name) {
+            throw new Error(
+              'Vitest mocker was not initialized in this environment. ' +
+                `vi.${String(name)}() is forbidden.`,
+            )
           },
-        )
+        })
   }
 
   return {
     hoisted<T>(factory: () => T): T {
       if (typeof factory !== 'function') {
-        throw new TypeError(
-          `vi.hoisted() expects a function, but received a ${typeof factory}`,
-        )
+        throw new TypeError(`vi.hoisted() expects a function, but received a ${typeof factory}`)
       }
       return factory()
     },
 
-    mock(path: string | Promise<unknown>, factory?: ModuleMockOptions | ModuleMockFactoryWithHelper): void {
+    mock(
+      path: string | Promise<unknown>,
+      factory?: ModuleMockOptions | ModuleMockFactoryWithHelper,
+    ): void {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.mock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.mock() expects a string path, but received a ${typeof path}`)
       }
       const importer = getImporter('mock')
       _mocker().queueMock(
         path,
         importer,
         typeof factory === 'function'
-          ? () =>
-              factory(() =>
-                _mocker().importActual(
-                  path,
-                  importer,
-                ),
-              )
+          ? () => factory(() => _mocker().importActual(path, importer))
           : factory,
       )
     },
 
     unmock(path: string | Promise<unknown>): void {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.unmock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.unmock() expects a string path, but received a ${typeof path}`)
       }
       _mocker().queueUnmock(path, getImporter('unmock'))
     },
 
-    doMock(path: string | Promise<unknown>, factory?: ModuleMockOptions | ModuleMockFactoryWithHelper): void {
+    doMock(
+      path: string | Promise<unknown>,
+      factory?: ModuleMockOptions | ModuleMockFactoryWithHelper,
+    ): void {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.doMock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.doMock() expects a string path, but received a ${typeof path}`)
       }
       const importer = getImporter('doMock')
       _mocker().queueMock(
         path,
         importer,
         typeof factory === 'function'
-          ? () =>
-              factory(() =>
-                _mocker().importActual(
-                  path,
-                  importer,
-                ),
-              )
+          ? () => factory(() => _mocker().importActual(path, importer))
           : factory,
       )
     },
 
     doUnmock(path: string | Promise<unknown>): void {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.doUnmock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.doUnmock() expects a string path, but received a ${typeof path}`)
       }
       _mocker().queueUnmock(path, getImporter('doUnmock'))
     },
 
     async importActual<T = unknown>(path: string): Promise<T> {
-      return _mocker().importActual<T>(
-        path,
-        getImporter('importActual'),
-      )
+      return _mocker().importActual<T>(path, getImporter('importActual'))
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {

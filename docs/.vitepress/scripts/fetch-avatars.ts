@@ -15,8 +15,7 @@ async function download(url: string, fileName: string) {
   try {
     const image = await (await fetch(url)).arrayBuffer()
     await fsp.writeFile(fileName, Buffer.from(image))
-  }
-  catch {}
+  } catch {}
 }
 
 async function fetchAvatars() {
@@ -24,7 +23,13 @@ async function fetchAvatars() {
     await fsp.mkdir(dirAvatars, { recursive: true })
   }
 
-  await Promise.all([...teamEmeritiMembers, ...teamMembers].map(c => c.github).map(name => download(`https://github.com/${name}.png?size=100`, join(dirAvatars, `${name}.png`))))
+  await Promise.all(
+    [...teamEmeritiMembers, ...teamMembers]
+      .map((c) => c.github)
+      .map((name) =>
+        download(`https://github.com/${name}.png?size=100`, join(dirAvatars, `${name}.png`)),
+      ),
+  )
 }
 
 fetchAvatars()

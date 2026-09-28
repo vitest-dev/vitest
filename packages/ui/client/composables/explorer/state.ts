@@ -1,5 +1,12 @@
 import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
-import type { FileTreeNode, Filter, FilteredTests, SortUIType, TreeFilterState, UITaskTreeNode } from './types'
+import type {
+  FileTreeNode,
+  Filter,
+  FilteredTests,
+  SortUIType,
+  TreeFilterState,
+  UITaskTreeNode,
+} from './types'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, reactive, ref, shallowRef } from 'vue'
 import { availableProjects } from '~/composables/client'
@@ -9,41 +16,45 @@ import { createTagsFilter } from '../../../../vitest/src/runtime/runner/utils/ta
 import { config } from '../client'
 import { explorerTree } from './index'
 
+/** All root file nodes, independent of the current filter and expansion state. */
 export const uiFiles = shallowRef<FileTreeNode[]>([])
+/** Flattened rows currently rendered by the explorer's virtual scroller. */
 export const uiEntries = shallowRef<UITaskTreeNode[]>([])
-export const openedTreeItems = useLocalStorage<string[]>(
-  'vitest-ui_task-tree-opened',
-  [],
-  { shallow: true },
-)
+/** Persisted node IDs used to restore individually expanded branches. */
+export const openedTreeItems = useLocalStorage<string[]>('vitest-ui_task-tree-opened', [], {
+  shallow: true,
+})
 export const ALL_PROJECTS = '__vitest_ui_all_projects__'
 export const openedTreeItemsSet = computed(() => new Set(openedTreeItems.value))
-export const treeFilter = useLocalStorage<TreeFilterState>(
-  'vitest-ui_task-tree-filter',
-  {
-    expandAll: undefined,
-    failed: false,
-    success: false,
-    skipped: false,
-    slow: false,
-    onlyTests: false,
-    search: '',
-    project: ALL_PROJECTS,
-    projectSort: undefined,
-  },
-)
+export const treeFilter = useLocalStorage<TreeFilterState>('vitest-ui_task-tree-filter', {
+  expandAll: undefined,
+  failed: false,
+  success: false,
+  skipped: false,
+  slow: false,
+  onlyTests: false,
+  search: '',
+  project: ALL_PROJECTS,
+  projectSort: undefined,
+})
 export const projectSort = ref<SortUIType>(treeFilter.value.projectSort || 'default')
 export const currentProject = shallowRef(treeFilter.value?.project || ALL_PROJECTS)
 export const enableProjects = computed(() => availableProjects.value.length > 1)
 export const disableClearProjects = computed(() => currentProject.value === ALL_PROJECTS)
 export const currentProjectName = computed(() => {
-  return !enableProjects.value || currentProject.value === ALL_PROJECTS ? undefined : currentProject.value
+  return !enableProjects.value || currentProject.value === ALL_PROJECTS
+    ? undefined
+    : currentProject.value
 })
 export const search = ref<string>(treeFilter.value.search)
-const tagExpressionsCache = new Map<string, { error?: string; matcher: (tags: string[]) => boolean }>()
+const tagExpressionsCache = new Map<
+  string,
+  { error?: string; matcher: (tags: string[]) => boolean }
+>()
 export const searchMatcher = computed(() => {
   if (search.value.startsWith('tag:')) {
-    if (!config.value.tags) { // config is not loaded yet
+    if (!config.value.tags) {
+      // config is not loaded yet
       return { matcher: () => true }
     }
     const tagQuery = search.value.slice(4).trim()
@@ -62,16 +73,13 @@ export const searchMatcher = computed(() => {
   }
 })
 
-function createSafeFilter(
-  query: string,
-) {
+function createSafeFilter(query: string) {
   if (!query) {
     return { matcher: () => true }
   }
   try {
     return { matcher: createTagsFilter([query], config.value.tags || []) }
-  }
-  catch (error: any) {
+  } catch (error: any) {
     return { matcher: () => false, error: error.message }
   }
 }
@@ -80,10 +88,10 @@ const htmlEntities: Record<string, string> = {
   '<': '&lt;',
   '>': '&gt;',
   '"': '&quot;',
-  '\'': '&#39;',
+  "'": '&#39;',
 }
 export function escapeHtml(str: string) {
-  return str.replace(/[&<>"']/g, m => htmlEntities[m])
+  return str.replace(/[&<>"']/g, (m) => htmlEntities[m])
 }
 export const highlightRegex = computed(() => {
   const searchString = search.value.toLowerCase()

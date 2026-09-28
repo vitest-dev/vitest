@@ -19,13 +19,9 @@ import { beginAriaCaches, endAriaCaches, isElementVisible as ivyaIsVisible } fro
 import { server } from 'vitest/browser'
 import { getElementFromUserInput } from './utils'
 
-export default function toBeVisible(
-  this: MatcherState,
-  actual: Element | Locator,
-): MatcherResult {
+export default function toBeVisible(this: MatcherState, actual: Element | Locator): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeVisible, this)
-  const isInDocument
-    = htmlElement.ownerDocument === htmlElement.getRootNode({ composed: true })
+  const isInDocument = htmlElement.ownerDocument === htmlElement.getRootNode({ composed: true })
   beginAriaCaches()
   const isVisible = isInDocument && isElementVisible(htmlElement)
   endAriaCaches()
@@ -34,15 +30,9 @@ export default function toBeVisible(
     message: () => {
       const is = isVisible ? 'is' : 'is not'
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeVisible`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeVisible`, 'element', ''),
         '',
-        `Received element ${is} visible${
-          isInDocument ? '' : ' (element is not in the document)'
-        }:`,
+        `Received element ${is} visible${isInDocument ? '' : ' (element is not in the document)'}:`,
         `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
       ].join('\n')
     },

@@ -14,7 +14,7 @@ test.each([
 
   // TODO: node.js has a bug that makes --inspect-brk not work on worker threads
   if (pool !== 'forks') {
-    if ((nodeMajor === 20 && nodeMinor > 14) || (nodeMajor > 20)) {
+    if ((nodeMajor === 20 && nodeMinor > 14) || nodeMajor > 20) {
       return
     }
   }
@@ -31,21 +31,25 @@ test.each([
 })
 
 test('should not pass execArgv to workers when not specified in the config', async () => {
-  const { stdout, stderr } = await x('node', [
-    '--title',
-    'this-works-only-on-main-thread',
-    '../../../../node_modules/vitest/vitest.mjs',
-    '--run',
-  ], {
-    nodeOptions: {
-      cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
-      env: {
-        VITEST_MODULE_DIRECTORIES: '/node_modules/,/packages/',
-        NO_COLOR: '1',
+  const { stdout, stderr } = await x(
+    'node',
+    [
+      '--title',
+      'this-works-only-on-main-thread',
+      '../../../../node_modules/vitest/vitest.mjs',
+      '--run',
+    ],
+    {
+      nodeOptions: {
+        cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
+        env: {
+          VITEST_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+          NO_COLOR: '1',
+        },
       },
+      throwOnError: false,
     },
-    throwOnError: false,
-  })
+  )
 
   expect(stderr).not.toContain('Error: Initiated Worker with invalid execArgv flags: --title')
   expect(stderr).not.toContain('ERR_WORKER_INVALID_EXEC_ARGV')
@@ -53,22 +57,26 @@ test('should not pass execArgv to workers when not specified in the config', asy
 })
 
 test('should let allowed args pass to workers', async () => {
-  const { stdout, stderr } = await x('node', [
-    '--heap-prof',
-    '--diagnostic-dir=/tmp/vitest-diagnostics',
-    '--heap-prof-name=heap.prof',
-    '../../../../node_modules/vitest/vitest.mjs',
-    '--run',
-  ], {
-    nodeOptions: {
-      cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
-      env: {
-        VITEST_MODULE_DIRECTORIES: '/node_modules/,/packages/',
-        NO_COLOR: '1',
+  const { stdout, stderr } = await x(
+    'node',
+    [
+      '--heap-prof',
+      '--diagnostic-dir=/tmp/vitest-diagnostics',
+      '--heap-prof-name=heap.prof',
+      '../../../../node_modules/vitest/vitest.mjs',
+      '--run',
+    ],
+    {
+      nodeOptions: {
+        cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
+        env: {
+          VITEST_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+          NO_COLOR: '1',
+        },
       },
+      throwOnError: false,
     },
-    throwOnError: false,
-  })
+  )
 
   expect(stderr).toBe('')
   expect(stdout).toContain('✓ allowed-exec-argv.test.ts')

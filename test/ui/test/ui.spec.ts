@@ -5,17 +5,30 @@ import { existsSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import { join } from 'pathe'
 import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
-import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import {
+  assertDownloadAttachment,
+  assertImageAttachment,
+  assertTestCounts,
+  getExplorerItem,
+  openExplorerFileItem,
+  openExplorerItem,
+  startHtmlReportPreview,
+  startVitestUi,
+} from './helper'
 
 const TEST_COUNTS = {
   pass: 21,
   fail: 5,
-  skip: 1,
+  skip: 2,
   files: {
     pass: 9,
     fail: 3,
+    skip: 1,
   },
 }
+
+// Keep enough main fixture rows rendered for tests that access the explorer without filtering.
+test.use({ viewport: { width: 800, height: 1600 } })
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -97,8 +110,7 @@ test.describe('ui', () => {
       // unreachable and Vite responds 404 instead of 403. Both mean it is not
       // served. See https://github.com/vitejs/vite/issues/10802
       expect([403, 404]).toContain(res.status())
-    }
-    else {
+    } else {
       expect(res.status()).toBe(403)
     }
   })
@@ -111,6 +123,15 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
     await assertTestCounts(page, TEST_COUNTS)
     expect(page.url()).toBe(`${cleanPageUrl}#/`)
+
+    const tokenCookie = (await page.context().cookies(cleanPageUrl)).find(
+      (cookie) => cookie.name === 'vitest-ui-token',
+    )
+    expect(tokenCookie).toMatchObject({
+      httpOnly: true,
+      sameSite: 'Strict',
+    })
+    expect(tokenCookie!.expires).toBeGreaterThan(Date.now() / 1000 + 60 * 60 * 24 * 364)
 
     await page.goto(cleanPageUrl)
     await assertTestCounts(page, TEST_COUNTS)
@@ -155,14 +176,15 @@ test.describe('ui', () => {
     await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
 
-    await page.setViewportSize({ width: 1000, height: 1600 })
+    // Keep the last fixture row in view; increase this when adding explorer fixtures.
+    await page.setViewportSize({ width: 1000, height: 2000 })
 
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
   })
 
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
-    await testTagsFilter(page)
+    await testTagsFilter(page, { mode: 'ui' })
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
@@ -255,7 +277,7 @@ test.describe('html report', () => {
 
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
-    await testTagsFilter(page)
+    await testTagsFilter(page, { mode: 'static' })
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
@@ -301,7 +323,7 @@ test.describe('html report', () => {
 
 async function testBasic(page: Page, pageUrl: string) {
   const pageErrors: unknown[] = []
-  page.on('pageerror', error => pageErrors.push(error))
+  page.on('pageerror', (error) => pageErrors.push(error))
 
   await page.goto(pageUrl)
 
@@ -310,8 +332,8 @@ async function testBasic(page: Page, pageUrl: string) {
 
   // unhandled errors
   await expect(page.getByTestId('unhandled-errors')).toContainText(
-    'Vitest caught 2 errors during the test run. This might cause false positive tests. '
-    + 'Resolve unhandled errors to make sure your tests are not affected.',
+    'Vitest caught 2 errors during the test run. This might cause false positive tests. ' +
+      'Resolve unhandled errors to make sure your tests are not affected.',
   )
 
   await expect(page.getByTestId('unhandled-errors-details')).toContainText('Error: error')
@@ -485,10 +507,14 @@ async function testConsole(page: Page) {
 
 async function testError(page: Page) {
   await openExplorerFileItem(page, 'error.test.ts')
-  await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
+  await expect(page.getByTestId('diff')).toContainText(
+    '- Expected + Received + <style>* {border: 2px solid green};</style>',
+  )
 
   await getExplorerItem(page, 'colored error message').click()
-  await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /node/error.test.ts:12:17')
+  await expect(page.getByTestId('report')).toHaveText(
+    'Error: this-is-blue - /node/error.test.ts:12:17',
+  )
 
   // switch to Code tab and verify ANSI is rendered as HTML in the editor line widget
   await page.getByTestId('btn-code').click()
@@ -500,6 +526,10 @@ async function testError(page: Page) {
 
 async function testSuiteReport(page: Page) {
   const report = page.getByTestId('report')
+
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await page.getByPlaceholder('Search...').fill('suite-report')
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
   await getExplorerItem(page, 'suite-report.test.ts').click()
   await expect(report).toContainText('before-all-marker')
@@ -527,24 +557,32 @@ async function testSuiteReport(page: Page) {
 
   // test that the suite can be collapsed and expanded
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
-  await successfulSuite.getByRole('button', { name: 'Collapse successful suite', exact: true }).click()
+  await successfulSuite
+    .getByRole('button', { name: 'Collapse successful suite', exact: true })
+    .click()
   await expect(getExplorerItem(page, 'successful child')).not.toBeVisible()
-  await successfulSuite.getByRole('button', { name: 'Expand successful suite', exact: true }).click()
+  await successfulSuite
+    .getByRole('button', { name: 'Expand successful suite', exact: true })
+    .click()
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
 }
 
-async function testTagsFilter(page: Page) {
+async function testTagsFilter(page: Page, options: { mode: 'ui' | 'static' }) {
+  const running = options.mode === 'static' ? undefined : 0
+
   await page.getByPlaceholder('Search...').fill('tag:db')
 
   // only one test with the tag "db"
-  await expect(page.getByText('PASS (1)')).toBeVisible()
+  await expectExplorerSummary(page, { fail: 0, running, pass: 1, skip: 0 })
   await expect(getExplorerItem(page, 'has tags')).toBeVisible()
 
   await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
   await expect(page.getByText('No matched test')).toBeVisible()
 
   await page.getByPlaceholder('Search...').fill('tag:unknown')
-  await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
+  await expect(
+    page.getByText('The tag pattern "unknown" is not defined in the configuration'),
+  ).toBeVisible()
 }
 
 async function testVisualRegression(page: Page) {
@@ -556,7 +594,10 @@ async function testVisualRegression(page: Page) {
   await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
   await expect(artifact).toContainText('visual-regression.test.ts:7:3')
   await expect(artifact.getByRole('tablist')).toHaveText('Reference')
-  await expect(artifact.getByRole('tabpanel').getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
+  await expect(artifact.getByRole('tabpanel').getByRole('img')).not.toHaveJSProperty(
+    'naturalWidth',
+    0,
+  )
 }
 
 async function testDashboardFilter(page: Page) {
@@ -589,48 +630,110 @@ async function testDashboardFilter(page: Page) {
 }
 
 async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
+  const failFilter = page.getByRole('checkbox', { name: 'Fail', exact: true }).locator('..')
+  const passFilter = page.getByRole('checkbox', { name: 'Pass', exact: true }).locator('..')
+  const onlyTestsFilter = page
+    .getByRole('checkbox', { name: 'Only Tests', exact: true })
+    .locator('..')
+  const summary = page.getByTestId('explorer-summary')
+  const runningCount = options.mode === 'static' ? undefined : 0
+
+  // Static reports only contain completed test results.
+  const running = summary.getByText(/RUNNING/)
+  if (options.mode === 'static') {
+    await expect(running).toHaveCount(0)
+  } else {
+    await expect(running).toBeVisible()
+  }
+
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
-  await page.getByText(`PASS (${TEST_COUNTS.files.pass})`).click()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
+  await expectExplorerSummary(page, {
+    fail: TEST_COUNTS.files.fail,
+    running: runningCount,
+    pass: TEST_COUNTS.files.pass,
+    skip: TEST_COUNTS.files.skip,
+  })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+
+  // count skipped files when filtered
+  await page.getByPlaceholder('Search...').fill('skipped.test.ts')
+  await expectExplorerSummary(page, {
+    fail: 0,
+    running: runningCount,
+    pass: 0,
+    skip: TEST_COUNTS.files.skip,
+  })
+  await expect(getExplorerItem(page, 'skipped.test.ts')).toBeVisible()
+
+  // "Only Tests" mode text search excludes test file name matches
+  await page.getByPlaceholder('Search...').fill('sample.test.ts')
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 1, skip: 0 })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'add')).toBeVisible()
+  await onlyTestsFilter.click()
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 0, skip: 0 })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
+  await expect(getExplorerItem(page, 'add')).toHaveCount(0)
+
+  // match all individual tests when no search
+  await page.getByPlaceholder('Search...').fill('')
+  await expectExplorerSummary(page, {
+    fail: TEST_COUNTS.fail,
+    running: runningCount,
+    pass: TEST_COUNTS.pass,
+    skip: TEST_COUNTS.skip,
+  })
+  await onlyTestsFilter.click()
 
   // match nothing
   await page.getByPlaceholder('Search...').fill('nothing')
-  await page.getByText('No matched test').click()
+  await expect(page.getByTestId('results-panel').getByText('No matched test')).toBeVisible()
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 0, skip: 0 })
 
   // searching "add" will match "sample.test.ts" since it includes a test case named "add"
   await page.getByPlaceholder('Search...').fill('add')
-  await page.getByText('PASS (1)').click()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 1, skip: 0 })
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 
   // match only failing files when fail filter applied
   await page.getByPlaceholder('Search...').fill('')
-  await page.getByText(/^Fail$/, { exact: true }).click()
-  await page.getByText(`FAIL (${TEST_COUNTS.files.fail})`).click()
-  await expect(page.getByTestId('results-panel').getByText('error.test.ts', { exact: true })).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
+  await failFilter.click()
+  await expectExplorerSummary(page, {
+    fail: TEST_COUNTS.files.fail,
+    running: runningCount,
+    pass: 0,
+    skip: 0,
+  })
+  await expect(getExplorerItem(page, 'error.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
-  // match only pass files when fail filter applied
+  // match a failed file through its passing child
+  await page.getByPlaceholder('Search...').fill('successful child')
+  await failFilter.click()
+  await passFilter.click()
+  await expectExplorerSummary(page, { fail: 1, running: runningCount, pass: 0, skip: 0 })
+  await expect(getExplorerItem(page, 'suite-report.test.ts')).toBeVisible()
+
+  // match only pass files when pass filter applied
   await page.getByPlaceholder('Search...').fill('console')
-  await page.getByText(/^Fail$/, { exact: true }).click()
-  await page.locator('span').filter({ hasText: /^Pass$/ }).click()
-  await page.getByText('PASS (1)').click()
-  await expect(page.getByTestId('results-panel').getByText('console.test.ts', { exact: true })).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
+  await expectExplorerSummary(page, { fail: 0, running: runningCount, pass: 1, skip: 0 })
+  await expect(getExplorerItem(page, 'console.test.ts')).toBeVisible()
+  await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
   // html entities in task names are escaped
-  await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+  await passFilter.click()
   await page.getByPlaceholder('Search...').fill('<MyComponent />')
   // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
   await page.getByTestId('collapse-all').click()
   await page.getByTestId('expand-all').click()
-  await expect(page.getByText('<MyComponent />')).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
+  await expect(getExplorerItem(page, '<MyComponent />')).toBeVisible()
+  await expect(getExplorerItem(page, 'task-name.test.ts')).toBeVisible()
 
   // html entities in task names are escaped
   await page.getByPlaceholder('Search...').fill('<>\'"')
-  await expect(page.getByText('<>\'"')).toBeVisible()
-  await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
+  await expect(getExplorerItem(page, '<>\'"')).toBeVisible()
+  await expect(getExplorerItem(page, 'task-name.test.ts')).toBeVisible()
 
   // pass files with special chars
   await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
@@ -641,6 +744,16 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
     await testItem.getByLabel('Run current test').click()
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   }
+}
+
+async function expectExplorerSummary(
+  page: Page,
+  expected: { fail: number; running: number | undefined; pass: number; skip: number },
+) {
+  const running = expected.running == null ? '' : `RUNNING (${expected.running}) `
+  await expect(page.getByTestId('explorer-summary')).toHaveText(
+    `FAIL (${expected.fail}) / ${running}PASS (${expected.pass}) / SKIP (${expected.skip})`,
+  )
 }
 
 async function testFilterInitiallyInvisibleItem(page: Page) {
@@ -664,8 +777,7 @@ async function testCrossOriginAccess(page: Page, pageUrl: string) {
     try {
       const res = await fetch(pageUrl)
       return res.status
-    }
-    catch (e) {
+    } catch (e) {
       return e instanceof Error ? e.message : e
     }
   }, pageUrl)
@@ -694,12 +806,14 @@ async function testWriteFile(page: Page, options: { enabled: boolean }) {
   const editor = page.getByTestId('editor')
   await expect(editor).toContainText('expect(1 + 1).toEqual(2)')
   await editor.click()
-  await expect(editor.locator('.CodeMirror-cursors')).toHaveCSS('visibility', options.enabled ? 'visible' : 'hidden')
+  await expect(editor.locator('.CodeMirror-cursors')).toHaveCSS(
+    'visibility',
+    options.enabled ? 'visible' : 'hidden',
+  )
   await page.keyboard.type('\n// edited \n')
   if (options.enabled) {
     await expect(editor).toContainText('// edited')
-  }
-  else {
+  } else {
     await expect(editor).not.toContainText('// edited')
   }
 }
@@ -774,7 +888,7 @@ test.describe('standalone', () => {
     // check results
     await page.getByRole('button', { name: 'Show dashboard' }).click()
     await assertTestCounts(page, { pass: 2, fail: 0 })
-    expect(vitest?.state.getFiles().map(f => [f.name, f.result?.state])).toEqual([
+    expect(vitest?.state.getFiles().map((f) => [f.name, f.result?.state])).toEqual([
       ['sample.test.ts', 'pass'],
     ])
   })

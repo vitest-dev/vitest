@@ -20,13 +20,12 @@ import { getElementFromUserInput, getTag } from './utils'
 const FORM_TAGS = ['FORM', 'INPUT', 'SELECT', 'TEXTAREA']
 
 function isElementHavingAriaInvalid(element: HTMLElement | SVGElement) {
-  return (
-    element.hasAttribute('aria-invalid')
-    && element.getAttribute('aria-invalid') !== 'false'
-  )
+  return element.hasAttribute('aria-invalid') && element.getAttribute('aria-invalid') !== 'false'
 }
 
-function isSupportsValidityMethod(element: HTMLElement | SVGElement): element is HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLFormElement {
+function isSupportsValidityMethod(
+  element: HTMLElement | SVGElement,
+): element is HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLFormElement {
   return FORM_TAGS.includes(getTag(element))
 }
 
@@ -34,8 +33,7 @@ function isElementInvalid(element: HTMLElement | SVGElement) {
   const isHaveAriaInvalid = isElementHavingAriaInvalid(element)
   if (isSupportsValidityMethod(element)) {
     return isHaveAriaInvalid || !element.checkValidity()
-  }
-  else {
+  } else {
     return isHaveAriaInvalid
   }
 }
@@ -53,11 +51,7 @@ export function toBeInvalid(
     message: () => {
       const is = isInvalid ? 'is' : 'is not'
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeInvalid`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeInvalid`, 'element', ''),
         '',
         `Received element ${is} currently invalid:`,
         `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
@@ -79,11 +73,7 @@ export function toBeValid(
     message: () => {
       const is = isValid ? 'is' : 'is not'
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeValid`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeValid`, 'element', ''),
         '',
         `Received element ${is} currently valid:`,
         `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,

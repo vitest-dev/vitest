@@ -1,7 +1,6 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
-
 import { runVitest } from '../../test-utils'
 
 describe('should fail', async () => {
@@ -23,7 +22,7 @@ describe('should fail', async () => {
     expect(stderr).toBeTruthy()
     const lines = String(stderr).split(/\n/g)
     const msg = lines
-      .filter(i => i.includes('TypeCheckError: '))
+      .filter((i) => i.includes('TypeCheckError: '))
       .reverse()
       .join('\n')
       .trim()
@@ -53,7 +52,7 @@ describe('should fail', async () => {
 
     const lines = String(stderr).split(/\n/g)
     const msg = lines
-      .filter(i => i.includes('TypeCheckError: '))
+      .filter((i) => i.includes('TypeCheckError: '))
       .reverse()
       .join('\n')
       .trim()
@@ -85,7 +84,12 @@ describe('should fail', async () => {
 
     const message = removeLines(stderr.replace(resolve(import.meta.dirname, '..'), '<root>'))
 
-    expect(message.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', '')).toMatchSnapshot()
+    expect(
+      message.replace(
+        "Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\n",
+        '',
+      ),
+    ).toMatchSnapshot()
   })
 })
 
@@ -96,22 +100,20 @@ describe('ignoreSourceErrors', () => {
     })
     expect(vitest.stderr).toContain('Unhandled Errors')
     expect(vitest.stderr).toContain('Unhandled Source Error')
-    expect(vitest.stderr).toContain('TypeCheckError: Cannot find name \'thisIsSourceError\'')
+    expect(vitest.stderr).toContain("TypeCheckError: Cannot find name 'thisIsSourceError'")
   })
 
   it('enabled', async () => {
-    const vitest = await runVitest(
-      {
-        root: resolve(import.meta.dirname, '../fixtures/source-error'),
-        typecheck: {
-          ignoreSourceErrors: true,
-          enabled: true,
-        },
+    const vitest = await runVitest({
+      root: resolve(import.meta.dirname, '../fixtures/source-error'),
+      typecheck: {
+        ignoreSourceErrors: true,
+        enabled: true,
       },
-    )
+    })
     expect(vitest.stdout).not.toContain('Unhandled Errors')
     expect(vitest.stderr).not.toContain('Unhandled Source Error')
-    expect(vitest.stderr).not.toContain('TypeCheckError: Cannot find name \'thisIsSourceError\'')
+    expect(vitest.stderr).not.toContain("TypeCheckError: Cannot find name 'thisIsSourceError'")
   })
 })
 
@@ -127,9 +129,9 @@ describe('when the title is dynamic', () => {
     expect(vitest.stdout).toContain('↓ dynamic skip')
     expect(vitest.stdout).not.toContain('✓ false') // .skipIf is not reported as a separate test
     expect(vitest.stdout).toContain('✓ template string')
-    // eslint-disable-next-line no-template-curly-in-string
+    // oxlint-disable-next-line no-template-curly-in-string
     expect(vitest.stdout).toContain('✓ template ${"some value"} string')
-    // eslint-disable-next-line no-template-curly-in-string
+    // oxlint-disable-next-line no-template-curly-in-string
     expect(vitest.stdout).toContain('✓ template ${`literal`} string')
     expect(vitest.stdout).toContain('✓ name')
     expect(vitest.stdout).toContain('✓ (() => "some name")()')
@@ -147,8 +149,7 @@ it('throws an error if typechecker process exists', async () => {
   expect(stderr).toContain('Error: Spawning typechecker failed - is typescript installed?')
   if (process.platform === 'win32') {
     expect(stderr).toContain('Error: The non-existing-command command exited with code 1.')
-  }
-  else {
+  } else {
     expect(stderr).toContain('Error: spawn non-existing-command ENOENT')
   }
 })

@@ -53,8 +53,7 @@ function matcherHint(
     // Old format: for backward compatibility,
     // especially without promise or isNot options
     dimString += matcherName
-  }
-  else {
+  } else {
     // New format: omit period from matcherName arg
     hint += DIM_COLOR(`${dimString}.`) + matcherName
     dimString = ''
@@ -62,8 +61,7 @@ function matcherHint(
 
   if (expected === '') {
     dimString += '()'
-  }
-  else {
+  } else {
     hint += DIM_COLOR(`${dimString}(`) + expectedColor(expected)
     if (secondArgument) {
       hint += DIM_COLOR(', ') + secondArgumentColor(secondArgument)
@@ -87,7 +85,7 @@ const SPACE_SYMBOL = '\u{00B7}' // middle dot
 // Instead of inverse highlight which now implies a change,
 // replace common spaces with middle dot at the end of any line.
 function replaceTrailingSpaces(text: string): string {
-  return text.replace(/\s+$/gm, spaces => SPACE_SYMBOL.repeat(spaces.length))
+  return text.replace(/\s+$/gm, (spaces) => SPACE_SYMBOL.repeat(spaces.length))
 }
 
 function printReceived(object: unknown): string {
@@ -126,16 +124,9 @@ export function getMatcherUtils(): {
   }
 }
 
-export function printWithType<T>(
-  name: string,
-  value: T,
-  print: (value: T) => string,
-): string {
+export function printWithType<T>(name: string, value: T, print: (value: T) => string): string {
   const type = getType(value)
-  const hasType
-    = type !== 'null' && type !== 'undefined'
-      ? `${name} has type:  ${type}\n`
-      : ''
+  const hasType = type !== 'null' && type !== 'undefined' ? `${name} has type:  ${type}\n` : ''
   const hasValue = `${name} has value: ${print(value)}`
   return hasType + hasValue
 }
@@ -149,9 +140,7 @@ export function addCustomEqualityTesters(newTesters: Array<Tester>): void {
     )
   }
 
-  (globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters.push(
-    ...newTesters,
-  )
+  ;(globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters.push(...newTesters)
 }
 
 export function getCustomEqualityTesters(): Array<Tester> {

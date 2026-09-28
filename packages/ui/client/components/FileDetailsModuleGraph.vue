@@ -15,11 +15,8 @@ const hideNodeModules = ref(true)
 const NODE_MODULES_RE = /[/\\]node_modules[/\\]/
 
 const { state: graphData, isLoading } = useAsyncState(
-  () => client.rpc.getModuleGraph(
-    props.projectName,
-    props.file.filepath,
-    props.file.viteEnvironment,
-  ),
+  () =>
+    client.rpc.getModuleGraph(props.projectName, props.file.filepath, props.file.viteEnvironment),
   undefined,
 )
 
@@ -31,8 +28,8 @@ const graph = computed(() => {
   if (hideNodeModules.value) {
     moduleGraph = {
       ...moduleGraph,
-      inlined: moduleGraph.inlined.filter(n => !NODE_MODULES_RE.test(n)),
-      externalized: moduleGraph.externalized.filter(n => !NODE_MODULES_RE.test(n)),
+      inlined: moduleGraph.inlined.filter((n) => !NODE_MODULES_RE.test(n)),
+      externalized: moduleGraph.externalized.filter((n) => !NODE_MODULES_RE.test(n)),
     }
   }
   return getModuleGraph(moduleGraph, props.file.filepath)
@@ -40,8 +37,8 @@ const graph = computed(() => {
 </script>
 
 <template>
-  <div flex-1 overflow-hidden>
-    <div v-if="isLoading" h-full flex items-center justify-center op-70>
+  <div class="flex-1 overflow-hidden">
+    <div v-if="isLoading" class="h-full flex items-center justify-center op-70">
       Loading module graph...
     </div>
     <ViewModuleGraph

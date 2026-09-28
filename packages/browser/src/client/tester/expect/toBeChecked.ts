@@ -20,23 +20,17 @@ import { getElementFromUserInput, isInputElement, toSentence } from './utils'
 
 const supportedRoles = getAriaCheckedRoles()
 
-export default function toBeChecked(
-  this: MatcherState,
-  actual: Element | Locator,
-): MatcherResult {
+export default function toBeChecked(this: MatcherState, actual: Element | Locator): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeChecked, this)
 
   const isValidInput = () => {
-    return (
-      isInputElement(htmlElement)
-      && ['checkbox', 'radio'].includes(htmlElement.type)
-    )
+    return isInputElement(htmlElement) && ['checkbox', 'radio'].includes(htmlElement.type)
   }
 
   const isValidAriaElement = () => {
     return (
-      supportedRoles.includes(getAriaRole(htmlElement) || '')
-      && ['true', 'false'].includes(htmlElement.getAttribute('aria-checked') || '')
+      supportedRoles.includes(getAriaRole(htmlElement) || '') &&
+      ['true', 'false'].includes(htmlElement.getAttribute('aria-checked') || '')
     )
   }
 
@@ -56,11 +50,7 @@ export default function toBeChecked(
     message: () => {
       const is = isChecked ? 'is' : 'is not'
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeChecked`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeChecked`, 'element', ''),
         '',
         `Received element ${is} checked:`,
         `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
@@ -71,7 +61,7 @@ export default function toBeChecked(
 
 function supportedRolesSentence() {
   return toSentence(
-    supportedRoles.map(role => `role="${role}"`),
+    supportedRoles.map((role) => `role="${role}"`),
     { lastWordConnector: ' or ' },
   )
 }

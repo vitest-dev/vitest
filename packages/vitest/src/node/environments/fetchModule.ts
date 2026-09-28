@@ -2,7 +2,12 @@ import type { Span } from '@opentelemetry/api'
 import type { StaticMockCall } from '@vitest/mocker/node'
 import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult, ModuleType, VitestFetchResult } from '../../types/general'
+import type {
+  FetchCachedFileSystemResult,
+  ModuleType,
+  TestError,
+  VitestFetchResult,
+} from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
 import type { FileSystemModuleCache } from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
@@ -92,15 +97,18 @@ class ModuleFetcher {
       return { externalize, type: 'module' }
     }
 
-    const cachePath = await this.getCachePath(
-      environment,
-      moduleGraphModule,
-    )
+    const cachePath = await this.getCachePath(environment, moduleGraphModule)
 
     // full fs caching is disabled, but we still want to keep tmp files if makeTmpCopies is enabled
     // this is primarily used by the forks pool to avoid using process.send(bigBuffer)
     if (cachePath == null) {
-      const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+      const result = await this.fetchAndProcess(
+        environment,
+        url,
+        importer,
+        moduleGraphModule,
+        options,
+      )
 
       this.recordResult(trace, result)
 
@@ -138,13 +146,24 @@ class ModuleFetcher {
       })
     }
 
-    const cachedModule = await this.getCachedModule(cachePath, environment, moduleGraphModule, importer)
+    const cachedModule = await this.getCachedModule(
+      cachePath,
+      environment,
+      moduleGraphModule,
+      importer,
+    )
     if (cachedModule) {
       this.recordResult(trace, cachedModule)
       return cachedModule
     }
 
-    const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+    const result = await this.fetchAndProcess(
+      environment,
+      url,
+      importer,
+      moduleGraphModule,
+      options,
+    )
     const importedUrls = this.getSerializedImports(moduleGraphModule)
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
@@ -197,7 +216,10 @@ class ModuleFetcher {
     }
   }
 
-  private async getCachePath(environment: DevEnvironment, moduleGraphModule: EnvironmentModuleNode): Promise<null | string> {
+  private async getCachePath(
+    environment: DevEnvironment,
+    moduleGraphModule: EnvironmentModuleNode,
+  ): Promise<null | string> {
     if (!this.fsCacheEnabled) {
       return null
     }
@@ -224,10 +246,10 @@ class ModuleFetcher {
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<string> {
     if (
-      moduleGraphModule.file
+      moduleGraphModule.file &&
       // \x00 is a virtual file convention
-      && !moduleGraphModule.file.startsWith('\x00')
-      && !moduleGraphModule.file.startsWith('virtual:')
+      !moduleGraphModule.file.startsWith('\x00') &&
+      !moduleGraphModule.file.startsWith('virtual:')
     ) {
       const result = await this.readFileConcurrently(moduleGraphModule.file)
       if (result != null) {
@@ -309,13 +331,15 @@ class ModuleFetcher {
       }
     }
 
-    await Promise.all(cachedModule.importedUrls.map(async (url) => {
-      const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
-      if (moduleNode) {
-        moduleNode.importers.add(moduleGraphModule)
-        moduleGraphModule.importedModules.add(moduleNode)
-      }
-    }))
+    await Promise.all(
+      cachedModule.importedUrls.map(async (url) => {
+        const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
+        if (moduleNode) {
+          moduleNode.importers.add(moduleGraphModule)
+          moduleGraphModule.importedModules.add(moduleNode)
+        }
+      }),
+    )
 
     return {
       cached: true as const,
@@ -335,23 +359,24 @@ class ModuleFetcher {
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
   ): Promise<VitestFetchResult> {
-    const moduleRunnerModule = await fetchModule(
-      environment,
-      url,
-      importer,
-      {
-        ...options,
-        inlineSourceMap: false,
-      },
-    ).catch(handleRollupError)
+    const moduleRunnerModule = await fetchModule(environment, url, importer, {
+      ...options,
+      inlineSourceMap: false,
+    }).catch(handleRollupError)
 
     const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
     if ('code' in result) {
-      result.moduleType = await this.cachedModuleType(result.file, result.code, moduleGraphModule.transformResult)
+      result.moduleType = await this.cachedModuleType(
+        result.file,
+        result.code,
+        moduleGraphModule.transformResult,
+      )
     }
     const transformResult = moduleGraphModule.transformResult
     if (transformResult && moduleGraphModule.id) {
-      transformResult.__vitestStaticMocks ??= environment.pluginContainer.getModuleInfo(moduleGraphModule.id)?.meta?.vitestStaticMocks ?? null
+      transformResult.__vitestStaticMocks ??=
+        environment.pluginContainer.getModuleInfo(moduleGraphModule.id)?.meta?.vitestStaticMocks ??
+        null
     }
     return result
   }
@@ -376,9 +401,9 @@ class ModuleFetcher {
     if (!this.detectModuleType) {
       return undefined
     }
-    const moduleType
-      = transformResult?.__vitestModuleType
-        ?? await detectModuleType(file, code, this.sourceLoader(file))
+    const moduleType =
+      transformResult?.__vitestModuleType ??
+      (await detectModuleType(file, code, this.sourceLoader(file)))
     if (transformResult) {
       transformResult.__vitestModuleType = moduleType
     }
@@ -392,9 +417,7 @@ class ModuleFetcher {
     importedUrls: string[] = [],
     mappings = false,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
-    const returnResult = 'code' in result
-      ? getCachedResult(result, cachePath)
-      : result
+    const returnResult = 'code' in result ? getCachedResult(result, cachePath) : result
 
     if (saveCachePromises.has(cachePath)) {
       return saveCachePromises.get(cachePath)!
@@ -421,9 +444,11 @@ class ModuleFetcher {
       readFilePromises.set(
         file,
         // virtual file can have a "file" property
-        readFile(file, 'utf-8').catch(() => null).finally(() => {
-          readFilePromises.delete(file)
-        }),
+        readFile(file, 'utf-8')
+          .catch(() => null)
+          .finally(() => {
+            readFilePromises.delete(file)
+          }),
       )
     }
     return readFilePromises.get(file)!
@@ -437,7 +462,7 @@ export interface VitestFetchFunction {
     environment: DevEnvironment,
     cacheFs?: boolean,
     options?: FetchFunctionOptions,
-    otelCarrier?: OTELCarrier
+    otelCarrier?: OTELCarrier,
   ): Promise<FetchResult | FetchCachedFileSystemResult>
 }
 
@@ -451,15 +476,9 @@ export function createFetchModuleFunction(
   const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
   return async (url, importer, environment, cacheFs, options, otelCarrier) => {
     await traces.waitInit()
-    const context = otelCarrier
-      ? traces.getContextFromCarrier(otelCarrier)
-      : undefined
-    return traces.$(
-      'vitest.module.transform',
-      context
-        ? { context }
-        : {},
-      span => fetcher.fetch(span, url, importer, environment, cacheFs, options),
+    const context = otelCarrier ? traces.getContextFromCarrier(otelCarrier) : undefined
+    return traces.$('vitest.module.transform', context ? { context } : {}, (span) =>
+      fetcher.fetch(span, url, importer, environment, cacheFs, options),
     )
   }
 }
@@ -500,11 +519,7 @@ function inlineSourceMap(result: TransformResult) {
   const map = result.map
   let code = result.code
 
-  if (
-    !map
-    || !('version' in map)
-    || code.includes(MODULE_RUNNER_SOURCEMAPPING_SOURCE)
-  ) {
+  if (!map || !('version' in map) || code.includes(MODULE_RUNNER_SOURCEMAPPING_SOURCE)) {
     return result
   }
 
@@ -536,7 +551,10 @@ function genSourceMapUrl(map: Rollup.SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-function getCachedResult(result: Extract<VitestFetchResult, { code: string }>, tmp: string): FetchCachedFileSystemResult {
+function getCachedResult(
+  result: Extract<VitestFetchResult, { code: string }>,
+  tmp: string,
+): FetchCachedFileSystemResult {
   return {
     cached: true as const,
     file: result.file,
@@ -559,9 +577,7 @@ function extractSourceMap(code: string): null | Rollup.SourceMap {
     return null
   }
 
-  const mapString = MODULE_RUNNER_SOURCEMAPPING_REGEXP.exec(
-    code.slice(lastIndex),
-  )?.[1]
+  const mapString = MODULE_RUNNER_SOURCEMAPPING_REGEXP.exec(code.slice(lastIndex))?.[1]
   if (!mapString) {
     return null
   }
@@ -575,17 +591,13 @@ function extractSourceMap(code: string): null | Rollup.SourceMap {
 }
 
 // serialize rollup error on server to preserve details as a test error
-export function handleRollupError(e: unknown): never {
-  if (
-    e instanceof Error
-    && ('plugin' in e || 'frame' in e || 'id' in e)
-  ) {
-    // eslint-disable-next-line no-throw-literal
-    throw {
+export function toRollupError(e: unknown): TestError | undefined {
+  if (e instanceof Error && ('plugin' in e || 'frame' in e || 'id' in e)) {
+    return {
       name: e.name,
       message: e.message,
       stack: e.stack,
-      cause: e.cause,
+      cause: e.cause as TestError | undefined,
       __vitest_rollup_error__: {
         plugin: (e as any).plugin,
         id: (e as any).id,
@@ -594,7 +606,10 @@ export function handleRollupError(e: unknown): never {
       },
     }
   }
-  throw e
+}
+
+export function handleRollupError(e: unknown): never {
+  throw toRollupError(e) ?? e
 }
 
 declare module 'vite' {

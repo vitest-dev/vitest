@@ -1,8 +1,4 @@
-import type {
-  ModuleGraphData,
-  RunnerTestFile,
-  SerializedRootConfig,
-} from 'vitest'
+import type { ModuleGraphData, RunnerTestFile, SerializedRootConfig } from 'vitest'
 import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
@@ -28,7 +24,8 @@ export interface HTMLReportMetadata {
 function deserializeReportMetadata(metadata: HTMLReportMetadata) {
   const sourceCodes: { [moduleId: string]: string } = {}
   for (const testModule of metadata.testModules) {
-    const codeIndex = metadata.sourceCode.testModules[testModule.projectName]?.[testModule.relativeModuleId]
+    const codeIndex =
+      metadata.sourceCode.testModules[testModule.projectName]?.[testModule.relativeModuleId]
     if (codeIndex != null) {
       sourceCodes[testModule.moduleId] = metadata.sourceCode.codeTable[codeIndex]
     }
@@ -77,11 +74,10 @@ export function createStaticClient(): VitestClient {
     // Check for gzip magic numbers (0x1f 0x8b) to determine if content is compressed.
     // This handles cases where a static server incorrectly sets Content-Encoding: gzip
     // for .gz files, causing the browser to auto-decompress before we process the raw gzip data.
-    if (content.length >= 2 && content[0] === 0x1F && content[1] === 0x8B) {
+    if (content.length >= 2 && content[0] === 0x1f && content[1] === 0x8b) {
       const decompressed = strFromU8(decompressSync(content))
       metadata = parse(decompressed)
-    }
-    else {
+    } else {
       metadata = parse(strFromU8(content))
     }
     ctx.rpc = deserializeReportMetadata(metadata)

@@ -1,4 +1,4 @@
-/* eslint-disable no-sparse-arrays */
+/* oxlint-disable no-sparse-arrays */
 import nodeAssert, { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
@@ -49,10 +49,20 @@ describe('jest-expect', () => {
 
     expect(new URL('https://example.org')).toEqual(new URL('https://example.org'))
     expect(new URL('https://example.org')).not.toEqual(new URL('https://different-example.org'))
-    expect(new URL('https://example.org?query=value')).toEqual(new URL('https://example.org?query=value'))
-    expect(new URL('https://example.org?query=one')).not.toEqual(new URL('https://example.org?query=two'))
-    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).toEqual(new URL('https://subdomain.example.org/path?query=value#fragment-identifier'))
-    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).not.toEqual(new URL('https://subdomain.example.org/path?query=value#different-fragment-identifier'))
+    expect(new URL('https://example.org?query=value')).toEqual(
+      new URL('https://example.org?query=value'),
+    )
+    expect(new URL('https://example.org?query=one')).not.toEqual(
+      new URL('https://example.org?query=two'),
+    )
+    expect(new URL('https://subdomain.example.org/path?query=value#fragment-identifier')).toEqual(
+      new URL('https://subdomain.example.org/path?query=value#fragment-identifier'),
+    )
+    expect(
+      new URL('https://subdomain.example.org/path?query=value#fragment-identifier'),
+    ).not.toEqual(
+      new URL('https://subdomain.example.org/path?query=value#different-fragment-identifier'),
+    )
     expect(new URL('https://example.org/path')).toEqual(new URL('/path', 'https://example.org'))
     expect(new URL('https://example.org/path')).not.toEqual(new URL('/path', 'https://example.com'))
 
@@ -92,15 +102,17 @@ describe('jest-expect', () => {
     }).toThrow(err)
     expect(() => {
       throw new Error('message')
-    }).toThrow(expect.objectContaining({
-      message: expect.stringContaining('mes'),
-    }))
+    }).toThrow(
+      expect.objectContaining({
+        message: expect.stringContaining('mes'),
+      }),
+    )
     expect(() => {
-      // eslint-disable-next-line no-throw-literal
+      // oxlint-disable-next-line no-throw-literal
       throw ''
     }).toThrow(/^$/)
     expect(() => {
-      // eslint-disable-next-line no-throw-literal
+      // oxlint-disable-next-line no-throw-literal
       throw ''
     }).toThrow('')
     expect(() => {
@@ -117,7 +129,9 @@ describe('jest-expect', () => {
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
     expect(0.2 + 0.1).not.toBeCloseTo(0.3, 100) // expect.closeTo will fail in chai
 
-    expect(() => expect(1).toMatch(/\d/)).toThrowErrorMatchingInlineSnapshot(`[TypeError: .toMatch() expects to receive a string, but got number]`)
+    expect(() => expect(1).toMatch(/\d/)).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: .toMatch() expects to receive a string, but got number]`,
+    )
   })
 
   it('asymmetric matchers (jest style)', () => {
@@ -145,8 +159,12 @@ describe('jest-expect', () => {
     expect({ a: 0, b: 0 }).not.toEqual(expect.objectContaining({ z: 0 }))
     // objectContaining with symbol key
     const symbolForObjectContaining = Symbol('symbolForObjectContaining')
-    expect({ [symbolForObjectContaining]: 0 }).toEqual(expect.objectContaining({ [symbolForObjectContaining]: 0 }))
-    expect({ [symbolForObjectContaining]: 0 }).not.toEqual(expect.objectContaining({ [symbolForObjectContaining]: 1 }))
+    expect({ [symbolForObjectContaining]: 0 }).toEqual(
+      expect.objectContaining({ [symbolForObjectContaining]: 0 }),
+    )
+    expect({ [symbolForObjectContaining]: 0 }).not.toEqual(
+      expect.objectContaining({ [symbolForObjectContaining]: 1 }),
+    )
     expect(0).toEqual(expect.any(Number))
     expect('string').toEqual(expect.any(String))
     expect('string').not.toEqual(expect.any(Number))
@@ -154,18 +172,12 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.arrayContaining(['Bob']))
     expect(['Bob', 'Eve']).not.toEqual(expect.arrayContaining(['Mohammad']))
 
-    expect([
-      { name: 'Bob' },
-      { name: 'Eve' },
-    ]).toEqual(expect.arrayContaining<{ name: string }>([
-      { name: 'Bob' },
-    ]))
-    expect([
-      { name: 'Bob' },
-      { name: 'Eve' },
-    ]).not.toEqual(expect.arrayContaining<{ name: string }>([
-      { name: 'Mohammad' },
-    ]))
+    expect([{ name: 'Bob' }, { name: 'Eve' }]).toEqual(
+      expect.arrayContaining<{ name: string }>([{ name: 'Bob' }]),
+    )
+    expect([{ name: 'Bob' }, { name: 'Eve' }]).not.toEqual(
+      expect.arrayContaining<{ name: string }>([{ name: 'Mohammad' }]),
+    )
 
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
@@ -193,37 +205,50 @@ describe('jest-expect', () => {
       }).toEqual({
         sum: expect.closeTo(0.4),
       })
-    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`,
+    )
   })
 
   it('asymmetric matchers and equality testers', () => {
     // iterable equality testers
-    expect([new Set(['x'])]).toEqual(
-      expect.arrayContaining([new Set(['x'])]),
-    )
-    expect([new Set()]).not.toEqual(
-      expect.arrayContaining([new Set(['x'])]),
-    )
-    expect({ foo: new Set(['x']) }).toEqual(
-      expect.objectContaining({ foo: new Set(['x']) }),
-    )
-    expect({ foo: new Set() }).not.toEqual(
-      expect.objectContaining({ foo: new Set(['x']) }),
-    )
+    expect([new Set(['x'])]).toEqual(expect.arrayContaining([new Set(['x'])]))
+    expect([new Set()]).not.toEqual(expect.arrayContaining([new Set(['x'])]))
+    expect({ foo: new Set(['x']) }).toEqual(expect.objectContaining({ foo: new Set(['x']) }))
+    expect({ foo: new Set() }).not.toEqual(expect.objectContaining({ foo: new Set(['x']) }))
 
     // `toStrictEqual` testers
     class Stock {
       constructor(public type: string) {}
     }
-    expect([new Stock('x')]).toEqual(
-      expect.arrayContaining([{ type: 'x' }]),
-    )
-    expect([new Stock('x')]).not.toStrictEqual(
-      expect.arrayContaining([{ type: 'x' }]),
-    )
-    expect([new Stock('x')]).toStrictEqual(
-      expect.arrayContaining([new Stock('x')]),
-    )
+    expect([new Stock('x')]).toEqual(expect.arrayContaining([{ type: 'x' }]))
+    expect([new Stock('x')]).not.toStrictEqual(expect.arrayContaining([{ type: 'x' }]))
+    expect([new Stock('x')]).toStrictEqual(expect.arrayContaining([new Stock('x')]))
+  })
+
+  // https://github.com/vitest-dev/vitest/issues/11071
+  it('asymmetric matchers and toMatchObject equality', () => {
+    expect([{ id: 1 }]).not.toMatchObject(expect.arrayContaining([{ id: 1, required: 'x' }]))
+    expect({ nested: [{ id: 1 }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1, extra: true }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+    })
+    expect({ nested: [{ id: 1 }] }).not.toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+      extra: true,
+    })
+
+    expect({ nested: [{ id: 1, required: 'x' }] }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1, required: 'x' }, { extra: true }] }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1, required: 'x' }]),
+    })
+    expect({ nested: [{ id: 1 }], extra: true }).toMatchObject({
+      nested: expect.arrayContaining([{ id: 1 }]),
+    })
   })
 
   it('asymmetric matchers negate', () => {
@@ -239,15 +264,12 @@ describe('jest-expect', () => {
         const pass = received % divisor === 0
         if (pass) {
           return {
-            message: () =>
-              `expected ${received} not to be divisible by ${divisor}`,
+            message: () => `expected ${received} not to be divisible by ${divisor}`,
             pass: true,
           }
-        }
-        else {
+        } else {
           return {
-            message: () =>
-              `expected ${received} to be divisible by ${divisor}`,
+            message: () => `expected ${received} to be divisible by ${divisor}`,
             pass: false,
           }
         }
@@ -290,8 +312,12 @@ describe('jest-expect', () => {
     expect(() => expect(2).toBeDividedBy(5)).toThrow()
 
     expect(() => expect(null).toBeTestedSync()).toThrow('toBeTestedSync')
-    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrow('toBeTestedAsync')
-    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow('toBeTestedPromise')
+    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrow(
+      'toBeTestedAsync',
+    )
+    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow(
+      'toBeTestedPromise',
+    )
   })
 
   it('object', () => {
@@ -303,11 +329,11 @@ describe('jest-expect', () => {
     const foo = {}
     const complex = {
       '0': 'zero',
-      'foo': 1,
+      foo: 1,
       'foo.bar[0]': 'baz',
       'a-b': true,
       'a-b-1.0.0': true,
-      'bar': {
+      bar: {
         foo: 'foo',
         bar: 100,
         arr: ['first', { zoo: 'monkey' }],
@@ -356,14 +382,18 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false]`)
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false]`,
+    )
 
     expect(() => {
       const x = { a: { b: { c: 1 } } }
       const y = { a: { b: { c: 2 } } }
       Object.freeze(x.a)
       expect(x).toEqual(y)
-    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`)
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`,
+    )
   })
 
   it('fails cleanly when toHaveProperty receives a nullish value', () => {
@@ -397,21 +427,13 @@ describe('jest-expect', () => {
 
   it('assertions when asynchronous code', async () => {
     expect.assertions(3)
-    await Promise.all([
-      expect(1).toBe(1),
-      expect(1).toBe(1),
-      expect(1).toBe(1),
-    ])
+    await Promise.all([expect(1).toBe(1), expect(1).toBe(1), expect(1).toBe(1)])
   })
 
   it.fails('assertions when asynchronous code', async () => {
     // Error: expected number of assertions to be 2, but got 3
     expect.assertions(2)
-    await Promise.all([
-      expect(1).toBe(1),
-      expect(1).toBe(1),
-      expect(1).toBe(1),
-    ])
+    await Promise.all([expect(1).toBe(1), expect(1).toBe(1), expect(1).toBe(1)])
   })
 
   it.fails('has assertions', () => {
@@ -471,23 +493,25 @@ describe('jest-expect', () => {
   })
 
   describe('toThrow', () => {
-    it('error wasn\'t thrown', () => {
+    it("error wasn't thrown", () => {
       expect(() => {
-        expect(() => {
-        }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
+        expect(() => {}).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected function to throw an error, but it didn't]`,
+      )
     })
 
-    it('async wasn\'t awaited', () => {
+    it("async wasn't awaited", () => {
       expect(() => {
-        expect(async () => {
-        }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
+        expect(async () => {}).toThrow(Error)
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected function to throw an error, but it didn't]`,
+      )
     })
 
     it('custom error class', () => {
-      class Error1 extends Error {};
-      class Error2 extends Error {};
+      class Error1 extends Error {}
+      class Error2 extends Error {}
 
       // underlying `toEqual` doesn't require constructor/prototype equality
       expect(() => {
@@ -500,44 +524,48 @@ describe('jest-expect', () => {
     it('non Error instance', () => {
       // primitives
       expect(() => {
-        // eslint-disable-next-line no-throw-literal
+        // oxlint-disable-next-line no-throw-literal
         throw 42
       }).toThrow(42)
       expect(() => {
-        // eslint-disable-next-line no-throw-literal
+        // oxlint-disable-next-line no-throw-literal
         throw 42
       }).not.toThrow(43)
 
       expect(() => {
         expect(() => {
-        // eslint-disable-next-line no-throw-literal
+          // oxlint-disable-next-line no-throw-literal
           throw 42
         }).toThrow(43)
       }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal 43]`)
 
       // deep equality
       expect(() => {
-        // eslint-disable-next-line no-throw-literal
+        // oxlint-disable-next-line no-throw-literal
         throw { foo: 'hello world' }
       }).toThrow({ foo: expect.stringContaining('hello') })
       expect(() => {
-        // eslint-disable-next-line no-throw-literal
+        // oxlint-disable-next-line no-throw-literal
         throw { foo: 'bar' }
       }).not.toThrow({ foo: expect.stringContaining('hello') })
 
       expect(() => {
         expect(() => {
-        // eslint-disable-next-line no-throw-literal
+          // oxlint-disable-next-line no-throw-literal
           throw { foo: 'bar' }
         }).toThrow({ foo: expect.stringContaining('hello') })
-      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal { foo: StringContaining "hello" }]`)
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected a thrown value to equal { foo: StringContaining "hello" }]`,
+      )
     })
 
     it('error from different realm', async () => {
       const vm = await import('node:vm')
       const context: any = {}
       vm.createContext(context)
-      new vm.Script('fn = () => { throw new TypeError("oops") }; globalObject = this').runInContext(context)
+      new vm.Script('fn = () => { throw new TypeError("oops") }; globalObject = this').runInContext(
+        context,
+      )
       const { fn, globalObject } = context
 
       // constructor
@@ -556,11 +584,17 @@ describe('jest-expect', () => {
 
 describe('.toStrictEqual()', () => {
   class TestClassA {
-    constructor(public a: any, public b: any) {}
+    constructor(
+      public a: any,
+      public b: any,
+    ) {}
   }
 
   class TestClassB {
-    constructor(public a: any, public b: any) {}
+    constructor(
+      public a: any,
+      public b: any,
+    ) {}
   }
 
   const TestClassC = class Child extends TestClassA {
@@ -628,27 +662,15 @@ describe('.toStrictEqual()', () => {
   })
 
   it('does not pass when ArrayBuffers are not equal', () => {
-    expect(Uint8Array.from([1, 2]).buffer).not.toStrictEqual(
-      Uint8Array.from([0, 0]).buffer,
-    )
-    expect(Uint8Array.from([2, 1]).buffer).not.toStrictEqual(
-      Uint8Array.from([2, 2]).buffer,
-    )
-    expect(Uint8Array.from([]).buffer).not.toStrictEqual(
-      Uint8Array.from([1]).buffer,
-    )
+    expect(Uint8Array.from([1, 2]).buffer).not.toStrictEqual(Uint8Array.from([0, 0]).buffer)
+    expect(Uint8Array.from([2, 1]).buffer).not.toStrictEqual(Uint8Array.from([2, 2]).buffer)
+    expect(Uint8Array.from([]).buffer).not.toStrictEqual(Uint8Array.from([1]).buffer)
   })
 
   it('passes for matching buffers', () => {
-    expect(Uint8Array.from([1]).buffer).toStrictEqual(
-      Uint8Array.from([1]).buffer,
-    )
-    expect(Uint8Array.from([]).buffer).toStrictEqual(
-      Uint8Array.from([]).buffer,
-    )
-    expect(Uint8Array.from([9, 3]).buffer).toStrictEqual(
-      Uint8Array.from([9, 3]).buffer,
-    )
+    expect(Uint8Array.from([1]).buffer).toStrictEqual(Uint8Array.from([1]).buffer)
+    expect(Uint8Array.from([]).buffer).toStrictEqual(Uint8Array.from([]).buffer)
+    expect(Uint8Array.from([9, 3]).buffer).toStrictEqual(Uint8Array.from([9, 3]).buffer)
   })
 
   it('does not pass for DataView', () => {
@@ -746,8 +768,14 @@ describe('toBeOneOf()', () => {
   it('error message', () => {
     snapshotError(() => expect(3).toBeOneOf([0, 1, 2]))
     snapshotError(() => expect(3).toBeOneOf([expect.any(String)]))
-    snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null, undefined])))
-    snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
+    snapshotError(() =>
+      expect({ a: 0 }).toEqual(
+        expect.toBeOneOf([expect.objectContaining({ b: 0 }), null, undefined]),
+      ),
+    )
+    snapshotError(() =>
+      expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }),
+    )
   })
 })
 
@@ -1093,15 +1121,21 @@ describe('async expect', () => {
     await expect((async () => 'true')()).resolves.not.toThrow()
     await expect((async () => new Error('msg'))()).resolves.not.toThrow() // calls chai assertion
     await expect((async () => new Error('msg'))()).resolves.not.toThrow(Error) // calls our assertion
-    await expect((async () => () => {
-      throw new Error('msg')
-    })()).resolves.toThrow()
-    await expect((async () => () => {
-      return new Error('msg')
-    })()).resolves.not.toThrow()
-    await expect((async () => () => {
-      return new Error('msg')
-    })()).resolves.not.toThrow(Error)
+    await expect(
+      (async () => () => {
+        throw new Error('msg')
+      })(),
+    ).resolves.toThrow()
+    await expect(
+      (async () => () => {
+        return new Error('msg')
+      })(),
+    ).resolves.not.toThrow()
+    await expect(
+      (async () => () => {
+        return new Error('msg')
+      })(),
+    ).resolves.not.toThrow(Error)
   })
 
   it('resolves throws chai', async () => {
@@ -1109,7 +1143,7 @@ describe('async expect', () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow()
     }
 
-    await expect(assertion).rejects.toThrow('expected promise to throw an error, but it didn\'t')
+    await expect(assertion).rejects.toThrow("expected promise to throw an error, but it didn't")
   })
 
   it('resolves throws jest', async () => {
@@ -1117,58 +1151,77 @@ describe('async expect', () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow(Error)
     }
 
-    await expect(assertion).rejects.toThrow('expected promise to throw an error, but it didn\'t')
+    await expect(assertion).rejects.toThrow("expected promise to throw an error, but it didn't")
   })
 
   it('throws an error on .resolves when the argument is not a promise', () => {
     expect.assertions(2)
 
-    const expectedError = new TypeError('You must provide a Promise to expect() when using .resolves, not \'number\'.')
+    const expectedError = new TypeError(
+      "You must provide a Promise to expect() when using .resolves, not 'number'.",
+    )
 
     try {
       expect(1).resolves.toEqual(2)
       expect.unreachable()
-    }
-    catch (error) {
+    } catch (error) {
       expect(error).toEqual(expectedError)
     }
   })
 
   it.fails('failed to resolve', async () => {
-    await expect((async () => {
-      throw new Error('err')
-    })()).resolves.toBe('true')
+    await expect(
+      (async () => {
+        throw new Error('err')
+      })(),
+    ).resolves.toBe('true')
   })
 
   it.fails('failed to throw', async () => {
-    await expect((async () => {
-      throw new Error('err')
-    })()).resolves.not.toThrow()
+    await expect(
+      (async () => {
+        throw new Error('err')
+      })(),
+    ).resolves.not.toThrow()
   })
 
   it('rejects', async () => {
-    await expect((async () => {
-      throw new Error('err')
-    })()).rejects.toStrictEqual(new Error('err'))
-    await expect((async () => {
-      throw new Error('err')
-    })()).rejects.toThrow('err')
-    await expect((async () => {
-      throw new TestError('error')
-    })()).rejects.toThrow(TestError)
+    await expect(
+      (async () => {
+        throw new Error('err')
+      })(),
+    ).rejects.toStrictEqual(new Error('err'))
+    await expect(
+      (async () => {
+        throw new Error('err')
+      })(),
+    ).rejects.toThrow('err')
+    await expect(
+      (async () => {
+        throw new TestError('error')
+      })(),
+    ).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    await expect((async () => {
-      throw err
-    })()).rejects.toThrow(err)
-    await expect((async () => {
-      throw new Error('message')
-    })()).rejects.toThrow(expect.objectContaining({
-      message: expect.stringContaining('mes'),
-    }))
+    await expect(
+      (async () => {
+        throw err
+      })(),
+    ).rejects.toThrow(err)
+    await expect(
+      (async () => {
+        throw new Error('message')
+      })(),
+    ).rejects.toThrow(
+      expect.objectContaining({
+        message: expect.stringContaining('mes'),
+      }),
+    )
 
-    await expect((async () => {
-      throw new Error('err')
-    })()).rejects.not.toStrictEqual(new Error('fake err'))
+    await expect(
+      (async () => {
+        throw new Error('err')
+      })(),
+    ).rejects.not.toStrictEqual(new Error('fake err'))
   })
 
   it.fails('failed to reject', async () => {
@@ -1178,43 +1231,43 @@ describe('async expect', () => {
   it('throws an error on .rejects when the argument (or function result) is not a promise', () => {
     expect.assertions(4)
 
-    const expectedError = new TypeError('You must provide a Promise to expect() when using .rejects, not \'number\'.')
+    const expectedError = new TypeError(
+      "You must provide a Promise to expect() when using .rejects, not 'number'.",
+    )
 
     try {
       expect(1).rejects.toEqual(2)
       expect.unreachable()
-    }
-    catch (error) {
+    } catch (error) {
       expect(error).toEqual(expectedError)
     }
 
     try {
       expect(() => 1).rejects.toEqual(2)
       expect.unreachable()
-    }
-    catch (error) {
+    } catch (error) {
       expect(error).toEqual(expectedError)
     }
   })
 
   it('reminds users to use deep equality checks if they are comparing objects', () => {
-    const generatedToBeMessage = (
-      deepEqualityName: string,
-      expected: string,
-      actual: string,
-    ) => new AssertionError({
-      message: generateToBeMessage(deepEqualityName, expected, actual),
-    })
+    const generatedToBeMessage = (deepEqualityName: string, expected: string, actual: string) =>
+      new AssertionError({
+        message: generateToBeMessage(deepEqualityName, expected, actual),
+      })
 
     const actual = { key: 'value' }
     class FakeClass {}
 
-    const toStrictEqualError1 = generatedToBeMessage('toStrictEqual', '{ key: \'value\' }', '{ key: \'value\' }')
+    const toStrictEqualError1 = generatedToBeMessage(
+      'toStrictEqual',
+      "{ key: 'value' }",
+      "{ key: 'value' }",
+    )
     try {
       expect(actual).toBe({ ...actual })
       expect.unreachable()
-    }
-    catch (error: any) {
+    } catch (error: any) {
       expect(error.message).toBe(toStrictEqualError1.message)
     }
 
@@ -1222,8 +1275,7 @@ describe('async expect', () => {
     try {
       expect(new FakeClass()).toBe(new FakeClass())
       expect.unreachable()
-    }
-    catch (error: any) {
+    } catch (error: any) {
       expect(error.message).toBe(toStrictEqualError2.message)
     }
 
@@ -1231,8 +1283,7 @@ describe('async expect', () => {
     try {
       expect({}).toBe(new FakeClass())
       expect.unreachable()
-    }
-    catch (error: any) {
+    } catch (error: any) {
       expect(error.message).toBe(toEqualError1.message)
     }
 
@@ -1240,29 +1291,26 @@ describe('async expect', () => {
     try {
       expect(new FakeClass()).toBe({})
       expect.unreachable()
-    }
-    catch (error: any) {
+    } catch (error: any) {
       expect(error.message).toBe(toEqualError2.message)
     }
   })
 
   describe('promise auto queuing', () => {
     it.fails('fails', () => {
-      expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
-        .resolves
-        .toBe('true')
+      expect(new Promise((resolve, reject) => setTimeout(reject, 500))).resolves.toBe('true')
     })
 
     let value = 0
 
     it.fails('not awaited fails', () => {
-      expect((async () => {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        value += 1
-        return value
-      })())
-        .resolves
-        .toBe(1)
+      expect(
+        (async () => {
+          await new Promise((resolve) => setTimeout(resolve, 500))
+          value += 1
+          return value
+        })(),
+      ).resolves.toBe(1)
     })
 
     it('not awaited assertion is still resolved', () => {
@@ -1274,9 +1322,10 @@ describe('async expect', () => {
     try {
       await expect(Promise.resolve({ foo: { bar: 42 } })).rejects.toThrow()
       expect.unreachable()
-    }
-    catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot(`"promise resolved "{ foo: { bar: 42 } }" instead of rejecting"`)
+    } catch (err: any) {
+      expect(err.message).toMatchInlineSnapshot(
+        `"promise resolved "{ foo: { bar: 42 } }" instead of rejecting"`,
+      )
       expect(err.stack).toContain('jest-expect.test.ts')
     }
 
@@ -1285,9 +1334,10 @@ describe('async expect', () => {
       Object.assign(error, { foo: { bar: 42 } })
       await expect(Promise.reject(error)).resolves.toBe(1)
       expect.unreachable()
-    }
-    catch (err: any) {
-      expect(err.message).toMatchInlineSnapshot(`"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`)
+    } catch (err: any) {
+      expect(err.message).toMatchInlineSnapshot(
+        `"promise rejected "Error: some error { foo: { bar: 42 } }" instead of resolving"`,
+      )
       expect(err.cause).toBeDefined()
       expect(err.cause.message).toMatchInlineSnapshot(`"some error"`)
       expect(err.stack).toContain('jest-expect.test.ts')
@@ -1301,31 +1351,29 @@ describe('async expect', () => {
     try {
       await expect({ then: (resolve: any) => resolve(0) }).rejects.toBe(0)
       expect.unreachable()
-    }
-    catch (error) {
+    } catch (error) {
       expect(error).toMatchObject({ message: 'promise resolved "+0" instead of rejecting' })
     }
 
     try {
       await expect({ then: (_: any, reject: any) => reject(0) }).resolves.toBe(0)
       expect.unreachable()
-    }
-    catch (error) {
+    } catch (error) {
       expect(error).toMatchObject({ message: 'promise rejected "+0" instead of resolving' })
     }
   })
 
   it('chainable types', async () => {
-    /* eslint-disable prefer-promise-reject-errors */
+    /* oxlint-disable prefer-promise-reject-errors */
     await expect(Promise.resolve(1)).resolves.toBeOneOf([1])
     await expect(Promise.resolve(1)).resolves.not.toBeOneOf([2])
     await expect(Promise.reject(1)).rejects.toBeOneOf([1])
     await expect(Promise.reject(1)).rejects.not.toBeOneOf([2])
-    await expect(Promise.resolve(1)).resolves.toSatisfy(v => v === 1)
-    await expect(Promise.reject(2)).rejects.toSatisfy(v => v === 2)
+    await expect(Promise.resolve(1)).resolves.toSatisfy((v) => v === 1)
+    await expect(Promise.reject(2)).rejects.toSatisfy((v) => v === 2)
     await (expect(Promise.resolve(1)).resolves.to.equal(1) satisfies Promise<any>)
     await (expect(Promise.resolve(1)).resolves.not.to.equal(2) satisfies Promise<any>)
-    /* eslint-enable prefer-promise-reject-errors */
+    /* oxlint-enable prefer-promise-reject-errors */
   })
 })
 
@@ -1345,8 +1393,7 @@ it('correctly prints diff', () => {
   try {
     expect({ a: 1 }).toEqual({ a: 2 })
     expect.unreachable()
-  }
-  catch (err) {
+  } catch (err) {
     const error = processError(err)
     const diff = stripVTControlCharacters(error.diff!)
     expect(diff).toContain('-   "a": 2')
@@ -1358,8 +1405,7 @@ it('correctly prints diff for the cause', () => {
   try {
     expect({ a: 1 }).toEqual({ a: 2 })
     expect.unreachable()
-  }
-  catch (err) {
+  } catch (err) {
     const error = processError(new Error('wrapper', { cause: err }))
     const diff = stripVTControlCharacters(error.cause!.diff!)
     expect(diff).toContain('-   "a": 2')
@@ -1374,8 +1420,7 @@ it('correctly prints diff with asymmetric matchers', () => {
       b: expect.any(Function),
     })
     expect.unreachable()
-  }
-  catch (err) {
+  } catch (err) {
     const error = processError(err)
     expect(stripVTControlCharacters(error.diff!)).toMatchInlineSnapshot(`
       "- Expected
@@ -1398,27 +1443,35 @@ function trim(s: string): string {
 function getError(f: () => unknown) {
   try {
     f()
-  }
-  catch (error) {
+  } catch (error) {
     const processed = processError(error)
-    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff!))]
+    return [
+      stripVTControlCharacters(processed.message),
+      stripVTControlCharacters(trim(processed.diff!)),
+    ]
   }
   return expect.unreachable()
 }
 
 it('toMatchObject', () => {
-  expect(() => expect(null).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected null to match object Set{}]`)
-  expect(() => expect(undefined).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected undefined to match object Set{}]`)
-  expect(() => expect(1234).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1234 to match object Set{}]`)
-  expect(() => expect('hello').toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to match object Set{}]`)
-  expect(() => expect({}).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Set{}]`)
-  expect(() => expect({}).toMatchObject(new Map()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Map{}]`)
+  expect(() => expect(null).toMatchObject(new Set())).toThrowErrorMatchingInlineSnapshot(
+    `[AssertionError: expected null to match object Set{}]`,
+  )
+  expect(() => expect(undefined).toMatchObject(new Set())).toThrowErrorMatchingInlineSnapshot(
+    `[AssertionError: expected undefined to match object Set{}]`,
+  )
+  expect(() => expect(1234).toMatchObject(new Set())).toThrowErrorMatchingInlineSnapshot(
+    `[AssertionError: expected 1234 to match object Set{}]`,
+  )
+  expect(() => expect('hello').toMatchObject(new Set())).toThrowErrorMatchingInlineSnapshot(
+    `[AssertionError: expected 'hello' to match object Set{}]`,
+  )
+  expect(() => expect({}).toMatchObject(new Set())).toThrowErrorMatchingInlineSnapshot(
+    `[AssertionError: expected {} to match object Set{}]`,
+  )
+  expect(() => expect({}).toMatchObject(new Map())).toThrowErrorMatchingInlineSnapshot(
+    `[AssertionError: expected {} to match object Map{}]`,
+  )
 
   // subset equality works inside Set/Map
   expect(new Set([{ x: 1 }])).toMatchObject(new Set([{}]))
@@ -1431,28 +1484,38 @@ it('toMatchObject', () => {
 
 it('proxy equality', () => {
   // { intercepted: 'original', passthrough: 'original' } => { intercepted: 'proxied', passthrough: 'original' }
-  const proxyActual = new Proxy({ intercepted: 'original', passthrough: 'original' }, {
-    get(target, prop, receiver) {
-      if (prop === 'intercepted') {
-        return 'proxied'
-      }
-      return Reflect.get(target, prop, receiver)
+  const proxyActual = new Proxy(
+    { intercepted: 'original', passthrough: 'original' },
+    {
+      get(target, prop, receiver) {
+        if (prop === 'intercepted') {
+          return 'proxied'
+        }
+        return Reflect.get(target, prop, receiver)
+      },
     },
-  })
+  )
   // { intercepted: 'original' } => { intercepted: 'proxied' }
-  const proxyExpected = new Proxy({ intercepted: 'original' }, {
-    get(target, prop, receiver) {
-      if (prop === 'intercepted') {
-        return 'proxied'
-      }
-      return Reflect.get(target, prop, receiver)
+  const proxyExpected = new Proxy(
+    { intercepted: 'original' },
+    {
+      get(target, prop, receiver) {
+        if (prop === 'intercepted') {
+          return 'proxied'
+        }
+        return Reflect.get(target, prop, receiver)
+      },
     },
-  })
+  )
 
   // objectContaining
-  expect(proxyActual).toEqual(expect.objectContaining({ intercepted: 'proxied', passthrough: 'original' }))
+  expect(proxyActual).toEqual(
+    expect.objectContaining({ intercepted: 'proxied', passthrough: 'original' }),
+  )
   expect(proxyActual).not.toEqual(expect.objectContaining({ intercepted: 'original' }))
-  expect({ intercepted: 'proxied', extra: 'ignored' }).toEqual(expect.objectContaining(proxyExpected))
+  expect({ intercepted: 'proxied', extra: 'ignored' }).toEqual(
+    expect.objectContaining(proxyExpected),
+  )
   expect({ intercepted: 'original' }).not.toEqual(expect.objectContaining(proxyExpected))
 
   // toMatchObject
@@ -1482,21 +1545,24 @@ it('proxy equality', () => {
   expect({ virtual: 'value' }).not.toEqual(proxyBad)
 
   // empty target proxy with required traps
-  const proxyGood = new Proxy({}, {
-    get(target, prop, receiver) {
-      if (prop === 'virtual') {
-        return 'value'
-      }
-      return Reflect.get(target, prop, receiver)
+  const proxyGood = new Proxy(
+    {},
+    {
+      get(target, prop, receiver) {
+        if (prop === 'virtual') {
+          return 'value'
+        }
+        return Reflect.get(target, prop, receiver)
+      },
+      ownKeys: () => ['virtual'],
+      getOwnPropertyDescriptor(target, prop) {
+        if (prop === 'virtual') {
+          return { enumerable: true, configurable: true, value: 'value' }
+        }
+        return Reflect.getOwnPropertyDescriptor(target, prop)
+      },
     },
-    ownKeys: () => ['virtual'],
-    getOwnPropertyDescriptor(target, prop) {
-      if (prop === 'virtual') {
-        return { enumerable: true, configurable: true, value: 'value' }
-      }
-      return Reflect.getOwnPropertyDescriptor(target, prop)
-    },
-  })
+  )
   expect(proxyGood).toEqual({ virtual: 'value' })
   expect(proxyGood).toMatchObject({ virtual: 'value' })
   expect(proxyGood).toEqual(expect.objectContaining({ virtual: 'value' }))
@@ -1505,7 +1571,8 @@ it('proxy equality', () => {
 
 it('toMatchObject error diff', () => {
   // single property on root (3 total properties, 1 expected)
-  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ c: 4 }))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ c: 4 })))
+    .toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: 3 } to match object { c: 4 }
     (2 matching properties omitted from actual)",
@@ -1520,7 +1587,8 @@ it('toMatchObject error diff', () => {
   `)
 
   // single property on root (4 total properties, 1 expected)
-  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ b: 3 }))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 } }).toMatchObject({ b: 3 })))
+    .toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 4 } } to match object { b: 3 }
     (3 matching properties omitted from actual)",
@@ -1535,7 +1603,11 @@ it('toMatchObject error diff', () => {
   `)
 
   // nested property (7 total properties, 2 expected)
-  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4, e: 5 }, f: { g: 6 } }).toMatchObject({ c: { d: 5 } }))).toMatchInlineSnapshot(`
+  expect(
+    getError(() =>
+      expect({ a: 1, b: 2, c: { d: 4, e: 5 }, f: { g: 6 } }).toMatchObject({ c: { d: 5 } }),
+    ),
+  ).toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 4, e: 5 }, …(1) } to match object { c: { d: 5 } }
     (5 matching properties omitted from actual)",
@@ -1552,7 +1624,8 @@ it('toMatchObject error diff', () => {
   `)
 
   // 3 total properties, 3 expected (0 stripped)
-  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ a: 1, b: 2, c: 4 }))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ a: 1, b: 2, c: 4 })))
+    .toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: 3 } to match object { a: 1, b: 2, c: 4 }",
       "- Expected
@@ -1568,7 +1641,8 @@ it('toMatchObject error diff', () => {
   `)
 
   // 4 total properties, 3 expected
-  expect(getError(() => expect({ a: 1, b: 2, c: { d: 3 } }).toMatchObject({ a: 1, c: { d: 4 } }))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ a: 1, b: 2, c: { d: 3 } }).toMatchObject({ a: 1, c: { d: 4 } })))
+    .toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 3 } } to match object { a: 1, c: { d: 4 } }
     (1 matching property omitted from actual)",
@@ -1586,7 +1660,17 @@ it('toMatchObject error diff', () => {
   `)
 
   // 8 total properties, 4 expected
-  expect(getError(() => expect({ a: 1, b: 2, c: { d: 4 }, foo: { value: 'bar' }, bar: { value: 'foo' } }).toMatchObject({ c: { d: 5 }, foo: { value: 'biz' } }))).toMatchInlineSnapshot(`
+  expect(
+    getError(() =>
+      expect({
+        a: 1,
+        b: 2,
+        c: { d: 4 },
+        foo: { value: 'bar' },
+        bar: { value: 'foo' },
+      }).toMatchObject({ c: { d: 5 }, foo: { value: 'biz' } }),
+    ),
+  ).toMatchInlineSnapshot(`
     [
       "expected { a: 1, b: 2, c: { d: 4 }, …(2) } to match object { c: { d: 5 }, foo: { value: 'biz' } }
     (4 matching properties omitted from actual)",
@@ -1607,8 +1691,21 @@ it('toMatchObject error diff', () => {
   `)
 
   // 8 total properties, 3 expected
-  const characters = { firstName: 'Vladimir', lastName: 'Harkonnen', family: 'House Harkonnen', colors: ['red', 'blue'], children: [{ firstName: 'Jessica', lastName: 'Atreides', colors: ['red', 'green', 'black'] }] }
-  expect(getError(() => expect(characters).toMatchObject({ family: 'House Atreides', children: [{ firstName: 'Paul' }] }))).toMatchInlineSnapshot(`
+  const characters = {
+    firstName: 'Vladimir',
+    lastName: 'Harkonnen',
+    family: 'House Harkonnen',
+    colors: ['red', 'blue'],
+    children: [{ firstName: 'Jessica', lastName: 'Atreides', colors: ['red', 'green', 'black'] }],
+  }
+  expect(
+    getError(() =>
+      expect(characters).toMatchObject({
+        family: 'House Atreides',
+        children: [{ firstName: 'Paul' }],
+      }),
+    ),
+  ).toMatchInlineSnapshot(`
     [
       "expected { firstName: 'Vladimir', …(4) } to match object { family: 'House Atreides', …(1) }
     (5 matching properties omitted from actual)",
@@ -1683,15 +1780,17 @@ it('toMatchObject error diff', () => {
     ]
   `)
 
-  expect(getError(() =>
-    expect({
-      bad: new Foo(1),
-      good: new Foo(0),
-    }).toMatchObject({
-      bad: new Bar(2),
-      good: new Bar(0),
-    }),
-  )).toMatchInlineSnapshot(`
+  expect(
+    getError(() =>
+      expect({
+        bad: new Foo(1),
+        good: new Foo(0),
+      }).toMatchObject({
+        bad: new Bar(2),
+        good: new Bar(0),
+      }),
+    ),
+  ).toMatchInlineSnapshot(`
     [
       "expected { bad: Foo{ value: 1 }, …(1) } to match object { bad: Bar{ value: 2 }, …(1) }",
       "- Expected
@@ -1710,9 +1809,8 @@ it('toMatchObject error diff', () => {
     ]
   `)
 
-  expect(getError(() =>
-    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Bar(0))),
-  )).toMatchInlineSnapshot(`
+  expect(getError(() => expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Bar(0)))))
+    .toMatchInlineSnapshot(`
     [
       "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Bar{ value: +0 } }",
       "- Expected
@@ -1730,9 +1828,8 @@ it('toMatchObject error diff', () => {
   `)
 
   expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(1)))
-  expect(getError(() =>
-    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(2))),
-  )).toMatchInlineSnapshot(`
+  expect(getError(() => expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(2)))))
+    .toMatchInlineSnapshot(`
     [
       "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Foo{ value: 2 } }",
       "- Expected
@@ -1751,7 +1848,8 @@ it('toMatchObject error diff', () => {
 
 it('toHaveProperty error diff', () => {
   // non match value
-  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar')))
+    .toMatchInlineSnapshot(`
     [
       "expected { name: 'foo' } to have property "name" with value 'bar'",
       "Expected: "bar"
@@ -1760,7 +1858,8 @@ it('toHaveProperty error diff', () => {
   `)
 
   // non match key
-  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', 'bar')))
+    .toMatchInlineSnapshot(`
     [
       "expected { noName: 'foo' } to have property "name" with value 'bar'",
       "- Expected:
@@ -1772,7 +1871,8 @@ it('toHaveProperty error diff', () => {
   `)
 
   // non match value (with asymmetric matcher)
-  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', expect.any(Number))))
+    .toMatchInlineSnapshot(`
     [
       "expected { name: 'foo' } to have property "name" with value Any<Number>",
       "- Expected:
@@ -1784,7 +1884,8 @@ it('toHaveProperty error diff', () => {
   `)
 
   // non match key (with asymmetric matcher)
-  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', expect.any(Number)))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ noName: 'foo' }).toHaveProperty('name', expect.any(Number))))
+    .toMatchInlineSnapshot(`
     [
       "expected { noName: 'foo' } to have property "name" with value Any<Number>",
       "- Expected:
@@ -1796,7 +1897,8 @@ it('toHaveProperty error diff', () => {
   `)
 
   // non match value (deep key)
-  expect(getError(() => expect({ parent: { name: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ parent: { name: 'foo' } }).toHaveProperty('parent.name', 'bar')))
+    .toMatchInlineSnapshot(`
     [
       "expected { parent: { name: 'foo' } } to have property "parent.name" with value 'bar'",
       "Expected: "bar"
@@ -1805,7 +1907,8 @@ it('toHaveProperty error diff', () => {
   `)
 
   // non match key (deep key)
-  expect(getError(() => expect({ parent: { noName: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
+  expect(getError(() => expect({ parent: { noName: 'foo' } }).toHaveProperty('parent.name', 'bar')))
+    .toMatchInlineSnapshot(`
     [
       "expected { parent: { noName: 'foo' } } to have property "parent.name" with value 'bar'",
       "- Expected:
@@ -1820,8 +1923,7 @@ it('toHaveProperty error diff', () => {
 function snapshotError(f: () => unknown) {
   try {
     f()
-  }
-  catch (error) {
+  } catch (error) {
     const e = processError(error, { expand: true })
     expect({
       message: stripVTControlCharacters(e.message),
@@ -1839,7 +1941,8 @@ it('asymmetric matcher error', () => {
     stringContainingCustom(received: unknown, other: string) {
       return {
         pass: typeof received === 'string' && received.includes(other),
-        message: () => `expected ${this.utils.printReceived(received)} ${this.isNot ? 'not ' : ''}to contain ${this.utils.printExpected(other)}`,
+        message: () =>
+          `expected ${this.utils.printReceived(received)} ${this.isNot ? 'not ' : ''}to contain ${this.utils.printExpected(other)}`,
       }
     },
   })
@@ -1853,8 +1956,12 @@ it('asymmetric matcher error', () => {
   // custom
   snapshotError(() => expect('hello').toEqual((expect as any).stringContainingCustom('xx')))
   snapshotError(() => expect('hello').toEqual((expect as any).not.stringContainingCustom('ll')))
-  snapshotError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).stringContainingCustom('xx') }))
-  snapshotError(() => expect({ foo: 'hello' }).toEqual({ foo: (expect as any).not.stringContainingCustom('ll') }))
+  snapshotError(() =>
+    expect({ foo: 'hello' }).toEqual({ foo: (expect as any).stringContainingCustom('xx') }),
+  )
+  snapshotError(() =>
+    expect({ foo: 'hello' }).toEqual({ foo: (expect as any).not.stringContainingCustom('ll') }),
+  )
 
   // assertion form
   snapshotError(() => (expect('hello') as any).stringContainingCustom('xx'))
@@ -1873,20 +1980,26 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect('hello').toEqual((expect as any).testComplexMatcher({ x: 'y' })))
 
   // more builtins
-  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.objectContaining({ k: 'v', k3: 'v3' })))
+  snapshotError(() =>
+    expect({ k: 'v', k2: 'v2' }).toEqual(expect.objectContaining({ k: 'v', k3: 'v3' })),
+  )
   snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
   snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
   snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
   snapshotError(() => expect('foo').toEqual(expect.toBeOneOf(['bar', 'baz'])))
   snapshotError(() => expect(0).toEqual(expect.toBeOneOf([expect.any(String), null, undefined])))
-  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.toBeOneOf([expect.objectContaining({ k: 'v', k3: 'v3' }), null, undefined])))
+  snapshotError(() =>
+    expect({ k: 'v', k2: 'v2' }).toEqual(
+      expect.toBeOneOf([expect.objectContaining({ k: 'v', k3: 'v3' }), null, undefined]),
+    ),
+  )
 
   // simple truncation if pretty-format is too long
   snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))
 
   // error message on `toThrow(asymmetricMatcher)` failure
   function throwError() {
-    // eslint-disable-next-line no-throw-literal
+    // oxlint-disable-next-line no-throw-literal
     throw 'hello'
   }
   snapshotError(() => expect(throwError).toThrow(expect.stringContaining('xx')))
@@ -1894,31 +2007,43 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(throwError).not.toThrow(expect.stringContaining('ll')))
   snapshotError(() => expect(throwError).not.toThrow((expect as any).stringContainingCustom('ll')))
 
-  snapshotError(() => expect(() => {
-    throw new Error('hello')
-  }).toThrow(expect.stringContaining('ll')))
-  snapshotError(() => expect(() => {
-    throw new Error('hello')
-  }).toThrow((expect as any).stringContainingCustom('ll')))
+  snapshotError(() =>
+    expect(() => {
+      throw new Error('hello')
+    }).toThrow(expect.stringContaining('ll')),
+  )
+  snapshotError(() =>
+    expect(() => {
+      throw new Error('hello')
+    }).toThrow((expect as any).stringContainingCustom('ll')),
+  )
 
   // error constructor
   class MyError1 extends Error {}
   class MyError2 extends Error {}
 
-  snapshotError(() => expect(() => {
-    throw new MyError2('hello')
-  }).toThrow(MyError1))
+  snapshotError(() =>
+    expect(() => {
+      throw new MyError2('hello')
+    }).toThrow(MyError1),
+  )
 })
 
 it('error equality', () => {
   class MyError extends Error {
-    constructor(message: string, public custom: string) {
+    constructor(
+      message: string,
+      public custom: string,
+    ) {
       super(message)
     }
   }
 
   class YourError extends Error {
-    constructor(message: string, public custom: string) {
+    constructor(
+      message: string,
+      public custom: string,
+    ) {
       super(message)
     }
   }
@@ -2058,22 +2183,36 @@ it('error equality', () => {
   {
     // asymmetric matcher
     const e1 = new Error('hello', { cause: 'x' })
-    expect(e1).toEqual(expect.objectContaining({
-      message: 'hello',
-      cause: 'x',
-    }))
-    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
-      message: 'hello',
-      cause: 'y',
-    })))
-    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
-      message: 'world',
-      cause: 'x',
-    })))
-    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
-      message: 'world',
-      cause: 'y',
-    })))
+    expect(e1).toEqual(
+      expect.objectContaining({
+        message: 'hello',
+        cause: 'x',
+      }),
+    )
+    snapshotError(() =>
+      expect(e1).toEqual(
+        expect.objectContaining({
+          message: 'hello',
+          cause: 'y',
+        }),
+      ),
+    )
+    snapshotError(() =>
+      expect(e1).toEqual(
+        expect.objectContaining({
+          message: 'world',
+          cause: 'x',
+        }),
+      ),
+    )
+    snapshotError(() =>
+      expect(e1).toEqual(
+        expect.objectContaining({
+          message: 'world',
+          cause: 'y',
+        }),
+      ),
+    )
   }
 })
 
@@ -2091,7 +2230,7 @@ it('toMatch/toContain diff', () => {
   snapshotError(() => expect('hello'.repeat(20)).toMatch(/world/))
 })
 
-it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
+it('timeout', () => new Promise((resolve) => setTimeout(resolve, 500)))
 
 it('diff', () => {
   snapshotError(() => expect(undefined).toBeTruthy())
@@ -2111,21 +2250,30 @@ it('expected and actual reuse the stringification from the diff', () => {
   snapshotError(() => expect('foo').toEqual('bar'))
 
   // map/set (stringification happens after sorting)
-  snapshotError(() => expect(new Map([['x', 1], ['y', 2]])).toEqual(new Map([['x', 1], ['y', 3]])))
+  snapshotError(() =>
+    expect(
+      new Map([
+        ['x', 1],
+        ['y', 2],
+      ]),
+    ).toEqual(
+      new Map([
+        ['x', 1],
+        ['y', 3],
+      ]),
+    ),
+  )
   snapshotError(() => expect(new Set([1, 2])).toEqual(new Set([1, 3])))
 
   // mismatched types
   snapshotError(() => expect(1).toEqual('foo'))
 
   // asymmetric matchers in arrays
-  snapshotError(() => expect([
-    { x: 1, y: 2, z: 3 },
-    { x: 3, y: 1, z: 2 },
-    { x: 2, y: 3, z: 1 },
-    'wrong',
-  ]).toEqual([
-    expect.objectContaining({ x: 1 }),
-    expect.objectContaining({ z: 2 }),
-    expect.objectContaining({ y: 3 }),
-  ]))
+  snapshotError(() =>
+    expect([{ x: 1, y: 2, z: 3 }, { x: 3, y: 1, z: 2 }, { x: 2, y: 3, z: 1 }, 'wrong']).toEqual([
+      expect.objectContaining({ x: 1 }),
+      expect.objectContaining({ z: 2 }),
+      expect.objectContaining({ y: 3 }),
+    ]),
+  )
 })

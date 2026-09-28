@@ -1,17 +1,11 @@
-import type {
-  SnapshotResult,
-  SnapshotStateOptions,
-  SnapshotSummary,
-} from './types'
+import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from './types'
 import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 
 export class SnapshotManager {
   public summary!: SnapshotSummary
   public extension = '.snap'
 
-  constructor(
-    public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>,
-  ) {
+  constructor(public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>) {
     this.clear()
   }
 
@@ -24,8 +18,9 @@ export class SnapshotManager {
   }
 
   resolvePath<T = any>(testPath: string, context?: T): string {
-    const resolver
-      = this.options.resolveSnapshotPath || (() => {
+    const resolver =
+      this.options.resolveSnapshotPath ||
+      (() => {
         return join(
           join(dirname(testPath), '__snapshots__'),
           `${basename(testPath)}${this.extension}`,
@@ -63,10 +58,7 @@ export function emptySummary(
   return summary
 }
 
-export function addSnapshotResult(
-  summary: SnapshotSummary,
-  result: SnapshotResult,
-): void {
+export function addSnapshotResult(summary: SnapshotSummary, result: SnapshotResult): void {
   if (result.added) {
     summary.filesAdded++
   }
@@ -92,6 +84,5 @@ export function addSnapshotResult(
 
   summary.unmatched += result.unmatched
   summary.updated += result.updated
-  summary.total
-    += result.added + result.matched + result.unmatched + result.updated
+  summary.total += result.added + result.matched + result.unmatched + result.updated
 }

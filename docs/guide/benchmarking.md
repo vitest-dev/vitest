@@ -319,7 +319,6 @@ In a multi-project workspace (different browsers, different runtimes), share one
 test('cross-project baseline', async ({ bench }) => {
   await bench(
     'parse',
-    // eslint-disable-next-line no-template-curly-in-string
     { perProject: true, writeResult: './benchmarks/parse.${projectName}.json' },
     () => parse(largeInput),
   ).run()
@@ -479,4 +478,5 @@ This only affects Node.js mode. Browser mode uses native ESM imports and does no
     )
   })
   ```
+
 - **Cross-browser differences**: V8 (Chrome), SpiderMonkey (Firefox), and JSC (Safari) optimize different patterns differently. A benchmark that shows one library winning in Chrome may show the opposite in Firefox.

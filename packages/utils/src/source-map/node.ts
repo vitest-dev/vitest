@@ -14,15 +14,11 @@ export function extractSourcemapFromFile(
 ): ExtractedSourceMap | undefined {
   try {
     const map = (
-      convertSourceMap.fromSource(code)
-      || convertSourceMap.fromMapFileSource(
-        code,
-        createConvertSourceMapReadMap(filePath),
-      )
+      convertSourceMap.fromSource(code) ||
+      convertSourceMap.fromMapFileSource(code, createConvertSourceMapReadMap(filePath))
     )?.toObject()
     return map ? { map } : undefined
-  }
-  catch {
+  } catch {
     return undefined
   }
 }

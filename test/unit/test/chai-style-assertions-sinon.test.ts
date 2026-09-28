@@ -1,4 +1,4 @@
-/* eslint-disable ts/no-unused-expressions */
+/* oxlint-disable typescript/no-unused-expressions */
 // @ts-expect-error no type override otherwise vitest ones broken
 import sinon from 'sinon'
 // @ts-expect-error same

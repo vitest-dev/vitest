@@ -35,7 +35,7 @@ test('clean() throws an actionable error when another live process holds the loc
 
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
   onTestFinished(() => void child.kill())
-  await new Promise(resolve => child.once('spawn', resolve))
+  await new Promise((resolve) => child.once('spawn', resolve))
 
   const childPid = child.pid
   assert(childPid != null, 'child process did not start')
@@ -43,11 +43,11 @@ test('clean() throws an actionable error when another live process holds the loc
   writeFileSync(lockFile, JSON.stringify({ pid: childPid, reportsDirectory }))
 
   await expect(provider.clean(true)).rejects.toThrow(
-    `The coverage report directory "${reportsDirectory.replaceAll(sep, '/')}" is already in use by `
-    + `another Vitest process (pid ${childPid}). Running coverage for multiple `
-    + `Vitest processes in the same directory at the same time is not supported, because they would `
-    + `delete each other's reports.\nGive each run its own "coverage.reportsDirectory" `
-    + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
+    `The coverage report directory "${reportsDirectory.replaceAll(sep, '/')}" is already in use by ` +
+      `another Vitest process (pid ${childPid}). Running coverage for multiple ` +
+      `Vitest processes in the same directory at the same time is not supported, because they would ` +
+      `delete each other's reports.\nGive each run its own "coverage.reportsDirectory" ` +
+      `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
   )
 
   expect(JSON.parse(readFileSync(lockFile, 'utf-8')).pid).toBe(childPid)
@@ -69,7 +69,7 @@ test('clean() reclaims a stale lock left by a process that no longer exists', as
   const { provider, reportsDirectory, lockFile } = createProvider()
 
   const child = spawn(process.execPath, ['-e', ''], { stdio: 'ignore' })
-  await new Promise(resolve => child.once('exit', resolve))
+  await new Promise((resolve) => child.once('exit', resolve))
 
   const deadPid = child.pid
   assert(deadPid != null, 'child process did not start')
@@ -94,7 +94,6 @@ function createProvider() {
     _coverageOptions: { reportsDirectory },
   } as any)
 
-  // eslint-disable-next-line dot-notation -- Accessing private property
   const lockFile = provider['reportsDirectoryLock'].lockFile
   onTestFinished(() => rmSync(lockFile, { force: true }))
 
