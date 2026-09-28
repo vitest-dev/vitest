@@ -29,7 +29,7 @@ export default function App() {
   ])
 
   function removePost(index: number) {
-    setPosts(posts => posts.filter((_, i) => i !== index))
+    setPosts((posts) => posts.filter((_, i) => i !== index))
   }
 
   return (

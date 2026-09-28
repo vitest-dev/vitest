@@ -98,6 +98,7 @@ watcher.on('add', async (file) => {
   }
 })
 ```
+
 :::
 
 In cases where you need to disable the watcher, you can pass down `server.watch: null` since Vite 5.3 or `server.watch: { ignored: ['*/*'] }` to a Vite config:

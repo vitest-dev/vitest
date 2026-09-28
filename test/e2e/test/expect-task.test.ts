@@ -1,7 +1,7 @@
 import { describe, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-const toMatchTest = /* ts */`
+const toMatchTest = /* ts */ `
 export function toMatchTest(this, expected) {
   if (this.task?.name !== expected) {
     return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
@@ -17,7 +17,7 @@ export function delay() {
 }
 `
 
-const globals = /* ts */`
+const globals = /* ts */ `
   import { test, describe } from 'vitest'
   import { delay, toMatchTest } from './to-match-test.ts'
 
@@ -36,7 +36,7 @@ const globals = /* ts */`
   })
 `
 
-const globalImport = /* ts */`
+const globalImport = /* ts */ `
   import { test, describe, expect } from 'vitest'
   import { delay, toMatchTest } from './to-match-test.ts'
 
@@ -55,7 +55,7 @@ const globalImport = /* ts */`
   })
 `
 
-const fromContextGlobalExtend = /* ts */`
+const fromContextGlobalExtend = /* ts */ `
   import { test, describe, expect } from 'vitest'
   import { delay, toMatchTest } from './to-match-test.ts'
 
@@ -74,7 +74,7 @@ const fromContextGlobalExtend = /* ts */`
   })
 `
 
-const fromContextLocalExtend = /* ts */`
+const fromContextLocalExtend = /* ts */ `
   import { test, describe } from 'vitest'
   import { delay, toMatchTest } from './to-match-test.ts'
 
@@ -95,7 +95,7 @@ const fromContextLocalExtend = /* ts */`
   })
 `
 
-const testBoundGlobalExtend = /* ts */`
+const testBoundGlobalExtend = /* ts */ `
   import { test, describe, expect, createExpect } from 'vitest'
   import { delay, toMatchTest } from './to-match-test.ts'
 
@@ -118,7 +118,7 @@ const testBoundGlobalExtend = /* ts */`
   })
 `
 
-const testBoundLocalExtend = /* ts */`
+const testBoundLocalExtend = /* ts */ `
   import { test, describe, createExpect } from 'vitest'
   import { delay, toMatchTest } from './to-match-test.ts'
 

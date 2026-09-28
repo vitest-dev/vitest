@@ -40,7 +40,9 @@ test('initializes project', async () => {
 
   await vitest.waitForStdout('✔ All packages are already installed.')
   await vitest.waitForStdout('✔ Added "test:browser" script to your package.json.')
-  await vitest.waitForStdout(`✔ Created example test file in ${join('vitest-example', 'HelloWorld.test.ts')}`)
+  await vitest.waitForStdout(
+    `✔ Created example test file in ${join('vitest-example', 'HelloWorld.test.ts')}`,
+  )
   await vitest.waitForStdout('All done! Run your tests with pnpm test:browser')
 
   expect(await getFiles()).toMatchInlineSnapshot(`

@@ -152,7 +152,7 @@ Vitest 4.1 introduces [`browser.detailsPanelPosition`](/config/browser/detailspa
   <img alt="Vitest UI with details at the bottom" img-light src="/ui/light-ui-details-bottom.png">
   <img alt="Vitest UI with details at the bottom" img-dark src="/ui/dark-ui-details-bottom.png">
 
-  <sup>An example of UI with the details panel at the bottom.</sup>
+<sup>An example of UI with the details panel at the bottom.</sup>
 </center>
 
 This is especially useful on smaller screens, where switching to a bottom panel leaves more horizontal space for your app:
@@ -180,7 +180,7 @@ Vitest 4.1 brings major improvements to the [Playwright Trace Viewer](/guide/bro
   <img alt="Trace Viewer showing the trace timeline and rendered component" img-light src="/trace-viewer-light.png">
   <img alt="Trace Viewer showing the trace timeline and rendered component" img-dark src="/trace-viewer-dark.png">
 
-  <sup>An example of trace view with `expect.element` assertion failure highlighted.</sup>
+<sup>An example of trace view with `expect.element` assertion failure highlighted.</sup>
 </center>
 
 Framework libraries are also integrating with the trace. For example, [`vitest-browser-react`](https://github.com/vitest-community/vitest-browser-react)'s `render()` utility now automatically appears in the trace with rendered element highlighted.
@@ -268,6 +268,7 @@ This change could be considered breaking. Previously Vitest passed down undocume
 The new `aroundEach` hook registers a callback function that wraps around each test within the current suite. The callback receives a `runTest` function that **must** be called to run the test. The `aroundAll` hook works similarly, but is called for every suite, not every test.
 
 You should use `aroundEach` when your test needs to run **inside a context** that wraps around it, such as:
+
 - Wrapping tests in [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) context
 - Wrapping tests with tracing spans
 - Database transactions
@@ -361,7 +362,7 @@ The built-in [`github-actions` reporter](/guide/reporters#github-actions-reporte
   <img alt="GitHub Actions Job Summary" img-dark src="/github-actions-job-summary-dark.png">
   <img alt="GitHub Actions Job Summary" img-light src="/github-actions-job-summary-light.png">
 
-  <sup>An example of the job summary with flaky test details.</sup>
+<sup>An example of the job summary with flaky test details.</sup>
 </center>
 
 The summary is enabled by default when running in GitHub Actions and writes to the path specified by `$GITHUB_STEP_SUMMARY`. No configuration is needed in most cases. To disable it or customize the output path:

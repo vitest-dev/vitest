@@ -27,7 +27,7 @@ function updateSnapshot() {
   return client.rpc.updateSnapshot()
 }
 
-const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
+const toggleMode = computed(() => (isDark.value ? 'light' : 'dark'))
 
 async function onRunAll(files?: RunnerTestFile[]) {
   if (config.value.api?.allowExec === false) {
@@ -44,8 +44,7 @@ async function onRunAll(files?: RunnerTestFile[]) {
   }
   if (files?.length) {
     await runFiles(files)
-  }
-  else {
+  } else {
     await runAll()
   }
 }
@@ -62,15 +61,24 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
   if (config.value.api?.allowExec === false) {
     return 'Cannot run tests when `api.allowExec` is `false`. Did you expose UI to the internet?'
   }
-  return filteredFiles ? (filteredFiles.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'
+  return filteredFiles
+    ? filteredFiles.length === 0
+      ? 'No test to run (clear filter)'
+      : 'Rerun filtered'
+    : 'Rerun all'
 }
 </script>
 
 <template>
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
-  <Explorer class="border-r border-base" :on-item-click="clickOnTask" :nested="true" @run="onRunAll">
+  <Explorer
+    class="border-r border-base"
+    :on-item-click="clickOnTask"
+    :nested="true"
+    @run="onRunAll"
+  >
     <template #header="{ filteredFiles }">
-      <img class="w-6 h-6" :src="logoUrl" alt="Vitest logo">
+      <img class="w-6 h-6" :src="logoUrl" alt="Vitest logo" />
       <span class="font-light text-sm flex-1">Vitest</span>
       <div class="flex text-lg">
         <IconButton
@@ -126,7 +134,12 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
           @click="showCoverage()"
         />
         <IconButton
-          v-if="(explorerTree.summary.failedSnapshot && !isReport && config.api?.allowExec && config.api?.allowWrite)"
+          v-if="
+            explorerTree.summary.failedSnapshot &&
+            !isReport &&
+            config.api?.allowExec &&
+            config.api?.allowWrite
+          "
           v-tooltip.bottom="'Update all failed snapshot(s)'"
           icon="i-carbon:result-old"
           :disabled="!explorerTree.summary.failedSnapshotEnabled"

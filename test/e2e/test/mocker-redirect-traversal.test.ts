@@ -4,9 +4,7 @@ import { createServer } from 'vite'
 import { expect, it, onTestFinished } from 'vitest'
 import { WebSocket } from 'ws'
 
-const root = fileURLToPath(
-  new URL('../fixtures/mocker/redirect-security/root', import.meta.url),
-)
+const root = fileURLToPath(new URL('../fixtures/mocker/redirect-security/root', import.meta.url))
 
 async function createMockerServer() {
   const server = await createServer({
@@ -47,8 +45,7 @@ function registerRedirect(port: string, redirect: string) {
       let message: any
       try {
         message = JSON.parse(raw.toString())
-      }
-      catch {
+      } catch {
         return
       }
       if (message.type === 'custom' && message.event === 'vitest:interceptor:register:result') {
@@ -58,11 +55,13 @@ function registerRedirect(port: string, redirect: string) {
       }
     })
     ws.on('open', () => {
-      ws.send(JSON.stringify({
-        type: 'custom',
-        event: 'vitest:interceptor:register',
-        data: { type: 'redirect', raw: '', id: '/mock', url: '/mock', redirect },
-      }))
+      ws.send(
+        JSON.stringify({
+          type: 'custom',
+          event: 'vitest:interceptor:register',
+          data: { type: 'redirect', raw: '', id: '/mock', url: '/mock', redirect },
+        }),
+      )
     })
     ws.on('error', reject)
   })

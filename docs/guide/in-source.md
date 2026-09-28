@@ -73,6 +73,7 @@ export default defineConfig({
 ### Other Bundlers
 
 ::: details Rolldown
+
 ```js [rolldown.config.js]
 import { defineConfig } from 'rolldown/config'
 
@@ -89,6 +90,7 @@ Learn more: [Rolldown](https://rolldown.rs/)
 :::
 
 ::: details Rollup
+
 ```js [rollup.config.js]
 import replace from '@rollup/plugin-replace' // [!code ++]
 
@@ -106,6 +108,7 @@ Learn more: [Rollup](https://rollupjs.org/)
 :::
 
 ::: details unbuild
+
 ```js [build.config.js]
 import { defineBuildConfig } from 'unbuild'
 
@@ -121,6 +124,7 @@ Learn more: [unbuild](https://github.com/unjs/unbuild)
 :::
 
 ::: details webpack
+
 ```js [webpack.config.js]
 const webpack = require('webpack')
 

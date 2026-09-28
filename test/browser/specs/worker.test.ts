@@ -6,7 +6,8 @@ test('worker', async () => {
     root: './fixtures/worker',
   })
   expect(stderr).toBe('')
-  expect(Object.fromEntries(ctx.state.getFiles().map(f => [f.name, f.result.state]))).toMatchInlineSnapshot(`
+  expect(Object.fromEntries(ctx.state.getFiles().map((f) => [f.name, f.result.state])))
+    .toMatchInlineSnapshot(`
     {
       "src/basic.test.ts": "pass",
     }

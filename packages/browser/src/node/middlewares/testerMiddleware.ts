@@ -3,7 +3,9 @@ import type { ParentBrowserProject } from '../projectParent'
 import { resolveTester } from '../serverTester'
 import { allowIframes, disableCache } from './utils'
 
-export function createTesterMiddleware(browserServer: ParentBrowserProject): Connect.NextHandleFunction {
+export function createTesterMiddleware(
+  browserServer: ParentBrowserProject,
+): Connect.NextHandleFunction {
   return async function vitestTesterMiddleware(req, res, next) {
     if (!req.url) {
       return next()

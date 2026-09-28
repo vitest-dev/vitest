@@ -5,7 +5,6 @@ import { resolve } from 'pathe'
 import { describe, expect, test, vi } from 'vitest'
 // @ts-expect-error module is not typed
 import promiseExport from '../src/cjs/promise-export'
-
 import { dynamicRelativeImport } from '../src/relative-import'
 
 test('can import type from an ESM dependency', () => {
@@ -88,9 +87,13 @@ test('dynamic import has null prototype', async () => {
 test('dynamic import throws an error', async () => {
   const path = './some-unknown-path'
   const imported = import(path)
-  await expect(imported).rejects.toThrow(`Cannot find module '/test/some-unknown-path' imported from ${resolve(import.meta.filename)}`)
+  await expect(imported).rejects.toThrow(
+    `Cannot find module '/test/some-unknown-path' imported from ${resolve(import.meta.filename)}`,
+  )
   // @ts-expect-error path does not exist
-  await expect(() => import('./some-unknown-path')).rejects.toThrow(`Cannot find module '/test/some-unknown-path' imported from ${resolve(import.meta.filename)}`)
+  await expect(() => import('./some-unknown-path')).rejects.toThrow(
+    `Cannot find module '/test/some-unknown-path' imported from ${resolve(import.meta.filename)}`,
+  )
 })
 
 test('can import @vite/client', async () => {
@@ -138,33 +141,36 @@ describe('importing special files from node_modules', async () => {
   })
 })
 
-describe.runIf(process.platform === 'win32')('importing files with different drive casing', async () => {
-  test('importing a local file with different drive casing works', async () => {
-    const path = new URL('./../src/timeout', import.meta.url)
-    const filepath = fileURLToPath(path)
-    const drive = filepath[0].toLowerCase()
-    const upperDrive = drive.toUpperCase()
-    const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
-    const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
-    expect(lowercasePath).not.toBe(uppercasePath)
-    const mod1 = await import(lowercasePath)
-    const mod2 = await import(uppercasePath)
-    const mod3 = await import('./../src/timeout')
-    expect(mod1).toBe(mod2)
-    expect(mod1).toBe(mod3)
-  })
+describe.runIf(process.platform === 'win32')(
+  'importing files with different drive casing',
+  async () => {
+    test('importing a local file with different drive casing works', async () => {
+      const path = new URL('./../src/timeout', import.meta.url)
+      const filepath = fileURLToPath(path)
+      const drive = filepath[0].toLowerCase()
+      const upperDrive = drive.toUpperCase()
+      const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
+      const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
+      expect(lowercasePath).not.toBe(uppercasePath)
+      const mod1 = await import(lowercasePath)
+      const mod2 = await import(uppercasePath)
+      const mod3 = await import('./../src/timeout')
+      expect(mod1).toBe(mod2)
+      expect(mod1).toBe(mod3)
+    })
 
-  test('importing an external file with different drive casing works', async () => {
-    const path = new URL('./../src/esm/esm.js', import.meta.url)
-    const filepath = fileURLToPath(path)
-    const drive = filepath[0].toLowerCase()
-    const upperDrive = drive.toUpperCase()
-    const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
-    const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
-    expect(lowercasePath).not.toBe(uppercasePath)
-    const mod1 = await import(lowercasePath)
-    vi.resetModules() // since they reference the same global ESM cache, it should not matter
-    const mod2 = await import(uppercasePath)
-    expect(mod1).toBe(mod2)
-  })
-})
+    test('importing an external file with different drive casing works', async () => {
+      const path = new URL('./../src/esm/esm.js', import.meta.url)
+      const filepath = fileURLToPath(path)
+      const drive = filepath[0].toLowerCase()
+      const upperDrive = drive.toUpperCase()
+      const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
+      const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
+      expect(lowercasePath).not.toBe(uppercasePath)
+      const mod1 = await import(lowercasePath)
+      vi.resetModules() // since they reference the same global ESM cache, it should not matter
+      const mod2 = await import(uppercasePath)
+      expect(mod1).toBe(mod2)
+    })
+  },
+)

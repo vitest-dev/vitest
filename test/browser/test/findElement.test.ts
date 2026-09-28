@@ -30,7 +30,7 @@ test('locator.findElement fails if it cannot find the element', async () => {
   const elementsSpy = vi.spyOn(locator, 'elements')
   await expect(() => {
     return locator.findElement({ timeout: 100 })
-  }).rejects.toThrow('Cannot find element with locator: getByRole(\'button\')')
+  }).rejects.toThrow("Cannot find element with locator: getByRole('button')")
   // Normally it would be 5:
   // Immediate, 0 (next tick), 20, 50, 100
   // But on CI it can be less because resources are limited
@@ -41,9 +41,8 @@ test('locator.findElement fails if there are multiple elements by default', asyn
   createButton()
   createButton()
 
-  await expect(
-    () => page.getByRole('button').findElement(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
+  await expect(() => page.getByRole('button').findElement()).rejects
+    .toThrowErrorMatchingInlineSnapshot(`
     [Error: strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)
@@ -55,9 +54,8 @@ test('locator.findElement fails if there are multiple elements if strict mode is
   createButton()
   createButton()
 
-  await expect(
-    () => page.getByRole('button').findElement({ strict: true }),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
+  await expect(() => page.getByRole('button').findElement({ strict: true })).rejects
+    .toThrowErrorMatchingInlineSnapshot(`
     [Error: strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)
@@ -71,9 +69,8 @@ test('locator.findElement fails if multiple elements appear later with strict mo
     createButton()
   }, 50)
 
-  await expect(
-    () => page.getByRole('button').findElement(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
+  await expect(() => page.getByRole('button').findElement()).rejects
+    .toThrowErrorMatchingInlineSnapshot(`
     [Error: strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)
@@ -112,9 +109,8 @@ function createButton() {
 test('expect.element is strict', async () => {
   createButton()
   createButton()
-  await expect(
-    () => expect.element(page.getByRole('button'), { timeout: 50 }).toBeVisible(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
+  await expect(() => expect.element(page.getByRole('button'), { timeout: 50 }).toBeVisible())
+    .rejects.toThrowErrorMatchingInlineSnapshot(`
     [Error: strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
         2) <button></button> aka getByRole('button').nth(1)

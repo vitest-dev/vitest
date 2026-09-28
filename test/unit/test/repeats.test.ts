@@ -55,7 +55,7 @@ describe('testing repeats with retry', () => {
 const nestedDescribeNumbers: number[] = []
 
 describe('testing nested describe', { repeats: 1 }, () => {
-  test ('test 1', () => {
+  test('test 1', () => {
     nestedDescribeNumbers.push(1)
   })
 

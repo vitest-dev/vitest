@@ -41,7 +41,7 @@ test('can test unhandled exception', async () => {
 
 describe('with fake timers', () => {
   async function foo() {
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
     throw new Error('boom')
   }
 

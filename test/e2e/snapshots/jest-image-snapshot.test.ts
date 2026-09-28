@@ -32,7 +32,11 @@ test('jest-image-snapshot', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.existsSync(join(root, '__image_snapshots__/basic-test-ts-to-match-image-snapshot-1-snap.png'))).toBe(true)
+  expect(
+    fs.existsSync(
+      join(root, '__image_snapshots__/basic-test-ts-to-match-image-snapshot-1-snap.png'),
+    ),
+  ).toBe(true)
 
   // match existing snapshot
   vitest = await runVitest({
@@ -58,5 +62,9 @@ test('jest-image-snapshot', async () => {
       "updated": 0,
     }
   `)
-  expect(fs.existsSync(join(root, '__image_snapshots__/basic-test-ts-to-match-image-snapshot-1-snap.png'))).toBe(true)
+  expect(
+    fs.existsSync(
+      join(root, '__image_snapshots__/basic-test-ts-to-match-image-snapshot-1-snap.png'),
+    ),
+  ).toBe(true)
 })

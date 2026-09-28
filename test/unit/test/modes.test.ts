@@ -34,7 +34,7 @@ describe('test modes', () => {
 })
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 describe('concurrent tests', () => {
@@ -93,7 +93,7 @@ describe.concurrent('concurrent suite', () => {
   it.todo.concurrent('todo-concurrent')
 })
 
-it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
+it('timeout', () => new Promise((resolve) => setTimeout(resolve, timeout)))
 
 describe('test.only in nested described', () => {
   describe('nested describe', () => {

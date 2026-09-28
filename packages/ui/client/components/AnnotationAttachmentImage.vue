@@ -10,10 +10,12 @@ const props = defineProps<{
 const href = computed<string>(() => {
   const attachment = props.annotation.attachment!
   const potentialUrl = attachment.path || attachment.body
-  if (typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))) {
+  if (
+    typeof potentialUrl === 'string' &&
+    (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))
+  ) {
     return potentialUrl
-  }
-  else {
+  } else {
     return getAttachmentUrl(attachment)
   }
 })
@@ -28,8 +30,6 @@ const href = computed<string>(() => {
     :href="href"
     :referrerPolicy="isExternalAttachment(annotation.attachment) ? 'no-referrer' : undefined"
   >
-    <img
-      :src="href"
-    >
+    <img :src="href" />
   </a>
 </template>

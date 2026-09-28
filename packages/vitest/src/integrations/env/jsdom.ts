@@ -15,17 +15,13 @@ function catchWindowErrors(window: DOMWindow) {
   const addEventListener = window.addEventListener.bind(window)
   const removeEventListener = window.removeEventListener.bind(window)
   window.addEventListener('error', throwUnhandlerError)
-  window.addEventListener = function (
-    ...args: [any, any, any]
-  ) {
+  window.addEventListener = function (...args: [any, any, any]) {
     if (args[0] === 'error') {
       userErrorListenerCount++
     }
     return addEventListener.apply(this, args)
   }
-  window.removeEventListener = function (
-    ...args: [any, any, any]
-  ) {
+  window.removeEventListener = function (...args: [any, any, any]) {
     if (args[0] === 'error' && userErrorListenerCount) {
       userErrorListenerCount--
     }
@@ -49,9 +45,11 @@ function getResourceOptions(
   resources: JSDOMOptions['resources'],
   userAgent: string | undefined,
 ) {
-  const ResourceLoader = (jsdom as typeof jsdom & {
-    ResourceLoader?: LegacyResourceLoader
-  }).ResourceLoader
+  const ResourceLoader = (
+    jsdom as typeof jsdom & {
+      ResourceLoader?: LegacyResourceLoader
+    }
+  ).ResourceLoader
 
   // jsdom 28 replaced ResourceLoader with a resources options object.
   if (!ResourceLoader) {
@@ -61,9 +59,7 @@ function getResourceOptions(
   }
 
   return {
-    resources:
-      resources
-      ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
+    resources: resources ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
     userAgent,
   }
 }
@@ -97,7 +93,7 @@ export default <Environment>{
       virtualConsole = new VirtualConsole()
       // jsdom <27
       if ('sendTo' in virtualConsole) {
-        (virtualConsole.sendTo as any)(globalThis.console)
+        ;(virtualConsole.sendTo as any)(globalThis.console)
       }
       // jsdom >=27
       else {
@@ -140,10 +136,7 @@ export default <Environment>{
     ] as const
     for (const name of globalNames) {
       const value = globalThis[name]
-      if (
-        typeof value !== 'undefined'
-        && typeof dom.window[name] === 'undefined'
-      ) {
+      if (typeof value !== 'undefined' && typeof dom.window[name] === 'undefined') {
         dom.window[name] = value
       }
     }
@@ -206,7 +199,7 @@ export default <Environment>{
       virtualConsole = new VirtualConsole()
       // jsdom <27
       if ('sendTo' in virtualConsole) {
-        (virtualConsole.sendTo as any)(globalThis.console)
+        ;(virtualConsole.sendTo as any)(globalThis.console)
       }
       // jsdom >=27
       else {
@@ -244,7 +237,7 @@ export default <Environment>{
         clearWindowErrors()
         dom.window.close()
         delete global.jsdom
-        keys.forEach(key => delete global[key])
+        keys.forEach((key) => delete global[key])
         originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }
@@ -264,8 +257,7 @@ function createCompatRequest(utils: CompatUtils) {
           compatInit.body = utils.makeCompatFormData(init.body)
         }
         super(input, compatInit)
-      }
-      else {
+      } else {
         super(...args)
       }
     }
@@ -313,16 +305,16 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       formData.forEach((value, key) => {
         if (value instanceof window.Blob) {
           nodeFormData.append(key, utils.makeCompatBlob(value as any) as any)
-        }
-        else {
+        } else {
           nodeFormData.append(key, value)
         }
       })
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
-      const buffer = (blob as any)[implSymbol]._buffer
-      return new NodeBlob_([buffer], { type: blob.type })
+      const impl = (blob as any)[implSymbol]
+      // jsdom 28 renamed `_buffer` to `_bytes`
+      return new NodeBlob_([impl._bytes ?? impl._buffer], { type: blob.type })
     },
   }
   return utils

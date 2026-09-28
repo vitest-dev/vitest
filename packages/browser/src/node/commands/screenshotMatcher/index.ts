@@ -2,7 +2,10 @@ import type { SerializedLocator } from '@vitest/browser'
 import type { SnapshotUpdateState } from 'vitest'
 import type { ScreenshotMatcherOptions } from 'vitest/browser'
 import type { BrowserCommand, BrowserCommandContext, TestProject } from 'vitest/node'
-import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
+import type {
+  ScreenshotMatcherArguments,
+  ScreenshotMatcherOutput,
+} from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
 import type { AnyComparator } from './comparators'
 import type { TypedArray } from './types'
@@ -39,29 +42,29 @@ interface CapturedScreenshot {
  * - `matched-after-comparison`: screenshot matched after another comparison
  * - `mismatch`: screenshot differs from reference
  */
-type MatchOutcome
-  = | {
-    type: 'unstable-screenshot'
-    reference: ScreenshotData | null
-  }
+type MatchOutcome =
   | {
-    type: 'missing-reference'
-    location: 'reference' | 'diffs'
-    reference: ScreenshotData
-  }
+      type: 'unstable-screenshot'
+      reference: ScreenshotData | null
+    }
   | {
-    type: 'update-reference'
-    reference: ScreenshotData
-  }
+      type: 'missing-reference'
+      location: 'reference' | 'diffs'
+      reference: ScreenshotData
+    }
+  | {
+      type: 'update-reference'
+      reference: ScreenshotData
+    }
   | { type: 'matched-immediately' }
   | { type: 'matched-after-comparison' }
   | {
-    type: 'mismatch'
-    reference: ScreenshotData
-    actual: ScreenshotData
-    diff: ScreenshotData | null
-    message: string | null
-  }
+      type: 'mismatch'
+      reference: ScreenshotData
+      actual: ScreenshotData
+      diff: ScreenshotData | null
+      message: string | null
+    }
 
 /**
  * Browser command that compares a screenshot against a stored reference.
@@ -111,11 +114,14 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
 
     // Keep custom comparator semantics intact: only the built-in pixelmatch
     // comparator is known to pass byte-identical PNGs without side effects.
-    if (comparatorName === 'pixelmatch' && Buffer.compare(referenceFile, initialScreenshotBuffer) === 0) {
+    if (
+      comparatorName === 'pixelmatch' &&
+      Buffer.compare(referenceFile, initialScreenshotBuffer) === 0
+    ) {
       return buildOutput({ type: 'matched-immediately' }, timeout)
     }
 
-    [reference, initialScreenshot] = await Promise.all([
+    ;[reference, initialScreenshot] = await Promise.all([
       codec.decode(referenceFile, {}),
       takeScreenshotData({
         ...screenshotCaptureOptions,
@@ -125,18 +131,21 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     ])
   }
 
-  const screenshotResult = await waitForStableScreenshot({
-    codec,
-    comparator,
-    comparatorOptions,
-    context,
-    element,
-    initialScreenshot,
-    name: screenshotName,
-    reference,
-    screenshotOptions,
-    target,
-  }, timeout)
+  const screenshotResult = await waitForStableScreenshot(
+    {
+      codec,
+      comparator,
+      comparatorOptions,
+      context,
+      element,
+      initialScreenshot,
+      name: screenshotName,
+      reference,
+      screenshotOptions,
+      target,
+    },
+    timeout,
+  )
 
   const outcome = await determineOutcome({
     reference,
@@ -161,25 +170,23 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
  *
  * The outcome carries all data needed by {@linkcode performSideEffects} and {@linkcode buildOutput}.
  */
-async function determineOutcome(
-  {
-    comparator,
-    comparatorOptions,
-    paths,
-    reference,
-    retries,
-    screenshot,
-    screenshotBuffer,
-    updateSnapshot,
-  }: Pick<ResolvedOptions, 'comparator' | 'paths'> & {
-    comparatorOptions: ResolvedOptions['resolvedOptions']['comparatorOptions']
-    reference: DecodedImage | null
-    retries: number
-    screenshot: DecodedImage | null
-    screenshotBuffer?: Buffer<ArrayBufferLike>
-    updateSnapshot: SnapshotUpdateState
-  },
-): Promise<MatchOutcome> {
+async function determineOutcome({
+  comparator,
+  comparatorOptions,
+  paths,
+  reference,
+  retries,
+  screenshot,
+  screenshotBuffer,
+  updateSnapshot,
+}: Pick<ResolvedOptions, 'comparator' | 'paths'> & {
+  comparatorOptions: ResolvedOptions['resolvedOptions']['comparatorOptions']
+  reference: DecodedImage | null
+  retries: number
+  screenshot: DecodedImage | null
+  screenshotBuffer?: Buffer<ArrayBufferLike>
+  updateSnapshot: SnapshotUpdateState
+}): Promise<MatchOutcome> {
   if (screenshot === null) {
     return {
       type: 'unstable-screenshot',
@@ -203,18 +210,14 @@ async function determineOutcome(
       }
     }
 
-    const location = updateSnapshot === 'none'
-      ? 'diffs'
-      : 'reference'
+    const location = updateSnapshot === 'none' ? 'diffs' : 'reference'
 
     return {
       type: 'missing-reference',
       location,
       reference: {
         image: screenshot,
-        path: location === 'reference'
-          ? paths.reference
-          : paths.diffs.reference,
+        path: location === 'reference' ? paths.reference : paths.diffs.reference,
         buffer: screenshotBuffer,
       },
     }
@@ -225,11 +228,10 @@ async function determineOutcome(
     return { type: 'matched-immediately' }
   }
 
-  const comparisonResult = await comparator(
-    reference,
-    screenshot,
-    { createDiff: true, ...comparatorOptions },
-  )
+  const comparisonResult = await comparator(reference, screenshot, {
+    createDiff: true,
+    ...comparatorOptions,
+  })
 
   if (comparisonResult.pass) {
     return { type: 'matched-after-comparison' }
@@ -320,10 +322,7 @@ function encodeScreenshot(screenshot: ScreenshotData, codec: AnyCodec) {
  *
  * Maps each outcome to a pass/fail result with metadata and error messages.
  */
-function buildOutput(
-  outcome: MatchOutcome,
-  timeout: number,
-): Awaited<ScreenshotMatcherOutput> {
+function buildOutput(outcome: MatchOutcome, timeout: number): Awaited<ScreenshotMatcherOutput> {
   switch (outcome.type) {
     case 'unstable-screenshot':
       return {
@@ -350,9 +349,10 @@ function buildOutput(
         },
         actual: null,
         diff: null,
-        message: outcome.location === 'reference'
-          ? 'No existing reference screenshot found; a new one was created. Review it before running tests again.'
-          : 'No existing reference screenshot found.',
+        message:
+          outcome.location === 'reference'
+            ? 'No existing reference screenshot found; a new one was created. Review it before running tests again.'
+            : 'No existing reference screenshot found.',
       }
     }
 
@@ -420,23 +420,20 @@ interface StableScreenshotOptions {
  *
  * Wraps {@linkcode getStableScreenshot} with an abort controller that triggers when the timeout expires. Returns `null` if the page never stabilizes.
  */
-async function waitForStableScreenshot(options: StableScreenshotOptions, timeout: number,
+async function waitForStableScreenshot(
+  options: StableScreenshotOptions,
+  timeout: number,
 ): Promise<{ actual: DecodedImage; buffer: Buffer<ArrayBufferLike>; retries: number } | null> {
   const abortController = new AbortController()
 
-  const stableScreenshot = getStableScreenshot(
-    options,
-    abortController.signal,
-  )
+  const stableScreenshot = getStableScreenshot(options, abortController.signal)
 
-  const result = await (
-    timeout === 0
-      ? stableScreenshot
-      : Promise.race([
-          stableScreenshot,
-          asyncTimeout(timeout).finally(() => abortController.abort()),
-        ])
-  )
+  const result = await (timeout === 0
+    ? stableScreenshot
+    : Promise.race([
+        stableScreenshot,
+        asyncTimeout(timeout).finally(() => abortController.abort()),
+      ]))
 
   return result
 }
@@ -456,18 +453,21 @@ async function waitForStableScreenshot(options: StableScreenshotOptions, timeout
  *
  * @returns `Promise` resolving to an object containing the retry count and final screenshot
  */
-async function getStableScreenshot({
-  codec,
-  context,
-  comparator,
-  comparatorOptions,
-  element,
-  initialScreenshot,
-  name,
-  reference,
-  screenshotOptions,
-  target,
-}: StableScreenshotOptions, signal: AbortSignal): Promise<{
+async function getStableScreenshot(
+  {
+    codec,
+    context,
+    comparator,
+    comparatorOptions,
+    element,
+    initialScreenshot,
+    name,
+    reference,
+    screenshotOptions,
+    target,
+  }: StableScreenshotOptions,
+  signal: AbortSignal,
+): Promise<{
   retries: number
   actual: DecodedImage
   buffer: Buffer<ArrayBufferLike>
@@ -499,11 +499,8 @@ async function getStableScreenshot({
     const { image: image2 } = capturedScreenshot
     lastCapturedScreenshot = capturedScreenshot
 
-    const isStable = (await comparator(
-      image1,
-      image2,
-      { ...comparatorOptions, createDiff: false },
-    )).pass
+    const isStable = (await comparator(image1, image2, { ...comparatorOptions, createDiff: false }))
+      .pass
 
     decodedBaseline = image2
     nextScreenshot = null
@@ -545,13 +542,15 @@ async function takeScreenshotData({
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
   target?: ScreenshotMatcherArguments[2]['target']
 }): Promise<CapturedScreenshot> {
-  const screenshot = buffer ?? await takeScreenshotBuffer({
-    context,
-    element,
-    name,
-    screenshotOptions,
-    target,
-  })
+  const screenshot =
+    buffer ??
+    (await takeScreenshotBuffer({
+      context,
+      element,
+      name,
+      screenshotOptions,
+      target,
+    }))
 
   return {
     buffer: screenshot,
@@ -566,8 +565,7 @@ async function writeScreenshot(path: string, image: TypedArray, project: TestPro
     assertBrowserFileAccess(project, path)
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, image)
-  }
-  catch (cause) {
-    throw new Error('Couldn\'t write file to fs', { cause })
+  } catch (cause) {
+    throw new Error("Couldn't write file to fs", { cause })
   }
 }

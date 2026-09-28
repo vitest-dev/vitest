@@ -43,7 +43,11 @@ export interface Report {
    * await report.writeFile('test-report.json', JSON.stringify(results))
    * ```
    */
-  writeFile: (filename: string, content: Parameters<typeof writeFile>[1], encoding?: BufferEncoding) => Promise<void>
+  writeFile: (
+    filename: string,
+    content: Parameters<typeof writeFile>[1],
+    encoding?: BufferEncoding,
+  ) => Promise<void>
 
   /**
    * Read a file from the report directory for this scope.
@@ -87,13 +91,7 @@ export function createReport(ctx: Vitest, scope: string): Report {
   const vitestDir = resolve(root, '.vitest')
   const reportDir = resolve(vitestDir, scope)
 
-  if (!fsSync.existsSync(vitestDir)) {
-    fsSync.mkdirSync(vitestDir)
-  }
-
-  if (!fsSync.existsSync(reportDir)) {
-    fsSync.mkdirSync(reportDir)
-  }
+  fsSync.mkdirSync(reportDir, { recursive: true })
 
   return {
     root: reportDir,

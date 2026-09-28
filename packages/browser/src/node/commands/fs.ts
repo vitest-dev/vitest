@@ -5,9 +5,11 @@ import { basename, dirname, resolve } from 'node:path'
 import mime from 'mime/lite'
 import { assertBrowserApiWrite, assertBrowserFileAccess } from '../utils'
 
-export const readFile: BrowserCommand<
-  Parameters<BrowserCommands['readFile']>
-> = async ({ project }, path, options = {}) => {
+export const readFile: BrowserCommand<Parameters<BrowserCommands['readFile']>> = async (
+  { project },
+  path,
+  options = {},
+) => {
   const filepath = resolve(project.config.root, path)
   assertBrowserFileAccess(project, filepath)
   // never return a Buffer
@@ -17,9 +19,12 @@ export const readFile: BrowserCommand<
   return fsp.readFile(filepath, options)
 }
 
-export const writeFile: BrowserCommand<
-  Parameters<BrowserCommands['writeFile']>
-> = async ({ project }, path, data, options) => {
+export const writeFile: BrowserCommand<Parameters<BrowserCommands['writeFile']>> = async (
+  { project },
+  path,
+  data,
+  options,
+) => {
   assertBrowserApiWrite(project, path)
   const filepath = resolve(project.config.root, path)
   assertBrowserFileAccess(project, filepath)
@@ -30,16 +35,21 @@ export const writeFile: BrowserCommand<
   await fsp.writeFile(filepath, data, options)
 }
 
-export const removeFile: BrowserCommand<
-  Parameters<BrowserCommands['removeFile']>
-> = async ({ project }, path) => {
+export const removeFile: BrowserCommand<Parameters<BrowserCommands['removeFile']>> = async (
+  { project },
+  path,
+) => {
   assertBrowserApiWrite(project, path)
   const filepath = resolve(project.config.root, path)
   assertBrowserFileAccess(project, filepath)
   await fsp.rm(filepath)
 }
 
-export const _fileInfo: BrowserCommand<[path: string, encoding: BufferEncoding]> = async ({ project }, path, encoding) => {
+export const _fileInfo: BrowserCommand<[path: string, encoding: BufferEncoding]> = async (
+  { project },
+  path,
+  encoding,
+) => {
   const filepath = resolve(project.config.root, path)
   assertBrowserFileAccess(project, filepath)
   const content = await fsp.readFile(filepath, encoding || 'base64')

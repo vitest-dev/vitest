@@ -1,6 +1,7 @@
 import type { jsdomTypes } from 'vitest/optional-types.js'
 
-export type JSDOMOptions = ConstructorOptionsOverride & Omit<jsdomTypes.ConstructorOptions, keyof ConstructorOptionsOverride>
+export type JSDOMOptions = ConstructorOptionsOverride &
+  Omit<jsdomTypes.ConstructorOptions, keyof ConstructorOptionsOverride>
 
 interface ConstructorOptionsOverride {
   /**

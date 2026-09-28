@@ -19,7 +19,10 @@ import { page, server } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
 
 class PlaywrightLocator extends Locator {
-  constructor(public selector: string, protected _container?: Element) {
+  constructor(
+    public selector: string,
+    protected _container?: Element,
+  ) {
     super()
   }
 
@@ -48,10 +51,7 @@ class PlaywrightLocator extends Locator {
   }
 
   protected elementLocator(element: Element) {
-    return new PlaywrightLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
+    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
   }
 }
 
@@ -63,7 +63,9 @@ page.extend({
     return new PlaywrightLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
+    return new PlaywrightLocator(
+      getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId),
+    )
   },
   getByAltText(text, options) {
     return new PlaywrightLocator(getByAltTextSelector(text, options))
@@ -79,19 +81,14 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PlaywrightLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
+    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
   },
   frameLocator(locator: Locator) {
-    return new PlaywrightLocator(
-      `${locator.selector} >> internal:control=enter-frame`,
-    )
+    return new PlaywrightLocator(`${locator.selector} >> internal:control=enter-frame`)
   },
 })
 
-__INTERNAL._createLocator = selector => new PlaywrightLocator(selector)
+__INTERNAL._createLocator = (selector) => new PlaywrightLocator(selector)
 
 function processDragAndDropOptions(options?: UserEventDragAndDropOptions) {
   if (!options) {

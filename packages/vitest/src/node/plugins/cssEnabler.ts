@@ -23,10 +23,7 @@ function isInline(id: string) {
   return cssInlineRE.test(id)
 }
 
-function getCSSModuleProxyReturn(
-  strategy: CSSModuleScopeStrategy,
-  filename: string,
-) {
+function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: string) {
   if (strategy === 'non-scoped') {
     return 'style'
   }
@@ -42,10 +39,10 @@ export function CSSEnablerPlugin(): VitePlugin[] {
     if (typeof css === 'boolean') {
       return css
     }
-    if (toArray(css.exclude).some(re => re.test(id))) {
+    if (toArray(css.exclude).some((re) => re.test(id))) {
       return false
     }
-    if (toArray(css.include).some(re => re.test(id))) {
+    if (toArray(css.include).some((re) => re.test(id))) {
       return true
     }
     return false
@@ -81,10 +78,10 @@ export function CSSEnablerPlugin(): VitePlugin[] {
           // return proxy for css modules, so that imported module has names:
           // styles.foo returns a "foo" instead of "undefined"
           // we don't use code content to generate hash for "scoped", because it's empty
-          const scopeStrategy
-            = (typeof viteConfig.test.css !== 'boolean'
-              && viteConfig.test.css.modules?.classNameStrategy)
-            || 'stable'
+          const scopeStrategy =
+            (typeof viteConfig.test.css !== 'boolean' &&
+              viteConfig.test.css.modules?.classNameStrategy) ||
+            'stable'
           const proxyReturn = getCSSModuleProxyReturn(
             scopeStrategy,
             relative(viteConfig.test.root, id),

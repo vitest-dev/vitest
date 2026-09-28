@@ -14,7 +14,7 @@ function spyOnPrewarm() {
   }
   // config resolution assigns `name` on the instance objects,
   // so the shared settings array cannot be reused between runs
-  const freshInstances = instances.map(instance => ({ ...instance }))
+  const freshInstances = instances.map((instance) => ({ ...instance }))
   return { prewarmed, spyProvider, freshInstances }
 }
 
@@ -27,12 +27,15 @@ test('prewarm receives only the instances matching the --project filter', async 
   const { prewarmed, spyProvider, freshInstances } = spyOnPrewarm()
   const target = instances[0].browser!
 
-  const result = await runInlineBrowserTests({
-    'basic.test.ts': basicTest,
-  }, {
-    project: [target],
-    browser: { provider: spyProvider, instances: freshInstances },
-  })
+  const result = await runInlineBrowserTests(
+    {
+      'basic.test.ts': basicTest,
+    },
+    {
+      project: [target],
+      browser: { provider: spyProvider, instances: freshInstances },
+    },
+  )
 
   expect(result.stderr).toBe('')
   expect(prewarmed).toEqual([target])
@@ -42,26 +45,29 @@ test('prewarm receives only the matching instances of a workspace project', asyn
   const { prewarmed, spyProvider, freshInstances } = spyOnPrewarm()
   const target = `browser (${instances[0].browser})`
 
-  const { stderr } = await runInlineTests({
-    'basic.test.ts': basicTest,
-  }, {
-    watch: false,
-    reporters: 'none',
-    project: [target],
-    projects: [
-      {
-        test: {
-          name: 'browser',
-          browser: {
-            enabled: true,
-            provider: spyProvider,
-            instances: freshInstances,
-            headless: true,
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': basicTest,
+    },
+    {
+      watch: false,
+      reporters: 'none',
+      project: [target],
+      projects: [
+        {
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+              provider: spyProvider,
+              instances: freshInstances,
+              headless: true,
+            },
           },
         },
-      },
-    ],
-  })
+      ],
+    },
+  )
 
   expect(stderr).toBe('')
   expect(prewarmed).toEqual([target])
@@ -85,12 +91,15 @@ test('prewarm uses the provider from the resolved instance project', async () =>
     provider: index === 0 ? instanceProvider : undefined,
   }))
 
-  const result = await runInlineBrowserTests({
-    'basic.test.ts': basicTest,
-  }, {
-    project: [target],
-    browser: { provider: undefined, instances: freshInstances },
-  })
+  const result = await runInlineBrowserTests(
+    {
+      'basic.test.ts': basicTest,
+    },
+    {
+      project: [target],
+      browser: { provider: undefined, instances: freshInstances },
+    },
+  )
 
   expect(result.stderr).toBe('')
   expect(prewarmed).toEqual([{ browser: target, name: target }])
@@ -101,33 +110,41 @@ test('does not prewarm a project without test files', async () => {
   let projectNames: string[] = []
   const browser = instances[0].browser!
 
-  const result = await runInlineBrowserTests({
-    'basic.test.ts': basicTest,
-  }, {
-    browser: {
-      provider: spyProvider,
-      instances: [
-        { browser, name: 'with tests', include: ['basic.test.ts'] },
-        { browser, name: 'without tests', include: ['missing.test.ts'] },
-      ],
+  const result = await runInlineBrowserTests(
+    {
+      'basic.test.ts': basicTest,
     },
-    $viteConfig: {
-      plugins: [
-        {
-          name: 'capture-projects',
-          configureVitest({ project, vitest }) {
-            projectNames = vitest.projects.map(project => project.name)
-            if (project.name === 'without tests') {
-              project.config.include = ['basic.test.ts']
-            }
+    {
+      browser: {
+        provider: spyProvider,
+        instances: [
+          { browser, name: 'with tests', include: ['basic.test.ts'] },
+          { browser, name: 'without tests', include: ['missing.test.ts'] },
+        ],
+      },
+      $viteConfig: {
+        plugins: [
+          {
+            name: 'capture-projects',
+            configureVitest({ project, vitest }) {
+              projectNames = vitest.projects.map((project) => project.name)
+              if (project.name === 'without tests') {
+                project.config.include = ['basic.test.ts']
+              }
+            },
           },
-        },
-      ],
+        ],
+      },
     },
-  })
+  )
 
   expect(result.stderr).toBe('')
   expect(prewarmed).toEqual(['with tests'])
   expect(projectNames).toEqual(['with tests', 'without tests'])
-  expect(result.ctx!.state.getFiles().map(file => file.projectName).sort()).toEqual(['with tests', 'without tests'])
+  expect(
+    result
+      .ctx!.state.getFiles()
+      .map((file) => file.projectName)
+      .sort(),
+  ).toEqual(['with tests', 'without tests'])
 })

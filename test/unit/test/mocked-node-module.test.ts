@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/prefer-node-protocol */
+/* oxlint-disable unicorn/prefer-node-protocol */
 
 import fs from 'fs/promises'
 import { expect, test, vi } from 'vitest'

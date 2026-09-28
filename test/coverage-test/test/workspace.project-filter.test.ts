@@ -11,7 +11,9 @@ test('coverage files include all projects', async () => {
     root: 'fixtures/workspaces/project',
   })
 
-  const coverageMap = await readCoverageMap('fixtures/workspaces/project/coverage/coverage-final.json')
+  const coverageMap = await readCoverageMap(
+    'fixtures/workspaces/project/coverage/coverage-final.json',
+  )
   const files = coverageMap.files()
 
   // All files from workspace should be picked
@@ -37,7 +39,9 @@ test('coverage files limited to specified project', async () => {
     root: 'fixtures/workspaces/project',
   })
 
-  const coverageMap = await readCoverageMap('fixtures/workspaces/project/coverage/coverage-final.json')
+  const coverageMap = await readCoverageMap(
+    'fixtures/workspaces/project/coverage/coverage-final.json',
+  )
   const files = coverageMap.files()
 
   expect(files).toMatchInlineSnapshot(`

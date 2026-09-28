@@ -1,4 +1,3 @@
-/* eslint-disable style/spaced-comment */
 import { test as base, expect } from 'vitest'
 
 const test = base.extend<{

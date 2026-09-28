@@ -22,11 +22,7 @@ export function MocksPlugins(options: MocksPluginOptions = {}): Plugin[] {
         return true
       },
       codeFrameGenerator(node, id, code) {
-        return generateCodeFrame(
-          code,
-          4,
-          node.start + 1,
-        )
+        return generateCodeFrame(code, 4, node.start + 1)
       },
     }),
     automockPlugin(),

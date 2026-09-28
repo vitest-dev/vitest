@@ -4,11 +4,14 @@ import type {
   ScreenshotMatcherOptions,
 } from '@vitest/browser/context'
 
-interface BaseMetadata { height: number; width: number }
-export type TypedArray
-  = | Buffer<ArrayBufferLike>
-    | Uint8Array<ArrayBufferLike>
-    | Uint8ClampedArray<ArrayBufferLike>
+interface BaseMetadata {
+  height: number
+  width: number
+}
+export type TypedArray =
+  | Buffer<ArrayBufferLike>
+  | Uint8Array<ArrayBufferLike>
+  | Uint8ClampedArray<ArrayBufferLike>
 type Promisable<T> = T | Promise<T>
 
 export interface Codec<
@@ -52,18 +55,15 @@ type CustomComparatorsToRegister = {
   [Key in keyof NonStandardScreenshotComparators]: Comparator<NonStandardScreenshotComparators[Key]>
 }
 
-export type CustomComparatorsRegistry
-  = keyof CustomComparatorsToRegister extends never
-    ? { comparators?: Record<string, Comparator<Record<string, unknown>>> }
-    : { comparators: CustomComparatorsToRegister }
+export type CustomComparatorsRegistry = keyof CustomComparatorsToRegister extends never
+  ? { comparators?: Record<string, Comparator<Record<string, unknown>>> }
+  : { comparators: CustomComparatorsToRegister }
 
 declare module 'vitest/node' {
   export interface ToMatchScreenshotOptions
-    extends Omit<
-      ScreenshotMatcherOptions,
-      'comparatorName' | 'comparatorOptions'
-    >, CustomComparatorsRegistry {}
+    extends
+      Omit<ScreenshotMatcherOptions, 'comparatorName' | 'comparatorOptions'>,
+      CustomComparatorsRegistry {}
 
-  export interface ToMatchScreenshotComparators
-    extends ScreenshotComparatorRegistry {}
+  export interface ToMatchScreenshotComparators extends ScreenshotComparatorRegistry {}
 }

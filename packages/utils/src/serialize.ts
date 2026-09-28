@@ -37,16 +37,16 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
 
     if (jsonValue && jsonValue !== val && typeof jsonValue === 'object') {
       if (typeof val.message === 'string') {
-        safe(() => jsonValue.message ??= normalizeErrorMessage(val.message))
+        safe(() => (jsonValue.message ??= normalizeErrorMessage(val.message)))
       }
       if (typeof val.stack === 'string') {
-        safe(() => jsonValue.stack ??= val.stack)
+        safe(() => (jsonValue.stack ??= val.stack))
       }
       if (typeof val.name === 'string') {
-        safe(() => jsonValue.name ??= val.name)
+        safe(() => (jsonValue.name ??= val.name))
       }
       if (val.cause != null) {
-        safe(() => jsonValue.cause ??= serializeValue(val.cause, seen))
+        safe(() => (jsonValue.cause ??= serializeValue(val.cause, seen)))
       }
     }
     return serializeValue(jsonValue, seen)
@@ -71,8 +71,8 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
     return serializeValue(val.toJSON(), seen)
   }
   if (
-    val instanceof Promise
-    || (val.constructor && val.constructor.prototype === 'AsyncFunction')
+    val instanceof Promise ||
+    (val.constructor && val.constructor.prototype === 'AsyncFunction')
   ) {
     return 'Promise'
   }
@@ -88,20 +88,18 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
 
   if (Array.isArray(val)) {
-    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparse arrays ([1,,3])
+    // oxlint-disable-next-line unicorn/no-new-array -- we need to keep sparse arrays ([1,,3])
     const clone: any[] = new Array(val.length)
     seen.set(val, clone)
     val.forEach((e, i) => {
       try {
         clone[i] = serializeValue(e, seen)
-      }
-      catch (err) {
+      } catch (err) {
         clone[i] = getUnserializableMessage(err)
       }
     })
     return clone
-  }
-  else {
+  } else {
     // Objects with `Error` constructors appear to cause problems during worker communication
     // using `MessagePort`, so the serialized error object is being recreated as plain object.
     const clone = Object.create(null)
@@ -115,8 +113,7 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
         }
         try {
           clone[key] = serializeValue(val[key], seen)
-        }
-        catch (err) {
+        } catch (err) {
           // delete in case it has a setter from prototype that might throw
           delete clone[key]
           clone[key] = getUnserializableMessage(err)
@@ -125,7 +122,7 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
       obj = Object.getPrototypeOf(obj)
     }
     if (val instanceof Error) {
-      safe(() => clone.message = normalizeErrorMessage(val.message))
+      safe(() => (clone.message = normalizeErrorMessage(val.message)))
     }
     return clone
   }
@@ -134,18 +131,19 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
 function safe(fn: () => void) {
   try {
     return fn()
-  }
-  catch {
+  } catch {
     // ignore
   }
 }
 
 function normalizeErrorMessage(message: string) {
-  return message
-    // vite 7+
-    .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
-    // vite <7
-    .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
-    // vitest-browser-* errors will have __vitest_<componentId>__ in their messages
-    .replace(/getByTestId('__vitest_\d+__')/g, 'page')
+  return (
+    message
+      // vite 7+
+      .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+      // vite <7
+      .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
+      // vitest-browser-* errors will have __vitest_<componentId>__ in their messages
+      .replace(/getByTestId('__vitest_\d+__')/g, 'page')
+  )
 }

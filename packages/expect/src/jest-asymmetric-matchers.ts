@@ -1,15 +1,9 @@
-/* eslint-disable unicorn/no-instanceof-builtins -- we check both */
+/* oxlint-disable unicorn/no-instanceof-builtins -- we check both */
 
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { ChaiPlugin, MatcherState, Tester } from './types'
 import { GLOBAL_EXPECT } from './constants'
-import {
-  diff,
-  getCustomEqualityTesters,
-  getMatcherUtils,
-  stringify,
-} from './jest-matcher-utils'
-
+import { diff, getCustomEqualityTesters, getMatcherUtils, stringify } from './jest-matcher-utils'
 import {
   equals,
   isA,
@@ -34,7 +28,10 @@ export abstract class AsymmetricMatcher<
   // should have "jest" to be compatible with its ecosystem
   $$typeof: symbol = Symbol.for('jest.asymmetricMatcher')
 
-  constructor(protected sample: T, protected inverse = false) {}
+  constructor(
+    protected sample: T,
+    protected inverse = false,
+  ) {}
 
   protected getMatcherContext(expect?: Chai.ExpectStatic): State {
     return {
@@ -62,7 +59,10 @@ export abstract class AsymmetricMatcher<
 // https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
 // @ts-expect-error computed properties is not supported when isolatedDeclarations is enabled
 // FIXME: https://github.com/microsoft/TypeScript/issues/61068
-AsymmetricMatcher.prototype[Symbol.for('chai/inspect')] = function (options: { depth: number; truncate: number }): string {
+AsymmetricMatcher.prototype[Symbol.for('chai/inspect')] = function (options: {
+  depth: number
+  truncate: number
+}): string {
   // minimal pretty-format with simple manual truncation
   const result = stringify(this, options.depth, { min: true })
   if (result.length <= options.truncate) {
@@ -109,9 +109,7 @@ export class Anything extends AsymmetricMatcher<void> {
   }
 }
 
-export class ObjectContaining extends AsymmetricMatcher<
-  Record<string | symbol | number, unknown>
-> {
+export class ObjectContaining extends AsymmetricMatcher<Record<string | symbol | number, unknown>> {
   constructor(sample: Record<string, unknown>, inverse = false) {
     super(sample, inverse)
   }
@@ -144,7 +142,7 @@ export class ObjectContaining extends AsymmetricMatcher<
     return [
       ...Object.keys(obj),
       ...Object.getOwnPropertySymbols(obj).filter(
-        s => Object.getOwnPropertyDescriptor(obj, s)?.enumerable,
+        (s) => Object.getOwnPropertyDescriptor(obj, s)?.enumerable,
       ),
     ]
   }
@@ -152,8 +150,7 @@ export class ObjectContaining extends AsymmetricMatcher<
   asymmetricMatch(other: any, customTesters?: Array<Tester>): boolean {
     if (typeof this.sample !== 'object') {
       throw new TypeError(
-        `You must provide an object to ${this.toString()}, not '${typeof this
-          .sample}'.`,
+        `You must provide an object to ${this.toString()}, not '${typeof this.sample}'.`,
       )
     }
 
@@ -161,19 +158,13 @@ export class ObjectContaining extends AsymmetricMatcher<
 
     const properties = this.getProperties(this.sample)
     for (const property of properties) {
-      if (
-        !this.hasProperty(other, property)
-      ) {
+      if (!this.hasProperty(other, property)) {
         result = false
         break
       }
       const value = this.sample[property]
       const otherValue = other[property]
-      if (!equals(
-        value,
-        otherValue,
-        customTesters,
-      )) {
+      if (!equals(value, otherValue, customTesters)) {
         result = false
         break
       }
@@ -199,19 +190,14 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
   asymmetricMatch(other: Array<T>, customTesters?: Array<Tester>): boolean {
     if (!Array.isArray(this.sample)) {
       throw new TypeError(
-        `You must provide an array to ${this.toString()}, not '${typeof this
-          .sample}'.`,
+        `You must provide an array to ${this.toString()}, not '${typeof this.sample}'.`,
       )
     }
 
-    const result
-      = this.sample.length === 0
-        || (Array.isArray(other)
-          && this.sample.every(item =>
-            other.some(another =>
-              equals(item, another, customTesters),
-            ),
-          ))
+    const result =
+      this.sample.length === 0 ||
+      (Array.isArray(other) &&
+        this.sample.every((item) => other.some((another) => equals(item, another, customTesters))))
 
     return this.inverse ? !result : result
   }
@@ -229,8 +215,8 @@ export class Any extends AsymmetricMatcher<any> {
   constructor(sample: unknown) {
     if (typeof sample === 'undefined') {
       throw new TypeError(
-        'any() expects to be passed a constructor function. '
-        + 'Please pass one or use anything() to match any object.',
+        'any() expects to be passed a constructor function. ' +
+          'Please pass one or use anything() to match any object.',
       )
     }
     super(sample)
@@ -361,19 +347,11 @@ class CloseTo extends AsymmetricMatcher<number> {
     }
 
     let result = false
-    if (
-      other === Number.POSITIVE_INFINITY
-      && this.sample === Number.POSITIVE_INFINITY
-    ) {
+    if (other === Number.POSITIVE_INFINITY && this.sample === Number.POSITIVE_INFINITY) {
       result = true // Infinity - Infinity is NaN
-    }
-    else if (
-      other === Number.NEGATIVE_INFINITY
-      && this.sample === Number.NEGATIVE_INFINITY
-    ) {
+    } else if (other === Number.NEGATIVE_INFINITY && this.sample === Number.NEGATIVE_INFINITY) {
       result = true // -Infinity - -Infinity is NaN
-    }
-    else {
+    } else {
       result = Math.abs(this.sample - other) < 10 ** -this.precision / 2
     }
     return this.inverse ? !result : result
@@ -388,11 +366,7 @@ class CloseTo extends AsymmetricMatcher<number> {
   }
 
   override toAsymmetricMatcher(): string {
-    return [
-      this.toString(),
-      this.sample,
-      `(${pluralize('digit', this.precision)})`,
-    ].join(' ')
+    return [this.toString(), this.sample, `(${pluralize('digit', this.precision)})`].join(' ')
   }
 }
 
@@ -401,9 +375,7 @@ export class SchemaMatching extends AsymmetricMatcher<StandardSchemaV1<unknown, 
 
   constructor(sample: StandardSchemaV1<unknown, unknown>, inverse = false) {
     if (!isStandardSchema(sample)) {
-      throw new TypeError(
-        'SchemaMatching expected to receive a Standard Schema.',
-      )
+      throw new TypeError('SchemaMatching expected to receive a Standard Schema.')
     }
     super(sample, inverse)
   }
@@ -463,11 +435,7 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     <T = any>(expected: Array<T>) => new ArrayContaining<T>(expected),
   )
 
-  utils.addMethod(
-    chai.expect,
-    'stringMatching',
-    (expected: any) => new StringMatching(expected),
-  )
+  utils.addMethod(chai.expect, 'stringMatching', (expected: any) => new StringMatching(expected))
 
   utils.addMethod(
     chai.expect,
@@ -475,23 +443,15 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     (expected: any, precision?: number) => new CloseTo(expected, precision),
   )
 
-  utils.addMethod(
-    chai.expect,
-    'schemaMatching',
-    (expected: any) => new SchemaMatching(expected),
-  );
+  utils.addMethod(chai.expect, 'schemaMatching', (expected: any) => new SchemaMatching(expected))
 
   // defineProperty does not work
-  (chai.expect as any).not = {
-    stringContaining: (expected: string) =>
-      new StringContaining(expected, true),
+  ;(chai.expect as any).not = {
+    stringContaining: (expected: string) => new StringContaining(expected, true),
     objectContaining: (expected: any) => new ObjectContaining(expected, true),
-    arrayContaining: <T = unknown>(expected: Array<T>) =>
-      new ArrayContaining<T>(expected, true),
-    stringMatching: (expected: string | RegExp) =>
-      new StringMatching(expected, true),
-    closeTo: (expected: any, precision?: number) =>
-      new CloseTo(expected, precision, true),
+    arrayContaining: <T = unknown>(expected: Array<T>) => new ArrayContaining<T>(expected, true),
+    stringMatching: (expected: string | RegExp) => new StringMatching(expected, true),
+    closeTo: (expected: any, precision?: number) => new CloseTo(expected, precision, true),
     schemaMatching: (expected: any) => new SchemaMatching(expected, true),
   }
 }

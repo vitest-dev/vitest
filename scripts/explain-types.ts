@@ -13,21 +13,21 @@ for (let i = 1; i < content.length; i++) {
       continue
     }
 
-    const [_, __, from] = (line.includes('with')
-      ? /Imported via '(.*)' from file '(.*)' with/.exec(line)
-      : /Imported via '(.*)' from file '(.*)'/.exec(line)) ?? []
+    const [_, __, from] =
+      (line.includes('with')
+        ? /Imported via '(.*)' from file '(.*)' with/.exec(line)
+        : /Imported via '(.*)' from file '(.*)'/.exec(line)) ?? []
 
     dependencies[from] ??= []
     if (!dependencies[from].includes(lastKey)) {
       dependencies[from].push(lastKey)
     }
-  }
-  else {
+  } else {
     lastKey = content[i]
   }
 }
 
-function printTree(start: string, deps: string[], depth = 1, seen = new Set()) {
+function printTree(deps: string[], depth = 1, seen = new Set()) {
   for (const dep of deps) {
     if (seen.has(dep)) {
       continue
@@ -36,7 +36,7 @@ function printTree(start: string, deps: string[], depth = 1, seen = new Set()) {
     console.error('  '.repeat(depth) + dep)
     const deps = dependencies[dep]
     if (deps && !dep.includes('node_modules')) {
-      printTree(start, deps, depth + 1, seen)
+      printTree(deps, depth + 1, seen)
     }
   }
 }
@@ -44,6 +44,6 @@ function printTree(start: string, deps: string[], depth = 1, seen = new Set()) {
 for (const key in dependencies) {
   if (key.startsWith('src/client')) {
     console.error(key)
-    printTree(key, dependencies[key])
+    printTree(dependencies[key])
   }
 }

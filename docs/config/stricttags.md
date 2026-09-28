@@ -16,11 +16,13 @@ Note that Vitest will always throw an error if `--tags-filter` flag defines a ta
 For example, this test will throw an error because the tag `fortnend` has a typo (it should be `frontend`):
 
 ::: code-group
+
 ```js [form.test.js]
 test('renders a form', { tags: ['fortnend'] }, () => {
   // ...
 })
 ```
+
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -32,4 +34,5 @@ export default defineConfig({
   },
 })
 ```
+
 :::

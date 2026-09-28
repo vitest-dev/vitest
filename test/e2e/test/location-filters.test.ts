@@ -135,11 +135,7 @@ describe('location filter with list command', () => {
   })
 
   test('fails on part of filename with location filter', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'list',
-      `-r=${fixturePath}`,
-      `math:999`,
-    )
+    const { stdout, stderr } = await runVitestCli('list', `-r=${fixturePath}`, `math:999`)
 
     expect(stdout).toEqual('')
     expect(stderr).toContain('Collect Error')
@@ -255,11 +251,7 @@ describe('location filter with run command', () => {
   })
 
   test('fails on part of filename with location filter', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'run',
-      `-r=${fixturePath}`,
-      `math:999`,
-    )
+    const { stdout, stderr } = await runVitestCli('run', `-r=${fixturePath}`, `math:999`)
 
     expect(stdout).not.contain('math.test.ts')
     expect(stdout).not.contain('math-with-dashes-in-name.test.ts')

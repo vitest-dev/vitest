@@ -3,9 +3,7 @@ import type { EnvironmentOptions, VitestEnvironment } from '../node/types/config
 import type { ContextTestEnvironment } from '../types/worker'
 import { promises as fs } from 'node:fs'
 
-export async function getSpecificationsOptions(
-  specifications: Array<TestSpecification>,
-): Promise<{
+export async function getSpecificationsOptions(specifications: Array<TestSpecification>): Promise<{
   environments: WeakMap<TestSpecification, ContextTestEnvironment>
   tags: WeakMap<TestSpecification, string[]>
 }> {
@@ -37,9 +35,7 @@ export async function getSpecificationsOptions(
       const envKey = env === 'happy-dom' ? 'happyDOM' : env
       const environment: ContextTestEnvironment = {
         name: env as VitestEnvironment,
-        options: envOptions
-          ? ({ [envKey]: envOptions } as EnvironmentOptions)
-          : null,
+        options: envOptions ? ({ [envKey]: envOptions } as EnvironmentOptions) : null,
       }
       environments.set(spec, environment)
     }),
@@ -61,8 +57,8 @@ export function detectCodeBlock(content: string): {
   const envOptions = JSON.parse(envOptionsJson || 'null')
   const tags: string[] = []
   let tagMatch: RegExpMatchArray | null
-  // eslint-disable-next-line no-cond-assign
-  while (tagMatch = content.match(/(\/\/|\*)\s*@module-tag\s+([\w\-/]+)\b/)) {
+  // oxlint-disable-next-line no-cond-assign
+  while ((tagMatch = content.match(/(\/\/|\*)\s*@module-tag\s+([\w\-/]+)\b/))) {
     tags.push(tagMatch[2])
     content = content.slice(tagMatch.index! + tagMatch[0].length)
   }

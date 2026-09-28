@@ -51,10 +51,7 @@ test.describe('explorer watch updates', () => {
     await expect(page.getByTestId('file-detail')).toContainText('reconcile-remove-me')
     fs.writeFileSync(
       basicFile,
-      basicContent.replace(
-        /\/\/ TEST REMOVE START[\s\S]*?\/\/ TEST REMOVE END\n/,
-        '',
-      ),
+      basicContent.replace(/\/\/ TEST REMOVE START[\s\S]*?\/\/ TEST REMOVE END\n/, ''),
       'utf-8',
     )
 
