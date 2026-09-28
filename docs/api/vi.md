@@ -1193,9 +1193,9 @@ To enable mocking timers, you need to call this method. It will wrap all further
 
 Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
 
-The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
-
 The `now` option accepts a `Date`, number, `Temporal.Instant`, or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
+
+The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ::: tip
 `vi.useFakeTimers()` does not automatically mock `process.nextTick` and `queueMicrotask`.
