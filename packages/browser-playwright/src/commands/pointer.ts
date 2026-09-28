@@ -34,39 +34,33 @@ export const pointer: UserEventCommand<PointerEvent> = async (context, input, st
     if (target || coords) {
       lastTarget = target
       lastCoords = coords
-    }
-    else {
+    } else {
       target = lastTarget
       coords = lastCoords
     }
 
     const pointerAction = { ...option, target, coords }
-    const keys = 'keys' in option
-      ? option.keys
-      : null
+    const keys = 'keys' in option ? option.keys : null
     const parsedKeys = keys === null ? null : groupKeyDefs(parseKeyDef(keys))
     const hasOnlyClickActions = parsedKeys?.every(
-      ({ keyDef: { keyDef: { code }, releasePrevious, releaseSelf } }) =>
-        code === 'MouseLeft' && !releasePrevious && releaseSelf,
+      ({
+        keyDef: {
+          keyDef: { code },
+          releasePrevious,
+          releaseSelf,
+        },
+      }) => code === 'MouseLeft' && !releasePrevious && releaseSelf,
     )
 
     // click has its own moving logic, no need to move twice
     if (!hasOnlyClickActions) {
       if (target) {
-        await hover(
-          context,
-          target,
-          {
-            position: coords
-              && await resolvePageCoordinates(
-                context,
-                { x: coords.x ?? 0, y: coords.y ?? 0 },
-                true,
-              ),
-          },
-        )
-      }
-      else if (coords) {
+        await hover(context, target, {
+          position:
+            coords &&
+            (await resolvePageCoordinates(context, { x: coords.x ?? 0, y: coords.y ?? 0 }, true)),
+        })
+      } else if (coords) {
         const pageCoords = await resolvePageCoordinates(context, coords, false)
 
         await context.page.mouse.move(pageCoords.x, pageCoords.y)
