@@ -3,10 +3,10 @@
   "plugins": ["typescript", "unicorn", "oxc", "import", "node", "vue", "jsdoc"],
   "env": {
     "browser": true,
-    "node": true
+    "node": true,
   },
   "options": {
-    "reportUnusedDisableDirectives": "error"
+    "reportUnusedDisableDirectives": "error",
   },
   "ignorePatterns": [
     "**/fixtures",
@@ -16,10 +16,10 @@
     "test/unit/src/wasm/wasm-bindgen*",
     "test/unit/src/self",
     "test/unit/test/mocking/already-hoisted.test.ts",
-    "test/*/deps"
+    "test/*/deps",
   ],
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
   },
   "rules": {
     "accessor-pairs": "error",
@@ -69,25 +69,25 @@
     "no-restricted-globals": [
       "error",
       { "name": "global", "message": "Use `globalThis` instead." },
-      { "name": "self", "message": "Use `globalThis` instead." }
+      { "name": "self", "message": "Use `globalThis` instead." },
     ],
     "no-restricted-imports": ["error", { "paths": ["path"] }],
     "no-restricted-properties": [
       "error",
       {
         "property": "__proto__",
-        "message": "Use `Object.getPrototypeOf` or `Object.setPrototypeOf` instead."
+        "message": "Use `Object.getPrototypeOf` or `Object.setPrototypeOf` instead.",
       },
       { "property": "__defineGetter__", "message": "Use `Object.defineProperty` instead." },
       { "property": "__defineSetter__", "message": "Use `Object.defineProperty` instead." },
       {
         "property": "__lookupGetter__",
-        "message": "Use `Object.getOwnPropertyDescriptor` instead."
+        "message": "Use `Object.getOwnPropertyDescriptor` instead.",
       },
       {
         "property": "__lookupSetter__",
-        "message": "Use `Object.getOwnPropertyDescriptor` instead."
-      }
+        "message": "Use `Object.getOwnPropertyDescriptor` instead.",
+      },
     ],
     "no-self-assign": "error",
     "no-self-compare": "error",
@@ -103,7 +103,7 @@
     "no-unsafe-finally": "error",
     "no-unused-expressions": [
       "error",
-      { "allowShortCircuit": true, "allowTaggedTemplates": true, "allowTernary": true }
+      { "allowShortCircuit": true, "allowTaggedTemplates": true, "allowTernary": true },
     ],
     "no-unused-vars": [
       "error",
@@ -112,8 +112,8 @@
         "argsIgnorePattern": "^_",
         "ignoreRestSiblings": true,
         "vars": "all",
-        "varsIgnorePattern": "^_"
-      }
+        "varsIgnorePattern": "^_",
+      },
     ],
     "no-use-before-define": ["error", { "classes": false, "functions": false, "variables": true }],
     "no-useless-call": "error",
@@ -147,8 +147,8 @@
       {
         "prefer": "type-imports",
         "fixStyle": "separate-type-imports",
-        "disallowTypeAnnotations": false
-      }
+        "disallowTypeAnnotations": false,
+      },
     ],
     "typescript/method-signature-style": ["error", "property"],
     "typescript/no-duplicate-enum-values": "error",
@@ -256,27 +256,27 @@
     "unicorn/no-thenable": "off",
     "unicorn/no-useless-spread": "off",
     // the formatter lowercases hex digits
-    "unicorn/number-literal-case": "off"
+    "unicorn/number-literal-case": "off",
   },
   "overrides": [
     {
       "files": ["packages/**"],
       "rules": {
-        "no-restricted-imports": ["error", { "paths": ["vitest", "path", "vitest/node"] }]
-      }
+        "no-restricted-imports": ["error", { "paths": ["vitest", "path", "vitest/node"] }],
+      },
     },
     {
       // these packages declare vitest as a peer dependency
       "files": ["packages/{coverage-*,ui,browser,web-worker,browser-*}/**"],
       "rules": {
-        "no-restricted-imports": ["error", { "paths": ["path"] }]
-      }
+        "no-restricted-imports": ["error", { "paths": ["path"] }],
+      },
     },
     {
       "files": ["packages/browser/src/client/orchestrator.ts"],
       "rules": {
-        "no-restricted-imports": ["error", { "paths": ["vitest/internal/browser", "vitest/node"] }]
-      }
+        "no-restricted-imports": ["error", { "paths": ["vitest/internal/browser", "vitest/node"] }],
+      },
     },
     {
       // ivya must stay in a single rollup chunk, see the browser rollup config
@@ -286,17 +286,17 @@
         "packages/browser/src/client/tester/aria.ts",
         "packages/browser/src/client/tester/locators.ts",
         "packages/browser/src/client/tester/expect/**",
-        "packages/browser/src/client/utils.ts"
+        "packages/browser/src/client/utils.ts",
       ],
       "rules": {
-        "no-restricted-imports": ["error", { "paths": ["ivya", "ivya/utils", "ivya/aria"] }]
-      }
+        "no-restricted-imports": ["error", { "paths": ["ivya", "ivya/utils", "ivya/aria"] }],
+      },
     },
     {
       "files": ["docs/**", "packages/web-worker/**", "test/unit/**"],
       "rules": {
-        "no-restricted-globals": "off"
-      }
+        "no-restricted-globals": "off",
+      },
     },
     {
       "files": ["docs/**"],
@@ -307,26 +307,26 @@
         "no-throw-literal": "off",
         "no-unused-vars": "off",
         "import/no-duplicates": "off",
-        "import/no-mutable-exports": "off"
-      }
+        "import/no-mutable-exports": "off",
+      },
     },
     {
       "files": ["test/**", "scripts/**", "docs/**", "examples/**", "**/*.config.*"],
       "rules": {
-        "node/no-top-level-await": "off"
-      }
+        "node/no-top-level-await": "off",
+      },
     },
     {
       "files": ["**/scripts/**", "**/cli.*", "**/cli/**"],
       "rules": {
-        "no-console": "off"
-      }
+        "no-console": "off",
+      },
     },
     {
       "files": ["**/*.cjs"],
       "rules": {
-        "typescript/no-require-imports": "off"
-      }
-    }
-  ]
+        "typescript/no-require-imports": "off",
+      },
+    },
+  ],
 }
