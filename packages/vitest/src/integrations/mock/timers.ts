@@ -277,7 +277,7 @@ export class FakeTimers {
   }
 }
 
-function toEpochMilliseconds(time: string | FakeTimersConfig['now']) {
+function toEpochMilliseconds(time?: string | number | Date | TemporalTimelike) {
   return time && typeof time === 'object' && 'epochMilliseconds' in time
     ? time.epochMilliseconds
     : time
