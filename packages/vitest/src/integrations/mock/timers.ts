@@ -202,7 +202,7 @@ export class FakeTimers {
   }
 
   setSystemTime(now?: string | number | Date | TemporalTimelike): void {
-    const normalized = toEpochMilliseconds(now)
+    const normalized = normalizeSystemTime(now)
     const date = (typeof normalized === 'undefined' || normalized instanceof Date) ? normalized : new Date(normalized)
     if (this._fakingTime) {
       this._clock.setSystemTime(date)
@@ -278,7 +278,7 @@ export class FakeTimers {
 }
 
 // Like fake-timers, read epochMilliseconds from Instant or ZonedDateTime without requiring built-in Temporal types.
-function toEpochMilliseconds(time?: string | number | Date | TemporalTimelike) {
+function normalizeSystemTime(time?: string | number | Date | TemporalTimelike): string | number | Date | undefined {
   return time && typeof time === 'object' && 'epochMilliseconds' in time
     ? time.epochMilliseconds
     : time
