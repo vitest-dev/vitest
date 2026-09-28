@@ -13,7 +13,9 @@ test('custom snapshot matcher', async () => {
 
   // remove snapshots
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
-  editFile(testFile, s => s.replace(/(toMatchCustom(?:Async)?InlineSnapshot)\(`[^`]*`\)/g, '$1()'))
+  editFile(testFile, (s) =>
+    s.replace(/(toMatchCustom(?:Async)?InlineSnapshot)\(`[^`]*`\)/g, '$1()'),
+  )
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
@@ -80,13 +82,15 @@ test('custom snapshot matcher', async () => {
   `)
 
   // edit tests to introduce snapshot errors
-  editFile(testFile, s => s
-    .replace('`hahaha`', '`hahaha-edit`')
-    .replace('`popopo`', '`popopo-edit`')
-    .replace('`pepepe`', '`pepepe-edit`')
-    .replace('`hihihi`', '`hihihi-edit`')
-    .replace('`huhuhu`', '`huhuhu-edit`')
-    .replace('`hehehe`', '`hehehe-edit`'))
+  editFile(testFile, (s) =>
+    s
+      .replace('`hahaha`', '`hahaha-edit`')
+      .replace('`popopo`', '`popopo-edit`')
+      .replace('`pepepe`', '`pepepe-edit`')
+      .replace('`hihihi`', '`hihihi-edit`')
+      .replace('`huhuhu`', '`huhuhu-edit`')
+      .replace('`hehehe`', '`hehehe-edit`'),
+  )
 
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -375,8 +379,9 @@ test('custom snapshot matcher', async () => {
 })
 
 test('browser', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { test, expect, Snapshots } from 'vitest'
 
 const {
@@ -409,20 +414,22 @@ test('raw file snapshot', async () => {
   await expect('crazy long string oh my gerd').toMatchTrimmedFileSnapshot('./raw.txt')
 })
 `,
-  }, {
-    update: 'all',
-    browser: {
-      enabled: true,
-      headless: true,
-      screenshotFailures: false,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-        },
-      ],
     },
-  })
+    {
+      update: 'all',
+      browser: {
+        enabled: true,
+        headless: true,
+        screenshotFailures: false,
+        provider: playwright(),
+        instances: [
+          {
+            browser: 'chromium',
+          },
+        ],
+      },
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -448,8 +455,9 @@ test('raw file snapshot', async () => {
 })
 
 test('outer expect message is prefixed by jest-extend for Snapshots wrappers', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { test, expect, Snapshots } from 'vitest'
 
 const {
@@ -476,9 +484,11 @@ test('builtin properties mismatch', () => {
   })
 })
 `,
-  }, {
-    update: 'none',
-  })
+    },
+    {
+      update: 'none',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯

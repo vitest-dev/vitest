@@ -21,7 +21,11 @@ export type {
 } from '../node/core'
 export { BaseCoverageProvider } from '../node/coverage'
 export { createVitest } from '../node/create'
-export { BrowserConnectionError, GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
+export {
+  BrowserConnectionError,
+  GitNotFoundError,
+  FilesNotFoundError as TestsNotFoundError,
+} from '../node/errors'
 export { Logger } from '../node/logger'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { resolveFsAllow } from '../node/plugins/utils'
@@ -76,7 +80,6 @@ export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
   TaskOptions,
-
   TestCase,
   TestCollection,
   TestDiagnostic,
@@ -94,10 +97,7 @@ export type {
 export { experimental_getRunnerTask } from '../node/reporters/reported-tasks'
 
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
-export type {
-  TestSequencer,
-  TestSequencerConstructor,
-} from '../node/sequencers/types'
+export type { TestSequencer, TestSequencerConstructor } from '../node/sequencers/types'
 export { registerConsoleShortcuts } from '../node/stdin'
 export type { TestSpecification, TestSpecificationOptions } from '../node/test-specification'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'

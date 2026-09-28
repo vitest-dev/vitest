@@ -9,8 +9,7 @@ test('snapshot', () => {
 })
 
 test('file snapshot', async () => {
-  await expect('my snapshot content')
-    .toMatchFileSnapshot('./__snapshots__/custom/my_snapshot')
+  await expect('my snapshot content').toMatchFileSnapshot('./__snapshots__/custom/my_snapshot')
 })
 
 test('vitest attribute is hidden', () => {

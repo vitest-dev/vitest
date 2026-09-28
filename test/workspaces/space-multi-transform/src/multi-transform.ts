@@ -16,12 +16,10 @@ export function run(name: string) {
   else if (name === 'project-1') {
     // This is covered by Project #1
     return 1
-  }
-  else if (name === 'not-covered-2') {
+  } else if (name === 'not-covered-2') {
     // This is not covered by any test
     return 0
-  }
-  else if (name === 'project-2') {
+  } else if (name === 'project-2') {
     // This is covered by Project #2
     return 2
   }

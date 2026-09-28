@@ -74,37 +74,39 @@ describe('format', () => {
     ['%%', 'string'],
     ['prefix', Symbol('test')],
   ])('format(%s)', (formatString, ...args) => {
-    expect(format([formatString, ...args]), `failed ${formatString}`).toBe(util.format(formatString, ...args))
+    expect(format([formatString, ...args]), `failed ${formatString}`).toBe(
+      util.format(formatString, ...args),
+    )
   })
 
   test('cannot serialize some values', () => {
-    expect(() => format(['%j', 100n])).toThrowErrorMatchingInlineSnapshot(`[TypeError: Do not know how to serialize a BigInt]`)
+    expect(() => format(['%j', 100n])).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: Do not know how to serialize a BigInt]`,
+    )
   })
 
-  test.each(
-    [
-      {
-        name: 'without format',
-        args: [{ n: { a: { b: { c: { d: { e: '3' } } } } } }],
-        result: '{ n: { a: { b: { c: { d: { e: \'3\' } } } } } }',
-      },
-      {
-        name: 'as an object',
-        args: ['%o', {}, { n: { a: { b: { c: '3' } } } }],
-        result: '{} { n: { a: { b: { c: \'3\' } } } }',
-      },
-      {
-        name: 'as a full object',
-        args: ['%O', {}, { n: { a: { b: { c: '3' } } } }],
-        result: '{} { n: { a: { b: { c: \'3\' } } } }',
-      },
-      {
-        name: 'as a json',
-        args: ['%j', {}, { n: { a: { b: { c: '3' } } } }],
-        result: '{} { n: { a: { b: { c: \'3\' } } } }',
-      },
-    ],
-  )('formats objects $name (loupe doesn\'t respect depth)', ({ args, result }) => {
+  test.each([
+    {
+      name: 'without format',
+      args: [{ n: { a: { b: { c: { d: { e: '3' } } } } } }],
+      result: "{ n: { a: { b: { c: { d: { e: '3' } } } } } }",
+    },
+    {
+      name: 'as an object',
+      args: ['%o', {}, { n: { a: { b: { c: '3' } } } }],
+      result: "{} { n: { a: { b: { c: '3' } } } }",
+    },
+    {
+      name: 'as a full object',
+      args: ['%O', {}, { n: { a: { b: { c: '3' } } } }],
+      result: "{} { n: { a: { b: { c: '3' } } } }",
+    },
+    {
+      name: 'as a json',
+      args: ['%j', {}, { n: { a: { b: { c: '3' } } } }],
+      result: "{} { n: { a: { b: { c: '3' } } } }",
+    },
+  ])("formats objects $name (loupe doesn't respect depth)", ({ args, result }) => {
     expect(format(args)).toBe(result)
   })
 })

@@ -81,7 +81,7 @@ describe('default reporter', async () => {
   test('prints parent describe suites for slow tests when renderSucceed is off', async () => {
     const { stdout, stderr } = await runInlineTests(
       {
-        'slow.test.ts': /* ts */`
+        'slow.test.ts': /* ts */ `
           import { describe, test } from 'vitest'
 
           describe('outer', () => {
@@ -111,7 +111,7 @@ describe('default reporter', async () => {
   test('prints parent describe suites for inline benchmarks when renderSucceed is off', async () => {
     const { stdout, stderr } = await runInlineTests(
       {
-        'suite.bench.ts': /* ts */`
+        'suite.bench.ts': /* ts */ `
           import { describe, inject, test } from 'vitest'
 
           describe('my first suite', () => {
@@ -140,7 +140,7 @@ describe('default reporter', async () => {
     // reporter tree lines when asserting the nesting
     const tree = trimReporterOutput(stdout)
       .split('\n')
-      .filter(line => /[✓❯×↓]/.test(line))
+      .filter((line) => /[✓❯×↓]/.test(line))
       .join('\n')
     expect(tree).toMatchInlineSnapshot(`
       "✓ |bench| suite.bench.ts (2 tests) [...]ms
@@ -216,7 +216,7 @@ describe('default reporter', async () => {
     expect(vitest.stdout).not.toContain('✓ b2 failed')
   })
 
-  test('doesn\'t print error properties', async () => {
+  test("doesn't print error properties", async () => {
     const result = await runVitest({
       root: 'fixtures/reporters/error-props',
       reporters: 'default',
@@ -469,7 +469,9 @@ describe('default reporter', async () => {
       reporters: new Custom(),
     })
 
-    expect(stderr).toMatch('FAIL   > { name: fails, meta: Failing test added this } (Custom getFullName here')
+    expect(stderr).toMatch(
+      'FAIL   > { name: fails, meta: Failing test added this } (Custom getFullName here',
+    )
   })
 
   test('merge identical errors', async () => {

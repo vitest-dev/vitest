@@ -17,7 +17,7 @@ function getTaskIdByStack(root: string) {
     return UNKNOWN_TEST_ID
   }
 
-  const index = stack.findIndex(line => line.includes('at Console.value'))
+  const index = stack.findIndex((line) => line.includes('at Console.value'))
   const line = index === -1 ? null : stack[index + 2]
 
   if (!line) {
@@ -36,10 +36,7 @@ function getTaskIdByStack(root: string) {
 export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
-  const timers = new Map<
-    string,
-    { stdoutTime: number; stderrTime: number; cancel?: () => void }
-  >()
+  const timers = new Map<string, { stdoutTime: number; stderrTime: number; cancel?: () => void }>()
 
   const { queueMicrotask } = getSafeTimers()
 
@@ -66,8 +63,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
       if (stderrTime < stdoutTime) {
         sendStderr(taskId)
         sendStdout(taskId)
-      }
-      else {
+      } else {
         sendStdout(taskId)
         sendStderr(taskId)
       }
@@ -91,17 +87,15 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
       buffer.forEach(([buffer, origin]) => {
         sendLog(type, taskId, String(buffer), buffer.length, origin)
       })
-    }
-    else {
-      const content = buffer.map(i => String(i[0])).join('')
+    } else {
+      const content = buffer.map((i) => String(i[0])).join('')
       sendLog(type, taskId, content, buffer.length)
     }
     const timer = timers.get(taskId)!
     buffers.delete(taskId)
     if (type === 'stderr') {
       timer.stderrTime = 0
-    }
-    else {
+    } else {
       timer.stdoutTime = 0
     }
   }
@@ -128,16 +122,15 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stdout = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      const id
-        = s?.current?.id
-          || s?.current?.suite?.id
-          || s.current?.file.id
-          || getTaskIdByStack(s.config.root)
+      const id =
+        s?.current?.id ||
+        s?.current?.suite?.id ||
+        s.current?.file.id ||
+        getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
-      }
-      else {
+      } else {
         timer = {
           stdoutTime: RealDate.now(),
           stderrTime: 0,
@@ -156,8 +149,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
         const trace = stack?.split('\n').slice(7).join('\n')
         Error.stackTraceLimit = limit
         buffer.push([data, trace])
-      }
-      else {
+      } else {
         buffer.push([data, undefined])
       }
       schedule(id)
@@ -167,16 +159,15 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stderr = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      const id
-        = s?.current?.id
-          || s?.current?.suite?.id
-          || s.current?.file.id
-          || getTaskIdByStack(s.config.root)
+      const id =
+        s?.current?.id ||
+        s?.current?.suite?.id ||
+        s.current?.file.id ||
+        getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
-      }
-      else {
+      } else {
         timer = {
           stderrTime: RealDate.now(),
           stdoutTime: 0,
@@ -193,19 +184,15 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
         Error.stackTraceLimit = limit + 6
         const stack = new Error('STACK_TRACE').stack?.split('\n')
         Error.stackTraceLimit = limit
-        const isTrace = stack?.some(line =>
-          line.includes('at Console.trace'),
-        )
+        const isTrace = stack?.some((line) => line.includes('at Console.trace'))
         if (isTrace) {
           buffer.push([data, undefined])
-        }
-        else {
+        } else {
           const trace = stack?.slice(7).join('\n')
           Error.stackTraceLimit = limit
           buffer.push([data, trace])
         }
-      }
-      else {
+      } else {
         buffer.push([data, undefined])
       }
       schedule(id)

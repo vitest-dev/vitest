@@ -6,13 +6,13 @@ import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-const test3Content = /* ts */`
+const test3Content = /* ts */ `
 export async function externalArtifactRecord(recordArtifact, task) {
   await recordArtifact(task, { type: 'external' })
 }
 `
 
-const artifactsTest = /* ts */`
+const artifactsTest = /* ts */ `
 import { test, describe, recordArtifact } from 'vitest'
 import { externalArtifactRecord } from './test-3.js'
 
@@ -43,9 +43,7 @@ describe('API', () => {
         enabled: true,
         provider: playwright(),
         headless: true,
-        instances: [
-          { browser: 'chromium' as const },
-        ],
+        instances: [{ browser: 'chromium' as const }],
       },
     },
   ])('artifacts are exposed correctly in $name', async (options) => {
@@ -69,10 +67,14 @@ describe('API', () => {
               events.push('[annotate]')
             },
             onTestCaseArtifactRecord(testCase, artifact) {
-              const path = artifact.attachments?.map(
-                attachment => attachment.path?.replace(testCase.project.config.root, '<root>').replace(/\w+\.js$/, '<hash>.js'),
+              const path = artifact.attachments?.map((attachment) =>
+                attachment.path
+                  ?.replace(testCase.project.config.root, '<root>')
+                  .replace(/\w+\.js$/, '<hash>.js'),
               )
-              events.push(`[artifact] ${testCase.name} ${artifact.type} path=${format(path)} contentType=${format(artifact.attachments?.map(attachment => attachment.contentType))} body=${format(artifact.attachments?.map(attachment => attachment.body))}`)
+              events.push(
+                `[artifact] ${testCase.name} ${artifact.type} path=${format(path)} contentType=${format(artifact.attachments?.map((attachment) => attachment.contentType))} body=${format(artifact.attachments?.map((attachment) => attachment.body))}`,
+              )
             },
             onTestCaseReady(testCase) {
               events.push(`[ready] ${testCase.name}`)
@@ -84,10 +86,9 @@ describe('API', () => {
                 if (Array.isArray(artifact.attachments)) {
                   for (const attachment of artifact.attachments) {
                     if (attachment?.path) {
-                      attachment.path = attachment.path.replace(
-                        testCase.project.config.root,
-                        '<root>',
-                      ).replace(/\w+\.js$/, '<hash>.js')
+                      attachment.path = attachment.path
+                        .replace(testCase.project.config.root, '<root>')
+                        .replace(/\w+\.js$/, '<hash>.js')
                     }
                   }
                 }
@@ -249,8 +250,9 @@ describe('API', () => {
   })
 
   test('can record artifacts even after the test finished running', async () => {
-    const { stderr } = await runInlineTests({
-      'basic.test.ts': `
+    const { stderr } = await runInlineTests(
+      {
+        'basic.test.ts': `
         import { recordArtifact } from 'vitest'
         test('finished early', ({ task }) => {
           setTimeout(() => {
@@ -262,14 +264,17 @@ describe('API', () => {
           await new Promise(r => setTimeout(() => r(), 100))
         })
       `,
-    }, { globals: true })
+      },
+      { globals: true },
+    )
     expect(stderr).toBe('')
   })
 
   test('recordArtifact uses vi.defineHelper callsite', async () => {
     const artifacts: TestArtifact[] = []
-    const { root, stderr } = await runInlineTests({
-      'basic.test.ts': `
+    const { root, stderr } = await runInlineTests(
+      {
+        'basic.test.ts': `
         import { recordArtifact, test, vi } from 'vitest'
 
         const record = vi.defineHelper(async (task) => {
@@ -281,13 +286,17 @@ describe('API', () => {
           await record(task)
         })
       `,
-    }, {
-      reporters: [{
-        onTestCaseResult(testCase) {
-          artifacts.push(...testCase.artifacts())
-        },
-      }],
-    })
+      },
+      {
+        reporters: [
+          {
+            onTestCaseResult(testCase) {
+              artifacts.push(...testCase.artifacts())
+            },
+          },
+        ],
+      },
+    )
 
     expect(stderr).toBe('')
     expect(artifacts).toHaveLength(1)
@@ -360,7 +369,7 @@ describe('reporters', () => {
     const result = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
       .replace(/time="[\d.]+"/g, 'time="0"')
       .replace(/timestamp="[\w\-:.]+"/g, 'timestamp="0"')
-      .replace(/hostname="[\w.\-]+"/g, 'hostname="CI"')
+      .replace(/hostname="[\w.-]+"/g, 'hostname="CI"')
 
     expect(result).toMatchInlineSnapshot(`
       "<?xml version="1.0" encoding="UTF-8" ?>

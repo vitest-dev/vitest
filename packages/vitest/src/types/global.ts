@@ -5,19 +5,12 @@ import type { BenchResult } from '../runtime/benchmark'
 import type { Test } from '../runtime/runner/types'
 
 interface SnapshotMatcher<R extends void | Promise<void>, T = unknown> {
-  <U extends { [P in keyof T]: any }>(
-    snapshot: Partial<U>,
-    hint?: string
-  ): R
+  <U extends { [P in keyof T]: any }>(snapshot: Partial<U>, hint?: string): R
   (hint?: string): R
 }
 
 interface InlineSnapshotMatcher<R extends void | Promise<void>, T = unknown> {
-  <U extends { [P in keyof T]: any }>(
-    properties: Partial<U>,
-    snapshot?: string,
-    hint?: string
-  ): R
+  <U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, hint?: string): R
   (hint?: string): R
 }
 
@@ -75,10 +68,7 @@ declare module 'vitest' {
      * const throwError = () => { throw new Error('Error occurred') };
      * expect(throwError).toThrowErrorMatchingInlineSnapshot(`"Error occurred"`);
      */
-    toThrowErrorMatchingInlineSnapshot: (
-      snapshot?: string,
-      hint?: string,
-    ) => R
+    toThrowErrorMatchingInlineSnapshot: (snapshot?: string, hint?: string) => R
 
     /**
      * Compares the received value to a snapshot saved in a specified file.
@@ -104,10 +94,7 @@ declare module 'vitest' {
      * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'))
      * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'), { delta: 0.1 })
      */
-    toBeFasterThan: (
-      expected: BenchResult,
-      options?: { delta?: number },
-    ) => R
+    toBeFasterThan: (expected: BenchResult, options?: { delta?: number }) => R
 
     /**
      * Asserts that a benchmark result is slower than another benchmark result.
@@ -121,10 +108,7 @@ declare module 'vitest' {
      * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'))
      * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'), { delta: 0.2 })
      */
-    toBeSlowerThan: (
-      expected: BenchResult,
-      options?: { delta?: number },
-    ) => R
+    toBeSlowerThan: (expected: BenchResult, options?: { delta?: number }) => R
 
     /**
      * Ensures a `vi.when` chain has been exhausted.

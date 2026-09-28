@@ -2,20 +2,35 @@ import type { MockerRegistry } from '@vitest/mocker'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject, Vitest } from 'vitest/node'
+import type {
+  BrowserCommandContext,
+  ResolveSnapshotPathHandlerContext,
+  TestProject,
+  Vitest,
+} from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
-import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
+import {
+  AutomockedModule,
+  AutospiedModule,
+  ManualMockedModule,
+  RedirectedModule,
+} from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname, join, resolve } from 'pathe'
-import { BrowserConnectionError, createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
+import {
+  BrowserConnectionError,
+  createDebugger,
+  isFileLoadingAllowed,
+  isValidApiRequest,
+} from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
@@ -35,14 +50,19 @@ function resolveHeartbeatInterval(vitest: Vitest): number {
   if (Number.isNaN(interval)) {
     if (!warnedInvalidHeartbeatInterval) {
       warnedInvalidHeartbeatInterval = true
-      vitest.logger.warn(`VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "${rawInterval}". Using the default interval of ${DEFAULT_HEARTBEAT_INTERVAL}ms instead.`)
+      vitest.logger.warn(
+        `VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "${rawInterval}". Using the default interval of ${DEFAULT_HEARTBEAT_INTERVAL}ms instead.`,
+      )
     }
     return DEFAULT_HEARTBEAT_INTERVAL
   }
   return interval
 }
 
-export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
+export function setupBrowserRpc(
+  globalServer: ParentBrowserProject,
+  defaultMockerRegistry: MockerRegistry,
+): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
 
@@ -70,13 +90,17 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     if (type !== 'tester' && type !== 'orchestrator') {
       return error(
-        new Error(`[vitest] Type query in ${request.url} is invalid. Type should be either "tester" or "orchestrator".`),
+        new Error(
+          `[vitest] Type query in ${request.url} is invalid. Type should be either "tester" or "orchestrator".`,
+        ),
       )
     }
 
     if (!sessionId || !rpcId || projectName == null) {
       return error(
-        new Error(`[vitest] Invalid URL ${request.url}. "projectName", "sessionId" and "rpcId" queries are required.`),
+        new Error(
+          `[vitest] Invalid URL ${request.url}. "projectName", "sessionId" and "rpcId" queries are required.`,
+        ),
       )
     }
 
@@ -84,9 +108,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     if (!sessions.sessionIds.has(sessionId)) {
       const ids = [...sessions.sessionIds].join(', ')
-      return error(
-        new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
-      )
+      return error(new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`))
     }
 
     if (type === 'orchestrator') {
@@ -99,9 +121,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     const project = vitest.getProjectByName(projectName)
 
     if (!project) {
-      return error(
-        new Error(`[vitest] Project "${projectName}" not found.`),
-      )
+      return error(new Error(`[vitest] Project "${projectName}" not found.`))
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
@@ -123,23 +143,31 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       ws.on('pong', () => {
         missedPongs = 0
       })
-      const heartbeat = heartbeatInterval > 0
-        ? setInterval(() => {
-            if (ws.readyState !== ws.OPEN) {
-              return
-            }
-            if (missedPongs >= HEARTBEAT_MAX_MISSED) {
-              debug?.('[%s] %s did not respond to %s heartbeat pings, terminating the connection', rpcId, type, missedPongs)
-              rpc.$close(
-                new Error(`[vitest] The browser ${type} did not respond to a heartbeat ping for ${missedPongs * heartbeatInterval}ms. The browser process might be frozen or killed. Closing the connection.`),
-              )
-              ws.terminate()
-              return
-            }
-            missedPongs++
-            ws.ping()
-          }, heartbeatInterval).unref()
-        : undefined
+      const heartbeat =
+        heartbeatInterval > 0
+          ? setInterval(() => {
+              if (ws.readyState !== ws.OPEN) {
+                return
+              }
+              if (missedPongs >= HEARTBEAT_MAX_MISSED) {
+                debug?.(
+                  '[%s] %s did not respond to %s heartbeat pings, terminating the connection',
+                  rpcId,
+                  type,
+                  missedPongs,
+                )
+                rpc.$close(
+                  new Error(
+                    `[vitest] The browser ${type} did not respond to a heartbeat ping for ${missedPongs * heartbeatInterval}ms. The browser process might be frozen or killed. Closing the connection.`,
+                  ),
+                )
+                ws.terminate()
+                return
+              }
+              missedPongs++
+              ws.ping()
+            }, heartbeatInterval).unref()
+          : undefined
 
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
@@ -152,7 +180,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         }
         // this will reject any hanging methods if there are any
         rpc.$close(
-          new BrowserConnectionError(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
+          new BrowserConnectionError(
+            `[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`,
+          ),
         )
       })
     })
@@ -173,17 +203,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   }
 
   function canWrite(project: TestProject) {
-    return (
-      project.config.api.allowWrite
-      && project.vitest.config.api.allowWrite
-    )
+    return project.config.api.allowWrite && project.vitest.config.api.allowWrite
   }
 
   function canExec(project: TestProject) {
-    return (
-      project.config.api.allowExec
-      && project.vitest.config.api.allowExec
-    )
+    return project.config.api.allowExec && project.vitest.config.api.allowExec
   }
 
   function isCdpAllowed(project: TestProject) {
@@ -227,16 +251,14 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         async onQueued(method, file) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, [file])
-          }
-          else {
+          } else {
             await vitest._testRun.enqueued(project, file)
           }
         },
         async onCollected(method, files) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, files)
-          }
-          else {
+          } else {
             await vitest._testRun.collected(project, files)
           }
         },
@@ -250,19 +272,24 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             }
             // remove attachments if cannot write
             if (artifact.attachments?.length) {
-              const attachments = artifact.attachments.map(n => n.path).filter(r => !!r).join('", "')
+              const attachments = artifact.attachments
+                .map((n) => n.path)
+                .filter((r) => !!r)
+                .join('", "')
               artifact.attachments = []
               vitest.logger.error(
                 `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/api.`,
               )
             }
-          }
-          else {
+          } else {
             // attachment files are copied into `attachmentsDir`, so confine
             // client-supplied paths to Vite's `server.fs` boundary
-            const attachments = artifact.type === 'internal:annotation'
-              ? (artifact.annotation.attachment ? [artifact.annotation.attachment] : [])
-              : (artifact.attachments ?? [])
+            const attachments =
+              artifact.type === 'internal:annotation'
+                ? artifact.annotation.attachment
+                  ? [artifact.annotation.attachment]
+                  : []
+                : (artifact.attachments ?? [])
             for (const attachment of attachments) {
               const path = attachment.path
               if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
@@ -293,8 +320,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
             vitest.state.updateTasks(packs)
-          }
-          else {
+          } else {
             await vitest._testRun.updated(packs, events)
           }
         },
@@ -304,8 +330,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         async sendLog(method, log) {
           if (method === 'collect') {
             vitest.state.updateUserLog(log)
-          }
-          else {
+          } else {
             await vitest._testRun.log(log)
           }
         },
@@ -397,8 +422,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
           if (direction === 'iframe') {
             await (provider as any).switchToTestFrame()
-          }
-          else {
+          } else {
             await (provider as any).switchToMainFrame()
           }
         },
@@ -420,21 +444,13 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
                 await tester?.pageMark(name, options)
               },
               triggerCommand: (name: string, ...args: any[]) => {
-                return project.browser!.triggerCommand(
-                  name as any,
-                  context,
-                  ...args,
-                )
+                return project.browser!.triggerCommand(name as any, context, ...args)
               },
               __ensureCDPHandler: () => globalServer.ensureCDPHandler(sessionId, rpcId),
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          return await project.browser!.triggerCommand(
-            command as any,
-            context,
-            ...payload,
-          )
+          return await project.browser!.triggerCommand(command as any, context, ...payload)
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
@@ -453,16 +469,14 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               const mock = ManualMockedModule.fromJSON(module, async () => {
                 try {
                   const { keys } = await rpc.resolveManualMock(module.url)
-                  return Object.fromEntries(keys.map(key => [key, null]))
-                }
-                catch (err) {
+                  return Object.fromEntries(keys.map((key) => [key, null]))
+                } catch (err) {
                   vitest.state.catchError(err, 'Manual Mock Resolver Error')
                   return {}
                 }
               })
               defaultMockerRegistry.add(mock)
-            }
-            else {
+            } else {
               if (module.type === 'redirect') {
                 const redirectUrl = new URL(module.redirect)
                 module.redirect = join(vite.config.root, redirectUrl.pathname)
@@ -476,17 +490,14 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           if (module.type === 'manual') {
             const manualModule = ManualMockedModule.fromJSON(module, async () => {
               const { keys } = await rpc.resolveManualMock(module.url)
-              return Object.fromEntries(keys.map(key => [key, null]))
+              return Object.fromEntries(keys.map((key) => [key, null]))
             })
             await mocker.register(sessionId, manualModule)
-          }
-          else if (module.type === 'redirect') {
+          } else if (module.type === 'redirect') {
             await mocker.register(sessionId, RedirectedModule.fromJSON(module))
-          }
-          else if (module.type === 'automock') {
+          } else if (module.type === 'automock') {
             await mocker.register(sessionId, AutomockedModule.fromJSON(module))
-          }
-          else if (module.type === 'autospy') {
+          } else if (module.type === 'autospy') {
             await mocker.register(sessionId, AutospiedModule.fromJSON(module))
           }
         },
@@ -509,15 +520,20 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           return cdp.send(event, payload)
         },
-        async trackCdpEvent(sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
+        async trackCdpEvent(
+          sessionId: string,
+          type: 'on' | 'once' | 'off',
+          event: string,
+          listenerId: string,
+        ) {
           assertCdpAllowed(project)
           const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           cdp[type](event, listenerId)
         },
       },
       {
-        post: msg => ws.send(msg),
-        on: fn => ws.on('message', fn),
+        post: (msg) => ws.send(msg),
+        on: (fn) => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
@@ -525,7 +541,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       },
     )
 
-    const offCancel = vitest.onCancel(reason => rpc.onCancel(reason))
+    const offCancel = vitest.onCancel((reason) => rpc.onCancel(reason))
 
     return { rpc, offCancel }
   }
@@ -555,8 +571,7 @@ function stringifyReplace(key: string, value: any): any {
       stack: value.stack,
       ...cloned,
     }
-  }
-  else {
+  } else {
     return value
   }
 }

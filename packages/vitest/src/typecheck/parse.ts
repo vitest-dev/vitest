@@ -3,15 +3,9 @@ import type { RawErrsMap, TscErrorInfo } from './types'
 const newLineRegExp = /\r?\n/
 const errCodeRegExp = /error TS(?<errCode>\d+)/
 
-async function makeTscErrorInfo(
-  errInfo: string,
-): Promise<[string, TscErrorInfo | null]> {
+async function makeTscErrorInfo(errInfo: string): Promise<[string, TscErrorInfo | null]> {
   const [errFilePathPos = '', ...errMsgRawArr] = errInfo.split(':')
-  if (
-    !errFilePathPos
-    || errMsgRawArr.length === 0
-    || errMsgRawArr.join('').length === 0
-  ) {
+  if (!errFilePathPos || errMsgRawArr.length === 0 || errMsgRawArr.join('').length === 0) {
     return ['unknown filepath', null]
   }
 
@@ -66,17 +60,15 @@ export async function getRawErrsMapFromTsCompile(tscErrorStdout: string): Promis
       .reduce<string[]>((prev, next) => {
         if (!next) {
           return prev
-        }
-        else if (next[0] !== ' ') {
+        } else if (next[0] !== ' ') {
           prev.push(next)
-        }
-        else {
+        } else {
           prev[prev.length - 1] += `\n${next}`
         }
 
         return prev
       }, [])
-      .map(errInfoLine => makeTscErrorInfo(errInfoLine)),
+      .map((errInfoLine) => makeTscErrorInfo(errInfoLine)),
   )
   infos.forEach(([errFilePath, errInfo]) => {
     if (!errInfo) {
@@ -85,8 +77,7 @@ export async function getRawErrsMapFromTsCompile(tscErrorStdout: string): Promis
 
     if (!rawErrsMap.has(errFilePath)) {
       rawErrsMap.set(errFilePath, [errInfo])
-    }
-    else {
+    } else {
       rawErrsMap.get(errFilePath)?.push(errInfo)
     }
   })

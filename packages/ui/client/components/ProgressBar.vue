@@ -9,16 +9,18 @@ const classes = computed(() => {
   return [
     explorerTree.summary.files === 0 && '!bg-gray-4 !dark:bg-gray-7',
     !finished.value && 'in-progress',
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 })
 
 const widthPass = computed(() => {
   const t = explorerTree.summary.files
-  return t > 0 ? (width.value * explorerTree.summary.filesSuccess / t) : 0
+  return t > 0 ? (width.value * explorerTree.summary.filesSuccess) / t : 0
 })
 const widthFailed = computed(() => {
   const t = explorerTree.summary.files
-  return t > 0 ? (width.value * explorerTree.summary.filesFailed / t) : 0
+  return t > 0 ? (width.value * explorerTree.summary.filesFailed) / t : 0
 })
 const pending = computed(() => {
   const t = explorerTree.summary.files
@@ -26,7 +28,7 @@ const pending = computed(() => {
 })
 const widthPending = computed(() => {
   const t = explorerTree.summary.files
-  return t > 0 ? (width.value * pending.value / t) : 0
+  return t > 0 ? (width.value * pending.value) / t : 0
 })
 </script>
 
@@ -38,7 +40,6 @@ const widthPending = computed(() => {
     <div class="px-0 h-3px relative overflow-hidden w-screen">
       <div
         class="absolute bg-red-700 dark:bg-red-500 h-3px"
-
         :class="classes"
         :style="`width: ${widthFailed}px;`"
       >
@@ -46,7 +47,6 @@ const widthPending = computed(() => {
       </div>
       <div
         class="absolute bg-green-700 dark:bg-green-500 h-3px"
-
         :class="classes"
         :style="`left: ${widthFailed}px; width: ${widthPass}px;`"
       >
@@ -54,7 +54,6 @@ const widthPending = computed(() => {
       </div>
       <div
         class="absolute bg-yellow-700 dark:bg-yellow-500 h-3px"
-
         :class="classes"
         :style="`left: ${widthPass + widthFailed}px; width: ${widthPending}px;`"
       >

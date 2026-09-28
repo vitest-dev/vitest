@@ -12,6 +12,7 @@ Path to global setup files relative to project [root](/config/root).
 A global setup file can either export named functions `setup` and `teardown` or a `default` function that returns a teardown function:
 
 ::: code-group
+
 ```js [exports]
 export function setup(project) {
   console.log('setup')
@@ -21,6 +22,7 @@ export function teardown() {
   console.log('teardown')
 }
 ```
+
 ```js [default]
 export default function setup(project) {
   console.log('setup')
@@ -30,6 +32,7 @@ export default function setup(project) {
   }
 }
 ```
+
 :::
 
 Note that the `setup` method and a `default` function receive a [test project](/api/advanced/test-project) as the first argument. The global setup is called before the test workers are created and only if there is at least one test queued, and teardown is called after all test files have finished running. In [watch mode](/config/watch), the teardown is called before the process is exited instead. If you need to reconfigure your setup before the test rerun, you can use [`onTestsRerun`](#handling-test-reruns) hook instead.
@@ -40,11 +43,13 @@ Multiple global setup files are possible. `setup` and `teardown` are executed se
 Beware that the global setup is running in a different global scope before test workers are even created, so your tests don't have access to global variables defined here. However, you can pass down serializable data to tests via [`provide`](/config/provide) method and read them in your tests via `inject` imported from `vitest`:
 
 :::code-group
+
 ```ts [example.test.ts]
 import { inject } from 'vitest'
 
 inject('wsPort') === 3000
 ```
+
 ```ts [globalSetup.ts]
 import type { TestProject } from 'vitest/node'
 

@@ -1,9 +1,5 @@
 [files]
-extend-exclude = [
-  "*.js.map",
-  "*.svg",
-  "test/e2e/test/fixtures/reporters/html/**",
-]
+extend-exclude = ["*.js.map", "*.svg", "test/e2e/test/fixtures/reporters/html/**"]
 
 [default.extend-words]
 # AsyncLocalStorage abbreviation

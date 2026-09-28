@@ -1,5 +1,3 @@
 <template>
-  <Badge type="danger">
-    deprecated
-  </Badge>
+  <Badge type="danger"> deprecated </Badge>
 </template>

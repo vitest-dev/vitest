@@ -6,24 +6,28 @@ import { instances, runBrowserTests } from './utils'
 test('update snapshot', async () => {
   // setup wrong snapshot value
   const snapshotPath = './fixtures/update-snapshot/__snapshots__/basic.test.ts.snap'
-  editFile(snapshotPath, data => data.replace('`1`', '`2`'))
+  editFile(snapshotPath, (data) => data.replace('`1`', '`2`'))
   const basicFixturePath = './fixtures/update-snapshot/basic-fixture.ts'
   const testPath = './fixtures/update-snapshot/basic.test.ts'
   createFile(testPath, readFileSync(basicFixturePath, 'utf-8'))
 
   // run vitest watch mode
-  const ctx = await runBrowserTests({
-    watch: true,
-    root: './fixtures/update-snapshot',
-    project: [instances[0].browser], // TODO 2024-12-11 Sheremet V.A. test with multiple browsers
-    reporters: ['default'], // use simple reporter to not pollute stdout
-    browser: { headless: true },
-  }, [], {
-    server: {
-      // ignore the watcher update
-      watch: null,
+  const ctx = await runBrowserTests(
+    {
+      watch: true,
+      root: './fixtures/update-snapshot',
+      project: [instances[0].browser], // TODO 2024-12-11 Sheremet V.A. test with multiple browsers
+      reporters: ['default'], // use simple reporter to not pollute stdout
+      browser: { headless: true },
     },
-  })
+    [],
+    {
+      server: {
+        // ignore the watcher update
+        watch: null,
+      },
+    },
+  )
   const { exitCode, ctx: vitest } = ctx
   onTestFinished(() => vitest.close())
   onTestFailed(() => {

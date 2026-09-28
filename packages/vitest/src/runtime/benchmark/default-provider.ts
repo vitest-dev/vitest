@@ -29,8 +29,8 @@ export function createDefaultBenchmarkProvider(config: SerializedConfig): Benchm
       await tinybench.run()
 
       const errors = tinybench.tasks
-        .filter(task => task.result.state === 'errored')
-        .map(task => (task.result as { error: unknown }).error)
+        .filter((task) => task.result.state === 'errored')
+        .map((task) => (task.result as { error: unknown }).error)
       if (errors.length === 1) {
         throw errors[0]
       }

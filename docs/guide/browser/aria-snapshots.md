@@ -470,8 +470,8 @@ With `deep-equal`, every child of each `link` must also match exactly. If a link
 
 #### Comparison
 
-| Mode | Directive | Behavior |
-| --- | --- | --- |
-| Partial | _(default)_ or `/children: contain` | Template children are an ordered subsequence — extra actual children are ignored |
-| Exact | `/children: equal` | Immediate children must match exactly; descendants still use partial matching |
-| Deep exact | `/children: deep-equal` | All children at every depth must match exactly |
+| Mode       | Directive                           | Behavior                                                                         |
+| ---------- | ----------------------------------- | -------------------------------------------------------------------------------- |
+| Partial    | _(default)_ or `/children: contain` | Template children are an ordered subsequence — extra actual children are ignored |
+| Exact      | `/children: equal`                  | Immediate children must match exactly; descendants still use partial matching    |
+| Deep exact | `/children: deep-equal`             | All children at every depth must match exactly                                   |

@@ -1,8 +1,4 @@
-import type {
-  CoverageOptions,
-  ResolvedBenchmarkOptions,
-  UserConfig,
-} from './node/types/config'
+import type { CoverageOptions, ResolvedBenchmarkOptions, UserConfig } from './node/types/config'
 import type { FieldsWithDefaultValues } from './node/types/coverage'
 import os from 'node:os'
 import { isAgent, isCI } from './utils/env'
@@ -10,10 +6,7 @@ import { isAgent, isCI } from './utils/env'
 export { defaultBrowserPort } from './constants'
 
 export const defaultInclude: string[] = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude: string[] = [
-  '**/node_modules/**',
-  '**/.git/**',
-]
+export const defaultExclude: string[] = ['**/node_modules/**', '**/.git/**']
 export const benchmarkConfigDefaults: ResolvedBenchmarkOptions = {
   enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
@@ -35,18 +28,10 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
   reportsDirectory: './coverage',
   exclude: [],
   reportOnFailure: false,
-  reporter: [
-    'text',
-    'html',
-    'clover',
-    'json',
-  ],
+  reporter: ['text', 'html', 'clover', 'json'],
   allowExternal: false,
   excludeAfterRemap: false,
-  processingConcurrency: Math.min(
-    20,
-    os.availableParallelism?.() ?? os.cpus().length,
-  ),
+  processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
   ignoreClassMethods: [],
   skipFull: false,
   watermarks: {

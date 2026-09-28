@@ -2,9 +2,13 @@ import { expect, test } from 'vitest'
 import { runVitest } from '#test-utils'
 
 test('reports errors from modules with malformed source maps (#10892)', async () => {
-  const { errorTree } = await runVitest({
-    root: './fixtures/malformed-source-map',
-  }, [], { fails: true })
+  const { errorTree } = await runVitest(
+    {
+      root: './fixtures/malformed-source-map',
+    },
+    [],
+    { fails: true },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {

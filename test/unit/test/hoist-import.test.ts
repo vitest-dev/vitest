@@ -1,5 +1,4 @@
 import { assert, expect, test, vi } from 'vitest'
-
 // @ts-expect-error timeout doesn't have fn, mock factory adds it
 import { fn, timeout } from '../src/timeout'
 

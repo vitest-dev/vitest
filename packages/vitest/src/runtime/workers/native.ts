@@ -20,8 +20,7 @@ const REGEXP_MOCK_ACTUAL = /\?mock=actual/
 export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<void> {
   if (module.setSourceMapsSupport) {
     module.setSourceMapsSupport(true)
-  }
-  else if (process.setSourceMapsEnabled) {
+  } else if (process.setSourceMapsEnabled) {
     process.setSourceMapsEnabled(true)
   }
 
@@ -64,12 +63,12 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         }
         if (
           // nodeLoader disables mocking and `import.meta.vitest`
-          worker.config.experimental.nodeLoader === false
+          worker.config.experimental.nodeLoader === false ||
           // something is wrong if there is no parent, we should not mock anything
-          || !context.parentURL
+          !context.parentURL ||
           // ignore any transforms inside of `vitest` module
-          || result.url.includes(distDir)
-          || context.parentURL?.toString().includes(distDir)
+          result.url.includes(distDir) ||
+          context.parentURL?.toString().includes(distDir)
         ) {
           return result
         }
@@ -82,12 +81,9 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
 
         return result
       },
-      load: worker.config.experimental.nodeLoader === false
-        ? undefined
-        : createLoadHook(worker),
+      load: worker.config.experimental.nodeLoader === false ? undefined : createLoadHook(worker),
     })
-  }
-  else if (module.register) {
+  } else if (module.register) {
     if (worker.config.experimental.nodeLoader !== false) {
       console.warn(
         `${c.bgYellow(' WARNING ')} "module.registerHooks" is not supported in Node.js ${process.version}. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.\n`,
@@ -117,8 +113,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
       data: { port: port2 },
       transferList: [port2],
     })
-  }
-  else if (!process.versions.deno && !process.versions.bun) {
+  } else if (!process.versions.deno && !process.versions.bun) {
     console.warn(
       '"module.registerHooks" and "module.register" are not supported. Some Vitest features may not work. Please, use Node.js 18.19.0 or higher.',
     )
@@ -129,7 +124,7 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
   const re = /import\.meta\.vitest/g
   let match: RegExpExecArray | null
   let overridden = false
-  // eslint-disable-next-line no-cond-assign
+  // oxlint-disable-next-line no-cond-assign
   while ((match = re.exec(source))) {
     const { index, '0': code } = match
     overridden = true
@@ -139,25 +134,21 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
   if (overridden) {
     const filename = resolve(fileURLToPath(url))
     // appending instead of prepending because functions are hoisted and we don't change the offset
-    ms().append(`;\nfunction IMPORT_META_TEST() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined; }`)
+    ms().append(
+      `;\nfunction IMPORT_META_TEST() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined; }`,
+    )
   }
 }
 
-const ignoreFormats = new Set<string>([
-  'addon',
-  'builtin',
-  'wasm',
-])
+const ignoreFormats = new Set<string>(['addon', 'builtin', 'wasm'])
 
 function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
   return (url, context, nextLoad) => {
-    const result: module.LoadFnOutput = url.includes('mock=') && isBuiltin(cleanUrl(url))
-      ? { format: 'commonjs' } // avoid resolving the builtin module that is supposed to be mocked
-      : nextLoad(url, context)
-    if (
-      (result.format && ignoreFormats.has(result.format))
-      || url.includes(distDir)
-    ) {
+    const result: module.LoadFnOutput =
+      url.includes('mock=') && isBuiltin(cleanUrl(url))
+        ? { format: 'commonjs' } // avoid resolving the builtin module that is supposed to be mocked
+        : nextLoad(url, context)
+    if ((result.format && ignoreFormats.has(result.format)) || url.includes(distDir)) {
       return result
     }
 
@@ -203,12 +194,16 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     hoistMocks(
       transformedCode,
       filename,
-      code => parse(code, {
-        ecmaVersion: 'latest',
-        sourceType: result.format === 'module' || result.format === 'module-typescript' || result.format === 'typescript'
-          ? 'module'
-          : 'script',
-      }),
+      (code) =>
+        parse(code, {
+          ecmaVersion: 'latest',
+          sourceType:
+            result.format === 'module' ||
+            result.format === 'module-typescript' ||
+            result.format === 'typescript'
+              ? 'module'
+              : 'script',
+        }),
       {
         magicString: ms,
         globalThisAccessor: '"__vitest_mocker__"',
@@ -220,8 +215,7 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
       const transformed = _ms.toString()
       const map = _ms.generateMap({ hires: 'boundary', source: filename })
       code = `${transformed}\n//# sourceMappingURL=${genSourceMapUrl(map)}`
-    }
-    else {
+    } else {
       code = source
     }
 
@@ -241,8 +235,8 @@ function genSourceMapUrl(map: SourceMap | string): string {
 }
 
 function getNativeMocker() {
-  const mocker: NativeModuleMocker | undefined
-  // @ts-expect-error untyped global
-    = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : undefined
+  const mocker: NativeModuleMocker | undefined =
+    // @ts-expect-error untyped global
+    typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : undefined
   return mocker
 }

@@ -20,8 +20,7 @@ export function setup({ provide }: TestProject) {
   try {
     provide('invalidValue', () => {})
     throw new Error('Should throw')
-  }
-  catch (err: any) {
+  } catch (err: any) {
     assert.equal(err.message, 'Cannot provide "invalidValue" because it\'s not serializable.')
     assert.match(err.cause.message, /could not be cloned/)
     assert.equal(err.cause.name, 'DataCloneError')
@@ -41,13 +40,14 @@ export async function teardown() {
     assert.equal(results.numPassedTests, 25)
     assert.ok(results.coverageMap)
 
-    const shared = results.testResults.filter((r: any) => r.name.includes('space_shared/test.spec.ts'))
+    const shared = results.testResults.filter((r: any) =>
+      r.name.includes('space_shared/test.spec.ts'),
+    )
 
     assert.equal(shared.length, 2)
-  }
-  catch (err) {
+  } catch (err) {
     console.error(err)
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     console.dir(results, { depth: null })
     process.exit(1)
   }

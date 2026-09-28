@@ -33,6 +33,7 @@ export default defineConfig({
 You can also specify different config options independently from the browser (although, the instances _can_ also have `browser` fields):
 
 ::: code-group
+
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
@@ -64,6 +65,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```ts [example.test.ts]
 import { expect, inject, test } from 'vitest'
 import { globalSetupModifier } from './example.js'
@@ -72,6 +74,7 @@ test('ratio works', () => {
   expect(inject('ratio') * globalSetupModifier).toBe(14)
 })
 ```
+
 :::
 
 In this example Vitest will run all tests in `chromium` browser, but execute a `'./ratio-setup.ts'` file only in the first configuration and inject a different `ratio` value depending on the [`provide` field](/config/provide).
@@ -89,6 +92,7 @@ $ vitest --project=chromium
 ```
 
 ::: code-group
+
 ```ts{6,8} [default]
 export default defineConfig({
   test: {
@@ -103,6 +107,7 @@ export default defineConfig({
   }
 })
 ```
+
 ```ts{3,7,9} [custom]
 export default defineConfig({
   test: {
@@ -118,4 +123,5 @@ export default defineConfig({
   }
 })
 ```
+
 :::

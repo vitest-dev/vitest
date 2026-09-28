@@ -12,8 +12,9 @@ test('aria inline snapshot', async () => {
   const testFile = join(root, 'basic.test.ts')
 
   // purge inline snapshots to empty strings, restore test values
-  editFile(testFile, s => s
-    .replace(/toMatchAriaInlineSnapshot\(`[^`]*`/g, 'toMatchAriaInlineSnapshot('))
+  editFile(testFile, (s) =>
+    s.replace(/toMatchAriaInlineSnapshot\(`[^`]*`/g, 'toMatchAriaInlineSnapshot('),
+  )
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
@@ -63,8 +64,7 @@ test('aria inline snapshot', async () => {
 
   // hand-edit inline snapshot to introduce regex pattern
   //    "1234" -> /\\d+/
-  editFile(testFile, s => s
-    .replace(`- button "1234"`, '- button /\\\\d+/'))
+  editFile(testFile, (s) => s.replace(`- button "1234"`, '- button /\\\\d+/'))
 
   // run without update — regex matches, all pass
   result = await runVitest({ root, update: 'none' })
@@ -80,9 +80,11 @@ test('aria inline snapshot', async () => {
   `)
 
   // edit test
-  editFile(testFile, s => s
-    .replace('<p>Original</p>', '<p>Changed</p>')
-    .replace(`aria-label="1234"`, `aria-label="9999"`))
+  editFile(testFile, (s) =>
+    s
+      .replace('<p>Original</p>', '<p>Changed</p>')
+      .replace(`aria-label="1234"`, `aria-label="9999"`),
+  )
 
   // run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })
@@ -159,8 +161,9 @@ test('aria inline snapshot', async () => {
 })
 
 test('domain multiple inline at same location - success', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { expect, test } from 'vitest';
 
 test('basic', () => {
@@ -170,19 +173,21 @@ test('basic', () => {
   }
 });
 `,
-  }, {
-    browser: {
-      enabled: true,
-      headless: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-        },
-      ],
     },
-    update: 'new',
-  })
+    {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: playwright(),
+        instances: [
+          {
+            browser: 'chromium',
+          },
+        ],
+      },
+      update: 'new',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -206,8 +211,9 @@ test('basic', () => {
 })
 
 test('domain multiple inline at same location - fail', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { expect, test } from 'vitest';
 
 test('basic', () => {
@@ -217,20 +223,22 @@ test('basic', () => {
   }
 });
 `,
-  }, {
-    browser: {
-      enabled: true,
-      headless: true,
-      screenshotFailures: false,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-        },
-      ],
     },
-    update: 'new',
-  })
+    {
+      browser: {
+        enabled: true,
+        headless: true,
+        screenshotFailures: false,
+        provider: playwright(),
+        instances: [
+          {
+            browser: 'chromium',
+          },
+        ],
+      },
+      update: 'new',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -282,28 +290,31 @@ test('basic', () => {
 })
 
 test('template parse error', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { expect, test } from 'vitest';
 
 test('basic', () => {
   expect(document.body).toMatchAriaInlineSnapshot(\`x: y\`);
 });
 `,
-  }, {
-    browser: {
-      enabled: true,
-      headless: true,
-      screenshotFailures: false,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-        },
-      ],
     },
-    update: 'none',
-  })
+    {
+      browser: {
+        enabled: true,
+        headless: true,
+        screenshotFailures: false,
+        provider: playwright(),
+        instances: [
+          {
+            browser: 'chromium',
+          },
+        ],
+      },
+      update: 'none',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯

@@ -29,64 +29,62 @@ export class VitestSpecifications {
         specs.push(project.createSpecification(moduleId, [], 'typescript'))
       }
     }
-    specs.forEach(spec => this.ensureSpecificationCached(spec))
+    specs.forEach((spec) => this.ensureSpecificationCached(spec))
     return specs
   }
 
   public async getRelevantTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.filterTestsBySource(
-      await this.globTestSpecifications(filters),
-    )
+    return this.filterTestsBySource(await this.globTestSpecifications(filters))
   }
 
   public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     const files: TestSpecification[] = []
     const dir = process.cwd()
-    const parsedFilters = filters.map(f => parseFilter(f))
+    const parsedFilters = filters.map((f) => parseFilter(f))
 
     // Require includeTaskLocation when a location filter is passed
     if (
-      !this.vitest.config.includeTaskLocation
-      && parsedFilters.some(f => f.lineNumber !== undefined)
+      !this.vitest.config.includeTaskLocation &&
+      parsedFilters.some((f) => f.lineNumber !== undefined)
     ) {
       throw new IncludeTaskLocationDisabledError()
     }
 
-    const testLines = groupFilters(parsedFilters.map(
-      f => ({ ...f, filename: resolve(dir, f.filename) }),
-    ))
+    const testLines = groupFilters(
+      parsedFilters.map((f) => ({ ...f, filename: resolve(dir, f.filename) })),
+    )
 
     // Key is file and val specifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}
 
-    await Promise.all(this.vitest.projects.map(async (project) => {
-      const { testFiles, typecheckTestFiles } = await project.globTestFiles(
-        parsedFilters.map(f => f.filename),
-      )
+    await Promise.all(
+      this.vitest.projects.map(async (project) => {
+        const { testFiles, typecheckTestFiles } = await project.globTestFiles(
+          parsedFilters.map((f) => f.filename),
+        )
 
-      testFiles.forEach((file) => {
-        const lines = testLines[file]
-        testLocHasMatch[file] = true
+        testFiles.forEach((file) => {
+          const lines = testLines[file]
+          testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, lines)
-        this.ensureSpecificationCached(spec)
-        files.push(spec)
-      })
-      typecheckTestFiles.forEach((file) => {
-        const lines = testLines[file]
-        testLocHasMatch[file] = true
+          const spec = project.createSpecification(file, lines)
+          this.ensureSpecificationCached(spec)
+          files.push(spec)
+        })
+        typecheckTestFiles.forEach((file) => {
+          const lines = testLines[file]
+          testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, lines, 'typescript')
-        this.ensureSpecificationCached(spec)
-        files.push(spec)
-      })
-    }))
+          const spec = project.createSpecification(file, lines, 'typescript')
+          this.ensureSpecificationCached(spec)
+          files.push(spec)
+        })
+      }),
+    )
 
     Object.entries(testLines).forEach(([filepath, loc]) => {
       if (loc.length !== 0 && !testLocHasMatch[filepath]) {
-        throw new LocationFilterFileNotFoundError(
-          relative(dir, filepath),
-        )
+        throw new LocationFilterFileNotFoundError(relative(dir, filepath))
       }
     })
 
@@ -96,8 +94,7 @@ export class VitestSpecifications {
   public clearCache(moduleId?: string): void {
     if (moduleId) {
       this._cachedSpecs.delete(moduleId)
-    }
-    else {
+    } else {
       this._cachedSpecs.clear()
     }
   }
@@ -109,12 +106,11 @@ export class VitestSpecifications {
   public ensureSpecificationCached(spec: TestSpecification): TestSpecification[] {
     const file = spec.moduleId
     const specs = this._cachedSpecs.get(file) || []
-    const index = specs.findIndex(_s => _s.project === spec.project && _s.pool === spec.pool)
+    const index = specs.findIndex((_s) => _s.project === spec.project && _s.pool === spec.pool)
     if (index === -1) {
       specs.push(spec)
       this._cachedSpecs.set(file, specs)
-    }
-    else {
+    } else {
       specs.splice(index, 1, spec)
     }
     return specs
@@ -136,7 +132,7 @@ export class VitestSpecifications {
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
     const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
-    if (matcher && related.some(file => matcher(file))) {
+    if (matcher && related.some((file) => matcher(file))) {
       return specs
     }
 
@@ -151,20 +147,17 @@ export class VitestSpecifications {
     for (const spec of specs) {
       let projectSpecs = specsByProject.get(spec.project)
       if (!projectSpecs) {
-        specsByProject.set(spec.project, projectSpecs = [])
+        specsByProject.set(spec.project, (projectSpecs = []))
       }
       projectSpecs.push(spec)
     }
 
     const affectedByProject = new Map<TestProject, Set<string>>()
     for (const [project, projectSpecs] of specsByProject) {
-      affectedByProject.set(
-        project,
-        await this.getAffectedModules(project, projectSpecs, related),
-      )
+      affectedByProject.set(project, await this.getAffectedModules(project, projectSpecs, related))
     }
 
-    return specs.filter(spec => affectedByProject.get(spec.project)!.has(spec.moduleId))
+    return specs.filter((spec) => affectedByProject.get(spec.project)!.has(spec.moduleId))
   }
 
   /**
@@ -188,13 +181,12 @@ export class VitestSpecifications {
     const waiters: Array<() => void> = []
     const withLimit = async <T>(fn: () => Promise<T>): Promise<T> => {
       if (active >= TRANSFORM_CONCURRENCY) {
-        await new Promise<void>(resolve => waiters.push(resolve))
+        await new Promise<void>((resolve) => waiters.push(resolve))
       }
       active++
       try {
         return await fn()
-      }
-      finally {
+      } finally {
         active--
         waiters.shift()?.()
       }
@@ -220,28 +212,31 @@ export class VitestSpecifications {
 
       const environment = project.vite.environments.ssr
       const mod = environment.moduleGraph.getModuleById(filepath)
-      const transformed = mod?.transformResult || await withLimit(() => environment.transformRequest(filepath))
+      const transformed =
+        mod?.transformResult || (await withLimit(() => environment.transformRequest(filepath)))
       if (!transformed) {
         return
       }
-      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
-      await Promise.all(dependencies.map(async (dep) => {
-        const fsPath = dep.startsWith('/@fs/')
-          ? dep.slice(isWindows ? 5 : 4)
-          : join(project.config.root, dep)
-        if (fsPath.includes('node_modules') || !cachedExists(fsPath)) {
-          return
-        }
-        let importedBy = importers.get(fsPath)
-        if (!importedBy) {
-          importers.set(fsPath, importedBy = new Set())
-        }
-        importedBy.add(filepath)
-        await addImports(fsPath)
-      }))
+      const dependencies = [...(transformed.deps || []), ...(transformed.dynamicDeps || [])]
+      await Promise.all(
+        dependencies.map(async (dep) => {
+          const fsPath = dep.startsWith('/@fs/')
+            ? dep.slice(isWindows ? 5 : 4)
+            : join(project.config.root, dep)
+          if (fsPath.includes('node_modules') || !cachedExists(fsPath)) {
+            return
+          }
+          let importedBy = importers.get(fsPath)
+          if (!importedBy) {
+            importers.set(fsPath, (importedBy = new Set()))
+          }
+          importedBy.add(filepath)
+          await addImports(fsPath)
+        }),
+      )
     }
 
-    await Promise.all(specs.map(spec => addImports(spec.moduleId)))
+    await Promise.all(specs.map((spec) => addImports(spec.moduleId)))
 
     const affected = new Set<string>(related)
     const queue = [...related]

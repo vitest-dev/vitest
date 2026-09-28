@@ -39,8 +39,8 @@ export default function toHaveDisplayValue(
 
   const values = getValues(tagName, htmlElement)
   const expectedValues = getExpectedValues(expectedValue)
-  const numberOfMatchesWithValues = expectedValues.filter(expected =>
-    values.some(value =>
+  const numberOfMatchesWithValues = expectedValues.filter((expected) =>
+    values.some((value) =>
       expected instanceof RegExp
         ? expected.test(value)
         : this.equals(value, String(expected), this.customTesters),
@@ -48,19 +48,14 @@ export default function toHaveDisplayValue(
   ).length
 
   const matchedWithAllValues = numberOfMatchesWithValues === values.length
-  const matchedWithAllExpectedValues
-    = numberOfMatchesWithValues === expectedValues.length
+  const matchedWithAllExpectedValues = numberOfMatchesWithValues === expectedValues.length
 
   return {
     pass: matchedWithAllValues && matchedWithAllExpectedValues,
     message: () =>
       getMessage(
         this,
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toHaveDisplayValue`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toHaveDisplayValue`, 'element', ''),
         `Expected element ${this.isNot ? 'not ' : ''}to have display value`,
         expectedValue,
         'Received',
@@ -72,11 +67,13 @@ export default function toHaveDisplayValue(
 function getValues(tagName: string, htmlElement: HTMLElement | SVGElement) {
   return tagName === 'SELECT'
     ? Array.from(htmlElement as HTMLSelectElement)
-        .filter(option => (option as HTMLOptionElement).selected)
-        .map(option => option.textContent || '')
+        .filter((option) => (option as HTMLOptionElement).selected)
+        .map((option) => option.textContent || '')
     : [(htmlElement as HTMLInputElement).value]
 }
 
-function getExpectedValues(expectedValue: string | RegExp | Array<string | RegExp>): Array<string | RegExp> {
+function getExpectedValues(
+  expectedValue: string | RegExp | Array<string | RegExp>,
+): Array<string | RegExp> {
   return Array.isArray(expectedValue) ? expectedValue : [expectedValue]
 }

@@ -38,10 +38,8 @@ onKeyStroke('Escape', () => {
         :src="url"
         :alt="`Screenshot error for '${name}' test in file '${file}'`"
         class="border-base border-t border-r border-b border-dotted border-red-500 border-l"
-      >
-      <div v-else>
-        Something was wrong, the image cannot be resolved.
-      </div>
+      />
+      <div v-else>Something was wrong, the image cannot be resolved.</div>
     </div>
   </div>
 </template>

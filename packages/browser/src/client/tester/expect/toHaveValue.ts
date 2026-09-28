@@ -15,7 +15,13 @@
 
 import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
-import { arrayAsSetComparison, getElementFromUserInput, getMessage, getSingleElementValue, isInputElement } from './utils'
+import {
+  arrayAsSetComparison,
+  getElementFromUserInput,
+  getMessage,
+  getSingleElementValue,
+  isInputElement,
+} from './utils'
 
 export default function toHaveValue(
   this: MatcherState,
@@ -24,10 +30,7 @@ export default function toHaveValue(
 ): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveValue, this)
 
-  if (
-    isInputElement(htmlElement)
-    && ['checkbox', 'radio'].includes(htmlElement.type)
-  ) {
+  if (isInputElement(htmlElement) && ['checkbox', 'radio'].includes(htmlElement.type)) {
     throw new Error(
       'input with type=checkbox or type=radio cannot be used with .toHaveValue(). Use .toBeChecked() for type=checkbox or .toHaveFormValues() instead',
     )
@@ -38,7 +41,7 @@ export default function toHaveValue(
 
   let expectedTypedValue = expectedValue
   let receivedTypedValue = receivedValue
-  // eslint-disable-next-line eqeqeq
+  // oxlint-disable-next-line eqeqeq
   if (expectedValue == receivedValue && expectedValue !== receivedValue) {
     expectedTypedValue = `${expectedValue} (${typeof expectedValue})`
     receivedTypedValue = `${receivedValue} (${typeof receivedValue})`

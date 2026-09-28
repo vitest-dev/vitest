@@ -1,4 +1,8 @@
-import type { MockedModuleSerialized, ServerIdResolution, ServerMockResolution } from '@vitest/mocker'
+import type {
+  MockedModuleSerialized,
+  ServerIdResolution,
+  ServerMockResolution,
+} from '@vitest/mocker'
 import type { BirpcReturn } from 'birpc'
 import type {
   AfterSuiteRunMeta,
@@ -22,8 +26,15 @@ export interface WebSocketBrowserHandlers {
   onUnhandledError: (error: unknown, type: string) => Promise<void>
   onQueued: (method: TestExecutionMethod, file: RunnerTestFile) => void
   onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
-  onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
-  onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
+  onTaskArtifactRecord: <Artifact extends TestArtifact>(
+    testId: string,
+    artifact: Artifact,
+  ) => Promise<Artifact>
+  onTaskUpdate: (
+    method: TestExecutionMethod,
+    packs: TaskResultPack[],
+    events: TaskEventPack[],
+  ) => void
   onTestBenchmark: (testId: string, benchmark: TestBenchmark) => void
   readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
   writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
@@ -38,10 +49,7 @@ export interface WebSocketBrowserHandlers {
   sendLog: (method: TestExecutionMethod, log: UserConsoleLog) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
-  resolveId: (
-    id: string,
-    importer?: string,
-  ) => Promise<ServerIdResolution | null>
+  resolveId: (id: string, importer?: string) => Promise<ServerIdResolution | null>
   triggerCommand: <T>(
     sessionId: string,
     command: string,
@@ -54,9 +62,7 @@ export interface WebSocketBrowserHandlers {
     options: { mock: 'spy' | 'factory' | 'auto' },
   ) => Promise<ServerMockResolution>
   invalidate: (ids: string[]) => void
-  getBrowserFileSourceMap: (
-    id: string,
-  ) => SourceMap | null | { mappings: '' } | undefined
+  getBrowserFileSourceMap: (id: string) => SourceMap | null | { mappings: '' } | undefined
   wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 
   registerMock: (sessionId: string, mock: MockedModuleSerialized) => void
@@ -65,7 +71,12 @@ export interface WebSocketBrowserHandlers {
 
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown
-  trackCdpEvent: (sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
+  trackCdpEvent: (
+    sessionId: string,
+    type: 'on' | 'once' | 'off',
+    event: string,
+    listenerId: string,
+  ) => void
 }
 
 export interface WebSocketBrowserEvents {
@@ -81,10 +92,7 @@ export interface WebSocketBrowserEvents {
   }>
 }
 
-export type WebSocketBrowserRPC = BirpcReturn<
-  WebSocketBrowserEvents,
-  WebSocketBrowserHandlers
->
+export type WebSocketBrowserRPC = BirpcReturn<WebSocketBrowserEvents, WebSocketBrowserHandlers>
 
 interface SourceMap {
   file: string

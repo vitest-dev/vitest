@@ -1,12 +1,22 @@
-import type { AsyncExpectationResult, ChaiPlugin, ExpectationResult, MatcherState, SyncExpectationResult } from '@vitest/expect'
+import type {
+  AsyncExpectationResult,
+  ChaiPlugin,
+  ExpectationResult,
+  MatcherState,
+  SyncExpectationResult,
+} from '@vitest/expect'
 import type { DomainSnapshotAdapter } from '@vitest/snapshot'
 import type { Test } from '../../runtime/runner/types'
-import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import {
-  addSerializer,
-  SnapshotClient,
-  stripSnapshotIndentation,
-} from '@vitest/snapshot'
+  chai,
+  createAssertionMessage,
+  equals,
+  iterableEquality,
+  recordAsyncExpect,
+  subsetEquality,
+  wrapAssertion,
+} from '@vitest/expect'
+import { addSerializer, SnapshotClient, stripSnapshotIndentation } from '@vitest/snapshot'
 import { TestSyntaxError } from '../../runtime/runner/errors'
 import { getWorkerState } from '../../runtime/utils'
 import { getNames } from '../../utils/tasks'
@@ -27,9 +37,7 @@ export function getSnapshotClient(): SnapshotClient {
 function getError(expected: () => void | Error, promise: string | undefined) {
   if (typeof expected !== 'function') {
     if (!promise) {
-      throw new Error(
-        `expected must be a function, received ${typeof expected}`,
-      )
+      throw new Error(`expected must be a function, received ${typeof expected}`)
     }
 
     // when "promised", it receives thrown error
@@ -38,12 +46,11 @@ function getError(expected: () => void | Error, promise: string | undefined) {
 
   try {
     expected()
-  }
-  catch (e) {
+  } catch (e) {
     return e
   }
 
-  throw new Error('snapshot function didn\'t throw')
+  throw new Error("snapshot function didn't throw")
 }
 
 function getTestNames(test: Test) {
@@ -57,7 +64,9 @@ function getTestNames(test: Test) {
 function getAssertionName(assertion: Chai.Assertion): string {
   const name = chai.util.flag(assertion, '_name') as string | undefined
   if (!name) {
-    throw new Error('Assertion name is not set. This is a bug in Vitest. Please, open a new issue with reproduction.')
+    throw new Error(
+      'Assertion name is not set. This is a bug in Vitest. Please, open a new issue with reproduction.',
+    )
   }
   return name
 }
@@ -84,11 +93,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     utils.addMethod(
       chai.Assertion.prototype,
       key,
-      wrapAssertion(utils, key, function (
-        this,
-        propertiesOrHint?: object | string,
-        hint?: string,
-      ) {
+      wrapAssertion(utils, key, function (this, propertiesOrHint?: object | string, hint?: string) {
         const result = toMatchSnapshotImpl({
           assertion: this,
           received: utils.flag(this, 'object'),
@@ -113,7 +118,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         filepath,
         hint,
       })
-      const assertPromise = resultPromise.then(result =>
+      const assertPromise = resultPromise.then((result) =>
         assertMatchResult(result, chai.util.flag(this, 'message')),
       )
       return recordAsyncExpect(
@@ -129,55 +134,63 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
-    wrapAssertion(utils, 'toMatchInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
-      this,
-      propertiesOrInlineSnapshot?: object | string,
-      inlineSnapshotOrHint?: string,
-      hint?: string,
-    ) {
-      const result = toMatchSnapshotImpl({
-        assertion: this,
-        received: utils.flag(this, 'object'),
-        isInline: true,
-        ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
-      })
-      return assertMatchResult(result, chai.util.flag(this, 'message'))
-    }),
+    wrapAssertion(
+      utils,
+      'toMatchInlineSnapshot',
+      function __INLINE_SNAPSHOT_OFFSET_3__(
+        this,
+        propertiesOrInlineSnapshot?: object | string,
+        inlineSnapshotOrHint?: string,
+        hint?: string,
+      ) {
+        const result = toMatchSnapshotImpl({
+          assertion: this,
+          received: utils.flag(this, 'object'),
+          isInline: true,
+          ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
+        })
+        return assertMatchResult(result, chai.util.flag(this, 'message'))
+      },
+    ),
   )
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
-    wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, propertiesOrHint?: object | string, hint?: string) {
-      validateAssertion(this)
-      const received = utils.flag(this, 'object')
-      const promise = utils.flag(this, 'promise') as string | undefined
-      const result = toMatchSnapshotImpl({
-        assertion: this,
-        received: getError(received, promise),
-        ...normalizeArguments(propertiesOrHint, hint),
-      })
-      return assertMatchResult(result, chai.util.flag(this, 'message'))
-    }),
+    wrapAssertion(
+      utils,
+      'toThrowErrorMatchingSnapshot',
+      function (this, propertiesOrHint?: object | string, hint?: string) {
+        validateAssertion(this)
+        const received = utils.flag(this, 'object')
+        const promise = utils.flag(this, 'promise') as string | undefined
+        const result = toMatchSnapshotImpl({
+          assertion: this,
+          received: getError(received, promise),
+          ...normalizeArguments(propertiesOrHint, hint),
+        })
+        return assertMatchResult(result, chai.util.flag(this, 'message'))
+      },
+    ),
   )
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingInlineSnapshot',
-    wrapAssertion(utils, 'toThrowErrorMatchingInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
-      this,
-      inlineSnapshotOrHint?: string,
-      hint?: string,
-    ) {
-      validateAssertion(this)
-      const received = utils.flag(this, 'object')
-      const promise = utils.flag(this, 'promise') as string | undefined
-      const result = toMatchSnapshotImpl({
-        assertion: this,
-        received: getError(received, promise),
-        isInline: true,
-        ...normalizeInlineArguments(undefined, inlineSnapshotOrHint, hint),
-      })
-      return assertMatchResult(result, chai.util.flag(this, 'message'))
-    }),
+    wrapAssertion(
+      utils,
+      'toThrowErrorMatchingInlineSnapshot',
+      function __INLINE_SNAPSHOT_OFFSET_3__(this, inlineSnapshotOrHint?: string, hint?: string) {
+        validateAssertion(this)
+        const received = utils.flag(this, 'object')
+        const promise = utils.flag(this, 'promise') as string | undefined
+        const result = toMatchSnapshotImpl({
+          assertion: this,
+          received: getError(received, promise),
+          isInline: true,
+          ...normalizeInlineArguments(undefined, inlineSnapshotOrHint, hint),
+        })
+        return assertMatchResult(result, chai.util.flag(this, 'message'))
+      },
+    ),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
 }
@@ -200,7 +213,9 @@ function toMatchDomainSnapshotImpl(opts: {
     inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
   }
 
-  const pollFn = chai.util.flag(assertion, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
+  const pollFn = chai.util.flag(assertion, '_poll.fn') as
+    | (() => Promise<unknown> | unknown)
+    | undefined
   if (pollFn) {
     return getSnapshotClient().pollMatchDomain({
       poll: pollFn,
@@ -295,7 +310,10 @@ async function toMatchFileSnapshotImpl(options: {
   const test = getTest(assertion)
   const testNames = getTestNames(test)
   const snapshotState = getSnapshotClient().getSnapshotState(testNames.filepath)
-  const rawSnapshotFile = await snapshotState.environment.resolveRawPath(testNames.filepath, options.filepath)
+  const rawSnapshotFile = await snapshotState.environment.resolveRawPath(
+    testNames.filepath,
+    options.filepath,
+  )
   const rawSnapshotContent = await snapshotState.environment.readSnapshotFile(rawSnapshotFile)
   return getSnapshotClient().match({
     received: options.received,

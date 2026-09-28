@@ -10,8 +10,8 @@ test('white space sensitive', async () => {
   expect(vitest.exitCode).toBe(0)
 
   // check diff of wrong snapshot
-  editFile(join(root, 'snapshot-1.txt'), s => s.trim())
-  editFile(join(root, 'snapshot-2.txt'), s => s.replace('echo', 'ECHO'))
+  editFile(join(root, 'snapshot-1.txt'), (s) => s.trim())
+  editFile(join(root, 'snapshot-2.txt'), (s) => s.replace('echo', 'ECHO'))
   vitest = await runVitest({ root })
   expect(vitest.stderr).toContain(`
 - white space
@@ -50,15 +50,18 @@ test('file snapshot', async () => {
 })
 
 test('file snapshot can use another test filename', async () => {
-  const result = await runInlineTests({
-    'other.test.ts': `
+  const result = await runInlineTests(
+    {
+      'other.test.ts': `
 import { expect, test } from 'vitest'
 
 test('file snapshot', async () => {
   await expect('content').toMatchFileSnapshot('__snapshots__/basic.test.ts.snap')
 })
 `,
-  }, { update: true })
+    },
+    { update: true },
+  )
 
   expect(result.stderr).toBe('')
   expect(result.testTree()).toMatchInlineSnapshot(`

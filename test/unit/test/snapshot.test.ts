@@ -1,5 +1,3 @@
-/* eslint-disable style/quotes */
-
 import { expect, test, vi } from 'vitest'
 import { testOutsideInlineSnapshot } from './snapshots-outside'
 
@@ -58,12 +56,12 @@ test('throwing', async () => {
   }).toThrowErrorMatchingSnapshot()
 
   expect(() => {
-    // eslint-disable-next-line no-throw-literal
+    // oxlint-disable-next-line no-throw-literal
     throw 'omega'
   }).toThrowErrorMatchingSnapshot()
 
   expect(() => {
-    // eslint-disable-next-line no-throw-literal
+    // oxlint-disable-next-line no-throw-literal
     throw { error: 'omega' }
   }).toThrowErrorMatchingSnapshot()
 

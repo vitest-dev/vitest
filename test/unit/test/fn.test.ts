@@ -91,8 +91,7 @@ describe('mock', () => {
 
     try {
       fn()
-    }
-    catch {}
+    } catch {}
     expect(fn).not.toHaveReturned()
 
     fn()
@@ -103,8 +102,7 @@ describe('mock', () => {
     try {
       expect(fn).toHaveNthReturnedWith(1, '1')
       assert.fail('expect should throw, since 1st call is thrown')
-    }
-    catch {}
+    } catch {}
 
     // not throws
     expect(fn).not.toHaveNthReturnedWith(1, '1')
@@ -127,8 +125,7 @@ describe('mock', () => {
 
     try {
       await fn()
-    }
-    catch {}
+    } catch {}
     expect(fn).not.toHaveResolved()
 
     await fn()
@@ -139,8 +136,7 @@ describe('mock', () => {
     try {
       expect(fn).toHaveNthResolvedWith(1, '1')
       assert.fail('expect should throw, since 1st call is thrown')
-    }
-    catch {}
+    } catch {}
 
     // not throws
     expect(fn).not.toHaveNthResolvedWith(1, '1')

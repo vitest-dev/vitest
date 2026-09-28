@@ -43,7 +43,7 @@ describe('jest mock compat layer', () => {
   })
 
   it('collects contexts', () => {
-    // eslint-disable-next-line prefer-arrow-callback
+    // oxlint-disable-next-line prefer-arrow-callback
     const Spy = vi.fn(function () {})
 
     expect(Spy.mock.contexts).toHaveLength(0)
@@ -77,7 +77,7 @@ describe('jest mock compat layer', () => {
       (): SpyClass
       new (): SpyClass
     }
-    const Spy = (function () {}) as SpyConstructor
+    const Spy = function () {} as SpyConstructor
     const obj = { Spy }
     const spy = vi.spyOn(obj, 'Spy')
     const instance = new obj.Spy()
@@ -317,7 +317,9 @@ describe('jest mock compat layer', () => {
     expect(setValue).toBe('first')
     expect(mockedValue).toBe('none')
 
-    spy.mockImplementation(() => (mockedValue = 'mocked')).mockImplementationOnce(() => (mockedValue = 'once'))
+    spy
+      .mockImplementation(() => (mockedValue = 'mocked'))
+      .mockImplementationOnce(() => (mockedValue = 'once'))
 
     obj.setter = 'i can do whatever'
     expect(mockedValue).toBe('once')
@@ -463,29 +465,26 @@ describe('jest mock compat layer', () => {
 
   it('throwing', async () => {
     const fn = vi.fn(() => {
-      // eslint-disable-next-line no-throw-literal
+      // oxlint-disable-next-line no-throw-literal
       throw 'error'
     })
 
     try {
       fn()
-    }
-    catch {}
+    } catch {}
 
-    expect(fn.mock.results).toEqual([
-      e('error'),
-    ])
+    expect(fn.mock.results).toEqual([e('error')])
   })
 
   it('mockRejectedValue', async () => {
     const safeCall = async (fn: () => void) => {
       try {
         await fn()
-      }
-      catch {}
+      } catch {}
     }
 
-    const spy = vi.fn()
+    const spy = vi
+      .fn()
       .mockRejectedValue(new Error('error'))
       .mockRejectedValueOnce(new Error('once'))
 
@@ -500,9 +499,7 @@ describe('jest mock compat layer', () => {
     expect(spy.mock.settledResults[1]).toEqual(h(new Error('error')))
   })
   it('mockResolvedValue', async () => {
-    const spy = vi.fn()
-      .mockResolvedValue('resolved')
-      .mockResolvedValueOnce('once')
+    const spy = vi.fn().mockResolvedValue('resolved').mockResolvedValueOnce('once')
 
     await spy()
     await spy()
@@ -569,15 +566,15 @@ describe('jest mock compat layer', () => {
   })
 
   it('mock classes', () => {
-    const Dog = vi.fn(class Dog {
-      constructor(public name: string) {
-        this.name = name
-      }
+    const Dog = vi.fn(
+      class Dog {
+        constructor(public name: string) {}
 
-      static getType: () => string = vi.fn(() => 'mocked animal')
-      speak = vi.fn(() => 'loud bark!')
-      feed = vi.fn()
-    })
+        static getType: () => string = vi.fn(() => 'mocked animal')
+        speak = vi.fn(() => 'loud bark!')
+        feed = vi.fn()
+      },
+    )
 
     const dogMax = new Dog('Max')
     expect(dogMax.name).toBe('Max')

@@ -113,6 +113,7 @@ export default defineConfig({
 
 ::: tip Why `ssr.resolve.conditions` and not `resolve.conditions`?
 Vitest follows Vite's configuration convention:
+
 - [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) applies to Vite's `client` environment, which corresponds to Vitest's browser mode, jsdom, happy-dom, or custom environments with `viteEnvironment: 'client'`.
 - [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) applies to Vite's `ssr` environment, which corresponds to Vitest's node environment or custom environments with `viteEnvironment: 'ssr'`.
 
@@ -133,6 +134,7 @@ Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 't
 In these cases the native module is likely not built to be multi-thread safe. As a workaround, you can switch to `pool: 'forks'` which runs the test cases in multiple `node:child_process` instead of multiple `node:worker_threads`.
 
 ::: code-group
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -142,9 +144,11 @@ export default defineConfig({
   },
 })
 ```
+
 ```bash [CLI]
 vitest --pool=forks
 ```
+
 :::
 
 ## Time Zone Does Not Change in Worker Threads
@@ -159,9 +163,11 @@ new Date('2026-01-01T00:00:00Z').getHours() // 9 in forks, unchanged in threads
 Set the time zone before workers start. Use the shell, the config file, or [`globalSetup`](/config/globalsetup); all of them run in the main process and work in every pool.
 
 ::: code-group
+
 ```bash [CLI]
 TZ=Asia/Tokyo vitest
 ```
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -169,11 +175,13 @@ process.env.TZ = 'Asia/Tokyo'
 
 export default defineConfig({})
 ```
+
 ```ts [globalSetup.js]
 export default function () {
   process.env.TZ = 'Asia/Tokyo'
 }
 ```
+
 :::
 
 If tests need different time zones at runtime, use `pool: 'forks'` or `pool: 'vmForks'`, where each worker is a separate process, or pass the `timeZone` option to `Intl.DateTimeFormat` instead of changing `TZ`.

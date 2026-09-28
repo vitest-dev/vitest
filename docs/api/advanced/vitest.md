@@ -168,6 +168,7 @@ This method can be slow because it needs to filter `--changed` flags. Do not use
 
 - If you need to get the list of specifications for known test files, use [`getModuleSpecifications`](#getmodulespecifications) instead.
 - If you need to get the list of all possible test files, use [`globTestSpecifications`](#globtestspecifications).
+
 :::
 
 ## mergeReports
@@ -410,6 +411,7 @@ const dynamicExample = await vitest.import('./example.js')
 
 dynamicExample !== staticExample // ✅
 ```
+
 :::
 
 ::: info
@@ -483,6 +485,7 @@ function onFilterWatchedSpecification(
   fn: (specification: TestSpecification) => boolean
 ): void
 ```
+
 Register a handler that will be called when a file is changed. This callback should return `true` or `false`, indicating whether the test file needs to be rerun.
 
 With this method, you can hook into the default watcher logic to delay or discard tests that the user doesn't want to keep track of at the moment:
@@ -580,6 +583,7 @@ import { escapeTestName } from 'vitest/node'
 // turns into /hello, .+?/
 const escapedPattern = new RegExp(escapeTestName('hello, %s', true))
 ```
+
 :::
 
 ::: warning
@@ -621,6 +625,7 @@ export function experimental_getSourceModuleDiagnostic(
 ```
 
 ::: details Types
+
 ```ts
 export interface ModuleDefinitionLocation {
   line: number
@@ -660,6 +665,7 @@ export interface SourceModuleDiagnostic {
   untrackedModules: UntrackedModuleDefinitionDiagnostic[]
 }
 ```
+
 :::
 
 Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not provided, `selfTime` and `totalTime` will be aggregated across all tests that were running the last time. If the module was not transformed or executed, the diagnostic will be empty.
@@ -704,7 +710,6 @@ const report = vitest.createReport('my-json-reporter')
 // Is <project-root>/.vitest/my-json-reporter
 const root = report.root
 ```
-
 
 ### Report.clean
 
@@ -772,7 +777,6 @@ const filenames: string[] = await report.readdir()
 
 ### Report.delete
 
-<!-- eslint-skip -->
 ```ts
 function delete(filename: string): Promise<void>
 ```
@@ -785,4 +789,3 @@ const report = vitest.createReport('my-json-reporter')
 // Deletes file from .vitest/my-json-reporter/test-report.json
 await report.delete('test-report.json')
 ```
-

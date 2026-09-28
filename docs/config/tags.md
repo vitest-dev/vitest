@@ -48,6 +48,7 @@ declare module 'vitest' {
   }
 }
 ```
+
 :::
 
 ## description

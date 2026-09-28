@@ -1,4 +1,13 @@
-import type { Declaration, ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, Expression, Pattern, Positioned, Program } from './esmWalker'
+import type {
+  Declaration,
+  ExportAllDeclaration,
+  ExportDefaultDeclaration,
+  ExportNamedDeclaration,
+  Expression,
+  Pattern,
+  Positioned,
+  Program,
+} from './esmWalker'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import MagicString from 'magic-string'
@@ -24,8 +33,7 @@ export function automockModule(
   let ast: Program
   try {
     ast = parse(code) as Program
-  }
-  catch (cause) {
+  } catch (cause) {
     if (options.id) {
       throw new Error(`failed to parse ${options.id}`, { cause })
     }
@@ -57,11 +65,17 @@ export function automockModule(
       const moduleContent = readFileSync(modulePath, 'utf-8')
       const transformedCode = transformCode(moduleContent, moduleUrl)
       const moduleFormat = resolveModuleFormat(moduleUrl, transformedCode)
-      const moduleExports = collectModuleExports(modulePath, transformedCode, moduleFormat || 'module')
+      const moduleExports = collectModuleExports(
+        modulePath,
+        transformedCode,
+        moduleFormat || 'module',
+      )
       replacers.push(() => {
         const importNames: string[] = []
         moduleExports.forEach((exportName) => {
-          const isReexported = allSpecifiers.some(({ name, alias }) => name === exportName || alias === exportName)
+          const isReexported = allSpecifiers.some(
+            ({ name, alias }) => name === exportName || alias === exportName,
+          )
           if (!isReexported) {
             importNames.push(exportName)
             allSpecifiers.push({ name: exportName })
@@ -91,8 +105,7 @@ export function automockModule(
             }
             traversePattern(element)
           })
-        }
-        else if (expression.type === 'ObjectPattern') {
+        } else if (expression.type === 'ObjectPattern') {
           expression.properties.forEach((property) => {
             // export const { ...rest } = {}
             if (property.type === 'RestElement') {
@@ -101,30 +114,23 @@ export function automockModule(
             // export const { test, test2: alias } = {}
             else if (property.type === 'Property') {
               traversePattern(property.value)
-            }
-            else {
+            } else {
               property satisfies never
             }
           })
-        }
-        else if (expression.type === 'RestElement') {
+        } else if (expression.type === 'RestElement') {
           traversePattern(expression.argument)
         }
         // const [name[1], name[2]] = []
         // cannot be used in export
         else if (expression.type === 'AssignmentPattern') {
-          throw new Error(
-            `AssignmentPattern is not supported. Please open a new bug report.`,
-          )
+          throw new Error(`AssignmentPattern is not supported. Please open a new bug report.`)
         }
         // const test = thing.func()
         // cannot be used in export
         else if (expression.type === 'MemberExpression') {
-          throw new Error(
-            `MemberExpression is not supported. Please open a new bug report.`,
-          )
-        }
-        else {
+          throw new Error(`MemberExpression is not supported. Please open a new bug report.`)
+        } else {
           expression satisfies never
         }
       }
@@ -132,16 +138,13 @@ export function automockModule(
       if (declaration) {
         if (declaration.type === 'FunctionDeclaration') {
           allSpecifiers.push({ name: declaration.id.name })
-        }
-        else if (declaration.type === 'VariableDeclaration') {
+        } else if (declaration.type === 'VariableDeclaration') {
           declaration.declarations.forEach((declaration) => {
             traversePattern(declaration.id)
           })
-        }
-        else if (declaration.type === 'ClassDeclaration') {
+        } else if (declaration.type === 'ClassDeclaration') {
           allSpecifiers.push({ name: declaration.id.name })
-        }
-        else {
+        } else {
           declaration satisfies never
         }
         m.remove(node.start, (declaration as Positioned<Declaration>).start)
@@ -158,8 +161,7 @@ export function automockModule(
           })
         })
         m.remove(node.start, node.end)
-      }
-      else if (source && specifiers.length) {
+      } else if (source && specifiers.length) {
         const importNames: [string, string][] = []
 
         specifiers.forEach((specifier) => {
@@ -185,7 +187,7 @@ export function automockModule(
       m.overwrite(node.start, declaration.start, `const __vitest_default = `)
     }
   }
-  replacers.forEach(cb => cb())
+  replacers.forEach((cb) => cb())
   const moduleObject = `
 const __vitest_current_es_module__ = {
   __esModule: true,

@@ -39,11 +39,7 @@ interface IdentifierInfo {
 }
 
 interface Visitors {
-  onIdentifier?: (
-    node: Positioned<Identifier>,
-    info: IdentifierInfo,
-    parentStack: Node[],
-  ) => void
+  onIdentifier?: (node: Positioned<Identifier>, info: IdentifierInfo, parentStack: Node[]) => void
   onImportMeta?: (node: Positioned<MetaProperty>) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void
   onCallExpression?: (node: Positioned<CallExpression>) => void
@@ -84,36 +80,30 @@ export function esmWalker(
   }
 
   function isInScope(name: string, parents: Node[]) {
-    return parents.some(node => node && scopeMap.get(node)?.has(name))
+    return parents.some((node) => node && scopeMap.get(node)?.has(name))
   }
   function handlePattern(p: Pattern, parentScope: _Node) {
     if (p.type === 'Identifier') {
       setScope(parentScope, p.name)
-    }
-    else if (p.type === 'RestElement') {
+    } else if (p.type === 'RestElement') {
       handlePattern(p.argument, parentScope)
-    }
-    else if (p.type === 'ObjectPattern') {
+    } else if (p.type === 'ObjectPattern') {
       p.properties.forEach((property) => {
         if (property.type === 'RestElement') {
           setScope(parentScope, (property.argument as Identifier).name)
-        }
-        else {
+        } else {
           handlePattern(property.value, parentScope)
         }
       })
-    }
-    else if (p.type === 'ArrayPattern') {
+    } else if (p.type === 'ArrayPattern') {
       p.elements.forEach((element) => {
         if (element) {
           handlePattern(element, parentScope)
         }
       })
-    }
-    else if (p.type === 'AssignmentPattern') {
+    } else if (p.type === 'AssignmentPattern') {
       handlePattern(p.left, parentScope)
-    }
-    else {
+    } else {
       setScope(parentScope, (p as any).name)
     }
   }
@@ -126,10 +116,7 @@ export function esmWalker(
 
       // track parent stack, skip for "else-if"/"else" branches as acorn nests
       // the ast within "if" nodes instead of flattening them
-      if (
-        parent
-        && !(parent.type === 'IfStatement' && node === parent.alternate)
-      ) {
+      if (parent && !(parent.type === 'IfStatement' && node === parent.alternate)) {
         parentStack.unshift(parent as Node)
       }
 
@@ -144,32 +131,25 @@ export function esmWalker(
 
       if (node.type === 'MetaProperty' && node.meta.name === 'import') {
         onImportMeta?.(node as Positioned<MetaProperty>)
-      }
-      else if (node.type === 'ImportExpression') {
+      } else if (node.type === 'ImportExpression') {
         onDynamicImport?.(node as Positioned<ImportExpression>)
       }
 
       if (node.type === 'Identifier') {
-        if (
-          !isInScope(node.name, parentStack)
-          && isRefIdentifier(node, parent!, parentStack)
-        ) {
+        if (!isInScope(node.name, parentStack) && isRefIdentifier(node, parent!, parentStack)) {
           // record the identifier, for DFS -> BFS
           identifiers.push([node, parentStack.slice(0)])
         }
-      }
-      else if (node.type === 'ClassDeclaration' && node.id) {
+      } else if (node.type === 'ClassDeclaration' && node.id) {
         // A class declaration name could shadow an import, so add its name to the parent scope
         const parentScope = findParentScope(parentStack)
         if (parentScope) {
           setScope(parentScope, node.id.name)
         }
-      }
-      else if (node.type === 'ClassExpression' && node.id) {
+      } else if (node.type === 'ClassExpression' && node.id) {
         // A class expression name could shadow an import, so add its name to the scope
         setScope(node, node.id.name)
-      }
-      else if (isFunctionNode(node)) {
+      } else if (isFunctionNode(node)) {
         // If it is a function declaration, it could be shadowing an import
         // Add its name to the scope so it won't get replaced
         if (node.type === 'FunctionDeclaration') {
@@ -185,13 +165,10 @@ export function esmWalker(
             handlePattern(p, node)
             return
           }
-          (eswalk as any)(p.type === 'AssignmentPattern' ? p.left : p, {
+          ;(eswalk as any)(p.type === 'AssignmentPattern' ? p.left : p, {
             enter(child: Node, parent: Node) {
               // skip params default value of destructure
-              if (
-                parent?.type === 'AssignmentPattern'
-                && parent?.right === child
-              ) {
+              if (parent?.type === 'AssignmentPattern' && parent?.right === child) {
                 return this.skip()
               }
 
@@ -205,9 +182,8 @@ export function esmWalker(
               // do not record if this is a default value
               // assignment of a destructuring variable
               if (
-                (parent?.type === 'TemplateLiteral'
-                  && parent?.expressions.includes(child))
-                || (parent?.type === 'CallExpression' && parent?.callee === child)
+                (parent?.type === 'TemplateLiteral' && parent?.expressions.includes(child)) ||
+                (parent?.type === 'CallExpression' && parent?.callee === child)
               ) {
                 return
               }
@@ -216,31 +192,22 @@ export function esmWalker(
             },
           })
         })
-      }
-      else if (node.type === 'Property' && parent!.type === 'ObjectPattern') {
+      } else if (node.type === 'Property' && parent!.type === 'ObjectPattern') {
         // mark property in destructuring pattern
         setIsNodeInPattern(node)
-      }
-      else if (node.type === 'VariableDeclarator') {
-        const parentFunction = findParentScope(
-          parentStack,
-          varKindStack[0] === 'var',
-        )
+      } else if (node.type === 'VariableDeclarator') {
+        const parentFunction = findParentScope(parentStack, varKindStack[0] === 'var')
         if (parentFunction) {
           handlePattern(node.id, parentFunction)
         }
-      }
-      else if (node.type === 'CatchClause' && node.param) {
+      } else if (node.type === 'CatchClause' && node.param) {
         handlePattern(node.param, node)
       }
     },
 
     leave(node, parent) {
       // untrack parent stack from above
-      if (
-        parent
-        && !(parent.type === 'IfStatement' && node === parent.alternate)
-      ) {
+      if (parent && !(parent.type === 'IfStatement' && node === parent.alternate)) {
         parentStack.shift()
       }
 
@@ -255,16 +222,14 @@ export function esmWalker(
   identifiers.forEach(([node, stack]) => {
     if (!isInScope(node.name, stack)) {
       const parent = stack[0]
-      const hasBindingShortcut
-        = isStaticProperty(parent)
-          && parent.shorthand
-          && (!isNodeInPattern(parent)
-            || isInDestructuringAssignment(parent, parentStack))
+      const hasBindingShortcut =
+        isStaticProperty(parent) &&
+        parent.shorthand &&
+        (!isNodeInPattern(parent) || isInDestructuringAssignment(parent, parentStack))
 
-      const classDeclaration = (parent.type === 'ClassDeclaration' && node === parent.superClass)
+      const classDeclaration = parent.type === 'ClassDeclaration' && node === parent.superClass
 
-      const classExpression
-        = parent.type === 'ClassExpression' && node === parent.id
+      const classExpression = parent.type === 'ClassExpression' && node === parent.id
 
       onIdentifier?.(
         node,
@@ -282,10 +247,9 @@ export function esmWalker(
 function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   // declaration id
   if (
-    parent.type === 'CatchClause'
-    || ((parent.type === 'VariableDeclarator'
-      || parent.type === 'ClassDeclaration')
-    && parent.id === id)
+    parent.type === 'CatchClause' ||
+    ((parent.type === 'VariableDeclarator' || parent.type === 'ClassDeclaration') &&
+      parent.id === id)
   ) {
     return false
   }
@@ -324,19 +288,12 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   }
 
   // non-assignment array destructuring pattern
-  if (
-    parent.type === 'ArrayPattern'
-    && !isInDestructuringAssignment(parent, parentStack)
-  ) {
+  if (parent.type === 'ArrayPattern' && !isInDestructuringAssignment(parent, parentStack)) {
     return false
   }
 
   // member expression property
-  if (
-    parent.type === 'MemberExpression'
-    && parent.property === id
-    && !parent.computed
-  ) {
+  if (parent.type === 'MemberExpression' && parent.property === id && !parent.computed) {
     return false
   }
 
@@ -370,22 +327,13 @@ function isBlock(node: _Node) {
   return blockNodeTypeRE.test(node.type)
 }
 
-function findParentScope(
-  parentStack: _Node[],
-  isVar = false,
-): _Node | undefined {
+function findParentScope(parentStack: _Node[], isVar = false): _Node | undefined {
   return parentStack.find(isVar ? isFunctionNode : isBlock)
 }
 
-function isInDestructuringAssignment(
-  parent: _Node,
-  parentStack: _Node[],
-): boolean {
-  if (
-    parent
-    && (parent.type === 'Property' || parent.type === 'ArrayPattern')
-  ) {
-    return parentStack.some(i => i.type === 'AssignmentExpression')
+function isInDestructuringAssignment(parent: _Node, parentStack: _Node[]): boolean {
+  if (parent && (parent.type === 'Property' || parent.type === 'ArrayPattern')) {
+    return parentStack.some((i) => i.type === 'AssignmentExpression')
   }
 
   return false

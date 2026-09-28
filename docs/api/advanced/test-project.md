@@ -13,6 +13,7 @@ This guide describes the advanced Node.js API. If you just want to define projec
 The name is a unique string assigned by the user or interpreted by Vitest. If user did not provide a name, Vitest tries to load a `package.json` in the root of the project and takes the `name` property from there. If there is no `package.json`, Vitest uses the name of the folder by default. Inline projects use numbers as the name (converted to string).
 
 ::: code-group
+
 ```ts [node.js]
 import { createVitest } from 'vitest/node'
 
@@ -24,6 +25,7 @@ vitest.projects.map(p => p.name) === [
   'custom'
 ]
 ```
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -48,6 +50,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ::: info
@@ -74,6 +77,7 @@ The `serializedConfig` property is a getter. Every time it's accessed Vitest ser
 ```ts
 project.serializedConfig === project.serializedConfig // ❌
 ```
+
 :::
 
 ## globalConfig
@@ -128,6 +132,7 @@ function provide<T extends keyof ProvidedContext & string>(
 A way to provide custom values to tests in addition to [`config.provide`](/config/provide) field. All values are validated with [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone) before they are stored, but the values on `providedContext` themselves are not cloned.
 
 ::: code-group
+
 ```ts [node.js]
 import { createVitest } from 'vitest/node'
 
@@ -136,10 +141,12 @@ const project = vitest.projects.find(p => p.name === 'custom')
 project.provide('key', 'value')
 await vitest.start()
 ```
+
 ```ts [test.spec.js]
 import { inject } from 'vitest'
 const value = inject('key')
 ```
+
 :::
 
 The values can be provided dynamically. Provided value in tests will be updated on their next run.
@@ -152,6 +159,7 @@ export default function setup({ provide }) {
   provide('wsPort', 3000)
 }
 ```
+
 :::
 
 ## getProvidedContext
@@ -248,6 +256,7 @@ This method looks at several config options:
 - `test.include`, `test.exclude` to find regular test files
 - `test.includeSource`, `test.exclude` to find in-source tests
 - `test.typecheck.include`, `test.typecheck.exclude` to find typecheck tests
+
 :::
 
 ## matchesTestGlob
@@ -294,6 +303,7 @@ const dynamicExample = await project.import('./example.js')
 
 dynamicExample !== staticExample // ✅
 ```
+
 :::
 
 ::: info

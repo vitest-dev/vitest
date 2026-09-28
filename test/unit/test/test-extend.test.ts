@@ -1,4 +1,4 @@
-/* eslint-disable prefer-rest-params */
+/* oxlint-disable prefer-rest-params */
 
 import type { TestAPI } from 'vitest'
 import type { InferFixturesTypes } from '../../../packages/vitest/src/runtime/runner/types'
@@ -53,7 +53,7 @@ describe('test.extend()', () => {
     const typesTest = test.extend<TypesContext>({
       number: 1,
       array: [1, 2, 3],
-      async string({ }, use) {
+      async string({}, use) {
         await use('string')
       },
       async any({}, use) {
@@ -363,11 +363,11 @@ describe('asynchronous setup/teardown', () => {
   const myTest = test.extend<{ a: string }>({
     a: async ({}, use) => {
       trackFn('setup-sync')
-      await new Promise(resolve => setTimeout(resolve, 200))
+      await new Promise((resolve) => setTimeout(resolve, 200))
       trackFn('setup-async')
       await use('ok')
       trackFn('teardown-sync')
-      await new Promise(resolve => setTimeout(resolve, 200))
+      await new Promise((resolve) => setTimeout(resolve, 200))
       trackFn('teardown-async')
     },
   })
@@ -506,11 +506,12 @@ describe('test.scoped repro #9305', () => {
       numbers: async ({ a, b }, use) => use([a, b]),
     })
 
-    extendedTest('scoped fixture can access dependencies from original test', async ({
-      numbers,
-    }) => {
-      expect(numbers).toStrictEqual([1, 2])
-    })
+    extendedTest(
+      'scoped fixture can access dependencies from original test',
+      async ({ numbers }) => {
+        expect(numbers).toStrictEqual([1, 2])
+      },
+    )
   })
 })
 
@@ -528,8 +529,15 @@ const counterTest = test.extend<{
   counter: { value: number }
   fileCounter: { value: number }
 }>({
-  counter: async ({}, use) => { await use({ value: 0 }) },
-  fileCounter: [async ({}, use) => { await use({ value: 0 }) }, { scope: 'file' }],
+  counter: async ({}, use) => {
+    await use({ value: 0 })
+  },
+  fileCounter: [
+    async ({}, use) => {
+      await use({ value: 0 })
+    },
+    { scope: 'file' },
+  ],
 })
 
 counterTest.describe('type-safe fixture hooks', () => {
@@ -560,13 +568,19 @@ const helperTest = test.extend<{
   $file: { fileFixture: number }
   $test: { testFixture: string }
 }>({
-  workerFixture: [async ({}, use) => {
-    await use(true)
-  }, { scope: 'worker' }],
-  fileFixture: [async ({ workerFixture }, use) => {
-    expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
-    await use(workerFixture ? 42 : 0)
-  }, { scope: 'file' }],
+  workerFixture: [
+    async ({}, use) => {
+      await use(true)
+    },
+    { scope: 'worker' },
+  ],
+  fileFixture: [
+    async ({ workerFixture }, use) => {
+      expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
+      await use(workerFixture ? 42 : 0)
+    },
+    { scope: 'file' },
+  ],
   testFixture: async ({ fileFixture, workerFixture }, use) => {
     expectTypeOf(fileFixture).toEqualTypeOf<number>()
     expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
@@ -575,15 +589,18 @@ const helperTest = test.extend<{
 })
 
 helperTest.describe('scoped fixtures with tuple syntax', () => {
-  helperTest('fixtures should have correct types', ({ testFixture, fileFixture, workerFixture }) => {
-    expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
-    expectTypeOf(fileFixture).toEqualTypeOf<number>()
-    expectTypeOf(testFixture).toEqualTypeOf<string>()
+  helperTest(
+    'fixtures should have correct types',
+    ({ testFixture, fileFixture, workerFixture }) => {
+      expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
+      expectTypeOf(fileFixture).toEqualTypeOf<number>()
+      expectTypeOf(testFixture).toEqualTypeOf<string>()
 
-    expect(workerFixture).toBe(true)
-    expect(fileFixture).toBe(42)
-    expect(testFixture).toBe('test-42-true')
-  })
+      expect(workerFixture).toBe(true)
+      expect(fileFixture).toBe(42)
+      expect(testFixture).toBe('test-42-true')
+    },
+  )
 })
 
 describe('builder pattern with non-function values', () => {
@@ -593,17 +610,20 @@ describe('builder pattern with non-function values', () => {
     .extend('arrayValue', [1, 2, 3])
     .extend('objectValue', { key: 'value', nested: { a: 1 } })
 
-  nonFnTest('non-function values are provided correctly', ({ stringValue, numberValue, arrayValue, objectValue }) => {
-    expectTypeOf(stringValue).toEqualTypeOf<string>()
-    expectTypeOf(numberValue).toEqualTypeOf<number>()
-    expectTypeOf(arrayValue).toEqualTypeOf<number[]>()
-    expectTypeOf(objectValue).toEqualTypeOf<{ key: string; nested: { a: number } }>()
+  nonFnTest(
+    'non-function values are provided correctly',
+    ({ stringValue, numberValue, arrayValue, objectValue }) => {
+      expectTypeOf(stringValue).toEqualTypeOf<string>()
+      expectTypeOf(numberValue).toEqualTypeOf<number>()
+      expectTypeOf(arrayValue).toEqualTypeOf<number[]>()
+      expectTypeOf(objectValue).toEqualTypeOf<{ key: string; nested: { a: number } }>()
 
-    expect(stringValue).toBe('hello')
-    expect(numberValue).toBe(42)
-    expect(arrayValue).toEqual([1, 2, 3])
-    expect(objectValue).toEqual({ key: 'value', nested: { a: 1 } })
-  })
+      expect(stringValue).toBe('hello')
+      expect(numberValue).toBe(42)
+      expect(arrayValue).toEqual([1, 2, 3])
+      expect(objectValue).toEqual({ key: 'value', nested: { a: 1 } })
+    },
+  )
 
   const mixedTest = test
     .extend('config', { port: 3000, host: 'localhost' })
@@ -632,15 +652,18 @@ describe('builder pattern with non-function values', () => {
       return syncValue.toUpperCase()
     })
 
-  syncTest('synchronous functions work in builder pattern', ({ prefix, syncValue, chainedSync }) => {
-    expectTypeOf(prefix).toEqualTypeOf<string>()
-    expectTypeOf(syncValue).toEqualTypeOf<string>()
-    expectTypeOf(chainedSync).toEqualTypeOf<string>()
+  syncTest(
+    'synchronous functions work in builder pattern',
+    ({ prefix, syncValue, chainedSync }) => {
+      expectTypeOf(prefix).toEqualTypeOf<string>()
+      expectTypeOf(syncValue).toEqualTypeOf<string>()
+      expectTypeOf(chainedSync).toEqualTypeOf<string>()
 
-    expect(prefix).toBe('hello')
-    expect(syncValue).toBe('hello world')
-    expect(chainedSync).toBe('HELLO WORLD')
-  })
+      expect(prefix).toBe('hello')
+      expect(syncValue).toBe('hello world')
+      expect(chainedSync).toBe('HELLO WORLD')
+    },
+  )
 })
 
 // https://github.com/vitest-dev/vitest/issues/9810

@@ -92,6 +92,7 @@ function feed(dog: Dog) {
   // ...
 }
 ```
+
 ```ts [tests/dog.test.ts]
 import { expect, test, vi } from 'vitest'
 import { feed } from '../src/feed.js'
@@ -110,6 +111,7 @@ test('can feed dogs', () => {
   expect(dogMax.isHungry()).toBe(false)
 })
 ```
+
 :::
 
 Now, when we create a new instance of the `Dog` class its `speak` method (alongside `feed` and `greet`) is already mocked:

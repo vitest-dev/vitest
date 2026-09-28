@@ -3,12 +3,15 @@ import { expect, it } from 'vitest'
 import { runInlineTests } from '#test-utils'
 
 it('basic', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `test('basic', () => {});`,
-  }, {
-    globals: true,
-    reporters: ['default', 'html'],
-  })
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `test('basic', () => {});`,
+    },
+    {
+      globals: true,
+      reporters: ['default', 'html'],
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -22,15 +25,15 @@ it('basic', async () => {
 })
 
 it('singleFile', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `test('basic', () => {});`,
-  }, {
-    globals: true,
-    reporters: [
-      'default',
-      ['html', { singleFile: true }],
-    ],
-  })
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `test('basic', () => {});`,
+    },
+    {
+      globals: true,
+      reporters: ['default', ['html', { singleFile: true }]],
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -44,22 +47,23 @@ it('singleFile', async () => {
 })
 
 it('browser mode headless', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': /* ts */`
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
 import { test } from "vitest";
 test('basic', () => {});
 `,
-  }, {
-    reporters: ['default', 'html'],
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      headless: true,
-      instances: [
-        { browser: 'chromium' as const },
-      ],
     },
-  })
+    {
+      reporters: ['default', 'html'],
+      browser: {
+        enabled: true,
+        provider: playwright(),
+        headless: true,
+        instances: [{ browser: 'chromium' as const }],
+      },
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -72,28 +76,28 @@ test('basic', () => {});
 })
 
 it('html and coverage already next each other', async () => {
-  const result = await runInlineTests({
-    'basic.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.ts': `
 export const add = (a: number, b: number) => a + b;
 `,
-    'basic.test.ts': `
+      'basic.test.ts': `
 import { test, expect } from "vitest";
 import { add } from "./basic";
 test('add', () => {
   expect(add(1, 2)).toBe(3);
 });
 `,
-  }, {
-    reporters: [
-      'default',
-      ['html', { outputDir: './custom-dir' }],
-    ],
-    coverage: {
-      enabled: true,
-      reporter: ['html'],
-      reportsDirectory: './custom-dir/coverage',
     },
-  })
+    {
+      reporters: ['default', ['html', { outputDir: './custom-dir' }]],
+      coverage: {
+        enabled: true,
+        reporter: ['html'],
+        reportsDirectory: './custom-dir/coverage',
+      },
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -114,32 +118,35 @@ test('add', () => {
 })
 
 it('projects', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': /* ts */`
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
 import { test } from "vitest";
 test('basic', () => {});
 `,
-  }, {
-    reporters: ['default', 'html'],
-    projects: [
-      {
-        test: {
-          name: {
-            label: 'project1',
-            color: 'black',
+    },
+    {
+      reporters: ['default', 'html'],
+      projects: [
+        {
+          test: {
+            name: {
+              label: 'project1',
+              color: 'black',
+            },
           },
         },
-      },
-      {
-        test: {
-          name: {
-            label: 'project2',
-            color: 'white',
+        {
+          test: {
+            name: {
+              label: 'project2',
+              color: 'white',
+            },
           },
         },
-      },
-    ],
-  })
+      ],
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
