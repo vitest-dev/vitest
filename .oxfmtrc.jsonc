@@ -13,16 +13,16 @@
       "value-internal",
       ["value-parent", "value-sibling", "value-index"],
       "side_effect",
-      "unknown"
+      "unknown",
     ],
-    "newlinesBetween": false
+    "newlinesBetween": false,
   },
   "overrides": [
     {
       // code blocks in the docs are written by hand to look good
       "files": ["**/*.md"],
-      "options": { "embeddedLanguageFormatting": "off" }
-    }
+      "options": { "embeddedLanguageFormatting": "off" },
+    },
   ],
   "ignorePatterns": [
     "**/fixtures",
@@ -42,6 +42,6 @@
     "test/workspaces/results.json",
     "test/workspaces-browser/results.json",
     "test/e2e/deps/error",
-    "test/e2e/deps/malformed-source-map"
-  ]
+    "test/e2e/deps/malformed-source-map",
+  ],
 }
