@@ -17,12 +17,6 @@ import { isChildProcess } from '../../runtime/utils'
 
 const RealDate = globalThis.Date
 
-function toEpochMilliseconds(time: string | FakeTimersConfig['now']) {
-  return time && typeof time === 'object' && !(time instanceof Date)
-    ? time.epochMilliseconds
-    : time
-}
-
 export class FakeTimers {
   private _global: typeof globalThis
   private _clock!: Clock
@@ -281,4 +275,10 @@ export class FakeTimers {
 
     return this._fakingTime
   }
+}
+
+function toEpochMilliseconds(time: string | FakeTimersConfig['now']) {
+  return time && typeof time === 'object' && !(time instanceof Date)
+    ? time.epochMilliseconds
+    : time
 }
