@@ -133,6 +133,35 @@ test('pre-bundles vite module runner through vitest in browser mode', async () =
   expect(v.vite.config.optimizeDeps.exclude).not.toContain('vite/module-runner')
 })
 
+test('keeps the config of other browser-consumed environments in browser mode', async () => {
+  const v = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [{ browser: 'chromium' }],
+    },
+    $viteConfig: {
+      environments: {
+        page_runner: {
+          consumer: 'client',
+          dev: { moduleRunnerTransform: true, preTransformRequests: true },
+          optimizeDeps: { include: ['react'] },
+        },
+      },
+    },
+  })
+
+  const { page_runner, ssr } = v.vite.config.environments
+  expect(page_runner.dev.preTransformRequests).toBe(true)
+  expect(page_runner.keepProcessEnv).toBe(false)
+  expect(page_runner.resolve.noExternal).not.toBe(true)
+  expect(page_runner.optimizeDeps.noDiscovery).toBe(false)
+  expect(page_runner.optimizeDeps.include).toEqual(['react'])
+  // environments that Vitest runs on the server keep the node-runner config
+  expect(ssr.optimizeDeps.noDiscovery).toBe(true)
+  expect(ssr.resolve.noExternal).toBe(true)
+})
+
 test('disables pre-transform requests in node mode', async () => {
   expect(await observePreTransformRequests()).toEqual({
     client: false,
