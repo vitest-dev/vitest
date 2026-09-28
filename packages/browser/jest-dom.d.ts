@@ -787,7 +787,7 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * @see https://vitest.dev/guide/browser/aria-snapshots
    * @see https://vitest.dev/api/expect#tomatchariasnapshot
    */
-  toMatchAriaSnapshot: () => R
+  toMatchAriaSnapshot(): R
   /**
    * @experimental
    * @description
@@ -818,5 +818,5 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * @see https://vitest.dev/guide/browser/aria-snapshots
    * @see https://vitest.dev/api/expect#tomatchariaInlinesnapshot
    */
-  toMatchAriaInlineSnapshot: (inlineSnapshot?: string) => R
+  toMatchAriaInlineSnapshot(inlineSnapshot?: string): R
 }
