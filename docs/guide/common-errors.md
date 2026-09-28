@@ -49,6 +49,31 @@ This error can happen when NodeJS's `fetch` is used with [`pool: 'threads'`](/co
 
 The default [`pool: 'forks'`](/config/pool#forks) does not have this issue. If you've explicitly set `pool: 'threads'`, switching back to `'forks'` or using [`'vmForks'`](/config/pool#vmforks) will resolve it.
 
+## Project Working Directory Does Not Change
+
+In a [multi-project run](/guide/projects), Vitest does not change `process.cwd()` for each project. If you start Vitest from the workspace root, project config files and tests see that directory as their working directory. A project's [`root`](/config/root) controls where Vitest looks for its files, but it does not change the process working directory. Vite plugins can use `config.root` in their `configResolved` hook to get the project root.
+
+If your tests need `process.cwd()` to point to the project directory, use the [`forks` pool](/config/pool#forks) and a project-specific [`setupFiles`](/config/setupfiles) file:
+
+```ts [packages/lib1/vitest.config.ts]
+import { defineProject } from 'vitest/config'
+
+export default defineProject({
+  test: {
+    pool: 'forks',
+    setupFiles: ['./setup.chdir.ts'],
+  },
+})
+```
+
+```ts [packages/lib1/setup.chdir.ts]
+import { fileURLToPath } from 'node:url'
+
+process.chdir(fileURLToPath(new URL('.', import.meta.url)))
+```
+
+This changes the working directory in the test worker, after config loading. The [`threads` pool](/config/pool#threads) cannot use `process.chdir()`.
+
 ## Custom package conditions are not resolved
 
 If you are using custom conditions in your `package.json` [exports](https://nodejs.org/api/packages.html#package-entry-points) or [subpath imports](https://nodejs.org/api/packages.html#subpath-imports), you may find that Vitest does not respect these conditions by default.

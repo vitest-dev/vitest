@@ -171,6 +171,8 @@ export default defineProject({
 })
 ```
 
+A project root does not change `process.cwd()`. See [Project Working Directory Does Not Change](/guide/common-errors#project-working-directory-does-not-change) if your tests depend on the working directory.
+
 ## Running Tests
 
 To run tests, define a script in your root `package.json`:
@@ -244,31 +246,6 @@ vitest --project '!e2e'
 # run every project starting with "unit", except "unit (browser)"
 vitest --project 'unit*' --project '!unit (browser)'
 ```
-
-## Working Directory
-
-Vitest does not change `process.cwd()` for each project. If you start Vitest from the workspace root, project config files and tests see that directory as their working directory. A project's [`root`](/config/root) controls where Vitest looks for its files, but it does not change the process working directory. Vite plugins can use `config.root` in their `configResolved` hook to get the project root.
-
-If your tests need `process.cwd()` to point to the project directory, use the [`forks` pool](/config/pool#forks) and a project-specific [`setupFiles`](/config/setupfiles) file:
-
-```ts [packages/lib1/vitest.config.ts]
-import { defineProject } from 'vitest/config'
-
-export default defineProject({
-  test: {
-    pool: 'forks',
-    setupFiles: ['./setup.chdir.ts'],
-  },
-})
-```
-
-```ts [packages/lib1/setup.chdir.ts]
-import { fileURLToPath } from 'node:url'
-
-process.chdir(fileURLToPath(new URL('.', import.meta.url)))
-```
-
-This changes the working directory in the test worker, after config loading. The [`threads` pool](/config/pool#threads) cannot use `process.chdir()`.
 
 ## Configuration
 
