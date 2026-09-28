@@ -45,13 +45,13 @@ export const pointer: UserEventCommand<PointerEvent> = async (context, input, st
       ? option.keys
       : null
     const parsedKeys = keys === null ? null : groupKeyDefs(parseKeyDef(keys))
-    const hasClickAction = parsedKeys?.some(
+    const hasOnlyClickActions = parsedKeys?.every(
       ({ keyDef: { keyDef: { code }, releasePrevious, releaseSelf } }) =>
         code === 'MouseLeft' && !releasePrevious && releaseSelf,
     )
 
     // click has its own moving logic, no need to move twice
-    if (!hasClickAction) {
+    if (!hasOnlyClickActions) {
       if (target) {
         await hover(
           context,
