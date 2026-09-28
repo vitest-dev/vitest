@@ -314,7 +314,7 @@ function createBlobImplGetter(window: DOMWindow): (blob: Blob) => any {
   return (blob) => (blob as any)[implSymbol]
 }
 
-let getBlobImpl: ((blob: Blob) => any) | undefined
+let getBlobImpl: (blob: Blob) => any
 
 function createCompatUtils(window: DOMWindow): CompatUtils {
   getBlobImpl ??= createBlobImplGetter(window)
@@ -332,7 +332,7 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
-      const impl = getBlobImpl!(blob)
+      const impl = getBlobImpl(blob)
       if (!impl) {
         throw new TypeError(
           'Vitest cannot read the bytes of a jsdom Blob. This is a Vitest bug, please report it with your jsdom version.',
