@@ -20,7 +20,7 @@ export async function globProjectFiles(
     ignore: exclude,
     expandDirectories: false,
   })
-  return files.map(file => slash(path.resolve(cwd, file)))
+  return files.map((file) => slash(path.resolve(cwd, file)))
 }
 
 export function isInSourceTestCode(code: string): boolean {
@@ -50,8 +50,7 @@ export async function globProjectTestFiles(
           if (isInSourceTestCode(code)) {
             testFiles.push(file)
           }
-        }
-        catch {
+        } catch {
           return null
         }
       }),

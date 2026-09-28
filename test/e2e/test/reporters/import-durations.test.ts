@@ -16,14 +16,16 @@ function normalizeImportDurationsOutput(stdout: string): string {
   }
   const endOfLine = plain.indexOf('\n', end)
   const section = plain.slice(start, endOfLine === -1 ? undefined : endOfLine)
-  return section
-    // Normalize time values (e.g., "88ms", "1.01s") to "XXX"
-    // Negative lookahead to avoid matching times in filenames (e.g., "import-durations-50ms.ts")
-    .replace(/\d+(\.\d+)?(ms|s)(?![\w.])/g, 'XXX')
-    // Normalize bar characters to "[BAR]"
-    .replace(/[█░]+/g, '[BAR]')
-    // Normalize multiple spaces (from column padding) to single space
-    .replace(/ {2,}/g, ' ')
+  return (
+    section
+      // Normalize time values (e.g., "88ms", "1.01s") to "XXX"
+      // Negative lookahead to avoid matching times in filenames (e.g., "import-durations-50ms.ts")
+      .replace(/\d+(\.\d+)?(ms|s)(?![\w.])/g, 'XXX')
+      // Normalize bar characters to "[BAR]"
+      .replace(/[█░]+/g, '[BAR]')
+      // Normalize multiple spaces (from column padding) to single space
+      .replace(/ {2,}/g, ' ')
+  )
 }
 
 describe('import durations', () => {
@@ -190,7 +192,11 @@ describe('import durations', () => {
     expect(stderrDefault).not.toContain('exceeded the danger threshold')
 
     // With lower danger threshold (50ms), should fail (imports are ~75ms > 50ms)
-    const { exitCode: exitCodeLow, stderr: stderrLow, stdout: stdoutLow } = await runVitest({
+    const {
+      exitCode: exitCodeLow,
+      stderr: stderrLow,
+      stdout: stdoutLow,
+    } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
       experimental: {

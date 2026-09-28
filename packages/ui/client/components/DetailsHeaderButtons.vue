@@ -21,7 +21,9 @@ function getDetailsPanelToggleRotation(action: 'show' | 'hide') {
 
 <template>
   <IconButton
-    v-tooltip.bottom="`Switch panel position (${detailsPosition === 'bottom' ? 'right' : 'bottom'})`"
+    v-tooltip.bottom="
+      `Switch panel position (${detailsPosition === 'bottom' ? 'right' : 'bottom'})`
+    "
     :title="`Switch panel position (${detailsPosition === 'bottom' ? 'right' : 'bottom'})`"
     icon="i-carbon-split-screen"
     :class="{ 'rotate-90': detailsPosition === 'right' }"

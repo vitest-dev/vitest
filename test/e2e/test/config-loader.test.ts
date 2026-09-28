@@ -12,7 +12,7 @@ test.runIf(isTypeStrippingSupported)('configLoader native', async () => {
       configLoader: 'native',
     },
   })
-  expect(ctx?.projects.map(p => p.name)).toMatchInlineSnapshot(`
+  expect(ctx?.projects.map((p) => p.name)).toMatchInlineSnapshot(`
     [
       "node",
       "browser (chromium)",
@@ -31,7 +31,7 @@ test('configLoader runner', async () => {
       configLoader: 'runner',
     },
   })
-  expect(ctx?.projects.map(p => p.name)).toMatchInlineSnapshot(`
+  expect(ctx?.projects.map((p) => p.name)).toMatchInlineSnapshot(`
     [
       "node",
       "browser (chromium)",

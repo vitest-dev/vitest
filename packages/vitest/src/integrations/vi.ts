@@ -10,7 +10,14 @@ import type { Disposable } from 'vitest/optional-runtime-types.js'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { VitestMocker } from '../runtime/moduleRunner/moduleMocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
-import { clearAllMocks, fn, isMockFunction, resetAllMocks, restoreAllMocks, spyOn } from '@vitest/spy'
+import {
+  clearAllMocks,
+  fn,
+  isMockFunction,
+  resetAllMocks,
+  restoreAllMocks,
+  spyOn,
+} from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
@@ -108,7 +115,8 @@ export interface VitestUtils {
    * - `interval`: Timers are advanced automatically by a specified interval.
    * @param interval The interval in milliseconds to use when `mode` is `'interval'`.
    */
-  setTimerTickMode: ((mode: 'manual' | 'nextTimerAsync') => VitestUtils) & ((mode: 'interval', interval?: number) => VitestUtils)
+  setTimerTickMode: ((mode: 'manual' | 'nextTimerAsync') => VitestUtils) &
+    ((mode: 'interval', interval?: number) => VitestUtils)
 
   /**
    * Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
@@ -246,9 +254,9 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   mock(path: string, factory?: MockFactoryWithHelper | MockOptions): void
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   mock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): void
 
   /**
@@ -257,9 +265,9 @@ export interface VitestUtils {
    * This call is hoisted to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   unmock(path: string): void
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   unmock(module: Promise<unknown>): void
 
   /**
@@ -273,9 +281,9 @@ export interface VitestUtils {
    *
    * @returns A disposable object that calls {@link doUnmock()} when disposed
    */
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   doMock(path: string, factory?: MockFactoryWithHelper | MockOptions): Disposable
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): Disposable
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
@@ -283,9 +291,9 @@ export interface VitestUtils {
    * Unlike [`vi.unmock`](https://vitest.dev/api/vi#vi-unmock), this method is not hoisted to the top of the file.
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    */
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   doUnmock(path: string): void
-  // eslint-disable-next-line ts/method-signature-style
+  // oxlint-disable-next-line typescript/method-signature-style
   doUnmock(module: Promise<unknown>): void
 
   /**
@@ -316,9 +324,7 @@ export interface VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Fully mocked module
    */
-  importMock: <T = ESModuleExports>(
-    path: string,
-  ) => Promise<MaybeMockedDeep<T>>
+  importMock: <T = ESModuleExports>(path: string) => Promise<MaybeMockedDeep<T>>
 
   /**
    * Deeply mocks properties and methods of a given object
@@ -375,25 +381,13 @@ export interface VitestUtils {
    * @param deep If the object is deeply mocked
    * @param options If the object is partially or deeply mocked
    */
-  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>)
-    & (<T>(item: T, deep: true) => MaybeMockedDeep<T>)
-    & (<T>(
-      item: T,
-      options: { partial?: false; deep?: false },
-    ) => MaybeMocked<T>)
-    & (<T>(
-      item: T,
-      options: { partial?: false; deep: true },
-    ) => MaybeMockedDeep<T>)
-    & (<T>(
-      item: T,
-      options: { partial: true; deep?: false },
-    ) => MaybePartiallyMocked<T>)
-    & (<T>(
-      item: T,
-      options: { partial: true; deep: true },
-    ) => MaybePartiallyMockedDeep<T>)
-    & (<T>(item: T) => MaybeMocked<T>)
+  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) &
+    (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
+    (<T>(item: T, options: { partial?: false; deep?: false }) => MaybeMocked<T>) &
+    (<T>(item: T, options: { partial?: false; deep: true }) => MaybeMockedDeep<T>) &
+    (<T>(item: T, options: { partial: true; deep?: false }) => MaybePartiallyMocked<T>) &
+    (<T>(item: T, options: { partial: true; deep: true }) => MaybePartiallyMockedDeep<T>) &
+    (<T>(item: T) => MaybeMocked<T>)
 
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.
@@ -492,10 +486,7 @@ function createVitest(): VitestUtils {
       config: state().config.fakeTimers,
     }))
 
-  const _stubsGlobal = new Map<
-    string | symbol | number,
-    PropertyDescriptor | undefined
-  >()
+  const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
   const _stubsEnv = new Map()
 
   const _envBooleans = ['PROD', 'DEV', 'SSR']
@@ -504,8 +495,8 @@ function createVitest(): VitestUtils {
     useFakeTimers(config?: FakeTimersConfig) {
       if (isChildProcess()) {
         if (
-          config?.toFake?.includes('nextTick')
-          || state().config?.fakeTimers?.toFake?.includes('nextTick')
+          config?.toFake?.includes('nextTick') ||
+          state().config?.fakeTimers?.toFake?.includes('nextTick')
         ) {
           throw new Error(
             'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.',
@@ -515,8 +506,7 @@ function createVitest(): VitestUtils {
 
       if (config) {
         timers().configure({ ...state().config.fakeTimers, ...config })
-      }
-      else {
+      } else {
         timers().configure(state().config.fakeTimers)
       }
 
@@ -626,8 +616,7 @@ function createVitest(): VitestUtils {
           return (async function __VITEST_HELPER__() {
             try {
               return await result
-            }
-            catch (error) {
+            } catch (error) {
               if (error instanceof Error && !error.stack?.includes('__VITEST_HELPER__')) {
                 copyStackTrace(error, stackTraceError)
               }
@@ -645,9 +634,7 @@ function createVitest(): VitestUtils {
 
     mock(path: string | Promise<unknown>, factory?: MockOptions | MockFactoryWithHelper) {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.mock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.mock() expects a string path, but received a ${typeof path}`)
       }
       const importer = getImporter('mock')
       _mocker().queueMock(
@@ -656,11 +643,7 @@ function createVitest(): VitestUtils {
         typeof factory === 'function'
           ? () =>
               factory(() =>
-                _mocker().importActual(
-                  path,
-                  importer,
-                  _mocker().getMockContext().callstack,
-                ),
+                _mocker().importActual(path, importer, _mocker().getMockContext().callstack),
               )
           : factory,
       )
@@ -668,18 +651,14 @@ function createVitest(): VitestUtils {
 
     unmock(path: string | Promise<unknown>) {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.unmock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.unmock() expects a string path, but received a ${typeof path}`)
       }
       _mocker().queueUnmock(path, getImporter('unmock'))
     },
 
     doMock(path: string | Promise<unknown>, factory?: MockOptions | MockFactoryWithHelper) {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.doMock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.doMock() expects a string path, but received a ${typeof path}`)
       }
       const importer = getImporter('doMock')
       _mocker().queueMock(
@@ -688,11 +667,7 @@ function createVitest(): VitestUtils {
         typeof factory === 'function'
           ? () =>
               factory(() =>
-                _mocker().importActual(
-                  path,
-                  importer,
-                  _mocker().getMockContext().callstack,
-                ),
+                _mocker().importActual(path, importer, _mocker().getMockContext().callstack),
               )
           : factory,
       )
@@ -708,9 +683,7 @@ function createVitest(): VitestUtils {
 
     doUnmock(path: string | Promise<unknown>) {
       if (typeof path !== 'string') {
-        throw new TypeError(
-          `vi.doUnmock() expects a string path, but received a ${typeof path}`,
-        )
+        throw new TypeError(`vi.doUnmock() expects a string path, but received a ${typeof path}`)
       }
       const importer = getImporter('doUnmock')
       _mocker().queueUnmock(path, importer)
@@ -718,11 +691,7 @@ function createVitest(): VitestUtils {
 
     async importActual<T = unknown>(path: string): Promise<T> {
       const importer = getImporter('importActual')
-      return _mocker().importActual<T>(
-        path,
-        importer,
-        _mocker().getMockContext().callstack,
-      )
+      return _mocker().importActual<T>(path, importer, _mocker().getMockContext().callstack)
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
@@ -760,10 +729,7 @@ function createVitest(): VitestUtils {
 
     stubGlobal(name: string | symbol | number, value: any) {
       if (!_stubsGlobal.has(name)) {
-        _stubsGlobal.set(
-          name,
-          Object.getOwnPropertyDescriptor(globalThis, name),
-        )
+        _stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
       }
       Object.defineProperty(globalThis, name, {
         value,
@@ -781,11 +747,9 @@ function createVitest(): VitestUtils {
       }
       if (value === undefined) {
         delete env[name]
-      }
-      else if (_envBooleans.includes(name)) {
+      } else if (_envBooleans.includes(name)) {
         env[name] = value ? '1' : ''
-      }
-      else {
+      } else {
         env[name] = String(value)
       }
       return utils
@@ -795,8 +759,7 @@ function createVitest(): VitestUtils {
       _stubsGlobal.forEach((original, name) => {
         if (!original) {
           Reflect.deleteProperty(globalThis, name)
-        }
-        else {
+        } else {
           Object.defineProperty(globalThis, name, original)
         }
       })
@@ -809,8 +772,7 @@ function createVitest(): VitestUtils {
       _stubsEnv.forEach((original, name) => {
         if (original === undefined) {
           delete env[name]
-        }
-        else {
+        } else {
           env[name] = original
         }
       })
@@ -850,19 +812,16 @@ export const vi: VitestUtils = vitest
 function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide
   return typeof __vitest_mocker__ !== 'undefined'
-  // @ts-expect-error injected by vite-nide
-    ? __vitest_mocker__
-    : new Proxy(
-        {} as any,
-        {
-          get(_, name) {
-            throw new Error(
-              'Vitest mocker was not initialized in this environment. '
-              + `vi.${String(name)}() is forbidden.`,
-            )
-          },
+    ? // @ts-expect-error injected by vite-nide
+      __vitest_mocker__
+    : new Proxy({} as any, {
+        get(_, name) {
+          throw new Error(
+            'Vitest mocker was not initialized in this environment. ' +
+              `vi.${String(name)}() is forbidden.`,
+          )
         },
-      )
+      })
 }
 
 function getImporter(name: string) {
@@ -870,7 +829,11 @@ function getImporter(name: string) {
   const stackArray = stackTrace.split('\n')
   // if there is no message in a stack trace, use the item - 1
   const importerStackIndex = stackArray.findLastIndex((stack) => {
-    return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`) || stack.includes(` at ${name} (`)
+    return (
+      stack.includes(` at Object.${name}`) ||
+      stack.includes(`${name}@`) ||
+      stack.includes(` at ${name} (`)
+    )
   })
   const stack = parseSingleStack(stackArray[importerStackIndex + 1])
   return stack?.file || ''
@@ -885,7 +848,7 @@ function copyStackTrace(target: Error, source: Error) {
 
 function waitNextTick() {
   const { setTimeout } = getSafeTimers()
-  return new Promise(resolve => setTimeout(resolve, 0))
+  return new Promise((resolve) => setTimeout(resolve, 0))
 }
 
 async function waitForImportsToResolve(): Promise<void> {

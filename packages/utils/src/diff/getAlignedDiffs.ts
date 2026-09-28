@@ -19,8 +19,8 @@ function concatenateRelevantDiffs(
 ): string {
   return diffs.reduce(
     (reduced: string, diff: Diff): string =>
-      reduced
-      + (diff[0] === DIFF_EQUAL
+      reduced +
+      (diff[0] === DIFF_EQUAL
         ? diff[1]
         : diff[0] === op && diff[1].length !== 0 // empty if change is newline
           ? changeColor(diff[1])
@@ -56,10 +56,7 @@ class ChangeBuffer {
     // otherwise then it has line color only.
     this.lines.push(
       this.line.length !== 1
-        ? new Diff(
-            this.op,
-            concatenateRelevantDiffs(this.op, this.line, this.changeColor),
-          )
+        ? new Diff(this.op, concatenateRelevantDiffs(this.op, this.line, this.changeColor))
         : this.line[0][0] === this.op
           ? this.line[0] // can use instance
           : new Diff(this.op, this.line[0][1]), // was common diff
@@ -89,16 +86,14 @@ class ChangeBuffer {
           // A middle substring is a change line.
           this.pushSubstring(substring)
           this.pushLine()
-        }
-        else if (substring.length !== 0) {
+        } else if (substring.length !== 0) {
           // The last substring starts a change line, if it is not empty.
           // Important: This non-empty condition also automatically omits
           // the newline appended to the end of expected and received strings.
           this.pushSubstring(substring)
         }
       })
-    }
-    else {
+    } else {
       // Append non-multiline string to current change line.
       this.pushDiff(diff)
     }
@@ -160,35 +155,28 @@ class CommonBuffer {
       substrings.forEach((substring, i) => {
         if (i === 0) {
           const subdiff = new Diff(op, substring)
-          if (
-            this.deleteBuffer.isLineEmpty()
-            && this.insertBuffer.isLineEmpty()
-          ) {
+          if (this.deleteBuffer.isLineEmpty() && this.insertBuffer.isLineEmpty()) {
             // If both current change lines are empty,
             // then the first substring is a common line.
             this.flushChangeLines()
             this.pushDiffCommonLine(subdiff)
-          }
-          else {
+          } else {
             // If either current change line is non-empty,
             // then the first substring completes the change lines.
             this.pushDiffChangeLines(subdiff)
             this.flushChangeLines()
           }
-        }
-        else if (i < iLast) {
+        } else if (i < iLast) {
           // A middle substring is a common line.
           this.pushDiffCommonLine(new Diff(op, substring))
-        }
-        else if (substring.length !== 0) {
+        } else if (substring.length !== 0) {
           // The last substring starts a change line, if it is not empty.
           // Important: This non-empty condition also automatically omits
           // the newline appended to the end of expected and received strings.
           this.pushDiffChangeLines(new Diff(op, substring))
         }
       })
-    }
-    else {
+    } else {
       // Append non-multiline string to current change lines.
       // Important: It cannot be at the end following empty change lines,
       // because newline appended to the end of expected and received strings.
@@ -213,10 +201,7 @@ class CommonBuffer {
 // Assume the function is not called:
 // * if either expected or received is empty string
 // * if neither expected nor received is multiline string
-function getAlignedDiffs(
-  diffs: Array<Diff>,
-  changeColor: DiffOptionsColor,
-): Array<Diff> {
+function getAlignedDiffs(diffs: Array<Diff>, changeColor: DiffOptionsColor): Array<Diff> {
   const deleteBuffer = new ChangeBuffer(DIFF_DELETE, changeColor)
   const insertBuffer = new ChangeBuffer(DIFF_INSERT, changeColor)
   const commonBuffer = new CommonBuffer(deleteBuffer, insertBuffer)

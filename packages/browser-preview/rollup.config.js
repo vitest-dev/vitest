@@ -41,10 +41,7 @@ export default () =>
       },
       external,
       context: 'null',
-      plugins: [
-        ...dtsUtils.isolatedDecl(),
-        ...plugins,
-      ],
+      plugins: [...dtsUtils.isolatedDecl(), ...plugins],
     },
     {
       input: dtsUtils.dtsInput('src/index.ts'),

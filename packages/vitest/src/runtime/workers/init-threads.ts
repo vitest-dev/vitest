@@ -14,9 +14,9 @@ export default function workerInit(options: {
   const { runTests } = options
 
   init({
-    post: response => parentPort!.postMessage(response),
-    on: callback => parentPort!.on('message', callback),
-    off: callback => parentPort!.off('message', callback),
+    post: (response) => parentPort!.postMessage(response),
+    on: (callback) => parentPort!.on('message', callback),
+    off: (callback) => parentPort!.off('message', callback),
     teardown: () => parentPort!.removeAllListeners('message'),
     runTests: async (state, traces) => runTests('run', state, traces),
     collectTests: async (state, traces) => runTests('collect', state, traces),

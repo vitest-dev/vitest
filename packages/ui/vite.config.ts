@@ -37,14 +37,12 @@ export default defineConfig({
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
         'focus-base': 'border-gray-500 dark:border-gray-400',
-        'highlight': 'bg-[#eab306] text-[#323238] dark:bg-[#323238] dark:text-[#eab306]',
+        highlight: 'bg-[#eab306] text-[#323238] dark:bg-[#323238] dark:text-[#eab306]',
 
         'tab-button': 'font-light op50 hover:op80 h-full px-4',
         'tab-button-active': 'op100 bg-gray-500:10',
       },
-      transformers: [
-        transformerDirectives(),
-      ],
+      transformers: [transformerDirectives()],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
     process.env.HTML_REPORT_DIR
@@ -68,7 +66,8 @@ export default defineConfig({
 })
 
 function devUiScriptPlugin(): Plugin {
-  const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
+  const BROWSER_SCRIPT_RE =
+    /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
 
   const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
 

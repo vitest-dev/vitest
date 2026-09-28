@@ -30,7 +30,12 @@ import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { LocatorAction, resolveActionTimeout, UploadAction } from './action'
-import { convertElementToCssSelector, escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from './tester-utils'
+import {
+  convertElementToCssSelector,
+  escapeForTextSelector,
+  isLocator,
+  resolveUserEventWheelOptions,
+} from './tester-utils'
 import { recordBrowserTraceEntry } from './trace'
 
 export { ensureAwaited } from '../utils'
@@ -53,7 +58,7 @@ const waitForIntervals = [0, 20, 50, 100, 100, 500]
 
 function sleep(ms: number): Promise<void> {
   const { setTimeout } = getSafeTimers()
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export const selectorEngine: Ivya = Ivya.create({
@@ -136,14 +141,20 @@ export abstract class Locator {
   }
 
   public unhover(options?: UserEventHoverOptions): Promise<void> {
-    return this.action('__vitest_hover', [], options, { selector: 'html > body', locator: 'locator(\'body\')' })
+    return this.action('__vitest_hover', [], options, {
+      selector: 'html > body',
+      locator: "locator('body')",
+    })
   }
 
   public fill(text: string, options?: UserEventFillOptions): Promise<void> {
     return this.action('__vitest_fill', [text], options)
   }
 
-  public upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
+  public upload(
+    files: string | string[] | File | File[],
+    options?: UserEventUploadOptions,
+  ): Promise<void> {
     return new UploadAction(this.serialize(), files, options, this._errorSource)
   }
 
@@ -161,7 +172,10 @@ export abstract class Locator {
           ? v.serialize()
           : {
               selector: convertElementToCssSelector(v),
-              locator: __INTERNAL._asLocator('javascript', selectorEngine.generateSelectorSimple(v)),
+              locator: __INTERNAL._asLocator(
+                'javascript',
+                selectorEngine.generateSelectorSimple(v),
+              ),
             }
         return { element }
       }
@@ -175,10 +189,13 @@ export abstract class Locator {
     base64: string
   }>
   public screenshot(options?: LocatorScreenshotOptions): Promise<string>
-  public screenshot(options?: LocatorScreenshotOptions): Promise<string | {
-    path: string
-    base64: string
-  }> {
+  public screenshot(options?: LocatorScreenshotOptions): Promise<
+    | string
+    | {
+        path: string
+        base64: string
+      }
+  > {
     return page.screenshot({
       ...options,
       element: this,
@@ -188,7 +205,8 @@ export abstract class Locator {
   public mark(name: string, options?: MarkOptions): Promise<void> {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const hasActiveTraceView = !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
+    const hasActiveTraceView =
+      !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
     if (!currentTest || (!hasActiveTrace && !hasActiveTraceView)) {
       return Promise.resolve()
     }
@@ -206,11 +224,13 @@ export abstract class Locator {
       }
       return getBrowserState().commands.triggerCommand<void>(
         '__vitest_markTrace',
-        [{
-          name,
-          element: this.serialize(),
-          stack: options?.stack ?? error?.stack,
-        }],
+        [
+          {
+            name,
+            element: this.serialize(),
+            stack: options?.stack ?? error?.stack,
+          },
+        ],
         error,
       )
     })
@@ -284,8 +304,12 @@ export abstract class Locator {
   }
 
   public query(): HTMLElement | SVGElement | null {
-    const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelector(parsedSelector, document.documentElement, true) as HTMLElement | SVGElement
+    const parsedSelector =
+      this._parsedSelector ||
+      (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
+    return selectorEngine.querySelector(parsedSelector, document.documentElement, true) as
+      | HTMLElement
+      | SVGElement
   }
 
   public element(): HTMLElement | SVGElement {
@@ -297,8 +321,13 @@ export abstract class Locator {
   }
 
   public elements(): (HTMLElement | SVGElement)[] {
-    const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelectorAll(parsedSelector, document.documentElement) as (HTMLElement | SVGElement)[]
+    const parsedSelector =
+      this._parsedSelector ||
+      (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
+    return selectorEngine.querySelectorAll(parsedSelector, document.documentElement) as (
+      | HTMLElement
+      | SVGElement
+    )[]
   }
 
   public get length(): number {
@@ -306,7 +335,7 @@ export abstract class Locator {
   }
 
   public all(): Locator[] {
-    return this.elements().map(element => this.elementLocator(element))
+    return this.elements().map((element) => this.elementLocator(element))
   }
 
   public nth(index: number): Locator {
@@ -334,7 +363,10 @@ export abstract class Locator {
   }
 
   public asLocator(): string {
-    return this._pwLocator || (this._pwLocator = asLocator('javascript', this._pwSelector || this.selector))
+    return (
+      this._pwLocator ||
+      (this._pwLocator = asLocator('javascript', this._pwSelector || this.selector))
+    )
   }
 
   public toJSON(): SerializedLocator {
@@ -363,9 +395,7 @@ export abstract class Locator {
         throw utils.getElementError(this, this._container || document.body)
       }
       const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]
-      const nextInterval = timeout != null
-        ? Math.min(interval, timeout - elapsed)
-        : interval
+      const nextInterval = timeout != null ? Math.min(interval, timeout - elapsed) : interval
       await sleep(nextInterval)
     }
   }
@@ -383,13 +413,11 @@ export abstract class Locator {
 /**
  * @deprecated
  */
-export function triggerCommandWithTrace<T>(
-  options: {
-    name: string
-    arguments: unknown[]
-    errorSource?: Error | undefined
-  },
-): Promise<T> {
+export function triggerCommandWithTrace<T>(options: {
+  name: string
+  arguments: unknown[]
+  errorSource?: Error | undefined
+}): Promise<T> {
   return getBrowserState().commands.triggerCommand<T>(
     options.name,
     options.arguments,
@@ -406,17 +434,13 @@ export interface SerializedLocator {
   _pwSelector?: string
 }
 
-function createStrictModeViolationError(
-  locator: Locator,
-  matches: Element[],
-) {
-  const infos = matches.slice(0, 10).map(m => ({
+function createStrictModeViolationError(locator: Locator, matches: Element[]) {
+  const infos = matches.slice(0, 10).map((m) => ({
     preview: selectorEngine.previewNode(m),
     selector: selectorEngine.generateSelectorSimple(m),
   }))
   const lines = infos.map(
-    (info, i) =>
-      `\n    ${i + 1}) ${info.preview} aka ${asLocator('javascript', info.selector)}`,
+    (info, i) => `\n    ${i + 1}) ${info.preview} aka ${asLocator('javascript', info.selector)}`,
   )
   if (infos.length < matches.length) {
     lines.push('\n    ...')

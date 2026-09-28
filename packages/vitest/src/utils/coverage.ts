@@ -67,15 +67,12 @@ export async function resolveCoverageProviderModule(
       builtInModule += '/browser'
     }
 
-    const { default: coverageModule }
-      = loader.isBrowser
-        ? await loader.import(builtInModule)
-        : await import(/* @vite-ignore */ builtInModule)
+    const { default: coverageModule } = loader.isBrowser
+      ? await loader.import(builtInModule)
+      : await import(/* @vite-ignore */ builtInModule)
 
     if (!coverageModule) {
-      throw new Error(
-        `Failed to load ${CoverageProviderMap[provider]}. Default export is missing.`,
-      )
+      throw new Error(`Failed to load ${CoverageProviderMap[provider]}. Default export is missing.`)
     }
 
     return coverageModule
@@ -85,8 +82,7 @@ export async function resolveCoverageProviderModule(
 
   try {
     customProviderModule = await loader.import(options.customProviderModule!)
-  }
-  catch (error) {
+  } catch (error) {
     throw new Error(
       `Failed to load custom CoverageProviderModule from ${options.customProviderModule}`,
       { cause: error },

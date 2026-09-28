@@ -49,25 +49,21 @@ export class ViteExecutor {
         if (result.code) {
           return result.code
         }
-      }
-      catch (cause: any) {
+      } catch (cause: any) {
         // rethrow vite error if it cannot load the module because it's not resolved
         if (
-          (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL')
-          || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
+          (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL') ||
+          (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
         ) {
-          const error = new Error(
-            `Cannot find module '${fileUrl}'`,
-            { cause },
-          ) as Error & { code: string }
+          const error = new Error(`Cannot find module '${fileUrl}'`, { cause }) as Error & {
+            code: string
+          }
           error.code = 'ERR_MODULE_NOT_FOUND'
           throw error
         }
       }
 
-      throw new Error(
-        `[vitest] Failed to transform ${fileUrl}. Does the file exist?`,
-      )
+      throw new Error(`[vitest] Failed to transform ${fileUrl}. Does the file exist?`)
     })
   }
 
@@ -104,11 +100,7 @@ export class ViteExecutor {
     if (config.transformAssets && KNOWN_ASSET_RE.test(modulePath)) {
       return true
     }
-    if (
-      toArray(config.transformGlobPattern).some(pattern =>
-        pattern.test(modulePath),
-      )
-    ) {
+    if (toArray(config.transformGlobPattern).some((pattern) => pattern.test(modulePath))) {
       return true
     }
     return false

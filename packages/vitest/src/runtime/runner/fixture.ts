@@ -19,7 +19,10 @@ export type UserFixtures = Record<string, unknown>
 export type FixtureRegistrations = Map<string, TestFixtureItem>
 
 export class TestFixtures {
-  private _suiteContexts: WeakMap<Suite | { type: 'worker' }, /* context object */ Record<string, unknown>>
+  private _suiteContexts: WeakMap<
+    Suite | { type: 'worker' },
+    /* context object */ Record<string, unknown>
+  >
   private _overrides = new WeakMap<Suite, FixtureRegistrations>()
   private _registrations: FixtureRegistrations
 
@@ -43,15 +46,18 @@ export class TestFixtures {
   }
 
   static getWorkerContexts(): Record<string, any>[] {
-    return TestFixtures._definitions.map(f => f.getWorkerContext())
+    return TestFixtures._definitions.map((f) => f.getWorkerContext())
   }
 
   static getFileContexts(file: File): Record<string, any>[] {
-    return TestFixtures._definitions.map(f => f.getFileContext(file))
+    return TestFixtures._definitions.map((f) => f.getFileContext(file))
   }
 
   static isFixtureOptions(obj: unknown): boolean {
-    return isObject(obj) && Object.keys(obj as any).some(key => TestFixtures._fixtureOptionKeys.includes(key))
+    return (
+      isObject(obj) &&
+      Object.keys(obj as any).some((key) => TestFixtures._fixtureOptionKeys.includes(key))
+    )
   }
 
   constructor(registrations?: FixtureRegistrations) {
@@ -90,13 +96,17 @@ export class TestFixtures {
     // Create a copy of the closest parent's registrations to avoid modifying them
     // For chained calls, this.get(suite) returns this suite's overrides; for first call, returns parent's
     const suiteRegistrations = new Map(this.get(suite))
-    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, suiteRegistrations)
+    const registrations = this.parseUserFixtures(
+      runner,
+      userFixtures,
+      isTopLevel,
+      suiteRegistrations,
+    )
     // If defined in top-level, just override all registrations
     // We don't support overriding suite-level fixtures anyway (it will throw an error)
     if (isTopLevel) {
       this._registrations = registrations
-    }
-    else {
+    } else {
       this._overrides.set(suite, registrations)
     }
   }
@@ -128,42 +138,41 @@ export class TestFixtures {
       let value: unknown | undefined
       let _options: FixtureOptions | undefined
 
-      if (
-        Array.isArray(fn)
-        && fn.length >= 2
-        && TestFixtures.isFixtureOptions(fn[1])
-      ) {
+      if (Array.isArray(fn) && fn.length >= 2 && TestFixtures.isFixtureOptions(fn[1])) {
         _options = fn[1] as FixtureOptions
         options = {
           auto: _options.auto ?? false,
           scope: _options.scope ?? 'test',
           injected: _options.injected ?? false,
         }
-        value = options.injected
-          ? (runner.injectValue?.(name) ?? fn[0])
-          : fn[0]
-      }
-      else {
+        value = options.injected ? (runner.injectValue?.(name) ?? fn[0]) : fn[0]
+      } else {
         value = fn
       }
 
       const parent = registrations.get(name)
       if (parent && options) {
         if (parent.scope !== options.scope) {
-          errors.push(new FixtureDependencyError(`The "${name}" fixture was already registered with a "${options.scope}" scope.`))
+          errors.push(
+            new FixtureDependencyError(
+              `The "${name}" fixture was already registered with a "${options.scope}" scope.`,
+            ),
+          )
         }
         if (parent.auto !== options.auto) {
-          errors.push(new FixtureDependencyError(`The "${name}" fixture was already registered as { auto: ${options.auto} }.`))
+          errors.push(
+            new FixtureDependencyError(
+              `The "${name}" fixture was already registered as { auto: ${options.auto} }.`,
+            ),
+          )
         }
-      }
-      else if (parent) {
+      } else if (parent) {
         options = {
           auto: parent.auto,
           scope: parent.scope,
           injected: parent.injected,
         }
-      }
-      else if (!options) {
+      } else if (!options) {
         options = {
           auto: false,
           injected: false,
@@ -172,16 +181,20 @@ export class TestFixtures {
       }
 
       if (options.scope && !TestFixtures._fixtureScopes.includes(options.scope)) {
-        errors.push(new FixtureDependencyError(`The "${name}" fixture has unknown scope "${options.scope}".`))
+        errors.push(
+          new FixtureDependencyError(`The "${name}" fixture has unknown scope "${options.scope}".`),
+        )
       }
 
       if (!supportNonTest && options.scope !== 'test') {
-        errors.push(new FixtureDependencyError(`The "${name}" fixture cannot be defined with a ${options.scope} scope${!_options?.scope && parent?.scope ? ' (inherited from the base fixture)' : ''} inside the describe block. Define it at the top level of the file instead.`))
+        errors.push(
+          new FixtureDependencyError(
+            `The "${name}" fixture cannot be defined with a ${options.scope} scope${!_options?.scope && parent?.scope ? ' (inherited from the base fixture)' : ''} inside the describe block. Define it at the top level of the file instead.`,
+          ),
+        )
       }
 
-      const deps = isFixtureFunction(value)
-        ? getUsedProps(value)
-        : new Set<string>()
+      const deps = isFixtureFunction(value) ? getUsedProps(value) : new Set<string>()
       const item: TestFixtureItem = {
         name,
         value,
@@ -212,16 +225,31 @@ export class TestFixtures {
 
         const dep = registrations.get(depName)
         if (!dep) {
-          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on unknown fixture "${depName}".`))
+          errors.push(
+            new FixtureDependencyError(
+              `The "${fixture.name}" fixture depends on unknown fixture "${depName}".`,
+            ),
+          )
           continue
         }
         if (depName === fixture.name && !fixture.parent) {
-          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on itself, but does not have a base implementation.`))
+          errors.push(
+            new FixtureDependencyError(
+              `The "${fixture.name}" fixture depends on itself, but does not have a base implementation.`,
+            ),
+          )
           continue
         }
 
-        if (TestFixtures._fixtureScopes.indexOf(fixture.scope) > TestFixtures._fixtureScopes.indexOf(dep.scope)) {
-          errors.push(new FixtureDependencyError(`The ${fixture.scope} "${fixture.name}" fixture cannot depend on a ${dep.scope} fixture "${dep.name}".`))
+        if (
+          TestFixtures._fixtureScopes.indexOf(fixture.scope) >
+          TestFixtures._fixtureScopes.indexOf(dep.scope)
+        ) {
+          errors.push(
+            new FixtureDependencyError(
+              `The ${fixture.scope} "${fixture.name}" fixture cannot depend on a ${dep.scope} fixture "${dep.name}".`,
+            ),
+          )
           continue
         }
       }
@@ -229,18 +257,17 @@ export class TestFixtures {
 
     if (errors.length === 1) {
       throw errors[0]
-    }
-    else if (errors.length > 1) {
-      throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
+    } else if (errors.length > 1) {
+      throw new AggregateError(
+        errors,
+        'Cannot resolve user fixtures. See errors for more information.',
+      )
     }
     return registrations
   }
 }
 
-const cleanupFnArrayMap = new WeakMap<
-  object,
-  Array<() => void | Promise<void>>
->()
+const cleanupFnArrayMap = new WeakMap<object, Array<() => void | Promise<void>>>()
 
 export async function callFixtureCleanup(context: object): Promise<void> {
   const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
@@ -313,7 +340,8 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
   const suite = options?.suite || collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
-    const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
+    const context: (TestContext & { [key: string]: any }) | undefined =
+      hookContext || (options?.context as TestContext)
 
     if (!context) {
       if (options?.suiteHook) {
@@ -360,22 +388,24 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     // Check if suite-level hook is trying to access test-scoped fixtures
     // Suite hooks (beforeAll/afterAll/aroundAll) can only access file/worker scoped fixtures
     if (options?.suiteHook) {
-      const testScopedFixtures = pendingFixtures.filter(f => f.scope === 'test')
+      const testScopedFixtures = pendingFixtures.filter((f) => f.scope === 'test')
       if (testScopedFixtures.length > 0) {
-        const fixtureNames = testScopedFixtures.map(f => `"${f.name}"`).join(', ')
+        const fixtureNames = testScopedFixtures.map((f) => `"${f.name}"`).join(', ')
         const alternativeHook = {
           aroundAll: 'aroundEach',
           beforeAll: 'beforeEach',
           afterAll: 'afterEach',
         }
         const error = new FixtureDependencyError(
-          `Test-scoped fixtures cannot be used inside ${options.suiteHook} hook. `
-          + `The following fixtures are test-scoped: ${fixtureNames}. `
-          + `Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to ${alternativeHook[options.suiteHook]} hook.`,
+          `Test-scoped fixtures cannot be used inside ${options.suiteHook} hook. ` +
+            `The following fixtures are test-scoped: ${fixtureNames}. ` +
+            `Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to ${alternativeHook[options.suiteHook]} hook.`,
         )
         // Use stack trace from hook registration for better error location
         if (options.stackTraceError?.stack) {
-          error.stack = error.message + options.stackTraceError.stack.replace(options.stackTraceError.message, '')
+          error.stack =
+            error.message +
+            options.stackTraceError.stack.replace(options.stackTraceError.message, '')
         }
         throw error
       }
@@ -396,23 +426,14 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
         }
         cachedFixtures.add(fixture)
 
-        const resolvedValue = await resolveTestFixtureValue(
-          fixture,
-          context,
-          cleanupFnArray,
-        )
+        const resolvedValue = await resolveTestFixtureValue(fixture, context, cleanupFnArray)
         context[fixture.name] = resolvedValue
 
         cleanupFnArray.push(() => {
           cachedFixtures.delete(fixture)
         })
-      }
-      else {
-        const resolvedValue = await resolveScopeFixtureValue(
-          fixtures,
-          suite,
-          fixture,
-        )
+      } else {
+        const resolvedValue = await resolveScopeFixtureValue(fixtures, suite, fixture)
         context[fixture.name] = resolvedValue
       }
     }
@@ -445,12 +466,7 @@ function resolveTestFixtureValue(
     return fixture.value
   }
 
-  return resolveFixtureFunction(
-    fixture.value,
-    fixture.name,
-    context,
-    cleanupFnArray,
-  )
+  return resolveFixtureFunction(fixture.value, fixture.name, context, cleanupFnArray)
 }
 
 const scopedFixturePromiseCache = new WeakMap<TestFixtureItem, Promise<unknown>>()
@@ -497,18 +513,15 @@ async function resolveScopeFixtureValue(
 }
 
 async function resolveFixtureFunction(
-  fixtureFn: (
-    context: unknown,
-    useFn: (arg: unknown) => Promise<void>,
-  ) => Promise<void>,
+  fixtureFn: (context: unknown, useFn: (arg: unknown) => Promise<void>) => Promise<void>,
   fixtureName: string,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
 ): Promise<unknown> {
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
-  const stackTraceError
-    = FIXTURE_STACK_TRACE_KEY in fixtureFn && fixtureFn[FIXTURE_STACK_TRACE_KEY] instanceof Error
+  const stackTraceError =
+    FIXTURE_STACK_TRACE_KEY in fixtureFn && fixtureFn[FIXTURE_STACK_TRACE_KEY] instanceof Error
       ? fixtureFn[FIXTURE_STACK_TRACE_KEY]
       : undefined
   let isUseFnArgResolved = false
@@ -527,26 +540,28 @@ async function resolveFixtureFunction(
       await fixtureReturn
     })
     await useReturnPromise
-  }).then(() => {
-    // fixture returned without calling use()
-    if (!isUseFnArgResolved) {
-      const error = new Error(
-        `Fixture "${fixtureName}" returned without calling "use". Make sure to call "use" in every code path of the fixture function.`,
-      )
-      if (stackTraceError?.stack) {
-        error.stack = error.message + stackTraceError.stack.replace(stackTraceError.message, '')
-      }
-      useFnArgPromise.reject(error)
-    }
-  }).catch((e: unknown) => {
-    // treat fixture setup error as test failure
-    if (!isUseFnArgResolved) {
-      useFnArgPromise.reject(e)
-      return
-    }
-    // otherwise re-throw to avoid silencing error during cleanup
-    throw e
   })
+    .then(() => {
+      // fixture returned without calling use()
+      if (!isUseFnArgResolved) {
+        const error = new Error(
+          `Fixture "${fixtureName}" returned without calling "use". Make sure to call "use" in every code path of the fixture function.`,
+        )
+        if (stackTraceError?.stack) {
+          error.stack = error.message + stackTraceError.stack.replace(stackTraceError.message, '')
+        }
+        useFnArgPromise.reject(error)
+      }
+    })
+    .catch((e: unknown) => {
+      // treat fixture setup error as test failure
+      if (!isUseFnArgResolved) {
+        useFnArgPromise.reject(e)
+        return
+      }
+      // otherwise re-throw to avoid silencing error during cleanup
+      throw e
+    })
 
   return useFnArgPromise
 }
@@ -568,12 +583,11 @@ function resolveDeps(
     if (depSet.has(fixture)) {
       if (fixture.parent) {
         fixture = fixture.parent
-      }
-      else {
+      } else {
         throw new Error(
           `Circular fixture dependency detected: ${fixture.name} <- ${[...depSet]
             .reverse()
-            .map(d => d.name)
+            .map((d) => d.name)
             .join(' <- ')}`,
         )
       }
@@ -581,7 +595,9 @@ function resolveDeps(
 
     depSet.add(fixture)
     resolveDeps(
-      Array.from(fixture.deps, n => n === fixture.name ? fixture.parent : registrations.get(n)).filter(n => !!n),
+      Array.from(fixture.deps, (n) =>
+        n === fixture.name ? fixture.parent : registrations.get(n),
+      ).filter((n) => !!n),
       registrations,
       depSet,
       pendingFixtures,
@@ -597,10 +613,10 @@ function validateSuiteHook(fn: Function, hook: SuiteHook, suiteError: Error | un
   const usedProps = getUsedProps(fn, { sourceError: suiteError, suiteHook: hook })
   if (usedProps.size) {
     const error = new FixtureAccessError(
-      `The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. `
-      + `Did you forget to call it as "test.${hook}()" instead of "${hook}()"?\n`
-      + `If you used internal "suite" task as the first argument previously, access it in the second argument instead. `
-      + `See https://vitest.dev/guide/test-context#suite-level-hooks`,
+      `The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. ` +
+        `Did you forget to call it as "test.${hook}()" instead of "${hook}()"?\n` +
+        `If you used internal "suite" task as the first argument previously, access it in the second argument instead. ` +
+        `See https://vitest.dev/guide/test-context#suite-level-hooks`,
     )
     if (suiteError) {
       error.stack = suiteError.stack?.replace(suiteError.message, error.message)
@@ -625,7 +641,7 @@ export function configureProps(fn: Function, options: FixturePropsOptions): void
 }
 
 function memoProps(fn: Function, props: Set<string>): Set<string> {
-  (fn as any)[kPropNamesSymbol] = props
+  ;(fn as any)[kPropNamesSymbol] = props
   return props
 }
 
@@ -634,15 +650,16 @@ interface PropsParserOptions {
   suiteHook?: SuiteHook
 }
 
-function getUsedProps(fn: Function, { sourceError, suiteHook }: PropsParserOptions = {}): Set<string> {
+function getUsedProps(
+  fn: Function,
+  { sourceError, suiteHook }: PropsParserOptions = {},
+): Set<string> {
   if (kPropNamesSymbol in fn) {
     return fn[kPropNamesSymbol] as Set<string>
   }
 
-  const {
-    index: fixturesIndex = 0,
-    original: implementation = fn,
-  } = kPropsSymbol in fn ? fn[kPropsSymbol] as FixturePropsOptions : {}
+  const { index: fixturesIndex = 0, original: implementation = fn } =
+    kPropsSymbol in fn ? (fn[kPropsSymbol] as FixturePropsOptions) : {}
   let fnString = filterOutComments(implementation.toString())
 
   // match lowered async function and strip it off
@@ -672,9 +689,9 @@ function getUsedProps(fn: Function, { sourceError, suiteHook }: PropsParserOptio
   if (!(fixturesArgument[0] === '{' && fixturesArgument.endsWith('}'))) {
     const ordinalArgument = ordinal(fixturesIndex + 1)
     const error = new FixtureParseError(
-      `The ${ordinalArgument} argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). `
-      + `Instead, received "${fixturesArgument}".`
-      + `${(suiteHook ? ` If you used internal "suite" task as the ${ordinalArgument} argument previously, access it in the ${ordinal(fixturesIndex + 2)} argument instead.` : '')}`,
+      `The ${ordinalArgument} argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). ` +
+        `Instead, received "${fixturesArgument}".` +
+        `${suiteHook ? ` If you used internal "suite" task as the ${ordinalArgument} argument previously, access it in the ${ordinal(fixturesIndex + 2)} argument instead.` : ''}`,
     )
     if (sourceError) {
       error.stack = sourceError.stack?.replace(sourceError.message, error.message)
@@ -708,11 +725,9 @@ function splitByComma(s: string) {
   for (let i = 0; i < s.length; i++) {
     if (s[i] === '{' || s[i] === '[') {
       stack.push(s[i] === '{' ? '}' : ']')
-    }
-    else if (s[i] === stack.at(-1)) {
+    } else if (s[i] === stack.at(-1)) {
       stack.pop()
-    }
-    else if (!stack.length && s[i] === ',') {
+    } else if (!stack.length && s[i] === ',') {
       const token = s.substring(start, i).trim()
       if (token) {
         result.push(token)

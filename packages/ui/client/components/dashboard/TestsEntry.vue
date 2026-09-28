@@ -25,22 +25,21 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       data-testid="pass-entry"
       @click="toggleFilter('success')"
     >
-      <template #header>
-        Pass
-      </template>
+      <template #header> Pass </template>
       <template #body>
         {{ explorerTree.summary.testsSuccess }}
       </template>
     </DashboardEntry>
     <DashboardEntry
-      :class="{ 'text-red-700 dark:text-red-500': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }"
+      :class="{
+        'text-red-700 dark:text-red-500': explorerTree.summary.testsFailed,
+        op50: !explorerTree.summary.testsFailed,
+      }"
       data-testid="fail-entry"
       class="cursor-pointer hover:op80"
       @click="toggleFilter('failed')"
     >
-      <template #header>
-        Fail
-      </template>
+      <template #header> Fail </template>
       <template #body>
         {{ explorerTree.summary.testsFailed }}
       </template>
@@ -50,9 +49,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       class="text-cyan-700 dark:text-cyan-500"
       data-testid="expected-fail-entry"
     >
-      <template #header>
-        Expected Fail
-      </template>
+      <template #header> Expected Fail </template>
       <template #body>
         {{ explorerTree.summary.testsExpectedFail }}
       </template>
@@ -63,21 +60,13 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       data-testid="skipped-entry"
       @click="toggleFilter('skipped')"
     >
-      <template #header>
-        Skip
-      </template>
+      <template #header> Skip </template>
       <template #body>
         {{ explorerTree.summary.testsSkipped }}
       </template>
     </DashboardEntry>
-    <DashboardEntry
-      v-if="explorerTree.summary.testsTodo"
-      class="op50"
-      data-testid="todo-entry"
-    >
-      <template #header>
-        Todo
-      </template>
+    <DashboardEntry v-if="explorerTree.summary.testsTodo" class="op50" data-testid="todo-entry">
+      <template #header> Todo </template>
       <template #body>
         {{ explorerTree.summary.testsTodo }}
       </template>
@@ -88,9 +77,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       class="cursor-pointer hover:op80"
       @click="toggleFilter('total')"
     >
-      <template #header>
-        Total
-      </template>
+      <template #header> Total </template>
       <template #body>
         {{ explorerTree.summary.totalTests }}
       </template>
@@ -101,9 +88,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       data-testid="slow-entry"
       @click="toggleFilter('slow')"
     >
-      <template #header>
-        Slow
-      </template>
+      <template #header> Slow </template>
       <template #body>
         {{ explorerTree.summary.testsSlow }}
       </template>

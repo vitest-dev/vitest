@@ -82,9 +82,10 @@ function createBrowserRunner(
       super.onBeforeTryTask?.(test, options)
       const trace = this.config.browser.trace
       const { retry, repeats } = options
-      const shouldTrace = trace !== 'off'
-        && !(trace === 'on-all-retries' && retry === 0)
-        && !(trace === 'on-first-retry' && retry !== 1)
+      const shouldTrace =
+        trace !== 'off' &&
+        !(trace === 'on-all-retries' && retry === 0) &&
+        !(trace === 'on-first-retry' && retry !== 1)
       const shouldTraceView = this.config.browser.traceView.enabled
       if (!shouldTraceView && !shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
@@ -92,10 +93,10 @@ function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        getBrowserState().browserTraceDomSnapshot ??= await getOrchestratorState().browserTraceDomSnapshotPromise
+        getBrowserState().browserTraceDomSnapshot ??=
+          await getOrchestratorState().browserTraceDomSnapshotPromise
         getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
-      }
-      else {
+      } else {
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
       if (!shouldTrace) {
@@ -112,13 +113,13 @@ function createBrowserRunner(
       }
 
       const name = getTraceName(test, retry, repeats)
-      await this.commands.triggerCommand(
-        '__vitest_startChunkTrace',
-        [{ name, title }],
-      )
+      await this.commands.triggerCommand('__vitest_startChunkTrace', [{ name, title }])
     }
 
-    onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
+    onAfterRetryTask = async (
+      test: Test,
+      { retry, repeats }: { retry: number; repeats: number },
+    ) => {
       const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
@@ -136,19 +137,20 @@ function createBrowserRunner(
       if (!hasActiveTrace) {
         return
       }
-      await this.commands.triggerCommand('__vitest_markTrace', [{
-        name: `onAfterRetryTask [${test.result?.state}]`,
-        stack: test.result?.errors?.[0].stack,
-      }])
+      await this.commands.triggerCommand('__vitest_markTrace', [
+        {
+          name: `onAfterRetryTask [${test.result?.state}]`,
+          stack: test.result?.errors?.[0].stack,
+        },
+      ])
       const name = getTraceName(test, retry, repeats)
       if (!this.traces.has(test.id)) {
         this.traces.set(test.id, [])
       }
       const traces = this.traces.get(test.id)!
-      const { tracePath } = await this.commands.triggerCommand(
-        '__vitest_stopChunkTrace',
-        [{ name }],
-      ) as { tracePath: string }
+      const { tracePath } = (await this.commands.triggerCommand('__vitest_stopChunkTrace', [
+        { name },
+      ])) as { tracePath: string }
       traces.push(tracePath)
     }
 
@@ -158,16 +160,11 @@ function createBrowserRunner(
       const traces = this.traces.get(task.id) || []
       if (traces.length) {
         if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
-          await this.commands.triggerCommand(
-            '__vitest_deleteTracing',
-            [{ traces }],
-          )
-        }
-        else {
-          await this.commands.triggerCommand(
-            '__vitest_annotateTraces',
-            [{ testId: task.id, traces }],
-          )
+          await this.commands.triggerCommand('__vitest_deleteTracing', [{ traces }])
+        } else {
+          await this.commands.triggerCommand('__vitest_annotateTraces', [
+            { testId: task.id, traces },
+          ])
         }
       }
       if (this.config.bail && task.result?.state === 'fail') {
@@ -185,26 +182,29 @@ function createBrowserRunner(
       // check custom matcher metadata in JestExtendError
       const lastErrorContext = task.result?.errors?.at(-1)?.__vitest_error_context__
       if (
-        this.config.browser.screenshotFailures
-        && document.body.clientHeight > 0
-        && task.result?.state === 'fail'
-        && task.type === 'test'
-        && !(
-          lastErrorContext
-          && Reflect.get(lastErrorContext, 'assertionName') === 'toMatchScreenshot'
-          && Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot')
+        this.config.browser.screenshotFailures &&
+        document.body.clientHeight > 0 &&
+        task.result?.state === 'fail' &&
+        task.type === 'test' &&
+        !(
+          lastErrorContext &&
+          Reflect.get(lastErrorContext, 'assertionName') === 'toMatchScreenshot' &&
+          Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot'
+        )
       ) {
-        const screenshot = await page.screenshot({
-          timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
-          path: resolve(
-            this.config.attachmentsDir,
-            'failure-screenshots',
-            basename(task.file.filepath),
-            `${task.fullTestName.replace(/\W/g, '-')}.png`,
-          ),
-        }).catch((err) => {
-          console.error('[vitest] Failed to take a screenshot', err)
-        })
+        const screenshot = await page
+          .screenshot({
+            timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
+            path: resolve(
+              this.config.attachmentsDir,
+              'failure-screenshots',
+              basename(task.file.filepath),
+              `${task.fullTestName.replace(/\W/g, '-')}.png`,
+            ),
+          })
+          .catch((err) => {
+            console.error('[vitest] Failed to take a screenshot', err)
+          })
         if (screenshot) {
           await recordArtifact(task, {
             type: 'internal:failureScreenshot',
@@ -228,10 +228,8 @@ function createBrowserRunner(
           }
           // usually resolved already: the request is fired as soon as the
           // file finishes importing, while collection is still running
-          const map = await (
-            this.sourceMapPrefetches.get(suite.filepath)
-            ?? rpc().getBrowserFileSourceMap(suite.filepath)
-          )
+          const map = await (this.sourceMapPrefetches.get(suite.filepath) ??
+            rpc().getBrowserFileSourceMap(suite.filepath))
           this.sourceMapPrefetches.delete(suite.filepath)
           this.sourceMapCache.set(suite.filepath, map)
           const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
@@ -245,15 +243,12 @@ function createBrowserRunner(
     onAfterRunFiles = async (files: File[]) => {
       super.onAfterRunFiles(files)
 
-      const [coverage] = await Promise.all([
-        coverageModule.takeCoverage(),
-        mocker.invalidate(),
-      ])
+      const [coverage] = await Promise.all([coverageModule.takeCoverage(), mocker.invalidate()])
 
       if (coverage) {
         await rpc().onAfterSuiteRun({
           coverage,
-          testFiles: files.map(file => file.name),
+          testFiles: files.map((file) => file.name),
           environment: 'client',
           projectName: this.config.name,
         })
@@ -276,19 +271,25 @@ function createBrowserRunner(
       if (this.config.includeTaskLocation) {
         try {
           await updateTestFilesLocations(files, this.sourceMapCache)
-        }
-        catch {}
+        } catch {}
       }
       return rpc().onCollected(this.method, files)
     }
 
     onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<TestAnnotation> => {
-      const artifact: TestArtifact = { type: 'internal:annotation', annotation, location: annotation.location }
+      const artifact: TestArtifact = {
+        type: 'internal:annotation',
+        annotation,
+        location: annotation.location,
+      }
 
       return this.onTestArtifactRecord(test, artifact).then(({ annotation }) => annotation)
     }
 
-    onTestArtifactRecord = <Artifact extends TestArtifact>(test: Test, artifact: Artifact): Promise<Artifact> => {
+    onTestArtifactRecord = <Artifact extends TestArtifact>(
+      test: Test,
+      artifact: Artifact,
+    ): Promise<Artifact> => {
       if (artifact.location) {
         // the file should be the test file
         // tests from other files are not supported
@@ -344,8 +345,7 @@ function createBrowserRunner(
       }
       try {
         await import(/* @vite-ignore */ importpath)
-      }
-      catch (err) {
+      } catch (err) {
         throw new Error(`Failed to import test file ${filepath}`, { cause: err })
       }
 
@@ -354,14 +354,17 @@ function createBrowserRunner(
         // request it early so onBeforeRunSuite doesn't have to wait
         this.sourceMapPrefetches.set(
           filepath,
-          rpc().getBrowserFileSourceMap(filepath).catch(() => undefined),
+          rpc()
+            .getBrowserFileSourceMap(filepath)
+            .catch(() => undefined),
         )
       }
     }
 
     trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
-      const options: import('@opentelemetry/api').SpanOptions = typeof attributes === 'object' ? { attributes } : {}
-      return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+      const options: import('@opentelemetry/api').SpanOptions =
+        typeof attributes === 'object' ? { attributes } : {}
+      return this._otel.$(`vitest.test.runner.${name}`, options, cb || (attributes as () => T))
     }
   }
 }
@@ -381,8 +384,7 @@ export async function initiateRunner(
     return cachedRunner
   }
   const BrowserRunner = createBrowserRunner(mocker, state, {
-    takeCoverage: () =>
-      takeCoverageInsideWorker(config.coverage, moduleRunner),
+    takeCoverage: () => takeCoverageInsideWorker(config.coverage, moduleRunner),
   })
   if (!config.snapshotOptions.snapshotEnvironment) {
     config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
@@ -413,10 +415,14 @@ export async function initiateRunner(
 }
 
 async function getTraceMap(file: string, sourceMaps: Map<string, any>) {
-  const result = sourceMaps.get(file) || await rpc().getBrowserFileSourceMap(file).then((map) => {
-    sourceMaps.set(file, map)
-    return map
-  })
+  const result =
+    sourceMaps.get(file) ||
+    (await rpc()
+      .getBrowserFileSourceMap(file)
+      .then((map) => {
+        sourceMaps.set(file, map)
+        return map
+      }))
   if (!result) {
     return null
   }

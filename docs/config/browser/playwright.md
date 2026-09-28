@@ -90,6 +90,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ## connectOptions
@@ -149,6 +150,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ## contextOptions

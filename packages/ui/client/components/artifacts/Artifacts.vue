@@ -8,10 +8,16 @@ import VisualRegression from './visual-regression/VisualRegression.vue'
 
 const { test } = defineProps<{ test: RunnerTestCase }>()
 
-interface HandledArtifact { artifact: TestArtifact; component?: Component; props: object }
+interface HandledArtifact {
+  artifact: TestArtifact
+  component?: Component
+  props: object
+}
 
-type ComponentProps<T> = T extends new(...args: any) => { $props: infer P } ? NonNullable<P>
-  : T extends (props: infer P, ...args: any) => any ? P
+type ComponentProps<T> = T extends new (...args: any) => { $props: infer P }
+  ? NonNullable<P>
+  : T extends (props: infer P, ...args: any) => any
+    ? P
     : object
 
 const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
@@ -45,11 +51,9 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
   <TraceArtifacts :test="test" />
 
   <template v-if="handledArtifacts.length">
-    <h1 class="m-2">
-      Test Artifacts
-    </h1>
+    <h1 class="m-2">Test Artifacts</h1>
     <div
-      v-for="{ artifact, component, props }, index of handledArtifacts"
+      v-for="({ artifact, component, props }, index) of handledArtifacts"
       :key="artifact.type + index"
       class="bg-yellow-500/10 text-sm text-yellow-500 px-3 py-2 m-2 rounded"
       role="note"

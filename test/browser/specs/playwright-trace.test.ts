@@ -153,10 +153,7 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
 
     const failingTestTracesFolder = resolve(tracesFolder, 'failing.special.ts')
 
-    expect(readdirSync(tracesFolder)).toEqual([
-      'basic.test.ts',
-      'failing.special.ts',
-    ])
+    expect(readdirSync(tracesFolder)).toEqual(['basic.test.ts', 'failing.special.ts'])
     expect(readdirSync(basicTestTracesFolder).sort()).toMatchInlineSnapshot(`[]`)
     expect(readdirSync(failingTestTracesFolder).sort()).toMatchInlineSnapshot(`
     [

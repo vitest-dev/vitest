@@ -95,8 +95,7 @@ test('invalid packages', async () => {
         },
       }
     `)
-  }
-  else {
+  } else {
     expect(errorTree()).toMatchInlineSnapshot(`
       {
         "mock-bad-dep.test.ts": {
@@ -184,8 +183,9 @@ function modeToConfig(mode: string): RunVitestConfig {
 }
 
 test.for(['node', 'playwright'])('importOriginal for virtual modules (%s)', async (mode) => {
-  const { stderr, errorTree } = await runInlineTests({
-    'vitest.config.js': `
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [{
@@ -203,7 +203,7 @@ export default defineConfig({
   }],
 })
     `,
-    './basic.test.js': `
+      './basic.test.js': `
 import { test, expect, vi } from 'vitest'
 import { value } from 'virtual:my-module'
 
@@ -216,7 +216,9 @@ test('importOriginal returns original virtual module exports', () => {
   expect(value).toBe('original-modified')
 })
     `,
-  }, modeToConfig(mode))
+    },
+    modeToConfig(mode),
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -228,9 +230,12 @@ test('importOriginal returns original virtual module exports', () => {
   `)
 })
 
-test.for(['node', 'playwright'])('mocking virtual module without importOriginal skips loading original (%s)', async (mode) => {
-  const { stderr, testTree } = await runInlineTests({
-    'vitest.config.js': `
+test.for(['node', 'playwright'])(
+  'mocking virtual module without importOriginal skips loading original (%s)',
+  async (mode) => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [{
@@ -248,7 +253,7 @@ export default defineConfig({
   }],
 })
     `,
-    './basic.test.js': `
+        './basic.test.js': `
 import { test, expect, vi } from 'vitest'
 import { value } from 'virtual:my-module'
 
@@ -260,21 +265,27 @@ test('mock works without loading original', () => {
   expect(value).toBe('mocked')
 })
     `,
-  }, modeToConfig(mode))
+      },
+      modeToConfig(mode),
+    )
 
-  expect(stderr).toBe('')
-  expect(testTree()).toMatchInlineSnapshot(`
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
     {
       "basic.test.js": {
         "mock works without loading original": "passed",
       },
     }
   `)
-})
+  },
+)
 
-test.for(['node', 'playwright'])('mocking actual module with factory skips loading original (%s)', async (mode) => {
-  const { stderr, errorTree } = await runInlineTests({
-    'vitest.config.js': `
+test.for(['node', 'playwright'])(
+  'mocking actual module with factory skips loading original (%s)',
+  async (mode) => {
+    const { stderr, errorTree } = await runInlineTests(
+      {
+        'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [{
@@ -287,8 +298,8 @@ export default defineConfig({
   }],
 })
     `,
-    './do-not-load.js': `export const value = 'original'`,
-    './basic.test.js': `
+        './do-not-load.js': `export const value = 'original'`,
+        './basic.test.js': `
 import { test, expect, vi } from 'vitest'
 import * as dep from './do-not-load.js'
 
@@ -300,21 +311,27 @@ test('mock works without loading original', () => {
   expect(dep).toMatchObject({ value: 'mocked' })
 })
     `,
-  }, modeToConfig(mode))
+      },
+      modeToConfig(mode),
+    )
 
-  expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
+    expect(stderr).toBe('')
+    expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.js": {
         "mock works without loading original": "passed",
       },
     }
   `)
-})
+  },
+)
 
-test.for(['node', 'playwright'])('mocking actual module via __mocks__ skips loading original (%s)', async (mode) => {
-  const { stderr, errorTree } = await runInlineTests({
-    'vitest.config.js': `
+test.for(['node', 'playwright'])(
+  'mocking actual module via __mocks__ skips loading original (%s)',
+  async (mode) => {
+    const { stderr, errorTree } = await runInlineTests(
+      {
+        'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [{
@@ -327,9 +344,9 @@ export default defineConfig({
   }],
 })
     `,
-    './do-not-load.js': `export const value = 'original'`,
-    './__mocks__/do-not-load.js': `export const value = 'mocked'`,
-    './basic.test.js': `
+        './do-not-load.js': `export const value = 'original'`,
+        './__mocks__/do-not-load.js': `export const value = 'mocked'`,
+        './basic.test.js': `
 import { test, expect, vi } from 'vitest'
 import { value } from './do-not-load.js'
 
@@ -339,17 +356,20 @@ test('mock works without loading original', () => {
   expect(value).toBe('mocked')
 })
     `,
-  }, modeToConfig(mode))
+      },
+      modeToConfig(mode),
+    )
 
-  expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
+    expect(stderr).toBe('')
+    expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.js": {
         "mock works without loading original": "passed",
       },
     }
   `)
-})
+  },
+)
 
 test('doMock/doUnmock ordering is preserved in resolveMocks', async () => {
   // This tests repeats doUnmock + doMock
@@ -363,13 +383,19 @@ test('doMock/doUnmock ordering is preserved in resolveMocks', async () => {
   //   import('/mock-lib-1') // => { value: 1 }
   //   ...
   const N = 20
-  const mockEntries = Array.from({ length: N }, (_, i) => `\
+  const mockEntries = Array.from(
+    { length: N },
+    (_, i) => `\
 vi.doUnmock('/mock-lib-${i}');
 vi.doMock('/mock-lib-${i}', () => ({ value: ${i} }));
-`).join('\n')
-  const importChecks = Array.from({ length: N }, (_, i) => `\
+`,
+  ).join('\n')
+  const importChecks = Array.from(
+    { length: N },
+    (_, i) => `\
 await expect(import('/mock-lib-${i}')).resolves.toEqual({ value: ${i} });
-`).join('\n')
+`,
+  ).join('\n')
 
   const { stderr, errorTree } = await runInlineTests({
     './basic.test.js': `
@@ -400,13 +426,19 @@ test('the last doMock of the same path wins', async () => {
   // then, the last registered factory should be used
   //   import('/mock-lib-0') // => { value: 'second' }
   const N = 20
-  const mockEntries = Array.from({ length: N }, (_, i) => `\
+  const mockEntries = Array.from(
+    { length: N },
+    (_, i) => `\
 vi.doMock('/mock-lib-${i}', () => ({ value: 'first' }));
 vi.doMock('/mock-lib-${i}', () => ({ value: 'second' }));
-`).join('\n')
-  const importChecks = Array.from({ length: N }, (_, i) => `\
+`,
+  ).join('\n')
+  const importChecks = Array.from(
+    { length: N },
+    (_, i) => `\
 await expect(import('/mock-lib-${i}')).resolves.toEqual({ value: 'second' });
-`).join('\n')
+`,
+  ).join('\n')
 
   const { stderr, errorTree } = await runInlineTests({
     './basic.test.js': `
@@ -429,13 +461,13 @@ ${importChecks}
   `)
 })
 
-test.for([
-  'node',
-  'playwright',
-])('repeating mock, importActual, and resetModules (%s)', async (mode) => {
-  const { stderr, errorTree } = await runInlineTests({
-    // external
-    './external.test.ts': `
+test.for(['node', 'playwright'])(
+  'repeating mock, importActual, and resetModules (%s)',
+  async (mode) => {
+    const { stderr, errorTree } = await runInlineTests(
+      {
+        // external
+        './external.test.ts': `
 import { expect, test, vi } from "vitest"
 
 test("external", async () => {
@@ -466,8 +498,8 @@ test("external", async () => {
   expect(lib4).toBe(lib5)
 });
     `,
-    // builtin module
-    './builtin.test.ts': `
+        // builtin module
+        './builtin.test.ts': `
 import { expect, test, vi } from "vitest"
 
 test("builtin", async () => {
@@ -498,8 +530,8 @@ test("builtin", async () => {
   expect(lib4).toBe(lib5)
 });
     `,
-    // local module
-    './local.test.ts': `
+        // local module
+        './local.test.ts': `
 import { expect, test, vi } from "vitest"
 
 test("local", async () => {
@@ -530,12 +562,14 @@ test("local", async () => {
   expect(lib4).toBe(lib5)
 });
     `,
-    './local.js': `export const local = 'local'`,
-  }, modeToConfig(mode))
+        './local.js': `export const local = 'local'`,
+      },
+      modeToConfig(mode),
+    )
 
-  if (mode === 'playwright') {
-    // browser mode doesn't support resetModules nor node builtin
-    expect(errorTree()).toMatchInlineSnapshot(`
+    if (mode === 'playwright') {
+      // browser mode doesn't support resetModules nor node builtin
+      expect(errorTree()).toMatchInlineSnapshot(`
       {
         "builtin.test.ts": {
           "builtin": [
@@ -558,11 +592,11 @@ test("local", async () => {
         },
       }
     `)
-    return
-  }
+      return
+    }
 
-  expect(stderr).toMatchInlineSnapshot(`""`)
-  expect(errorTree()).toMatchInlineSnapshot(`
+    expect(stderr).toMatchInlineSnapshot(`""`)
+    expect(errorTree()).toMatchInlineSnapshot(`
     {
       "builtin.test.ts": {
         "builtin": "passed",
@@ -575,11 +609,13 @@ test("local", async () => {
       },
     }
   `)
-})
+  },
+)
 
 test('automocking works with isolate:false when factory mock runs first (resolve alias)', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'vitest.config.js': `
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'vitest.config.js': `
 import path from 'node:path'
 import { defineConfig } from 'vitest/config'
 
@@ -594,11 +630,11 @@ export default defineConfig({
   },
 })
     `,
-    './src/dep.ts': `
+      './src/dep.ts': `
 export function useDep(): string { return 'real' }
 export function helperDep(): number { return 42 }
     `,
-    './a-factory.test.ts': `
+      './a-factory.test.ts': `
 import { vi, test, expect } from 'vitest'
 import { useDep } from '~/dep'
 vi.mock(import('~/dep'), () => ({
@@ -609,7 +645,7 @@ test('factory mock', () => {
   expect(useDep()).toBe('factory')
 })
     `,
-    './b-automock.test.ts': `
+      './b-automock.test.ts': `
 import { vi, test, expect } from 'vitest'
 import { useDep } from '~/dep'
 vi.mock(import('~/dep'))
@@ -621,9 +657,11 @@ test('automock mockReturnValue works', () => {
   expect(useDep()).toBe('mocked')
 })
     `,
-  }, {
-    sequence: { sequencer: StableTestFileOrderSorter },
-  })
+    },
+    {
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+  )
 
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`

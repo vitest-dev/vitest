@@ -18,6 +18,7 @@ Vitest uses [`std-env`](https://npmx.dev/package/std-env) package to detect the 
 You can customize this behavior by explicitly setting the `allowOnly` option to either `true` or `false`.
 
 ::: code-group
+
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -27,9 +28,11 @@ export default defineConfig({
   },
 })
 ```
+
 ```bash [CLI]
 vitest --allowOnly
 ```
+
 :::
 
 When enabled, Vitest will not fail the test suite if tests marked with [`only`](/api/test#test-only) are detected, including in CI environments.

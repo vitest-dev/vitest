@@ -24,7 +24,7 @@ test('two plus two is four', () => {
 })
 ```
 
-This works great for primitive values like numbers, strings, and booleans. But when you're comparing objects, `toBe` checks *identity* (whether they're the exact same object in memory), not whether they have the same shape. That's where [`toEqual`](/api/expect#toequal) comes in. It recursively compares every field of an object or element of an array, ignoring object identity:
+This works great for primitive values like numbers, strings, and booleans. But when you're comparing objects, `toBe` checks _identity_ (whether they're the exact same object in memory), not whether they have the same shape. That's where [`toEqual`](/api/expect#toequal) comes in. It recursively compares every field of an object or element of an array, ignoring object identity:
 
 ```js
 test('object assignment', () => {
@@ -75,7 +75,7 @@ test('toEqual vs toStrictEqual', () => {
 A good rule of thumb: use `toBe` for primitives (numbers, strings, booleans), `toEqual` for comparing structure, and `toStrictEqual` when you also care about types and explicit `undefined` values.
 :::
 
-You can also negate any matcher by inserting `.not` before it. This is useful when you want to verify that something is *not* the case:
+You can also negate any matcher by inserting `.not` before it. This is useful when you want to verify that something is _not_ the case:
 
 ```js
 test('adding positive numbers is not zero', () => {
@@ -216,7 +216,7 @@ test('object has property', () => {
 
 ## Asymmetric Matchers
 
-Sometimes you don't know the exact value, but you know its type or shape. Asymmetric matchers let you describe what a value should *look like* without pinning down the exact content. They work inside any matcher that does deep comparison, like `toEqual` or `toMatchObject`:
+Sometimes you don't know the exact value, but you know its type or shape. Asymmetric matchers let you describe what a value should _look like_ without pinning down the exact content. They work inside any matcher that does deep comparison, like `toEqual` or `toMatchObject`:
 
 ```js
 test('user has the right shape', () => {
@@ -264,7 +264,7 @@ test('compiling an empty string throws', () => {
 ```
 
 ::: tip
-The wrapping function `() => compileCode('')` is important. If you wrote `expect(compileCode('')).toThrow()`, the error would be thrown *before* `expect` gets a chance to catch it, and the test would fail with an unhandled error instead.
+The wrapping function `() => compileCode('')` is important. If you wrote `expect(compileCode('')).toThrow()`, the error would be thrown _before_ `expect` gets a chance to catch it, and the test would fail with an unhandled error instead.
 :::
 
 ## Soft Assertions

@@ -1,5 +1,12 @@
 import type { Context as OTELContext } from '@opentelemetry/api'
-import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelOutgoingEvent, IframeReceivedEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
+import type {
+  GlobalChannelIncomingEvent,
+  IframeChannelEvent,
+  IframeChannelOutgoingEvent,
+  IframeReceivedEvent,
+  IframeViewportDoneEvent,
+  IframeViewportFailEvent,
+} from '@vitest/browser/client'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import type { FileSpecification } from 'vitest/internal/browser'
 import { channel, client, globalChannel } from '@vitest/browser/client'
@@ -40,17 +47,12 @@ export class IframeOrchestrator {
       sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
     })
 
-    channel.addEventListener(
-      'message',
-      e => this.onIframeEvent(e),
-    )
-    globalChannel.addEventListener(
-      'message',
-      e => this.onGlobalChannelEvent(e),
-    )
+    channel.addEventListener('message', (e) => this.onIframeEvent(e))
+    globalChannel.addEventListener('message', (e) => this.onGlobalChannelEvent(e))
 
     // Notify the server once the websocket is ready without blocking orchestrator creation.
-    void client.waitForConnection()
+    void client
+      .waitForConnection()
       .then(() => client.rpc.onOrchestratorReady())
       .catch((error) => {
         debug('failed to notify orchestrator readiness', error)
@@ -59,15 +61,13 @@ export class IframeOrchestrator {
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
     await this.traces.waitInit()
-    this.traces.recordInitSpan(
-      this.traces.getContextFromCarrier(getBrowserState().otelCarrier),
-    )
+    this.traces.recordInitSpan(this.traces.getContextFromCarrier(getBrowserState().otelCarrier))
     const orchestratorSpan = this.traces.startContextSpan(
       'vitest.browser.orchestrator.run',
       this.traces.getContextFromCarrier(options.otelCarrier),
     )
     orchestratorSpan.span.setAttributes({
-      'vitest.browser.files': options.files.map(f => f.filepath),
+      'vitest.browser.files': options.files.map((f) => f.filepath),
     })
     const endSpan = async () => {
       orchestratorSpan.span.end()
@@ -99,7 +99,7 @@ export class IframeOrchestrator {
       return
     }
 
-    this.iframes.forEach(iframe => iframe.remove())
+    this.iframes.forEach((iframe) => iframe.remove())
     this.iframes.clear()
     this.readyIframes.clear()
     this.readyWaiters.clear()
@@ -205,12 +205,7 @@ export class IframeOrchestrator {
       this.removeIframe(file)
     }
 
-    await this.prepareIframe(
-      container,
-      file,
-      startTime,
-      otelContext,
-    )
+    await this.prepareIframe(container, file, startTime, otelContext)
     await setIframeViewport(width, height)
     // running tests after the "prepare" event
     await this.sendEventToIframe({
@@ -249,42 +244,45 @@ export class IframeOrchestrator {
         const href = this.getIframeHref(iframe)
         debug('iframe loaded with href', href)
         if (href !== iframe.src) {
-          reject(this.dispatchIframeError(new Error(
-            `Cannot connect to the iframe. `
-            + `Did you change the location or submitted a form? `
-            + 'If so, don\'t forget to call `event.preventDefault()` to avoid reloading the page.\n\n'
-            + `Received URL: ${href || 'unknown due to CORS'}\nExpected: ${iframe.src}`,
-          )))
-        }
-        else if (this.iframes.has(iframeId)) {
+          reject(
+            this.dispatchIframeError(
+              new Error(
+                `Cannot connect to the iframe. ` +
+                  `Did you change the location or submitted a form? ` +
+                  "If so, don't forget to call `event.preventDefault()` to avoid reloading the page.\n\n" +
+                  `Received URL: ${href || 'unknown due to CORS'}\nExpected: ${iframe.src}`,
+              ),
+            ),
+          )
+        } else if (this.iframes.has(iframeId)) {
           const events = this.iframeEvents.get(iframe)
           if (events?.size) {
-            this.dispatchIframeError(new Error(this.createWarningMessage(iframeId, 'during a test')))
-          }
-          else {
+            this.dispatchIframeError(
+              new Error(this.createWarningMessage(iframeId, 'during a test')),
+            )
+          } else {
             this.warnReload(iframe, iframeId)
           }
-        }
-        else {
+        } else {
           this.iframes.set(iframeId, iframe)
           this.waitForReady(iframeId)
-            .then(() => this.sendEventToIframe({
-              event: 'prepare',
-              iframeId,
-              startTime,
-              otelCarrier: this.traces.getContextCarrier(otelContext),
-            }))
-            .then(resolve, error => reject(this.dispatchIframeError(error)))
+            .then(() =>
+              this.sendEventToIframe({
+                event: 'prepare',
+                iframeId,
+                startTime,
+                otelCarrier: this.traces.getContextCarrier(otelContext),
+              }),
+            )
+            .then(resolve, (error) => reject(this.dispatchIframeError(error)))
         }
       }
       iframe.onerror = (e) => {
         if (typeof e === 'string') {
           reject(this.dispatchIframeError(new Error(e)))
-        }
-        else if (e instanceof ErrorEvent) {
+        } else if (e instanceof ErrorEvent) {
           reject(this.dispatchIframeError(e.error))
-        }
-        else {
+        } else {
           reject(this.dispatchIframeError(new Error(`Cannot load the iframe ${iframeId}.`)))
         }
       }
@@ -313,10 +311,12 @@ export class IframeOrchestrator {
       // never does (e.g. it threw during bootstrap), don't wait forever
       const timer = setTimeout(() => {
         this.readyWaiters.delete(iframeId)
-        reject(new Error(
-          `The iframe "${iframeId}" did not become ready within ${timeout}ms. `
-          + `The tester likely failed to initialize, check the browser console for errors.`,
-        ))
+        reject(
+          new Error(
+            `The iframe "${iframeId}" did not become ready within ${timeout}ms. ` +
+              `The tester likely failed to initialize, check the browser console for errors.`,
+          ),
+        )
       }, timeout)
 
       this.readyWaiters.set(iframeId, {
@@ -348,11 +348,13 @@ export class IframeOrchestrator {
   private loggedIframe = new WeakSet<HTMLIFrameElement>()
 
   private createWarningMessage(iframeId: string, location: string) {
-    return `The iframe${iframeId === ID_ALL ? '' : ` for "${iframeId}"`} was reloaded ${location}. `
-      + `This can lead to unexpected behavior during tests, duplicated test results or tests hanging.\n\n`
-      + `Make sure that your test code does not change window's location, submit forms without preventing default behavior, or imports unoptimized dependencies.\n`
-      + `If you are using a framework that manipulates browser history (like React Router), consider using memory-based routing for tests. `
-      + `If you think this is a false positive, open an issue with a reproduction: https://github.com/vitest-dev/vitest/issues/new`
+    return (
+      `The iframe${iframeId === ID_ALL ? '' : ` for "${iframeId}"`} was reloaded ${location}. ` +
+      `This can lead to unexpected behavior during tests, duplicated test results or tests hanging.\n\n` +
+      `Make sure that your test code does not change window's location, submit forms without preventing default behavior, or imports unoptimized dependencies.\n` +
+      `If you are using a framework that manipulates browser history (like React Router), consider using memory-based routing for tests. ` +
+      `If you think this is a false positive, open an issue with a reproduction: https://github.com/vitest-dev/vitest/issues/new`
+    )
   }
 
   private warnReload(iframe: HTMLIFrameElement, iframeId: string) {
@@ -362,13 +364,17 @@ export class IframeOrchestrator {
     this.loggedIframe.add(iframe)
     const message = `\x1B[41m WARNING \x1B[49m ${this.createWarningMessage(iframeId, 'multiple times')}`
 
-    client.rpc.sendLog('run', {
-      type: 'stderr',
-      time: Date.now(),
-      content: message,
-      size: message.length,
-      taskId: iframeId === ID_ALL ? undefined : generateFileId(iframeId),
-    }).catch(() => { /* ignore */ })
+    client.rpc
+      .sendLog('run', {
+        type: 'stderr',
+        time: Date.now(),
+        content: message,
+        size: message.length,
+        taskId: iframeId === ID_ALL ? undefined : generateFileId(iframeId),
+      })
+      .catch(() => {
+        /* ignore */
+      })
   }
 
   private getIframeHref(iframe: HTMLIFrameElement) {
@@ -377,8 +383,7 @@ export class IframeOrchestrator {
       // same origin trusted iframe (where tests can run)
       // also allows accessing "location"
       return iframe.contentWindow?.location.href
-    }
-    catch {
+    } catch {
       // looks like this iframe is not a tester.html
       return undefined
     }
@@ -404,9 +409,11 @@ export class IframeOrchestrator {
     // enable scaling only when using the UI, without UI the iframe fills the page
     if (config.browser.ui) {
       if (config.browser.name !== 'firefox') {
-        iframe.style.setProperty('transform', 'scale(min(1, calc(100cqw / var(--viewport-width)), calc(100cqh / var(--viewport-height))))')
-      }
-      else {
+        iframe.style.setProperty(
+          'transform',
+          'scale(min(1, calc(100cqw / var(--viewport-width)), calc(100cqh / var(--viewport-height))))',
+        )
+      } else {
         // Firefox cannot resolve relative units like `cqw` directly inside `atan2()`
         // Storing it in a CSS variable first forces Firefox to resolve `100cqw` to an absolute pixel value
         iframe.style.setProperty('--container-width', '100cqw')
@@ -415,7 +422,10 @@ export class IframeOrchestrator {
         // `tan(atan2(a, b))` produces a unit-less `a / b` ratio:
         //  - `atan2()` accepts two lengths and returns an `<angle>`
         //  - `tan()` converts it back to a unit-less `<number>`
-        iframe.style.setProperty('transform', 'scale(min(1, tan(atan2(var(--container-width), var(--viewport-width))), tan(atan2(var(--container-height), var(--viewport-height)))))')
+        iframe.style.setProperty(
+          'transform',
+          'scale(min(1, tan(atan2(var(--container-width), var(--viewport-width))), tan(atan2(var(--container-height), var(--viewport-height)))))',
+        )
       }
 
       iframe.style.setProperty('transform-origin', 'top left')
@@ -461,15 +471,18 @@ export class IframeOrchestrator {
           break
         }
         await setIframeViewport(width, height)
-        channel.postMessage({ event: 'viewport:done', iframeId: id } satisfies IframeViewportDoneEvent)
+        channel.postMessage({
+          event: 'viewport:done',
+          iframeId: id,
+        } satisfies IframeViewportDoneEvent)
         break
       }
       default: {
         // ignore acknowledgements and responses to events we sent
         const event = e.data.event
         if (
-          typeof event === 'string'
-          && (event.startsWith('response:') || event.startsWith('ack:'))
+          typeof event === 'string' &&
+          (event.startsWith('response:') || event.startsWith('ack:'))
         ) {
           break
         }
@@ -520,10 +533,12 @@ export class IframeOrchestrator {
       const timeout = getIframeTimeout()
       ackTimer = setTimeout(() => {
         cleanupEvents()
-        reject(new Error(
-          `The iframe "${event.iframeId}" did not acknowledge the "${event.event}" message within ${timeout}ms. `
-          + `The tester might have crashed, been removed, or be blocked by a long synchronous task.`,
-        ))
+        reject(
+          new Error(
+            `The iframe "${event.iframeId}" did not acknowledge the "${event.event}" message within ${timeout}ms. ` +
+              `The tester might have crashed, been removed, or be blocked by a long synchronous task.`,
+          ),
+        )
       }, timeout)
 
       function onReceived(e: MessageEvent) {
@@ -573,28 +588,20 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 function generateFileId(file: string) {
   const config = getConfig()
   const path = relative(config.root, file)
-  return generateFileHash(
-    path,
-    config.name,
-    {
-      typecheck: config.pool === 'typescript',
-      __vitest_label__: config.mergeReportsLabel,
-    },
-  )
+  return generateFileHash(path, config.name, {
+    typecheck: config.pool === 'typescript',
+    __vitest_label__: config.mergeReportsLabel,
+  })
 }
 
 let currentViewport: { width: number; height: number } | undefined
 
-async function setIframeViewport(
-  width: number,
-  height: number,
-) {
+async function setIframeViewport(width: number, height: number) {
   const ui = getUiAPI()
 
   if (ui) {
     await ui.setIframeViewport(width, height)
-  }
-  else {
+  } else {
     document.body.style.setProperty('--viewport-width', `${width}px`)
     document.body.style.setProperty('--viewport-height', `${height}px`)
 
@@ -603,20 +610,13 @@ async function setIframeViewport(
     // the size actually changes; other providers resize the window, which
     // outside code can move under us, so they always re-pin
     const cacheable = getBrowserState().provider === 'playwright'
-    if (
-      cacheable
-      && currentViewport?.width === width
-      && currentViewport?.height === height
-    ) {
+    if (cacheable && currentViewport?.width === width && currentViewport?.height === height) {
       return
     }
 
-    await client.rpc.triggerCommand(
-      getBrowserState().sessionId,
-      '__vitest_viewport',
-      undefined,
-      [{ width, height }],
-    )
+    await client.rpc.triggerCommand(getBrowserState().sessionId, '__vitest_viewport', undefined, [
+      { width, height },
+    ])
     currentViewport = cacheable ? { width, height } : undefined
   }
 }

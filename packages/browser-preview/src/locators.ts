@@ -23,12 +23,15 @@ import { page, server, userEvent, utils } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
 
 class PreviewLocator extends Locator {
-  constructor(protected _pwSelector: string, protected _container?: Element) {
+  constructor(
+    protected _pwSelector: string,
+    protected _container?: Element,
+  ) {
     super()
   }
 
   override get selector() {
-    const selectors = this.elements().map(element => convertElementToCssSelector(element))
+    const selectors = this.elements().map((element) => convertElementToCssSelector(element))
     if (!selectors.length) {
       throw utils.getElementError(this._pwSelector, this._container || document.body)
     }
@@ -65,7 +68,10 @@ class PreviewLocator extends Locator {
     return userEvent.fill(element, text)
   }
 
-  async upload(file: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
+  async upload(
+    file: string | string[] | File | File[],
+    options?: UserEventUploadOptions,
+  ): Promise<void> {
     const element = await this.findElement(options)
     return userEvent.upload(element, file)
   }
@@ -93,10 +99,7 @@ class PreviewLocator extends Locator {
   }
 
   protected elementLocator(element: Element) {
-    return new PreviewLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
+    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
   }
 }
 
@@ -108,7 +111,9 @@ page.extend({
     return new PreviewLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    return new PreviewLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
+    return new PreviewLocator(
+      getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId),
+    )
   },
   getByAltText(text, options) {
     return new PreviewLocator(getByAltTextSelector(text, options))
@@ -124,11 +129,8 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PreviewLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
+    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
   },
 })
 
-__INTERNAL._createLocator = selector => new PreviewLocator(selector)
+__INTERNAL._createLocator = (selector) => new PreviewLocator(selector)

@@ -42,6 +42,7 @@ For browser mode, see the [Browser Mode](/guide/open-telemetry#browser-mode) sec
 An `sdkPath` is resolved relative to the [`root`](/config/root) of the project and should point to a module that exposes a started SDK instance as a default export. For example:
 
 ::: code-group
+
 ```js [otel.js]
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
@@ -56,6 +57,7 @@ const sdk = new NodeSDK({
 sdk.start()
 export default sdk
 ```
+
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -70,6 +72,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ::: warning
@@ -412,6 +415,7 @@ test(name, () => {})
 const tags = getTags()
 test('my test', { tags }, () => {})
 ```
+
 :::
 
 ## experimental.diagnostics <Version type="experimental">5.0.0</Version> {#experimental-diagnostics}

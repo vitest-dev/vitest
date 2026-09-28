@@ -25,8 +25,7 @@ export function mockObject(
     try {
       container[key] = value
       return true
-    }
-    catch {
+    } catch {
       return false
     }
   }
@@ -49,10 +48,7 @@ export function mockObject(
     })
   }
 
-  const mockPropertiesOf = (
-    container: Record<Key, any>,
-    newContainer: Record<Key, any>,
-  ) => {
+  const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
     const containerType = getType(container)
     const isModule = containerType === 'Module' || !!container.__esModule
     for (const { key: property, descriptor } of getAllMockableProperties(
@@ -65,8 +61,7 @@ export function mockObject(
         try {
           if (options.type === 'autospy') {
             Object.defineProperty(newContainer, property, descriptor)
-          }
-          else {
+          } else {
             Object.defineProperty(newContainer, property, {
               configurable: descriptor.configurable,
               enumerable: descriptor.enumerable,
@@ -76,8 +71,7 @@ export function mockObject(
               set: descriptor.set ? () => {} : undefined,
             })
           }
-        }
-        catch {
+        } catch {
           // Ignore errors, just move on to the next prop.
         }
         continue
@@ -94,9 +88,7 @@ export function mockObject(
       // recursion in circular objects.
       const refId = refs.getId(value)
       if (refId !== undefined) {
-        finalizers.push(() =>
-          define(newContainer, property, refs.getMockedValue(refId)),
-        )
+        finalizers.push(() => define(newContainer, property, refs.getMockedValue(refId)))
         continue
       }
 
@@ -105,8 +97,7 @@ export function mockObject(
       if (Array.isArray(value)) {
         if (options.type === 'automock') {
           define(newContainer, property, [])
-        }
-        else {
+        } else {
           const array = value.map((value) => {
             if (value && typeof value === 'object') {
               const newObject = {}
@@ -123,13 +114,8 @@ export function mockObject(
         continue
       }
 
-      const isFunction
-        = type.includes('Function') && typeof value === 'function'
-      if (
-        (!isFunction || value._isMockFunction)
-        && type !== 'Object'
-        && type !== 'Module'
-      ) {
+      const isFunction = type.includes('Function') && typeof value === 'function'
+      if ((!isFunction || value._isMockFunction) && type !== 'Object' && type !== 'Module') {
         define(newContainer, property, value)
         continue
       }
@@ -148,14 +134,15 @@ export function mockObject(
         })
         try {
           newContainer[property] = exports
-        }
-        catch {
+        } catch {
           continue
         }
       }
       // Sometimes this assignment fails for some unknown reason. If it does,
       // just move along.
-      else if (!define(newContainer, property, isFunction || options.type === 'autospy' ? value : {})) {
+      else if (
+        !define(newContainer, property, isFunction || options.type === 'autospy' ? value : {})
+      ) {
         continue
       }
 
@@ -206,27 +193,22 @@ function getType(value: unknown): string {
 
 function isReadonlyProp(object: unknown, prop: string | symbol) {
   if (
-    prop === 'arguments'
-    || prop === 'caller'
-    || prop === 'callee'
-    || prop === 'name'
-    || prop === 'length'
+    prop === 'arguments' ||
+    prop === 'caller' ||
+    prop === 'callee' ||
+    prop === 'name' ||
+    prop === 'length'
   ) {
     const typeName = getType(object)
     return (
-      typeName === 'Function'
-      || typeName === 'AsyncFunction'
-      || typeName === 'GeneratorFunction'
-      || typeName === 'AsyncGeneratorFunction'
+      typeName === 'Function' ||
+      typeName === 'AsyncFunction' ||
+      typeName === 'GeneratorFunction' ||
+      typeName === 'AsyncGeneratorFunction'
     )
   }
 
-  if (
-    prop === 'source'
-    || prop === 'global'
-    || prop === 'ignoreCase'
-    || prop === 'multiline'
-  ) {
+  if (prop === 'source' || prop === 'global' || prop === 'ignoreCase' || prop === 'multiline') {
     return getType(object) === 'RegExp'
   }
 
@@ -241,11 +223,7 @@ export interface GlobalConstructors {
   Map: MapConstructor
 }
 
-function getAllMockableProperties(
-  obj: any,
-  isModule: boolean,
-  constructors: GlobalConstructors,
-) {
+function getAllMockableProperties(obj: any, isModule: boolean, constructors: GlobalConstructors) {
   const { Map, Object, Function, RegExp, Array } = constructors
 
   const allProps = new Map<
@@ -255,11 +233,7 @@ function getAllMockableProperties(
   let curr = obj
   do {
     // we don't need properties from these
-    if (
-      curr === Object.prototype
-      || curr === Function.prototype
-      || curr === RegExp.prototype
-    ) {
+    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype) {
       break
     }
 
@@ -269,7 +243,7 @@ function getAllMockableProperties(
         allProps.set(key, { key, descriptor })
       }
     })
-    // eslint-disable-next-line no-cond-assign
+    // oxlint-disable-next-line no-cond-assign
   } while ((curr = Object.getPrototypeOf(curr)))
   // default is not specified in ownKeys, if module is interoped
   if (isModule && !allProps.has('default') && 'default' in obj) {
@@ -285,10 +259,8 @@ function collectOwnProperties(
   obj: any,
   collector: Set<string | symbol> | ((key: string | symbol) => void),
 ) {
-  const collect
-    = typeof collector === 'function'
-      ? collector
-      : (key: string | symbol) => collector.add(key)
+  const collect =
+    typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }

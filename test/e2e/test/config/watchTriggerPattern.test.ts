@@ -14,10 +14,7 @@ test('watch trigger pattern picks up the file', async () => {
 
   await vitest.waitForStdout('Waiting for file changes')
 
-  editFile(
-    resolve(root, 'folder/fs/text.txt'),
-    content => content.replace('world', 'vitest'),
-  )
+  editFile(resolve(root, 'folder/fs/text.txt'), (content) => content.replace('world', 'vitest'))
 
   await vitest.waitForStderr('basic.test.ts')
 

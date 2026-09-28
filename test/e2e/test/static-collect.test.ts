@@ -1487,15 +1487,12 @@ test('@module-tag docs inject test tags', async () => {
     root: './fixtures/file-tags',
     standalone: true,
     watch: true,
-    tags: [
-      { name: 'file' },
-      { name: 'file-2' },
-      { name: 'file/slash' },
-      { name: 'test' },
-    ],
+    tags: [{ name: 'file' }, { name: 'file-2' }, { name: 'file/slash' }, { name: 'test' }],
   })
   const testModule = await ctx!.experimental_parseSpecification(
-    ctx!.getRootProject().createSpecification(resolve(ctx!.config.root, './valid-file-tags.test.ts')),
+    ctx!
+      .getRootProject()
+      .createSpecification(resolve(ctx!.config.root, './valid-file-tags.test.ts')),
   )
   expect(testTree(testModule)).toMatchInlineSnapshot(`
     {
@@ -1524,15 +1521,12 @@ test('invalid @module-tag throws and error', async () => {
     config: false,
     root: './fixtures/file-tags',
     include: ['./error-file-tags.test.ts'],
-    tags: [
-      { name: 'file' },
-      { name: 'file-2' },
-      { name: 'file/slash' },
-      { name: 'test' },
-    ],
+    tags: [{ name: 'file' }, { name: 'file-2' }, { name: 'file/slash' }, { name: 'test' }],
   })
   const testModule = await ctx!.experimental_parseSpecification(
-    ctx!.getRootProject().createSpecification(resolve(ctx!.config.root, './error-file-tags.test.ts')),
+    ctx!
+      .getRootProject()
+      .createSpecification(resolve(ctx!.config.root, './error-file-tags.test.ts')),
   )
   expect(testModule.errors()[0].message).toMatchInlineSnapshot(`
     "The tag "invalid" is not defined in the configuration. Available tags are:
@@ -1553,14 +1547,17 @@ test('reports the details of a transform error', async () => {
 })
 
 test('collects tests with runIf modifier', async () => {
-  const testModule = await collectTests(`
+  const testModule = await collectTests(
+    `
     import { test } from 'vitest'
 
     describe('runIf tests', () => {
       test.runIf(true)('runs conditionally', () => {})
       test.runIf(false)('also conditional', () => {})
     })
-`, { fnFn: true })
+`,
+    { fnFn: true },
+  )
   expect(testModule).toMatchInlineSnapshot(`
     {
       "runIf tests": {
@@ -1586,14 +1583,17 @@ test('collects tests with runIf modifier', async () => {
 })
 
 test('collects tests with skipIf modifier', async () => {
-  const testModule = await collectTests(`
+  const testModule = await collectTests(
+    `
     import { test } from 'vitest'
 
     describe('skipIf tests', () => {
       test.skipIf(true)('skips conditionally', () => {})
       test.skipIf(false)('also conditional skip', () => {})
     })
-`, { fnFn: true })
+`,
+    { fnFn: true },
+  )
   expect(testModule).toMatchInlineSnapshot(`
     {
       "skipIf tests": {
@@ -1655,7 +1655,7 @@ test('collects tests with for modifier', async () => {
   `)
 })
 
-test('properties on test don\'t generate tests', async () => {
+test("properties on test don't generate tests", async () => {
   const testModule = await collectTests(`
     import { test, describe } from 'vitest'
 
@@ -1713,11 +1713,7 @@ async function collectTestModule(code: string, options?: CliOptions) {
       includeTaskLocation: true,
       allowOnly: true,
       ...options,
-      tags: [
-        { name: 'slow' },
-        { name: 'integration' },
-        { name: 'unit' },
-      ],
+      tags: [{ name: 'slow' }, { name: 'integration' }, { name: 'unit' }],
     },
     {
       plugins: [
@@ -1746,8 +1742,7 @@ function testTree(module: TestModule | TestSuite, tree: any = {}, fnFn?: boolean
   for (const item of module.children) {
     if (item.type === 'test') {
       tree[item.name] = testItem(item, fnFn)
-    }
-    else {
+    } else {
       tree[item.name] ??= {}
       testTree(item, tree[item.name], fnFn)
     }
@@ -1765,9 +1760,10 @@ function testItem(
   const state = testCase.result().state
   if (testCase.location) {
     // rolldown's column is moved by 1 when using test.each/test.for
-    const column = rolldownVersion && (testCase.options.each || fnFn)
-      ? testCase.location.column - 1
-      : testCase.location.column
+    const column =
+      rolldownVersion && (testCase.options.each || fnFn)
+        ? testCase.location.column - 1
+        : testCase.location.column
     location = `${testCase.location.line}:${column}`
   }
   return {

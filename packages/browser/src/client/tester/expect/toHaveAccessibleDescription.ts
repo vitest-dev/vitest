@@ -34,10 +34,9 @@ export default function toHaveAccessibleDescription(
     // When called without an expected value we only want to validate that the element has an
     // accessible description, whatever it may be.
     pass = actualAccessibleDescription !== ''
-  }
-  else {
-    pass
-      = expectedAccessibleDescription instanceof defaultView.RegExp
+  } else {
+    pass =
+      expectedAccessibleDescription instanceof defaultView.RegExp
         ? expectedAccessibleDescription.test(actualAccessibleDescription)
         : this.equals(
             actualAccessibleDescription,

@@ -7,9 +7,7 @@ import { instances, runBrowserTests } from './utils'
 const dir = join(import.meta.dirname, '../fixtures/aria-snapshot')
 
 function extractInlineSnaphsots(code: string) {
-  const matches = Array.from(
-    code.matchAll(/\.toMatchAriaInlineSnapshot\(\s*`[\s\S]*?`\s*\)/g),
-  )
+  const matches = Array.from(code.matchAll(/\.toMatchAriaInlineSnapshot\(\s*`[\s\S]*?`\s*\)/g))
   const snapshots = matches.map((match) => {
     const end = match.index! + match[0].length
     const start = code.lastIndexOf('expect', match.index)
@@ -21,14 +19,15 @@ function extractInlineSnaphsots(code: string) {
   return `\n${snapshots.join('\n\n')}\n`
 }
 
-test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
+test.for(instances.map((i) => i.browser))('aria snapshot %s', async (browser) => {
   const testFile = join(dir, 'basic.test.ts')
   const snapshotFile = join(dir, '__snapshots__/basic.test.ts.snap')
 
   // clean slate — remove file snapshots and clear inline snapshots
   fs.rmSync(join(dir, '__snapshots__'), { recursive: true, force: true })
-  editFile(testFile, s =>
-    s.replace(/toMatchAriaInlineSnapshot\(`[^`]*`\)/g, 'toMatchAriaInlineSnapshot()'))
+  editFile(testFile, (s) =>
+    s.replace(/toMatchAriaInlineSnapshot\(`[^`]*`\)/g, 'toMatchAriaInlineSnapshot()'),
+  )
 
   // run with update: new — creates snapshots from scratch
   let result = await runBrowserTests({
@@ -95,8 +94,8 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
   expect(result2.errorTree()).toEqual(result.errorTree())
 
   // edit snapshots to add regex patterns, run with none — should still pass
-  editFile(snapshotFile, s => s.replace(`navigation "Actions"`, 'navigation /A\\\\w+/'))
-  editFile(testFile, s => s.replace(`- button "1234"`, '- button /\\\\d+/'))
+  editFile(snapshotFile, (s) => s.replace(`navigation "Actions"`, 'navigation /A\\\\w+/'))
+  editFile(testFile, (s) => s.replace(`- button "1234"`, '- button /\\\\d+/'))
 
   const result3 = await runBrowserTests({
     root: './fixtures/aria-snapshot',
@@ -107,8 +106,8 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
   expect(result3.errorTree()).toEqual(result.errorTree())
 
   // edit test HTML to break a literal match, run with none — should fail
-  editFile(testFile, s => s.replace(`aria-label="Actions"`, `aria-label="EDITED"`))
-  editFile(testFile, s => s.replace('<p>Original</p>', '<p>Changed</p>'))
+  editFile(testFile, (s) => s.replace(`aria-label="Actions"`, `aria-label="EDITED"`))
+  editFile(testFile, (s) => s.replace('<p>Original</p>', '<p>Changed</p>'))
 
   result = await runBrowserTests({
     root: './fixtures/aria-snapshot',

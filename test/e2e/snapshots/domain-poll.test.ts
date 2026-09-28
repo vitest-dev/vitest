@@ -98,8 +98,7 @@ test('domain snapshot with poll', async () => {
   // --- mismatch — stable on wrong value ---
   // Edit reference so "stable" poll stabilizes but doesn't match
   // Should produce a mismatch error with diff, not "unstable" error
-  editFile(snapshotFile, s => s
-    .replace('name=a\n', 'name=a-changed\n'))
+  editFile(snapshotFile, (s) => s.replace('name=a\n', 'name=a-changed\n'))
 
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -205,8 +204,7 @@ test('domain snapshot with poll', async () => {
 
   // --- pattern-preserving update ---
   // Inject regex pattern into snapshot, verify --update preserves it
-  editFile(snapshotFile, s => s
-    .replace('name=a\n', 'name=/\\\\w/\n'))
+  editFile(snapshotFile, (s) => s.replace('name=a\n', 'name=/\\\\w/\n'))
 
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
@@ -265,15 +263,16 @@ test('domain snapshot with poll', async () => {
 })
 
 test('poll until stable match when "none"', async () => {
-  const result = await runInlineTests({
-    '__snapshots__/basic.test.ts.snap': `\
+  const result = await runInlineTests(
+    {
+      '__snapshots__/basic.test.ts.snap': `\
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[\`stable wrong then right 1\`] = \`
 phase=complete
 \`;
 `,
-    'basic.test.ts': `
+      'basic.test.ts': `
 import { expect, test } from 'vitest'
 import '../snapshots/fixtures/domain/basic-extend'
 
@@ -287,9 +286,11 @@ test('stable wrong then right', async () => {
   expect(trial).toBe(6)
 })
 `,
-  }, {
-    update: 'none',
-  })
+    },
+    {
+      update: 'none',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -301,15 +302,16 @@ test('stable wrong then right', async () => {
 })
 
 test('poll until stable when "all"', async () => {
-  const result = await runInlineTests({
-    '__snapshots__/basic.test.ts.snap': `\
+  const result = await runInlineTests(
+    {
+      '__snapshots__/basic.test.ts.snap': `\
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[\`stable wrong then right 1\`] = \`
 phase=complete
 \`;
 `,
-    'basic.test.ts': `
+      'basic.test.ts': `
 import { expect, test } from 'vitest'
 import '../snapshots/fixtures/domain/basic-extend'
 
@@ -323,9 +325,11 @@ test('stable wrong then right', async () => {
   expect(trial).toBe(2)
 })
 `,
-  }, {
-    update: 'all',
-  })
+    },
+    {
+      update: 'all',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -345,8 +349,9 @@ test('stable wrong then right', async () => {
 })
 
 test('errors', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import { expect, test } from 'vitest'
 import '../snapshots/fixtures/domain/basic-extend'
 
@@ -374,9 +379,11 @@ test('throwing', async () => {
   }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
 })
 `,
-  }, {
-    update: 'all',
-  })
+    },
+    {
+      update: 'all',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
@@ -446,8 +453,9 @@ test('throwing', async () => {
 })
 
 test('signal', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 import '../snapshots/fixtures/domain/basic-extend'
 
 test('signal', async () => {
@@ -463,10 +471,12 @@ test('signal', async () => {
   expect(aborted).toMatchInlineSnapshot()
 })
 `,
-  }, {
-    globals: true,
-    update: 'all',
-  })
+    },
+    {
+      globals: true,
+      update: 'all',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {

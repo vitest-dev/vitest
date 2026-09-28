@@ -2,7 +2,10 @@ import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 function extractLogs(stdout: string): string {
-  return stdout.split('\n').filter(l => l.includes('>>')).join('\n')
+  return stdout
+    .split('\n')
+    .filter((l) => l.includes('>>'))
+    .join('\n')
 }
 
 test('basic aroundEach wraps the test', async () => {
@@ -56,7 +59,10 @@ test('multiple aroundEach hooks are nested (first is outermost)', async () => {
   expect(stderr).toBe('')
 
   // Extract log lines
-  const logs = stdout.split('\n').filter(line => line.startsWith('>> ')).map(l => l.trim())
+  const logs = stdout
+    .split('\n')
+    .filter((line) => line.startsWith('>> '))
+    .map((l) => l.trim())
   expect(logs).toEqual([
     '>> outer before',
     '>> inner before',
@@ -216,7 +222,10 @@ test('aroundEach with async operations', async () => {
     }
   `)
 
-  const logs = stdout.split('\n').filter(line => line.startsWith('>> ')).map(l => l.trim())
+  const logs = stdout
+    .split('\n')
+    .filter((line) => line.startsWith('>> '))
+    .map((l) => l.trim())
   expect(logs).toEqual([
     '>> setup start',
     '>> setup done',
@@ -293,7 +302,10 @@ test('aroundEach with beforeEach and afterEach', async () => {
   expect(stderr).toBe('')
 
   // aroundEach should wrap around beforeEach/test/afterEach
-  const logs = stdout.split('\n').filter(line => line.startsWith('>> ')).map(l => l.trim())
+  const logs = stdout
+    .split('\n')
+    .filter((line) => line.startsWith('>> '))
+    .map((l) => l.trim())
   expect(logs).toEqual([
     '>> aroundEach before',
     '>> beforeEach',
@@ -513,8 +525,9 @@ test('aroundEach with database transaction pattern', async () => {
 })
 
 test('aroundEach with globals: true', async () => {
-  const { stdout, stderr, errorTree } = await runInlineTests({
-    'globals.test.ts': `
+  const { stdout, stderr, errorTree } = await runInlineTests(
+    {
+      'globals.test.ts': `
       aroundEach(async (runTest) => {
         console.log('>> aroundEach global')
         await runTest()
@@ -525,7 +538,9 @@ test('aroundEach with globals: true', async () => {
         console.log('>> test')
       })
     `,
-  }, { globals: true })
+    },
+    { globals: true },
+  )
 
   expect(stderr).toBe('')
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
@@ -857,8 +872,9 @@ test('aroundEach setup and teardown have independent timeouts', async () => {
 })
 
 test('aroundEach default timeout uses hookTimeout config', async () => {
-  const { stderr } = await runInlineTests({
-    'default-timeout.test.ts': `
+  const { stderr } = await runInlineTests(
+    {
+      'default-timeout.test.ts': `
       import { aroundEach, test } from 'vitest'
 
       aroundEach(async (runTest) => {
@@ -869,7 +885,9 @@ test('aroundEach default timeout uses hookTimeout config', async () => {
 
       test('test', () => {})
     `,
-  }, { hookTimeout: 10 })
+    },
+    { hookTimeout: 10 },
+  )
 
   expect(stderr).toMatchInlineSnapshot(`
     "

@@ -93,7 +93,7 @@ describe('mocked classes', () => {
 
     expect(instance.getOnlyProp).toBe(undefined)
     // @ts-expect-error Assign to the read-only prop to ensure it errors.
-    expect(() => instance.getOnlyProp = 4).toThrow()
+    expect(() => (instance.getOnlyProp = 4)).toThrow()
 
     const getterSpy = vi.spyOn(instance, 'getOnlyProp', 'get').mockReturnValue(456)
     expect(instance.getOnlyProp).toEqual(456)
@@ -109,7 +109,7 @@ describe('mocked classes', () => {
     expect(descriptor?.set).toBeDefined()
 
     expect(instance.getSetProp).toBe(undefined)
-    expect(() => instance.getSetProp = 4).not.toThrow()
+    expect(() => (instance.getSetProp = 4)).not.toThrow()
 
     const getterSpy = vi.spyOn(instance, 'getSetProp', 'get').mockReturnValue(789)
     expect(instance.getSetProp).toEqual(789)
@@ -142,8 +142,7 @@ test('async functions should be mocked', async () => {
 function getError(cb: () => void): string {
   try {
     cb()
-  }
-  catch (e: any) {
+  } catch (e: any) {
     return stripVTControlCharacters(e.message)
   }
   expect.unreachable()
@@ -192,10 +191,13 @@ describe('temporary mock implementation', () => {
 
     expect.assertions(3)
 
-    mock.withImplementation(() => 2, () => {
-      expect(mock()).toBe(2)
-      expect(mock()).toBe(2)
-    })
+    mock.withImplementation(
+      () => 2,
+      () => {
+        expect(mock()).toBe(2)
+        expect(mock()).toBe(2)
+      },
+    )
 
     expect(mock()).toBe(1)
   })
@@ -205,11 +207,14 @@ describe('temporary mock implementation', () => {
 
     expect.assertions(5)
 
-    mock.withImplementation(() => 2, () => {
-      expect(mock.getMockImplementation()).toBeTypeOf('function')
-      expect(mock()).toBe(2)
-      expect(mock()).toBe(2)
-    })
+    mock.withImplementation(
+      () => 2,
+      () => {
+        expect(mock.getMockImplementation()).toBeTypeOf('function')
+        expect(mock()).toBe(2)
+        expect(mock()).toBe(2)
+      },
+    )
 
     expect(mock()).toBe(undefined)
     expect(mock.getMockImplementation()).toBe(undefined)
@@ -220,10 +225,13 @@ describe('temporary mock implementation', () => {
 
     expect.assertions(3)
 
-    mock.withImplementation(() => 2, () => {
-      expect(mock()).toBe(2)
-      expect(mock()).toBe(2)
-    })
+    mock.withImplementation(
+      () => 2,
+      () => {
+        expect(mock()).toBe(2)
+        expect(mock()).toBe(2)
+      },
+    )
 
     expect(mock()).toBe(1)
   })
@@ -233,12 +241,15 @@ describe('temporary mock implementation', () => {
 
     expect.assertions(3)
 
-    await mock.withImplementation(() => 2, async () => {
-      await Promise.resolve()
+    await mock.withImplementation(
+      () => 2,
+      async () => {
+        await Promise.resolve()
 
-      expect(mock()).toBe(2)
-      expect(mock()).toBe(2)
-    })
+        expect(mock()).toBe(2)
+        expect(mock()).toBe(2)
+      },
+    )
 
     expect(mock()).toBe(1)
   })
@@ -248,10 +259,13 @@ describe('temporary mock implementation', () => {
 
     expect.assertions(3)
 
-    await mock.withImplementation(async () => 2, async () => {
-      expect(await mock()).toBe(2)
-      expect(await mock()).toBe(2)
-    })
+    await mock.withImplementation(
+      async () => 2,
+      async () => {
+        expect(await mock()).toBe(2)
+        expect(await mock()).toBe(2)
+      },
+    )
 
     expect(await mock()).toBe(1)
   })
@@ -262,10 +276,13 @@ describe('temporary mock implementation', () => {
     expect.assertions(3)
 
     mock.mockImplementationOnce(() => 2)
-    mock.withImplementation(() => 3, () => {
-      expect(mock()).toBe(3)
-      expect(mock()).toBe(3)
-    })
+    mock.withImplementation(
+      () => 3,
+      () => {
+        expect(mock()).toBe(3)
+        expect(mock()).toBe(3)
+      },
+    )
 
     expect(mock()).toBe(2)
   })

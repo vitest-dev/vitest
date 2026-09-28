@@ -20,9 +20,10 @@ export async function resolveOrchestrator(
     return
   }
 
-  const injectorJs = typeof globalServer.injectorJs === 'string'
-    ? globalServer.injectorJs
-    : await globalServer.injectorJs
+  const injectorJs =
+    typeof globalServer.injectorJs === 'string'
+      ? globalServer.injectorJs
+      : await globalServer.injectorJs
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(browserProject.config.browser.provider?.name || 'preview'),
@@ -35,7 +36,9 @@ export async function resolveOrchestrator(
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: '"none"',
     __VITEST_OTEL_CARRIER__: JSON.stringify(session?.otelCarrier ?? null),
-    __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(browserProject.project.getProvidedContext())),
+    __VITEST_PROVIDED_CONTEXT__: JSON.stringify(
+      stringify(browserProject.project.getProvidedContext()),
+    ),
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
@@ -43,27 +46,29 @@ export async function resolveOrchestrator(
   res.removeHeader('Content-Security-Policy')
 
   if (!globalServer.orchestratorScripts) {
-    globalServer.orchestratorScripts = (await globalServer.formatScripts(
-      globalServer.config.browser.orchestratorScripts,
-    )).map((script) => {
-      let html = '<script '
-      for (const attr in script.attrs || {}) {
-        html += `${attr}="${script.attrs![attr]}" `
-      }
-      html += `>${escapeInlineScript(typeof script.children === 'string' ? script.children : '')}</script>`
-      return html
-    }).join('\n')
+    globalServer.orchestratorScripts = (
+      await globalServer.formatScripts(globalServer.config.browser.orchestratorScripts)
+    )
+      .map((script) => {
+        let html = '<script '
+        for (const attr in script.attrs || {}) {
+          html += `${attr}="${script.attrs![attr]}" `
+        }
+        html += `>${escapeInlineScript(typeof script.children === 'string' ? script.children : '')}</script>`
+        return html
+      })
+      .join('\n')
   }
 
-  let baseHtml = typeof globalServer.orchestratorHtml === 'string'
-    ? globalServer.orchestratorHtml
-    : await globalServer.orchestratorHtml
+  let baseHtml =
+    typeof globalServer.orchestratorHtml === 'string'
+      ? globalServer.orchestratorHtml
+      : await globalServer.orchestratorHtml
 
   // if UI is enabled, use UI HTML and inject the orchestrator script
   if (globalServer.config.browser.ui) {
-    const manifestContent = globalServer.manifest instanceof Promise
-      ? await globalServer.manifest
-      : globalServer.manifest
+    const manifestContent =
+      globalServer.manifest instanceof Promise ? await globalServer.manifest : globalServer.manifest
     const jsEntry = manifestContent['orchestrator.html'].file
     const base = browserProject.parent.vite.config.base || '/'
     baseHtml = baseHtml
@@ -92,7 +97,5 @@ export async function resolveOrchestrator(
 }
 
 function escapeInlineScript(content: string): string {
-  return content
-    .replace(/<!--/g, '<\\!--')
-    .replace(/<\/(script)/gi, '</\\$1')
+  return content.replace(/<!--/g, '<\\!--').replace(/<\/(script)/gi, '</\\$1')
 }

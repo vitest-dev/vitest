@@ -26,8 +26,7 @@ test('interop', async ({ task }) => {
         "test": "hello",
       }
     `)
-  }
-  else {
+  } else {
     expect(esModuleFalse).toMatchInlineSnapshot(`
       {
         "__esModule": false,

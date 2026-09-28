@@ -18,10 +18,7 @@ import type { Locator } from '../locators'
 import { getAriaDisabled } from 'ivya/utils'
 import { getElementFromUserInput, getTag } from './utils'
 
-export function toBeDisabled(
-  this: MatcherState,
-  actual: Element | Locator,
-): MatcherResult {
+export function toBeDisabled(this: MatcherState, actual: Element | Locator): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeDisabled, this)
   const isDisabled = isElementDisabled(htmlElement)
   return {
@@ -29,11 +26,7 @@ export function toBeDisabled(
     message: () => {
       const is = isDisabled ? 'is' : 'is not'
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeDisabled`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeDisabled`, 'element', ''),
         '',
         `Received element ${is} disabled:`,
         `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
@@ -42,10 +35,7 @@ export function toBeDisabled(
   }
 }
 
-export function toBeEnabled(
-  this: MatcherState,
-  actual: Element | Locator,
-): MatcherResult {
+export function toBeEnabled(this: MatcherState, actual: Element | Locator): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeEnabled, this)
   const isDisabled = isElementDisabled(htmlElement)
   return {
@@ -53,11 +43,7 @@ export function toBeEnabled(
     message: () => {
       const is = !isDisabled ? 'is' : 'is not'
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeEnabled`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeEnabled`, 'element', ''),
         '',
         `Received element ${is} enabled:`,
         `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,

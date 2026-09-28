@@ -13,9 +13,7 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": false
   },
-  "references": [
-    { "path": "../project-a" }
-  ],
+  "references": [{ "path": "../project-a" }],
   "files": ["src/b.test-d.ts"],
   "exclude": ["node_modules"]
 }

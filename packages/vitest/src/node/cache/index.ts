@@ -18,19 +18,16 @@ export class VitestCache {
     return this.results.getResults(key)
   }
 
-  getFileStats(key: string): {
-    size: number
-  } | undefined {
+  getFileStats(key: string):
+    | {
+        size: number
+      }
+    | undefined {
     return this.stats.getStats(key)
   }
 
   static resolveCacheDir(root: string, dir?: string, projectName?: string): string {
     const baseDir = slash(dir || 'node_modules/.vite')
-    return resolve(
-      root,
-      baseDir,
-      'vitest',
-      hash('sha1', projectName || '', 'hex'),
-    )
+    return resolve(root, baseDir, 'vitest', hash('sha1', projectName || '', 'hex'))
   }
 }
