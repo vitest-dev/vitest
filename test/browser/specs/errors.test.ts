@@ -70,8 +70,9 @@ test('throws an error if test reloads the iframe during a test run', async () =>
 })
 
 test('cannot use fs commands if write is disabled', async () => {
-  const { stderr, fs } = await runInlineBrowserTests({
-    'fs-commands.test.ts': `
+  const { stderr, fs } = await runInlineBrowserTests(
+    {
+      'fs-commands.test.ts': `
       import { test, expect, recordArtifact } from 'vitest'
       import { commands } from 'vitest/browser'
 
@@ -100,25 +101,29 @@ test('cannot use fs commands if write is disabled', async () => {
         })
       })
     `,
-    './__snapshots__/basic.test.js.snap': `// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html`,
-    'basic.test.js': `
+      './__snapshots__/basic.test.js.snap': `// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html`,
+      'basic.test.js': `
       import { test } from 'vitest'
 
       test('basic test', () => {
         expect(1 + 1).toBe(2)
       })
     `,
-  }, {
-    api: {
-      allowExec: false,
-      allowWrite: false,
     },
-    $cliOptions: {
-      update: true,
+    {
+      api: {
+        allowExec: false,
+        allowWrite: false,
+      },
+      $cliOptions: {
+        update: true,
+      },
     },
-  })
+  )
 
-  const errors = stderr.split('\n').filter(line => line.includes('Cannot modify file "/test-file.txt".'))
+  const errors = stderr
+    .split('\n')
+    .filter((line) => line.includes('Cannot modify file "/test-file.txt".'))
   expect(errors).toHaveLength(2 * instances.length)
 
   expect(stderr).toContain(
@@ -129,9 +134,7 @@ test('cannot use fs commands if write is disabled', async () => {
   )
 
   // we don't throw an error if cannot write attachment, just warn
-  expect(stderr).toContain(
-    'Cannot record annotation attachment because file writing is disabled',
-  )
+  expect(stderr).toContain('Cannot record annotation attachment because file writing is disabled')
   expect(stderr).toContain(
     'Cannot record attachments ("/artifact-attachment.txt") because file writing is disabled, removing attachments from artifact "my-custom".',
   )
@@ -154,10 +157,10 @@ test('prints source-mapped stack for optimized dependency', async () => {
           )
         return `${s.method} at ${normalizedFile}:${s.line}:${s.column}`
       })
-      return ({ message: e.message, stacks })
+      return { message: e.message, stacks }
     })
   })
-  expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
+  expect(Object.keys(projectTree).sort()).toEqual(instances.map((i) => i.browser).sort())
 
   for (const [name, tree] of Object.entries(projectTree)) {
     if (name === 'webkit') {
@@ -176,8 +179,7 @@ test('prints source-mapped stack for optimized dependency', async () => {
           },
         }
       `)
-    }
-    else {
+    } else {
       expect(tree).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {
@@ -197,9 +199,12 @@ test('prints source-mapped stack for optimized dependency', async () => {
   }
 })
 
-test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is disabled', async () => {
-  const result = await runInlineBrowserTests({
-    'cdp.test.ts': `
+test.runIf(provider.name === 'playwright')(
+  'cannot use cdp if write or exec is disabled',
+  async () => {
+    const result = await runInlineBrowserTests(
+      {
+        'cdp.test.ts': `
       import { expect, test } from 'vitest'
       import { cdp, server } from 'vitest/browser'
 
@@ -207,17 +212,19 @@ test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is d
         await cdp().send('Runtime.evaluate', { expression: '1 + 1' })
       })
     `,
-  }, {
-    api: {
-      allowExec: false,
-      allowWrite: false,
-    },
-    browser: {
-      instances: [{ browser: 'chromium' }],
-      screenshotFailures: false,
-    },
-  })
-  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+      },
+      {
+        api: {
+          allowExec: false,
+          allowWrite: false,
+        },
+        browser: {
+          instances: [{ browser: 'chromium' }],
+          screenshotFailures: false,
+        },
+      },
+    )
+    expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
       "chromium": {
         "cdp.test.ts": {
@@ -228,7 +235,8 @@ test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is d
       },
     }
   `)
-})
+  },
+)
 
 test('upload is blocked for files denied by server.fs.deny', async () => {
   const result = await runBrowserTests({

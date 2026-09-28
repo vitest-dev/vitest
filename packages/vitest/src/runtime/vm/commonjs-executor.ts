@@ -54,10 +54,8 @@ export class CommonjsExecutor {
 
   private moduleCache = new Map<string, VMSyntheticModule>()
   private builtinCache: Record<string, NodeJS.Module> = Object.create(null)
-  private extensions: Record<
-    string,
-    (m: NodeJS.Module, filename: string) => unknown
-  > = Object.create(null)
+  private extensions: Record<string, (m: NodeJS.Module, filename: string) => unknown> =
+    Object.create(null)
 
   private fs: FileMap
   private codeCache: CodeCache | undefined
@@ -77,16 +75,13 @@ export class CommonjsExecutor {
     this.shouldRequireAsEsm = options.shouldRequireAsEsm
     this.requireEsm = options.requireEsm
 
-    const primitives = vm.runInContext(
-      '({ Object, Array, Error })',
-      this.context,
-    ) as {
+    const primitives = vm.runInContext('({ Object, Array, Error })', this.context) as {
       Object: typeof Object
       Array: typeof Array
       Error: typeof Error
     }
 
-    // eslint-disable-next-line ts/no-this-alias
+    // oxlint-disable-next-line typescript/no-this-alias
     const executor = this
 
     this.Module = class Module {
@@ -132,15 +127,11 @@ export class CommonjsExecutor {
       }
 
       static register = () => {
-        throw new Error(
-          `[vitest] "register" is not available when running in Vitest.`,
-        )
+        throw new Error(`[vitest] "register" is not available when running in Vitest.`)
       }
 
       static registerHooks = () => {
-        throw new Error(
-          `[vitest] "registerHooks" is not available when running in Vitest.`,
-        )
+        throw new Error(`[vitest] "registerHooks" is not available when running in Vitest.`)
       }
 
       _compile(code: string, filename: string) {
@@ -158,12 +149,8 @@ export class CommonjsExecutor {
               cachedData,
               importModuleDynamically: activeImportModuleDynamically,
             } as any)
-          }
-          catch (error) {
-            if (
-              error instanceof SyntaxError
-              && executor.canFallbackToEsm(filename)
-            ) {
+          } catch (error) {
+            if (error instanceof SyntaxError && executor.canFallbackToEsm(filename)) {
               throw new CjsParseError(error)
             }
             throw error
@@ -181,8 +168,7 @@ export class CommonjsExecutor {
         try {
           fn(this.exports, this.require, this, filename, __dirname)
           return this.exports
-        }
-        finally {
+        } finally {
           this.loaded = true
           // store after execution so the code cache carries the compiled
           // module body, not only the lazily-parsed wrapper
@@ -191,11 +177,7 @@ export class CommonjsExecutor {
       }
 
       // exposed for external use, Node.js does the opposite
-      static _load = (
-        request: string,
-        parent: Module | undefined,
-        _isMain: boolean,
-      ) => {
+      static _load = (request: string, parent: Module | undefined, _isMain: boolean) => {
         const require = Module.createRequire(parent?.filename ?? request)
         return require(request)
       }
@@ -254,8 +236,8 @@ export class CommonjsExecutor {
   }
 
   private requireJs = (m: NodeJS.Module, filename: string) => {
-    const content = this.fs.readFile(filename);
-    (m as PrivateNodeModule)._compile(content, filename)
+    const content = this.fs.readFile(filename)
+    ;(m as PrivateNodeModule)._compile(content, filename)
   }
 
   private requireJson = (m: NodeJS.Module, filename: string) => {
@@ -327,10 +309,7 @@ export class CommonjsExecutor {
   }
 
   // very naive implementation for Node.js require
-  private loadCommonJSModule(
-    module: NodeJS.Module,
-    filename: string,
-  ): Record<string, unknown> {
+  private loadCommonJSModule(module: NodeJS.Module, filename: string): Record<string, unknown> {
     const cached = this.requireCache.get(filename)
     if (cached) {
       return cached.exports
@@ -344,8 +323,7 @@ export class CommonjsExecutor {
     const loader = this.extensions[extension] || this.extensions['.js']
     try {
       loader(module, filename)
-    }
-    catch (error) {
+    } catch (error) {
       if (error instanceof CjsParseError) {
         return this.fallbackRequireEsm(filename, error)
       }
@@ -357,22 +335,18 @@ export class CommonjsExecutor {
 
   private canFallbackToEsm(filename: string): boolean {
     return (
-      supportsSyncEsmEvaluate
+      supportsSyncEsmEvaluate &&
       // mirrors Node's ESM-syntax detection scope: explicit extensions
       // (.mjs/.cjs) already picked their loader
-      && extname(filename) === '.js'
+      extname(filename) === '.js'
     )
   }
 
-  private fallbackRequireEsm(
-    filename: string,
-    parseError: CjsParseError,
-  ): Record<string, unknown> {
+  private fallbackRequireEsm(filename: string, parseError: CjsParseError): Record<string, unknown> {
     let exports: unknown
     try {
       exports = this.requireEsm(filename)
-    }
-    catch (esmError) {
+    } catch (esmError) {
       // both parsers rejected the file — surface the original CJS error
       if (esmError instanceof SyntaxError) {
         throw parseError.cause
@@ -388,7 +362,7 @@ export class CommonjsExecutor {
     let currentExtension: string
     let index: number
     let startIndex = 0
-    // eslint-disable-next-line no-cond-assign
+    // oxlint-disable-next-line no-cond-assign
     while ((index = name.indexOf('.', startIndex)) !== -1) {
       startIndex = index + 1
       if (index === 0) {
@@ -408,12 +382,16 @@ export class CommonjsExecutor {
     }
     const exports = this.require(identifier)
     const keys = Object.keys(exports)
-    const module = new SyntheticModule([...keys, 'default'], () => {
-      for (const key of keys) {
-        module.setExport(key, exports[key])
-      }
-      module.setExport('default', exports)
-    }, { context: this.context, identifier })
+    const module = new SyntheticModule(
+      [...keys, 'default'],
+      () => {
+        for (const key of keys) {
+          module.setExport(key, exports[key])
+        }
+        module.setExport('default', exports)
+      },
+      { context: this.context, identifier },
+    )
     this.moduleCache.set(identifier, module)
     return module
   }
@@ -542,22 +520,18 @@ export function parseCjsConditions(
   if (requireEsmSupported) {
     conditions.push('module-sync')
   }
-  const args = [
-    ...execArgv,
-    ...(nodeOptions?.split(/\s+/) ?? []),
-  ]
+  const args = [...execArgv, ...(nodeOptions?.split(/\s+/) ?? [])]
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
     const eqMatch = arg.match(/^(?:--conditions|-C)=(.+)$/)
     if (eqMatch) {
       conditions.push(eqMatch[1])
-    }
-    else if ((arg === '--conditions' || arg === '-C') && i + 1 < args.length) {
+    } else if ((arg === '--conditions' || arg === '-C') && i + 1 < args.length) {
       conditions.push(args[++i])
     }
   }
   if (!requireEsmSupported) {
-    return new Set(conditions.filter(c => c !== 'module-sync'))
+    return new Set(conditions.filter((c) => c !== 'module-sync'))
   }
   return new Set(conditions)
 }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach } from 'vitest'
 
-// eslint-disable-next-line import/no-mutable-exports
+// oxlint-disable-next-line import/no-mutable-exports
 export let foo: number
 
 beforeEach(() => {

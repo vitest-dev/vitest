@@ -33,11 +33,7 @@ const isWindows = process.platform === 'win32'
 // (`mock:` ids stay distinct from their originals).
 const vmInlineScriptCache = new Map<string, vm.Script>()
 
-function getVmInlineScript(
-  id: string,
-  wrappedCode: string,
-  options: vm.ScriptOptions,
-): vm.Script {
+function getVmInlineScript(id: string, wrappedCode: string, options: vm.ScriptOptions): vm.Script {
   let script = vmInlineScriptCache.get(id)
   if (!script) {
     script = new vm.Script(wrappedCode, options)
@@ -99,12 +95,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       this.compiledFunctionArgumentsValues = options.compiledFunctionArgumentsValues
     }
     if (vmOptions) {
-      this.primitives = vm.runInContext(
-        '({ Object, Proxy, Reflect })',
-        vmOptions.context,
-      )
-    }
-    else {
+      this.primitives = vm.runInContext('({ Object, Proxy, Reflect })', vmOptions.context)
+    } else {
       this.primitives = {
         Object,
         Proxy,
@@ -140,25 +132,22 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const importers = this._evaluatedModules?.getModuleById(id)?.importers
     const importer = importers?.values().next().value
     const filename = id.startsWith('file://') ? fileURLToPath(id) : id
-    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(
-      filename,
-      {
-        startOffset: 0,
-        external: true,
-        importer,
-      },
-    )
-    const namespace = await this._otel.$(
-      'vitest.module.external',
-      {
-        attributes: { 'code.file.path': file },
-      },
-      () => this.vm
-        ? this.vm.externalModulesExecutor.import(file)
-        : import(file),
-    ).finally(() => {
-      this.options.moduleExecutionInfo?.set(filename, finishModuleExecutionInfo())
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(filename, {
+      startOffset: 0,
+      external: true,
+      importer,
     })
+    const namespace = await this._otel
+      .$(
+        'vitest.module.external',
+        {
+          attributes: { 'code.file.path': file },
+        },
+        () => (this.vm ? this.vm.externalModulesExecutor.import(file) : import(file)),
+      )
+      .finally(() => {
+        this.options.moduleExecutionInfo?.set(filename, finishModuleExecutionInfo())
+      })
 
     if (!this.shouldInterop(file, namespace)) {
       return namespace
@@ -202,9 +191,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     code: string,
     module: Readonly<EvaluatedModuleNode>,
   ): Promise<any> {
-    return this._otel.$(
-      'vitest.module.inline',
-      span => this._runInlinedModule(context, code, module, span),
+    return this._otel.$('vitest.module.inline', (span) =>
+      this._runInlinedModule(context, code, module, span),
     )
   }
 
@@ -233,9 +221,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module
         if (
-          p === 'default'
-          && this.shouldInterop(module.file, { default: value })
-          && cjsExports !== value
+          p === 'default' &&
+          this.shouldInterop(module.file, { default: value }) &&
+          cjsExports !== value
         ) {
           span.addEvent('`exports.default` is assigned, copying values')
           exportAll(cjsExports, value)
@@ -249,11 +237,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
         // returns undefined, when accessing named exports, if default is not an object
         // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-        if (
-          moduleExports !== SYMBOL_NOT_DEFINED
-          && isPrimitive(moduleExports)
-        ) {
-          span.addEvent(`\`exports.${String(p)}\` is assigned, but module.exports is a primitive. assigning "undefined" values instead to comply with ESM`)
+        if (moduleExports !== SYMBOL_NOT_DEFINED && isPrimitive(moduleExports)) {
+          span.addEvent(
+            `\`exports.${String(p)}\` is assigned, but module.exports is a primitive. assigning "undefined" values instead to comply with ESM`,
+          )
           defineExport(exportsObject, p, () => undefined)
           return true
         }
@@ -327,12 +314,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     span.setAttribute('code.file.path', meta.filename)
 
-    const __vite_ssr_exportName__ = context.__vite_ssr_exportName__
-      || ((name: string, getter: () => unknown) => Object.defineProperty(context[ssrModuleExportsKey], name, {
-        enumerable: true,
-        configurable: true,
-        get: getter,
-      }))
+    const __vite_ssr_exportName__ =
+      context.__vite_ssr_exportName__ ||
+      ((name: string, getter: () => unknown) =>
+        Object.defineProperty(context[ssrModuleExportsKey], name, {
+          enumerable: true,
+          configurable: true,
+          get: getter,
+        }))
 
     let __vite_track_exportName__: ((name: string, getter: () => unknown) => void) | undefined
     const getterTracker = this.getterTracker
@@ -361,21 +350,16 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     // TODO@discuss switch the default in Vitest 6(?)
     // backwards compat for vite-node
-    const injectCjsGlobals = this.options.injectCjsGlobals !== false
+    const injectCjsGlobals =
+      this.options.injectCjsGlobals !== false ||
       // the module type is provided by the server only when `injectCjsGlobals` is disabled.
       // CommonJS modules always receive these variables because they are part
       // of the module scope, without them the module cannot be evaluated at all
-      || (module.meta as VitestFetchResult | undefined)?.moduleType === 'cjs'
+      (module.meta as VitestFetchResult | undefined)?.moduleType === 'cjs'
 
     if (injectCjsGlobals) {
       const cjsGlobals = this._createCJSGlobals(context, module, span)
-      argumentsList.push(
-        '__filename',
-        '__dirname',
-        'module',
-        'exports',
-        'require',
-      )
+      argumentsList.push('__filename', '__dirname', 'module', 'exports', 'require')
 
       argumentsValues.push(
         cjsGlobals.__filename,
@@ -397,9 +381,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     span.setAttribute('vitest.module.arguments', argumentsList)
 
     // add 'use strict' since ESM enables it by default
-    const codeDefinition = `'use strict';async (${argumentsList.join(
-      ',',
-    )})=>{{`
+    const codeDefinition = `'use strict';async (${argumentsList.join(',')})=>{{`
     const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
       // use original id for auto spy module (vi.mock(..., { spy: true }))
@@ -419,10 +401,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       importer,
     })
 
-    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, {
-      startOffset: codeDefinition.length,
-      importer,
-    })
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(
+      options.filename,
+      {
+        startOffset: codeDefinition.length,
+        importer,
+      },
+    )
 
     try {
       const initModule = this.vm
@@ -430,14 +415,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         : vm.runInThisContext(wrappedCode, options)
 
       await initModule(...argumentsValues)
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       if (!injectCjsGlobals) {
         throw enhanceMissingCjsGlobalsError(error)
       }
       throw error
-    }
-    finally {
+    } finally {
       // moduleExecutionInfo needs to use Node filename instead of the normalized one
       // because we rely on this behaviour in coverage-v8, for example
       this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
@@ -447,14 +430,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private createRequire(url: string) {
     if (url.startsWith('data:')) {
       const _require = (id: string) => {
-        throw new SyntaxError(`require() is not supported in virtual modules. Trying to call require("${id}") in ${url}`)
+        throw new SyntaxError(
+          `require() is not supported in virtual modules. Trying to call require("${id}") in ${url}`,
+        )
       }
       _require.resolve = _require
       return _require
     }
-    return this.vm
-      ? this.vm.externalModulesExecutor.createRequire(url)
-      : createRequire(url)
+    return this.vm ? this.vm.externalModulesExecutor.createRequire(url) : createRequire(url)
   }
 
   private shouldInterop(path: string, mod: any): boolean {
@@ -487,8 +470,7 @@ export function createImportMetaEnvProxy(): ModuleRunnerImportMeta['env'] {
 
       if (booleanKeys.includes(key)) {
         process.env[key] = value ? '1' : ''
-      }
-      else {
+      } else {
         process.env[key] = value
       }
 
@@ -570,11 +552,7 @@ function exportAll(exports: any, sourceModule: any) {
     return
   }
 
-  if (
-    isPrimitive(sourceModule)
-    || Array.isArray(sourceModule)
-    || sourceModule instanceof Promise
-  ) {
+  if (isPrimitive(sourceModule) || Array.isArray(sourceModule) || sourceModule instanceof Promise) {
     return
   }
 
@@ -582,8 +560,7 @@ function exportAll(exports: any, sourceModule: any) {
     if (key !== 'default' && !(key in exports)) {
       try {
         defineExport(exports, key, () => sourceModule[key])
-      }
-      catch {}
+      } catch {}
     }
   }
 }
@@ -622,7 +599,8 @@ function interopModule(mod: any) {
   return { mod, defaultExport }
 }
 
-const CJS_GLOBALS_REFERENCE_ERROR_RE = /^(module|exports|require|__filename|__dirname) is not defined$/
+const CJS_GLOBALS_REFERENCE_ERROR_RE =
+  /^(module|exports|require|__filename|__dirname) is not defined$/
 
 const ESM_HINTS: Record<string, string> = {
   module: 'use "export" declarations instead of "module.exports"',
@@ -645,10 +623,11 @@ function enhanceMissingCjsGlobalsError(error: unknown): unknown {
   if (!name) {
     return error
   }
-  const message = `${referenceError.message}\n\n`
-    + `"${name}" is a CommonJS variable that is not available in ES modules, and "injectCjsGlobals" is disabled. `
-    + `If this module is meant to be an ES module, ${ESM_HINTS[name]}. `
-    + `If it is meant to be a CommonJS module, use the ".cjs" file extension, set "type": "commonjs" in the nearest package.json, or externalize it with "server.deps.external".`
+  const message =
+    `${referenceError.message}\n\n` +
+    `"${name}" is a CommonJS variable that is not available in ES modules, and "injectCjsGlobals" is disabled. ` +
+    `If this module is meant to be an ES module, ${ESM_HINTS[name]}. ` +
+    `If it is meant to be a CommonJS module, use the ".cjs" file extension, set "type": "commonjs" in the nearest package.json, or externalize it with "server.deps.external".`
   if (typeof referenceError.stack === 'string') {
     referenceError.stack = referenceError.stack.replace(referenceError.message, message)
   }

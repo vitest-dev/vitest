@@ -51,35 +51,50 @@ export class Traces {
 
   constructor(options: TracesOptions) {
     if (options.enabled) {
-      const apiInit = import('@opentelemetry/api').then((api) => {
-        const otel = {
-          tracer: api.trace.getTracer(options.tracerName || 'vitest'),
-          context: api.context,
-          propagation: api.propagation,
-          trace: api.trace,
-          SpanKind: api.SpanKind,
-          SpanStatusCode: api.SpanStatusCode,
-        }
-        this.#otel = otel
-      }).catch(() => {
-        throw new Error(`"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://vitest.dev/guide/open-telemetry`)
-      })
-      const sdkInit = (options.sdkPath ? import(/* @vite-ignore */ options.sdkPath!) : Promise.resolve()).catch((cause) => {
-        throw new Error(`Failed to import custom OpenTelemetry SDK script (${options.sdkPath}): ${cause.message}`)
-      })
-      this.#init = Promise.all([sdkInit, apiInit]).then(([sdk]) => {
-        if (sdk != null) {
-          if (sdk.default != null && typeof sdk.default === 'object' && typeof sdk.default.shutdown === 'function') {
-            this.#sdk = sdk.default
+      const apiInit = import('@opentelemetry/api')
+        .then((api) => {
+          const otel = {
+            tracer: api.trace.getTracer(options.tracerName || 'vitest'),
+            context: api.context,
+            propagation: api.propagation,
+            trace: api.trace,
+            SpanKind: api.SpanKind,
+            SpanStatusCode: api.SpanStatusCode,
           }
-          else if (options.watchMode !== true && process.env.VITEST_MODE !== 'watch') {
-            console.warn(`OpenTelemetry instrumentation module (${options.sdkPath}) does not have a default export with a "shutdown" method. Vitest won't be able to ensure that all traces are processed in time. Try running Vitest in watch mode instead.`)
-          }
-        }
-      }).finally(() => {
-        this.#initEndTime = performance.now()
-        this.#init = null
+          this.#otel = otel
+        })
+        .catch(() => {
+          throw new Error(
+            `"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://vitest.dev/guide/open-telemetry`,
+          )
+        })
+      const sdkInit = (
+        options.sdkPath ? import(/* @vite-ignore */ options.sdkPath!) : Promise.resolve()
+      ).catch((cause) => {
+        throw new Error(
+          `Failed to import custom OpenTelemetry SDK script (${options.sdkPath}): ${cause.message}`,
+        )
       })
+      this.#init = Promise.all([sdkInit, apiInit])
+        .then(([sdk]) => {
+          if (sdk != null) {
+            if (
+              sdk.default != null &&
+              typeof sdk.default === 'object' &&
+              typeof sdk.default.shutdown === 'function'
+            ) {
+              this.#sdk = sdk.default
+            } else if (options.watchMode !== true && process.env.VITEST_MODE !== 'watch') {
+              console.warn(
+                `OpenTelemetry instrumentation module (${options.sdkPath}) does not have a default export with a "shutdown" method. Vitest won't be able to ensure that all traces are processed in time. Try running Vitest in watch mode instead.`,
+              )
+            }
+          }
+        })
+        .finally(() => {
+          this.#initEndTime = performance.now()
+          this.#init = null
+        })
     }
   }
 
@@ -105,15 +120,18 @@ export class Traces {
       return
     }
     this.#initRecorded = true
-    this
-      .startSpan('vitest.runtime.traces', { startTime: this.#initStartTime }, context)
-      .end(this.#initEndTime)
+    this.startSpan('vitest.runtime.traces', { startTime: this.#initStartTime }, context).end(
+      this.#initEndTime,
+    )
   }
 
   /**
    * @internal
    */
-  startContextSpan(name: string, currentContext?: Context): {
+  startContextSpan(
+    name: string,
+    currentContext?: Context,
+  ): {
     span: Span
     context: Context
   } {
@@ -125,11 +143,7 @@ export class Traces {
     }
 
     const activeContext = currentContext || this.#otel.context.active()
-    const span = this.#otel.tracer.startSpan(
-      name,
-      {},
-      activeContext,
-    )
+    const span = this.#otel.tracer.startSpan(name, {}, activeContext)
     const context = this.#otel.trace.setSpan(activeContext, span)
     return {
       span,
@@ -203,8 +217,7 @@ export class Traces {
           .finally(() => span.end()) as T
       }
       return result
-    }
-    catch (error) {
+    } catch (error) {
       if (error instanceof Error) {
         span.recordException({
           name: error.name,
@@ -216,8 +229,7 @@ export class Traces {
         })
       }
       throw error
-    }
-    finally {
+    } finally {
       // end sync callback
       if (!(result instanceof Promise)) {
         span.end()
@@ -236,7 +248,11 @@ export class Traces {
   /**
    * @internal
    */
-  $<T>(name: string, optionsOrFn: TracesSpanOptions | ((span: Span) => T), fn?: (span: Span) => T): T {
+  $<T>(
+    name: string,
+    optionsOrFn: TracesSpanOptions | ((span: Span) => T),
+    fn?: (span: Span) => T,
+  ): T {
     const callback = typeof optionsOrFn === 'function' ? optionsOrFn : fn!
     if (!this.#otel) {
       return callback(this.#noopSpan)
@@ -246,17 +262,12 @@ export class Traces {
     const options = typeof optionsOrFn === 'function' ? {} : optionsOrFn
     const context = options.context
     if (context) {
-      return otel.tracer.startActiveSpan(
-        name,
-        options,
-        context,
-        span => this.#callActiveSpan(span, callback),
+      return otel.tracer.startActiveSpan(name, options, context, (span) =>
+        this.#callActiveSpan(span, callback),
       )
     }
-    return otel.tracer.startActiveSpan(
-      name,
-      options,
-      span => this.#callActiveSpan(span, callback),
+    return otel.tracer.startActiveSpan(name, options, (span) =>
+      this.#callActiveSpan(span, callback),
     )
   }
 

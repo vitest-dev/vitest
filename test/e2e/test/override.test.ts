@@ -5,8 +5,10 @@ import { describe, expect, it } from 'vitest'
 import { parseCLI } from 'vitest/node'
 import { resolveTestConfig } from '#test-utils'
 
-async function config(options: TestUserConfig & { $cliOptions?: CliOptions; $viteConfig?: ViteUserConfig }) {
-  const { config } = await resolveTestConfig(options) as any
+async function config(
+  options: TestUserConfig & { $cliOptions?: CliOptions; $viteConfig?: ViteUserConfig },
+) {
+  const { config } = (await resolveTestConfig(options)) as any
   config.test.$viteConfig = config
   return config.test as ResolvedConfig & { $viteConfig: ResolvedViteConfig }
 }
@@ -73,7 +75,9 @@ describe('correctly defines api flag', () => {
   })
 
   it('allowWrite and allowExec can be explicitly overridden when exposed to network', async () => {
-    const c = await config({ api: { port: 5555, host: '0.0.0.0', allowWrite: true, allowExec: true } })
+    const c = await config({
+      api: { port: 5555, host: '0.0.0.0', allowWrite: true, allowExec: true },
+    })
     expect(c.api.allowWrite).toBe(true)
     expect(c.api.allowExec).toBe(true)
   })
@@ -85,10 +89,7 @@ describe('correctly defines api flag', () => {
   })
 })
 
-describe.each([
-  '--inspect',
-  '--inspect-brk',
-])('correctly parses %s flags', (inspectFlagName) => {
+describe.each(['--inspect', '--inspect-brk'])('correctly parses %s flags', (inspectFlagName) => {
   it.each([
     ['', { enabled: true }],
     ['true', { enabled: true }],
@@ -100,9 +101,7 @@ describe.each([
     ['www.remote.com:1002', { enabled: true, port: 1002, host: 'www.remote.com' }],
     ['www.remote.com', { enabled: true, host: 'www.remote.com' }],
   ])(`parses "vitest ${inspectFlagName} %s" value`, async (cliValue, inspect) => {
-    const rawConfig = parseCLI(
-      `vitest --no-file-parallelism ${inspectFlagName} ${cliValue}`,
-    )
+    const rawConfig = parseCLI(`vitest --no-file-parallelism ${inspectFlagName} ${cliValue}`)
     const c = await config(rawConfig.options)
     expect(c.inspector).toEqual({
       ...inspect,
@@ -111,12 +110,7 @@ describe.each([
   })
   it('cannot use URL', async () => {
     const url = 'https://www.remote.com:1002'
-    const rawConfig = parseCLI([
-      'vitest',
-      '--no-file-parallelism',
-      inspectFlagName,
-      url,
-    ])
+    const rawConfig = parseCLI(['vitest', '--no-file-parallelism', inspectFlagName, url])
     await expect(async () => {
       await config(rawConfig.options)
     }).rejects.toThrow(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
@@ -162,7 +156,9 @@ it('fsModuleCache is inherited in a project', async () => {
   expect(v.resolvedProjects[0].projectConfig.fsModuleCache).toBe(true)
 
   expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(
+    resolve('./node_modules/custom-cache-path'),
+  )
 })
 
 it('project overrides fsModuleCache', async () => {
@@ -183,7 +179,9 @@ it('project overrides fsModuleCache', async () => {
   expect(v.resolvedProjects[0].projectConfig.fsModuleCache).toBe(false)
 
   expect(v.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
-  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
+  expect(v.resolvedProjects[0].projectConfig.fsModuleCachePath).toBe(
+    resolve('./node_modules/project-cache-path'),
+  )
 })
 
 it('migrates the deprecated `experimental.fsModuleCache*` options to the top level', async () => {

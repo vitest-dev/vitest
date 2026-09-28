@@ -128,3 +128,18 @@ jobs:
         run: |
           TAG="v$VERSION"
           npx changelogithub --to "$TAG" --name "$TAG"
+
+  promote-docs:
+    if: needs.detect.outputs.release == 'true' && github.ref_name == 'main' && !contains(needs.detect.outputs.version, '-')
+    needs:
+      - detect
+      - publish
+    name: Promote stable documentation
+    permissions:
+      contents: read
+    uses: ./.github/workflows/promote-docs.yml
+    with:
+      target: ${{ github.sha }}
+    secrets:
+      RELEASE_GITHUB_APP_ID: ${{ secrets.RELEASE_GITHUB_APP_ID }}
+      RELEASE_GITHUB_APP_PRIVATE_KEY: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}

@@ -86,35 +86,23 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
-        const classNameStrategy
-          = (typeof testConfig.css !== 'boolean'
-            && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+        const classNameStrategy =
+          (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) ||
+          'stable'
 
         if (!browserEnabled && classNameStrategy !== 'scoped') {
           config.css ??= {}
           config.css.modules ??= {}
           if (config.css.modules) {
-            config.css.modules.generateScopedName = (
-              name: string,
-              filename: string,
-            ) => {
-              return generateScopedClassName(
-                classNameStrategy,
-                name,
-                relative(root, filename),
-              )!
+            config.css.modules.generateScopedName = (name: string, filename: string) => {
+              return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
             }
           }
         }
 
-        config.customLogger = createViteLogger(
-          harness.logger,
-          viteConfig.logLevel || 'warn',
-          {
-            allowClearScreen: false,
-          },
-        )
+        config.customLogger = createViteLogger(harness.logger, viteConfig.logLevel || 'warn', {
+          allowClearScreen: false,
+        })
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
@@ -142,8 +130,7 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
           // Always disable the websocket server in middlewareMode
           if (!isBrowserEnabled && api.middlewareMode) {
             server.ws = false
-          }
-          else if (viteConfig.server && 'ws' in viteConfig.server) {
+          } else if (viteConfig.server && 'ws' in viteConfig.server) {
             viteConfig.server.ws = undefined
           }
 

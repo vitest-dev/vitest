@@ -1,5 +1,4 @@
 import { expect, test } from 'vitest'
-
 import { runVitest } from '../../test-utils'
 
 test('should run suites and tests concurrently unless concurrent false is specified when sequence.concurrent is true', async () => {

@@ -12,10 +12,9 @@ export async function teardown() {
     assert.equal(results.numTotalTestSuites, 4)
     assert.equal(results.numTotalTests, 5)
     assert.equal(results.numPassedTests, 5)
-  }
-  catch (err) {
+  } catch (err) {
     console.error(err)
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     console.dir(results, { depth: null })
     process.exit(1)
   }

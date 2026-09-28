@@ -9,7 +9,7 @@ const processOff = process.off.bind(process)
 const dispose: (() => void)[] = []
 
 export function listenForErrors(state: () => WorkerGlobalState): void {
-  dispose.forEach(fn => fn())
+  dispose.forEach((fn) => fn())
   dispose.length = 0
 
   function catchError(err: any, type: string, event: 'uncaughtException' | 'unhandledRejection') {
@@ -34,7 +34,8 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
   }
 
   const uncaughtException = (e: Error) => catchError(e, 'Uncaught Exception', 'uncaughtException')
-  const unhandledRejection = (e: Error) => catchError(e, 'Unhandled Rejection', 'unhandledRejection')
+  const unhandledRejection = (e: Error) =>
+    catchError(e, 'Unhandled Rejection', 'unhandledRejection')
 
   processOn('uncaughtException', uncaughtException)
   processOn('unhandledRejection', unhandledRejection)

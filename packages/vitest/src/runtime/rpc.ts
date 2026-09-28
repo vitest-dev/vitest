@@ -8,16 +8,17 @@ import { getWorkerState } from './utils'
 
 const { get } = Reflect
 
+const globalProcess = globalThis.process
+
 function withSafeTimers(fn: () => void) {
-  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate }
-    = getSafeTimers()
+  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getSafeTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
 
-  const currentNextTick = globalThis.process?.nextTick
+  const currentNextTick = globalProcess?.nextTick
 
   try {
     globalThis.setTimeout = setTimeout
@@ -30,22 +31,21 @@ function withSafeTimers(fn: () => void) {
       globalThis.clearImmediate = clearImmediate
     }
 
-    if (globalThis.process && nextTick) {
-      globalThis.process.nextTick = nextTick
+    if (globalProcess && nextTick) {
+      globalProcess.nextTick = nextTick
     }
 
     const result = fn()
     return result
-  }
-  finally {
+  } finally {
     globalThis.setTimeout = currentSetTimeout
     globalThis.clearTimeout = currentClearTimeout
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process && nextTick) {
+    if (globalProcess && nextTick) {
       nextTick(() => {
-        globalThis.process.nextTick = currentNextTick
+        globalProcess.nextTick = currentNextTick
       })
     }
   }
@@ -74,22 +74,17 @@ export function onCancel(callback: (reason: CancelReason) => void): () => void {
 }
 
 export function createRuntimeRpc(
-  options: Pick<
-    BirpcOptions<RuntimeRPC>,
-    'on' | 'post' | 'serialize' | 'deserialize'
-  >,
+  options: Pick<BirpcOptions<RuntimeRPC>, 'on' | 'post' | 'serialize' | 'deserialize'>,
 ): WorkerRPC {
   return createSafeRpc(
     createBirpc<RuntimeRPC, RunnerRPC>(
       {
         async onCancel(reason) {
-          await Promise.all(onCancelCallbacks.map(fn => fn(reason)))
+          await Promise.all(onCancelCallbacks.map((fn) => fn(reason)))
         },
       },
       {
-        eventNames: [
-          'onCancel',
-        ],
+        eventNames: ['onCancel'],
         timeout: -1,
         ...options,
       },
@@ -112,8 +107,7 @@ function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
           promises.add(result)
           try {
             return await result
-          }
-          finally {
+          } finally {
             promises.delete(result)
           }
         })

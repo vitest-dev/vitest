@@ -4,13 +4,15 @@ import { instances, provider, runInlineBrowserTests } from './utils'
 
 const [firstInstance] = instances
 
-test.runIf(provider.name === 'playwright')('exposes concurrencyId/workerId bounded by maxWorkers', async () => {
-  const maxWorkers = 2
-  const fileCount = 4
+test.runIf(provider.name === 'playwright')(
+  'exposes concurrencyId/workerId bounded by maxWorkers',
+  async () => {
+    const maxWorkers = 2
+    const fileCount = 4
 
-  const files: Record<string, string> = {}
-  for (let i = 0; i < fileCount; i++) {
-    files[`test/file-${i}.test.ts`] = `
+    const files: Record<string, string> = {}
+    for (let i = 0; i < fileCount; i++) {
+      files[`test/file-${i}.test.ts`] = `
       import { expect, test } from 'vitest'
       test('reads worker state', () => {
         const ctx = globalThis.__vitest_worker__.ctx
@@ -20,42 +22,43 @@ test.runIf(provider.name === 'playwright')('exposes concurrencyId/workerId bound
         expect(String(ctx.concurrencyId)).toBe(import.meta.env.VITEST_POOL_ID)
       })
     `
-  }
+    }
 
-  const testModules: TestModule[] = []
+    const testModules: TestModule[] = []
 
-  const { stderr, stdout } = await runInlineBrowserTests(files, {
-    maxWorkers,
-    fileParallelism: true,
-    browser: {
-      instances: [firstInstance],
-    },
-    reporters: [
-      'default',
-      {
-        onTestModuleEnd(module) {
-          testModules.push(module)
-        },
+    const { stderr, stdout } = await runInlineBrowserTests(files, {
+      maxWorkers,
+      fileParallelism: true,
+      browser: {
+        instances: [firstInstance],
       },
-    ],
-  })
+      reporters: [
+        'default',
+        {
+          onTestModuleEnd(module) {
+            testModules.push(module)
+          },
+        },
+      ],
+    })
 
-  expect(stderr).toBe('')
-  expect(testModules).toHaveLength(fileCount)
+    expect(stderr).toBe('')
+    expect(testModules).toHaveLength(fileCount)
 
-  const used = new Set<number>()
-  for (const module of testModules) {
-    const diagnostic = module.diagnostic()
+    const used = new Set<number>()
+    for (const module of testModules) {
+      const diagnostic = module.diagnostic()
 
-    expect(stdout).toReportPassedTest(module.relativeModuleId, firstInstance.browser)
+      expect(stdout).toReportPassedTest(module.relativeModuleId, firstInstance.browser)
 
-    expect(diagnostic.workerId).toBe(diagnostic.concurrencyId)
-    expect(diagnostic.concurrencyId).toBeGreaterThanOrEqual(1)
-    expect(diagnostic.concurrencyId).toBeLessThanOrEqual(maxWorkers)
+      expect(diagnostic.workerId).toBe(diagnostic.concurrencyId)
+      expect(diagnostic.concurrencyId).toBeGreaterThanOrEqual(1)
+      expect(diagnostic.concurrencyId).toBeLessThanOrEqual(maxWorkers)
 
-    used.add(diagnostic.concurrencyId)
-  }
+      used.add(diagnostic.concurrencyId)
+    }
 
-  // the pool opens one tab per slot, so both slots are used and stay within range
-  expect([...used].sort()).toEqual([1, 2])
-})
+    // the pool opens one tab per slot, so both slots are used and stay within range
+    expect([...used].sort()).toEqual([1, 2])
+  },
+)

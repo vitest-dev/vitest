@@ -1,10 +1,24 @@
 import type { ParsedStack, SerializedError } from '@vitest/utils'
-import type { File, Task, TestAnnotation, TestBenchmark, TestBenchmarkTask } from '../../runtime/runner/types'
+import type {
+  File,
+  Task,
+  TestAnnotation,
+  TestBenchmark,
+  TestBenchmarkTask,
+} from '../../runtime/runner/types'
 import type { AsyncLeak, TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
-import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
+import type {
+  TestCase,
+  TestCollection,
+  TestModule,
+  TestModuleState,
+  TestResult,
+  TestSuite,
+  TestSuiteState,
+} from './reported-tasks'
 import { readFileSync } from 'node:fs'
 import { availableParallelism } from 'node:os'
 import { performance } from 'node:perf_hooks'
@@ -16,9 +30,20 @@ import { groupBy } from '../../utils/base'
 import { isCI, isTTY } from '../../utils/env'
 import { getSuites, getTestName, getTests, hasFailed, hasFailedSnapshot } from '../../utils/tasks'
 import { generateCodeFrame, printStack } from '../printError'
-import { estimateModuleEvaluationSaving, getEnvironmentDiagnostics, getImportDiagnostics, getTransformDiagnostics, isSavingWorthHinting } from './diagnostics'
+import {
+  estimateModuleEvaluationSaving,
+  getEnvironmentDiagnostics,
+  getImportDiagnostics,
+  getTransformDiagnostics,
+  isSavingWorthHinting,
+} from './diagnostics'
 import { computeDurationBreakdown, formatDurationBreakdown } from './durationBreakdown'
-import { BENCH_TABLE_HEAD, computeBenchColumnWidths, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
+import {
+  BENCH_TABLE_HEAD,
+  computeBenchColumnWidths,
+  padBenchRow,
+  renderBenchmarkRow,
+} from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
   countTestErrors,
@@ -95,14 +120,13 @@ export abstract class BaseReporter implements Reporter {
     unhandledErrors: ReadonlyArray<SerializedError>,
     _reason: TestRunEndReason,
   ): void {
-    const files = testModules.map(testModule => testModule.task)
+    const files = testModules.map((testModule) => testModule.task)
     const errors = [...unhandledErrors]
 
     this.end = performance.now()
     if (!files.length && !errors.length) {
       this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
-    }
-    else {
+    } else {
       this.printPerProjectBenchmarks()
       this.reportSummary(files, errors)
     }
@@ -177,29 +201,34 @@ export abstract class BaseReporter implements Reporter {
           const suiteState = child.state()
 
           // Skipped suites are hidden when --hideSkippedTests, print otherwise
-          if (!this.ctx.config.hideSkippedTests || suiteState !== 'skipped' || child.task.mode === 'todo') {
+          if (
+            !this.ctx.config.hideSkippedTests ||
+            suiteState !== 'skipped' ||
+            child.task.mode === 'todo'
+          ) {
             this.printTestSuite(child)
           }
 
           visit(suiteState, child.children)
-        }
-        else {
+        } else {
           const testResult = child.result()
 
           testsCount++
           if (testResult.state === 'failed') {
             failedCount++
-          }
-          else if (testResult.state === 'skipped') {
+          } else if (testResult.state === 'skipped') {
             if (child.options.mode === 'todo') {
               todoCount++
-            }
-            else {
+            } else {
               skippedCount++
             }
           }
 
-          if (this.ctx.config.hideSkippedTests && suiteState === 'skipped' && child.options.mode !== 'todo') {
+          if (
+            this.ctx.config.hideSkippedTests &&
+            suiteState === 'skipped' &&
+            child.options.mode !== 'todo'
+          ) {
             // Skipped suites are hidden when --hideSkippedTests
             continue
           }
@@ -211,18 +240,19 @@ export abstract class BaseReporter implements Reporter {
 
     try {
       visit(moduleState, testModule.children)
-    }
-    finally {
+    } finally {
       this.log = originalLog
     }
 
-    this.log(this.getModuleLog(testModule, {
-      tests: testsCount,
-      failed: failedCount,
-      skipped: skippedCount,
-      todo: todoCount,
-    }))
-    logs.forEach(log => this.log(log))
+    this.log(
+      this.getModuleLog(testModule, {
+        tests: testsCount,
+        failed: failedCount,
+        skipped: skippedCount,
+        todo: todoCount,
+      }),
+    )
+    logs.forEach((log) => this.log(log))
   }
 
   protected printTestCase(moduleState: TestModuleState, test: TestCase): void {
@@ -234,7 +264,7 @@ export abstract class BaseReporter implements Reporter {
     const benchmarks = test.benchmarks()
     // perProject tasks still appear in the inline table — they're additionally
     // aggregated in the cross-project section at the end of the run
-    const inlineBenchmarks: TestBenchmark[] = benchmarks.filter(b => b.tasks.length > 0)
+    const inlineBenchmarks: TestBenchmark[] = benchmarks.filter((b) => b.tasks.length > 0)
 
     if (testResult.state === 'failed') {
       this.printAncestorSuites(test)
@@ -244,16 +274,20 @@ export abstract class BaseReporter implements Reporter {
     // also print slow tests
     else if (duration > this.ctx.config.slowTestThreshold) {
       this.printAncestorSuites(test)
-      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)}${suffix}`)
-    }
-
-    else if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
+      this.log(
+        ` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)}${suffix}`,
+      )
+    } else if (
+      this.ctx.config.hideSkippedTests &&
+      testResult.state === 'skipped' &&
+      test.options.mode !== 'todo'
+    ) {
       // Skipped tests are hidden when --hideSkippedTests
-    }
-
-    else if (this.renderSucceed || moduleState === 'failed' || inlineBenchmarks.length) {
+    } else if (this.renderSucceed || moduleState === 'failed' || inlineBenchmarks.length) {
       this.printAncestorSuites(test)
-      this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`)
+      this.log(
+        ` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`,
+      )
     }
 
     if (inlineBenchmarks.length > 0) {
@@ -261,12 +295,15 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  private getModuleLog(testModule: TestModule, counts: {
-    tests: number
-    failed: number
-    skipped: number
-    todo: number
-  }): string {
+  private getModuleLog(
+    testModule: TestModule,
+    counts: {
+      tests: number
+      failed: number
+      skipped: number
+      todo: number
+    },
+  ): string {
     let state = c.dim(`${counts.tests} test${counts.tests > 1 ? 's' : ''}`)
 
     if (counts.failed) {
@@ -373,8 +410,7 @@ export abstract class BaseReporter implements Reporter {
       if (location) {
         const file = relative(test.project.config.root, location.file)
         group = `${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`
-      }
-      else {
+      } else {
         group = c.bold(type)
       }
 
@@ -443,23 +479,22 @@ export abstract class BaseReporter implements Reporter {
       return ''
     }
 
-    const color = duration > this.ctx.config.slowTestThreshold
-      ? c.yellow
-      : c.green
+    const color = duration > this.ctx.config.slowTestThreshold ? c.yellow : c.green
 
     return color(` ${duration}${c.dim('ms')}`)
   }
 
-  onWatcherStart(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
+  onWatcherStart(
+    files: File[] = this.ctx.state.getFiles(),
+    errors: unknown[] = this.ctx.state.getUnhandledErrors(),
+  ): void {
     const failed = errors.length > 0 || hasFailed(files)
 
     if (failed) {
       this.log(withLabel('red', 'FAIL', 'Tests failed. Watching for file changes...'))
-    }
-    else if (this.ctx.isCancelling) {
+    } else if (this.ctx.isCancelling) {
       this.log(withLabel('red', 'CANCELLED', 'Test run cancelled. Watching for file changes...'))
-    }
-    else {
+    } else {
       this.log(withLabel('green', 'PASS', 'Waiting for file changes...'))
     }
 
@@ -467,8 +502,7 @@ export abstract class BaseReporter implements Reporter {
 
     if (hasFailedSnapshot(files)) {
       hints.unshift(c.dim('press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot'))
-    }
-    else {
+    } else {
       hints.push(c.dim('press ') + c.bold('q') + c.dim(' to quit'))
     }
 
@@ -477,9 +511,12 @@ export abstract class BaseReporter implements Reporter {
 
   onWatcherRerun(files: string[], trigger?: string): void {
     this.watchFilters = files
-    this.failedUnwatchedFiles = this.ctx.state.getTestModules().filter(testModule =>
-      !files.includes(testModule.task.filepath) && testModule.state() === 'failed',
-    )
+    this.failedUnwatchedFiles = this.ctx.state
+      .getTestModules()
+      .filter(
+        (testModule) =>
+          !files.includes(testModule.task.filepath) && testModule.state() === 'failed',
+      )
 
     // Update re-run count for each file
     files.forEach((filepath) => {
@@ -498,15 +535,25 @@ export abstract class BaseReporter implements Reporter {
     this.log(withLabel('blue', 'RERUN', banner))
 
     if (this.ctx.configOverride.project) {
-      this.log(BADGE_PADDING + c.dim(' Project name: ') + c.blue(toArray(this.ctx.configOverride.project).join(', ')))
+      this.log(
+        BADGE_PADDING +
+          c.dim(' Project name: ') +
+          c.blue(toArray(this.ctx.configOverride.project).join(', ')),
+      )
     }
 
     if (this.ctx.filenamePattern) {
-      this.log(BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern.join(', ')))
+      this.log(
+        BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern.join(', ')),
+      )
     }
 
     if (this.ctx.configOverride.testNamePattern) {
-      this.log(BADGE_PADDING + c.dim(' Test name pattern: ') + c.blue(String(this.ctx.configOverride.testNamePattern)))
+      this.log(
+        BADGE_PADDING +
+          c.dim(' Test name pattern: ') +
+          c.blue(String(this.ctx.configOverride.testNamePattern)),
+      )
     }
 
     this.log('')
@@ -521,10 +568,8 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
-    const output
-      = log.type === 'stdout'
-        ? this.ctx.logger.outputStream
-        : this.ctx.logger.errorStream
+    const output =
+      log.type === 'stdout' ? this.ctx.logger.outputStream : this.ctx.logger.errorStream
 
     const write = (msg: string) => (output as any).write(msg)
 
@@ -533,8 +578,7 @@ export abstract class BaseReporter implements Reporter {
 
     if (task) {
       headerText = this.getFullName(task, separator)
-    }
-    else if (log.taskId && log.taskId !== '__vitest__unknown_test__') {
+    } else if (log.taskId && log.taskId !== '__vitest__unknown_test__') {
       headerText = log.taskId
     }
 
@@ -551,19 +595,16 @@ export abstract class BaseReporter implements Reporter {
         : this.ctx.getRootProject()
 
       const stack = log.browser
-        ? (project.browser?.parseStacktrace(log.origin) || [])
+        ? project.browser?.parseStacktrace(log.origin) || []
         : parseStacktrace(log.origin)
 
-      const highlight = task && stack.find(i => i.file === task.file.filepath)
+      const highlight = task && stack.find((i) => i.file === task.file.filepath)
 
       for (const frame of stack) {
         const color = frame === highlight ? c.cyan : c.gray
         const path = relative(project.config.root, frame.file)
 
-        const positions = [
-          frame.method,
-          `${path}:${c.dim(`${frame.line}:${frame.column}`)}`,
-        ]
+        const positions = [frame.method, `${path}:${c.dim(`${frame.line}:${frame.column}`)}`]
           .filter(Boolean)
           .join(' ')
 
@@ -575,7 +616,9 @@ export abstract class BaseReporter implements Reporter {
   }
 
   onTestRemoved(trigger?: string): void {
-    this.log(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.log(
+      c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''),
+    )
   }
 
   shouldLog(log: UserConsoleLog, taskState?: TestResult['state']): boolean {
@@ -599,11 +642,13 @@ export abstract class BaseReporter implements Reporter {
   }
 
   onServerRestart(reason?: string): void {
-    this.log(c.bold(c.magenta(
-      reason === 'config'
-        ? '\nRestarting due to config changes...'
-        : '\nRestarting Vitest...',
-    )))
+    this.log(
+      c.bold(
+        c.magenta(
+          reason === 'config' ? '\nRestarting due to config changes...' : '\nRestarting Vitest...',
+        ),
+      ),
+    )
   }
 
   reportSummary(files: File[], errors: unknown[]): void {
@@ -617,16 +662,10 @@ export abstract class BaseReporter implements Reporter {
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
-    const affectedFiles = [
-      ...this.failedUnwatchedFiles.map(m => m.task),
-      ...files,
-    ]
+    const affectedFiles = [...this.failedUnwatchedFiles.map((m) => m.task), ...files]
     const tests = getTests(affectedFiles)
 
-    const snapshotOutput = renderSnapshotSummary(
-      this.ctx.config.root,
-      this.ctx.snapshot.summary,
-    )
+    const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
 
     for (const [index, snapshot] of snapshotOutput.entries()) {
       const title = index === 0 ? 'Snapshots' : ''
@@ -640,14 +679,12 @@ export abstract class BaseReporter implements Reporter {
     this.log(padSummaryTitle('Test Files'), getStateString(affectedFiles))
     this.log(padSummaryTitle('Tests'), getStateString(tests))
 
-    if (this.ctx.projects.some(c => c.config.typecheck.enabled)) {
-      const failed = tests.filter(t => t.meta?.typecheck && t.result?.errors?.length)
+    if (this.ctx.projects.some((c) => c.config.typecheck.enabled)) {
+      const failed = tests.filter((t) => t.meta?.typecheck && t.result?.errors?.length)
 
       this.log(
         padSummaryTitle('Type Errors'),
-        failed.length
-          ? c.bold(c.red(`${failed.length} failed`))
-          : c.dim('no errors'),
+        failed.length ? c.bold(c.red(`${failed.length} failed`)) : c.dim('no errors'),
       )
     }
 
@@ -659,36 +696,46 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (leakCount) {
-      this.log(padSummaryTitle('Leaks'), c.bold(c.red(`${leakCount} leak${leakCount > 1 ? 's' : ''}`)))
+      this.log(
+        padSummaryTitle('Leaks'),
+        c.bold(c.red(`${leakCount} leak${leakCount > 1 ? 's' : ''}`)),
+      )
     }
 
     this.log(padSummaryTitle('Start at'), this._timeStart)
 
-    const collectTime = sum(files, file => file.collectDuration)
-    const testsTime = sum(files, file => file.result?.duration)
-    const setupTime = sum(files, file => file.setupDuration)
+    const collectTime = sum(files, (file) => file.collectDuration)
+    const testsTime = sum(files, (file) => file.result?.duration)
+    const setupTime = sum(files, (file) => file.setupDuration)
 
     if (this.watchFilters) {
       this.log(padSummaryTitle('Duration'), formatTime(collectTime + testsTime + setupTime))
-    }
-    else {
+    } else {
       const blobs = this.ctx.state.blobs
 
       // Execution time is either sum of all runs of `--merge-reports` or the current run's time
-      const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
+      const executionTime = blobs?.executionTimes
+        ? sum(blobs.executionTimes, (time) => time)
+        : this.end - this.start
 
       const breakdown = computeDurationBreakdown({
         files,
-        typecheckTime: sum(this.ctx.projects, project => project.typechecker?.getResult().time),
+        typecheckTime: sum(this.ctx.projects, (project) => project.typechecker?.getResult().time),
       })
 
       // percentages are relative to the sum of all tracked phases: phases run
       // in parallel workers, so their sum is not comparable to the wall time
       const timers = breakdown.total > 0 ? formatDurationBreakdown(breakdown) : ''
-      this.log(padSummaryTitle('Duration'), formatTime(executionTime) + (timers ? c.dim(` (${timers})`) : ''))
+      this.log(
+        padSummaryTitle('Duration'),
+        formatTime(executionTime) + (timers ? c.dim(` (${timers})`) : ''),
+      )
 
       if (blobs?.executionTimes) {
-        this.log(padSummaryTitle('Per blob') + blobs.executionTimes.map(time => ` ${formatTime(time)}`).join(''))
+        this.log(
+          padSummaryTitle('Per blob') +
+            blobs.executionTimes.map((time) => ` ${formatTime(time)}`).join(''),
+        )
       }
     }
 
@@ -698,9 +745,10 @@ export abstract class BaseReporter implements Reporter {
     // the import hint explains the same `isolate` remedy through module data,
     // and the transform hint (a cache, helping the *next* run) only speaks up
     // when neither applies
-    const hinted = this.reportEnvironmentDiagnostic(files)
-      || this.reportImportDiagnostic(files)
-      || this.reportTransformDiagnostic(files)
+    const hinted =
+      this.reportEnvironmentDiagnostic(files) ||
+      this.reportImportDiagnostic(files) ||
+      this.reportTransformDiagnostic(files)
     if (!hinted) {
       this.reportIsolateDiagnostic(files)
     }
@@ -725,14 +773,18 @@ export abstract class BaseReporter implements Reporter {
   private reportEnvironmentDiagnostic(files: File[]): boolean {
     // merged blob reports replay durations of past runs: no environments were
     // created by this process
-    if (this.ctx.config.watch || this.ctx.state.blobs || !this.ctx.config.experimental.diagnostics.environment) {
+    if (
+      this.ctx.config.watch ||
+      this.ctx.state.blobs ||
+      !this.ctx.config.experimental.diagnostics.environment
+    ) {
       return false
     }
 
     const executionTime = this.end - this.start
     const maxWorkers = this.getEffectiveMaxWorkers()
     const inputs = this.ctx.projects.map((project) => {
-      const projectFiles = files.filter(file => (file.projectName || '') === project.name)
+      const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let environmentTime = 0
       let environmentCount = 0
       let trackedTime = 0
@@ -765,22 +817,24 @@ export abstract class BaseReporter implements Reporter {
     }
 
     for (const diagnostic of diagnostics) {
-      const project = this.ctx.projects.find(p => p.name === diagnostic.name)
+      const project = this.ctx.projects.find((p) => p.name === diagnostic.name)
       this.log()
       this.log(
         padSummaryTitle('Environment'),
-        formatProjectName(project)
-        + c.yellow(`${diagnostic.environment} was created ${diagnostic.environmentCount} times`)
-        + c.dim(` · ${formatTime(diagnostic.environmentTime)} total, ${Math.round(diagnostic.share * 100)}% of tracked time`),
+        formatProjectName(project) +
+          c.yellow(`${diagnostic.environment} was created ${diagnostic.environmentCount} times`) +
+          c.dim(
+            ` · ${formatTime(diagnostic.environmentTime)} total, ${Math.round(diagnostic.share * 100)}% of tracked time`,
+          ),
       )
       const alternative = diagnostic.suggestIsolate
-        ? c.dim(' (keeps per-file isolation) or ') + c.yellow('isolate: false') + c.dim(' (shares it across files)')
+        ? c.dim(' (keeps per-file isolation) or ') +
+          c.yellow('isolate: false') +
+          c.dim(' (shares it across files)')
         : c.dim(' (keeps per-file isolation)')
       this.log(
         padSummaryTitle(''),
-        c.dim('create it once per worker with ')
-        + c.yellow(`pool: 'vmThreads'`)
-        + alternative,
+        c.dim('create it once per worker with ') + c.yellow(`pool: 'vmThreads'`) + alternative,
       )
       this.log(
         padSummaryTitle(''),
@@ -799,14 +853,18 @@ export abstract class BaseReporter implements Reporter {
    * so suites with disjoint per-file graphs stay quiet.
    */
   private reportImportDiagnostic(files: File[]): boolean {
-    if (this.ctx.config.watch || this.ctx.state.blobs || !this.ctx.config.experimental.diagnostics.import) {
+    if (
+      this.ctx.config.watch ||
+      this.ctx.state.blobs ||
+      !this.ctx.config.experimental.diagnostics.import
+    ) {
       return false
     }
 
     const executionTime = this.end - this.start
     const maxWorkers = this.getEffectiveMaxWorkers()
     const inputs = this.ctx.projects.map((project) => {
-      const projectFiles = files.filter(file => (file.projectName || '') === project.name)
+      const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let importTime = 0
       let trackedTime = 0
       for (const file of projectFiles) {
@@ -824,7 +882,7 @@ export abstract class BaseReporter implements Reporter {
         isolateProvided: project.config.providedOptions.isolate,
         importTime,
         trackedTime,
-        fetchCounts: durations ? Object.values(durations).map(times => times.length) : [],
+        fetchCounts: durations ? Object.values(durations).map((times) => times.length) : [],
         fileCount: projectFiles.length,
         parallelism: Math.max(1, Math.min(projectFiles.length, maxWorkers)),
         executionTime,
@@ -837,19 +895,23 @@ export abstract class BaseReporter implements Reporter {
     }
 
     for (const diagnostic of diagnostics) {
-      const project = this.ctx.projects.find(p => p.name === diagnostic.name)
+      const project = this.ctx.projects.find((p) => p.name === diagnostic.name)
       this.log()
       this.log(
         padSummaryTitle('Import'),
-        formatProjectName(project)
-        + c.yellow(`${diagnostic.uniqueModules} modules were evaluated ${diagnostic.totalFetches} times`)
-        + c.dim(` · ${formatTime(diagnostic.importTime)} total, ${Math.round(diagnostic.share * 100)}% of tracked time`),
+        formatProjectName(project) +
+          c.yellow(
+            `${diagnostic.uniqueModules} modules were evaluated ${diagnostic.totalFetches} times`,
+          ) +
+          c.dim(
+            ` · ${formatTime(diagnostic.importTime)} total, ${Math.round(diagnostic.share * 100)}% of tracked time`,
+          ),
       )
       this.log(
         padSummaryTitle(''),
-        c.dim(`~${formatTime(diagnostic.estimatedSaving)} faster with `)
-        + c.yellow('isolate: false')
-        + c.dim(' — shared modules are evaluated once per worker instead of once per file'),
+        c.dim(`~${formatTime(diagnostic.estimatedSaving)} faster with `) +
+          c.yellow('isolate: false') +
+          c.dim(' — shared modules are evaluated once per worker instead of once per file'),
       )
       this.log(
         padSummaryTitle(''),
@@ -866,13 +928,17 @@ export abstract class BaseReporter implements Reporter {
    * `fsModuleCache` persists the results so the next run skips them.
    */
   private reportTransformDiagnostic(files: File[]): boolean {
-    if (this.ctx.config.watch || this.ctx.state.blobs || !this.ctx.config.experimental.diagnostics.transform) {
+    if (
+      this.ctx.config.watch ||
+      this.ctx.state.blobs ||
+      !this.ctx.config.experimental.diagnostics.transform
+    ) {
       return false
     }
 
     const executionTime = this.end - this.start
     const inputs = this.ctx.projects.map((project) => {
-      const projectFiles = files.filter(file => (file.projectName || '') === project.name)
+      const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let transformTime = 0
       let trackedTime = 0
       for (const file of projectFiles) {
@@ -895,18 +961,17 @@ export abstract class BaseReporter implements Reporter {
     }
 
     for (const diagnostic of diagnostics) {
-      const project = this.ctx.projects.find(p => p.name === diagnostic.name)
+      const project = this.ctx.projects.find((p) => p.name === diagnostic.name)
       this.log()
       this.log(
         padSummaryTitle('Transform'),
-        formatProjectName(project)
-        + c.yellow(`transforming modules took ${formatTime(diagnostic.transformTime)}`)
-        + c.dim(` · ${Math.round(diagnostic.share * 100)}% of tracked time, re-done on every run`),
+        formatProjectName(project) +
+          c.yellow(`transforming modules took ${formatTime(diagnostic.transformTime)}`) +
+          c.dim(` · ${Math.round(diagnostic.share * 100)}% of tracked time, re-done on every run`),
       )
       this.log(
         padSummaryTitle(''),
-        c.dim('persist transforms across runs with ')
-        + c.yellow('fsModuleCache: true'),
+        c.dim('persist transforms across runs with ') + c.yellow('fsModuleCache: true'),
       )
       if (isCI) {
         this.log(
@@ -941,9 +1006,10 @@ export abstract class BaseReporter implements Reporter {
     // only meaningful when at least one non-browser project isolates workers
     // without the user having explicitly chosen isolation
     const isolates = this.ctx.projects.some(
-      project => project.config.isolate
-        && !project.config.browser.enabled
-        && !project.config.providedOptions.isolate,
+      (project) =>
+        project.config.isolate &&
+        !project.config.browser.enabled &&
+        !project.config.providedOptions.isolate,
     )
     if (!numWorkers || !isolates) {
       return
@@ -979,12 +1045,17 @@ export abstract class BaseReporter implements Reporter {
     if (measuresModules) {
       // vm pools re-create the module graph per VM context regardless of
       // `isolate`, so only files of `forks`/`threads` projects count
-      const eligibleProjects = new Set(this.ctx.projects
-        .filter(project => (project.config.pool === 'forks' || project.config.pool === 'threads')
-          && project.config.isolate
-          && !project.config.browser.enabled
-          && !project.config.providedOptions.isolate)
-        .map(project => project.name))
+      const eligibleProjects = new Set(
+        this.ctx.projects
+          .filter(
+            (project) =>
+              (project.config.pool === 'forks' || project.config.pool === 'threads') &&
+              project.config.isolate &&
+              !project.config.browser.enabled &&
+              !project.config.providedOptions.isolate,
+          )
+          .map((project) => project.name),
+      )
       const moduleSelfTimes = new Map<string, number[]>()
       for (const file of files) {
         if (!eligibleProjects.has(file.projectName || '') || !file.importDurations) {
@@ -1011,16 +1082,18 @@ export abstract class BaseReporter implements Reporter {
     this.log()
     this.log(
       padSummaryTitle('Isolate'),
-      c.yellow(`${numWorkers} workers spawned`)
-      + c.dim(` · ~${formatTime(avgStartup)} startup each (spawn + environment, per file)`),
+      c.yellow(`${numWorkers} workers spawned`) +
+        c.dim(` · ~${formatTime(avgStartup)} startup each (spawn + environment, per file)`),
     )
     this.log(
       padSummaryTitle(''),
-      c.dim(`${measuresModules ? '' : 'at least '}~${formatTime(estimatedSavings)} faster with `)
-      + c.yellow('isolate: false')
-      + c.dim(measuresModules
-        ? ' — reuses workers across files and evaluates shared modules once per worker'
-        : ' — reuses workers across files instead of one per file'),
+      c.dim(`${measuresModules ? '' : 'at least '}~${formatTime(estimatedSavings)} faster with `) +
+        c.yellow('isolate: false') +
+        c.dim(
+          measuresModules
+            ? ' — reuses workers across files and evaluates shared modules once per worker'
+            : ' — reuses workers across files instead of one per file',
+        ),
     )
   }
 
@@ -1028,7 +1101,7 @@ export abstract class BaseReporter implements Reporter {
     const { print, failOnDanger, thresholds } = this.ctx.config.experimental.importDurations
     if (!print && !failOnDanger) {
       return
-    };
+    }
 
     const testModules = this.ctx.state.getTestModules()
 
@@ -1080,7 +1153,7 @@ export abstract class BaseReporter implements Reporter {
 
     // Determine if we should print
     const shouldFail = failOnDanger && hasDangerImports
-    const shouldPrint = (print === true) || (print === 'on-warn' && hasWarnImports) || shouldFail
+    const shouldPrint = print === true || (print === 'on-warn' && hasWarnImports) || shouldFail
     if (!shouldPrint) {
       return
     }
@@ -1113,7 +1186,7 @@ export abstract class BaseReporter implements Reporter {
     //      ↳ tests/support/components/renderComponent.ts      56ms     936ms ███████████████████░
 
     const groupedImports = Object.entries(
-      groupBy(topImports, i => i.testModule.id),
+      groupBy(topImports, (i) => i.testModule.id),
       // the first one is always the highest because the modules are already sorted
     ).sort(([, imps1], [, imps2]) => imps2[0].totalTime - imps1[0].totalTime)
 
@@ -1124,7 +1197,11 @@ export abstract class BaseReporter implements Reporter {
         const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
 
         // only show the arrow if there is more than 1 group
-        const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 1 && index > 0)
+        const pathDisplay = this.ellipsisPath(
+          imp.importedModuleId,
+          imp.external,
+          groupedImports.length > 1 && index > 0,
+        )
 
         this.log(
           `${pathDisplay} ${this.importDurationTime(imp.selfTime)} ${this.importDurationTime(imp.totalTime)}  ${bar}`,
@@ -1135,7 +1212,12 @@ export abstract class BaseReporter implements Reporter {
     this.log()
     this.log(c.dim('Total imports: ') + allImports.length)
     this.log(c.dim('Slowest import (total-time): ') + formatTime(slowestImport.totalTime))
-    this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
+    this.log(
+      c.dim('Total import time (self/total): ') +
+        formatTime(totalSelfTime) +
+        c.dim(' / ') +
+        formatTime(totalTotalTime),
+    )
 
     // Fail if danger threshold exceeded
     if (shouldFail) {
@@ -1149,7 +1231,12 @@ export abstract class BaseReporter implements Reporter {
 
   private importDurationTime(duration: number) {
     const { thresholds } = this.ctx.config.experimental.importDurations
-    const color = duration >= thresholds.danger ? c.red : duration >= thresholds.warn ? c.yellow : (c: string) => c
+    const color =
+      duration >= thresholds.danger
+        ? c.red
+        : duration >= thresholds.warn
+          ? c.yellow
+          : (c: string) => c
     return color(formatTime(duration).padStart(6))
   }
 
@@ -1172,13 +1259,14 @@ export abstract class BaseReporter implements Reporter {
     const suites = getSuites(files)
     const tests = getTests(files)
 
-    const failedSuites = suites.filter(i => i.result?.errors)
-    const failedTests = tests.filter(i => i.result?.state === 'fail')
+    const failedSuites = suites.filter((i) => i.result?.errors)
+    const failedTests = tests.filter((i) => i.result?.state === 'fail')
     const failedTotal = countTestErrors(failedSuites) + countTestErrors(failedTests)
 
     // TODO: error divider should take into account merged errors for counting
     let current = 1
-    const errorDivider = () => this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
+    const errorDivider = () =>
+      this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
       this.error(`\n${errorBanner(`Failed Suites ${failedSuites.length}`)}\n`)
@@ -1232,15 +1320,16 @@ export abstract class BaseReporter implements Reporter {
       try {
         const sourceCode = readFileSync(stacks[0].file, 'utf-8')
 
-        this.ctx.logger.error(generateCodeFrame(
-          sourceCode.length > 100_000
-            ? sourceCode
-            : this.ctx.logger.highlight(stacks[0].file, sourceCode),
-          undefined,
-          stacks[0],
-        ))
-      }
-      catch {
+        this.ctx.logger.error(
+          generateCodeFrame(
+            sourceCode.length > 100_000
+              ? sourceCode
+              : this.ctx.logger.highlight(stacks[0].file, sourceCode),
+            undefined,
+            stacks[0],
+          ),
+        )
+      } catch {
         // ignore error, do not produce more detailed message with code frame.
       }
 
@@ -1292,7 +1381,11 @@ export abstract class BaseReporter implements Reporter {
     this.log('')
   }
 
-  protected printBenchmarkTable(benchmarks: readonly TestBenchmark[], basePadding: string, columnName = 'name'): void {
+  protected printBenchmarkTable(
+    benchmarks: readonly TestBenchmark[],
+    basePadding: string,
+    columnName = 'name',
+  ): void {
     let printedCount = 0
     for (const benchmark of benchmarks) {
       const { tasks } = benchmark
@@ -1304,11 +1397,8 @@ export abstract class BaseReporter implements Reporter {
         this.log('')
       }
 
-      const rows = tasks.map(t => renderBenchmarkRow(t))
-      const tableHead = [
-        columnName,
-        ...BENCH_TABLE_HEAD,
-      ]
+      const rows = tasks.map((t) => renderBenchmarkRow(t))
+      const tableHead = [columnName, ...BENCH_TABLE_HEAD]
       const widths = computeBenchColumnWidths(tableHead, rows)
       const indent = ` ${basePadding}  `
 
@@ -1364,14 +1454,15 @@ export abstract class BaseReporter implements Reporter {
             const currentAnnotations = task.type === 'test' && task.annotations
             const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
 
-            return projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
+            return (
+              projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
+            )
           })
         }
 
         if (previous) {
           previous[1].push(task)
-        }
-        else {
+        } else {
           errorsQueue.push([error, [task]])
         }
       })
@@ -1381,7 +1472,7 @@ export abstract class BaseReporter implements Reporter {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
-        const project = this.ctx.projects.find(p => p.name === projectName)
+        const project = this.ctx.projects.find((p) => p.name === projectName)
 
         let name = this.getFullName(task, separator)
 
@@ -1459,11 +1550,13 @@ function sum<T>(items: T[], cb: (_next: T) => number | undefined) {
  * `setupDuration`/`collectDuration`, so it is not added separately.
  */
 function trackedFileTime(file: File): number {
-  return (file.environmentLoad || 0)
-    + (file.setupDuration || 0)
-    + (file.collectDuration || 0)
-    + (file.prepareDuration || 0)
-    + (file.result?.duration || 0)
+  return (
+    (file.environmentLoad || 0) +
+    (file.setupDuration || 0) +
+    (file.collectDuration || 0) +
+    (file.prepareDuration || 0) +
+    (file.result?.duration || 0)
+  )
 }
 
 function getIndentation(suite: Task, level = 1): number {

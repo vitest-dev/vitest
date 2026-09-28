@@ -15,7 +15,7 @@ import IconButton from './IconButton.vue'
 const sizes: Record<ViewportSize, [width: number, height: number]> = {
   'small-mobile': [320, 568],
   'large-mobile': [414, 896],
-  'tablet': [834, 1112],
+  tablet: [834, 1112],
 }
 
 function isViewport(name: ViewportSize) {
@@ -69,7 +69,9 @@ const scale = computed(() =>
         @click="showNavigationPanel()"
       />
       <div class="i-carbon-content-delivery-network" />
-      <span class="pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate">Browser UI</span>
+      <span class="pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate"
+        >Browser UI</span
+      >
       <IconButton
         v-show="detailsPosition === 'right' && !detailsPanelVisible"
         v-tooltip.bottom="'Show Details Panel'"
@@ -106,9 +108,7 @@ const scale = computed(() =>
         <span v-if="scale < 100">({{ scale }}%)</span>
       </span>
     </div>
-    <div id="tester-ui" ref="tester-ui">
-      Select a test to run
-    </div>
+    <div id="tester-ui" ref="tester-ui">Select a test to run</div>
   </div>
 </template>
 

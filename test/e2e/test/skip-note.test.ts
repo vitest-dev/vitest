@@ -11,9 +11,7 @@ test.for([
 ])('can leave a note when skipping in the $reporter reporter', async ({ reporter, isTTY }) => {
   const { ctx, stdout, stderr } = await runVitest({
     root,
-    reporters: [
-      [reporter, { isTTY }],
-    ],
+    reporters: [[reporter, { isTTY }]],
   })
 
   expect(stderr).toBe('')

@@ -13,7 +13,8 @@ test('snapshots in skipped test/suite is not obsolete', async () => {
     update: true,
   })
   expect(vitest.stdout).toContain('Snapshots  2 written')
-  expect(fs.readFileSync(path.join(root, '__snapshots__/repro.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(path.join(root, '__snapshots__/repro.test.ts.snap'), 'utf-8'))
+    .toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`repro suite > inner case 1\`] = \`"hi-1"\`;
@@ -40,7 +41,8 @@ test('snapshots in skipped test/suite is not obsolete', async () => {
       ENABLE_SKIP: '1',
     },
   })
-  expect(fs.readFileSync(path.join(root, '__snapshots__/repro.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(path.join(root, '__snapshots__/repro.test.ts.snap'), 'utf-8'))
+    .toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`repro suite > inner case 1\`] = \`"hi-1"\`;
@@ -62,7 +64,8 @@ test('handle obsoleteness of toMatchSnapshot("custom message")', async () => {
     update: true,
   })
   expect(vitest.stdout).toContain('Snapshots  4 written')
-  expect(fs.readFileSync(path.join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(path.join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8'))
+    .toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`custom a > x 1\`] = \`0\`;
@@ -101,7 +104,8 @@ test('handle obsoleteness of toMatchSnapshot("custom message")', async () => {
   expect(vitest.stdout).toContain('1 passed')
   expect(vitest.stdout).toContain('1 skipped')
   expect(vitest.stdout).not.toContain('obsolete')
-  expect(fs.readFileSync(path.join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(path.join(root, '__snapshots__/basic.test.ts.snap'), 'utf-8'))
+    .toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`custom a > x 1\`] = \`0\`;
@@ -154,7 +158,8 @@ exports[\`removed test 1\`] = \`2\`;
   `)
 
   const updated = await runInlineTests(structure, { update: 'all' })
-  expect(fs.readFileSync(path.join(updated.root, '__snapshots__/basic.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(path.join(updated.root, '__snapshots__/basic.test.ts.snap'), 'utf-8'))
+    .toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`a 1\`] = \`0\`;
@@ -165,8 +170,9 @@ exports[\`removed test 1\`] = \`2\`;
 })
 
 test('skipped test does not hide obsolete snapshots of a test with a longer name', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
       import { expect, it } from 'vitest'
 
       it.skip('foo', () => {
@@ -178,7 +184,7 @@ test('skipped test does not hide obsolete snapshots of a test with a longer name
         expect(1).toMatchSnapshot()
       })
     `,
-    '__snapshots__/basic.test.ts.snap': `// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+      '__snapshots__/basic.test.ts.snap': `// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[\`bar 1\`] = \`1\`;
 
@@ -188,7 +194,9 @@ exports[\`foo > custom 1\`] = \`0\`;
 
 exports[\`foobar 1\`] = \`0\`;
 `,
-  }, { update: 'none' })
+    },
+    { update: 'none' },
+  )
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {

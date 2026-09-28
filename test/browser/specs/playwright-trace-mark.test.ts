@@ -28,10 +28,10 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
     const projectTree = buildTestProjectTree(results, (testCase) => {
       const result = testCase.result()
       return result.state === 'failed'
-        ? result.errors.map(e => stripVTControlCharacters(e.message))
+        ? result.errors.map((e) => stripVTControlCharacters(e.message))
         : result.state
     })
-    expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
+    expect(Object.keys(projectTree).sort()).toEqual(instances.map((i) => i.browser).sort())
 
     for (const [name, tree] of Object.entries(projectTree)) {
       expect.soft(tree).toMatchInlineSnapshot(`
@@ -60,19 +60,21 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
       `)
 
       const traceFiles = readdirSync(basicTestTracesFolder)
-        .filter(file => file.startsWith(`${name}-`) && file.endsWith('.trace.zip'))
+        .filter((file) => file.startsWith(`${name}-`) && file.endsWith('.trace.zip'))
         .sort()
-      expect.soft(traceFiles).toEqual([
-        expect.stringContaining('click'),
-        expect.stringContaining('expect-element-fail'),
-        expect.stringContaining('expect-element-pass'),
-        expect.stringContaining('failure'),
-        expect.stringContaining('helper'),
-        expect.stringContaining('locator-mark'),
-        expect.stringContaining('mark-group'),
-        expect.stringContaining('page-mark'),
-        expect.stringContaining('stack'),
-      ])
+      expect
+        .soft(traceFiles)
+        .toEqual([
+          expect.stringContaining('click'),
+          expect.stringContaining('expect-element-fail'),
+          expect.stringContaining('expect-element-pass'),
+          expect.stringContaining('failure'),
+          expect.stringContaining('helper'),
+          expect.stringContaining('locator-mark'),
+          expect.stringContaining('mark-group'),
+          expect.stringContaining('page-mark'),
+          expect.stringContaining('stack'),
+        ])
 
       function formatStack(event: any) {
         return event.stack
@@ -86,7 +88,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
       for (const traceFile of traceFiles) {
         const zipPath = resolve(basicTestTracesFolder, traceFile)
         const parsed = await readTraceZip(zipPath)
-        const events = parsed.events.filter(event => event.type === 'before')
+        const events = parsed.events.filter((event) => event.type === 'before')
 
         if (traceFile.includes('locator-mark')) {
           expect(events).toEqual(
@@ -103,7 +105,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'button rendered - locator')
+          const markerEvent = events.find((e) => e.title === 'button rendered - locator')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:34"`)
         }
@@ -120,7 +122,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'button rendered - page')
+          const markerEvent = events.find((e) => e.title === 'button rendered - page')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:14"`)
         }
@@ -140,7 +142,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'toHaveTextContent')
+          const markerEvent = events.find((e) => e.title === 'toHaveTextContent')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:16"`)
         }
@@ -164,18 +166,17 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'toHaveTextContent [ERROR]')
+          const markerEvent = events.find((e) => e.title === 'toHaveTextContent [ERROR]')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:16"`)
         }
 
         if (traceFile.includes('failure')) {
-          const markerEvent = events.find(e => e.title === 'onAfterRetryTask [fail]')
+          const markerEvent = events.find((e) => e.title === 'onAfterRetryTask [fail]')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:13"`)
-          }
-          else {
+          } else {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:9"`)
           }
         }
@@ -197,7 +198,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'vitest:click')
+          const markerEvent = events.find((e) => e.title === 'vitest:click')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:34"`)
         }
@@ -210,7 +211,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'render helper')
+          const markerEvent = events.find((e) => e.title === 'render helper')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:9"`)
         }
@@ -223,12 +224,11 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'button rendered - stack')
+          const markerEvent = events.find((e) => e.title === 'button rendered - stack')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:21"`)
-          }
-          else {
+          } else {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:17"`)
           }
         }
@@ -241,7 +241,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === 'render group')
+          const markerEvent = events.find((e) => e.title === 'render group')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:14"`)
         }
@@ -262,8 +262,7 @@ async function readTraceZip(zipPath: string): Promise<{ entries: string[]; event
         return JSON.parse(line)
       })
     return { entries, events }
-  }
-  finally {
+  } finally {
     zipFile.close()
   }
 }
@@ -322,7 +321,7 @@ class ZipFile {
         }
 
         const buffers: Buffer[] = []
-        stream.on('data', data => buffers.push(data))
+        stream.on('data', (data) => buffers.push(data))
         stream.on('error', reject)
         stream.on('end', () => resolve(Buffer.concat(buffers)))
       })

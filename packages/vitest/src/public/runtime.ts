@@ -15,11 +15,7 @@ export { VitestNodeSnapshotEnvironment as VitestSnapshotEnvironment } from '../i
 export type { SerializedConfig } from '../runtime/config'
 
 export type { VitestRunner } from '../runtime/runner/types'
-export type {
-  Environment,
-  EnvironmentReturn,
-  VmEnvironmentReturn,
-} from '../types/environment'
+export type { Environment, EnvironmentReturn, VmEnvironmentReturn } from '../types/environment'
 export type { SnapshotEnvironment } from '@vitest/snapshot/environment'
 
 // #region internal

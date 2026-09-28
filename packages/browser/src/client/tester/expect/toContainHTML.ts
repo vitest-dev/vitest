@@ -38,11 +38,7 @@ export default function toContainHTML(
     pass: htmlElement.outerHTML.includes(getNormalizedHtml(htmlElement, htmlText)),
     message: () => {
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toContainHTML`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toContainHTML`, 'element', ''),
         'Expected:',
         `  ${this.utils.EXPECTED_COLOR(htmlText)}`,
         'Received:',

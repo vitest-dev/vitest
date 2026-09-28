@@ -4,10 +4,7 @@ export interface SafeTimers {
   // node.js timers
   nextTick?: (cb: () => void) => void
   setImmediate?: {
-    <TArgs extends any[]>(
-      callback: (...args: TArgs) => void,
-      ...args: TArgs
-    ): any
+    <TArgs extends any[]>(callback: (...args: TArgs) => void, ...args: TArgs): any
     __promisify__: <T = void>(value?: T, options?: any) => Promise<T>
   }
   clearImmediate?: (immediateId: any) => void
@@ -31,8 +28,8 @@ export function getSafeTimers(): SafeTimers {
     queueMicrotask: safeQueueMicrotask,
   } = (globalThis as any)[SAFE_TIMERS_SYMBOL] || globalThis
 
-  const { nextTick: safeNextTick } = (globalThis as any)[SAFE_TIMERS_SYMBOL]
-    || globalThis.process || {}
+  const { nextTick: safeNextTick } =
+    (globalThis as any)[SAFE_TIMERS_SYMBOL] || globalThis.process || {}
 
   return {
     nextTick: safeNextTick,
@@ -68,9 +65,9 @@ export function setSafeTimers(): void {
     setImmediate: safeSetImmediate,
     clearImmediate: safeClearImmediate,
     queueMicrotask: safeQueueMicrotask,
-  };
+  }
 
-  (globalThis as any)[SAFE_TIMERS_SYMBOL] = timers
+  ;(globalThis as any)[SAFE_TIMERS_SYMBOL] = timers
 }
 
 /**
@@ -88,5 +85,5 @@ export function setSafeTimers(): void {
  * await delay(100, setTimeout)
  */
 export function delay(timeout: number, scheduler: typeof setTimeout = setTimeout): Promise<void> {
-  return new Promise(resolve => scheduler(resolve, timeout))
+  return new Promise((resolve) => scheduler(resolve, timeout))
 }

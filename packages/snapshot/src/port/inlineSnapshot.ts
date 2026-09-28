@@ -1,11 +1,7 @@
 import type MagicString from 'magic-string'
 import type { SnapshotEnvironment } from '../types'
 import { getCallLastIndex } from '@vitest/utils/helpers'
-import {
-  lineSplitRE,
-  offsetToLineNumber,
-  positionToOffset,
-} from '@vitest/utils/offset'
+import { lineSplitRE, offsetToLineNumber, positionToOffset } from '@vitest/utils/offset'
 import { memo } from './utils'
 
 export interface InlineSnapshot {
@@ -25,10 +21,10 @@ export async function saveInlineSnapshots(
   snapshots: Array<InlineSnapshot>,
 ): Promise<void> {
   const MagicString = (await import('magic-string')).default
-  const files = new Set(snapshots.map(i => i.file))
+  const files = new Set(snapshots.map((i) => i.file))
   await Promise.all(
     Array.from(files).map(async (file) => {
-      const snaps = snapshots.filter(i => i.file === file)
+      const snaps = snapshots.filter((i) => i.file === file)
       const code = await environment.readSnapshotFile(file)
       if (code == null) {
         throw new Error(`cannot read ${file} when saving inline snapshot`)
@@ -49,8 +45,8 @@ export async function saveInlineSnapshots(
   )
 }
 
-const defaultStartObjectRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
+const defaultStartObjectRegex =
+  /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -93,8 +89,7 @@ function replaceObjectSnap(
   if (shapeEnd === callEnd) {
     // toMatchInlineSnapshot({ foo: expect.any(String) })
     s.appendLeft(callEnd, snap)
-  }
-  else {
+  } else {
     // toMatchInlineSnapshot({ foo: expect.any(String) }, ``)
     s.overwrite(shapeEnd, callEnd, snap)
   }
@@ -109,8 +104,7 @@ function getObjectShapeEndIndex(code: string, index: number) {
     const s = code[index++]
     if (s === '{') {
       startBraces++
-    }
-    else if (s === '}') {
+    } else if (s === '}') {
       endBraces++
     }
   }
@@ -128,13 +122,10 @@ function prepareSnapString(snap: string, source: string, index: number) {
   const isOneline = lines.length <= 1
   const quote = '`'
   if (isOneline) {
-    return `${quote}${lines
-      .join('\n')
-      .replace(/`/g, '\\`')
-      .replace(/\$\{/g, '\\${')}${quote}`
+    return `${quote}${lines.join('\n').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}${quote}`
   }
   return `${quote}\n${lines
-    .map(i => (i ? indentNext + i : ''))
+    .map((i) => (i ? indentNext + i : ''))
     .join('\n')
     .replace(/`/g, '\\`')
     .replace(/\$\{/g, '\\${')}\n${indent}${quote}`
@@ -159,8 +150,8 @@ function getCodeStartingAtIndex(code: string, index: number, methodNames: string
   }
 }
 
-const defaultStartRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
+const defaultStartRegex =
+  /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
 
 const buildStartRegex = memo((assertionName: string) => {
   const replaced = defaultStartRegex.source.replace(
@@ -178,12 +169,18 @@ export function replaceInlineSnap(
   assertionName?: string,
 ): boolean {
   const methodNames = assertionName ? [assertionName] : defaultMethodNames
-  const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex, methodNames)
+  const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(
+    code,
+    currentIndex,
+    methodNames,
+  )
 
   const startRegex = assertionName ? buildStartRegex(assertionName) : defaultStartRegex
   const startMatch = startRegex.exec(codeStartingAtIndex)
 
-  const keywordRegex = assertionName ? new RegExp(escapeRegExp(assertionName)) : /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/
+  const keywordRegex = assertionName
+    ? new RegExp(escapeRegExp(assertionName))
+    : /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/
   const firstKeywordMatch = keywordRegex.exec(codeStartingAtIndex)
 
   if (!startMatch || startMatch.index !== firstKeywordMatch?.index) {

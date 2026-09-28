@@ -5,7 +5,7 @@ describe('vitest runs code in strict mode', () => {
     const o = { id: 1 }
     Object.defineProperty(o, 'id', { writable: false, configurable: false })
 
-    expect(() => o.id = 42).toThrow(TypeError)
+    expect(() => (o.id = 42)).toThrow(TypeError)
   })
 
   test('cannot defined non existing variable', () => {
@@ -26,8 +26,8 @@ describe('vitest runs code in strict mode', () => {
   })
 
   test('cannot declare properties on primitives', () => {
-    expect(() => false.true = '').toThrow(TypeError)
-    expect(() => (14).sailing = 'home').toThrow(TypeError)
-    expect(() => 'with'.you = 'far away').toThrow(TypeError)
+    expect(() => (false.true = '')).toThrow(TypeError)
+    expect(() => ((14).sailing = 'home')).toThrow(TypeError)
+    expect(() => ('with'.you = 'far away')).toThrow(TypeError)
   })
 })

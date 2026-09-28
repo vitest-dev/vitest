@@ -5,12 +5,15 @@ import vitestConfig from './vitest.config'
 process.stdin.isTTY = true
 process.stdin.setRawMode = () => process.stdin
 
-export default mergeConfig(vitestConfig, defineConfig({
-  test: {
-    coverage: {
-      enabled: false,
+export default mergeConfig(
+  vitestConfig,
+  defineConfig({
+    test: {
+      coverage: {
+        enabled: false,
+      },
+      reporters: ['default'],
+      globalSetup: undefined,
     },
-    reporters: ['default'],
-    globalSetup: undefined,
-  },
-}))
+  }),
+)

@@ -36,7 +36,10 @@ const performanceNow = performance.now.bind(performance)
 export class ModuleDebug {
   private executionStack: ExecutionStack = []
 
-  startCalculateModuleExecutionInfo(filename: string, options: ExecutionInfoOptions): () => ModuleExecutionInfoEntry {
+  startCalculateModuleExecutionInfo(
+    filename: string,
+    options: ExecutionInfoOptions,
+  ): () => ModuleExecutionInfoEntry {
     const startTime = performanceNow()
 
     this.executionStack.push({

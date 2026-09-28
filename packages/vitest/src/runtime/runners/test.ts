@@ -58,7 +58,7 @@ export class TestRunner implements VitestTestRunner {
     // nothing to tear down there; registering it anyway would keep the
     // listener, an in-context closure, alive for the lifetime of the worker
     if (this.pool !== 'vmThreads' && this.pool !== 'vmForks') {
-      this.onCleanupWorkerContext = listener => this.workerState.onCleanup(listener)
+      this.onCleanupWorkerContext = (listener) => this.workerState.onCleanup(listener)
     }
   }
 
@@ -106,10 +106,7 @@ export class TestRunner implements VitestTestRunner {
       }
 
       const result = await this.snapshotClient.finish(suite.file.filepath)
-      if (
-        this.workerState.config.snapshotOptions.updateSnapshot === 'none'
-        && result.unchecked
-      ) {
+      if (this.workerState.config.snapshotOptions.updateSnapshot === 'none' && result.unchecked) {
         let message = `Obsolete snapshots found when no snapshot update is expected.\n`
         for (const key of result.uncheckedKeys) {
           message += `· ${key}\n`
@@ -161,10 +158,7 @@ export class TestRunner implements VitestTestRunner {
 
     // initialize snapshot state before running file suite
     if (suite.mode !== 'skip' && 'filepath' in suite) {
-      await this.snapshotClient.setup(
-        suite.file.filepath,
-        this.workerState.config.snapshotOptions,
-      )
+      await this.snapshotClient.setup(suite.file.filepath, this.workerState.config.snapshotOptions)
     }
 
     this.workerState.current = suite
@@ -195,14 +189,10 @@ export class TestRunner implements VitestTestRunner {
       expectedAssertionsNumberErrorGen,
       isExpectingAssertions,
       isExpectingAssertionsError,
-    }
-      = test.context._local
-        ? test.context.expect.getState()
-        : getState((globalThis as any)[GLOBAL_EXPECT])
-    if (
-      expectedAssertionsNumber !== null
-      && assertionCalls !== expectedAssertionsNumber
-    ) {
+    } = test.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
+    if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber) {
       throw expectedAssertionsNumberErrorGen!()
     }
     if (isExpectingAssertions === true && assertionCalls === 0) {
@@ -261,9 +251,7 @@ export class TestRunner implements VitestTestRunner {
     const entries = [...(this.workerState.moduleExecutionInfo?.entries() || [])]
 
     // Sort by duration descending and keep top entries
-    const sortedEntries = entries
-      .sort(([, a], [, b]) => b.duration - a.duration)
-      .slice(0, limit)
+    const sortedEntries = entries.sort(([, a], [, b]) => b.duration - a.duration).slice(0, limit)
 
     const importDurations: Record<string, ImportDuration> = {}
     for (const [filepath, { duration, selfTime, external, importer }] of sortedEntries) {
@@ -284,7 +272,7 @@ export class TestRunner implements VitestTestRunner {
 
   trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
     const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
-    return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+    return this._otel.$(`vitest.test.runner.${name}`, options, cb || (attributes as () => T))
   }
 
   __setTraces(traces: Traces): void {
@@ -304,8 +292,7 @@ export class TestRunner implements VitestTestRunner {
 }
 
 function clearModuleMocks(config: SerializedConfig) {
-  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals }
-    = config
+  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals } = config
 
   if (restoreMocks) {
     vi.restoreAllMocks()

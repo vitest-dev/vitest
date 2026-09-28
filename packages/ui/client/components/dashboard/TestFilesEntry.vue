@@ -25,9 +25,7 @@ import ErrorEntry from './ErrorEntry.vue'
 
     <template v-if="explorerTree.summary.filesSkipped">
       <div class="i-carbon:redo rotate-90" />
-      <div>
-        Skip
-      </div>
+      <div>Skip</div>
       <div class="number text-purple-700 dark:text-purple-400">
         {{ explorerTree.summary.filesSkipped }}
       </div>
@@ -35,9 +33,7 @@ import ErrorEntry from './ErrorEntry.vue'
 
     <template v-if="explorerTree.summary.filesFailed">
       <div class="i-carbon-close" />
-      <div>
-        Fail
-      </div>
+      <div>Fail</div>
       <div class="number text-red-700 dark:text-red-500">
         {{ explorerTree.summary.filesFailed }}
       </div>
@@ -45,9 +41,7 @@ import ErrorEntry from './ErrorEntry.vue'
 
     <template v-if="explorerTree.summary.filesSnapshotFailed">
       <div class="i-carbon-compare" />
-      <div>
-        Snapshot Fail
-      </div>
+      <div>Snapshot Fail</div>
       <div class="number text-red-700 dark:text-red-500">
         {{ explorerTree.summary.filesSnapshotFailed }}
       </div>
@@ -55,9 +49,7 @@ import ErrorEntry from './ErrorEntry.vue'
 
     <template v-if="unhandledErrors.length">
       <div class="i-carbon-checkmark-outline-error" />
-      <div>
-        Errors
-      </div>
+      <div>Errors</div>
       <div class="number text-red-700 dark:text-red-500">
         {{ unhandledErrors.length }}
       </div>
@@ -71,20 +63,20 @@ import ErrorEntry from './ErrorEntry.vue'
   </div>
   <template v-if="unhandledErrors.length">
     <div class="bg-red500/10 text-red500 px-3 py-2 max-w-xl m-2 rounded">
-      <h3 class="text-center mb-2">
-        Unhandled Errors
-      </h3>
+      <h3 class="text-center mb-2">Unhandled Errors</h3>
       <p class="text-sm font-thin mb-2" data-testid="unhandled-errors">
-        Vitest caught {{ unhandledErrors.length }} error{{ unhandledErrors.length > 1 ? 's' : '' }} during the test run.<br>
-        This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+        Vitest caught {{ unhandledErrors.length }} error{{
+          unhandledErrors.length > 1 ? 's' : ''
+        }}
+        during the test run.<br />
+        This might cause false positive tests. Resolve unhandled errors to make sure your tests are
+        not affected.
       </p>
       <details
         data-testid="unhandled-errors-details"
         class="scrolls unhandled-errors text-sm font-thin pe-2.5 open:max-h-52 overflow-auto"
       >
-        <summary class="font-bold cursor-pointer">
-          Errors
-        </summary>
+        <summary class="font-bold cursor-pointer">Errors</summary>
         <ErrorEntry v-for="(e, idx) in unhandledErrors" :key="idx" :error="e" />
       </details>
     </div>

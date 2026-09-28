@@ -61,6 +61,7 @@ Internally this method is called inside [`vitest.start`](/api/advanced/vitest#st
 Note that you can also get access to `vitest` instance from test cases, suites and test modules via a [`project`](/api/advanced/test-project) property, but it might also be useful to store a reference to `vitest` in this method.
 
 ::: details Example
+
 ```ts
 import type { Reporter, TestSpecification, Vitest } from 'vitest/node'
 
@@ -82,6 +83,7 @@ class MyReporter implements Reporter {
 
 export default new MyReporter()
 ```
+
 :::
 
 ## onBrowserInit {#onbrowserinit}
@@ -105,6 +107,7 @@ This method is called when a new test run has started. It receives an array of [
 If Vitest didn't find any test files to run, this event will be invoked with an empty array, and then [`onTestRunEnd`](#ontestrunend) will be called immediately after.
 
 ::: details Example
+
 ```ts
 import type { Reporter, TestSpecification } from 'vitest/node'
 
@@ -116,6 +119,7 @@ class MyReporter implements Reporter {
 
 export default new MyReporter()
 ```
+
 :::
 
 ## onTestRunEnd
@@ -143,6 +147,7 @@ The third argument indicated why the test run was finished:
 If Vitest didn't find any test files to run, this event will be invoked with empty arrays of modules and errors, and the state will depend on the value of [`config.passWithNoTests`](/config/passwithnotests).
 
 ::: details Example
+
 ```ts
 import type {
   Reporter,
@@ -179,6 +184,7 @@ class MyReporter implements Reporter {
 
 export default new MyReporter()
 ```
+
 :::
 
 ## onCoverage

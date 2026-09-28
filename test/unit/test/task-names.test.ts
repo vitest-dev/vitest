@@ -35,12 +35,10 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
 
   // validate this test itself (task.file.tasks[0])
   expect(task.suite).toBe(undefined)
-  expect(
-    task.fullName,
-  ).toBe('test/task-names.test.ts > tasks have correct `fullName` and `fullTestName` properties')
-  expect(
-    task.fullTestName,
-  ).toBe('tasks have correct `fullName` and `fullTestName` properties')
+  expect(task.fullName).toBe(
+    'test/task-names.test.ts > tasks have correct `fullName` and `fullTestName` properties',
+  )
+  expect(task.fullTestName).toBe('tasks have correct `fullName` and `fullTestName` properties')
 
   expect(task.file.fullName).toBe('test/task-names.test.ts')
   expect(task.file.fullTestName).toBe(undefined)
@@ -50,112 +48,64 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   expect(thisTest.fullName).toBe(
     'test/task-names.test.ts > tasks have correct `fullName` and `fullTestName` properties',
   )
-  expect(thisTest.fullTestName).toBe(
-    'tasks have correct `fullName` and `fullTestName` properties',
-  )
+  expect(thisTest.fullTestName).toBe('tasks have correct `fullName` and `fullTestName` properties')
 
-  expect(
-    task.file.tasks,
-  ).toHaveLength(5)
+  expect(task.file.tasks).toHaveLength(5)
 
   // top-level tests
   const createsRecipe = task.file.tasks[1]
   expect(createsRecipe.suite).toBe(undefined)
-  expect(createsRecipe.fullName).toBe(
-    'test/task-names.test.ts > creates new recipe',
-  )
-  expect(createsRecipe.fullTestName).toBe(
-    'creates new recipe',
-  )
+  expect(createsRecipe.fullName).toBe('test/task-names.test.ts > creates new recipe')
+  expect(createsRecipe.fullTestName).toBe('creates new recipe')
 
   const searchIngredient = task.file.tasks[2]
   expect(searchIngredient.suite).toBe(undefined)
-  expect(searchIngredient.fullName).toBe(
-    'test/task-names.test.ts > searches by ingredient',
-  )
-  expect(searchIngredient.fullTestName).toBe(
-    'searches by ingredient',
-  )
+  expect(searchIngredient.fullName).toBe('test/task-names.test.ts > searches by ingredient')
+  expect(searchIngredient.fullTestName).toBe('searches by ingredient')
 
   // single-level suite
   const recipeManagement = task.file.tasks[3] as RunnerTestSuite
   expect(recipeManagement.suite).toBe(undefined)
-  expect(recipeManagement.fullName).toBe(
-    'test/task-names.test.ts > recipe management',
-  )
-  expect(recipeManagement.fullTestName).toBe(
-    'recipe management',
-  )
+  expect(recipeManagement.fullName).toBe('test/task-names.test.ts > recipe management')
+  expect(recipeManagement.fullTestName).toBe('recipe management')
 
   expect(recipeManagement.tasks).toHaveLength(2)
 
   const savesRecipe = recipeManagement.tasks[0]
-  expect(savesRecipe.suite?.fullName).toBe(
-    'test/task-names.test.ts > recipe management',
-  )
-  expect(savesRecipe.suite?.fullTestName).toBe(
-    'recipe management',
-  )
-  expect(savesRecipe.fullName).toBe(
-    'test/task-names.test.ts > recipe management > saves recipe',
-  )
-  expect(savesRecipe.fullTestName).toBe(
-    'recipe management > saves recipe',
-  )
+  expect(savesRecipe.suite?.fullName).toBe('test/task-names.test.ts > recipe management')
+  expect(savesRecipe.suite?.fullTestName).toBe('recipe management')
+  expect(savesRecipe.fullName).toBe('test/task-names.test.ts > recipe management > saves recipe')
+  expect(savesRecipe.fullTestName).toBe('recipe management > saves recipe')
 
   const deletesRecipe = recipeManagement.tasks[1]
-  expect(deletesRecipe.suite?.fullName).toBe(
-    'test/task-names.test.ts > recipe management',
-  )
-  expect(deletesRecipe.suite?.fullTestName).toBe(
-    'recipe management',
-  )
+  expect(deletesRecipe.suite?.fullName).toBe('test/task-names.test.ts > recipe management')
+  expect(deletesRecipe.suite?.fullTestName).toBe('recipe management')
   expect(deletesRecipe.fullName).toBe(
     'test/task-names.test.ts > recipe management > deletes recipe',
   )
-  expect(deletesRecipe.fullTestName).toBe(
-    'recipe management > deletes recipe',
-  )
+  expect(deletesRecipe.fullTestName).toBe('recipe management > deletes recipe')
 
   // nested suites with mixed patterns
   const mealPlanning = task.file.tasks[4] as RunnerTestSuite
   expect(mealPlanning.suite).toBe(undefined)
-  expect(mealPlanning.fullName).toBe(
-    'test/task-names.test.ts > meal planning',
-  )
-  expect(mealPlanning.fullTestName).toBe(
-    'meal planning',
-  )
+  expect(mealPlanning.fullName).toBe('test/task-names.test.ts > meal planning')
+  expect(mealPlanning.fullTestName).toBe('meal planning')
 
   expect(mealPlanning.tasks).toHaveLength(4)
 
   const generatesPlan = mealPlanning.tasks[0]
-  expect(generatesPlan.suite?.fullName).toBe(
-    'test/task-names.test.ts > meal planning',
-  )
-  expect(generatesPlan.suite?.fullTestName).toBe(
-    'meal planning',
-  )
+  expect(generatesPlan.suite?.fullName).toBe('test/task-names.test.ts > meal planning')
+  expect(generatesPlan.suite?.fullTestName).toBe('meal planning')
   expect(generatesPlan.fullName).toBe(
     'test/task-names.test.ts > meal planning > generates weekly plan',
   )
-  expect(generatesPlan.fullTestName).toBe(
-    'meal planning > generates weekly plan',
-  )
+  expect(generatesPlan.fullTestName).toBe('meal planning > generates weekly plan')
 
   const groceryList = mealPlanning.tasks[1] as RunnerTestSuite
-  expect(groceryList.suite?.fullName).toBe(
-    'test/task-names.test.ts > meal planning',
-  )
-  expect(groceryList.suite?.fullTestName).toBe(
-    'meal planning',
-  )
-  expect(groceryList.fullName).toBe(
-    'test/task-names.test.ts > meal planning > grocery lists',
-  )
-  expect(groceryList.fullTestName).toBe(
-    'meal planning > grocery lists',
-  )
+  expect(groceryList.suite?.fullName).toBe('test/task-names.test.ts > meal planning')
+  expect(groceryList.suite?.fullTestName).toBe('meal planning')
+  expect(groceryList.fullName).toBe('test/task-names.test.ts > meal planning > grocery lists')
+  expect(groceryList.fullTestName).toBe('meal planning > grocery lists')
 
   expect(groceryList.tasks).toHaveLength(3)
 
@@ -163,9 +113,7 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   expect(calculatesIngredients.suite?.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists',
   )
-  expect(calculatesIngredients.suite?.fullTestName).toBe(
-    'meal planning > grocery lists',
-  )
+  expect(calculatesIngredients.suite?.fullTestName).toBe('meal planning > grocery lists')
   expect(calculatesIngredients.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists > calculates ingredients',
   )
@@ -177,9 +125,7 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   expect(combinesItems.suite?.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists',
   )
-  expect(combinesItems.suite?.fullTestName).toBe(
-    'meal planning > grocery lists',
-  )
+  expect(combinesItems.suite?.fullTestName).toBe('meal planning > grocery lists')
   expect(combinesItems.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists > combines duplicate items',
   )
@@ -188,18 +134,12 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   )
 
   const shopping = groceryList.tasks[2] as RunnerTestSuite
-  expect(shopping.suite?.fullName).toBe(
-    'test/task-names.test.ts > meal planning > grocery lists',
-  )
-  expect(shopping.suite?.fullTestName).toBe(
-    'meal planning > grocery lists',
-  )
+  expect(shopping.suite?.fullName).toBe('test/task-names.test.ts > meal planning > grocery lists')
+  expect(shopping.suite?.fullTestName).toBe('meal planning > grocery lists')
   expect(shopping.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists > shopping',
   )
-  expect(shopping.fullTestName).toBe(
-    'meal planning > grocery lists > shopping',
-  )
+  expect(shopping.fullTestName).toBe('meal planning > grocery lists > shopping')
 
   expect(shopping.tasks).toHaveLength(2)
 
@@ -207,9 +147,7 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   expect(marksItemsPurchased.suite?.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists > shopping',
   )
-  expect(marksItemsPurchased.suite?.fullTestName).toBe(
-    'meal planning > grocery lists > shopping',
-  )
+  expect(marksItemsPurchased.suite?.fullTestName).toBe('meal planning > grocery lists > shopping')
   expect(marksItemsPurchased.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists > shopping > marks items as purchased',
   )
@@ -221,9 +159,7 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   expect(estimatesTotalCost.suite?.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists > shopping',
   )
-  expect(estimatesTotalCost.suite?.fullTestName).toBe(
-    'meal planning > grocery lists > shopping',
-  )
+  expect(estimatesTotalCost.suite?.fullTestName).toBe('meal planning > grocery lists > shopping')
   expect(estimatesTotalCost.fullName).toBe(
     'test/task-names.test.ts > meal planning > grocery lists > shopping > estimates total cost',
   )
@@ -232,32 +168,20 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   )
 
   const exportsCalendar = mealPlanning.tasks[2]
-  expect(exportsCalendar.suite?.fullName).toBe(
-    'test/task-names.test.ts > meal planning',
-  )
-  expect(exportsCalendar.suite?.fullTestName).toBe(
-    'meal planning',
-  )
+  expect(exportsCalendar.suite?.fullName).toBe('test/task-names.test.ts > meal planning')
+  expect(exportsCalendar.suite?.fullTestName).toBe('meal planning')
   expect(exportsCalendar.fullName).toBe(
     'test/task-names.test.ts > meal planning > exports calendar',
   )
-  expect(exportsCalendar.fullTestName).toBe(
-    'meal planning > exports calendar',
-  )
+  expect(exportsCalendar.fullTestName).toBe('meal planning > exports calendar')
 
   const nutritionTracking = mealPlanning.tasks[3] as RunnerTestSuite
-  expect(nutritionTracking.suite?.fullName).toBe(
-    'test/task-names.test.ts > meal planning',
-  )
-  expect(nutritionTracking.suite?.fullTestName).toBe(
-    'meal planning',
-  )
+  expect(nutritionTracking.suite?.fullName).toBe('test/task-names.test.ts > meal planning')
+  expect(nutritionTracking.suite?.fullTestName).toBe('meal planning')
   expect(nutritionTracking.fullName).toBe(
     'test/task-names.test.ts > meal planning > nutrition tracking',
   )
-  expect(nutritionTracking.fullTestName).toBe(
-    'meal planning > nutrition tracking',
-  )
+  expect(nutritionTracking.fullTestName).toBe('meal planning > nutrition tracking')
 
   expect(nutritionTracking.tasks).toHaveLength(2)
 
@@ -265,9 +189,7 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   expect(calculatesCalories.suite?.fullName).toBe(
     'test/task-names.test.ts > meal planning > nutrition tracking',
   )
-  expect(calculatesCalories.suite?.fullTestName).toBe(
-    'meal planning > nutrition tracking',
-  )
+  expect(calculatesCalories.suite?.fullTestName).toBe('meal planning > nutrition tracking')
   expect(calculatesCalories.fullName).toBe(
     'test/task-names.test.ts > meal planning > nutrition tracking > calculates daily calories',
   )
@@ -279,15 +201,11 @@ test('tasks have correct `fullName` and `fullTestName` properties', ({ expect, t
   expect(tracksMacros.suite?.fullName).toBe(
     'test/task-names.test.ts > meal planning > nutrition tracking',
   )
-  expect(tracksMacros.suite?.fullTestName).toBe(
-    'meal planning > nutrition tracking',
-  )
+  expect(tracksMacros.suite?.fullTestName).toBe('meal planning > nutrition tracking')
   expect(tracksMacros.fullName).toBe(
     'test/task-names.test.ts > meal planning > nutrition tracking > tracks macros',
   )
-  expect(tracksMacros.fullTestName).toBe(
-    'meal planning > nutrition tracking > tracks macros',
-  )
+  expect(tracksMacros.fullTestName).toBe('meal planning > nutrition tracking > tracks macros')
 })
 
 // setup

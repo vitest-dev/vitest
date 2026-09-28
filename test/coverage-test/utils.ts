@@ -11,89 +11,99 @@ import { playwright } from '@vitest/browser-playwright'
 import * as libCoverage from '@vitest/istanbul-lib-coverage'
 import { toArray } from '@vitest/utils/helpers'
 import { normalize } from 'pathe'
-import { onTestFailed, onTestFinished, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import {
+  onTestFailed,
+  onTestFinished,
+  TestRunner,
+  vi,
+  describe as vitestDescribe,
+  test as vitestTest,
+} from 'vitest'
 import * as testUtils from '../test-utils/index'
 
-export const test: TestAPI = process.env.COVERAGE_TEST !== 'true'
-  ? vitestTest
-  : (() => {}) as any as TestAPI
+export const test: TestAPI =
+  process.env.COVERAGE_TEST !== 'true' ? vitestTest : ((() => {}) as any as TestAPI)
 
-export const describe: SuiteAPI = process.env.COVERAGE_TEST !== 'true'
-  ? vitestDescribe
-  : (() => {}) as any as SuiteAPI
+export const describe: SuiteAPI =
+  process.env.COVERAGE_TEST !== 'true' ? vitestDescribe : ((() => {}) as any as SuiteAPI)
 
-export const coverageTest: TestAPI = process.env.COVERAGE_TEST !== 'true'
-  ? (() => {}) as any as TestAPI
-  : vitestTest
+export const coverageTest: TestAPI =
+  process.env.COVERAGE_TEST !== 'true' ? ((() => {}) as any as TestAPI) : vitestTest
 
-export const runVitest = vi.defineHelper(async (config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) => {
-  const provider = process.env.COVERAGE_PROVIDER as any
+export const runVitest = vi.defineHelper(
+  async (
+    config: TestUserConfig,
+    options = { throwOnError: true },
+    viteOverrides: ViteUserConfig = {},
+  ) => {
+    const provider = process.env.COVERAGE_PROVIDER as any
 
-  const result = await testUtils.runVitest({
-    config: 'fixtures/configs/vitest.config.ts',
-    pool: 'threads',
-    ...config,
-    env: {
-      COVERAGE_TEST: 'true',
-      ...config.env,
-    },
-    coverage: {
-      enabled: true,
-      reporter: [],
-      ...config.coverage,
-      provider,
-      customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
-    },
-    browser: {
-      enabled: process.env.COVERAGE_BROWSER === 'true',
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-      provider: playwright(),
-      ...config.browser,
-    },
-    experimental: {
-      ...config.experimental,
-      viteModuleRunner: process.env.VITE_MODULE_RUNNER === 'false' ? false : config.experimental?.viteModuleRunner,
-    },
-    setupFiles: [
-      resolve(import.meta.dirname, 'setup.native.ts'),
-      ...config.setupFiles ?? [],
-    ],
+    const result = await testUtils.runVitest({
+      config: 'fixtures/configs/vitest.config.ts',
+      pool: 'threads',
+      ...config,
+      env: {
+        COVERAGE_TEST: 'true',
+        ...config.env,
+      },
+      coverage: {
+        enabled: true,
+        reporter: [],
+        ...config.coverage,
+        provider,
+        customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
+      },
+      browser: {
+        enabled: process.env.COVERAGE_BROWSER === 'true',
+        headless: true,
+        instances: [{ browser: 'chromium' }],
+        provider: playwright(),
+        ...config.browser,
+      },
+      experimental: {
+        ...config.experimental,
+        viteModuleRunner:
+          process.env.VITE_MODULE_RUNNER === 'false'
+            ? false
+            : config.experimental?.viteModuleRunner,
+      },
+      setupFiles: [resolve(import.meta.dirname, 'setup.native.ts'), ...(config.setupFiles ?? [])],
 
-    projects: config.projects?.map((project) => {
-      if (typeof project !== 'string' && 'test' in project) {
-        project.test ||= {}
-        project.test.setupFiles = toArray(project.test.setupFiles)
-        project.test.setupFiles.push(resolve(import.meta.dirname, 'setup.native.ts'))
-      }
+      projects: config.projects?.map((project) => {
+        if (typeof project !== 'string' && 'test' in project) {
+          project.test ||= {}
+          project.test.setupFiles = toArray(project.test.setupFiles)
+          project.test.setupFiles.push(resolve(import.meta.dirname, 'setup.native.ts'))
+        }
 
-      return project
-    }),
+        return project
+      }),
 
-    $viteConfig: viteOverrides,
-  })
-
-  if (TestRunner.getCurrentTest()) {
-    onTestFailed(() => {
-      console.error('stderr:', result.stderr)
-      console.error('stdout:', result.stdout)
+      $viteConfig: viteOverrides,
     })
 
-    onTestFinished(() => {
-      if (process.env.NODE_V8_COVERAGE) {
-        delete process.env.NODE_V8_COVERAGE
-      }
-    })
-  }
+    if (TestRunner.getCurrentTest()) {
+      onTestFailed(() => {
+        console.error('stderr:', result.stderr)
+        console.error('stdout:', result.stdout)
+      })
 
-  if (options.throwOnError) {
-    if (result.stderr !== '') {
-      throw new Error(`stderr:\n${result.stderr}\n\nstdout:\n${result.stdout}`)
+      onTestFinished(() => {
+        if (process.env.NODE_V8_COVERAGE) {
+          delete process.env.NODE_V8_COVERAGE
+        }
+      })
     }
-  }
 
-  return result
-})
+    if (options.throwOnError) {
+      if (result.stderr !== '') {
+        throw new Error(`stderr:\n${result.stderr}\n\nstdout:\n${result.stdout}`)
+      }
+    }
+
+    return result
+  },
+)
 
 export async function cleanupCoverageJson(name = './coverage/coverage-final.json') {
   if (existsSync(name)) {
@@ -127,10 +137,13 @@ export async function readCoverageMap(name = './coverage/coverage-final.json') {
 }
 
 export function formatSummary(summary: CoverageSummary) {
-  return (['branches', 'functions', 'lines', 'statements'] as const).reduce((all, current) => ({
-    ...all,
-    [current]: `${summary[current].covered}/${summary[current].total} (${summary[current].pct}%)`,
-  }), {})
+  return (['branches', 'functions', 'lines', 'statements'] as const).reduce(
+    (all, current) => ({
+      ...all,
+      [current]: `${summary[current].covered}/${summary[current].total} (${summary[current].pct}%)`,
+    }),
+    {},
+  )
 }
 
 export function normalizeFilename(filename: string) {
@@ -162,6 +175,6 @@ export function captureStdout() {
 
   return function collect() {
     process.stdout.write = original
-    return stripVTControlCharacters(spy.mock.calls.map(call => call[0]).join(''))
+    return stripVTControlCharacters(spy.mock.calls.map((call) => call[0]).join(''))
   }
 }

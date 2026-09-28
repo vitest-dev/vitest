@@ -50,19 +50,14 @@ export default defineConfig({
       {
         test: {
           name: 'Threads pool',
-          include: [
-            './space-pools/threads.test.ts',
-            './space-pools/isolate.test.ts',
-          ],
+          include: ['./space-pools/threads.test.ts', './space-pools/isolate.test.ts'],
           pool: 'threads',
         },
       },
       {
         test: {
           name: 'Non-parallel thread pool',
-          include: [
-            './space-pools/threads.test.ts',
-          ],
+          include: ['./space-pools/threads.test.ts'],
           pool: 'threads',
           fileParallelism: false,
         },
@@ -70,10 +65,7 @@ export default defineConfig({
       {
         test: {
           name: 'Non-isolated thread pool',
-          include: [
-            './space-pools/threads.test.ts',
-            './space-pools/no-isolate.test.ts',
-          ],
+          include: ['./space-pools/threads.test.ts', './space-pools/no-isolate.test.ts'],
           pool: 'threads',
           isolate: false,
         },
@@ -81,19 +73,14 @@ export default defineConfig({
       {
         test: {
           name: 'Forks pool',
-          include: [
-            './space-pools/forks.test.ts',
-            './space-pools/isolate.test.ts',
-          ],
+          include: ['./space-pools/forks.test.ts', './space-pools/isolate.test.ts'],
           pool: 'forks',
         },
       },
       {
         test: {
           name: 'Non-parallel fork pool',
-          include: [
-            './space-pools/forks.test.ts',
-          ],
+          include: ['./space-pools/forks.test.ts'],
           pool: 'forks',
           fileParallelism: false,
         },
@@ -101,10 +88,7 @@ export default defineConfig({
       {
         test: {
           name: 'Non-isolated fork pool',
-          include: [
-            './space-pools/forks.test.ts',
-            './space-pools/no-isolate.test.ts',
-          ],
+          include: ['./space-pools/forks.test.ts', './space-pools/no-isolate.test.ts'],
           pool: 'forks',
           isolate: false,
         },
@@ -141,7 +125,7 @@ function customPlugin(offset: number): Vite.Plugin {
         const padding = '\n*****'.repeat(offset)
 
         const transformed = new MagicString(code)
-        transformed.replace('\'default-padding\'', `\`${padding}\``)
+        transformed.replace("'default-padding'", `\`${padding}\``)
 
         const map = remapping(
           [transformed.generateMap({ hires: true }), this.getCombinedSourcemap() as any],

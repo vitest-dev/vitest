@@ -6,6 +6,7 @@ Vitest reexports the `assert` method from [`chai`](https://www.chaijs.com/api/as
 When using [assertion functions](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#assertion-functions) such as `assert` from `import.meta.vitest` in [in-source tests](/guide/in-source), TypeScript reports error `TS2775` because they must be called via an explicitly annotated name. Annotate the variable with `Chai.Assert` or call it directly:
 
 ::: code-group
+
 ```ts [Annotated variable]
 if (import.meta.vitest) {
   const { test, assert } = import.meta.vitest // [!code --]
@@ -17,6 +18,7 @@ if (import.meta.vitest) {
   })
 }
 ```
+
 ```ts [Direct call]
 if (import.meta.vitest) {
   const { test, assert } = import.meta.vitest // [!code --]
@@ -28,6 +30,7 @@ if (import.meta.vitest) {
   })
 }
 ```
+
 :::
 
 ## assert
@@ -419,7 +422,7 @@ test('assert.isDefined', () => {
 
 - **Type:** `<T>(value: T, message?: string) => void`
 - **Alias:** `isCallable`
-Asserts that `value` is a function.
+  Asserts that `value` is a function.
 
 ```ts
 import { assert, test } from 'vitest'

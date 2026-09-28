@@ -3,13 +3,11 @@ import { useImportEnv } from '../fixtures/src/import-meta-env'
 import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 test('file using import.meta.env is included in report (#2332)', async () => {
-  await runVitest(
-    {
-      include: [normalizeURL(import.meta.url)],
-      coverage: { reporter: 'json' },
-      env: { SOME_VARIABLE: 'some variable set here' },
-    },
-  )
+  await runVitest({
+    include: [normalizeURL(import.meta.url)],
+    coverage: { reporter: 'json' },
+    env: { SOME_VARIABLE: 'some variable set here' },
+  })
 
   const coverageMap = await readCoverageMap()
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/import-meta-env.ts')

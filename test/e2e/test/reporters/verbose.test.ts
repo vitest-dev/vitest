@@ -64,7 +64,9 @@ test('prints retry count', async () => {
     config: false,
   })
 
-  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`"✓ fixtures/reporters/retry.test.ts > pass after retries [...]ms (retry x3)"`)
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(
+    `"✓ fixtures/reporters/retry.test.ts > pass after retries [...]ms (retry x3)"`,
+  )
 })
 
 test('prints repeat count', async () => {
@@ -74,7 +76,9 @@ test('prints repeat count', async () => {
     config: false,
   })
 
-  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`"✓ fixtures/reporters/repeats.test.ts > repeat couple of times [...]ms (repeat x3)"`)
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(
+    `"✓ fixtures/reporters/repeats.test.ts > repeat couple of times [...]ms (repeat x3)"`,
+  )
 })
 
 test('renders tests in a list', async () => {
@@ -198,8 +202,8 @@ function trimReporterOutput(report: string) {
   const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
 
   // Trim start and end, capture just rendered tree
-  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
-  rows.splice(rows.findIndex(row => row.includes('Test Files')))
+  rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  rows.splice(rows.findIndex((row) => row.includes('Test Files')))
 
   return rows.join('\n').trim()
 }

@@ -6,12 +6,7 @@
  */
 
 import type { Config, NewPlugin, Printer, Refs } from '../types'
-import {
-  printChildren,
-  printElement,
-  printElementAsLeaf,
-  printProps,
-} from './lib/markup'
+import { printChildren, printElement, printElementAsLeaf, printProps } from './lib/markup'
 
 interface ReactTestObject {
   $$typeof: symbol
@@ -23,17 +18,15 @@ interface ReactTestObject {
 // Child can be `number` in Stack renderer but not in Fiber renderer.
 type ReactTestChild = ReactTestObject | string | number
 
-const testSymbol
-  = typeof Symbol === 'function' && Symbol.for
-    ? Symbol.for('react.test.json')
-    : 0xE_A7_13_57
+const testSymbol =
+  typeof Symbol === 'function' && Symbol.for ? Symbol.for('react.test.json') : 0xe_a7_13_57
 
 function getPropKeys(object: ReactTestObject) {
   const { props } = object
 
   return props
     ? Object.keys(props)
-        .filter(key => props[key] !== undefined)
+        .filter((key) => props[key] !== undefined)
         .sort()
     : []
 }
@@ -75,8 +68,7 @@ const serialize: NewPlugin['serialize'] = (
         indentation,
       )
 
-const test: NewPlugin['test'] = val =>
-  val && val.$$typeof === testSymbol
+const test: NewPlugin['test'] = (val) => val && val.$$typeof === testSymbol
 
 const plugin: NewPlugin = { serialize, test }
 

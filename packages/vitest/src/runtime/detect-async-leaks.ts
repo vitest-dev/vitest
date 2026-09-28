@@ -3,6 +3,7 @@ import { createHook } from 'node:async_hooks'
 
 interface PossibleLeak extends AsyncLeak {
   isActive: () => boolean
+  handle?: WeakRef<object>
 }
 
 const IGNORED_TYPES = new Set([
@@ -18,7 +19,12 @@ const IGNORED_TYPES = new Set([
   'ZLIB',
 ])
 
-export function detectAsyncLeaks(testFile: string, projectName: string): () => Promise<AsyncLeak[]> {
+const STDIO_TYPES = new Set(['PIPEWRAP', 'TTYWRAP'])
+
+export function detectAsyncLeaks(
+  testFile: string,
+  projectName: string,
+): () => Promise<AsyncLeak[]> {
   const resources = new Map<number, PossibleLeak>()
 
   const hook = createHook({
@@ -35,11 +41,9 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
       try {
         Error.stackTraceLimit = 100
         stack = new Error('VITEST_DETECT_ASYNC_LEAKS').stack || ''
-      }
-      catch {
+      } catch {
         return
-      }
-      finally {
+      } finally {
         Error.stackTraceLimit = limit
       }
 
@@ -61,7 +65,14 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
         isActive = () => ref.deref()?.hasRef() ?? false
       }
 
-      resources.set(asyncId, { type, stack, projectName, filename: testFile, isActive })
+      resources.set(asyncId, {
+        type,
+        stack,
+        projectName,
+        filename: testFile,
+        isActive,
+        handle: STDIO_TYPES.has(type) ? new WeakRef(resource) : undefined,
+      })
     },
     destroy(asyncId) {
       if (resources.get(asyncId)?.type !== 'PROMISE') {
@@ -76,14 +87,14 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
   hook.enable()
 
   return async function collect() {
-    await new Promise<void>(resolve => setImmediate(resolve))
+    await new Promise<void>((resolve) => setImmediate(resolve))
 
     hook.disable()
 
     const leaks = []
 
     for (const resource of resources.values()) {
-      if (resource.isActive()) {
+      if (resource.isActive() && !isStdioHandle(resource.handle?.deref())) {
         leaks.push({
           stack: resource.stack,
           type: resource.type,
@@ -101,4 +112,14 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
 
 function isActiveDefault() {
   return true
+}
+
+function isStdioHandle(handle: object | undefined): boolean {
+  if (!handle) {
+    return false
+  }
+
+  return [process.stdin, process.stdout, process.stderr].some(
+    (stream) => (stream as { _handle?: object })._handle === handle,
+  )
 }

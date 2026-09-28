@@ -346,22 +346,26 @@ const html = utils.prettyDOM(element, undefined, {
 **Common Patterns:**
 
 Filter out scripts and styles:
+
 ```ts
 utils.configurePrettyDOM({ filterNode: 'script, style' })
 ```
 
 Hide specific elements with data attributes:
+
 ```ts
 utils.configurePrettyDOM({ filterNode: '[data-test-hide]' })
 ```
 
 Hide nested content within an element:
+
 ```ts
 // Hides all children of elements with data-test-hide-content
 utils.configurePrettyDOM({ filterNode: '[data-test-hide-content] *' })
 ```
 
 Combine multiple selectors:
+
 ```ts
 utils.configurePrettyDOM({
   filterNode: 'script, style, [data-test-hide], svg'

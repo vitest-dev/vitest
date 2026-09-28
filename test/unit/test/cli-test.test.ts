@@ -1,11 +1,5 @@
 import { expect, test } from 'vitest'
-import {
-  createCLI,
-  parseCLI,
-  ReportersMap,
-  resolveConfig,
-  rolldownVersion,
-} from 'vitest/node'
+import { createCLI, parseCLI, ReportersMap, resolveConfig, rolldownVersion } from 'vitest/node'
 
 const vitestCli = createCLI()
 
@@ -47,7 +41,8 @@ test('negated top level nested options return boolean', async () => {
 })
 
 test('nested coverage options have correct types', async () => {
-  expect(getCLIOptions(`
+  expect(
+    getCLIOptions(`
     --coverage.enabled=true
     --coverage.clean false
     --coverage.cleanOnRerun true
@@ -78,7 +73,8 @@ test('nested coverage options have correct types', async () => {
     --coverage.watermarks.lines=30,40
     --coverage.watermarks.branches=70,80
     --coverage.watermarks.functions 20,60
-  `).coverage).toEqual({
+  `).coverage,
+  ).toEqual({
     enabled: true,
     reporter: ['text'],
     provider: 'v8',
@@ -111,11 +107,13 @@ test('nested coverage options have correct types', async () => {
 })
 
 test('correctly normalizes methods to be an array', async () => {
-  expect(getCLIOptions(`
+  expect(
+    getCLIOptions(`
     --coverage.ignoreClassMethods method2
     --coverage.include pattern
     --coverage.exclude pattern
-  `)).toMatchObject({
+  `),
+  ).toMatchObject({
     coverage: {
       ignoreClassMethods: ['method2'],
       include: ['pattern'],
@@ -125,18 +123,29 @@ test('correctly normalizes methods to be an array', async () => {
 })
 
 test('fails when an array is passed down for a single value', async () => {
-  expect(() => getCLIOptions('--coverage.provider v8 --coverage.provider istanbul'))
-    .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
+  expect(() =>
+    getCLIOptions('--coverage.provider v8 --coverage.provider istanbul'),
+  ).toThrowErrorMatchingInlineSnapshot(
+    `[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`,
+  )
 })
 
 test('coverage autoUpdate accepts boolean values from CLI', async () => {
-  expect(getCLIOptions('--coverage.thresholds.autoUpdate true').coverage.thresholds.autoUpdate).toBe(true)
-  expect(getCLIOptions('--coverage.thresholds.autoUpdate false').coverage.thresholds.autoUpdate).toBe(false)
-  expect(getCLIOptions('--coverage.thresholds.autoUpdate yes').coverage.thresholds.autoUpdate).toBe(true)
-  expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(false)
+  expect(
+    getCLIOptions('--coverage.thresholds.autoUpdate true').coverage.thresholds.autoUpdate,
+  ).toBe(true)
+  expect(
+    getCLIOptions('--coverage.thresholds.autoUpdate false').coverage.thresholds.autoUpdate,
+  ).toBe(false)
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate yes').coverage.thresholds.autoUpdate).toBe(
+    true,
+  )
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(
+    false,
+  )
 })
 
-test('even if coverage is boolean, don\'t fail', () => {
+test("even if coverage is boolean, don't fail", () => {
   expect(getCLIOptions('--coverage --coverage.provider v8').coverage).toEqual({
     enabled: true,
     provider: 'v8',
@@ -144,7 +153,8 @@ test('even if coverage is boolean, don\'t fail', () => {
 })
 
 test('array options', () => {
-  expect(getCLIOptions('--reporter json --coverage.reporter=html --coverage.exclude utils')).toMatchInlineSnapshot(`
+  expect(getCLIOptions('--reporter json --coverage.reporter=html --coverage.exclude utils'))
+    .toMatchInlineSnapshot(`
     {
       "coverage": {
         "exclude": [
@@ -160,14 +170,16 @@ test('array options', () => {
     }
   `)
 
-  expect(getCLIOptions(`
+  expect(
+    getCLIOptions(`
   --reporter json
   --reporter=default
   --coverage.reporter=json
   --coverage.reporter html
   --coverage.exclude=utils
   --coverage.exclude=components
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     {
       "coverage": {
         "exclude": [
@@ -243,8 +255,12 @@ test('cache is parsed correctly', () => {
 test('shuffle is parsed correctly', () => {
   expect(getCLIOptions('--sequence.shuffle')).toEqual({ sequence: { shuffle: true } })
   expect(getCLIOptions('--sequence.shuffle=false')).toEqual({ sequence: { shuffle: false } })
-  expect(getCLIOptions('--sequence.shuffle.files --sequence.shuffle.tests')).toEqual({ sequence: { shuffle: { files: true, tests: true } } })
-  expect(getCLIOptions('--sequence.shuffle.files=false --sequence.shuffle.tests=false')).toEqual({ sequence: { shuffle: { files: false, tests: false } } })
+  expect(getCLIOptions('--sequence.shuffle.files --sequence.shuffle.tests')).toEqual({
+    sequence: { shuffle: { files: true, tests: true } },
+  })
+  expect(getCLIOptions('--sequence.shuffle.files=false --sequence.shuffle.tests=false')).toEqual({
+    sequence: { shuffle: { files: false, tests: false } },
+  })
 })
 
 test('typecheck correctly passes down arguments', () => {
@@ -341,13 +357,21 @@ test('clearScreen', async (ctx) => {
 
 test('merge-reports', () => {
   expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest/blob' })
-  expect(getCLIOptions('--merge-reports=different-folder')).toEqual({ mergeReports: 'different-folder' })
-  expect(getCLIOptions('--merge-reports different-folder')).toEqual({ mergeReports: 'different-folder' })
+  expect(getCLIOptions('--merge-reports=different-folder')).toEqual({
+    mergeReports: 'different-folder',
+  })
+  expect(getCLIOptions('--merge-reports different-folder')).toEqual({
+    mergeReports: 'different-folder',
+  })
 })
 
 test('configure expect', () => {
-  expect(() => getCLIOptions('vitest --expect.poll=1000')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value for --expect.poll: true. If you need to configure timeout, use --expect.poll.timeout=<timeout>]`)
-  expect(() => getCLIOptions('vitest --expect=1000')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value for --expect: true. If you need to configure expect options, use --expect.{name}=<value> syntax]`)
+  expect(() => getCLIOptions('vitest --expect.poll=1000')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Unexpected value for --expect.poll: true. If you need to configure timeout, use --expect.poll.timeout=<timeout>]`,
+  )
+  expect(() => getCLIOptions('vitest --expect=1000')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Unexpected value for --expect: true. If you need to configure expect options, use --expect.{name}=<value> syntax]`,
+  )
   expect(getCLIOptions('vitest --expect.poll.interval=100 --expect.poll.timeout=300')).toEqual({
     expect: {
       poll: {
@@ -374,79 +398,83 @@ test('silent', () => {
   expect(getCLIOptions('--silent=passed-only')).toEqual({ silent: 'passed-only' })
   expect(getCLIOptions('--silent=true example.test.ts')).toEqual({ silent: true })
 
-  expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.]`)
+  expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.]`,
+  )
 })
 
 test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],
     options: {
-      'watch': true,
+      watch: true,
       '--': [],
-      'color': true,
+      color: true,
     },
   })
   expect(parseCLI('vitest watch')).toEqual({
     filter: [],
     options: {
-      'watch': true,
+      watch: true,
       '--': [],
-      'color': true,
+      color: true,
     },
   })
   expect(parseCLI('vitest run')).toEqual({
     filter: [],
     options: {
-      'run': true,
+      run: true,
       '--': [],
-      'color': true,
+      color: true,
     },
   })
   expect(parseCLI('vitest run --watch')).toEqual({
     filter: [],
     options: {
-      'watch': true,
-      'w': true,
+      watch: true,
+      w: true,
       '--': [],
-      'color': true,
+      color: true,
     },
   })
   expect(parseCLI('vitest related ./some-files.js')).toEqual({
     filter: [],
     options: {
-      'passWithNoTests': true,
-      'related': ['./some-files.js'],
+      passWithNoTests: true,
+      related: ['./some-files.js'],
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest --coverage --browser=chrome')).toEqual({
     filter: [],
     options: {
-      'coverage': { enabled: true },
-      'browser': { name: 'chrome' },
+      coverage: { enabled: true },
+      browser: { name: 'chrome' },
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest ./tests.js --coverage')).toEqual({
     filter: ['./tests.js'],
     options: {
-      'coverage': { enabled: true },
+      coverage: { enabled: true },
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
-  expect(parseCLI('vitest ./tests.js --coverage --custom-options', { allowUnknownOptions: true })).toEqual({
+  expect(
+    parseCLI('vitest ./tests.js --coverage --custom-options', { allowUnknownOptions: true }),
+  ).toEqual({
     filter: ['./tests.js'],
     options: {
-      'coverage': { enabled: true },
-      'customOptions': true,
+      coverage: { enabled: true },
+      customOptions: true,
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
@@ -457,79 +485,83 @@ test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest --project=space_1 --project=space_2')).toEqual({
     filter: [],
     options: {
-      'project': ['space_1', 'space_2'],
-      'p': ['space_1', 'space_2'],
+      project: ['space_1', 'space_2'],
+      p: ['space_1', 'space_2'],
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest -p space_1 -p space_2')).toEqual({
     filter: [],
     options: {
-      'project': ['space_1', 'space_2'],
-      'p': ['space_1', 'space_2'],
+      project: ['space_1', 'space_2'],
+      p: ['space_1', 'space_2'],
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest --project="space 1"')).toEqual({
     filter: [],
     options: {
-      'project': ['space 1'],
-      'p': '"space 1"',
+      project: ['space 1'],
+      p: '"space 1"',
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest "--project=space 1"')).toEqual({
     filter: [],
     options: {
-      'project': ['space 1'],
-      'p': 'space 1',
+      project: ['space 1'],
+      p: 'space 1',
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest --project "space 1"')).toEqual({
     filter: [],
     options: {
-      'project': ['space 1'],
-      'p': 'space 1',
+      project: ['space 1'],
+      p: 'space 1',
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest --project="space 1" --project="space 2"')).toEqual({
     filter: [],
     options: {
-      'project': ['space 1', 'space 2'],
-      'p': ['"space 1"', '"space 2"'],
+      project: ['space 1', 'space 2'],
+      p: ['"space 1"', '"space 2"'],
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
-  expect(parseCLI('vitest ./test-1.js ./test-2.js --project="space 1" --project="space 2" --project="space 3"')).toEqual({
+  expect(
+    parseCLI(
+      'vitest ./test-1.js ./test-2.js --project="space 1" --project="space 2" --project="space 3"',
+    ),
+  ).toEqual({
     filter: ['./test-1.js', './test-2.js'],
     options: {
-      'project': ['space 1', 'space 2', 'space 3'],
-      'p': ['"space 1"', '"space 2"', '"space 3"'],
+      project: ['space 1', 'space 2', 'space 3'],
+      p: ['"space 1"', '"space 2"', '"space 3"'],
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 
   expect(parseCLI('vitest --exclude=docs --exclude=demo')).toEqual({
     filter: [],
     options: {
-      'exclude': ['docs', 'demo'],
+      exclude: ['docs', 'demo'],
       '--': [],
-      'color': true,
+      color: true,
     },
   })
 })
@@ -545,7 +577,10 @@ test('should include builtin reporters list', () => {
   const match = helpText.match(/--reporter[^(]*\(([^)]+)\)/)
   expect(match).not.toBeNull()
 
-  const listed = match![1].split(',').map(s => s.trim()).filter(Boolean)
+  const listed = match![1]
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
   const expected = Object.keys(ReportersMap)
   expect(new Set(listed)).toEqual(new Set(expected))
 })

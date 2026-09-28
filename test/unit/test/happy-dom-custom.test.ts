@@ -3,12 +3,9 @@
  * @vitest-environment-options { "url": "http://my-website:5435", "settings": { "disableCSSFileLoading": true } }
  */
 
-/* eslint-disable vars-on-top */
-
 import { expect, it } from 'vitest'
 
 declare global {
-
   var happyDOM: any
 }
 

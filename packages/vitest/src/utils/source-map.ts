@@ -1,7 +1,4 @@
-export {
-  lineSplitRE,
-  positionToOffset,
-} from '@vitest/utils/offset'
+export { lineSplitRE, positionToOffset } from '@vitest/utils/offset'
 export {
   defaultStackIgnorePatterns,
   parseErrorStacktrace,
