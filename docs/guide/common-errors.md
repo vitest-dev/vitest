@@ -51,7 +51,7 @@ The default [`pool: 'forks'`](/config/pool#forks) does not have this issue. If y
 
 ## Project Working Directory Does Not Change
 
-In a [multi-project run](/guide/projects), Vitest does not change `process.cwd()` for each project. If you start Vitest from the workspace root, project config files and tests see that directory as their working directory. A project's [`root`](/config/root) controls where Vitest looks for its files, but it does not change the process working directory. Vite plugins can use `config.root` in their `configResolved` hook to get the project root.
+In a [multi-project run](/guide/projects), `process.cwd()` in project config files and tests returns the directory where Vitest was started by default. A project's [`root`](/config/root) controls where Vitest looks for its files, but it does not change the process working directory. Vite plugins can use `config.root` in their `configResolved` hook to get the project root.
 
 If your tests need `process.cwd()` to point to the project directory, use the [`forks` pool](/config/pool#forks) and a project-specific [`setupFiles`](/config/setupfiles) file:
 
