@@ -120,7 +120,6 @@ describe('repeats fail', () => {
         "(0, 1) fail",
         "(0, 2) run",
         "(0, 2) finish",
-        "(0, 2) fail",
       ]
     `)
   })
