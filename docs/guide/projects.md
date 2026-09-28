@@ -171,7 +171,7 @@ export default defineProject({
 })
 ```
 
-A project root does not change `process.cwd()`. See [Project Working Directory Does Not Change](/guide/common-errors#project-working-directory-does-not-change) if your tests depend on the working directory.
+By default, `process.cwd()` in every project's tests returns the directory where Vitest was started, even if the project has a different root. See [Project Working Directory Does Not Change](/guide/common-errors#project-working-directory-does-not-change) for details and a workaround.
 
 ## Running Tests
 
