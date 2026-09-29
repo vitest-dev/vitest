@@ -159,10 +159,11 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
   public async cachedRequest(
     url: string,
     mod: EvaluatedModuleNode,
-    callstack: string[] = [],
+    importerCallstack: string[] = [],
     metadata?: SSRImportMetadata,
     ignoreMock = false,
   ): Promise<any> {
+    const callstack = this.mocker.withFactoryCallstack(mod, importerCallstack)
     // Track for a better error message if dynamic import is not resolved properly
     this._callstacks.set(mod, callstack)
 
@@ -184,6 +185,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
       // - self-import: mock factory/file is importing the module it's mocking
       const isSelfImport =
         callstack.includes(mockId) ||
+        this.mocker.isFactoryImport(currentMock) ||
         callstack.includes(url) ||
         ('redirect' in currentMock && callstack.includes(currentMock.redirect))
       if (isSelfImport) {

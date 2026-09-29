@@ -73,6 +73,157 @@ test('exposes the spied module', () => {
   `)
 })
 
+test('concurrent dynamic imports of a mocked module', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './target.js': `export default 'original'`,
+    './consumer.js': `
+const load = () => import('./target.js')
+export function preload() {
+  load()
+}
+export async function compute() {
+  return (await load()).default
+}
+    `,
+    './factory.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./target.js', () => ({ default: 'mocked' }))
+
+test('Promise.all', async () => {
+  const modules = await Promise.all([
+    import('./target.js'),
+    import('./target.js'),
+    import('./target.js'),
+  ])
+  expect(modules.map(m => m.default)).toEqual(['mocked', 'mocked', 'mocked'])
+})
+    `,
+    './preload.test.js': `
+import { expect, test, vi } from 'vitest'
+import { preload, compute } from './consumer.js'
+
+vi.mock('./target.js', () => ({ default: 'mocked' }))
+
+test('preload then load', async () => {
+  preload()
+  expect(await compute()).toBe('mocked')
+})
+    `,
+    './self-import.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./target.js', async () => {
+  const original = await import('./target.js')
+  return { default: original.default + ' mocked' }
+})
+
+test('factory imports the module it mocks', async () => {
+  const modules = await Promise.all([
+    import('./target.js'),
+    import('./target.js'),
+  ])
+  expect(modules.map(m => m.default)).toEqual(['original mocked', 'original mocked'])
+})
+    `,
+    './helper.js': `
+await globalThis.helperGate.promise
+export const value = (await import('./target.js')).default
+    `,
+    './factory-dependency.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.hoisted(() => {
+  globalThis.helperGate = Promise.withResolvers()
+})
+
+vi.mock('./target.js', async () => {
+  const helper = import('./helper.js')
+  setTimeout(globalThis.helperGate.resolve, 10)
+  const { value } = await helper
+  return { default: value + ' mocked' }
+})
+
+test('factory waits for a module that imports the mocked module', async () => {
+  const [helper, target] = await Promise.all([
+    import('./helper.js'),
+    import('./target.js'),
+  ])
+  expect([helper.value, target.default]).toEqual(['undefined mocked', 'undefined mocked mocked'])
+})
+    `,
+    './loader.js': `
+export const load = () => import('./target.js')
+    `,
+    './factory-loaded-dependency.test.js': `
+import { expect, test, vi } from 'vitest'
+import { load } from './loader.js'
+
+const gate = vi.hoisted(() => {
+  let open
+  const opened = new Promise(resolve => {
+    open = resolve
+  })
+  return { opened, open }
+})
+
+vi.mock('./target.js', async () => {
+  await import('./loader.js')
+  await gate.opened
+  return { default: 'mocked' }
+})
+
+test('module the factory imported earlier gets the mock', async () => {
+  const target = import('./target.js')
+  await new Promise(resolve => setTimeout(resolve, 10))
+  const fromLoader = load()
+  await new Promise(resolve => setTimeout(resolve, 10))
+  gate.open()
+  expect([(await target).default, (await fromLoader).default]).toEqual(['mocked', 'mocked'])
+})
+    `,
+    './after-factory.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const later = vi.hoisted(() => ({ import: null }))
+
+vi.mock('./target.js', () => {
+  later.import = new Promise(resolve => setTimeout(resolve, 10)).then(() => import('./target.js'))
+  return { default: 'mocked' }
+})
+
+test('import scheduled by a finished factory', async () => {
+  await import('./target.js')
+  expect((await later.import).default).toBe('mocked')
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "after-factory.test.js": {
+        "import scheduled by a finished factory": "passed",
+      },
+      "factory-dependency.test.js": {
+        "factory waits for a module that imports the mocked module": "passed",
+      },
+      "factory-loaded-dependency.test.js": {
+        "module the factory imported earlier gets the mock": "passed",
+      },
+      "factory.test.js": {
+        "Promise.all": "passed",
+      },
+      "preload.test.js": {
+        "preload then load": "passed",
+      },
+      "self-import.test.js": {
+        "factory imports the module it mocks": "passed",
+      },
+    }
+  `)
+})
+
 test('invalid packages', async () => {
   const { stderr, errorTree } = await runVitest({
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),
