@@ -68,13 +68,14 @@ test.for(['vmThreads', 'vmForks'] as const)(
 
 // the same module is transformed differently by the client (jsdom) and ssr
 // (node) environments, so a worker running both must not reuse one's script
+// (env names are interpolated so they don't set this file's own environment)
 test.for(['vmThreads', 'vmForks'] as const)(
   '%s does not share compiled modules between vite environments',
   async (pool) => {
     const { stderr, exitCode } = await runInlineTests({
       'env.js': `export const env = '__ENV__'`,
       'client.test.js': `
-          // @vitest-environment jsdom
+          // @vitest-environment ${'jsdom'}
           import { expect, test } from 'vitest'
           import { env } from './env.js'
 
@@ -83,7 +84,7 @@ test.for(['vmThreads', 'vmForks'] as const)(
           })
         `,
       'ssr.test.js': `
-          // @vitest-environment node
+          // @vitest-environment ${'node'}
           import { expect, test } from 'vitest'
           import { env } from './env.js'
 
