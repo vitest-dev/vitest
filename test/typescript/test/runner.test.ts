@@ -138,6 +138,19 @@ describe('when the title is dynamic', () => {
   })
 })
 
+it('typechecks test.for with noUncheckedIndexedAccess', async () => {
+  const root = resolve(import.meta.dirname, '../fixtures/no-unchecked-indexed-access')
+  const result = await runVitest({
+    root,
+    typecheck: {
+      enabled: true,
+      tsconfig: resolve(root, 'tsconfig.json'),
+    },
+  })
+
+  expect(result.stderr).not.toContain('TypeCheckError')
+})
+
 it('throws an error if typechecker process exists', async () => {
   const { stderr } = await runVitest({
     root: resolve(import.meta.dirname, '../fixtures/source-error'),
