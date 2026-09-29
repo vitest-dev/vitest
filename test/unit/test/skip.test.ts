@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events'
 import { expect, it } from 'vitest'
 
-const sleep = (ms?: number) => new Promise(resolve => setTimeout(resolve, ms))
+const sleep = (ms?: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 it('correctly skips sync tests', ({ skip }) => {
   skip()

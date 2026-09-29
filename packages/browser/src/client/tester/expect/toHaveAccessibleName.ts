@@ -33,10 +33,9 @@ export default function toHaveAccessibleName(
     // When called without an expected value we only want to validate that the element has an
     // accessible name, whatever it may be.
     pass = actualAccessibleName !== ''
-  }
-  else {
-    pass
-      = expectedAccessibleName instanceof defaultView.RegExp
+  } else {
+    pass =
+      expectedAccessibleName instanceof defaultView.RegExp
         ? expectedAccessibleName.test(actualAccessibleName)
         : this.equals(actualAccessibleName, expectedAccessibleName, this.customTesters)
   }

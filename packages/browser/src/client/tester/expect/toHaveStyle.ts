@@ -48,9 +48,8 @@ export default function toHaveStyle(
   const htmlElement = getElementFromUserInput(actual, toHaveStyle, this)
   const { getComputedStyle } = htmlElement.ownerDocument.defaultView!
 
-  const expected = typeof css === 'object'
-    ? getStyleFromObjectCSS(css)
-    : computeCSSStyleDeclaration(css)
+  const expected =
+    typeof css === 'object' ? getStyleFromObjectCSS(css) : computeCSSStyleDeclaration(css)
   const received = getComputedStyle(htmlElement)
   const receivedCustomKeys = new Set(Array.from(htmlElement.style))
 
@@ -60,36 +59,33 @@ export default function toHaveStyle(
       const matcher = `${this.isNot ? '.not' : ''}.toHaveStyle`
       const expectedKeys = new Set(Object.keys(expected))
       const receivedObject = Array.from(received)
-        .filter(prop => expectedKeys.has(prop))
+        .filter((prop) => expectedKeys.has(prop))
         .reduce(
           (obj, prop) => {
-            const styleSheet = receivedCustomKeys.has(prop) && usedValuesProps.has(prop)
-              ? htmlElement.style
-              : received
+            const styleSheet =
+              receivedCustomKeys.has(prop) && usedValuesProps.has(prop)
+                ? htmlElement.style
+                : received
             obj[prop] = styleSheet[prop as 'color']
             return obj
           },
           {} as Record<string, unknown>,
         )
       const receivedString = printoutObjectStyles(receivedObject)
-      const diff = receivedString === ''
-        ? 'Expected styles could not be parsed by the browser. Did you make a typo?'
-        : this.utils.diff(
-            printoutObjectStyles(expected),
-            receivedString,
-          )
-      return [
-        this.utils.matcherHint(matcher, 'element', ''),
-        diff,
-      ].join('\n\n')
+      const diff =
+        receivedString === ''
+          ? 'Expected styles could not be parsed by the browser. Did you make a typo?'
+          : this.utils.diff(printoutObjectStyles(expected), receivedString)
+      return [this.utils.matcherHint(matcher, 'element', ''), diff].join('\n\n')
     },
   }
 }
 
 function getStyleFromObjectCSS(css: Record<string, unknown>): Record<string, unknown> {
-  const doc = browser === 'chrome' || browser === 'chromium'
-    ? document
-    : document.implementation.createHTMLDocument('')
+  const doc =
+    browser === 'chrome' || browser === 'chromium'
+      ? document
+      : document.implementation.createHTMLDocument('')
 
   const copy = doc.createElement('div')
   doc.body.appendChild(copy)
@@ -118,9 +114,10 @@ function getStyleFromObjectCSS(css: Record<string, unknown>): Record<string, unk
 function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
   // on chromium for styles to be computed, they need to be inserted into the actual document
   // webkit will also not compute _some_ style like transform if it's not in the document
-  const doc = browser === 'chrome' || browser === 'chromium' || browser === 'webkit'
-    ? document
-    : document.implementation.createHTMLDocument('')
+  const doc =
+    browser === 'chrome' || browser === 'chromium' || browser === 'webkit'
+      ? document
+      : document.implementation.createHTMLDocument('')
 
   const rootElement = doc.createElement('div')
   rootElement.setAttribute('style', css.replace(/\n/g, ''))
@@ -128,12 +125,15 @@ function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
 
   const computedStyle = window.getComputedStyle(rootElement)
 
-  const styleDeclaration = Array.from(rootElement.style).reduce((acc, prop) => {
-    acc[prop] = usedValuesProps.has(prop)
-      ? rootElement.style.getPropertyValue(prop)
-      : computedStyle.getPropertyValue(prop)
-    return acc
-  }, {} as Record<string, unknown>)
+  const styleDeclaration = Array.from(rootElement.style).reduce(
+    (acc, prop) => {
+      acc[prop] = usedValuesProps.has(prop)
+        ? rootElement.style.getPropertyValue(prop)
+        : computedStyle.getPropertyValue(prop)
+      return acc
+    },
+    {} as Record<string, unknown>,
+  )
   rootElement.remove()
   return styleDeclaration
 }
@@ -141,7 +141,7 @@ function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
 function printoutObjectStyles(styles: Record<string, unknown>): string {
   return Object.keys(styles)
     .sort()
-    .map(prop => `${prop}: ${styles[prop]};`)
+    .map((prop) => `${prop}: ${styles[prop]};`)
     .join('\n')
 }
 
@@ -163,16 +163,11 @@ function isSubset(
       spellingVariants.push(prop.toLowerCase())
     }
 
-    const pass = spellingVariants.some(
-      (name) => {
-        const styleSheet = receivedCustomKeys.has(prop) && usedValuesProps.has(prop)
-          ? element.style
-          : computedStyle
-        return styleSheet[name as 'color'] === value
-          || styleSheet.getPropertyValue(name) === value
-      },
-    )
+    const pass = spellingVariants.some((name) => {
+      const styleSheet =
+        receivedCustomKeys.has(prop) && usedValuesProps.has(prop) ? element.style : computedStyle
+      return styleSheet[name as 'color'] === value || styleSheet.getPropertyValue(name) === value
+    })
     return pass
-  },
-  )
+  })
 }

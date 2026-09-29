@@ -1,6 +1,5 @@
 import supertest from 'supertest'
 import { afterAll, expect, test } from 'vitest'
-
 import { usersData } from '../mockData.js'
 import app from '../src/app.js'
 
@@ -18,9 +17,7 @@ test('with HTTP injection', async () => {
 test('with a running server', async () => {
   await app.ready()
 
-  const response = await supertest(app.server)
-    .get('/users')
-    .expect(200)
+  const response = await supertest(app.server).get('/users').expect(200)
 
   expect(response.body).toHaveLength(4)
   expect(response.body).toStrictEqual(usersData)
@@ -33,7 +30,7 @@ test('with fetch', async () => {
   const address = app.server.address()
   const port = typeof address === 'string' ? address : address?.port
 
-  const response = await fetch(`http://localhost:${port}/users`).then(r => r.json())
+  const response = await fetch(`http://localhost:${port}/users`).then((r) => r.json())
 
   expect(response).toHaveLength(4)
   expect(response).toStrictEqual(usersData)

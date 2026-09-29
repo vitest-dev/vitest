@@ -1,6 +1,5 @@
 import type { TestUserConfig } from 'vitest/node'
 import { basename } from 'pathe'
-
 import { expect, test } from 'vitest'
 import * as testUtils from '../../test-utils'
 
@@ -9,11 +8,15 @@ function runVitest(config: TestUserConfig, root = './fixtures/shard') {
 }
 
 function parsePaths(stdout: string) {
-  return Array.from(new Set(stdout
-    .split('\n')
-    .filter(line => line && line.includes('.test.js'))
-    .map(file => basename(file.trim().split(' ')[1]))
-    .sort()))
+  return Array.from(
+    new Set(
+      stdout
+        .split('\n')
+        .filter((line) => line && line.includes('.test.js'))
+        .map((file) => basename(file.trim().split(' ')[1]))
+        .sort(),
+    ),
+  )
 }
 
 test('--shard=1/1', async () => {

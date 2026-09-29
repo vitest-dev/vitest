@@ -20,11 +20,11 @@ export async function getModuleGraph(
 
   if (viteEnvironment) {
     environment = project.vite.environments[viteEnvironment]
-  }
-  else {
-    environment = project.config.experimental.viteModuleRunner === false
-      ? project.vite.environments.__vitest__
-      : getTestFileEnvironment(project, testFilePath, browser)
+  } else {
+    environment =
+      project.config.experimental.viteModuleRunner === false
+        ? project.vite.environments.__vitest__
+        : getTestFileEnvironment(project, testFilePath, browser)
   }
 
   if (!environment) {
@@ -37,10 +37,10 @@ export async function getModuleGraph(
       return
     }
     if (
-      mod.id === '\0vitest/browser'
+      mod.id === '\0vitest/browser' ||
       // the export helper is injected in all vue files
       // so the module graph becomes too bouncy
-      || mod.id.includes('plugin-vue:export-helper')
+      mod.id.includes('plugin-vue:export-helper')
     ) {
       return
     }
@@ -65,11 +65,9 @@ export async function getModuleGraph(
     }
     inlined.add(id)
     const mods = Array.from(mod.importedModules).filter(
-      i => i.id && !i.id.includes('/vitest/dist/'),
+      (i) => i.id && !i.id.includes('/vitest/dist/'),
     )
-    graph[id] = mods.map(m => get(m)).filter(
-      Boolean,
-    ) as string[]
+    graph[id] = mods.map((m) => get(m)).filter(Boolean) as string[]
     return id
   }
 

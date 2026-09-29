@@ -4,11 +4,9 @@ import { expect, test } from 'vitest'
 import { instances, runBrowserTests } from './utils'
 
 test('setup file imports the same modules', async () => {
-  const { stderr, stdout } = await runBrowserTests(
-    {
-      root: './fixtures/setup-file',
-    },
-  )
+  const { stderr, stdout } = await runBrowserTests({
+    root: './fixtures/setup-file',
+  })
 
   expect(stderr).toReportNoErrors()
   expect(stdout).toReportPassedTest('module-equality.test.ts', instances)

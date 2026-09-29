@@ -15,4 +15,4 @@ it('circular', () => {
   expect(CalledB).toEqual([0, 1, 2])
 })
 
-it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
+it('timeout', () => new Promise((resolve) => setTimeout(resolve, timeout)))

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { page } from 'vitest/browser'
-
 import '../src/my-button.js'
 
 describe('Button with increment', async () => {

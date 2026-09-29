@@ -18,9 +18,7 @@ const href = computed<string>(() => internalOrExternalUrl(attachment))
       :href="href"
       :referrerPolicy="isExternalAttachment(attachment) ? 'no-referrer' : undefined"
     >
-      <img
-        :src="href"
-      >
+      <img :src="href" />
     </a>
   </VisualRegressionImageContainer>
 </template>

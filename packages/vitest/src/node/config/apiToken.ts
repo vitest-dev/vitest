@@ -1,11 +1,5 @@
 import crypto from 'node:crypto'
-import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'pathe'
 import { searchForWorkspaceRoot } from 'vite'
@@ -35,12 +29,15 @@ function resolveTokenFromPath(tokenPath: string): { token: string; tokenCreated:
   try {
     chmodSync(dirname(tokenPath), 0o700)
     chmodSync(tokenPath, 0o600)
-  }
-  catch {}
+  } catch {}
   return { token, tokenCreated: true }
 }
 
-export function resolveApiToken(root: string): { token: string; tokenCreated: boolean; tokenPath: string } {
+export function resolveApiToken(root: string): {
+  token: string
+  tokenCreated: boolean
+  tokenPath: string
+} {
   const tokenPaths = [
     join(getUserDataDir(), 'vitest', API_TOKEN_FILE),
     join(searchForWorkspaceRoot(root), 'node_modules/.vitest', API_TOKEN_FILE),
@@ -49,8 +46,7 @@ export function resolveApiToken(root: string): { token: string; tokenCreated: bo
   for (const tokenPath of tokenPaths) {
     try {
       return { ...resolveTokenFromPath(tokenPath), tokenPath }
-    }
-    catch {}
+    } catch {}
   }
 
   throw new Error(`Failed to create Vitest API token at ${tokenPaths.join(' or ')}`)

@@ -49,12 +49,14 @@ export const pwa: PwaOptions = {
         purpose: 'maskable',
       },
     ],
-    screenshots: [{
-      src: 'og.jpg',
-      sizes: '2258x1185',
-      type: 'image/jpeg',
-      label: `Screenshot of ${vitestName}`,
-    }],
+    screenshots: [
+      {
+        src: 'og.jpg',
+        sizes: '2258x1185',
+        type: 'image/jpeg',
+        label: `Screenshot of ${vitestName}`,
+      },
+    ],
     handle_links: 'preferred',
     launch_handler: {
       client_mode: ['navigate-existing', 'auto'],

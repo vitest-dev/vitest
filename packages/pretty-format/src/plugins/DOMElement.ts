@@ -26,8 +26,7 @@ const ELEMENT_REGEXP = /^(?:(?:HTML|SVG)\w*)?Element$/
 function testHasAttribute(val: any) {
   try {
     return typeof val.hasAttribute === 'function' && val.hasAttribute('is')
-  }
-  catch {
+  } catch {
     return false
   }
 }
@@ -35,21 +34,18 @@ function testHasAttribute(val: any) {
 function testNode(val: any) {
   const constructorName = val.constructor.name
   const { nodeType, tagName } = val
-  const isCustomElement
-    = (typeof tagName === 'string' && tagName.includes('-'))
-      || testHasAttribute(val)
+  const isCustomElement =
+    (typeof tagName === 'string' && tagName.includes('-')) || testHasAttribute(val)
 
   return (
-    (nodeType === ELEMENT_NODE
-      && (ELEMENT_REGEXP.test(constructorName) || isCustomElement))
-    || (nodeType === TEXT_NODE && constructorName === 'Text')
-    || (nodeType === COMMENT_NODE && constructorName === 'Comment')
-    || (nodeType === FRAGMENT_NODE && constructorName === 'DocumentFragment')
+    (nodeType === ELEMENT_NODE && (ELEMENT_REGEXP.test(constructorName) || isCustomElement)) ||
+    (nodeType === TEXT_NODE && constructorName === 'Text') ||
+    (nodeType === COMMENT_NODE && constructorName === 'Comment') ||
+    (nodeType === FRAGMENT_NODE && constructorName === 'DocumentFragment')
   )
 }
 
-const test: NewPlugin['test'] = (val: any) =>
-  val?.constructor?.name && testNode(val)
+const test: NewPlugin['test'] = (val: any) => val?.constructor?.name && testNode(val)
 
 type HandledType = Element | Text | Comment | DocumentFragment
 
@@ -103,37 +99,33 @@ function serializeDOM(
     return printComment(node.data, config)
   }
 
-  const type = nodeIsFragment(node)
-    ? 'DocumentFragment'
-    : node.tagName.toLowerCase()
+  const type = nodeIsFragment(node) ? 'DocumentFragment' : node.tagName.toLowerCase()
 
   if (++depth > config.maxDepth) {
     return printElementAsLeaf(type, config)
   }
 
   const children = Array.prototype.slice.call(node.childNodes || node.children)
-  const shadowChildren = (nodeIsFragment(node) || !node.shadowRoot)
-    ? []
-    : Array.prototype.slice.call(node.shadowRoot.children)
+  const shadowChildren =
+    nodeIsFragment(node) || !node.shadowRoot
+      ? []
+      : Array.prototype.slice.call(node.shadowRoot.children)
 
   const resolvedChildren = filterNode ? filterChildren(children, filterNode) : children
-  const resolvedShadowChildren = filterNode ? filterChildren(shadowChildren, filterNode) : shadowChildren
+  const resolvedShadowChildren = filterNode
+    ? filterChildren(shadowChildren, filterNode)
+    : shadowChildren
 
   return printElement(
     type,
     printProps(
-      nodeIsFragment(node)
-        ? []
-        : Array.from(node.attributes, attr => attr.name).sort(),
+      nodeIsFragment(node) ? [] : Array.from(node.attributes, (attr) => attr.name).sort(),
       nodeIsFragment(node)
         ? {}
-        : [...node.attributes].reduce<Record<string, string>>(
-            (props, attribute) => {
-              props[attribute.name] = attribute.value
-              return props
-            },
-            {},
-          ),
+        : [...node.attributes].reduce<Record<string, string>>((props, attribute) => {
+            props[attribute.name] = attribute.value
+            return props
+          }, {}),
       config,
       indentation + config.indent,
       depth,
@@ -141,16 +133,16 @@ function serializeDOM(
       printer,
     ),
     (resolvedShadowChildren.length > 0
-      ? printShadowRoot(resolvedShadowChildren, config, indentation + config.indent, depth, refs, printer)
-      : '')
-    + printChildren(
-      resolvedChildren,
-      config,
-      indentation + config.indent,
-      depth,
-      refs,
-      printer,
-    ),
+      ? printShadowRoot(
+          resolvedShadowChildren,
+          config,
+          indentation + config.indent,
+          depth,
+          refs,
+          printer,
+        )
+      : '') +
+      printChildren(resolvedChildren, config, indentation + config.indent, depth, refs, printer),
     config,
     indentation,
   )

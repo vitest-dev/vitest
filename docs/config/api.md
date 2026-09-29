@@ -11,6 +11,8 @@ outline: deep
 
 Listen to port and serve API for [the UI](/guide/ui) or [browser server](/guide/browser/). When set to `true`, the default port is `51204` or `63315` if running in Browser Mode.
 
+In Browser Mode the server binds its port on the first browser launch, unless `api` or `ui` is enabled.
+
 ## api.allowWrite <Version>4.1.0</Version> {#api-allowwrite}
 
 - **Type:** `boolean`

@@ -9,7 +9,10 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
   const filename = `fixtures/test/${runtime.replace(' ', '-')}.test.ts`
 
   test('{ autoAttachSubprocess: true } typescript source file', async ({ skip }) => {
-    skip(isTypeStrippingSupported === false, `Type stripping is not supported in Node ${process.version}`)
+    skip(
+      isTypeStrippingSupported === false,
+      `Type stripping is not supported in Node ${process.version}`,
+    )
 
     await runVitest({
       include: [filename],
@@ -32,7 +35,9 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
     `)
 
     /* See {@link file://./../fixtures/src/worker-or-process.ts} */
-    const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/worker-or-process.ts')
+    const fileCoverage = coverageMap.fileCoverageFor(
+      '<process-cwd>/fixtures/src/worker-or-process.ts',
+    )
     const lines = fileCoverage.getLineCoverage()
 
     expect.soft(lines[25]).toBe(runtime === 'child process' ? 1 : 0)
@@ -64,8 +69,10 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
     `)
 
     {
-    /* See {@link file://./../fixtures/src/worker-or-process.js} */
-      const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/worker-or-process.js')
+      /* See {@link file://./../fixtures/src/worker-or-process.js} */
+      const fileCoverage = coverageMap.fileCoverageFor(
+        '<process-cwd>/fixtures/src/worker-or-process.js',
+      )
       const lines = fileCoverage.getLineCoverage()
 
       expect.soft(lines[16]).toBe(runtime === 'child process' ? 1 : 0)
@@ -98,7 +105,9 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
     `)
 
     /* See {@link file://./../fixtures/src/pre-transpiled/original.ts} */
-    const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/pre-transpiled/original.ts')
+    const fileCoverage = coverageMap.fileCoverageFor(
+      '<process-cwd>/fixtures/src/pre-transpiled/original.ts',
+    )
     const lines = fileCoverage.getLineCoverage()
 
     expect.soft(lines[4]).toBe(0)
@@ -197,7 +206,10 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
   })
 })
 
-function assertMath(coverageMap: Awaited<ReturnType<typeof readCoverageMap>>, filename: 'math.ts' | 'math-in-js.js' = 'math.ts') {
+function assertMath(
+  coverageMap: Awaited<ReturnType<typeof readCoverageMap>>,
+  filename: 'math.ts' | 'math-in-js.js' = 'math.ts',
+) {
   /* See {@link file://./../fixtures/src/math-in-js.js} */
   const fileCoverage = coverageMap.fileCoverageFor(`<process-cwd>/fixtures/src/${filename}`)
   const lines = fileCoverage.getLineCoverage()

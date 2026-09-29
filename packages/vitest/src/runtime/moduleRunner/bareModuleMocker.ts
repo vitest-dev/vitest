@@ -1,4 +1,9 @@
-import type { MockedModule, MockedModuleType, ModuleMockContext, TestModuleMocker } from '@vitest/mocker'
+import type {
+  MockedModule,
+  MockedModuleType,
+  ModuleMockContext,
+  TestModuleMocker,
+} from '@vitest/mocker'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../../types/mocker'
 import type { Traces } from '../../utils/traces'
 import { isAbsolute } from 'node:path'
@@ -13,7 +18,10 @@ export interface BareModuleMockerOptions {
   spyModule?: typeof import('@vitest/spy')
   root: string
   moduleDirectories: string[]
-  resolveId: (id: string, importer?: string) => Promise<{
+  resolveId: (
+    id: string,
+    importer?: string,
+  ) => Promise<{
     id: string
     file: string
     url: string
@@ -84,7 +92,7 @@ export class BareModuleMocker implements TestModuleMocker {
   }
 
   protected isModuleDirectory(path: string): boolean {
-    return this.moduleDirectories.some(dir => path.includes(dir))
+    return this.moduleDirectories.some((dir) => path.includes(dir))
   }
 
   public getSuiteFilepath(): string {
@@ -98,7 +106,10 @@ export class BareModuleMocker implements TestModuleMocker {
     return error
   }
 
-  public async resolveId(rawId: string, importer?: string): Promise<{
+  public async resolveId(
+    rawId: string,
+    importer?: string,
+  ): Promise<{
     id: string
     url: string
     external: string | null
@@ -130,8 +141,10 @@ export class BareModuleMocker implements TestModuleMocker {
         }
         // external is node_module or unresolved module
         // for example, some people mock "vscode" and don't have it installed
-        const external
-          = !isAbsolute(result.file) || this.isModuleDirectory(result.file) ? normalizeModuleId(rawId) : null
+        const external =
+          !isAbsolute(result.file) || this.isModuleDirectory(result.file)
+            ? normalizeModuleId(rawId)
+            : null
         const id = normalizeModuleId(result.id)
         span.setAttributes({
           'vitest.module.id': id,
@@ -173,14 +186,7 @@ export class BareModuleMocker implements TestModuleMocker {
           this.unmockPath(id)
         }
         if (mock.action === 'mock') {
-          this.mockPath(
-            mock.id,
-            id,
-            url,
-            external,
-            mock.type,
-            mock.factory,
-          )
+          this.mockPath(mock.id, id, url, external, mock.type, mock.factory)
         }
       }
     }
@@ -228,8 +234,7 @@ export class BareModuleMocker implements TestModuleMocker {
     if (mockExportsOrModuleType === 'automock' || mockExportsOrModuleType === 'autospy') {
       moduleType = mockExportsOrModuleType
       mockExports = undefined
-    }
-    else {
+    } else {
       mockExports = mockExportsOrModuleType
     }
     moduleType ??= 'automock'
@@ -269,16 +274,13 @@ export class BareModuleMocker implements TestModuleMocker {
 
     if (mockType === 'manual') {
       registry.register('manual', originalId, id, url, factory!)
-    }
-    else if (mockType === 'autospy') {
+    } else if (mockType === 'autospy') {
       registry.register('autospy', originalId, id, url)
-    }
-    else {
+    } else {
       const redirect = this.findMockRedirect(id, external)
       if (redirect) {
         registry.register('redirect', originalId, id, url, redirect)
-      }
-      else {
+      } else {
         registry.register('automock', originalId, id, url)
       }
     }
@@ -287,7 +289,11 @@ export class BareModuleMocker implements TestModuleMocker {
     this.invalidateModuleById(id)
   }
 
-  async importActual<T>(_rawId: string, _importer: string, _callstack?: string[] | null): Promise<T> {
+  async importActual<T>(
+    _rawId: string,
+    _importer: string,
+    _callstack?: string[] | null,
+  ): Promise<T> {
     throw new Error(`importActual is not implemented`)
   }
 
@@ -340,12 +346,7 @@ function getMockType(factoryOrOptions?: MockFactory | MockOptions): MockedModule
 
 // unique id that is not available as "$bare_import" like "test"
 // https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
-const prefixedBuiltins = new Set([
-  'node:sea',
-  'node:sqlite',
-  'node:test',
-  'node:test/reporters',
-])
+const prefixedBuiltins = new Set(['node:sea', 'node:sqlite', 'node:test', 'node:test/reporters'])
 
 const isWindows = process.platform === 'win32'
 
@@ -383,8 +384,7 @@ function groupByConsecutiveAction(mocks: PendingSuiteMock[]): PendingSuiteMock[]
     const last = groups.at(-1)
     if (last?.[0].action === mock.action) {
       last.push(mock)
-    }
-    else {
+    } else {
       groups.push([mock])
     }
   }

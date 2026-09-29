@@ -97,7 +97,10 @@ export function wrapAssertion(
   name: string,
   fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => void | PromiseLike<void>,
 ) {
-  return function (this: Chai.AssertionStatic & Assertion, ...args: any[]): void | PromiseLike<void> {
+  return function (
+    this: Chai.AssertionStatic & Assertion,
+    ...args: any[]
+  ): void | PromiseLike<void> {
     // private
     if (name !== 'withTest') {
       utils.flag(this, '_name', name)
@@ -108,8 +111,7 @@ export function wrapAssertion(
       // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
       try {
         return fn.apply(this, args)
-      }
-      finally {
+      } finally {
         // no lint
       }
     }
@@ -130,8 +132,7 @@ export function wrapAssertion(
       }
 
       return result
-    }
-    catch (err) {
+    } catch (err) {
       handleTestError(test, err)
     }
   }

@@ -135,7 +135,8 @@ test('display truncated multiple items array diff', () => {
 })
 
 test('asymmetric matcher in object', () => {
-  expect(stripVTControlCharacters(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() }))).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() })))
+    .toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -149,11 +150,13 @@ test('asymmetric matcher in object', () => {
 
 test('asymmetric matcher in object with truncated diff', () => {
   expect(
-    stripVTControlCharacters(getErrorDiff(
-      { w: 'foo', x: 0, y: 'bar', z: 'baz' },
-      { w: expect.anything(), x: 1, y: expect.anything(), z: 'bar' },
-      { truncateThreshold: 3 },
-    )),
+    stripVTControlCharacters(
+      getErrorDiff(
+        { w: 'foo', x: 0, y: 'bar', z: 'baz' },
+        { w: expect.anything(), x: 1, y: expect.anything(), z: 'bar' },
+        { truncateThreshold: 3 },
+      ),
+    ),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -167,7 +170,8 @@ test('asymmetric matcher in object with truncated diff', () => {
 })
 
 test('asymmetric matcher in array', () => {
-  expect(stripVTControlCharacters(getErrorDiff([0, 'foo'], [1, expect.anything()]))).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(getErrorDiff([0, 'foo'], [1, expect.anything()])))
+    .toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -181,11 +185,9 @@ test('asymmetric matcher in array', () => {
 
 test('asymmetric matcher in array  with truncated diff', () => {
   expect(
-    stripVTControlCharacters(getErrorDiff(
-      [0, 'foo', 2],
-      [1, expect.anything(), 3],
-      { truncateThreshold: 2 },
-    )),
+    stripVTControlCharacters(
+      getErrorDiff([0, 'foo', 2], [1, expect.anything(), 3], { truncateThreshold: 2 }),
+    ),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -199,10 +201,12 @@ test('asymmetric matcher in array  with truncated diff', () => {
 
 test('asymmetric matcher in nested', () => {
   expect(
-    stripVTControlCharacters(getErrorDiff(
-      [{ x: 0, y: 'foo' }, [0, 'bar']],
-      [{ x: 1, y: expect.anything() }, [1, expect.anything()]],
-    )),
+    stripVTControlCharacters(
+      getErrorDiff(
+        [{ x: 0, y: 'foo' }, [0, 'bar']],
+        [{ x: 1, y: expect.anything() }, [1, expect.anything()]],
+      ),
+    ),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -224,11 +228,16 @@ test('asymmetric matcher in nested', () => {
 
 test('asymmetric matcher in nested with truncated diff', () => {
   expect(
-    stripVTControlCharacters(getErrorDiff(
-      [{ x: 0, y: 'foo', z: 'bar' }, [0, 'bar', 'baz']],
-      [{ x: 1, y: expect.anything(), z: expect.anything() }, [1, expect.anything(), expect.anything()]],
-      { truncateThreshold: 5 },
-    )),
+    stripVTControlCharacters(
+      getErrorDiff(
+        [{ x: 0, y: 'foo', z: 'bar' }, [0, 'bar', 'baz']],
+        [
+          { x: 1, y: expect.anything(), z: expect.anything() },
+          [1, expect.anything(), expect.anything()],
+        ],
+        { truncateThreshold: 5 },
+      ),
+    ),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -252,9 +261,7 @@ test('diff for multi-line string compared by characters', () => {
   FOO,
   bar,
   `
-  expect(
-    stripVTControlCharacters(diffStringsUnified(string1, string2)),
-  ).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(diffStringsUnified(string1, string2))).toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -277,9 +284,8 @@ test('truncated diff for multi-line string compared by characters', () => {
   bar,
   BAZ,
   `
-  expect(
-    stripVTControlCharacters(diffStringsUnified(string1, string2, { truncateThreshold: 3 })),
-  ).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(diffStringsUnified(string1, string2, { truncateThreshold: 3 })))
+    .toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -302,9 +308,7 @@ test('getter only property', () => {
     enumerable: true,
     get: () => ({ a: 'b' }),
   })
-  expect(
-    stripVTControlCharacters(getErrorDiff(x, y)),
-  ).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(getErrorDiff(x, y))).toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -346,8 +350,7 @@ test('diff default maxDepth', () => {
 function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions): string {
   try {
     expect(actual).toEqual(expected)
-  }
-  catch (e) {
+  } catch (e) {
     const error = processError(e, options)
     return error.diff!
   }

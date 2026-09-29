@@ -34,9 +34,11 @@ By default Vitest runs every test file in an isolated environment based on the [
 This greatly increases test times, which might not be desirable for projects that don't rely on side effects and properly cleanup their state (which is usually true for projects with `node` environment). In this case disabling isolation will improve the speed of your tests. To do that, you can provide `--no-isolate` flag to the CLI or set [`test.isolate`](/config/isolate) property in the config to `false`.
 
 ::: code-group
+
 ```bash [CLI]
 vitest --no-isolate
 ```
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -46,6 +48,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 You can also disable isolation for specific files only by using `projects`:
@@ -82,9 +85,11 @@ If you are using `vmThreads` pool, you cannot disable isolation. Use `threads` p
 For some projects, it might also be desirable to disable parallelism to improve startup time. To do that, provide `--no-file-parallelism` flag to the CLI or set [`test.fileParallelism`](/config/fileparallelism) property in the config to `false`.
 
 ::: code-group
+
 ```bash [CLI]
 vitest --no-file-parallelism
 ```
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -94,6 +99,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ## Test Environments
@@ -102,11 +108,11 @@ DOM environments are expensive to create: `jsdom` costs roughly 200-500ms per im
 
 Three configurations reduce this cost:
 
-| configuration | environment created | isolation | trade-off |
-|---|---|---|---|
-| `pool: 'forks'`/`'threads'` + `isolate: true` (default) | once per file | fresh process/thread and environment per file | safest, slowest |
-| `pool: 'vmThreads'` | once per worker | fresh VM context and `window` per file | test code runs in a VM realm: cross-realm `instanceof` edge cases with externalized packages, and memory is not reclaimed as reliably (see [`vmMemoryLimit`](/config/vmmemorylimit)) |
-| `isolate: false` | once per worker | none - files in the same worker share the environment and module state | tests must not depend on a clean `window` or module state; run `vitest doctor` to check |
+| configuration                                           | environment created | isolation                                                              | trade-off                                                                                                                                                                            |
+| ------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pool: 'forks'`/`'threads'` + `isolate: true` (default) | once per file       | fresh process/thread and environment per file                          | safest, slowest                                                                                                                                                                      |
+| `pool: 'vmThreads'`                                     | once per worker     | fresh VM context and `window` per file                                 | test code runs in a VM realm: cross-realm `instanceof` edge cases with externalized packages, and memory is not reclaimed as reliably (see [`vmMemoryLimit`](/config/vmmemorylimit)) |
+| `isolate: false`                                        | once per worker     | none - files in the same worker share the environment and module state | tests must not depend on a clean `window` or module state; run `vitest doctor` to check                                                                                              |
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
@@ -158,9 +164,11 @@ By default Vitest runs tests in `pool: 'forks'`. While `'forks'` pool is better 
 You can try to improve test run time by switching `pool` option in configuration:
 
 ::: code-group
+
 ```bash [CLI]
 vitest --pool=threads
 ```
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -170,6 +178,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ## Sharding

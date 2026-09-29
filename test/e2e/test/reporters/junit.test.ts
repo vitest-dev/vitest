@@ -15,8 +15,7 @@ function readJunitReport(reportRoot: string) {
 test('calc the duration used by junit', () => {
   const result: RunnerTaskResult = { state: 'pass', duration: 0 }
   const file: RunnerTestFile = TestRunner.createFileTask('/test.ts', '/', 'test')
-  const suiteName
-    = 'suite'
+  const suiteName = 'suite'
   const suite: RunnerTestSuite = {
     id: '1_0',
     type: 'suite',
@@ -66,12 +65,17 @@ test('emits <failure> if a test has a syntax error', async () => {
 
   const xml = stabilizeReport(readJunitReport(ctx!.config.root))
 
-  expect(xml).toContain('<testsuite name="with-syntax-error.test.js" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">')
+  expect(xml).toContain(
+    '<testsuite name="with-syntax-error.test.js" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">',
+  )
   expect(xml).toContain('<failure')
 })
 
 test('emits <failure> when beforeAll/afterAll failed', async () => {
-  const { ctx } = await runVitest({ reporters: 'junit', root: './fixtures/reporters/suite-hook-failure' })
+  const { ctx } = await runVitest({
+    reporters: 'junit',
+    root: './fixtures/reporters/suite-hook-failure',
+  })
 
   const xml = stabilizeReport(readJunitReport(ctx!.config.root))
 
@@ -83,19 +87,23 @@ test('time', async () => {
 
   const xml = stabilizeReportWOTime(readJunitReport(ctx!.config.root))
 
-  const fastTestRegex = /<testcase classname="basic\.test\.ts" name="fast" time="(?<floatNumber>[\d.]+)">/
+  const fastTestRegex =
+    /<testcase classname="basic\.test\.ts" name="fast" time="(?<floatNumber>[\d.]+)">/
   const fastTestTime = matchJunitTime(xml, fastTestRegex)
   expect(fastTestTime).toBeGreaterThan(0)
 
-  const slowTestRegex = /<testcase classname="basic\.test\.ts" name="slow" time="(?<floatNumber>[\d.]+)">/
+  const slowTestRegex =
+    /<testcase classname="basic\.test\.ts" name="slow" time="(?<floatNumber>[\d.]+)">/
   const slowTestTime = matchJunitTime(xml, slowTestRegex)
   expect(slowTestTime).toBeGreaterThan(0.2)
 
-  const testsuiteRegex = /<testsuite name="basic\.test\.ts" timestamp="\.\.\." hostname="\.\.\." tests="2" failures="0" errors="0" skipped="0" time="(?<floatNumber>[\d.]+)">/
+  const testsuiteRegex =
+    /<testsuite name="basic\.test\.ts" timestamp="\.\.\." hostname="\.\.\." tests="2" failures="0" errors="0" skipped="0" time="(?<floatNumber>[\d.]+)">/
   const testsuiteTime = matchJunitTime(xml, testsuiteRegex)
   expect(testsuiteTime).toBeCloseTo(fastTestTime + slowTestTime, 1)
 
-  const testsuitesRegex = /<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="(?<floatNumber>[\d.]+)">/
+  const testsuitesRegex =
+    /<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="(?<floatNumber>[\d.]+)">/
   const testsuitesTime = matchJunitTime(xml, testsuitesRegex)
   expect(testsuitesTime).toBeCloseTo(testsuiteTime, 1)
 })
@@ -106,12 +114,19 @@ test('format error', async () => {
 })
 
 test('write testsuite name relative to root config', async () => {
-  const { ctx } = await runVitest({ reporters: 'junit', root: './fixtures/reporters/better-testsuite-name' })
+  const { ctx } = await runVitest({
+    reporters: 'junit',
+    root: './fixtures/reporters/better-testsuite-name',
+  })
 
   const xml = stabilizeReport(readJunitReport(ctx!.config.root))
 
-  expect(xml).toContain('<testsuite name="space-1/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
-  expect(xml).toContain('<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
+  expect(xml).toContain(
+    '<testsuite name="space-1/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">',
+  )
+  expect(xml).toContain(
+    '<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">',
+  )
 })
 
 test('options.suiteName changes name property', async () => {
@@ -188,12 +203,7 @@ test.each([true, false])('addFileAttribute %s', async (t) => {
 
 test('many errors without warning', async () => {
   const manyErrorsRoot = resolve(import.meta.dirname, '../../fixtures/reporters/many-errors')
-  const result = await runVitestCli(
-    'run',
-    '--reporter=junit',
-    '--root',
-    manyErrorsRoot,
-  )
+  const result = await runVitestCli('run', '--reporter=junit', '--root', manyErrorsRoot)
   const xml = stabilizeReport(readJunitReport(manyErrorsRoot))
   expect(xml.split('\n')[1]).toMatchInlineSnapshot(
     `"<testsuites name="vitest tests" tests="20" failures="20" errors="0" time="...">"`,
@@ -204,12 +214,7 @@ test('many errors without warning', async () => {
 
 test('CLI reporter option preserves config file options', async () => {
   const cliOptionsRoot = resolve(import.meta.dirname, '../../fixtures/reporters/junit-cli-options')
-  await runVitestCli(
-    'run',
-    '--reporter=junit',
-    '--root',
-    cliOptionsRoot,
-  )
+  await runVitestCli('run', '--reporter=junit', '--root', cliOptionsRoot)
 
   const xml = stabilizeReport(readJunitReport(cliOptionsRoot))
 

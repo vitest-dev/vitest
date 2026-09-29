@@ -24,7 +24,13 @@ import { sponsors } from '../sponsors'
         </div>
         <p flex flex-col items-center mt-10 class="text-center opacity-75">
           <a href="https://www.netlify.com" rel="noopener noreferrer">
-            <img src="/netlify.svg" alt="Deploys by Netlify" width="114" height="151" decoding="async">
+            <img
+              src="/netlify.svg"
+              alt="Deploys by Netlify"
+              width="114"
+              height="151"
+              decoding="async"
+            />
           </a>
         </p>
       </main>

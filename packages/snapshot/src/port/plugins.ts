@@ -10,7 +10,6 @@ import type {
   Plugins as PrettyFormatPlugins,
 } from '@vitest/pretty-format'
 import { plugins as prettyFormatPlugins } from '@vitest/pretty-format'
-
 import MockSerializer from './mockSerializer'
 
 const {

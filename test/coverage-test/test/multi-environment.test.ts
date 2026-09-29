@@ -10,7 +10,9 @@ test('files transformed with multiple transform modes work (#3251)', async () =>
 
   const coverageMap = await readCoverageMap()
 
-  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/multi-environment.ts')
+  const fileCoverage = coverageMap.fileCoverageFor(
+    '<process-cwd>/fixtures/src/multi-environment.ts',
+  )
   const lineCoverage = fileCoverage.getLineCoverage()
 
   // Condition not covered by any test

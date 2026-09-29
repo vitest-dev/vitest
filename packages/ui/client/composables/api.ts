@@ -16,6 +16,6 @@ export const ui: BrowserUI = {
     if (browserState?.provider === 'webdriverio') {
       updateBrowserPanel()
     }
-    await new Promise(r => requestAnimationFrame(r))
+    await new Promise((r) => requestAnimationFrame(r))
   },
 }

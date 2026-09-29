@@ -1,7 +1,4 @@
-import type {
-  DepOptimizationOptions,
-  UserConfig as ViteConfig,
-} from 'vite'
+import type { DepOptimizationOptions, UserConfig as ViteConfig } from 'vite'
 import type { DepsOptimizationOptions, UserConfig } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
@@ -15,12 +12,10 @@ export function resolveTestCacheDir(
   viteCacheDir: string | undefined,
 ): string {
   const name = testConfig.name
-  const label = typeof name === 'string' ? name : (name?.label || '')
+  const label = typeof name === 'string' ? name : name?.label || ''
   return VitestCache.resolveCacheDir(
     root,
-    testConfig.cache != null && testConfig.cache !== false
-      ? testConfig.cache.dir
-      : viteCacheDir,
+    testConfig.cache != null && testConfig.cache !== false ? testConfig.cache.dir : viteCacheDir,
     label,
   )
 }
@@ -39,8 +34,7 @@ export function resolveOptimizerConfig(
       disabled: true,
       entries: [],
     }
-  }
-  else {
+  } else {
     const currentInclude = testOptions.include || viteOptions?.include || []
     const exclude = [
       'vitest',
@@ -50,7 +44,7 @@ export function resolveOptimizerConfig(
       ...(testOptions.exclude || viteOptions?.exclude || []),
     ]
     const runtime = currentInclude.filter(
-      n => n.endsWith('jsx-dev-runtime') || n.endsWith('jsx-runtime'),
+      (n) => n.endsWith('jsx-dev-runtime') || n.endsWith('jsx-runtime'),
     )
     exclude.push(...runtime)
 
@@ -105,8 +99,7 @@ export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
     let replacement: any
     try {
       replacement = typeof val === 'string' ? JSON.parse(val) : val
-    }
-    catch {
+    } catch {
       // a reference to code, like "__VAR__": "process.env.VAR";
       // the defines script evaluates the raw value at runtime
       scriptDefines[key] = val
@@ -117,17 +110,14 @@ export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
       const envKey = key.slice('import.meta.env.'.length)
       process.env[envKey] = replacement
       delete viteConfig.define[key]
-    }
-    else if (key.startsWith('process.env.')) {
+    } else if (key.startsWith('process.env.')) {
       const envKey = key.slice('process.env.'.length)
       process.env[envKey] = replacement
       delete viteConfig.define[key]
-    }
-    else if (!key.includes('.')) {
+    } else if (!key.includes('.')) {
       defines[key] = replacement
       delete viteConfig.define[key]
-    }
-    else {
+    } else {
       scriptDefines[key] = val
       delete viteConfig.define[key]
     }
@@ -142,11 +132,7 @@ export function resolveFsAllow(
   if (!rootConfigFile) {
     return [searchForWorkspaceRoot(projectRoot), rootDir]
   }
-  return [
-    dirname(rootConfigFile),
-    searchForWorkspaceRoot(projectRoot),
-    rootDir,
-  ]
+  return [dirname(rootConfigFile), searchForWorkspaceRoot(projectRoot), rootDir]
 }
 
 export function getDefaultResolveOptions(): vite.ResolveOptions {
@@ -164,7 +150,7 @@ function getDefaultServerConditions(): string[] {
   const viteMajor = Number(viteVersion.split('.')[0])
   if (viteMajor >= 6) {
     const conditions: string[] = (vite as any).defaultServerConditions
-    return conditions.filter(c => c !== 'module')
+    return conditions.filter((c) => c !== 'module')
   }
   return ['node']
 }

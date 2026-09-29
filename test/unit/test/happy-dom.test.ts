@@ -2,12 +2,9 @@
  * @vitest-environment happy-dom
  */
 
-/* eslint-disable vars-on-top */
-
 import { expect, it, vi } from 'vitest'
 
 declare global {
-
   var __property_dom: unknown
 
   var happyDOM: any
@@ -17,7 +14,7 @@ it('defaults URL to localhost:3000', () => {
   expect(location.href).toBe('http://localhost:3000/')
 })
 
-it('disableCSSFileLoading is false by default because we didn\'t change options', () => {
+it("disableCSSFileLoading is false by default because we didn't change options", () => {
   expect(window.happyDOM?.settings.disableCSSFileLoading).toBe(false)
 })
 

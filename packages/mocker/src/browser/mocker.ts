@@ -2,6 +2,7 @@ import type { CreateMockInstanceProcedure } from '../automocker'
 import type { MockedModule, MockedModuleType } from '../registry'
 import type { ModuleMockContext, ModuleMockOptions, TestModuleMocker } from '../types'
 import type { ModuleMockerInterceptor } from './interceptor'
+import { withTrailingSlash } from '@vitest/utils/helpers'
 import { extname, join } from 'pathe'
 import { mockObject } from '../automocker'
 import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
@@ -25,13 +26,15 @@ export class ModuleMocker implements TestModuleMocker {
     if (!this.queue.size) {
       return
     }
-    await Promise.all([...this.queue.values()])
+    await Promise.all(this.queue.values())
   }
 
   public async resolveFactoryModule(id: string): Promise<Record<string | symbol, any>> {
     const mock = this.registry.get(id)
     if (!mock || mock.type !== 'manual') {
-      throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)
+      throw new Error(
+        `Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`,
+      )
     }
     const result = await mock.resolve()
     return result
@@ -40,10 +43,14 @@ export class ModuleMocker implements TestModuleMocker {
   public getFactoryModule(id: string): any {
     const mock = this.registry.get(id)
     if (!mock || mock.type !== 'manual') {
-      throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)
+      throw new Error(
+        `Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`,
+      )
     }
     if (!mock.cache) {
-      throw new Error(`Mock ${id} wasn't resolved. This is probably a Vitest error. Please, open a new issue with reproduction.`)
+      throw new Error(
+        `Mock ${id} wasn't resolved. This is probably a Vitest error. Please, open a new issue with reproduction.`,
+      )
     }
     return mock.cache
   }
@@ -61,9 +68,7 @@ export class ModuleMocker implements TestModuleMocker {
   public async importActual<T>(id: string, importer: string): Promise<T> {
     const resolved = await this.rpc.resolveId(id, importer)
     if (resolved == null) {
-      throw new Error(
-        `[vitest] Cannot resolve "${id}" imported from "${importer}"`,
-      )
+      throw new Error(`[vitest] Cannot resolve "${id}" imported from "${importer}"`)
     }
     const ext = extname(resolved.id)
     const url = new URL(resolved.url, this.getBaseUrl())
@@ -77,7 +82,12 @@ export class ModuleMocker implements TestModuleMocker {
       }
       // vite injects this helper for optimized modules, so we try to follow the same behavior
       const m = mod.default
-      return m?.__esModule ? m : { ...((typeof m === 'object' && !Array.isArray(m)) || typeof m === 'function' ? m : {}), default: m }
+      return m?.__esModule
+        ? m
+        : {
+            ...((typeof m === 'object' && !Array.isArray(m)) || typeof m === 'function' ? m : {}),
+            default: m,
+          }
     })
   }
 
@@ -87,33 +97,35 @@ export class ModuleMocker implements TestModuleMocker {
 
   public async importMock<T>(rawId: string, importer: string): Promise<T> {
     await this.prepare()
-    const { resolvedId, resolvedUrl, redirectUrl } = await this.rpc.resolveMock(
-      rawId,
-      importer,
-      { mock: 'auto' },
-    )
+    const { resolvedId, resolvedUrl, redirectUrl } = await this.rpc.resolveMock(rawId, importer, {
+      mock: 'auto',
+    })
 
     const mockUrl = this.resolveMockPath(cleanVersion(resolvedUrl))
     let mock = this.registry.get(mockUrl)
 
     if (!mock) {
       if (redirectUrl) {
-        const resolvedRedirect = new URL(this.resolveMockPath(cleanVersion(redirectUrl)), this.getBaseUrl()).toString()
+        const resolvedRedirect = new URL(
+          this.resolveMockPath(cleanVersion(redirectUrl)),
+          this.getBaseUrl(),
+        ).toString()
         mock = new RedirectedModule(rawId, resolvedId, mockUrl, resolvedRedirect)
-      }
-      else {
+      } else {
         mock = new AutomockedModule(rawId, resolvedId, mockUrl)
       }
     }
 
     if (mock.type === 'manual') {
-      return await mock.resolve() as T
+      return (await mock.resolve()) as T
     }
 
     if (mock.type === 'automock' || mock.type === 'autospy') {
       const url = new URL(`/@id/${resolvedId}`, this.getBaseUrl())
       const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
-      const moduleObject = await import(/* @vite-ignore */ `${url.pathname}${query}&mock=${mock.type}${url.hash}`)
+      const moduleObject = await import(
+        /* @vite-ignore */ `${url.pathname}${query}&mock=${mock.type}${url.hash}`
+      )
       return this.mockObject(moduleObject, mock.type) as T
     }
 
@@ -138,8 +150,7 @@ export class ModuleMocker implements TestModuleMocker {
     if (mockExportsOrModuleType === 'automock' || mockExportsOrModuleType === 'autospy') {
       moduleType = mockExportsOrModuleType
       mockExports = undefined
-    }
-    else {
+    } else {
       mockExports = mockExportsOrModuleType
     }
     moduleType ??= 'automock'
@@ -167,28 +178,37 @@ export class ModuleMocker implements TestModuleMocker {
     }
   }
 
-  public queueMock(rawId: string, importer: string, factoryOrOptions?: ModuleMockOptions | (() => any)): void {
+  public queueMock(
+    rawId: string,
+    importer: string,
+    factoryOrOptions?: ModuleMockOptions | (() => any),
+  ): void {
     const promise = this.rpc
       .resolveMock(rawId, importer, {
-        mock: typeof factoryOrOptions === 'function'
-          ? 'factory'
-          : factoryOrOptions?.spy ? 'spy' : 'auto',
+        mock:
+          typeof factoryOrOptions === 'function'
+            ? 'factory'
+            : factoryOrOptions?.spy
+              ? 'spy'
+              : 'auto',
       })
       .then(async ({ redirectUrl, resolvedId, resolvedUrl, needsInterop, mockType }) => {
         const mockUrl = this.resolveMockPath(cleanVersion(resolvedUrl))
         this.mockedIds.add(resolvedId)
-        const factory = typeof factoryOrOptions === 'function'
-          ? async () => {
-            const data = await factoryOrOptions()
-            // vite wraps all external modules that have "needsInterop" in a function that
-            // merges all exports from default into the module object
-            return needsInterop ? { default: data } : data
-          }
-          : undefined
+        const factory =
+          typeof factoryOrOptions === 'function'
+            ? async () => {
+                const data = await factoryOrOptions()
+                // vite wraps all external modules that have "needsInterop" in a function that
+                // merges all exports from default into the module object
+                return needsInterop ? { default: data } : data
+              }
+            : undefined
 
-        const mockRedirect = typeof redirectUrl === 'string'
-          ? new URL(this.resolveMockPath(cleanVersion(redirectUrl)), this.getBaseUrl()).toString()
-          : null
+        const mockRedirect =
+          typeof redirectUrl === 'string'
+            ? new URL(this.resolveMockPath(cleanVersion(redirectUrl)), this.getBaseUrl()).toString()
+            : null
 
         let module: MockedModule
         if (mockType === 'manual') {
@@ -197,11 +217,9 @@ export class ModuleMocker implements TestModuleMocker {
         // autospy takes higher priority over redirect, so it needs to be checked first
         else if (mockType === 'autospy') {
           module = this.registry.register('autospy', rawId, resolvedId, mockUrl)
-        }
-        else if (mockType === 'redirect') {
+        } else if (mockType === 'redirect') {
           module = this.registry.register('redirect', rawId, resolvedId, mockUrl, mockRedirect!)
-        }
-        else {
+        } else {
           module = this.registry.register('automock', rawId, resolvedId, mockUrl)
         }
 
@@ -260,11 +278,11 @@ export class ModuleMocker implements TestModuleMocker {
     const fsRoot = join('/@fs/', config.root)
 
     // URL can be /file/path.js, but path is resolved to /file/path
-    if (path.startsWith(config.root)) {
+    if (path.startsWith(withTrailingSlash(config.root))) {
       return path.slice(config.root.length)
     }
 
-    if (path.startsWith(fsRoot)) {
+    if (path.startsWith(withTrailingSlash(fsRoot))) {
       return path.slice(fsRoot.length)
     }
 

@@ -46,8 +46,7 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
           const watch = viteConfig.test?.watch ?? configDefaults.watch
           if (!watch) {
             server.watch = null
-          }
-          else {
+          } else {
             server.watch ??= {}
             // chokidar fsevents is unstable on macos when emitting the "ready" event
             if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
@@ -70,7 +69,11 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
       enforce: 'post',
       async configResolved(config) {
         if (config.test.ui) {
-          await harness.packageInstaller.ensureInstalled('@vitest/ui', resolve(config.root), harness.version)
+          await harness.packageInstaller.ensureInstalled(
+            '@vitest/ui',
+            resolve(config.root),
+            harness.version,
+          )
           const uiPlugin = (await import('@vitest/ui')).default(harness)
           // @ts-expect-error mutate readonly
           config.plugins.push(uiPlugin)

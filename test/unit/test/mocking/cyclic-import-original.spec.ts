@@ -1,5 +1,4 @@
 import { expect, test, vi } from 'vitest'
-
 import '../../src/mocks/cyclic-deps/module-1'
 
 vi.mock('../../src/mocks/cyclic-deps/module-2', async (importOriginal) => {

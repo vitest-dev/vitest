@@ -1,4 +1,10 @@
-import type { Locator, SelectorOptions, SerializedLocator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
+import type {
+  Locator,
+  SelectorOptions,
+  SerializedLocator,
+  UserEventWheelDeltaOptions,
+  UserEventWheelOptions,
+} from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
@@ -8,9 +14,7 @@ import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
   if (!element || !(element instanceof Element)) {
-    throw new Error(
-      `Expected DOM element to be an instance of Element, received ${typeof element}`,
-    )
+    throw new Error(`Expected DOM element to be an instance of Element, received ${typeof element}`)
   }
 
   return getUniqueCssSelector(element)
@@ -22,23 +26,30 @@ function escapeIdForCSSSelector(id: string) {
     .map((char) => {
       const code = char.charCodeAt(0)
 
-      if (char === ' ' || char === '#' || char === '.' || char === ':' || char === '[' || char === ']' || char === '>' || char === '+' || char === '~' || char === '\\') {
+      if (
+        char === ' ' ||
+        char === '#' ||
+        char === '.' ||
+        char === ':' ||
+        char === '[' ||
+        char === ']' ||
+        char === '>' ||
+        char === '+' ||
+        char === '~' ||
+        char === '\\'
+      ) {
         // Escape common special characters with backslashes
         return `\\${char}`
-      }
-      else if (code >= 0x10000) {
+      } else if (code >= 0x10000) {
         // Unicode escape for characters outside the BMP
         return `\\${code.toString(16).toUpperCase().padStart(6, '0')} `
-      }
-      else if (code < 0x20 || code === 0x7F) {
+      } else if (code < 0x20 || code === 0x7f) {
         // Non-printable ASCII characters (0x00-0x1F and 0x7F) are escaped
         return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else if (code >= 0x80) {
+      } else if (code >= 0x80) {
         // Non-ASCII characters (0x80 and above) are escaped
         return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else {
+      } else {
         // Allowable characters are used directly
         return char
       }
@@ -50,8 +61,8 @@ function getUniqueCssSelector(el: Element) {
   const path = []
   let parent: null | ParentNode
   let hasShadowRoot = false
-  // eslint-disable-next-line no-cond-assign
-  while (parent = getParent(el)) {
+  // oxlint-disable-next-line no-cond-assign
+  while ((parent = getParent(el))) {
     if ((parent as Element).shadowRoot) {
       hasShadowRoot = true
     }
@@ -59,11 +70,9 @@ function getUniqueCssSelector(el: Element) {
     const tag = el.tagName
     if (el.id) {
       path.push(`#${escapeIdForCSSSelector(el.id)}`)
-    }
-    else if (!el.nextElementSibling && !el.previousElementSibling) {
+    } else if (!el.nextElementSibling && !el.previousElementSibling) {
       path.push(tag.toLowerCase())
-    }
-    else {
+    } else {
       let index = 0
       let sameTagSiblings = 0
       let elementIndex = 0
@@ -80,13 +89,12 @@ function getUniqueCssSelector(el: Element) {
 
       if (sameTagSiblings > 1) {
         path.push(`${tag.toLowerCase()}:nth-child(${elementIndex})`)
-      }
-      else {
+      } else {
         path.push(tag.toLowerCase())
       }
     }
     el = parent as Element
-  };
+  }
   return `${getBrowserState().provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`
 }
 
@@ -133,21 +141,23 @@ export class CommandsManager {
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
-    args = args.filter(arg => arg !== undefined) // remove optional fields
+    args = args.filter((arg) => arg !== undefined) // remove optional fields
 
     const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command)
       ? `vitest:${command.slice('__vitest_'.length)}`
       : undefined
     const currentTest = getWorkerState().current
-    const hasActiveTrace = !!actionTraceGroupName
-      && !!currentTest
-      && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const hasActiveTraceView = !!actionTraceGroupName
-      && !!currentTest
-      && getBrowserState().browserTraceAttempts.has(currentTest.id)
+    const hasActiveTrace =
+      !!actionTraceGroupName &&
+      !!currentTest &&
+      getBrowserState().activeTraceTaskIds.has(currentTest.id)
+    const hasActiveTraceView =
+      !!actionTraceGroupName &&
+      !!currentTest &&
+      getBrowserState().browserTraceAttempts.has(currentTest.id)
 
     if (this._listeners.length) {
-      await Promise.all(this._listeners.map(listener => listener(command, args)))
+      await Promise.all(this._listeners.map((listener) => listener(command, args)))
     }
     return traces.$(
       'vitest.browser.tester.command',
@@ -159,19 +169,19 @@ export class CommandsManager {
       },
       async () => {
         if (hasActiveTrace) {
-          await rpc.triggerCommand<void>(
-            sessionId,
-            '__vitest_groupTraceStart',
-            filepath,
-            [{
+          await rpc.triggerCommand<void>(sessionId, '__vitest_groupTraceStart', filepath, [
+            {
               name: actionTraceGroupName,
               stack: clientError.stack,
-            }],
-          )
+            },
+          ])
         }
         let status: BrowserTraceEntryStatus = 'pass'
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
-        const element = typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined
+        const element =
+          typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0]
+            ? args[0]
+            : undefined
         if (hasActiveTraceView) {
           // Covers provider-backed actionability/waiting after command dispatch.
           // Local pre-command resolution, such as serializeElement/findElement paths
@@ -186,16 +196,14 @@ export class CommandsManager {
         }
         try {
           return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
-        }
-        catch (err: any) {
+        } catch (err: any) {
           status = 'fail'
           // rethrow an error to keep the stack trace in browser
           clientError.message = err.message
           clientError.name = err.name
           clientError.stack = clientError.stack?.replace(clientError.message, err.message)
           throw clientError
-        }
-        finally {
+        } finally {
           if (hasActiveTraceView) {
             await recordBrowserTraceEntry(currentTest, {
               name: actionTraceGroupName,
@@ -207,12 +215,7 @@ export class CommandsManager {
             })
           }
           if (hasActiveTrace) {
-            await rpc.triggerCommand<void>(
-              sessionId,
-              '__vitest_groupTraceEnd',
-              filepath,
-              [],
-            )
+            await rpc.triggerCommand<void>(sessionId, '__vitest_groupTraceEnd', filepath, [])
           }
         }
       },
@@ -224,7 +227,9 @@ export function getIframeScale(): number {
   const iframe = window.frameElement
 
   if (!iframe) {
-    throw new Error(`Cannot find iframe element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+    throw new Error(
+      `Cannot find iframe element. This is a bug in Vitest. Please, open a new issue with reproduction.`,
+    )
   }
 
   // DOMMatrix parses the computed 2D transform matrix [a, b, c, d, e, f]
@@ -243,7 +248,9 @@ function escapeRegexForSelector(re: RegExp): string {
     return String(re)
   }
   // Even number of backslashes followed by the quote -> insert a backslash.
-  return String(re).replace(/(^|[^\\])(\\\\)*(["'`])/g, '$1$2\\$3').replace(/>>/g, '\\>\\>')
+  return String(re)
+    .replace(/(^|[^\\])(\\\\)*(["'`])/g, '$1$2\\$3')
+    .replace(/>>/g, '\\>\\>')
 }
 
 export function escapeForTextSelector(text: string | RegExp, exact: boolean): string {
@@ -256,7 +263,10 @@ export function escapeForTextSelector(text: string | RegExp, exact: boolean): st
 const provider = getBrowserState().provider
 const kElementLocator = Symbol.for('$$vitest:locator-resolved')
 
-export async function serializeElement(elementOrLocator: Element | Locator, options?: SelectorOptions): Promise<SerializedLocator> {
+export async function serializeElement(
+  elementOrLocator: Element | Locator,
+  options?: SelectorOptions,
+): Promise<SerializedLocator> {
   if (!elementOrLocator) {
     throw new Error('Expected element or locator to be defined.')
   }
@@ -279,18 +289,19 @@ export async function serializeElement(elementOrLocator: Element | Locator, opti
 const kLocator = Symbol.for('$$vitest:locator')
 
 export function isLocator(element: unknown): element is Locator {
-  return (!!element && typeof element === 'object' && kLocator in element)
+  return !!element && typeof element === 'object' && kLocator in element
 }
 
 const DEFAULT_WHEEL_DELTA = 100
 
-export function resolveUserEventWheelOptions(options: UserEventWheelOptions): UserEventWheelDeltaOptions {
+export function resolveUserEventWheelOptions(
+  options: UserEventWheelOptions,
+): UserEventWheelDeltaOptions {
   let delta: UserEventWheelDeltaOptions['delta']
 
   if (options.delta) {
     delta = options.delta
-  }
-  else {
+  } else {
     switch (options.direction) {
       case 'up': {
         delta = { y: -DEFAULT_WHEEL_DELTA }

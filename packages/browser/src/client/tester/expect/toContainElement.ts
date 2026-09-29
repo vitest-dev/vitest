@@ -23,9 +23,10 @@ export default function toContainElement(
   expectedElement: Element | Locator | null,
 ): MatcherResult {
   const containerElement = getElementFromUserInput(actual, toContainElement, this)
-  const childElement = expectedElement !== null
-    ? getElementFromUserInput(expectedElement, toContainElement, this)
-    : null
+  const childElement =
+    expectedElement !== null
+      ? getElementFromUserInput(expectedElement, toContainElement, this)
+      : null
 
   return {
     pass: containerElement.contains(childElement),
@@ -38,9 +39,7 @@ export default function toContainElement(
         ),
         '',
 
-        this.utils.RECEIVED_COLOR(`${this.utils.stringify(
-          containerElement.cloneNode(false),
-        )} ${
+        this.utils.RECEIVED_COLOR(`${this.utils.stringify(containerElement.cloneNode(false))} ${
           this.isNot ? 'contains:' : 'does not contain:'
         } ${this.utils.stringify(childElement ? childElement.cloneNode(false) : null)}
         `),

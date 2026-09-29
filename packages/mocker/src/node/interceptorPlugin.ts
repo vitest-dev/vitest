@@ -2,6 +2,7 @@ import type { Plugin } from 'vite'
 import type { MockedModuleSerialized } from '../registry'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path/posix'
+import { slash } from '@vitest/utils/helpers'
 import { isFileLoadingAllowed } from 'vite'
 import { ManualMockedModule, MockerRegistry } from '../registry'
 import { cleanUrl, createManualModuleSource } from '../utils'
@@ -24,7 +25,7 @@ export interface InterceptorPluginOptions {
 
 export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugin {
   const registry = options.registry || new MockerRegistry()
-  return {
+  const plugin: Plugin = {
     name: 'vitest:mocks:interceptor',
     enforce: 'pre',
     load: {
@@ -63,22 +64,21 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
         }
       },
     },
-    configureServer(server) {
-      if (options.registerWebSocketEvents === false) {
-        return
-      }
+  }
+
+  if (options.registerWebSocketEvents !== false) {
+    plugin.configureServer = (server) => {
       server.ws.on('vitest:interceptor:register', (event: MockedModuleSerialized) => {
         if (event.type === 'manual') {
           const module = ManualMockedModule.fromJSON(event, async () => {
             const keys = await getFactoryExports(event.url)
-            return Object.fromEntries(keys.map(key => [key, null]))
+            return Object.fromEntries(keys.map((key) => [key, null]))
           })
           registry.add(module)
-        }
-        else {
+        } else {
           if (event.type === 'redirect') {
             const redirectUrl = new URL(event.redirect)
-            const redirect = join(server.config.root, redirectUrl.pathname)
+            const redirect = join(server.config.root, slash(redirectUrl.pathname))
             // the redirect is served through the `load` hook below, so it must
             // stay inside the file-serving allowlist and never escape the root
             if (!isFileLoadingAllowed(server.config, redirect)) {
@@ -107,14 +107,19 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
           timeout = setTimeout(() => {
             reject(new Error(`Timeout while waiting for factory exports of ${url}`))
           }, 10_000)
-          server.ws.on('vitest:interceptor:resolved', ({ url: resolvedUrl, keys }: { url: string; keys: string[] }) => {
-            if (resolvedUrl === url) {
-              clearTimeout(timeout)
-              resolve(keys)
-            }
-          })
+          server.ws.on(
+            'vitest:interceptor:resolved',
+            ({ url: resolvedUrl, keys }: { url: string; keys: string[] }) => {
+              if (resolvedUrl === url) {
+                clearTimeout(timeout)
+                resolve(keys)
+              }
+            },
+          )
         })
       }
-    },
+    }
   }
+
+  return plugin
 }

@@ -8,7 +8,7 @@ test('resolveSnapshotPath context', async () => {
   expect(stderr).toBe('')
   expect(
     Object.fromEntries(
-      ctx!.state.getFiles().map(f => [`${f.projectName}|${f.name}`, f.result?.state]),
+      ctx!.state.getFiles().map((f) => [`${f.projectName}|${f.name}`, f.result?.state]),
     ),
   ).toMatchInlineSnapshot(`
     {

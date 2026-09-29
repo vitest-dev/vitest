@@ -86,10 +86,7 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   }
 
   if (line.includes(' > eval')) {
-    line = line.replace(
-      / line (\d+)(?: > eval line \d+)* > eval:\d+:\d+/g,
-      ':$1',
-    )
+    line = line.replace(/ line (\d+)(?: > eval line \d+)* > eval:\d+:\d+/g, ':$1')
   }
 
   // Early return for lines that don't look like Firefox/Safari stack traces
@@ -155,9 +152,7 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   }
 
   if (line.includes('(eval ')) {
-    line = line
-      .replace(/eval code/g, 'eval')
-      .replace(/(\(eval at [^()]*)|(,.*$)/g, '')
+    line = line.replace(/eval code/g, 'eval').replace(/(\(eval at [^()]*)|(,.*$)/g, '')
   }
 
   let sanitizedLine = line
@@ -170,15 +165,11 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   const location = sanitizedLine.match(/ (\(.+\)$)/)
 
   // remove the parenthesized location from the line, if it was matched
-  sanitizedLine = location
-    ? sanitizedLine.replace(location[0], '')
-    : sanitizedLine
+  sanitizedLine = location ? sanitizedLine.replace(location[0], '') : sanitizedLine
 
   // if a location was matched, pass it to extractLocation() otherwise pass all sanitizedLine
   // because this line doesn't have function name
-  const [url, lineNumber, columnNumber] = extractLocation(
-    location ? location[1] : sanitizedLine,
-  )
+  const [url, lineNumber, columnNumber] = extractLocation(location ? location[1] : sanitizedLine)
   let method = (location && sanitizedLine) || ''
   let file = url && ['eval', '<anonymous>'].includes(url) ? undefined : url
 
@@ -195,15 +186,13 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   }
 
   // normalize Windows path (\ -> /)
-  file = file.startsWith('node:') || file.startsWith('internal:')
-    ? file
-    : resolve(file)
+  file = file.startsWith('node:') || file.startsWith('internal:') ? file : resolve(file)
 
   if (method) {
     method = method
-    // vite 7+
+      // vite 7+
       .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
-    // vite <7
+      // vite <7
       .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
       .replace(/(Object\.)?__vite_ssr_export_default__\s?/g, '')
   }
@@ -217,13 +206,15 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
 }
 
 export function createStackString(stacks: ParsedStack[]): string {
-  return stacks.map((stack) => {
-    const line = `${stack.file}:${stack.line}:${stack.column}`
-    if (stack.method) {
-      return `    at ${stack.method}(${line})`
-    }
-    return `    at ${line}`
-  }).join('\n')
+  return stacks
+    .map((stack) => {
+      const line = `${stack.file}:${stack.line}:${stack.column}`
+      if (stack.method) {
+        return `    at ${stack.method}(${line})`
+      }
+      return `    at ${line}`
+    })
+    .join('\n')
 }
 
 export function parseStacktrace(
@@ -236,7 +227,7 @@ export function parseStacktrace(
     : parseV8Stacktrace(stack)
 
   // remove vi.defineHelper's internal stacks
-  const helperIndex = stacks.findLastIndex(s =>
+  const helperIndex = stacks.findLastIndex((s) =>
     // this covers cases such as
     //   "__VITEST_HELPER__"
     //   "__VITEST_HELPER__ [as <object method name>]"
@@ -248,69 +239,68 @@ export function parseStacktrace(
     stacks = stacks.slice(helperIndex + 1)
   }
 
-  return stacks.map((stack) => {
-    if (options.getUrlId) {
-      stack.file = options.getUrlId(stack.file)
-    }
-
-    const map = options.getSourceMap?.(stack.file) as
-      | SourceMapLike
-      | null
-      | undefined
-    if (!map || typeof map !== 'object' || !map.version) {
-      return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
-    }
-
-    const traceMap = new DecodedMap(map, stack.file)
-    if (stack.line <= 0 || stack.column <= 0) {
-      return stack
-    }
-    const position = getOriginalPosition(traceMap, {
-      line: stack.line,
-      // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
-      column: stack.column - 1,
-    })
-    if (!position) {
-      return stack
-    }
-
-    const { line, column, source, name } = position
-    let file = source || stack.file
-    if (/\/\w:\//.test(file)) {
-      file = file.slice(1)
-    }
-
-    if (shouldFilter(ignoreStackEntries, file)) {
-      return null
-    }
-
-    if (line != null && column != null) {
-      return {
-        line,
-        column: column + 1,
-        file,
-        method: name || stack.method,
+  return stacks
+    .map((stack) => {
+      if (options.getUrlId) {
+        stack.file = options.getUrlId(stack.file)
       }
-    }
-    return stack
-  }).filter(s => s != null)
+
+      const map = options.getSourceMap?.(stack.file) as SourceMapLike | null | undefined
+      if (!map || typeof map !== 'object' || !map.version) {
+        return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
+      }
+
+      const traceMap = new DecodedMap(map, stack.file)
+      if (stack.line <= 0 || stack.column <= 0) {
+        return stack
+      }
+      const position = getOriginalPosition(traceMap, {
+        line: stack.line,
+        // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
+        column: stack.column - 1,
+      })
+      if (!position) {
+        return stack
+      }
+
+      const { line, column, source, name } = position
+      let file = source || stack.file
+      if (/\/\w:\//.test(file)) {
+        file = file.slice(1)
+      }
+
+      if (shouldFilter(ignoreStackEntries, file)) {
+        return null
+      }
+
+      if (line != null && column != null) {
+        return {
+          line,
+          column: column + 1,
+          file,
+          method: name || stack.method,
+        }
+      }
+      return stack
+    })
+    .filter((s) => s != null)
 }
 
 function shouldFilter(ignoreStackEntries: (string | RegExp)[], file: string): boolean {
-  return ignoreStackEntries.some(p => file.match(p))
+  return ignoreStackEntries.some((p) => file.match(p))
 }
 
 function parseFFOrSafariStackTrace(stack: string): ParsedStack[] {
   return stack
     .split('\n')
-    .map(line => parseSingleFFOrSafariStack(line))
+    .map((line) => parseSingleFFOrSafariStack(line))
     .filter(notNullish)
 }
 
 function parseV8Stacktrace(stack: string): ParsedStack[] {
   return stack
     .split('\n')
-    .map(line => parseSingleV8Stack(line))
+    .map((line) => parseSingleV8Stack(line))
     .filter(notNullish)
 }
 
@@ -329,9 +319,7 @@ export function parseErrorStacktrace(
   const stackStr = e.stack || ''
   // if "stack" property was overwritten at runtime to be something else,
   // ignore the value because we don't know how to process it
-  let stackFrames = typeof stackStr === 'string'
-    ? parseStacktrace(stackStr, options)
-    : []
+  let stackFrames = typeof stackStr === 'string' ? parseStacktrace(stackStr, options) : []
 
   if (!stackFrames.length) {
     const e_ = e as any
@@ -344,9 +332,7 @@ export function parseErrorStacktrace(
   }
 
   if (options.frameFilter) {
-    stackFrames = stackFrames.filter(
-      f => options.frameFilter!(e as TestError, f) !== false,
-    )
+    stackFrames = stackFrames.filter((f) => options.frameFilter!(e as TestError, f) !== false)
   }
 
   ;(e as TestError).stacks = stackFrames
@@ -386,9 +372,7 @@ export class DecodedMap {
     this._encoded = mappings || ''
     this._decodedMemo = memoizedState()
     this.url = from
-    this.resolvedSources = (sources || []).map(s =>
-      resolve(from, '..', s || ''),
-    )
+    this.resolvedSources = (sources || []).map((s) => resolve(from, '..', s || ''))
   }
 }
 
@@ -406,10 +390,7 @@ function memoizedState(): Stats {
   }
 }
 
-export function getOriginalPosition(
-  map: DecodedMap,
-  needle: Needle,
-): OriginalMapping | null {
+export function getOriginalPosition(map: DecodedMap, needle: Needle): OriginalMapping | null {
   const result = originalPositionFor(map as any, needle)
   if (result.column == null) {
     return null

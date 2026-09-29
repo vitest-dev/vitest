@@ -33,7 +33,7 @@ test.for([
 })
 
 function createTest(fileName: string) {
-  return /* ts */`
+  return /* ts */ `
     import { expect, test } from 'vitest'
 
     const testPath = expect.getState().testPath;

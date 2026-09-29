@@ -171,6 +171,8 @@ export default defineProject({
 })
 ```
 
+By default, `process.cwd()` in every project's tests returns the directory where Vitest was started, even if the project has a different root. See [Project Working Directory Does Not Change](/guide/common-errors#project-working-directory-does-not-change) for details and a workaround.
+
 ## Running Tests
 
 To run tests, define a script in your root `package.json`:
@@ -186,53 +188,68 @@ To run tests, define a script in your root `package.json`:
 Now tests can be run using your package manager:
 
 ::: code-group
+
 ```bash [npm]
 npm run test
 ```
+
 ```bash [yarn]
 yarn test
 ```
+
 ```bash [pnpm]
 pnpm run test
 ```
+
 ```bash [bun]
 bun run test
 ```
+
 :::
 
 If you need to run tests only inside a single project, use the `--project` CLI option:
 
 ::: code-group
+
 ```bash [npm]
 npm run test --project e2e
 ```
+
 ```bash [yarn]
 yarn test --project e2e
 ```
+
 ```bash [pnpm]
 pnpm run test --project e2e
 ```
+
 ```bash [bun]
 bun run test --project e2e
 ```
+
 :::
 
 :::: tip
 CLI option `--project` can be used multiple times to filter out several projects:
 
 ::: code-group
+
 ```bash [npm]
 npm run test --project e2e --project unit
 ```
+
 ```bash [yarn]
 yarn test --project e2e --project unit
 ```
+
 ```bash [pnpm]
 pnpm run test --project e2e --project unit
 ```
+
 ```bash [bun]
 bun run test --project e2e --project unit
 ```
+
 :::
 ::::
 

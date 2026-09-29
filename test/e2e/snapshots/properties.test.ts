@@ -6,7 +6,7 @@ import { editFile, runVitest } from '../../test-utils'
 const INLINE_BLOCK_RE = /\/\/ -- TEST INLINE START --\n([\s\S]*?)\/\/ -- TEST INLINE END --/g
 
 function extractInlineBlocks(content: string): string {
-  return Array.from(content.matchAll(INLINE_BLOCK_RE), m => m[1].trim()).join('\n\n')
+  return Array.from(content.matchAll(INLINE_BLOCK_RE), (m) => m[1].trim()).join('\n\n')
 }
 
 test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
@@ -16,8 +16,9 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
 
   // remove snapshots
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
-  editFile(testFile, s =>
-    s.replace(/toMatchInlineSnapshot\((\{[^}]*\}),\s*`[^`]*`\)/g, 'toMatchInlineSnapshot($1)'))
+  editFile(testFile, (s) =>
+    s.replace(/toMatchInlineSnapshot\((\{[^}]*\}),\s*`[^`]*`\)/g, 'toMatchInlineSnapshot($1)'),
+  )
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
@@ -74,12 +75,13 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
   expect(result2.errorTree()).toEqual(result.errorTree())
 
   // edit tests to break properties check
-  editFile(testFile, s =>
+  editFile(testFile, (s) =>
     s
-      .replace('age: 30', 'age: \'thirty\'')
+      .replace('age: 30', "age: 'thirty'")
       .replace('score: 95', 'score: 999')
       .replace('name: "dave"', 'name: "dave-edit"')
-      .replace('age: 25', 'age: \'twenty-five\''))
+      .replace('age: 25', "age: 'twenty-five'"),
+  )
 
   // properties mismatch should NOT cause false-positive obsolete snapshot
   result = await runVitest({ root, update: 'none' })

@@ -30,9 +30,7 @@ const serialize: NewPlugin['serialize'] = (
       indentationNext,
       depth,
       refs,
-    )}${config.min ? ', ' : ','}${
-      config.spacingOuter
-    }${indentationNext}"results": ${printer(
+    )}${config.min ? ', ' : ','}${config.spacingOuter}${indentationNext}"results": ${printer(
       val.mock.results,
       config,
       indentationNext,
@@ -44,7 +42,7 @@ const serialize: NewPlugin['serialize'] = (
   return `[MockFunction${nameString}]${callsString}`
 }
 
-const test: NewPlugin['test'] = val => val && !!val._isMockFunction
+const test: NewPlugin['test'] = (val) => val && !!val._isMockFunction
 
 const plugin: NewPlugin = { serialize, test }
 

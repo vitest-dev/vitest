@@ -12,8 +12,7 @@ export async function runSetupFiles(
         await runner.importFile(fsPath, 'setup')
       }),
     )
-  }
-  else {
+  } else {
     for (const fsPath of files) {
       await runner.importFile(fsPath, 'setup')
     }

@@ -12,12 +12,10 @@ test('timeout error stack starts with the timeout message', async () => {
   const { ctx } = await runVitest({
     root: './fixtures/hook-timeout',
   })
-  const errors = ctx!.state.getFiles().flatMap(f =>
-    f.tasks.flatMap(t => t.result?.errors ?? []),
-  )
-  expect(
-    errors.map(e => e.stack?.split('\n')[0]),
-  ).toMatchInlineSnapshot(`
+  const errors = ctx!.state
+    .getFiles()
+    .flatMap((f) => f.tasks.flatMap((t) => t.result?.errors ?? []))
+  expect(errors.map((e) => e.stack?.split('\n')[0])).toMatchInlineSnapshot(`
     [
       "Error: Hook timed out in 10ms.",
       "Error: Hook timed out in 30ms.",
