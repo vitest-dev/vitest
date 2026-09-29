@@ -70,16 +70,8 @@ export function ModuleRunnerTransform(): VitePlugin {
           return
         }
 
-        // `__vitest_vm__` is a `client` consumer whose tests load modules with
-        // the native import mechanism, so it never uses the dependency
-        // optimizer. It still needs to be configured: otherwise the environment
-        // keeps Vite's browser default and discovers dependencies from every
-        // `index.html` in the project, which can abort the run even when no test
-        // imports them. The user-facing options are deliberately not wired for
-        // it, since their output would never be used.
         const optimizerOptions =
           name === '__vitest_vm__' ? undefined : testConfig?.deps?.optimizer?.[name]
-
         config.optimizeDeps = resolveOptimizerConfig(optimizerOptions, config.optimizeDeps)
 
         if (name === '__vitest_vm__') {
