@@ -22,14 +22,16 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest_source__": "./ui/node/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./reporter": {
+      "__vitest_source__": "./ui/node/reporter.ts",
       "types": "./reporter.d.ts",
       "default": "./dist/reporter.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
