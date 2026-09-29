@@ -495,7 +495,7 @@ Instances keep the prototype chain of the implementation class, so its prototype
 function mockObject<T>(value: T, options?: MockOptions): MaybeMockedDeep<T>
 ```
 
-Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
+Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking#automocking-algorithm) for the detail.
 
 ```ts
 const original = {

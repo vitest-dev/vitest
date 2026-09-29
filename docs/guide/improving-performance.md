@@ -159,7 +159,7 @@ Note that Vitest automatically disables the compile cache in workers when the `v
 
 ## Pool
 
-By default Vitest runs tests in `pool: 'forks'`. While `'forks'` pool is better for compatibility issues ([hanging process](/guide/common-errors.html#failed-to-terminate-worker) and [segfaults](/guide/common-errors.html#segfaults-and-native-code-errors)), it may be slightly slower than `pool: 'threads'` in larger projects.
+By default Vitest runs tests in `pool: 'forks'`. While `'forks'` pool is better for compatibility issues ([hanging process](/guide/common-errors#failed-to-terminate-worker) and [segfaults](/guide/common-errors#segfaults-and-native-code-errors)), it may be slightly slower than `pool: 'threads'` in larger projects.
 
 You can try to improve test run time by switching `pool` option in configuration:
 

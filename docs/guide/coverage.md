@@ -534,11 +534,11 @@ export function ignored() { // [!code error]
 
 ## Coverage Performance
 
-If code coverage generation is slow on your project, see [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage).
+If code coverage generation is slow on your project, see [Profiling Test Performance | Code coverage](/guide/profiling-test-performance#code-coverage).
 
 ## Vitest UI
 
-You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters#html-reporter).
 
 This is integrated with builtin coverage reporters with HTML output (`html`, `html-spa`, and `lcov` reporters). `html` reporter is enabled by default and this works out of the box. To integrate with custom reporters, you can configure [`coverage.htmlDir`](/config/coverage#coverage-htmldir).
 
