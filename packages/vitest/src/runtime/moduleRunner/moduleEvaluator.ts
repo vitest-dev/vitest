@@ -30,15 +30,18 @@ const isWindows = process.platform === 'win32'
 // holds no per-context state (Vite rewrites dynamic imports to
 // `__vite_ssr_dynamic_import__`, so no per-context import callback is baked
 // in) — only its evaluation has to happen per context. Keyed by module id
-// (`mock:` ids stay distinct from their originals).
-const vmInlineScriptCache = new Map<string, vm.Script>()
+// (`mock:` ids stay distinct from their originals) and guarded by the code:
+// one worker can run files of different Vite environments, which transform
+// the same id differently.
+const vmInlineScriptCache = new Map<string, { code: string; script: vm.Script }>()
 
 function getVmInlineScript(id: string, wrappedCode: string, options: vm.ScriptOptions): vm.Script {
-  let script = vmInlineScriptCache.get(id)
-  if (!script) {
-    script = new vm.Script(wrappedCode, options)
-    vmInlineScriptCache.set(id, script)
+  const cached = vmInlineScriptCache.get(id)
+  if (cached?.code === wrappedCode) {
+    return cached.script
   }
+  const script = new vm.Script(wrappedCode, options)
+  vmInlineScriptCache.set(id, { code: wrappedCode, script })
   return script
 }
 
