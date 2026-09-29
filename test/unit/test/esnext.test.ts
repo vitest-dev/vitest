@@ -9,7 +9,7 @@ it.skipIf(Number(version) < 20)('"v" flag in regexp', () => {
 
 it('new "using" feature', () => {
   let getResource = (): any => {
-    throw new Error('don\'t call me')
+    throw new Error("don't call me")
   }
   {
     using resource = resourceful('foo')

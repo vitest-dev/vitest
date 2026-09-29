@@ -20,7 +20,7 @@ test('in-source tests work', async () => {
   `)
 
   const fileCoverage = coverageMap.fileCoverageFor(files[0])
-  const functions = Object.values(fileCoverage.fnMap).map(fn => fn.name)
+  const functions = Object.values(fileCoverage.fnMap).map((fn) => fn.name)
 
   // If-branch is not taken - makes sure source maps are correct in in-source testing too
   expect(fileCoverage.getUncoveredLines()).toContain('5')

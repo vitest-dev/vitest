@@ -14,16 +14,9 @@ function getNewLineSymbol(string: string) {
   return string.includes('\r\n') ? '\r\n' : '\n'
 }
 
-function diffStrings(
-  a: string,
-  b: string,
-  options?: DiffOptions,
-): [Array<Diff>, boolean] {
+function diffStrings(a: string, b: string, options?: DiffOptions): [Array<Diff>, boolean] {
   const truncate = options?.truncateThreshold ?? false
-  const truncateThreshold = Math.max(
-    Math.floor(options?.truncateThreshold ?? 0),
-    0,
-  )
+  const truncateThreshold = Math.max(Math.floor(options?.truncateThreshold ?? 0), 0)
   let aLength = a.length
   let bLength = b.length
   if (truncate) {
@@ -49,11 +42,7 @@ function diffStrings(
   let bIndex = 0
   const diffs: Array<Diff> = []
 
-  const foundSubsequence = (
-    nCommon: number,
-    aCommon: number,
-    bCommon: number,
-  ) => {
+  const foundSubsequence = (nCommon: number, aCommon: number, bCommon: number) => {
     if (aIndex !== aCommon) {
       diffs.push(new Diff(DIFF_DELETE, a.slice(aIndex, aCommon)))
     }

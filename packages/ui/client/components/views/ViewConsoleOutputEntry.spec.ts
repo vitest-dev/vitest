@@ -21,9 +21,6 @@ describe('ViewConsoleOutputEntry', () => {
     const span = spans[0]
 
     expect(span.textContent, 'the message has the correct message').toBe(now)
-    expect(
-      span.getAttribute('style'),
-      'the message has the correct text color',
-    ).toBe('color:#A50')
+    expect(span.getAttribute('style'), 'the message has the correct text color').toBe('color:#A50')
   })
 })

@@ -1,5 +1,5 @@
-import { LocatorSelectors, Locator } from './context'
 import { StringifyOptions } from 'vitest/internal/browser'
+import { LocatorSelectors, Locator } from './context'
 
 export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 

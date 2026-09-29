@@ -71,6 +71,7 @@ const hash = generateFileHash(
   undefined, // the project name or `undefined` is not set
 )
 ```
+
 :::
 
 ::: danger

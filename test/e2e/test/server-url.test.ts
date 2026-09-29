@@ -1,6 +1,5 @@
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { expect, it } from 'vitest'
-
 import { runInlineTests } from '../../test-utils'
 
 // `api: true` must resolve to the default port, but which port Vite actually

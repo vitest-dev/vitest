@@ -79,11 +79,11 @@ In browser mode, prefer [`page.locator`](/api/browser/locators) and [`expect.ele
 
 ## Picking between them
 
-|  | `expect.poll` | `vi.waitFor` | `vi.waitUntil` |
-| --- | --- | --- | --- |
-| Reach for it when | the wait is an assertion | the work might fail until it's ready | a lookup might be falsy and that's fine |
-| Retries on thrown error | yes | yes | no, fails fast |
-| Resolves with | the assertion | callback's return value | callback's return value |
+|                         | `expect.poll`            | `vi.waitFor`                         | `vi.waitUntil`                          |
+| ----------------------- | ------------------------ | ------------------------------------ | --------------------------------------- |
+| Reach for it when       | the wait is an assertion | the work might fail until it's ready | a lookup might be falsy and that's fine |
+| Retries on thrown error | yes                      | yes                                  | no, fails fast                          |
+| Resolves with           | the assertion            | callback's return value              | callback's return value                 |
 
 Each of these accepts `{ timeout, interval }` options, defaulting to a 1000 ms timeout and 50 ms intervals. `vi.waitFor` and `vi.waitUntil` also accept a number in place of the options object as shorthand for the timeout.
 

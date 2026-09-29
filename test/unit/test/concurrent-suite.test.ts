@@ -120,7 +120,7 @@ describe('override concurrent', { concurrent: true }, () => {
   })
 })
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function checkSequentialTests() {
   let x = 0
@@ -137,10 +137,7 @@ function checkSequentialTests() {
 }
 
 function checkParallelTests() {
-  const defers = [
-    createDefer<void>(),
-    createDefer<void>(),
-  ]
+  const defers = [createDefer<void>(), createDefer<void>()]
 
   test('t1', async () => {
     defers[0].resolve()
@@ -154,10 +151,7 @@ function checkParallelTests() {
 }
 
 function checkParallelSuites() {
-  const defers = [
-    createDefer<void>(),
-    createDefer<void>(),
-  ]
+  const defers = [createDefer<void>(), createDefer<void>()]
 
   describe('s1', () => {
     test('t1', async () => {
@@ -178,7 +172,14 @@ describe('suite hook concurrency', () => {
   const logs: string[] = []
 
   afterAll(() => {
-    expect(logs).toEqual(['s2-before', 's2-after', 's1-before', 's1-before-2', 's1-after-2', 's1-after'])
+    expect(logs).toEqual([
+      's2-before',
+      's2-after',
+      's1-before',
+      's1-before-2',
+      's1-after-2',
+      's1-after',
+    ])
   })
 
   describe.concurrent('s1', () => {

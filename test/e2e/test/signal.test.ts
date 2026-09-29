@@ -5,7 +5,7 @@ import { runInlineTests } from '../../test-utils'
 
 test('timeout aborts the signal without fixtures', async () => {
   const { stderr, results } = await runInlineTests({
-    'basic.test.ts': /* ts */`
+    'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
       import { setTimeout } from 'node:timers/promises'
       test('timeouts', async ({ signal, task, example }) => {
@@ -25,7 +25,7 @@ test('timeout aborts the signal without fixtures', async () => {
 
 test('timeout aborts the signal', async () => {
   const { stderr, results } = await runInlineTests({
-    'basic.test.ts': /* ts */`
+    'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
       import { setTimeout } from 'node:timers/promises'
       test.extend({
@@ -48,7 +48,7 @@ test('timeout aborts the signal', async () => {
 
 test('timeout aborts all signals in concurrent tests', async () => {
   const { stderr, results } = await runInlineTests({
-    'basic.test.ts': /* ts */`
+    'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
       import { setTimeout } from 'node:timers/promises'
       test
@@ -91,8 +91,9 @@ class AbortReporter implements Reporter {
 }
 
 test('cancelling test run aborts the signal', async () => {
-  const { results, stderr } = await runInlineTests({
-    'basic.test.ts': /* ts */ `
+  const { results, stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
       test('aborted', async ({ signal, task }) => {
         return new Promise(resolve => {
@@ -104,12 +105,11 @@ test('cancelling test run aborts the signal', async () => {
         })
       }, Infinity)
     `,
-  }, {
-    reporters: [
-      'default',
-      new AbortReporter(),
-    ],
-  })
+    },
+    {
+      reporters: ['default', new AbortReporter()],
+    },
+  )
   expect(stderr).toBe('')
   expect(results).toHaveLength(1)
   expect(results[0].children.at(0)?.meta()).toEqual({
@@ -118,8 +118,9 @@ test('cancelling test run aborts the signal', async () => {
 })
 
 test('cancelling test run aborts the signal in all concurrent tests', async () => {
-  const { results, stderr } = await runInlineTests({
-    'basic.test.ts': /* ts */`
+  const { results, stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
       test.concurrent.for([1, 2, 3])(
         'aborted',
@@ -136,12 +137,11 @@ test('cancelling test run aborts the signal in all concurrent tests', async () =
           })
         })
     `,
-  }, {
-    reporters: [
-      'default',
-      new AbortReporter(),
-    ],
-  })
+    },
+    {
+      reporters: ['default', new AbortReporter()],
+    },
+  )
   expect(stderr).toBe('')
   expect(results).toHaveLength(1)
   expect(results[0].children.at(0)?.meta()).toEqual({

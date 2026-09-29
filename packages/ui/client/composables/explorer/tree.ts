@@ -1,4 +1,9 @@
-import type { RunnerTestFile as File, RunnerTaskEventPack, RunnerTaskResultPack as TaskResultPack, TestArtifact } from 'vitest'
+import type {
+  RunnerTestFile as File,
+  RunnerTaskEventPack,
+  RunnerTaskResultPack as TaskResultPack,
+  TestArtifact,
+} from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
@@ -8,14 +13,16 @@ import type {
 import { useRafFn } from '@vueuse/core'
 import { reactive } from 'vue'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { collectTestsTotalData, preparePendingTasks, recordTestArtifact, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import {
+  collectTestsTotalData,
+  preparePendingTasks,
+  recordTestArtifact,
+  runCollect,
+  runLoadFiles,
+} from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
-import {
-  filter,
-  searchMatcher,
-  uiFiles,
-} from '~/composables/explorer/state'
+import { filter, searchMatcher, uiFiles } from '~/composables/explorer/state'
 import { isParentNode, pruneStaleChildren, removeNodeSubtree } from '~/composables/explorer/utils'
 
 export class ExplorerTree {
@@ -62,18 +69,13 @@ export class ExplorerTree {
   }
 
   loadFiles(remoteFiles: File[]) {
-    runLoadFiles(
-      remoteFiles,
-      true,
-      searchMatcher.value.matcher,
-      {
-        failed: filter.failed,
-        success: filter.success,
-        skipped: filter.skipped,
-        slow: filter.slow,
-        onlyTests: filter.onlyTests,
-      },
-    )
+    runLoadFiles(remoteFiles, true, searchMatcher.value.matcher, {
+      failed: filter.failed,
+      success: filter.success,
+      skipped: filter.skipped,
+      slow: filter.slow,
+      onlyTests: filter.onlyTests,
+    })
   }
 
   startRun() {
@@ -116,7 +118,7 @@ export class ExplorerTree {
 
   /** Remove all file nodes matching a filepath across projects and recalculate the explorer view. */
   removeFile(filepath: string) {
-    for (const fileNode of this.root.tasks.filter(file => file.filepath === filepath)) {
+    for (const fileNode of this.root.tasks.filter((file) => file.filepath === filepath)) {
       removeNodeSubtree(this.nodes, fileNode)
       this.root.tasks.splice(this.root.tasks.indexOf(fileNode), 1)
     }
@@ -164,13 +166,20 @@ export class ExplorerTree {
     tests: File[],
     filesSummary: FilteredTests,
   ) {
-    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, searchMatcher.value.matcher, {
-      failed: filter.failed,
-      success: filter.success,
-      skipped: filter.skipped,
-      slow: filter.slow,
-      onlyTests: filter.onlyTests,
-    })
+    return collectTestsTotalData(
+      filtered,
+      onlyTests,
+      tests,
+      filesSummary,
+      searchMatcher.value.matcher,
+      {
+        failed: filter.failed,
+        success: filter.success,
+        skipped: filter.skipped,
+        slow: filter.slow,
+        onlyTests: filter.onlyTests,
+      },
+    )
   }
 
   collapseNode(id: string) {

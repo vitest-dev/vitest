@@ -21,9 +21,12 @@ const kPerProject: unique symbol = Symbol('perProject')
 const kWriteResult: unique symbol = Symbol('writeResult')
 export const kFinalize: unique symbol = Symbol('finalize')
 
-type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
-  [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
-}[number], never>
+type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<
+  {
+    [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
+  }[number],
+  never
+>
 
 /**
  * A benchmarked function. Vitest-owned and engine-agnostic.
@@ -48,7 +51,8 @@ export type BenchRunOptions = BenchCompareOptions
  * unchanged into the reporter, `bench.from()` baselines and comparison tables.
  * The `name` matches the corresponding {@link BenchRegistration}.
  */
-export interface BenchResult extends TaskResultCompleted, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo {
+export interface BenchResult
+  extends TaskResultCompleted, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo {
   /** The registered benchmark name this result belongs to. */
   name: string
 }
@@ -103,17 +107,11 @@ async function loadProviderModule(
   let mod: Record<string, any>
   try {
     mod = await moduleRunner.import(provider)
-  }
-  catch (error) {
-    throw new Error(
-      `Failed to load benchmark provider from "${provider}".`,
-      { cause: error },
-    )
+  } catch (error) {
+    throw new Error(`Failed to load benchmark provider from "${provider}".`, { cause: error })
   }
   if (mod.default == null) {
-    throw new Error(
-      `Benchmark provider loaded from "${provider}" did not have a default export.`,
-    )
+    throw new Error(`Benchmark provider loaded from "${provider}" did not have a default export.`)
   }
   return mod.default
 }
@@ -182,13 +180,21 @@ export interface BenchRegistration<Name extends string> {
 }
 
 interface BenchCompare {
-  <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchStorage<ExtractBenchNames<Args>>>
-  <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchRunOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
+  <Args extends BenchRegistration<any>[]>(
+    ...args: Args
+  ): Promise<BenchStorage<ExtractBenchNames<Args>>>
+  <Args extends BenchRegistration<any>[]>(
+    ...args: [...Args, BenchRunOptions]
+  ): Promise<BenchStorage<ExtractBenchNames<Args>>>
 }
 
 interface BenchFactory {
   <Name extends string>(name: Name | Function, fn: BenchFn): BenchRegistration<Name>
-  <Name extends string>(name: Name | Function, options: BenchFnOptions, fn: BenchFn): BenchRegistration<Name>
+  <Name extends string>(
+    name: Name | Function,
+    options: BenchFnOptions,
+    fn: BenchFn,
+  ): BenchRegistration<Name>
 }
 
 export interface BenchFromSource {
@@ -196,7 +202,10 @@ export interface BenchFromSource {
 }
 
 interface BenchFrom {
-  <Name extends string>(name: Name | Function, source: string | BenchFromSource): BenchRegistration<Name>
+  <Name extends string>(
+    name: Name | Function,
+    source: string | BenchFromSource,
+  ): BenchRegistration<Name>
 }
 
 export interface Bench extends BenchFactory {
@@ -232,7 +241,8 @@ export function createBench(
 ): Bench {
   const pending = new Set<BenchRegistration<any>>()
 
-  const resolveTemplate = (template: string) => substitutePath(template, config.benchmark.projectName)
+  const resolveTemplate = (template: string) =>
+    substitutePath(template, config.benchmark.projectName)
 
   const resolveFromSource = async (source: string | BenchFromSource): Promise<BaselineData> => {
     if (typeof source === 'function') {
@@ -241,15 +251,14 @@ export function createBench(
     const resolved = resolveTemplate(source)
     const data = await rpc().readBenchmarkResult(resolved)
     if (data == null) {
-      throw new Error(`\`bench.from()\` could not find a result file at "${resolved}". Run the source benchmark first to create it.`)
+      throw new Error(
+        `\`bench.from()\` could not find a result file at "${resolved}". Run the source benchmark first to create it.`,
+      )
     }
     return data
   }
 
-  const taskFromBaseline = (
-    name: string,
-    data: BaselineData,
-  ): TestBenchmarkTask => ({
+  const taskFromBaseline = (name: string, data: BaselineData): TestBenchmarkTask => ({
     name,
     latency: data.latency,
     throughput: data.throughput,
@@ -278,7 +287,9 @@ export function createBench(
     }
   }
 
-  interface TaskMeta { perProject?: true }
+  interface TaskMeta {
+    perProject?: true
+  }
 
   const serializeBenchmark = (
     results: BenchResult[],
@@ -286,7 +297,7 @@ export function createBench(
     taskMeta?: Map<string, TaskMeta>,
     fromTasks?: TestBenchmarkTask[],
   ): TestBenchmark => {
-    const tasks: TestBenchmarkTask[] = results.map(result => ({
+    const tasks: TestBenchmarkTask[] = results.map((result) => ({
       name: result.name,
       latency: result.latency,
       throughput: result.throughput,
@@ -347,14 +358,16 @@ export function createBench(
         byName.set(result.name, result)
       }
       return byName
-    }
-    finally {
+    } finally {
       const excessiveInvocations = config.benchmark.suppressExportGetterWarnings
         ? undefined
         : getterTracker?.getExcessiveInvocations()
       if (excessiveInvocations?.length) {
         const entries = excessiveInvocations
-          .map(({ moduleId, exportName }) => `  - ${formatModuleId(moduleId, workerState.config.root)} > ${exportName}`)
+          .map(
+            ({ moduleId, exportName }) =>
+              `  - ${formatModuleId(moduleId, workerState.config.root)} > ${exportName}`,
+          )
           .join('\n')
         console.warn(
           [
@@ -392,10 +405,7 @@ export function createBench(
     return result
   }
 
-  const runFrom = async (
-    name: string,
-    source: string | BenchFromSource,
-  ): Promise<BenchResult> => {
+  const runFrom = async (name: string, source: string | BenchFromSource): Promise<BenchResult> => {
     const data = await resolveFromSource(source)
     const benchmark: TestBenchmark = {
       name: test.fullTestName,
@@ -406,10 +416,15 @@ export function createBench(
     return data as BenchResult
   }
 
-  const bench: Bench = (nameOrFunction: string | Function, a: BenchFn | BenchFnOptions, b?: BenchFn | BenchFnOptions) => {
+  const bench: Bench = (
+    nameOrFunction: string | Function,
+    a: BenchFn | BenchFnOptions,
+    b?: BenchFn | BenchFnOptions,
+  ) => {
     validateBenchmarkProject(config)
     const { fn, fnOpts, writeResult, perProject } = normalizeBenchArgs(a, b)
-    const name = typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction
+    const name =
+      typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction
     const meta: TaskMeta | undefined = perProject ? { perProject: true } : undefined
     const registration: RunnableRegistration<string> = {
       [kRegistration]: true,
@@ -431,15 +446,24 @@ export function createBench(
     return registration
   }
 
-  bench.from = <Name extends string>(nameOrFunction: Name | Function, source: string | BenchFromSource): BenchRegistration<Name> => {
+  bench.from = <Name extends string>(
+    nameOrFunction: Name | Function,
+    source: string | BenchFromSource,
+  ): BenchRegistration<Name> => {
     validateBenchmarkProject(config)
     if (typeof nameOrFunction !== 'string' && typeof nameOrFunction !== 'function') {
-      throw new TypeError('`bench.from()` requires a name (string or named function) as its first argument.')
+      throw new TypeError(
+        '`bench.from()` requires a name (string or named function) as its first argument.',
+      )
     }
     if (typeof source !== 'string' && typeof source !== 'function') {
-      throw new TypeError('`bench.from()` expects a string path or a function returning the result data as its second argument.')
+      throw new TypeError(
+        '`bench.from()` expects a string path or a function returning the result data as its second argument.',
+      )
     }
-    const name = (typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction) as Name
+    const name = (
+      typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction
+    ) as Name
     const registration: FromRegistration<Name> = {
       [kRegistration]: true,
       [kFromSource]: source,
@@ -459,7 +483,7 @@ export function createBench(
     // extract optional trailing BenchRunOptions argument
     const lastArg = args.at(-1)
     const isOptions = lastArg != null && typeof lastArg === 'object' && !(kRegistration in lastArg)
-    const benchOptions = isOptions ? args.pop() as BenchRunOptions : undefined
+    const benchOptions = isOptions ? (args.pop() as BenchRunOptions) : undefined
     const registrations = args as BenchRegistration<any>[]
 
     // Mark every passed-in registration as consumed before validation so a
@@ -472,11 +496,15 @@ export function createBench(
     }
 
     if (registrations.length < 2) {
-      throw new SyntaxError(`\`bench.compare()\` requires at least 2 benchmarks, received ${registrations.length} instead. ${registrations.length === 1 ? 'Consider calling `bench().run()`. ' : 'Define benchmarks by calling `bench()`. '}See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
+      throw new SyntaxError(
+        `\`bench.compare()\` requires at least 2 benchmarks, received ${registrations.length} instead. ${registrations.length === 1 ? 'Consider calling `bench().run()`. ' : 'Define benchmarks by calling `bench()`. '}See https://vitest.dev/guide/benchmarking#comparing-benchmarks`,
+      )
     }
     for (const reg of registrations) {
       if (reg == null || typeof reg !== 'object' || !(kRegistration in reg)) {
-        throw new SyntaxError('`bench.compare()` expects every argument to be the return value of `bench` or `bench.from`.')
+        throw new SyntaxError(
+          '`bench.compare()` expects every argument to be the return value of `bench` or `bench.from`.',
+        )
       }
     }
 
@@ -485,8 +513,7 @@ export function createBench(
     for (const reg of registrations) {
       if (isFromRegistration(reg)) {
         fromEntries.push(reg)
-      }
-      else {
+      } else {
         runnable.push(reg as RunnableRegistration<any>)
       }
     }
@@ -516,19 +543,24 @@ export function createBench(
     let results = new Map<string, BenchResult>()
     if (runnable.length > 0) {
       results = await runGroup(
-        runnable.map(reg => ({ name: reg.name, fn: reg.fn, fnOpts: reg.fnOpts })),
+        runnable.map((reg) => ({ name: reg.name, fn: reg.fn, fnOpts: reg.fnOpts })),
         benchOptions,
       )
     }
 
-    await recordBenchmark(Array.from(results.values()), groupName(benchOptions), taskMeta, fromTasks)
+    await recordBenchmark(
+      Array.from(results.values()),
+      groupName(benchOptions),
+      taskMeta,
+      fromTasks,
+    )
 
     // write artifacts for every runnable registration that requested it. We
     // do this after recording so a write failure can't be confused with a
     // benchmark failure in the reporter output.
     await Promise.all(
       runnable
-        .filter(reg => reg[kWriteResult] != null)
+        .filter((reg) => reg[kWriteResult] != null)
         .map((reg) => {
           const result = results.get(reg.name)!
           return writeResultArtifact(reg[kWriteResult]!, result)
@@ -542,7 +574,7 @@ export function createBench(
     if (pending.size === 0) {
       return
     }
-    const names = Array.from(pending, reg => `"${reg.name}"`).join(', ')
+    const names = Array.from(pending, (reg) => `"${reg.name}"`).join(', ')
     pending.clear()
     console.warn(
       [
@@ -568,15 +600,24 @@ function formatModuleId(moduleId: string, root: string): string {
 function normalizeBenchArgs(
   a: BenchFn | BenchFnOptions,
   b: BenchFn | BenchFnOptions | undefined,
-): { fn: BenchFn; fnOpts: BenchOptions | undefined; writeResult: string | undefined; perProject: boolean } {
+): {
+  fn: BenchFn
+  fnOpts: BenchOptions | undefined
+  writeResult: string | undefined
+  perProject: boolean
+} {
   if (typeof a === 'function') {
     if (b !== undefined) {
-      throw new TypeError('`bench()` does not accept options as the third argument. Pass options as the second argument instead: `bench(name, options, fn)`.')
+      throw new TypeError(
+        '`bench()` does not accept options as the third argument. Pass options as the second argument instead: `bench(name, options, fn)`.',
+      )
     }
     return { fn: a, fnOpts: undefined, writeResult: undefined, perProject: false }
   }
   if (typeof b !== 'function') {
-    throw new TypeError('`bench()` expects a benchmark function. Call `bench(name, fn)` or `bench(name, options, fn)`.')
+    throw new TypeError(
+      '`bench()` expects a benchmark function. Call `bench(name, fn)` or `bench(name, options, fn)`.',
+    )
   }
   // Strip vitest-specific fields only when present so we don't allocate a new
   // object — preserving referential identity matters: users inspect
@@ -588,7 +629,7 @@ function normalizeBenchArgs(
   const { writeResult, perProject, ...fnOpts } = a
   return {
     fn: b,
-    fnOpts: Object.keys(fnOpts).length > 0 ? fnOpts as BenchOptions : undefined,
+    fnOpts: Object.keys(fnOpts).length > 0 ? (fnOpts as BenchOptions) : undefined,
     writeResult,
     perProject: perProject ?? false,
   }
@@ -597,10 +638,10 @@ function normalizeBenchArgs(
 function validateBenchmarkProject(config: SerializedConfig) {
   if (!config.benchmark.enabled) {
     throw new Error(
-      `Cannot use the \`bench\` test-context fixture within a regular test run. `
-      + `Benchmarks are inherently flaky, so Vitest runs them in a dedicated project based on the \`benchmark.include\` pattern (default \`**/*.{bench,benchmark}.?(c|m)[jt]s?(x)\`). `
-      + `Move this code to a file matched by \`benchmark.include\`, and make sure \`bench\` is destructured from the test context (\`test('...', async ({ bench }) => { ... })\`) — it is not a top-level export of \`vitest\`. `
-      + `See https://vitest.dev/guide/benchmarking#stability`,
+      `Cannot use the \`bench\` test-context fixture within a regular test run. ` +
+        `Benchmarks are inherently flaky, so Vitest runs them in a dedicated project based on the \`benchmark.include\` pattern (default \`**/*.{bench,benchmark}.?(c|m)[jt]s?(x)\`). ` +
+        `Move this code to a file matched by \`benchmark.include\`, and make sure \`bench\` is destructured from the test context (\`test('...', async ({ bench }) => { ... })\`) — it is not a top-level export of \`vitest\`. ` +
+        `See https://vitest.dev/guide/benchmarking#stability`,
     )
   }
 }

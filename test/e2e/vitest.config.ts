@@ -19,21 +19,15 @@ export default defineConfig({
     fsModuleCache: true,
     reporters: [
       process.env.CI ? 'minimal' : 'verbose',
-      (process.env.VITEST_CI_BLOB_LABEL
-        ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
-        : {}),
-      (process.env.VITEST_CI_MERGE_REPORTS
-        ? ['html', { singleFile: true }]
-        : {}),
+      process.env.VITEST_CI_BLOB_LABEL ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }] : {},
+      process.env.VITEST_CI_MERGE_REPORTS ? ['html', { singleFile: true }] : {},
     ],
     onConsoleLog(log) {
       if (log.includes('watcher is ready')) {
         return false
       }
     },
-    tags: [
-      { name: 'browser', timeout: 60_000 },
-    ],
+    tags: [{ name: 'browser', timeout: 60_000 }],
     projects: [
       {
         extends: true,
@@ -97,11 +91,7 @@ export default defineConfig({
   },
   server: {
     watch: {
-      ignored: [
-        '**/vitest-test-*/**',
-        '**/fixtures/browser-init/**/*',
-        '**/package.json',
-      ],
+      ignored: ['**/vitest-test-*/**', '**/fixtures/browser-init/**/*', '**/package.json'],
     },
   },
 })

@@ -1,5 +1,4 @@
 import { expect, test } from 'vitest'
-
 import { runVitest } from '../../test-utils'
 
 test('should still test math.test.ts', async () => {

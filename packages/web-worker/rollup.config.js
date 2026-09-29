@@ -32,25 +32,26 @@ const plugins = [
   }),
 ]
 
-export default () => defineConfig([
-  {
-    input: entries,
-    output: {
-      dir: 'dist',
-      format: 'esm',
+export default () =>
+  defineConfig([
+    {
+      input: entries,
+      output: {
+        dir: 'dist',
+        format: 'esm',
+      },
+      external,
+      plugins,
     },
-    external,
-    plugins,
-  },
-  {
-    input: dtsUtils.dtsInput({ pure: '' }),
-    output: {
-      dir: 'dist',
-      entryFileNames: '[name].d.ts',
-      format: 'esm',
+    {
+      input: dtsUtils.dtsInput({ pure: '' }),
+      output: {
+        dir: 'dist',
+        entryFileNames: '[name].d.ts',
+        format: 'esm',
+      },
+      watch: false,
+      external,
+      plugins: dtsUtils.dts(),
     },
-    watch: false,
-    external,
-    plugins: dtsUtils.dts(),
-  },
-])
+  ])

@@ -56,7 +56,7 @@ export class VitestWatcher {
   }
 
   private scheduleRerun(file: string): void {
-    this._onRerun.forEach(cb => cb(file))
+    this._onRerun.forEach((cb) => cb(file))
   }
 
   private getTestFilesFromWatcherTrigger(id: string): boolean {
@@ -70,9 +70,8 @@ export class VitestWatcher {
         const files = definition.testsToRun(id, exec)
         if (Array.isArray(files)) {
           triggered = true
-          files.forEach(file => this.changedTests.add(resolve(this.vitest.config.root, file)))
-        }
-        else if (typeof files === 'string') {
+          files.forEach((file) => this.changedTests.add(resolve(this.vitest.config.root, file)))
+        } else if (typeof files === 'string') {
           triggered = true
           this.changedTests.add(resolve(this.vitest.config.root, files))
         }
@@ -88,8 +87,7 @@ export class VitestWatcher {
     const testFiles = this.getTestFilesFromWatcherTrigger(id)
     if (testFiles) {
       this.scheduleRerun(id)
-    }
-    else {
+    } else {
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun) {
         this.scheduleRerun(id)
@@ -103,7 +101,7 @@ export class VitestWatcher {
     this.invalidates.add(id)
 
     if (this.vitest.state.filesMap.has(id)) {
-      this.vitest.projects.forEach(project => project._removeCachedTestFile(id))
+      this.vitest.projects.forEach((project) => project._removeCachedTestFile(id))
       this.vitest.state.filesMap.delete(id)
       this.vitest.cache.results.removeFromCache(id)
       this.vitest.cache.stats.removeStats(id)
@@ -134,8 +132,7 @@ export class VitestWatcher {
     if (matchingProjects.length > 0) {
       this.changedTests.add(id)
       this.scheduleRerun(id)
-    }
-    else {
+    } else {
       // it's possible that file was already there but watcher triggered "add" event instead
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun) {
@@ -174,7 +171,7 @@ export class VitestWatcher {
     }
 
     if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
-      this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
+      this.vitest.state.getFilepaths().forEach((file) => this.changedTests.add(file))
       return true
     }
 
@@ -190,7 +187,10 @@ export class VitestWatcher {
     if (!projects.length) {
       // if there are no modules it's possible that server was restarted
       // we don't have information about importers anymore, so let's check if the file is a test file at least
-      if (this.vitest.state.filesMap.has(filepath) || this.vitest.projects.some(project => project._isCachedTestFile(filepath))) {
+      if (
+        this.vitest.state.filesMap.has(filepath) ||
+        this.vitest.projects.some((project) => project._isCachedTestFile(filepath))
+      ) {
         this.changedTests.add(filepath)
         return true
       }
@@ -200,7 +200,9 @@ export class VitestWatcher {
     const files: string[] = []
 
     for (const project of projects) {
-      const environmentMods = project._getViteEnvironments().map(({ moduleGraph }) => moduleGraph.getModulesByFile(filepath))
+      const environmentMods = project
+        ._getViteEnvironments()
+        .map(({ moduleGraph }) => moduleGraph.getModulesByFile(filepath))
       if (!environmentMods.length) {
         continue
       }
@@ -241,8 +243,5 @@ export class VitestWatcher {
 
 export interface WatcherTriggerPattern {
   pattern: RegExp
-  testsToRun: (
-    file: string,
-    match: RegExpMatchArray,
-  ) => string[] | string | null | undefined | void
+  testsToRun: (file: string, match: RegExpMatchArray) => string[] | string | null | undefined | void
 }

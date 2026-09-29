@@ -11,8 +11,8 @@ export function trimReporterOutput(report: string) {
   const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
 
   // Trim start and end, capture just rendered tree
-  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
-  rows.splice(rows.findIndex(row => row.includes('Test Files')))
+  rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  rows.splice(rows.findIndex((row) => row.includes('Test Files')))
 
   return rows.join('\n').trim()
 }
@@ -54,7 +54,7 @@ export function getContext(): Context {
   // @ts-expect-error logger is readonly
   context.logger = {
     ctx: context as Vitest,
-    log: (text: string) => output += `${text}\n`,
+    log: (text: string) => (output += `${text}\n`),
     highlight: () => {},
   } as unknown as Logger
 
@@ -129,17 +129,18 @@ const error: TestError = {
   stacks: undefined!,
 }
 error.showDiff = true
-error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
-  + '    at /vitest/test/unit/test/basic.test.ts:8:32\n'
-  + '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
-  + '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
-  + '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'
-  + '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n'
-  + '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n'
-  + '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n'
-  + '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n'
-  + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
-  + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
+error.stack =
+  'AssertionError: expected 2.23606797749979 to equal 2\n' +
+  '    at /vitest/test/unit/test/basic.test.ts:8:32\n' +
+  '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n' +
+  '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n' +
+  '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n' +
+  '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n' +
+  '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n' +
+  '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n' +
+  '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n' +
+  '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n' +
+  '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
 const tasks: RunnerTestCase[] = [
   {

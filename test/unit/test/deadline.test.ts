@@ -5,7 +5,7 @@ function noop() {}
 const never = new Promise<never>(noop)
 
 function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 test('derive keeps a buffer before the task deadline and stays positive', () => {
@@ -42,7 +42,7 @@ test('settle reports an operation due after the task right away', async () => {
   deadline.track('click', never, 5000)
   const pending = await deadline.settle()
   expect.assert(pending)
-  expect(pending.map(operation => operation.name)).toEqual(['click'])
+  expect(pending.map((operation) => operation.name)).toEqual(['click'])
   deadline.clear()
 })
 
@@ -58,7 +58,7 @@ test('settle rejects with the error of a failed operation', async () => {
 test('settle resolves with nothing pending once operations finish', async () => {
   const deadline = new TaskDeadline(100, noop)
   let finish!: () => void
-  deadline.track('click', new Promise<void>(resolve => finish = resolve), 10)
+  deadline.track('click', new Promise<void>((resolve) => (finish = resolve)), 10)
   const settled = deadline.settle()
   finish()
   await expect(settled).resolves.toEqual([])
@@ -72,7 +72,7 @@ test('settle reports operations that did not report back within the grace', asyn
   deadline.track('screenshot', never, 5000)
   const pending = await deadline.settle()
   expect.assert(pending)
-  expect(pending.map(operation => operation.name)).toEqual(['click', 'screenshot'])
+  expect(pending.map((operation) => operation.name)).toEqual(['click', 'screenshot'])
   expect(pending[0].source).toBe(source)
   deadline.clear()
 })

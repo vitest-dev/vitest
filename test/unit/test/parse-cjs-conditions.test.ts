@@ -42,14 +42,9 @@ describe('parseCjsConditions', () => {
       ['--conditions=from-cli', '-C', 'another'],
       '--conditions=from-env',
     )
-    expect(result).toEqual(new Set([
-      'node',
-      'require',
-      'node-addons',
-      'from-cli',
-      'another',
-      'from-env',
-    ]))
+    expect(result).toEqual(
+      new Set(['node', 'require', 'node-addons', 'from-cli', 'another', 'from-env']),
+    )
   })
 
   it('filters out module-sync', () => {

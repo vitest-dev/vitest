@@ -58,9 +58,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         coverageFilesDirectory: getCoverageFilesDirectory(reportsDirectory, globalConfig.shard),
         provider: coverage.provider,
         enabled: coverage.enabled,
-        customProviderModule: 'customProviderModule' in coverage
-          ? coverage.customProviderModule
-          : undefined,
+        customProviderModule:
+          'customProviderModule' in coverage ? coverage.customProviderModule : undefined,
         htmlDir: coverage.htmlDir,
         autoAttachSubprocess: coverage.autoAttachSubprocess ?? false,
       }
@@ -68,10 +67,13 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     fakeTimers: config.fakeTimers,
     deps: {
       web: config.deps.web || {},
-      optimizer: Object.entries(optimizer).reduce((acc, [name, option]) => {
-        acc[name] = { enabled: option?.enabled ?? false }
-        return acc
-      }, {} as Record<string, { enabled: boolean }>),
+      optimizer: Object.entries(optimizer).reduce(
+        (acc, [name, option]) => {
+          acc[name] = { enabled: option?.enabled ?? false }
+          return acc
+        },
+        {} as Record<string, { enabled: boolean }>,
+      ),
       interopDefault: config.deps.interopDefault,
       moduleDirectories: config.deps.moduleDirectories,
     },
@@ -82,9 +84,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       snapshotFormat: {
         ...globalConfig.snapshotOptions.snapshotFormat,
       },
-      expand:
-        config.snapshotOptions.expand
-        ?? globalConfig.snapshotOptions.expand,
+      expand: config.snapshotOptions.expand ?? globalConfig.snapshotOptions.expand,
     },
     sequence: {
       shuffle: config.sequence.shuffle,
@@ -100,9 +100,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     inspector: globalConfig.inspector,
     detectAsyncLeaks: globalConfig.detectAsyncLeaks,
     watch: config.watch,
-    includeTaskLocation:
-      config.includeTaskLocation
-      ?? globalConfig.includeTaskLocation,
+    includeTaskLocation: config.includeTaskLocation ?? globalConfig.includeTaskLocation,
     env: {
       ...viteConfig?.env,
       ...config.env,
@@ -121,19 +119,19 @@ export function serializeConfig(project: TestProject): SerializedConfig {
           exact: browser.locators.exact,
           errorFormat: browser.locators.errorFormat,
         },
-        providerOptions: provider?.name === 'playwright'
-          ? {
-              actionTimeout: (provider as any)?.options?.actionTimeout,
-            }
-          : {},
+        providerOptions:
+          provider?.name === 'playwright'
+            ? {
+                actionTimeout: (provider as any)?.options?.actionTimeout,
+              }
+            : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
         trace: browser.trace.mode,
         traceView: browser.traceView,
       }
     })(config.browser),
     standalone: config.standalone,
-    printConsoleTrace:
-      config.printConsoleTrace ?? globalConfig.printConsoleTrace,
+    printConsoleTrace: config.printConsoleTrace ?? globalConfig.printConsoleTrace,
     benchmark: {
       enabled: config.benchmark.enabled,
       retainSamples: config.benchmark.retainSamples,
@@ -142,9 +140,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       projectName: config.benchmark.projectName,
     },
     // the browser initialized them via `@vite/env` import
-    serializedDefines: config.browser.enabled
-      ? ''
-      : project._serializedDefines || '',
+    serializedDefines: config.browser.enabled ? '' : project._serializedDefines || '',
     fsModuleCache: config.fsModuleCache ?? false,
     experimental: {
       importDurations: config.experimental.importDurations,
@@ -157,9 +153,9 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     strictTags: config.strictTags ?? true,
     mergeReportsLabel: config.mergeReportsLabel,
     slowTestThreshold:
-      config.slowTestThreshold
-      ?? globalConfig.slowTestThreshold
-      ?? configDefaults.slowTestThreshold,
+      config.slowTestThreshold ??
+      globalConfig.slowTestThreshold ??
+      configDefaults.slowTestThreshold,
     disableColors: isAgent && !isForceColor(),
     attachmentsDir: config.attachmentsDir,
   }
@@ -199,7 +195,7 @@ function serializeDiffOptions(
   const result: SerializedDiffOptions = {}
   for (const key of serializableDiffKeys) {
     if (diff[key] !== undefined) {
-      (result as Record<string, unknown>)[key] = diff[key]
+      ;(result as Record<string, unknown>)[key] = diff[key]
     }
   }
   return result

@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { runInlineTests } from '#test-utils'
 
-describe.for([
-  true,
-  false,
-])('%s reporter with %s tty', (isTTY) => {
+describe.for([true, false])('%s reporter with %s tty', (isTTY) => {
   it('prints previously failed tests on rerun', async () => {
     const { vitest, fs } = await runReporterTests(isTTY)
 
@@ -16,7 +13,7 @@ describe.for([
 
     vitest.resetOutput()
 
-    fs.editFile('./basic.test.js', code => `${code}\n`)
+    fs.editFile('./basic.test.js', (code) => `${code}\n`)
 
     await vitest.waitForStdout('RERUN  ../basic.test.js')
     await vitest.waitForStdout('Waiting for file changes...')
@@ -38,7 +35,7 @@ describe.for([
 
     vitest.resetOutput()
 
-    fs.editFile('./failed.test.js', code => `${code}\n`)
+    fs.editFile('./failed.test.js', (code) => `${code}\n`)
 
     await vitest.waitForStdout('RERUN  ../failed.test.js')
     await vitest.waitForStdout('Watching for file changes...')
@@ -51,8 +48,9 @@ describe.for([
 })
 
 async function runReporterTests(isTTY: boolean) {
-  return await runInlineTests({
-    'basic.test.js': /* js */`
+  return await runInlineTests(
+    {
+      'basic.test.js': /* js */ `
       import { expect, it } from 'vitest';
 
       it('works correctly', () => {
@@ -60,7 +58,7 @@ async function runReporterTests(isTTY: boolean) {
         expect(1).toBe(1)
       })
     `,
-    'failed.test.js': /* js */`
+      'failed.test.js': /* js */ `
       import { it } from 'vitest';
 
       it('fails', () => {
@@ -68,10 +66,12 @@ async function runReporterTests(isTTY: boolean) {
         throw new Error('failed')
       })
     `,
-  }, {
-    config: false,
-    watch: true,
-    fileParallelism: false,
-    reporters: [['default', { isTTY }]],
-  })
+    },
+    {
+      config: false,
+      watch: true,
+      fileParallelism: false,
+      reporters: [['default', { isTTY }]],
+    },
+  )
 }

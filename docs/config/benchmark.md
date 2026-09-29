@@ -26,7 +26,7 @@ Include globs for benchmark test files
 ## benchmark.exclude
 
 - **Type:** `string[]`
-- **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
+- **Default:** `['**/node_modules/**', '**/.git/**']`
 
 Exclude globs for benchmark test files
 

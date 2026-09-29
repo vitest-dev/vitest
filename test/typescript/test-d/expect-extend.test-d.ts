@@ -34,7 +34,9 @@ test('infers matcher declaration type from a custom matcher type', async () => {
   })
 
   expectTypeOf(expect({ a: 1, b: '2' }).toMatchSchema({ a: '1' })).toEqualTypeOf<void>()
-  await (expect(Promise.resolve({ a: '1' })).resolves.toMatchSchema({ a: '1' }) satisfies Promise<void>)
+  await (expect(Promise.resolve({ a: '1' })).resolves.toMatchSchema({
+    a: '1',
+  }) satisfies Promise<void>)
   expect('a').toEqualMultiple('a', 1)
   expect('a').toEqualTyped('b')
   // @ts-expect-error Expected value must match the received type.
@@ -42,7 +44,9 @@ test('infers matcher declaration type from a custom matcher type', async () => {
   await (expect(Promise.resolve('a')).resolves.not.toEqualTyped('b') satisfies Promise<void>)
   // @ts-expect-error Expected value must match the resolved type.
   await expect(Promise.resolve('a')).resolves.toEqualTyped(1)
-  await (expect(Promise.reject(new Error('error'))).rejects.toEqualTyped(new Error('error')) satisfies Promise<void>)
+  await (expect(Promise.reject(new Error('error'))).rejects.toEqualTyped(
+    new Error('error'),
+  ) satisfies Promise<void>)
 })
 
 test('automatically extends asymmetric matchers', () => {

@@ -35,16 +35,18 @@ export function ModuleRunnerTransform(): VitePlugin {
           config.environments[name] ??= {}
 
           const environment = config.environments[name]
+          // other environments consumed by the browser are not run by Vitest
+          if (browserEnabled && name !== 'client' && environment.consumer === 'client') {
+            continue
+          }
           environment.dev ??= {}
           // vm tests run using the native import mechanism
           if (name === '__vitest_vm__') {
             environment.dev.moduleRunnerTransform = false
             environment.consumer = 'client'
-          }
-          else if (name === 'client' && browserEnabled) {
+          } else if (name === 'client' && browserEnabled) {
             environment.dev.moduleRunnerTransform = false
-          }
-          else {
+          } else {
             environment.dev.moduleRunnerTransform = true
           }
           if (name !== 'client' || !browserEnabled) {
@@ -60,10 +62,11 @@ export function ModuleRunnerTransform(): VitePlugin {
         if (name === '__vitest_vm__' || name === '__vitest__') {
           return
         }
-        // In browser mode the `client` environment is browser-managed: don't
-        // apply node-runner externalization / `optimizeDeps` to it (that would
-        // discard the browser `optimizeDeps.include`, e.g. `vitest > expect-type`).
-        if (name === 'client' && testConfig.browser?.enabled) {
+        // In browser mode the `client` environment (and any other environment
+        // consumed by the browser) is browser-managed: don't apply node-runner
+        // externalization / `optimizeDeps` to it (that would discard the browser
+        // `optimizeDeps.include`, e.g. `vitest > expect-type`).
+        if (testConfig.browser?.enabled && (name === 'client' || config.consumer === 'client')) {
           return
         }
 
@@ -72,9 +75,7 @@ export function ModuleRunnerTransform(): VitePlugin {
         // remove Vite's externalization logic because we have our own (unfortunately)
         config.resolve.external = [
           ...builtinModules,
-          ...builtinModules
-            .filter(m => !m.startsWith('node:'))
-            .map(m => `node:${m}`),
+          ...builtinModules.filter((m) => !m.startsWith('node:')).map((m) => `node:${m}`),
         ]
 
         // by setting `noExternal` to `true`, we make sure that

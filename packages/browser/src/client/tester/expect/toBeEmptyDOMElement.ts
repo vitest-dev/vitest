@@ -27,11 +27,7 @@ export default function toBeEmptyDOMElement(
     pass: isEmptyElement(htmlElement),
     message: () => {
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeEmptyDOMElement`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeEmptyDOMElement`, 'element', ''),
         '',
         'Received:',
         `  ${this.utils.printReceived(htmlElement.innerHTML)}`,
@@ -44,6 +40,8 @@ export default function toBeEmptyDOMElement(
  * Identifies if an element doesn't contain child nodes (excluding comments)
  */
 function isEmptyElement(element: HTMLElement | SVGElement): boolean {
-  const nonCommentChildNodes = [...element.childNodes].filter(node => node.nodeType !== Node.COMMENT_NODE)
+  const nonCommentChildNodes = [...element.childNodes].filter(
+    (node) => node.nodeType !== Node.COMMENT_NODE,
+  )
   return nonCommentChildNodes.length === 0
 }

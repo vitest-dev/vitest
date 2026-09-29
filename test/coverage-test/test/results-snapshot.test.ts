@@ -6,16 +6,12 @@ test('coverage results matches snapshot', async () => {
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
     coverage: {
       reporter: 'json',
-      include: [
-        'fixtures/src/math.ts',
-        'fixtures/src/even.ts',
-        'fixtures/src/untested-file.ts',
-      ],
+      include: ['fixtures/src/math.ts', 'fixtures/src/even.ts', 'fixtures/src/untested-file.ts'],
     },
   })
 
   const coverageMap = await readCoverageMap()
-  const fileCoverages = coverageMap.files().map(file => coverageMap.fileCoverageFor(file))
+  const fileCoverages = coverageMap.files().map((file) => coverageMap.fileCoverageFor(file))
 
   expect(fileCoverages).toMatchInlineSnapshot(`
     {
@@ -40,10 +36,13 @@ test('coverage results matches snapshot', async () => {
     }
   `)
 
-  const lineCoverages = coverageMap.files().reduce((all, file) => ({
-    [file]: coverageMap.fileCoverageFor(file).getLineCoverage(),
-    ...all,
-  }), {})
+  const lineCoverages = coverageMap.files().reduce(
+    (all, file) => ({
+      [file]: coverageMap.fileCoverageFor(file).getLineCoverage(),
+      ...all,
+    }),
+    {},
+  )
 
   expect(lineCoverages).toMatchInlineSnapshot(`
     {
@@ -69,20 +68,21 @@ test('coverage results matches snapshot', async () => {
   `)
 })
 
-test.for(['node', 'jsdom'] as const)('vite SSR generated code ignored in { environment: %s }', async (environment, { skip }) => {
-  skip(isBrowser(), 'SSR not relevant to browser environment')
+test.for(['node', 'jsdom'] as const)(
+  'vite SSR generated code ignored in { environment: %s }',
+  async (environment, { skip }) => {
+    skip(isBrowser(), 'SSR not relevant to browser environment')
 
-  await runVitest({
-    include: ['fixtures/test/vite-ssr-imports.test.ts'],
-    environment,
-    coverage: { reporter: 'json',
-    },
-  })
+    await runVitest({
+      include: ['fixtures/test/vite-ssr-imports.test.ts'],
+      environment,
+      coverage: { reporter: 'json' },
+    })
 
-  const coverageMap = await readCoverageMap()
-  const fileCoverages = coverageMap.files().map(file => coverageMap.fileCoverageFor(file))
+    const coverageMap = await readCoverageMap()
+    const fileCoverages = coverageMap.files().map((file) => coverageMap.fileCoverageFor(file))
 
-  expect(fileCoverages).toMatchInlineSnapshot(`
+    expect(fileCoverages).toMatchInlineSnapshot(`
     {
       "<process-cwd>/fixtures/src/node-built-ins.ts": {
         "branches": "0/0 (100%)",
@@ -93,16 +93,20 @@ test.for(['node', 'jsdom'] as const)('vite SSR generated code ignored in { envir
     }
   `)
 
-  const lineCoverages = coverageMap.files().reduce((all, file) => ({
-    [file]: coverageMap.fileCoverageFor(file).getLineCoverage(),
-    ...all,
-  }), {})
+    const lineCoverages = coverageMap.files().reduce(
+      (all, file) => ({
+        [file]: coverageMap.fileCoverageFor(file).getLineCoverage(),
+        ...all,
+      }),
+      {},
+    )
 
-  expect(lineCoverages).toMatchInlineSnapshot(`
+    expect(lineCoverages).toMatchInlineSnapshot(`
     {
       "<process-cwd>/fixtures/src/node-built-ins.ts": {
         "4": 1,
       },
     }
   `)
-})
+  },
+)

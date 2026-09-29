@@ -15,10 +15,7 @@ export function getFn<Task = Test>(key: Task): () => Awaitable<void> {
   return fnMap.get(key as any)
 }
 
-export function setTestFixture(
-  key: TestContext,
-  fixture: TestFixtures,
-): void {
+export function setTestFixture(key: TestContext, fixture: TestFixtures): void {
   testFixtureMap.set(key, fixture)
 }
 

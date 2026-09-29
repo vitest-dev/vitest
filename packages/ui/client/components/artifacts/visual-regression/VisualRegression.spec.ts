@@ -44,10 +44,8 @@ describe('VisualRegression', () => {
     const article = page.getByRole('article')
 
     await expect.element(article).toBeInTheDocument()
-    await expect.element(article.getByRole('heading'))
-      .toHaveTextContent('Visual Regression')
-    await expect.element(article.getByRole('paragraph'))
-      .toHaveTextContent(messageContent)
+    await expect.element(article.getByRole('heading')).toHaveTextContent('Visual Regression')
+    await expect.element(article.getByRole('paragraph')).toHaveTextContent(messageContent)
     await expect.element(article.getByRole('tablist')).toHaveTextContent('')
 
     expect(result.container).toMatchAriaInlineSnapshot(`
@@ -70,10 +68,8 @@ describe('VisualRegression', () => {
       },
     })
 
-    await expect.element(page.getByRole('tablist').getByRole('tab'))
-      .toHaveTextContent('Diff')
-    await expect.element(page.getByRole('tabpanel').getByRole('img'))
-      .toBeInTheDocument()
+    await expect.element(page.getByRole('tablist').getByRole('tab')).toHaveTextContent('Diff')
+    await expect.element(page.getByRole('tabpanel').getByRole('img')).toBeInTheDocument()
     await expect.element(result.locator).toMatchAriaInlineSnapshot(`
       - article:
         - heading "Visual Regression" [level=1]
@@ -99,10 +95,8 @@ describe('VisualRegression', () => {
       },
     })
 
-    await expect.element(page.getByRole('tablist').getByRole('tab'))
-      .toHaveTextContent('Reference')
-    await expect.element(page.getByRole('tabpanel').getByRole('img'))
-      .toBeInTheDocument()
+    await expect.element(page.getByRole('tablist').getByRole('tab')).toHaveTextContent('Reference')
+    await expect.element(page.getByRole('tabpanel').getByRole('img')).toBeInTheDocument()
   })
 
   it('renders actual tab', async () => {
@@ -117,10 +111,8 @@ describe('VisualRegression', () => {
       },
     })
 
-    await expect.element(page.getByRole('tablist').getByRole('tab'))
-      .toHaveTextContent('Actual')
-    await expect.element(page.getByRole('tabpanel').getByRole('img'))
-      .toBeInTheDocument()
+    await expect.element(page.getByRole('tablist').getByRole('tab')).toHaveTextContent('Actual')
+    await expect.element(page.getByRole('tabpanel').getByRole('img')).toBeInTheDocument()
   })
 
   it('renders reference, actual, and slider tabs', async () => {
