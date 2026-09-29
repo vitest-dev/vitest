@@ -8,8 +8,7 @@ function cacheTimestamps(cachePath: string) {
 }
 
 // The import check must not report a false miss, or the cache is rewritten on
-// every run: virtual modules resolve to ids that are not files, and an id may
-// look like an absolute path without being one.
+// every run: virtual modules resolve to ids that are not files.
 test('an unchanged module graph is served from the cache', async () => {
   const cold = await runInlineTests({
     'vitest.config.js': /* js */ `
@@ -19,11 +18,9 @@ test('an unchanged module graph is served from the cache', async () => {
             name: 'answer',
             resolveId(id) {
               if (id === 'virtual:answer') return '\\0virtual:answer'
-              if (id === 'virtual:base' || id === '/virtual/base') return '/virtual/base'
             },
             load(id) {
               if (id === '\\0virtual:answer') return 'export const answer = 42'
-              if (id === '/virtual/base') return 'export const base = 0'
             },
           },
         ],
@@ -35,9 +32,8 @@ test('an unchanged module graph is served from the cache', async () => {
     `,
     'src/a.ts': /* ts */ `
       import { answer } from 'virtual:answer'
-      import { base } from 'virtual:base'
       import { value } from './b'
-      export const sum = answer + base + value
+      export const sum = answer + value
     `,
     'src/b.ts': `export const value = 1`,
     'src/a.test.ts': /* ts */ `
@@ -73,6 +69,71 @@ test('an unchanged module graph is served from the cache', async () => {
   `)
   expect(cacheTimestamps(cachePath)).toEqual(timestamps)
 })
+
+// An id can look like an absolute path without being a file, so the url does
+// not give it back. Windows cannot run such a module: its url has no drive
+// letter, which is not a valid file url there.
+test.skipIf(process.platform === 'win32')(
+  'an import with an id that its url does not give back is served from the cache',
+  async () => {
+    const cold = await runInlineTests({
+      'vitest.config.js': /* js */ `
+        export default {
+          plugins: [
+            {
+              name: 'base',
+              resolveId(id) {
+                if (id === 'virtual:base' || id === '/virtual/base') return '/virtual/base'
+              },
+              load(id) {
+                if (id === '/virtual/base') return 'export const base = 42'
+              },
+            },
+          ],
+          test: {
+            fsModuleCache: true,
+            fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          },
+        }
+      `,
+      'src/a.ts': /* ts */ `
+        import { base } from 'virtual:base'
+        export const sum = base + 1
+      `,
+      'src/a.test.ts': /* ts */ `
+        import { expect, it } from 'vitest'
+        import { sum } from './a'
+        it('reads it', () => {
+          expect(sum).toBe(43)
+        })
+      `,
+    })
+    expect(cold.stderr).toBe('')
+    expect(cold.errorTree()).toMatchInlineSnapshot(`
+      {
+        "src/a.test.ts": {
+          "reads it": "passed",
+        },
+      }
+    `)
+    await cold.ctx?.close()
+
+    const cachePath = join(cold.root, 'node_modules/.vitest-fs-cache')
+    const timestamps = cacheTimestamps(cachePath)
+    expect(timestamps.length).toBeGreaterThan(1)
+
+    const warm = await runVitest({ root: cold.root })
+    expect(warm.stderr).toBe('')
+    expect(warm.errorTree()).toMatchInlineSnapshot(`
+      {
+        "src/a.test.ts": {
+          "reads it": "passed",
+        },
+      }
+    `)
+    expect(cacheTimestamps(cachePath)).toEqual(timestamps)
+  },
+)
 
 // A cached transform embeds the resolved URLs of its imports, so it has to be
 // dropped when those imports no longer resolve to the same modules, even if
