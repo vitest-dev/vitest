@@ -362,8 +362,8 @@ test('a file-based project uses its config file directory as `root`', async () =
 })
 
 test.each([
-  ['relative', '\'./dir\''],
-  ['absolute', 'resolve(import.meta.dirname, \'./dir\')'],
+  ['relative', "'./dir'"],
+  ['absolute', "resolve(import.meta.dirname, './dir')"],
 ])('a file-based project respects the Vite `%s` root', async (_kind, root) => {
   const fs = useTmpFS({
     './vitest.config.ts': ts`
