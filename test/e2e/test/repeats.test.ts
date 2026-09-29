@@ -134,7 +134,6 @@ test('onTestFailed runs only for failed repeats', async () => {
     }
   `)
 })
-
 test('expected failures are evaluated for each repeat', async () => {
   const { errorTree } = await runInlineTests({
     'repeats.test.js': `

@@ -35,6 +35,10 @@ export function ModuleRunnerTransform(): VitePlugin {
           config.environments[name] ??= {}
 
           const environment = config.environments[name]
+          // other environments consumed by the browser are not run by Vitest
+          if (browserEnabled && name !== 'client' && environment.consumer === 'client') {
+            continue
+          }
           environment.dev ??= {}
           // vm tests run using the native import mechanism
           if (name === '__vitest_vm__') {
@@ -58,10 +62,11 @@ export function ModuleRunnerTransform(): VitePlugin {
         if (name === '__vitest_vm__' || name === '__vitest__') {
           return
         }
-        // In browser mode the `client` environment is browser-managed: don't
-        // apply node-runner externalization / `optimizeDeps` to it (that would
-        // discard the browser `optimizeDeps.include`, e.g. `vitest > expect-type`).
-        if (name === 'client' && testConfig.browser?.enabled) {
+        // In browser mode the `client` environment (and any other environment
+        // consumed by the browser) is browser-managed: don't apply node-runner
+        // externalization / `optimizeDeps` to it (that would discard the browser
+        // `optimizeDeps.include`, e.g. `vitest > expect-type`).
+        if (testConfig.browser?.enabled && (name === 'client' || config.consumer === 'client')) {
           return
         }
 
