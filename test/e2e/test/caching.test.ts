@@ -138,7 +138,10 @@ test('if cache key generator is defined, the hash is valid', async () => {
   `)
 })
 
-test.each([['foo', 'bar'], ['bar', 'foo']])('cache key generators are scoped to projects (%s, %s)', async (first, second) => {
+test.each([
+  ['foo', 'bar'],
+  ['bar', 'foo'],
+])('cache key generators are scoped to projects (%s, %s)', async (first, second) => {
   const cold = await runInlineTests({
     'vitest.config.js': `
       import { defineConfig } from 'vitest/config'
