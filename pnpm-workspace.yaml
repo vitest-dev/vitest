@@ -105,6 +105,7 @@ catalog:
   vite: 8.0.11
   vitest-sonar-reporter: 3.0.0
   vue: ^3.5.42
+  wrangler: ^4.142.0
   ws: ^8.21.3
   yauzl: ^3.4.0
 peerDependencyRules:
@@ -120,3 +121,4 @@ allowBuilds:
   protobufjs: true
   sharp: true
   vue-demi: true
+  workerd: true

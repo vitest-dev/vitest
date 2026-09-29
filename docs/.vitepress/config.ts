@@ -31,6 +31,7 @@ export default ({ mode }: { mode: string }) => {
         lang: 'en-US',
         title: vitestName,
         description: vitestDescription,
+        cleanUrls: true,
         srcExclude: ['**/guide/examples/*', '**/guide/cli-generated.md', 'AGENTS.md'],
         locales: {
           root: {
