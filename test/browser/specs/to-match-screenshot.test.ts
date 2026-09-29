@@ -13,8 +13,8 @@ const testName = 'screenshot-snapshot'
 const bgColor = '#fff'
 
 const testContent = /* ts */ `
-import { page, server } from 'vitest/browser'
-import { describe, test } from 'vitest'
+import { page } from 'vitest/browser'
+import { test } from 'vitest'
 import { render } from './utils'
 
 const dataTestId = 'inline-test'
