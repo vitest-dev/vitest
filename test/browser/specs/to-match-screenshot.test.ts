@@ -313,10 +313,10 @@ test.for([{ option: 'retry' }, { option: 'repeats' }] as const)(
       },
     )
 
-    expect(fs.readdir('__screenshots__/basic.test.ts')).toEqual([
-      `screenshot-snapshot-1-chromium-${process.platform}.png`,
-      `screenshot-snapshot-1-firefox-${process.platform}.png`,
-      `screenshot-snapshot-1-webkit-${process.platform}.png`,
-    ])
+    expect(fs.readdir('__screenshots__/basic.test.ts')).toEqual(
+      instances.map(
+        (instance) => `screenshot-snapshot-1-${instance.browser}-${process.platform}.png`,
+      ),
+    )
   },
 )
