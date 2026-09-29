@@ -287,7 +287,7 @@ test('server uses correct port', ({ config, server }) => {
 
 ## test.override <Version>4.1.0</Version> {#test-override}
 
-Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context.html#overriding-fixture-values) for more information.
+Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context#overriding-fixture-values) for more information.
 
 ```ts
 import { test as baseTest, describe, expect } from 'vitest'

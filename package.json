@@ -16,6 +16,7 @@
     "docs": "pnpm -C docs run dev",
     "docs:build": "ROLLDOWN_OPTIONS_VALIDATION=loose pnpm -C docs run build",
     "docs:serve": "pnpm -C docs run serve",
+    "docs:deploy": "pnpm -C docs run deploy",
     "docs:https": "pnpm -C docs run preview-https",
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
     "docs:contributors": "tsx scripts/update-contributors.ts",
