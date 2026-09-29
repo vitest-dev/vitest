@@ -1,6 +1,12 @@
 import type { Span } from '@opentelemetry/api'
 import type { StaticMockCall } from '@vitest/mocker/node'
-import type { DevEnvironment, EnvironmentModuleNode, Rollup, TransformResult } from 'vite'
+import type {
+  DevEnvironment,
+  EnvironmentModuleNode,
+  ResolvedConfig as ViteResolvedConfig,
+  Rollup,
+  TransformResult,
+} from 'vite'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
 import type {
   FetchCachedFileSystemResult,
@@ -9,17 +15,23 @@ import type {
   VitestFetchResult,
 } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
-import type { FileSystemModuleCache } from '../cache/fsModuleCache'
+import type {
+  CachedInlineModuleMeta,
+  CachedModuleImports,
+  FileSystemModuleCache,
+} from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
 import { join } from 'pathe'
+import c from 'tinyrainbow'
 import { fetchModule } from 'vite'
 import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
 import { detectModuleType } from '../resolver'
+import { fsPathFromId } from '../vite'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
 const debugFs = createDebugger('vitest:cache:fs')
@@ -164,7 +176,7 @@ class ModuleFetcher {
       moduleGraphModule,
       options,
     )
-    const importedUrls = this.getSerializedImports(moduleGraphModule)
+    const imports = this.getCachedImports(environment, moduleGraphModule)
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
@@ -172,7 +184,7 @@ class ModuleFetcher {
       result,
       cachePath,
       moduleGraphModule.transformResult,
-      importedUrls,
+      imports,
       !!mappings,
     )
     // remember where the code is stored on disk so that repeat fetches and the
@@ -184,11 +196,19 @@ class ModuleFetcher {
     return cachedResult
   }
 
-  // we need this for UI to be able to show a module graph
-  private getSerializedImports(node: EnvironmentModuleNode): string[] {
-    const imports: string[] = []
-    node.importedModules.forEach((importer) => {
-      imports.push(importer.url)
+  private getCachedImports(
+    environment: DevEnvironment,
+    node: EnvironmentModuleNode,
+  ): CachedModuleImports {
+    const imports: CachedModuleImports = { urls: [], ids: {} }
+    node.importedModules.forEach(({ url, id }) => {
+      if (id == null) {
+        return
+      }
+      imports.urls.push(url)
+      if (id !== urlToId(environment, url)) {
+        imports.ids[url] = id
+      }
     })
     return imports
   }
@@ -245,12 +265,7 @@ class ModuleFetcher {
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<string> {
-    if (
-      moduleGraphModule.file &&
-      // \x00 is a virtual file convention
-      !moduleGraphModule.file.startsWith('\x00') &&
-      !moduleGraphModule.file.startsWith('virtual:')
-    ) {
+    if (moduleGraphModule.file && !isVirtualFile(moduleGraphModule.file)) {
       const result = await this.readFileConcurrently(moduleGraphModule.file)
       if (result != null) {
         return result
@@ -302,6 +317,11 @@ class ModuleFetcher {
       return
     }
 
+    const importedModules = await this.resolveCachedImports(environment, cachedModule)
+    if (!importedModules) {
+      return
+    }
+
     // keep the module graph in sync
     let map: Rollup.SourceMap | null | { mappings: '' } = extractSourceMap(cachedModule.code)
     if (map && cachedModule.file) {
@@ -331,15 +351,10 @@ class ModuleFetcher {
       }
     }
 
-    await Promise.all(
-      cachedModule.importedUrls.map(async (url) => {
-        const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
-        if (moduleNode) {
-          moduleNode.importers.add(moduleGraphModule)
-          moduleGraphModule.importedModules.add(moduleNode)
-        }
-      }),
-    )
+    for (const moduleNode of importedModules) {
+      moduleNode.importers.add(moduleGraphModule)
+      moduleGraphModule.importedModules.add(moduleNode)
+    }
 
     return {
       cached: true as const,
@@ -349,6 +364,43 @@ class ModuleFetcher {
       url: cachedModule.url,
       invalidate: false,
       moduleType,
+    }
+  }
+
+  // the cached code imports the urls that Vite resolved when the module was
+  // transformed, so the entry is stale once any of them points elsewhere
+  private async resolveCachedImports(
+    environment: DevEnvironment,
+    cachedModule: CachedInlineModuleMeta,
+  ): Promise<EnvironmentModuleNode[] | undefined> {
+    const safeModulePaths = getSafeModulePaths(environment)
+    const { urls, ids } = cachedModule.imports
+    const importedModules = await Promise.all(
+      urls.map(async (url) => {
+        const id = Object.hasOwn(ids, url) ? ids[url] : urlToId(environment, url)
+        const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
+        const stale =
+          !moduleNode ||
+          moduleNode.id !== id ||
+          // the resolver trusts /@fs/ urls without checking that the file exists
+          (url.startsWith('/@fs/') && moduleNode.file != null && !existsSync(moduleNode.file))
+        if (stale) {
+          debugFs?.(
+            `${c.red('[stale]')} ${cachedModule.id} imports ${url}, which no longer resolves to ${id}`,
+          )
+          return null
+        }
+        // import analysis marks out-of-root imports as safe to load from
+        // outside `server.fs.allow`; a cached importer never goes through it
+        if (url.startsWith('/@fs/') && moduleNode.file) {
+          safeModulePaths?.add(moduleNode.file)
+        }
+        return moduleNode
+      }),
+    )
+    const resolved = importedModules.filter((moduleNode) => moduleNode != null)
+    if (resolved.length === importedModules.length) {
+      return resolved
     }
   }
 
@@ -382,7 +434,7 @@ class ModuleFetcher {
   }
 
   private sourceLoader(file: string | null): (() => Promise<string | null>) | undefined {
-    if (!file || file.startsWith('\x00') || file.startsWith('virtual:')) {
+    if (!file || isVirtualFile(file)) {
       return undefined
     }
     return () => this.readFileConcurrently(file)
@@ -414,7 +466,7 @@ class ModuleFetcher {
     result: FetchResult,
     cachePath: string,
     transformResult: TransformResult | null,
-    importedUrls: string[] = [],
+    imports?: CachedModuleImports,
     mappings = false,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result ? getCachedResult(result, cachePath) : result
@@ -424,7 +476,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, transformResult, importedUrls, mappings)
+      .saveCachedModule(cachePath, result, transformResult, imports, mappings)
       .then(() => returnResult)
       .catch((error) => {
         debugFs?.(`failed to cache ${cachePath}, serving it inline: ${error}`)
@@ -453,6 +505,30 @@ class ModuleFetcher {
     }
     return readFilePromises.get(file)!
   }
+}
+
+// \x00 is a virtual file convention
+function isVirtualFile(file: string): boolean {
+  return file.startsWith('\x00') || file.startsWith('virtual:')
+}
+
+// inverts the url that import analysis writes for a resolved id
+function urlToId(environment: DevEnvironment, url: string): string {
+  if (url.startsWith('/@fs/')) {
+    return fsPathFromId(url)
+  }
+  if (url[0] === '/') {
+    return environment.config.root + url
+  }
+  return url
+}
+
+// Vite keeps the set out of its public types
+function getSafeModulePaths(environment: DevEnvironment): Set<string> | undefined {
+  const config = environment.getTopLevelConfig() as ViteResolvedConfig & {
+    safeModulePaths?: Set<string>
+  }
+  return config.safeModulePaths
 }
 
 export interface VitestFetchFunction {
