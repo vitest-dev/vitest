@@ -31,17 +31,20 @@ test.each(['forks', 'threads'] as const)(
   'inline diff config object with color functions works in %s pool',
   async (pool) => {
     const filename = resolve('./fixtures/reporters/custom-diff-config.test.ts')
-    const { stderr } = await runVitest({
-      root: './fixtures/reporters',
-      pool,
-      diff: {
-        aAnnotation: 'Expected to be',
-        bAnnotation: 'But got',
-        // @ts-expect-error color functions are not part of the public diff type,
-        // but users pass them at runtime — this is what used to crash the worker.
-        aColor: (s: string) => s,
+    const { stderr } = await runVitest(
+      {
+        root: './fixtures/reporters',
+        pool,
+        diff: {
+          aAnnotation: 'Expected to be',
+          bAnnotation: 'But got',
+          // @ts-expect-error color functions are not part of the public diff type,
+          // but users pass them at runtime — this is what used to crash the worker.
+          aColor: (s: string) => s,
+        },
       },
-    }, [filename])
+      [filename],
+    )
 
     expect(stderr).not.toContain('could not be cloned')
     expect(stderr).not.toContain('DataCloneError')

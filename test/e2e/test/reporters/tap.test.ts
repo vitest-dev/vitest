@@ -2,7 +2,10 @@ import { expect, test } from 'vitest'
 import { runVitest } from '#test-utils'
 
 test('handle custom error without name', async () => {
-  let { stdout, stderr } = await runVitest({ reporters: 'tap', root: './fixtures/reporters/custom-error' })
+  let { stdout, stderr } = await runVitest({
+    reporters: 'tap',
+    root: './fixtures/reporters/custom-error',
+  })
   stdout = stdout.replaceAll(/time=(\S*)/g, 'time=[...]') // strip non-deterministic output
   expect(stdout).toMatchInlineSnapshot(`
     "TAP version 13
@@ -40,7 +43,10 @@ test('handle custom error without name', async () => {
 })
 
 test('tap-flat handles custom error without name', async () => {
-  let { stdout, stderr } = await runVitest({ reporters: 'tap-flat', root: './fixtures/reporters/custom-error' })
+  let { stdout, stderr } = await runVitest({
+    reporters: 'tap-flat',
+    root: './fixtures/reporters/custom-error',
+  })
   stdout = stdout.replaceAll(/time=(\S*)/g, 'time=[...]') // strip non-deterministic output
   expect(stdout).toMatchInlineSnapshot(`
     "TAP version 13

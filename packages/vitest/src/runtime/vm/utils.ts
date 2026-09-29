@@ -18,11 +18,7 @@ export function interopCommonJsModule(
     }
   }
 
-  if (
-    interopDefault !== false
-    && '__esModule' in mod
-    && !isPrimitive(mod.default)
-  ) {
+  if (interopDefault !== false && '__esModule' in mod && !isPrimitive(mod.default)) {
     const defaultKets = Object.keys(mod.default)
     const moduleKeys = Object.keys(mod)
     const allKeys = new Set([...defaultKets, ...moduleKeys])
@@ -42,9 +38,7 @@ export function interopCommonJsModule(
   }
 
   return {
-    keys: Object.keys(mod).filter(
-      key => key !== 'default' && key !== 'module.exports',
-    ),
+    keys: Object.keys(mod).filter((key) => key !== 'default' && key !== 'module.exports'),
     moduleExports: mod,
     defaultExport: mod,
   }
@@ -55,17 +49,15 @@ function isPrimitive(obj: unknown): boolean {
   return !isObject
 }
 
-export const SyntheticModule: typeof VMSyntheticModule = (vm as any)
-  .SyntheticModule
-export const SourceTextModule: typeof VMSourceTextModule = (vm as any)
-  .SourceTextModule
+export const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
+export const SourceTextModule: typeof VMSourceTextModule = (vm as any).SourceTextModule
 
 // `SourceTextModule#hasAsyncGraph` marks the Node 24.9+ vm APIs required to
 // load an ES module graph synchronously (`moduleRequests`, `linkRequests`,
 // `instantiate`, synchronously-completing `evaluate`) — the same APIs Node
 // itself uses for require(esm)
-export const supportsSyncEsmEvaluate: boolean
-  = typeof SourceTextModule?.prototype.hasAsyncGraph === 'function'
+export const supportsSyncEsmEvaluate: boolean =
+  typeof SourceTextModule?.prototype.hasAsyncGraph === 'function'
 
 let lexerInitialized = false
 
@@ -80,18 +72,14 @@ export function hasEsmSyntax(source: string): boolean {
   }
   try {
     return parse(source)[3]
-  }
-  catch {
+  } catch {
     return false
   }
 }
 
 // mirrors Node's require(esm) error codes so user-side catches work uniformly
 
-export function createRequireAsyncModuleError(
-  identifier: string,
-  detail: string,
-): Error {
+export function createRequireAsyncModuleError(identifier: string, detail: string): Error {
   const error: NodeJS.ErrnoException = new Error(
     `require() cannot be used to load ES Module ${identifier}: ${detail}. Use import() instead.`,
   )
@@ -123,7 +111,10 @@ export function setActiveVmExecutor(executor: ActiveVmExecutor | undefined): voi
   activeVmExecutor = executor
 }
 
-export async function activeImportModuleDynamically(specifier: string, referencer: VMModule): Promise<VMModule> {
+export async function activeImportModuleDynamically(
+  specifier: string,
+  referencer: VMModule,
+): Promise<VMModule> {
   if (!activeVmExecutor) {
     throw new Error(`Cannot import "${specifier}": the test context was torn down.`)
   }
@@ -147,8 +138,7 @@ const captureKeysScript = new vm.Script(
 export function captureContextKeys(context: vm.Context): Set<string | symbol> {
   try {
     return new Set(captureKeysScript.runInContext(context))
-  }
-  catch {
+  } catch {
     return new Set()
   }
 }
@@ -171,8 +161,7 @@ const stripScript = new vm.Script(
 export function stripDisposedContext(context: vm.Context, initialKeys: Set<string | symbol>): void {
   try {
     stripScript.runInContext(context)(initialKeys)
-  }
-  catch {
+  } catch {
     // the context is being thrown away; stripping is best-effort
   }
 }

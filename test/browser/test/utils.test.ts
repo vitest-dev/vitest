@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, expect, it, test } from 'vitest'
 import { commands, utils } from 'vitest/browser'
-
 import { inspect } from 'vitest/internal/browser'
 
 afterEach(() => {
@@ -53,7 +52,9 @@ test('should handle DOM content bigger than maxLength', async () => {
   parentDiv.innerHTML = domString
 
   document.body.appendChild(parentDiv)
-  expect(await commands.stripVTControlCharacters(utils.prettyDOM(undefined, maxContent))).toMatchSnapshot()
+  expect(
+    await commands.stripVTControlCharacters(utils.prettyDOM(undefined, maxContent)),
+  ).toMatchSnapshot()
 })
 
 test('should handle shadow DOM content', async () => {
@@ -95,7 +96,11 @@ test('should be able to opt out of shadow DOM content', async () => {
   div.innerHTML = '<no-shadow-root></no-shadow-root>'
   document.body.append(div)
 
-  expect(await commands.stripVTControlCharacters(utils.prettyDOM(undefined, undefined, { printShadowRoot: false }))).toMatchSnapshot()
+  expect(
+    await commands.stripVTControlCharacters(
+      utils.prettyDOM(undefined, undefined, { printShadowRoot: false }),
+    ),
+  ).toMatchSnapshot()
 })
 
 test('changing the defaults works', async () => {
@@ -126,7 +131,9 @@ test('filterNode option filters out matching elements', async () => {
   `
   document.body.append(div)
 
-  const result = await commands.stripVTControlCharacters(utils.prettyDOM(div, undefined, { filterNode: 'script, style, [data-test-hide]' }))
+  const result = await commands.stripVTControlCharacters(
+    utils.prettyDOM(div, undefined, { filterNode: 'script, style, [data-test-hide]' }),
+  )
 
   expect(result).not.toContain('console.log')
   expect(result).not.toContain('color: red')
@@ -187,7 +194,9 @@ test('filterNode with wildcard selector filters nested content', async () => {
   `
   document.body.append(div)
 
-  const result = await commands.stripVTControlCharacters(utils.prettyDOM(div, undefined, { filterNode: '[data-test-hide-content] *' }))
+  const result = await commands.stripVTControlCharacters(
+    utils.prettyDOM(div, undefined, { filterNode: '[data-test-hide-content] *' }),
+  )
 
   expect(result).not.toContain('nested hidden')
   expect(result).not.toContain('deeply nested hidden')
@@ -197,7 +206,7 @@ test('filterNode with wildcard selector filters nested content', async () => {
     "<div>
       <div>
         <div
-          data-test-hide-content=\"\"
+          data-test-hide-content=""
         />
         <span>
           visible

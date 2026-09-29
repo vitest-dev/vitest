@@ -22,7 +22,7 @@ test('vi.mock({ spy: true }) collects coverage of original module', async () => 
 
   const coverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/mock-target.ts')
   const functionCoverage = Object.keys(coverage.fnMap)
-    .map(index => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
+    .map((index) => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
   expect(functionCoverage).toMatchInlineSnapshot(`

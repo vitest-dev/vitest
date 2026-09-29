@@ -4,21 +4,8 @@ import { PNG } from 'pngjs'
 
 const codec: Codec<ParserOptions, Metadata, PackerOptions> = {
   decode: (buffer, options) => {
-    const {
-      data,
-      alpha,
-      bpp,
-      color,
-      colorType,
-      depth,
-      height,
-      interlace,
-      palette,
-      width,
-    } = PNG.sync.read(
-      Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer),
-      options,
-    )
+    const { data, alpha, bpp, color, colorType, depth, height, interlace, palette, width } =
+      PNG.sync.read(Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer), options)
 
     return {
       metadata: {

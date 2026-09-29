@@ -7,10 +7,7 @@ test('{ allowExternal: true } includes files outside project root', async () => 
     coverage: {
       allowExternal: true,
       reporter: 'json',
-      include: [
-        '**/fixtures/src/math.ts',
-        '**/fixtures/external-math.ts',
-      ],
+      include: ['**/fixtures/src/math.ts', '**/fixtures/external-math.ts'],
     },
   })
   const coverageMap = await readCoverageMap()
@@ -29,17 +26,14 @@ test('{ allowExternal: false } excludes files outside project root', async () =>
     coverage: {
       allowExternal: false,
       reporter: 'json',
-      include: [
-        '**/fixtures/src/math.ts',
-        '**/fixtures/external-math.ts',
-      ],
+      include: ['**/fixtures/src/math.ts', '**/fixtures/external-math.ts'],
     },
   })
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
 
   // File outside project root
-  expect(files.find(file => file.includes('test-utils/fixtures/external-math.ts'))).toBeFalsy()
+  expect(files.find((file) => file.includes('test-utils/fixtures/external-math.ts'))).toBeFalsy()
 
   // Files inside project root should always be included
   expect(files).toContain('<process-cwd>/fixtures/src/math.ts')

@@ -24,7 +24,7 @@ test('query param based transforms are resolved properly', async () => {
   // Query params change which functions end up in transform result,
   // verify that all functions are present
   const functionCoverage = Object.keys(coverage.fnMap)
-    .map(index => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
+    .map((index) => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
   expect(functionCoverage).toMatchInlineSnapshot(`
@@ -49,35 +49,37 @@ test('query param based transforms are resolved properly', async () => {
   `)
 })
 
-test.each([{ changed: 'HEAD' }, { coverage: { changed: 'HEAD' } }])('query param transforms respect %s', async (options) => {
-  const filePath = resolve('./fixtures/src/query-param-transformed.ts')
-  const original = readFileSync(filePath, 'utf8')
+test.each([{ changed: 'HEAD' }, { coverage: { changed: 'HEAD' } }])(
+  'query param transforms respect %s',
+  async (options) => {
+    const filePath = resolve('./fixtures/src/query-param-transformed.ts')
+    const original = readFileSync(filePath, 'utf8')
 
-  onTestFinished(() => writeFileSync(filePath, original, 'utf8'))
-  writeFileSync(filePath, `${original}\nexport const changedMarker = true\n`, 'utf8')
+    onTestFinished(() => writeFileSync(filePath, original, 'utf8'))
+    writeFileSync(filePath, `${original}\nexport const changedMarker = true\n`, 'utf8')
 
-  await runVitest({
-    config: 'fixtures/configs/vitest.config.query-param-transform.ts',
-    include: ['fixtures/test/query-param.test.ts'],
-    ...options,
-    coverage: { reporter: 'json', ...options.coverage },
-  })
+    await runVitest({
+      config: 'fixtures/configs/vitest.config.query-param-transform.ts',
+      include: ['fixtures/test/query-param.test.ts'],
+      ...options,
+      coverage: { reporter: 'json', ...options.coverage },
+    })
 
-  const coverageMap = await readCoverageMap()
+    const coverageMap = await readCoverageMap()
 
-  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    expect(coverageMap.files()).toMatchInlineSnapshot(`
     [
       "<process-cwd>/fixtures/src/query-param-transformed.ts",
     ]
   `)
 
-  const coverage = coverageMap.fileCoverageFor(coverageMap.files()[0])
+    const coverage = coverageMap.fileCoverageFor(coverageMap.files()[0])
 
-  const functionCoverage = Object.keys(coverage.fnMap)
-    .map(index => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+    const functionCoverage = Object.keys(coverage.fnMap)
+      .map((index) => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
+      .sort((a, b) => a.name.localeCompare(b.name))
 
-  expect(functionCoverage).toMatchInlineSnapshot(`
+    expect(functionCoverage).toMatchInlineSnapshot(`
     [
       {
         "hits": 1,
@@ -97,4 +99,5 @@ test.each([{ changed: 'HEAD' }, { coverage: { changed: 'HEAD' } }])('query param
       },
     ]
   `)
-})
+  },
+)

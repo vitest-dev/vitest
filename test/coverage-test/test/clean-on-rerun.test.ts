@@ -120,11 +120,7 @@ async function startWatchMode(options: { cleanOnRerun: boolean }) {
     watch: true,
     include: [FIXTURE, 'fixtures/test/even.test.ts'],
     coverage: {
-      include: [
-        'fixtures/src/math.ts',
-        'fixtures/src/even.ts',
-        'fixtures/src/untested-file.ts',
-      ],
+      include: ['fixtures/src/math.ts', 'fixtures/src/even.ts', 'fixtures/src/untested-file.ts'],
       reporter: 'json',
       ...options,
     },
@@ -144,11 +140,13 @@ async function getFunctionCoverageCounts(file: 'math.ts' | 'even.ts') {
   const coverageMap = await readCoverageMap()
   const fileCoverage = coverageMap.fileCoverageFor(`<process-cwd>/fixtures/src/${file}`)
 
-  return Object.entries(fileCoverage.fnMap).reduce((total, [key, data]) => ({
-    ...total,
-    ...(fileCoverage.f[key] ? { [data.name]: fileCoverage.f[key] } : {}),
-
-  }), {} as Record<'sum' | 'subtract' | 'multiply' | 'remainder', number>)
+  return Object.entries(fileCoverage.fnMap).reduce(
+    (total, [key, data]) => ({
+      ...total,
+      ...(fileCoverage.f[key] ? { [data.name]: fileCoverage.f[key] } : {}),
+    }),
+    {} as Record<'sum' | 'subtract' | 'multiply' | 'remainder', number>,
+  )
 }
 
 async function getReportedFiles() {

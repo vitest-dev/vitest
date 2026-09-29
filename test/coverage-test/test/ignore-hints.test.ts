@@ -1,7 +1,7 @@
 /*
  * Ignore hints are implemented by 3rd party packages but there's
  * Vitest related logic (esbuild) that makes them work.
-*/
+ */
 
 import { expect } from 'vitest'
 import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
@@ -38,8 +38,7 @@ test('ignore hints work', async () => {
   // Line 25 = Ignore v8
   if (isV8Provider()) {
     expect(lines[25]).toBeUndefined()
-  }
-  else {
+  } else {
     expect(lines[25]).toBeGreaterThanOrEqual(1)
   }
 })

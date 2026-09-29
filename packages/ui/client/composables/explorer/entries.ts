@@ -5,7 +5,7 @@ export function replaceSubtreeEntries(
   node: UITaskTreeNode,
   subtree: readonly UITaskTreeNode[],
 ) {
-  const start = entries.findIndex(entry => entry.id === node.id)
+  const start = entries.findIndex((entry) => entry.id === node.id)
   if (start < 0) {
     return [...entries]
   }
@@ -15,9 +15,5 @@ export function replaceSubtreeEntries(
     end++
   }
 
-  return [
-    ...entries.slice(0, start),
-    ...subtree,
-    ...entries.slice(end),
-  ]
+  return [...entries.slice(0, start), ...subtree, ...entries.slice(end)]
 }

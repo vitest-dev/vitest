@@ -4,7 +4,12 @@ import { replaceSubtreeEntries } from '~/composables/explorer/entries'
 import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
-import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
+import {
+  createOrUpdateNode,
+  createOrUpdateSuiteTask,
+  isFileNode,
+  isParentNode,
+} from '~/composables/explorer/utils'
 
 /**
  * Expand the node: only direct children will be expanded
@@ -24,15 +29,8 @@ import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode }
  * @param search The search applied.
  * @param filter The filter applied.
  */
-export function runExpandNode(
-  id: string,
-  search: SearchMatcher,
-  filter: Filter,
-) {
-  const entry = createOrUpdateSuiteTask(
-    id,
-    false,
-  )
+export function runExpandNode(id: string, search: SearchMatcher, filter: Filter) {
+  const entry = createOrUpdateSuiteTask(id, false)
   if (!entry) {
     return
   }
@@ -49,16 +47,13 @@ export function runExpandNode(
 
   const treeItems = new Set(openedTreeItems.value)
   treeItems.add(node.id)
-  const filteredSubtree = filterNode(
-    node,
-    {
-      nodes: explorerTree.nodes,
-      tasks: client.state.idMap,
-      search,
-      filter,
-      slowTestThreshold: config.value.slowTestThreshold,
-    },
-  )
+  const filteredSubtree = filterNode(node, {
+    nodes: explorerTree.nodes,
+    tasks: client.state.idMap,
+    search,
+    filter,
+    slowTestThreshold: config.value.slowTestThreshold,
+  })
 
   const subtree = isFileNode(node) ? filteredSubtree : [node, ...filteredSubtree]
   const entries = replaceSubtreeEntries(uiEntries.value, node, subtree)
@@ -90,33 +85,23 @@ export function runExpandNode(
  * @param search The search applied.
  * @param filter The filter applied.
  */
-export function runExpandAll(
-  search: SearchMatcher,
-  filter: Filter,
-) {
+export function runExpandAll(search: SearchMatcher, filter: Filter) {
   expandAllNodes(explorerTree.root.tasks, false)
-  const entries = filterAll(
-    search,
-    filter,
-  )
+  const entries = filterAll(search, filter)
   treeFilter.value.expandAll = false
   openedTreeItems.value = []
   uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
 }
 
-export function expandNodesOnEndRun(
-  ids: Set<string>,
-  end: boolean,
-) {
+export function expandNodesOnEndRun(ids: Set<string>, end: boolean) {
   if (ids.size) {
     for (const node of uiEntries.value) {
       if (ids.has(node.id)) {
         node.expanded = true
       }
     }
-  }
-  else if (end) {
+  } else if (end) {
     expandAllNodes(uiEntries.value.filter(isFileNode), true)
   }
 }

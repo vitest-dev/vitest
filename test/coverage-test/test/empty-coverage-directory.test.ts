@@ -18,11 +18,14 @@ test('empty coverage directory is cleaned after tests', async () => {
 })
 
 test('empty coverage directory is cleaned after failing test run', async () => {
-  const { exitCode } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    testNamePattern: 'failing test',
-    coverage: { reporter: 'text' },
-  }, { throwOnError: false })
+  const { exitCode } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      testNamePattern: 'failing test',
+      coverage: { reporter: 'text' },
+    },
+    { throwOnError: false },
+  )
 
   expect(existsSync('./coverage')).toBe(false)
   expect(exitCode).toBe(1)

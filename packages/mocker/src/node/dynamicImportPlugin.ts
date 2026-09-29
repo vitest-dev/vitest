@@ -21,7 +21,7 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
     transform: {
       order: 'post',
       handler(source, id) {
-      // TODO: test is not called for static imports
+        // TODO: test is not called for static imports
         if (!regexDynamicImport.test(source)) {
           return
         }
@@ -54,8 +54,7 @@ export function injectDynamicImport(
   let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
-  }
-  catch (err) {
+  } catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)
     return
   }

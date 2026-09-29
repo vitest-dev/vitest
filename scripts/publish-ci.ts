@@ -11,7 +11,9 @@ const $$ = $({ stdio: 'inherit' })
 
 async function main() {
   if (process.env.VITE_TEST_WATCHER_DEBUG !== 'false') {
-    throw new Error(`Cannot release Vitest without VITE_TEST_WATCHER_DEBUG=${process.env.VITE_TEST_WATCHER_DEBUG} environment variable. `)
+    throw new Error(
+      `Cannot release Vitest without VITE_TEST_WATCHER_DEBUG=${process.env.VITE_TEST_WATCHER_DEBUG} environment variable. `,
+    )
   }
 
   const version = process.argv[2]

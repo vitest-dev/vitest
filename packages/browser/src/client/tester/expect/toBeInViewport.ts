@@ -33,11 +33,7 @@ export default function toBeInViewport(
         const ratioText = expectedRatio > 0 ? ` with ratio ${expectedRatio}` : ''
         const actualRatioText = ratio !== undefined ? ` (actual ratio: ${ratio.toFixed(3)})` : ''
         return [
-          this.utils.matcherHint(
-            `${this.isNot ? '.not' : ''}.toBeInViewport`,
-            'element',
-            '',
-          ),
+          this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toBeInViewport`, 'element', ''),
           '',
           `Received element ${is} in viewport${ratioText}${actualRatioText}:`,
           `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
@@ -51,7 +47,10 @@ export default function toBeInViewport(
  * Get viewport intersection ratio using IntersectionObserver API
  * This implementation follows Playwright's approach using IntersectionObserver as the primary mechanism
  */
-async function getViewportIntersection(element: HTMLElement | SVGElement, expectedRatio: number): Promise<{ pass: boolean; ratio?: number }> {
+async function getViewportIntersection(
+  element: HTMLElement | SVGElement,
+  expectedRatio: number,
+): Promise<{ pass: boolean; ratio?: number }> {
   // Use IntersectionObserver API to get the intersection ratio
   // Following Playwright's exact pattern from viewportRatio function
   const intersectionRatio = await new Promise<number>((resolve) => {
@@ -59,8 +58,7 @@ async function getViewportIntersection(element: HTMLElement | SVGElement, expect
     const observer = new IntersectionObserver((entries) => {
       if (entries.length > 0) {
         resolve(entries[0].intersectionRatio)
-      }
-      else {
+      } else {
         resolve(0)
       }
       observer.disconnect()
@@ -75,7 +73,7 @@ async function getViewportIntersection(element: HTMLElement | SVGElement, expect
 
   // Apply the same logic as Playwright:
   // ratio > 0 && ratio > (expectedRatio - 1e-9)
-  const pass = intersectionRatio > 0 && intersectionRatio > (expectedRatio - 1e-9)
+  const pass = intersectionRatio > 0 && intersectionRatio > expectedRatio - 1e-9
 
   return { pass, ratio: intersectionRatio }
 }

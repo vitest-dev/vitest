@@ -1,16 +1,14 @@
 // @vitest-environment node
 
 import type { defineWebWorkers } from '@vitest/web-worker/pure'
-
 import { version } from 'node:process'
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
 import MyObjectWorker from '../src/web-worker/objectWorker?worker'
 import MySelfWorker from '../src/web-worker/selfWorker?worker'
 import MySharedWorker from '../src/web-worker/sharedWorker?sharedworker'
-import GlobalsWorker from '../src/web-worker/worker-globals?worker'
 import MyWorker from '../src/web-worker/worker?worker'
+import GlobalsWorker from '../src/web-worker/worker-globals?worker'
 import '@vitest/web-worker'
 
 const major = Number(version.split('.')[0].slice(1))
@@ -30,14 +28,12 @@ describe.runIf(major >= 17)('when node supports structuredClone', () => {
       worker.onmessage = (e) => {
         try {
           expect(e).toBeInstanceOf(MessageEvent)
-          expect(e.data, 'doesn\'t keep reference').not.toBe(obj)
+          expect(e.data, "doesn't keep reference").not.toBe(obj)
           expect(e.data, 'shape is equal').toEqual(obj)
           resolve()
-        }
-        catch (err) {
+        } catch (err) {
           reject(err)
-        }
-        finally {
+        } finally {
           worker.terminate()
         }
       }
@@ -58,12 +54,9 @@ describe.runIf(major >= 17)('when node supports structuredClone', () => {
         try {
           expect(e.type).toBe('messageerror')
           expect(e).toBeInstanceOf(MessageEvent)
-          expect(e.data.message).toContain(
-            'could not be cloned.',
-          )
+          expect(e.data.message).toContain('could not be cloned.')
           resolve()
-        }
-        catch (err) {
+        } catch (err) {
           reject(err)
         }
       }
@@ -97,22 +90,24 @@ describe('when passing down custom clone', () => {
       worker.onmessage = (e) => {
         try {
           expect(e).toBeInstanceOf(MessageEvent)
-          expect(e.data, 'doesn\'t keep reference').not.toBe(obj)
-          expect(e.data, 'shape is not equal, don\'t transfer buffer').toEqual({ hello: 'world' })
-          expect(console.warn).toBeCalledWith(expect.stringContaining('[@vitest/web-worker] `structuredClone` is not supported in this'))
+          expect(e.data, "doesn't keep reference").not.toBe(obj)
+          expect(e.data, "shape is not equal, don't transfer buffer").toEqual({ hello: 'world' })
+          expect(console.warn).toBeCalledWith(
+            expect.stringContaining(
+              '[@vitest/web-worker] `structuredClone` is not supported in this',
+            ),
+          )
           resolve()
-        }
-        catch (err) {
+        } catch (err) {
           reject(err)
-        }
-        finally {
+        } finally {
           worker.terminate()
         }
       }
     })
   })
 
-  it('doesn\'t clone, if asked to', () => {
+  it("doesn't clone, if asked to", () => {
     expect.assertions(3)
 
     console.warn = vi.fn()
@@ -133,11 +128,9 @@ describe('when passing down custom clone', () => {
           expect(e.data, 'keeps reference').toBe(obj)
           expect(console.warn).not.toHaveBeenCalled()
           resolve()
-        }
-        catch (err) {
+        } catch (err) {
           reject(err)
-        }
-        finally {
+        } finally {
           worker.terminate()
         }
       }
@@ -146,7 +139,7 @@ describe('when passing down custom clone', () => {
 })
 
 function sleep(time: number) {
-  return new Promise(resolve => setTimeout(resolve, time))
+  return new Promise((resolve) => setTimeout(resolve, time))
 }
 
 function testWorker(worker: Worker) {
@@ -206,17 +199,19 @@ it('self injected into worker and its deps should be equal', async () => {
 
   await sleep(0)
 
-  expect(await testSelfWorker(new Worker(new URL('../src/web-worker/selfWorker.ts', import.meta.url)))).toBeTruthy()
+  expect(
+    await testSelfWorker(new Worker(new URL('../src/web-worker/selfWorker.ts', import.meta.url))),
+  ).toBeTruthy()
   // wait for clear worker mod cache
   await sleep(0)
-  expect(await testSelfWorker(new Worker(new URL('../src/web-worker/selfWorker.ts', import.meta.url)))).toBeTruthy()
+  expect(
+    await testSelfWorker(new Worker(new URL('../src/web-worker/selfWorker.ts', import.meta.url))),
+  ).toBeTruthy()
 })
 
-const cloneTypes = [
-  'native',
-  'ponyfill',
-  'none',
-] satisfies Array<NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']>
+const cloneTypes = ['native', 'ponyfill', 'none'] satisfies Array<
+  NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']
+>
 cloneTypes.forEach((clone) => {
   describe(`defineWebWorkers with clone=${clone}`, () => {
     beforeEach(() => {
@@ -232,7 +227,7 @@ cloneTypes.forEach((clone) => {
       const worker = new MyWorker()
       const channel = new MessageChannel()
       const promise = new Promise<string>((resolve, reject) => {
-        channel.port1.onmessage = e => resolve(e.data as string)
+        channel.port1.onmessage = (e) => resolve(e.data as string)
         channel.port1.onmessageerror = reject
       })
       worker.postMessage('hello', [channel.port2])
@@ -240,18 +235,21 @@ cloneTypes.forEach((clone) => {
     })
 
     // Skipped for 'ponyfill' because it does not support transferring MessagePort objects.
-    it.skipIf(clone === 'ponyfill')('transfers a MessagePort object in the data argument to worker and the passed port works', async () => {
-      expect.assertions(1)
+    it.skipIf(clone === 'ponyfill')(
+      'transfers a MessagePort object in the data argument to worker and the passed port works',
+      async () => {
+        expect.assertions(1)
 
-      const worker = new MyWorker()
-      const channel = new MessageChannel()
-      const promise = new Promise<string>((resolve, reject) => {
-        channel.port1.onmessage = e => resolve(e.data as string)
-        channel.port1.onmessageerror = reject
-      })
-      worker.postMessage({ port: channel.port2 }, [channel.port2])
-      await expect(promise).resolves.toBe('Reply via port in data')
-    })
+        const worker = new MyWorker()
+        const channel = new MessageChannel()
+        const promise = new Promise<string>((resolve, reject) => {
+          channel.port1.onmessage = (e) => resolve(e.data as string)
+          channel.port1.onmessageerror = reject
+        })
+        worker.postMessage({ port: channel.port2 }, [channel.port2])
+        await expect(promise).resolves.toBe('Reply via port in data')
+      },
+    )
   })
 })
 
@@ -311,7 +309,7 @@ it('shared worker with path works', async () => {
   await expect(sendOnMessage(worker, 'event')).resolves.toBe('event')
 })
 
-it('doesn\'t trigger events, if closed', async () => {
+it("doesn't trigger events, if closed", async () => {
   const worker = new MySharedWorker()
   worker.port.close()
   await new Promise((resolve) => {
@@ -335,8 +333,7 @@ it('returns globals on self correctly', async () => {
           origin: 'http://localhost:3000',
         })
         resolve()
-      }
-      catch (err) {
+      } catch (err) {
         reject(err)
       }
     }

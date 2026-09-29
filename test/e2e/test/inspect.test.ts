@@ -2,7 +2,6 @@ import type { InspectorNotification } from 'node:inspector'
 import { version as viteVersion } from 'vite'
 import { expect, test } from 'vitest'
 import WebSocket from 'ws'
-
 import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
@@ -34,15 +33,14 @@ test('--inspect-brk stops at test file', async () => {
   // Verify that debugger paused on test file
   const response = receive()
   send({ method: 'Debugger.getScriptSource', params: { scriptId } })
-  const { result } = await response as any
+  const { result } = (await response) as any
 
   if (viteVersion[0] >= '6') {
     // vite ssr transform wraps import by
     //   (0, __vite_ssr_import_0__.test)(...)
     expect(result.scriptSource).toContain('test)("sum", () => {')
     expect(result.scriptSource).toContain('expect)(1 + 1).toBe(2)')
-  }
-  else {
+  } else {
     expect(result.scriptSource).toContain('test("sum", () => {')
     expect(result.scriptSource).toContain('expect(1 + 1).toBe(2)')
   }
@@ -80,7 +78,7 @@ async function createChannel(url: string) {
     ws.send(JSON.stringify({ ...message, id: id++ }))
   }
 
-  await new Promise(r => ws.on('open', r))
+  await new Promise((r) => ws.on('open', r))
 
   return { receive, send }
 }

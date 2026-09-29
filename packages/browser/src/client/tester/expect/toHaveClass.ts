@@ -29,15 +29,13 @@ export default function toHaveClass(
   const expected = expectedClassNames.reduce(
     (acc, className) => {
       return acc.concat(
-        typeof className === 'string' || !className
-          ? splitClassNames(className)
-          : className,
+        typeof className === 'string' || !className ? splitClassNames(className) : className,
       )
     },
     [] as (string | RegExp)[],
   )
 
-  const hasRegExp = expected.some(className => className instanceof RegExp)
+  const hasRegExp = expected.some((className) => className instanceof RegExp)
   if (options.exact && hasRegExp) {
     throw new Error('Exact option does not support RegExp expected class names')
   }
@@ -113,8 +111,7 @@ function getExpectedClassNamesAndOptions(
   if (typeof lastParam === 'object' && !(lastParam instanceof RegExp)) {
     expectedClassNames = params
     options = lastParam
-  }
-  else {
+  } else {
     expectedClassNames = params.concat(lastParam)
     options = { exact: false }
   }
@@ -125,13 +122,13 @@ function splitClassNames(str: string | undefined | null): string[] {
   if (!str) {
     return []
   }
-  return str.split(/\s+/).filter(s => s.length > 0)
+  return str.split(/\s+/).filter((s) => s.length > 0)
 }
 
 function isSubset(subset: (string | RegExp)[], superset: string[]) {
-  return subset.every(strOrRegexp =>
+  return subset.every((strOrRegexp) =>
     typeof strOrRegexp === 'string'
       ? superset.includes(strOrRegexp)
-      : superset.some(className => strOrRegexp.test(className)),
+      : superset.some((className) => strOrRegexp.test(className)),
   )
 }

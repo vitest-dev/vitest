@@ -17,6 +17,6 @@ process.emit = function (event, warning) {
     return
   }
 
-  // eslint-disable-next-line prefer-rest-params
+  // oxlint-disable-next-line prefer-rest-params
   return Reflect.apply(emit, this, arguments)
 }

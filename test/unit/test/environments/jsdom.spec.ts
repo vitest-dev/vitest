@@ -24,21 +24,35 @@ test('fetch, Request, Response, and BroadcastChannel are available', () => {
 })
 
 test('Fetch API accepts other APIs', async () => {
-  expect.soft(() => new Request('http://localhost', { signal: new AbortController().signal })).not.toThrow()
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() })).not.toThrow()
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() })).not.toThrow()
+  expect
+    .soft(() => new Request('http://localhost', { signal: new AbortController().signal }))
+    .not.toThrow()
+  expect
+    .soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() }))
+    .not.toThrow()
+  expect
+    .soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() }))
+    .not.toThrow()
   expect.soft(() => new Request(new URL('https://localhost'))).not.toThrow()
 
   const request = new Request('http://localhost')
   expect.soft(request.headers).toBeInstanceOf(Headers)
 
-  expect.soft(
-    () => new Request('http://localhost', { method: 'POST', body: new URLSearchParams([['key', 'value']]) }),
-  ).not.toThrow()
+  expect
+    .soft(
+      () =>
+        new Request('http://localhost', {
+          method: 'POST',
+          body: new URLSearchParams([['key', 'value']]),
+        }),
+    )
+    .not.toThrow()
 
   const searchParams = new URLSearchParams()
   searchParams.set('key', 'value')
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrow()
+  expect
+    .soft(() => new Request('http://localhost', { method: 'POST', body: searchParams }))
+    .not.toThrow()
 
   const clone = request.clone()
   expect.soft(clone).toBeInstanceOf(Request)
@@ -59,13 +73,15 @@ describe('FormData', () => {
     const formData = new FormData()
     formData.set('hello', 'world')
 
-    await expect((async () => {
-      const req = new Request('http://localhost:3000/', {
-        method: 'POST',
-        body: formData,
-      })
-      await req.formData()
-    })()).resolves.not.toThrow()
+    await expect(
+      (async () => {
+        const req = new Request('http://localhost:3000/', {
+          method: 'POST',
+          body: formData,
+        })
+        await req.formData()
+      })(),
+    ).resolves.not.toThrow()
   })
 
   test('can pass down form data from a FORM element', async () => {
@@ -79,17 +95,17 @@ describe('FormData', () => {
     form.append(hello)
 
     const formData = new FormData(form)
-    expect([...formData.entries()]).toEqual([
-      ['hello', 'world'],
-    ])
+    expect([...formData.entries()]).toEqual([['hello', 'world']])
 
-    await expect((async () => {
-      const req = new Request('http://localhost:3000/', {
-        method: 'POST',
-        body: formData,
-      })
-      await req.formData()
-    })()).resolves.not.toThrow()
+    await expect(
+      (async () => {
+        const req = new Request('http://localhost:3000/', {
+          method: 'POST',
+          body: formData,
+        })
+        await req.formData()
+      })(),
+    ).resolves.not.toThrow()
   })
 
   test('can pass down form data from a FORM element with a submitter', async () => {
@@ -114,13 +130,15 @@ describe('FormData', () => {
       ['include', 'submitter'],
     ])
 
-    await expect((async () => {
-      const req = new Request('http://localhost:3000/', {
-        method: 'POST',
-        body: formData,
-      })
-      await req.formData()
-    })()).resolves.not.toThrow()
+    await expect(
+      (async () => {
+        const req = new Request('http://localhost:3000/', {
+          method: 'POST',
+          body: formData,
+        })
+        await req.formData()
+      })(),
+    ).resolves.not.toThrow()
   })
 
   // https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData#exceptions
@@ -147,8 +165,7 @@ describe('FormData', () => {
     try {
       // can't use toThrow here because DOMException is not an Error
       const _ = new FormData(form1, submitter)
-    }
-    catch (error: any) {
+    } catch (error: any) {
       const expectedError = new DOMException(
         'The specified element is not owned by this form element',
         'NotFoundError',
@@ -181,6 +198,13 @@ describe('FormData', () => {
     const retrievedBlob = form.get(key)
 
     expect(retrievedBlob).toBeInstanceOf(File)
+  })
+
+  test('keeps Blob bytes when used as a Request body', async () => {
+    const blob = new Blob(['hello world'], { type: 'text/plain' })
+    const request = new Request('http://localhost/', { method: 'POST', body: blob })
+
+    expect(await request.text()).toBe('hello world')
   })
 })
 
@@ -221,9 +245,11 @@ test('can pass down the same abort signal many times without a warning', ({ onTe
     })
   }
 
-  expect(emitWarning).not.toHaveBeenCalledWith(expect.objectContaining({
-    message: expect.stringContaining('Possible EventTarget memory leak detected.'),
-  }))
+  expect(emitWarning).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: expect.stringContaining('Possible EventTarget memory leak detected.'),
+    }),
+  )
 })
 
 test('DOM APIs addEventListener allow null as third parameter', () => {
@@ -231,7 +257,7 @@ test('DOM APIs addEventListener allow null as third parameter', () => {
   document.body.append(element)
   const spy = vi.fn()
 
-  // eslint-disable-next-line ts/ban-ts-comment
+  // oxlint-disable-next-line typescript/ban-ts-comment
   // @ts-expect-error
   element.addEventListener('click', spy, null)
 
@@ -272,20 +298,25 @@ test('toContain correctly handles DOM nodes', () => {
 
   expect(() => {
     expect(wrapper).toContain('some-element')
-  }).toThrowErrorMatchingInlineSnapshot(`[TypeError: toContain() expected a DOM node as the argument, but got string]`)
+  }).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: toContain() expected a DOM node as the argument, but got string]`,
+  )
 
   expect(() => {
     expect(wrapper.classList).toContain('flex-row')
-  }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected "flex flex-col" to contain "flex-row"]`)
+  }).toThrowErrorMatchingInlineSnapshot(
+    `[AssertionError: expected "flex flex-col" to contain "flex-row"]`,
+  )
   expect(() => {
     expect(wrapper.classList).toContain(2)
-  }).toThrowErrorMatchingInlineSnapshot(`[TypeError: class name value must be string, received "number"]`)
+  }).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: class name value must be string, received "number"]`,
+  )
 
   try {
     expect(wrapper.classList).toContain('flex-row')
     expect.unreachable()
-  }
-  catch (err: any) {
+  } catch (err: any) {
     expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex flex-col flex-row"
       Received: "flex flex-col""
@@ -295,8 +326,7 @@ test('toContain correctly handles DOM nodes', () => {
   try {
     expect(wrapper.classList).not.toContain('flex')
     expect.unreachable()
-  }
-  catch (err: any) {
+  } catch (err: any) {
     expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex-col"
       Received: "flex flex-col""
@@ -304,7 +334,7 @@ test('toContain correctly handles DOM nodes', () => {
   }
 })
 
-test('request doesn\'t support absolute URL because jsdom doesn\'t provide compatible Request so Vitest is using Node.js Request', () => {
+test("request doesn't support absolute URL because jsdom doesn't provide compatible Request so Vitest is using Node.js Request", () => {
   expect(() => {
     const _r = new Request('/api', { method: 'GET' })
   }).toThrow(/Failed to parse URL/)
@@ -317,6 +347,17 @@ test('URL.createObjectUrl works properly', () => {
   expect(() => {
     URL.createObjectURL(new File([], 'name.js'))
   }).not.toThrow()
+})
+
+test('URL.createObjectURL keeps the Blob bytes', async () => {
+  const url = URL.createObjectURL(new Blob(['hello world'], { type: 'text/plain' }))
+  expect(url).toMatch(/^blob:/)
+
+  const response = await fetch(url)
+  URL.revokeObjectURL(url)
+
+  expect(response.headers.get('content-type')).toBe('text/plain')
+  expect(await response.text()).toBe('hello world')
 })
 
 test('compat classes preserve their .name property', () => {

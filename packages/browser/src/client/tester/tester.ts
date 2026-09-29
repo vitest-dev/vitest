@@ -23,9 +23,10 @@ import { browserHashMap, initiateRunner } from './runner'
 import { CommandsManager } from './tester-utils'
 
 const debugVar = getConfig().env.VITEST_BROWSER_DEBUG
-const debug = debugVar && debugVar !== 'false'
-  ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
-  : undefined
+const debug =
+  debugVar && debugVar !== 'false'
+    ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
+    : undefined
 
 const otelConfig = getConfig().experimental.openTelemetry
 const traces = new Traces({
@@ -85,15 +86,14 @@ channel.addEventListener('message', async (e) => {
         state.metaEnv.VITEST_WORKER_ID = String(workerId)
 
         if (method === 'collect') {
-          await executeTests('collect', files).catch(err => unhandledError(err, 'Collect Error'))
-        }
-        else {
-          await executeTests('run', files).catch(err => unhandledError(err, 'Run Error'))
+          await executeTests('collect', files).catch((err) => unhandledError(err, 'Collect Error'))
+        } else {
+          await executeTests('run', files).catch((err) => unhandledError(err, 'Run Error'))
         }
         break
       }
       case 'cleanup': {
-        await cleanup().catch(err => unhandledError(err, 'Cleanup Error'))
+        await cleanup().catch((err) => unhandledError(err, 'Cleanup Error'))
         rootTesterSpan?.span.end()
         await traces.finish()
         break
@@ -102,12 +102,9 @@ channel.addEventListener('message', async (e) => {
         await traces.waitInit()
         const tracesContext = traces.getContextFromCarrier(data.otelCarrier)
         traces.recordInitSpan(tracesContext)
-        rootTesterSpan = traces.startContextSpan(
-          `vitest.browser.tester.run`,
-          tracesContext,
-        )
+        rootTesterSpan = traces.startContextSpan(`vitest.browser.tester.run`, tracesContext)
         traces.bind(rootTesterSpan.context)
-        await prepare(data).catch(err => unhandledError(err, 'Prepare Error'))
+        await prepare(data).catch((err) => unhandledError(err, 'Prepare Error'))
         break
       }
       case 'viewport:done':
@@ -120,13 +117,11 @@ channel.addEventListener('message', async (e) => {
         unhandledError(error, 'Unknown Event')
       }
     }
-  }
-  catch (error: any) {
+  } catch (error: any) {
     // errors not handled by the cases above (e.g. tracing setup/teardown) must
     // not stop us from responding, otherwise the orchestrator would wait forever
     await unhandledError(error, 'Tester Error')
-  }
-  finally {
+  } finally {
     // always let the orchestrator know the event was handled so its
     // `sendEventToIframe` promise resolves, even if the work above threw
     channel.postMessage({
@@ -172,14 +167,9 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   state.rpc = rpc as any
 
   const interceptor = createModuleMockerInterceptor()
-  const mocker = new VitestBrowserClientMocker(
-    interceptor,
-    rpc,
-    SpyModule.createMockInstance,
-    {
-      root: getBrowserState().viteConfig.root,
-    },
-  )
+  const mocker = new VitestBrowserClientMocker(interceptor, rpc, SpyModule.createMockInstance, {
+    root: getBrowserState().viteConfig.root,
+  })
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
@@ -220,13 +210,13 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   }
 }
 
-let preparedData:
-  | Awaited<ReturnType<typeof prepareTestEnvironment>>
-  | undefined
+let preparedData: Awaited<ReturnType<typeof prepareTestEnvironment>> | undefined
 
 async function executeTests(method: 'run' | 'collect', specifications: FileSpecification[]) {
   if (!preparedData) {
-    throw new Error(`Data was not properly initialized. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+    throw new Error(
+      `Data was not properly initialized. This is a bug in Vitest. Please, open a new issue with reproduction.`,
+    )
   }
 
   debug?.('runner resolved successfully')
@@ -250,13 +240,11 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
 
     await traces.$(
       `vitest.test.runner.${method}.module`,
-      { attributes: { 'code.file.path': file.filepath },
-      },
+      { attributes: { 'code.file.path': file.filepath } },
       async () => {
         if (method === 'run') {
           await startTests([file], runner)
-        }
-        else {
+        } else {
           await collectTests([file], runner)
         }
       },
@@ -309,37 +297,41 @@ async function cleanup() {
   if (cleanupSymbol in page) {
     try {
       await (page[cleanupSymbol] as any)()
-    }
-    catch (error: any) {
+    } catch (error: any) {
       await unhandledError(error, 'Cleanup Error')
     }
   }
   // need to cleanup for each tester
   // since playwright keyboard API is stateful on page instance level
-  await userEvent.cleanup()
-    .catch(error => unhandledError(error, 'Cleanup Error'))
+  await userEvent.cleanup().catch((error) => unhandledError(error, 'Cleanup Error'))
 
-  await Promise.all(
-    getBrowserState().cleanups.map(fn => fn()),
-  ).catch(error => unhandledError(error, 'Cleanup Error'))
+  await Promise.all(getBrowserState().cleanups.map((fn) => fn())).catch((error) =>
+    unhandledError(error, 'Cleanup Error'),
+  )
 
   // if isolation is disabled, Vitest reuses the same iframe and we
   // don't need to switch the context back at all
   if (contextSwitched) {
-    await rpc.wdioSwitchContext('parent')
-      .catch(error => unhandledError(error, 'Cleanup Error'))
+    await rpc.wdioSwitchContext('parent').catch((error) => unhandledError(error, 'Cleanup Error'))
   }
-  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }).catch((error) => {
-    return unhandledError(error, 'Coverage Error')
-  })
+  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }).catch(
+    (error) => {
+      return unhandledError(error, 'Coverage Error')
+    },
+  )
 }
 
 function unhandledError(e: Error, type: string) {
-  return client.rpc.onUnhandledError({
-    name: e.name,
-    message: e.message,
-    stack: e.stack,
-  }, type).catch(() => {})
+  return client.rpc
+    .onUnhandledError(
+      {
+        name: e.name,
+        message: e.message,
+        stack: e.stack,
+      },
+      type,
+    )
+    .catch(() => {})
 }
 function isEvent(data: unknown): data is IframeReceivedEvent {
   return typeof data === 'object' && !!data && 'event' in data

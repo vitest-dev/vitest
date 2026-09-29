@@ -7,7 +7,12 @@ import { assertBrowserApiWrite, assertBrowserFileAccess } from '@vitest/browser'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { getDescribedLocator } from './utils'
 
-export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
+export const startTracing: BrowserCommand<[]> = async ({
+  context,
+  project,
+  provider,
+  sessionId,
+}) => {
   if (isPlaywrightProvider(provider)) {
     if (provider.tracingContexts.has(sessionId)) {
       return
@@ -15,13 +20,15 @@ export const startTracing: BrowserCommand<[]> = async ({ context, project, provi
 
     provider.tracingContexts.add(sessionId)
     const options = project.config.browser!.trace
-    await context.tracing.start({
-      screenshots: options.screenshots ?? true,
-      snapshots: options.snapshots ?? true,
-      sources: options.sources ?? true,
-    }).catch(() => {
-      provider.tracingContexts.delete(sessionId)
-    })
+    await context.tracing
+      .start({
+        screenshots: options.screenshots ?? true,
+        snapshots: options.snapshots ?? true,
+        sources: options.sources ?? true,
+      })
+      .catch(() => {
+        provider.tracingContexts.delete(sessionId)
+      })
     return
   }
   throw new TypeError(`The ${provider.name} provider does not support tracing.`)
@@ -47,10 +54,7 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
   throw new TypeError(`The ${provider.name} provider does not support tracing.`)
 }
 
-export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
-  context,
-  { name },
-) => {
+export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (context, { name }) => {
   if (isPlaywrightProvider(context.provider)) {
     const path = resolveTracesPath(context, name)
     assertBrowserApiWrite(context.project, path)
@@ -62,10 +66,9 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
 
-export const markTrace: BrowserCommand<[payload: { name: string; element?: SerializedLocator; stack?: string }]> = async (
-  context,
-  payload,
-) => {
+export const markTrace: BrowserCommand<
+  [payload: { name: string; element?: SerializedLocator; stack?: string }]
+> = async (context, payload) => {
   if (isPlaywrightProvider(context.provider)) {
     // skip if tracing is not active
     // this is only safe guard and this isn't expected to happen since
@@ -86,16 +89,13 @@ export const markTrace: BrowserCommand<[payload: { name: string; element?: Seria
             isNot: false,
             timeout: 1, // don't wait when element doesn't exist
           })
-        }
-        else {
+        } else {
           await context.page.evaluate(() => 0)
         }
-      }
-      else {
+      } else {
         await context.page.evaluate(() => 0)
       }
-    }
-    catch {}
+    } catch {}
     await context.context.tracing.groupEnd()
     return
   }
@@ -118,9 +118,7 @@ export const groupTraceStart: BrowserCommand<[payload: { name: string; stack?: s
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
 
-export const groupTraceEnd: BrowserCommand<[]> = async (
-  context,
-) => {
+export const groupTraceEnd: BrowserCommand<[]> = async (context) => {
   if (isPlaywrightProvider(context.provider)) {
     if (!context.provider.tracingContexts.has(context.sessionId)) {
       return
@@ -171,14 +169,16 @@ export const deleteTracing: BrowserCommand<[{ traces: string[] }]> = async (
       assertBrowserFileAccess(context.project, trace)
     }
     return Promise.all(
-      traces.map(trace => unlink(trace).catch((err) => {
-        if (err.code === 'ENOENT') {
-        // Ignore the error if the file doesn't exist
-          return
-        }
-        // Re-throw other errors
-        throw err
-      })),
+      traces.map((trace) =>
+        unlink(trace).catch((err) => {
+          if (err.code === 'ENOENT') {
+            // Ignore the error if the file doesn't exist
+            return
+          }
+          // Re-throw other errors
+          throw err
+        }),
+      ),
     )
   }
 
@@ -190,31 +190,33 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
   { testId, traces },
 ) => {
   const vitest = project.vitest
-  await Promise.all(traces.map((trace) => {
-    assertBrowserApiWrite(project, trace)
-    assertBrowserFileAccess(project, trace)
-    const entity = vitest.state.getReportedEntityById(testId)
-    const location = entity?.location
-      ? {
-          file: entity.module.moduleId,
-          line: entity.location.line,
-          column: entity.location.column,
-        }
-      : undefined
-    return vitest._testRun.recordArtifact(testId, {
-      type: 'internal:annotation',
-      annotation: {
-        message: relative(project.config.root, trace),
-        type: 'traces',
-        attachment: {
-          path: trace,
-          contentType: 'application/octet-stream',
+  await Promise.all(
+    traces.map((trace) => {
+      assertBrowserApiWrite(project, trace)
+      assertBrowserFileAccess(project, trace)
+      const entity = vitest.state.getReportedEntityById(testId)
+      const location = entity?.location
+        ? {
+            file: entity.module.moduleId,
+            line: entity.location.line,
+            column: entity.location.column,
+          }
+        : undefined
+      return vitest._testRun.recordArtifact(testId, {
+        type: 'internal:annotation',
+        annotation: {
+          message: relative(project.config.root, trace),
+          type: 'traces',
+          attachment: {
+            path: trace,
+            contentType: 'application/octet-stream',
+          },
+          location,
         },
         location,
-      },
-      location,
-    })
-  }))
+      })
+    }),
+  )
 }
 
 function isPlaywrightProvider(provider: BrowserProvider): provider is PlaywrightBrowserProvider {

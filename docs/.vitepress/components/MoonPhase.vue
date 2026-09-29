@@ -10,9 +10,7 @@ const phases = [
   { emoji: '🌘', alt: 'waning crescent moon' },
 ]
 
-const phase = phases[
-  Math.floor(Math.random() * phases.length)
-]
+const phase = phases[Math.floor(Math.random() * phases.length)]
 </script>
 
 <template>

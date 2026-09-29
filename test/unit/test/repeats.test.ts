@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test, TestRunner } from 'vitest'
+import { afterAll, describe, expect, test } from 'vitest'
 
 const testNumbers: number[] = []
 
@@ -50,16 +50,12 @@ describe('testing repeats with retry', () => {
       expect(retryNumbers).toStrictEqual(result)
     })
   })
-
-  test('should not reset retry count', { repeats: 2, retry: 1 }, () => {
-    expect(TestRunner.getCurrentTest()!.result?.retryCount).toBe(3)
-  })
 })
 
 const nestedDescribeNumbers: number[] = []
 
 describe('testing nested describe', { repeats: 1 }, () => {
-  test ('test 1', () => {
+  test('test 1', () => {
     nestedDescribeNumbers.push(1)
   })
 

@@ -27,7 +27,9 @@ test('task timeouts wait for pending actions', async () => {
 
   // the timeout error points at the pending action, not at the test
   const report = stderr.split('\n')
-  const start = report.findIndex(line => line.includes('names the pending action when it does not report back'))
+  const start = report.findIndex((line) =>
+    line.includes('names the pending action when it does not report back'),
+  )
   const end = report.findIndex((line, index) => index > start && line.startsWith('⎯'))
   expect(report.slice(start, end).join('\n')).toMatchInlineSnapshot(`
     " FAIL  |chromium| actions.test.ts > names the pending action when it does not report back

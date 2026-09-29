@@ -20,10 +20,8 @@ test('formatting of non-ascii placeholders in test.each', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(ctx?.state.getTestModules()[0].children.array()).toStrictEqual(
-    [
-      expect.objectContaining({ name: 'returns 5 given 1' }),
-      expect.objectContaining({ name: 'returns 10 given 2' }),
-    ],
-  )
+  expect(ctx?.state.getTestModules()[0].children.array()).toStrictEqual([
+    expect.objectContaining({ name: 'returns 5 given 1' }),
+    expect.objectContaining({ name: 'returns 10 given 2' }),
+  ])
 })

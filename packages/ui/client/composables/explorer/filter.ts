@@ -2,12 +2,13 @@ import type { RunnerTask as Task } from 'vitest'
 import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { client, config, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
-import { currentProjectName, filteredFiles, projectSort, uiEntries } from '~/composables/explorer/state'
 import {
-  getSortedRootTasks,
-  isFileNode,
-  isParentNode,
-} from '~/composables/explorer/utils'
+  currentProjectName,
+  filteredFiles,
+  projectSort,
+  uiEntries,
+} from '~/composables/explorer/state'
+import { getSortedRootTasks, isFileNode, isParentNode } from '~/composables/explorer/utils'
 
 export interface FilterNodeContext {
   nodes: ReadonlyMap<string, UITaskTreeNode>
@@ -38,22 +39,13 @@ export function testMatcher(
  * @param search The search applied.
  * @param filter The filter applied.
  */
-export function runFilter(
-  search: SearchMatcher,
-  filter: Filter,
-) {
-  const entries = filterAll(
-    search,
-    filter,
-  )
+export function runFilter(search: SearchMatcher, filter: Filter) {
+  const entries = filterAll(search, filter)
   uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
 }
 
-export function filterAll(
-  search: SearchMatcher,
-  filter: Filter,
-) {
+export function filterAll(search: SearchMatcher, filter: Filter) {
   const project = currentProjectName.value
   const tasks = getSortedRootTasks(projectSort.value)
   const entries: UITaskTreeNode[] = []
@@ -77,10 +69,7 @@ export function filterAll(
   return entries
 }
 
-export function filterNode(
-  node: UITaskTreeNode,
-  context: FilterNodeContext,
-) {
+export function filterNode(node: UITaskTreeNode, context: FilterNodeContext) {
   const { onlyTests } = context.filter
   const file = isFileNode(node)
     ? undefined
@@ -89,9 +78,7 @@ export function filterNode(
       : undefined
   const ancestorMatches = !onlyTests && !!file && matchesNode(file, context)
   const filteredTree = filterTreeNode(node, onlyTests, context, ancestorMatches)
-  return filteredTree
-    ? flattenVisibleTree(filteredTree, isFileNode(node))
-    : []
+  return filteredTree ? flattenVisibleTree(filteredTree, isFileNode(node)) : []
 }
 
 function filterTreeNode(
@@ -104,15 +91,10 @@ function filterTreeNode(
   const descendantsInheritMatch = ancestorMatches || nodeMatches
   const children = isParentNode(node)
     ? node.tasks
-        .map(child => filterTreeNode(
-          child,
-          onlyTests,
-          context,
-          descendantsInheritMatch,
-        ))
-        .filter(child => child !== undefined)
+        .map((child) => filterTreeNode(child, onlyTests, context, descendantsInheritMatch))
+        .filter((child) => child !== undefined)
     : []
-  const subtreeMatches = nodeMatches || children.some(child => child.subtreeMatches)
+  const subtreeMatches = nodeMatches || children.some((child) => child.subtreeMatches)
 
   if (!ancestorMatches && !subtreeMatches) {
     return undefined
@@ -131,9 +113,7 @@ function filterTreeNode(
 
 function matchesNode(node: UITaskTreeNode, context: FilterNodeContext) {
   const task = context.tasks.get(node.id)
-  return task
-    ? matchTask(task, context.search, context.filter, context.slowTestThreshold)
-    : false
+  return task ? matchTask(task, context.search, context.filter, context.slowTestThreshold) : false
 }
 
 function flattenVisibleTree(
@@ -157,7 +137,11 @@ function flattenVisibleTree(
 function matchState(task: Task, filter: Filter, slowTestThreshold: number | undefined) {
   if (filter.slow) {
     if (task.type === 'test') {
-      if (typeof slowTestThreshold === 'number' && typeof task.result?.duration === 'number' && task.result.duration > slowTestThreshold) {
+      if (
+        typeof slowTestThreshold === 'number' &&
+        typeof task.result?.duration === 'number' &&
+        task.result.duration > slowTestThreshold
+      ) {
         return true
       }
     }
@@ -194,8 +178,7 @@ function matchTask(
       if (matchState(task, filter, slowTestThreshold)) {
         return true
       }
-    }
-    else {
+    } else {
       return true
     }
   }

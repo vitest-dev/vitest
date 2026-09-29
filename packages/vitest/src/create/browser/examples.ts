@@ -340,8 +340,7 @@ export async function generateExampleFiles(framework: string, lang: 'ts' | 'js')
 
   if (isJSX && lang === 'ts') {
     fileName = fileName.replace('.jsx', '.tsx')
-  }
-  else if (fileName.endsWith('.js') && lang === 'ts') {
+  } else if (fileName.endsWith('.js') && lang === 'ts') {
     fileName = fileName.replace('.js', '.ts')
   }
 

@@ -25,8 +25,7 @@ const whenSymbol = Symbol.for('$$vitest:when')
 export function isWhenChain(input: object): input is When<Procedure> {
   try {
     return Reflect.has(input, whenSymbol)
-  }
-  catch {
+  } catch {
     return false
   }
 }
@@ -76,7 +75,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenReturn: (value: ReturnType, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenReturn: (
+    value: ReturnType,
+    options?: BehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a resolved `Promise` return value for when the spy is called with the registered arguments.
@@ -85,7 +87,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenResolve: (value: Awaited<ReturnType>, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenResolve: (
+    value: Awaited<ReturnType>,
+    options?: BehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a synchronous return value for a single call with the registered arguments, then removes the behavior.
@@ -94,7 +99,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenReturnOnce: (value: ReturnType, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenReturnOnce: (
+    value: ReturnType,
+    options?: OnceBehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a resolved `Promise` return value for a single call with the registered arguments, then removes the behavior.
@@ -103,7 +111,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenResolveOnce: (value: Awaited<ReturnType>, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenResolveOnce: (
+    value: Awaited<ReturnType>,
+    options?: OnceBehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a thrown error for when the spy is called with the registered arguments.
@@ -112,7 +123,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenThrow: (value: unknown, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenThrow: (
+    value: unknown,
+    options?: BehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a rejected `Promise` for when the spy is called with the registered arguments.
@@ -121,7 +135,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenReject: (value: unknown, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenReject: (
+    value: unknown,
+    options?: BehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a thrown error for a single call with the registered arguments, then removes the behavior.
@@ -130,7 +147,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenThrowOnce: (value: unknown, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenThrowOnce: (
+    value: unknown,
+    options?: OnceBehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 
   /**
    * Schedules a rejected `Promise` for a single call with the registered arguments, then removes the behavior.
@@ -139,7 +159,10 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
    * @param options - Optional behavior configuration.
    * @returns The same {@linkcode when|vi.when} instance for chaining.
    */
-  thenRejectOnce: (value: unknown, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+  thenRejectOnce: (
+    value: unknown,
+    options?: OnceBehaviorOptions | undefined,
+  ) => CalledWithInstance<ReturnType, Fn>
 }
 
 /**
@@ -291,9 +314,14 @@ interface WhenOptions<Fn extends Procedure = Procedure> {
  * expect(spy(1)).toEqual({ id: 1, name: 'Alice' })
  * expect(() => spy(2)).toThrow()
  */
-export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOptions<Fn>): When<Fn> {
+export function when<Fn extends Procedure>(
+  spy: Fn | Mock<Fn>,
+  options?: WhenOptions<Fn>,
+): When<Fn> {
   if (!isMockFunction(spy)) {
-    throw new TypeError('vi.when: the argument must be a mock function created with `vi.fn()` or `vi.spyOn()`')
+    throw new TypeError(
+      'vi.when: the argument must be a mock function created with `vi.fn()` or `vi.spyOn()`',
+    )
   }
 
   type ScopedParameters = Parameters<Fn>
@@ -303,14 +331,13 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
   const originalImplementation = spy.getMockImplementation()
 
   function findAction(args: ScopedParameters) {
-    const testers = [
-      ...getCustomEqualityTesters(),
-      iterableEquality,
-    ]
+    const testers = [...getCustomEqualityTesters(), iterableEquality]
 
     for (const behavior of behaviors) {
       if (equals(args, behavior.arguments, testers)) {
-        return behavior.actions.findLast(action => !(action.remaining === 0 && action.called)) ?? null
+        return (
+          behavior.actions.findLast((action) => !(action.remaining === 0 && action.called)) ?? null
+        )
       }
     }
 
@@ -323,13 +350,16 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
       const action = findAction(args)
 
       if (action === null) {
-        const onUnmatched = typeof options?.onUnmatched === 'function'
-          ? options.onUnmatched
-          : options?.onUnmatched === 'throw'
-            ? () => {
-                throw new Error(`vi.when: no behavior defined when called with [${args.map(arg => stringify(arg)).join(', ')}]`)
-              }
-            : originalImplementation
+        const onUnmatched =
+          typeof options?.onUnmatched === 'function'
+            ? options.onUnmatched
+            : options?.onUnmatched === 'throw'
+              ? () => {
+                  throw new Error(
+                    `vi.when: no behavior defined when called with [${args.map((arg) => stringify(arg)).join(', ')}]`,
+                  )
+                }
+              : originalImplementation
         return onUnmatched?.(...args)
       }
 
@@ -357,12 +387,9 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
   )
 
   function getOrCreateBehavior(args: ScopedParameters) {
-    const testers = [
-      ...getCustomEqualityTesters(),
-      iterableEquality,
-    ]
+    const testers = [...getCustomEqualityTesters(), iterableEquality]
 
-    let behavior = behaviors.find(behavior => equals(args, behavior.arguments, testers))
+    let behavior = behaviors.find((behavior) => equals(args, behavior.arguments, testers))
 
     if (behavior === undefined) {
       behavior = {
@@ -381,7 +408,12 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
     calledWith: (...args: ScopedParameters) => {
       const behavior = getOrCreateBehavior(args)
 
-      function appendAction(behavior: Behavior<ScopedParameters, ScopedReturn>, type: BehaviorType, value: unknown, times: number) {
+      function appendAction(
+        behavior: Behavior<ScopedParameters, ScopedReturn>,
+        type: BehaviorType,
+        value: unknown,
+        times: number,
+      ) {
         behavior.actions.push({
           type,
           value,
@@ -442,15 +474,19 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
       return calledWithInstance
     },
     _getDiagnostics: () => {
-      const pendingBehaviors = behaviors
-        .filter(behavior =>
-          behavior.actions.length === 0 || behavior.actions.some(action => !hasBeenConsumed(action)),
-        )
+      const pendingBehaviors = behaviors.filter(
+        (behavior) =>
+          behavior.actions.length === 0 ||
+          behavior.actions.some((action) => !hasBeenConsumed(action)),
+      )
 
       return {
         isExhausted: behaviors.length !== 0 && pendingBehaviors.length === 0,
         pendingBehaviors: pendingBehaviors
-          .map(behavior => `calledWith(${behavior.arguments.map(argument => stringify(argument)).join(', ')})${behavior.actions.length === 0 ? '  → no actions' : `\n${formatActions(behavior.actions)}`}`)
+          .map(
+            (behavior) =>
+              `calledWith(${behavior.arguments.map((argument) => stringify(argument)).join(', ')})${behavior.actions.length === 0 ? '  → no actions' : `\n${formatActions(behavior.actions)}`}`,
+          )
           .join('\n\n'),
       }
     },
@@ -481,18 +517,17 @@ function formatActions(actions: Behavior<unknown[], unknown>['actions']): string
     const method = getMethodName(action.type)
     const symbol = getSymbol(action)
     const left = `  ${symbol} ${method}(${stringify(action.value)}${action.times === Number.POSITIVE_INFINITY ? '' : `, { times: ${action.times} }`})`
-    const unreachable = !hasBeenConsumed(action)
-      && actions.slice(index + 1).some(later => later.times === Number.POSITIVE_INFINITY)
+    const unreachable =
+      !hasBeenConsumed(action) &&
+      actions.slice(index + 1).some((later) => later.times === Number.POSITIVE_INFINITY)
     const remaining = getRemainingLabel(action) + (unreachable ? '  → unreachable action' : '')
 
     return { left, remaining }
   })
 
-  const maxLeft = Math.max(...lines.map(line => line.left.length))
+  const maxLeft = Math.max(...lines.map((line) => line.left.length))
 
-  return lines
-    .map(({ left, remaining }) => `${left.padEnd(maxLeft + 2)}${remaining}`)
-    .join('\n')
+  return lines.map(({ left, remaining }) => `${left.padEnd(maxLeft + 2)}${remaining}`).join('\n')
 }
 
 function getMethodName(type: BehaviorType): string {
@@ -510,7 +545,7 @@ function getMethodName(type: BehaviorType): string {
       return 'thenReject'
     }
     default: {
-      (type satisfies never)
+      ;(type) satisfies never
 
       throw new Error(`vi.when: "${type}" is not a known method`)
     }
@@ -518,8 +553,10 @@ function getMethodName(type: BehaviorType): string {
 }
 
 function hasBeenConsumed(action: BehaviorAction<unknown>): boolean {
-  return action.remaining === 0 /* times-actions reached 0 */
-    || (action.remaining === Number.POSITIVE_INFINITY && action.called) /* infinite actions called at least once */
+  return (
+    action.remaining === 0 /* times-actions reached 0 */ ||
+    (action.remaining === Number.POSITIVE_INFINITY && action.called)
+  ) /* infinite actions called at least once */
 }
 
 function getRemainingLabel(action: BehaviorAction<unknown>): string {

@@ -547,14 +547,14 @@ Set the randomization seed. This option will have no effect if `--sequence.shuff
 - **CLI:** `--sequence.hooks <order>`
 - **Config:** [sequence.hooks](/config/sequence#sequence-hooks)
 
-Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](/config/sequence#sequence-hooks) for more information (default: `"parallel"`)
+Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](/config/sequence#sequence-hooks) for more information (default: `"stack"`)
 
 ### sequence.setupFiles
 
 - **CLI:** `--sequence.setupFiles <order>`
 - **Config:** [sequence.setupFiles](/config/sequence#sequence-setupfiles)
 
-Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"parallel"`)
+Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"list"`)
 
 ### inspect
 
@@ -671,7 +671,7 @@ Placeholder for an empty first or last line (default: `""`)
 - **CLI:** `--diff.expand`
 - **Config:** [diff.expand](/config/diff#diff-expand)
 
-Expand all common lines (default: `true`)
+Expand all common lines (default: `false`)
 
 ### diff.includeChangeCounts
 
@@ -692,7 +692,7 @@ Omit annotation lines from the output (default: `false`)
 - **CLI:** `--diff.printBasicPrototype`
 - **Config:** [diff.printBasicPrototype](/config/diff#diff-printbasicprototype)
 
-Print basic prototype Object and Array (default: `true`)
+Print basic prototype Object and Array (default: `false`)
 
 ### diff.maxDepth
 

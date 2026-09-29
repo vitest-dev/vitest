@@ -4,6 +4,7 @@ import { splitFileAndPostfix } from '@vitest/utils/helpers'
 import { join, normalize } from 'pathe'
 import { distDir } from '../../paths'
 
+const platform = process.platform
 const bareVitestRegexp = /^@?vitest(?:\/|$)/
 const normalizedDistDir = normalize(distDir)
 const relativeIds: Record<string, string> = {}
@@ -23,7 +24,7 @@ export function getCachedVitestImport(
   state: () => WorkerGlobalState,
 ): null | { externalize: string; type: 'module' } {
   if (id.startsWith('/@fs/') || id.startsWith('\\@fs\\')) {
-    id = id.slice(process.platform === 'win32' ? 5 : 4)
+    id = id.slice(platform === 'win32' ? 5 : 4)
   }
 
   if (externalizeMap.has(id)) {
@@ -35,16 +36,16 @@ export function getCachedVitestImport(
   const relativeRoot = relativeIds[root] ?? (relativeIds[root] = getRelativeDistDir(root))
   if (id.includes(distDir) || id.includes(normalizedDistDir)) {
     const { file, postfix } = splitFileAndPostfix(id)
-    const externalize = id.startsWith('file://')
-      ? id
-      : `${pathToFileURL(file)}${postfix}`
+    const externalize = id.startsWith('file://') ? id : `${pathToFileURL(file)}${postfix}`
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
   if (
     // "relative" to root path:
     // /node_modules/.pnpm/vitest/dist
-    (relativeRoot && relativeRoot !== '/' && id.startsWith(relativeRoot))
+    relativeRoot &&
+    relativeRoot !== '/' &&
+    id.startsWith(relativeRoot)
   ) {
     const { file, postfix } = splitFileAndPostfix(id)
     const path = join(root, file)

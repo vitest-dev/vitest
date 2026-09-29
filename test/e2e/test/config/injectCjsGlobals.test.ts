@@ -4,8 +4,9 @@ import { replaceRoot, runInlineTests, ts } from '#test-utils'
 const pools = ['forks', 'vmThreads'] as const
 
 test.for(pools)('cjs globals are injected by default (%s)', async (pool) => {
-  const { stderr, exitCode } = await runInlineTests({
-    'basic.test.js': ts`
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'basic.test.js': ts`
       import { expect, test } from 'vitest'
 
       test('cjs globals are defined', () => {
@@ -16,14 +17,19 @@ test.for(pools)('cjs globals are injected by default (%s)', async (pool) => {
         expect(typeof __dirname).toBe('string')
       })
     `,
-  }, { pool })
+    },
+    { pool },
+  )
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
 
-test.for(pools)('cjs globals are not injected into ES modules when injectCjsGlobals is disabled (%s)', async (pool) => {
-  const { stderr, exitCode } = await runInlineTests({
-    'basic.test.js': ts`
+test.for(pools)(
+  'cjs globals are not injected into ES modules when injectCjsGlobals is disabled (%s)',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'basic.test.js': ts`
       import { expect, test } from 'vitest'
 
       test('cjs globals are not defined', () => {
@@ -35,20 +41,26 @@ test.for(pools)('cjs globals are not injected into ES modules when injectCjsGlob
         expect(() => __dirname).toThrowError(ReferenceError)
       })
     `,
-  }, { pool, injectCjsGlobals: false })
-  expect(stderr).toBe('')
-  expect(exitCode).toBe(0)
-})
+      },
+      { pool, injectCjsGlobals: false },
+    )
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
 
-test.for(pools)('inlined ".cjs" modules keep the module scope when injectCjsGlobals is disabled (%s)', async (pool) => {
-  const { stderr, exitCode } = await runInlineTests({
-    'cjs-dep.cjs': ts`
+test.for(pools)(
+  'inlined ".cjs" modules keep the module scope when injectCjsGlobals is disabled (%s)',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'cjs-dep.cjs': ts`
       module.exports = {
         answer: 42,
         filename: __filename,
       }
     `,
-    'basic.test.js': ts`
+        'basic.test.js': ts`
       import { expect, test } from 'vitest'
       import cjs from './cjs-dep.cjs'
 
@@ -58,10 +70,13 @@ test.for(pools)('inlined ".cjs" modules keep the module scope when injectCjsGlob
         expect(typeof module).toBe('undefined')
       })
     `,
-  }, { pool, injectCjsGlobals: false })
-  expect(stderr).toBe('')
-  expect(exitCode).toBe(0)
-})
+      },
+      { pool, injectCjsGlobals: false },
+    )
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
 
 test('cjs dep served from the warm-modules snapshot keeps the module scope when injectCjsGlobals is disabled', async () => {
   // the `fetchWarmModules` fast path hands a module the server already
@@ -108,12 +123,13 @@ test('cjs dep served from the warm-modules snapshot keeps the module scope when 
 })
 
 test('".js" modules without ESM syntax are detected as commonjs in a typeless package', async () => {
-  const { stderr, exitCode } = await runInlineTests({
-    'package.json': '{}',
-    'cjs-dep.js': ts`
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'package.json': '{}',
+      'cjs-dep.js': ts`
       module.exports = { answer: 42 }
     `,
-    'basic.test.js': ts`
+      'basic.test.js': ts`
       import { expect, test } from 'vitest'
       import cjs from './cjs-dep.js'
 
@@ -123,15 +139,18 @@ test('".js" modules without ESM syntax are detected as commonjs in a typeless pa
         expect(typeof __dirname).toBe('undefined')
       })
     `,
-  }, { injectCjsGlobals: false })
+    },
+    { injectCjsGlobals: false },
+  )
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
 
 test('"type": "commonjs" in package.json keeps the module scope when injectCjsGlobals is disabled', async () => {
-  const { stderr, exitCode } = await runInlineTests({
-    'package.json': '{ "type": "commonjs" }',
-    'basic.test.js': ts`
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'package.json': '{ "type": "commonjs" }',
+      'basic.test.js': ts`
       import { expect, test } from 'vitest'
 
       test('cjs globals are defined', () => {
@@ -142,19 +161,22 @@ test('"type": "commonjs" in package.json keeps the module scope when injectCjsGl
         expect(typeof __dirname).toBe('string')
       })
     `,
-  }, { injectCjsGlobals: false })
+    },
+    { injectCjsGlobals: false },
+  )
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
 
 test('esm markers inside comments do not affect the detection', async () => {
-  const { stderr, exitCode } = await runInlineTests({
-    'package.json': '{}',
-    'cjs-dep.js': ts`
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'package.json': '{}',
+      'cjs-dep.js': ts`
       // this module mentions __vite_ssr_import__ and __vite_ssr_exports__ in a comment
       module.exports = { answer: 42 }
     `,
-    'basic.test.js': ts`
+      'basic.test.js': ts`
       // the marker __vite_ssr_import__ in a comment doesn't make a real ES module less strict
       import { expect, test } from 'vitest'
       import cjs from './cjs-dep.js'
@@ -164,15 +186,18 @@ test('esm markers inside comments do not affect the detection', async () => {
         expect(typeof module).toBe('undefined')
       })
     `,
-  }, { injectCjsGlobals: false })
+    },
+    { injectCjsGlobals: false },
+  )
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
 
 test('typescript file with only type imports is detected as commonjs', async () => {
-  const { stderr, exitCode } = await runInlineTests({
-    'package.json': '{}',
-    'cjs-dep.ts': ts`
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'package.json': '{}',
+      'cjs-dep.ts': ts`
       import type { Stats } from 'node:fs'
 
       module.exports = {
@@ -180,7 +205,7 @@ test('typescript file with only type imports is detected as commonjs', async () 
         isStats: (stats: Stats) => stats instanceof Object,
       }
     `,
-    'basic.test.js': ts`
+      'basic.test.js': ts`
       import { expect, test } from 'vitest'
       import cjs from './cjs-dep.ts'
 
@@ -189,18 +214,21 @@ test('typescript file with only type imports is detected as commonjs', async () 
         expect(cjs.isStats({})).toBe(true)
       })
     `,
-  }, { injectCjsGlobals: false })
+    },
+    { injectCjsGlobals: false },
+  )
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
 
 test('typeless files inside node_modules do not inherit the project package type', async () => {
-  const { stderr, exitCode } = await runInlineTests({
-    'package.json': '{ "type": "module" }',
-    'node_modules/raw-dep/index.js': ts`
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'package.json': '{ "type": "module" }',
+      'node_modules/raw-dep/index.js': ts`
       module.exports = { answer: 42 }
     `,
-    'basic.test.js': ts`
+      'basic.test.js': ts`
       import { expect, test } from 'vitest'
       import cjs from './node_modules/raw-dep/index.js'
 
@@ -209,24 +237,29 @@ test('typeless files inside node_modules do not inherit the project package type
         expect(typeof module).toBe('undefined')
       })
     `,
-  }, {
-    injectCjsGlobals: false,
-    server: { deps: { inline: [/raw-dep/] } },
-  })
+    },
+    {
+      injectCjsGlobals: false,
+      server: { deps: { inline: [/raw-dep/] } },
+    },
+  )
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
 
 test('referencing a cjs variable in an ES module fails with a hint', async () => {
-  const { stderr, root, exitCode } = await runInlineTests({
-    'basic.test.js': ts`
+  const { stderr, root, exitCode } = await runInlineTests(
+    {
+      'basic.test.js': ts`
       import { test } from 'vitest'
 
       const dirname = __dirname
 
       test('not reported', () => {})
     `,
-  }, { injectCjsGlobals: false })
+    },
+    { injectCjsGlobals: false },
+  )
   expect(exitCode).toBe(1)
   expect(replaceRoot(stderr, root)).toMatchInlineSnapshot(`
     "

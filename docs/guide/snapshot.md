@@ -605,6 +605,7 @@ export default defineConfig({
 Vitest uses chevron `>` as a separator instead of colon `:` for readability, when a custom message is passed during creation of a snapshot file.
 
 For the following example test code:
+
 ```js
 test('toThrowErrorMatchingSnapshot', () => {
   expect(() => {
@@ -614,11 +615,13 @@ test('toThrowErrorMatchingSnapshot', () => {
 ```
 
 In Jest, the snapshot will be:
+
 ```console
 exports[`toThrowErrorMatchingSnapshot: hint 1`] = `"error"`;
 ```
 
 In Vitest, the equivalent snapshot will be:
+
 ```console
 exports[`toThrowErrorMatchingSnapshot > hint 1`] = `[Error: error]`;
 ```

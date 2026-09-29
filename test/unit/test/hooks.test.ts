@@ -1,4 +1,13 @@
-import { afterAll, afterEach, beforeAll, beforeEach, expect, it, onTestFinished, suite } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  it,
+  onTestFinished,
+  suite,
+} from 'vitest'
 
 let count = -1
 
@@ -122,19 +131,11 @@ suite('hooks cleanup order', () => {
   })
 
   it('one', () => {
-    expect(order).toEqual([
-      '[a] beforeEach',
-      '[b] beforeEach',
-    ])
+    expect(order).toEqual(['[a] beforeEach', '[b] beforeEach'])
   })
 
   afterAll(() => {
-    expect(order).toEqual([
-      '[a] beforeEach',
-      '[b] beforeEach',
-      '[b] cleanup',
-      '[a] cleanup',
-    ])
+    expect(order).toEqual(['[a] beforeEach', '[b] beforeEach', '[b] cleanup', '[a] cleanup'])
   })
 })
 

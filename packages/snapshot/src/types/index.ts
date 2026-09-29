@@ -5,10 +5,7 @@ import type {
 import type { DomainMatchResult } from '../domain'
 import type { RawSnapshotInfo } from '../port/rawSnapshot'
 import type { ExpectedSnapshot } from '../port/state'
-import type {
-  SnapshotEnvironment,
-  SnapshotEnvironmentOptions,
-} from './environment'
+import type { SnapshotEnvironment, SnapshotEnvironmentOptions } from './environment'
 
 export type { SnapshotEnvironment, SnapshotEnvironmentOptions }
 export type SnapshotData = Record<string, string>

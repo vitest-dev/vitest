@@ -129,7 +129,7 @@ export class GithubActionsReporter implements Reporter {
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
   ): void {
-    const files = testModules.map(testModule => testModule.task)
+    const files = testModules.map((testModule) => testModule.task)
     const errors = [...unhandledErrors]
 
     // collect all errors and associate them with projects
@@ -192,13 +192,8 @@ export class GithubActionsReporter implements Reporter {
       )
 
       try {
-        writeFileSync(
-          this.options.jobSummary.outputPath,
-          summary,
-          { flag: 'a' },
-        )
-      }
-      catch (error) {
+        writeFileSync(this.options.jobSummary.outputPath, summary, { flag: 'a' })
+      } catch (error) {
         this.ctx.logger.warn('Could not write summary to `options.summary.outputPath`', error)
       }
     }
@@ -282,7 +277,10 @@ interface SummaryData {
   }>
 }
 
-function collectSummaryData(testModules: ReadonlyArray<TestModule>, config: ResolvedConfig): SummaryData {
+function collectSummaryData(
+  testModules: ReadonlyArray<TestModule>,
+  config: ResolvedConfig,
+): SummaryData {
   const summaryData: SummaryData = {
     name: config.name || null,
     fileStats: {
@@ -335,8 +333,7 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>, config: Reso
             case 'pass': {
               if (test.task.fails) {
                 summaryData.testsStats.expectedFail += 1
-              }
-              else {
+              } else {
                 summaryData.testsStats.passed += 1
               }
 
@@ -349,11 +346,12 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>, config: Reso
       const diagnostic = test.diagnostic()
 
       if (diagnostic?.flaky) {
-        const retriesAllowed = typeof test.options.retry === 'number'
-          ? test.options.retry
-          : (test.options.retry?.count
-            // falling back to `retryCount` as this is used as the denominator to compute `retryRatio`
-            ?? diagnostic.retryCount)
+        const retriesAllowed =
+          typeof test.options.retry === 'number'
+            ? test.options.retry
+            : (test.options.retry?.count ??
+              // falling back to `retryCount` as this is used as the denominator to compute `retryRatio`
+              diagnostic.retryCount)
         const retriesRatio = diagnostic.retryCount / retriesAllowed
 
         flakyTests.tests.push({
@@ -378,7 +376,9 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>, config: Reso
   return summaryData
 }
 
-function createGitHubFileLinkCreator(fileLinks?: JobSummaryOptions['fileLinks']): (path: string, line?: number) => string | null {
+function createGitHubFileLinkCreator(
+  fileLinks?: JobSummaryOptions['fileLinks'],
+): (path: string, line?: number) => string | null {
   const repository = fileLinks?.repository
   const commitHash = fileLinks?.commitHash
   const workspacePath = fileLinks?.workspacePath
@@ -420,7 +420,9 @@ function renderStats({ fileStats, testsStats }: SummaryData): string {
   fileInfo.push(`${fileInfoTotal} total`)
 
   if (testsStats.failed > 0) {
-    primaryInfo.push(`❌ **${testsStats.failed} ${noun(testsStats.failed, 'failure', 'failures')}**`)
+    primaryInfo.push(
+      `❌ **${testsStats.failed} ${noun(testsStats.failed, 'failure', 'failures')}**`,
+    )
   }
 
   if (testsStats.passed > 0) {
@@ -428,7 +430,9 @@ function renderStats({ fileStats, testsStats }: SummaryData): string {
   }
 
   if (testsStats.expectedFail > 0) {
-    primaryInfo.push(`🔵 **${testsStats.expectedFail} expected ${noun(testsStats.expectedFail, 'failure', 'failures')}**`)
+    primaryInfo.push(
+      `🔵 **${testsStats.expectedFail} expected ${noun(testsStats.expectedFail, 'failure', 'failures')}**`,
+    )
   }
 
   primaryInfo.push(`${primaryInfoTotal} total`)
@@ -452,19 +456,20 @@ function renderStats({ fileStats, testsStats }: SummaryData): string {
   return output
 }
 
-function renderSummary(summaryData: SummaryData, title?: string, fileLinks?: JobSummaryOptions['fileLinks']): string {
+function renderSummary(
+  summaryData: SummaryData,
+  title?: string,
+  fileLinks?: JobSummaryOptions['fileLinks'],
+): string {
   const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
-  const header = title
-    ?? (
-      summaryData.name
-        ? `(${summaryData.name}) ${DEFAULT_TITLE}`
-        : DEFAULT_TITLE
-    )
+  const header =
+    title ?? (summaryData.name ? `(${summaryData.name}) ${DEFAULT_TITLE}` : DEFAULT_TITLE)
 
   let summary = `## ${header}\n${renderStats(summaryData)}`
 
   if (summaryData.flakyTests.length > 0) {
-    summary += '\n### Flaky Tests\n\nThese tests passed only after one or more retries, indicating potential instability.\n'
+    summary +=
+      '\n### Flaky Tests\n\nThese tests passed only after one or more retries, indicating potential instability.\n'
 
     for (const flakyTests of summaryData.flakyTests) {
       summary += `\n##### \`${flakyTests.path.relative}\` (${flakyTests.tests.length} flaky tests)\n`
