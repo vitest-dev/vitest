@@ -1,5 +1,5 @@
-// Intentionally not parseable as JavaScript, mirroring Flow-annotated sources
-// published by some packages (the exact syntax is Flow-only: exact object type).
+// This package has invalid JavaScript so the test fails if Vite's optimizer
+// scans the dependency imported from index.html.
 export default function broken(input: {| value: string |}) {
   return input.value
 }
