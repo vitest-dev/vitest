@@ -242,9 +242,6 @@ importers:
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.17
-      tsx:
-        specifier: ^4.23.13
-        version: 4.23.13
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
