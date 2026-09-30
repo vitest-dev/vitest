@@ -8,6 +8,7 @@
     "cli-table": "tsx .vitepress/scripts/cli-generator.ts",
     "build-no-prefetch": "vitepress build",
     "serve": "vitepress serve",
+    "deploy": "wrangler deploy",
     "preview-https": "pnpm run build && serve .vitepress/dist",
     "preview-https-no-prefetch": "pnpm run build-no-prefetch && serve .vitepress/dist",
     "prefetch": "tsx .vitepress/scripts/fetch-avatars.ts",
@@ -39,6 +40,7 @@
     "vitepress-plugin-group-icons": "^1.7.6",
     "vitepress-plugin-llms": "^1.13.5",
     "vitepress-plugin-tabs": "^0.9.1",
-    "workbox-window": "^7.4.1"
+    "workbox-window": "^7.4.1",
+    "wrangler": "catalog:"
   }
 }

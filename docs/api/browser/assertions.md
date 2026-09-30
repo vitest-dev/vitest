@@ -1222,7 +1222,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 - `screenshotOptions: object`
 
   The same options allowed by
-  [`locator.screenshot()`](/api/browser/locators.html#screenshot), except for:
+  [`locator.screenshot()`](/api/browser/locators#screenshot), except for:
 
   - `'base64'`
   - `'path'`
