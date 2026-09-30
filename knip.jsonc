@@ -16,7 +16,7 @@
   },
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.{js,ts}", "shims.d.ts"],
+      "entry": ["scripts/*.{js,ts}", ".github/scripts/*.js", "shims.d.ts"],
       // pnpm resolves peer dependencies of workspace packages from the root,
       // @vitest/browser-webdriverio needs vitest as a peer
       "ignoreDependencies": ["vitest"],
