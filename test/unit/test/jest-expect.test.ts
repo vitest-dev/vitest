@@ -226,6 +226,25 @@ describe('jest-expect', () => {
     expect([new Stock('x')]).toStrictEqual(expect.arrayContaining([new Stock('x')]))
   })
 
+  it('expect.extend asymmetric matchers and equality testers', () => {
+    // iterable equality testers
+    expect(new Set(['x'])).toEqual(expect.toBeOneOf([new Set(['x'])]))
+    expect(new Set()).not.toEqual(expect.toBeOneOf([new Set(['x'])]))
+
+    // `toStrictEqual` testers
+    class Stock {
+      constructor(public type: string) {}
+    }
+    expect(new Stock('x')).toEqual(expect.toBeOneOf([{ type: 'x' }]))
+    expect(new Stock('x')).not.toStrictEqual(expect.toBeOneOf([{ type: 'x' }]))
+    expect(new Stock('x')).toStrictEqual(expect.toBeOneOf([new Stock('x')]))
+
+    // non-asymmetric usage only sees registered testers
+    // TODO: https://github.com/vitest-dev/vitest/issues/11296
+    expect(new Set(['x'])).toBeOneOf([new Set(['x'])])
+    expect(new Set()).toBeOneOf([new Set(['x'])])
+  })
+
   // https://github.com/vitest-dev/vitest/issues/11071
   it('asymmetric matchers and toMatchObject equality', () => {
     expect([{ id: 1 }]).not.toMatchObject(expect.arrayContaining([{ id: 1, required: 'x' }]))
