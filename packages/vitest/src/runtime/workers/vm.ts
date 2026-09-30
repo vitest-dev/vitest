@@ -202,8 +202,7 @@ export function setupVmWorker(context: WorkerSetupContext): void {
   // compiled-code caching the flag disables is already covered by the
   // worker's own script and code caches.
   v8.setFlagsFromString('--no-compilation-cache')
-  // Environments like jsdom build objects with the worker's own builtins, so
-  // V8's "retained maps" heuristic keeps every finished test file's context
-  // alive through their hidden classes.
+  // jsdom builds objects with the worker's own builtins, so V8's retained maps
+  // keep every finished test file's context alive through their hidden classes
   v8.setFlagsFromString('--retain-maps-for-n-gc=0')
 }

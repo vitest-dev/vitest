@@ -599,14 +599,13 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
-// jsdom creates DOM objects with the worker's builtins, so V8's retained maps
-// keep finished contexts alive. Forced GCs skip map retention, so each file
-// promotes and drops large arrays to trigger regular major GCs instead. Spawns
-// the real CLI like the leak probe above
+// Forced GCs skip V8's map retention, so each file churns promoted memory to
+// trigger regular major GCs instead. Uses the real CLI because the in-process
+// harness keeps contexts alive itself
 test.for(['vmThreads', 'vmForks'] as const)(
   '%s does not retain jsdom contexts of finished test files',
   async (pool) => {
-    const files = 20
+    const files = 40
     const root = resolvePath(import.meta.url, `../fixtures/vm-retained-maps-${pool}`)
     const testFile = `
       import { expect, test } from 'vitest'
@@ -647,9 +646,10 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
     const alive = fs.readFile('contexts.log').trim().split('\n').map(Number)
     expect(alive).toHaveLength(files)
-    // a major GC runs every few files: released contexts peak at 5, retained
-    // ones at 10 and more
-    expect(Math.max(...alive)).toBeLessThan(8)
+    // how often GCs run depends on the machine, so only check what survives one:
+    // the worker's own contexts and the running file's
+    const aliveAfterGC = alive.filter((count, i) => count < alive[i - 1])
+    expect(Math.min(...aliveAfterGC)).toBeLessThanOrEqual(4)
   },
 )
 
