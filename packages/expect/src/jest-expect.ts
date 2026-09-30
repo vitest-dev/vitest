@@ -252,7 +252,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toContainEqual', function (expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      return jestEquals(item, expected, customTesters)
+      return jestEquals(item, expected, [...customTesters, iterableEquality])
     })
 
     this.assert(
@@ -432,7 +432,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return utils.getPathInfo(actual, propertyName)
     }
     const { value, exists } = getValue()
-    const pass = exists && (args.length === 1 || jestEquals(expected, value, customTesters))
+    const pass =
+      exists &&
+      (args.length === 1 || jestEquals(expected, value, [...customTesters, iterableEquality]))
 
     const valueString =
       args.length === 1 ? '' : ` with value ${inspect(expected, { truncate: 40 })}`
@@ -833,7 +835,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: 'toHaveResolvedWith',
         condition: (spy, value) =>
           spy.mock.settledResults.some(
-            ({ type, value: result }) => type === 'fulfilled' && jestEquals(value, result),
+            ({ type, value: result }) =>
+              type === 'fulfilled' &&
+              jestEquals(value, result, [...customTesters, iterableEquality]),
           ),
         action: 'resolve',
       },
@@ -841,7 +845,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: ['toHaveReturnedWith', 'toReturnWith'],
         condition: (spy, value) =>
           spy.mock.results.some(
-            ({ type, value: result }) => type === 'return' && jestEquals(value, result),
+            ({ type, value: result }) =>
+              type === 'return' && jestEquals(value, result, [...customTesters, iterableEquality]),
           ),
         action: 'return',
       },
@@ -872,7 +877,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: 'toHaveLastResolvedWith',
         condition: (spy, value) => {
           const result = spy.mock.settledResults.at(-1)
-          return Boolean(result && result.type === 'fulfilled' && jestEquals(result.value, value))
+          return Boolean(
+            result &&
+            result.type === 'fulfilled' &&
+            jestEquals(result.value, value, [...customTesters, iterableEquality]),
+          )
         },
         action: 'resolve',
       },
@@ -880,7 +889,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: 'toHaveLastReturnedWith',
         condition: (spy, value) => {
           const result = spy.mock.results.at(-1)
-          return Boolean(result && result.type === 'return' && jestEquals(result.value, value))
+          return Boolean(
+            result &&
+            result.type === 'return' &&
+            jestEquals(result.value, value, [...customTesters, iterableEquality]),
+          )
         },
         action: 'return',
       },
@@ -906,7 +919,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: 'toHaveNthResolvedWith',
         condition: (spy, index, value) => {
           const result = spy.mock.settledResults[index - 1]
-          return result && result.type === 'fulfilled' && jestEquals(result.value, value)
+          return (
+            result &&
+            result.type === 'fulfilled' &&
+            jestEquals(result.value, value, [...customTesters, iterableEquality])
+          )
         },
         action: 'resolve',
       },
@@ -914,7 +931,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: 'toHaveNthReturnedWith',
         condition: (spy, index, value) => {
           const result = spy.mock.results[index - 1]
-          return result && result.type === 'return' && jestEquals(result.value, value)
+          return (
+            result &&
+            result.type === 'return' &&
+            jestEquals(result.value, value, [...customTesters, iterableEquality])
+          )
         },
         action: 'return',
       },
