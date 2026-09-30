@@ -10,11 +10,16 @@ import { TypecheckPoolWorker } from './workers/typecheckWorker'
 import { VmForksPoolWorker } from './workers/vmForksWorker'
 import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
-const WORKER_START_TIMEOUT = 90_000
+/**
+ * Added to `workerStartTimeout` for the pool's own limit, so the runner's
+ * more specific timeout error is the one that fires first.
+ */
+const WORKER_START_GRACE = 30_000
 
 interface Options {
   distPath: string
   teardownTimeout: number
+  workerStartTimeout: number
   state: StateManager
 }
 
@@ -128,7 +133,7 @@ export class Pool {
         const id = setTimeout(
           () =>
             resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
-          WORKER_START_TIMEOUT,
+          this.options.workerStartTimeout + WORKER_START_GRACE,
         )
 
         await runner

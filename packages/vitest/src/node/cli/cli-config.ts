@@ -739,6 +739,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Default timeout of a teardown function in milliseconds (default: `10000`)',
     argument: '<timeout>',
   },
+  workerStartTimeout: {
+    description:
+      'Timeout for a test worker to start and report ready in milliseconds (default: `60000`)',
+    argument: '<timeout>',
+  },
   cache: {
     description: 'Enable cache',
     argument: '', // allow only boolean
