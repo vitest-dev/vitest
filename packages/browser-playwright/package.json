@@ -60,7 +60,9 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
+    "pathe": "catalog:",
     "playwright": "catalog:",
+    "vite": "catalog:",
     "vitest": "workspace:*"
   }
 }

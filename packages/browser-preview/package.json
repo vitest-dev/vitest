@@ -52,6 +52,7 @@
     "@vitest/browser": "workspace:*"
   },
   "devDependencies": {
+    "pathe": "catalog:",
     "vitest": "workspace:*"
   }
 }

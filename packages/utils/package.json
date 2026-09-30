@@ -107,6 +107,7 @@
   "devDependencies": {
     "@jridgewell/trace-mapping": "catalog:",
     "@types/convert-source-map": "^2.0.3",
-    "diff-sequences": "^29.6.3"
+    "diff-sequences": "^29.6.3",
+    "pathe": "catalog:"
   }
 }

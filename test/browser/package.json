@@ -29,6 +29,7 @@
     "docker": "docker compose"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
     "@types/react": "^19.2.18",
     "@types/yauzl": "catalog:",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
@@ -37,12 +38,14 @@
     "@vitest/browser-preview": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
+    "pathe": "catalog:",
     "playwright": "catalog:",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "test-dep-error": "file:./deps/test-dep-error",
     "tinyexec": "catalog:",
     "url": "^0.11.4",
+    "vite": "latest",
     "vitest": "workspace:*",
     "vitest-browser-react": "^2.2.0",
     "ws": "catalog:",

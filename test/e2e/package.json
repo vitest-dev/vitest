@@ -30,6 +30,7 @@
     "@vitest/test-dep-optimizer-external": "file:./deps/optimizer/external",
     "@vitest/test-dep-optimizer-optimized": "file:./deps/optimizer/optimized",
     "@vitest/test-dep-optimizer-unparsable": "file:./deps/optimizer/unparsable",
+    "@vitest/ui": "workspace:*",
     "@vitest/utils": "workspace:*",
     "ansivision": "catalog:",
     "flatted": "catalog:",

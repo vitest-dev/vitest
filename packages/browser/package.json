@@ -99,6 +99,7 @@
     "mime": "^4.1.0",
     "pathe": "catalog:",
     "rrweb-snapshot": "2.1.1",
+    "vite": "catalog:",
     "vitest": "workspace:*"
   }
 }
