@@ -1,6 +1,6 @@
 import type { ApiConfig } from '../types/config'
 import type { CliOptions } from './cli-api'
-import { defaultBrowserPort, defaultPort } from '../../constants'
+import { defaultBrowserPort, defaultPort } from '../../constants.ts'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends never | RegExp | unknown[]
   ? never

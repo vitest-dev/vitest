@@ -17,9 +17,13 @@
   "workspaces": {
     ".": {
       "entry": ["scripts/*.{js,ts}", "shims.d.ts"],
+      // pnpm resolves peer dependencies of workspace packages from the root,
+      // @vitest/browser-webdriverio needs vitest as a peer
+      "ignoreDependencies": ["vitest"],
     },
     "docs": {
-      // VitePress resolves these build integrations dynamically.
+      // VitePress resolves these build integrations dynamically,
+      // twoslash code blocks import vitest.
       "ignoreDependencies": [
         "@iconify-json/carbon",
         "@iconify-json/logos",
@@ -28,6 +32,7 @@
         "@vueuse/core",
         "tinyglobby",
         "unocss",
+        "vitest",
       ],
     },
     "packages/browser": {

@@ -4,5 +4,8 @@
   "description": "Tests that should have no access to Vitest APIs in the test process.",
   "scripts": {
     "test": "node --test './test/*'"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
   }
 }
