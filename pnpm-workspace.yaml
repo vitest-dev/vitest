@@ -80,7 +80,7 @@ catalog:
   loupe: ^3.2.1
   magic-string: ^1.2.3
   magicast: ^0.5.4
-  msw: ^2.15.0
+  msw: ^3.0.0
   obug: ^2.1.4
   oxfmt: ^0.70.0
   oxlint: ^1.85.0

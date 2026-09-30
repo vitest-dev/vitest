@@ -84,7 +84,13 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
             },
           }
         : import('msw/browser'),
-      import('msw/core/http'),
+      Promise.any([
+        /* @vite-ignore */
+        // @ts-expect-error to support both v2 and v3
+        import('msw/core/http'),
+        /* @vite-ignore */
+        import('msw/http'),
+      ]) as Promise<typeof import('msw/http')>,
     ])
       .then(([{ setupWorker }, { http }]) => {
         const worker = setupWorker(

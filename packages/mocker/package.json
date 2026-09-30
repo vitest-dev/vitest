@@ -75,7 +75,7 @@
     "dev": "rollup -c --watch"
   },
   "peerDependencies": {
-    "msw": "^2.4.9",
+    "msw": "^2.4.9 || ^3.0.0",
     "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "peerDependenciesMeta": {
