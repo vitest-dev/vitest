@@ -31,6 +31,7 @@
     "@vitejs/plugin-vue": "catalog:",
     "@voidzero-dev/vitepress-theme": "^5.0.6",
     "https-localhost": "^4.7.1",
+    "pathe": "catalog:",
     "tinyglobby": "catalog:",
     "tsx": "catalog:",
     "unocss": "catalog:",
@@ -40,6 +41,7 @@
     "vitepress-plugin-group-icons": "^1.7.6",
     "vitepress-plugin-llms": "^1.13.5",
     "vitepress-plugin-tabs": "^0.9.1",
+    "vitest": "workspace:*",
     "workbox-window": "^7.4.1",
     "wrangler": "catalog:"
   }

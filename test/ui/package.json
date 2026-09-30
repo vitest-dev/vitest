@@ -7,11 +7,16 @@
     "test-fixtures": "vitest"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
     "@testing-library/dom": "^10.4.1",
     "@types/codemirror": "^5.60.18",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
+    "@vitest/coverage-v8": "workspace:*",
+    "@vitest/ui": "workspace:*",
     "happy-dom": "^20.12.0",
+    "pathe": "catalog:",
+    "vite": "latest",
     "vitest": "workspace:*"
   }
 }
