@@ -2,6 +2,7 @@ import type { Plugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import { join, resolve } from 'pathe'
 import { distDir } from '../../paths'
+import { isBrowserExternal, isBuiltin } from '../../utils/modules'
 
 export function VitestProjectResolver(harness: PluginHarness): Plugin {
   let browserEnabled = false
@@ -70,6 +71,29 @@ export function VitestCoreResolver(): Plugin {
           skipSelf: true,
         })
       }
+    },
+  }
+}
+
+export function VitestBuiltinResolver(): Plugin {
+  return {
+    name: 'vitest:resolve-builtin',
+    enforce: 'pre',
+    applyToEnvironment(environment) {
+      return (
+        environment.config.consumer === 'client' && environment.config.dev.moduleRunnerTransform
+      )
+    },
+    async resolveId(id, importer, options) {
+      if (!isBuiltin(id)) {
+        return
+      }
+      const resolved = await this.resolve(id, importer, { ...options, skipSelf: true })
+      // Vite replaces builtins with a browser shim, but the module runner can import them
+      if (resolved && isBrowserExternal(resolved.id)) {
+        return { id, external: true }
+      }
+      return resolved
     },
   }
 }

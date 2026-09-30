@@ -2,6 +2,7 @@ import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { ModuleGraphData } from '../types/general'
 import { getTestFileEnvironment } from './environments'
+import { isBuiltin } from './modules'
 
 export async function getModuleGraph(
   ctx: Vitest,
@@ -53,6 +54,10 @@ export async function getModuleGraph(
       const external = id.slice('__vite-browser-external:'.length)
       externalized.add(external)
       return external
+    }
+    if (isBuiltin(id)) {
+      externalized.add(id)
+      return id
     }
     const external = project._resolver.wasExternalized(id)
     if (typeof external === 'string') {
