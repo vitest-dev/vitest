@@ -411,10 +411,22 @@ class ModuleFetcher {
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
   ): Promise<VitestFetchResult> {
-    const moduleRunnerModule = await fetchModule(environment, url, importer, {
-      ...options,
-      inlineSourceMap: false,
-    }).catch(handleRollupError)
+    const fetchOptions = { ...options, inlineSourceMap: false }
+    const moduleRunnerModule = await fetchModule(environment, url, importer, fetchOptions)
+      .catch(async (error) => {
+        // Vite loads imported modules without the `server.fs` checks when it
+        // pre-transforms them, but Vitest disables pre-transforming
+        if (
+          importer &&
+          environment.config.consumer === 'client' &&
+          error?.code === 'ERR_LOAD_URL'
+        ) {
+          await environment.warmupRequest(url)
+          return fetchModule(environment, url, importer, fetchOptions)
+        }
+        throw error
+      })
+      .catch(handleRollupError)
 
     const result: VitestFetchResult = processResultSource(environment, moduleRunnerModule)
     if ('code' in result) {
