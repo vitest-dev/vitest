@@ -12,7 +12,12 @@ body:
     attributes:
       label: Describe the bug
       description: A clear and concise description of what the bug is. If you intend to submit a PR for this issue, tell us in the description. Thanks!
-      placeholder: I am doing ... What I expect is ... What actually happening is ...
+      value: |
+        <!-- Brief description of the bug, maximum of 200 words -->
+        #### Brief description of the bug
+
+        <!-- More context, if needed -->
+        #### More context
     validations:
       required: true
   - type: textarea
