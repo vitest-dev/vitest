@@ -646,6 +646,7 @@ export interface Assertion<R extends void | Promise<void> = void, T = unknown>
     JestAssertion<R, T>,
     ChaiMockAssertion<R, T>,
     Matchers<R, T> {
+  not: Assertion<R, T>
   /**
    * Ensures a value is of a specific type.
    *
