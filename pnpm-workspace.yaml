@@ -76,7 +76,7 @@ catalog:
   loupe: ^3.2.1
   magic-string: ^1.4.2
   magicast: ^0.5.5
-  msw: ^2.15.0
+  msw: ^3.0.0
   obug: ^3.0.0
   oxfmt: ^0.71.0
   oxlint: ^1.86.0

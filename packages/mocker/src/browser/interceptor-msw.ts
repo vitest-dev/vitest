@@ -31,6 +31,11 @@ export interface ModuleMockerMSWInterceptorOptions {
   mswWorker?: SetupWorker
 }
 
+const mswHttp = {
+  v2: 'msw/core/http',
+  v3: 'msw/http',
+} as const
+
 export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
   protected readonly mocks: MockerRegistry = new MockerRegistry()
 
@@ -84,7 +89,10 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
             },
           }
         : import('msw/browser'),
-      import('msw/core/http'),
+      Promise.any([
+        import(/* @vite-ignore */ mswHttp.v2),
+        import(/* @vite-ignore */ mswHttp.v3),
+      ]) as Promise<typeof import('msw/http')>,
     ])
       .then(([{ setupWorker }, { http }]) => {
         const worker = setupWorker(
