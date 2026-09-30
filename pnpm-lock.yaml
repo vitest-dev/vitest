@@ -1004,7 +1004,7 @@ importers:
         specifier: 'catalog:'
         version: 0.2.17
       why-is-node-running:
-        specifier: ^3.2.1
+        specifier: 3.2.1
         version: 3.2.1
     devDependencies:
       '@antfu/install-pkg':
