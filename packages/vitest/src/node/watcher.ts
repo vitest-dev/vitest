@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { noop, slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import pm from 'picomatch'
+import { isCSSRequest } from 'vite'
 
 export class VitestWatcher {
   /**
@@ -197,6 +198,18 @@ export class VitestWatcher {
       return false
     }
 
+    // a stylesheet can depend on any file, like the sources Tailwind scans for class names.
+    // following it from an imported file would rerun every test that imports the stylesheet
+    const skipStylesheets =
+      !isCSSRequest(filepath) &&
+      projects.some((project) => {
+        return project._getViteEnvironments().some(({ moduleGraph }) => {
+          return Array.from(moduleGraph.getModulesByFile(filepath) || []).some((mod) => {
+            return Array.from(mod.importers).some((importer) => !isCSSRequest(importer.url))
+          })
+        })
+      })
+
     const files: string[] = []
 
     for (const project of projects) {
@@ -220,7 +233,7 @@ export class VitestWatcher {
       for (const mods of environmentMods) {
         for (const mod of mods || []) {
           mod.importers.forEach((i) => {
-            if (!i.file) {
+            if (!i.file || (skipStylesheets && isCSSRequest(i.url))) {
               return
             }
 
