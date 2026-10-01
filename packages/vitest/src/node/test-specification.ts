@@ -1,4 +1,5 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
+import type { ContextTestEnvironment } from '../types/worker'
 import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
 import type { Pool } from './types/config'
@@ -10,6 +11,12 @@ export interface TestSpecificationOptions {
   testIds?: string[]
   testLines?: number[]
   testTagsFilter?: string[]
+}
+
+/** @internal */
+export interface SpecificationDocblock {
+  environment: ContextTestEnvironment
+  tags: string[]
 }
 
 export class TestSpecification {
@@ -45,6 +52,9 @@ export class TestSpecification {
    * The tags of tests to run.
    */
   public testTagsFilter: string[] | undefined
+
+  /** @internal */
+  public _docblock: SpecificationDocblock | undefined
 
   /**
    * This class represents a test suite for a test module within a single project.

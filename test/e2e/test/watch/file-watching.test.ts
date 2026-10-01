@@ -291,3 +291,45 @@ describe('browser', () => {
     },
   )
 })
+
+test('editing the environment comment of a test file uses the new environment', async () => {
+  // written this way so the comment is not picked up from this file
+  const environmentComment = `// @vitest-${'environment'} custom`
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      'vitest.config.js': `
+        import { fileURLToPath } from 'node:url'
+        export default {
+          resolve: {
+            alias: {
+              'vitest-environment-custom': fileURLToPath(new URL('./env.js', import.meta.url)),
+            },
+          },
+        }
+      `,
+      'env.js': `
+        export default {
+          name: 'custom',
+          viteEnvironment: 'ssr',
+          setup() {
+            globalThis.__environment = 'custom'
+            return { teardown() { delete globalThis.__environment } }
+          },
+        }
+      `,
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+        test('environment', () => expect(globalThis.__environment).toBe('custom'))
+      `,
+    },
+    { watch: true },
+  )
+
+  await vitest.waitForStdout('Tests failed. Watching for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('basic.test.js', (content) => `${environmentComment}\n${content}`)
+
+  await vitest.waitForStdout('RERUN  ../basic.test.js')
+  await vitest.waitForStdout('1 passed')
+})

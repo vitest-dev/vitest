@@ -1,5 +1,5 @@
 import { relative, resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createMethodsRPC, createVitest } from 'vitest/node'
 import {
   createFile,
@@ -775,4 +775,51 @@ test('prewarm skips factory-mocked and dynamically imported subtrees', async () 
   // fs module cache hit
   expect(await prewarmed('fetch')).toEqual(expected)
   expect(await prewarmed('transformRequest')).toEqual(expected)
+})
+
+test('prewarm follows __mocks__ redirects and setup file mocks', async () => {
+  const root = resolvePath(import.meta.url, `../fixtures/vm-prewarm-${crypto.randomUUID()}`)
+  useFS(root, {
+    'redirected/index.js': `import './leaf.js'`,
+    'redirected/leaf.js': 'export {}',
+    'redirected/__mocks__/index.js': `import './mock-leaf.js'`,
+    'redirected/__mocks__/mock-leaf.js': 'export {}',
+    'setup-mocked/index.js': `import './leaf.js'`,
+    'setup-mocked/leaf.js': 'export {}',
+    'setup.js': `import { vi } from 'vitest'\nvi.mock('./setup-mocked/index.js', () => ({}))\n`,
+    'consumer.test.js': `
+      import { test, vi } from 'vitest'
+      import './redirected/index.js'
+      import './setup-mocked/index.js'
+
+      vi.mock('./redirected/index.js')
+
+      test('stub', () => {})
+    `,
+  })
+
+  const ctx = await createVitest('test', {
+    root,
+    watch: false,
+    setupFiles: ['./setup.js'],
+    reporters: [],
+  })
+  onTestFinished(() => ctx.close())
+  const project = ctx.getRootProject()
+  const testFile = resolve(root, 'consumer.test.js')
+  const rpc = createMethodsRPC(project)
+  await rpc.fetch(testFile, undefined, 'ssr')
+  await rpc.prewarmModuleGraph('ssr', [testFile])
+
+  const prewarmed = [...project.vite.environments.ssr.moduleGraph.idToModuleMap.values()]
+    .filter((mod) => mod.transformResult && mod.id?.startsWith(root) && mod.id !== testFile)
+    .map((mod) => relative(root, mod.id!))
+    .sort()
+  expect(prewarmed).toMatchInlineSnapshot(`
+    [
+      "redirected/__mocks__/index.js",
+      "redirected/__mocks__/mock-leaf.js",
+      "setup.js",
+    ]
+  `)
 })

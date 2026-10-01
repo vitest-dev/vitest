@@ -1,11 +1,8 @@
 import type { Vitest } from './core'
-import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
-import { existsSync } from 'node:fs'
-import os from 'node:os'
-import { join, relative, resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
-import { isWindows } from '../utils/env'
+import { AffectedModulesResolver } from './affected-modules'
 import { groupFilters, parseFilter } from './cli/filter'
 import { IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 
@@ -99,6 +96,12 @@ export class VitestSpecifications {
     }
   }
 
+  public invalidateDocblock(moduleId: string): void {
+    this._cachedSpecs.get(moduleId)?.forEach((spec) => {
+      spec._docblock = undefined
+    })
+  }
+
   private getCachedSpecifications(moduleId: string): TestSpecification[] | undefined {
     return this._cachedSpecs.get(moduleId)
   }
@@ -144,122 +147,8 @@ export class VitestSpecifications {
       return []
     }
 
-    // The module graph, and so the dependency edges, are per project.
-    const specsByProject = new Map<TestProject, TestSpecification[]>()
-    for (const spec of specs) {
-      let projectSpecs = specsByProject.get(spec.project)
-      if (!projectSpecs) {
-        specsByProject.set(spec.project, (projectSpecs = []))
-      }
-      projectSpecs.push(spec)
-    }
-
-    const affectedByProject = new Map<TestProject, Set<string>>()
-    for (const [project, projectSpecs] of specsByProject) {
-      affectedByProject.set(project, await this.getAffectedModules(project, projectSpecs, related))
-    }
-
-    const affectedSpecs = specs.filter((spec) =>
-      affectedByProject.get(spec.project)!.has(spec.moduleId),
-    )
+    const affectedSpecs = await new AffectedModulesResolver(this.vitest, related).resolve(specs)
     this.vitest._sourceFilterResult = { affected: affectedSpecs.length, total: specs.length }
     return affectedSpecs
-  }
-
-  /**
-   * Returns every module in `project` that transitively imports one of `related`.
-   *
-   * Expands each module's imports at most once into a shared reverse-edge map,
-   * then walks that map backwards from the changed files.
-   */
-  private async getAffectedModules(
-    project: TestProject,
-    specs: TestSpecification[],
-    related: string[],
-  ): Promise<Set<string>> {
-    const importers = new Map<string, Set<string>>()
-    const visited = new Set<string>()
-    const existsCache = new Map<string, boolean>()
-
-    // limit concurrency to lower peak memory usage on large graphs
-    const TRANSFORM_CONCURRENCY = os.availableParallelism?.() ?? os.cpus().length
-    let active = 0
-    const waiters: Array<() => void> = []
-    const withLimit = async <T>(fn: () => Promise<T>): Promise<T> => {
-      if (active >= TRANSFORM_CONCURRENCY) {
-        await new Promise<void>((resolve) => waiters.push(resolve))
-      }
-      active++
-      try {
-        return await fn()
-      } finally {
-        active--
-        waiters.shift()?.()
-      }
-    }
-
-    const cachedExists = (filepath: string): boolean => {
-      const cached = existsCache.get(filepath)
-      if (cached !== undefined) {
-        return cached
-      }
-      const result = existsSync(filepath)
-      existsCache.set(filepath, result)
-      return result
-    }
-
-    const addImports = async (filepath: string) => {
-      // `visited` is shared by every spec in the project, so a module is
-      // expanded once per run instead of once per test file that reaches it.
-      if (visited.has(filepath)) {
-        return
-      }
-      visited.add(filepath)
-
-      const environment = project.vite.environments.ssr
-      const mod = environment.moduleGraph.getModuleById(filepath)
-      const transformed =
-        mod?.transformResult ||
-        (await withLimit(() => project._transformService.transform(filepath, environment)))
-      if (!transformed) {
-        return
-      }
-      const dependencies = [...(transformed.deps || []), ...(transformed.dynamicDeps || [])]
-      await Promise.all(
-        dependencies.map(async (dep) => {
-          const fsPath = dep.startsWith('/@fs/')
-            ? dep.slice(isWindows ? 5 : 4)
-            : join(project.config.root, dep)
-          if (fsPath.includes('node_modules') || !cachedExists(fsPath)) {
-            return
-          }
-          let importedBy = importers.get(fsPath)
-          if (!importedBy) {
-            importers.set(fsPath, (importedBy = new Set()))
-          }
-          importedBy.add(filepath)
-          await addImports(fsPath)
-        }),
-      )
-    }
-
-    await Promise.all(specs.map((spec) => addImports(spec.moduleId)))
-
-    const affected = new Set<string>(related)
-    const queue = [...related]
-    while (queue.length) {
-      const importedBy = importers.get(queue.pop()!)
-      if (!importedBy) {
-        continue
-      }
-      for (const importer of importedBy) {
-        if (!affected.has(importer)) {
-          affected.add(importer)
-          queue.push(importer)
-        }
-      }
-    }
-
-    return affected
   }
 }

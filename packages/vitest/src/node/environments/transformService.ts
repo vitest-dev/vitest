@@ -33,6 +33,7 @@ import { hash } from '../hash'
 import { detectModuleType } from '../resolver'
 import { fsPathFromId } from '../vite'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
+import { getStaticMocks } from './staticMocks'
 
 const debugFs = createDebugger('vitest:cache:fs')
 
@@ -462,8 +463,7 @@ export class ModuleTransformService {
     const transformResult = moduleGraphModule.transformResult
     if (transformResult && moduleGraphModule.id) {
       transformResult.__vitestStaticMocks ??=
-        environment.pluginContainer.getModuleInfo(moduleGraphModule.id)?.meta?.vitestStaticMocks ??
-        null
+        getStaticMocks(environment, moduleGraphModule.id) ?? null
     }
     return result
   }

@@ -1589,6 +1589,7 @@ export class Vitest {
    * Invalidate a file in all projects.
    */
   public invalidateFile(filepath: string): void {
+    this.specifications.invalidateDocblock(filepath)
     this.projects.forEach(({ vite }) => {
       const environments = Object.values(vite.environments)
 

@@ -25,6 +25,8 @@ export interface StaticMockCall {
   hasFactory: boolean
   /** the factory uses `importOriginal`/`importActual` */
   factoryLoadsOriginal: boolean
+  /** called without a factory or options, so the module is automocked or redirected to `__mocks__` */
+  automock?: boolean
 }
 
 export interface HoistMocksOptions {
@@ -339,6 +341,7 @@ export function hoistMocks(
                 method: methodName,
                 specifier,
                 hasFactory: factory != null,
+                automock: node.arguments.length === 1,
                 factoryLoadsOriginal:
                   factory != null &&
                   (factory.params.length > 0 ||
