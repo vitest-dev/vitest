@@ -333,3 +333,39 @@ test('editing the environment comment of a test file uses the new environment', 
   await vitest.waitForStdout('RERUN  ../basic.test.js')
   await vitest.waitForStdout('1 passed')
 })
+
+test.each([
+  [
+    'snapshot serializer',
+    { snapshotSerializers: ['./loaded.js'] },
+    `export default { serialize: () => '', test: () => false }\n`,
+  ],
+  ['diff config', { diff: './loaded.js' }, 'export default {}\n'],
+])('editing a %s reruns the tests of its project', async (_, options, content) => {
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      'loaded.js': content,
+      'first/a.test.js': `import { test } from 'vitest'\ntest('[first] reruns', () => {})\n`,
+      'second/b.test.js': `import { test } from 'vitest'\ntest("[second] doesn't rerun", () => {})\n`,
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { test: { name: 'first', include: ['first/*.test.js'], ...options } },
+            { test: { name: 'second', include: ['second/*.test.js'] } },
+          ],
+        },
+      },
+    },
+    { watch: true },
+  )
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('loaded.js', (file) => `${file}\n`)
+
+  await vitest.waitForStdout('RERUN  ../loaded.js')
+  await vitest.waitForStdout('Test Files  1 passed')
+  expect(vitest.stdout).toContain('[first] reruns')
+  expect(vitest.stdout).not.toContain("[second] doesn't rerun")
+})

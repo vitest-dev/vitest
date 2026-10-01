@@ -451,4 +451,392 @@ describe('mocked modules', () => {
       ]
     `)
   })
+
+  test('a test with its own mocks still runs when a shared module is affected', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'src/dep.js': 'export {}',
+        'src/shared.js': `import './changed.js'`,
+        'src/changed.js': 'export {}',
+        'a.test.js': testFile(
+          'a',
+          `import { vi } from 'vitest'\nimport './src/dep.js'\nimport './src/shared.js'\nvi.mock('./src/dep.js', () => ({}))`,
+        ),
+        'b.test.js': testFile('b', `import './src/shared.js'`),
+      },
+      { related: ['src/changed.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a module mocked in one test is still transformed for a test that imports it', async () => {
+    const transformed = useTransformed()
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': trackTransforms(),
+        'src/dep.js': `import './nested.js'`,
+        'src/nested.js': 'export {}',
+        'a.test.js': mockedTest(`vi.mock('./src/dep.js', () => ({}))`),
+        'b.test.js': testFile('b', `import './src/dep.js'`),
+      },
+      { related: ['src/nested.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+    expect(transformed.sort()).toMatchInlineSnapshot(`
+      [
+        "a.test.js",
+        "b.test.js",
+        "src/dep.js",
+        "src/nested.js",
+      ]
+    `)
+  })
+
+  test('a package redirected to the root __mocks__ is followed', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        '__mocks__/tinyspy.js': `import '../src/helper.js'\nexport const spyOn = () => {}`,
+        'src/helper.js': 'export {}',
+        'a.test.js': testFile(
+          'a',
+          `import { vi } from 'vitest'\nimport 'tinyspy'\nvi.mock('tinyspy')`,
+        ),
+        'b.test.js': testFile('b', `import 'tinyspy'`),
+      },
+      { related: ['src/helper.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a mock inside an imported module does not skip the mocked module', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'src/dep.js': 'export {}',
+        'src/helper.js': `import { vi } from 'vitest'\nvi.mock('./dep.js', () => ({}))\n`,
+        'a.test.js': testFile('a', `import './src/helper.js'\nimport './src/dep.js'`),
+      },
+      { related: ['src/dep.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+})
+
+describe('files loaded for every test', () => {
+  test.each([
+    [
+      'snapshotSerializers',
+      { snapshotSerializers: ['./loaded.js'] },
+      `export default { serialize: () => '', test: () => false }`,
+    ],
+    [
+      'snapshotEnvironment',
+      { snapshotEnvironment: './loaded.js' },
+      `import { VitestSnapshotEnvironment } from 'vitest/runtime'\nexport default new VitestSnapshotEnvironment()`,
+    ],
+    ['diff', { diff: './loaded.js' }, 'export default {}'],
+    ['runner', { runner: './loaded.js' }, `export { TestRunner as default } from 'vitest'`],
+    ['environment', { environment: './loaded.js' }, customEnvironment],
+  ])('a file imported by %s runs every test', async (_, config, content) => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { test: config },
+        'loaded.js': `import './src/helper.js'\n${content}`,
+        'src/helper.js': 'export {}',
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b'),
+      },
+      { related: ['src/helper.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
+  test('an unrelated change runs only the tests that import it', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'], runner: './runner.js' } },
+        'setup.js': `import './src/helper.js'`,
+        'runner.js': `export { TestRunner as default } from 'vitest'`,
+        'src/helper.js': 'export {}',
+        'src/other.js': 'export {}',
+        'a.test.js': testFile('a', `import './src/other.js'`),
+        'b.test.js': testFile('b'),
+      },
+      { related: ['src/other.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+})
+
+describe('projects', () => {
+  test('a file imported by the root config runs the tests of every project', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': `
+          import { shared } from './vitest.shared.js'
+          export default {
+            test: {
+              projects: [
+                { test: { ...shared, name: 'first', include: ['first/*.test.js'] } },
+                { test: { ...shared, name: 'second', include: ['second/*.test.js'] } },
+              ],
+            },
+          }
+        `,
+        'vitest.shared.js': 'export const shared = {}',
+        'first/a.test.js': testFile('a'),
+        'second/b.test.js': testFile('b'),
+      },
+      { related: ['vitest.shared.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "first/a.test.js": {
+          "a": "passed",
+        },
+        "second/b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a file imported by the root config runs the tests of every config project', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': `
+          import './vitest.shared.js'
+          export default { test: { projects: ['./first', './second'] } }
+        `,
+        'vitest.shared.js': 'export {}',
+        'first/vitest.config.js': { test: { name: 'first' } },
+        'first/a.test.js': testFile('a'),
+        'second/vitest.config.js': { test: { name: 'second' } },
+        'second/b.test.js': testFile('b'),
+      },
+      { related: ['vitest.shared.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a setup file defined in a project config runs only the tests of that project', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { projects: ['./first', './second'] } },
+        'first/vitest.config.js': { test: { name: 'first', setupFiles: ['./setup.js'] } },
+        'first/setup.js': `import '../src/helper.js'`,
+        'first/a.test.js': testFile('a'),
+        'second/vitest.config.js': { test: { name: 'second' } },
+        'second/b.test.js': testFile('b'),
+        'src/helper.js': 'export {}',
+      },
+      { related: ['src/helper.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a mock in a setup file applies only to the tests of that project', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': {
+          test: {
+            projects: [
+              { test: { name: 'first', include: ['first/*.test.js'], setupFiles: ['./setup.js'] } },
+              { test: { name: 'second', include: ['second/*.test.js'] } },
+            ],
+          },
+        },
+        'setup.js': `import { vi } from 'vitest'\nvi.mock('./src/dep.js', () => ({}))\n`,
+        'src/dep.js': 'export {}',
+        'first/a.test.js': testFile('a', `import '../src/dep.js'`),
+        'second/b.test.js': testFile('b', `import '../src/dep.js'`),
+      },
+      { related: ['src/dep.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "second/b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
+  test('the same test file runs only in the project affected by the change', async () => {
+    const { stderr, buildTree } = await runInlineTests(
+      {
+        'vitest.config.js': {
+          test: {
+            projects: [
+              { test: { name: 'first', setupFiles: ['./setup.js'] } },
+              { test: { name: 'second' } },
+            ],
+          },
+        },
+        'setup.js': `import './src/helper.js'`,
+        'src/helper.js': 'export {}',
+        'a.test.js': testFile('a'),
+      },
+      { related: ['src/helper.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(buildTree((testCase) => testCase.project.name)).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "first",
+        },
+      }
+    `)
+  })
+})
+
+test('the environment comment is ignored for browser tests', async () => {
+  const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
+  useFS(root, {
+    'vitest.config.js': `
+      import { playwright } from '@vitest/browser-playwright'
+      export default {
+        test: {
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      }
+    `,
+    'a.test.js': testFile('a', `${environmentComment('custom')}\nimport './src/helper.js'`),
+    'src/helper.js': 'export {}',
+  })
+  const vitest = await createVitest('test', { root, watch: false })
+  onTestFinished(() => vitest.close())
+
+  vitest.config.related = [`${root}/src/helper.js`]
+  const specifications = await vitest.getRelevantTestSpecifications()
+  expect(specifications.map((spec) => [spec.pool, spec._docblock])).toMatchInlineSnapshot(`
+    [
+      [
+        "browser",
+        undefined,
+      ],
+    ]
+  `)
+})
+
+test('the run uses the environment comment read when filtering', async () => {
+  const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
+  const { editFile } = useFS(root, {
+    'vitest.config.js': `
+      import { fileURLToPath } from 'node:url'
+      export default {
+        resolve: {
+          alias: {
+            'vitest-environment-custom': fileURLToPath(new URL('./env.js', import.meta.url)),
+          },
+        },
+      }
+    `,
+    'env.js': `
+      export default {
+        name: 'custom',
+        viteEnvironment: 'ssr',
+        setup() {
+          globalThis.__environment = 'custom'
+          return { teardown() { delete globalThis.__environment } }
+        },
+      }
+    `,
+    'a.test.js': `${environmentComment('custom')}
+import { expect, test } from 'vitest'
+test('environment', () => expect(globalThis.__environment).toBe('custom'))
+`,
+  })
+  const vitest = await createVitest('test', { root, watch: false, reporters: [{}] })
+  onTestFinished(() => vitest.close())
+
+  vitest.config.related = [`${root}/env.js`]
+  const specifications = await vitest.getRelevantTestSpecifications()
+  // the file is not read again, so the run still uses the environment from the comment
+  editFile('a.test.js', (content) => content.replace(environmentComment('custom'), ''))
+
+  const { testModules } = await vitest.runTestSpecifications(specifications)
+  expect(testModules.map((testModule) => testModule.state())).toEqual(['passed'])
 })
