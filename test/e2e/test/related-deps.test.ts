@@ -239,6 +239,70 @@ test('a file imported by a project config runs only the tests of that project', 
   `)
 })
 
+test.each([
+  ['raw', 'src/data.txt', `import './src/data.txt?raw'`],
+  ['url', 'src/dep.js', `import './src/dep.js?url'`],
+  ['inline css', 'src/style.css', `import './src/style.css?inline'`],
+  ['raw through a module', 'src/data.txt', `import './src/loader.js'`],
+])(
+  'a file imported with a query (%s) runs the test that imports it',
+  async (_, changed, imports) => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'src/data.txt': 'hello',
+        'src/dep.js': 'export {}',
+        'src/style.css': '.a {}',
+        'src/loader.js': `import './data.txt?raw'`,
+        'a.test.js': testFile('a', imports),
+        'b.test.js': testFile('b'),
+      },
+      { related: [changed] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+  },
+)
+
+test('imports are followed for modules served from the fs module cache', async () => {
+  const cold = await runInlineTests({
+    'vitest.config.js': {
+      test: { fsModuleCache: true, fsModuleCachePath: './node_modules/.vitest-fs-cache' },
+    },
+    'src/data.txt': 'hello',
+    'src/shared.js': `import './nested.js'`,
+    'src/nested.js': 'export {}',
+    'a.test.js': testFile('a', `import './src/data.txt?raw'`),
+    'b.test.js': testFile('b', `import './src/shared.js'`),
+    'c.test.js': testFile('c'),
+  })
+  expect(cold.stderr).toBe('')
+  await cold.ctx?.close()
+
+  const { stderr, testTree } = await runVitest({
+    root: cold.root,
+    related: ['src/data.txt', 'src/nested.js'],
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+      "b.test.js": {
+        "b": "passed",
+      },
+    }
+  `)
+})
+
 test('a manual mock from __mocks__ runs only the test that mocks it', async () => {
   const { stderr, testTree } = await runInlineTests(
     {

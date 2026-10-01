@@ -5,8 +5,7 @@ import type { TestSpecification } from './test-specification'
 import { existsSync } from 'node:fs'
 import os from 'node:os'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { isAbsolute, join, resolve } from 'pathe'
-import { isWindows } from '../utils/env'
+import { isAbsolute, resolve } from 'pathe'
 import { getSpecificationDocblock } from '../utils/test-helpers'
 import { getStaticMocks, resolveStaticMocks } from './environments/staticMocks'
 
@@ -208,37 +207,37 @@ class ProjectGraph {
     this.environment = project.vite.environments.ssr
   }
 
-  getModule(filepath: string): Promise<ModuleNode | null> {
-    let node = this.modules.get(filepath)
+  getModule(id: string): Promise<ModuleNode | null> {
+    let node = this.modules.get(id)
     if (!node) {
-      node = this.loadModule(filepath)
-      this.modules.set(filepath, node)
+      node = this.loadModule(id)
+      this.modules.set(id, node)
     }
     return node
   }
 
   /**
-   * Modules that are never loaded when `filepath` hoists its mocks.
+   * Modules that are never loaded when `id` hoists its mocks.
    */
-  async getMockedModules(filepath: string): Promise<Set<string>> {
-    return (await this.getModule(filepath))?.mocked ?? new Set()
+  async getMockedModules(id: string): Promise<Set<string>> {
+    return (await this.getModule(id))?.mocked ?? new Set()
   }
 
   // a module that fails to load is treated as affected, so its tests run and report the error
-  private async loadModule(filepath: string): Promise<ModuleNode | null> {
+  private async loadModule(id: string): Promise<ModuleNode | null> {
     try {
-      return await this.transformModule(filepath)
+      return await this.transformModule(id)
     } catch {
       return { dependencies: [], mocked: new Set(), failed: true }
     }
   }
 
-  private async transformModule(filepath: string): Promise<ModuleNode | null> {
-    const mod = this.environment.moduleGraph.getModuleById(filepath)
+  private async transformModule(id: string): Promise<ModuleNode | null> {
+    const mod = this.environment.moduleGraph.getModuleById(id)
     const transformed =
       mod?.transformResult ||
       (await this.resolver.withTransformLimit(() =>
-        this.project._transformService.transform(filepath, this.environment),
+        this.project._transformService.transform(id, this.environment),
       ))
     if (!transformed) {
       return null
@@ -247,19 +246,24 @@ class ProjectGraph {
     const { replaced, redirects } = await resolveStaticMocks(
       this.environment,
       this.project.config,
-      filepath,
-      getStaticMocks(this.environment, filepath, transformed),
+      id,
+      getStaticMocks(this.environment, id, transformed),
     )
-    const dependencies = [...(transformed.deps || []), ...(transformed.dynamicDeps || [])]
-      .map((dep) =>
-        dep.startsWith('/@fs/')
-          ? dep.slice(isWindows ? 5 : 4)
-          : join(this.project.config.root, dep),
-      )
-      .concat(redirects)
-      .filter((dep) => this.resolver.isLocalSourceFile(dep))
+    // ids keep the query, so `./file.txt?raw` is walked as its own module
+    const node = this.environment.moduleGraph.getModuleById(id)
+    const dependencies: string[] = []
+    node?.importedModules.forEach((imported) => {
+      if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
+        dependencies.push(imported.id)
+      }
+    })
+    redirects.forEach((file) => {
+      if (this.resolver.isLocalSourceFile(file)) {
+        dependencies.push(file)
+      }
+    })
 
-    return { dependencies, mocked: new Set(Array.from(replaced, (id) => cleanUrl(id))) }
+    return { dependencies, mocked: new Set(Array.from(replaced, (mockedId) => cleanUrl(mockedId))) }
   }
 }
 
@@ -287,9 +291,9 @@ class GraphWalk {
   // modules that import a changed file through modules that are not in `mocked`
   getAffected(mocked: Set<string>): Set<string> {
     const affected = new Set<string>()
-    for (const file of this.changed) {
-      if (!mocked.has(file)) {
-        affected.add(file)
+    for (const id of this.changed) {
+      if (!mocked.has(id)) {
+        affected.add(id)
       }
     }
     const queue = [...affected]
@@ -308,17 +312,17 @@ class GraphWalk {
     return affected
   }
 
-  // whether `filepath` imports a changed file without passing through `mocked`,
+  // whether `id` imports a changed file without passing through `mocked`,
   // only modules in `affected` can lead to a change
-  reachesChange(filepath: string, mocked: Set<string>, affected: Set<string>): boolean {
-    const visited = new Set([filepath])
-    const stack = [filepath]
+  reachesChange(id: string, mocked: Set<string>, affected: Set<string>): boolean {
+    const visited = new Set([id])
+    const stack = [id]
     while (stack.length) {
-      const file = stack.pop()!
-      if (this.changed.has(file)) {
+      const current = stack.pop()!
+      if (this.changed.has(current)) {
         return true
       }
-      for (const dep of this.dependencies.get(file) ?? []) {
+      for (const dep of this.dependencies.get(current) ?? []) {
         if (affected.has(dep) && !mocked.has(dep) && !visited.has(dep)) {
           visited.add(dep)
           stack.push(dep)
@@ -328,31 +332,32 @@ class GraphWalk {
     return false
   }
 
-  private async addModule(filepath: string, mocked: Set<string>): Promise<void> {
-    const previous = this.mockedByAll.get(filepath)
+  private async addModule(id: string, mocked: Set<string>): Promise<void> {
+    const previous = this.mockedByAll.get(id)
     if (previous) {
       if (isSubset(previous, mocked)) {
         return
       }
-      mocked = new Set([...previous].filter((id) => mocked.has(id)))
+      mocked = new Set([...previous].filter((mockedId) => mocked.has(mockedId)))
     }
-    this.mockedByAll.set(filepath, mocked)
+    this.mockedByAll.set(id, mocked)
 
-    const node = await this.graph.getModule(filepath)
+    const node = await this.graph.getModule(id)
     if (!node) {
       return
     }
-    if (node.failed) {
-      this.changed.add(filepath)
+    // a file imported with a query is a separate module
+    if (node.failed || this.changed.has(cleanUrl(id))) {
+      this.changed.add(id)
     }
-    this.dependencies.set(filepath, node.dependencies)
+    this.dependencies.set(id, node.dependencies)
     await Promise.all(
       node.dependencies.map((dep) => {
         let importedBy = this.importers.get(dep)
         if (!importedBy) {
           this.importers.set(dep, (importedBy = new Set()))
         }
-        importedBy.add(filepath)
+        importedBy.add(id)
         return mocked.has(dep) ? undefined : this.addModule(dep, mocked)
       }),
     )
