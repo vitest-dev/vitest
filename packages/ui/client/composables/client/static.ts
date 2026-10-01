@@ -1,10 +1,10 @@
 import type { RunnerTestFile, SerializedRootConfig } from 'vitest'
-import type { SerializedProjectEnvironmentModules } from '../../../../vitest/src/utils/serialized-module-graph'
+import type { SerializedProjectEnvironmentModules } from '../../../../vitest/src/utils/module-graph-serialization'
 import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
-import { deriveModuleGraphData } from '../../../../vitest/src/utils/serialized-module-graph'
+import { deriveModuleGraphData } from '../../../../vitest/src/utils/module-graph-serialization'
 import { StateManager } from './state'
 
 export interface HTMLReportMetadata {

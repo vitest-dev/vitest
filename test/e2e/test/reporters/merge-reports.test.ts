@@ -14,7 +14,7 @@ import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
 import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
 import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph.js'
-import { deriveModuleGraphData } from '../../../../packages/vitest/src/utils/serialized-module-graph.js'
+import { deriveModuleGraphData } from '../../../../packages/vitest/src/utils/module-graph-serialization.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
