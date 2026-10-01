@@ -4,8 +4,12 @@ import { expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { runInlineTests, useFS } from '#test-utils'
 
+function affectedSummary(stdout: string) {
+  return stdout.split('\n').find((line) => line.includes('Affected'))
+}
+
 test('custom vcsProvider that returns specific files runs only matching tests', async () => {
-  const { testTree, stderr } = await runInlineTests(
+  const { testTree, stderr, stdout } = await runInlineTests(
     {
       'vitest.config.js': `
       import path from 'node:path'
@@ -51,6 +55,47 @@ test('custom vcsProvider that returns specific files runs only matching tests', 
       },
     }
   `)
+  expect(affectedSummary(stdout)).toMatchInlineSnapshot(
+    `"   Affected  1 of 2 test files (related to 1 changed file)"`,
+  )
+})
+
+test('related prints how many test files were affected', async () => {
+  const { testTree, stderr, stdout } = await runInlineTests(
+    {
+      'src/changed.ts': 'export const a = 1',
+      'src/not-changed.ts': 'export const b = 2',
+      'related.test.ts': `
+      import { a } from './src/changed.ts'
+      import { test, expect } from 'vitest'
+      test('related test', () => {
+        expect(a).toBe(1)
+      })
+    `,
+      'not-related.test.ts': `
+      import { b } from './src/not-changed.ts'
+      import { test, expect } from 'vitest'
+      test('not related test', () => {
+        expect(b).toBe(2)
+      })
+    `,
+    },
+    {
+      related: ['src/changed.ts'],
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "related.test.ts": {
+        "related test": "passed",
+      },
+    }
+  `)
+  expect(affectedSummary(stdout)).toMatchInlineSnapshot(
+    `"   Affected  1 of 2 test files (related to src/changed.ts)"`,
+  )
 })
 
 test('custom vcsProvider that returns no files runs no tests', async () => {
