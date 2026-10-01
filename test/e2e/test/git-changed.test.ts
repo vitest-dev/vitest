@@ -30,7 +30,7 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
 
   it('should run no tests if file does not exist', async () => {
     const { stdout } = await run()
-    expect(stdout).toContain('No test files found, exiting with code 0')
+    expect(stdout).toMatch(/No (changed|affected test) files found, exiting with code 0/)
   })
 })
 
@@ -57,7 +57,7 @@ it.skipIf(process.env.ECOSYSTEM_CI)(
       root: './fixtures/git-changed/workspace',
     })
 
-    expect(stdout).toContain('No test files found, exiting with code 0')
+    expect(stdout).toMatch(/No (changed|affected test) files found, exiting with code 0/)
   },
 )
 

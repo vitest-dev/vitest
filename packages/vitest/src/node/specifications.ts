@@ -144,6 +144,7 @@ export class VitestSpecifications {
     // don't run anything if no related sources are found
     // if we are in watch mode, we want to process all tests
     if (!this.vitest.config.watch && !related.length) {
+      this.vitest._sourceFilterResult = { affected: 0, total: specs.length }
       return []
     }
 
