@@ -36,7 +36,7 @@
     "flatted": "catalog:",
     "inline-dep": "file:./deps/vite-ssr-resolve/inline-dep",
     "jest-image-snapshot": "^6.5.2",
-    "obug": "^2.2.1",
+    "obug": "^3.0.0",
     "other-dep": "file:./deps/vite-ssr-resolve/other-dep",
     "pathe": "catalog:",
     "playwright": "catalog:",
