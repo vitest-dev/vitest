@@ -26,17 +26,17 @@ export interface ModuleGraphData {
   roots: string[]
 }
 
-export interface SharedModuleGraphData {
-  modules: ModuleGraphData['modules']
-  rootsByTestFile: { [testFile: string]: string[] }
+export interface SharedModuleGraphByProject {
+  [projectName: string]: SharedModuleGraphByEnvironment
 }
 
 export interface SharedModuleGraphByEnvironment {
   [environmentName: string]: SharedModuleGraphData
 }
 
-export interface SharedModuleGraphByProject {
-  [projectName: string]: SharedModuleGraphByEnvironment
+export interface SharedModuleGraphData {
+  modules: ModuleGraphData['modules']
+  rootsByTestFile: { [testFile: string]: string[] }
 }
 
 export interface ProvidedContext {}
