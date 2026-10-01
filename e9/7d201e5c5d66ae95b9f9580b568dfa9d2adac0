@@ -1,0 +1,41 @@
+docs/config/changed.md
+  s_9d48a2300498d5::t_ac78111b4ee46f 18-19
+packages/mocker/src/node/hoistMocks.ts
+  s_9d48a2300498d5::t_e33a96089df531 28-29,344
+packages/vitest/src/node/affected-modules.ts
+  s_9d48a2300498d5::t_8b380a7ad58d28 1-329
+packages/vitest/src/node/core.ts
+  s_9d48a2300498d5::t_3e33846d8767e9 1592
+packages/vitest/src/node/environments/transformService.ts
+  s_9d48a2300498d5::t_a71e048bc8e765 36,466
+packages/vitest/src/node/pools/rpc.ts
+  s_9d48a2300498d5::t_482b9f7e18eaec 6,14,176-177,180-185,187,194,256-268,271-278,280-281,284-295,297
+packages/vitest/src/node/specifications.ts
+  s_9d48a2300498d5::t_1f5d6cc85fca9d 3,5,99-104,150
+packages/vitest/src/node/test-specification.ts
+  s_9d48a2300498d5::t_a2f800226cbb2b 2,16-21,56-58
+packages/vitest/src/utils/test-helpers.ts
+  s_9d48a2300498d5::t_5ec7f7df39c574 1,12-13,17,20-22,28-59
+test/e2e/test/related-deps.test.ts
+  s_9d48a2300498d5::t_01c8172162541f 1-454
+test/e2e/test/vm-threads.test.ts
+  s_9d48a2300498d5::t_aa640352c4a968 2,779-825
+test/e2e/test/watch/file-watching.test.ts
+  s_9d48a2300498d5::t_73d28065886931 294-335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e97d201e5c5d66ae95b9f9580b568dfa9d2adac0",
+  "prompts": {},
+  "sessions": {
+    "s_9d48a2300498d5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f0914adc3ffeStcly36athmgQ8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
