@@ -1,18 +1,22 @@
 import type { ModuleGraphData } from '../../types/general'
-import type { ModuleGraphEnvironment, ModuleGraphNode, ModuleGraphProject } from './types'
+import type {
+  ModuleGraphQueryEnvironment,
+  ModuleGraphQueryNode,
+  ModuleGraphQueryProject,
+} from './types'
 
 export function getTestFileModuleGraph(
-  project: ModuleGraphProject,
-  environment: ModuleGraphEnvironment,
+  project: ModuleGraphQueryProject,
+  environment: ModuleGraphQueryEnvironment,
   testFilePath: string,
 ): ModuleGraphData {
   const graph: Record<string, string[]> = {}
   const externalized = new Set<string>()
   const inlined = new Set<string>()
   const browser = project.config.browser.enabled
-  const seen = new Map<ModuleGraphNode, string>()
+  const seen = new Map<ModuleGraphQueryNode, string>()
 
-  function get(mod?: ModuleGraphNode) {
+  function get(mod?: ModuleGraphQueryNode) {
     if (!mod || !mod.id) {
       return
     }

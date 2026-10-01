@@ -1,8 +1,8 @@
 import type { ModuleGraphData } from '../../types/general'
 import type {
-  ModuleGraphEnvironment,
-  ModuleGraphNode,
-  ModuleGraphProject,
+  ModuleGraphQueryEnvironment,
+  ModuleGraphQueryNode,
+  ModuleGraphQueryProject,
   SerializedEnvironmentModuleGraph,
   SerializedProjectModules,
 } from './types'
@@ -49,8 +49,8 @@ export function getSerializedTestFileModuleGraph(
 function createModuleGraphShell(
   projectModules: SerializedProjectModules,
   serialized: SerializedEnvironmentModuleGraph,
-): { project: ModuleGraphProject; environment: ModuleGraphEnvironment } {
-  const nodes = new Map<string, ModuleGraphNode>()
+): { project: ModuleGraphQueryProject; environment: ModuleGraphQueryEnvironment } {
+  const nodes = new Map<string, ModuleGraphQueryNode>()
   for (const [id, file] of serialized.modules) {
     nodes.set(serialized.idTable[id], {
       id: serialized.idTable[id],
