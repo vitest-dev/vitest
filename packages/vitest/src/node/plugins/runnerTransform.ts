@@ -49,9 +49,7 @@ export function ModuleRunnerTransform(): VitePlugin {
           } else {
             environment.dev.moduleRunnerTransform = true
           }
-          if (name !== 'client' || !browserEnabled) {
-            environment.dev.preTransformRequests = false
-          }
+          environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
         }
       },

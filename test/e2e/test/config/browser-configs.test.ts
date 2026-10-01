@@ -105,7 +105,7 @@ async function observePreTransformRequests(options: TestUserConfig = {}) {
   }
 }
 
-test('does not disable pre-transform requests in browser mode', async () => {
+test('disables pre-transform requests in browser mode', async () => {
   const result = await observePreTransformRequests({
     browser: {
       enabled: true,
@@ -115,8 +115,8 @@ test('does not disable pre-transform requests in browser mode', async () => {
   })
 
   expect(result).toEqual({
-    client: undefined,
-    server: undefined,
+    client: false,
+    server: false,
   })
 })
 

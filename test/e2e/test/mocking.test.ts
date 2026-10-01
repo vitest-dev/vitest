@@ -1,6 +1,8 @@
 import type { RunVitestConfig } from '../../test-utils'
 import path from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
+import { ServerMockResolver } from '@vitest/mocker/node'
+import { createServer } from 'vite'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { runInlineTests, runVitest, StableTestFileOrderSorter } from '../../test-utils'
@@ -675,4 +677,59 @@ test('automock mockReturnValue works', () => {
       },
     }
   `)
+})
+
+test('invalidating a pending virtual module transform does not cache its original exports', async () => {
+  let releaseLoad!: () => void
+  let notifyLoad!: () => void
+  const loading = new Promise<void>((resolve) => {
+    notifyLoad = resolve
+  })
+  const released = new Promise<void>((resolve) => {
+    releaseLoad = resolve
+  })
+  let value = 'original'
+  const id = '\0virtual:pending-mock'
+  const server = await createServer({
+    configFile: false,
+    server: { middlewareMode: true, ws: false },
+    optimizeDeps: { noDiscovery: true, include: [] },
+    plugins: [
+      {
+        name: 'pending-virtual-module',
+        resolveId(source) {
+          if (source === 'virtual:pending-mock') {
+            return id
+          }
+        },
+        async load(source) {
+          if (source === id) {
+            const loadedValue = value
+            if (loadedValue === 'original') {
+              notifyLoad()
+              await released
+            }
+            return `export const value = ${JSON.stringify(loadedValue)}`
+          }
+        },
+      },
+    ],
+  })
+
+  try {
+    const url = 'virtual:pending-mock'
+    await server.environments.client.moduleGraph.ensureEntryFromUrl(url)
+    const pending = server.environments.client.transformRequest(url)
+    await loading
+    value = 'modified'
+    new ServerMockResolver(server).invalidate([id])
+    releaseLoad()
+    await pending
+
+    const result = await server.environments.client.transformRequest(url)
+    expect(result?.code).toMatchInlineSnapshot(`"export const value = "modified""`)
+  } finally {
+    releaseLoad()
+    await server.close()
+  }
 })

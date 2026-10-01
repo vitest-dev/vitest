@@ -19,9 +19,16 @@ import { getElementFromUserInput } from './utils'
 
 export default function toHaveFocus(this: MatcherState, actual: Element | Locator): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveFocus, this)
+  const root = htmlElement.getRootNode()
+  const defaultView = htmlElement.ownerDocument.defaultView
+  const isDocumentOrShadowRoot =
+    root === htmlElement.ownerDocument || (defaultView && root instanceof defaultView.ShadowRoot)
+  const activeElement = isDocumentOrShadowRoot
+    ? (root as Document | ShadowRoot).activeElement
+    : htmlElement.ownerDocument.activeElement
 
   return {
-    pass: htmlElement.ownerDocument.activeElement === htmlElement,
+    pass: activeElement === htmlElement,
     message: () => {
       return [
         this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toHaveFocus`, 'element', ''),
@@ -32,7 +39,7 @@ export default function toHaveFocus(this: MatcherState, actual: Element | Locato
               'Expected element with focus:',
               `  ${this.utils.printExpected(htmlElement)}`,
               'Received element with focus:',
-              `  ${this.utils.printReceived(htmlElement.ownerDocument.activeElement)}`,
+              `  ${this.utils.printReceived(activeElement)}`,
             ]),
       ].join('\n')
     },

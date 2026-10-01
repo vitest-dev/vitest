@@ -53,7 +53,7 @@ export class ServerMockResolver {
       const moduleGraph = this.server.moduleGraph
       const module = moduleGraph.getModuleById(id)
       if (module) {
-        module.transformResult = null
+        moduleGraph.invalidateModule(module)
       }
     })
   }

@@ -122,9 +122,7 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
 
           const server: ServerOptions = {
             ...api,
-          }
-          if (!isBrowserEnabled) {
-            server.preTransformRequests = false
+            preTransformRequests: false,
           }
 
           // Always disable the websocket server in middlewareMode
