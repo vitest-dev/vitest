@@ -151,6 +151,7 @@ export class Vitest {
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
+  /** @internal */ _sourceFilterResult?: { affected: number; total: number }
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ cancelPromise?: Promise<void | void[]>
@@ -1102,6 +1103,7 @@ export class Vitest {
         // all subsequent runs will treat this as a fresh run
         this.config.changed = false
         this.config.related = undefined
+        this._sourceFilterResult = undefined
       })
 
       return await this.runningPromise
@@ -1301,6 +1303,7 @@ export class Vitest {
       // all subsequent runs will treat this as a fresh run
       this.config.changed = false
       this.config.related = undefined
+      this._sourceFilterResult = undefined
     })
 
     return await this.runningPromise
