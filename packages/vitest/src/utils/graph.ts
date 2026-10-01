@@ -1,7 +1,27 @@
-import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
+import type { DevEnvironment } from 'vite'
 import type { Vitest } from '../node/core'
 import type { ModuleGraphData } from '../types/general'
+import { isWindows } from './env'
 import { getTestFileEnvironment } from './environments'
+
+export interface ModuleGraphNode {
+  id: string | null
+  file: string | null
+  importedModules: Set<ModuleGraphNode>
+}
+
+export interface ModuleGraphProject {
+  config: {
+    setupFiles: string[]
+    browser: { enabled: boolean }
+  }
+  browser?: { vite: { config: { cacheDir: string } } }
+  _resolver: { wasExternalized: (id: string) => string | false }
+}
+
+export interface ModuleGraphEnvironment {
+  moduleGraph: { getModuleById: (id: string) => ModuleGraphNode | undefined }
+}
 
 export async function getModuleGraph(
   ctx: Vitest,
@@ -9,10 +29,6 @@ export async function getModuleGraph(
   testFilePath: string,
   viteEnvironment?: string,
 ): Promise<ModuleGraphData> {
-  const graph: Record<string, string[]> = {}
-  const externalized = new Set<string>()
-  const inlined = new Set<string>()
-
   const project = ctx.getProjectByName(projectName)
   const browser = project.config.browser.enabled
 
@@ -30,9 +46,21 @@ export async function getModuleGraph(
   if (!environment) {
     throw new Error(`Cannot find environment for ${testFilePath}`)
   }
-  const seen = new Map<EnvironmentModuleNode, string>()
+  return getEnvironmentModuleGraph(project, environment, testFilePath)
+}
 
-  function get(mod?: EnvironmentModuleNode) {
+export function getEnvironmentModuleGraph(
+  project: ModuleGraphProject,
+  environment: ModuleGraphEnvironment,
+  testFilePath: string,
+): ModuleGraphData {
+  const graph: Record<string, string[]> = {}
+  const externalized = new Set<string>()
+  const inlined = new Set<string>()
+  const browser = project.config.browser.enabled
+  const seen = new Map<ModuleGraphNode, string>()
+
+  function get(mod?: ModuleGraphNode) {
     if (!mod || !mod.id) {
       return
     }
@@ -85,4 +113,11 @@ export async function getModuleGraph(
 
 function clearId(id?: string | null) {
   return id?.replace(/\?v=\w+$/, '') || ''
+}
+
+export function normalizeId(id: string): string {
+  if (id.startsWith('/@fs/')) {
+    id = id.slice(isWindows ? 5 : 4)
+  }
+  return id
 }

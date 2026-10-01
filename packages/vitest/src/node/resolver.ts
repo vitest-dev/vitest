@@ -14,7 +14,7 @@ import {
   ssrImportMetaKey,
   ssrModuleExportsKey,
 } from 'vite/module-runner'
-import { isWindows } from '../utils/env'
+import { normalizeId } from '../utils/graph'
 
 export class VitestResolver {
   public readonly options: ExternalizeOptions
@@ -69,13 +69,6 @@ export class VitestResolver {
         this.externalizeConcurrentCache.delete(normalizedFile)
       })
   }
-}
-
-function normalizeId(id: string) {
-  if (id.startsWith('/@fs/')) {
-    id = id.slice(isWindows ? 5 : 4)
-  }
-  return id
 }
 
 interface ExternalizeOptions extends ServerDepsOptions {
