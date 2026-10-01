@@ -42,6 +42,8 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
       return metadata.config
     },
     getModuleGraph: async (projectName, id, viteEnvironment) => {
+      // the reporter keys graphs by the environment the file ran in, which is the file's
+      // `viteEnvironment`. It's unset only for files that never ran, which have no graph.
       const graph = viteEnvironment
         ? metadata.moduleGraph[projectName]?.[viteEnvironment]
         : undefined
