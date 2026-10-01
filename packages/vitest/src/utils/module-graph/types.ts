@@ -1,14 +1,3 @@
-export type SerializedEnvironmentModuleNode = [
-  id: number,
-  file: number,
-  url: number,
-  importedIds: number[],
-]
-
-export interface SerializedEnvironmentModuleGraph {
-  idTable: string[]
-  modules: SerializedEnvironmentModuleNode[]
-}
 
 export interface SerializedProjectModules {
   environments: {
@@ -22,11 +11,17 @@ export interface SerializedProjectModules {
   }
 }
 
-export interface ModuleGraphNode {
-  id: string | null
-  file: string | null
-  importedModules: Set<ModuleGraphNode>
+export interface SerializedEnvironmentModuleGraph {
+  idTable: string[]
+  modules: SerializedEnvironmentModuleNode[]
 }
+
+export type SerializedEnvironmentModuleNode = [
+  id: number,
+  file: number,
+  url: number,
+  importedIds: number[],
+]
 
 export interface ModuleGraphProject {
   config: {
@@ -39,4 +34,10 @@ export interface ModuleGraphProject {
 
 export interface ModuleGraphEnvironment {
   moduleGraph: { getModuleById: (id: string) => ModuleGraphNode | undefined }
+}
+
+export interface ModuleGraphNode {
+  id: string | null
+  file: string | null
+  importedModules: Set<ModuleGraphNode>
 }

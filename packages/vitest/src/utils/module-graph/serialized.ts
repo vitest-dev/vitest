@@ -14,6 +14,37 @@ const emptyModuleGraph: ModuleGraphData = {
   inlined: [],
 }
 
+export function getSerializedTestFileModuleGraph(
+  projectModules: SerializedProjectModules | undefined,
+  testFilePath: string,
+  viteEnvironment?: string,
+): ModuleGraphData {
+  if (!projectModules) {
+    return emptyModuleGraph
+  }
+
+  let serializedGraph: SerializedEnvironmentModuleGraph | undefined
+  const environmentName = viteEnvironment || projectModules.project.defaultEnvironment
+  if (environmentName) {
+    serializedGraph = projectModules.environments[environmentName]
+  } else {
+    for (const environmentName in projectModules.environments) {
+      const environment = projectModules.environments[environmentName]
+      if (environment.modules.some(([idIndex]) => environment.idTable[idIndex] === testFilePath)) {
+        serializedGraph = environment
+        break
+      }
+    }
+  }
+
+  if (!serializedGraph) {
+    return emptyModuleGraph
+  }
+
+  const { project, environment } = createModuleGraphShell(projectModules, serializedGraph)
+  return getTestFileModuleGraph(project, environment, testFilePath)
+}
+
 // minimal project/environment shell so the static html report can run getTestFileModuleGraph
 function createModuleGraphShell(
   projectModules: SerializedProjectModules,
@@ -55,35 +86,4 @@ function createModuleGraphShell(
       moduleGraph: { getModuleById: (id) => nodes.get(id) },
     },
   }
-}
-
-export function getSerializedTestFileModuleGraph(
-  projectModules: SerializedProjectModules | undefined,
-  testFilePath: string,
-  viteEnvironment?: string,
-): ModuleGraphData {
-  if (!projectModules) {
-    return emptyModuleGraph
-  }
-
-  let serializedGraph: SerializedEnvironmentModuleGraph | undefined
-  const environmentName = viteEnvironment || projectModules.project.defaultEnvironment
-  if (environmentName) {
-    serializedGraph = projectModules.environments[environmentName]
-  } else {
-    for (const environmentName in projectModules.environments) {
-      const environment = projectModules.environments[environmentName]
-      if (environment.modules.some(([idIndex]) => environment.idTable[idIndex] === testFilePath)) {
-        serializedGraph = environment
-        break
-      }
-    }
-  }
-
-  if (!serializedGraph) {
-    return emptyModuleGraph
-  }
-
-  const { project, environment } = createModuleGraphShell(projectModules, serializedGraph)
-  return getTestFileModuleGraph(project, environment, testFilePath)
 }
