@@ -265,6 +265,48 @@ test('attempts grow while the test runs', async () => {
   `)
 })
 
+test('skipping during a retry ends attempts with a skipped attempt', async () => {
+  const { stderr, results } = await runInlineTests({
+    'skip.test.js': `
+      import { expect, it } from 'vitest'
+
+      let runs = 0
+
+      it('skips on retry', { retry: 2, repeats: 1 }, ({ skip }) => {
+        if (++runs === 2) {
+          skip()
+        }
+        expect(1).toBe(2)
+      })
+
+      it.skip('skipped statically', () => {})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  const [skipsOnRetry, skippedStatically] = results[0].children.allTests()
+  expect(skipsOnRetry.result().state).toBe('skipped')
+  expect(
+    skipsOnRetry
+      .attempts()
+      .map((a) => ({ repeat: a.repeatIndex, retry: a.retryIndex, state: a.state })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "repeat": 0,
+        "retry": 0,
+        "state": "failed",
+      },
+      {
+        "repeat": 0,
+        "retry": 1,
+        "state": "skipped",
+      },
+    ]
+  `)
+  expect(skippedStatically.attempts()).toEqual([])
+})
+
 test('syntax errors remain failures after successful repeats', async () => {
   const { errorTree } = await runInlineTests({
     'repeats.test.js': `
