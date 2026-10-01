@@ -13,8 +13,8 @@ export async function getModuleGraph(
   const project = ctx.getProjectByName(projectName)
   const environment = getModuleGraphEnvironment(project, testFilePath, viteEnvironment)
   const collector = createModuleGraphCollector(project, environment)
-  collector.add(testFilePath)
-  return collector.getData()
+  const roots = collector.add(testFilePath)
+  return { modules: collector.modules, roots }
 }
 
 export function getModuleGraphEnvironment(
@@ -43,16 +43,19 @@ export function createModuleGraphCollector(
   project: TestProject,
   environment: DevEnvironment,
 ): {
+  modules: ModuleGraphData['modules']
   add: (testFilePath: string) => string[]
-  getData: () => ModuleGraphData
 } {
-  const graph: Record<string, string[]> = {}
-  const externalized = new Set<string>()
-  const inlined = new Set<string>()
+  const modules: ModuleGraphData['modules'] = {}
   const browser = project.config.browser.enabled
   const seen = new Map<EnvironmentModuleNode, string>()
 
-  function get(mod?: EnvironmentModuleNode) {
+  function addExternal(id: string) {
+    modules[id] ??= { external: true, imports: [] }
+    return id
+  }
+
+  function get(mod?: EnvironmentModuleNode): string | undefined {
     if (!mod || !mod.id) {
       return
     }
@@ -70,24 +73,21 @@ export function createModuleGraphCollector(
     const id = clearId(mod.id)
     seen.set(mod, id)
     if (id.startsWith('__vite-browser-external:')) {
-      const external = id.slice('__vite-browser-external:'.length)
-      externalized.add(external)
-      return external
+      return addExternal(id.slice('__vite-browser-external:'.length))
     }
     const external = project._resolver.wasExternalized(id)
     if (typeof external === 'string') {
-      externalized.add(external)
-      return external
+      return addExternal(external)
     }
     if (browser && mod.file?.includes(project.browser!.vite.config.cacheDir)) {
-      externalized.add(mod.id)
-      return id
+      return addExternal(id)
     }
-    inlined.add(id)
-    const mods = Array.from(mod.importedModules).filter(
-      (i) => i.id && !i.id.includes('/vitest/dist/'),
-    )
-    graph[id] = mods.map((m) => get(m)).filter(Boolean) as string[]
+    const module: ModuleGraphData['modules'][string] = { external: false, imports: [] }
+    modules[id] = module
+    module.imports = Array.from(mod.importedModules)
+      .filter((i) => i.id && !i.id.includes('/vitest/dist/'))
+      .map((m) => get(m))
+      .filter((id) => id != null)
     return id
   }
 
@@ -98,14 +98,7 @@ export function createModuleGraphCollector(
       .filter((id) => id != null)
   }
 
-  return {
-    add,
-    getData: () => ({
-      graph,
-      externalized: Array.from(externalized),
-      inlined: Array.from(inlined),
-    }),
-  }
+  return { modules, add }
 }
 
 function clearId(id?: string | null) {

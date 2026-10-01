@@ -22,9 +22,13 @@ export interface UserConsoleLog {
 }
 
 export interface ModuleGraphData {
-  graph: Record<string, string[]>
-  externalized: string[]
-  inlined: string[]
+  modules: Record<string, ModuleGraphModule>
+  roots: string[]
+}
+
+export interface ModuleGraphModule {
+  external: boolean
+  imports: string[]
 }
 
 export interface ProvidedContext {}

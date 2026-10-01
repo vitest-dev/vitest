@@ -383,50 +383,71 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
         "<root>/basic.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/sub/format.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/basic.test.ts": [
-              "<optimized-deps>/vitest.js",
-              "<root>/sub/format.ts",
-              "<root>/util.ts"
-            ]
+          "modules": {
+            "<root>/basic.test.ts": {
+              "external": false,
+              "imports": [
+                "<optimized-deps>/vitest.js",
+                "<root>/sub/format.ts",
+                "<root>/util.ts"
+              ]
+            },
+            "<optimized-deps>/vitest.js": {
+              "external": true,
+              "imports": []
+            },
+            "<root>/sub/format.ts": {
+              "external": false,
+              "imports": [
+                "<root>/sub/subject.ts"
+              ]
+            },
+            "<root>/sub/subject.ts": {
+              "external": false,
+              "imports": []
+            },
+            "<root>/util.ts": {
+              "external": false,
+              "imports": [
+                "<root>/sub/subject.ts"
+              ]
+            }
           },
-          "externalized": [
-            "<optimized-deps>/vitest.js?v=<hash>"
-          ],
-          "inlined": [
-            "<root>/basic.test.ts",
-            "<root>/sub/format.ts",
-            "<root>/sub/subject.ts",
-            "<root>/util.ts"
+          "roots": [
+            "<root>/basic.test.ts"
           ]
         },
         "<root>/second.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/second.test.ts": [
-              "<optimized-deps>/vitest.js",
-              "<root>/util.ts",
-              "<optimized-deps>/obug.js"
-            ]
+          "modules": {
+            "<root>/second.test.ts": {
+              "external": false,
+              "imports": [
+                "<optimized-deps>/vitest.js",
+                "<root>/util.ts",
+                "<optimized-deps>/obug.js"
+              ]
+            },
+            "<optimized-deps>/vitest.js": {
+              "external": true,
+              "imports": []
+            },
+            "<root>/util.ts": {
+              "external": false,
+              "imports": [
+                "<root>/sub/subject.ts"
+              ]
+            },
+            "<root>/sub/subject.ts": {
+              "external": false,
+              "imports": []
+            },
+            "<optimized-deps>/obug.js": {
+              "external": true,
+              "imports": []
+            }
           },
-          "externalized": [
-            "<optimized-deps>/vitest.js?v=<hash>",
-            "<optimized-deps>/obug.js?v=<hash>"
-          ],
-          "inlined": [
-            "<root>/second.test.ts",
-            "<root>/util.ts",
-            "<root>/sub/subject.ts"
+          "roots": [
+            "<root>/second.test.ts"
           ]
         }
       }"
@@ -435,45 +456,61 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
         "<root>/basic.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/sub/format.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/basic.test.ts": [
-              "<root>/sub/format.ts",
-              "<root>/util.ts"
-            ]
+          "modules": {
+            "<root>/basic.test.ts": {
+              "external": false,
+              "imports": [
+                "<root>/sub/format.ts",
+                "<root>/util.ts"
+              ]
+            },
+            "<root>/sub/format.ts": {
+              "external": false,
+              "imports": [
+                "<root>/sub/subject.ts"
+              ]
+            },
+            "<root>/sub/subject.ts": {
+              "external": false,
+              "imports": []
+            },
+            "<root>/util.ts": {
+              "external": false,
+              "imports": [
+                "<root>/sub/subject.ts"
+              ]
+            }
           },
-          "externalized": [],
-          "inlined": [
-            "<root>/basic.test.ts",
-            "<root>/sub/format.ts",
-            "<root>/sub/subject.ts",
-            "<root>/util.ts"
+          "roots": [
+            "<root>/basic.test.ts"
           ]
         },
         "<root>/second.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/second.test.ts": [
-              "<root>/util.ts",
-              "<node_modules>/obug/dist/node.js"
-            ]
+          "modules": {
+            "<root>/second.test.ts": {
+              "external": false,
+              "imports": [
+                "<root>/util.ts",
+                "<node_modules>/obug/dist/node.js"
+              ]
+            },
+            "<root>/util.ts": {
+              "external": false,
+              "imports": [
+                "<root>/sub/subject.ts"
+              ]
+            },
+            "<root>/sub/subject.ts": {
+              "external": false,
+              "imports": []
+            },
+            "<node_modules>/obug/dist/node.js": {
+              "external": true,
+              "imports": []
+            }
           },
-          "externalized": [
-            "<node_modules>/obug/dist/node.js"
-          ],
-          "inlined": [
-            "<root>/second.test.ts",
-            "<root>/util.ts",
-            "<root>/sub/subject.ts"
+          "roots": [
+            "<root>/second.test.ts"
           ]
         }
       }"
