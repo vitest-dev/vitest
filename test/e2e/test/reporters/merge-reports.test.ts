@@ -376,6 +376,7 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
     return baseConfig
   }
 
+  // run tests and keep the live module graph as the reference
   const result = await runVitest({
     ...baseConfig(),
     reporters: ['blob'],
@@ -520,6 +521,7 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
     `)
   }
 
+  // merging the blob restores the same module graph
   const result2 = await runVitest({
     ...baseConfig(),
     mergeReports: reportsDir,
@@ -529,6 +531,7 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
   const restoredModuleGraphJson = await getSerializedModuleGraph(result2.ctx)
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
+  // the html report generated from the blob also keeps the same module graph
   const result3 = await runVitest({
     ...baseConfig(),
     mergeReports: resolve(root, '.vitest/blob'),
