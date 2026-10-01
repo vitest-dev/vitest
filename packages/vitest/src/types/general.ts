@@ -21,21 +21,21 @@ export interface UserConsoleLog {
   size: number
 }
 
+interface ModuleGraphModules {
+  [id: string]: { external: boolean; imports: string[] }
+}
+
 export interface ModuleGraphData {
-  modules: { [id: string]: { external: boolean; imports: string[] } }
+  modules: ModuleGraphModules
   roots: string[]
 }
 
 export interface SharedModuleGraphByProject {
-  [projectName: string]: SharedModuleGraphByEnvironment
-}
-
-export interface SharedModuleGraphByEnvironment {
-  [environmentName: string]: SharedModuleGraphData
+  [projectName: string]: { [environmentName: string]: SharedModuleGraphData }
 }
 
 export interface SharedModuleGraphData {
-  modules: ModuleGraphData['modules']
+  modules: ModuleGraphModules
   rootsByTestFile: { [testFile: string]: string[] }
 }
 

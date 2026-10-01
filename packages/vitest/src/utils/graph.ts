@@ -4,7 +4,6 @@ import type { TestProject } from '../node/project'
 import type { TestModule } from '../node/reporters/reported-tasks'
 import type {
   ModuleGraphData,
-  SharedModuleGraphByEnvironment,
   SharedModuleGraphByProject,
   SharedModuleGraphData,
 } from '../types/general'
@@ -43,7 +42,7 @@ export function getSharedModuleGraphByProject(
 function getSharedModuleGraphByEnvironment(
   project: TestProject,
   testModules: TestModule[],
-): SharedModuleGraphByEnvironment {
+): SharedModuleGraphByProject[string] {
   const collectors: { [environmentName: string]: ModuleGraphCollector } = {}
   for (const testModule of testModules) {
     const environment = getModuleGraphEnvironment(
