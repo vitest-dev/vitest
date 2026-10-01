@@ -799,30 +799,27 @@ describe('toBeOneOf()', () => {
 
 // https://github.com/vitest-dev/vitest/issues/11296
 describe('Map and Set equality', () => {
-  const map = new Map([['x', 1]])
-  const set = new Set(['x'])
-
   it('toContainEqual', () => {
-    expect([new Map([['x', 1]])]).toContainEqual(map)
-    expect([new Map([['y', 1]])]).not.toContainEqual(map)
-    expect([new Set(['x'])]).toContainEqual(set)
-    expect([new Set(['y'])]).not.toContainEqual(set)
+    expect([new Map([['x', 1]])]).toContainEqual(new Map([['x', 1]]))
+    expect([new Map([['y', 1]])]).not.toContainEqual(new Map([['x', 1]]))
+    expect([new Set(['x'])]).toContainEqual(new Set(['x']))
+    expect([new Set(['y'])]).not.toContainEqual(new Set(['x']))
   })
 
   it('toHaveProperty', () => {
-    expect({ a: new Map([['x', 1]]) }).toHaveProperty('a', map)
-    expect({ a: new Map([['y', 1]]) }).not.toHaveProperty('a', map)
-    expect({ a: new Set(['x']) }).toHaveProperty('a', set)
-    expect({ a: new Set(['y']) }).not.toHaveProperty('a', set)
+    expect({ a: new Map([['x', 1]]) }).toHaveProperty('a', new Map([['x', 1]]))
+    expect({ a: new Map([['y', 1]]) }).not.toHaveProperty('a', new Map([['x', 1]]))
+    expect({ a: new Set(['x']) }).toHaveProperty('a', new Set(['x']))
+    expect({ a: new Set(['y']) }).not.toHaveProperty('a', new Set(['x']))
   })
 
   it('toBeOneOf', () => {
-    expect(new Map([['x', 1]])).toBeOneOf([map])
-    expect(new Map([['y', 1]])).not.toBeOneOf([map])
-    expect(new Set(['x'])).toBeOneOf(new Set([set]))
-    expect(new Set(['y'])).not.toBeOneOf(new Set([set]))
-    expect(new Set(['x'])).toEqual(expect.toBeOneOf([set]))
-    expect(new Set(['y'])).not.toEqual(expect.toBeOneOf([set]))
+    expect(new Map([['x', 1]])).toBeOneOf([new Map([['x', 1]])])
+    expect(new Map([['y', 1]])).not.toBeOneOf([new Map([['x', 1]])])
+    expect(new Set(['x'])).toBeOneOf(new Set([new Set(['x'])]))
+    expect(new Set(['y'])).not.toBeOneOf(new Set([new Set(['x'])]))
+    expect(new Set(['x'])).toEqual(expect.toBeOneOf([new Set(['x'])]))
+    expect(new Set(['y'])).not.toEqual(expect.toBeOneOf([new Set(['x'])]))
   })
 
   it('toThrow with asymmetric matcher', () => {
@@ -835,7 +832,7 @@ describe('Map and Set equality', () => {
       throw new DataError(new Set(['x']))
     }
 
-    expect(fn).toThrow(expect.objectContaining({ data: set }))
+    expect(fn).toThrow(expect.objectContaining({ data: new Set(['x']) }))
     expect(fn).not.toThrow(expect.objectContaining({ data: new Set(['y']) }))
   })
 
@@ -843,11 +840,11 @@ describe('Map and Set equality', () => {
     const fn = vi.fn(() => new Set(['x']))
     fn()
 
-    expect(fn).toHaveReturnedWith(set)
+    expect(fn).toHaveReturnedWith(new Set(['x']))
     expect(fn).not.toHaveReturnedWith(new Set(['y']))
-    expect(fn).toHaveLastReturnedWith(set)
+    expect(fn).toHaveLastReturnedWith(new Set(['x']))
     expect(fn).not.toHaveLastReturnedWith(new Set(['y']))
-    expect(fn).toHaveNthReturnedWith(1, set)
+    expect(fn).toHaveNthReturnedWith(1, new Set(['x']))
     expect(fn).not.toHaveNthReturnedWith(1, new Set(['y']))
   })
 
@@ -855,11 +852,11 @@ describe('Map and Set equality', () => {
     const fn = vi.fn(async () => new Map([['x', 1]]))
     await fn()
 
-    expect(fn).toHaveResolvedWith(map)
+    expect(fn).toHaveResolvedWith(new Map([['x', 1]]))
     expect(fn).not.toHaveResolvedWith(new Map([['y', 1]]))
-    expect(fn).toHaveLastResolvedWith(map)
+    expect(fn).toHaveLastResolvedWith(new Map([['x', 1]]))
     expect(fn).not.toHaveLastResolvedWith(new Map([['y', 1]]))
-    expect(fn).toHaveNthResolvedWith(1, map)
+    expect(fn).toHaveNthResolvedWith(1, new Map([['x', 1]]))
     expect(fn).not.toHaveNthResolvedWith(1, new Map([['y', 1]]))
   })
 })
