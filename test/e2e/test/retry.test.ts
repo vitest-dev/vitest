@@ -227,6 +227,7 @@ test('attempts grow while the test runs', async () => {
       const seen = []
       let runs = 0
 
+      // the current attempt is recorded after afterEach, so only previous attempts are visible
       afterEach(({ task }) => {
         seen.push(task.result.attempts.map(a => ({ repeat: a.repeatIndex, retry: a.retryIndex, state: a.state })))
       })
