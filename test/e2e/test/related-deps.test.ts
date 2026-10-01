@@ -1,7 +1,8 @@
 import type { TestModule } from 'vitest/node'
+import { resolve } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
-import { runInlineTests, useFS } from '#test-utils'
+import { runInlineTests, runVitest, useFS } from '#test-utils'
 
 function testFile(name: string, imports = '') {
   return `
@@ -297,6 +298,29 @@ test('the environment comment is read when filtering and reused by the run', asy
         "options": null,
       },
       "tags": [],
+    }
+  `)
+})
+
+test('a force rerun trigger inside a dot folder runs every test', async () => {
+  const root = resolve(process.cwd(), `.vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'vitest.config.js': { test: { forceRerunTriggers: ['**/trigger.js'] } },
+    'trigger.js': 'export {}',
+    'a.test.js': testFile('a'),
+    'b.test.js': testFile('b'),
+  })
+  const { stderr, testTree } = await runVitest({ root, related: ['trigger.js'] })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+      "b.test.js": {
+        "b": "passed",
+      },
     }
   `)
 })

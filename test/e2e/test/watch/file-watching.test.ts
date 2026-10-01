@@ -375,3 +375,45 @@ test.each([
   expect(vitest.stdout).toContain('[first] reruns')
   expect(vitest.stdout).not.toContain("[second] doesn't rerun")
 })
+
+describe('dot folders', () => {
+  const testFile = (name: string) => `
+    import { test } from 'vitest'
+    test('${name}', () => {})
+  `
+
+  test('editing a force rerun trigger inside a dot folder reruns all tests', async () => {
+    const root = resolve(process.cwd(), `.vitest-test-${crypto.randomUUID()}`)
+    const { editFile } = testUtils.useFS(root, {
+      'vitest.config.js': { test: { forceRerunTriggers: ['**/trigger.js'] } },
+      'trigger.js': 'export {}',
+      'a.test.js': testFile('a'),
+      'b.test.js': testFile('b'),
+    })
+    const { vitest } = await testUtils.runVitest({ root, watch: true })
+
+    await vitest.waitForStdout('Waiting for file changes...')
+    vitest.resetOutput()
+
+    editFile('trigger.js', (content) => `${content}\n`)
+
+    await vitest.waitForStdout('Test Files  2 passed')
+    expect(vitest.stdout).toContain('a.test.js > a')
+    expect(vitest.stdout).toContain('b.test.js > b')
+  })
+
+  test('creating a test file inside a dot folder runs it', async () => {
+    const { vitest, fs } = await testUtils.runInlineTests(
+      { 'a.test.js': testFile('a') },
+      { watch: true },
+    )
+
+    await vitest.waitForStdout('Waiting for file changes...')
+    vitest.resetOutput()
+
+    fs.createFile('.storybook/new.test.js', testFile('new'))
+
+    await vitest.waitForStdout('Test Files  1 passed')
+    expect(vitest.stdout).toContain('.storybook/new.test.js > new')
+  })
+})
