@@ -1,12 +1,15 @@
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { RunVitestConfig } from '#test-utils'
+import type { HTMLReportMetadata } from '../../../../packages/ui/client/composables/client/static.js'
 import type { MergeReport } from '../../../../packages/vitest/src/node/reporters/blob.js'
+import type { ModuleGraphData } from '../../../../packages/vitest/src/types/general.js'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { gunzipSync } from 'node:zlib'
 import { playwright } from '@vitest/browser-playwright'
-import { stringify } from 'flatted'
+import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
@@ -537,22 +540,56 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
            You can run npx vite preview --outDir .vitest to see the test results.
     "
   `)
+  expect.assert(result3.ctx)
+  expect(getHtmlReportModuleGraph(result3.ctx)).toBe(generatedModuleGraphJson)
 })
 
 async function getSerializedModuleGraph(ctx: Vitest) {
-  const files = ctx.state
-    .getFiles()
-    .slice()
-    .sort((a, b) => a.filepath.localeCompare(b.filepath))
   const moduleGraphs = Object.fromEntries(
     await Promise.all(
-      files.map(async (file) => {
+      getSortedFiles(ctx).map(async (file) => {
         const projectName = file.projectName || ''
         const graph = await getModuleGraph(ctx, projectName, file.filepath, file.viteEnvironment)
         return [file.filepath, graph] as const
       }),
     ),
   )
+  return normalizeModuleGraphJson(ctx, moduleGraphs)
+}
+
+// the html report stores modules per environment, so keep only what the file reaches
+function getHtmlReportModuleGraph(ctx: Vitest) {
+  const metadata: HTMLReportMetadata = parse(
+    gunzipSync(readFileSync(resolve(ctx.config.root, '.vitest/ui/html.meta.json.gz'))).toString(),
+  )
+  const moduleGraphs = Object.fromEntries(
+    getSortedFiles(ctx).map((file) => {
+      const environment = Object.values(metadata.moduleGraph[file.projectName || '']).find(
+        (environment) => environment.roots[file.filepath],
+      )!
+      const roots = environment.roots[file.filepath]
+      const modules: ModuleGraphData['modules'] = {}
+      const visit = (id: string) => {
+        if (!modules[id]) {
+          modules[id] = environment.modules[id]
+          modules[id].imports.forEach(visit)
+        }
+      }
+      roots.forEach(visit)
+      return [file.filepath, { modules, roots }] as const
+    }),
+  )
+  return normalizeModuleGraphJson(ctx, moduleGraphs)
+}
+
+function getSortedFiles(ctx: Vitest) {
+  return ctx.state
+    .getFiles()
+    .slice()
+    .sort((a, b) => a.filepath.localeCompare(b.filepath))
+}
+
+function normalizeModuleGraphJson(ctx: Vitest, moduleGraphs: object) {
   return JSON.stringify(moduleGraphs, null, 2)
     .replaceAll(ctx.config.root, '<root>')
     .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')

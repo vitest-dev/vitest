@@ -8,7 +8,14 @@ import { StateManager } from './state'
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
+  moduleGraph: {
+    [projectName: string]: {
+      [environmentName: string]: {
+        modules: ModuleGraphData['modules']
+        roots: { [testModuleId: string]: string[] }
+      }
+    }
+  }
   unhandledErrors: unknown[]
   testModules: {
     projectName: string
@@ -39,7 +46,12 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
       return metadata.config
     },
     getModuleGraph: async (projectName, id) => {
-      return metadata.moduleGraph[projectName]?.[id]
+      for (const { modules, roots } of Object.values(metadata.moduleGraph[projectName] ?? {})) {
+        if (roots[id]) {
+          return { modules, roots: roots[id] }
+        }
+      }
+      return { modules: {}, roots: [] }
     },
     getUnhandledErrors: async () => {
       return metadata.unhandledErrors

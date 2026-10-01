@@ -22,13 +22,8 @@ export interface UserConsoleLog {
 }
 
 export interface ModuleGraphData {
-  modules: Record<string, ModuleGraphModule>
+  modules: Record<string, { external: boolean; imports: string[] }>
   roots: string[]
-}
-
-export interface ModuleGraphModule {
-  external: boolean
-  imports: string[]
 }
 
 export interface ProvidedContext {}

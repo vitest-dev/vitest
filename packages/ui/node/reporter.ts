@@ -14,7 +14,7 @@ import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
-import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { createModuleGraphCollector, getModuleGraphEnvironment } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
 
 const gzipAsync = promisify(gzip)
@@ -147,7 +147,11 @@ async function serializeReportMetadata(
     return index
   }
 
-  const promises: Promise<void>[] = []
+  const collectors: {
+    [projectName: string]: {
+      [environmentName: string]: ReturnType<typeof createModuleGraphCollector>
+    }
+  } = {}
 
   for (const testModule of testModules) {
     result.files.push(testModule.task)
@@ -168,21 +172,19 @@ async function serializeReportMetadata(
       } catch {}
     }
 
-    // TODO: https://github.com/vitest-dev/vitest/issues/9763
-    promises.push(
-      (async () => {
-        result.moduleGraph[projectName] ??= {}
-        result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
-          ctx,
-          projectName,
-          testModule.moduleId,
-          testModule.viteEnvironment?.name,
-        )
-      })(),
+    const environment = getModuleGraphEnvironment(
+      project,
+      testModule.moduleId,
+      testModule.viteEnvironment?.name,
     )
+    const collector = ((collectors[projectName] ??= {})[environment.name] ??=
+      createModuleGraphCollector(project, environment))
+    const moduleGraph = ((result.moduleGraph[projectName] ??= {})[environment.name] ??= {
+      modules: collector.modules,
+      roots: {},
+    })
+    moduleGraph.roots[testModule.moduleId] = collector.add(testModule.moduleId)
   }
-
-  await Promise.all(promises)
 
   return result
 }
