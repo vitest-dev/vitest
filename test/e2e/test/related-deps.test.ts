@@ -620,6 +620,59 @@ test.each([
   })
 })
 
+test('global setup and environments are walked in the environment that loads them', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'global-setup.js': `import './src/global-helper.js'\nexport default () => {}`,
+    'env.js': `import './src/env-helper.js'\n${customEnvironment}`,
+    'setup.js': `import './src/setup-helper.js'`,
+    'src/global-helper.js': 'export {}',
+    'src/env-helper.js': 'export {}',
+    'src/setup-helper.js': 'export {}',
+    'src/dep.js': 'export {}',
+    'a.test.js': testFile('a', `import './src/dep.js'`),
+  })
+  const vitest = await createVitest({
+    root,
+    watch: false,
+    config: false,
+    related: ['src/dep.js'],
+    globalSetup: ['./global-setup.js'],
+    environment: './env.js',
+    setupFiles: ['./setup.js'],
+  })
+  onTestFinished(() => vitest.close())
+
+  const specifications = await vitest.getRelevantTestSpecifications()
+  const { environments } = vitest.getRootProject().vite
+  const transformed = (environment: string) =>
+    [...environments[environment].moduleGraph.idToModuleMap.values()]
+      .filter((mod) => mod.transformResult && mod.id?.startsWith(`${root}/`))
+      .map((mod) => mod.id!.slice(root.length + 1))
+      .sort()
+  expect({
+    affected: specifications.length,
+    __vitest__: transformed('__vitest__'),
+    ssr: transformed('ssr'),
+  }).toMatchInlineSnapshot(`
+    {
+      "__vitest__": [
+        "env.js",
+        "global-setup.js",
+        "src/env-helper.js",
+        "src/global-helper.js",
+      ],
+      "affected": 1,
+      "ssr": [
+        "a.test.js",
+        "setup.js",
+        "src/dep.js",
+        "src/setup-helper.js",
+      ],
+    }
+  `)
+})
+
 test('mocks are applied to tests that run in the client environment', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {

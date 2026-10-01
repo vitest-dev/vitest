@@ -11,6 +11,7 @@ import { getStaticMocks, resolveStaticMocks } from './environments/staticMocks'
 
 const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime'])
 const clientEnvironments = new Set(['jsdom', 'happy-dom'])
+const noMocks = new Set<string>()
 
 interface ModuleNode {
   dependencies: string[]
@@ -67,10 +68,40 @@ export class AffectedModulesResolver {
       return specs
     }
 
+    // global setup and environments are loaded by Vitest itself, not by the test's module runner
+    const vitestWalk = new GraphWalk(
+      new ProjectGraph(project, project.vite.environments.__vitest__, this),
+      this.related,
+    )
+    const vitestFiles = this.filterLocalSourceFiles([
+      ...project.config.globalSetup,
+      await this.resolveEnvironmentFile(project, project.config.environment),
+    ])
+    const environmentFiles = await Promise.all(
+      specs.map((spec) => this.getSpecificationEnvironmentFile(spec)),
+    )
+    await vitestWalk.add(
+      [...vitestFiles, ...environmentFiles.filter((file) => file != null)],
+      noMocks,
+    )
+
+    // if global setup or a setup file is changed, run all specs
+    const affectedByVitest = vitestWalk.getAffected(noMocks)
+    if (vitestFiles.some((file) => affectedByVitest.has(file))) {
+      return specs
+    }
+
     // walk the graph of the environment that runs the test, so the run reuses the transforms
+    const affected: TestSpecification[] = []
     const environments = await Promise.all(specs.map((spec) => this.getViteEnvironment(spec)))
     const specsByEnvironment = new Map<DevEnvironment, TestSpecification[]>()
     specs.forEach((spec, index) => {
+      // always run the spec if environment file is updated
+      const environmentFile = environmentFiles[index]
+      if (environmentFile && affectedByVitest.has(environmentFile)) {
+        affected.push(spec)
+        return
+      }
       let environmentSpecs = specsByEnvironment.get(environments[index])
       if (!environmentSpecs) {
         specsByEnvironment.set(environments[index], (environmentSpecs = []))
@@ -78,12 +109,12 @@ export class AffectedModulesResolver {
       environmentSpecs.push(spec)
     })
 
-    const affected = await Promise.all(
+    const affectedInEnvironments = await Promise.all(
       Array.from(specsByEnvironment, ([environment, environmentSpecs]) =>
         this.findAffectedInEnvironment(project, environment, environmentSpecs),
       ),
     )
-    return affected.flat()
+    return [...affected, ...affectedInEnvironments.flat()]
   }
 
   // mirrors the `viteEnvironment` of the builtin environments, custom ones are only known in the worker
@@ -108,25 +139,13 @@ export class AffectedModulesResolver {
     const setupFiles = this.filterLocalSourceFiles(config.setupFiles)
     const projectFiles = this.filterLocalSourceFiles([
       ...setupFiles,
-      ...config.globalSetup,
       ...config.snapshotSerializers,
       config.runner,
       config.snapshotEnvironment,
       typeof config.diff === 'string' ? config.diff : undefined,
-      await this.resolveEnvironmentFile(project, config.environment),
     ])
-    const environmentFiles = new Map<TestSpecification, string>()
-    await Promise.all(
-      specs.map(async (spec) => {
-        const file = await this.getSpecificationEnvironmentFile(spec)
-        if (file) {
-          environmentFiles.set(spec, file)
-        }
-      }),
-    )
     const walk = new GraphWalk(graph, this.related)
-    const noMocks = new Set<string>()
-    await walk.add([...projectFiles, ...environmentFiles.values()], noMocks)
+    await walk.add(projectFiles, noMocks)
     // the project files are fully walked at this point, so later walks can't change the result
     const affectedByProjectFiles = walk.getAffected(noMocks)
     if (projectFiles.some((file) => affectedByProjectFiles.has(file))) {
@@ -159,10 +178,6 @@ export class AffectedModulesResolver {
     const affectedWithoutMocks = specMocks.size ? walk.getAffected(noMocks) : affected
 
     return specs.filter((spec) => {
-      const environmentFile = environmentFiles.get(spec)
-      if (environmentFile && affectedByProjectFiles.has(environmentFile)) {
-        return true
-      }
       const mocked = specMocks.get(spec)
       if (!mocked) {
         return affected.has(spec.moduleId)
