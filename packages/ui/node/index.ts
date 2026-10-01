@@ -2,7 +2,7 @@ import type { IncomingMessage } from 'node:http'
 import type { PluginHarness, Vite } from 'vitest/node'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
-import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import { parseCookie, stringifySetCookie } from 'cookie'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
@@ -39,7 +39,9 @@ export default (harness: PluginHarness): Vite.Plugin => {
         const base = uiOptions.uiBase
 
         function serializeTokenCookie(): string {
-          return serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
+          return stringifySetCookie({
+            name: UI_TOKEN_COOKIE,
+            value: ctx.config.api.token,
             path: base,
             httpOnly: true,
             maxAge: UI_TOKEN_COOKIE_MAX_AGE,
