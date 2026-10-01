@@ -36,7 +36,12 @@ export function getCachedVitestImport(
   const relativeRoot = relativeIds[root] ?? (relativeIds[root] = getRelativeDistDir(root))
   if (id.includes(distDir) || id.includes(normalizedDistDir)) {
     const { file, postfix } = splitFileAndPostfix(id)
-    const externalize = id.startsWith('file://') ? id : `${pathToFileURL(file)}${postfix}`
+    // Vite resolves the Windows drive letter in upper case, but Node.js caches
+    // modules by URL, so keep the drive letter Vitest itself was loaded with
+    const path = file.startsWith(normalizedDistDir)
+      ? distDir + file.slice(normalizedDistDir.length)
+      : file
+    const externalize = id.startsWith('file://') ? id : `${pathToFileURL(path)}${postfix}`
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
