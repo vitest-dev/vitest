@@ -764,7 +764,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   fsModuleCache: {
     description:
-      'Cache transformed modules on the file system and reuse them between reruns (default: `false`)',
+      'Cache transformed modules on the file system and reuse them between reruns (default: `true`)',
   },
   fsModuleCachePath: {
     description:
