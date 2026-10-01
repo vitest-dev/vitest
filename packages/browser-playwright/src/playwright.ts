@@ -32,7 +32,7 @@ import { defineBrowserProvider } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import { resolve } from 'pathe'
 import c from 'tinyrainbow'
-import { createDebugger, isCSSRequest } from 'vitest/node'
+import { BrowserConnectionError, createDebugger, isCSSRequest } from 'vitest/node'
 import commands from './commands'
 import { distRoot } from './constants'
 
@@ -693,7 +693,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       debug?.('[%s][%s] the page crashed', sessionId, this.browserName)
       const session = this.project.vitest._browserSessions.getSession(sessionId)
       session?.fail(
-        new Error(
+        new BrowserConnectionError(
           `The ${this.browserName} page crashed while running tests. This can happen if the browser ran out of memory.`,
         ),
       )

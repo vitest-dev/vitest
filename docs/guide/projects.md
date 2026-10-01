@@ -171,6 +171,8 @@ export default defineProject({
 })
 ```
 
+By default, `process.cwd()` in every project's tests returns the directory where Vitest was started, even if the project has a different root. See [Project Working Directory Does Not Change](/guide/common-errors#project-working-directory-does-not-change) for details and a workaround.
+
 ## Running Tests
 
 To run tests, define a script in your root `package.json`:

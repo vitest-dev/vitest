@@ -118,6 +118,7 @@ const scale = computed(() =>
   container-type: size;
 
   margin-top: 0.5rem;
+  margin-inline: var(--splitpane-handle-size);
 }
 
 #tester-ui:not([data-ready]) {
