@@ -277,13 +277,17 @@ test('the environment comment is read when filtering and reused by the run', asy
     `,
     'src/helper.js': 'export {}',
   })
-  const vitest = await createVitest({ root, watch: false, config: false })
+  const vitest = await createVitest({
+    root,
+    watch: false,
+    config: false,
+    related: ['src/helper.js'],
+  })
   onTestFinished(() => vitest.close())
 
   const [unfiltered] = await vitest.globTestSpecifications()
   expect(unfiltered._docblock).toBeUndefined()
 
-  vitest.config.related = [`${root}/src/helper.js`]
   const [filtered] = await vitest.getRelevantTestSpecifications()
   expect(filtered._docblock).toMatchInlineSnapshot(`
     {
@@ -854,10 +858,9 @@ test('the environment comment is ignored for browser tests', async () => {
     `,
     'src/helper.js': 'export {}',
   })
-  const vitest = await createVitest({ root, watch: false })
+  const vitest = await createVitest({ root, watch: false, related: ['src/helper.js'] })
   onTestFinished(() => vitest.close())
 
-  vitest.config.related = [`${root}/src/helper.js`]
   const specifications = await vitest.getRelevantTestSpecifications()
   expect(specifications.map((spec) => [spec.pool, spec._docblock])).toMatchInlineSnapshot(`
     [
@@ -899,10 +902,9 @@ test('the run uses the environment comment read when filtering', async () => {
       test('environment', () => expect(globalThis.__environment).toBe('custom'))
     `,
   })
-  const vitest = await createVitest({ root, watch: false, reporters: [{}] })
+  const vitest = await createVitest({ root, watch: false, reporters: [{}], related: ['env.js'] })
   onTestFinished(() => vitest.close())
 
-  vitest.config.related = [`${root}/env.js`]
   const specifications = await vitest.getRelevantTestSpecifications()
   // the file is not read again, so the run still uses the environment from the comment
   editFile('a.test.js', (content) => content.replace(environmentComment('custom'), ''))
