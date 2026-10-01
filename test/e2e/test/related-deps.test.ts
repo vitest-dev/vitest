@@ -297,6 +297,69 @@ test.each([
   `)
 })
 
+describe('externalized modules', () => {
+  const files = {
+    'vitest.config.js': `
+      export default {
+        test: {
+          server: { deps: { external: [/\\.wasm$/, /\\/src\\/external\\//] } },
+        },
+      }
+    `,
+    'src/empty.wasm': '\0asm\x01\0\0\0',
+    'src/external/index.js': `import '../nested.js'\nexport {}`,
+    'src/nested.js': 'export {}',
+    'src/other.js': 'export {}',
+    // the wasm module is never loaded, so the test does not need wasm support
+    'a.test.js': `
+      import { test } from 'vitest'
+      test('a', async () => {
+        if (globalThis.__never) await import('./src/empty.wasm')
+      })
+    `,
+    'b.test.js': testFile('b', `import './src/external/index.js'`),
+    'c.test.js': testFile('c', `import './src/other.js'`),
+  }
+
+  test('an unrelated change does not run the tests that import an externalized module', async () => {
+    const { stderr, testTree } = await runInlineTests(files, { related: ['src/other.js'] })
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "c.test.js": {
+          "c": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a change to an externalized module runs the tests that import it', async () => {
+    const { stderr, testTree } = await runInlineTests(files, {
+      related: ['src/empty.wasm', 'src/external/index.js'],
+    })
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
+  // like in a normal run, an externalized module is not transformed, so its imports are unknown
+  test('the imports of an externalized module are not followed', async () => {
+    const { testTree } = await runInlineTests(files, { related: ['src/nested.js'] })
+
+    expect(testTree()).toMatchInlineSnapshot(`{}`)
+  })
+})
+
 describe('files added with addWatchFile', () => {
   // the plugin builds src/template.js from src/template.html
   const templatePlugin = (hook: 'load' | 'transform', test = {}) => `

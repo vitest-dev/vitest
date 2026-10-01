@@ -79,20 +79,23 @@ export class ModuleTransformService {
 
   /**
    * Transforms the module like `environment.transformRequest`, but reads and
-   * populates the `fsModuleCache` when it is enabled.
+   * populates the `fsModuleCache` when it is enabled. Returns `null` for externalized modules.
    */
   async transform(id: string, environment: DevEnvironment): Promise<TransformResult | null> {
     await this.traces.waitInit()
     const result = await this.traces.$('vitest.module.transform', (span) =>
       this.fetchInSpan(span, id, undefined, environment),
     )
+    // externalized modules are loaded by Node without a transform, like in a normal run
+    if ('externalize' in result) {
+      return null
+    }
     if ('id' in result) {
       const transformResult = environment.moduleGraph.getModuleById(result.id)?.transformResult
       if (transformResult) {
         return transformResult
       }
     }
-    // externalized modules are never transformed by `fetch`
     return environment.transformRequest(id)
   }
 
