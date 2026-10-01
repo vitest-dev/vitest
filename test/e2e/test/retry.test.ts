@@ -220,43 +220,40 @@ test('expected failures can recover through a retry in every repeat', async () =
 })
 
 test('attempts grow while the test runs', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { stderr, results } = await runInlineTests({
     'attempts.test.js': `
-      import { afterAll, expect, it, onTestFailed } from 'vitest'
+      import { expect, it, onTestFailed } from 'vitest'
 
-      const seen = []
-      let runs = 0
-      const summarize = (task) =>
-        task.result.attempts.map(a => [a.repeatIndex, a.retryIndex, a.state])
+      let run = 0
 
-      it('flaky', { retry: 2, repeats: 1 }, ({ task }) => {
-        seen.push(['run', ...summarize(task)])
-        onTestFailed(() => {
-          seen.push(['failed', ...summarize(task)])
-        })
-        expect(++runs % 2).toBe(0)
-      })
-
-      afterAll(() => {
-        expect(seen).toEqual([
-          ['run'],
-          ['failed'],
-          ['run', [0, 0, 'fail']],
-          ['run', [0, 0, 'fail'], [0, 1, 'pass']],
-          ['failed', [0, 0, 'fail'], [0, 1, 'pass']],
-          ['run', [0, 0, 'fail'], [0, 1, 'pass'], [1, 0, 'fail']],
-        ])
+      it('fails on odd runs', { retry: 2, repeats: 1 }, ({ task }) => {
+        run++
+        const log = (label) => {
+          const attempts = task.result.attempts.map(
+            (a) => \`repeat \${a.repeatIndex} retry \${a.retryIndex}: \${a.state}\`,
+          )
+          ;(task.meta.log ??= []).push(\`\${label} -> [\${attempts.join(', ')}]\`)
+        }
+        const label = \`run \${run}\`
+        log(label)
+        onTestFailed(() => log(\`\${label} onTestFailed\`))
+        expect(run % 2).toBe(0)
       })
     `,
   })
 
   expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "attempts.test.js": {
-        "flaky": "passed",
-      },
-    }
+  const [test] = results[0].children.allTests()
+  expect(test.result().state).toBe('passed')
+  expect((test.meta() as { log: string[] }).log).toMatchInlineSnapshot(`
+    [
+      "run 1 -> []",
+      "run 1 onTestFailed -> []",
+      "run 2 -> [repeat 0 retry 0: fail]",
+      "run 3 -> [repeat 0 retry 0: fail, repeat 0 retry 1: pass]",
+      "run 3 onTestFailed -> [repeat 0 retry 0: fail, repeat 0 retry 1: pass]",
+      "run 4 -> [repeat 0 retry 0: fail, repeat 0 retry 1: pass, repeat 1 retry 0: fail]",
+    ]
   `)
 })
 
