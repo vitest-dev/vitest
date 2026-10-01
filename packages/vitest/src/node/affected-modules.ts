@@ -86,9 +86,12 @@ export class AffectedModulesResolver {
         }
       }),
     )
-    const projectWalk = new GraphWalk(graph, this.related, new Set())
-    await projectWalk.add([...projectFiles, ...environmentFiles.values()])
-    if (projectFiles.some((file) => projectWalk.isAffected(file))) {
+    const walk = new GraphWalk(graph, this.related)
+    const noMocks = new Set<string>()
+    await walk.add([...projectFiles, ...environmentFiles.values()], noMocks)
+    // the project files are fully walked at this point, so later walks can't change the result
+    const affectedWithoutMocks = walk.getAffected(noMocks)
+    if (projectFiles.some((file) => affectedWithoutMocks.has(file))) {
       return specs
     }
 
@@ -109,25 +112,22 @@ export class AffectedModulesResolver {
       }),
     )
 
-    const baseWalk = new GraphWalk(graph, this.related, projectMocks)
-    await baseWalk.add(specs.filter((spec) => !specMocks.has(spec)).map((spec) => spec.moduleId))
-
-    const affected = await Promise.all(
-      specs.map(async (spec) => {
-        const environmentFile = environmentFiles.get(spec)
-        if (environmentFile && projectWalk.isAffected(environmentFile)) {
-          return true
-        }
-        const mocked = specMocks.get(spec)
-        if (!mocked) {
-          return baseWalk.isAffected(spec.moduleId)
-        }
-        const walk = new GraphWalk(graph, this.related, mocked, baseWalk)
-        await walk.add([spec.moduleId])
-        return walk.isAffected(spec.moduleId)
-      }),
+    await Promise.all(
+      specs.map((spec) => walk.add([spec.moduleId], specMocks.get(spec) ?? projectMocks)),
     )
-    return specs.filter((_, index) => affected[index])
+    const affected = walk.getAffected(projectMocks)
+
+    return specs.filter((spec) => {
+      const environmentFile = environmentFiles.get(spec)
+      if (environmentFile && affectedWithoutMocks.has(environmentFile)) {
+        return true
+      }
+      if (!affected.has(spec.moduleId)) {
+        return false
+      }
+      const mocked = specMocks.get(spec)
+      return !mocked || walk.reachesChange(spec.moduleId, mocked, affected)
+    })
   }
 
   private dependsOnConfig(configDependencies: string[] | undefined): boolean {
@@ -264,69 +264,34 @@ class ProjectGraph {
 }
 
 /**
- * Walks the module graph from a set of roots without entering the modules that are mocked.
+ * Walks the module graph once for every root, skipping a module only when every walk that reaches it mocks it.
  */
 class GraphWalk {
+  private dependencies = new Map<string, string[]>()
   private importers = new Map<string, Set<string>>()
-  private visited = new Set<string>()
-  private failed = new Set<string>()
-  private _affected: Set<string> | undefined
+  // modules mocked by every root that reaches the module, so they are not walked from it
+  private mockedByAll = new Map<string, Set<string>>()
+  private changed: Set<string>
 
   constructor(
     private graph: ProjectGraph,
-    private related: string[],
-    private mocked: Set<string>,
-    // a walk that mocks a subset of these modules, so it reaches every module this walk can
-    private base?: GraphWalk,
-  ) {}
-
-  async add(roots: string[]): Promise<void> {
-    await Promise.all(roots.map((root) => this.addModule(root)))
+    related: string[],
+  ) {
+    this.changed = new Set(related)
   }
 
-  isAffected(filepath: string): boolean {
-    return this.getAffected().has(filepath)
+  async add(roots: string[], mocked: Set<string>): Promise<void> {
+    await Promise.all(roots.map((root) => this.addModule(root, mocked)))
   }
 
-  private async addModule(filepath: string): Promise<void> {
-    if (this.visited.has(filepath) || this.mocked.has(filepath)) {
-      return
+  // modules that import a changed file through modules that are not in `mocked`
+  getAffected(mocked: Set<string>): Set<string> {
+    const affected = new Set<string>()
+    for (const file of this.changed) {
+      if (!mocked.has(file)) {
+        affected.add(file)
+      }
     }
-    this.visited.add(filepath)
-    if (this.base?.visited.has(filepath) && !this.base.isAffected(filepath)) {
-      return
-    }
-
-    const node = await this.graph.getModule(filepath)
-    if (!node) {
-      return
-    }
-    if (node.failed) {
-      this.failed.add(filepath)
-    }
-    await Promise.all(
-      node.dependencies.map(async (dep) => {
-        if (this.mocked.has(dep)) {
-          return
-        }
-        let importedBy = this.importers.get(dep)
-        if (!importedBy) {
-          this.importers.set(dep, (importedBy = new Set()))
-        }
-        importedBy.add(filepath)
-        return this.addModule(dep)
-      }),
-    )
-  }
-
-  private getAffected(): Set<string> {
-    if (this._affected) {
-      return this._affected
-    }
-    const affected = new Set<string>([
-      ...this.related.filter((file) => !this.mocked.has(file)),
-      ...this.failed,
-    ])
     const queue = [...affected]
     while (queue.length) {
       const importedBy = this.importers.get(queue.pop()!)
@@ -334,13 +299,71 @@ class GraphWalk {
         continue
       }
       for (const importer of importedBy) {
-        if (!affected.has(importer)) {
+        if (!affected.has(importer) && !mocked.has(importer)) {
           affected.add(importer)
           queue.push(importer)
         }
       }
     }
-    this._affected = affected
     return affected
   }
+
+  // whether `filepath` imports a changed file without passing through `mocked`,
+  // only modules in `affected` can lead to a change
+  reachesChange(filepath: string, mocked: Set<string>, affected: Set<string>): boolean {
+    const visited = new Set([filepath])
+    const stack = [filepath]
+    while (stack.length) {
+      const file = stack.pop()!
+      if (this.changed.has(file)) {
+        return true
+      }
+      for (const dep of this.dependencies.get(file) ?? []) {
+        if (affected.has(dep) && !mocked.has(dep) && !visited.has(dep)) {
+          visited.add(dep)
+          stack.push(dep)
+        }
+      }
+    }
+    return false
+  }
+
+  private async addModule(filepath: string, mocked: Set<string>): Promise<void> {
+    const previous = this.mockedByAll.get(filepath)
+    if (previous) {
+      if (isSubset(previous, mocked)) {
+        return
+      }
+      mocked = new Set([...previous].filter((id) => mocked.has(id)))
+    }
+    this.mockedByAll.set(filepath, mocked)
+
+    const node = await this.graph.getModule(filepath)
+    if (!node) {
+      return
+    }
+    if (node.failed) {
+      this.changed.add(filepath)
+    }
+    this.dependencies.set(filepath, node.dependencies)
+    await Promise.all(
+      node.dependencies.map((dep) => {
+        let importedBy = this.importers.get(dep)
+        if (!importedBy) {
+          this.importers.set(dep, (importedBy = new Set()))
+        }
+        importedBy.add(filepath)
+        return mocked.has(dep) ? undefined : this.addModule(dep, mocked)
+      }),
+    )
+  }
+}
+
+function isSubset(subset: Set<string>, set: Set<string>): boolean {
+  for (const item of subset) {
+    if (!set.has(item)) {
+      return false
+    }
+  }
+  return true
 }

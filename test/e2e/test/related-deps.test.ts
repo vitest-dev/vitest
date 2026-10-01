@@ -577,6 +577,35 @@ describe('mocked modules', () => {
     `)
   })
 
+  test('a module mocked behind a shared module is still walked for a test that does not mock it', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'src/shared.js': `import './dep.js'`,
+        'src/dep.js': `import './nested.js'`,
+        'src/nested.js': 'export {}',
+        'a.test.js': `
+          import { test, vi } from 'vitest'
+          import './src/shared.js'
+
+          vi.mock('./src/dep.js', () => ({}))
+
+          test('a', () => {})
+        `,
+        'b.test.js': testFile('b', `import './src/shared.js'`),
+      },
+      { related: ['src/nested.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
   test('a package redirected to the root __mocks__ is followed', async () => {
     const { stderr, testTree } = await runInlineTests(
       {
