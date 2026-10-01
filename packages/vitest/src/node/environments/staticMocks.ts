@@ -10,7 +10,11 @@ export interface StaticMockedModules {
   replaced: Set<string>
   /** Files in `__mocks__` that can be loaded instead of the original module. */
   redirects: string[]
+  /** Resolved ids of modules that are loaded even if they are mocked, for example, in a setup file. */
+  restored: Set<string>
 }
+
+const restoringMethods = new Set(['unmock', 'doUnmock', 'importActual'])
 
 export function getStaticMocks(
   environment: DevEnvironment,
@@ -24,7 +28,7 @@ export function getStaticMocks(
 }
 
 /**
- * Resolves the hoisted `vi.mock` calls of `importer`.
+ * Resolves the static `vi.mock` calls of `importer` and the calls that load the original module.
  */
 export async function resolveStaticMocks(
   environment: DevEnvironment,
@@ -32,33 +36,46 @@ export async function resolveStaticMocks(
   importer: string,
   mocks: StaticMockCall[] | null | undefined,
 ): Promise<StaticMockedModules> {
-  const result: StaticMockedModules = { replaced: new Set(), redirects: [] }
-  const hoisted = mocks?.filter((mock) => mock.method === 'mock')
-  if (!hoisted?.length) {
+  const result: StaticMockedModules = { replaced: new Set(), redirects: [], restored: new Set() }
+  if (!mocks?.length) {
     return result
   }
-  await Promise.all(
-    hoisted.map(async (mock) => {
+  const resolvedIds = await Promise.all(
+    mocks.map(async (mock) => {
       const resolved = await environment.pluginContainer
         .resolveId(mock.specifier, importer)
         .catch(() => null)
-      if (mock.hasFactory) {
-        if (resolved && !mock.factoryLoadsOriginal) {
-          result.replaced.add(resolved.id)
-        }
-        return
-      }
-      // without a factory the mock is either redirected to `__mocks__` or
-      // generated from the original; options like `{ spy: true }` always use the original
-      const redirect = findRedirect(config, mock.specifier, resolved?.id)
-      if (redirect) {
-        result.redirects.push(redirect)
-        if (resolved && mock.automock) {
-          result.replaced.add(resolved.id)
-        }
-      }
+      return resolved?.id
     }),
   )
+  mocks.forEach((mock, index) => {
+    const id = resolvedIds[index]
+    if (id && restoringMethods.has(mock.method)) {
+      result.restored.add(id)
+    }
+  })
+  mocks.forEach((mock, index) => {
+    if (mock.method !== 'mock') {
+      return
+    }
+    const id = resolvedIds[index]
+    const replaces = id != null && !result.restored.has(id)
+    if (mock.hasFactory) {
+      if (replaces && !mock.factoryLoadsOriginal) {
+        result.replaced.add(id)
+      }
+      return
+    }
+    // without a factory the mock is either redirected to `__mocks__` or
+    // generated from the original; options like `{ spy: true }` always use the original
+    const redirect = findRedirect(config, mock.specifier, id)
+    if (redirect) {
+      result.redirects.push(redirect)
+      if (replaces && mock.automock) {
+        result.replaced.add(id)
+      }
+    }
+  })
   return result
 }
 

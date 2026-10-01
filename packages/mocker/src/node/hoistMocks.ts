@@ -95,7 +95,10 @@ function getNodeTail(code: string, node: Node) {
   return end
 }
 
-const regexpHoistable = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\s*\(/
+const regexpHoistable =
+  /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock|importActual)\s*\(/
+// calls that load the original module even if it is mocked
+const originalLoadingMethodNames = ['doUnmock', 'importActual']
 const hashbangRE = /^#!.*\n/
 
 // Public redistributions of Vitest that re-export its mocking API (`vi`)
@@ -389,6 +392,18 @@ export function hoistMocks(
           }
           if (source) {
             s.overwrite(moduleInfo.start, moduleInfo.end, s.slice(source.start, source.end))
+          }
+        }
+
+        if (options.onStaticMock && originalLoadingMethodNames.includes(methodName)) {
+          const specifier = getStaticSpecifier(node.arguments[0])
+          if (specifier != null) {
+            options.onStaticMock({
+              method: methodName,
+              specifier,
+              hasFactory: false,
+              factoryLoadsOriginal: false,
+            })
           }
         }
 

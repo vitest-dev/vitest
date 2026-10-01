@@ -38,6 +38,9 @@ test('reports static mocks', () => {
   vi.mock('./original', async (importOriginal) => importOriginal())
   vi.mock('./spy', { spy: true })
   vi.unmock('./unmocked')
+  vi.doUnmock('./do-unmocked')
+  vi.importActual('./actual')
+  vi.doMock('./do-mocked', () => ({}))
   `,
     { onStaticMock: (call) => calls.push(call) },
   )
@@ -77,6 +80,18 @@ test('reports static mocks', () => {
         "hasFactory": false,
         "method": "unmock",
         "specifier": "./unmocked",
+      },
+      {
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "doUnmock",
+        "specifier": "./do-unmocked",
+      },
+      {
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "importActual",
+        "specifier": "./actual",
       },
     ]
   `)

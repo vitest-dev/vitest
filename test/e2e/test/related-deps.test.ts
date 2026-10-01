@@ -889,6 +889,112 @@ describe('mocked modules', () => {
     `)
   })
 
+  test.each([
+    [
+      'vi.importActual',
+      `
+        import { test, vi } from 'vitest'
+        vi.mock('./src/dep.js', () => ({}))
+        test('a', async () => {
+          await vi.importActual('./src/dep.js')
+        })
+      `,
+    ],
+    [
+      'vi.doUnmock',
+      `
+        import { test, vi } from 'vitest'
+        vi.mock('./src/dep.js', () => ({}))
+        test('a', async () => {
+          vi.doUnmock('./src/dep.js')
+          await import('./src/dep.js')
+        })
+      `,
+    ],
+  ])('a module mocked with a factory and loaded with %s runs the test', async (_, test) => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'src/dep.js': `import './nested.js'`,
+        'src/nested.js': 'export {}',
+        'a.test.js': test,
+      },
+      { related: ['src/nested.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a module mocked in a setup file and loaded with vi.importActual runs the test', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+        'setup.js': `
+          import { vi } from 'vitest'
+          vi.mock('./src/dep.js', () => ({}))
+        `,
+        'src/dep.js': `import './nested.js'`,
+        'src/nested.js': 'export {}',
+        'a.test.js': `
+          import { test, vi } from 'vitest'
+          test('a', async () => {
+            await vi.importActual('./src/dep.js')
+          })
+        `,
+        'b.test.js': testFile('b', `import './src/dep.js'`),
+      },
+      { related: ['src/nested.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a module mocked in a setup file and unmocked in a test runs the test', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+        'setup.js': `
+          import { vi } from 'vitest'
+          vi.mock('./src/dep.js', () => ({}))
+        `,
+        'src/dep.js': `import './nested.js'`,
+        'src/nested.js': 'export {}',
+        'a.test.js': `
+          import { test, vi } from 'vitest'
+          import './src/dep.js'
+
+          vi.unmock('./src/dep.js')
+
+          test('a', () => {})
+        `,
+        'b.test.js': testFile('b', `import './src/dep.js'`),
+      },
+      { related: ['src/nested.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+
   test('a mock inside an imported module does not skip the mocked module', async () => {
     const { stderr, testTree } = await runInlineTests(
       {

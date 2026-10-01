@@ -16,6 +16,7 @@ interface ModuleNode {
   // files added by plugins with `addWatchFile`, they are not modules and are never transformed
   watchedFiles: string[]
   mocked: Set<string>
+  restored: Set<string>
   failed?: boolean
 }
 
@@ -91,25 +92,28 @@ export class AffectedModulesResolver {
     const noMocks = new Set<string>()
     await walk.add([...projectFiles, ...environmentFiles.values()], noMocks)
     // the project files are fully walked at this point, so later walks can't change the result
-    const affectedWithoutMocks = walk.getAffected(noMocks)
-    if (projectFiles.some((file) => affectedWithoutMocks.has(file))) {
+    const affectedByProjectFiles = walk.getAffected(noMocks)
+    if (projectFiles.some((file) => affectedByProjectFiles.has(file))) {
       return specs
     }
 
     // mocks from setup files apply to every test file of the project
     const projectMocks = new Set<string>()
     for (const file of setupFiles) {
-      const mocked = await graph.getMockedModules(file)
+      const { mocked } = await graph.getMocks(file)
       mocked.forEach((id) => projectMocks.add(id))
     }
 
     const specMocks = new Map<TestSpecification, Set<string>>()
     await Promise.all(
       specs.map(async (spec) => {
-        const mocked = await graph.getMockedModules(spec.moduleId)
-        if (mocked.size) {
-          specMocks.set(spec, new Set([...projectMocks, ...mocked]))
+        const { mocked, restored } = await graph.getMocks(spec.moduleId)
+        if (!mocked.size && !restored.size) {
+          return
         }
+        const specMocked = new Set([...projectMocks, ...mocked])
+        restored.forEach((id) => specMocked.delete(id))
+        specMocks.set(spec, specMocked)
       }),
     )
 
@@ -117,17 +121,22 @@ export class AffectedModulesResolver {
       specs.map((spec) => walk.add([spec.moduleId], specMocks.get(spec) ?? projectMocks)),
     )
     const affected = walk.getAffected(projectMocks)
+    // a test can load a module that a setup file mocks, so its walk is not limited by those mocks
+    const affectedWithoutMocks = specMocks.size ? walk.getAffected(noMocks) : affected
 
     return specs.filter((spec) => {
       const environmentFile = environmentFiles.get(spec)
-      if (environmentFile && affectedWithoutMocks.has(environmentFile)) {
+      if (environmentFile && affectedByProjectFiles.has(environmentFile)) {
         return true
       }
-      if (!affected.has(spec.moduleId)) {
-        return false
-      }
       const mocked = specMocks.get(spec)
-      return !mocked || walk.reachesChange(spec.moduleId, mocked, affected)
+      if (!mocked) {
+        return affected.has(spec.moduleId)
+      }
+      return (
+        affectedWithoutMocks.has(spec.moduleId) &&
+        walk.reachesChange(spec.moduleId, mocked, affectedWithoutMocks)
+      )
     })
   }
 
@@ -219,10 +228,11 @@ class ProjectGraph {
   }
 
   /**
-   * Modules that are never loaded when `id` hoists its mocks.
+   * Modules that are never loaded when `id` hoists its mocks, and modules that `id` loads even if they are mocked.
    */
-  async getMockedModules(id: string): Promise<Set<string>> {
-    return (await this.getModule(id))?.mocked ?? new Set()
+  async getMocks(id: string): Promise<{ mocked: Set<string>; restored: Set<string> }> {
+    const node = await this.getModule(id)
+    return { mocked: node?.mocked ?? new Set(), restored: node?.restored ?? new Set() }
   }
 
   // a module that fails to load is treated as affected, so its tests run and report the error
@@ -230,7 +240,13 @@ class ProjectGraph {
     try {
       return await this.transformModule(id)
     } catch {
-      return { dependencies: [], watchedFiles: [], mocked: new Set(), failed: true }
+      return {
+        dependencies: [],
+        watchedFiles: [],
+        mocked: new Set(),
+        restored: new Set(),
+        failed: true,
+      }
     }
   }
 
@@ -245,7 +261,7 @@ class ProjectGraph {
       return null
     }
 
-    const { replaced, redirects } = await resolveStaticMocks(
+    const { replaced, redirects, restored } = await resolveStaticMocks(
       this.environment,
       this.project.config,
       id,
@@ -261,8 +277,9 @@ class ProjectGraph {
         ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
       }
     })
-    redirects.forEach((file) => {
-      if (this.resolver.isLocalSourceFile(file)) {
+    // `vi.importActual` loads the original without importing it
+    ;[...redirects, ...restored].forEach((file) => {
+      if (this.resolver.isLocalSourceFile(file) && !dependencies.includes(file)) {
         dependencies.push(file)
       }
     })
@@ -271,6 +288,7 @@ class ProjectGraph {
       dependencies,
       watchedFiles,
       mocked: new Set(Array.from(replaced, (mockedId) => cleanUrl(mockedId))),
+      restored: new Set(Array.from(restored, (restoredId) => cleanUrl(restoredId))),
     }
   }
 }
