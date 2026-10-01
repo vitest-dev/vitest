@@ -1,36 +1,18 @@
-import type {
-  CloneOption,
-  DefineWorkerOptions,
-  Procedure,
-} from './types'
+import type { CloneOption, DefineWorkerOptions, Procedure } from './types'
 import { startWebWorkerModuleRunner } from './runner'
-import {
-  createMessageEvent,
-  debug,
-  getFileIdFromUrl,
-} from './utils'
+import { createMessageEvent, debug, getFileIdFromUrl } from './utils'
 
-export function createWorkerConstructor(
-  options?: DefineWorkerOptions,
-): typeof Worker {
+export function createWorkerConstructor(options?: DefineWorkerOptions): typeof Worker {
   const cloneType = () =>
-    (options?.clone
-      ?? process.env.VITEST_WEB_WORKER_CLONE
-      ?? 'native') as CloneOption
+    (options?.clone ?? process.env.VITEST_WEB_WORKER_CLONE ?? 'native') as CloneOption
 
   return class Worker extends EventTarget {
     static __VITEST_WEB_WORKER__ = true
 
     private _vw_workerTarget = new EventTarget()
-    private _vw_insideListeners = new Map<
-      string,
-      EventListenerOrEventListenerObject
-    >()
+    private _vw_insideListeners = new Map<string, EventListenerOrEventListenerObject>()
 
-    private _vw_outsideListeners = new Map<
-      string,
-      EventListenerOrEventListenerObject
-    >()
+    private _vw_outsideListeners = new Map<string, EventListenerOrEventListenerObject>()
 
     private _vw_name: string
     private _vw_messageQueue: any[] | null = []
@@ -66,23 +48,17 @@ export function createWorkerConstructor(
           if (args[1]) {
             this._vw_insideListeners.set(args[0], args[1])
           }
-          return this._vw_workerTarget.addEventListener(...args as [any, any])
+          return this._vw_workerTarget.addEventListener(...(args as [any, any]))
         },
         removeEventListener: (...args: any[]) => {
-          return this._vw_workerTarget.removeEventListener(...args as [any, any])
+          return this._vw_workerTarget.removeEventListener(...(args as [any, any]))
         },
         postMessage: (...args: any[]) => {
           if (!args.length) {
-            throw new SyntaxError(
-              '"postMessage" requires at least one argument.',
-            )
+            throw new SyntaxError('"postMessage" requires at least one argument.')
           }
 
-          debug(
-            'posting message %o from the worker %s to the main thread',
-            args[0],
-            this._vw_name,
-          )
+          debug('posting message %o from the worker %s to the main thread', args[0], this._vw_name)
           const event = createMessageEvent(args[0], args[1], cloneType())
           this.dispatchEvent(event)
         },
@@ -117,36 +93,33 @@ export function createWorkerConstructor(
       this._vw_name = fileId
 
       const runner = startWebWorkerModuleRunner(context)
-      runner.mocker.resolveId(fileId).then(({ url, id: resolvedId }) => {
-        this._vw_name = options?.name ?? url
-        debug('initialize worker %s', this._vw_name)
+      runner.mocker
+        .resolveId(fileId)
+        .then(({ url, id: resolvedId }) => {
+          this._vw_name = options?.name ?? url
+          debug('initialize worker %s', this._vw_name)
 
-        return runner.import(url).then(() => {
-          runner._invalidateSubTreeById([
-            resolvedId,
-            runner.mocker.getMockPath(resolvedId),
-          ])
-          const q = this._vw_messageQueue
-          this._vw_messageQueue = null
-          if (q) {
-            q.forEach(
-              ([data, transfer]) => this.postMessage(data, transfer),
-              this,
-            )
-          }
-          debug('worker %s successfully initialized', this._vw_name)
+          return runner.import(url).then(() => {
+            runner._invalidateSubTreeById([resolvedId, runner.mocker.getMockPath(resolvedId)])
+            const q = this._vw_messageQueue
+            this._vw_messageQueue = null
+            if (q) {
+              q.forEach(([data, transfer]) => this.postMessage(data, transfer), this)
+            }
+            debug('worker %s successfully initialized', this._vw_name)
+          })
         })
-      }).catch((e) => {
-        debug('worker %s failed to initialize: %o', this._vw_name, e)
-        const EventConstructor = globalThis.ErrorEvent || globalThis.Event
-        const error = new EventConstructor('error', {
-          error: e,
-          message: e.message,
+        .catch((e) => {
+          debug('worker %s failed to initialize: %o', this._vw_name, e)
+          const EventConstructor = globalThis.ErrorEvent || globalThis.Event
+          const error = new EventConstructor('error', {
+            error: e,
+            message: e.message,
+          })
+          this.dispatchEvent(error)
+          this.onerror?.(error)
+          console.error(e)
         })
-        this.dispatchEvent(error)
-        this.onerror?.(error)
-        console.error(e)
-      })
     }
 
     addEventListener(
@@ -160,35 +133,24 @@ export function createWorkerConstructor(
       return super.addEventListener(type, callback, options)
     }
 
-    postMessage(
-      ...args: [any, StructuredSerializeOptions | Transferable[] | undefined]
-    ): void {
+    postMessage(...args: [any, StructuredSerializeOptions | Transferable[] | undefined]): void {
       if (!args.length) {
         throw new SyntaxError('"postMessage" requires at least one argument.')
       }
 
       const [data, transferOrOptions] = args
       if (this._vw_messageQueue != null) {
-        debug(
-          'worker %s is not yet initialized, queue message %s',
-          this._vw_name,
-          data,
-        )
+        debug('worker %s is not yet initialized, queue message %s', this._vw_name, data)
         this._vw_messageQueue.push([data, transferOrOptions])
         return
       }
 
-      debug(
-        'posting message %o from the main thread to the worker %s',
-        data,
-        this._vw_name,
-      )
+      debug('posting message %o from the main thread to the worker %s', data, this._vw_name)
 
       const event = createMessageEvent(data, transferOrOptions, cloneType())
       if (event.type === 'messageerror') {
         this.dispatchEvent(event)
-      }
-      else {
+      } else {
         this._vw_workerTarget.dispatchEvent(event)
       }
     }

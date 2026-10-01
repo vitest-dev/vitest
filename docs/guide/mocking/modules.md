@@ -125,6 +125,7 @@ vi.mock('./example.js', { spy: true })
 
 vi.mocked(exampleObject.answer).mockReturnValue(0)
 ```
+
 :::
 
 ::: warning
@@ -141,6 +142,7 @@ export function question() {
   return 'Unknown Question'
 }
 ```
+
 :::
 
 Note that `vi.spyOn` will only spy on calls that were done after it spied on the method. So, if the function is executed at the top level during an import or it was called before the spying, `vi.spyOn` will not be able to report on it.
@@ -290,6 +292,7 @@ vi.mock(import('vscode'), () => {
 Vitest implements different module mocking mechanisms depending on the environment. The only feature they share is the plugin transformer. When Vitest sees that a file has `vi.mock` inside, it will transform every static import into a dynamic one and move the `vi.mock` call to the top of the file. This allows Vitest to register the mock before the import happens without breaking the ESM rule of hoisted imports.
 
 ::: code-group
+
 ```ts [example.js]
 import { answer } from './answer.js'
 
@@ -297,6 +300,7 @@ vi.mock(import('./answer.js'))
 
 console.log(answer)
 ```
+
 ```ts [example.transformed.js]
 vi.mock('./answer.js')
 
@@ -307,6 +311,7 @@ const __vitest_module_0__ = await __handle_mock__(
 // the export on the module namespace
 console.log(__vitest_module_0__.answer())
 ```
+
 :::
 
 The `__handle_mock__` wrapper just makes sure the mock is resolved before the import is initiated, it doesn't modify the module in any way.
@@ -326,11 +331,13 @@ Vitest uses native ESM in the Browser Mode. This means that we cannot replace th
 For example, if the module is automocked, Vitest can parse static exports and create a placeholder module:
 
 ::: code-group
+
 ```ts [answer.js]
 export function answer() {
   return 42
 }
 ```
+
 ```ts [answer.transformed.js]
 function answer() {
   return 42
@@ -343,6 +350,7 @@ const __private_module__ = {
 
 export const answer = __private_module__.answer
 ```
+
 :::
 
 The example is simplified for brevity, but the concept is unchanged. We can inject a `__private_module__` variable into the module to hold the mocked values. If the user called `vi.mock` with `spy: true`, we pass down the original value; otherwise, we create a simple `vi.fn()` mock.

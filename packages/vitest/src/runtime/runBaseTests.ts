@@ -4,10 +4,7 @@ import type { SerializedConfig } from './config'
 import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import type { FileSpecification } from './runner/types'
 import { performance } from 'node:perf_hooks'
-import {
-  startCoverageInsideWorker,
-  stopCoverageInsideWorker,
-} from '../integrations/coverage'
+import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import { vi } from '../integrations/vi'
 import { detectAsyncLeaks } from './detect-async-leaks'
@@ -31,11 +28,15 @@ export async function run(
   const [testRunner] = await Promise.all([
     traces.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, traces)),
     traces.$('vitest.runtime.global_env', () => setupGlobalEnv(config, environment)),
-    traces.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })),
+    traces.$('vitest.runtime.coverage.start', () =>
+      startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
+    ),
     traces.$('vitest.runtime.snapshot.environment', async () => {
       if (!workerState.config.snapshotOptions.snapshotEnvironment) {
-        workerState.config.snapshotOptions.snapshotEnvironment
-          = await resolveSnapshotEnvironment(config, moduleRunner)
+        workerState.config.snapshotOptions.snapshotEnvironment = await resolveSnapshotEnvironment(
+          config,
+          moduleRunner,
+        )
       }
     }),
   ])
@@ -47,51 +48,50 @@ export async function run(
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
   try {
-    await traces.$(
-      `vitest.test.runner.${method}`,
-      async () => {
-        for (const file of files) {
-          if (config.isolate) {
-            moduleRunner.mocker?.reset()
-            resetModules(workerState.evaluatedModules, true)
-          }
-
-          workerState.filepath = file.filepath
-
-          if (method === 'run') {
-            const collectAsyncLeaks = config.detectAsyncLeaks ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName) : undefined
-
-            await traces.$(
-              `vitest.test.runner.${method}.module`,
-              { attributes: { 'code.file.path': file.filepath } },
-              () => startTests([file], testRunner),
-            )
-
-            const leaks = await collectAsyncLeaks?.()
-
-            if (leaks?.length) {
-              workerState.rpc.onAsyncLeaks(leaks)
-            }
-          }
-          else {
-            await traces.$(
-              `vitest.test.runner.${method}.module`,
-              { attributes: { 'code.file.path': file.filepath } },
-              () => collectTests([file], testRunner),
-            )
-          }
-
-          // reset after tests, because user might call `vi.setConfig` in setupFile
-          vi.resetConfig()
-          // mocks should not affect different files
-          vi.restoreAllMocks()
+    await traces.$(`vitest.test.runner.${method}`, async () => {
+      for (const file of files) {
+        if (config.isolate) {
+          moduleRunner.mocker?.reset()
+          resetModules(workerState.evaluatedModules, true)
         }
-      },
-    )
-  }
-  finally {
+
+        workerState.filepath = file.filepath
+
+        if (method === 'run') {
+          const collectAsyncLeaks = config.detectAsyncLeaks
+            ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName)
+            : undefined
+
+          await traces.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => startTests([file], testRunner),
+          )
+
+          const leaks = await collectAsyncLeaks?.()
+
+          if (leaks?.length) {
+            workerState.rpc.onAsyncLeaks(leaks)
+          }
+        } else {
+          await traces.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => collectTests([file], testRunner),
+          )
+        }
+
+        // reset after tests, because user might call `vi.setConfig` in setupFile
+        vi.resetConfig()
+        // mocks should not affect different files
+        vi.restoreAllMocks()
+      }
+    })
+  } finally {
     offCancel()
   }
 
-  await traces.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }))
+  await traces.$('vitest.runtime.coverage.stop', () =>
+    stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
+  )
 }

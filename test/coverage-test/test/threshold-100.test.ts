@@ -13,21 +13,24 @@ declare module 'vitest' {
 }
 
 test('{ threshold: { 100: true }}', async () => {
-  await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: { thresholds: { 100: true } },
-    reporters: [
-      'verbose',
-      {
-        onInit(ctx) {
-          ctx.getRootProject().provide('coverage', {
-            provider: ctx.config.coverage.provider,
-            thresholds: (ctx.config.coverage as any).thresholds,
-          })
+  await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: { thresholds: { 100: true } },
+      reporters: [
+        'verbose',
+        {
+          onInit(ctx) {
+            ctx.getRootProject().provide('coverage', {
+              provider: ctx.config.coverage.provider,
+              thresholds: (ctx.config.coverage as any).thresholds,
+            })
+          },
         },
-      },
-    ],
-  }, { throwOnError: false })
+      ],
+    },
+    { throwOnError: false },
+  )
 })
 
 coverageTest('thresholds.100 sets global thresholds to 100', () => {

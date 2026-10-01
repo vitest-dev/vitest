@@ -18,10 +18,7 @@ function testName(name: any) {
 }
 
 const test: NewPlugin['test'] = (val: object) =>
-  val
-  && val.constructor
-  && !!val.constructor.name
-  && testName(val.constructor.name)
+  val && val.constructor && !!val.constructor.name && testName(val.constructor.name)
 
 function isNamedNodeMap(collection: object): collection is NamedNodeMap {
   return collection.constructor.name === 'NamedNodeMap'
@@ -41,32 +38,22 @@ const serialize: NewPlugin['serialize'] = (
   }
 
   return (
-    (config.min ? '' : name + SPACE)
-    + (OBJECT_NAMES.has(name)
+    (config.min ? '' : name + SPACE) +
+    (OBJECT_NAMES.has(name)
       ? `{${printObjectProperties(
-        isNamedNodeMap(collection)
-          ? [...collection].reduce<Record<string, string>>(
-              (props, attribute) => {
+          isNamedNodeMap(collection)
+            ? [...collection].reduce<Record<string, string>>((props, attribute) => {
                 props[attribute.name] = attribute.value
                 return props
-              },
-              {},
-            )
-          : { ...collection },
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
-      : `[${printListItems(
-        [...collection],
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}]`)
+              }, {})
+            : { ...collection },
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+        )}}`
+      : `[${printListItems([...collection], config, indentation, depth, refs, printer)}]`)
   )
 }
 

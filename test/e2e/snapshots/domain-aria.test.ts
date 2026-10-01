@@ -61,8 +61,7 @@ test('aria snapshot', { tags: ['browser'] }, async () => {
   `)
 
   // hand-edit snapshot to introduce regex patterns for "semantic match" test
-  editFile(snapshotFile, s => s
-    .replace(`- button "1234"`, `- button /\\\\d+/`))
+  editFile(snapshotFile, (s) => s.replace(`- button "1234"`, `- button /\\\\d+/`))
 
   // re-run without update — regex pattern matches, all pass, snapshot unchanged
   result = await runVitest({ root, update: 'none' })
@@ -96,9 +95,11 @@ test('aria snapshot', { tags: ['browser'] }, async () => {
   `)
 
   // edit test
-  editFile(testFile, s => s
-    .replace('<p>Original</p>', '<p>Changed</p>')
-    .replace(`aria-label="1234"`, `aria-label="9999"`))
+  editFile(testFile, (s) =>
+    s
+      .replace('<p>Original</p>', '<p>Changed</p>')
+      .replace(`aria-label="1234"`, `aria-label="9999"`),
+  )
 
   // run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })

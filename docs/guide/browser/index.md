@@ -19,18 +19,23 @@ If you are looking for documentation for `expect`, `vi` or any general API like 
 For easier setup, you can use `vitest init browser` command to install required dependencies and create browser configuration.
 
 ::: code-group
+
 ```bash [npm]
 npx vitest init browser
 ```
+
 ```bash [yarn]
 yarn exec vitest init browser
 ```
+
 ```bash [pnpm]
 pnpx vitest init browser
 ```
+
 ```bash [bun]
 bunx vitest init browser
 ```
+
 :::
 
 ### Manual Installation
@@ -40,18 +45,23 @@ You can also install packages manually. Vitest always requires a provider to be 
 If you want to just preview how your tests look, you can use the `preview` provider:
 
 ::: code-group
+
 ```bash [npm]
 npm install -D vitest @vitest/browser-preview
 ```
+
 ```bash [yarn]
 yarn add -D vitest vite @vitest/browser-preview
 ```
+
 ```bash [pnpm]
 pnpm add -D vitest @vitest/browser-preview
 ```
+
 ```bash [bun]
 bun add -D vitest @vitest/browser-preview
 ```
+
 :::
 
 ::: warning
@@ -64,35 +74,45 @@ If you don't already use one of these tools, we recommend starting with Playwrig
 [Playwright](https://npmx.dev/package/playwright) is a framework for Web Testing and Automation.
 
 ::: code-group
+
 ```bash [npm]
 npm install -D vitest @vitest/browser-playwright
 ```
+
 ```bash [yarn]
 yarn add -D vitest vite @vitest/browser-playwright
 ```
+
 ```bash [pnpm]
 pnpm add -D vitest @vitest/browser-playwright
 ```
+
 ```bash [bun]
 bun add -D vitest @vitest/browser-playwright
 ```
+
 == WebdriverIO
 
 [WebdriverIO](https://npmx.dev/package/webdriverio) allows you to run tests locally using the WebDriver protocol.
 
 ::: code-group
+
 ```bash [npm]
 npm install -D vitest @vitest/browser-webdriverio
 ```
+
 ```bash [yarn]
 yarn add -D vitest vite @vitest/browser-webdriverio
 ```
+
 ```bash [pnpm]
 pnpm add -D vitest @vitest/browser-webdriverio
 ```
+
 ```bash [bun]
 bun add -D vitest @vitest/browser-webdriverio
 ```
+
 :::
 
 ## Configuration
@@ -118,12 +138,13 @@ export default defineConfig({
 ```
 
 ::: info
-Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel. You can change that with the [`api`](/config/api) option.
+Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel. You can change that with the [`api`](/config/api) option. The port is bound when the first browser is launched, or on startup if `api` or `ui` is enabled.
 :::
 
 If you have not used Vite before, make sure you have your framework's plugin installed and specified in the config. Some frameworks might require extra configuration to work - check their Vite related documentation to be sure.
 
 ::: code-group
+
 ```ts [react]
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
@@ -142,6 +163,7 @@ export default defineConfig({
   }
 })
 ```
+
 ```ts [vue]
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
@@ -160,6 +182,7 @@ export default defineConfig({
   }
 })
 ```
+
 ```ts [svelte]
 import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
@@ -178,6 +201,7 @@ export default defineConfig({
   }
 })
 ```
+
 ```ts [solid]
 import { defineConfig } from 'vitest/config'
 import solidPlugin from 'vite-plugin-solid'
@@ -196,6 +220,7 @@ export default defineConfig({
   }
 })
 ```
+
 ```ts [marko]
 import { defineConfig } from 'vitest/config'
 import marko from '@marko/vite'
@@ -214,6 +239,7 @@ export default defineConfig({
   }
 })
 ```
+
 ```ts [qwik]
 import { defineConfig } from 'vitest/config'
 import { qwikVite } from '@builder.io/qwik/optimizer'
@@ -233,6 +259,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 If you need to run some tests using Node-based runner, you can define a [`projects`](/guide/projects) option with separate configurations for different testing strategies:
@@ -425,6 +452,7 @@ await page.getByLabelText(/username/i).fill('Alice')
 ```
 
 ::: code-group
+
 ```ts [vue]
 import { render } from 'vitest-browser-vue'
 import Component from './Component.vue'
@@ -445,6 +473,7 @@ test('properly handles v-model', async () => {
   await expect.element(screen.getByText('Hi, my name is Bob')).toBeInTheDocument()
 })
 ```
+
 ```ts [svelte]
 import { render } from 'vitest-browser-svelte'
 import { expect, test } from 'vitest'
@@ -461,6 +490,7 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+
 ```tsx [react]
 import { render } from 'vitest-browser-react'
 import Fetch from './fetch'
@@ -478,6 +508,7 @@ test('loads and displays greeting', async () => {
   await expect.element(screen.getByRole('button')).toBeDisabled()
 })
 ```
+
 ```ts [lit]
 import { render } from 'vitest-browser-lit'
 import { html } from 'lit'
@@ -493,6 +524,7 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+
 ```tsx [preact]
 import { render } from 'vitest-browser-preact'
 import { createElement } from 'preact'
@@ -508,6 +540,7 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+
 ```tsx [qwik]
 import { render } from 'vitest-browser-qwik'
 import Greeting from './greeting'
@@ -523,6 +556,7 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+
 :::
 
 Vitest doesn't support all frameworks out of the box, but you can use external tools to run tests with these frameworks. We also encourage the community to create their own `vitest-browser` wrappers - if you have one, feel free to add it to the examples above.
@@ -539,6 +573,7 @@ You can also see more examples in [`browser-examples`](https://github.com/vitest
 :::
 
 ::: code-group
+
 ```tsx [solid]
 // based on @testing-library/solid API
 // https://testing-library.com/docs/solid-testing-library/api
@@ -566,6 +601,7 @@ it('uses params', async () => {
   await expect.screen(screen.getByText('Id: 1234')).toBeInTheDocument()
 })
 ```
+
 ```ts [marko]
 // based on @testing-library/marko API
 // https://testing-library.com/docs/marko-testing-library/api
@@ -582,6 +618,7 @@ test('renders a message', async () => {
   `)
 })
 ```
+
 :::
 
 ## Limitations
@@ -619,12 +656,14 @@ vi.mocked(module.method).mockImplementation(() => {
 However, the only way to mock exported _variables_ is to export a method that will change the internal value:
 
 ::: code-group
+
 ```js [module.js]
 export let MODE = 'test'
 export function changeMode(newMode) {
   MODE = newMode
 }
 ```
+
 ```js [module.test.ts]
 import { expect } from 'vitest'
 import { changeMode, MODE } from './module.js'
@@ -632,4 +671,5 @@ import { changeMode, MODE } from './module.js'
 changeMode('production')
 expect(MODE).toBe('production')
 ```
+
 :::

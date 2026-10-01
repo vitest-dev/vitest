@@ -42,6 +42,7 @@ At the moment Vitest also doesn't support ranges:
 $ vitest basic/foo.test.ts:10, basic/foo.test.ts:25 # ✅
 $ vitest basic/foo.test.ts:10-25 # ❌
 ```
+
 :::
 
 ### `vitest run`
@@ -67,18 +68,19 @@ vitest related /src/index.ts /src/hello-world.js
 ```
 
 ::: tip
-Don't forget that Vitest runs with enabled watch mode by default. If you are using tools like `lint-staged`, you  should also pass `--run` option, so that command can exit normally.
+Don't forget that Vitest runs with enabled watch mode by default. If you are using tools like `lint-staged`, you should also pass `--run` option, so that command can exit normally.
 
 ```js [.lintstagedrc.js]
 export default {
   '*.{js,ts}': 'vitest related --run',
 }
 ```
+
 :::
 
 ### `vitest bench`
 
-Run only [benchmark](/guide/features.html#benchmarking) tests, which compare performance results.
+Run only [benchmark](/guide/features#benchmarking) tests, which compare performance results.
 
 ### `vitest init`
 
@@ -229,6 +231,7 @@ Boolean options can be negated with `no-` prefix. Specifying the value as `false
 vitest --no-api
 vitest --api=false
 ```
+
 :::
 
 <!--@include: ./cli-generated.md-->

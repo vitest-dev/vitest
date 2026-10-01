@@ -9,55 +9,68 @@ import { createVitest, Logger, PluginHarness, resolveConfig } from 'vitest/node'
 import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
 import { Cli } from '../../../test-utils/cli'
 
-const vitest = vi.defineHelper(async (options: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions }, vitestOptions: VitestOptions = {}) => {
-  const vitest = await createVitest(
-    {
-      ...options.$cliConfig,
-      watch: false,
-      config: false,
-    },
-    {
-      ...options.$viteConfig,
-      plugins: [
-        ...(options.$viteConfig?.plugins || []),
-        {
-          name: 'ignore-optimize-deps',
-          enforce: 'post',
-          config: {
-            order: 'post',
-            handler(config) {
-              config.optimizeDeps ??= {}
-              config.optimizeDeps.include = []
-              config.optimizeDeps.include = []
-              config.optimizeDeps.entries = []
-              config.optimizeDeps.noDiscovery = true
-              config.optimizeDeps.rolldownOptions = {}
-              config.optimizeDeps.ignoreOutdatedRequests = true
+const vitest = vi.defineHelper(
+  async (
+    options: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions },
+    vitestOptions: VitestOptions = {},
+  ) => {
+    const vitest = await createVitest(
+      {
+        ...options.$cliConfig,
+        watch: false,
+        config: false,
+      },
+      {
+        ...options.$viteConfig,
+        plugins: [
+          ...(options.$viteConfig?.plugins || []),
+          {
+            name: 'ignore-optimize-deps',
+            enforce: 'post',
+            config: {
+              order: 'post',
+              handler(config) {
+                config.optimizeDeps ??= {}
+                config.optimizeDeps.include = []
+                config.optimizeDeps.include = []
+                config.optimizeDeps.entries = []
+                config.optimizeDeps.noDiscovery = true
+                config.optimizeDeps.rolldownOptions = {}
+                config.optimizeDeps.ignoreOutdatedRequests = true
+              },
             },
           },
-        },
-      ],
+        ],
+        test: options,
+      },
+      vitestOptions,
+    )
+    onTestFinished(async () => {
+      try {
+        await vitest.vite.waitForRequestsIdle()
+      } finally {
+        await vitest.close()
+      }
+    })
+    return vitest
+  },
+)
+
+async function config(
+  options?: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions },
+  pluginHarness?: PluginHarness,
+) {
+  const {
+    test: { resolvedProjects },
+  } = await resolveConfig(
+    { config: false, ...options?.$cliConfig },
+    {
+      ...options?.$viteConfig,
       test: options,
     },
-    vitestOptions,
+    pluginHarness,
   )
-  onTestFinished(async () => {
-    try {
-      await vitest.vite.waitForRequestsIdle()
-    }
-    finally {
-      await vitest.close()
-    }
-  })
-  return vitest
-})
-
-async function config(options?: TestUserConfig & { $viteConfig?: ViteUserConfig; $cliConfig?: CliOptions }, pluginHarness?: PluginHarness) {
-  const { test: { resolvedProjects } } = await resolveConfig({ config: false, ...options?.$cliConfig }, {
-    ...options?.$viteConfig,
-    test: options,
-  }, pluginHarness)
-  return resolvedProjects.filter(p => !p.hidden)
+  return resolvedProjects.filter((p) => !p.hidden)
 }
 
 async function observePreTransformRequests(options: TestUserConfig = {}) {
@@ -97,9 +110,7 @@ test('does not disable pre-transform requests in browser mode', async () => {
     browser: {
       enabled: true,
       provider: preview(),
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
   })
 
@@ -114,14 +125,41 @@ test('pre-bundles vite module runner through vitest in browser mode', async () =
     browser: {
       enabled: true,
       provider: preview(),
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
   })
 
   expect(v.vite.config.optimizeDeps.include).toContain('vitest > vite/module-runner')
   expect(v.vite.config.optimizeDeps.exclude).not.toContain('vite/module-runner')
+})
+
+test('keeps the config of other browser-consumed environments in browser mode', async () => {
+  const v = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [{ browser: 'chromium' }],
+    },
+    $viteConfig: {
+      environments: {
+        page_runner: {
+          consumer: 'client',
+          dev: { moduleRunnerTransform: true, preTransformRequests: true },
+          optimizeDeps: { include: ['react'] },
+        },
+      },
+    },
+  })
+
+  const { page_runner, ssr } = v.vite.config.environments
+  expect(page_runner.dev.preTransformRequests).toBe(true)
+  expect(page_runner.keepProcessEnv).toBe(false)
+  expect(page_runner.resolve.noExternal).not.toBe(true)
+  expect(page_runner.optimizeDeps.noDiscovery).toBe(false)
+  expect(page_runner.optimizeDeps.include).toEqual(['react'])
+  // environments that Vitest runs on the server keep the node-runner config
+  expect(ssr.optimizeDeps.noDiscovery).toBe(true)
+  expect(ssr.resolve.noExternal).toBe(true)
 })
 
 test('disables pre-transform requests in node mode', async () => {
@@ -137,18 +175,10 @@ test('assigns names as browsers', async () => {
       enabled: true,
       headless: true,
       provider: preview(),
-      instances: [
-        { browser: 'chromium' },
-        { browser: 'firefox' },
-        { browser: 'webkit' },
-      ],
+      instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
     },
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'chromium',
-    'firefox',
-    'webkit',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium', 'firefox', 'webkit'])
 })
 
 test('filters projects', async () => {
@@ -157,16 +187,10 @@ test('filters projects', async () => {
     browser: {
       enabled: true,
       provider: preview(),
-      instances: [
-        { browser: 'chromium' },
-        { browser: 'firefox' },
-        { browser: 'webkit' },
-      ],
+      instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
     },
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'chromium',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium'])
 })
 
 test('filters projects with a wildcard', async () => {
@@ -175,16 +199,10 @@ test('filters projects with a wildcard', async () => {
     browser: {
       enabled: true,
       provider: preview(),
-      instances: [
-        { browser: 'chromium' },
-        { browser: 'firefox' },
-        { browser: 'webkit' },
-      ],
+      instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
     },
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'chromium',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium'])
 })
 
 test('assigns names as browsers in a custom project', async () => {
@@ -208,7 +226,7 @@ test('assigns names as browsers in a custom project', async () => {
       },
     ],
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
+  expect(projects.map((p) => p.projectConfig.name)).toEqual([
     'custom (chromium)',
     'custom (firefox)',
     'custom (webkit)',
@@ -261,7 +279,7 @@ test('inherits browser options', async () => {
       ],
     },
   })
-  expect(projects.map(p => p.projectConfig)).toMatchObject([
+  expect(projects.map((p) => p.projectConfig)).toMatchObject([
     {
       name: 'chromium',
       setupFiles: ['/test/setup.ts'],
@@ -307,47 +325,42 @@ test('inherits browser options', async () => {
   ])
 })
 
-test.each([true, false])('browser instance headless overrides root headless: $0', async (headless) => {
-  const projects = await config({
-    browser: {
-      enabled: true,
-      provider: preview(),
-      headless,
-      instances: [
-        { browser: 'chromium', name: 'inherits-root' },
-        { browser: 'firefox', name: 'overrides-root', headless: !headless },
-      ],
-    },
-  })
-
-  expect(projects.map(project => project.projectConfig.browser.headless)).toEqual([
-    headless,
-    !headless,
-  ])
-})
-
-test('coverage provider v8 works correctly in browser mode if instances are filtered', async () => {
-  const projects = await config(
-    {
-      project: 'chromium',
-      coverage: {
-        enabled: true,
-        provider: 'v8',
-      },
+test.each([true, false])(
+  'browser instance headless overrides root headless: $0',
+  async (headless) => {
+    const projects = await config({
       browser: {
         enabled: true,
-        provider: playwright(),
+        provider: preview(),
+        headless,
         instances: [
-          { browser: 'chromium' },
-          { browser: 'firefox' },
-          { browser: 'webkit' },
+          { browser: 'chromium', name: 'inherits-root' },
+          { browser: 'firefox', name: 'overrides-root', headless: !headless },
         ],
       },
+    })
+
+    expect(projects.map((project) => project.projectConfig.browser.headless)).toEqual([
+      headless,
+      !headless,
+    ])
+  },
+)
+
+test('coverage provider v8 works correctly in browser mode if instances are filtered', async () => {
+  const projects = await config({
+    project: 'chromium',
+    coverage: {
+      enabled: true,
+      provider: 'v8',
     },
-  )
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'chromium',
-  ])
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
+    },
+  })
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium'])
 })
 
 test('coverage provider v8 works correctly in workspaced browser mode if instances are filtered', async () => {
@@ -360,11 +373,7 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
           browser: {
             enabled: true,
             provider: playwright(),
-            instances: [
-              { browser: 'chromium' },
-              { browser: 'firefox' },
-              { browser: 'webkit' },
-            ],
+            instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
           },
         },
       },
@@ -374,9 +383,7 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
       provider: 'v8',
     },
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'browser (chromium)',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['browser (chromium)'])
 })
 
 test('browser instances with include/exclude/includeSource option override parent that patterns', async () => {
@@ -412,25 +419,17 @@ test('browser instances with include/exclude/includeSource option override paren
     '**/*.global.test.{js,ts}',
     '**/*.shared.test.{js,ts}',
   ])
-  expect(projects[0].projectConfig.exclude).toEqual([
-    '**/*.skip.test.{js,ts}',
-  ])
-  expect(projects[0].projectConfig.includeSource).toEqual([
-    'src/**/*.{js,ts}',
-  ])
+  expect(projects[0].projectConfig.exclude).toEqual(['**/*.skip.test.{js,ts}'])
+  expect(projects[0].projectConfig.includeSource).toEqual(['src/**/*.{js,ts}'])
 
   // Firefox should only have its specific include/exclude/includeSource pattern (not parent patterns)
   expect(projects[1].projectConfig.name).toEqual('firefox')
-  expect(projects[1].projectConfig.include).toEqual([
-    'test/firefox-specific.test.ts',
-  ])
+  expect(projects[1].projectConfig.include).toEqual(['test/firefox-specific.test.ts'])
   expect(projects[1].projectConfig.exclude).toEqual([
     'test/webkit-only.test.ts',
     'test/webkit-extra.test.ts',
   ])
-  expect(projects[1].projectConfig.includeSource).toEqual([
-    'src/firefox-compat.ts',
-  ])
+  expect(projects[1].projectConfig.includeSource).toEqual(['src/firefox-compat.ts'])
 
   // Webkit should only have its specific include/exclude/includeSource patterns (not parent patterns)
   expect(projects[2].projectConfig.name).toEqual('webkit')
@@ -438,12 +437,8 @@ test('browser instances with include/exclude/includeSource option override paren
     'test/webkit-only.test.ts',
     'test/webkit-extra.test.ts',
   ])
-  expect(projects[2].projectConfig.exclude).toEqual([
-    'test/firefox-specific.test.ts',
-  ])
-  expect(projects[2].projectConfig.includeSource).toEqual([
-    'src/webkit-compat.ts',
-  ])
+  expect(projects[2].projectConfig.exclude).toEqual(['test/firefox-specific.test.ts'])
+  expect(projects[2].projectConfig.includeSource).toEqual(['src/webkit-compat.ts'])
 })
 
 test('browser instances with empty include array should get parent include patterns', async () => {
@@ -453,10 +448,7 @@ test('browser instances with empty include array should get parent include patte
       enabled: true,
       provider: preview(),
       headless: true,
-      instances: [
-        { browser: 'chromium', include: [] },
-        { browser: 'firefox' },
-      ],
+      instances: [{ browser: 'chromium', include: [] }, { browser: 'firefox' }],
     },
   })
 
@@ -476,11 +468,7 @@ test('negation filter excludes all browser instances', async () => {
             enabled: true,
             provider: playwright(),
             headless: true,
-            instances: [
-              { browser: 'chromium' },
-              { browser: 'firefox' },
-              { browser: 'webkit' },
-            ],
+            instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
           },
         },
       },
@@ -491,9 +479,7 @@ test('negation filter excludes all browser instances', async () => {
       },
     ],
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'other',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['other'])
 })
 
 test('negation wildcard filter excludes all matching browser instances', async () => {
@@ -507,10 +493,7 @@ test('negation wildcard filter excludes all matching browser instances', async (
             enabled: true,
             provider: playwright(),
             headless: true,
-            instances: [
-              { browser: 'chromium' },
-              { browser: 'firefox' },
-            ],
+            instances: [{ browser: 'chromium' }, { browser: 'firefox' }],
           },
         },
       },
@@ -521,9 +504,7 @@ test('negation wildcard filter excludes all matching browser instances', async (
       },
     ],
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'other',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['other'])
 })
 
 test('negation filter excludes a single browser instance', async () => {
@@ -537,10 +518,7 @@ test('negation filter excludes a single browser instance', async () => {
             enabled: true,
             provider: playwright(),
             headless: true,
-            instances: [
-              { browser: 'chromium' },
-              { browser: 'firefox' },
-            ],
+            instances: [{ browser: 'chromium' }, { browser: 'firefox' }],
           },
         },
       },
@@ -551,10 +529,7 @@ test('negation filter excludes a single browser instance', async () => {
       },
     ],
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'other',
-    'myproject (firefox)',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['other', 'myproject (firefox)'])
 })
 
 test('negation filter excludes a browser instance of a matching project', async () => {
@@ -568,10 +543,7 @@ test('negation filter excludes a browser instance of a matching project', async 
             enabled: true,
             provider: playwright(),
             headless: true,
-            instances: [
-              { browser: 'chromium' },
-              { browser: 'firefox' },
-            ],
+            instances: [{ browser: 'chromium' }, { browser: 'firefox' }],
           },
         },
       },
@@ -582,9 +554,7 @@ test('negation filter excludes a browser instance of a matching project', async 
       },
     ],
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'myproject (firefox)',
-  ])
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['myproject (firefox)'])
 })
 
 test('filter for the global browser project includes all browser instances', async () => {
@@ -598,11 +568,7 @@ test('filter for the global browser project includes all browser instances', asy
             enabled: true,
             provider: playwright(),
             headless: true,
-            instances: [
-              { browser: 'chromium' },
-              { browser: 'firefox' },
-              { browser: 'webkit' },
-            ],
+            instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
           },
         },
       },
@@ -613,7 +579,7 @@ test('filter for the global browser project includes all browser instances', asy
       },
     ],
   })
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
+  expect(projects.map((p) => p.projectConfig.name)).toEqual([
     'myproject (chromium)',
     'myproject (firefox)',
     'myproject (webkit)',
@@ -621,40 +587,33 @@ test('filter for the global browser project includes all browser instances', asy
 })
 
 test('can enable browser-cli options for multi-project workspace', async () => {
-  const projects = await config(
-    {
-      projects: [
-        {
-          test: {
-            name: 'unit',
-          },
-        },
-        {
-          test: {
-            browser: {
-              enabled: true,
-              provider: playwright(),
-              instances: [
-                { browser: 'chromium', name: 'browser' },
-              ],
-            },
-          },
-        },
-      ],
-      $cliConfig: {
-        browser: {
-          enabled: true,
-          provider: preview(),
-          headless: true,
-          instances: [],
+  const projects = await config({
+    projects: [
+      {
+        test: {
+          name: 'unit',
         },
       },
+      {
+        test: {
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium', name: 'browser' }],
+          },
+        },
+      },
+    ],
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        provider: preview(),
+        headless: true,
+        instances: [],
+      },
     },
-  )
-  expect(projects.map(p => p.projectConfig.name)).toEqual([
-    'unit',
-    'browser',
-  ])
+  })
+  expect(projects.map((p) => p.projectConfig.name)).toEqual(['unit', 'browser'])
 
   // unit config
   expect(projects[0].projectConfig.browser.enabled).toBe(false)
@@ -669,9 +628,7 @@ test('core provider has options if `provider` is playwright', async () => {
     browser: {
       enabled: true,
       provider: playwright({ actionTimeout: 1000 }),
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
   })
   expect(v[0].projectConfig.browser.provider?.options).toEqual({
@@ -684,9 +641,7 @@ test('core provider has options if `provider` is preview', async () => {
     browser: {
       enabled: true,
       provider: preview(),
-      instances: [
-        { browser: 'chrome' },
-      ],
+      instances: [{ browser: 'chrome' }],
     },
   })
   expect(v[0].projectConfig.browser.provider?.options).toEqual({})
@@ -697,9 +652,7 @@ test('provider options can be changed dynamically', async () => {
     browser: {
       enabled: true,
       provider: playwright({ actionTimeout: 1000 }),
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
     $viteConfig: {
       plugins: [
@@ -727,9 +680,7 @@ test('provider options can be changed dynamically if no options are specified', 
     browser: {
       enabled: true,
       provider: playwright(),
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
     $viteConfig: {
       plugins: [
@@ -757,9 +708,7 @@ test('provider options can be changed dynamically in CLI', async () => {
     browser: {
       enabled: true,
       provider: preview(),
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
     $cliConfig: {
       browser: {
@@ -819,9 +768,7 @@ test('detailsPanelPosition defaults to right', async () => {
     browser: {
       enabled: true,
       provider: preview(),
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
   })
   expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('right')
@@ -833,9 +780,7 @@ test('detailsPanelPosition from config file is respected', async () => {
       enabled: true,
       provider: preview(),
       detailsPanelPosition: 'bottom',
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
   })
   expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('bottom')
@@ -852,9 +797,7 @@ test('CLI option --browser.detailsPanelPosition overrides config', async () => {
       enabled: true,
       provider: playwright(),
       detailsPanelPosition: 'right',
-      instances: [
-        { browser: 'chromium' },
-      ],
+      instances: [{ browser: 'chromium' }],
     },
   })
   expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('bottom')
@@ -863,7 +806,7 @@ test('CLI option --browser.detailsPanelPosition overrides config', async () => {
 async function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
   const { root } = useTmpFS({
     ...fs,
-    'basic.test.ts': /* ts */`
+    'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
       test('basic', () => {
         expect(1).toBe(1)
@@ -940,30 +883,33 @@ async function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsSt
 
 describe('[e2e] workspace configs are affected by the CLI options', () => {
   test('nested CLI options correctly override inline workspace options', async () => {
-    const vitest = await getCliConfig({
-      projects: [
-        {
-          test: {
-            name: 'unit',
-          },
-        },
-        {
-          test: {
-            name: 'browser',
-            browser: {
-              enabled: true,
-              headless: true,
-              provider: playwright(),
-              instances: [
-                {
-                  browser: 'chromium',
-                },
-              ],
+    const vitest = await getCliConfig(
+      {
+        projects: [
+          {
+            test: {
+              name: 'unit',
             },
           },
-        },
-      ],
-    }, ['--browser.locators.exact'])
+          {
+            test: {
+              name: 'browser',
+              browser: {
+                enabled: true,
+                headless: true,
+                provider: playwright(),
+                instances: [
+                  {
+                    browser: 'chromium',
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      ['--browser.locators.exact'],
+    )
 
     const config = JSON.parse(vitest.stdout)
 
@@ -985,30 +931,33 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   })
 
   test('UI is not enabled by default in headless config', async () => {
-    const vitest = await getCliConfig({
-      projects: [
-        {
-          test: {
-            name: 'unit',
-          },
-        },
-        {
-          test: {
-            name: 'browser',
-            browser: {
-              enabled: true,
-              headless: true,
-              provider: playwright(),
-              instances: [
-                {
-                  browser: 'chromium',
-                },
-              ],
+    const vitest = await getCliConfig(
+      {
+        projects: [
+          {
+            test: {
+              name: 'unit',
             },
           },
-        },
-      ],
-    }, [])
+          {
+            test: {
+              name: 'browser',
+              browser: {
+                enabled: true,
+                headless: true,
+                provider: playwright(),
+                instances: [
+                  {
+                    browser: 'chromium',
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      [],
+    )
 
     const config = JSON.parse(vitest.stdout)
 
@@ -1038,30 +987,33 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   })
 
   test('CLI options correctly override inline workspace options', async () => {
-    const vitest = await getCliConfig({
-      projects: [
-        {
-          test: {
-            name: 'unit',
-          },
-        },
-        {
-          test: {
-            name: 'browser',
-            browser: {
-              enabled: true,
-              headless: true,
-              provider: playwright(),
-              instances: [
-                {
-                  browser: 'chromium',
-                },
-              ],
+    const vitest = await getCliConfig(
+      {
+        projects: [
+          {
+            test: {
+              name: 'unit',
             },
           },
-        },
-      ],
-    }, ['--browser.headless=false'])
+          {
+            test: {
+              name: 'browser',
+              browser: {
+                enabled: true,
+                headless: true,
+                provider: playwright(),
+                instances: [
+                  {
+                    browser: 'chromium',
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      ['--browser.headless=false'],
+    )
 
     const config = JSON.parse(vitest.stdout)
 
@@ -1149,34 +1101,35 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   })
 
   test('correctly resolves extended project', async () => {
-    const { stdout } = await getCliConfig({
-      browser: {
-        provider: playwright(),
-        headless: true,
-        instances: [
-          { browser: 'chromium' },
-        ],
-      },
-      projects: [
-        {
-          extends: true,
-          test: {
-            name: 'node',
-          },
+    const { stdout } = await getCliConfig(
+      {
+        browser: {
+          provider: playwright(),
+          headless: true,
+          instances: [{ browser: 'chromium' }],
         },
-        {
-          extends: true,
-          test: {
-            name: 'browser',
-            browser: {
-              enabled: true,
-              provider: preview(),
-              instances: [],
+        projects: [
+          {
+            extends: true,
+            test: {
+              name: 'node',
             },
           },
-        },
-      ],
-    }, [])
+          {
+            extends: true,
+            test: {
+              name: 'browser',
+              browser: {
+                enabled: true,
+                provider: preview(),
+                instances: [],
+              },
+            },
+          },
+        ],
+      },
+      [],
+    )
 
     const config = JSON.parse(stdout)
 
@@ -1204,34 +1157,35 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   })
 
   test('correctly overrides extended project', async () => {
-    const { stdout } = await getCliConfig({
-      browser: {
-        provider: playwright(),
-        headless: true,
-        instances: [
-          { browser: 'chromium' },
-        ],
-      },
-      projects: [
-        {
-          extends: true,
-          test: {
-            name: 'node',
-          },
+    const { stdout } = await getCliConfig(
+      {
+        browser: {
+          provider: playwright(),
+          headless: true,
+          instances: [{ browser: 'chromium' }],
         },
-        {
-          extends: true,
-          test: {
-            name: 'browser',
-            browser: {
-              enabled: true,
-              provider: preview(),
-              instances: [],
+        projects: [
+          {
+            extends: true,
+            test: {
+              name: 'node',
             },
           },
-        },
-      ],
-    }, ['--browser.headless=false'])
+          {
+            extends: true,
+            test: {
+              name: 'browser',
+              browser: {
+                enabled: true,
+                provider: preview(),
+                instances: [],
+              },
+            },
+          },
+        ],
+      },
+      ['--browser.headless=false'],
+    )
 
     const config = JSON.parse(stdout)
 
@@ -1259,16 +1213,17 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   })
 
   test('CLI options override the config if --browser.enabled is passed down manually', async () => {
-    const { stdout } = await getCliConfig({
-      browser: {
-        enabled: false,
-        provider: playwright(),
-        headless: true,
-        instances: [
-          { browser: 'chromium' },
-        ],
+    const { stdout } = await getCliConfig(
+      {
+        browser: {
+          enabled: false,
+          provider: playwright(),
+          headless: true,
+          instances: [{ browser: 'chromium' }],
+        },
       },
-    }, ['--browser.headless=false', '--browser.enabled'])
+      ['--browser.headless=false', '--browser.enabled'],
+    )
 
     const config = JSON.parse(stdout)
     expect(config).toEqual({
@@ -1328,11 +1283,17 @@ test('browser project', async () => {
 const customHtmlRoot = resolve(import.meta.dirname, '../../fixtures/config/browser-custom-html')
 
 test('throws an error with non-existing path', async () => {
-  const { stderr } = await runVitest({
-    root: customHtmlRoot,
-    config: './vitest.config.non-existing.ts',
-  }, [], { fails: true })
-  expect(stderr).toContain(`Tester HTML file "${resolve(customHtmlRoot, './some-non-existing-path')}" doesn't exist.`)
+  const { stderr } = await runVitest(
+    {
+      root: customHtmlRoot,
+      config: './vitest.config.non-existing.ts',
+    },
+    [],
+    { fails: true },
+  )
+  expect(stderr).toContain(
+    `Tester HTML file "${resolve(customHtmlRoot, './some-non-existing-path')}" doesn't exist.`,
+  )
 })
 
 test('throws an error and exits if there is an error in the html file hook', async () => {

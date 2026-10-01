@@ -1,11 +1,5 @@
 {
   "extends": "../../tsconfig.build.json",
-  "include": [
-    "./**/*.ts",
-    "./**/*.js"
-  ],
-  "exclude": [
-    "**/dist/**",
-    "**/fixtures/**"
-  ]
+  "include": ["./**/*.ts", "./**/*.js"],
+  "exclude": ["**/dist/**", "**/fixtures/**"]
 }

@@ -11,7 +11,7 @@ test.runIf(nodeMajor >= 22)('can import node:sqlite', async () => {
         execArgv: ['--experimental-sqlite', '--no-warnings=ExperimentalWarning'],
       },
     },
-    'basic.test.ts': /* ts */`
+    'basic.test.ts': /* ts */ `
       import { test, expect } from 'vitest'
       import sqlite from 'node:sqlite'
 

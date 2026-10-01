@@ -19,13 +19,7 @@ export function getComparator<ComparatorName extends keyof ScreenshotComparatorR
     return comparators[comparator]
   }
 
-  const customComparators = context
-    .project
-    .config
-    .browser
-    .expect
-    ?.toMatchScreenshot
-    ?.comparators
+  const customComparators = context.project.config.browser.expect?.toMatchScreenshot?.comparators
 
   if (customComparators && comparator in customComparators) {
     return customComparators[comparator]
@@ -34,4 +28,6 @@ export function getComparator<ComparatorName extends keyof ScreenshotComparatorR
   throw new Error(`Unrecognized comparator ${comparator}`)
 }
 
-export type AnyComparator = Comparator<ScreenshotComparatorRegistry[keyof ScreenshotComparatorRegistry]>
+export type AnyComparator = Comparator<
+  ScreenshotComparatorRegistry[keyof ScreenshotComparatorRegistry]
+>

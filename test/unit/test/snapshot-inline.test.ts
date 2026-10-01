@@ -6,8 +6,7 @@ test('object', () => {
       type: 'object',
       map: new Map(),
     },
-  })
-    .toMatchInlineSnapshot(`
+  }).toMatchInlineSnapshot(`
       {
         "foo": {
           "map": Map {},
@@ -24,7 +23,7 @@ test('single line', () => {
     "inline multiline
      $string"
   `)
-  // eslint-disable-next-line no-template-curly-in-string
+  // oxlint-disable-next-line no-template-curly-in-string
   expect('inline multiline\n ${string}').toMatchInlineSnapshot(`
     "inline multiline
      \${string}"
@@ -65,12 +64,12 @@ test('throwing inline snapshots', async () => {
   }).toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)
 
   expect(() => {
-    // eslint-disable-next-line no-throw-literal
+    // oxlint-disable-next-line no-throw-literal
     throw 'omega'
   }).toThrowErrorMatchingInlineSnapshot('"omega"')
 
   expect(() => {
-    // eslint-disable-next-line no-throw-literal
+    // oxlint-disable-next-line no-throw-literal
     throw { error: 'omega' }
   }).toThrowErrorMatchingInlineSnapshot(`
     {
@@ -79,7 +78,7 @@ test('throwing inline snapshots', async () => {
   `)
 
   expect(() => {
-    // eslint-disable-next-line no-throw-literal
+    // oxlint-disable-next-line no-throw-literal
     throw { some: { nested: { error: 'object' } } }
   }).toThrowErrorMatchingInlineSnapshot(`
     {
@@ -134,16 +133,19 @@ test('properties inline snapshot', () => {
     name: 'LeBron James',
   }
 
-  expect(user).toMatchInlineSnapshot({
-    createdAt: expect.any(Date),
-    id: expect.any(Number),
-  }, `
+  expect(user).toMatchInlineSnapshot(
+    {
+      createdAt: expect.any(Date),
+      id: expect.any(Number),
+    },
+    `
     {
       "createdAt": Any<Date>,
       "id": Any<Number>,
       "name": "LeBron James",
     }
-  `)
+  `,
+  )
 })
 
 test('literal tag', () => {

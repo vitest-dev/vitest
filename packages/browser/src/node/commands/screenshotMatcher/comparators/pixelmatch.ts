@@ -19,22 +19,21 @@ export const pixelmatch: Comparator<ScreenshotComparatorRegistry['pixelmatch']> 
   actual,
   { createDiff, ...options },
 ) => {
-  if (reference.metadata.height !== actual.metadata.height || reference.metadata.width !== actual.metadata.width) {
+  if (
+    reference.metadata.height !== actual.metadata.height ||
+    reference.metadata.width !== actual.metadata.width
+  ) {
     return {
       pass: false,
       diff: null,
       message: `Expected image dimensions to be ${reference.metadata.width}×${
         reference.metadata.height
-      }px, but received ${actual.metadata.width}×${
-        actual.metadata.height
-      }px.`,
+      }px, but received ${actual.metadata.width}×${actual.metadata.height}px.`,
     }
   }
 
   const optionsWithDefaults = { ...defaultOptions, ...options }
-  const diffBuffer = createDiff
-    ? new Uint8Array(reference.data.length)
-    : undefined
+  const diffBuffer = createDiff ? new Uint8Array(reference.data.length) : undefined
 
   const mismatchedPixels = diff(
     reference.data,
@@ -49,9 +48,7 @@ export const pixelmatch: Comparator<ScreenshotComparatorRegistry['pixelmatch']> 
 
   let allowedMismatchedPixels = Math.min(
     optionsWithDefaults.allowedMismatchedPixels ?? Number.POSITIVE_INFINITY,
-    (optionsWithDefaults.allowedMismatchedPixelRatio
-      ?? Number.POSITIVE_INFINITY)
-    * imageArea,
+    (optionsWithDefaults.allowedMismatchedPixelRatio ?? Number.POSITIVE_INFINITY) * imageArea,
   )
 
   if (allowedMismatchedPixels === Number.POSITIVE_INFINITY) {
@@ -65,10 +62,10 @@ export const pixelmatch: Comparator<ScreenshotComparatorRegistry['pixelmatch']> 
     diff: diffBuffer ?? null,
     message: pass
       ? null
-      : `${mismatchedPixels} pixels (ratio ${(
-        // as we compare using `<=`, use `Math.ceil` to ensure the reported ratio
-        // doesn't appear equal to the allowed limit when it's a bit over
-        Math.ceil((mismatchedPixels / imageArea) * 100) / 100
-      ).toFixed(2)}) differ.`,
+      : `${mismatchedPixels} pixels (ratio ${
+          // as we compare using `<=`, use `Math.ceil` to ensure the reported ratio
+          // doesn't appear equal to the allowed limit when it's a bit over
+          (Math.ceil((mismatchedPixels / imageArea) * 100) / 100).toFixed(2)
+        }) differ.`,
   }
 }

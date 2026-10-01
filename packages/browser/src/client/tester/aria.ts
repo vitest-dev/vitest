@@ -1,25 +1,13 @@
-import type {
-  AriaNode,
-  AriaTemplateNode,
-} from 'ivya/aria'
-import type {
-  DomainMatchResult,
-  DomainSnapshotAdapter,
-  MatchersObject,
-} from 'vitest'
+import type { AriaNode, AriaTemplateNode } from 'ivya/aria'
+import type { DomainMatchResult, DomainSnapshotAdapter, MatchersObject } from 'vitest'
 import * as aria from 'ivya/aria'
 import { Snapshots } from 'vitest'
 import { getBrowserState } from '../utils'
 
 getBrowserState().aria = aria
 
-const {
-  generateAriaTree,
-  matchAriaTree,
-  parseAriaTemplate,
-  renderAriaTemplate,
-  renderAriaTree,
-} = aria
+const { generateAriaTree, matchAriaTree, parseAriaTemplate, renderAriaTemplate, renderAriaTree } =
+  aria
 
 const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
   name: 'aria',
@@ -41,8 +29,7 @@ const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
     Error.stackTraceLimit = limit + 20
     try {
       return parseAriaTemplate(input.trim())
-    }
-    finally {
+    } finally {
       Error.stackTraceLimit = limit
     }
   },
@@ -71,7 +58,12 @@ export const ariaMatchers: MatchersObject = {
     return Snapshots.toMatchDomainSnapshot.call(this, ariaSnapshotAdapter, actual)
   },
   toMatchAriaInlineSnapshot(actual: Element, inlineSnapshot?: string) {
-    return Snapshots.toMatchDomainInlineSnapshot.call(this, ariaSnapshotAdapter, actual, inlineSnapshot)
+    return Snapshots.toMatchDomainInlineSnapshot.call(
+      this,
+      ariaSnapshotAdapter,
+      actual,
+      inlineSnapshot,
+    )
   },
 }
 

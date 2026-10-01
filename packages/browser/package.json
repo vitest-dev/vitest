@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "5.0.1",
+  "version": "5.0.3",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -88,7 +88,7 @@
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.1",
-    "@testing-library/user-event": "^14.6.6",
+    "@testing-library/user-event": "^14.6.7",
     "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
@@ -99,6 +99,7 @@
     "mime": "^4.1.0",
     "pathe": "catalog:",
     "rrweb-snapshot": "2.1.1",
+    "vite": "catalog:",
     "vitest": "workspace:*"
   }
 }

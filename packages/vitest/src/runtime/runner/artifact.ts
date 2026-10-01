@@ -1,4 +1,5 @@
-import type { Test, TestArtifact, TestArtifactBase /* used in JSDoc */, TestAttachment } from './types'
+// oxlint-disable-next-line no-unused-vars -- TestArtifactBase is used in JSDoc
+import type { Test, TestArtifact, TestArtifactBase, TestAttachment } from './types'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
 import { findTestFileStackTrace } from './utils/collect'
@@ -38,13 +39,13 @@ import { findTestFileStackTrace } from './utils/collect'
  * }
  * ```
  */
-export async function recordArtifact<Artifact extends TestArtifact>(task: Test, artifact: Artifact): Promise<Artifact> {
+export async function recordArtifact<Artifact extends TestArtifact>(
+  task: Test,
+  artifact: Artifact,
+): Promise<Artifact> {
   const runner = getRunner()
 
-  const stack = findTestFileStackTrace(
-    task.file.filepath,
-    new Error('STACK_TRACE'),
-  )
+  const stack = findTestFileStackTrace(task.file.filepath, new Error('STACK_TRACE'))
 
   if (stack) {
     artifact.location = {
@@ -98,27 +99,27 @@ function encodeUint8Array(bytes: Uint8Array): string {
   let base64 = ''
   const len = bytes.byteLength
   for (let i = 0; i < len; i += 3) {
-    if (len === i + 1) { // last 1 byte
-      const a = (bytes[i] & 0xFC) >> 2
-      const b = ((bytes[i] & 0x03) << 4)
+    if (len === i + 1) {
+      // last 1 byte
+      const a = (bytes[i] & 0xfc) >> 2
+      const b = (bytes[i] & 0x03) << 4
       base64 += table[a]
       base64 += table[b]
       base64 += '=='
-    }
-    else if (len === i + 2) { // last 2 bytes
-      const a = (bytes[i] & 0xFC) >> 2
-      const b = ((bytes[i] & 0x03) << 4) | ((bytes[i + 1] & 0xF0) >> 4)
-      const c = ((bytes[i + 1] & 0x0F) << 2)
+    } else if (len === i + 2) {
+      // last 2 bytes
+      const a = (bytes[i] & 0xfc) >> 2
+      const b = ((bytes[i] & 0x03) << 4) | ((bytes[i + 1] & 0xf0) >> 4)
+      const c = (bytes[i + 1] & 0x0f) << 2
       base64 += table[a]
       base64 += table[b]
       base64 += table[c]
       base64 += '='
-    }
-    else {
-      const a = (bytes[i] & 0xFC) >> 2
-      const b = ((bytes[i] & 0x03) << 4) | ((bytes[i + 1] & 0xF0) >> 4)
-      const c = ((bytes[i + 1] & 0x0F) << 2) | ((bytes[i + 2] & 0xC0) >> 6)
-      const d = bytes[i + 2] & 0x3F
+    } else {
+      const a = (bytes[i] & 0xfc) >> 2
+      const b = ((bytes[i] & 0x03) << 4) | ((bytes[i + 1] & 0xf0) >> 4)
+      const c = ((bytes[i + 1] & 0x0f) << 2) | ((bytes[i + 2] & 0xc0) >> 6)
+      const d = bytes[i + 2] & 0x3f
       base64 += table[a]
       base64 += table[b]
       base64 += table[c]
@@ -134,10 +135,7 @@ function encodeUint8Array(bytes: Uint8Array): string {
  * This function tracks promises that should be awaited before a test completes.
  * The promise is automatically removed from the test's promise list once it settles.
  */
-export function recordAsyncOperation<T>(
-  test: Test,
-  promise: Promise<T>,
-): Promise<T> {
+export function recordAsyncOperation<T>(test: Test, promise: Promise<T>): Promise<T> {
   // if promise is explicitly awaited, remove it from the list
   promise = promise.finally(() => {
     if (!test.promises) {
@@ -172,7 +170,9 @@ export function manageArtifactAttachment(attachment: TestAttachment): void {
     throw new TypeError(`Test attachment requires "body" or "path" to be set. Both are missing.`)
   }
   if (attachment.body && attachment.path) {
-    throw new TypeError(`Test attachment requires only one of "body" or "path" to be set. Both are specified.`)
+    throw new TypeError(
+      `Test attachment requires only one of "body" or "path" to be set. Both are specified.`,
+    )
   }
   if (attachment.path && attachment.bodyEncoding) {
     throw new TypeError(`Test attachment with "path" should not have "bodyEncoding" specified.`)

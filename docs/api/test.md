@@ -109,6 +109,7 @@ test('heavy test', { skip: true, timeout: 10_000 }, () => {
   // ...
 })
 ```
+
 :::
 
 ### retry
@@ -286,7 +287,7 @@ test('server uses correct port', ({ config, server }) => {
 
 ## test.override <Version>4.1.0</Version> {#test-override}
 
-Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context.html#overriding-fixture-values) for more information.
+Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context#overriding-fixture-values) for more information.
 
 ```ts
 import { test as baseTest, describe, expect } from 'vitest'
@@ -557,24 +558,24 @@ test.each([
 
 You can also access Object attributes with `.`, if you are using objects as arguments:
 
-  ```ts
-  test.each`
-  a               | b      | expected
-  ${{ val: 1 }}   | ${'b'} | ${'1b'}
-  ${{ val: 2 }}   | ${'b'} | ${'2b'}
-  ${{ val: 3 }}   | ${'b'} | ${'3b'}
-  `('add($a.val, $b) -> $expected', ({ a, b, expected }) => {
-    expect(a.val + b).toBe(expected)
-  })
+```ts
+test.each`
+a               | b      | expected
+${{ val: 1 }}   | ${'b'} | ${'1b'}
+${{ val: 2 }}   | ${'b'} | ${'2b'}
+${{ val: 3 }}   | ${'b'} | ${'3b'}
+`('add($a.val, $b) -> $expected', ({ a, b, expected }) => {
+  expect(a.val + b).toBe(expected)
+})
 
-  // this will return
-  // ✓ add(1, b) -> 1b
-  // ✓ add(2, b) -> 2b
-  // ✓ add(3, b) -> 3b
-  ```
+// this will return
+// ✓ add(1, b) -> 1b
+// ✓ add(2, b) -> 2b
+// ✓ add(3, b) -> 3b
+```
 
-* First row should be column names, separated by `|`;
-* One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
+- First row should be column names, separated by `|`;
+- One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
 
 ```ts
 import { expect, test } from 'vitest'

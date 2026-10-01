@@ -10,9 +10,7 @@ export const MockPlugin: ChaiPlugin = (chai, utils) => {
       const chain = utils.flag(this, 'object')
 
       if (!isWhenChain(chain)) {
-        throw new TypeError(
-          `${utils.inspect(chain)} is not a \`vi.when\` instance`,
-        )
+        throw new TypeError(`${utils.inspect(chain)} is not a \`vi.when\` instance`)
       }
 
       const diagnostics = chain._getDiagnostics()

@@ -1,3 +1,1 @@
-export function squared() {
-
-}
+export function squared() {}

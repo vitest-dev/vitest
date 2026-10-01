@@ -19,9 +19,7 @@ export function createAnsiToHtmlFilter(dark: boolean) {
 }
 
 function isPrimitive(value: unknown) {
-  return (
-    value === null || (typeof value !== 'function' && typeof value !== 'object')
-  )
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
 }
 
 export function parseError(e: unknown) {

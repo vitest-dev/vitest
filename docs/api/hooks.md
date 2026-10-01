@@ -179,11 +179,13 @@ test('insert user', async () => {
 
 ::: tip When to use `aroundEach`
 Use `aroundEach` when your test needs to run **inside a context** that wraps around it, such as:
+
 - Wrapping tests in [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) context
 - Wrapping tests with tracing spans
 - Database transactions
 
 If you just need to run code before and after tests, prefer using [`beforeEach`](#beforeeach) with a cleanup return function:
+
 ```ts
 beforeEach(async () => {
   await database.connect()
@@ -192,6 +194,7 @@ beforeEach(async () => {
   }
 })
 ```
+
 :::
 
 ### Multiple Hooks
@@ -292,11 +295,13 @@ test('test 2', () => {
 
 ::: tip When to use `aroundAll`
 Use `aroundAll` when your suite needs to run **inside a context** that wraps around all tests, such as:
+
 - Wrapping an entire suite in [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) context
 - Wrapping a suite with tracing spans
 - Database transactions
 
 If you just need to run code once before and after all tests, prefer using [`beforeAll`](#beforeall) with a cleanup return function:
+
 ```ts
 beforeAll(async () => {
   await server.start()
@@ -305,6 +310,7 @@ beforeAll(async () => {
   }
 })
 ```
+
 :::
 
 ### Multiple Hooks
@@ -389,6 +395,7 @@ test.concurrent('performs a query', ({ onTestFinished }) => {
   db.query('SELECT * FROM users')
 })
 ```
+
 :::
 
 This hook is particularly useful when creating reusable logic:
@@ -464,4 +471,5 @@ test.concurrent('performs a query', ({ onTestFailed }) => {
   db.query('SELECT * FROM users')
 })
 ```
+
 :::

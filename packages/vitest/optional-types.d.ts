@@ -1,4 +1,4 @@
-/* eslint-disable ts/ban-ts-comment */
+/* oxlint-disable typescript/ban-ts-comment */
 
 // @ts-ignore optional peer dep
 export type * as jsdomTypes from 'jsdom'

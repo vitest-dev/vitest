@@ -2,8 +2,9 @@ import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 test('prints a custom error stack', async () => {
-  const { stderr } = await runInlineTests({
-    'basic.test.ts': `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': `
     test('failed test', () => {
       throw {
         message: 'from failed test',
@@ -25,26 +26,33 @@ test('prints a custom error stack', async () => {
       throw new CustomError('custom error')
     })
     `,
-  }, { globals: true })
+    },
+    { globals: true },
+  )
 
-  expect(stderr).toContain(`
+  expect(stderr).toContain(
+    `
  FAIL  basic.test.ts > failed test
 Unknown Error: from failed test
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 Serialized Error: { stack: [ 'stack 1', 'stack 2' ] }
-    `.trim())
+    `.trim(),
+  )
 
-  expect(stderr).toContain(`
+  expect(stderr).toContain(
+    `
  FAIL  basic.test.ts > fails toJson
 CustomError: custom error
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 Serialized Error: { stack: [ 'custom stack 1', 'custom stack 2' ] }
-    `.trim())
+    `.trim(),
+  )
 })
 
 test('prints buffer and UintArray', async () => {
-  const { stderr } = await runInlineTests({
-    'basic.test.ts': `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': `
     test('failed test', () => {
       throw {
         buffer: Buffer.from([1, 2, 3]),
@@ -52,7 +60,9 @@ test('prints buffer and UintArray', async () => {
       }
     })
     `,
-  }, { globals: true })
+    },
+    { globals: true },
+  )
 
   expect(stderr).toContain(`buffer: '<Buffer(3) ...>'`)
   expect(stderr).toContain(`uintarray: '<Uint8Array(3) ...>'`)

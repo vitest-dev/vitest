@@ -3,10 +3,6 @@
   "compilerOptions": {
     "types": []
   },
-  "include": [
-    "./failing/*"
-  ],
-  "exclude": [
-    "**/dist/**"
-  ]
+  "include": ["./failing/*"],
+  "exclude": ["**/dist/**"]
 }

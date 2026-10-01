@@ -7,6 +7,7 @@ Generating trace files is only available when using the [Playwright provider](/c
 :::
 
 ::: code-group
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
@@ -20,9 +21,11 @@ export default defineConfig({
   },
 })
 ```
+
 ```bash [CLI]
 vitest --browser.trace=on
 ```
+
 :::
 
 By default, Vitest will generate a trace file for each test. You can also configure it to only generate traces on test failures by setting `trace` to `'on-first-retry'`, `'on-all-retries'` or `'retain-on-failure'`. The files will be saved in `__traces__` folder next to your test files. The name of the trace includes the project name, the test name, the [`repeats`](/api/test#repeats) count and [`retry`](/api/test#retry) count:

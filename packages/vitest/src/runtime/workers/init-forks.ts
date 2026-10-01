@@ -14,11 +14,11 @@ const processOff = process.off.bind(process)
 const processRemoveAllListeners = process.removeAllListeners.bind(process)
 
 const isProfiling = process.execArgv.some(
-  execArg =>
-    execArg.startsWith('--prof')
-    || execArg.startsWith('--cpu-prof')
-    || execArg.startsWith('--heap-prof')
-    || execArg.startsWith('--diagnostic-dir'),
+  (execArg) =>
+    execArg.startsWith('--prof') ||
+    execArg.startsWith('--cpu-prof') ||
+    execArg.startsWith('--heap-prof') ||
+    execArg.startsWith('--diagnostic-dir'),
 )
 
 // Work-around for nodejs/node#55094
@@ -35,9 +35,9 @@ export default function workerInit(options: {
   const { runTests } = options
 
   init({
-    post: v => processSend(v),
-    on: cb => processOn('message', cb),
-    off: cb => processOff('message', cb),
+    post: (v) => processSend(v),
+    on: (cb) => processOn('message', cb),
+    off: (cb) => processOff('message', cb),
     teardown: () => {
       processRemoveAllListeners('message')
       processOff('error', onError)

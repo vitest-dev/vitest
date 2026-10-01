@@ -138,7 +138,7 @@ Snapshots shine when you're working with structured, serializable output that wo
 
 On the other hand, snapshots are not always the best tool. If the output changes frequently (for instance, it includes timestamps or random IDs), you'll spend more time updating snapshots than they save you. And if you only care about one or two specific fields, a targeted assertion like [`toMatchObject`](/api/expect#tomatchobject) or [`toHaveProperty`](/api/expect#tohaveproperty) expresses your intent more clearly than a snapshot that captures everything.
 
-The general rule: use snapshots when you want to protect against *any* change in the output, and use targeted assertions when you only care about *specific* properties.
+The general rule: use snapshots when you want to protect against _any_ change in the output, and use targeted assertions when you only care about _specific_ properties.
 
 ## Handling Dynamic Values
 

@@ -1,6 +1,13 @@
 import { createRequire } from 'node:module'
 import { expect } from 'vitest'
-import { coverageTest, isV8Provider, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
+import {
+  coverageTest,
+  isV8Provider,
+  normalizeURL,
+  readCoverageMap,
+  runVitest,
+  test,
+} from '../utils'
 
 test('does not crash when file outside Vite is loaded (#5639)', async () => {
   await runVitest({
@@ -9,7 +16,9 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
   })
 
   const coverageMap = await readCoverageMap()
-  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/load-outside-vite.cjs')
+  const fileCoverage = coverageMap.fileCoverageFor(
+    '<process-cwd>/fixtures/src/load-outside-vite.cjs',
+  )
 
   if (isV8Provider()) {
     expect(fileCoverage).toMatchInlineSnapshot(`
@@ -20,8 +29,7 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
         "statements": "1/1 (100%)",
       }
     `)
-  }
-  else {
+  } else {
     // On istanbul the instrumentation happens on Vite plugin, so files
     // loaded outside Vite should have 0% coverage
     expect(fileCoverage).toMatchInlineSnapshot(`
@@ -35,7 +43,7 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
   }
 })
 
-coverageTest('load file using require so it\'s not intercepted by Vite', () => {
+coverageTest("load file using require so it's not intercepted by Vite", () => {
   const noop = createRequire(import.meta.url)('../fixtures/src/load-outside-vite.cjs')
 
   expect(noop).toBeTypeOf('function')

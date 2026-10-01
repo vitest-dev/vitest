@@ -3,8 +3,9 @@ import { expect, test } from 'vitest'
 import { runInlineTests, ts } from '../../test-utils'
 
 test('should fail for non-awaited expect.element', async () => {
-  const { stderr } = await runInlineTests({
-    'expect-element.test.js': ts`
+  const { stderr } = await runInlineTests(
+    {
+      'expect-element.test.js': ts`
       import { expect, test, beforeAll } from 'vitest';
       import { page } from 'vitest/browser';
 
@@ -24,23 +25,23 @@ test('should fail for non-awaited expect.element', async () => {
         expect.element(element).toBeInTheDocument();
       })
       `,
-  }, {
-    projects: [
-      {
-        test: {
-          name: 'browser',
-          browser: {
-            enabled: true,
-            headless: true,
-            provider: playwright(),
-            instances: [
-              { browser: 'chromium' },
-            ],
+    },
+    {
+      projects: [
+        {
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: playwright(),
+              instances: [{ browser: 'chromium' }],
+            },
           },
         },
-      },
-    ],
-  })
+      ],
+    },
+  )
 
   expect(stderr).toMatchSnapshot()
 })

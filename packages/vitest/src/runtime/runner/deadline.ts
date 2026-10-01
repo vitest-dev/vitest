@@ -68,22 +68,27 @@ export class TaskDeadline {
       return undefined
     }
     const operations = [...this.operations]
-    const pending = () => operations.filter(operation => this.operations.has(operation))
-    const due = operations.filter(operation => operation.endTime <= this.endTime)
+    const pending = () => operations.filter((operation) => this.operations.has(operation))
+    const due = operations.filter((operation) => operation.endTime <= this.endTime)
     if (!due.length) {
       // return operations whose timeout is larger than task for a better stack trace
       return Promise.resolve(operations)
     }
     const { setTimeout } = getSafeTimers()
-    const waitUntil = Math.max(...due.map(operation => operation.endTime)) + SETTLE_GRACE
+    const waitUntil = Math.max(...due.map((operation) => operation.endTime)) + SETTLE_GRACE
     return Promise.race([
       // wait until all due operations resolve (or the first one rejects)
-      Promise.all(due.map(operation => operation.promise)).then(pending),
+      Promise.all(due.map((operation) => operation.promise)).then(pending),
       // or resolve after a grace period with the pending actions for the error (500ms)
-      new Promise<PendingOperation[]>(resolve => setTimeout(() => {
-        resolve(pending())
-      // the grace may already be in the past
-      }, Math.max(waitUntil - now(), 0))),
+      new Promise<PendingOperation[]>((resolve) =>
+        setTimeout(
+          () => {
+            resolve(pending())
+            // the grace may already be in the past
+          },
+          Math.max(waitUntil - now(), 0),
+        ),
+      ),
     ])
   }
 }

@@ -11,10 +11,10 @@ Vitest lets you write benchmarks alongside your tests using the `bench` fixture 
 Use the `bench` fixture to define a benchmark. Call `.run()` to execute it:
 
 ```ts
-import { expect, test } from 'vitest'
+import { test } from 'vitest'
 
 test('parsing performance', async ({ bench }) => {
-  const result = await bench('parse', () => {
+  await bench('parse', () => {
     JSON.parse('{"key":"value"}')
   }).run()
 })
@@ -79,12 +79,12 @@ To execute benchmarks with another benchmarking engine or execution strategy, se
 Use `bench.compare()` to compare multiple benchmarks against each other:
 
 ```ts
-import { expect, test } from 'vitest'
+import { test } from 'vitest'
 
 test('compare JSON libraries', async ({ bench }) => {
   const input = '{"key":"value","nested":{"a":1}}'
 
-  const result = await bench.compare(
+  await bench.compare(
     bench('JSON.parse', () => {
       JSON.parse(input)
     }),
@@ -105,7 +105,7 @@ You can pass [options](https://tinylibs.github.io/tinybench/interfaces/BenchOpti
 
 ```ts
 test('compare with options', async ({ bench }) => {
-  const result = await bench.compare(
+  await bench.compare(
     bench('lib1', () => { lib1() }),
     bench('lib2', () => { lib2() }),
     {
@@ -120,7 +120,7 @@ You can also pass per-benchmark [options](https://tinylibs.github.io/tinybench/i
 
 ```ts
 test('benchmarks with setup', async ({ bench }) => {
-  const result = await bench.compare(
+  await bench.compare(
     bench('with-cache', () => {
       readFromCache()
     }),
@@ -319,7 +319,6 @@ In a multi-project workspace (different browsers, different runtimes), share one
 test('cross-project baseline', async ({ bench }) => {
   await bench(
     'parse',
-    // eslint-disable-next-line no-template-curly-in-string
     { perProject: true, writeResult: './benchmarks/parse.${projectName}.json' },
     () => parse(largeInput),
   ).run()
@@ -479,4 +478,5 @@ This only affects Node.js mode. Browser mode uses native ESM imports and does no
     )
   })
   ```
+
 - **Cross-browser differences**: V8 (Chrome), SpiderMonkey (Firefox), and JSC (Safari) optimize different patterns differently. A benchmark that shows one library winning in Chrome may show the opposite in Firefox.

@@ -39,9 +39,9 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
 
   let onMessage: (data: any) => void
   const birpcHandlers = {
-    post: msg => ctx.ws.send(msg),
-    on: fn => (onMessage = fn),
-    serialize: e =>
+    post: (msg) => ctx.ws.send(msg),
+    on: (fn) => (onMessage = fn),
+    serialize: (e) =>
       stringify(e, (_, v) => {
         if (v instanceof Error) {
           return {
@@ -56,10 +56,7 @@ export function createWsClient(url: string, options: VitestClientOptions): Vites
     timeout: -1,
   } satisfies BirpcOptions<WebSocketHandlers>
 
-  ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
-    options.handlers,
-    birpcHandlers,
-  )
+  ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(options.handlers, birpcHandlers)
 
   async function reconnect() {
     ctx.ws = new WebSocket(url)

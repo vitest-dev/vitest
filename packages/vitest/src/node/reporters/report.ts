@@ -43,7 +43,11 @@ export interface Report {
    * await report.writeFile('test-report.json', JSON.stringify(results))
    * ```
    */
-  writeFile: (filename: string, content: Parameters<typeof writeFile>[1], encoding?: BufferEncoding) => Promise<void>
+  writeFile: (
+    filename: string,
+    content: Parameters<typeof writeFile>[1],
+    encoding?: BufferEncoding,
+  ) => Promise<void>
 
   /**
    * Read a file from the report directory for this scope.

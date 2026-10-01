@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-
 import { runVitest } from '#test-utils'
 
 describe('json reporter', async () => {
@@ -13,18 +12,23 @@ describe('json reporter', async () => {
   }
 
   it('generates correct report', async () => {
-    await runVitest({
-      reporters: 'json',
-      root,
-      include: ['**/json-fail-import.test.ts', '**/json-fail.test.ts'],
-      includeTaskLocation: true,
-    }, ['json-fail'])
+    await runVitest(
+      {
+        reporters: 'json',
+        root,
+        include: ['**/json-fail-import.test.ts', '**/json-fail.test.ts'],
+        includeTaskLocation: true,
+      },
+      ['json-fail'],
+    )
 
     const data = readJsonReport()
 
     expect(data.testResults).toHaveLength(2)
 
-    const failedImport = data.testResults.find((r: any) => r.name.includes('json-fail-import.test'))!
+    const failedImport = data.testResults.find((r: any) =>
+      r.name.includes('json-fail-import.test'),
+    )!
     const failedTest = data.testResults.find((r: any) => r.name.includes('json-fail.test'))!
 
     expect(failedTest.assertionResults).toHaveLength(1)
@@ -36,20 +40,22 @@ describe('json reporter', async () => {
     const result = failedTest.assertionResults[0]
     delete result.duration
     const rootRegexp = new RegExp(projectRoot, 'g')
-    result.failureMessages = result.failureMessages
-      .map((m: string) => {
-        const errorStack = m.split('\n').slice(0, 2).join('\n')
-        return errorStack.replace(/\\/g, '/').replace(rootRegexp, '<root>')
-      })
+    result.failureMessages = result.failureMessages.map((m: string) => {
+      const errorStack = m.split('\n').slice(0, 2).join('\n')
+      return errorStack.replace(/\\/g, '/').replace(rootRegexp, '<root>')
+    })
     expect(result).toMatchSnapshot()
   })
 
   it('generates empty json with success: false', async () => {
-    await runVitest({
-      reporters: 'json',
-      root,
-      includeTaskLocation: true,
-    }, ['json-non-existing-files'])
+    await runVitest(
+      {
+        reporters: 'json',
+        root,
+        includeTaskLocation: true,
+      },
+      ['json-non-existing-files'],
+    )
 
     const json = readJsonReport()
     json.startTime = 0
@@ -88,12 +94,15 @@ describe('json reporter', async () => {
   })
 
   it('generates empty json with success: true', async () => {
-    await runVitest({
-      reporters: 'json',
-      root,
-      includeTaskLocation: true,
-      passWithNoTests: true,
-    }, ['json-non-existing-files'])
+    await runVitest(
+      {
+        reporters: 'json',
+        root,
+        includeTaskLocation: true,
+        passWithNoTests: true,
+      },
+      ['json-non-existing-files'],
+    )
 
     const json = readJsonReport()
     json.startTime = 0
@@ -160,9 +169,14 @@ describe('json reporter', async () => {
 
   it('filterMeta filters meta fields by key', async () => {
     await runVitest({
-      reporters: [['json', {
-        filterMeta: key => key !== 'custom',
-      }]],
+      reporters: [
+        [
+          'json',
+          {
+            filterMeta: (key) => key !== 'custom',
+          },
+        ],
+      ],
       root,
       include: ['**/json-meta.test.ts'],
     })

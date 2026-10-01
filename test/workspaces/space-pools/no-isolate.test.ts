@@ -7,8 +7,7 @@ test('is not isolated', () => {
 
   if (config.pool === 'forks') {
     expect(config.isolate).toBe(false)
-  }
-  else {
+  } else {
     expect(config.pool).toBe('threads')
     expect(config.isolate).toBe(false)
   }

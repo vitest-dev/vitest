@@ -2,7 +2,6 @@
 import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import { hideAllPoppers } from 'floating-vue'
 import { computed, ref } from 'vue'
-
 import { RecycleScroller } from 'vue-virtual-scroller'
 import { availableProjects, config, isReport } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
@@ -68,16 +67,17 @@ const {
   <div class="h-full flex flex-col">
     <div>
       <div class="p-2 h-10 flex gap-2 items-center bg-header border-b border-base">
-        <slot name="header" :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined" />
+        <slot
+          name="header"
+          :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined"
+        />
       </div>
       <div
         v-if="enableProjects"
         class="pl-3 py-2 pr-2 bg-header border-base border-b-2 grid grid-cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2 gap-y-1 items-center"
       >
         <div class="i-carbon:workspace flex-shrink-0" />
-        <label for="project-select" class="text-sm">
-          Projects
-        </label>
+        <label for="project-select" class="text-sm"> Projects </label>
         <div class="relative flex-1">
           <select
             id="project-select"
@@ -85,9 +85,7 @@ const {
             v-model="currentProject"
             class="outline-none w-full appearance-none bg-base text-base border-base border rounded pl-2 pr-8 py-1 text-sm cursor-pointer hover:bg-active"
           >
-            <option :value="ALL_PROJECTS" class="text-base bg-base">
-              All Projects
-            </option>
+            <option :value="ALL_PROJECTS" class="text-base bg-base">All Projects</option>
             <option
               v-for="project in availableProjects"
               :key="project"
@@ -97,7 +95,9 @@ const {
               {{ project }}
             </option>
           </select>
-          <div class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none" />
+          <div
+            class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none"
+          />
         </div>
 
         <IconButton
@@ -112,9 +112,7 @@ const {
         class="pl-3 py-2 pr-2 bg-header border-base border-b-2 grid grid-cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2 items-center"
       >
         <div class="i-carbon:arrows-vertical flex-shrink-0" />
-        <label for="project-sort" class="text-sm">
-          Sort by
-        </label>
+        <label for="project-sort" class="text-sm"> Sort by </label>
         <div class="relative flex-1">
           <select
             id="project-sort"
@@ -122,23 +120,17 @@ const {
             v-model="projectSort"
             class="outline-none w-full appearance-none bg-base text-base border-base border rounded pl-2 pr-8 py-1 text-sm cursor-pointer hover:bg-active"
           >
-            <option value="default" class="text-base bg-base">
-              Default
-            </option>
-            <option value="duration-desc" class="text-base bg-base">
-              Slowest first
-            </option>
-            <option value="duration-asc" class="text-base bg-base">
-              Fastest first
-            </option>
-            <option v-if="enableProjects" value="asc" class="text-base bg-base">
-              Project A-Z
-            </option>
+            <option value="default" class="text-base bg-base">Default</option>
+            <option value="duration-desc" class="text-base bg-base">Slowest first</option>
+            <option value="duration-asc" class="text-base bg-base">Fastest first</option>
+            <option v-if="enableProjects" value="asc" class="text-base bg-base">Project A-Z</option>
             <option v-if="enableProjects" value="desc" class="text-base bg-base">
               Project Z-A
             </option>
           </select>
-          <div class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none" />
+          <div
+            class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none"
+          />
         </div>
         <IconButton
           v-tooltip.bottom="'Reset sort'"
@@ -148,9 +140,7 @@ const {
           @click.passive="clearProjectSort(true)"
         />
       </div>
-      <div
-        class="pl-3 py-2 pr-2 flex gap-2 items-center bg-header border-base border-b-2"
-      >
+      <div class="pl-3 py-2 pr-2 flex gap-2 items-center bg-header border-base border-b-2">
         <div class="i-carbon:search flex-shrink-0" />
         <input
           ref="searchBox"
@@ -160,7 +150,7 @@ const {
           :class="search.length ? 'op100' : 'op50'"
           @keydown.esc="clearSearch(false)"
           @keydown.enter="emit('run', isFiltered || isFilteredByStatus ? filteredFiles : undefined)"
-        >
+        />
         <IconButton
           v-tooltip.bottom="'Clear search'"
           :disabled="disableClearSearch"
@@ -174,9 +164,7 @@ const {
       >
         <div class="min-w-full flex gap-2 items-center">
           <div aria-hidden="true" class="i-carbon:filter flex-shrink-0" />
-          <div class="flex-grow-1 text-sm">
-            Filter
-          </div>
+          <div class="flex-grow-1 text-sm">Filter</div>
           <IconButton
             v-tooltip.bottom="'Clear Filter'"
             :disabled="disableFilter"
@@ -198,13 +186,13 @@ const {
           <div
             data-testid="explorer-summary"
             class="items-center gap-x-1"
-            :class="isReport
-              ? 'flex'
-              : 'grid grid-cols-[auto_min-content_auto] grid-rows-[min-content_min-content]'"
+            :class="
+              isReport
+                ? 'flex'
+                : 'grid grid-cols-[auto_min-content_auto] grid-rows-[min-content_min-content]'
+            "
           >
-            <span class="text-red-700 dark:text-red-500">
-              FAIL ({{ testsTotal.failed }})
-            </span>
+            <span class="text-red-700 dark:text-red-500"> FAIL ({{ testsTotal.failed }}) </span>
             <span>/</span>
             <span v-if="!isReport" class="text-yellow-700 dark:text-yellow-500">
               RUNNING ({{ testsTotal.running }})
@@ -219,14 +207,16 @@ const {
           </div>
         </template>
         <!-- empty-state -->
-        <template v-if="(isFiltered || isFilteredByStatus || !!currentProjectName) && uiEntries.length === 0">
+        <template
+          v-if="
+            (isFiltered || isFilteredByStatus || !!currentProjectName) && uiEntries.length === 0
+          "
+        >
           <div v-if="initialized" class="flex flex-col items-center px-4 py-4 font-light">
             <div v-if="searchMatcher.error" class="text-red text-center">
               {{ searchMatcher.error }}
             </div>
-            <div v-else class="op30">
-              No matched test
-            </div>
+            <div v-else class="op30">No matched test</div>
             <button
               type="button"
               class="font-light text-sm border rounded border-gray-400/50 px-2 py-0.5 mt-2 op-50"
@@ -255,9 +245,7 @@ const {
           </div>
           <div v-else class="flex flex-col items-center px-4 py-4 font-light">
             <div class="i-carbon:circle-dash animate-spin" />
-            <div class="op30">
-              Loading...
-            </div>
+            <div class="op30">Loading...</div>
           </div>
         </template>
         <template v-else>
@@ -286,7 +274,11 @@ const {
                 :slow="item.slow === true"
                 :opened="item.expanded"
                 :disable-task-location="!includeTaskLocation"
-                :class="selectedTest === item.id || (!selectedTest && activeFileId === item.id) ? 'bg-active' : ''"
+                :class="
+                  selectedTest === item.id || (!selectedTest && activeFileId === item.id)
+                    ? 'bg-active'
+                    : ''
+                "
                 :on-item-click="onItemClick"
               />
             </template>

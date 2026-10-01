@@ -61,7 +61,7 @@ test('bench.compare records benchmark results for each registration', async () =
 
   const { stderr } = await runInlineTests(
     {
-      'basic.bench.ts': /* ts */`
+      'basic.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
 
         test('compare loops', async ({ bench }) => {
@@ -91,15 +91,15 @@ test('bench.compare records benchmark results for each registration', async () =
   expect(stderr).toBe('')
   expect(benchmarks).toHaveLength(1)
   const [{ tasks }] = benchmarks
-  expect(tasks.map(t => t.name).sort()).toEqual(['for', 'while'])
-  expect(tasks.every(t => typeof t.latency.mean === 'number')).toBe(true)
-  expect(tasks.map(t => t.rank).sort()).toEqual([1, 2])
+  expect(tasks.map((t) => t.name).sort()).toEqual(['for', 'while'])
+  expect(tasks.every((t) => typeof t.latency.mean === 'number')).toBe(true)
+  expect(tasks.map((t) => t.rank).sort()).toEqual([1, 2])
 })
 
 test('bench accepts options as second argument and rejects them as third', async () => {
   const { stderr, results } = await runInlineTests(
     {
-      'sig.bench.ts': /* ts */`
+      'sig.bench.ts': /* ts */ `
         import { test, expect, inject } from 'vitest'
 
         test('bench signatures', async ({ bench }) => {
@@ -139,7 +139,7 @@ test('bench exposes plain and perProject compositions and prints a table', async
 
   const { stderr, stdout } = await runInlineTests(
     {
-      'compositions.bench.ts': /* ts */`
+      'compositions.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
 
         test('all compositions', async ({ bench }) => {
@@ -168,9 +168,7 @@ test('bench exposes plain and perProject compositions and prints a table', async
   expect(stderr).toBe('')
 
   // every factory shape produces a registration with the right flags
-  const byName = Object.fromEntries(
-    tasks.map(t => [t.name, { perProject: !!t.perProject }]),
-  )
+  const byName = Object.fromEntries(tasks.map((t) => [t.name, { perProject: !!t.perProject }]))
   expect(byName).toEqual({
     plain: { perProject: false },
     perProject: { perProject: true },
@@ -180,12 +178,12 @@ test('bench exposes plain and perProject compositions and prints a table', async
   // measurement-driven rank ordering doesn't reshuffle them, and the
   // rank-dependent fastest/slowest suffix is stripped.
   const lines = stdout.split('\n')
-  const headerIdx = lines.findIndex(l => /^\s*name\s+hz\s+min/.test(l))
+  const headerIdx = lines.findIndex((l) => /^\s*name\s+hz\s+min/.test(l))
   expect(headerIdx, `inline table header not found in stdout:\n${stdout}`).toBeGreaterThanOrEqual(0)
   const [header, ...rows] = lines.slice(headerIdx, headerIdx + 3)
   const normalized = formatBenchTable([
     header,
-    ...rows.map(r => stripBenchSuffix(r)).sort(),
+    ...rows.map((r) => stripBenchSuffix(r)).sort(),
   ])
 
   expect(normalized).toMatchInlineSnapshot(`
@@ -216,18 +214,22 @@ function stripBenchSuffix(line: string) {
 // keeps column labels like `p75` / `p995` intact.
 function formatBenchTable(tableLines: string[]): string {
   const indent = tableLines[0].match(/^\s*/)![0]
-  const rows = tableLines.map(line =>
-    line.slice(indent.length).trimEnd().split(/\s{2,}/).map(cell =>
-      cell.trim().replace(/(?<![a-z0-9])[\d,.]+/gi, 'd+'),
-    ),
+  const rows = tableLines.map((line) =>
+    line
+      .slice(indent.length)
+      .trimEnd()
+      .split(/\s{2,}/)
+      .map((cell) => cell.trim().replace(/(?<![a-z0-9])[\d,.]+/gi, 'd+')),
   )
-  const widths = rows[0].map((_, i) =>
-    Math.max(...rows.map(r => (r[i] ?? '').length)),
-  )
+  const widths = rows[0].map((_, i) => Math.max(...rows.map((r) => (r[i] ?? '').length)))
   return rows
-    .map(row => indent + row.map((cell, i) =>
-      i === 0 ? cell.padEnd(widths[i]) : cell.padStart(widths[i]),
-    ).join('  '))
+    .map(
+      (row) =>
+        indent +
+        row
+          .map((cell, i) => (i === 0 ? cell.padEnd(widths[i]) : cell.padStart(widths[i])))
+          .join('  '),
+    )
     .join('\n')
 }
 
@@ -241,7 +243,7 @@ async function runComposition(benchCall: string): Promise<{
   const tasks: TestBenchmarkTask[] = []
   const { stderr, stdout } = await runInlineTests(
     {
-      'composition.bench.ts': /* ts */`
+      'composition.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
 
         test('composition', async ({ bench }) => {
@@ -266,7 +268,7 @@ async function runComposition(benchCall: string): Promise<{
   expect(stderr).toBe('')
 
   const lines = stdout.split('\n')
-  const headerIdx = lines.findIndex(l => /^\s*name\s+hz\s+min/.test(l))
+  const headerIdx = lines.findIndex((l) => /^\s*name\s+hz\s+min/.test(l))
   expect(headerIdx, `inline table header not found in stdout:\n${stdout}`).toBeGreaterThanOrEqual(0)
   const inlineTable = formatBenchTable([
     lines[headerIdx],
@@ -277,7 +279,7 @@ async function runComposition(benchCall: string): Promise<{
   // (each 2 lines: `project …` header + data row). Reformat each sub-table
   // through formatBenchTable while leaving divider and title lines alone.
   let crossProjectSection: string | null = null
-  const xpIdx = lines.findIndex(l => /Cross-Project Benchmark Comparison/.test(l))
+  const xpIdx = lines.findIndex((l) => /Cross-Project Benchmark Comparison/.test(l))
   if (xpIdx >= 0) {
     const summaryIdx = lines.findIndex((l, i) => i > xpIdx && /^\s*Test Files\s/.test(l))
     const xpLines = lines.slice(xpIdx, summaryIdx < 0 ? undefined : summaryIdx)
@@ -290,8 +292,7 @@ async function runComposition(benchCall: string): Promise<{
           stripBenchSuffix(xpLines[i + 1]),
         ]))
         i++
-      }
-      else {
+      } else {
         out.push(line)
       }
     }
@@ -307,9 +308,8 @@ function assertFlags(task: TestBenchmarkTask, name: string, flags: { perProject?
 }
 
 test('plain `bench()` records a task with no flags', async () => {
-  const { tasks, inlineTable, crossProjectSection } = await runComposition(
-    `bench('plain', () => {})`,
-  )
+  const { tasks, inlineTable, crossProjectSection } =
+    await runComposition(`bench('plain', () => {})`)
   expect(tasks).toHaveLength(1)
   assertFlags(tasks[0], 'plain', {})
   expect(crossProjectSection).toBeNull()
@@ -335,7 +335,7 @@ test('`bench(..., { perProject: true }, fn)` records a perProject task in the in
 test('junit reporter embeds the benchmark table inside <system-out>', async () => {
   const { root } = await runInlineTests(
     {
-      'junit.bench.ts': /* ts */`
+      'junit.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
 
         test('junit benches', async ({ bench }) => {
@@ -357,18 +357,17 @@ test('junit reporter embeds the benchmark table inside <system-out>', async () =
   const xml = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
 
   // extract the <system-out> block from the rendered XML
-  // eslint-disable-next-line regexp/no-super-linear-backtracking
   const systemOut = xml.match(/<system-out>\s*\n([\s\S]*?)<\/system-out>/)?.[1]
   expect(systemOut, xml).toBeDefined()
 
   // a header + 2 data rows — reformat through the shared helper so digits
   // collapse to `d+` and widths become measurement-independent
-  const tableLines = systemOut!.split('\n').filter(l => l.trim())
+  const tableLines = systemOut!.split('\n').filter((l) => l.trim())
   expect(tableLines).toHaveLength(3)
   const [header, ...rows] = tableLines
   const formatted = formatBenchTable([
     header,
-    ...rows.map(r => stripBenchSuffix(r)).sort(),
+    ...rows.map((r) => stripBenchSuffix(r)).sort(),
   ])
 
   expect(formatted).toMatchInlineSnapshot(`
@@ -396,14 +395,18 @@ async function runPassingBench(
   expect(testCases).toHaveLength(1)
   expect(
     testCases[0].result()?.state,
-    JSON.stringify(testCases[0].result()?.errors?.map(e => e.message), null, 2),
+    JSON.stringify(
+      testCases[0].result()?.errors?.map((e) => e.message),
+      null,
+      2,
+    ),
   ).toBe('passed')
 }
 
 test('`bench()` inside a non-benchmark project throws a helpful error', async () => {
   const { stderr, results } = await runInlineTests(
     {
-      'regular.test.ts': /* ts */`
+      'regular.test.ts': /* ts */ `
         import { test, expect } from 'vitest'
         test('misuse', async ({ bench }) => {
           expect(() => bench('x', () => {})).toThrow(
@@ -412,7 +415,7 @@ test('`bench()` inside a non-benchmark project throws a helpful error', async ()
         })
 `,
     },
-    { /* benchmark.enabled defaults to false */ },
+    {/* benchmark.enabled defaults to false */},
   )
   expect(stderr).toBe('')
   const testCases = [...(results[0]?.children.allTests() ?? [])]
@@ -421,29 +424,37 @@ test('`bench()` inside a non-benchmark project throws a helpful error', async ()
 })
 
 test('`bench.compare()` with zero registrations throws "requires at least 2"', async () => {
-  await runPassingBench('zero.bench.ts', /* ts */`
+  await runPassingBench(
+    'zero.bench.ts',
+    /* ts */ `
     import { test, expect } from 'vitest'
     test('zero', async ({ bench }) => {
       await expect(bench.compare()).rejects.toThrow(
         /requires at least 2 benchmarks, received 0/,
       )
     })
-  `)
+  `,
+  )
 })
 
 test('`bench.compare(regA)` with one registration throws and suggests `.run()`', async () => {
-  await runPassingBench('one.bench.ts', /* ts */`
+  await runPassingBench(
+    'one.bench.ts',
+    /* ts */ `
     import { test, expect } from 'vitest'
     test('one', async ({ bench }) => {
       await expect(bench.compare(bench('a', () => {}))).rejects.toThrow(
         /received 1.+Consider calling .+bench\\(\\)\\.run\\(\\)/s,
       )
     })
-  `)
+  `,
+  )
 })
 
 test('`bench.compare(reg, non-reg, reg)` throws the shape error', async () => {
-  await runPassingBench('shape.bench.ts', /* ts */`
+  await runPassingBench(
+    'shape.bench.ts',
+    /* ts */ `
     import { test, expect } from 'vitest'
     test('shape', async ({ bench }) => {
       await expect(bench.compare(
@@ -454,13 +465,14 @@ test('`bench.compare(reg, non-reg, reg)` throws the shape error', async () => {
         /expects every argument to be the return value of/,
       )
     })
-  `)
+  `,
+  )
 })
 
 test('`bench(name, { writeResult }, fn)` writes a result file at the given path', async () => {
   const { stderr, fs } = await runInlineTests(
     {
-      'foo.bench.ts': /* ts */`
+      'foo.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('write', async ({ bench }) => {
           await bench('x', { writeResult: './out/x.json' }, () => {}).run(inject('options'))
@@ -486,7 +498,7 @@ test('`writeResult` is overwritten on every successful run', async () => {
   const sentinel = fakeBaseline(99999)
   const { stderr, fs } = await runInlineTests(
     {
-      'upd.bench.ts': /* ts */`
+      'upd.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('upd', async ({ bench }) => {
           await bench('x', { writeResult: './out/upd.json' }, () => {}).run(inject('options'))
@@ -501,11 +513,11 @@ test('`writeResult` is overwritten on every successful run', async () => {
   expect(after.latency.mean).not.toBe(99999)
 })
 
-// eslint-disable-next-line no-template-curly-in-string
+// oxlint-disable-next-line no-template-curly-in-string
 test('`writeResult` substitutes `${projectName}` so multi-project runs do not collide', async () => {
   const { stderr, fs } = await runInlineTests(
     {
-      'shared.bench.ts': /* ts */`
+      'shared.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('t', async ({ bench }) => {
           await bench(
@@ -535,7 +547,7 @@ test('`writeResult` substitutes `${projectName}` so multi-project runs do not co
 test('`writeResult` does NOT write a file when the benchmark throws', async () => {
   const { fs } = await runInlineTests(
     {
-      'throw.bench.ts': /* ts */`
+      'throw.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('throws', async ({ bench }) => {
           try {
@@ -557,7 +569,7 @@ test('`bench.from(name, path)` reads a stored result without invoking any functi
   const seed = fakeBaseline(0.5)
   const { stderr, results } = await runInlineTests(
     {
-      'read.bench.ts': /* ts */`
+      'read.bench.ts': /* ts */ `
         import { test, expect } from 'vitest'
         test('read', async ({ bench }) => {
           const r = await bench.from('previous', './out/seed.json').run()
@@ -573,7 +585,9 @@ test('`bench.from(name, path)` reads a stored result without invoking any functi
 })
 
 test('`bench.from(name, fn)` awaits the function and treats its return value as the result', async () => {
-  await runPassingBench('readfn.bench.ts', /* ts */`
+  await runPassingBench(
+    'readfn.bench.ts',
+    /* ts */ `
     import { test, expect } from 'vitest'
     test('read via function', async ({ bench }) => {
       const data = {
@@ -585,29 +599,36 @@ test('`bench.from(name, fn)` awaits the function and treats its return value as 
       const r = await bench.from('previous', () => Promise.resolve(data)).run()
       expect(r.latency.mean).toBe(0.42)
     })
-  `)
+  `,
+  )
 })
 
 test('`bench.from()` raises a helpful error when the file is missing', async () => {
-  await runPassingBench('missingfile.bench.ts', /* ts */`
+  await runPassingBench(
+    'missingfile.bench.ts',
+    /* ts */ `
     import { test, expect } from 'vitest'
     test('missing file', async ({ bench }) => {
       await expect(bench.from('x', './does-not-exist.json').run()).rejects.toThrow(
         /could not find a result file at/,
       )
     })
-  `)
+  `,
+  )
 })
 
 test('`bench.from()` rejects a path that escapes the project root', async () => {
-  await runPassingBench('escape.bench.ts', /* ts */`
+  await runPassingBench(
+    'escape.bench.ts',
+    /* ts */ `
     import { test, expect } from 'vitest'
     test('escape', async ({ bench }) => {
       await expect(bench.from('x', '../package.json').run()).rejects.toThrow(
         /resolves outside the project root/,
       )
     })
-  `)
+  `,
+  )
 })
 
 test('`bench.compare` with a live `writeResult` AND a `bench.from()` records both tasks', async () => {
@@ -615,7 +636,7 @@ test('`bench.compare` with a live `writeResult` AND a `bench.from()` records bot
   const tasks: TestBenchmarkTask[] = []
   const { stderr, results } = await runInlineTests(
     {
-      'mixed.bench.ts': /* ts */`
+      'mixed.bench.ts': /* ts */ `
         import { test, expect, inject } from 'vitest'
         test('mixed', async ({ bench }) => {
           const storage = await bench.compare(
@@ -631,22 +652,27 @@ test('`bench.compare` with a live `writeResult` AND a `bench.from()` records bot
     },
     {
       benchmark: { enabled: true },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
       provide: { options: fastBenchOptions },
     },
   )
   expect(stderr).toBe('')
   expect([...(results[0]?.children.allTests() ?? [])][0]?.result()?.state).toBe('passed')
   // both rows appear in the same TestBenchmark, with the from() row marked
-  expect(tasks.map(t => ({ name: t.name, fromStore: !!t.fromStore })).sort((a, b) => a.name.localeCompare(b.name)))
-    .toEqual([
-      { name: 'current', fromStore: false },
-      { name: 'previous', fromStore: true },
-    ])
+  expect(
+    tasks
+      .map((t) => ({ name: t.name, fromStore: !!t.fromStore }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  ).toEqual([
+    { name: 'current', fromStore: false },
+    { name: 'previous', fromStore: true },
+  ])
 })
 
 test('`bench.compare` with only `bench.from()` registrations skips tinybench entirely', async () => {
@@ -655,7 +681,7 @@ test('`bench.compare` with only `bench.from()` registrations skips tinybench ent
   const tasks: TestBenchmarkTask[] = []
   const { stderr, results } = await runInlineTests(
     {
-      'only-from.bench.ts': /* ts */`
+      'only-from.bench.ts': /* ts */ `
         import { test, expect } from 'vitest'
         test('only from', async ({ bench }) => {
           const storage = await bench.compare(
@@ -671,16 +697,18 @@ test('`bench.compare` with only `bench.from()` registrations skips tinybench ent
     },
     {
       benchmark: { enabled: true },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
     },
   )
   expect(stderr).toBe('')
   expect([...(results[0]?.children.allTests() ?? [])][0]?.result()?.state).toBe('passed')
-  expect(tasks.every(t => t.fromStore)).toBe(true)
+  expect(tasks.every((t) => t.fromStore)).toBe(true)
 })
 
 test('`bench.from()` rows render rme and samples columns from the stored data', async () => {
@@ -690,7 +718,7 @@ test('`bench.from()` rows render rme and samples columns from the stored data', 
   const seed = { ...fakeBaseline(0.5), latency: { ...fakeStats(0.5), rme: 1.23, samplesCount: 7 } }
   const { stderr, stdout } = await runInlineTests(
     {
-      'render.bench.ts': /* ts */`
+      'render.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('render', async ({ bench }) => {
           await bench.compare(
@@ -710,11 +738,11 @@ test('`bench.from()` rows render rme and samples columns from the stored data', 
   )
   expect(stderr).toBe('')
   const lines = stdout.split('\n')
-  const headerIdx = lines.findIndex(l => /^\s*name\s+hz\s+min/.test(l))
+  const headerIdx = lines.findIndex((l) => /^\s*name\s+hz\s+min/.test(l))
   expect(headerIdx, `inline table header not found in stdout:\n${stdout}`).toBeGreaterThanOrEqual(0)
   // The header columns are: name, hz, min, max, mean, p75, p99, p995, p999, rme, samples.
   // Find the row for "stored" and inspect its last two cells.
-  const storedRow = lines.slice(headerIdx + 1, headerIdx + 3).find(l => /^\s*stored\b/.test(l))!
+  const storedRow = lines.slice(headerIdx + 1, headerIdx + 3).find((l) => /^\s*stored\b/.test(l))!
   expect(storedRow, `stored row not found in:\n${stdout}`).toBeDefined()
   const cells = stripBenchSuffix(storedRow.trim()).split(/\s+/)
   // rme + samples must be real values, not the `-` placeholder
@@ -726,14 +754,14 @@ test('`benchmark.include` overrides the default `*.bench.ts` pattern', async () 
   const tasks: TestBenchmarkTask[] = []
   const { stderr } = await runInlineTests(
     {
-      'a.perf.ts': /* ts */`
+      'a.perf.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('custom include', async ({ bench }) => {
           await bench('x', () => {}).run(inject('options'))
         })
 `,
       // this .bench.ts would run under the default pattern — but we override
-      'b.bench.ts': /* ts */`
+      'b.bench.ts': /* ts */ `
         import { test } from 'vitest'
         test('should not run', async ({ bench }) => {
           await bench('never', () => { throw new Error('not discovered') }).run()
@@ -742,29 +770,31 @@ test('`benchmark.include` overrides the default `*.bench.ts` pattern', async () 
     },
     {
       benchmark: { enabled: true, include: ['**/*.perf.ts'] },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
       provide: { options: fastBenchOptions },
     },
   )
   expect(stderr).toBe('')
-  expect(tasks.map(t => t.name)).toEqual(['x'])
+  expect(tasks.map((t) => t.name)).toEqual(['x'])
 })
 
 test('`benchmark.exclude` filters matching files out of the bench project', async () => {
   const tasks: TestBenchmarkTask[] = []
   const { stderr } = await runInlineTests(
     {
-      'wanted.bench.ts': /* ts */`
+      'wanted.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('wanted', async ({ bench }) => {
           await bench('x', () => {}).run(inject('options'))
         })
 `,
-      'skipped.bench.ts': /* ts */`
+      'skipped.bench.ts': /* ts */ `
         import { test } from 'vitest'
         test('should not run', async ({ bench }) => {
           await bench('never', () => { throw new Error('excluded') }).run()
@@ -776,23 +806,25 @@ test('`benchmark.exclude` filters matching files out of the bench project', asyn
         enabled: true,
         exclude: ['**/skipped.bench.ts', '**/node_modules/**'],
       },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
       provide: { options: fastBenchOptions },
     },
   )
   expect(stderr).toBe('')
-  expect(tasks.map(t => t.name)).toEqual(['x'])
+  expect(tasks.map((t) => t.name)).toEqual(['x'])
 })
 
 test('`benchmark.includeSource` runs in-source benchmarks via `import.meta.vitest`', async () => {
   const tasks: TestBenchmarkTask[] = []
   const { stderr } = await runInlineTests(
     {
-      'lib.ts': /* ts */`
+      'lib.ts': /* ts */ `
         export function add(a: number, b: number) { return a + b }
         if (import.meta.vitest) {
           const { test } = import.meta.vitest
@@ -806,22 +838,24 @@ test('`benchmark.includeSource` runs in-source benchmarks via `import.meta.vites
     },
     {
       benchmark: { enabled: true, includeSource: ['**/*.ts'] },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
     },
   )
   expect(stderr).toBe('')
-  expect(tasks.map(t => t.name)).toEqual(['add'])
+  expect(tasks.map((t) => t.name)).toEqual(['add'])
 })
 
 test('`benchmark.retainSamples: true` preserves the raw samples array', async () => {
   const tasks: TestBenchmarkTask[] = []
   const { stderr } = await runInlineTests(
     {
-      'samples.bench.ts': /* ts */`
+      'samples.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('samples', async ({ bench }) => {
           await bench('x', () => {}).run(inject('options'))
@@ -830,11 +864,13 @@ test('`benchmark.retainSamples: true` preserves the raw samples array', async ()
     },
     {
       benchmark: { enabled: true, retainSamples: true },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
       provide: { options: fastBenchOptions },
     },
   )
@@ -849,7 +885,7 @@ test('`benchmark.retainSamples: false` (the default) omits the samples array', a
   const tasks: TestBenchmarkTask[] = []
   const { stderr } = await runInlineTests(
     {
-      'nosamples.bench.ts': /* ts */`
+      'nosamples.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('nosamples', async ({ bench }) => {
           await bench('x', () => {}).run(inject('options'))
@@ -858,11 +894,13 @@ test('`benchmark.retainSamples: false` (the default) omits the samples array', a
     },
     {
       benchmark: { enabled: true },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
       provide: { options: fastBenchOptions },
     },
   )
@@ -875,24 +913,26 @@ test('`benchmark.enabled: false` skips .bench.ts files entirely', async () => {
   const names: string[] = []
   const { stderr } = await runInlineTests(
     {
-      'ignored.bench.ts': /* ts */`
+      'ignored.bench.ts': /* ts */ `
         import { test } from 'vitest'
         test('should-never-run', () => {
           throw new Error('bench project should not have been created')
         })
 `,
-      'regular.test.ts': /* ts */`
+      'regular.test.ts': /* ts */ `
         import { test } from 'vitest'
         test('runs', () => {})
 `,
     },
     {
       // benchmark.enabled defaults to false → no bench project cloned
-      reporters: [{
-        onTestCaseReady(testCase) {
-          names.push(testCase.name)
+      reporters: [
+        {
+          onTestCaseReady(testCase) {
+            names.push(testCase.name)
+          },
         },
-      }],
+      ],
     },
   )
   expect(stderr).toBe('')
@@ -902,7 +942,7 @@ test('`benchmark.enabled: false` skips .bench.ts files entirely', async () => {
 test('`vitest bench` CLI invocation filters to the cloned benchmark project', async () => {
   const { stderr, ctx } = await runInlineTests(
     {
-      'x.bench.ts': /* ts */`
+      'x.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('x', async ({ bench }) => {
           await bench('a', () => {}).run(inject('options'))
@@ -916,14 +956,14 @@ test('`vitest bench` CLI invocation filters to the cloned benchmark project', as
   )
   expect(stderr).toBe('')
   // --benchmarkOnly narrows ctx.projects to only bench-enabled projects
-  const projectNames = ctx?.projects.map(p => p.name) ?? []
+  const projectNames = ctx?.projects.map((p) => p.name) ?? []
   expect(projectNames).toEqual(['bench'])
 })
 
 test('json reporter surfaces benchmarks on each assertion result', async () => {
   const { stderr, root } = await runInlineTests(
     {
-      'foo.bench.ts': /* ts */`
+      'foo.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('smoke', async ({ bench }) => {
           await bench.compare(
@@ -941,9 +981,11 @@ test('json reporter surfaces benchmarks on each assertion result', async () => {
     },
   )
   expect(stderr).toBe('')
-  const parsed = JSON.parse(readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8')) as JsonTestResults
-  const assertionResults = parsed.testResults.flatMap(tr => tr.assertionResults)
-  const smoke = assertionResults.find(a => a.title === 'smoke')!
+  const parsed = JSON.parse(
+    readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8'),
+  ) as JsonTestResults
+  const assertionResults = parsed.testResults.flatMap((tr) => tr.assertionResults)
+  const smoke = assertionResults.find((a) => a.title === 'smoke')!
   expect(
     smoke,
     `no assertion result titled "smoke" in json output:\n${JSON.stringify(parsed, null, 2)}`,
@@ -951,9 +993,9 @@ test('json reporter surfaces benchmarks on each assertion result', async () => {
   expect(Array.isArray(smoke.benchmarks)).toBe(true)
   expect(smoke.benchmarks).toHaveLength(1)
   const [benchmark] = smoke.benchmarks
-  expect(benchmark.tasks.map(t => t.name).sort()).toEqual(['a', 'b'])
+  expect(benchmark.tasks.map((t) => t.name).sort()).toEqual(['a', 'b'])
   // tasks are ranked 1..n and carry the full statistics surface
-  expect(benchmark.tasks.map(t => t.rank).sort()).toEqual([1, 2])
+  expect(benchmark.tasks.map((t) => t.rank).sort()).toEqual([1, 2])
   expect(typeof benchmark.tasks[0].latency.mean).toBe('number')
   expect(typeof benchmark.tasks[0].throughput.mean).toBe('number')
 })
@@ -961,7 +1003,7 @@ test('json reporter surfaces benchmarks on each assertion result', async () => {
 test('multi-project run aggregates perProject tasks into a single cross-project sub-table', async () => {
   const { stderr, stdout } = await runInlineTests(
     {
-      'shared.bench.ts': /* ts */`
+      'shared.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('cross', async ({ bench }) => {
           await bench('x', { perProject: true }, () => {}).run(inject('options'))
@@ -982,12 +1024,15 @@ test('multi-project run aggregates perProject tasks into a single cross-project 
 
   // find the `project ... hz ... min` header of the `x` sub-table + 2 data rows
   const lines = stdout.split('\n')
-  const headerIdx = lines.findIndex(l => /^\s*project\s+hz\s+min/.test(l))
-  expect(headerIdx, `cross-project sub-table header not found in stdout:\n${stdout}`).toBeGreaterThan(-1)
+  const headerIdx = lines.findIndex((l) => /^\s*project\s+hz\s+min/.test(l))
+  expect(
+    headerIdx,
+    `cross-project sub-table header not found in stdout:\n${stdout}`,
+  ).toBeGreaterThan(-1)
   const [header, ...rows] = lines.slice(headerIdx, headerIdx + 3)
   const normalized = formatBenchTable([
     header,
-    ...rows.map(r => stripBenchSuffix(r)).sort(),
+    ...rows.map((r) => stripBenchSuffix(r)).sort(),
   ])
   expect(normalized).toMatchInlineSnapshot(`
     "   project      hz  min  max  mean  p75  p99  p995  p999   rme  samples
@@ -1002,7 +1047,7 @@ test('cross-project section is skipped when every perProject benchmark ran in on
   // would be a single row with nothing to compare against.
   const { stderr, stdout } = await runInlineTests(
     {
-      'solo.bench.ts': /* ts */`
+      'solo.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('solo', async ({ bench }) => {
           await bench.compare(
@@ -1026,7 +1071,7 @@ test('cross-project section is skipped when every perProject benchmark ran in on
 test('cross-project section is absent when no benchmark is perProject', async () => {
   const { stderr, stdout } = await runInlineTests(
     {
-      'nox.bench.ts': /* ts */`
+      'nox.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('no perProject', async ({ bench }) => {
           await bench('only', () => {}).run(inject('options'))
@@ -1044,7 +1089,9 @@ test('cross-project section is absent when no benchmark is perProject', async ()
 })
 
 test('`bench.compare` wraps multiple failed benchmarks in an AggregateError', async () => {
-  await runPassingBench('aggregate.bench.ts', /* ts */`
+  await runPassingBench(
+    'aggregate.bench.ts',
+    /* ts */ `
     import { test, expect, inject } from 'vitest'
     test('aggregate errors', async ({ bench }) => {
       const err = await bench.compare(
@@ -1057,11 +1104,14 @@ test('`bench.compare` wraps multiple failed benchmarks in an AggregateError', as
       const messages = err.errors.map((e) => e.message).sort()
       expect(messages).toEqual(['A failed', 'B failed'])
     })
-  `)
+  `,
+  )
 })
 
 test('`BenchStorage.get` returns a valid BenchResult shape for every registration', async () => {
-  await runPassingBench('storage.bench.ts', /* ts */`
+  await runPassingBench(
+    'storage.bench.ts',
+    /* ts */ `
     import { test, expect, inject } from 'vitest'
     test('storage shape', async ({ bench }) => {
       const storage = await bench.compare(
@@ -1077,14 +1127,15 @@ test('`BenchStorage.get` returns a valid BenchResult shape for every registratio
         expect(typeof result.totalTime).toBe('number')
       }
     })
-  `)
+  `,
+  )
 })
 
 test('`bench.compare` trailing options propagate through to the underlying Tinybench', async () => {
   const benchmarks: TestBenchmark[] = []
   const { stderr } = await runInlineTests(
     {
-      'options.bench.ts': /* ts */`
+      'options.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('options', async ({ bench }) => {
           await bench.compare(
@@ -1097,11 +1148,13 @@ test('`bench.compare` trailing options propagate through to the underlying Tinyb
     },
     {
       benchmark: { enabled: true },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          benchmarks.push(benchmark)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            benchmarks.push(benchmark)
+          },
         },
-      }],
+      ],
       provide: { options: fastBenchOptions },
     },
   )
@@ -1115,10 +1168,10 @@ test('`bench.compare` trailing options propagate through to the underlying Tinyb
 test('benchmark warns when module export getters are accessed too many times', async () => {
   const { stderr } = await runInlineTests(
     {
-      'fixture.ts': /* ts */`
+      'fixture.ts': /* ts */ `
         export const value = 1
 `,
-      'getter-warning.bench.ts': /* ts */`
+      'getter-warning.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         import * as fixture from './fixture'
 
@@ -1155,10 +1208,10 @@ test('benchmark warns when module export getters are accessed too many times', a
 test('benchmark export getter warning can be suppressed', async () => {
   const { stderr } = await runInlineTests(
     {
-      'fixture.ts': /* ts */`
+      'fixture.ts': /* ts */ `
         export const value = 1
 `,
-      'getter-warning.bench.ts': /* ts */`
+      'getter-warning.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         import * as fixture from './fixture'
 
@@ -1183,7 +1236,7 @@ test('benchmark export getter warning can be suppressed', async () => {
 test('warns when `bench()` is registered but never run', async () => {
   const { stderr } = await runInlineTests(
     {
-      'unrun.bench.ts': /* ts */`
+      'unrun.bench.ts': /* ts */ `
         import { test } from 'vitest'
         test('forgot to run', ({ bench }) => {
           bench('a', () => {})
@@ -1201,7 +1254,7 @@ test('warns about every unrun registration in the message, including `bench.from
   const { stderr } = await runInlineTests(
     {
       'out/seed.json': JSON.stringify(fakeBaseline(0.5)),
-      'multi.bench.ts': /* ts */`
+      'multi.bench.ts': /* ts */ `
         import { test } from 'vitest'
         test('multi unrun', ({ bench }) => {
           bench('a', () => {})
@@ -1220,7 +1273,7 @@ test('warns about every unrun registration in the message, including `bench.from
 test('does NOT warn when every registration is consumed by `.run()` or `bench.compare()`', async () => {
   const { stderr } = await runInlineTests(
     {
-      'consumed.bench.ts': /* ts */`
+      'consumed.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('all consumed', async ({ bench }) => {
           await bench('lone', () => {}).run(inject('options'))
@@ -1240,7 +1293,7 @@ test('does NOT warn when every registration is consumed by `.run()` or `bench.co
 test('warns only about the unrun registration when others are consumed', async () => {
   const { stderr } = await runInlineTests(
     {
-      'partial.bench.ts': /* ts */`
+      'partial.bench.ts': /* ts */ `
         import { test, inject } from 'vitest'
         test('partial', async ({ bench }) => {
           await bench('used', () => {}).run(inject('options'))
@@ -1256,7 +1309,9 @@ test('warns only about the unrun registration when others are consumed', async (
 })
 
 test('`BenchStorage.get("missing")` throws a descriptive error', async () => {
-  await runPassingBench('missing.bench.ts', /* ts */`
+  await runPassingBench(
+    'missing.bench.ts',
+    /* ts */ `
     import { test, expect, inject } from 'vitest'
     test('missing', async ({ bench }) => {
       const storage = await bench.compare(
@@ -1268,7 +1323,8 @@ test('`BenchStorage.get("missing")` throws a descriptive error', async () => {
         /task "missing" was not defined/,
       )
     })
-  `)
+  `,
+  )
 })
 
 test('`toBeFasterThan` passes when actual.latency.mean is strictly smaller', () => {
@@ -1292,8 +1348,7 @@ test('`toBeFasterThan` honours the `delta` threshold', () => {
   const fast = fakeResult(0.8) // 20% faster than 1.0
   const slow = fakeResult(1.0)
   // 20% faster is not enough when delta demands 30%
-  expect(() => expect(fast).toBeFasterThan(slow, { delta: 0.3 }))
-    .toThrow(/faster by at least 30%/)
+  expect(() => expect(fast).toBeFasterThan(slow, { delta: 0.3 })).toThrow(/faster by at least 30%/)
   // passes when the demanded margin is only 10%
   expect(fast).toBeFasterThan(slow, { delta: 0.1 })
 })
@@ -1318,17 +1373,15 @@ test('`toBeSlowerThan` fails with a percent-faster message when actual is faster
 test('`toBeSlowerThan` honours the `delta` threshold', () => {
   // slow = 2x fast → 100% slower. delta 0.5 → threshold 150% → passes at 100%
   expect(fakeResult(1.0)).toBeSlowerThan(fakeResult(0.5), { delta: 0.5 })
-  expect(() => expect(fakeResult(1.0)).toBeSlowerThan(fakeResult(0.5), { delta: 1.5 }))
-    .toThrow(/slower by at least 150%/)
+  expect(() => expect(fakeResult(1.0)).toBeSlowerThan(fakeResult(0.5), { delta: 1.5 })).toThrow(
+    /slower by at least 150%/,
+  )
 })
 
 test('bench matchers reject non-benchmark-result values with a TypeError', () => {
-  expect(() => expect({ foo: 'bar' }).toBeFasterThan(fakeResult(1.0)))
-    .toThrow(TypeError)
-  expect(() => expect(fakeResult(1.0)).toBeFasterThan({ foo: 'bar' } as any))
-    .toThrow(TypeError)
-  expect(() => expect({ foo: 'bar' }).toBeSlowerThan(fakeResult(1.0)))
-    .toThrow(TypeError)
+  expect(() => expect({ foo: 'bar' }).toBeFasterThan(fakeResult(1.0))).toThrow(TypeError)
+  expect(() => expect(fakeResult(1.0)).toBeFasterThan({ foo: 'bar' } as any)).toThrow(TypeError)
+  expect(() => expect({ foo: 'bar' }).toBeSlowerThan(fakeResult(1.0))).toThrow(TypeError)
 })
 
 test('`benchmark.provider` runs a custom provider whose returned results are authoritative', async () => {
@@ -1339,7 +1392,7 @@ test('`benchmark.provider` runs a custom provider whose returned results are aut
       // fabricated statistics keyed by registration name so the assertions
       // below can only pass if Vitest reports exactly what the provider
       // returned, not anything measured off tinybench.
-      'my-provider.ts': /* ts */`
+      'my-provider.ts': /* ts */ `
         function stats(mean) {
           return {
             aad: 0, critical: 0, df: 0, mad: 0, max: mean, samples: undefined,
@@ -1360,7 +1413,7 @@ test('`benchmark.provider` runs a custom provider whose returned results are aut
           },
         }
       `,
-      'custom.bench.ts': /* ts */`
+      'custom.bench.ts': /* ts */ `
         import { test } from 'vitest'
         test('custom provider', async ({ bench }) => {
           await bench.compare(
@@ -1372,22 +1425,28 @@ test('`benchmark.provider` runs a custom provider whose returned results are aut
     },
     {
       benchmark: { enabled: true, provider: './my-provider.ts' },
-      reporters: [{
-        onTestCaseBenchmark(_tc, benchmark) {
-          tasks.push(...benchmark.tasks)
+      reporters: [
+        {
+          onTestCaseBenchmark(_tc, benchmark) {
+            tasks.push(...benchmark.tasks)
+          },
         },
-      }],
+      ],
     },
   )
 
   expect(stderr).toBe('')
   // the benchmark fns throw — a passing run proves the provider never invoked
   // them, and the reported numbers are the provider's fabricated values
-  const byName = Object.fromEntries(tasks.map(t => [t.name, t.latency.mean]))
+  const byName = Object.fromEntries(tasks.map((t) => [t.name, t.latency.mean]))
   expect(byName).toEqual({ first: 100, second: 200 })
   // ranking is applied by Vitest over the provider's results
-  expect(tasks.map(t => ({ name: t.name, rank: t.rank })).sort((a, b) => a.rank - b.rank))
-    .toEqual([{ name: 'first', rank: 1 }, { name: 'second', rank: 2 }])
+  expect(
+    tasks.map((t) => ({ name: t.name, rank: t.rank })).sort((a, b) => a.rank - b.rank),
+  ).toEqual([
+    { name: 'first', rank: 1 },
+    { name: 'second', rank: 2 },
+  ])
 })
 
 test('`benchmark.provider` receives the registrations with raw fn and fnOpts', async () => {
@@ -1395,7 +1454,7 @@ test('`benchmark.provider` receives the registrations with raw fn and fnOpts', a
   // benchmark function and its lifecycle hooks reach the provider untouched.
   const { stderr, results } = await runInlineTests(
     {
-      'runner-provider.ts': /* ts */`
+      'runner-provider.ts': /* ts */ `
         function stats(mean) {
           return {
             aad: 0, critical: 0, df: 0, mad: 0, max: mean, samples: undefined,
@@ -1419,7 +1478,7 @@ test('`benchmark.provider` receives the registrations with raw fn and fnOpts', a
           },
         }
       `,
-      'raw.bench.ts': /* ts */`
+      'raw.bench.ts': /* ts */ `
         import { test, expect } from 'vitest'
         test('raw registration', async ({ bench }) => {
           const calls = []

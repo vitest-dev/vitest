@@ -67,18 +67,10 @@ function ellipsisFile(moduleId: string) {
     <table class="my-2 mx-4 text-sm font-light op-90">
       <thead>
         <tr>
-          <th>
-            Module
-          </th>
-          <th>
-            Self
-          </th>
-          <th>
-            Total
-          </th>
-          <th>
-            %
-          </th>
+          <th>Module</th>
+          <th>Self</th>
+          <th>Total</th>
+          <th>%</th>
         </tr>
       </thead>
       <tbody>

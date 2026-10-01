@@ -47,8 +47,7 @@ stdout | fixtures/reporters/console-some-failing.test.ts > passed suite #2
 Log from passed suite
 
 stdout | fixtures/reporters/console-some-failing.test.ts > passed suite #2 > passed test #3
-Log from passed test`,
-  )
+Log from passed test`)
 })
 
 test('{ silent: "passed-only" } shows all console logs from failed tests only', async () => {
@@ -70,8 +69,7 @@ stdout | fixtures/reporters/console-some-failing.test.ts > failed suite #1
 Log from failed suite
 
 stdout | fixtures/reporters/console-some-failing.test.ts
-Log from failed file`,
-  )
+Log from failed file`)
 
   expect(stdout).not.toContain('Log from passed')
   expect(stdout.match(/stdout/g)).toHaveLength(4)
@@ -94,8 +92,7 @@ test('{ silent: "passed-only" } logs are filtered by custom onConsoleLog', async
 
   expect(stdout).toContain(`\
 stdout | fixtures/reporters/console-some-failing.test.ts > failed suite #1
-Log from failed suite`,
-  )
+Log from failed suite`)
 
   expect(stdout).not.toContain('Log from passed')
   expect(stdout).not.toContain('Log from failed test')

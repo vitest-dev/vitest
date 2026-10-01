@@ -1,5 +1,8 @@
 import { expect, test, vi } from 'vitest'
-import { asyncSquare as importedAsyncSquare, square as importedSquare } from '../../src/mocks/example'
+import {
+  asyncSquare as importedAsyncSquare,
+  square as importedSquare,
+} from '../../src/mocks/example'
 
 const mocks = vi.hoisted(() => {
   return {

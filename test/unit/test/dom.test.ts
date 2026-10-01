@@ -3,12 +3,9 @@
  * @vitest-environment-options { "url": "https://example.com/" }
  */
 
-/* eslint-disable vars-on-top */
-
 import { expect, it, vi } from 'vitest'
 
 declare global {
-
   var __property_jsdom: unknown
 }
 
@@ -26,7 +23,7 @@ it('jsdom', () => {
   expect(dom.outerHTML).toEqual('<a href="https://vitest.dev">&lt;Vitest&gt;</a>')
 })
 
-it('dispatchEvent doesn\'t throw', () => {
+it("dispatchEvent doesn't throw", () => {
   const target = new EventTarget()
   const event = new Event('click')
   expect(() => target.dispatchEvent(event)).not.toThrow()
@@ -181,7 +178,7 @@ it.each([
   expect(typedArray.buffer instanceof ArrayBuffer).toBeTruthy()
 })
 
-it('doesn\'t throw, if listening for error', () => {
+it("doesn't throw, if listening for error", () => {
   const spy = vi.fn((e: Event) => e.preventDefault())
   window.addEventListener('error', spy)
   addEventListener('custom', () => {

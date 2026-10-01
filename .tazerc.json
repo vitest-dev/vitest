@@ -1,8 +1,5 @@
 {
-  "exclude": [
-    "vue",
-    "pretty-format"
-  ],
+  "exclude": ["vue", "pretty-format"],
   "packageMode": {
     "vue": "minor",
     "codemirror": "minor",

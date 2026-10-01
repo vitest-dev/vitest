@@ -5,16 +5,20 @@ import { assertBrowserFileAccess } from '@vitest/browser'
 import { resolve } from 'pathe'
 import { getDescribedLocator } from './utils'
 
-export const upload: UserEventCommand<(element: SerializedLocator, files: Array<string | {
-  name: string
-  mimeType: string
-  base64: string
-}>, options: UserEventUploadOptions) => void> = async (
-  context,
-  selector,
-  files,
-  options,
-) => {
+export const upload: UserEventCommand<
+  (
+    element: SerializedLocator,
+    files: Array<
+      | string
+      | {
+          name: string
+          mimeType: string
+          base64: string
+        }
+    >,
+    options: UserEventUploadOptions,
+  ) => void
+> = async (context, selector, files, options) => {
   const testPath = context.testPath
   if (!testPath) {
     throw new Error(`Cannot upload files outside of a test`)

@@ -57,8 +57,7 @@ export class DotReporter extends BaseReporter {
     if (this.isTTY) {
       const finalLog = formatTests(Array.from(this.tests.values()))
       this.ctx.logger.log(finalLog)
-    }
-    else {
+    } else {
       this.ctx.logger.log()
     }
 
@@ -88,7 +87,7 @@ export class DotReporter extends BaseReporter {
 
     // On non-TTY the finished tests are printed immediately
     if (!this.isTTY && result !== 'pending') {
-      (this.ctx.logger.outputStream as Writable).write(formatTests([result]))
+      ;(this.ctx.logger.outputStream as Writable).write(formatTests([result]))
     }
 
     super.onTestCaseResult(test)
@@ -111,7 +110,7 @@ export class DotReporter extends BaseReporter {
       return
     }
 
-    const finishedTests = Array.from(this.tests).filter(entry => entry[1] !== 'pending')
+    const finishedTests = Array.from(this.tests).filter((entry) => entry[1] !== 'pending')
 
     if (finishedTests.length < columns) {
       return
@@ -135,10 +134,7 @@ export class DotReporter extends BaseReporter {
   }
 
   private createSummary() {
-    return [
-      formatTests(Array.from(this.tests.values())),
-      '',
-    ]
+    return [formatTests(Array.from(this.tests.values())), '']
   }
 }
 

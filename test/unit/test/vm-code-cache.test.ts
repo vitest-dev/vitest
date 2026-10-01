@@ -1,5 +1,8 @@
 import { expect, test, vi } from 'vitest'
-import { CodeCache, createV8ModuleWithCacheReset } from '../../../packages/vitest/src/runtime/vm/code-cache.js'
+import {
+  CodeCache,
+  createV8ModuleWithCacheReset,
+} from '../../../packages/vitest/src/runtime/vm/code-cache.js'
 
 test('returns the stored data only for the exact same source', () => {
   const cache = new CodeCache()

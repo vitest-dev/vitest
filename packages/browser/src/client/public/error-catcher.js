@@ -2,9 +2,8 @@ import { client } from '@vitest/browser/client'
 
 function serializeError(unhandledError) {
   const state = globalThis.__vitest_worker__
-  const VITEST_TEST_NAME = state && state.current && state.current.type === 'test'
-    ? state.current.name
-    : undefined
+  const VITEST_TEST_NAME =
+    state && state.current && state.current.type === 'test' ? state.current.name : undefined
   const VITEST_TEST_PATH = state && state.filepath ? state.filepath : undefined
 
   if (typeof unhandledError !== 'object' || !unhandledError) {
@@ -29,8 +28,7 @@ function catchWindowErrors(errorEvent, prop, cb) {
   function throwUnhandlerError(e) {
     if (userErrorListenerCount === 0 && e[prop] != null) {
       cb(e)
-    }
-    else {
+    } else {
       // `ErrorEvent` doesn't necessary have `ErrorEvent.error` defined
       // but some has `ErrorEvent.message` defined, e.g. ResizeObserver error.
       // https://developer.mozilla.org/en-US/docs/Web/API/ErrorEvent/error
@@ -59,24 +57,26 @@ function catchWindowErrors(errorEvent, prop, cb) {
 }
 
 function registerUnexpectedErrors() {
-  const offError = catchWindowErrors('error', 'error', event =>
-    reportUnexpectedError('Error', event.error))
-  const offRejection = catchWindowErrors('unhandledrejection', 'reason', event =>
-    reportUnexpectedError('Unhandled Rejection', event.reason))
+  const offError = catchWindowErrors('error', 'error', (event) =>
+    reportUnexpectedError('Error', event.error),
+  )
+  const offRejection = catchWindowErrors('unhandledrejection', 'reason', (event) =>
+    reportUnexpectedError('Unhandled Rejection', event.reason),
+  )
   return () => {
     offError()
     offRejection()
   }
 }
 
-async function reportUnexpectedError(
-  type,
-  error,
-) {
+async function reportUnexpectedError(type, error) {
   const processedError = serializeError(error)
-  await client.waitForConnection().then(() => {
-    return client.rpc.onUnhandledError(processedError, type)
-  }).catch(console.error)
+  await client
+    .waitForConnection()
+    .then(() => {
+      return client.rpc.onUnhandledError(processedError, type)
+    })
+    .catch(console.error)
 }
 
 globalThis.__vitest_browser_runner__.disposeExceptionTracker = registerUnexpectedErrors()

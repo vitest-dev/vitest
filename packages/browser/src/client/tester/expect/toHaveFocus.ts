@@ -17,34 +17,22 @@ import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput } from './utils'
 
-export default function toHaveFocus(
-  this: MatcherState,
-  actual: Element | Locator,
-): MatcherResult {
+export default function toHaveFocus(this: MatcherState, actual: Element | Locator): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveFocus, this)
 
   return {
     pass: htmlElement.ownerDocument.activeElement === htmlElement,
     message: () => {
       return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toHaveFocus`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toHaveFocus`, 'element', ''),
         '',
         ...(this.isNot
-          ? [
-              'Received element is focused:',
-              `  ${this.utils.printReceived(htmlElement)}`,
-            ]
+          ? ['Received element is focused:', `  ${this.utils.printReceived(htmlElement)}`]
           : [
               'Expected element with focus:',
               `  ${this.utils.printExpected(htmlElement)}`,
               'Received element with focus:',
-              `  ${this.utils.printReceived(
-                htmlElement.ownerDocument.activeElement,
-              )}`,
+              `  ${this.utils.printReceived(htmlElement.ownerDocument.activeElement)}`,
             ]),
       ].join('\n')
     },

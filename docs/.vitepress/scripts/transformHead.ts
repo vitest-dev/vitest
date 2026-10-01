@@ -1,5 +1,4 @@
 import type { HeadConfig, TransformContext } from 'vitepress'
-
 import { preconnectHomeLinks, preconnectLinks } from '../meta'
 
 export async function transformHead({ pageData }: TransformContext): Promise<HeadConfig[]> {
