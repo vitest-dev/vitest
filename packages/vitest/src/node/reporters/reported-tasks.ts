@@ -8,6 +8,7 @@ import type {
   Suite as RunnerTestSuite,
   SerializableRetry,
   TaskMeta,
+  TaskResultAttempt,
   TestAnnotation,
   TestArtifact,
   TestBenchmark,
@@ -198,14 +199,7 @@ export class TestCase extends ReportedTaskImplementation {
    * Individual results for every retry and repeat attempt.
    */
   public attempts(): ReadonlyArray<TestAttempt> {
-    return (this.task.result?.attempts || []).map((attempt) => ({
-      state: attempt.state === 'pass' ? 'passed' : attempt.state === 'fail' ? 'failed' : 'skipped',
-      errors: attempt.errors as TestError[] | undefined,
-      duration: attempt.duration,
-      startTime: attempt.startTime,
-      retryIndex: attempt.retryIndex,
-      repeatIndex: attempt.repeatIndex,
-    }))
+    return (this.task.result?.attempts || []).map(toTestAttempt)
   }
 
   /**
@@ -802,6 +796,17 @@ function getReportedTask(
     throw new Error(`Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`)
   }
   return reportedTask
+}
+
+export function toTestAttempt(attempt: TaskResultAttempt): TestAttempt {
+  return {
+    state: attempt.state === 'pass' ? 'passed' : attempt.state === 'fail' ? 'failed' : 'skipped',
+    errors: attempt.errors as TestError[] | undefined,
+    duration: attempt.duration,
+    startTime: attempt.startTime,
+    retryIndex: attempt.retryIndex,
+    repeatIndex: attempt.repeatIndex,
+  }
 }
 
 function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {

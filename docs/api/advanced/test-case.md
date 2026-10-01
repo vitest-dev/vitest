@@ -327,7 +327,7 @@ For example, a test with `retry: 2` that passes on its third run returns:
 ```
 
 ::: info
-`attempts()` returns an empty array if the test has not run yet.
+`attempts()` returns an empty array if the test has not run yet. While the test is running, it only includes the runs that have finished. Use the [`onTestCaseAttempt`](/api/advanced/reporters#ontestcaseattempt) reporter hook to be notified when each run finishes.
 :::
 
 ## annotations

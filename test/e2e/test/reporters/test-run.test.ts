@@ -3,6 +3,7 @@ import type {
   ReportedHookContext,
   Reporter,
   SerializedError,
+  TestAttempt,
   TestCase,
   TestModule,
   TestRunEndReason,
@@ -973,6 +974,148 @@ describe('merge reports', () => {
   })
 })
 
+describe('attempts', () => {
+  test('single attempt', async () => {
+    const report = await run(
+      {
+        'example.test.ts': ts`
+          test('passes', () => {});
+          test('fails', () => { expect(1).toBe(2) });
+        `,
+      },
+      undefined,
+      { printAttempts: true, failed: true },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |passes|
+        onTestCaseAttempt   (example.test.ts) |passes| [repeat 0, retry 0, passed, 0 errors, attempts() 1]
+        onTestCaseResult    (example.test.ts) |passes|
+        onTestCaseReady     (example.test.ts) |fails|
+        onTestCaseAttempt   (example.test.ts) |fails| [repeat 0, retry 0, failed, 1 errors, attempts() 1]
+        onTestCaseResult    (example.test.ts) |fails|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
+  test('retries and repeats', async () => {
+    const report = await run(
+      {
+        'example.test.ts': ts`
+          let runs = 0
+          beforeEach(() => {})
+          test('flaky', { retry: 1, repeats: 1 }, () => {
+            expect(++runs % 2).toBe(0)
+          });
+        `,
+      },
+      undefined,
+      { printAttempts: true },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |flaky|
+          onHookStart       (example.test.ts) |flaky| [beforeEach]
+          onHookEnd         (example.test.ts) |flaky| [beforeEach]
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 0, retry 0, failed, 1 errors, attempts() 1]
+          onHookStart       (example.test.ts) |flaky| [beforeEach]
+          onHookEnd         (example.test.ts) |flaky| [beforeEach]
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 0, retry 1, passed, 0 errors, attempts() 2]
+          onHookStart       (example.test.ts) |flaky| [beforeEach]
+          onHookEnd         (example.test.ts) |flaky| [beforeEach]
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 1, retry 0, failed, 1 errors, attempts() 3]
+          onHookStart       (example.test.ts) |flaky| [beforeEach]
+          onHookEnd         (example.test.ts) |flaky| [beforeEach]
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 1, retry 1, passed, 0 errors, attempts() 4]
+        onTestCaseResult    (example.test.ts) |flaky|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
+  test('expected failures and skips', async () => {
+    const report = await run(
+      {
+        'example.test.ts': ts`
+          test.fails('fails', { retry: 1 }, () => { expect(1).toBe(2) });
+          test.fails('passes', { retry: 1 }, () => {});
+          test('skips', ({ skip }) => { skip() });
+        `,
+      },
+      undefined,
+      { printAttempts: true, failed: true },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |fails|
+        onTestCaseAttempt   (example.test.ts) |fails| [repeat 0, retry 0, passed, 0 errors, attempts() 1]
+        onTestCaseResult    (example.test.ts) |fails|
+        onTestCaseReady     (example.test.ts) |passes|
+        onTestCaseAttempt   (example.test.ts) |passes| [repeat 0, retry 0, failed, 1 errors, attempts() 1]
+        onTestCaseAttempt   (example.test.ts) |passes| [repeat 0, retry 1, failed, 1 errors, attempts() 2]
+        onTestCaseResult    (example.test.ts) |passes|
+        onTestCaseReady     (example.test.ts) |skips|
+        onTestCaseAttempt   (example.test.ts) |skips| [repeat 0, retry 0, skipped, 0 errors, attempts() 1]
+        onTestCaseResult    (example.test.ts) |skips|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
+  test('merge reports replays attempts', async () => {
+    const blobsOutputDirectory = resolve(import.meta.dirname, 'fixtures-blobs-attempts')
+    const blobOutputFile = resolve(blobsOutputDirectory, 'blob.json')
+    onTestFinished(() => {
+      rmSync(blobsOutputDirectory, { recursive: true, force: true })
+    })
+
+    const { root } = await runInlineTests(
+      {
+        'example.test.ts': ts`
+          let runs = 0
+          test('flaky', { retry: 1, repeats: 1 }, () => {
+            expect(++runs % 2).toBe(0)
+          });
+        `,
+      },
+      {
+        globals: true,
+        reporters: [['blob', { outputFile: blobOutputFile }]],
+      },
+    )
+
+    const report = await run(
+      {},
+      { mergeReports: blobsOutputDirectory },
+      { roots: [root], printAttempts: true },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |flaky|
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 0, retry 0, failed, 1 errors, attempts() 4]
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 0, retry 1, passed, 0 errors, attempts() 4]
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 1, retry 0, failed, 1 errors, attempts() 4]
+        onTestCaseAttempt   (example.test.ts) |flaky| [repeat 1, retry 1, passed, 0 errors, attempts() 4]
+        onTestCaseResult    (example.test.ts) |flaky|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+})
+
 describe('type checking', () => {
   test('typechecking is reported correctly', async () => {
     const report = await run(
@@ -1139,6 +1282,7 @@ describe('test run result', () => {
 
 interface ReporterOptions {
   printTestRunEvents?: boolean
+  printAttempts?: boolean
   roots?: string[]
   failed?: boolean
 }
@@ -1249,6 +1393,14 @@ class CustomReporter implements Reporter {
     this.calls.push(
       `${padded(test, 'onTestCaseResult')} (${this.normalizeFilename(test.module)}) |${test.name}|`,
     )
+  }
+
+  onTestCaseAttempt(test: TestCase, attempt: TestAttempt) {
+    if (this.options.printAttempts) {
+      this.calls.push(
+        `${padded(test, 'onTestCaseAttempt')} (${this.normalizeFilename(test.module)}) |${test.name}| [repeat ${attempt.repeatIndex}, retry ${attempt.retryIndex}, ${attempt.state}, ${attempt.errors?.length ?? 0} errors, attempts() ${test.attempts().length}]`,
+      )
+    }
   }
 
   onUserConsoleLog(log: UserConsoleLog) {

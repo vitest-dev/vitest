@@ -10,6 +10,8 @@ import type {
   Suite,
   SuiteHooks,
   Task,
+  TaskEventData,
+  TaskEventPack,
   TaskMeta,
   TaskResult,
   TaskResultAttempt,
@@ -456,7 +458,7 @@ async function callAroundEachHooks(
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
-const eventsPacks: [string, TaskUpdateEvent, undefined][] = []
+const eventsPacks: TaskEventPack[] = []
 const pendingTasksUpdates: Promise<void>[] = []
 
 function sendTasksUpdate(runner: VitestRunner): void {
@@ -507,8 +509,13 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 // throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
-function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
-  eventsPacks.push([task.id, event, undefined])
+function updateTask(
+  event: TaskUpdateEvent,
+  task: Task,
+  runner: VitestRunner,
+  data?: TaskEventData,
+): void {
+  eventsPacks.push([task.id, event, data])
   packs.set(task.id, [task.result, task.meta])
   sendTasksUpdateThrottled(runner)
 }
@@ -609,14 +616,20 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       const attemptErrorsStart = test.result.errors?.length ?? 0
       const recordAttempt = (state: TaskResultAttempt['state']) => {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
-        test.result!.attempts!.push({
+        const attempt: TaskResultAttempt = {
           state,
           errors: errors?.length ? errors : undefined,
           duration: now() - attemptStart,
           startTime: attemptStartTime,
           retryIndex: retryCount,
           repeatIndex: repeatCount,
-        })
+        }
+        test.result!.attempts!.push(attempt)
+        updateTask('test-attempt-finished', test, runner, { attempt })
+        // tests that run once don't need a dedicated flush per attempt
+        if (retry || repeats) {
+          sendTasksUpdate(runner)
+        }
       }
       let beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count

@@ -133,6 +133,9 @@ export function convertTasksToEvents(
           task.artifacts.forEach((artifact) => {
             events.push([task.id, 'test-artifact', { artifact }])
           })
+          task.result?.attempts?.forEach((attempt) => {
+            events.push([task.id, 'test-attempt-finished', { attempt }])
+          })
           events.push([task.id, 'test-finished', undefined])
         }
       }

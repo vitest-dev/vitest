@@ -12,6 +12,7 @@ import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type {
   ReportedHookContext,
+  TestAttempt,
   TestCase,
   TestModule,
   TestSuite,
@@ -76,6 +77,11 @@ export interface Reporter {
    * The `result()` cannot be `pending`.
    */
   onTestCaseResult?: (testCase: TestCase) => Awaitable<void>
+  /**
+   * Called after each run of the test finishes, including every retry and repeat.
+   * Called before `onTestCaseResult` for the final attempt.
+   */
+  onTestCaseAttempt?: (testCase: TestCase, attempt: TestAttempt) => Awaitable<void>
 
   /**
    * Called when annotation is added via the `task.annotate` API.

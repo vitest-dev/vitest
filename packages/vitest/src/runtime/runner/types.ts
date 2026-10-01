@@ -267,6 +267,7 @@ export type TaskResultPack = [
 export interface TaskEventData {
   annotation?: TestAnnotation | undefined
   artifact?: TestArtifact | undefined
+  attempt?: TaskResultAttempt | undefined
 }
 
 export type TaskEventPack = [
@@ -289,7 +290,11 @@ export type TaskUpdateEvent =
   | 'suite-failed-early'
   | 'test-prepare'
   | 'test-finished'
+  /**
+   * @deprecated Use `test-attempt-finished` instead.
+   */
   | 'test-retried'
+  | 'test-attempt-finished'
   | 'test-cancel'
   | 'suite-prepare'
   | 'suite-finished'

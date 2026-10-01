@@ -30,6 +30,7 @@ import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
+import { toTestAttempt } from './reporters/reported-tasks'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -269,6 +270,11 @@ export class TestRun {
 
     if (event === 'test-prepare' && entity.type === 'test') {
       return await this.vitest.report('onTestCaseReady', entity)
+    }
+
+    if (event === 'test-attempt-finished' && entity.type === 'test') {
+      assert(data?.attempt, 'Attempt must be provided for test-attempt-finished event')
+      return await this.vitest.report('onTestCaseAttempt', entity, toTestAttempt(data.attempt))
     }
 
     if (event === 'test-finished' && entity.type === 'test') {
