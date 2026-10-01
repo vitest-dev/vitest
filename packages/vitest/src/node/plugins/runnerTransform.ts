@@ -59,7 +59,7 @@ export function ModuleRunnerTransform(): VitePlugin {
     configEnvironment: {
       order: 'post',
       handler(name, config) {
-        if (name === '__vitest_vm__' || name === '__vitest__') {
+        if (name === '__vitest__') {
           return
         }
         // In browser mode the `client` environment (and any other environment
@@ -67,6 +67,14 @@ export function ModuleRunnerTransform(): VitePlugin {
         // externalization / `optimizeDeps` to it (that would discard the browser
         // `optimizeDeps.include`, e.g. `vitest > expect-type`).
         if (testConfig.browser?.enabled && (name === 'client' || config.consumer === 'client')) {
+          return
+        }
+
+        const optimizerOptions =
+          name === '__vitest_vm__' ? undefined : testConfig?.deps?.optimizer?.[name]
+        config.optimizeDeps = resolveOptimizerConfig(optimizerOptions, config.optimizeDeps)
+
+        if (name === '__vitest_vm__') {
           return
         }
 
@@ -83,11 +91,6 @@ export function ModuleRunnerTransform(): VitePlugin {
         // to externalize modules and always resolve static imports
         // in both SSR and Client environments
         config.resolve.noExternal = true
-
-        config.optimizeDeps = resolveOptimizerConfig(
-          testConfig?.deps?.optimizer?.[name],
-          config.optimizeDeps,
-        )
       },
     },
   }

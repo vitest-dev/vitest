@@ -1,7 +1,7 @@
 import type { SerializedLocator } from '@vitest/browser'
-// Note: this augments `screenshotOptions` types
-import type {} from '@vitest/browser-playwright'
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
+// Note: this augments `screenshotOptions` types
+import type {} from '../../../../../browser-playwright'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
