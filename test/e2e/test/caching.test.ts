@@ -194,6 +194,79 @@ test.each([
   }
 })
 
+test('filtering by related sources reuses the cache', async () => {
+  const transformed: string[] = []
+  ;(globalThis as any).__vitest_transformed__ = transformed
+
+  const cold = await runInlineTests(
+    {
+      'vitest.config.js': `
+        import { defineConfig } from 'vitest/config'
+        export default defineConfig({
+          plugins: [{
+            name: 'track-transforms',
+            transform(_code, id) {
+              if (id.startsWith(this.environment.config.root)) {
+                globalThis.__vitest_transformed__.push(id.slice(this.environment.config.root.length + 1))
+              }
+            },
+          }],
+          test: {
+            fsModuleCache: true,
+            fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          },
+        })
+      `,
+      'a.js': `export const a = 'a'`,
+      'b.js': `export const b = 'b'`,
+      'a.test.js': `
+        import { expect, test } from 'vitest'
+        import { a } from './a.js'
+        test('a', () => expect(a).toBe('a'))
+      `,
+      'b.test.js': `
+        import { expect, test } from 'vitest'
+        import { b } from './b.js'
+        test('b', () => expect(b).toBe('b'))
+      `,
+    },
+    { related: ['a.js'] },
+  )
+
+  expect(cold.stderr).toBe('')
+  expect(cold.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+  expect(transformed.sort()).toMatchInlineSnapshot(`
+    [
+      "a.js",
+      "a.test.js",
+      "b.js",
+      "b.test.js",
+    ]
+  `)
+
+  transformed.length = 0
+
+  const warm = await runVitest({ root: cold.root, related: ['a.js'] })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+  expect(transformed).toEqual([])
+
+  delete (globalThis as any).__vitest_transformed__
+})
+
 test('if cache key generator bails out, the file is not cached', async () => {
   process.env.REPLACED = 'value1'
 
