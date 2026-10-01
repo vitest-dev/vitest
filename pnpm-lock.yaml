@@ -359,7 +359,7 @@ importers:
         version: link:../../packages/ui
       fastify:
         specifier: ^5.12.1
-        version: 5.12.1
+        version: 5.12.5
       supertest:
         specifier: ^7.2.2
         version: 7.2.2(supports-color@10.2.2)
@@ -465,7 +465,7 @@ importers:
         version: link:../../packages/ui
       fastify:
         specifier: ^5.12.1
-        version: 5.12.1
+        version: 5.12.5
       jsdom:
         specifier: ^30.1.1
         version: 30.1.1(@noble/hashes@1.8.0)
@@ -6459,8 +6459,8 @@ packages:
     resolution: {integrity: sha512-brCNCeScma/kqa54J4PIDriSSSLssRkuYaUCpvHJulGc3HGI/xxKUCTDcYkAdqJsyb//ydpbxecjC3hB9+tb/g==}
     hasBin: true
 
-  fastify@5.12.1:
-    resolution: {integrity: sha512-FWi+tQvwxR/PeRX7Z2mhfEF5ozJ3jn9asiiclzKXNSzJRHAYcU924aIOKAdHFJ+YIKieh3cqr1IwCOvTr41B3Q==}
+  fastify@5.12.5:
+    resolution: {integrity: sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==}
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -14321,7 +14321,7 @@ snapshots:
       strnum: 2.4.1
       xml-naming: 0.1.0
 
-  fastify@5.12.1:
+  fastify@5.12.5:
     dependencies:
       '@fastify/ajv-compiler': 4.0.5
       '@fastify/error': 4.2.0
