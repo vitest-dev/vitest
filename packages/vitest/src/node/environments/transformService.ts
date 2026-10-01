@@ -42,7 +42,7 @@ const saveCachePromises = new Map<
 >()
 const readFilePromises = new Map<string, Promise<string | null>>()
 
-class ModuleFetcher {
+export class ModuleTransformService {
   private tmpDirectories = new Set<string>()
   private fsCacheEnabled: boolean
   // the module type is only needed by the evaluator to decide if CJS
@@ -54,6 +54,7 @@ class ModuleFetcher {
     private resolver: VitestResolver,
     private config: ResolvedConfig,
     private fsCache: FileSystemModuleCache,
+    private traces: Traces,
     private tmpProjectDir: string,
   ) {
     this.fsCacheEnabled = config.fsModuleCache === true
@@ -61,6 +62,40 @@ class ModuleFetcher {
   }
 
   async fetch(
+    url: string,
+    importer: string | undefined,
+    environment: DevEnvironment,
+    makeTmpCopies?: boolean,
+    options?: FetchFunctionOptions,
+    otelCarrier?: OTELCarrier,
+  ): Promise<FetchResult | FetchCachedFileSystemResult> {
+    await this.traces.waitInit()
+    const context = otelCarrier ? this.traces.getContextFromCarrier(otelCarrier) : undefined
+    return this.traces.$('vitest.module.transform', context ? { context } : {}, (span) =>
+      this.fetchInSpan(span, url, importer, environment, makeTmpCopies, options),
+    )
+  }
+
+  /**
+   * Transforms the module like `environment.transformRequest`, but reads and
+   * populates the `fsModuleCache` when it is enabled.
+   */
+  async transform(id: string, environment: DevEnvironment): Promise<TransformResult | null> {
+    await this.traces.waitInit()
+    const result = await this.traces.$('vitest.module.transform', (span) =>
+      this.fetchInSpan(span, id, undefined, environment),
+    )
+    if ('id' in result) {
+      const transformResult = environment.moduleGraph.getModuleById(result.id)?.transformResult
+      if (transformResult) {
+        return transformResult
+      }
+    }
+    // externalized modules are never transformed by `fetch`
+    return environment.transformRequest(id)
+  }
+
+  private async fetchInSpan(
     trace: Span,
     url: string,
     importer: string | undefined,
@@ -529,34 +564,6 @@ function getSafeModulePaths(environment: DevEnvironment): Set<string> | undefine
     safeModulePaths?: Set<string>
   }
   return config.safeModulePaths
-}
-
-export interface VitestFetchFunction {
-  (
-    url: string,
-    importer: string | undefined,
-    environment: DevEnvironment,
-    cacheFs?: boolean,
-    options?: FetchFunctionOptions,
-    otelCarrier?: OTELCarrier,
-  ): Promise<FetchResult | FetchCachedFileSystemResult>
-}
-
-export function createFetchModuleFunction(
-  resolver: VitestResolver,
-  config: ResolvedConfig,
-  fsCache: FileSystemModuleCache,
-  traces: Traces,
-  tmpProjectDir: string,
-): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
-  return async (url, importer, environment, cacheFs, options, otelCarrier) => {
-    await traces.waitInit()
-    const context = otelCarrier ? traces.getContextFromCarrier(otelCarrier) : undefined
-    return traces.$('vitest.module.transform', context ? { context } : {}, (span) =>
-      fetcher.fetch(span, url, importer, environment, cacheFs, options),
-    )
-  }
 }
 
 let SOURCEMAPPING_URL = 'sourceMa'
