@@ -219,6 +219,47 @@ test('expected failures can recover through a retry in every repeat', async () =
   })
 })
 
+test('attempts grow while the test runs', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'attempts.test.js': `
+      import { afterAll, expect, it, onTestFailed } from 'vitest'
+
+      const seen = []
+      let runs = 0
+      const summarize = (task) =>
+        task.result.attempts.map(a => [a.repeatIndex, a.retryIndex, a.state])
+
+      it('flaky', { retry: 2, repeats: 1 }, ({ task }) => {
+        seen.push(['run', ...summarize(task)])
+        onTestFailed(() => {
+          seen.push(['failed', ...summarize(task)])
+        })
+        expect(++runs % 2).toBe(0)
+      })
+
+      afterAll(() => {
+        expect(seen).toEqual([
+          ['run'],
+          ['failed'],
+          ['run', [0, 0, 'fail']],
+          ['run', [0, 0, 'fail'], [0, 1, 'pass']],
+          ['failed', [0, 0, 'fail'], [0, 1, 'pass']],
+          ['run', [0, 0, 'fail'], [0, 1, 'pass'], [1, 0, 'fail']],
+        ])
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "attempts.test.js": {
+        "flaky": "passed",
+      },
+    }
+  `)
+})
+
 test('syntax errors remain failures after successful repeats', async () => {
   const { errorTree } = await runInlineTests({
     'repeats.test.js': `

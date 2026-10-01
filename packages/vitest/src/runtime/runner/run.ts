@@ -587,6 +587,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     state: 'run',
     startTime: unixNow(),
     retryCount: 0,
+    attempts: [],
   }
   updateTask('test-prepare', test, runner)
 
@@ -597,7 +598,6 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const $ = runner.trace!
 
   const repeats = test.repeats ?? 0
-  const attempts: TaskResultAttempt[] = []
   let hasFailedRepeat = false
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
@@ -609,7 +609,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       const attemptErrorsStart = test.result.errors?.length ?? 0
       const recordAttempt = (state: TaskResultAttempt['state']) => {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
-        attempts.push({
+        test.result!.attempts!.push({
           state,
           errors: errors?.length ? errors : undefined,
           duration: now() - attemptStart,
@@ -716,7 +716,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           note: test.result?.note,
           pending: true,
           duration: now() - start,
-          attempts,
+          attempts: test.result.attempts,
         }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
@@ -774,7 +774,6 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   if (hasFailedRepeat) {
     test.result.state = 'fail'
   }
-  test.result.attempts = attempts
 
   cleanupRunningTest()
   setCurrentTest(undefined)
