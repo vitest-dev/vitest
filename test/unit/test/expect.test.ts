@@ -224,6 +224,7 @@ describe('recursive custom equality tester', () => {
     }
   }
 
+  // different `personId`, so they are equal only through `arePersonsEqual`
   const person1 = new Person('Luke Skywalker', new Address('Tatooine'))
   const person2 = new Person('Luke Skywalker', new Address('Tatooine'))
 
