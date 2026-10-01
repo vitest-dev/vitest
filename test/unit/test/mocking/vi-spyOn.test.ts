@@ -2,6 +2,56 @@ import type { MockContext } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
 
 describe('vi.spyOn() edge cases', () => {
+  test('can spy on Set.prototype.add', () => {
+    const spy = vi.spyOn(Set.prototype, 'add')
+
+    try {
+      const set = new Set([1])
+      expect(spy).toHaveBeenCalledExactlyOnceWith(1)
+      expect(set.has(1)).toBe(true)
+
+      spy.mockClear()
+      set.add(2)
+      expect(spy).toHaveBeenCalledExactlyOnceWith(2)
+
+      vi.clearAllMocks()
+      expect(spy).not.toHaveBeenCalled()
+      set.add(3)
+      expect(spy).toHaveBeenCalledExactlyOnceWith(3)
+
+      vi.resetAllMocks()
+      expect(spy).not.toHaveBeenCalled()
+      set.add(4)
+      expect(spy).toHaveBeenCalledExactlyOnceWith(4)
+      expect(set.has(4)).toBe(true)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  test('can call mocked prototype methods while spying on Set.prototype.add', () => {
+    const { Example } = vi.mockObject({
+      Example: class {
+        method() {}
+      },
+    })
+    const instance = new Example()
+    const spy = vi.spyOn(Set.prototype, 'add')
+
+    try {
+      instance.method()
+      expect(spy).not.toHaveBeenCalled()
+      expect(instance.method).toHaveBeenCalledOnce()
+      expect(Example.prototype.method).toHaveBeenCalledOnce()
+
+      vi.clearAllMocks()
+      expect(instance.method).not.toHaveBeenCalled()
+      expect(Example.prototype.method).not.toHaveBeenCalled()
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
   test('vi.spyOn() has correct length', () => {
     const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
     expect(fn0.length).toBe(0)
@@ -19,7 +69,39 @@ describe('vi.spyOn() edge cases', () => {
     expect(fn3.length).toBe(3)
   })
 
-  test('can spy on a proxy with undefined descriptor\'s value', () => {
+  test('spying on a non-configurable ESM namespace export points to the module mocking docs, not browser mode', () => {
+    // Fake an ES module namespace: `Symbol.toStringTag` is 'Module' and the
+    // export is non-configurable, so `Object.defineProperty` throws
+    // "Cannot redefine property" — the same guard the real ESM path hits.
+    const namespace: Record<string, unknown> = {}
+    Object.defineProperty(namespace, Symbol.toStringTag, { value: 'Module' })
+    Object.defineProperty(namespace, 'answer', {
+      value: () => 42,
+      enumerable: true,
+      configurable: false,
+      writable: false,
+    })
+    Object.preventExtensions(namespace)
+
+    const error = (() => {
+      try {
+        vi.spyOn(namespace as any, 'answer')
+        expect.unreachable()
+      } catch (err) {
+        return err as Error
+      }
+    })()
+
+    expect(error).toBeInstanceOf(TypeError)
+    expect(error.message).toContain('Cannot spy on export "answer"')
+    // This error fires in Node too, so it must not send users to the
+    // browser-mode-only docs (issue #9467). It should point at the
+    // environment-agnostic module mocking guide instead.
+    expect(error.message).toContain('https://vitest.dev/guide/mocking/modules#mocking-a-module')
+    expect(error.message).not.toContain('/guide/browser')
+  })
+
+  test("can spy on a proxy with undefined descriptor's value", () => {
     const obj = new Proxy<{ fn: () => number }>({} as any, {
       get(_, prop) {
         if (prop === 'fn') {
@@ -227,12 +309,14 @@ describe('vi.spyOn() state', () => {
   test('vi.spyOn() spies and tracks overridden sync class calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'Class')
-    mock.mockImplementation(class {
-      public value: number
-      constructor() {
-        this.value = 42
-      }
-    })
+    mock.mockImplementation(
+      class {
+        public value: number
+        constructor() {
+          this.value = 42
+        }
+      },
+    )
     const state = mock.mock
 
     assertStateEmpty(state)
@@ -260,6 +344,80 @@ describe('vi.spyOn() state', () => {
 
     vi.clearAllMocks()
     assertStateEmpty(state)
+  })
+
+  // reproduction of #10553
+  test('vi.spyOn() keeps prototype methods of a class implementation', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+
+    const spy = vi.spyOn(myObj, 'TestClass').mockImplementation(
+      class MockClass extends OriginalClass {
+        method() {
+          return 'mocked'
+        }
+      },
+    )
+
+    const instance = new myObj.TestClass()
+
+    expect(instance.method()).toBe('mocked')
+    expect(instance).toBeInstanceOf(myObj.TestClass)
+    expect(instance).toBeInstanceOf(OriginalClass)
+    expect(spy.mock.calls).toEqual([[]])
+    expect(spy.mock.instances).toEqual([instance])
+
+    spy.mockRestore()
+    expect(myObj.TestClass).toBe(OriginalClass)
+    expect(new myObj.TestClass().method()).toBe('original')
+  })
+
+  test('vi.spyOn() chains the class prototype before the first construction', () => {
+    class OriginalClass {
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+    const spy = vi.spyOn(myObj, 'TestClass')
+
+    expect(Object.getPrototypeOf(myObj.TestClass.prototype)).toBe(OriginalClass.prototype)
+    expect(Object.create(myObj.TestClass.prototype)).toBeInstanceOf(OriginalClass)
+    expect(Object.create(myObj.TestClass.prototype)).toBeInstanceOf(myObj.TestClass)
+
+    spy.mockRestore()
+  })
+
+  test('vi.spyOn() keeps prototype methods when constructing the original class', () => {
+    let methodInConstructor!: unknown
+    class OriginalClass {
+      constructor() {
+        methodInConstructor = this.method
+      }
+
+      method() {
+        return 'original'
+      }
+    }
+
+    const myObj = { TestClass: OriginalClass }
+    const spy = vi.spyOn(myObj, 'TestClass')
+
+    const instance = new myObj.TestClass()
+
+    expect(methodInConstructor).toBeTypeOf('function')
+    expect(instance.method()).toBe('original')
+    expect(instance).toBeInstanceOf(myObj.TestClass)
+    expect(instance).toBeInstanceOf(OriginalClass)
+    expect(spy.mock.calls).toEqual([[]])
+
+    spy.mockRestore()
   })
 
   test('vi.spyOn() spies and tracks overridden async calls', async () => {
@@ -301,7 +459,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() doesn\'t loose context', () => {
+  test("vi.spyOn() doesn't loose context", () => {
     const instances: any[] = []
     const Names = function Names(this: any) {
       instances.push(this)
@@ -542,20 +700,32 @@ describe('vi.spyOn() settings', () => {
 
 describe('vi.spyOn() restoration', () => {
   test('vi.spyOn() cannot spy on undefined or null', () => {
-    expect(() => vi.spyOn(undefined as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
-    expect(() => vi.spyOn(null as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
+    expect(() => vi.spyOn(undefined as any, 'test')).toThrow(
+      'The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.',
+    )
+    expect(() => vi.spyOn(null as any, 'test')).toThrow(
+      'The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.',
+    )
   })
 
   test('vi.spyOn() cannot spy on a primitive value', () => {
-    expect(() => vi.spyOn('string' as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn('string' as any, 'toString')).toThrow(
+      'Vitest cannot spy on a primitive value.',
+    )
     expect(() => vi.spyOn(0 as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(true as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(true as any, 'toString')).toThrow(
+      'Vitest cannot spy on a primitive value.',
+    )
     expect(() => vi.spyOn(1n as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrow(
+      'Vitest cannot spy on a primitive value.',
+    )
   })
 
   test('vi.spyOn() cannot spy on non-existing property', () => {
-    expect(() => vi.spyOn({} as any, 'never')).toThrow('The property "never" is not defined on the object.')
+    expect(() => vi.spyOn({} as any, 'never')).toThrow(
+      'The property "never" is not defined on the object.',
+    )
   })
 
   test('vi.spyOn() restores the original method when .mockRestore() is called', () => {

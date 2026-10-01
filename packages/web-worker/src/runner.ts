@@ -1,14 +1,12 @@
 import type { __TYPES } from 'vitest/runtime'
 import { __INTERNAL } from 'vitest/runtime'
 
-const {
-  VitestModuleEvaluator,
-  startVitestModuleRunner,
-  VITEST_VM_CONTEXT_SYMBOL,
-  getWorkerState,
-} = __INTERNAL
+const { VitestModuleEvaluator, startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL, getWorkerState } =
+  __INTERNAL
 
-export function startWebWorkerModuleRunner(context: Record<string, unknown>): __TYPES['VitestModuleRunner'] {
+export function startWebWorkerModuleRunner(
+  context: Record<string, unknown>,
+): __TYPES['VitestModuleRunner'] {
   const state = getWorkerState()
   const mocker = (globalThis as any).__vitest_mocker__
 
@@ -21,6 +19,7 @@ export function startWebWorkerModuleRunner(context: Record<string, unknown>): __
 
   const evaluator = new VitestModuleEvaluator(vm, {
     interopDefault: state.config.deps.interopDefault,
+    injectCjsGlobals: state.config.injectCjsGlobals,
     moduleExecutionInfo: state.moduleExecutionInfo,
     getCurrentTestFilepath: () => state.filepath,
     compiledFunctionArgumentsNames,

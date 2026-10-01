@@ -1,4 +1,12 @@
 import type { SerializedCoverageConfig } from '../runtime/config'
+import { resolve } from 'pathe'
+
+export function getCoverageFilesDirectory(
+  reportsDirectory: string,
+  shard: { index: number; count: number } | undefined,
+): string {
+  return resolve(reportsDirectory, `.tmp${shard ? `-${shard.index}-${shard.count}` : ''}`)
+}
 
 export interface RuntimeCoverageModuleLoader {
   import: (id: string) => Promise<{ default: RuntimeCoverageProviderModule }>
@@ -26,7 +34,10 @@ export interface RuntimeCoverageProviderModule {
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
    */
-  takeCoverage?: (runtimeOptions?: { moduleExecutionInfo?: Map<string, { startOffset: number }> }) => unknown | Promise<unknown>
+  takeCoverage?: (runtimeOptions?: {
+    moduleExecutionInfo?: Map<string, { startOffset: number }>
+    coverageFilesDirectory: string
+  }) => unknown | Promise<unknown>
 
   /**
    * Executed after all tests have been run in the worker thread.
@@ -52,19 +63,16 @@ export async function resolveCoverageProviderModule(
   if (provider === 'v8' || provider === 'istanbul') {
     let builtInModule = CoverageProviderMap[provider]
 
-    if (provider === 'v8' && loader.isBrowser) {
+    if (loader.isBrowser) {
       builtInModule += '/browser'
     }
 
-    const { default: coverageModule }
-      = loader.isBrowser
-        ? await loader.import(builtInModule)
-        : await import(/* @vite-ignore */ builtInModule)
+    const { default: coverageModule } = loader.isBrowser
+      ? await loader.import(builtInModule)
+      : await import(/* @vite-ignore */ builtInModule)
 
     if (!coverageModule) {
-      throw new Error(
-        `Failed to load ${CoverageProviderMap[provider]}. Default export is missing.`,
-      )
+      throw new Error(`Failed to load ${CoverageProviderMap[provider]}. Default export is missing.`)
     }
 
     return coverageModule
@@ -74,8 +82,7 @@ export async function resolveCoverageProviderModule(
 
   try {
     customProviderModule = await loader.import(options.customProviderModule!)
-  }
-  catch (error) {
+  } catch (error) {
     throw new Error(
       `Failed to load custom CoverageProviderModule from ${options.customProviderModule}`,
       { cause: error },

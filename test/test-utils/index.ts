@@ -1,5 +1,5 @@
 import type { Options } from 'tinyexec'
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { FSWatcher, UserConfig as ViteUserConfig } from 'vite'
 import type { ParsedStack, SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
@@ -19,13 +19,20 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { inspect, stripVTControlCharacters } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
-import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished, TestRunner } from 'vitest'
-import { startVitest } from 'vitest/node'
+import {
+  disableDefaultColors,
+  Logger,
+  PluginHarness,
+  resolveConfig,
+  startVitest,
+} from 'vitest/node'
 import { Cli } from './cli'
 
-// override default colors to disable them in tests
-Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
+// Vitest bundles its own `tinyrainbow` instance (see rollup `manualChunks`), which
+// is a different object than the one imported above. Disable colors on it too so
+// reporter output captured in tests is deterministic regardless of `CI`/`FORCE_COLOR`.
+disableDefaultColors()
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -33,7 +40,6 @@ export interface VitestRunnerCLIOptions {
   printExitCode?: boolean
   preserveAnsi?: boolean
   tty?: boolean
-  mode?: 'test' | 'benchmark'
 }
 
 export interface RunVitestConfig extends TestUserConfig {
@@ -43,6 +49,69 @@ export interface RunVitestConfig extends TestUserConfig {
 }
 
 const process_ = process
+
+// Polling interval of the file watcher in spawned watch-mode instances. The
+// watcher-ready probe derives its timing from it: each probe state must
+// outlive a full poll cycle, or the poller can keep sampling the state that
+// matches its baseline and never observe a difference.
+const WATCH_POLL_INTERVAL = 100
+
+export function createConsole({ tty, std }: { tty?: boolean; std?: 'inherit' } = {}) {
+  const stdout = new Writable({
+    write(chunk, __, callback) {
+      if (std === 'inherit') {
+        process.stdout.write(chunk.toString())
+      }
+      callback()
+    },
+  })
+
+  if (tty) {
+    ;(stdout as typeof process.stdout).isTTY = true
+  }
+
+  const stderr = new Writable({
+    write(chunk, __, callback) {
+      if (std === 'inherit') {
+        process.stderr.write(chunk.toString())
+      }
+      callback()
+    },
+  })
+
+  // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
+  const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
+  stdin.isTTY = true
+  stdin.setRawMode = () => stdin
+
+  return {
+    stdin,
+    stdout,
+    stderr,
+  }
+}
+
+export async function resolveTestConfig(
+  config: RunVitestConfig,
+  runnerOptions: VitestRunnerCLIOptions = {},
+) {
+  const { stdout, stderr, stdin } = createConsole(runnerOptions)
+
+  const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
+  const { $cliOptions, $viteConfig, ...restConfig } = config
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const resolved = await resolveConfig(
+    { config: false, ...$cliOptions },
+    { ...$viteConfig, test: restConfig },
+    harness,
+  )
+  return {
+    config: resolved,
+    vitest: cli,
+    stdout: cli.stdout,
+    stderr: cli.stderr,
+  }
+}
 
 /**
  * The config is assumed to be the config on the file system, not CLI options
@@ -67,7 +136,7 @@ export async function runVitest(
     globalThis.process = new Proxy(process_, {
       set(target, p, newValue, receiver) {
         if (p === 'exitCode') {
-          // eslint-disable-next-line no-console
+          // oxlint-disable-next-line no-console
           console.trace('exitCode was set to', newValue)
         }
         return Reflect.set(target, p, newValue, receiver)
@@ -77,34 +146,10 @@ export async function runVitest(
 
   // Prevent possible process.exit() calls, e.g. from --browser
   const exit = process.exit
-  process.exit = (() => { }) as never
+  process.exit = (() => {}) as never
 
-  const stdout = new Writable({
-    write(chunk, __, callback) {
-      if (runnerOptions.std === 'inherit') {
-        process.stdout.write(chunk.toString())
-      }
-      callback()
-    },
-  })
+  const { stdout, stderr, stdin } = createConsole(runnerOptions)
 
-  if (runnerOptions?.tty) {
-    (stdout as typeof process.stdout).isTTY = true
-  }
-
-  const stderr = new Writable({
-    write(chunk, __, callback) {
-      if (runnerOptions.std === 'inherit') {
-        process.stderr.write(chunk.toString())
-      }
-      callback()
-    },
-  })
-
-  // "node:tty".ReadStream doesn't work on Github Windows CI, let's simulate it
-  const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
-  stdin.isTTY = true
-  stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
   // @ts-expect-error not typed global
   const currentConfig: SerializedConfig = __vitest_worker__.ctx.config
@@ -128,8 +173,6 @@ export async function runVitest(
     project,
     cliExclude,
     clearScreen,
-    compare,
-    outputJson,
     mergeReports,
     clearCache,
     // #endregion
@@ -139,96 +182,135 @@ export async function runVitest(
   } = config
 
   if ((viteConfig as any).test) {
-    throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
+    throw new Error(
+      `Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`,
+    )
   }
+
+  // Don't let unrelated package.json / config edits made by other tests running
+  // in parallel force-rerun this test's watcher. Applied as a default here so a
+  // fixture config or an explicit `forceRerunTriggers` still takes precedence.
+  rest.forceRerunTriggers ??= []
 
   ;(viteConfig as any).test = rest
 
   try {
-    ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
-      root,
-      config: configFile,
-      standalone,
-      dom,
-      related,
-      mode,
-      changed,
-      shard,
-      project,
-      cliExclude,
-      clearScreen,
-      compare,
-      outputJson,
-      mergeReports,
-      clearCache,
-      cache: 'cache' in config ? config.cache : false,
+    ctx = await startVitest(
+      cliFilters,
+      removeUndefinedValues({
+        root,
+        config: configFile,
+        standalone,
+        dom,
+        related,
+        mode,
+        changed,
+        shard,
+        project,
+        cliExclude,
+        clearScreen,
+        mergeReports,
+        clearCache,
+        cache: 'cache' in config ? config.cache : false,
 
-      // Test cases are already run with multiple forks/threads
-      maxWorkers: maxWorkers ?? 1,
+        // Test cases are already run with multiple forks/threads
+        maxWorkers: maxWorkers ?? 1,
 
-      watch: watch ?? false,
-      // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
-      ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
-      ...cliOptions,
-      env: {
-        NO_COLOR: 'true',
-        AI_AGENT: '',
-        ...rest.env,
-        ...cliOptions?.env,
-      },
-      // override cache config with the one that was used to run `vitest` from the CLI
-      experimental: {
-        fsModuleCache: rest.experimental?.fsModuleCache ?? currentConfig.experimental.fsModuleCache,
-        ...cliOptions?.experimental,
-      },
-    }, {
-      ...viteConfig,
-      server: {
-        // we never need a websocket connection for the root config because it doesn't connect to the browser
-        // browser mode uses a separate config that doesn't inherit CLI overrides
-        ws: false,
-        watch: {
-          // During tests we edit the files too fast and sometimes chokidar
-          // misses change events, so enforce polling for consistency
-          // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
-          usePolling: true,
-          interval: 100,
-          ...viteConfig.server?.watch,
+        watch: watch ?? false,
+        // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
+        ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
+        ...cliOptions,
+        env: {
+          NO_COLOR: 'true',
+          FORCE_COLOR: undefined,
+          AI_AGENT: '',
+          ...rest.env,
+          ...cliOptions?.env,
         },
-        ...viteConfig?.server,
+        // override cache config with the one that was used to run `vitest` from the CLI
+        fsModuleCache: rest.fsModuleCache ?? currentConfig.fsModuleCache,
+        experimental: {
+          // keep performance hints out of captured test output unless a test opts in
+          diagnostics: rest.experimental?.diagnostics ?? false,
+          ...cliOptions?.experimental,
+        },
+      }),
+      {
+        ...viteConfig,
+        plugins: [
+          ...(viteConfig.plugins ?? []),
+          // Spawning the worker is the dominant cost of these meta-tests (each `runVitest`
+          // boots a fresh Vitest). Default the spawned run to `threads`, which is cheaper
+          // to start than `forks`, especially on Windows. A `config` hook only fills the
+          // gap when nothing else set a pool, so an explicit `pool` (from `config` or the
+          // fixture's own config file) always wins. Browser runs are left alone since they
+          // don't execute in a node pool.
+          {
+            name: 'vitest:test-utils:default-pool',
+            config(config) {
+              if (config.test?.pool == null && !config.test?.browser?.enabled) {
+                return { test: { pool: 'threads' } }
+              }
+            },
+          },
+        ],
+        server: {
+          watch: {
+            // During tests we edit the files too fast and sometimes chokidar
+            // misses change events, so enforce polling for consistency
+            // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
+            usePolling: true,
+            interval: WATCH_POLL_INTERVAL,
+            ...viteConfig.server?.watch,
+          },
+          ...viteConfig?.server,
+        },
       },
-    }, {
-      stdin,
-      stdout,
-      stderr,
-    })
-  }
-  catch (e: any) {
+      {
+        stdin,
+        stdout,
+        stderr,
+      },
+    )
+  } catch (e: any) {
     if (runnerOptions.fails !== true) {
       console.error(e)
     }
     thrown = true
     cli.stderr += inspect(e)
-  }
-  finally {
+  } finally {
     if (runnerOptions.printExitCode) {
       globalThis.process = process_
     }
     exitCode = process.exitCode
     process.exitCode = 0
 
+    // tests emulating CLI shortcuts (`q`, double CTRL+C) trigger `vitest.exit()`,
+    // which arms an unref'd force-exit watchdog; it must be disarmed before the
+    // real `process.exit` is restored, or it would kill this worker
+    // `teardownTimeout` later, in the middle of a subsequent test file
     if (TestRunner.getCurrentTest()) {
       onTestFinished(async () => {
+        clearTimeout(ctx?._exitTimeout)
         await ctx?.close()
         process.exit = exit
       })
-    }
-    else {
+    } else {
       afterEach(async () => {
+        clearTimeout(ctx?._exitTimeout)
         await ctx?.close()
         process.exit = exit
       })
     }
+  }
+
+  // In watch mode, `startVitest` can resolve before the file watcher finished
+  // its initial scan (especially in standalone mode, which doesn't run any
+  // tests on startup). A test file created right after would be folded into the
+  // watcher's baseline and ignored, so newly added files wouldn't trigger a
+  // rerun. Wait for the watcher to be ready before handing control back.
+  if (watch && ctx) {
+    await waitForWatcherReady(ctx)
   }
 
   return {
@@ -247,8 +329,9 @@ export async function runVitest(
         ? buildErrorProjectTree(modules, options)
         : buildErrorTree(modules, options)
       const errors = ctx?.state.getUnhandledErrors()
-      if (errors && errors.length > 0) {
-        tree.__unhandled_errors__ = errors.map((e: any) => e.message)
+      const root = ctx?.config.root
+      if (errors && errors.length > 0 && root) {
+        tree.__unhandled_errors__ = errors.map((e: any) => replaceRoot(e.message, root))
       }
       return tree
     },
@@ -259,9 +342,117 @@ export async function runVitest(
       return buildTestTree(ctx?.state.getTestModules() || [], onResult)
     },
     waitForClose: async () => {
-      await new Promise<void>(resolve => ctx!.onClose(resolve))
+      await new Promise<void>((resolve) => ctx!.onClose(resolve))
       return ctx?.closingPromise
     },
+  }
+}
+
+// In watch mode `startVitest` can resolve before the file watcher has finished
+// establishing itself. chokidar's `ready`/`_readyEmitted` fires after the
+// initial scan, but with polling a file only gets a per-file stat poller some
+// time after it is discovered, and an edit made before the poller exists is
+// folded into its baseline stat and never emits an event. No amount of chokidar
+// bookkeeping (`_readyEmitted`, `getWatched()`) proves the pollers are live, so
+// verify end-to-end: keep cycling a probe file in the root until the watcher
+// reports it. The probe is recreated rather than rewritten because a creation
+// folded into the initial scan of the file AND its directory leaves nothing to
+// rescan; alternating present/absent guarantees the current state differs from
+// whichever state the poller's baseline captured, and any probe event (`add`,
+// `change` or `unlink`) proves delivery. Each state is held for multiple poll
+// intervals: on a loaded runner, a cycle as fast as the poll interval aliases
+// with it — every rescan can land when the probe is back in the state matching
+// the poller's baseline, and no event ever fires.
+//
+// The scan can also surface writes made by the PREVIOUS test (an `afterEach`
+// restoring a fixture right before this instance started) as fresh change
+// events, triggering a rerun the test never asked for. While waiting, neuter
+// every rerun attempt by clearing the watcher state (the rerun debounce
+// returns silently when `changedTests` is empty) and only hand control back
+// after the event backlog has been quiet for a couple of poll intervals.
+//
+// Only instances with an explicit small root (a fixture or an inline-test dir)
+// get the probe: tests that assert on watch reruns always use one. Instances
+// rooted at the whole test package (config-introspection tests passing
+// `watch: true` without a root) never wait for file events, and polling their
+// huge tree can take longer than any reasonable deadline, so for them only the
+// cheap bookkeeping check runs, as before.
+async function waitForWatcherReady(ctx: Vitest): Promise<void> {
+  const watcher: FSWatcher = ctx.vite.watcher
+  const root = ctx.config.root
+  const slash = (p: string) => p.replace(/\\/g, '/')
+  const parent = slash(dirname(root))
+  const bookkeepingDeadline = Date.now() + 2000
+
+  while (Date.now() < bookkeepingDeadline) {
+    const isReady = (watcher as { _readyEmitted?: boolean })._readyEmitted
+    const watchesParent = Object.keys(watcher.getWatched()).some((dir) => slash(dir) === parent)
+    if (isReady && watchesParent) {
+      break
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+
+  if (slash(root) === slash(process.cwd())) {
+    return
+  }
+
+  const deadline = Date.now() + 10_000
+  const probe = resolve(root, '.vitest-watcher-ready-probe')
+  const suppressRerun = () => {
+    ctx.watcher.changedTests.clear()
+    ctx.watcher.invalidates.clear()
+  }
+  let probeSeen = false
+  let lastEventAt = Date.now()
+  const onWatcherEvent = (_event: string, file: string) => {
+    suppressRerun()
+    if (slash(file) === probe) {
+      probeSeen = true
+    } else {
+      lastEventAt = Date.now()
+    }
+  }
+  watcher.on('all', onWatcherEvent)
+  try {
+    const holdProbeState = async () => {
+      const stateEnd = Date.now() + WATCH_POLL_INTERVAL * 2.5
+      while (Date.now() < stateEnd) {
+        if (probeSeen) {
+          return
+        }
+        await new Promise((resolve) => setTimeout(resolve, 25))
+      }
+    }
+    while (true) {
+      if (probeSeen) {
+        break
+      }
+      if (Date.now() > deadline) {
+        throw new Error(
+          `The watcher of ${root} did not report the probe file within 10s. Watched files:\n${JSON.stringify(
+            watcher.getWatched(),
+            null,
+            2,
+          )}`,
+        )
+      }
+      fs.writeFileSync(probe, `${Date.now()}`, 'utf-8')
+      await holdProbeState()
+      if (probeSeen) {
+        break
+      }
+      fs.rmSync(probe, { force: true })
+      await holdProbeState()
+    }
+
+    while (Date.now() - lastEventAt < 200 && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+  } finally {
+    watcher.off('all', onWatcherEvent)
+    fs.rmSync(probe, { force: true })
+    suppressRerun()
   }
 }
 
@@ -283,7 +474,7 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
   }
 
   const subprocess = x(command, args, {
-    ...options as Options,
+    ...(options as Options),
     nodeOptions: {
       ...(options as Options)?.nodeOptions,
       env: { ...process.env, AI_AGENT: '', ...(options as Options)?.nodeOptions?.env },
@@ -297,7 +488,7 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
   })
 
   let setDone: (value?: unknown) => void
-  const isDone = new Promise(resolve => (setDone = resolve))
+  const isDone = new Promise((resolve) => (setDone = resolve))
   subprocess.on('exit', () => setDone())
 
   function output() {
@@ -319,7 +510,11 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
     await isDone
   })
 
-  if ((options as CliOptions)?.earlyReturn || args.includes('--inspect') || args.includes('--inspect-brk')) {
+  if (
+    (options as CliOptions)?.earlyReturn ||
+    args.includes('--inspect') ||
+    args.includes('--inspect-brk')
+  ) {
     return output()
   }
 
@@ -338,8 +533,7 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
     // make sure watcher is ready
     await cli.waitForStdout('[debug] watcher is ready')
     cli.stdout = cli.stdout.replace('[debug] watcher is ready\n', '')
-  }
-  else {
+  } else {
     await isDone
   }
 
@@ -357,6 +551,7 @@ export function getInternalState(): WorkerGlobalState {
 }
 
 const originalFiles = new Map<string, string>()
+const originalFileStats = new Map<string, fs.Stats>()
 
 export function createFile(file: string, content: string) {
   fs.mkdirSync(dirname(file), { recursive: true })
@@ -372,15 +567,29 @@ export function editFile(file: string, callback: (content: string) => string) {
   const content = fs.readFileSync(file, 'utf-8')
   if (!originalFiles.has(file)) {
     originalFiles.set(file, content)
+    originalFileStats.set(file, fs.statSync(file))
   }
   fs.writeFileSync(file, callback(content), 'utf-8')
   onTestFinished(() => {
     const original = originalFiles.get(file)
     if (original !== undefined) {
-      fs.writeFileSync(file, original, 'utf-8')
+      restoreFile(file, original, originalFileStats.get(file))
       originalFiles.delete(file)
+      originalFileStats.delete(file)
     }
   })
+}
+
+// Restore the original mtime along with the content: a restore with a fresh
+// mtime is indistinguishable from a real edit to any watcher whose stat
+// baseline predates it, and the phantom change event then reruns tests in the
+// NEXT test's instance. With content, size and mtime all matching the
+// pre-test state, no stat comparison can report the file as changed.
+export function restoreFile(file: string, content: string, stat?: fs.Stats) {
+  fs.writeFileSync(file, content, 'utf-8')
+  if (stat) {
+    fs.utimesSync(file, stat.atime, stat.mtime)
+  }
 }
 
 export function resolvePath(baseUrl: string, path: string) {
@@ -403,7 +612,9 @@ export function stripIndent(str: string): string {
   if (!match) {
     return normalized
   }
-  const indent = match.filter(m => !!m).reduce((min, line) => Math.min(min, line.length), Infinity)
+  const indent = match
+    .filter((m) => !!m)
+    .reduce((min, line) => Math.min(min, line.length), Infinity)
   if (indent === 0) {
     return normalized
   }
@@ -418,16 +629,24 @@ function getGeneratedFileContent(content: TestFsStructure[string]) {
     const code = `await (${stripIndent(String(content))})()`
     return code
   }
-  if (Array.isArray(content) && typeof content[1] === 'object' && ('exports' in content[1] || 'imports' in content[1])) {
+  if (
+    Array.isArray(content) &&
+    typeof content[1] === 'object' &&
+    ('exports' in content[1] || 'imports' in content[1])
+  ) {
     const imports = Object.entries(content[1].imports || [])
     const code = `
 ${imports.map(([path, is]) => `import { ${is.join(', ')} } from '${path}'`)}
 const results = await (${stripIndent(String(content[0]))})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
-${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
+${(content[1].exports || []).map((e) => `export const ${e} = results["${e}"]`)}
     `
     return code
   }
-  if ('test' in content && content.test?.browser?.enabled && content.test?.browser?.provider?.name) {
+  if (
+    'test' in content &&
+    content.test?.browser?.enabled &&
+    content.test?.browser?.provider?.name
+  ) {
     const name = content.test.browser.provider.name
     return `
 import { ${name} } from '@vitest/browser-${name}'
@@ -439,9 +658,23 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
-export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true, task?: TestContext['task']) {
+export function useTmpFS<T extends TestFsStructure>(
+  structure: T,
+  ensureConfig = true,
+  task?: TestContext['task'],
+) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  return useFS(root, structure, ensureConfig, task)
+}
+
+export function useFS<T extends TestFsStructure>(
+  root: string,
+  structure: T,
+  ensureConfig = true,
+  task?: TestContext['task'],
+) {
   const files = new Set<string>()
-  const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
+  const hasConfig = Object.keys(structure).some((file) => file.includes('.config.'))
   if (ensureConfig && !hasConfig) {
     ;(structure as any)['./vitest.config.js'] = {}
   }
@@ -452,13 +685,21 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     fs.mkdirSync(dirname(filepath), { recursive: true })
     fs.writeFileSync(filepath, String(content), 'utf-8')
   }
-  (task?.context.onTestFinished ?? onTestFinished)(() => {
+  ;(task?.context.onTestFinished ?? onTestFinished)(() => {
+    if (process.env.VITEST_FS_CLEANUP !== 'false') {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+  task?.context.signal.addEventListener('abort', () => {
     if (process.env.VITEST_FS_CLEANUP !== 'false') {
       fs.rmSync(root, { recursive: true, force: true })
     }
   })
   return {
     root,
+    readdir: (file: string): string[] => {
+      return fs.readdirSync(resolve(root, file))
+    },
     readFile: (file: string): string => {
       const filepath = resolve(root, file)
       if (relative(root, filepath).startsWith('..')) {
@@ -511,15 +752,18 @@ export async function runInlineTests(
   options?: VitestRunnerCLIOptions,
   task?: TestContext['task'],
 ) {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  const fs = useFS(root, structure, undefined, task)
-  const vitest = await runVitest({
-    root,
-    ...config,
-  }, config?.$cliFilters ?? [], options)
+  const fs = useTmpFS(structure, undefined, task ?? TestRunner.getCurrentTest())
+  const vitest = await runVitest(
+    {
+      root: fs.root,
+      ...config,
+    },
+    config?.$cliFilters ?? [],
+    options,
+  )
   return {
     fs,
-    root,
+    root: fs.root,
     ...vitest,
     get results() {
       return vitest.ctx?.state.getTestModules() || []
@@ -581,6 +825,9 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
 
   function mapError(e: { message: string; diff?: string; stacks?: ParsedStack[] }) {
     let message = stripVTControlCharacters(e.message)
+    if (root) {
+      message = replaceRoot(message, root)
+    }
     if (options?.diff && e.diff) {
       message = [message, stripVTControlCharacters(e.diff)].join('\n')
     }
@@ -599,7 +846,7 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
     (testCase) => {
       const result = testCase.result()
       if (result.state === 'failed') {
-        return result.errors.map(e => mapError(e))
+        return result.errors.map((e) => mapError(e))
       }
       return result.state
     },
@@ -608,7 +855,7 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
       if (errors.length > 0) {
         return {
           ...suiteChildren,
-          __suite_errors__: errors.map(e => mapError(e)),
+          __suite_errors__: errors.map((e) => mapError(e)),
         }
       }
       return suiteChildren
@@ -618,13 +865,13 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
       if (errors.length > 0) {
         return {
           ...moduleChildren,
-          __module_errors__: errors.map(e => mapError(e)),
+          __module_errors__: errors.map((e) => mapError(e)),
         }
       }
       return moduleChildren
     },
     options?.fileLabel
-      ? module => `${module.relativeModuleId} (${module.meta().__vitest_label__})`
+      ? (module) => `${module.relativeModuleId} (${module.meta().__vitest_label__})`
       : undefined,
   )
 }
@@ -646,13 +893,11 @@ export function buildTestTree(
         // Recursively walk suite children
         const suiteChildren = walkCollection(child.children)
         node[child.name] = onTestSuite ? onTestSuite(child, suiteChildren) : suiteChildren
-      }
-      else if (child.type === 'test') {
+      } else if (child.type === 'test') {
         const result = child.result()
         if (onTestCase) {
           node[child.name] = onTestCase(child)
-        }
-        else {
+        } else {
           node[child.name] = result.state
         }
       }
@@ -673,7 +918,10 @@ export function buildTestTree(
   return tree
 }
 
-export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
+export function buildTestProjectTree(
+  testModules: TestModule[],
+  onTestCase?: (result: TestCase) => unknown,
+) {
   const projectTree: Record<string, Record<string, any>> = {}
 
   for (const testModule of testModules) {
@@ -699,4 +947,13 @@ export function buildErrorProjectTree(testModules: TestModule[], options?: Build
   }
 
   return projectTree
+}
+
+function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
+  for (const key of Object.keys(obj)) {
+    if (obj[key] === undefined) {
+      delete obj[key]
+    }
+  }
+  return obj
 }

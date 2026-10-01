@@ -13,21 +13,21 @@ import { GithubActionsReporter } from './github-actions'
 import { HangingProcessReporter } from './hanging-process'
 import { JsonReporter } from './json'
 import { JUnitReporter } from './junit'
-import { AgentReporter } from './minimal'
+import { MinimalReporter } from './minimal'
 import { TapReporter } from './tap'
 import { TapFlatReporter } from './tap-flat'
 import { TreeReporter } from './tree'
 import { VerboseReporter } from './verbose'
 
 export {
-  AgentReporter,
+  MinimalReporter as AgentReporter,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
-  AgentReporter as MinimalReporter,
+  MinimalReporter,
   TapFlatReporter,
   TapReporter,
   TreeReporter,
@@ -35,30 +35,20 @@ export {
 }
 export type { BaseReporter, Reporter, TestRunEndReason }
 
-export type { BenchmarkBuiltinReporters } from './benchmark'
-export {
-  BenchmarkReporter,
-  BenchmarkReportsMap,
-  VerboseBenchmarkReporter,
-} from './benchmark'
-export type {
-  JsonAssertionResult,
-  JsonTestResult,
-  JsonTestResults,
-} from './json'
+export type { JsonAssertionResult, JsonTestResult, JsonTestResults } from './json'
 
 export const ReportersMap = {
-  'default': DefaultReporter as typeof DefaultReporter,
-  'agent': AgentReporter as typeof AgentReporter,
-  'minimal': AgentReporter as typeof AgentReporter,
-  'blob': BlobReporter as typeof BlobReporter,
-  'verbose': VerboseReporter as typeof VerboseReporter,
-  'dot': DotReporter as typeof DotReporter,
-  'json': JsonReporter as typeof JsonReporter,
-  'tap': TapReporter as typeof TapReporter,
+  default: DefaultReporter as typeof DefaultReporter,
+  agent: MinimalReporter as typeof MinimalReporter,
+  minimal: MinimalReporter as typeof MinimalReporter,
+  blob: BlobReporter as typeof BlobReporter,
+  verbose: VerboseReporter as typeof VerboseReporter,
+  dot: DotReporter as typeof DotReporter,
+  json: JsonReporter as typeof JsonReporter,
+  tap: TapReporter as typeof TapReporter,
   'tap-flat': TapFlatReporter as typeof TapFlatReporter,
-  'junit': JUnitReporter as typeof JUnitReporter,
-  'tree': TreeReporter as typeof TreeReporter,
+  junit: JUnitReporter as typeof JUnitReporter,
+  tree: TreeReporter as typeof TreeReporter,
   'hanging-process': HangingProcessReporter as typeof HangingProcessReporter,
   'github-actions': GithubActionsReporter as typeof GithubActionsReporter,
 }
@@ -66,19 +56,19 @@ export const ReportersMap = {
 export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
-  'default': DefaultReporterOptions
-  'minimal': DefaultReporterOptions
-  'agent': DefaultReporterOptions
-  'verbose': DefaultReporterOptions
-  'dot': BaseOptions
-  'tree': BaseOptions
-  'json': JsonOptions
-  'blob': BlobOptions
-  'tap': never
+  default: DefaultReporterOptions
+  minimal: DefaultReporterOptions
+  agent: DefaultReporterOptions
+  verbose: DefaultReporterOptions
+  dot: BaseOptions
+  tree: BaseOptions
+  json: JsonOptions
+  blob: BlobOptions
+  tap: never
   'tap-flat': never
-  'junit': JUnitOptions
+  junit: JUnitOptions
   'hanging-process': never
-  'html': HTMLOptions
+  html: HTMLOptions
   'github-actions': GithubActionsReporterOptions
 }
 

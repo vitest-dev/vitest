@@ -4,14 +4,13 @@ import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
-import * as find from 'empathic/find'
 import prompt from 'prompts'
 import { x } from 'tinyexec'
 import c from 'tinyrainbow'
-import { configFiles } from '../../constants'
+import { findConfigFile } from '../../node/config/resolveConfig'
 import { generateExampleFiles } from './examples'
 
-// eslint-disable-next-line no-console
+// oxlint-disable-next-line no-console
 const log = console.log
 
 function getProviderOptions(): prompt.Choice[] {
@@ -227,7 +226,7 @@ function getProviderDocsLink(provider: string) {
 }
 
 function sort(choices: prompt.Choice[], value: string | undefined) {
-  const index = choices.findIndex(i => i.value === value)
+  const index = choices.findIndex((i) => i.value === value)
   if (index === -1) {
     return choices
   }
@@ -276,13 +275,15 @@ async function generateFrameworkConfigFile(options: {
     `      provider: ${options.provider}(),`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
     `      instances: [`,
-    ...options.browsers.map(browser => `        { browser: '${browser}' },`),
+    ...options.browsers.map((browser) => `        { browser: '${browser}' },`),
     `      ],`,
     `    },`,
     `  },`,
     `})`,
     '',
-  ].filter(t => typeof t === 'string').join('\n')
+  ]
+    .filter((t) => typeof t === 'string')
+    .join('\n')
   await writeFile(options.configPath, configContent)
 }
 
@@ -294,8 +295,7 @@ async function updatePkgJsonScripts(pkgJsonPath: string, vitestScript: string) {
       },
     }
     await writeFile(pkgJsonPath, `${JSON.stringify(pkg, null, 2)}\n`, 'utf-8')
-  }
-  else {
+  } else {
     const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
     pkg.scripts = pkg.scripts || {}
     pkg.scripts['test:browser'] = vitestScript
@@ -360,7 +360,8 @@ export async function create(): Promise<void> {
   const { provider } = await prompt({
     type: 'select',
     name: 'provider',
-    message: 'Choose a browser provider. Vitest will use its API to control the testing environment',
+    message:
+      'Choose a browser provider. Vitest will use its API to control the testing environment',
     choices: sort(getProviderOptions(), defaults?.provider),
   })
   if (!provider) {
@@ -371,7 +372,7 @@ export async function create(): Promise<void> {
     type: 'multiselect',
     name: 'browsers',
     message: 'Choose a browser',
-    choices: getBrowserNames(provider).map(browser => ({
+    choices: getBrowserNames(provider).map((browser) => ({
       title: browser,
       value: browser,
     })),
@@ -402,9 +403,7 @@ export async function create(): Promise<void> {
     return fail()
   }
 
-  const dependenciesToInstall = [
-    `@vitest/browser-${provider}`,
-  ]
+  const dependenciesToInstall = [`@vitest/browser-${provider}`]
 
   const frameworkPackage = getFrameworkTestPackage(framework)
   if (frameworkPackage) {
@@ -421,12 +420,10 @@ export async function create(): Promise<void> {
   log()
   await installPackages(
     pkgManager,
-    dependenciesToInstall.filter(pkg => !dependencies[pkg]),
+    dependenciesToInstall.filter((pkg) => !dependencies[pkg]),
   )
 
-  const rootConfig = find.any(configFiles, {
-    cwd: process.cwd(),
-  })
+  const rootConfig = findConfigFile(process.cwd())
 
   let scriptCommand = 'vitest'
 
@@ -451,8 +448,7 @@ export async function create(): Promise<void> {
       'into your existing config located at ',
       c.bold(relative(process.cwd(), rootConfig)),
     )
-  }
-  else {
+  } else {
     const configPath = resolve(process.cwd(), `vitest.config.${lang}`)
     await generateFrameworkConfigFile({
       configPath,
@@ -461,7 +457,11 @@ export async function create(): Promise<void> {
       provider,
       browsers,
     })
-    log(c.green('✔'), 'Created a config file for browser tests:', c.bold(relative(process.cwd(), configPath)))
+    log(
+      c.green('✔'),
+      'Created a config file for browser tests:',
+      c.bold(relative(process.cwd(), configPath)),
+    )
   }
 
   log()
@@ -471,7 +471,10 @@ export async function create(): Promise<void> {
     log()
     const [command, ...args] = getPlaywrightRunArgs(pkgManager)
     const allArgs = [...args, 'playwright', 'install', '--with-deps']
-    log(c.cyan('◼'), `Installing Playwright dependencies with \`${c.bold(command)} ${c.bold(allArgs.join(' '))}\`...`)
+    log(
+      c.cyan('◼'),
+      `Installing Playwright dependencies with \`${c.bold(command)} ${c.bold(allArgs.join(' '))}\`...`,
+    )
     log()
     await x(command, allArgs, {
       nodeOptions: {
@@ -482,7 +485,11 @@ export async function create(): Promise<void> {
 
   log()
   const exampleTestFile = await generateExampleFiles(framework, lang)
-  log(c.green('✔'), 'Created example test file in', c.bold(relative(process.cwd(), exampleTestFile)))
+  log(
+    c.green('✔'),
+    'Created example test file in',
+    c.bold(relative(process.cwd(), exampleTestFile)),
+  )
   log(c.dim('  You can safely delete this file once you have written your own tests.'))
 
   log()

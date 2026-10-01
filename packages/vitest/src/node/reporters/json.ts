@@ -1,13 +1,13 @@
-import type { Suite, TaskMeta, TaskState } from '@vitest/runner'
+import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 import type { SnapshotSummary } from '@vitest/snapshot'
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { Suite, TaskMeta, TaskState, TestBenchmark } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
-import { getSuites, getTests } from '@vitest/runner/utils'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
+import { getSuites, getTests } from '../../utils/tasks'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -40,6 +40,7 @@ export interface JsonAssertionResult {
   failureMessages: Array<string> | null
   location?: Callsite | null
   tags: string[]
+  benchmarks: TestBenchmark[]
 }
 
 export interface JsonTestResult {
@@ -74,6 +75,12 @@ export interface JsonTestResults {
 
 export interface JsonOptions {
   outputFile?: string
+  /**
+   * Print the report to stdout instead of writing it to a file.
+   * Ignored when {@link outputFile} is set.
+   * @default false
+   */
+  stdout?: boolean
   /** @experimental */
   filterMeta?: (key: string, value: unknown) => unknown
 }
@@ -99,37 +106,41 @@ export class JsonReporter implements Reporter {
   }
 
   async onTestRunEnd(testModules: ReadonlyArray<TestModule>): Promise<void> {
-    const files = testModules.map(testModule => testModule.task)
+    const files = testModules.map((testModule) => testModule.task)
 
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
     const numTotalTests = tests.length
 
-    const numFailedTestSuites = suites.filter(s => s.result?.state === 'fail').length
+    const numFailedTestSuites = suites.filter((s) => s.result?.state === 'fail').length
     const numPendingTestSuites = suites.filter(
-      s => s.result?.state === 'run' || s.result?.state === 'queued' || s.mode === 'todo',
+      (s) => s.result?.state === 'run' || s.result?.state === 'queued' || s.mode === 'todo',
     ).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
 
-    const numFailedTests = tests.filter(
-      t => t.result?.state === 'fail',
-    ).length
-    const numPassedTests = tests.filter(t => t.result?.state === 'pass').length
+    const numFailedTests = tests.filter((t) => t.result?.state === 'fail').length
+    const numPassedTests = tests.filter((t) => t.result?.state === 'pass').length
     const numPendingTests = tests.filter(
-      t => t.result?.state === 'run' || t.result?.state === 'queued' || t.mode === 'skip' || t.result?.state === 'skip',
+      (t) =>
+        t.result?.state === 'run' ||
+        t.result?.state === 'queued' ||
+        t.mode === 'skip' ||
+        t.result?.state === 'skip',
     ).length
-    const numTodoTests = tests.filter(t => t.mode === 'todo').length
+    const numTodoTests = tests.filter((t) => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []
 
-    const success = !!(files.length > 0 || this.ctx.config.passWithNoTests) && numFailedTestSuites === 0 && numFailedTests === 0
+    const success =
+      !!(files.length > 0 || this.ctx.config.passWithNoTests) &&
+      numFailedTestSuites === 0 &&
+      numFailedTests === 0
     const { filterMeta } = this.options
 
     for (const file of files) {
       const tests = getTests([file])
       let startTime = tests.reduce(
-        (prev, next) =>
-          Math.min(prev, next.result?.startTime ?? Number.POSITIVE_INFINITY),
+        (prev, next) => Math.min(prev, next.result?.startTime ?? Number.POSITIVE_INFINITY),
         Number.POSITIVE_INFINITY,
       )
       if (startTime === Number.POSITIVE_INFINITY) {
@@ -138,10 +149,7 @@ export class JsonReporter implements Reporter {
 
       const endTime = tests.reduce(
         (prev, next) =>
-          Math.max(
-            prev,
-            (next.result?.startTime ?? 0) + (next.result?.duration ?? 0),
-          ),
+          Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)),
         startTime,
       )
       const assertionResults = tests.map((t) => {
@@ -155,14 +163,11 @@ export class JsonReporter implements Reporter {
 
         return {
           ancestorTitles,
-          fullName: t.name
-            ? [...ancestorTitles, t.name].join(' ')
-            : ancestorTitles.join(' '),
+          fullName: t.name ? [...ancestorTitles, t.name].join(' ') : ancestorTitles.join(' '),
           status: StatusMap[t.result?.state || t.mode] || 'skipped',
           title: t.name,
           duration: t.result?.duration,
-          failureMessages:
-            t.result?.errors?.map(e => e.stack || e.message) || [],
+          failureMessages: t.result?.errors?.map((e) => e.stack || e.message) || [],
           location: t.location,
           meta: filterMeta
             ? (() => {
@@ -177,25 +182,25 @@ export class JsonReporter implements Reporter {
               })()
             : t.meta,
           tags: t.tags || [],
+          benchmarks: t.benchmarks,
         } satisfies JsonAssertionResult
       })
 
-      if (tests.some(t => t.result?.state === 'run' || t.result?.state === 'queued')) {
+      if (tests.some((t) => t.result?.state === 'run' || t.result?.state === 'queued')) {
         this.ctx.logger.warn(
-          'WARNING: Some tests are still running when generating the JSON report.'
-          + 'This is likely an internal bug in Vitest.'
-          + 'Please report it to https://github.com/vitest-dev/vitest/issues',
+          'WARNING: Some tests are still running when generating the JSON report.' +
+            'This is likely an internal bug in Vitest.' +
+            'Please report it to https://github.com/vitest-dev/vitest/issues',
         )
       }
 
-      const hasFailedTests = tests.some(t => t.result?.state === 'fail')
+      const hasFailedTests = tests.some((t) => t.result?.state === 'fail')
 
       testResults.push({
         assertionResults,
         startTime,
         endTime,
-        status:
-          file.result?.state === 'fail' || hasFailedTests ? 'failed' : 'passed',
+        status: file.result?.state === 'fail' || hasFailedTests ? 'failed' : 'passed',
         message: file.result?.errors?.[0]?.message ?? '',
         name: file.filepath,
       })
@@ -218,17 +223,8 @@ export class JsonReporter implements Reporter {
       coverageMap: this.coverageMap,
     }
 
-    await this.writeReport(JSON.stringify(result))
-  }
-
-  /**
-   * Writes the report to an output file if specified in the config,
-   * or logs it to the console otherwise.
-   * @param report
-   */
-  async writeReport(report: string): Promise<void> {
-    const outputFile
-      = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
+    const resultString = JSON.stringify(result)
+    const outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
 
     if (outputFile) {
       const reportFile = resolve(this.ctx.config.root, outputFile)
@@ -238,11 +234,14 @@ export class JsonReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
       }
 
-      await fs.writeFile(reportFile, report, 'utf-8')
+      await fs.writeFile(reportFile, resultString, 'utf-8')
       this.ctx.logger.log(`JSON report written to ${reportFile}`)
-    }
-    else {
-      this.ctx.logger.log(report)
+    } else if (this.options.stdout) {
+      this.ctx.logger.log(resultString)
+    } else {
+      const report = this.ctx.createReport('json')
+      await report.writeFile('output.json', resultString)
+      this.ctx.logger.log(`JSON report written to ${resolve(report.root, 'output.json')}`)
     }
   }
 }

@@ -1,5 +1,4 @@
 import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
-
 import type {
   TestProjectConfiguration,
   TestProjectInlineConfiguration,
@@ -19,7 +18,7 @@ export {
   defaultInclude,
 } from '../defaults'
 export type { WatcherTriggerPattern } from '../node/watcher'
-export type { TestTagDefinition } from '@vitest/runner'
+export type { TestTagDefinition } from '../runtime/runner/types'
 export { mergeConfig } from 'vite'
 export type { Plugin } from 'vite'
 
@@ -33,20 +32,16 @@ export type {
 }
 export type ViteUserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
 export type ViteUserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
-export type ViteUserConfigFn = (
-  env: ConfigEnv,
-) => ViteUserConfig | Promise<ViteUserConfig>
-export type ViteUserConfigExport
-  = | ViteUserConfig
-    | Promise<ViteUserConfig>
-    | ViteUserConfigFnObject
-    | ViteUserConfigFnPromise
-    | ViteUserConfigFn
+export type ViteUserConfigFn = (env: ConfigEnv) => ViteUserConfig | Promise<ViteUserConfig>
+export type ViteUserConfigExport =
+  | ViteUserConfig
+  | Promise<ViteUserConfig>
+  | ViteUserConfigFnObject
+  | ViteUserConfigFnPromise
+  | ViteUserConfigFn
 
 export function defineConfig(config: ViteUserConfig): ViteUserConfig
-export function defineConfig(
-  config: Promise<ViteUserConfig>,
-): Promise<ViteUserConfig>
+export function defineConfig(config: Promise<ViteUserConfig>): Promise<ViteUserConfig>
 export function defineConfig(config: ViteUserConfigFnObject): ViteUserConfigFnObject
 export function defineConfig(config: ViteUserConfigFnPromise): ViteUserConfigFnPromise
 export function defineConfig(config: ViteUserConfigExport): ViteUserConfigExport

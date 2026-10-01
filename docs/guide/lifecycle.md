@@ -32,6 +32,7 @@ Phases 4–6 run once for each test file, so across your test suite they will ex
 When you run `vitest`, the framework first loads your configuration and prepares the test environment.
 
 **What happens:**
+
 - [Command-line](/guide/cli) arguments are parsed
 - [Configuration file](/config/) is loaded
 - Project structure is validated
@@ -45,12 +46,14 @@ This phase can run again if the config file or one of its imports changes.
 If you have configured [`globalSetup`](/config/globalsetup) files, they run once before any test workers are created.
 
 **What happens:**
+
 - `setup()` functions (or exported `default` function) from global setup files execute sequentially
 - Multiple global setup files run in the order they are defined
 
 **Scope:** Main process (separate from test workers)
 
 **Important notes:**
+
 - Global setup runs in a **different global scope** from your tests
 - Tests cannot access variables defined in global setup (use [`provide`/`inject`](/config/provide) instead)
 - Global setup only runs if there is at least one test queued
@@ -75,6 +78,7 @@ export function teardown() {
 After global setup completes, Vitest creates test workers based on your [pool configuration](/config/pool).
 
 **What happens:**
+
 - Workers are spawned according to the `browser.enabled` or `pool` setting (`threads`, `forks`, `vmThreads`, or `vmForks`)
 - Each worker gets its own isolated environment (unless [isolation](/config/isolate) is disabled)
 - By default, workers are not reused to provide isolation. Workers are reused only if:
@@ -88,6 +92,7 @@ After global setup completes, Vitest creates test workers based on your [pool co
 Before each test file runs, [setup files](/config/setupfiles) are executed.
 
 **What happens:**
+
 - Setup files run in the same process as your tests
 - By default, setup files run in **parallel** (configurable via [`sequence.setupFiles`](/config/sequence#sequence-setupfiles))
 - Setup files execute before **each test file**
@@ -96,6 +101,7 @@ Before each test file runs, [setup files](/config/setupfiles) are executed.
 **Scope:** Worker process (same as your tests)
 
 **Important notes:**
+
 - If [isolation](/config/isolate) is disabled, setup files still rerun before each test file to trigger side effects, but imported modules are cached
 - Editing a setup file triggers a rerun of all tests in watch mode
 
@@ -320,6 +326,7 @@ When using `test.concurrent` or [`sequence.concurrent`](/config/sequence#sequenc
 Throughout the test run, reporters receive lifecycle events and display results.
 
 **What happens:**
+
 - Reporters receive events as tests progress
 - Results are collected and formatted
 - Test summaries are generated
@@ -332,6 +339,7 @@ For detailed information about the reporter lifecycle, see the [Reporters](/api/
 After all tests complete, global teardown functions execute.
 
 **What happens:**
+
 - `teardown()` functions from [`globalSetup`](/config/globalsetup) files run
 - Multiple teardown functions run in **reverse order** of their setup
 - In watch mode, teardown runs before process exit, not between test reruns
@@ -349,18 +357,18 @@ export function teardown() {
 
 Understanding where code executes is crucial for avoiding common pitfalls:
 
-| Phase | Scope | Access to Test Context | Runs |
-|-------|-------|----------------------|------|
-| Config File | Main process | ❌ No | Once per Vitest run |
-| Global Setup | Main process | ❌ No (use `provide`/`inject`) | Once per Vitest run |
-| Setup Files | Worker (same as tests) | ✅ Yes | Before each test file |
-| File-level code | Worker | ✅ Yes | Once per test file |
-| `aroundAll` | Worker | ✅ Yes | Once per suite (wraps all tests) |
-| `beforeAll` / `afterAll` | Worker | ✅ Yes | Once per suite |
-| `aroundEach` | Worker | ✅ Yes | Per test (wraps each test) |
-| `beforeEach` / `afterEach` | Worker | ✅ Yes | Per test |
-| Test function | Worker | ✅ Yes | Once (or more with retries/repeats) |
-| Global Teardown | Main process | ❌ No | Once per Vitest run |
+| Phase                      | Scope                  | Access to Test Context         | Runs                                |
+| -------------------------- | ---------------------- | ------------------------------ | ----------------------------------- |
+| Config File                | Main process           | ❌ No                          | Once per Vitest run                 |
+| Global Setup               | Main process           | ❌ No (use `provide`/`inject`) | Once per Vitest run                 |
+| Setup Files                | Worker (same as tests) | ✅ Yes                         | Before each test file               |
+| File-level code            | Worker                 | ✅ Yes                         | Once per test file                  |
+| `aroundAll`                | Worker                 | ✅ Yes                         | Once per suite (wraps all tests)    |
+| `beforeAll` / `afterAll`   | Worker                 | ✅ Yes                         | Once per suite                      |
+| `aroundEach`               | Worker                 | ✅ Yes                         | Per test (wraps each test)          |
+| `beforeEach` / `afterEach` | Worker                 | ✅ Yes                         | Per test                            |
+| Test function              | Worker                 | ✅ Yes                         | Once (or more with retries/repeats) |
+| Global Teardown            | Main process           | ❌ No                          | Once per Vitest run                 |
 
 ## Watch Mode Lifecycle
 

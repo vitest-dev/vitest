@@ -1,18 +1,15 @@
-import type { FileSpecification } from '@vitest/runner'
 import type { Environment } from '../types/environment'
 import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
 import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
+import type { FileSpecification } from './runner/types'
 import { performance } from 'node:perf_hooks'
-import { collectTests, startTests } from '@vitest/runner'
-import {
-  startCoverageInsideWorker,
-  stopCoverageInsideWorker,
-} from '../integrations/coverage'
+import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import { vi } from '../integrations/vi'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
+import { collectTests, startTests } from './runner/run'
 import { resolveTestRunner } from './runners'
 import { setupGlobalEnv } from './setup-node'
 import { getWorkerState, resetModules } from './utils'
@@ -31,24 +28,27 @@ export async function run(
   const [testRunner] = await Promise.all([
     traces.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, traces)),
     traces.$('vitest.runtime.global_env', () => setupGlobalEnv(config, environment)),
-    traces.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })),
+    traces.$('vitest.runtime.coverage.start', () =>
+      startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
+    ),
     traces.$('vitest.runtime.snapshot.environment', async () => {
       if (!workerState.config.snapshotOptions.snapshotEnvironment) {
-        workerState.config.snapshotOptions.snapshotEnvironment
-          = await resolveSnapshotEnvironment(config, moduleRunner)
+        workerState.config.snapshotOptions.snapshotEnvironment = await resolveSnapshotEnvironment(
+          config,
+          moduleRunner,
+        )
       }
     }),
   ])
 
-  workerState.onCancel((reason) => {
+  const offCancel = workerState.onCancel((reason) => {
     closeInspector(config)
     testRunner.cancel?.(reason)
   })
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
-  await traces.$(
-    `vitest.test.runner.${method}`,
-    async () => {
+  try {
+    await traces.$(`vitest.test.runner.${method}`, async () => {
       for (const file of files) {
         if (config.isolate) {
           moduleRunner.mocker?.reset()
@@ -58,7 +58,9 @@ export async function run(
         workerState.filepath = file.filepath
 
         if (method === 'run') {
-          const collectAsyncLeaks = config.detectAsyncLeaks ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName) : undefined
+          const collectAsyncLeaks = config.detectAsyncLeaks
+            ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName)
+            : undefined
 
           await traces.$(
             `vitest.test.runner.${method}.module`,
@@ -71,8 +73,7 @@ export async function run(
           if (leaks?.length) {
             workerState.rpc.onAsyncLeaks(leaks)
           }
-        }
-        else {
+        } else {
           await traces.$(
             `vitest.test.runner.${method}.module`,
             { attributes: { 'code.file.path': file.filepath } },
@@ -85,8 +86,12 @@ export async function run(
         // mocks should not affect different files
         vi.restoreAllMocks()
       }
-    },
-  )
+    })
+  } finally {
+    offCancel()
+  }
 
-  await traces.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }))
+  await traces.$('vitest.runtime.coverage.stop', () =>
+    stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
+  )
 }

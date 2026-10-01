@@ -3,15 +3,19 @@ import { expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
 test('excludes Vite transforms done for CJS dependency', async () => {
-  await runVitest({
-    include: ['fixtures/test/cjs-dependency.test.ts'],
-    coverage: {
-      reporter: 'json',
+  await runVitest(
+    {
+      include: ['fixtures/test/cjs-dependency.test.ts'],
+      coverage: {
+        reporter: 'json',
+      },
     },
-  }, undefined, {
-    cacheDir: fileURLToPath(new URL('./node_modules/.vite', import.meta.url)),
-    optimizeDeps: { include: ['@vitest/cjs-lib', '/Users/ari/Git/vitest/test/browser/cjs-lib'] },
-  })
+    undefined,
+    {
+      cacheDir: fileURLToPath(new URL('./node_modules/.vite', import.meta.url)),
+      optimizeDeps: { include: ['@vitest/cjs-lib'] },
+    },
+  )
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
 

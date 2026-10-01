@@ -1,6 +1,6 @@
 import type { SourceMap } from 'magic-string'
 import type { Plugin, Rollup } from 'vite'
-import type { HoistMocksOptions } from './hoistMocks'
+import type { HoistMocksOptions, StaticMockCall } from './hoistMocks'
 import { createFilter } from 'vite'
 import { cleanUrl } from '../utils'
 import { hoistMocks } from './hoistMocks'
@@ -31,29 +31,44 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
   ])
 
   const regexpHoistable = new RegExp(
-    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\s*\\(`,
+    `\\b(?:${utilsObjectNames.join('|')})\\s*\\.\\s*(?:${Array.from(methods).join('|')})\\s*\\(`,
   )
+
+  let root: string
 
   return {
     name: 'vitest:mocks',
     enforce: 'post',
+    configResolved(config) {
+      root = config.root
+    },
     transform(code, id) {
       if (!filter(id)) {
         return
       }
+      const staticMocks: StaticMockCall[] = []
       const s = hoistMocks(code, id, this.parse, {
         regexpHoistable,
         hoistableMockMethodNames,
         hoistedMethodNames,
         utilsObjectNames,
         dynamicImportMockMethodNames,
+        root,
+        getMap: () => this.getCombinedSourcemap(),
         ...options,
+        onStaticMock(call) {
+          staticMocks.push(call)
+          options.onStaticMock?.(call)
+        },
       })
-      if (s) {
-        return {
-          code: s.toString(),
-          map: s.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
-        }
+      // vite keeps `meta` across re-transforms, so always reset it
+      if (!s) {
+        return { meta: { vitestStaticMocks: null } }
+      }
+      return {
+        code: s.toString(),
+        map: s.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
+        meta: { vitestStaticMocks: staticMocks },
       }
     },
   }

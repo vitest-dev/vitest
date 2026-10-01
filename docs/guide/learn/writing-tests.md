@@ -176,7 +176,7 @@ test.for([
 })
 ```
 
-The placeholders `%i`, `%s`, and `%f` in the test name are replaced with the corresponding values from each row, so the output shows `add(1, 1) -> 2`, `add(1, 2) -> 3`, and so on.
+In the example above, the %i placeholders are replaced with the integer values from each data row. Vitest also supports other placeholder types, such as %s for strings and %f for floating-point numbers. As a result, the test runner generates test names such as add(1, 1) -> 2, add(1, 2) -> 3, and add(2, 1) -> 3.
 
 If your cases have more than two or three values, passing objects is more readable. Use `$property` in the name to interpolate fields:
 

@@ -1,23 +1,24 @@
-import type { CancelReason } from '@vitest/runner'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types/worker'
+import type { CancelReason } from './runner/types'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { createBirpc } from 'birpc'
 import { getWorkerState } from './utils'
 
 const { get } = Reflect
 
+const globalProcess = globalThis.process
+
 function withSafeTimers(fn: () => void) {
-  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate }
-    = getSafeTimers()
+  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getSafeTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
   const currentSetImmediate = globalThis.setImmediate
   const currentClearImmediate = globalThis.clearImmediate
 
-  const currentNextTick = globalThis.process?.nextTick
+  const currentNextTick = globalProcess?.nextTick
 
   try {
     globalThis.setTimeout = setTimeout
@@ -30,22 +31,21 @@ function withSafeTimers(fn: () => void) {
       globalThis.clearImmediate = clearImmediate
     }
 
-    if (globalThis.process && nextTick) {
-      globalThis.process.nextTick = nextTick
+    if (globalProcess && nextTick) {
+      globalProcess.nextTick = nextTick
     }
 
     const result = fn()
     return result
-  }
-  finally {
+  } finally {
     globalThis.setTimeout = currentSetTimeout
     globalThis.clearTimeout = currentClearTimeout
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process && nextTick) {
+    if (globalProcess && nextTick) {
       nextTick(() => {
-        globalThis.process.nextTick = currentNextTick
+        globalProcess.nextTick = currentNextTick
       })
     }
   }
@@ -63,27 +63,28 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
 
 const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
 
-export function onCancel(callback: (reason: CancelReason) => void): void {
+export function onCancel(callback: (reason: CancelReason) => void): () => void {
   onCancelCallbacks.push(callback)
+  return () => {
+    const index = onCancelCallbacks.indexOf(callback)
+    if (index !== -1) {
+      onCancelCallbacks.splice(index, 1)
+    }
+  }
 }
 
 export function createRuntimeRpc(
-  options: Pick<
-    BirpcOptions<RuntimeRPC>,
-    'on' | 'post' | 'serialize' | 'deserialize'
-  >,
+  options: Pick<BirpcOptions<RuntimeRPC>, 'on' | 'post' | 'serialize' | 'deserialize'>,
 ): WorkerRPC {
   return createSafeRpc(
     createBirpc<RuntimeRPC, RunnerRPC>(
       {
         async onCancel(reason) {
-          await Promise.all(onCancelCallbacks.map(fn => fn(reason)))
+          await Promise.all(onCancelCallbacks.map((fn) => fn(reason)))
         },
       },
       {
-        eventNames: [
-          'onCancel',
-        ],
+        eventNames: ['onCancel'],
         timeout: -1,
         ...options,
       },
@@ -91,7 +92,7 @@ export function createRuntimeRpc(
   )
 }
 
-export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
+function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
       // keep $rejectPendingCalls as sync function
@@ -106,8 +107,7 @@ export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
           promises.add(result)
           try {
             return await result
-          }
-          finally {
+          } finally {
             promises.delete(result)
           }
         })

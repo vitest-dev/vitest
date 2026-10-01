@@ -2,24 +2,24 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of facebook/jest GitHub project tree.
+ * LICENSE file in the root directory of jestjs/jest GitHub project tree.
  */
 
 import type { ResolvedConfig } from '../node/types/config'
 import * as nodeos from 'node:os'
 
 function getDefaultThreadsCount(config: Pick<ResolvedConfig, 'watch'>) {
-  const numCpus
-    = typeof nodeos.availableParallelism === 'function'
+  const numCpus =
+    typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  return config.watch
-    ? Math.max(Math.floor(numCpus / 2), 1)
-    : Math.max(numCpus - 1, 1)
+  return config.watch ? Math.max(Math.floor(numCpus / 2), 1) : Math.max(numCpus - 1, 1)
 }
 
-export function getWorkerMemoryLimit(config: Pick<ResolvedConfig, 'vmMemoryLimit' | 'maxWorkers' | 'watch'>): string | number {
+export function getWorkerMemoryLimit(
+  config: Pick<ResolvedConfig, 'vmMemoryLimit' | 'maxWorkers' | 'watch'>,
+): string | number {
   if (config.vmMemoryLimit) {
     return config.vmMemoryLimit
   }
@@ -45,9 +45,7 @@ export function stringToBytes(
 
   if (typeof input === 'string') {
     if (Number.isNaN(Number.parseFloat(input.slice(-1)))) {
-      let [, numericString, trailingChars]
-        // eslint-disable-next-line regexp/no-super-linear-backtracking
-        = input.match(/(.*?)([^0-9.-]+)$/) || []
+      let [, numericString, trailingChars] = input.match(/(.*?)([^0-9.-]+)$/) || []
 
       if (trailingChars && numericString) {
         const numericValue = Number.parseFloat(numericString)
@@ -76,8 +74,7 @@ export function stringToBytes(
       }
 
       // It ends in some kind of char so we need to do some parsing
-    }
-    else {
+    } else {
       input = Number.parseFloat(input)
     }
   }
@@ -86,17 +83,14 @@ export function stringToBytes(
     if (input <= 1 && input > 0) {
       if (percentageReference) {
         return Math.floor(input * percentageReference)
-      }
-      else {
+      } else {
         throw new Error(
           'For a percentage based memory limit a percentageReference must be supplied',
         )
       }
-    }
-    else if (input > 1) {
+    } else if (input > 1) {
       return Math.floor(input)
-    }
-    else {
+    } else {
       throw new Error('Unexpected numerical input for "memoryLimit"')
     }
   }

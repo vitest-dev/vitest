@@ -8,7 +8,13 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
-import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
+import {
+  FilesNotFoundError,
+  GitNotFoundError,
+  IncludeTaskLocationDisabledError,
+  LocationFilterFileNotFoundError,
+  RangeLocationFilterProvidedError,
+} from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
 
 export interface CliOptions extends UserConfig {
@@ -30,12 +36,12 @@ export interface CliOptions extends UserConfig {
   filesOnly?: boolean
   /**
    * Parse files statically instead of running them to collect tests
-   * @experimental
+   * @default true
    */
   staticParse?: boolean
   /**
    * How many tests to process at the same time
-   * @experimental
+   * @default os.availableParallelism()
    */
   staticParseConcurrency?: number
 
@@ -46,6 +52,13 @@ export interface CliOptions extends UserConfig {
    * @experimental
    */
   configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
+
+  /**
+   * Only run benchmark projects, filtering out all other projects.
+   * Set automatically by `vitest bench`.
+   * @internal
+   */
+  benchmarkOnly?: boolean
 }
 
 /**
@@ -54,30 +67,53 @@ export interface CliOptions extends UserConfig {
  * Returns a Vitest instance if initialized successfully.
  */
 export async function startVitest(
-  mode: VitestRunMode,
-  cliFilters: string[] = [],
-  options: CliOptions = {},
+  cliFilters?: string[],
+  options?: CliOptions,
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
+): Promise<Vitest>
+/**
+ * @deprecated The `mode` argument is no longer used. Use `startVitest(cliFilters?, options?, viteOverrides?, vitestOptions?)` instead.
+ */
+export async function startVitest(
+  mode: VitestRunMode,
+  cliFilters?: string[],
+  options?: CliOptions,
+  viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
+): Promise<Vitest>
+export async function startVitest(
+  modeOrCliFilters?: VitestRunMode | string[],
+  cliFiltersOrOptions?: string[] | CliOptions,
+  optionsOrViteOverrides?: CliOptions | ViteUserConfig,
+  viteOverridesOrVitestOptions?: ViteUserConfig | VitestOptions,
+  maybeVitestOptions?: VitestOptions,
 ): Promise<Vitest> {
+  let cliFilters: string[]
+  let options: CliOptions
+  let viteOverrides: ViteUserConfig | undefined
+  let vitestOptions: VitestOptions | undefined
+  if (typeof modeOrCliFilters === 'string') {
+    cliFilters = (cliFiltersOrOptions as string[] | undefined) ?? []
+    options = (optionsOrViteOverrides as CliOptions | undefined) ?? {}
+    viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig | undefined
+    vitestOptions = maybeVitestOptions
+  } else {
+    cliFilters = modeOrCliFilters ?? []
+    options = (cliFiltersOrOptions as CliOptions | undefined) ?? {}
+    viteOverrides = optionsOrViteOverrides as ViteUserConfig | undefined
+    vitestOptions = viteOverridesOrVitestOptions as VitestOptions | undefined
+  }
   const root = resolve(options.root || process.cwd())
 
-  const ctx = await prepareVitest(
-    mode,
-    options,
-    viteOverrides,
-    vitestOptions,
-    cliFilters,
-  )
+  const ctx = await prepareVitest(options, viteOverrides, vitestOptions, cliFilters)
 
-  if (mode === 'test' && ctx._coverageOptions.enabled) {
+  if (ctx._coverageOptions.enabled) {
     const provider = ctx._coverageOptions.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
-      if (
-        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))
-      ) {
+      if (!(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))) {
         process.exitCode = 1
         return ctx
       }
@@ -91,58 +127,38 @@ export async function startVitest(
     stdinCleanup = registerConsoleShortcuts(ctx, stdin, stdout)
   }
 
-  ctx.onAfterSetServer(() => {
-    if (ctx.config.standalone) {
-      ctx.standalone()
+  ctx.onAfterSetServer(async () => {
+    if (ctx.closingPromise) {
+      return
     }
-    else {
-      ctx.start(cliFilters)
+    try {
+      if (ctx.config.standalone) {
+        await ctx.standalone()
+      } else {
+        await ctx.start(cliFilters)
+      }
+    } catch (error) {
+      reportStartError(ctx, error)
     }
   })
 
   try {
     if (ctx.config.listTags) {
       await ctx.listTags()
-    }
-    else if (ctx.config.clearCache) {
-      await ctx.experimental_clearCache()
-    }
-    else if (ctx.config.mergeReports) {
+    } else if (ctx.config.clearCache) {
+      await ctx.clearCache()
+    } else if (ctx.config.mergeReports) {
       await ctx.mergeReports()
-    }
-    else if (ctx.config.standalone) {
+    } else if (ctx.config.standalone) {
       await ctx.standalone()
-    }
-    else {
+    } else {
       await ctx.start(cliFilters)
     }
     return ctx
-  }
-  catch (e) {
-    if (e instanceof FilesNotFoundError) {
-      return ctx
-    }
-
-    if (e instanceof GitNotFoundError) {
-      ctx.logger.error(e.message)
-      return ctx
-    }
-
-    if (
-      e instanceof IncludeTaskLocationDisabledError
-      || e instanceof RangeLocationFilterProvidedError
-      || e instanceof LocationFilterFileNotFoundError
-    ) {
-      ctx.logger.printError(e, { verbose: false })
-      return ctx
-    }
-
-    process.exitCode = 1
-    ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
-    ctx.logger.error('\n\n')
+  } catch (e) {
+    reportStartError(ctx, e)
     return ctx
-  }
-  finally {
+  } finally {
     if (!ctx?.shouldKeepServer()) {
       stdinCleanup?.()
       await ctx.close()
@@ -150,13 +166,68 @@ export async function startVitest(
   }
 }
 
+function reportStartError(ctx: Vitest, error: unknown): void {
+  if (error instanceof FilesNotFoundError) {
+    return
+  }
+
+  if (error instanceof GitNotFoundError) {
+    ctx.logger.error(error.message)
+    return
+  }
+
+  if (
+    error instanceof IncludeTaskLocationDisabledError ||
+    error instanceof RangeLocationFilterProvidedError ||
+    error instanceof LocationFilterFileNotFoundError
+  ) {
+    ctx.logger.printError(error, { verbose: false })
+    return
+  }
+
+  process.exitCode = 1
+  ctx.logger.printError(error, { fullStack: true, type: 'Unhandled Error' })
+  ctx.logger.error('\n\n')
+}
+
 export async function prepareVitest(
-  mode: VitestRunMode,
-  options: CliOptions = {},
+  options?: CliOptions,
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
   cliFilters?: string[],
+): Promise<Vitest>
+/**
+ * @deprecated The `mode` argument is no longer used. Use `prepareVitest(options?, viteOverrides?, vitestOptions?, cliFilters?)` instead.
+ */
+export async function prepareVitest(
+  mode: VitestRunMode,
+  options?: CliOptions,
+  viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
+  cliFilters?: string[],
+): Promise<Vitest>
+export async function prepareVitest(
+  modeOrOptions?: VitestRunMode | CliOptions,
+  optionsOrViteOverrides?: CliOptions | ViteUserConfig,
+  viteOverridesOrVitestOptions?: ViteUserConfig | VitestOptions,
+  vitestOptionsOrCliFilters?: VitestOptions | string[],
+  maybeCliFilters?: string[],
 ): Promise<Vitest> {
+  let options: CliOptions
+  let viteOverrides: ViteUserConfig | undefined
+  let vitestOptions: VitestOptions | undefined
+  let cliFilters: string[] | undefined
+  if (typeof modeOrOptions === 'string') {
+    options = (optionsOrViteOverrides as CliOptions | undefined) ?? {}
+    viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig | undefined
+    vitestOptions = vitestOptionsOrCliFilters as VitestOptions | undefined
+    cliFilters = maybeCliFilters
+  } else {
+    options = modeOrOptions ?? {}
+    viteOverrides = optionsOrViteOverrides as ViteUserConfig | undefined
+    vitestOptions = viteOverridesOrVitestOptions as VitestOptions | undefined
+    cliFilters = vitestOptionsOrCliFilters as string[] | undefined
+  }
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
   process.env.NODE_ENV ??= 'test'
@@ -172,13 +243,13 @@ export async function prepareVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
+  const ctx = await createVitest(options, viteOverrides, vitestOptions)
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)
 
   if (
-    environmentPackage
-    && !(await ctx.packageInstaller.ensureInstalled(environmentPackage, root))
+    environmentPackage &&
+    !(await ctx.packageInstaller.ensureInstalled(environmentPackage, root))
   ) {
     process.exitCode = 1
     return ctx
@@ -207,7 +278,7 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
     return processJsonOutput(files, options)
   }
 
-  return formatCollectedAsString(files).forEach(test => console.log(test))
+  return formatCollectedAsString(files).forEach((test) => console.log(test))
 }
 
 export function outputFileList(files: TestSpecification[], options: CliOptions): void {
@@ -215,7 +286,7 @@ export function outputFileList(files: TestSpecification[], options: CliOptions):
     return outputJsonFileList(files, options)
   }
 
-  formatFilesAsString(files, options).map(file => console.log(file))
+  formatFilesAsString(files, options).map((file) => console.log(file))
 }
 
 function outputJsonFileList(files: TestSpecification[], options: CliOptions) {
@@ -273,14 +344,14 @@ function forEachSuite(modules: TestModule[], callback: (suite: TestSuite | TestM
   })
 }
 
-export interface TestCollectJSONResult {
+interface TestCollectJSONResult {
   name: string
   file: string
   projectName?: string
   location?: { line: number; column: number }
 }
 
-export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
+function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
   const results: TestCollectJSONResult[] = []
 
   files.forEach((file) => {
@@ -304,7 +375,7 @@ export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResul
   return results
 }
 
-export function formatCollectedAsString(testModules: TestModule[]): string[] {
+function formatCollectedAsString(testModules: TestModule[]): string[] {
   const results: string[] = []
 
   testModules.forEach((testModule) => {
@@ -313,20 +384,15 @@ export function formatCollectedAsString(testModules: TestModule[]): string[] {
         continue
       }
       const fullName = `${test.module.task.name} > ${test.fullName}`
-      results.push(
-        (test.project.name ? `[${test.project.name}] ` : '') + fullName,
-      )
+      results.push((test.project.name ? `[${test.project.name}] ` : '') + fullName)
     }
   })
 
   return results
 }
 
-const envPackageNames: Record<
-  Exclude<keyof typeof environments, 'node'>,
-  string
-> = {
-  'jsdom': 'jsdom',
+const envPackageNames: Record<Exclude<keyof typeof environments, 'node'>, string> = {
+  jsdom: 'jsdom',
   'happy-dom': 'happy-dom',
   'edge-runtime': '@edge-runtime/vm',
 }

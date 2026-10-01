@@ -13,19 +13,19 @@ test('renders blog posts', async () => {
 
   const [firstPost, secondPost] = posts
 
-  expect(firstPost.element()).toHaveTextContent(/molestiae ut ut quas/)
-  expect(firstPost.getByRole('heading').element()).toHaveTextContent(/occaecati excepturi/)
+  expect(firstPost.element()).toMatchTextContent(/molestiae ut ut quas/)
+  expect(firstPost.getByRole('heading').element()).toMatchTextContent(/occaecati excepturi/)
 
-  await expect.element(secondPost.getByRole('heading')).toHaveTextContent('qui est esse')
+  await expect.element(secondPost.getByRole('heading')).toMatchTextContent('qui est esse')
 
   await userEvent.click(secondPost.getByRole('button', { name: 'Delete' }))
 
   expect(screen.getByRole('listitem').all()).toHaveLength(3)
 
-  expect(screen.getByRole('listitem').nth(0).element()).toHaveTextContent(/molestiae ut ut quas/)
+  expect(screen.getByRole('listitem').nth(0).element()).toMatchTextContent(/molestiae ut ut quas/)
   await expect.element(screen.getByRole('listitem').nth(666)).not.toBeInTheDocument()
-  expect(screen.getByRole('listitem').first().element()).toHaveTextContent(/molestiae ut ut quas/)
-  expect(screen.getByRole('listitem').last().element()).toHaveTextContent(/eum et est/)
+  expect(screen.getByRole('listitem').first().element()).toMatchTextContent(/molestiae ut ut quas/)
+  expect(screen.getByRole('listitem').last().element()).toMatchTextContent(/eum et est/)
 
   expect(screen.getByPlaceholder('non-existing').query()).not.toBeInTheDocument()
 })

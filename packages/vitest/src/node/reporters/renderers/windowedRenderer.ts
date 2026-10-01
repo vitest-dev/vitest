@@ -2,7 +2,7 @@ import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
 
-/** Minimum time between two renders, no matter how many scheduled renderes were called */
+/** Minimum time between two renders, no matter how many scheduled renders were called */
 const DEFAULT_RENDER_THRESHOLD_MS = 100
 
 /** Interval between automatic renders. If no test state changes happened, this will increase just duration field */
@@ -79,7 +79,7 @@ export class WindowRenderer {
   }
 
   stop(): void {
-    this.cleanups.splice(0).map(fn => fn())
+    this.cleanups.splice(0).map((fn) => fn())
     clearInterval(this.renderInterval)
   }
 
@@ -105,8 +105,7 @@ export class WindowRenderer {
         setTimeout(() => {
           this.renderScheduled = false
         }, this.options.threshold).unref()
-      }
-      else {
+      } else {
         this.renderScheduled = false
       }
     }
@@ -195,8 +194,7 @@ export class WindowRenderer {
       if (chunk) {
         if (this.finished || !this.started) {
           this.write(chunk.toString(), type)
-        }
-        else {
+        } else {
           this.buffer.push({ type, message: chunk.toString() })
         }
       }
@@ -209,7 +207,7 @@ export class WindowRenderer {
   }
 
   private write(message: string, type: 'output' | 'error' = 'output') {
-    (this.streams[type] as Writable['write'])(message)
+    ;(this.streams[type] as Writable['write'])(message)
   }
 }
 

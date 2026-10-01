@@ -1,6 +1,6 @@
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('should print function name', async () => {
   const filename = resolve('./fixtures/reporters/function-as-name.test.ts')
@@ -15,12 +15,22 @@ test('should print function name', async () => {
   expect(stdout).toContain('function-as-name.test.ts > Bar > Bar')
 })
 
-test('should print function name in benchmark', async () => {
-  const filename = resolve('./fixtures/reporters/function-as-name.bench.ts')
-  const { stdout } = await runVitest({ root: './fixtures/reporters' }, [filename], { mode: 'benchmark' })
+test.for(['default', 'verbose'])(
+  'should print function name in benchmark in %s reporter',
+  async (reporters) => {
+    const filename = resolve('./fixtures/reporters/function-as-name.bench.ts')
+    const { stdout } = await runVitest(
+      {
+        root: './fixtures/reporters',
+        reporters,
+        benchmark: { enabled: true },
+      },
+      [filename],
+    )
 
-  expect(stdout).toBeTruthy()
-  expect(stdout).toContain('Bar')
-  expect(stdout).toContain('foo')
-  expect(stdout).toContain('<anonymous>')
-})
+    expect(stdout).toBeTruthy()
+    expect(stdout).toContain('Bar')
+    expect(stdout).toContain('foo')
+    expect(stdout).toContain('<anonymous>')
+  },
+)

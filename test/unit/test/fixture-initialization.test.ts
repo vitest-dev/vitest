@@ -1,4 +1,3 @@
-import type { Use } from '@vitest/runner'
 import { beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {
@@ -13,7 +12,7 @@ const myTest = test.extend<Pick<Fixtures, 'a' | 'b'>>({
   a: 1,
   b: async ({ a }, use) => {
     fnB()
-    await use (a * 2) // 2
+    await use(a * 2) // 2
     fnB.mockClear()
   },
 })
@@ -138,14 +137,12 @@ describe('fixture initialization', () => {
   })
 
   describe('fixture dependency', () => {
-    const myTest = test
-      .extend({ a: 1 })
-      .extend({
-        b: async ({ a }, use: Use<number>) => {
-          expectTypeOf(a).toEqualTypeOf<number>()
-          await use(a * 2)
-        },
-      })
+    const myTest = test.extend({ a: 1 }).extend({
+      b: async ({ a }, use: (v: number) => Promise<void>) => {
+        expectTypeOf(a).toEqualTypeOf<number>()
+        await use(a * 2)
+      },
+    })
 
     myTest('b => a', ({ b }) => {
       expectTypeOf(b).toEqualTypeOf<number>()
@@ -202,11 +199,21 @@ describe('fixture initialization', () => {
 })
 
 const myTest3 = test.extend<{ value: string }>({
-  value: [async ({}, use) => { await use('first-value') }, { scope: 'file' }],
+  value: [
+    async ({}, use) => {
+      await use('first-value')
+    },
+    { scope: 'file' },
+  ],
 })
 
 const myTest4 = test.extend<{ value: string }>({
-  value: [async ({}, use) => { await use('second-value') }, { scope: 'file' }],
+  value: [
+    async ({}, use) => {
+      await use('second-value')
+    },
+    { scope: 'file' },
+  ],
 })
 
 myTest3('test1', ({ value }) => {

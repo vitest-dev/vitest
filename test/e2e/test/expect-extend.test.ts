@@ -3,8 +3,9 @@ import { runInlineTests } from '../../test-utils'
 
 // JestExtendError's internal context property shouldn't show up as "Serialized Error"
 test('expect.extend error message', async () => {
-  const result = await runInlineTests({
-    './basic.test.js': `
+  const result = await runInlineTests(
+    {
+      './basic.test.js': `
 import { expect, test } from 'vitest';
 
 expect.extend({
@@ -18,9 +19,11 @@ test('fail', () => {
   expect(123).toMyEqual(456);
 });
 `,
-  }, {
-    reporters: 'verbose',
-  })
+    },
+    {
+      reporters: 'verbose',
+    },
+  )
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯

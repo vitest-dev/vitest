@@ -1,4 +1,4 @@
-import type { File } from '@vitest/runner'
+import type { File } from '../../runtime/runner/types'
 import type { Logger } from '../logger'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync } from 'node:fs'

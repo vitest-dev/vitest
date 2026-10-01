@@ -1,54 +1,27 @@
 <script setup lang="ts">
-import type { RunnerTask, RunnerTestCase } from 'vitest'
-import type { ModuleGraph } from '~/composables/module-graph'
+import type { RunnerTask } from 'vitest'
 import type { Params } from '~/composables/params'
-import { debouncedWatch } from '@vueuse/core'
-import { computed, nextTick, ref } from 'vue'
+import { computed, ref } from 'vue'
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
-import {
-  browserState,
-  client,
-  current,
-  currentLogs,
-  isReport,
-} from '~/composables/client'
+import { browserState, client, config, current, currentLogs, isReport } from '~/composables/client'
 import { tagsDefinitions } from '~/composables/client/state'
-import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
-import { getModuleGraph } from '~/composables/module-graph'
 import { selectedTest, viewMode } from '~/composables/params'
-import { getBadgeNameColor, getBadgeTextColor } from '~/utils/task'
+import { getBadgeNameColor, getProjectBadgeStyle } from '~/utils/task'
+import FileDetailsModuleGraph from './FileDetailsModuleGraph.vue'
 import IconButton from './IconButton.vue'
 import StatusIcon from './StatusIcon.vue'
 import ViewConsoleOutput from './views/ViewConsoleOutput.vue'
 import ViewEditor from './views/ViewEditor.vue'
-import ViewModuleGraph from './views/ViewModuleGraph.vue'
 import ViewReport from './views/ViewReport.vue'
 import ViewTestReport from './views/ViewTestReport.vue'
 
-const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)
-const hasGraphBeenDisplayed = ref(false)
-const loadingModuleGraph = ref(false)
-const currentFilepath = ref<string | undefined>(undefined)
-const hideNodeModules = ref(true)
 
-const test = computed(() => {
-  return selectedTest.value
-    ? client.state.idMap.get(selectedTest.value) as RunnerTestCase
-    : undefined
-})
-
-const graphData = computed(() => {
-  const c = current.value
-  if (!c || !c.filepath) {
-    return
-  }
-
-  return {
-    filepath: c.filepath,
-    projectName: c.file.projectName || '',
-  }
+const selectedTask = computed(() => {
+  return (
+    (selectedTest.value ? client.state.idMap.get(selectedTest.value) : undefined) ?? current.value
+  )
 })
 
 const failedSnapshot = computed(() => {
@@ -69,10 +42,6 @@ function open() {
 }
 
 function changeViewMode(view: Params['view']) {
-  if (view === 'graph') {
-    hasGraphBeenDisplayed.value = true
-  }
-
   viewMode.value = view
 }
 const consoleCount = computed(() => {
@@ -83,81 +52,8 @@ function onDraft(value: boolean) {
   draft.value = value
 }
 
-const nodeModuleRegex = /[/\\]node_modules[/\\]/
-
-async function loadModuleGraph(force = false) {
-  if (
-    loadingModuleGraph.value
-    || (graphData.value?.filepath === currentFilepath.value && !force)
-  ) {
-    return
-  }
-
-  loadingModuleGraph.value = true
-
-  await nextTick()
-
-  try {
-    const gd = graphData.value
-    if (!gd) {
-      loadingModuleGraph.value = false
-      return
-    }
-
-    if (
-      force
-      || !currentFilepath.value
-      || gd.filepath !== currentFilepath.value
-      || (!graph.value.nodes.length && !graph.value.links.length)
-    ) {
-      let moduleGraph = await client.rpc.getModuleGraph(
-        gd.projectName,
-        gd.filepath,
-        !!browserState,
-      )
-      // remove node_modules from the graph when enabled
-      if (hideNodeModules.value) {
-        moduleGraph = {
-          ...moduleGraph,
-          inlined: moduleGraph.inlined.filter(
-            n => !nodeModuleRegex.test(n),
-          ),
-          externalized: moduleGraph.externalized.filter(
-            n => !nodeModuleRegex.test(n),
-          ),
-        }
-      }
-      graph.value = getModuleGraph(
-        moduleGraph,
-        gd.filepath,
-      )
-      currentFilepath.value = gd.filepath
-    }
-    changeViewMode('graph')
-  }
-  finally {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    loadingModuleGraph.value = false
-  }
-}
-
-debouncedWatch(
-  () => [graphData.value, viewMode.value, hideNodeModules.value] as const,
-  ([, vm, hide], old) => {
-    if (vm === 'graph') {
-      // only force reload when hide is changed
-      loadModuleGraph(old && hide !== old[2])
-    }
-  },
-  { debounce: 100, immediate: true },
-)
-
-const projectNameColor = computed(() => {
-  const projectName = current.value?.file.projectName || ''
-  return explorerTree.colors.get(projectName) || getBadgeNameColor(current.value?.file.projectName)
-})
-
-const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
+const projectName = computed(() => current.value?.file.projectName || '')
+const projectBadgeStyle = computed(() => getProjectBadgeStyle(config.value, projectName.value))
 
 const testTitle = computed(() => {
   const testId = selectedTest.value
@@ -179,7 +75,7 @@ const tags = computed(() => {
     return []
   }
   const node = client.state.idMap.get(testId)
-  return (node?.tags || []).map(tag => ({
+  return (node?.tags || []).map((tag) => ({
     name: tag,
     description: tagsDefinitions.value[tag]?.description,
     bg: getBadgeNameColor(tag, true),
@@ -192,28 +88,37 @@ const tags = computed(() => {
 <template>
   <div
     v-if="current"
-    flex
-    flex-col
-    h-full
-    max-h-full
-    overflow-hidden
+    class="flex flex-col h-full max-h-full overflow-hidden"
     data-testid="file-detail"
   >
     <div>
-      <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
-        <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
-        <span v-if="label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
+      <div class="p-2 h-10 flex gap-2 items-center bg-header border-b border-base">
+        <StatusIcon
+          :state="current.result?.state"
+          :mode="current.mode"
+          :failed-snapshot="failedSnapshot"
+        />
+        <div
+          v-if="isTypecheck"
+          v-tooltip.bottom="
+            'This is a typecheck test. It won\'t report results of the runtime tests'
+          "
+          class="i-logos:typescript-icon flex-shrink-0"
+        />
+        <span
+          v-if="label"
+          class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 flex-shrink-0"
+          >{{ label }}</span
+        >
         <span
           v-if="current?.file.projectName"
-          class="rounded-full py-0.5 px-2 text-xs font-light"
-          :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
-          cursor-default
+          class="rounded-full py-0.5 px-2 text-xs font-light cursor-default"
+          :style="projectBadgeStyle"
         >
           {{ current.file.projectName }}
         </span>
-        <div flex-1 font-light overflow-hidden text-sm flex>
-          <span op-50 truncate>
+        <div class="flex-1 font-light overflow-hidden text-sm flex">
+          <span class="op-50 truncate">
             {{ testTitle }}
           </span>
 
@@ -221,12 +126,9 @@ const tags = computed(() => {
             v-for="tag of tags"
             :key="tag.name"
             v-tooltip.bottom="tag.description"
-            class="rounded-full ml-2 px-2 text-xs font-light"
+            class="rounded-full ml-2 px-2 text-xs font-light cursor-default flex items-center"
             :style="{ backgroundColor: tag.bg, color: tag.text, border: `1px solid ${tag.border}` }"
             :title="tag.description"
-            cursor-default
-            flex
-            items-center
           >
             {{ tag.name }}
           </span>
@@ -243,10 +145,9 @@ const tags = computed(() => {
           <DetailsHeaderButtons v-if="browserState" />
         </div>
       </div>
-      <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>
+      <div class="flex items-center bg-header border-base border-b-2 text-sm h-41px">
         <button
-          tab-button
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{ 'tab-button-active': viewMode == null }"
           data-testid="btn-report"
           @click="changeViewMode(null)"
@@ -255,39 +156,29 @@ const tags = computed(() => {
           Report
         </button>
         <button
-          tab-button
           data-testid="btn-graph"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{ 'tab-button-active': viewMode === 'graph' }"
           @click="changeViewMode('graph')"
         >
-          <span
-            v-if="loadingModuleGraph"
-            class="block w-1.4em h-1.4em i-carbon:circle-dash animate-spin animate-2s"
-          />
-          <span
-            v-else
-            class="block w-1.4em h-1.4em i-carbon:chart-relationship"
-          />
+          <span class="block w-1.4em h-1.4em i-carbon:chart-relationship" />
           Module Graph
         </button>
         <button
-          tab-button
           data-testid="btn-code"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
         >
           <span class="block w-1.4em h-1.4em i-carbon:code" />
-          {{ draft ? "*&#160;" : "" }}Code
+          {{ draft ? '*&#160;' : '' }}Code
         </button>
         <button
-          tab-button
           data-testid="btn-console"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 tab-button"
           :class="{
             'tab-button-active': viewMode === 'console',
-            'op20': viewMode !== 'console' && consoleCount === 0,
+            op20: viewMode !== 'console' && consoleCount === 0,
           }"
           @click="changeViewMode('console')"
         >
@@ -297,30 +188,29 @@ const tags = computed(() => {
       </div>
     </div>
 
-    <div flex flex-col flex-1 overflow="hidden">
-      <div v-if="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
-        <ViewModuleGraph
-          v-show="viewMode === 'graph' && !loadingModuleGraph"
-          v-model="hideNodeModules"
-          :graph="graph"
-          data-testid="graph"
-          :project-name="current.file.projectName || ''"
-        />
-      </div>
+    <div class="flex flex-col flex-1 overflow-hidden">
+      <FileDetailsModuleGraph
+        v-if="viewMode === 'graph'"
+        :key="`graph:${current.id}`"
+        :file="current"
+        :project-name="projectName"
+      />
       <ViewEditor
-        v-if="viewMode === 'editor'"
-        :key="current.id"
+        v-else-if="viewMode === 'editor'"
+        :key="`editor:${current.id}`"
         :file="current"
         data-testid="editor"
         @draft="onDraft"
       />
-      <ViewConsoleOutput
-        v-else-if="viewMode === 'console'"
-        :file="current"
-        data-testid="console"
-      />
-      <ViewReport v-else-if="!viewMode && !test && current" :file="current" data-testid="report" />
-      <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
+      <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" data-testid="console" />
+      <template v-else-if="!viewMode && selectedTask">
+        <ViewTestReport
+          v-if="selectedTask.type === 'test'"
+          :test="selectedTask"
+          data-testid="report"
+        />
+        <ViewReport v-else :suite="selectedTask" data-testid="report" />
+      </template>
     </div>
   </div>
 </template>

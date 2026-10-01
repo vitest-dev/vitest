@@ -1,13 +1,11 @@
-import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 import { transformerNotationWordHighlight } from '@shikijs/transformers'
+import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 import { withPwa } from '@vite-pwa/vitepress'
+import { extendConfig } from '@voidzero-dev/vitepress-theme/config'
 import { defineConfig } from 'vitepress'
-import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
-import {
-  groupIconMdPlugin,
-  groupIconVitePlugin,
-} from 'vitepress-plugin-group-icons'
+import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-icons'
 import llmstxt from 'vitepress-plugin-llms'
+import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import { version } from '../../package.json'
 import { teamMembers } from './contributors'
 import {
@@ -25,106 +23,128 @@ import {
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
-import { extendConfig } from '@voidzero-dev/vitepress-theme/config'
 
 export default ({ mode }: { mode: string }) => {
-  return withPwa(extendConfig(defineConfig({
-    lang: 'en-US',
-    title: vitestName,
-    description: vitestDescription,
-    srcExclude: [
-      '**/guide/examples/*',
-      '**/guide/cli-generated.md',
-    ],
-    locales: {
-      root: {
-        label: 'English',
+  return withPwa(
+    extendConfig(
+      defineConfig({
         lang: 'en-US',
-      },
-      zh: {
-        label: '简体中文',
-        lang: 'zh',
-        link: 'https://cn.vitest.dev/',
-      },
-    },
-    head: [
-      ['meta', { name: 'theme-color', content: '#22FF84' }],
-      ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
-      ['link', { rel: 'icon', href: '/logo-without-border.svg', type: 'image/svg+xml' }],
-      ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
-      ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, node' }],
-      ['meta', { property: 'og:title', content: vitestName }],
-      ['meta', { property: 'og:description', content: vitestDescription }],
-      ['meta', { property: 'og:url', content: ogUrl }],
-      ['meta', { property: 'og:image', content: ogImage }],
-      ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-      ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
-      ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
-      ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
-      ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
-      ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
-      [
-        'script',
-        {
-          'src': 'https://cdn.usefathom.com/script.js',
-          'data-site': 'BEAFAKYG',
-          'data-spa': 'auto',
-          'defer': '',
-        },
-      ],
-    ],
-    lastUpdated: true,
-    vite: {
-      plugins: [
-        groupIconVitePlugin({
-          customIcon: {
-            'CLI': 'vscode-icons:file-type-shell',
-            '.spec.ts': 'vscode-icons:file-type-testts',
-            '.test.ts': 'vscode-icons:file-type-testts',
-            '.spec.js': 'vscode-icons:file-type-testjs',
-            '.test.js': 'vscode-icons:file-type-testjs',
-            'next': '',
+        title: vitestName,
+        description: vitestDescription,
+        cleanUrls: true,
+        srcExclude: ['**/guide/examples/*', '**/guide/cli-generated.md', 'AGENTS.md'],
+        locales: {
+          root: {
+            label: 'English',
+            lang: 'en-US',
           },
-        }),
-        llmstxt(),
-      ],
-    },
-    markdown: {
-      config(md) {
-        md.use(tabsMarkdownPlugin)
-        md.use(groupIconMdPlugin)
-      },
-      theme: {
-        light: 'github-light',
-        dark: 'github-dark',
-      },
-      codeTransformers: mode === 'development'
-        ? [transformerNotationWordHighlight()]
-        : [
-            transformerNotationWordHighlight(),
-            transformerTwoslash({
-              processHoverInfo: (info) => {
-                if (info.includes(process.cwd())) {
-                  return info.replace(new RegExp(process.cwd(), 'g'), '')
-                }
-                return info
+          zh: {
+            label: '简体中文',
+            lang: 'zh',
+            link: 'https://cn.vitest.dev/',
+          },
+        },
+        head: [
+          ['meta', { name: 'theme-color', content: '#22FF84' }],
+          ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+          ['link', { rel: 'icon', href: '/logo-without-border.svg', type: 'image/svg+xml' }],
+          [
+            'meta',
+            {
+              name: 'author',
+              content: `${teamMembers.map((c) => c.name).join(', ')} and ${vitestName} contributors`,
+            },
+          ],
+          [
+            'meta',
+            {
+              name: 'keywords',
+              content:
+                'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, node',
+            },
+          ],
+          ['meta', { property: 'og:title', content: vitestName }],
+          ['meta', { property: 'og:description', content: vitestDescription }],
+          ['meta', { property: 'og:url', content: ogUrl }],
+          ['meta', { property: 'og:image', content: ogImage }],
+          ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+          [
+            'link',
+            {
+              rel: 'preload',
+              as: 'style',
+              onload: "this.onload=null;this.rel='stylesheet'",
+              href: font,
+            },
+          ],
+          ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
+          ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
+          ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
+          ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
+        ],
+        lastUpdated: true,
+        vite: {
+          plugins: [
+            groupIconVitePlugin({
+              customIcon: {
+                CLI: 'vscode-icons:file-type-shell',
+                '.spec.ts': 'vscode-icons:file-type-testts',
+                '.test.ts': 'vscode-icons:file-type-testts',
+                '.spec.js': 'vscode-icons:file-type-testjs',
+                '.test.js': 'vscode-icons:file-type-testjs',
+                next: '',
               },
             }),
+            llmstxt(),
           ],
-      languages: ['js', 'jsx', 'ts', 'tsx'],
-    },
-    themeConfig: {
-      variant: 'vitest',
-      logo: '/logo.svg',
+          define: {
+            __VITEST_VERSION__: JSON.stringify(version),
+          },
+        },
+        markdown: {
+          config(md) {
+            md.use(tabsMarkdownPlugin)
+            md.use(groupIconMdPlugin)
+          },
+          theme: {
+            light: 'github-light',
+            dark: 'github-dark',
+          },
+          codeTransformers:
+            mode === 'development'
+              ? [transformerNotationWordHighlight()]
+              : [
+                  transformerNotationWordHighlight(),
+                  transformerTwoslash({
+                    // resolve types from source, so the docs don't need built packages
+                    twoslashOptions: {
+                      compilerOptions: {
+                        moduleResolution: 100 /* Bundler */,
+                        customConditions: ['__vitest_source__'],
+                      },
+                    },
+                    processHoverInfo: (info) => {
+                      if (info.includes(process.cwd())) {
+                        return info.replace(new RegExp(process.cwd(), 'g'), '')
+                      }
+                      return info
+                    },
+                  }),
+                ],
+          languages: ['js', 'jsx', 'ts', 'tsx'],
+        },
+        themeConfig: {
+          variant: 'vitest',
+          logo: '/logo.svg',
 
-      editLink: {
-        pattern: 'https://github.com/vitest-dev/vitest/edit/main/docs/:path',
-        text: 'Suggest changes to this page',
-      },
+          editLink: {
+            pattern: 'https://github.com/vitest-dev/vitest/edit/main/docs/:path',
+            text: 'Suggest changes to this page',
+          },
 
-      search: {
-        provider: 'local',
-      /* provider: 'algolia',
+          search: {
+            provider: 'local',
+            /* provider: 'algolia',
       options: {
         appId: 'ZTF29HGJ69',
         apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
@@ -133,56 +153,56 @@ export default ({ mode }: { mode: string }) => {
         //   facetFilters: ['tags:en'],
         // },
       }, */
-      },
-
-      banner: {
-        id: 'viteplus-alpha',
-        text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
-        url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
-      },
-
-      carbonAds: {
-        code: 'CW7DVKJE',
-        placement: 'vitestdev',
-      },
-
-      socialLinks: [
-        { icon: 'bluesky', link: bluesky },
-        { icon: 'mastodon', link: mastodon },
-        { icon: 'discord', link: discord },
-        { icon: 'github', link: github },
-      ],
-
-      footer: {
-        copyright: `© ${new Date().getFullYear()} VoidZero Inc. and Vitest contributors.`,
-        nav: [
-          {
-            title: 'Vitest',
-            items: [
-              { text: 'Guides', link: '/guide/' },
-              { text: 'API', link: '/api/test' },
-              { text: 'Config', link: '/config/' },
-            ],
           },
-          {
-            title: 'Resources',
-            items: [
-              { text: 'Team', link: '/team' },
-              { text: 'Blog', link: '/blog' },
-              { text: 'Releases', link: releases },
-            ],
+
+          // banner: {
+          //   id: 'viteplus-alpha',
+          //   text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
+          //   url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
+          // },
+
+          carbonAds: {
+            code: 'CW7DVKJE',
+            placement: 'vitestdev',
           },
-          {
-            title: 'Versions',
-            items: [
-              { text: 'Unreleased Docs', link: 'https://main.vitest.dev/' },
-              { text: 'Vitest v3 Docs', link: 'https://v3.vitest.dev/' },
-              { text: 'Vitest v2 Docs', link: 'https://v2.vitest.dev/' },
-              { text: 'Vitest v1 Docs', link: 'https://v1.vitest.dev/' },
-              { text: 'Vitest v0 Docs', link: 'https://v0.vitest.dev/' },
-            ],
-          },
-          /* {
+
+          socialLinks: [
+            { icon: 'bluesky', link: bluesky },
+            { icon: 'mastodon', link: mastodon },
+            { icon: 'discord', link: discord },
+            { icon: 'github', link: github },
+          ],
+
+          footer: {
+            copyright: `© ${new Date().getFullYear()} VoidZero Inc. and Vitest contributors.`,
+            nav: [
+              {
+                title: 'Vitest',
+                items: [
+                  { text: 'Guides', link: '/guide/' },
+                  { text: 'API', link: '/api/test' },
+                  { text: 'Config', link: '/config/' },
+                ],
+              },
+              {
+                title: 'Resources',
+                items: [
+                  { text: 'Team', link: '/team' },
+                  { text: 'Blog', link: '/blog' },
+                  { text: 'Releases', link: releases },
+                ],
+              },
+              {
+                title: 'Versions',
+                items: [
+                  { text: 'Unreleased Docs', link: 'https://main.vitest.dev/' },
+                  { text: 'Vitest v4 Docs', link: 'https://v4.vitest.dev/' },
+                  { text: 'Vitest v3 Docs', link: 'https://v3.vitest.dev/' },
+                  { text: 'Vitest v2 Docs', link: 'https://v2.vitest.dev/' },
+                  { text: 'Vitest v1 Docs', link: 'https://v1.vitest.dev/' },
+                ],
+              },
+              /* {
             title: 'Legal',
             items: [
               { text: 'Terms & Conditions', link: 'https://voidzero.dev/terms' },
@@ -190,1141 +210,1179 @@ export default ({ mode }: { mode: string }) => {
               { text: 'Cookie Policy', link: 'https://voidzero.dev/cookies' },
             ],
           }, */
-        ],
-        social: [
-          { icon: 'github', link: github },
-          { icon: 'discord', link: discord },
-          // { icon: 'mastodon', link: mastodon }, -- the link shows github
-          { icon: 'bluesky', link: bluesky },
-        ],
-      },
+            ],
+            social: [
+              { icon: 'github', link: github },
+              { icon: 'discord', link: discord },
+              // { icon: 'mastodon', link: mastodon }, -- the link shows github
+              { icon: 'bluesky', link: bluesky },
+            ],
+          },
 
-      nav: [
-        { text: 'Guides', link: '/guide/', activeMatch: '^/guide/' },
-        { text: 'API', link: '/api/test', activeMatch: '^/api/' },
-        { text: 'Config', link: '/config/', activeMatch: '^/config/' },
-        {
-          text: 'Blog',
-          link: '/blog',
-        },
-        {
-          text: `v${version}`,
-          items: [
+          nav: [
+            { text: 'Guides', link: '/guide/', activeMatch: '^/guide/' },
+            { text: 'API', link: '/api/test', activeMatch: '^/api/' },
+            { text: 'Config', link: '/config/', activeMatch: '^/config/' },
             {
-              items: [
-                {
-                  text: `v${version}`,
-                  link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
-                },
-                {
-                  text: 'Releases Notes',
-                  link: releases,
-                },
-                {
-                  text: 'Contributing',
-                  link: contributing,
-                },
-                {
-                  text: 'Team',
-                  link: '/team',
-                },
-              ],
+              text: 'Blog',
+              link: '/blog',
             },
             {
+              text: `v${version}`,
               items: [
                 {
-                  text: 'unreleased',
-                  link: 'https://main.vitest.dev/',
+                  items: [
+                    {
+                      text: `v${version}`,
+                      link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
+                    },
+                    {
+                      text: 'Releases Notes',
+                      link: releases,
+                    },
+                    {
+                      text: 'Contributing',
+                      link: contributing,
+                    },
+                    {
+                      text: 'Team',
+                      link: '/team',
+                    },
+                    {
+                      text: 'Releases',
+                      link: '/releases',
+                    },
+                  ],
                 },
                 {
-                  text: 'v3.x',
-                  link: 'https://v3.vitest.dev/',
-                },
-                {
-                  text: 'v2.x',
-                  link: 'https://v2.vitest.dev/',
-                },
-                {
-                  text: 'v1.x',
-                  link: 'https://v1.vitest.dev/',
-                },
-                {
-                  text: 'v0.x',
-                  link: 'https://v0.vitest.dev/',
+                  items: [
+                    {
+                      text: 'unreleased',
+                      link: 'https://main.vitest.dev/',
+                    },
+                    {
+                      text: 'v4.x',
+                      link: 'https://v4.vitest.dev/',
+                    },
+                    {
+                      text: 'v3.x',
+                      link: 'https://v3.vitest.dev/',
+                    },
+                    {
+                      text: 'v2.x',
+                      link: 'https://v2.vitest.dev/',
+                    },
+                    {
+                      text: 'v1.x',
+                      link: 'https://v1.vitest.dev/',
+                    },
+                  ],
                 },
               ],
             },
           ],
-        },
-      ],
 
-      sidebar: {
-        '/config': [
-          {
-            text: 'Config Reference',
-            collapsed: false,
-            items: [
+          sidebar: {
+            '/config': [
               {
-                text: 'Config File',
-                link: '/config/',
-              },
-              {
-                text: 'include',
-                link: '/config/include',
-              },
-              {
-                text: 'exclude',
-                link: '/config/exclude',
-              },
-              {
-                text: 'includeSource',
-                link: '/config/include-source',
-              },
-              {
-                text: 'name',
-                link: '/config/name',
-              },
-              {
-                text: 'server',
-                link: '/config/server',
-              },
-              {
-                text: 'deps',
-                link: '/config/deps',
-              },
-              {
-                text: 'runner',
-                link: '/config/runner',
-              },
-              {
-                text: 'benchmark',
-                link: '/config/benchmark',
-              },
-              {
-                text: 'alias',
-                link: '/config/alias',
-              },
-              {
-                text: 'globals',
-                link: '/config/globals',
-              },
-              {
-                text: 'environment',
-                link: '/config/environment',
-              },
-              {
-                text: 'environmentOptions',
-                link: '/config/environmentoptions',
-              },
-              {
-                text: 'watch',
-                link: '/config/watch',
-              },
-              {
-                text: 'watchTriggerPatterns',
-                link: '/config/watchtriggerpatterns',
-              },
-              {
-                text: 'root',
-                link: '/config/root',
-              },
-              {
-                text: 'dir',
-                link: '/config/dir',
-              },
-              {
-                text: 'reporters',
-                link: '/config/reporters',
-              },
-              {
-                text: 'outputFile',
-                link: '/config/outputfile',
-              },
-              {
-                text: 'pool',
-                link: '/config/pool',
-              },
-              {
-                text: 'execArgv',
-                link: '/config/execargv',
-              },
-              {
-                text: 'vmMemoryLimit',
-                link: '/config/vmmemorylimit',
-              },
-              {
-                text: 'fileParallelism',
-                link: '/config/fileparallelism',
-              },
-              {
-                text: 'maxWorkers',
-                link: '/config/maxworkers',
-              },
-              {
-                text: 'testTimeout',
-                link: '/config/testtimeout',
-              },
-              {
-                text: 'hookTimeout',
-                link: '/config/hooktimeout',
-              },
-              {
-                text: 'teardownTimeout',
-                link: '/config/teardowntimeout',
-              },
-              {
-                text: 'silent',
-                link: '/config/silent',
-              },
-              {
-                text: 'setupFiles',
-                link: '/config/setupfiles',
-              },
-              {
-                text: 'provide',
-                link: '/config/provide',
-              },
-              {
-                text: 'globalSetup',
-                link: '/config/globalsetup',
-              },
-              {
-                text: 'forceRerunTriggers',
-                link: '/config/forcereruntriggers',
-              },
-              {
-                text: 'coverage',
-                link: '/config/coverage',
-              },
-              {
-                text: 'testNamePattern',
-                link: '/config/testnamepattern',
-              },
-              {
-                text: 'ui',
-                link: '/config/ui',
-              },
-              {
-                text: 'open',
-                link: '/config/open',
-              },
-              {
-                text: 'api',
-                link: '/config/api',
-              },
-              {
-                text: 'clearMocks',
-                link: '/config/clearmocks',
-              },
-              {
-                text: 'mockReset',
-                link: '/config/mockreset',
-              },
-              {
-                text: 'restoreMocks',
-                link: '/config/restoremocks',
-              },
-              {
-                text: 'unstubEnvs',
-                link: '/config/unstubenvs',
-              },
-              {
-                text: 'unstubGlobals',
-                link: '/config/unstubglobals',
-              },
-              {
-                text: 'snapshotFormat',
-                link: '/config/snapshotformat',
-              },
-              {
-                text: 'snapshotSerializers',
-                link: '/config/snapshotserializers',
-              },
-              {
-                text: 'resolveSnapshotPath',
-                link: '/config/resolvesnapshotpath',
-              },
-              {
-                text: 'allowOnly',
-                link: '/config/allowonly',
-              },
-              {
-                text: 'passWithNoTests',
-                link: '/config/passwithnotests',
-              },
-              {
-                text: 'logHeapUsage',
-                link: '/config/logheapusage',
-              },
-              {
-                text: 'css',
-                link: '/config/css',
-              },
-              {
-                text: 'maxConcurrency',
-                link: '/config/maxconcurrency',
-              },
-              {
-                text: 'cache',
-                link: '/config/cache',
-              },
-              {
-                text: 'sequence',
-                link: '/config/sequence',
-              },
-              {
-                text: 'tags',
-                link: '/config/tags',
-              },
-              {
-                text: 'strictTags',
-                link: '/config/stricttags',
-              },
-              {
-                text: 'typecheck',
-                link: '/config/typecheck',
-              },
-              {
-                text: 'slowTestThreshold',
-                link: '/config/slowtestthreshold',
-              },
-              {
-                text: 'chaiConfig',
-                link: '/config/chaiconfig',
-              },
-              {
-                text: 'bail',
-                link: '/config/bail',
-              },
-              {
-                text: 'retry',
-                link: '/config/retry',
-              },
-              {
-                text: 'onConsoleLog',
-                link: '/config/onconsolelog',
-              },
-              {
-                text: 'onStackTrace',
-                link: '/config/onstacktrace',
-              },
-              {
-                text: 'onUnhandledError',
-                link: '/config/onunhandlederror',
-              },
-              {
-                text: 'dangerouslyIgnoreUnhandled...',
-                link: '/config/dangerouslyignoreunhandlederrors',
-              },
-              {
-                text: 'diff',
-                link: '/config/diff',
-              },
-              {
-                text: 'fakeTimers',
-                link: '/config/faketimers',
-              },
-              {
-                text: 'projects',
-                link: '/config/projects',
-              },
-              {
-                text: 'isolate',
-                link: '/config/isolate',
-              },
-              {
-                text: 'includeTaskLocation',
-                link: '/config/includetasklocation',
-              },
-              {
-                text: 'snapshotEnvironment',
-                link: '/config/snapshotenvironment',
-              },
-              {
-                text: 'env',
-                link: '/config/env',
-              },
-              {
-                text: 'expect',
-                link: '/config/expect',
-              },
-              {
-                text: 'printConsoleTrace',
-                link: '/config/printconsoletrace',
-              },
-              {
-                text: 'attachmentsDir',
-                link: '/config/attachmentsdir',
-              },
-              {
-                text: 'hideSkippedTests',
-                link: '/config/hideskippedtests',
-              },
-              {
-                text: 'mode',
-                link: '/config/mode',
-              },
-              {
-                text: 'expandSnapshotDiff',
-                link: '/config/expandsnapshotdiff',
-              },
-              {
-                text: 'disableConsoleIntercept',
-                link: '/config/disableconsoleintercept',
-              },
-              {
-                text: 'experimental',
-                link: '/config/experimental',
-              },
-            ],
-          },
-          {
-            text: 'Browser Mode',
-            collapsed: false,
-            items: [
-              {
-                text: 'Providers',
+                text: 'Config Reference',
                 collapsed: false,
                 items: [
                   {
-                    text: 'playwright',
-                    link: '/config/browser/playwright',
+                    text: 'Config File',
+                    link: '/config/',
                   },
                   {
-                    text: 'webdriverio',
-                    link: '/config/browser/webdriverio',
+                    text: 'include',
+                    link: '/config/include',
                   },
                   {
-                    text: 'preview',
-                    link: '/config/browser/preview',
+                    text: 'exclude',
+                    link: '/config/exclude',
+                  },
+                  {
+                    text: 'includeSource',
+                    link: '/config/include-source',
+                  },
+                  {
+                    text: 'name',
+                    link: '/config/name',
+                  },
+                  {
+                    text: 'server',
+                    link: '/config/server',
+                  },
+                  {
+                    text: 'deps',
+                    link: '/config/deps',
+                  },
+                  {
+                    text: 'runner',
+                    link: '/config/runner',
+                  },
+                  {
+                    text: 'benchmark',
+                    link: '/config/benchmark',
+                  },
+                  {
+                    text: 'alias',
+                    link: '/config/alias',
+                  },
+                  {
+                    text: 'globals',
+                    link: '/config/globals',
+                  },
+                  {
+                    text: 'injectCjsGlobals',
+                    link: '/config/injectcjsglobals',
+                  },
+                  {
+                    text: 'environment',
+                    link: '/config/environment',
+                  },
+                  {
+                    text: 'environmentOptions',
+                    link: '/config/environmentoptions',
+                  },
+                  {
+                    text: 'watch',
+                    link: '/config/watch',
+                  },
+                  {
+                    text: 'watchTriggerPatterns',
+                    link: '/config/watchtriggerpatterns',
+                  },
+                  {
+                    text: 'root',
+                    link: '/config/root',
+                  },
+                  {
+                    text: 'dir',
+                    link: '/config/dir',
+                  },
+                  {
+                    text: 'reporters',
+                    link: '/config/reporters',
+                  },
+                  {
+                    text: 'outputFile',
+                    link: '/config/outputfile',
+                  },
+                  {
+                    text: 'pool',
+                    link: '/config/pool',
+                  },
+                  {
+                    text: 'execArgv',
+                    link: '/config/execargv',
+                  },
+                  {
+                    text: 'vmMemoryLimit',
+                    link: '/config/vmmemorylimit',
+                  },
+                  {
+                    text: 'fileParallelism',
+                    link: '/config/fileparallelism',
+                  },
+                  {
+                    text: 'maxWorkers',
+                    link: '/config/maxworkers',
+                  },
+                  {
+                    text: 'testTimeout',
+                    link: '/config/testtimeout',
+                  },
+                  {
+                    text: 'hookTimeout',
+                    link: '/config/hooktimeout',
+                  },
+                  {
+                    text: 'teardownTimeout',
+                    link: '/config/teardowntimeout',
+                  },
+                  {
+                    text: 'silent',
+                    link: '/config/silent',
+                  },
+                  {
+                    text: 'setupFiles',
+                    link: '/config/setupfiles',
+                  },
+                  {
+                    text: 'provide',
+                    link: '/config/provide',
+                  },
+                  {
+                    text: 'globalSetup',
+                    link: '/config/globalsetup',
+                  },
+                  {
+                    text: 'forceRerunTriggers',
+                    link: '/config/forcereruntriggers',
+                  },
+                  {
+                    text: 'coverage',
+                    link: '/config/coverage',
+                  },
+                  {
+                    text: 'testNamePattern',
+                    link: '/config/testnamepattern',
+                  },
+                  {
+                    text: 'ui',
+                    link: '/config/ui',
+                  },
+                  {
+                    text: 'open',
+                    link: '/config/open',
+                  },
+                  {
+                    text: 'api',
+                    link: '/config/api',
+                  },
+                  {
+                    text: 'clearMocks',
+                    link: '/config/clearmocks',
+                  },
+                  {
+                    text: 'mockReset',
+                    link: '/config/mockreset',
+                  },
+                  {
+                    text: 'restoreMocks',
+                    link: '/config/restoremocks',
+                  },
+                  {
+                    text: 'unstubEnvs',
+                    link: '/config/unstubenvs',
+                  },
+                  {
+                    text: 'unstubGlobals',
+                    link: '/config/unstubglobals',
+                  },
+                  {
+                    text: 'snapshotFormat',
+                    link: '/config/snapshotformat',
+                  },
+                  {
+                    text: 'snapshotSerializers',
+                    link: '/config/snapshotserializers',
+                  },
+                  {
+                    text: 'resolveSnapshotPath',
+                    link: '/config/resolvesnapshotpath',
+                  },
+                  {
+                    text: 'allowOnly',
+                    link: '/config/allowonly',
+                  },
+                  {
+                    text: 'passWithNoTests',
+                    link: '/config/passwithnotests',
+                  },
+                  {
+                    text: 'logHeapUsage',
+                    link: '/config/logheapusage',
+                  },
+                  {
+                    text: 'css',
+                    link: '/config/css',
+                  },
+                  {
+                    text: 'maxConcurrency',
+                    link: '/config/maxconcurrency',
+                  },
+                  {
+                    text: 'cache',
+                    link: '/config/cache',
+                  },
+                  {
+                    text: 'fsModuleCache',
+                    link: '/config/fsmodulecache',
+                  },
+                  {
+                    text: 'fsModuleCachePath',
+                    link: '/config/fsmodulecachepath',
+                  },
+                  {
+                    text: 'sequence',
+                    link: '/config/sequence',
+                  },
+                  {
+                    text: 'tags',
+                    link: '/config/tags',
+                  },
+                  {
+                    text: 'strictTags',
+                    link: '/config/stricttags',
+                  },
+                  {
+                    text: 'typecheck',
+                    link: '/config/typecheck',
+                  },
+                  {
+                    text: 'slowTestThreshold',
+                    link: '/config/slowtestthreshold',
+                  },
+                  {
+                    text: 'chaiConfig',
+                    link: '/config/chaiconfig',
+                  },
+                  {
+                    text: 'bail',
+                    link: '/config/bail',
+                  },
+                  {
+                    text: 'retry',
+                    link: '/config/retry',
+                  },
+                  {
+                    text: 'repeats',
+                    link: '/config/repeats',
+                  },
+                  {
+                    text: 'onConsoleLog',
+                    link: '/config/onconsolelog',
+                  },
+                  {
+                    text: 'onStackTrace',
+                    link: '/config/onstacktrace',
+                  },
+                  {
+                    text: 'onUnhandledError',
+                    link: '/config/onunhandlederror',
+                  },
+                  {
+                    text: 'dangerouslyIgnoreUnhandled...',
+                    link: '/config/dangerouslyignoreunhandlederrors',
+                  },
+                  {
+                    text: 'diff',
+                    link: '/config/diff',
+                  },
+                  {
+                    text: 'fakeTimers',
+                    link: '/config/faketimers',
+                  },
+                  {
+                    text: 'projects',
+                    link: '/config/projects',
+                  },
+                  {
+                    text: 'sharedViteServer',
+                    link: '/config/sharedviteserver',
+                  },
+                  {
+                    text: 'isolate',
+                    link: '/config/isolate',
+                  },
+                  {
+                    text: 'includeTaskLocation',
+                    link: '/config/includetasklocation',
+                  },
+                  {
+                    text: 'snapshotEnvironment',
+                    link: '/config/snapshotenvironment',
+                  },
+                  {
+                    text: 'env',
+                    link: '/config/env',
+                  },
+                  {
+                    text: 'expect',
+                    link: '/config/expect',
+                  },
+                  {
+                    text: 'printConsoleTrace',
+                    link: '/config/printconsoletrace',
+                  },
+                  {
+                    text: 'attachmentsDir',
+                    link: '/config/attachmentsdir',
+                  },
+                  {
+                    text: 'hideSkippedTests',
+                    link: '/config/hideskippedtests',
+                  },
+                  {
+                    text: 'mode',
+                    link: '/config/mode',
+                  },
+                  {
+                    text: 'expandSnapshotDiff',
+                    link: '/config/expandsnapshotdiff',
+                  },
+                  {
+                    text: 'disableConsoleIntercept',
+                    link: '/config/disableconsoleintercept',
+                  },
+                  {
+                    text: 'changed',
+                    link: '/config/changed',
+                  },
+                  {
+                    text: 'experimental',
+                    link: '/config/experimental',
                   },
                 ],
               },
               {
-                text: 'browser.enabled',
-                link: '/config/browser/enabled',
-              },
-              {
-                text: 'browser.instances',
-                link: '/config/browser/instances',
-              },
-              {
-                text: 'browser.headless',
-                link: '/config/browser/headless',
-              },
-              {
-                text: 'browser.isolate',
-                link: '/config/browser/isolate',
-              },
-              {
-                text: 'browser.testerHtmlPath',
-                link: '/config/browser/testerhtmlpath',
-              },
-              {
-                text: 'browser.api',
-                link: '/config/browser/api',
-              },
-              {
-                text: 'browser.provider',
-                link: '/config/browser/provider',
-              },
-              {
-                text: 'browser.ui',
-                link: '/config/browser/ui',
-              },
-              {
-                text: 'browser.detailsPanelPosition',
-                link: '/config/browser/detailspanelposition',
-              },
-              {
-                text: 'browser.viewport',
-                link: '/config/browser/viewport',
-              },
-              {
-                text: 'browser.locators',
-                link: '/config/browser/locators',
-              },
-              {
-                text: 'browser.screenshotDirectory',
-                link: '/config/browser/screenshotdirectory',
-              },
-              {
-                text: 'browser.screenshotFailures',
-                link: '/config/browser/screenshotfailures',
-              },
-              {
-                text: 'browser.orchestratorScripts',
-                link: '/config/browser/orchestratorscripts',
-              },
-              {
-                text: 'browser.commands',
-                link: '/config/browser/commands',
-              },
-              {
-                text: 'browser.connectTimeout',
-                link: '/config/browser/connecttimeout',
-              },
-              {
-                text: 'browser.trace',
-                link: '/config/browser/trace',
-              },
-              {
-                text: 'browser.trackUnhandledErrors',
-                link: '/config/browser/trackunhandlederrors',
-              },
-              {
-                text: 'browser.expect',
-                link: '/config/browser/expect',
-              },
-            ],
-          },
-          // {
-          //   text: '@vitest/plugin-eslint',
-          //   collapsed: true,
-          //   items: [
-          //     {
-          //       text: 'Lints',
-          //       link: '/config/eslint',
-          //     },
-          //     // TODO: generate
-          //     {
-          //       text: 'consistent-test-filename',
-          //       link: '/config/eslint/consistent-test-filename',
-          //     },
-          //     {
-          //       text: 'consistent-test-it',
-          //       link: '/config/eslint/consistent-test-it',
-          //     },
-          //   ],
-          // },
-          // {
-          //   text: 'vscode',
-          //   link: '/config/vscode',
-          // },
-        ],
-        '/guide': [
-          {
-            text: 'Introduction',
-            collapsed: false,
-            items: [
-              {
-                text: 'Why Vitest',
-                link: '/guide/why',
-              },
-              {
-                text: 'Getting Started',
-                link: '/guide/',
-              },
-              {
-                text: 'Features',
-                link: '/guide/features',
-              },
-            ],
-          },
-          {
-            text: 'Learn',
-            collapsed: false,
-            items: [
-              {
-                text: 'Writing Tests',
-                link: '/guide/learn/writing-tests',
-                docFooterText: 'Writing Tests | Learn',
-              },
-              {
-                text: 'Using Matchers',
-                link: '/guide/learn/matchers',
-                docFooterText: 'Using Matchers | Learn',
-              },
-              {
-                text: 'Testing Async Code',
-                link: '/guide/learn/async',
-                docFooterText: 'Testing Async Code | Learn',
-              },
-              {
-                text: 'Setup and Teardown',
-                link: '/guide/learn/setup-teardown',
-                docFooterText: 'Setup and Teardown | Learn',
-              },
-              {
-                text: 'Mock Functions',
-                link: '/guide/learn/mock-functions',
-                docFooterText: 'Mock Functions | Learn',
-              },
-              {
-                text: 'Snapshot Testing',
-                link: '/guide/learn/snapshots',
-                docFooterText: 'Snapshot Testing | Learn',
-              },
-              {
-                text: 'Testing in Practice',
-                link: '/guide/learn/testing-in-practice',
-                docFooterText: 'Testing in Practice | Learn',
-              },
-              {
-                text: 'Debugging Tests',
-                link: '/guide/learn/debugging-tests',
-                docFooterText: 'Debugging Tests | Learn',
-              },
-              {
-                text: 'Writing Tests with AI',
-                link: '/guide/learn/writing-tests-with-ai',
-                docFooterText: 'Writing Tests with AI | Learn',
-              },
-            ],
-          },
-          {
-            text: 'Browser Mode',
-            collapsed: false,
-            items: [
-              {
-                text: 'Why Browser Mode',
-                link: '/guide/browser/why',
-                docFooterText: 'Why Browser Mode | Browser Mode',
-              },
-              {
-                text: 'Getting Started',
-                link: '/guide/browser/',
-                docFooterText: 'Getting Started | Browser Mode',
-              },
-              {
-                text: 'Multiple Setups',
-                link: '/guide/browser/multiple-setups',
-                docFooterText: 'Multiple Setups | Browser Mode',
-              },
-              {
-                text: 'Component Testing',
-                link: '/guide/browser/component-testing',
-                docFooterText: 'Component Testing | Browser Mode',
-              },
-              {
-                text: 'Visual Regression Testing',
-                link: '/guide/browser/visual-regression-testing',
-                docFooterText: 'Visual Regression Testing | Browser Mode',
-              },
-              {
-                text: 'Trace View',
-                link: '/guide/browser/trace-view',
-                docFooterText: 'Trace View | Browser Mode',
-              },
-              {
-                text: 'Playwright Traces',
-                link: '/guide/browser/playwright-traces',
-                docFooterText: 'Playwright Traces | Browser Mode',
-              },
-              {
-                text: 'ARIA Snapshots',
-                link: '/guide/browser/aria-snapshots',
-                docFooterText: 'ARIA Snapshots | Browser Mode',
-              },
-            ],
-          },
-          // Authoring — how to express a test in code: constructing it,
-          // asserting, mocking dependencies, attaching metadata. The page is
-          // about *test content*, not the runner. Discriminator: "How do I
-          // write X in a test?" If yes, it belongs here. Mocking sub-pages
-          // live nested because they're a multi-page subtopic.
-          {
-            text: 'Authoring',
-            collapsed: false,
-            items: [
-              {
-                text: 'Test Context',
-                link: '/guide/test-context',
-              },
-              {
-                text: 'Test Run Lifecycle',
-                link: '/guide/lifecycle',
-              },
-              {
-                text: 'Snapshot',
-                link: '/guide/snapshot',
-              },
-              {
-                text: 'Mocking',
-                link: '/guide/mocking',
-                collapsed: true,
-                items: [
-                  {
-                    text: 'Dates',
-                    link: '/guide/mocking/dates',
-                  },
-                  {
-                    text: 'Functions',
-                    link: '/guide/mocking/functions',
-                  },
-                  {
-                    text: 'Globals',
-                    link: '/guide/mocking/globals',
-                  },
-                  {
-                    text: 'Modules',
-                    link: '/guide/mocking/modules',
-                  },
-                  {
-                    text: 'File System',
-                    link: '/guide/mocking/file-system',
-                  },
-                  {
-                    text: 'Requests',
-                    link: '/guide/mocking/requests',
-                  },
-                  {
-                    text: 'Timers',
-                    link: '/guide/mocking/timers',
-                  },
-                  {
-                    text: 'Classes',
-                    link: '/guide/mocking/classes',
-                  },
-                ],
-              },
-              {
-                text: 'Test Tags',
-                link: '/guide/test-tags',
-              },
-              {
-                text: 'Test Annotations',
-                link: '/guide/test-annotations',
-              },
-              {
-                text: 'Extending Matchers',
-                link: '/guide/extending-matchers',
-              },
-              {
-                text: 'Testing Types',
-                link: '/guide/testing-types',
-              },
-              {
-                text: 'In-Source Testing',
-                link: '/guide/in-source',
-              },
-            ],
-          },
-          // Workflow — how to invoke, select, and orchestrate test runs
-          // across files/projects/processes. The page is about the *runner
-          // and tooling around it*, not what's inside a test. Discriminator:
-          // "How do I run / filter / parallelize / integrate Vitest?" If a
-          // page is about the runtime environment of the tests themselves
-          // (jsdom, node), it still belongs here — that's a workflow choice.
-          {
-            text: 'Workflow',
-            collapsed: false,
-            items: [
-              {
-                text: 'CLI',
-                link: '/guide/cli',
-              },
-              {
-                text: 'Test Filtering',
-                link: '/guide/filtering',
-              },
-              {
-                text: 'Test Projects',
-                link: '/guide/projects',
-              },
-              {
-                text: 'Test Environment',
-                link: '/guide/environment',
-              },
-              {
-                text: 'Parallelism',
-                link: '/guide/parallelism',
-              },
-              {
-                text: 'Reporters',
-                link: '/guide/reporters',
-              },
-              {
-                text: 'Vitest UI',
-                link: '/guide/ui',
-              },
-              {
-                text: 'IDE Integration',
-                link: '/guide/ide',
-              },
-            ],
-          },
-          // Quality & Debugging — how to verify the test run is healthy and
-          // diagnose it when it isn't. Coverage, perf, leak detection, error
-          // triage, observability. Discriminator: "Is my suite good?" or
-          // "Why did this fail / leak / slow down?" If a page primarily
-          // measures or fixes the suite (rather than authoring or running
-          // it), put it here.
-          {
-            text: 'Quality & Debugging',
-            collapsed: false,
-            items: [
-              {
-                text: 'Coverage',
-                link: '/guide/coverage',
-              },
-              {
-                text: 'Debugging',
-                link: '/guide/debugging',
-              },
-              {
-                text: 'Common Errors',
-                link: '/guide/common-errors',
-              },
-              {
-                text: 'Performance',
+                text: 'Browser Mode',
                 collapsed: false,
                 items: [
                   {
-                    text: 'Profiling Test Performance',
-                    link: '/guide/profiling-test-performance',
+                    text: 'Providers',
+                    collapsed: false,
+                    items: [
+                      {
+                        text: 'playwright',
+                        link: '/config/browser/playwright',
+                      },
+                      {
+                        text: 'webdriverio',
+                        link: '/config/browser/webdriverio',
+                      },
+                      {
+                        text: 'preview',
+                        link: '/config/browser/preview',
+                      },
+                    ],
                   },
                   {
-                    text: 'Improving Performance',
-                    link: '/guide/improving-performance',
+                    text: 'browser.enabled',
+                    link: '/config/browser/enabled',
+                  },
+                  {
+                    text: 'browser.instances',
+                    link: '/config/browser/instances',
+                  },
+                  {
+                    text: 'browser.headless',
+                    link: '/config/browser/headless',
+                  },
+                  {
+                    text: 'browser.testerHtmlPath',
+                    link: '/config/browser/testerhtmlpath',
+                  },
+                  {
+                    text: 'browser.provider',
+                    link: '/config/browser/provider',
+                  },
+                  {
+                    text: 'browser.ui',
+                    link: '/config/browser/ui',
+                  },
+                  {
+                    text: 'browser.detailsPanelPosition',
+                    link: '/config/browser/detailspanelposition',
+                  },
+                  {
+                    text: 'browser.viewport',
+                    link: '/config/browser/viewport',
+                  },
+                  {
+                    text: 'browser.locators',
+                    link: '/config/browser/locators',
+                  },
+                  {
+                    text: 'browser.screenshotDirectory',
+                    link: '/config/browser/screenshotdirectory',
+                  },
+                  {
+                    text: 'browser.screenshotFailures',
+                    link: '/config/browser/screenshotfailures',
+                  },
+                  {
+                    text: 'browser.dependencySourcemaps',
+                    link: '/config/browser/dependencysourcemaps',
+                  },
+                  {
+                    text: 'browser.orchestratorScripts',
+                    link: '/config/browser/orchestratorscripts',
+                  },
+                  {
+                    text: 'browser.commands',
+                    link: '/config/browser/commands',
+                  },
+                  {
+                    text: 'browser.connectTimeout',
+                    link: '/config/browser/connecttimeout',
+                  },
+                  {
+                    text: 'browser.trace',
+                    link: '/config/browser/trace',
+                  },
+                  {
+                    text: 'browser.trackUnhandledErrors',
+                    link: '/config/browser/trackunhandlederrors',
+                  },
+                  {
+                    text: 'browser.expect',
+                    link: '/config/browser/expect',
                   },
                 ],
               },
-              {
-                text: 'OpenTelemetry',
-                link: '/guide/open-telemetry',
-              },
+              // {
+              //   text: '@vitest/plugin-eslint',
+              //   collapsed: true,
+              //   items: [
+              //     {
+              //       text: 'Lints',
+              //       link: '/config/eslint',
+              //     },
+              //     // TODO: generate
+              //     {
+              //       text: 'consistent-test-filename',
+              //       link: '/config/eslint/consistent-test-filename',
+              //     },
+              //     {
+              //       text: 'consistent-test-it',
+              //       link: '/config/eslint/consistent-test-it',
+              //     },
+              //   ],
+              // },
+              // {
+              //   text: 'vscode',
+              //   link: '/config/vscode',
+              // },
             ],
-          },
-          // Recipes — end-to-end patterns that solve a concrete problem by
-          // combining multiple features. Each entry is titled by the problem
-          // ("Database Transaction per Test"), not the feature. Add a recipe
-          // when a single feature page would over-explain, when the value
-          // comes from composition, or when users would search by intent
-          // rather than by API name.
-          {
-            text: 'Recipes',
-            collapsed: false,
-            items: [
+            '/guide': [
               {
-                text: 'Database Transaction per Test',
-                link: '/guide/recipes/db-transaction',
-              },
-              {
-                text: 'Cancelling Long-Running Operations Gracefully',
-                link: '/guide/recipes/cancellable',
-              },
-              {
-                text: 'Waiting for Async Conditions',
-                link: '/guide/recipes/wait-for',
-              },
-              {
-                text: 'Type Narrowing in Tests',
-                link: '/guide/recipes/type-narrowing',
-              },
-              {
-                text: 'Custom Assertion Helpers',
-                link: '/guide/recipes/custom-assertions',
-              },
-              {
-                text: 'Watching Non-Imported Files',
-                link: '/guide/recipes/watch-templates',
-              },
-              {
-                text: 'Extending Browser Locators',
-                link: '/guide/recipes/browser-locators',
-              },
-              {
-                text: 'Schema-Driven Assertions',
-                link: '/guide/recipes/schema-matching',
-              },
-              {
-                text: 'Auto-Cleanup with `using`',
-                link: '/guide/recipes/explicit-resources',
-              },
-              {
-                text: 'Per-File Isolation Settings',
-                link: '/guide/recipes/disable-isolation',
-              },
-              {
-                text: 'Parallel and Sequential Test Files',
-                link: '/guide/recipes/parallel-sequential',
-              },
-            ],
-          },
-          {
-            text: 'Advanced',
-            collapsed: false,
-            items: [
-              {
-                text: 'Getting Started',
-                link: '/guide/advanced/',
-              },
-              {
-                text: 'Running Tests via API',
-                link: '/guide/advanced/tests',
-              },
-              {
-                text: 'Extending Reporters',
-                link: '/guide/advanced/reporters',
-              },
-              {
-                text: 'Custom Pool',
-                link: '/guide/advanced/pool',
-              },
-            ],
-          },
-          // Migration — one-time transitional content: cross-version
-          // upgrades and porting from other test runners (Jest, Mocha).
-          // Sits near the bottom because it's not daily-use and would push
-          // active-use guides further from the user's first scroll.
-          {
-            text: 'Migration',
-            link: '/guide/migration',
-            collapsed: false,
-            items: [
-              {
-                text: 'Migrating to Vitest 4.0',
-                link: '/guide/migration#vitest-4',
-              },
-              {
-                text: 'Migrating from Jest',
-                link: '/guide/migration#jest',
-              },
-              {
-                text: 'Migrating from Mocha + Chai + Sinon',
-                link: '/guide/migration#mocha-chai-sinon',
-              },
-            ],
-          },
-          {
-            items: [
-              {
-                text: 'Comparisons',
-                link: '/guide/comparisons',
-              },
-            ],
-          },
-        ],
-        '/api': [
-          {
-            text: 'Test API Reference',
-            items: [
-              {
-                text: 'Test',
-                link: '/api/test',
-              },
-              {
-                text: 'Describe',
-                link: '/api/describe',
-              },
-              {
-                text: 'Hooks',
-                link: '/api/hooks',
-              },
-            ],
-          },
-          {
-            text: 'Mocks',
-            link: '/api/mock',
-          },
-          {
-            text: 'Vi Utility',
-            link: '/api/vi',
-          },
-          {
-            text: 'Expect',
-            link: '/api/expect',
-          },
-          {
-            text: 'ExpectTypeOf',
-            link: '/api/expect-typeof',
-          },
-          {
-            text: 'Assert',
-            link: '/api/assert',
-          },
-          {
-            text: 'AssertType',
-            link: '/api/assert-type',
-          },
-          {
-            text: 'Browser Mode',
-            items: [
-              {
-                text: 'Render Function',
+                text: 'Introduction',
                 collapsed: false,
                 items: [
                   {
-                    text: 'react',
-                    link: '/api/browser/react',
+                    text: 'Why Vitest',
+                    link: '/guide/why',
                   },
                   {
-                    text: 'vue',
-                    link: '/api/browser/vue',
+                    text: 'Getting Started',
+                    link: '/guide/',
                   },
                   {
-                    text: 'svelte',
-                    link: '/api/browser/svelte',
+                    text: 'Features',
+                    link: '/guide/features',
                   },
-                  // {
-                  //   text: 'angular',
-                  //   link: '/api/browser/angular',
-                  // },
                 ],
               },
               {
-                text: 'Context',
-                link: '/api/browser/context',
+                text: 'Learn',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Writing Tests',
+                    link: '/guide/learn/writing-tests',
+                    docFooterText: 'Writing Tests | Learn',
+                  },
+                  {
+                    text: 'Using Matchers',
+                    link: '/guide/learn/matchers',
+                    docFooterText: 'Using Matchers | Learn',
+                  },
+                  {
+                    text: 'Testing Async Code',
+                    link: '/guide/learn/async',
+                    docFooterText: 'Testing Async Code | Learn',
+                  },
+                  {
+                    text: 'Setup and Teardown',
+                    link: '/guide/learn/setup-teardown',
+                    docFooterText: 'Setup and Teardown | Learn',
+                  },
+                  {
+                    text: 'Mock Functions',
+                    link: '/guide/learn/mock-functions',
+                    docFooterText: 'Mock Functions | Learn',
+                  },
+                  {
+                    text: 'Snapshot Testing',
+                    link: '/guide/learn/snapshots',
+                    docFooterText: 'Snapshot Testing | Learn',
+                  },
+                  {
+                    text: 'Testing in Practice',
+                    link: '/guide/learn/testing-in-practice',
+                    docFooterText: 'Testing in Practice | Learn',
+                  },
+                  {
+                    text: 'Debugging Tests',
+                    link: '/guide/learn/debugging-tests',
+                    docFooterText: 'Debugging Tests | Learn',
+                  },
+                  {
+                    text: 'Writing Tests with AI',
+                    link: '/guide/learn/writing-tests-with-ai',
+                    docFooterText: 'Writing Tests with AI | Learn',
+                  },
+                ],
               },
               {
-                text: 'Interactivity',
-                link: '/api/browser/interactivity',
+                text: 'Browser Mode',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Why Browser Mode',
+                    link: '/guide/browser/why',
+                    docFooterText: 'Why Browser Mode | Browser Mode',
+                  },
+                  {
+                    text: 'Getting Started',
+                    link: '/guide/browser/',
+                    docFooterText: 'Getting Started | Browser Mode',
+                  },
+                  {
+                    text: 'Multiple Setups',
+                    link: '/guide/browser/multiple-setups',
+                    docFooterText: 'Multiple Setups | Browser Mode',
+                  },
+                  {
+                    text: 'Component Testing',
+                    link: '/guide/browser/component-testing',
+                    docFooterText: 'Component Testing | Browser Mode',
+                  },
+                  {
+                    text: 'Visual Regression Testing',
+                    link: '/guide/browser/visual-regression-testing',
+                    docFooterText: 'Visual Regression Testing | Browser Mode',
+                  },
+                  {
+                    text: 'Trace View',
+                    link: '/guide/browser/trace-view',
+                    docFooterText: 'Trace View | Browser Mode',
+                  },
+                  {
+                    text: 'Playwright Traces',
+                    link: '/guide/browser/playwright-traces',
+                    docFooterText: 'Playwright Traces | Browser Mode',
+                  },
+                  {
+                    text: 'ARIA Snapshots',
+                    link: '/guide/browser/aria-snapshots',
+                    docFooterText: 'ARIA Snapshots | Browser Mode',
+                  },
+                ],
+              },
+              // Authoring — how to express a test in code: constructing it,
+              // asserting, mocking dependencies, attaching metadata. The page is
+              // about *test content*, not the runner. Discriminator: "How do I
+              // write X in a test?" If yes, it belongs here. Mocking sub-pages
+              // live nested because they're a multi-page subtopic.
+              {
+                text: 'Authoring',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Test Context',
+                    link: '/guide/test-context',
+                  },
+                  {
+                    text: 'Test Run Lifecycle',
+                    link: '/guide/lifecycle',
+                  },
+                  {
+                    text: 'Snapshot',
+                    link: '/guide/snapshot',
+                  },
+                  {
+                    text: 'Mocking',
+                    link: '/guide/mocking',
+                    collapsed: true,
+                    items: [
+                      {
+                        text: 'Dates',
+                        link: '/guide/mocking/dates',
+                      },
+                      {
+                        text: 'Functions',
+                        link: '/guide/mocking/functions',
+                      },
+                      {
+                        text: 'Globals',
+                        link: '/guide/mocking/globals',
+                      },
+                      {
+                        text: 'Modules',
+                        link: '/guide/mocking/modules',
+                      },
+                      {
+                        text: 'File System',
+                        link: '/guide/mocking/file-system',
+                      },
+                      {
+                        text: 'Requests',
+                        link: '/guide/mocking/requests',
+                      },
+                      {
+                        text: 'Timers',
+                        link: '/guide/mocking/timers',
+                      },
+                      {
+                        text: 'Classes',
+                        link: '/guide/mocking/classes',
+                      },
+                    ],
+                  },
+                  {
+                    text: 'Test Tags',
+                    link: '/guide/test-tags',
+                  },
+                  {
+                    text: 'Test Annotations',
+                    link: '/guide/test-annotations',
+                  },
+                  {
+                    text: 'Extending Matchers',
+                    link: '/guide/extending-matchers',
+                  },
+                  {
+                    text: 'Testing Types',
+                    link: '/guide/testing-types',
+                  },
+                  {
+                    text: 'Benchmarking',
+                    link: '/guide/benchmarking',
+                  },
+                  {
+                    text: 'In-Source Testing',
+                    link: '/guide/in-source',
+                  },
+                ],
+              },
+              // Workflow — how to invoke, select, and orchestrate test runs
+              // across files/projects/processes. The page is about the *runner
+              // and tooling around it*, not what's inside a test. Discriminator:
+              // "How do I run / filter / parallelize / integrate Vitest?" If a
+              // page is about the runtime environment of the tests themselves
+              // (jsdom, node), it still belongs here — that's a workflow choice.
+              {
+                text: 'Workflow',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'CLI',
+                    link: '/guide/cli',
+                  },
+                  {
+                    text: 'Test Filtering',
+                    link: '/guide/filtering',
+                  },
+                  {
+                    text: 'Test Projects',
+                    link: '/guide/projects',
+                  },
+                  {
+                    text: 'Test Environment',
+                    link: '/guide/environment',
+                  },
+                  {
+                    text: 'Parallelism',
+                    link: '/guide/parallelism',
+                  },
+                  {
+                    text: 'Reporters',
+                    link: '/guide/reporters',
+                  },
+                  {
+                    text: 'Vitest UI',
+                    link: '/guide/ui',
+                  },
+                  {
+                    text: 'IDE Integration',
+                    link: '/guide/ide',
+                  },
+                ],
+              },
+              // Quality & Debugging — how to verify the test run is healthy and
+              // diagnose it when it isn't. Coverage, perf, leak detection, error
+              // triage, observability. Discriminator: "Is my suite good?" or
+              // "Why did this fail / leak / slow down?" If a page primarily
+              // measures or fixes the suite (rather than authoring or running
+              // it), put it here.
+              {
+                text: 'Quality & Debugging',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Coverage',
+                    link: '/guide/coverage',
+                  },
+                  {
+                    text: 'Debugging',
+                    link: '/guide/debugging',
+                  },
+                  {
+                    text: 'Common Errors',
+                    link: '/guide/common-errors',
+                  },
+                  {
+                    text: 'Performance',
+                    collapsed: false,
+                    items: [
+                      {
+                        text: 'Profiling Test Performance',
+                        link: '/guide/profiling-test-performance',
+                      },
+                      {
+                        text: 'Improving Performance',
+                        link: '/guide/improving-performance',
+                      },
+                    ],
+                  },
+                  {
+                    text: 'OpenTelemetry',
+                    link: '/guide/open-telemetry',
+                  },
+                ],
+              },
+              // Recipes — end-to-end patterns that solve a concrete problem by
+              // combining multiple features. Each entry is titled by the problem
+              // ("Database Transaction per Test"), not the feature. Add a recipe
+              // when a single feature page would over-explain, when the value
+              // comes from composition, or when users would search by intent
+              // rather than by API name.
+              {
+                text: 'Recipes',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Database Transaction per Test',
+                    link: '/guide/recipes/db-transaction',
+                  },
+                  {
+                    text: 'Cancelling Long-Running Operations Gracefully',
+                    link: '/guide/recipes/cancellable',
+                  },
+                  {
+                    text: 'Waiting for Async Conditions',
+                    link: '/guide/recipes/wait-for',
+                  },
+                  {
+                    text: 'Type Narrowing in Tests',
+                    link: '/guide/recipes/type-narrowing',
+                  },
+                  {
+                    text: 'Custom Assertion Helpers',
+                    link: '/guide/recipes/custom-assertions',
+                  },
+                  {
+                    text: 'Watching Non-Imported Files',
+                    link: '/guide/recipes/watch-templates',
+                  },
+                  {
+                    text: 'Extending Browser Locators',
+                    link: '/guide/recipes/browser-locators',
+                  },
+                  {
+                    text: 'Schema-Driven Assertions',
+                    link: '/guide/recipes/schema-matching',
+                  },
+                  {
+                    text: 'Auto-Cleanup with `using`',
+                    link: '/guide/recipes/explicit-resources',
+                  },
+                  {
+                    text: 'Conditional Mocking with `vi.when`',
+                    link: '/guide/recipes/conditional-mocking',
+                  },
+                  {
+                    text: 'Per-File Isolation Settings',
+                    link: '/guide/recipes/disable-isolation',
+                  },
+                  {
+                    text: 'Parallel and Sequential Test Files',
+                    link: '/guide/recipes/parallel-sequential',
+                  },
+                ],
               },
               {
-                text: 'Locators',
-                link: '/api/browser/locators',
+                text: 'Advanced',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Getting Started',
+                    link: '/guide/advanced/',
+                  },
+                  {
+                    text: 'Running Tests via API',
+                    link: '/guide/advanced/tests',
+                  },
+                  {
+                    text: 'Extending Reporters',
+                    link: '/guide/advanced/reporters',
+                  },
+                  {
+                    text: 'Custom Pool',
+                    link: '/guide/advanced/pool',
+                  },
+                  {
+                    text: 'Benchmark Provider',
+                    link: '/guide/advanced/benchmark-provider',
+                  },
+                ],
+              },
+              // Migration — one-time transitional content: cross-version
+              // upgrades and porting from other test runners (Jest, Mocha).
+              // Sits near the bottom because it's not daily-use and would push
+              // active-use guides further from the user's first scroll.
+              {
+                text: 'Migration',
+                link: '/guide/migration/',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Migrating to Vitest 5.0',
+                    link: '/guide/migration/',
+                  },
+                  {
+                    text: 'Migrating from Jest',
+                    link: '/guide/migration/jest',
+                  },
+                  {
+                    text: 'Migrating from Mocha + Chai + Sinon',
+                    link: '/guide/migration/mocha',
+                  },
+                ],
               },
               {
-                text: 'Assertions',
-                link: '/api/browser/assertions',
-              },
-              {
-                text: 'Commands',
-                link: '/api/browser/commands',
+                items: [
+                  {
+                    text: 'Comparisons',
+                    link: '/guide/comparisons',
+                  },
+                ],
               },
             ],
-          },
-          {
-            text: 'Advanced',
-            collapsed: false,
-            items: [
+            '/api': [
               {
-                text: 'Vitest',
-                link: '/api/advanced/vitest',
+                text: 'Test API Reference',
+                items: [
+                  {
+                    text: 'Test',
+                    link: '/api/test',
+                  },
+                  {
+                    text: 'Describe',
+                    link: '/api/describe',
+                  },
+                  {
+                    text: 'Hooks',
+                    link: '/api/hooks',
+                  },
+                ],
               },
               {
-                text: 'TestProject',
-                link: '/api/advanced/test-project',
+                text: 'Mocks',
+                link: '/api/mock',
               },
               {
-                text: 'TestSpecification',
-                link: '/api/advanced/test-specification',
+                text: 'Vi Utility',
+                link: '/api/vi',
               },
               {
-                text: 'TestCase',
-                link: '/api/advanced/test-case',
+                text: 'Expect',
+                link: '/api/expect',
               },
               {
-                text: 'TestSuite',
-                link: '/api/advanced/test-suite',
+                text: 'ExpectTypeOf',
+                link: '/api/expect-typeof',
               },
               {
-                text: 'TestModule',
-                link: '/api/advanced/test-module',
+                text: 'Assert',
+                link: '/api/assert',
               },
               {
-                text: 'TestCollection',
-                link: '/api/advanced/test-collection',
+                text: 'AssertType',
+                link: '/api/assert-type',
               },
               {
-                text: 'VitestPlugin',
-                link: '/api/advanced/plugin',
+                text: 'Browser Mode',
+                items: [
+                  {
+                    text: 'Render Function',
+                    collapsed: false,
+                    items: [
+                      {
+                        text: 'react',
+                        link: '/api/browser/react',
+                      },
+                      {
+                        text: 'vue',
+                        link: '/api/browser/vue',
+                      },
+                      {
+                        text: 'svelte',
+                        link: '/api/browser/svelte',
+                      },
+                      // {
+                      //   text: 'angular',
+                      //   link: '/api/browser/angular',
+                      // },
+                    ],
+                  },
+                  {
+                    text: 'Context',
+                    link: '/api/browser/context',
+                  },
+                  {
+                    text: 'Interactivity',
+                    link: '/api/browser/interactivity',
+                  },
+                  {
+                    text: 'Locators',
+                    link: '/api/browser/locators',
+                  },
+                  {
+                    text: 'Assertions',
+                    link: '/api/browser/assertions',
+                  },
+                  {
+                    text: 'Commands',
+                    link: '/api/browser/commands',
+                  },
+                ],
               },
               {
-                text: 'VitestRunner',
-                link: '/api/advanced/runner',
+                text: 'Advanced',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Vitest',
+                    link: '/api/advanced/vitest',
+                  },
+                  {
+                    text: 'TestProject',
+                    link: '/api/advanced/test-project',
+                  },
+                  {
+                    text: 'TestSpecification',
+                    link: '/api/advanced/test-specification',
+                  },
+                  {
+                    text: 'TestCase',
+                    link: '/api/advanced/test-case',
+                  },
+                  {
+                    text: 'TestSuite',
+                    link: '/api/advanced/test-suite',
+                  },
+                  {
+                    text: 'TestModule',
+                    link: '/api/advanced/test-module',
+                  },
+                  {
+                    text: 'TestCollection',
+                    link: '/api/advanced/test-collection',
+                  },
+                  {
+                    text: 'VitestPlugin',
+                    link: '/api/advanced/plugin',
+                  },
+                  {
+                    text: 'VitestRunner',
+                    link: '/api/advanced/runner',
+                  },
+                  {
+                    text: 'Reporter',
+                    link: '/api/advanced/reporters',
+                  },
+                  {
+                    text: 'TaskMeta',
+                    link: '/api/advanced/metadata',
+                  },
+                  {
+                    text: 'TestArtifact',
+                    link: '/api/advanced/artifacts',
+                  },
+                ],
               },
-              {
-                text: 'Reporter',
-                link: '/api/advanced/reporters',
-              },
-              {
-                text: 'TaskMeta',
-                link: '/api/advanced/metadata',
-              },
-              {
-                text: 'TestArtifact',
-                link: '/api/advanced/artifacts',
-              },
+              // {
+              //   text: 'Text Runner',
+              //   collapsed: false,
+              //   items: [
+              //     // TODO: generate
+              //     {
+              //       text: 'test',
+              //       link: '/api/test',
+              //     },
+              //     {
+              //       text: 'describe',
+              //       link: '/api/describe',
+              //     },
+              //     {
+              //       text: 'beforeEach',
+              //       link: '/api/before-each',
+              //     },
+              //     {
+              //       text: 'afterEach',
+              //       link: '/api/after-each',
+              //     },
+              //   ],
+              // },
+              // {
+              //   text: 'Assertion API',
+              //   collapsed: false,
+              //   items: [
+              //     {
+              //       text: 'expect',
+              //       link: '/api/expect',
+              //     },
+              //     {
+              //       text: 'assert',
+              //       link: '/api/assert',
+              //     },
+              //     {
+              //       text: 'expectTypeOf',
+              //       link: '/api/expect-typeof',
+              //     },
+              //     {
+              //       text: 'assertType',
+              //       link: '/api/assert-type',
+              //     },
+              //   ],
+              // },
+              // {
+              //   text: 'Vi Utility API',
+              //   collapsed: false,
+              //   items: [
+              //     {
+              //       text: 'Mock Modules',
+              //       link: '/api/vi/mock-modiles',
+              //     },
+              //     {
+              //       text: 'Mock Functions',
+              //       link: '/api/vi/mock-functions',
+              //     },
+              //     {
+              //       text: 'Mock Timers',
+              //       link: '/api/vi/mock-timers',
+              //     },
+              //     {
+              //       text: 'Miscellaneous',
+              //       link: '/api/vi/miscellaneous',
+              //     },
+              //   ],
+              // },
+              // {
+              //   text: 'Browser Mode',
+              //   collapsed: false,
+              //   items: [
+              //     // TODO: generate
+              //     {
+              //       text: 'page',
+              //       link: '/api/browser/page',
+              //     },
+              //     {
+              //       text: 'locators',
+              //       link: '/api/browser/locators',
+              //     },
+              //   ],
+              // },
             ],
           },
-          // {
-          //   text: 'Text Runner',
-          //   collapsed: false,
-          //   items: [
-          //     // TODO: generate
-          //     {
-          //       text: 'test',
-          //       link: '/api/test',
-          //     },
-          //     {
-          //       text: 'describe',
-          //       link: '/api/describe',
-          //     },
-          //     {
-          //       text: 'beforeEach',
-          //       link: '/api/before-each',
-          //     },
-          //     {
-          //       text: 'afterEach',
-          //       link: '/api/after-each',
-          //     },
-          //   ],
-          // },
-          // {
-          //   text: 'Assertion API',
-          //   collapsed: false,
-          //   items: [
-          //     {
-          //       text: 'expect',
-          //       link: '/api/expect',
-          //     },
-          //     {
-          //       text: 'assert',
-          //       link: '/api/assert',
-          //     },
-          //     {
-          //       text: 'expectTypeOf',
-          //       link: '/api/expect-typeof',
-          //     },
-          //     {
-          //       text: 'assertType',
-          //       link: '/api/assert-type',
-          //     },
-          //   ],
-          // },
-          // {
-          //   text: 'Vi Utility API',
-          //   collapsed: false,
-          //   items: [
-          //     {
-          //       text: 'Mock Modules',
-          //       link: '/api/vi/mock-modiles',
-          //     },
-          //     {
-          //       text: 'Mock Functions',
-          //       link: '/api/vi/mock-functions',
-          //     },
-          //     {
-          //       text: 'Mock Timers',
-          //       link: '/api/vi/mock-timers',
-          //     },
-          //     {
-          //       text: 'Miscellaneous',
-          //       link: '/api/vi/miscellaneous',
-          //     },
-          //   ],
-          // },
-          // {
-          //   text: 'Browser Mode',
-          //   collapsed: false,
-          //   items: [
-          //     // TODO: generate
-          //     {
-          //       text: 'page',
-          //       link: '/api/browser/page',
-          //     },
-          //     {
-          //       text: 'locators',
-          //       link: '/api/browser/locators',
-          //     },
-          //   ],
-          // },
-        ],
-      },
-    },
-    pwa,
-    transformHead,
-  })))
+        },
+        pwa,
+        transformHead,
+      }),
+    ),
+  )
 }

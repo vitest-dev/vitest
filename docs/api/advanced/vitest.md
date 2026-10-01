@@ -5,35 +5,9 @@ title: Vitest API
 
 # Vitest
 
-Vitest instance requires the current test mode. It can be either:
+## mode <Deprecated /> {#mode}
 
-- `test` when running runtime tests
-- `benchmark` when running benchmarks <Experimental />
-
-::: details New in Vitest 4
-Vitest 4 added several new APIs (they are marked with a "4.0.0+" badge) and removed deprecated APIs:
-
-- `invalidates`
-- `changedTests` (use [`onFilterWatchedSpecification`](#onfilterwatchedspecification) instead)
-- `server` (use [`vite`](#vite) instead)
-- `getProjectsByTestFile` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getFileWorkspaceSpecs` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getModuleProjects` (filter by [`this.projects`](#projects) yourself)
-- `updateLastChanged` (renamed to [`invalidateFile`](#invalidatefile))
-- `globTestSpecs` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `globTestFiles` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `listFile` (use [`getRelevantTestSpecifications`](#getrelevanttestspecifications) instead)
-:::
-
-## mode
-
-### test
-
-Test mode will only call functions inside `test` or `it`, and throws an error when `bench` is encountered. This mode uses `include` and `exclude` options in the config to find test files.
-
-### benchmark <Experimental /> {#benchmark}
-
-Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
+Since Vitest 5, this property is always `'test'`.
 
 ## config
 
@@ -53,7 +27,7 @@ This is a global [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedev
 Public `state` is an experimental API (except `vitest.state.getReportedEntity`). Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
-Global state stores information about the current tests. It uses the same API from `@vitest/runner` by default, but we recommend using the [Reported Tasks API](/api/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()` on the `@vitest/runner` API:
+Global state stores information about the current tests. It uses internal serializable Task API by default, but we recommend using the [Reported Tasks API](/api/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()`:
 
 ```ts
 const task = vitest.state.idMap.get(taskId) // old API
@@ -194,6 +168,7 @@ This method can be slow because it needs to filter `--changed` flags. Do not use
 
 - If you need to get the list of specifications for known test files, use [`getModuleSpecifications`](#getmodulespecifications) instead.
 - If you need to get the list of all possible test files, use [`globTestSpecifications`](#globtestspecifications).
+
 :::
 
 ## mergeReports
@@ -211,17 +186,21 @@ This method is called automatically by [`startVitest`](/guide/advanced/tests) if
 ## collect
 
 ```ts
-function collect(filters?: string[]): Promise<TestRunResult>
+function collect(
+  filters?: string[],
+  options?: {
+    staticParse?: boolean
+    staticParseConcurrency?: number
+  }
+): Promise<TestRunResult>
 ```
 
-Execute test files without running test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
+Based on `staticParse`, this will either statically analyse test files to collect them (the default) or run the code without executing test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 This method resolves tests specifications based on the config `include`, `exclude`, and `includeSource` values. Read more at [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed.
 
 ::: warning
-Note that Vitest doesn't use static analysis to collect tests. Vitest will run every test file in isolation, just like it runs regular tests.
-
-This makes this method very slow, unless you disable isolation before collecting tests.
+Note that since Vitest 5, the tests are collected by static analysis by default. If disabled via the second option, Vitest will run every test file in isolation, just like it runs regular tests. This would make this method very slow, unless you disable isolation manually before collecting tests.
 :::
 
 ## start
@@ -432,6 +411,7 @@ const dynamicExample = await vitest.import('./example.js')
 
 dynamicExample !== staticExample // ✅
 ```
+
 :::
 
 ::: info
@@ -505,6 +485,7 @@ function onFilterWatchedSpecification(
   fn: (specification: TestSpecification) => boolean
 ): void
 ```
+
 Register a handler that will be called when a file is changed. This callback should return `true` or `false`, indicating whether the test file needs to be rerun.
 
 With this method, you can hook into the default watcher logic to delay or discard tests that the user doesn't want to keep track of at the moment:
@@ -602,6 +583,7 @@ import { escapeTestName } from 'vitest/node'
 // turns into /hello, .+?/
 const escapedPattern = new RegExp(escapeTestName('hello, %s', true))
 ```
+
 :::
 
 ::: warning
@@ -610,10 +592,10 @@ Vitest will only collect tests defined in the file. It will never follow imports
 Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
 :::
 
-## experimental_parseSpecifications <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecifications}
+## parseSpecifications <Version>5.0.0</Version> {#parsespecifications}
 
 ```ts
-function experimental_parseSpecifications(
+function parseSpecifications(
   specifications: TestSpecification[],
   options?: {
     concurrency?: number
@@ -623,13 +605,15 @@ function experimental_parseSpecifications(
 
 This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.
 
-## experimental_clearCache <Version type="experimental">4.0.11</Version> <Experimental /> {#clearcache}
+## clearCache <Version>5.0.0</Version> {#clearcache}
 
 ```ts
-function experimental_clearCache(): Promise<void>
+function clearCache(): Promise<void>
 ```
 
-Deletes all Vitest caches, including [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache).
+Deletes all Vitest caches, including [`fsModuleCache`](/config/fsmodulecache).
+
+This was available since Vitest 4.0.11 as experimental `experimental_clearCache` method.
 
 ## experimental_getSourceModuleDiagnostic <Version type="experimental">4.0.15</Version> <Experimental /> {#getsourcemodulediagnostic}
 
@@ -641,6 +625,7 @@ export function experimental_getSourceModuleDiagnostic(
 ```
 
 ::: details Types
+
 ```ts
 export interface ModuleDefinitionLocation {
   line: number
@@ -680,6 +665,7 @@ export interface SourceModuleDiagnostic {
   untrackedModules: UntrackedModuleDefinitionDiagnostic[]
 }
 ```
+
 :::
 
 Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not provided, `selfTime` and `totalTime` will be aggregated across all tests that were running the last time. If the module was not transformed or executed, the diagnostic will be empty.
@@ -694,7 +680,7 @@ At the moment, the [browser](/guide/browser/) modules are not supported.
 function createReport(scope: string): Report
 ```
 
-Creates a report that is limited to the given scope. `Report` follows Vitest's rules around [Storing artifacts on file system](/guide/advanced/reporters.html#storing-artifacts-on-file-system).
+Creates a report that is limited to the given scope. `Report` follows Vitest's rules around [Storing artifacts on file system](/guide/advanced/reporters#storing-artifacts-on-file-system).
 
 `Report` provides collection of utilities for writing test results, temporary files and other artifacts on the file system. It's especially intended for third party integrations like custom reporters.
 
@@ -724,7 +710,6 @@ const report = vitest.createReport('my-json-reporter')
 // Is <project-root>/.vitest/my-json-reporter
 const root = report.root
 ```
-
 
 ### Report.clean
 
@@ -792,7 +777,6 @@ const filenames: string[] = await report.readdir()
 
 ### Report.delete
 
-<!-- eslint-skip -->
 ```ts
 function delete(filename: string): Promise<void>
 ```
@@ -805,4 +789,3 @@ const report = vitest.createReport('my-json-reporter')
 // Deletes file from .vitest/my-json-reporter/test-report.json
 await report.delete('test-report.json')
 ```
-

@@ -5,6 +5,7 @@ import { runVitest, test } from '../utils'
 test('custom provider', async () => {
   await runVitest({
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+    fsModuleCache: false,
   })
 
   const report = readFileSync('./coverage/custom-coverage-provider-report.json', 'utf-8')

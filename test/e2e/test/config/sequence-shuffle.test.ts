@@ -1,6 +1,6 @@
 import type { InlineConfig } from 'vitest/node'
-import { runInlineTests, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests, runVitest } from '#test-utils'
 
 function run(sequence: InlineConfig['sequence']) {
   return runVitest({
@@ -21,38 +21,34 @@ class CustomSequencer {
   }
 }
 
-test.each([
-  false,
-  { files: false, tests: false },
-  { files: false, tests: true },
-],
-)('should use BaseSequencer if shuffle is %o', async (shuffle) => {
-  const { ctx } = await run({ shuffle })
-  expect(ctx?.config.sequence.sequencer.name).toBe('BaseSequencer')
-})
+test.each([false, { files: false, tests: false }, { files: false, tests: true }])(
+  'should use BaseSequencer if shuffle is %o',
+  async (shuffle) => {
+    const { ctx } = await run({ shuffle })
+    expect(ctx?.config.sequence.sequencer.name).toBe('BaseSequencer')
+  },
+)
 
-test.each([
-  true,
-  { files: true, tests: false },
-  { files: true, tests: true },
-])('should use RandomSequencer if shuffle is %o', async (shuffle) => {
-  const { ctx } = await run({ shuffle })
-  expect(ctx?.config.sequence.sequencer.name).toBe('RandomSequencer')
-})
+test.each([true, { files: true, tests: false }, { files: true, tests: true }])(
+  'should use RandomSequencer if shuffle is %o',
+  async (shuffle) => {
+    const { ctx } = await run({ shuffle })
+    expect(ctx?.config.sequence.sequencer.name).toBe('RandomSequencer')
+  },
+)
 
-test.each([
-  false,
-  true,
-  { files: true, tests: false },
-  { files: true, tests: true },
-])('should always use CustomSequencer if passed', async (shuffle) => {
-  const { ctx } = await run({ shuffle, sequencer: CustomSequencer })
-  expect(ctx?.config.sequence.sequencer.name).toBe('CustomSequencer')
-})
+test.each([false, true, { files: true, tests: false }, { files: true, tests: true }])(
+  'should always use CustomSequencer if passed',
+  async (shuffle) => {
+    const { ctx } = await run({ shuffle, sequencer: CustomSequencer })
+    expect(ctx?.config.sequence.sequencer.name).toBe('CustomSequencer')
+  },
+)
 
 test('shuffle with a known seed', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.js': /* js */ `
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.js': /* js */ `
       import { afterAll, describe, expect, test } from 'vitest'
 
       const numbers = []
@@ -81,12 +77,14 @@ test('shuffle with a known seed', async () => {
         ])
       })
     `,
-  }, {
-    sequence: {
-      seed: 101,
-      shuffle: true,
     },
-  })
+    {
+      sequence: {
+        seed: 101,
+        shuffle: true,
+      },
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -117,48 +115,76 @@ test('shuffle with a known seed', async () => {
 })
 
 test('should log seed when only shuffle.tests is enabled', async () => {
-  const { stdout } = await runInlineTests({
-    'basic.test.js': /* js */ `
+  const { stdout } = await runInlineTests(
+    {
+      'basic.test.js': /* js */ `
       import { test } from 'vitest'
       test('example', () => {})
     `,
-  }, {
-    sequence: {
-      seed: 12345,
-      shuffle: { files: false, tests: true },
     },
-  })
+    {
+      sequence: {
+        seed: 12345,
+        shuffle: { files: false, tests: true },
+      },
+    },
+  )
 
   expect(stdout).toContain('Running tests with seed "12345"')
 })
 
 test('should log seed when shuffle is true', async () => {
-  const { stdout } = await runInlineTests({
-    'basic.test.js': /* js */ `
+  const { stdout } = await runInlineTests(
+    {
+      'basic.test.js': /* js */ `
       import { test } from 'vitest'
       test('example', () => {})
     `,
-  }, {
-    sequence: {
-      seed: 67890,
-      shuffle: true,
     },
-  })
+    {
+      sequence: {
+        seed: 67890,
+        shuffle: true,
+      },
+    },
+  )
 
   expect(stdout).toContain('Running tests with seed "67890"')
 })
 
-test('should not log seed when shuffle is disabled', async () => {
-  const { stdout } = await runInlineTests({
-    'basic.test.js': /* js */ `
+test('should log seed when a project shuffles tests', async () => {
+  const { stdout, ctx } = await runInlineTests(
+    {
+      'a.test.js': /* js */ `
       import { test } from 'vitest'
       test('example', () => {})
     `,
-  }, {
-    sequence: {
-      shuffle: false,
     },
-  })
+    {
+      projects: [{ test: { sequence: { shuffle: { tests: true } } } }],
+    },
+  )
 
+  const seed = ctx?.getSeed()
+  expect(seed).toEqual(expect.any(Number))
+  expect(stdout).toContain(`Running tests with seed "${seed}"`)
+})
+
+test('should not log seed when shuffle is disabled', async () => {
+  const { stdout, ctx } = await runInlineTests(
+    {
+      'basic.test.js': /* js */ `
+      import { test } from 'vitest'
+      test('example', () => {})
+    `,
+    },
+    {
+      sequence: {
+        shuffle: false,
+      },
+    },
+  )
+
+  expect(ctx?.getSeed()).toBe(null)
   expect(stdout).not.toContain('Running tests with seed')
 })

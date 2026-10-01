@@ -1,5 +1,6 @@
 import type vm from 'node:vm'
-import type { EvaluatedModules } from 'vite/module-runner'
+import type { EvaluatedModules, FetchResult } from 'vite/module-runner'
+import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
@@ -38,26 +39,73 @@ const isWindows = process.platform === 'win32'
 
 export function startVitestModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
   const traces = options.traces
-  const state = (): WorkerGlobalState =>
-    getSafeWorkerState() || options.state
+  const state = (): WorkerGlobalState => getSafeWorkerState() || options.state
   const rpc = () => state().rpc
+
+  // Wall time the worker spends blocked on server round-trips, measured as the
+  // union of in-flight intervals: sibling imports await fetches concurrently,
+  // so summing individual call durations would overcount the blocked time.
+  let fetchesInflight = 0
+  let fetchesBusyStart = 0
+  async function trackFetchTime<T>(fetchPromise: Promise<T>): Promise<T> {
+    if (fetchesInflight++ === 0) {
+      fetchesBusyStart = performance.now()
+    }
+    try {
+      return await fetchPromise
+    } finally {
+      if (--fetchesInflight === 0) {
+        state().durations.fetch += performance.now() - fetchesBusyStart
+      }
+    }
+  }
 
   const environment = () => {
     const environment = state().environment
     return environment.viteEnvironment || environment.name
   }
 
-  const vm = options.context && options.externalModulesExecutor
-    ? {
-        context: options.context,
-        externalModulesExecutor: options.externalModulesExecutor,
-      }
-    : undefined
+  const vm =
+    options.context && options.externalModulesExecutor
+      ? {
+          context: options.context,
+          externalModulesExecutor: options.externalModulesExecutor,
+        }
+      : undefined
 
-  const evaluator = options.evaluator || new VitestModuleEvaluator(
-    vm,
-    {
+  // A fresh worker pays one strictly sequential `fetch` round-trip per module
+  // in its test files' import graphs, even when the server processed all of
+  // them already. Ask the server ONCE per run request for everything it has on
+  // disk and answer those fetches locally. A file change invalidates the module
+  // server-side, dropping it from the snapshot of every subsequent run request,
+  // which keeps reused (isolate: false) workers in sync; an edit DURING a run
+  // was racy before this fast path existed and stays racy with it — the
+  // scheduled rerun always sees the fresh transform.
+  let warmModules:
+    | Promise<Record<string, FetchResult | FetchCachedFileSystemResult> | null>
+    | undefined
+  let warmModulesContext: unknown
+
+  function fetchWarmModules() {
+    const workerState = state()
+    if (warmModulesContext !== workerState.ctx) {
+      warmModulesContext = workerState.ctx
+      warmModules = rpc()
+        .fetchWarmModules(
+          environment(),
+          workerState.ctx.files.map((file) => file.filepath),
+        )
+        // if the snapshot cannot be fetched, fall back to per-module fetches
+        .catch(() => null)
+    }
+    return warmModules!
+  }
+
+  const evaluator =
+    options.evaluator ||
+    new VitestModuleEvaluator(vm, {
       traces,
+      metaEnv: state().metaEnv,
       evaluatedModules: options.evaluatedModules,
       get moduleExecutionInfo() {
         return state().moduleExecutionInfo
@@ -65,9 +113,13 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
       get interopDefault() {
         return state().config.deps.interopDefault
       },
+      get injectCjsGlobals() {
+        return state().config.injectCjsGlobals
+      },
       getCurrentTestFilepath: () => state().filepath,
-    },
-  )
+      getEnvironmentName: environment,
+      getterTracker: state().getterTracker,
+    })
 
   const moduleRunner: VitestModuleRunner = new VitestModuleRunner({
     spyModule: options.spyModule,
@@ -97,7 +149,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         }
 
         // strip _vitest_original query added by importActual so that
-        // the plugin pipeline sees the original import id (e.g. virtual modules's load hook)
+        // the plugin pipeline sees the original import id (e.g. virtual modules' load hook)
         const isImportActual = id.includes('_vitest_original')
         if (isImportActual) {
           id = removeQuery(id, '_vitest_original')
@@ -139,26 +191,50 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             return { cache: true }
           }
 
+          // only dependency fetches consult the snapshot: by the time the
+          // first dependency is requested, the entry file is transformed and
+          // its import graph is connected on the server, so the snapshot
+          // actually covers the file's transitive dependencies
+          if (importer != null) {
+            const warm = await trackFetchTime(fetchWarmModules())
+            // the null prototype is not preserved by the IPC serialization, so
+            // ids like "constructor" must not fall through to Object.prototype
+            const warmResult =
+              warm &&
+              (Object.hasOwn(warm, id)
+                ? warm[id]
+                : Object.hasOwn(warm, rawId)
+                  ? warm[rawId]
+                  : undefined)
+            if (warmResult) {
+              if ('tmp' in warmResult) {
+                try {
+                  const code = readFileSync(warmResult.tmp, 'utf-8')
+                  return { code, ...warmResult }
+                } catch {
+                  // the tmp file is gone — fall back to a live fetch
+                }
+              } else {
+                return warmResult
+              }
+            }
+          }
+
           const otelCarrier = traces?.getContextCarrier()
-          const result = await rpc().fetch(
-            id,
-            importer,
-            environment(),
-            options,
-            otelCarrier,
+          const result = await trackFetchTime(
+            rpc().fetch(id, importer, environment(), options, otelCarrier),
           )
           if ('cached' in result) {
             const code = readFileSync(result.tmp, 'utf-8')
             return { code, ...result }
           }
           return result
-        }
-        catch (cause: any) {
+        } catch (cause: any) {
           // rethrow vite error if it cannot load the module because it's not resolved
           if (
-            (typeof cause === 'object' && cause != null && cause.code === 'ERR_LOAD_URL')
-            || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
-            || (typeof cause?.message === 'string' && cause.message.startsWith('Cannot find module \''))
+            (typeof cause === 'object' && cause != null && cause.code === 'ERR_LOAD_URL') ||
+            (typeof cause?.message === 'string' && cause.message.includes('Failed to load url')) ||
+            (typeof cause?.message === 'string' && cause.message.startsWith("Cannot find module '"))
           ) {
             const error = new Error(
               `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from ${importer}` : ''}`,
@@ -169,17 +245,12 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           }
 
           throw cause
-        }
-        finally {
+        } finally {
           resolvingModules.delete(rawId)
         }
       },
       resolveId(id, importer) {
-        return rpc().resolve(
-          id,
-          importer,
-          environment(),
-        )
+        return rpc().resolve(id, importer, environment())
       },
     },
     getWorkerState: state,

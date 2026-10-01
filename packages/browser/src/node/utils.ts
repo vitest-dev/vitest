@@ -4,10 +4,10 @@ import type {
   ResolvedConfig,
   TestProject,
 } from 'vitest/node'
-
 import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
 import { parseKeyDef as tlParse } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
 import { basename, dirname, relative, resolve } from 'pathe'
+import { isFileLoadingAllowed } from 'vitest/node'
 
 declare enum DOM_KEY_LOCATION {
   STANDARD = 0,
@@ -54,12 +54,7 @@ export function resolveScreenshotPath(
   const dir = dirname(testPath)
   const base = basename(testPath)
   if (config.browser.screenshotDirectory) {
-    return resolve(
-      config.browser.screenshotDirectory,
-      relative(config.root, dir),
-      base,
-      name,
-    )
+    return resolve(config.browser.screenshotDirectory, relative(config.root, dir), base, name)
   }
   return resolve(dir, '__screenshots__', base, name)
 }
@@ -87,11 +82,33 @@ export async function getBrowserProvider(
     )
   }
   if (typeof options.provider.providerFactory !== 'function') {
-    throw new TypeError(`The "${name}" browser provider does not provide a "providerFactory" function. Received ${typeof options.provider.providerFactory}.`)
+    throw new TypeError(
+      `The "${name}" browser provider does not provide a "providerFactory" function. Received ${typeof options.provider.providerFactory}.`,
+    )
   }
   return options.provider.providerFactory(project)
 }
 
 export function slash(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+/g, '/')
+}
+
+export function assertBrowserFileAccess(project: TestProject, path: string): void {
+  const normalized = slash(path)
+  if (
+    !isFileLoadingAllowed(project.vite.config, normalized) &&
+    !isFileLoadingAllowed(project.vitest.vite.config, normalized)
+  ) {
+    throw new Error(
+      `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
+    )
+  }
+}
+
+export function assertBrowserApiWrite(project: TestProject, path: string): void {
+  if (!project.config.api.allowWrite || !project.vitest.config.api.allowWrite) {
+    throw new Error(
+      `Cannot modify file "${path}". File writing is disabled because the server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+    )
+  }
 }

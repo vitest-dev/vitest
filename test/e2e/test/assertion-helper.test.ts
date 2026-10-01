@@ -13,7 +13,7 @@ it('assertion helper', async () => {
      ❯ basic.test.ts:105:3
 
 
-    ⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > sync
     AssertionError: expected 'sync' to deeply equal 'x'
@@ -29,7 +29,7 @@ it('assertion helper', async () => {
          23| });
          24|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
 
      FAIL  basic.test.ts > async
     AssertionError: expected 'async' to deeply equal 'x'
@@ -45,7 +45,7 @@ it('assertion helper', async () => {
          27| });
          28|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
 
      FAIL  basic.test.ts > soft
     AssertionError: expected 'soft' to deeply equal 'x'
@@ -61,7 +61,7 @@ it('assertion helper', async () => {
          31| });
          32|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
 
      FAIL  basic.test.ts > soft async
     AssertionError: expected 'soft async' to deeply equal 'x'
@@ -77,7 +77,7 @@ it('assertion helper', async () => {
          35| });
          36|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
 
      FAIL  basic.test.ts > nested
     AssertionError: expected 'nested' to deeply equal 'x'
@@ -93,7 +93,7 @@ it('assertion helper', async () => {
          47| });
          48|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯
 
      FAIL  basic.test.ts > multiple soft
     AssertionError: expected 'first' to deeply equal 'x'
@@ -109,7 +109,7 @@ it('assertion helper', async () => {
          78|   myEqualSoft("second", "y");
          79| });
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯
 
      FAIL  basic.test.ts > multiple soft
     AssertionError: expected 'second' to deeply equal 'y'
@@ -125,7 +125,7 @@ it('assertion helper', async () => {
          79| });
          80|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯
 
      FAIL  basic.test.ts > custom error
     Error: custom error from helper
@@ -137,7 +137,7 @@ it('assertion helper', async () => {
          88| });
          89|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/14]⎯
 
      FAIL  basic.test.ts > non-helper wrapper
     AssertionError: expected 'wrapper' to deeply equal 'x'
@@ -154,7 +154,7 @@ it('assertion helper', async () => {
          94|
      ❯ basic.test.ts:96:3
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/14]⎯
 
      FAIL  basic.test.ts > helper with context fail
     AssertionError: expected 4321 to deeply equal 1234
@@ -173,7 +173,7 @@ it('assertion helper', async () => {
         125| });
         126|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/14]⎯
 
      FAIL  basic.test.ts > async helper with context fail
     AssertionError: expected 4321 to deeply equal 1234
@@ -192,7 +192,57 @@ it('assertion helper', async () => {
         133| });
         134|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/14]⎯
+
+     FAIL  basic.test.ts > waitFor keeps helper callsite
+    AssertionError: expected 1 to be 2 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 2
+    + 1
+
+     ❯ basic.test.ts:156:9
+        154|
+        155| test("waitFor keeps helper callsite", async () => {
+        156|   await checkWithWaitFor();
+           |         ^
+        157| });
+        158|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/14]⎯
+
+     FAIL  basic.test.ts > waitUntil keeps helper callsite
+    AssertionError: expected 1 to be 2 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 2
+    + 1
+
+     ❯ basic.test.ts:160:9
+        158|
+        159| test("waitUntil keeps helper callsite", async () => {
+        160|   await checkWithWaitUntil();
+           |         ^
+        161| });
+        162|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/14]⎯
+
+     FAIL  basic.test.ts > plain async error
+    Error: async error from helper
+     ❯ basic.test.ts:164:9
+        162|
+        163| test("plain async error", async () => {
+        164|   await throwPlainAsyncError();
+           |         ^
+        165| });
+        166|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/14]⎯
 
     "
   `)
@@ -226,6 +276,9 @@ it('assertion helper', async () => {
         ],
         "pass async": "passed",
         "pass sync": "passed",
+        "plain async error": [
+          "async error from helper",
+        ],
         "return async": "passed",
         "return sync": "passed",
         "soft": [
@@ -236,6 +289,12 @@ it('assertion helper', async () => {
         ],
         "sync": [
           "expected 'sync' to deeply equal 'x'",
+        ],
+        "waitFor keeps helper callsite": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "waitUntil keeps helper callsite": [
+          "expected 1 to be 2 // Object.is equality",
         ],
       },
     }

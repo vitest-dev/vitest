@@ -1,55 +1,59 @@
 import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
-import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
+import type {
+  AliasOptions,
+  ConfigEnv,
+  DepOptimizationConfig,
+  ResolvedConfig as ResolvedViteConfig,
+  ServerOptions,
+  UserConfig as ViteUserConfig,
+} from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
+import type {
+  SequenceHooks,
+  SequenceSetupFiles,
+  SerializableRetry,
+  TestTagDefinition,
+} from '../../runtime/runner/types'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import type { CliOptions } from '../cli/cli-api'
 import type { PoolRunnerInitializer } from '../pools/types'
-import type {
-  BuiltinReporterOptions,
-  BuiltinReporters,
-} from '../reporters'
+import type { BuiltinReporterOptions, BuiltinReporters } from '../reporters'
 import type { TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
-import type { BenchmarkUserOptions } from './benchmark'
-import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
+import type { BenchmarkUserOptions, ResolvedBenchmarkOptions } from './benchmark'
+import type {
+  BrowserConfigOptions,
+  BrowserServerContribution,
+  ResolvedBrowserOptions,
+} from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Reporter } from './reporter'
 
-export type { CoverageOptions, ResolvedCoverageOptions }
-export type { BenchmarkUserOptions }
+export type { CoverageOptions }
+export type { ResolvedBenchmarkOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
-export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
-export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
-export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+export type { SequenceHooks, SequenceSetupFiles } from '../../runtime/runner/types'
+export type { BrowserInstanceOption } from './browser'
 
-export type BuiltinEnvironment
-  = | 'node'
-    | 'jsdom'
-    | 'happy-dom'
-    | 'edge-runtime'
+export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
-export type VitestEnvironment
-  = | BuiltinEnvironment
-    | (string & Record<never, never>)
+export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
-export type ApiConfig = Pick<
-  ServerOptions,
-  'port' | 'strictPort' | 'host' | 'middlewareMode'
-> & {
+export type ApiConfig = Pick<ServerOptions, 'port' | 'strictPort' | 'host' | 'middlewareMode'> & {
   /**
    * Allow any write operations from the API server.
    *
-   * @default true if `api.host` is exposed to network, false otherwise
+   * @default false if `api.host` is exposed to network, true otherwise
    */
   allowWrite?: boolean
   /**
@@ -57,10 +61,12 @@ export type ApiConfig = Pick<
    * If `api.host` is exposed to network and `allowWrite` is true,
    * anyone connected to the API server can run arbitrary code on your machine.
    *
-   * @default true if `api.host` is exposed to network, false otherwise
+   * @default false if `api.host` is exposed to network, true otherwise
    */
   allowExec?: boolean
 }
+
+export type ResolvedApiConfig = ApiConfig & { token: string; tokenCreated: boolean }
 
 export interface EnvironmentOptions {
   /**
@@ -71,9 +77,10 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type { HappyDOMOptions, JSDOMOptions }
-
-export type VitestRunMode = 'test' | 'benchmark'
+/**
+ * @deprecated
+ */
+export type VitestRunMode = 'test'
 
 export interface ProjectName {
   label: string
@@ -104,18 +111,18 @@ interface SequenceOptions {
   shuffle?:
     | boolean
     | {
-      /**
-       * Should files run in random order. Long running tests will not start
-       * earlier if you enable this option.
-       * @default false
-       */
-      files?: boolean
-      /**
-       * Should tests run in random order.
-       * @default false
-       */
-      tests?: boolean
-    }
+        /**
+         * Should files run in random order. Long running tests will not start
+         * earlier if you enable this option.
+         * @default false
+         */
+        files?: boolean
+        /**
+         * Should tests run in random order.
+         * @default false
+         */
+        tests?: boolean
+      }
   /**
    * Should tests run in parallel.
    * @default false
@@ -125,7 +132,7 @@ interface SequenceOptions {
    * Defines how setup files should be ordered
    * - 'parallel' will run all setup files in parallel
    * - 'list' will run all setup files in the order they are defined in the config file
-   * @default 'parallel'
+   * @default 'list'
    */
   setupFiles?: SequenceSetupFiles
   /**
@@ -143,10 +150,7 @@ interface SequenceOptions {
   hooks?: SequenceHooks
 }
 
-export type DepsOptimizationOptions = Omit<
-  DepOptimizationConfig,
-  'disabled' | 'noDiscovery'
-> & {
+export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
   enabled?: boolean
 }
 
@@ -205,14 +209,16 @@ interface DepsOptions {
 
 type InlineReporter = Reporter
 type ReporterName = BuiltinReporters | 'html' | (string & {})
-type ReporterWithOptions<Name extends ReporterName = ReporterName>
-  = Name extends keyof BuiltinReporterOptions
+type ReporterWithOptions<Name extends ReporterName = ReporterName> =
+  Name extends keyof BuiltinReporterOptions
     ? BuiltinReporterOptions[Name] extends never
       ? [Name, object]
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
 
-export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
+export interface ResolveSnapshotPathHandlerContext {
+  config: SerializedConfig
+}
 
 export type ResolveSnapshotPathHandler = (
   testPath: string,
@@ -220,13 +226,7 @@ export type ResolveSnapshotPathHandler = (
   context: ResolveSnapshotPathHandlerContext,
 ) => string
 
-export type BuiltinPool
-  = | 'browser'
-    | 'threads'
-    | 'forks'
-    | 'vmThreads'
-    | 'vmForks'
-    | 'typescript'
+type BuiltinPool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'
 
 export type Pool = BuiltinPool | (string & {})
 
@@ -306,6 +306,24 @@ export interface InlineConfig {
   globals?: boolean
 
   /**
+   * Inject CommonJS module variables (`module`, `exports`, `require`,
+   * `__filename`, `__dirname`) into every module processed by Vitest.
+   *
+   * When disabled, ES modules no longer have access to CommonJS variables,
+   * matching how the code runs outside of Vitest. Modules detected to be
+   * CommonJS keep these variables because they are part of the module scope.
+   * The module type is detected the same way Node.js does it: the file
+   * extension wins, then the `type` field in the nearest package.json,
+   * then the presence of ESM syntax in the file.
+   *
+   * This option doesn't affect externalized modules which are always
+   * executed by the native runtime.
+   *
+   * @default true
+   */
+  injectCjsGlobals?: boolean
+
+  /**
    * Running environment
    *
    * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
@@ -372,9 +390,31 @@ export interface InlineConfig {
   fileParallelism?: boolean
 
   /**
-   * Options for projects
+   * Options for projects.
+   *
+   * When a project is referenced as a config file (or a directory with one) and
+   * that config declares `projects` itself, it becomes a container: it doesn't
+   * run tests, only provides the projects it declares. Inline configurations
+   * cannot declare `projects`.
    */
   projects?: TestProjectConfiguration[]
+
+  /**
+   * Let inline projects that don't modify the Vite config reuse the Vite
+   * server of the config that declares them. Instead of resolving a new
+   * Vite config and creating a new server per project, such projects share
+   * the server and its transform cache.
+   *
+   * A project still gets its own server when it defines Vite-level options
+   * (`plugins`, `resolve`, ...) or test options that affect the
+   * Vite config: `alias`, `browser`, `css`, `deps.moduleDirectories`,
+   * `deps.optimizer`, `mode`, `root`,
+   * or when `extends` doesn't point to the declaring config.
+   *
+   * This option is only respected in the root configuration.
+   * @default true
+   */
+  sharedViteServer?: boolean
 
   /**
    * Update snapshot
@@ -386,7 +426,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default !process.env.CI
+   * @default !process.env.CI && process.stdin.isTTY && !isAgent
    */
   watch?: boolean
 
@@ -405,19 +445,13 @@ export interface InlineConfig {
    */
   reporters?:
     | Arrayable<ReporterName | InlineReporter>
-    | (
-        | (ReporterName | InlineReporter)
-        | [ReporterName]
-        | ReporterWithOptions
-    )[]
+    | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
    */
-  outputFile?:
-    | string
-    | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
+  outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
    * Default timeout of a test in milliseconds
@@ -493,7 +527,7 @@ export interface InlineConfig {
 
   /**
    * Will call `.mockClear()` on all spies before each test
-   * @default false
+   * @default true
    */
   clearMocks?: boolean
 
@@ -624,7 +658,11 @@ export interface InlineConfig {
    *
    * Return `false` to ignore the log.
    */
-  onConsoleLog?: (log: string, type: 'stdout' | 'stderr', entity: TestModule | TestCase | TestSuite | undefined) => boolean | void
+  onConsoleLog?: (
+    log: string,
+    type: 'stdout' | 'stderr',
+    entity: TestModule | TestCase | TestSuite | undefined,
+  ) => boolean | void
 
   /**
    * Enable stack trace filtering. If absent, all stack trace frames
@@ -649,12 +687,12 @@ export interface InlineConfig {
   css?:
     | boolean
     | {
-      include?: RegExp | RegExp[]
-      exclude?: RegExp | RegExp[]
-      modules?: {
-        classNameStrategy?: CSSModuleScopeStrategy
+        include?: RegExp | RegExp[]
+        exclude?: RegExp | RegExp[]
+        modules?: {
+          classNameStrategy?: CSSModuleScopeStrategy
+        }
       }
-    }
   /**
    * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
    * @default 5
@@ -668,16 +706,41 @@ export interface InlineConfig {
   cache?:
     | false
     | {
-      /**
-       * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
-       */
-      dir: string
-    }
+        /**
+         * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
+         */
+        dir: string
+      }
+
+  /**
+   * Cache transformed modules on the file system and reuse them between reruns
+   * and separate Vitest processes, which can significantly speed up cold starts.
+   *
+   * @default false
+   */
+  fsModuleCache?: boolean
+
+  /**
+   * Directory where the {@link fsModuleCache} is stored. Can be set per project;
+   * projects that don't override it fall back to the root's cache directory.
+   *
+   * By default the cache is stored inside `node_modules` at the workspace root, so
+   * that it is naturally invalidated when dependencies are reinstalled.
+   *
+   * @default 'node_modules/.vitest-cache'
+   */
+  fsModuleCachePath?: string
 
   /**
    * Options for configuring the order of running tests.
    */
   sequence?: SequenceOptions
+
+  /**
+   * Overrides Vite mode
+   * @default 'test'
+   */
+  mode?: string
 
   /**
    * Specifies an `Object`, or an `Array` of `Object`,
@@ -828,16 +891,22 @@ export interface InlineConfig {
   retry?: SerializableRetry
 
   /**
+   * Repeat every test a specific number of times regardless of the result.
+   *
+   * @default 0 // Don't repeat
+   */
+  repeats?: number
+
+  /**
    * Show full diff when snapshot fails instead of a patch.
    */
   expandSnapshotDiff?: boolean
 
   /**
-   * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
-   * This is also required for console log preview on Vitest UI.
-   * However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
-   *
-   * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
+   * By default, Vitest intercepts console output during tests to add context such as the test file and test title.
+   * In browser mode, this interception is required to forward logs from the browser DevTools to the terminal.
+   * It is also required for console log previews in the Vitest UI.
+   * Disabling console interception can be useful when you want to debug code with normal synchronous terminal logging.
    *
    * @default false
    */
@@ -870,15 +939,6 @@ export interface InlineConfig {
    * @experimental
    */
   experimental?: {
-    /**
-     * Enable caching of modules on the file system between reruns.
-     */
-    fsModuleCache?: boolean
-    /**
-     * Path relative to the root of the project where the fs module cache will be stored.
-     * @default node_modules/.experimental-vitest-cache
-     */
-    fsModuleCachePath?: string
     /**
      * {@link https://vitest.dev/guide/open-telemetry}
      */
@@ -962,6 +1022,37 @@ export interface InlineConfig {
      * This will apply `.only` flag and test name pattern across all files without running them.
      */
     preParse?: boolean
+
+    /**
+     * Print performance hints after the run when the collected timings show
+     * that a configuration change would make the run significantly faster.
+     * Hints are never printed for options that were set explicitly.
+     *
+     * Set to `false` to disable all hints, or disable them individually:
+     * - `isolate`: hint when `isolate: true` spends a significant amount of
+     *   time spawning a fresh worker (and re-creating the environment) for
+     *   every test file, estimating how much `isolate: false` could save.
+     * - `environment`: hint when re-creating a DOM environment for every test
+     *   file dominates the run and a `vm` pool would set it up once per worker.
+     * - `import`: hint when test files repeatedly evaluate the same module
+     *   graph (typical for barrel-file imports) and `isolate: false` would
+     *   evaluate it once per worker.
+     * - `transform`: hint when transforming modules dominates the run and
+     *   `fsModuleCache` would persist the results across runs.
+     * @default true
+     */
+    diagnostics?:
+      | boolean
+      | {
+          /** @default true */
+          isolate?: boolean
+          /** @default true */
+          environment?: boolean
+          /** @default true */
+          import?: boolean
+          /** @default true */
+          transform?: boolean
+        }
   }
 
   /**
@@ -976,6 +1067,13 @@ export interface InlineConfig {
    * @default true
    */
   strictTags?: boolean
+
+  /**
+   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
+   * Requires initialized git repository
+   * @default false
+   */
+  changed?: boolean | string
 }
 
 export interface TypecheckConfig {
@@ -1002,7 +1100,7 @@ export interface TypecheckConfig {
   /**
    * Pattern for files that should not be treated as test files
    *
-   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
+   * @default ['**\/node_modules/**', '**\/.git/**']
    */
   exclude: string[]
   /**
@@ -1059,19 +1157,6 @@ export interface UserConfig extends InlineConfig {
   related?: string[] | string
 
   /**
-   * Overrides Vite mode
-   * @default 'test'
-   */
-  mode?: string
-
-  /**
-   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
-   * Requires initialized git repository
-   * @default false
-   */
-  changed?: boolean | string
-
-  /**
    * Test suite shard to execute in a format of <index>/<count>.
    * Will divide tests into a `count` numbers, and run only the `indexed` part.
    * Cannot be used with enabled watch.
@@ -1095,23 +1180,13 @@ export interface UserConfig extends InlineConfig {
   clearScreen?: boolean
 
   /**
-   * benchmark.compare option exposed at the top level for cli
-   */
-  compare?: string
-
-  /**
-   * benchmark.outputJson option exposed at the top level for cli
-   */
-  outputJson?: string
-
-  /**
    * Directory of blob reports to merge
    * @default '.vitest/blob'
    */
   mergeReports?: string
 
   /**
-   * Delete all Vitest caches, including `experimental.fsModuleCache`.
+   * Delete all Vitest caches, including the `fsModuleCache`.
    * @experimental
    */
   clearCache?: boolean
@@ -1126,42 +1201,49 @@ export interface UserConfig extends InlineConfig {
    * Log all available tags instead of running tests.
    */
   listTags?: boolean | 'json'
+
+  configLoader?: 'bundle' | 'runner' | 'native'
+
+  /**
+   * The `--reporter` argument from the CLI
+   */
+  reporter?: string | string[]
 }
 
-export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
+export type OnUnhandledErrorCallback = (
+  error: (TestError | Error) & { type: string },
+) => boolean | void
 
-export interface ResolvedConfig
-  extends Omit<
-    Required<UserConfig>,
-    | 'project'
-    | 'config'
-    | 'filters'
-    | 'browser'
-    | 'coverage'
-    | 'testNamePattern'
-    | 'related'
-    | 'api'
-    | 'reporters'
-    | 'resolveSnapshotPath'
-    | 'benchmark'
-    | 'shard'
-    | 'cache'
-    | 'sequence'
-    | 'typecheck'
-    | 'runner'
-    | 'pool'
-    | 'cliExclude'
-    | 'diff'
-    | 'setupFiles'
-    | 'snapshotEnvironment'
-    | 'bail'
-    | 'name'
-    | 'vmMemoryLimit'
-    | 'fileParallelism'
-    | 'tagsFilter'
-  > {
-  mode: VitestRunMode
-
+export interface ResolvedConfig extends Omit<
+  Required<UserConfig>,
+  | 'project'
+  | 'config'
+  | 'filters'
+  | 'browser'
+  | 'coverage'
+  | 'testNamePattern'
+  | 'related'
+  | 'api'
+  | 'reporters'
+  | 'resolveSnapshotPath'
+  | 'benchmark'
+  | 'shard'
+  | 'cache'
+  | 'sequence'
+  | 'typecheck'
+  | 'runner'
+  | 'pool'
+  | 'cliExclude'
+  | 'diff'
+  | 'setupFiles'
+  | 'snapshotEnvironment'
+  | 'bail'
+  | 'name'
+  | 'vmMemoryLimit'
+  | 'fileParallelism'
+  | 'tagsFilter'
+  | 'reporter'
+> {
   name: ProjectName['label']
   color?: ProjectName['color']
   base?: string
@@ -1186,16 +1268,18 @@ export interface ResolvedConfig
   reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
-  viteDefine: Record<string, any>
+  /**
+   * `define` entries applied by the runtime defines script instead of the
+   * server's transforms.
+   * @internal
+   */
+  _scriptDefines?: Record<string, any>
 
-  api: ApiConfig & { token: string }
+  api: ResolvedApiConfig
   cliExclude?: string[]
 
   project: string[]
-  benchmark?: Required<
-    Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-  >
-  & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  benchmark: ResolvedBenchmarkOptions
   shard?: {
     index: number
     count: number
@@ -1203,11 +1287,11 @@ export interface ResolvedConfig
 
   cache:
     | {
-      /**
-       * @deprecated
-       */
-      dir: string
-    }
+        /**
+         * @deprecated
+         */
+        dir: string
+      }
     | false
 
   sequence: {
@@ -1227,12 +1311,12 @@ export interface ResolvedConfig
 
   maxWorkers: number
 
-  vmMemoryLimit?: UserConfig['vmMemoryLimit']
+  vmMemoryLimit?: string | number
   dumpDir?: string
   tagsFilter?: string[]
   mergeReportsLabel?: string
 
-  experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
+  experimental: Omit<Required<UserConfig>['experimental'], 'importDurations' | 'diagnostics'> & {
     importDurations: {
       print: boolean | 'on-warn'
       limit: number
@@ -1242,37 +1326,167 @@ export interface ResolvedConfig
         danger: number
       }
     }
+    diagnostics: {
+      isolate: boolean
+      environment: boolean
+      import: boolean
+      transform: boolean
+    }
   }
+
+  /**
+   * Options that were explicitly provided by the user, as opposed to resolved
+   * defaults. Used by diagnostics to avoid suggesting changes to options the
+   * user chose deliberately.
+   * @internal
+   */
+  providedOptions: {
+    pool: boolean
+    isolate: boolean
+    environment: boolean
+    fsModuleCache: boolean
+    silent: boolean
+  }
+
+  cliOptions: CliOptions
+  viteOverrides: ViteUserConfig
+  resolvedProjects: ResolvedProjectEntry[]
+  /**
+   * Config files that declared `projects` and act as containers (the file
+   * itself doesn't run tests). Set only on the root config; used to restart
+   * on change since containers have no Vite server of their own.
+   *
+   * @internal
+   */
+  _containerConfigFiles?: string[]
+  /**
+   * The raw `test` options captured by `CaptureRawTestConfig`, used to
+   * resolve inline projects that share this config's Vite server.
+   * @internal
+   */
+  _rawTestConfig?: UserConfig
+  /**
+   * The `server.deps` entries contributed by `vitest:test-config`, applied
+   * to inline projects that share this config's Vite server.
+   * @internal
+   */
+  _moduleRunnerOptions?: ModuleRunnerTestOptions
+  /**
+   * Browser server contribution captured by the `vitest:browser:loader` plugin
+   * during this config's resolution (set only when `browser.enabled`). Used by
+   * server creation to build the single Vite server shared by `project.vite` and
+   * `project.browser.vite`.
+   *
+   * @internal
+   */
+  _browserContribution?: BrowserServerContribution
+  /**
+   * `api` or `ui` was set by the user. Browser mode always assigns `api.port`.
+   * @internal
+   */
+  _apiRequested?: boolean
 }
 
-type NonProjectOptions
-  = | 'shard'
-    | 'watch'
-    | 'run'
-    | 'cache'
-    | 'update'
-    | 'reporters'
-    | 'outputFile'
-    | 'teardownTimeout'
-    | 'silent'
-    | 'forceRerunTriggers'
-    | 'testNamePattern'
-    | 'ui'
-    | 'open'
-    | 'uiBase'
-    // TODO: allow snapshot options
-    | 'snapshotFormat'
-    | 'resolveSnapshotPath'
-    | 'passWithNoTests'
-    | 'onConsoleLog'
-    | 'onStackTrace'
-    | 'dangerouslyIgnoreUnhandledErrors'
-    | 'slowTestThreshold'
-    | 'inspect'
-    | 'inspectBrk'
-    | 'coverage'
-    | 'watchTriggerPatterns'
-    | 'tagsFilter' // CLI option only
+/**
+ * Values captured by Vitest's own plugins while Vite resolves a config,
+ * handed back to the resolution caller.
+ *
+ * The resolved config retains the plugins (and this object with them) for
+ * the server's lifetime: `browserContribution` is also read by the browser
+ * loader's server hooks and stays for as long as the server lives, while
+ * `rawTestConfig` must be cleared by the consumer once it is stored.
+ */
+export interface ConfigResolutionCaptures {
+  browserContribution?: BrowserServerContribution
+  rawTestConfig?: UserConfig
+  moduleRunnerOptions?: ModuleRunnerTestOptions
+}
+
+/**
+ * The `server.deps` entries that `vitest:test-config` derives from the
+ * config's original `resolve` options while the Vite config resolves. They
+ * cannot be recomputed later: the resolution overwrites the `resolve` options.
+ */
+export interface ModuleRunnerTestOptions {
+  inlineAll: boolean
+  inline: (string | RegExp)[]
+  external: (string | RegExp)[]
+}
+
+/**
+ * A resolved project entry. `viteConfig` may be shared by reference across multiple
+ * entries (e.g. browser instances or benchmark variants of the same parent), while
+ * `projectConfig` is always a distinct object per entry.
+ */
+export interface ResolvedProjectEntry {
+  viteConfig: ResolvedViteConfig
+  projectConfig: ResolvedConfig
+  /**
+   * Whether test files were found while resolving browser dependencies. This
+   * early result is used only to decide whether prewarming is useful; runtime
+   * discovery still globs after plugins have configured the server.
+   *
+   * @internal
+   */
+  hasTestFiles?: boolean
+  /**
+   * When set, this entry exists only so browser-instance siblings can attach
+   * to a parent that owns the Vite server and (later) the browser provider.
+   * The resulting `TestProject` is created and kept alive (so siblings can
+   * reference it via `_parent`) but is NOT pushed to `vitest.projects`.
+   */
+  hidden?: boolean
+  /**
+   * The project was declared as an inline configuration. Its
+   * `viteConfig.configFile` is the config it extends (the root config file
+   * by default), not a file of its own.
+   */
+  inline?: boolean
+  /**
+   * Names of the container configs this project is nested under, outermost
+   * first. The `--project` filter matches these in addition to the project's
+   * own name, so a container name selects its whole subtree.
+   *
+   * @internal
+   */
+  ancestors?: string[]
+  /**
+   * The project reuses the Vite server of the config that declares it
+   * (`sharedViteServer`).
+   * @internal
+   */
+  sharedServer?: boolean
+}
+
+type NonProjectOptions =
+  | 'shard'
+  | 'watch'
+  | 'run'
+  | 'cache'
+  | 'update'
+  | 'reporters'
+  | 'outputFile'
+  | 'teardownTimeout'
+  | 'silent'
+  | 'forceRerunTriggers'
+  | 'testNamePattern'
+  | 'ui'
+  | 'open'
+  | 'uiBase'
+  // TODO: allow snapshot options
+  | 'snapshotFormat'
+  | 'resolveSnapshotPath'
+  | 'passWithNoTests'
+  | 'onConsoleLog'
+  | 'onStackTrace'
+  | 'dangerouslyIgnoreUnhandledErrors'
+  | 'slowTestThreshold'
+  | 'inspect'
+  | 'inspectBrk'
+  | 'coverage'
+  | 'watchTriggerPatterns'
+  | 'tagsFilter' // CLI option only
+  | 'sharedViteServer'
 
 export interface ServerDepsOptions {
   /**
@@ -1301,13 +1515,20 @@ export interface ServerDepsOptions {
 
 export type ProjectConfig = Omit<
   InlineConfig,
-  NonProjectOptions
-  | 'sequencer'
+  | NonProjectOptions
+  // `projects` is only respected in config files; a container config is
+  // root-like and should be authored with `defineConfig`/`defineProject`
+  | 'projects'
+  | 'sequence'
   | 'deps'
 > & {
   mode?: string
-  sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
-  deps?: Omit<DepsOptions, 'moduleDirectories'>
+  sequence?: Omit<SequenceOptions, 'sequencer' | 'seed' | 'shuffle'> & {
+    // `shuffle.files` controls cross-project file ordering, which is resolved
+    // from the root config only, so projects can only shuffle their own tests.
+    shuffle?: boolean | { tests?: boolean }
+  }
+  deps?: DepsOptions
 }
 
 export type ResolvedProjectConfig = Omit<
@@ -1317,29 +1538,30 @@ export type ResolvedProjectConfig = Omit<
 >
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
-  test?: ProjectConfig
+  test?: ProjectConfig & { projects?: TestProjectConfiguration[] }
 }
 
-// TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
   env: ConfigEnv,
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
-export type UserProjectConfigExport
-  = | UserWorkspaceConfig
-    | Promise<UserWorkspaceConfig>
-    | UserProjectConfigFn
+export type UserProjectConfigExport =
+  | UserWorkspaceConfig
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn
 
-export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
+export type TestProjectInlineConfiguration = UserWorkspaceConfig & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * If `true`, the project will inherit all options from the root config.
+   * Set to `false` to keep the project configuration completely separate from the root config.
+   * @default true
    * @example '../vite.config.ts'
    */
-  extends?: string | true
-})
+  extends?: string | boolean
+}
 
-export type TestProjectConfiguration
-  = string
-    | TestProjectInlineConfiguration
-    | Promise<UserWorkspaceConfig>
-    | UserProjectConfigFn
+export type TestProjectConfiguration =
+  | string
+  | TestProjectInlineConfiguration
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn

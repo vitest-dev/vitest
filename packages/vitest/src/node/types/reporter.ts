@@ -1,9 +1,21 @@
-import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
 import type { Awaitable, SerializedError } from '@vitest/utils'
+import type {
+  File,
+  TaskEventPack,
+  TaskResultPack,
+  TestAnnotation,
+  TestArtifact,
+  TestBenchmark,
+} from '../../runtime/runner/types'
 import type { UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
-import type { ReportedHookContext, TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
+import type {
+  ReportedHookContext,
+  TestCase,
+  TestModule,
+  TestSuite,
+} from '../reporters/reported-tasks'
 import type { TestSpecification } from '../test-specification'
 
 export type TestRunEndReason = 'passed' | 'interrupted' | 'failed'
@@ -96,4 +108,10 @@ export interface Reporter {
   onHookEnd?: (hook: ReportedHookContext) => Awaitable<void>
 
   onCoverage?: (coverage: unknown) => Awaitable<void>
+
+  /**
+   * @experimental
+   * Called after the benchmark is finished.
+   */
+  onTestCaseBenchmark?: (testCase: TestCase, benchmark: TestBenchmark) => Awaitable<void>
 }

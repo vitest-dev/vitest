@@ -2,6 +2,7 @@ import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { Traces } from '../utils/traces'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
+import { GetterTracker } from './getter-tracker'
 import { setupInspect } from './inspector'
 import * as listeners from './listeners'
 import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
@@ -10,7 +11,12 @@ import { EnvironmentTeardownError } from './utils'
 
 const resolvingModules = new Set<string>()
 
-async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker, traces: Traces) {
+async function execute(
+  method: 'run' | 'collect',
+  ctx: ContextRPC,
+  worker: VitestWorker,
+  traces: Traces,
+) {
   const prepareStart = performance.now()
 
   const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
@@ -21,9 +27,15 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
   try {
     // do not close the RPC channel so that we can get the error messages sent to the main thread
     cleanups.push(async () => {
-      await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
-        reject(new EnvironmentTeardownError(`[vitest-worker]: Closing rpc while "${method}" was pending`))
-      }))
+      await Promise.all(
+        rpc.$rejectPendingCalls(({ method, reject }) => {
+          reject(
+            new EnvironmentTeardownError(
+              `[vitest-worker]: Closing rpc while "${method}" was pending`,
+            ),
+          )
+        }),
+      )
     })
 
     const state = {
@@ -38,6 +50,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       durations: {
         environment: 0,
         prepare: prepareStart,
+        fetch: 0,
       },
       rpc,
       onCancel,
@@ -46,7 +59,11 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       onFilterStackTrace(stack) {
         return createStackString(parseStacktrace(stack))
       },
-      metaEnv: createImportMetaEnvProxy(),
+      metaEnv: ctx.metaEnv,
+      getterTracker:
+        ctx.config.benchmark.enabled && !ctx.config.benchmark.suppressExportGetterWarnings
+          ? new GetterTracker()
+          : undefined,
     } satisfies WorkerGlobalState
 
     const methodName = method === 'collect' ? 'collectTests' : 'runTests'
@@ -58,10 +75,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
     }
 
     await worker[methodName](state, traces)
-  }
-  finally {
+  } finally {
     await rpcDone().catch(() => {})
-    await Promise.all(cleanups.map(fn => fn())).catch(() => {})
+    await Promise.all(cleanups.map((fn) => fn())).catch(() => {})
   }
 }
 
@@ -75,36 +91,4 @@ export function collect(ctx: ContextRPC, worker: VitestWorker, traces: Traces): 
 
 export async function teardown(): Promise<void> {
   await listeners.cleanup()
-}
-
-const env = process.env
-
-function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
-  // packages/vitest/src/node/plugins/index.ts:146
-  const booleanKeys = ['DEV', 'PROD', 'SSR']
-  return new Proxy(env, {
-    get(_, key) {
-      if (typeof key !== 'string') {
-        return undefined
-      }
-      if (booleanKeys.includes(key)) {
-        return !!process.env[key]
-      }
-      return process.env[key]
-    },
-    set(_, key, value) {
-      if (typeof key !== 'string') {
-        return true
-      }
-
-      if (booleanKeys.includes(key)) {
-        process.env[key] = value ? '1' : ''
-      }
-      else {
-        process.env[key] = value
-      }
-
-      return true
-    },
-  }) as WorkerGlobalState['metaEnv']
 }

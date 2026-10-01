@@ -5,7 +5,14 @@ import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment, WorkerExecuteContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { TestProject } from '../project'
-import type { PoolOptions, PoolRunnerOTEL, PoolTask, PoolWorker, WorkerRequest, WorkerResponse } from './types'
+import type {
+  PoolOptions,
+  PoolRunnerOTEL,
+  PoolTask,
+  PoolWorker,
+  WorkerRequest,
+  WorkerResponse,
+} from './types'
 import { EventEmitter } from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
@@ -46,6 +53,7 @@ export class PoolRunner {
   public readonly project: TestProject
   public environment: ContextTestEnvironment
 
+  private _lastTestFiles: string[]
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
   private _terminatePromise: DeferPromise<void> = createDefer()
@@ -74,11 +82,15 @@ export class PoolRunner {
     return this._state === RunnerState.STARTED
   }
 
-  constructor(options: PoolOptions, public worker: PoolWorker) {
+  constructor(
+    options: PoolOptions,
+    public worker: PoolWorker,
+  ) {
     this.project = options.project
     this.environment = options.environment
 
     const vitest = this.project.vitest
+    this._lastTestFiles = []
     this._traces = vitest._traces
     if (this._traces.isEnabled()) {
       const { span: workerSpan, context } = this._traces.startContextSpan('vitest.worker')
@@ -106,12 +118,12 @@ export class PoolRunner {
             this.postMessage(request)
           }
         },
-        on: callback => this._eventEmitter.on('rpc', callback),
+        on: (callback) => this._eventEmitter.on('rpc', callback),
         timeout: -1,
       },
     )
 
-    this._offCancel = vitest.onCancel(reason => this._rpc.onCancel(reason))
+    this._offCancel = vitest.onCancel((reason) => this._rpc.onCancel(reason))
   }
 
   /**
@@ -147,7 +159,8 @@ export class PoolRunner {
   }
 
   request(method: 'run' | 'collect', context: WorkerExecuteContext): void {
-    this._otel?.files.push(...context.files.map(f => f.filepath))
+    this._lastTestFiles = context.files.map((f) => f.filepath)
+    this._otel?.files.push(...this._lastTestFiles)
     return this.postMessage({
       __vitest_worker_request__: true,
       type: method,
@@ -158,9 +171,7 @@ export class PoolRunner {
 
   private getOTELCarrier() {
     const activeContext = this._otel?.currentContext || this._otel?.workerContext
-    return activeContext
-      ? this._traces.getContextCarrier(activeContext)
-      : undefined
+    return activeContext ? this._traces.getContextCarrier(activeContext) : undefined
   }
 
   async start(options: { workerId: number }): Promise<void> {
@@ -181,6 +192,7 @@ export class PoolRunner {
     this._operationLock = createDefer()
 
     let startSpan: Span | undefined
+    const startedAt = performance.now()
     try {
       this._state = RunnerState.STARTING
 
@@ -230,13 +242,17 @@ export class PoolRunner {
       await startPromise
 
       this._state = RunnerState.STARTED
-    }
-    catch (error: any) {
+
+      // record how long it took to spawn this worker, load its bundle and set up the
+      // environment, so the reporter can surface the cost of `isolate: true`
+      const { state } = this.project.vitest
+      state.startupTime += performance.now() - startedAt
+      state.workersSpawned += 1
+    } catch (error: any) {
       this._state = RunnerState.START_FAILURE
       startSpan?.recordException(error)
       throw error
-    }
-    finally {
+    } finally {
       startSpan?.end()
       this._operationLock.resolve()
       this._operationLock = null
@@ -267,8 +283,10 @@ export class PoolRunner {
     try {
       this._state = RunnerState.STOPPING
 
-      // Remove exit listener early to avoid "unexpected exit" errors during shutdown
+      // Remove exit and error listeners early to avoid "unexpected exit" and
+      // channel teardown errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
+      this.worker.off('error', this.emitWorkerError)
 
       const stopSpan = this.startTracesSpan('vitest.worker.stop')
       await this.withTimeout(
@@ -277,10 +295,7 @@ export class PoolRunner {
             if (response.type === 'stopped') {
               if (response.error) {
                 stopSpan.recordException(response.error as Error)
-                this.project.vitest.state.catchError(
-                  response.error,
-                  'Teardown Error',
-                )
+                this.project.vitest.state.catchError(response.error, 'Teardown Error')
               }
 
               resolve()
@@ -318,13 +333,12 @@ export class PoolRunner {
       )
 
       this._state = RunnerState.STOPPED
-    }
-    catch (error) {
+    } catch (error) {
       // Ensure we transition to stopped state even on error
       this._state = RunnerState.STOPPED
       throw error
-    }
-    finally {
+    } finally {
+      this._lastTestFiles = []
       this._operationLock.resolve()
       this._operationLock = null
       this._otel?.span.end()
@@ -350,43 +364,67 @@ export class PoolRunner {
     this._eventEmitter.emit('error', error)
   }
 
-  private emitWorkerMessage = (response: WorkerResponse | { m: string; __vitest_worker_response__: false }): void => {
+  private emitWorkerMessage = (
+    response: WorkerResponse | { m: string; __vitest_worker_response__: false },
+  ): void => {
     try {
       const message = this.worker.deserialize(response) as WorkerResponse
 
       if (typeof message === 'object' && message != null && message.__vitest_worker_response__) {
         this._eventEmitter.emit('message', message)
-      }
-      else {
+      } else {
         this._eventEmitter.emit('rpc', message)
       }
-    }
-    catch (error) {
+    } catch (error) {
       this._eventEmitter.emit('error', error as Error)
     }
   }
 
-  private emitUnexpectedExit = (): void => {
-    const error = new Error('Worker exited unexpectedly')
+  private emitUnexpectedExit = (code?: number, signal?: string): void => {
+    const hasCode = typeof code === 'number'
+    const errorDetails =
+      hasCode || signal
+        ? `with ${hasCode ? `exit code ${code} ` : ''}${signal ? `signal ${signal} ` : ''}`
+        : ''
+    const testFileDetails = this._lastTestFiles.length
+      ? ` while running test file${this._lastTestFiles.length === 1 ? '' : 's'} ${this._lastTestFiles.join(', ')}`
+      : ''
+    const error = new Error(
+      `Worker exited unexpectedly ${errorDetails}during ${this._state} state${testFileDetails}`,
+    )
+    this._state = RunnerState.STOPPED
 
     this._eventEmitter.emit('error', error)
   }
 
   private waitForStart() {
     return new Promise<void>((resolve, reject) => {
-      const onStart = (message: WorkerResponse) => {
+      const cleanup = () => {
+        this.off('message', onStart)
+        this.off('error', onError)
+      }
+
+      function onStart(message: WorkerResponse) {
         if (message.type === 'started') {
-          this.off('message', onStart)
+          cleanup()
           if (message.error) {
             reject(message.error)
-          }
-          else {
+          } else {
             resolve()
           }
         }
       }
 
+      // The worker can die before it ever reports back (e.g. an invalid
+      // `execArgv` makes Node exit immediately). Reject as soon as that
+      // happens instead of waiting for the start timeout to elapse.
+      function onError(error: Error) {
+        cleanup()
+        reject(error)
+      }
+
       this.on('message', onStart)
+      this.on('error', onError)
     })
   }
 

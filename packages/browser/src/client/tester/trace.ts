@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { RunnerTask as Task } from 'vitest'
 import type { BrowserTraceEntryKind } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
@@ -15,10 +15,10 @@ export interface BrowserTraceData {
 }
 
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
-export type BrowserTraceEntryRangePhase = 'start' | 'end'
-export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
+type BrowserTraceEntryRangePhase = 'start' | 'end'
+type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
 
-export interface BrowserTraceEntryRange {
+interface BrowserTraceEntryRange {
   id: string
   phase: BrowserTraceEntryRangePhase
 }
@@ -55,14 +55,15 @@ interface TraceSnapshot {
   pseudoClassIds: Record<PseudoClassName, number[]>
 }
 
-// rrweb-snapshot rewrites pseudo-class selectors in serialized styles so replay can
-// reproduce snapshot-time states. For example:
+// Dynamic pseudo-class state isn't preserved in the serialized DOM. rrweb-snapshot
+// rewrites user-action selectors in serialized styles. For example:
 //   some-selector:hover { ... }
 // becomes:
 //   some-selector:hover, some-selector.\:hover { ... }
 // Vitest side integration then adds matching pseudo-state classes in the replay DOM.
 // rrweb-snapshot only handles `:hover` upstream, so we patch it locally for the
-// other user-action pseudo-classes as well.
+// other user-action pseudo-classes as well. Native states such as `:popover-open`
+// are restored through their DOM API instead.
 // https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Pseudo-classes#user_action_pseudo-classes
 const PSEUDO_CLASS_NAMES = [
   ':hover',
@@ -70,6 +71,7 @@ const PSEUDO_CLASS_NAMES = [
   ':focus',
   ':focus-visible',
   ':focus-within',
+  ':popover-open',
 ] as const
 type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
 
@@ -147,7 +149,7 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
   }
   for (const className of PSEUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)
-    const ids = Array.from(elements, el => mirror.getId(el)).filter(id => id !== -1)
+    const ids = Array.from(elements, (el) => mirror.getId(el)).filter((id) => id !== -1)
     result.pseudoClassIds[className] = ids
   }
   if (serializedLocator) {
@@ -159,19 +161,16 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
       )
       if (!el) {
         result.selectorResolution = 'missing'
-      }
-      else {
+      } else {
         const id = mirror.getId(el)
         if (id !== -1) {
           result.selectorId = id
           result.selectorResolution = 'matched'
-        }
-        else {
+        } else {
           result.selectorResolution = 'missing'
         }
       }
-    }
-    catch (error) {
+    } catch (error) {
       result.selectorResolution = 'error'
       result.selectorError = error instanceof Error ? error.message : String(error)
     }

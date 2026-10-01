@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
+import { runVitest } from '#test-utils'
 
 /**
  * Extract import durations section and normalize variable values for snapshot testing.
@@ -16,14 +16,16 @@ function normalizeImportDurationsOutput(stdout: string): string {
   }
   const endOfLine = plain.indexOf('\n', end)
   const section = plain.slice(start, endOfLine === -1 ? undefined : endOfLine)
-  return section
-    // Normalize time values (e.g., "88ms", "1.01s") to "XXX"
-    // Negative lookahead to avoid matching times in filenames (e.g., "import-durations-50ms.ts")
-    .replace(/\d+(\.\d+)?(ms|s)(?![\w.])/g, 'XXX')
-    // Normalize bar characters to "[BAR]"
-    .replace(/[█░]+/g, '[BAR]')
-    // Normalize multiple spaces (from column padding) to single space
-    .replace(/ {2,}/g, ' ')
+  return (
+    section
+      // Normalize time values (e.g., "88ms", "1.01s") to "XXX"
+      // Negative lookahead to avoid matching times in filenames (e.g., "import-durations-50ms.ts")
+      .replace(/\d+(\.\d+)?(ms|s)(?![\w.])/g, 'XXX')
+      // Normalize bar characters to "[BAR]"
+      .replace(/[█░]+/g, '[BAR]')
+      // Normalize multiple spaces (from column padding) to single space
+      .replace(/ {2,}/g, ' ')
+  )
 }
 
 describe('import durations', () => {
@@ -64,19 +66,21 @@ describe('import durations', () => {
   }, 40000)
 
   it('should handle tests with no imports gracefully', async () => {
-    const { exitCode, ctx } = await runVitest({
+    const { ctx } = await runVitest({
       root,
       include: ['**/ok.test.ts'],
       experimental: { importDurations: { limit: 10 } },
     })
-
-    expect(exitCode).toBe(0)
 
     const capturedFiles = ctx!.state.getFiles()
 
     expect(capturedFiles).toHaveLength(1)
 
     const file = capturedFiles[0]
+    // assert on the run's own state, not `exitCode`: `process.exitCode` is
+    // process-global, and with `isolate: false` a stray unhandled rejection
+    // leaked by an earlier test file in this worker flips it to 1
+    expect(file.result?.state).toBe('pass')
     expect(file.importDurations).toBeDefined()
     expect(file.importDurations?.[file.filepath].totalTime).toBeGreaterThanOrEqual(0)
     expect(file.importDurations?.[file.filepath].selfTime).toBeGreaterThanOrEqual(0)
@@ -172,7 +176,7 @@ describe('import durations', () => {
 
   it('should fail when failOnDanger is enabled and threshold exceeded', async () => {
     // With default danger threshold (500ms), should NOT fail (imports are ~75ms)
-    const { exitCode: exitCodeDefault, stderr: stderrDefault } = await runVitest({
+    const { ctx: ctxDefault, stderr: stderrDefault } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
       experimental: {
@@ -182,11 +186,17 @@ describe('import durations', () => {
       },
     })
 
-    expect(exitCodeDefault).toBe(0)
+    // see "should handle tests with no imports gracefully" for why `exitCode`
+    // is not asserted here
+    expect(ctxDefault!.state.getFiles()[0]?.result?.state).toBe('pass')
     expect(stderrDefault).not.toContain('exceeded the danger threshold')
 
     // With lower danger threshold (50ms), should fail (imports are ~75ms > 50ms)
-    const { exitCode: exitCodeLow, stderr: stderrLow, stdout: stdoutLow } = await runVitest({
+    const {
+      exitCode: exitCodeLow,
+      stderr: stderrLow,
+      stdout: stdoutLow,
+    } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
       experimental: {

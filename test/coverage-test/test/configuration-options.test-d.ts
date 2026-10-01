@@ -1,9 +1,15 @@
 import type { defineConfig } from 'vitest/config'
-import type { CoverageInstrumenter, CoverageProviderModule, InstrumenterOptions, ResolvedCoverageOptions, Vitest } from 'vitest/node'
+import type {
+  CoverageInstrumenter,
+  CoverageProviderModule,
+  InstrumenterOptions,
+  ResolvedCoverageOptions,
+  Vitest,
+} from 'vitest/node'
 import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
-type Configuration = NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>
+type Configuration = NarrowToTestConfig<Parameters<typeof defineConfig>[0]>
 type Coverage = NonNullable<Configuration['coverage']>
 
 test('providers, built-in', () => {
@@ -32,10 +38,10 @@ test('provider options, generic', () => {
     },
     thresholds: {
       '100': true,
-      'lines': 1,
-      'autoUpdate': true,
-      'perFile': true,
-      'statements': 100,
+      lines: 1,
+      autoUpdate: true,
+      perFile: true,
+      statements: 100,
 
       '**/some-file.ts': {
         100: true,
@@ -43,6 +49,7 @@ test('provider options, generic', () => {
         branches: 12,
         functions: 12,
         statements: 12,
+        perFile: true,
       },
     },
   })
@@ -56,10 +63,10 @@ test('provider options, generic', () => {
     },
     thresholds: {
       '100': false,
-      'lines': 1,
-      'autoUpdate': true,
-      'perFile': true,
-      'statements': 100,
+      lines: 1,
+      autoUpdate: true,
+      perFile: true,
+      statements: 100,
 
       '**/some-file.ts': {
         100: false,
@@ -67,6 +74,84 @@ test('provider options, generic', () => {
         branches: 12,
         functions: 12,
         statements: 12,
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+      perFile: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    },
+  })
+
+  // Glob patterns accept their own `perFile` (boolean or object).
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: true,
+      },
+      '**/other-file.ts': {
+        perFile: {
+          lines: 50,
+        },
+      },
+      '**/strict.ts': {
+        perFile: {
+          100: true,
+        },
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: {
+          // @ts-expect-error -- per-file threshold values must be numbers
+          lines: '50',
+        },
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'istanbul',
+    thresholds: {
+      lines: 80,
+      perFile: {
+        100: true,
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- per-file threshold values must be numbers
+        lines: '50',
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- `autoUpdate` is not a per-file option
+        autoUpdate: true,
       },
     },
   })
@@ -86,7 +171,10 @@ test('provider module', () => {
             cleanOnRerun: true,
             enabled: true,
             exclude: ['string'],
-            reporter: [['html', {}], ['json', { file: 'string' }]],
+            reporter: [
+              ['html', {}],
+              ['json', { file: 'string' }],
+            ],
             reportsDirectory: 'string',
             reportOnFailure: true,
             allowExternal: true,
@@ -174,16 +262,12 @@ test('reporters, with options', () => {
       ['text-lcov', { projectRoot: 'string' }],
       ['text-summary', { file: 'string' }],
       ['text', { skipEmpty: true, skipFull: true, maxCols: 1 }],
-      ['custom-reporter', { 'someOption': true, 'some-other-custom-option': { width: 123 } }],
+      ['custom-reporter', { someOption: true, 'some-other-custom-option': { width: 123 } }],
     ],
   })
 
   assertType<Coverage>({
-    reporter: [
-      ['html', { subdir: 'string' }],
-      ['json'],
-      ['lcov', { projectRoot: 'string' }],
-    ],
+    reporter: [['html', { subdir: 'string' }], ['json'], ['lcov', { projectRoot: 'string' }]],
   })
 
   assertType<Coverage>({
@@ -213,7 +297,7 @@ test('custom instrumenter', () => {
   // Custom instrumenter factory function
   assertType<Coverage>({
     provider: 'istanbul',
-    instrumenter: _options => ({
+    instrumenter: (_options) => ({
       instrumentSync: (code, _filename, _sourceMap?) => code,
       lastSourceMap: () => ({}),
       lastFileCoverage: () => ({}),
@@ -226,8 +310,8 @@ test('custom instrumenter', () => {
   })
 
   // Verify CoverageInstrumenter type can be used as return type
-  const factory: (opts: InstrumenterOptions) => CoverageInstrumenter = _opts => ({
-    instrumentSync: code => code,
+  const factory: (opts: InstrumenterOptions) => CoverageInstrumenter = (_opts) => ({
+    instrumentSync: (code) => code,
     lastSourceMap: () => null,
     lastFileCoverage: () => ({}),
   })

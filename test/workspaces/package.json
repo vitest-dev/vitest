@@ -9,9 +9,11 @@
   },
   "devDependencies": {
     "@jridgewell/remapping": "catalog:",
-    "@types/istanbul-lib-coverage": "catalog:",
-    "istanbul-lib-coverage": "catalog:",
-    "jsdom": "latest",
+    "@vitest/istanbul-lib-coverage": "catalog:",
+    "jsdom": "^30.1.1",
+    "magic-string": "catalog:",
+    "pathe": "catalog:",
+    "vite": "latest",
     "vitest": "workspace:*"
   }
 }

@@ -19,12 +19,11 @@ export { shuffle } from './random'
  * - Rewrite prepareStackTrace to bypass "support-stack-trace" (usually takes ~250ms).
  */
 export function createSimpleStackTrace(options?: ErrorOptions): string {
-  const { message = '$$stack trace error', stackTraceLimit = 1 }
-    = options || {}
+  const { message = '$$stack trace error', stackTraceLimit = 1 } = options || {}
   const limit = Error.stackTraceLimit
   const prepareStackTrace = Error.prepareStackTrace
   Error.stackTraceLimit = stackTraceLimit
-  Error.prepareStackTrace = e => e.stack
+  Error.prepareStackTrace = (e) => e.stack
   const err = new Error(message)
   const stackTrace = err.stack || ''
   Error.prepareStackTrace = prepareStackTrace
@@ -36,24 +35,16 @@ export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
   return v != null
 }
 
-export function assertTypes(
-  value: unknown,
-  name: string,
-  types: string[],
-): void {
+export function assertTypes(value: unknown, name: string, types: string[]): void {
   const receivedType = typeof value
   const pass = types.includes(receivedType)
   if (!pass) {
-    throw new TypeError(
-      `${name} value must be ${types.join(' or ')}, received "${receivedType}"`,
-    )
+    throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
   }
 }
 
 export function isPrimitive(value: unknown): boolean {
-  return (
-    value === null || (typeof value !== 'function' && typeof value !== 'object')
-  )
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
 }
 
 export function slash(path: string): string {
@@ -111,21 +102,17 @@ export function filterOutComments(s: string): string {
       if (s[i] === '\n') {
         commentState = 'none'
       }
-    }
-    else if (commentState === 'multiline') {
+    } else if (commentState === 'multiline') {
       if (s[i - 1] === '*' && s[i] === '/') {
         commentState = 'none'
       }
-    }
-    else if (commentState === 'none') {
+    } else if (commentState === 'none') {
       if (s[i] === '/' && s[i + 1] === '/') {
         commentState = 'singleline'
-      }
-      else if (s[i] === '/' && s[i + 1] === '*') {
+      } else if (s[i] === '/' && s[i + 1] === '*') {
         commentState = 'multiline'
         i += 2
-      }
-      else {
+      } else {
         result.push(s[i])
       }
     }
@@ -140,9 +127,7 @@ export function isBareImport(id: string): boolean {
 }
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  if (array === null || array === undefined) {
-    array = []
-  }
+  array ??= []
 
   if (Array.isArray(array)) {
     return array
@@ -156,11 +141,7 @@ export function isObject(item: unknown): boolean {
 }
 
 function isFinalObj(obj: any) {
-  return (
-    obj === Object.prototype
-    || obj === Function.prototype
-    || obj === RegExp.prototype
-  )
+  return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
 }
 
 export function getType(value: unknown): string {
@@ -171,10 +152,8 @@ function collectOwnProperties(
   obj: any,
   collector: Set<string | symbol> | ((key: string | symbol) => void),
 ) {
-  const collect
-    = typeof collector === 'function'
-      ? collector
-      : (key: string | symbol) => collector.add(key)
+  const collect =
+    typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
@@ -190,10 +169,7 @@ export function getOwnProperties(obj: any): (string | symbol)[] {
 
 const defaultCloneOptions: CloneOptions = { forceWritable: false }
 
-export function deepClone<T>(
-  val: T,
-  options: CloneOptions = defaultCloneOptions,
-): T {
+export function deepClone<T>(val: T, options: CloneOptions = defaultCloneOptions): T {
   const seen = new WeakMap()
   return clone(val, seen, options)
 }
@@ -234,16 +210,14 @@ export function clone<T>(
           writable: true,
           value: cloned,
         })
-      }
-      else if ('get' in descriptor) {
+      } else if ('get' in descriptor) {
         Object.defineProperty(out, k, {
           ...descriptor,
           get() {
             return cloned
           },
         })
-      }
-      else {
+      } else {
         Object.defineProperty(out, k, {
           ...descriptor,
           value: cloned,
@@ -258,11 +232,7 @@ export function clone<T>(
 
 export function noop(): void {}
 
-export function objectAttr(
-  source: any,
-  path: string,
-  defaultValue = undefined,
-): any {
+export function objectAttr(source: any, path: string, defaultValue = undefined): any {
   // a[3].b -> a.3.b
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
@@ -314,13 +284,12 @@ export function getCallLastIndex(code: string): number | null {
     charIndex++
     const char = code[charIndex]
 
-    const isCharString = char === '"' || char === '\'' || char === '`'
+    const isCharString = char === '"' || char === "'" || char === '`'
 
     if (isCharString && beforeChar !== '\\') {
       if (inString === char) {
         inString = null
-      }
-      else if (!inString) {
+      } else if (!inString) {
         inString = char
       }
     }
@@ -359,8 +328,7 @@ function toString(v: any) {
 
 function isPlainObject(val: any): val is object {
   return (
-    toString(val) === '[object Object]'
-    && (!val.constructor || val.constructor.name === 'Object')
+    toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
   )
 }
 
@@ -394,10 +362,7 @@ export function ordinal(i: number): string {
  *
  * Do not merge types - it is very expensive and usually it's better to case a type here
  */
-export function deepMerge<T extends object = object>(
-  target: T,
-  ...sources: any[]
-): T {
+export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
   if (!sources.length) {
     return target as any
   }
@@ -408,7 +373,10 @@ export function deepMerge<T extends object = object>(
   }
 
   if (isMergeableObject(target) && isMergeableObject(source)) {
-    (Object.keys(source) as (keyof T)[]).forEach((key) => {
+    ;(Object.keys(source) as (keyof T)[]).forEach((key) => {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        return
+      }
       const _source = source as T
       if (isMergeableObject(_source[key])) {
         if (!target[key]) {
@@ -416,8 +384,7 @@ export function deepMerge<T extends object = object>(
         }
 
         deepMerge(target[key] as any, _source[key])
-      }
-      else {
+      } else {
         target[key] = _source[key] as any
       }
     })
@@ -431,6 +398,6 @@ export function unique<T>(array: T[]): T[] {
 }
 
 export function sanitizeFilePath(s: string): string {
-  // eslint-disable-next-line no-control-regex
+  // oxlint-disable-next-line no-control-regex
   return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
 }

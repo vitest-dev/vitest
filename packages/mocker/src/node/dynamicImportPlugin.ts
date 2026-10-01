@@ -18,15 +18,18 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
   return {
     name: 'vitest:browser:esm-injector',
     enforce: 'post',
-    transform(source, id) {
-      // TODO: test is not called for static imports
-      if (!regexDynamicImport.test(source)) {
-        return
-      }
-      if (options.filter && !options.filter(id, this.environment)) {
-        return
-      }
-      return injectDynamicImport(source, id, this.parse, options)
+    transform: {
+      order: 'post',
+      handler(source, id) {
+        // TODO: test is not called for static imports
+        if (!regexDynamicImport.test(source)) {
+          return
+        }
+        if (options.filter && !options.filter(id, this.environment)) {
+          return
+        }
+        return injectDynamicImport(source, id, this.parse, options)
+      },
     },
   }
 }
@@ -51,8 +54,7 @@ export function injectDynamicImport(
   let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
-  }
-  catch (err) {
+  } catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)
     return
   }
@@ -65,7 +67,7 @@ export function injectDynamicImport(
     },
     onDynamicImport(node) {
       const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
-      const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(() => import(`
+      const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(async () => import(`
       const importSubstring = code.substring(node.start, node.end)
       const hasIgnore = importSubstring.includes('/* @vite-ignore */')
       s.overwrite(

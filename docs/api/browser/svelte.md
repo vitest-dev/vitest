@@ -39,19 +39,10 @@ export function render<C extends Component>(
   Component: ComponentImport<C>,
   options?: ComponentOptions<C>,
   renderOptions?: SetupOptions
-): RenderResult<C> & PromiseLike<RenderResult<C>>
+): Promise<RenderResult<C>>
 ```
 
 The `render` function records a `svelte.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
-
-::: warning
-Synchronous usage of `render` is deprecated and will be removed in the next major version. Please always `await` the result:
-
-```ts
-const screen = render(Component) // [!code --]
-const screen = await render(Component) // [!code ++]
-```
-:::
 
 ### Options
 
@@ -174,10 +165,6 @@ function unmount(): Promise<void>
 
 Unmount and destroy the Svelte component. Also records a `svelte.unmount` trace mark in the [Trace View](/guide/browser/trace-view). This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
 
-::: warning
-Synchronous usage of `unmount` is deprecated and will be removed in the next major version. Please always `await` the result.
-:::
-
 ```ts
 import { render } from 'vitest-browser-svelte'
 
@@ -219,6 +206,7 @@ await expect.element(
 For simple snippets, you can use a wrapper component and "dummy" children to test them. Setting `data-testid` attributes can be helpful when testing slots in this manner.
 
 ::: code-group
+
 ```ts [basic.test.js]
 import { render } from 'vitest-browser-svelte'
 import { expect, test } from 'vitest'
@@ -234,6 +222,7 @@ test('basic snippet', async () => {
   await expect.element(child).toBeInTheDocument()
 })
 ```
+
 ```svelte [basic-snippet.svelte]
 <script>
   let { children } = $props()
@@ -243,6 +232,7 @@ test('basic snippet', async () => {
   {@render children?.()}
 </h1>
 ```
+
 ```svelte [basic-snippet.test.svelte]
 <script>
   import Subject from './basic-snippet.svelte'
@@ -252,11 +242,13 @@ test('basic snippet', async () => {
   <span data-testid="child"></span>
 </Subject>
 ```
+
 :::
 
 For more complex snippets, e.g. where you want to check arguments, you can use Svelte's [`createRawSnippet`](https://svelte.dev/docs/svelte/svelte#createRawSnippet) API.
 
 ::: code-group
+
 ```js [complex-snippet.test.js]
 import { render } from 'vitest-browser-svelte'
 import { createRawSnippet } from 'svelte'
@@ -277,6 +269,7 @@ test('renders greeting in message snippet', async () => {
   await expect.element(message).toHaveTextContent('Hello, Alice!')
 })
 ```
+
 ```svelte [complex-snippet.svelte]
 <script>
   let { name, message } = $props()
@@ -288,6 +281,7 @@ test('renders greeting in message snippet', async () => {
   {@render message?.(greeting)}
 </p>
 ```
+
 :::
 
 ## See also

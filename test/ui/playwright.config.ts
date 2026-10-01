@@ -5,12 +5,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      // increase viewport height so virtual scroller renders all explorer items
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } },
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   use: {
-    trace: process.env.CI ? 'on-first-retry' : 'on',
+    trace: process.env.CI ? 'on-first-retry' : undefined,
   },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

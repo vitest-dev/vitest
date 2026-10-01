@@ -1,15 +1,9 @@
 import type { Debugger } from 'obug'
-import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import { createDebug } from 'obug'
 
 export const debug: Debugger = createDebug('vitest:web-worker')
-
-export function getWorkerState(): WorkerGlobalState {
-  // @ts-expect-error untyped global
-  return globalThis.__vitest_worker__
-}
 
 export function assertGlobalExists(name: string): void {
   if (!(name in globalThis)) {
@@ -63,10 +57,10 @@ function createClonedMessageEvent(
     debug('create message event, using polyfilled structured clone')
     if (transfer?.length) {
       console.warn(
-        '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
-        + 'Falling back to polyfill, your transferable options will be lost. '
-        + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,'
-        + 'or update to Node 17+.',
+        '[@vitest/web-worker] `structuredClone` is not supported in this environment. ' +
+          'Falling back to polyfill, your transferable options will be lost. ' +
+          'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,' +
+          'or update to Node 17+.',
       )
     }
     return new MessageEvent('message', {
@@ -90,8 +84,7 @@ export function createMessageEvent(
 ): MessageEvent {
   try {
     return createClonedMessageEvent(data, transferOrOptions, clone)
-  }
-  catch (error) {
+  } catch (error) {
     debug('failed to clone message, dispatch "messageerror" event: %o', error)
     return new MessageEvent('messageerror', {
       data: error,

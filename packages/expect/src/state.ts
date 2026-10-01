@@ -11,7 +11,11 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
   const matchers = Object.create(null)
   const customEqualityTesters: Array<Tester> = []
   const asymmetricMatchers = Object.create(null)
+  // `configurable` so that vm pools can strip the accessors from a disposed
+  // context: the getters capture the expect state, which would otherwise keep
+  // the whole test-file world reachable from the leaked context shell
   Object.defineProperty(globalThis, MATCHERS_OBJECT, {
+    configurable: true,
     get: () => globalState,
   })
   Object.defineProperty(globalThis, JEST_MATCHERS_OBJECT, {
@@ -23,13 +27,12 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
     }),
   })
   Object.defineProperty(globalThis, ASYMMETRIC_MATCHERS_OBJECT, {
+    configurable: true,
     get: () => asymmetricMatchers,
   })
 }
 
-export function getState<State extends MatcherState = MatcherState>(
-  expect: ExpectStatic,
-): State {
+export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
   return (globalThis as any)[MATCHERS_OBJECT].get(expect)
 }
 
@@ -38,11 +41,10 @@ export function setState<State extends MatcherState = MatcherState>(
   expect: ExpectStatic,
 ): void {
   const map = (globalThis as any)[MATCHERS_OBJECT]
-  const current = map.get(expect) || {}
+  const current = map.get(expect)
   // so it keeps getters from `testPath`
-  const results = Object.defineProperties(current, {
-    ...Object.getOwnPropertyDescriptors(current),
-    ...Object.getOwnPropertyDescriptors(state),
-  })
-  map.set(expect, results)
+  const next = Object.defineProperties(current || {}, Object.getOwnPropertyDescriptors(state))
+  if (!current) {
+    map.set(expect, next)
+  }
 }

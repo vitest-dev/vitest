@@ -13,3 +13,7 @@ it('prompt', async () => {
 it('confirm', async () => {
   expect(confirm('test')).toBe(false)
 })
+
+it('print', async () => {
+  expect(print()).toBeUndefined()
+})

@@ -117,6 +117,29 @@ it('stop request when test times out', async ({ signal }) => {
 }, 2000)
 ```
 
+### `bench` <Version>5.0.0</Version> {#bench}
+
+The `bench` fixture lets you define and run benchmarks inside regular tests. You can measure throughput, compare implementations, and assert relative performance:
+
+```ts
+import { expect, test } from 'vitest'
+
+test('compare parsers', async ({ bench }) => {
+  const result = await bench.compare(
+    bench('JSON.parse', () => {
+      JSON.parse('{"key":"value"}')
+    }),
+    bench('custom parser', () => {
+      customParse('{"key":"value"}')
+    }),
+  )
+
+  expect(result.get('JSON.parse')).toBeFasterThan(result.get('custom parser'))
+})
+```
+
+See the [Benchmarks guide](/guide/benchmarking) for full documentation on comparisons, baselines, and assertion matchers.
+
 ### `onTestFailed`
 
 The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
@@ -361,6 +384,7 @@ const test = baseTest.extend<{
   baseUrl: 'http://localhost:3000'
 })
 ```
+
 :::
 
 #### Tuple Syntax for Options
@@ -431,6 +455,7 @@ test('context must be destructured', ({ database }) => { // [!code ++]
   expect(database).toBeDefined()
 })
 ```
+
 :::
 
 ### Extending Extended Tests
@@ -577,11 +602,11 @@ When running tests in `vmThreads` or `vmForks`, `scope: 'worker'` works the same
 
 Fixtures can only access other fixtures from the same or higher (longer-lived) scopes:
 
-| Fixture Scope | Can Access |
-|---------------|------------|
-| `worker` | Only other worker fixtures |
-| `file` | Worker + file fixtures |
-| `test` | Worker + file + test fixtures + [test context](#built-in-test-context) |
+| Fixture Scope | Can Access                                                             |
+| ------------- | ---------------------------------------------------------------------- |
+| `worker`      | Only other worker fixtures                                             |
+| `file`        | Worker + file fixtures                                                 |
+| `test`        | Worker + file + test fixtures + [test context](#built-in-test-context) |
 
 ```ts
 const test = baseTest
@@ -643,6 +668,7 @@ This provides the same compile-time safety as the builder pattern, catching scop
 Since Vitest 3, you can provide different values in different [projects](/guide/projects). To enable this, pass `{ injected: true }` in the options. If the key is not specified in the [project configuration](/config/provide), the default value will be used.
 
 :::code-group
+
 ```ts [fixtures.test.ts]
 import { test as baseTest } from 'vitest'
 
@@ -655,6 +681,7 @@ test('works correctly', ({ url }) => {
   // url is "/empty" in "project-empty"
 })
 ```
+
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
@@ -686,6 +713,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ### Overriding Fixture Values <Version>4.1.0</Version> {#overriding-fixture-values}
@@ -904,4 +932,5 @@ test.beforeAll(({ testFixture }) => {})
 // ✅ Works: file-scoped fixtures are available
 test.beforeAll(({ fileFixture }) => {})
 ```
+
 :::

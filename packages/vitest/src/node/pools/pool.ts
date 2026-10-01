@@ -38,13 +38,18 @@ export class Pool {
   private exitPromises: Promise<void>[] = []
   private _isCancelling: boolean = false
 
-  constructor(private options: Options, private logger: Logger) {}
+  constructor(
+    private options: Options,
+    private logger: Logger,
+  ) {}
 
   setMaxWorkers(maxWorkers: number): void {
     this.maxWorkers = maxWorkers
 
     this.workerIds = new Map(
-      Array.from({ length: maxWorkers }).fill(0).map((_, i) => [i + 1, true]),
+      Array.from({ length: maxWorkers })
+        .fill(0)
+        .map((_, i) => [i + 1, true]),
     )
   }
 
@@ -75,7 +80,9 @@ export class Pool {
       let isMemoryLimitReached = false
       const runner = this.getPoolRunner(task, method)
 
-      const poolId = runner.poolId ?? this.getWorkerId()
+      // `setMaxWorkers` can replace the map for the next group before this id is freed
+      const workerIds = this.workerIds
+      const poolId = runner.poolId ?? this.getConcurrencyId()
       runner.poolId = poolId
 
       const activeTask = { task, resolver, method, cancelTask }
@@ -101,28 +108,37 @@ export class Pool {
           }
 
           runner.off('message', onFinished)
+          runner.off('error', onTaskError)
           resolver.resolve()
         }
       }
 
+      function onTaskError(error: unknown) {
+        runner.off('message', onFinished)
+        runner.off('error', onTaskError)
+        resolver.reject(
+          new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
+        )
+      }
+
       runner.on('message', onFinished)
+      runner.on('error', onTaskError)
 
       if (!runner.isStarted) {
-        runner.on('error', (error) => {
-          resolver.reject(
-            new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
-          )
-        })
-
         const id = setTimeout(
-          () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
+          () =>
+            resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,
         )
 
-        await runner.start({ workerId: task.context.workerId })
-          .catch(error =>
+        await runner
+          .start({ workerId: task.context.workerId })
+          .catch((error) =>
             resolver.reject(
-              new Error(`[vitest-pool]: Failed to start ${task.worker} worker for test files ${formatFiles(task)}.`, { cause: error }),
+              new Error(
+                `[vitest-pool]: Failed to start ${task.worker} worker for test files ${formatFiles(task)}.`,
+                { cause: error },
+              ),
             ),
           )
           .finally(() => clearTimeout(id))
@@ -138,7 +154,7 @@ export class Pool {
       }
 
       await resolver.promise
-        .catch(error => span?.recordException(error))
+        .catch((error) => span?.recordException(error))
         .finally(() => span?.end())
 
       const index = this.activeTasks.indexOf(activeTask)
@@ -147,10 +163,11 @@ export class Pool {
       }
 
       if (
-        !task.isolate
-        && !isMemoryLimitReached
-        && this.queue[0]?.task.isolate === false
-        && isEqualRunner(runner, this.queue[0].task)
+        !task.isolate &&
+        !runner.isTerminated &&
+        !isMemoryLimitReached &&
+        this.queue[0]?.task.isolate === false &&
+        isEqualRunner(runner, this.queue[0].task)
       ) {
         this.sharedRunners.push(runner)
         return this.schedule()
@@ -160,18 +177,27 @@ export class Pool {
       // Runner termination can also already start from task cancellation.
       if (!runner.isTerminated) {
         const id = setTimeout(
-          () => this.logger.error(`[vitest-pool]: Timeout terminating ${task.worker} worker for test files ${formatFiles(task)}.`),
+          () =>
+            this.logger.error(
+              `[vitest-pool]: Timeout terminating ${task.worker} worker for test files ${formatFiles(task)}.`,
+            ),
           this.options.teardownTimeout,
         )
 
         this.exitPromises.push(
-          runner.stop({ force: resolver.isRejected })
+          runner
+            .stop({ force: resolver.isRejected })
             .then(() => clearTimeout(id))
-            .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`, error)),
+            .catch((error) =>
+              this.logger.error(
+                `[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`,
+                error,
+              ),
+            ),
         )
       }
 
-      this.freeWorkerId(poolId)
+      workerIds.set(poolId, true)
     }
 
     // This is mostly to avoid zombie workers when/if Vitest internals run into errors
@@ -194,13 +220,13 @@ export class Pool {
 
     if (pendingTasks.length) {
       const error = new Error('Cancelled')
-      pendingTasks.forEach(task => task.resolver.reject(error))
+      pendingTasks.forEach((task) => task.resolver.reject(error))
     }
 
-    await Promise.all(this.activeTasks.map(task => task.cancelTask({ force })))
+    await Promise.all(this.activeTasks.map((task) => task.cancelTask({ force })))
     this.activeTasks = []
 
-    await Promise.all(this.sharedRunners.map(runner => runner.stop()))
+    await Promise.all(this.sharedRunners.map((runner) => runner.stop()))
     this.sharedRunners = []
 
     await Promise.all(this.exitPromises)
@@ -218,7 +244,7 @@ export class Pool {
 
   private getPoolRunner(task: PoolTask, method: 'run' | 'collect'): PoolRunner {
     if (task.isolate === false) {
-      const index = this.sharedRunners.findIndex(runner => isEqualRunner(runner, task))
+      const index = this.sharedRunners.findIndex((runner) => isEqualRunner(runner, task))
 
       if (index !== -1) {
         const runner = this.sharedRunners.splice(index, 1)[0]
@@ -261,17 +287,21 @@ export class Pool {
     throw new Error(`Runner ${task.worker} is not supported. Test files: ${formatFiles(task)}.`)
   }
 
-  private getWorkerId() {
-    let workerId = 0
+  private getConcurrencyId() {
+    let concurrencyId: number | undefined
 
     this.workerIds.forEach((state, id) => {
-      if (state && !workerId) {
-        workerId = id
+      if (state && concurrencyId == null) {
+        concurrencyId = id
         this.workerIds.set(id, false)
       }
     })
 
-    return workerId
+    if (concurrencyId == null) {
+      throw new Error('Cannot set concurrency id because there are no valid free ids.')
+    }
+
+    return concurrencyId
   }
 
   private freeWorkerId(id: number) {
@@ -302,7 +332,7 @@ function withResolvers() {
 }
 
 function formatFiles(task: PoolTask) {
-  return task.context.files.map(file => file.filepath).join(', ')
+  return task.context.files.map((file) => file.filepath).join(', ')
 }
 
 function isEqualRunner(runner: PoolRunner, task: PoolTask) {
@@ -346,7 +376,7 @@ function deepEqual(obj1: any, obj2: any): boolean {
   }
 
   for (const key of keys1) {
-    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+    if (!Object.hasOwn(obj2, key) || !deepEqual(obj1[key], obj2[key])) {
       return false
     }
   }

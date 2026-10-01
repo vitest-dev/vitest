@@ -1,25 +1,17 @@
-import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
+import type { PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
-import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { BenchmarkResult } from '../runtime/types/benchmark'
-import type { UserConsoleLog } from './general'
+import type { BenchResult } from '../runtime/benchmark'
+import type { Test } from '../runtime/runner/types'
 
-interface SnapshotMatcher<T> {
-  <U extends { [P in keyof T]: any }>(
-    snapshot: Partial<U>,
-    hint?: string
-  ): void
-  (hint?: string): void
+interface SnapshotMatcher<R extends void | Promise<void>, T = unknown> {
+  <U extends { [P in keyof T]: any }>(snapshot: Partial<U>, hint?: string): R
+  (hint?: string): R
 }
 
-interface InlineSnapshotMatcher<T> {
-  <U extends { [P in keyof T]: any }>(
-    properties: Partial<U>,
-    snapshot?: string,
-    hint?: string
-  ): void
-  (hint?: string): void
+interface InlineSnapshotMatcher<R extends void | Promise<void>, T = unknown> {
+  <U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, hint?: string): R
+  (hint?: string): R
 }
 
 declare module 'vitest' {
@@ -38,7 +30,7 @@ declare module 'vitest' {
   interface ExpectStatic {
     assert: Chai.AssertStatic
     unreachable: (message?: string) => never
-    soft: <T>(actual: T, message?: string) => Assertion<T>
+    soft: <T>(actual: T, message?: string) => Assertion<void, T>
     poll: <T>(
       actual: (options: { signal: AbortSignal }) => T,
       options?: ExpectPollOptions,
@@ -49,11 +41,11 @@ declare module 'vitest' {
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 
-  interface Assertion<T> {
+  interface Assertion<R, T> {
     // Snapshots are extended in @vitest/snapshot and are not part of @vitest/expect
-    matchSnapshot: SnapshotMatcher<T>
-    toMatchSnapshot: SnapshotMatcher<T>
-    toMatchInlineSnapshot: InlineSnapshotMatcher<T>
+    matchSnapshot: SnapshotMatcher<R, T>
+    toMatchSnapshot: SnapshotMatcher<R, T>
+    toMatchInlineSnapshot: InlineSnapshotMatcher<R, T>
 
     /**
      * Checks that an error thrown by a function matches a previously recorded snapshot.
@@ -63,7 +55,7 @@ declare module 'vitest' {
      * @example
      * expect(functionWithError).toThrowErrorMatchingSnapshot();
      */
-    toThrowErrorMatchingSnapshot: (hint?: string) => void
+    toThrowErrorMatchingSnapshot: (hint?: string) => R
 
     /**
      * Checks that an error thrown by a function matches an inline snapshot within the test file.
@@ -76,10 +68,7 @@ declare module 'vitest' {
      * const throwError = () => { throw new Error('Error occurred') };
      * expect(throwError).toThrowErrorMatchingInlineSnapshot(`"Error occurred"`);
      */
-    toThrowErrorMatchingInlineSnapshot: (
-      snapshot?: string,
-      hint?: string,
-    ) => void
+    toThrowErrorMatchingInlineSnapshot: (snapshot?: string, hint?: string) => R
 
     /**
      * Compares the received value to a snapshot saved in a specified file.
@@ -92,37 +81,53 @@ declare module 'vitest' {
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
-  }
-}
 
-declare module '@vitest/runner' {
-  interface TestContext {
     /**
-     * `expect` instance bound to the current test.
+     * Asserts that a benchmark result is faster than another benchmark result.
+     * Compares mean latency — lower is faster.
      *
-     * This API is useful for running snapshot tests concurrently because global expect cannot track them.
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'))
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'), { delta: 0.1 })
      */
-    readonly expect: ExpectStatic
-    /** @internal */
-    _local: boolean
-  }
+    toBeFasterThan: (expected: BenchResult, options?: { delta?: number }) => R
 
-  interface TaskMeta {
-    typecheck?: boolean
-    benchmark?: boolean
-    __vitest_label__?: string
-  }
+    /**
+     * Asserts that a benchmark result is slower than another benchmark result.
+     * Compares mean latency — higher is slower.
+     *
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'))
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'), { delta: 0.2 })
+     */
+    toBeSlowerThan: (expected: BenchResult, options?: { delta?: number }) => R
 
-  interface File {
-    prepareDuration?: number
-    environmentLoad?: number
-  }
-
-  interface TaskBase {
-    logs?: UserConsoleLog[]
-  }
-
-  interface TaskResult {
-    benchmark?: BenchmarkResult
+    /**
+     * Ensures a `vi.when` chain has been exhausted.
+     *
+     * A chain is exhausted when at least one `calledWith` with an associated action (`then*`) has been registered
+     * and every registered behavior has been fully consumed. A chain with no registered
+     * behaviors, or with `calledWith` entries that have no associated `then*` actions, is never considered exhausted.
+     *
+     * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
+     *
+     * @example
+     * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+     *
+     * expect(w).not.toHaveBeenExhausted()
+     *
+     * expect(spy('hello')).toBe('HELLO')
+     *
+     * expect(w).toHaveBeenExhausted()
+     */
+    toHaveBeenExhausted: () => R
   }
 }

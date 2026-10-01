@@ -55,18 +55,18 @@ test('can redeclare json object', () => {
   expect((globalThis as any)[name]).toEqual({ hello: 'test' })
 })
 
-test('reassigning __MODE__', () => {
+test('reassigning complicated __MODE__', () => {
   const env = process.env.MODE
   expect(get__MODE__()).toBe(env)
   process.env.MODE = 'development'
-  expect(get__MODE__()).toBe('development')
+  expect(get__MODE__()).not.toBe('development')
 })
 
-test('dotted defines are processed by Vite, but cannot be reassigned', () => {
+test('dotted defines can be reassigned', () => {
   expect(SOME.VARIABLE).toBe('variable')
   expect(SOME.SOME.VARIABLE).toBe('nested variable')
   SOME.VARIABLE = 'new variable'
-  expect(SOME.VARIABLE).not.toBe('new variable')
+  expect(SOME.VARIABLE).toBe('new variable')
 })
 
 test('falsy defines are passed', () => {

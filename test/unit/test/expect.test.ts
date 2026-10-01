@@ -1,10 +1,9 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Tester } from '@vitest/expect'
 import { stripVTControlCharacters } from 'node:util'
-import { getCurrentTest } from '@vitest/runner'
 import { processError } from '@vitest/utils/error'
 import { Temporal } from 'temporal-polyfill'
-import { describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { describe, expect, expectTypeOf, test, TestRunner, vi } from 'vitest'
 
 describe('expect.soft', () => {
   test('types', () => {
@@ -35,8 +34,8 @@ describe('expect.soft', () => {
   test('should have multiple error', () => {
     expect.soft(1).toBe(2)
     expect.soft(2).toBe(3)
-    getCurrentTest()!.result!.state = 'run'
-    expect(getCurrentTest()?.result?.errors).toHaveLength(2)
+    TestRunner.getCurrentTest()!.result!.state = 'run'
+    expect(TestRunner.getCurrentTest()?.result?.errors).toHaveLength(2)
   })
 
   test.fails('should be a failure', () => {
@@ -73,22 +72,15 @@ describe('expect.addEqualityTesters', () => {
     return a instanceof AnagramComparator
   }
 
-  const areObjectsEqual: Tester = (
-    a: unknown,
-    b: unknown,
-  ): boolean | undefined => {
+  const areObjectsEqual: Tester = (a: unknown, b: unknown): boolean | undefined => {
     const isAAnagramComparator = isAnagramComparator(a)
     const isBAnagramComparator = isAnagramComparator(b)
 
     if (isAAnagramComparator && isBAnagramComparator) {
       return a.equals(b)
-    }
-
-    else if (isAAnagramComparator === isBAnagramComparator) {
+    } else if (isAAnagramComparator === isBAnagramComparator) {
       return undefined
-    }
-
-    else {
+    } else {
       return false
     }
   }
@@ -160,7 +152,7 @@ describe('expect.addEqualityTesters', () => {
 })
 
 describe('recursive custom equality tester for numeric values', () => {
-  const areNumbersEqual: Tester = (a, b) => typeof b === 'number' ? a === b : undefined
+  const areNumbersEqual: Tester = (a, b) => (typeof b === 'number' ? a === b : undefined)
 
   expect.addEqualityTesters([areNumbersEqual])
 
@@ -177,7 +169,10 @@ describe('recursive custom equality tester for numeric values', () => {
   })
 
   test('within deeply nested structures', () => {
-    expect({ foo: { bar: [1, [2, 0, [3, -0, 4]]] }, baz: 0 }).toStrictEqual({ foo: { bar: [1, [2, -0, [3, 0, 4]]] }, baz: -0 })
+    expect({ foo: { bar: [1, [2, 0, [3, -0, 4]]] }, baz: 0 }).toStrictEqual({
+      foo: { bar: [1, [2, -0, [3, 0, 4]]] },
+      baz: -0,
+    })
   })
 })
 
@@ -209,13 +204,9 @@ describe('recursive custom equality tester', () => {
 
     if (isAPerson && isBPerson) {
       return a.name === b.name && this.equals(a.address, b.address, customTesters)
-    }
-
-    else if (isAPerson === isBPerson) {
+    } else if (isAPerson === isBPerson) {
       return undefined
-    }
-
-    else {
+    } else {
       return false
     }
   }
@@ -226,13 +217,11 @@ describe('recursive custom equality tester', () => {
 
     if (isAAddress && isBAddress) {
       return a.address === b.address
-    }
-
-    else if (isAAddress === isBAddress) {
+    } else if (isAAddress === isBAddress) {
       return undefined
+    } else {
+      return false
     }
-
-    else { return false }
   }
 
   const person1 = new Person('Luke Skywalker', new Address('Tatooine'))
@@ -262,9 +251,7 @@ describe('recursive custom equality tester', () => {
 
   test('asymmetric matchers pass different Address objects', () => {
     expect([person1]).toEqual(expect.arrayContaining([person2]))
-    expect({ a: 1, b: { c: person1 } }).toEqual(
-      expect.objectContaining({ b: { c: person2 } }),
-    )
+    expect({ a: 1, b: { c: person1 } }).toEqual(expect.objectContaining({ b: { c: person2 } }))
   })
 
   test('toBe recommends toStrictEqual even with different Address objects', () => {
@@ -272,9 +259,7 @@ describe('recursive custom equality tester', () => {
   })
 
   test('toBe recommends toEqual even with different Address objects', () => {
-    expect(() => expect({ a: undefined, b: person1 }).toBe({ b: person2 })).toThrow(
-      'toEqual',
-    )
+    expect(() => expect({ a: undefined, b: person1 }).toBe({ b: person2 })).toThrow('toEqual')
   })
 
   test('iterableEquality still properly detects cycles', () => {
@@ -290,9 +275,7 @@ describe('recursive custom equality tester', () => {
   })
 
   test('spy matchers pass different Person objects', () => {
-    const mockFn = vi.fn(
-      (person: Person) => [person, person2],
-    )
+    const mockFn = vi.fn((person: Person) => [person, person2])
     mockFn(person1)
 
     expect(mockFn).toHaveBeenCalledWith(person1)
@@ -355,7 +338,10 @@ describe('iterator', () => {
 describe('Temporal equality', () => {
   describe.each([
     ['Instant', ['2025-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z']],
-    ['ZonedDateTime', ['2025-01-01T00:00:00+01:00[Europe/Amsterdam]', '2025-01-01T00:00:00+01:00[Europe/Paris]']],
+    [
+      'ZonedDateTime',
+      ['2025-01-01T00:00:00+01:00[Europe/Amsterdam]', '2025-01-01T00:00:00+01:00[Europe/Paris]'],
+    ],
     ['PlainDateTime', ['2025-01-01T00:00:00.000', '2026-01-01T00:00:00.000']],
     ['PlainDate', ['2025-01-01', '2026-01-01']],
     ['PlainTime', ['15:00:00.000', '16:00:00.000']],
@@ -397,21 +383,32 @@ describe('Temporal equality', () => {
 describe('expect with custom message', () => {
   describe('built-in matchers', () => {
     test('sync matcher throws custom message on failure', () => {
-      expect(() => expect(1, 'custom message').toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 to be 2 // Object.is equality]`)
+      expect(() => expect(1, 'custom message').toBe(2)).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: custom message: expected 1 to be 2 // Object.is equality]`,
+      )
     })
 
     test('async rejects matcher throws custom message on failure', async ({ expect }) => {
-      const asyncAssertion = expect(Promise.reject(new Error('test error')), 'custom async message').rejects.toBe(2)
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[AssertionError: custom async message: expected Error: test error to be 2 // Object.is equality]`)
+      const asyncAssertion = expect(
+        Promise.reject(new Error('test error')),
+        'custom async message',
+      ).rejects.toBe(2)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(
+        `[AssertionError: custom async message: expected Error: test error to be 2 // Object.is equality]`,
+      )
     })
 
     test('async resolves matcher throws custom message on failure', async ({ expect }) => {
       const asyncAssertion = expect(Promise.resolve(1), 'custom async message').resolves.toBe(2)
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[AssertionError: custom async message: expected 1 to be 2 // Object.is equality]`)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(
+        `[AssertionError: custom async message: expected 1 to be 2 // Object.is equality]`,
+      )
     })
 
     test('not matcher throws custom message on failure', () => {
-      expect(() => expect(1, 'custom message').not.toBe(1)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 not to be 1 // Object.is equality]`)
+      expect(() => expect(1, 'custom message').not.toBe(1)).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: custom message: expected 1 not to be 1 // Object.is equality]`,
+      )
     })
   })
 
@@ -426,7 +423,9 @@ describe('expect with custom message', () => {
           }
         },
       })
-      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrowErrorMatchingInlineSnapshot(`[Error: custom message: bar is foo]`)
+      expect(() =>
+        (expect('bar', 'custom message') as any).toBeFoo(),
+      ).toThrowErrorMatchingInlineSnapshot(`[Error: custom message: bar is foo]`)
     })
 
     test('sync custom matcher passes with custom message when assertion succeeds', ({ expect }) => {
@@ -452,8 +451,12 @@ describe('expect with custom message', () => {
           }
         },
       })
-      const asyncAssertion = (expect(Promise.resolve('bar'), 'custom async message') as any).toBeFoo()
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: bar is not foo]`)
+      const asyncAssertion = (
+        expect(Promise.resolve('bar'), 'custom async message') as any
+      ).toBeFoo()
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(
+        `[Error: custom async message: bar is not foo]`,
+      )
     })
 
     test('async custom matcher with not throws custom message on failure', async ({ expect }) => {
@@ -466,18 +469,26 @@ describe('expect with custom message', () => {
           }
         },
       })
-      const asyncAssertion = (expect(Promise.resolve('foo'), 'custom async message') as any).not.toBeFoo()
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: foo is not foo]`)
+      const asyncAssertion = (
+        expect(Promise.resolve('foo'), 'custom async message') as any
+      ).not.toBeFoo()
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(
+        `[Error: custom async message: foo is not foo]`,
+      )
     })
   })
 
   describe('edge cases', () => {
     test('empty custom message falls back to default matcher message', () => {
-      expect(() => expect(1, '').toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1 to be 2 // Object.is equality]`)
+      expect(() => expect(1, '').toBe(2)).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected 1 to be 2 // Object.is equality]`,
+      )
     })
 
     test('undefined custom message falls back to default matcher message', () => {
-      expect(() => expect(1, undefined as any).toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1 to be 2 // Object.is equality]`)
+      expect(() => expect(1, undefined as any).toBe(2)).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected 1 to be 2 // Object.is equality]`,
+      )
     })
   })
 })
@@ -493,30 +504,47 @@ describe('Standard Schema', () => {
     }
   }
 
-  function createAsyncMockSchema(validate: StandardSchemaV1['~standard']['validate']): StandardSchemaV1 {
+  function createAsyncMockSchema(
+    validate: StandardSchemaV1['~standard']['validate'],
+  ): StandardSchemaV1 {
     return {
       '~standard': {
         version: 1,
         vendor: 'mock-async',
-        validate: value => Promise.resolve(validate(value)),
+        validate: (value) => Promise.resolve(validate(value)),
       },
     }
   }
 
-  const stringSchema = createMockSchema(value =>
-    typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
+  const stringSchema = createMockSchema((value) =>
+    typeof value === 'string'
+      ? { issues: undefined, value }
+      : { issues: [{ message: 'Expected string' }] },
   )
-  const numberSchema = createMockSchema(value =>
-    typeof value === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected number' }] },
+  const numberSchema = createMockSchema((value) =>
+    typeof value === 'number'
+      ? { issues: undefined, value }
+      : { issues: [{ message: 'Expected number' }] },
   )
-  const emailSchema = createMockSchema(value =>
-    typeof value === 'string' && /^[\w%+.-]+@[\d.A-Z-]+\.[A-Z]{2,}$/i.test(value) ? { issues: undefined, value } : { issues: [{ message: 'Expected email' }] },
+  const emailSchema = createMockSchema((value) =>
+    typeof value === 'string' && /^[\w%+.-]+@[\d.A-Z-]+\.[A-Z]{2,}$/i.test(value)
+      ? { issues: undefined, value }
+      : { issues: [{ message: 'Expected email' }] },
   )
-  const objectSchema = createMockSchema(value =>
-    typeof value === 'object' && value !== null && 'name' in value && 'age' in value && typeof value.name === 'string' && typeof value.age === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected object' }] },
+  const objectSchema = createMockSchema((value) =>
+    typeof value === 'object' &&
+    value !== null &&
+    'name' in value &&
+    'age' in value &&
+    typeof value.name === 'string' &&
+    typeof value.age === 'number'
+      ? { issues: undefined, value }
+      : { issues: [{ message: 'Expected object' }] },
   )
-  const asyncStringSchema = createAsyncMockSchema(value =>
-    typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
+  const asyncStringSchema = createAsyncMockSchema((value) =>
+    typeof value === 'string'
+      ? { issues: undefined, value }
+      : { issues: [{ message: 'Expected string' }] },
   )
 
   describe('schemaMatching()', () => {
@@ -524,14 +552,21 @@ describe('Standard Schema', () => {
       expect('hello').toEqual(expect.schemaMatching(stringSchema))
       expect(42).toEqual(expect.schemaMatching(numberSchema))
 
-      expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 123 to deeply equal SchemaMatching{…}]`)
-      expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to deeply equal SchemaMatching{…}]`)
+      expect(() =>
+        expect(123).toEqual(expect.schemaMatching(stringSchema)),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected 123 to deeply equal SchemaMatching{…}]`,
+      )
+      expect(() =>
+        expect('hello').toEqual(expect.schemaMatching(numberSchema)),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected 'hello' to deeply equal SchemaMatching{…}]`,
+      )
 
       try {
         expect(123).toEqual(expect.schemaMatching(stringSchema))
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
@@ -557,11 +592,15 @@ describe('Standard Schema', () => {
         email: expect.schemaMatching(emailSchema),
       })
 
-      expect(() => expect({
-        email: 123,
-      }).toEqual({
-        email: expect.schemaMatching(emailSchema),
-      })).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { email: 123 } to deeply equal { email: SchemaMatching{…} }]`)
+      expect(() =>
+        expect({
+          email: 123,
+        }).toEqual({
+          email: expect.schemaMatching(emailSchema),
+        }),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected { email: 123 } to deeply equal { email: SchemaMatching{…} }]`,
+      )
 
       try {
         expect({
@@ -570,8 +609,7 @@ describe('Standard Schema', () => {
           email: expect.schemaMatching(emailSchema),
         })
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
@@ -596,9 +634,11 @@ describe('Standard Schema', () => {
       expect({
         name: 'John',
         age: 30,
-      }).toEqual(expect.objectContaining({
-        age: expect.schemaMatching(numberSchema),
-      }))
+      }).toEqual(
+        expect.objectContaining({
+          age: expect.schemaMatching(numberSchema),
+        }),
+      )
 
       try {
         expect({
@@ -613,8 +653,7 @@ describe('Standard Schema', () => {
           },
         })
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
@@ -639,19 +678,22 @@ describe('Standard Schema', () => {
     })
 
     test('should work with arrayContaining', () => {
-      expect([{
-        name: 'John',
-        age: 30,
-      }]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
+      expect([
+        {
+          name: 'John',
+          age: 30,
+        },
+      ]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
 
       try {
-        expect([{
-          name: 'John',
-          age: 'thirty',
-        }]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
+        expect([
+          {
+            name: 'John',
+            age: 'thirty',
+          },
+        ]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toContain('SchemaMatching')
@@ -663,13 +705,16 @@ describe('Standard Schema', () => {
       expect(123).not.toEqual(expect.schemaMatching(stringSchema))
       expect('hello').not.toEqual(expect.schemaMatching(numberSchema))
 
-      expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to not deeply equal SchemaMatching]`)
+      expect(() =>
+        expect('hello').not.toEqual(expect.schemaMatching(stringSchema)),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected 'hello' to not deeply equal SchemaMatching]`,
+      )
 
       try {
         expect('hello').not.toEqual(expect.schemaMatching(stringSchema))
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
@@ -683,11 +728,17 @@ describe('Standard Schema', () => {
     })
 
     test('should throw error for async schemas', () => {
-      expect(() => expect('hello').toEqual(expect.schemaMatching(asyncStringSchema))).toThrowErrorMatchingInlineSnapshot(`[TypeError: Async schema validation is not supported in asymmetric matchers.]`)
+      expect(() =>
+        expect('hello').toEqual(expect.schemaMatching(asyncStringSchema)),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[TypeError: Async schema validation is not supported in asymmetric matchers.]`,
+      )
     })
 
     test('should throw error for non-schema argument', () => {
-      expect(() => expect.schemaMatching('not-a-schema')).toThrowErrorMatchingInlineSnapshot(`[TypeError: SchemaMatching expected to receive a Standard Schema.]`)
+      expect(() => expect.schemaMatching('not-a-schema')).toThrowErrorMatchingInlineSnapshot(
+        `[TypeError: SchemaMatching expected to receive a Standard Schema.]`,
+      )
     })
 
     test('should work with toMatchObject', () => {
@@ -718,8 +769,7 @@ describe('Standard Schema', () => {
           },
         })
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
@@ -752,8 +802,7 @@ describe('Standard Schema', () => {
           age: expect.schemaMatching(numberSchema),
         })
         expect.unreachable()
-      }
-      catch (err) {
+      } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`

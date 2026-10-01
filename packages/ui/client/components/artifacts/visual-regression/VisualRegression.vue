@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VisualRegressionArtifact } from '@vitest/runner'
+import type { VisualRegressionArtifact } from 'vitest'
 import { computed } from 'vue'
 import ArtifactTemplate from '../ArtifactTemplate.vue'
 import SmallTabs from './SmallTabs.vue'
@@ -14,40 +14,30 @@ const { regression } = defineProps<{
 type AttachmentWithMeta = Exclude<VisualRegressionArtifact['attachments'][number], { name: 'diff' }>
 
 const groups = computed(() => ({
-  diff: regression.attachments.find(artifact => artifact.name === 'diff'),
-  reference: regression.attachments.find((artifact): artifact is AttachmentWithMeta => artifact.name === 'reference'),
-  actual: regression.attachments.find((artifact): artifact is AttachmentWithMeta => artifact.name === 'actual'),
+  diff: regression.attachments.find((artifact) => artifact.name === 'diff'),
+  reference: regression.attachments.find(
+    (artifact): artifact is AttachmentWithMeta => artifact.name === 'reference',
+  ),
+  actual: regression.attachments.find(
+    (artifact): artifact is AttachmentWithMeta => artifact.name === 'actual',
+  ),
 }))
 </script>
 
 <template>
   <ArtifactTemplate>
-    <template #title>
-      Visual Regression
-    </template>
+    <template #title> Visual Regression </template>
     <template #message>
       {{ regression.message }}
     </template>
     <SmallTabs>
-      <SmallTabsPane
-        v-if="groups.diff"
-        :key="groups.diff.path"
-        title="Diff"
-      >
+      <SmallTabsPane v-if="groups.diff" :key="groups.diff.path" title="Diff">
         <VisualRegressionImage :attachment="groups.diff" />
       </SmallTabsPane>
-      <SmallTabsPane
-        v-if="groups.reference"
-        :key="groups.reference.path"
-        title="Reference"
-      >
+      <SmallTabsPane v-if="groups.reference" :key="groups.reference.path" title="Reference">
         <VisualRegressionImage :attachment="groups.reference" />
       </SmallTabsPane>
-      <SmallTabsPane
-        v-if="groups.actual"
-        :key="groups.actual.path"
-        title="Actual"
-      >
+      <SmallTabsPane v-if="groups.actual" :key="groups.actual.path" title="Actual">
         <VisualRegressionImage :attachment="groups.actual" />
       </SmallTabsPane>
       <SmallTabsPane

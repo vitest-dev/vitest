@@ -2,14 +2,7 @@ import type { Environment } from '../../types/environment'
 import { Console } from 'node:console'
 
 // some globals we do not want, either because deprecated or we set it ourselves
-const denyList = new Set([
-  'GLOBAL',
-  'root',
-  'global',
-  'Buffer',
-  'ArrayBuffer',
-  'Uint8Array',
-])
+const denyList = new Set(['GLOBAL', 'root', 'global', 'Buffer', 'ArrayBuffer', 'Uint8Array'])
 
 const nodeGlobals = new Map<string, PropertyDescriptor>()
 
@@ -23,15 +16,10 @@ function populateNodeGlobals() {
   for (let i = 0; i < length; i++) {
     const globalName = names[i]
     if (!denyList.has(globalName)) {
-      const descriptor = Object.getOwnPropertyDescriptor(
-        globalThis,
-        globalName,
-      )
+      const descriptor = Object.getOwnPropertyDescriptor(globalThis, globalName)
 
       if (!descriptor) {
-        throw new Error(
-          `No property descriptor for ${globalName}, this is a bug in Vitest.`,
-        )
+        throw new Error(`No property descriptor for ${globalName}, this is a bug in Vitest.`)
       }
       nodeGlobals.set(globalName, descriptor)
     }
@@ -41,6 +29,7 @@ function populateNodeGlobals() {
 export default <Environment>{
   name: 'node',
   viteEnvironment: 'ssr',
+  prewarmModules: false,
   // this is largely copied from jest's node environment
   async setupVM() {
     populateNodeGlobals()
@@ -66,9 +55,9 @@ export default <Environment>{
                 enumerable: descriptor.enumerable,
                 value: val,
                 writable:
-                  descriptor.writable === true
+                  descriptor.writable === true ||
                   // Node 19 makes performance non-readable. This is probably not the correct solution.
-                  || nodeGlobalsKey === 'performance',
+                  nodeGlobalsKey === 'performance',
               })
               return val
             },
@@ -82,16 +71,14 @@ export default <Environment>{
               })
             },
           })
-        }
-        else if ('value' in descriptor) {
+        } else if ('value' in descriptor) {
           Object.defineProperty(global, nodeGlobalsKey, {
             configurable: false,
             enumerable: descriptor.enumerable,
             value: descriptor.value,
             writable: descriptor.writable,
           })
-        }
-        else {
+        } else {
           Object.defineProperty(global, nodeGlobalsKey, {
             configurable: false,
             enumerable: descriptor.enumerable,

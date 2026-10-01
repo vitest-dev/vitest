@@ -2,11 +2,7 @@ import { KEYS } from './jsdom-keys'
 
 const skipKeys = ['window', 'self', 'top', 'parent']
 
-export function getWindowKeys(
-  global: any,
-  win: any,
-  additionalKeys: string[] = [],
-): Set<string> {
+function getWindowKeys(global: any, win: any, additionalKeys: string[] = []): Set<string> {
   const keysArray = [...additionalKeys, ...KEYS]
   const keys = new Set(
     keysArray.concat(Object.getOwnPropertyNames(win)).filter((k) => {
@@ -45,25 +41,31 @@ export function populateGlobal(
 ): {
   keys: Set<string>
   skipKeys: string[]
-  originals: Map<string | symbol, any>
+  originals: Map<string | symbol, PropertyDescriptor>
 } {
   const { bindFunctions = false } = options
   const keys = getWindowKeys(global, win, options.additionalKeys)
 
-  const originals = new Map<string | symbol, any>()
+  const originals = new Map<string | symbol, PropertyDescriptor>()
 
-  const overriddenKeys = new Set([...KEYS, ...options.additionalKeys || []])
+  const overriddenKeys = new Set([...KEYS, ...(options.additionalKeys || [])])
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
-    const boundFunction
-      = bindFunctions
-        && typeof win[key] === 'function'
-        && !isClassLikeName(key)
-        && win[key].bind(win)
+    const boundFunction =
+      bindFunctions && typeof win[key] === 'function' && !isClassLikeName(key) && win[key].bind(win)
 
     if (overriddenKeys.has(key) && key in global) {
-      originals.set(key, global[key])
+      // capture the descriptor instead of the value to avoid invoking native
+      // lazy getters such as Node's `localStorage`, which warns when accessed
+      // without `--localstorage-file`
+      const descriptor = Object.getOwnPropertyDescriptor(global, key) ?? {
+        value: global[key],
+        configurable: true,
+        writable: true,
+        enumerable: true,
+      }
+      originals.set(key, descriptor)
     }
 
     Object.defineProperty(global, key, {
@@ -78,6 +80,10 @@ export function populateGlobal(
       },
       set(v) {
         overrideObject.set(key, v)
+        // propagate changes to underlying window implementation,
+        // which can affect other window API behavior internally, e.g.
+        // updating `innerWidth` affects `matchMedia("(max-width: *)")` on happy-dom.
+        win[key] = v
       },
       configurable: true,
     })
@@ -101,7 +107,7 @@ export function populateGlobal(
     })
   }
 
-  skipKeys.forEach(k => keys.add(k))
+  skipKeys.forEach((k) => keys.add(k))
 
   return {
     keys,

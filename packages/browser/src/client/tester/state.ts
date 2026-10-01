@@ -11,8 +11,10 @@ const state: WorkerGlobalState = {
     rpc: null as any,
     pool: 'browser',
     workerId: 1,
+    concurrencyId: 1,
     config,
     projectName: config.name || '',
+    metaEnv: null as any,
     files: [],
     environment: {
       name: 'browser',
@@ -31,7 +33,7 @@ const state: WorkerGlobalState = {
       throw new Error('Not called in the browser')
     },
   },
-  onCleanup: fn => getBrowserState().cleanups.push(fn),
+  onCleanup: (fn) => getBrowserState().cleanups.push(fn),
   evaluatedModules: new EvaluatedModules(),
   resolvingModules: new Set(),
   moduleExecutionInfo: new Map(),
@@ -40,6 +42,7 @@ const state: WorkerGlobalState = {
   durations: {
     environment: 0,
     prepare: performance.now(),
+    fetch: 0,
   },
   providedContext: {},
 }
@@ -91,7 +94,7 @@ function createCdp() {
     off(event: string, listener: (payload: any) => void) {
       const listenerId = getId(listener)
       if (listeners[event]) {
-        listeners[event] = listeners[event].filter(l => l !== listener)
+        listeners[event] = listeners[event].filter((l) => l !== listener)
       }
       rpc().trackCdpEvent(sessionId, 'off', event, listenerId).catch(error)
       return cdp
@@ -101,8 +104,7 @@ function createCdp() {
         listeners[event].forEach((l) => {
           try {
             l(payload)
-          }
-          catch (err) {
+          } catch (err) {
             error(err)
           }
         })

@@ -22,8 +22,8 @@ export async function resolveTester(
     )
   }
 
-  const sessionId = url.searchParams.get('sessionId') || 'none'
-  const session = globalServer.vitest._browserSessions.getSession(sessionId)
+  const sessionId = url.searchParams.get('sessionId')
+  const session = sessionId && globalServer.vitest._browserSessions.getSession(sessionId)
 
   if (!session) {
     res.statusCode = 400
@@ -32,7 +32,8 @@ export async function resolveTester(
   }
 
   const project = globalServer.vitest.getProjectByName(session.project.name || '')
-  const browserProject = (project.browser as ProjectBrowser | undefined) || [...globalServer.children][0]
+  const browserProject =
+    (project.browser as ProjectBrowser | undefined) || [...globalServer.children][0]
 
   if (!browserProject) {
     res.statusCode = 400
@@ -40,9 +41,10 @@ export async function resolveTester(
     return
   }
 
-  const injectorJs: string = typeof globalServer.injectorJs === 'string'
-    ? globalServer.injectorJs
-    : await globalServer.injectorJs
+  const injectorJs: string =
+    typeof globalServer.injectorJs === 'string'
+      ? globalServer.injectorJs
+      : await globalServer.injectorJs
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider.name),
@@ -59,20 +61,24 @@ export async function resolveTester(
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
-  const testerHtml = typeof browserProject.testerHtml === 'string'
-    ? browserProject.testerHtml
-    : await browserProject.testerHtml
-
   try {
-    const url = join('/@fs/', browserProject.testerFilepath)
-    const indexhtml = await browserProject.vite.transformIndexHtml(url, testerHtml)
+    browserProject.testerHtmlTransformed ??= (async () => {
+      const testerHtml =
+        typeof browserProject.testerHtml === 'string'
+          ? browserProject.testerHtml
+          : await browserProject.testerHtml
+      const url = join('/@fs/', browserProject.testerFilepath)
+      return await browserProject.vite.transformIndexHtml(url, testerHtml)
+    })()
+    const indexhtml = await browserProject.testerHtmlTransformed
     const html = replacer(indexhtml, {
       __VITEST_FAVICON__: globalServer.faviconUrl,
       __VITEST_INJECTOR__: injector,
     })
     return html
-  }
-  catch (err: any) {
+  } catch (err: any) {
+    // don't cache a rejection — the next request should retry the transform
+    browserProject.testerHtmlTransformed = undefined
     session.fail(err)
     next(err)
   }

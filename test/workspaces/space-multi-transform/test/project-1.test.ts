@@ -1,5 +1,4 @@
 import { expect, test } from 'vitest'
-
 import { run } from '../src/multi-transform'
 
 test('cover some branches', () => {

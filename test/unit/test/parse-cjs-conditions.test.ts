@@ -42,14 +42,9 @@ describe('parseCjsConditions', () => {
       ['--conditions=from-cli', '-C', 'another'],
       '--conditions=from-env',
     )
-    expect(result).toEqual(new Set([
-      'node',
-      'require',
-      'node-addons',
-      'from-cli',
-      'another',
-      'from-env',
-    ]))
+    expect(result).toEqual(
+      new Set(['node', 'require', 'node-addons', 'from-cli', 'another', 'from-env']),
+    )
   })
 
   it('filters out module-sync', () => {
@@ -63,6 +58,20 @@ describe('parseCjsConditions', () => {
       undefined,
     )
     expect(result).toEqual(new Set(['node', 'require', 'node-addons', 'custom']))
+  })
+
+  it('includes module-sync when require(esm) is supported', () => {
+    const result = parseCjsConditions([], undefined, true)
+    expect(result).toEqual(new Set(['node', 'require', 'node-addons', 'module-sync']))
+  })
+
+  it('keeps user-specified module-sync when require(esm) is supported', () => {
+    const result = parseCjsConditions(
+      ['--conditions=module-sync', '--conditions=custom'],
+      undefined,
+      true,
+    )
+    expect(result).toEqual(new Set(['node', 'require', 'node-addons', 'module-sync', 'custom']))
   })
 
   it('ignores unrelated execArgv entries', () => {

@@ -73,9 +73,9 @@ Error: uncaught timer
  ❯ Timeout._onTimeout multi.test.ts:7:11
 
 This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
-The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
-- The error was thrown, while Vitest was running this test.
-- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+The last test to run before this error was &quot;triggers two rejections and one uncaught exception&quot;. This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
             </error>
         </testcase>
         <testcase classname="vitest unhandled errors" name="Unhandled Rejection: first rejection" time="...">
@@ -84,9 +84,9 @@ Error: first rejection
  ❯ multi.test.ts:4:23
 
 This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
-The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
-- The error was thrown, while Vitest was running this test.
-- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+The last test to run before this error was &quot;triggers two rejections and one uncaught exception&quot;. This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
             </error>
         </testcase>
         <testcase classname="vitest unhandled errors" name="Unhandled Rejection: second rejection" time="...">
@@ -95,9 +95,9 @@ Error: second rejection
  ❯ multi.test.ts:5:23
 
 This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
-The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
-- The error was thrown, while Vitest was running this test.
-- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+The last test to run before this error was &quot;triggers two rejections and one uncaught exception&quot;. This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
             </error>
         </testcase>
     </testsuite>
@@ -234,9 +234,9 @@ Error: rejection from space-1
  ❯ test/reject.test.ts:4:23
 
 This error originated in &quot;test/reject.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
-The latest test that might&apos;ve caused the error is &quot;triggers a rejection from project 1&quot;. It might mean one of the following:
-- The error was thrown, while Vitest was running this test.
-- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+The last test to run before this error was &quot;triggers a rejection from project 1&quot;. This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
             </error>
         </testcase>
         <testcase classname="vitest unhandled errors" file="space-2/test/reject.test.ts" name="Unhandled Rejection: rejection from space-2" time="...">
@@ -245,9 +245,9 @@ Error: rejection from space-2
  ❯ test/reject.test.ts:4:23
 
 This error originated in &quot;test/reject.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
-The latest test that might&apos;ve caused the error is &quot;triggers a rejection from project 2&quot;. It might mean one of the following:
-- The error was thrown, while Vitest was running this test.
-- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+The last test to run before this error was &quot;triggers a rejection from project 2&quot;. This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
             </error>
         </testcase>
     </testsuite>

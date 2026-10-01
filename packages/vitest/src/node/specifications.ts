@@ -2,6 +2,7 @@ import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
 import { existsSync } from 'node:fs'
+import os from 'node:os'
 import { join, relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { isWindows } from '../utils/env'
@@ -28,64 +29,62 @@ export class VitestSpecifications {
         specs.push(project.createSpecification(moduleId, [], 'typescript'))
       }
     }
-    specs.forEach(spec => this.ensureSpecificationCached(spec))
+    specs.forEach((spec) => this.ensureSpecificationCached(spec))
     return specs
   }
 
   public async getRelevantTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.filterTestsBySource(
-      await this.globTestSpecifications(filters),
-    )
+    return this.filterTestsBySource(await this.globTestSpecifications(filters))
   }
 
   public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     const files: TestSpecification[] = []
     const dir = process.cwd()
-    const parsedFilters = filters.map(f => parseFilter(f))
+    const parsedFilters = filters.map((f) => parseFilter(f))
 
     // Require includeTaskLocation when a location filter is passed
     if (
-      !this.vitest.config.includeTaskLocation
-      && parsedFilters.some(f => f.lineNumber !== undefined)
+      !this.vitest.config.includeTaskLocation &&
+      parsedFilters.some((f) => f.lineNumber !== undefined)
     ) {
       throw new IncludeTaskLocationDisabledError()
     }
 
-    const testLines = groupFilters(parsedFilters.map(
-      f => ({ ...f, filename: resolve(dir, f.filename) }),
-    ))
+    const testLines = groupFilters(
+      parsedFilters.map((f) => ({ ...f, filename: resolve(dir, f.filename) })),
+    )
 
     // Key is file and val specifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}
 
-    await Promise.all(this.vitest.projects.map(async (project) => {
-      const { testFiles, typecheckTestFiles } = await project.globTestFiles(
-        parsedFilters.map(f => f.filename),
-      )
+    await Promise.all(
+      this.vitest.projects.map(async (project) => {
+        const { testFiles, typecheckTestFiles } = await project.globTestFiles(
+          parsedFilters.map((f) => f.filename),
+        )
 
-      testFiles.forEach((file) => {
-        const lines = testLines[file]
-        testLocHasMatch[file] = true
+        testFiles.forEach((file) => {
+          const lines = testLines[file]
+          testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, lines)
-        this.ensureSpecificationCached(spec)
-        files.push(spec)
-      })
-      typecheckTestFiles.forEach((file) => {
-        const lines = testLines[file]
-        testLocHasMatch[file] = true
+          const spec = project.createSpecification(file, lines)
+          this.ensureSpecificationCached(spec)
+          files.push(spec)
+        })
+        typecheckTestFiles.forEach((file) => {
+          const lines = testLines[file]
+          testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, lines, 'typescript')
-        this.ensureSpecificationCached(spec)
-        files.push(spec)
-      })
-    }))
+          const spec = project.createSpecification(file, lines, 'typescript')
+          this.ensureSpecificationCached(spec)
+          files.push(spec)
+        })
+      }),
+    )
 
     Object.entries(testLines).forEach(([filepath, loc]) => {
       if (loc.length !== 0 && !testLocHasMatch[filepath]) {
-        throw new LocationFilterFileNotFoundError(
-          relative(dir, filepath),
-        )
+        throw new LocationFilterFileNotFoundError(relative(dir, filepath))
       }
     })
 
@@ -95,8 +94,7 @@ export class VitestSpecifications {
   public clearCache(moduleId?: string): void {
     if (moduleId) {
       this._cachedSpecs.delete(moduleId)
-    }
-    else {
+    } else {
       this._cachedSpecs.clear()
     }
   }
@@ -108,12 +106,11 @@ export class VitestSpecifications {
   public ensureSpecificationCached(spec: TestSpecification): TestSpecification[] {
     const file = spec.moduleId
     const specs = this._cachedSpecs.get(file) || []
-    const index = specs.findIndex(_s => _s.project === spec.project && _s.pool === spec.pool)
+    const index = specs.findIndex((_s) => _s.project === spec.project && _s.pool === spec.pool)
     if (index === -1) {
       specs.push(spec)
       this._cachedSpecs.set(file, specs)
-    }
-    else {
+    } else {
       specs.splice(index, 1, spec)
     }
     return specs
@@ -135,7 +132,7 @@ export class VitestSpecifications {
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
     const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
-    if (matcher && related.some(file => matcher(file))) {
+    if (matcher && related.some((file) => matcher(file))) {
       return specs
     }
 
@@ -145,51 +142,117 @@ export class VitestSpecifications {
       return []
     }
 
-    const testGraphs = await Promise.all(
-      specs.map(async (spec) => {
-        const deps = await this.getTestDependencies(spec)
-        return [spec, deps] as const
-      }),
-    )
+    // The module graph, and so the dependency edges, are per project.
+    const specsByProject = new Map<TestProject, TestSpecification[]>()
+    for (const spec of specs) {
+      let projectSpecs = specsByProject.get(spec.project)
+      if (!projectSpecs) {
+        specsByProject.set(spec.project, (projectSpecs = []))
+      }
+      projectSpecs.push(spec)
+    }
 
-    const runningTests: TestSpecification[] = []
+    const affectedByProject = new Map<TestProject, Set<string>>()
+    for (const [project, projectSpecs] of specsByProject) {
+      affectedByProject.set(project, await this.getAffectedModules(project, projectSpecs, related))
+    }
 
-    for (const [specification, deps] of testGraphs) {
-      // if deps or the test itself were changed
-      if (related.some(path => path === specification.moduleId || deps.has(path))) {
-        runningTests.push(specification)
+    return specs.filter((spec) => affectedByProject.get(spec.project)!.has(spec.moduleId))
+  }
+
+  /**
+   * Returns every module in `project` that transitively imports one of `related`.
+   *
+   * Expands each module's imports at most once into a shared reverse-edge map,
+   * then walks that map backwards from the changed files.
+   */
+  private async getAffectedModules(
+    project: TestProject,
+    specs: TestSpecification[],
+    related: string[],
+  ): Promise<Set<string>> {
+    const importers = new Map<string, Set<string>>()
+    const visited = new Set<string>()
+    const existsCache = new Map<string, boolean>()
+
+    // limit concurrency to lower peak memory usage on large graphs
+    const TRANSFORM_CONCURRENCY = os.availableParallelism?.() ?? os.cpus().length
+    let active = 0
+    const waiters: Array<() => void> = []
+    const withLimit = async <T>(fn: () => Promise<T>): Promise<T> => {
+      if (active >= TRANSFORM_CONCURRENCY) {
+        await new Promise<void>((resolve) => waiters.push(resolve))
+      }
+      active++
+      try {
+        return await fn()
+      } finally {
+        active--
+        waiters.shift()?.()
       }
     }
 
-    return runningTests
-  }
+    const cachedExists = (filepath: string): boolean => {
+      const cached = existsCache.get(filepath)
+      if (cached !== undefined) {
+        return cached
+      }
+      const result = existsSync(filepath)
+      existsCache.set(filepath, result)
+      return result
+    }
 
-  private async getTestDependencies(spec: TestSpecification, deps = new Set<string>()): Promise<Set<string>> {
-    const addImports = async (project: TestProject, filepath: string) => {
-      if (deps.has(filepath)) {
+    const addImports = async (filepath: string) => {
+      // `visited` is shared by every spec in the project, so a module is
+      // expanded once per run instead of once per test file that reaches it.
+      if (visited.has(filepath)) {
         return
       }
-      deps.add(filepath)
+      visited.add(filepath)
 
-      const mod = project.vite.environments.ssr.moduleGraph.getModuleById(filepath)
-      const transformed = mod?.transformResult || await project.vite.environments.ssr.transformRequest(filepath)
+      const environment = project.vite.environments.ssr
+      const mod = environment.moduleGraph.getModuleById(filepath)
+      const transformed =
+        mod?.transformResult || (await withLimit(() => environment.transformRequest(filepath)))
       if (!transformed) {
         return
       }
-      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
-      await Promise.all(dependencies.map(async (dep) => {
-        const fsPath = dep.startsWith('/@fs/')
-          ? dep.slice(isWindows ? 5 : 4)
-          : join(project.config.root, dep)
-        if (!fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
-          await addImports(project, fsPath)
-        }
-      }))
+      const dependencies = [...(transformed.deps || []), ...(transformed.dynamicDeps || [])]
+      await Promise.all(
+        dependencies.map(async (dep) => {
+          const fsPath = dep.startsWith('/@fs/')
+            ? dep.slice(isWindows ? 5 : 4)
+            : join(project.config.root, dep)
+          if (fsPath.includes('node_modules') || !cachedExists(fsPath)) {
+            return
+          }
+          let importedBy = importers.get(fsPath)
+          if (!importedBy) {
+            importers.set(fsPath, (importedBy = new Set()))
+          }
+          importedBy.add(filepath)
+          await addImports(fsPath)
+        }),
+      )
     }
 
-    await addImports(spec.project, spec.moduleId)
-    deps.delete(spec.moduleId)
+    await Promise.all(specs.map((spec) => addImports(spec.moduleId)))
 
-    return deps
+    const affected = new Set<string>(related)
+    const queue = [...related]
+    while (queue.length) {
+      const importedBy = importers.get(queue.pop()!)
+      if (!importedBy) {
+        continue
+      }
+      for (const importer of importedBy) {
+        if (!affected.has(importer)) {
+          affected.add(importer)
+          queue.push(importer)
+        }
+      }
+    }
+
+    return affected
   }
 }

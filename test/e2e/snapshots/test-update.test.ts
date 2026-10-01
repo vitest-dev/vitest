@@ -63,7 +63,6 @@ test('test update', async () => {
       "retry-inline.test.ts",
       "same-title-file.test.js",
       "same-title-inline.test.js",
-      "vitest.config.ts",
     ]
   `)
 
@@ -82,6 +81,6 @@ test('test update', async () => {
 function readFiles(dir: string) {
   const files = globSync('**', { cwd: dir, ignore: ['**/node_modules/**'] })
   return Object.fromEntries(
-    files.sort().map(file => [file, fs.readFileSync(join(dir, file), 'utf-8')]),
+    files.sort().map((file) => [file, fs.readFileSync(join(dir, file), 'utf-8')]),
   )
 }

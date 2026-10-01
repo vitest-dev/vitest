@@ -16,11 +16,11 @@ Scan the codebase with `typos-cli`, classify findings, fix real typos, and maint
 
 `typos-cli` must be installed. If not available, install via one of:
 
-| Method | Command |
-|---|---|
-| cargo | `cargo install typos-cli` |
-| brew | `brew install typos-cli` |
-| pipx | `pipx install typos` |
+| Method | Command                                                  |
+| ------ | -------------------------------------------------------- |
+| cargo  | `cargo install typos-cli`                                |
+| brew   | `brew install typos-cli`                                 |
+| pipx   | `pipx install typos`                                     |
 | Binary | Download from https://github.com/crate-ci/typos/releases |
 
 ## Workflow
@@ -52,6 +52,7 @@ For every finding, decide:
 - **False positive** — add to `_typos.toml`
 
 Common false positive patterns:
+
 - Short variable names that happen to be words (`ba`, `fo`, `nd`)
 - Domain abbreviations (`als` for AsyncLocalStorage, `PnP` for Plug'n'Play)
 - File extensions in regexes (`.styl`, `.pcss`)

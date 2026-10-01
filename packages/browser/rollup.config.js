@@ -66,7 +66,7 @@ export default () =>
             // We mark it as having no side effects to prevent it from being included in the bundle
             if (id.includes('dataTransfer/Clipboard')) {
               return {
-                ...await this.resolve(id, importer),
+                ...(await this.resolve(id, importer)),
                 moduleSideEffects: false,
               }
             }
@@ -79,7 +79,7 @@ export default () =>
     // ivya chunk
     {
       input: {
-        'locators': './src/client/tester/locators.ts',
+        locators: './src/client/tester/locators.ts',
         'expect-element': './src/client/tester/expect-element.ts',
       },
       output: {
@@ -89,7 +89,7 @@ export default () =>
       external,
       plugins: [
         ...dtsUtilsClient.isolatedDecl(),
-        ...plugins.filter(p => p.name !== 'unplugin-oxc'),
+        ...plugins.filter((p) => p.name !== 'unplugin-oxc'),
         oxc({
           transform: { target: 'node18' },
           minify: true,
@@ -102,7 +102,7 @@ export default () =>
         file: 'dist/context.js',
         format: 'esm',
       },
-      external: ['vitest/internal/browser'],
+      external: ['vitest/internal/browser', 'vitest'],
       plugins: [
         oxc({
           transform: { target: 'node18' },
@@ -171,10 +171,7 @@ export default () =>
         format: 'esm',
       },
       external,
-      plugins: [
-        ...dtsUtils.isolatedDecl(),
-        ...plugins,
-      ],
+      plugins: [...dtsUtils.isolatedDecl(), ...plugins],
     },
     {
       input: {

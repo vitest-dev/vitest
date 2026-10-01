@@ -1,6 +1,6 @@
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 import TestReporter from '../../fixtures/reporters/implementations/custom-reporter'
 
 const reportersDir = resolve(import.meta.dirname, '../../fixtures/reporters/implementations')
@@ -19,9 +19,7 @@ describe('custom reporters', () => {
     const { stdout, stderr } = await runVitest({
       config: false,
       root: './fixtures/reporters/basic',
-      reporters: [
-        resolve(reportersDir, './custom-reporter.ts'),
-      ],
+      reporters: [resolve(reportersDir, './custom-reporter.ts')],
     })
     expect(stderr).toBe('')
     expect(stdout).includes('hello from custom reporter')
@@ -41,9 +39,7 @@ describe('custom reporters', () => {
     const { stdout } = await runVitest({
       root: './fixtures/reporters/basic',
       config: false,
-      reporters: [
-        resolve(reportersDir, './custom-reporter.js'),
-      ],
+      reporters: [resolve(reportersDir, './custom-reporter.js')],
     })
     expect(stdout).includes('hello from custom reporter')
   })

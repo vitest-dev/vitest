@@ -15,7 +15,7 @@ import IconButton from './IconButton.vue'
 const sizes: Record<ViewportSize, [width: number, height: number]> = {
   'small-mobile': [320, 568],
   'large-mobile': [414, 896],
-  'tablet': [834, 1112],
+  tablet: [834, 1112],
 }
 
 function isViewport(name: ViewportSize) {
@@ -58,18 +58,20 @@ const scale = computed(() =>
 </script>
 
 <template>
-  <div id="browser-frame" h="full" flex="~ col">
-    <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
+  <div id="browser-frame" class="h-full flex flex-col">
+    <div class="p-3 h-10 flex gap-2 items-center bg-header border-b border-base">
       <IconButton
         v-show="panels.navigation <= 15"
         v-tooltip.bottom="'Show Navigation Panel'"
         title="Show Navigation Panel"
-        rotate-180
+        class="rotate-180"
         icon="i-carbon:side-panel-close"
         @click="showNavigationPanel()"
       />
       <div class="i-carbon-content-delivery-network" />
-      <span pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>Browser UI</span>
+      <span class="pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate"
+        >Browser UI</span
+      >
       <IconButton
         v-show="detailsPosition === 'right' && !detailsPanelVisible"
         v-tooltip.bottom="'Show Details Panel'"
@@ -78,7 +80,7 @@ const scale = computed(() =>
         @click="detailsPanelVisible = true"
       />
     </div>
-    <div p="l3 y2 r2" flex="~ gap-2" items-center bg-header border="b-2 base">
+    <div class="pl-3 py-2 pr-2 flex gap-2 items-center bg-header border-base border-b-2">
       <!-- TODO: these are only for preview (thank you Storybook!), we need to support more different and custom sizes (as a dropdown) -->
       <IconButton
         v-tooltip.bottom="'Small mobile'"
@@ -101,14 +103,12 @@ const scale = computed(() =>
         :active="isViewport('tablet')"
         @click="changeViewport('tablet')"
       />
-      <span class="pointer-events-none" text-sm>
+      <span class="pointer-events-none text-sm">
         {{ viewport[0] }}x{{ viewport[1] }}px
         <span v-if="scale < 100">({{ scale }}%)</span>
       </span>
     </div>
-    <div id="tester-ui" ref="tester-ui">
-      Select a test to run
-    </div>
+    <div id="tester-ui" ref="tester-ui">Select a test to run</div>
   </div>
 </template>
 
@@ -118,6 +118,7 @@ const scale = computed(() =>
   container-type: size;
 
   margin-top: 0.5rem;
+  margin-inline: var(--splitpane-handle-size);
 }
 
 #tester-ui:not([data-ready]) {

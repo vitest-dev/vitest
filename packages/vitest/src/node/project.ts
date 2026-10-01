@@ -1,5 +1,4 @@
-import type { GlobOptions } from 'tinyglobby'
-import type { DevEnvironment, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { DevEnvironment, ResolvedConfig as ResolvedViteConfig, ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
@@ -8,39 +7,30 @@ import type { VitestFetchFunction } from './environments/fetchModule'
 import type { GlobalSetupFile } from './globalSetup'
 import type { TestSpecificationOptions } from './test-specification'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
-import type {
-  ProjectName,
-  ResolvedConfig,
-  SerializedConfig,
-  TestProjectInlineConfiguration,
-  UserConfig,
-} from './types/config'
+import type { ProjectName, ResolvedConfig, SerializedConfig } from './types/config'
 import crypto from 'node:crypto'
-import { promises as fs, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
-import { glob } from 'tinyglobby'
-import { isRunnableDevEnvironment } from 'vite'
-import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
-import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
+import { BenchmarkManager } from './benchmark'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
-import { CoverageTransform } from './plugins/coverageTransform'
-import { MetaEnvReplacerPlugin } from './plugins/metaEnvReplacer'
-import { MocksPlugins } from './plugins/mocks'
-import { WorkspaceVitestPlugin } from './plugins/workspace'
+import { listenClusterServer } from './plugins/browserLoader'
 import { getFilePoolName } from './pool'
+import {
+  globProjectFiles,
+  globProjectTestFiles,
+  isInSourceTestCode,
+} from './projects/globProjectFiles'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './test-specification'
-import { createViteServer } from './vite'
 
 export class TestProject {
   /**
@@ -63,13 +53,18 @@ export class TestProject {
    */
   public readonly tmpDir: string
 
+  public readonly benchmark: BenchmarkManager = new BenchmarkManager(this)
+
+  public config: ResolvedConfig
+  public viteConfig: ResolvedViteConfig
+  public vite: ViteDevServer
+  public hash: string
+
   /** @internal */ typechecker?: Typechecker
-  /** @internal */ _config?: ResolvedConfig
-  /** @internal */ _vite?: ViteDevServer
-  /** @internal */ _hash?: string
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _serializedDefines?: string
+  /** @internal */ _sharedViteServer = false
   /** @internal */ testFilesList: string[] | null = null
   /** @internal */ _browserReadySessions = new Set<string>()
 
@@ -84,24 +79,37 @@ export class TestProject {
 
   constructor(
     vitest: Vitest,
-    public options?: InitializeProjectOptions | undefined,
-    tmpDir?: string,
+    server: ViteDevServer,
+    viteConfig: ResolvedViteConfig,
+    projectConfig: ResolvedConfig,
   ) {
     this.vitest = vitest
     this.globalConfig = vitest.config
-    this.tmpDir = tmpDir || join(tmpdir(), nanoid())
+    this.tmpDir = join(tmpdir(), nanoid())
+    this.vite = server
+    this.viteConfig = viteConfig
+    this.config = projectConfig
+    this.hash = generateHash(this.config.root + this.config.name)
+    this._provideObject(projectConfig.provide)
   }
 
-  /**
-   * The unique hash of this project. This value is consistent between the reruns.
-   *
-   * It is based on the root of the project (not consistent between OS) and its name.
-   */
-  public get hash(): string {
-    if (!this._hash) {
-      throw new Error('The server was not set. It means that `project.hash` was called before the Vite server was established.')
-    }
-    return this._hash
+  /** @internal */
+  _initializeRunners(server: ViteDevServer) {
+    this._serializedDefines = createDefinesScript(this.config._scriptDefines)
+    this._resolver = new VitestResolver(server.config.cacheDir, this.config)
+    this._fetcher = createFetchModuleFunction(
+      this._resolver,
+      this.config,
+      this.vitest._fsCache,
+      this.vitest._traces,
+      this.tmpDir,
+    )
+
+    const environment = server.environments.__vitest__
+    this.runner =
+      this.config.experimental.viteModuleRunner === false
+        ? new NativeModuleRunner(this.config.root)
+        : new ServerModuleRunner(environment, this._fetcher, this.config)
   }
 
   // "provide" is a property, not a method to keep the context when destructed in the global setup,
@@ -109,23 +117,16 @@ export class TestProject {
   /**
    * Provide a value to the test context. This value will be available to all tests with `inject`.
    */
-  provide = <T extends keyof ProvidedContext & string>(
-    key: T,
-    value: ProvidedContext[T],
-  ): void => {
+  provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]): void => {
     try {
       structuredClone(value)
-    }
-    catch (err) {
-      throw new Error(
-        `Cannot provide "${key}" because it's not serializable.`,
-        {
-          cause: err,
-        },
-      )
+    } catch (err) {
+      throw new Error(`Cannot provide "${key}" because it's not serializable.`, {
+        cause: err,
+      })
     }
     // casting `any` because the default type is `never` since `ProvidedContext` is empty
-    (this._provided as any)[key] = value
+    ;(this._provided as any)[key] = value
   }
 
   /**
@@ -173,38 +174,6 @@ export class TestProject {
   }
 
   /**
-   * Vite's dev server instance. Every workspace project has its own server.
-   */
-  public get vite(): ViteDevServer {
-    if (!this._vite) {
-      throw new Error('The server was not set. It means that `project.vite` was called before the Vite server was established.')
-    }
-    // checking it once should be enough
-    Object.defineProperty(this, 'vite', {
-      configurable: true,
-      writable: true,
-      value: this._vite,
-    })
-    return this._vite
-  }
-
-  /**
-   * Resolved project configuration.
-   */
-  public get config(): ResolvedConfig {
-    if (!this._config) {
-      throw new Error('The config was not set. It means that `project.config` was called before the Vite server was established.')
-    }
-    // checking it once should be enough
-    // Object.defineProperty(this, 'config', {
-    //   configurable: true,
-    //   writable: true,
-    //   value: this._config,
-    // })
-    return this._config
-  }
-
-  /**
    * The name of the project or an empty string if not set.
    */
   public get name(): string {
@@ -232,16 +201,22 @@ export class TestProject {
     return this.vitest.getRootProject() === this
   }
 
+  /**
+   * Whether the project reuses the Vite server of the config that declared it
+   * (see the `sharedViteServer` option). The project that owns the server
+   * reports `false` even when other projects reuse it.
+   */
+  public get sharedViteServer(): boolean {
+    return this._sharedViteServer
+  }
+
   /** @internal */
   async _initializeGlobalSetup() {
     if (this._globalSetups) {
       return
     }
 
-    this._globalSetups = await loadGlobalSetupFiles(
-      this.runner,
-      this.config.globalSetup,
-    )
+    this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.(this)
@@ -303,23 +278,15 @@ export class TestProject {
           ? []
           : this.globAllTestFiles(include, exclude, includeSource, dir),
         typecheck.enabled
-          ? (this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir))
+          ? this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir)
           : [],
       ])
 
       this.typecheckFilesList = typecheckTestFiles
 
       return {
-        testFiles: this.filterFiles(
-          testFiles,
-          filters,
-          dir,
-        ),
-        typecheckTestFiles: this.filterFiles(
-          typecheckTestFiles,
-          filters,
-          dir,
-        ),
+        testFiles: this.filterFiles(testFiles, filters, dir),
+        typecheckTestFiles: this.filterFiles(typecheckTestFiles, filters, dir),
       }
     })
   }
@@ -334,25 +301,7 @@ export class TestProject {
       return this.testFilesList
     }
 
-    const testFiles = await this.globFiles(include, exclude, cwd)
-
-    if (includeSource?.length) {
-      const files = await this.globFiles(includeSource, exclude, cwd)
-
-      await Promise.all(
-        files.map(async (file) => {
-          try {
-            const code = await fs.readFile(file, 'utf-8')
-            if (this.isInSourceTestCode(code)) {
-              testFiles.push(file)
-            }
-          }
-          catch {
-            return null
-          }
-        }),
-      )
-    }
+    const testFiles = await globProjectTestFiles(include, exclude, includeSource, cwd)
 
     this.testFilesList = testFiles
 
@@ -360,7 +309,7 @@ export class TestProject {
   }
 
   isBrowserEnabled(): boolean {
-    return isBrowserEnabled(this.config)
+    return !!this.config.browser?.enabled
   }
 
   private markTestFile(testPath: string): void {
@@ -370,7 +319,7 @@ export class TestProject {
   /** @internal */
   _removeCachedTestFile(testPath: string): void {
     if (this.testFilesList) {
-      this.testFilesList = this.testFilesList.filter(file => file !== testPath)
+      this.testFilesList = this.testFilesList.filter((file) => file !== testPath)
     }
   }
 
@@ -391,19 +340,8 @@ export class TestProject {
   }
 
   /** @internal */
-  async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: GlobOptions = {
-      dot: true,
-      cwd,
-      ignore: exclude,
-      expandDirectories: false,
-    }
-
-    const files = await glob(include, globOptions)
-    // keep the slashes consistent with Vite
-    // we are not using the pathe here because it normalizes the drive letter on Windows
-    // and we want to keep it the same as working dir
-    return files.map(file => slash(path.resolve(cwd, file)))
+  globFiles(include: string[], exclude: string[], cwd: string): Promise<string[]> {
+    return globProjectFiles(include, exclude, cwd)
   }
 
   /**
@@ -421,12 +359,9 @@ export class TestProject {
       this.markTestFile(moduleId)
       return true
     }
-    if (
-      this.config.includeSource?.length
-      && pm.isMatch(relativeId, this.config.includeSource)
-    ) {
+    if (this.config.includeSource?.length && pm.isMatch(relativeId, this.config.includeSource)) {
       const code = source?.() || readFileSync(moduleId, 'utf-8')
-      if (this.isInSourceTestCode(code)) {
+      if (isInSourceTestCode(code)) {
         this.markTestFile(moduleId)
         return true
       }
@@ -434,13 +369,9 @@ export class TestProject {
     return false
   }
 
-  private isInSourceTestCode(code: string): boolean {
-    return code.includes('import.meta.vitest')
-  }
-
   private filterFiles(testFiles: string[], filters: string[], dir: string): string[] {
     if (filters.length && process.platform === 'win32') {
-      filters = filters.map(f => slash(f))
+      filters = filters.map((f) => slash(f))
     }
 
     if (filters.length) {
@@ -452,12 +383,10 @@ export class TestProject {
             return true
           }
 
-          const relativePath = f.endsWith('/')
-            ? join(relative(dir, f), '/')
-            : relative(dir, f)
+          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
           return (
-            testFile.includes(f.toLocaleLowerCase())
-            || testFile.includes(relativePath.toLocaleLowerCase())
+            testFile.includes(f.toLocaleLowerCase()) ||
+            testFile.includes(relativePath.toLocaleLowerCase())
           )
         })
       })
@@ -466,42 +395,16 @@ export class TestProject {
     return testFiles
   }
 
-  private _parentBrowser?: ParentProjectBrowser
+  /**
+   * The parent browser project that owns this cluster's single Vite server.
+   * Set on the primary (the hidden parent of a browser cluster) at server
+   * creation; instance siblings get their own `ProjectBrowser` view via
+   * `_parentBrowser.spawn`.
+   * @internal
+   */
+  _parentBrowser?: ParentProjectBrowser
   /** @internal */
   public _parent?: TestProject
-  /** @internal */
-  _initParentBrowser = deduped(async (childProject: TestProject) => {
-    if (!this.isBrowserEnabled() || this._parentBrowser) {
-      return
-    }
-    const provider = this.config.browser.provider || childProject.config.browser.provider
-    if (provider == null) {
-      throw new Error(`Provider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
-    }
-    if (typeof provider.serverFactory !== 'function') {
-      throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider.name}" package?`)
-    }
-    const browser = await provider.serverFactory({
-      project: this,
-      mocksPlugins: options => MocksPlugins(options),
-      metaEnvReplacer: () => MetaEnvReplacerPlugin(),
-      coveragePlugin: () => CoverageTransform(this.vitest),
-    })
-    this._parentBrowser = browser
-    if (this.config.browser.ui) {
-      setup(this.vitest, browser.vite)
-    }
-  })
-
-  /** @internal */
-  _initBrowserServer = deduped(async () => {
-    await this._parent?._initParentBrowser(this)
-
-    if (!this.browser && this._parent?._parentBrowser) {
-      this.browser = this._parent._parentBrowser.spawn(this)
-      await this.vitest.report('onBrowserInit', this)
-    }
-  })
 
   /**
    * Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts.
@@ -510,21 +413,16 @@ export class TestProject {
   public close(): Promise<void> {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all(
-        [
-          this.vite?.close(),
-          this.typechecker?.stop(),
-          // browser might not be set if it threw an error during initialization
-          (this.browser || this._parent?._parentBrowser?.vite)?.close(),
-          this.clearTmpDir(),
-        ].filter(Boolean),
-      ).then(() => {
-        if (!this.runner.isClosed()) {
-          return this.runner.close()
-        }
-      }).then(() => {
-        this._provided = {} as any
-        this._vite = undefined
-      })
+        [this.vite.close(), this.typechecker?.stop(), this.clearTmpDir()].filter(Boolean),
+      )
+        .then(() => {
+          if (!this.runner.isClosed()) {
+            return this.runner.close()
+          }
+        })
+        .then(() => {
+          this._provided = {} as any
+        })
     }
     return this.closingPromise
   }
@@ -537,86 +435,19 @@ export class TestProject {
     return this.runner.import(moduleId)
   }
 
-  private _setHash() {
-    this._hash = generateHash(
-      this._config!.root + this._config!.name,
-    )
-  }
-
-  /** @internal */
-  async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
-    this._config = resolveConfig(
-      this.vitest,
-      {
-        ...options,
-        // root-only configs
-        coverage: this.vitest.config.coverage,
-        attachmentsDir: this.vitest.config.attachmentsDir,
-      },
-      server.config,
-    )
-    this._config.api.token = this.vitest.config.api.token
-    this._config.mergeReportsLabel = this.vitest.config.mergeReportsLabel
-    this._setHash()
-    for (const _providedKey in this.config.provide) {
-      const providedKey = _providedKey as keyof ProvidedContext
-      // type is very strict here, so we cast it to any
-      (this.provide as (key: string, value: unknown) => void)(
-        providedKey,
-        this.config.provide[providedKey],
-      )
-    }
-
-    this.closingPromise = undefined
-
-    this._resolver = new VitestResolver(server.config.cacheDir, this._config)
-    this._vite = server
-    this._serializedDefines = createDefinesScript(server.config.define)
-    this._fetcher = createFetchModuleFunction(
-      this._resolver,
-      this._config,
-      this.vitest._fsCache,
-      this.vitest._traces,
-      this.tmpDir,
-    )
-
-    const environment = server.environments.__vitest__
-    this.runner = this._config.experimental.viteModuleRunner === false
-      ? new NativeModuleRunner(this._config.root)
-      : new ServerModuleRunner(
-          environment,
-          this._fetcher,
-          this._config,
-        )
-
-    const ssrEnvironment = server.environments.ssr
-    if (isRunnableDevEnvironment(ssrEnvironment)) {
-      const ssrRunner = new ServerModuleRunner(
-        ssrEnvironment,
-        this._fetcher,
-        this._config,
-      )
-      Object.defineProperty(ssrEnvironment, 'runner', {
-        value: ssrRunner,
-        writable: true,
-        configurable: true,
-      })
-    }
-  }
-
   /** @internal */
   public _getViteEnvironments(): DevEnvironment[] {
-    return [
-      ...Object.values(this.browser?.vite.environments || {}),
-      ...Object.values(this.vite.environments || {}),
-    ]
+    return Object.values(this.vite.environments || {})
   }
 
   /** @internal */
-  public async _openBrowserPage(sessionId: string, pool: {
-    reject: (error: Error) => void
-    parallel?: boolean
-  }): Promise<void> {
+  public async _openBrowserPage(
+    sessionId: string,
+    pool: {
+      reject: (error: Error) => void
+      parallel?: boolean
+    },
+  ): Promise<void> {
     if (!this.browser) {
       throw new Error(`browser is not initialized`)
     }
@@ -624,30 +455,20 @@ export class TestProject {
     const resolvedUrls = this.browser.vite.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
     if (!origin) {
-      throw new Error(
-        `Can't find browser origin URL for project "${this.name}"`,
-      )
+      throw new Error(`Can't find browser origin URL for project "${this.name}"`)
     }
 
     const url = new URL('/__vitest_test__/', origin)
     url.searchParams.set('sessionId', sessionId)
     const otelCarrier = this.vitest._traces.getContextCarrier()
     this.vitest._browserSessions.sessionIds.add(sessionId)
-    const sessionPromise = this.vitest._browserSessions.createSession(
-      sessionId,
-      this,
-      pool,
-      { otelCarrier },
-    )
-    const pagePromise = this.browser.provider.openPage(
-      sessionId,
-      url.toString(),
-      { parallel: pool.parallel ?? false },
-    )
-    await Promise.all([
-      sessionPromise,
-      pagePromise,
-    ])
+    const sessionPromise = this.vitest._browserSessions.createSession(sessionId, this, pool, {
+      otelCarrier,
+    })
+    const pagePromise = this.browser.provider.openPage(sessionId, url.toString(), {
+      parallel: pool.parallel ?? false,
+    })
+    await Promise.all([sessionPromise, pagePromise])
   }
 
   /** @internal */
@@ -676,17 +497,13 @@ export class TestProject {
     if (!this.vitest.configOverride) {
       return config
     }
-    return deepMerge(
-      config,
-      this.vitest.configOverride,
-    )
+    return deepMerge(config, this.vitest.configOverride)
   }
 
   private async clearTmpDir(): Promise<void> {
     try {
       await rm(this.tmpDir, { recursive: true })
-    }
-    catch {}
+    } catch {}
   }
 
   /** @internal */
@@ -694,55 +511,51 @@ export class TestProject {
     if (!this.isBrowserEnabled() || this.browser?.provider) {
       return
     }
-    if (!this.browser) {
-      await this._initBrowserServer()
+    // The browser server is created eagerly with the project, so `this.browser`
+    // is already set here; bind the port if startup did not, then init the provider.
+    if (this.browser) {
+      await listenClusterServer(this.vite)
+      await this.vitest.report('onBrowserInit', this)
     }
     await this.browser?.initBrowserProvider(this)
   })
 
-  /** @internal */
-  public _provideObject(context: Partial<ProvidedContext>): void {
+  private _provideObject(context: Partial<ProvidedContext>): void {
     for (const _providedKey in context) {
       const providedKey = _providedKey as keyof ProvidedContext
       // type is very strict here, so we cast it to any
-      (this.provide as (key: string, value: unknown) => void)(
-        providedKey,
-        context[providedKey],
-      )
+      ;(this.provide as (key: string, value: unknown) => void)(providedKey, context[providedKey])
     }
   }
 
   /** @internal */
   static _createBasicProject(vitest: Vitest): TestProject {
-    const project = new TestProject(
-      vitest,
-      undefined,
-      vitest._tmpDir,
-    )
+    const project = new TestProject(vitest, vitest.vite, vitest.viteConfig, vitest.config)
     project.runner = vitest.runner
-    project._vite = vitest.vite
-    project._config = vitest.config
     project._resolver = vitest._resolver
     project._fetcher = vitest._fetcher
-    project._serializedDefines = createDefinesScript(vitest.vite.config.define)
-    project._setHash()
-    project._provideObject(vitest.config.provide)
+    project._serializedDefines = createDefinesScript(vitest.config._scriptDefines)
     return project
   }
 
-  /** @internal */
-  static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
-    const clone = new TestProject(parent.vitest, undefined, parent.tmpDir)
-    clone.runner = parent.runner
-    clone._vite = parent._vite
-    clone._resolver = parent._resolver
-    clone._fetcher = parent._fetcher
-    clone._config = config
-    clone._setHash()
-    clone._parent = parent
-    clone._serializedDefines = parent._serializedDefines
-    clone._provideObject(config.provide)
-    return clone
+  /**
+   * Create a sibling project that shares server-derived resources (Vite server,
+   * runner, resolver, fetcher) with a primary project. The sibling has its own
+   * distinct `projectConfig`, but the same `viteConfig` reference as the primary.
+   *
+   * Used for browser-instance and benchmark variants whose entries share a
+   * `viteConfig` reference with a primary project entry.
+   *
+   * @internal
+   */
+  static _spawnSibling(parent: TestProject, config: ResolvedConfig): TestProject {
+    const sibling = new TestProject(parent.vitest, parent.vite, parent.viteConfig, config)
+    sibling.runner = parent.runner
+    sibling._resolver = parent._resolver
+    sibling._fetcher = parent._fetcher
+    sibling._parent = parent
+    sibling._serializedDefines = parent._serializedDefines
+    return sibling
   }
 }
 
@@ -762,36 +575,6 @@ export interface SerializedTestProject {
   name: string
   serializedConfig: SerializedConfig
   context: ProvidedContext
-}
-
-interface InitializeProjectOptions extends TestProjectInlineConfiguration {
-  configFile: string | false
-}
-
-export async function initializeProject(
-  workspacePath: string | number,
-  ctx: Vitest,
-  options: InitializeProjectOptions,
-): Promise<TestProject> {
-  const project = new TestProject(ctx, options)
-
-  const { configFile, ...restOptions } = options
-
-  const config: ViteInlineConfig = {
-    ...restOptions,
-    configFile,
-    configLoader: ctx.vite.config.inlineConfig.configLoader,
-    // this will make "mode": "test" | "benchmark" inside defineConfig
-    mode: options.test?.mode || options.mode || ctx.config.mode,
-    plugins: [
-      ...(options.plugins || []),
-      WorkspaceVitestPlugin(project, { ...options, workspacePath }),
-    ],
-  }
-
-  await createViteServer(config)
-
-  return project
 }
 
 function generateHash(str: string): string {

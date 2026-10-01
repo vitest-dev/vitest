@@ -10,7 +10,8 @@
     "vitest": "workspace:*"
   },
   "devDependencies": {
+    "pathe": "catalog:",
     "typescript": "^5.9.3",
-    "vue-tsc": "^3.2.5"
+    "vue-tsc": "^3.3.11"
   }
 }

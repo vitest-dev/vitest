@@ -60,9 +60,16 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
+By default, Vitest's reporters print their output to the terminal. The `json`, `junit` and `html` reporters instead write to a scoped location under `.vitest/`:
+
+- `json` writes `.vitest/json/output.json`
+- `junit` writes `.vitest/junit/output.xml`
+- `html` writes `.vitest/index.html`
+
+The `json` and `junit` locations can be overridden with the `outputFile` [configuration option](/config/outputfile) in your Vitest configuration file or via CLI. The `html` reporter uses its [`outputDir`](#html-reporter) option instead.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=json --outputFile=./test-output.json
 ```
@@ -75,6 +82,31 @@ export default defineConfig({
   },
 })
 ```
+
+:::
+
+The `json` and `junit` reporters also accept `outputFile` as a reporter option, which takes precedence over the top-level `outputFile`:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [['json', { outputFile: './test-output.json' }]],
+  },
+})
+```
+
+To print the report to the terminal instead of writing it to a file, set the `stdout` option on the `json` or `junit` reporter. This is ignored when `outputFile` is set:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [['json', { stdout: true }]],
+  },
+})
+```
+
+::: warning
+When `stdout` is enabled, the report can be interleaved with other output written directly to the terminal — for example `process.stdout.write` in a test file, or logs from the main process such as a global setup file — which can make the JSON or XML unparsable. Prefer the default file output when you need to consume the report programmatically.
 :::
 
 ## Combining Reporters
@@ -123,6 +155,7 @@ The `default` reporter displays summary of running tests and their status at the
 You can disable the summary by configuring the reporter:
 
 :::code-group
+
 ```ts [vitest.config.ts]
 export default defineConfig({
   test: {
@@ -132,6 +165,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example output for tests in progress:
@@ -186,6 +220,7 @@ In addition to this, the `verbose` reporter prints test error messages right awa
 This is the only terminal reporter that reports [annotations](/guide/test-annotations) when the test doesn't fail.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=verbose
 ```
@@ -199,6 +234,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example output:
@@ -218,10 +254,10 @@ Example output:
 An example with `--includeTaskLocation`:
 
 ```bash
-✓ __tests__/file1.test.ts:2:1 > first test file > 2 + 2 should equal 4 1ms
-✓ __tests__/file1.test.ts:3:1 > first test file > 4 - 2 should equal 2 1ms
-✓ __tests__/file2.test.ts:2:1 > second test file > 1 + 1 should equal 2 1ms
-✓ __tests__/file2.test.ts:3:1 > second test file > 2 - 1 should equal 1 1ms
+✓ __tests__/file1.test.ts:2 > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts:3 > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts:2 > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts:3 > second test file > 2 - 1 should equal 1 1ms
 
  Test Files  2 passed (2)
       Tests  4 passed (4)
@@ -234,6 +270,7 @@ An example with `--includeTaskLocation`:
 The tree reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. Similar to `default` reporter, you can disable the summary by configuring the reporter.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=tree
 ```
@@ -247,6 +284,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example output for tests in progress with default `slowTestThreshold: 300`:
@@ -290,6 +328,7 @@ Example of final terminal output for a passing test suite:
 Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the summary for the suite.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=dot
 ```
@@ -301,6 +340,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example terminal output for a passing test suite:
@@ -316,9 +356,10 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/outputfile) configuration option.
+Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=junit
 ```
@@ -330,9 +371,11 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example of a JUnit XML report:
+
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="2" failures="1" errors="0" time="0.503">
@@ -351,18 +394,19 @@ AssertionError: expected 5 to be 4 // Object.is equality
 
 The output XML contains nested `testsuites` → `testsuite` → `testcase` tags. You can customize the reporter's behaviour with the following options:
 
-| Option | Description | Default |
-|---|---|---|
-| `suiteName` | `name` attribute of `<testsuites>` | `"vitest tests"` |
-| `suiteNameTemplate` | Template for the `name` attribute of `<testsuite>`. Accepts a string with placeholders or a function. | Relative file path |
-| `classnameTemplate` | Template for the `classname` attribute of `<testcase>`. Accepts a string with placeholders or a function. | Relative file path |
-| `titleTemplate` | Template for the `name` attribute of `<testcase>`. Accepts a string with placeholders or a function. | Full test title with ancestor hierarchy |
-| `ancestorSeparator` | Separator used when joining ancestor describe block names in the `{classname}` placeholder and in the default test title. | `" > "` |
-| `addFileAttribute` | Add a `file` attribute to each `<testcase>`. | `false` |
-| `includeConsoleOutput` | Include `<system-out>` / `<system-err>` console output. | `true` |
-| `stackTrace` | Include stack traces in `<failure>` elements. | `true` |
+| Option                 | Description                                                                                                               | Default                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `suiteName`            | `name` attribute of `<testsuites>`                                                                                        | `"vitest tests"`                        |
+| `suiteNameTemplate`    | Template for the `name` attribute of `<testsuite>`. Accepts a string with placeholders or a function.                     | Relative file path                      |
+| `classnameTemplate`    | Template for the `classname` attribute of `<testcase>`. Accepts a string with placeholders or a function.                 | Relative file path                      |
+| `titleTemplate`        | Template for the `name` attribute of `<testcase>`. Accepts a string with placeholders or a function.                      | Full test title with ancestor hierarchy |
+| `ancestorSeparator`    | Separator used when joining ancestor describe block names in the `{classname}` placeholder and in the default test title. | `" > "`                                 |
+| `addFileAttribute`     | Add a `file` attribute to each `<testcase>`.                                                                              | `false`                                 |
+| `includeConsoleOutput` | Include `<system-out>` / `<system-err>` console output.                                                                   | `true`                                  |
+| `stackTrace`           | Include stack traces in `<failure>` elements.                                                                             | `true`                                  |
 
 The following placeholders are available for `suiteNameTemplate`:
+
 - `{title}` – name of the first top-level `describe` block; falls back to the file basename when there is no top-level `describe`
 - `{filename}` – relative file path from the root (e.g. `src/foo.test.ts`)
 - `{filepath}` – absolute file path
@@ -370,6 +414,7 @@ The following placeholders are available for `suiteNameTemplate`:
 - `{displayName}` – Vitest project name
 
 The following placeholders are available for `classnameTemplate` and `titleTemplate`:
+
 - `{classname}` – ancestor `describe` block names joined by `ancestorSeparator` (e.g. `outer > inner`)
 - `{title}` – leaf test title (the string passed to `it`/`test`)
 - `{suitename}` – top-level `describe` block name, empty string when the test has no enclosing `describe`
@@ -420,9 +465,10 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/outputfile) configuration option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=json
 ```
@@ -434,6 +480,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example of a JSON report:
@@ -504,11 +551,14 @@ export default defineConfig({
 
 ### HTML Reporter
 
-Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
+Generates a static version of [Vitest UI](/guide/ui) for reviewing completed test runs. See the [HTML Reporter guide](/guide/ui#html-reporter) for local preview, CI artifacts, and sharing workflows.
 
-Output file can be specified using the [`outputFile`](/config/outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
+The report artifact root can be specified using the reporter's `outputDir` option and the report entry is written to `<outputDir>/index.html`. By default `outputDir` is the shared Vitest artifact directory `.vitest`.
+
+Use `singleFile` to produce one portable HTML file. See [Share as a Single File](/guide/ui#share-as-a-single-file) for configuration and limitations.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=html
 ```
@@ -520,10 +570,7 @@ export default defineConfig({
   },
 })
 ```
-:::
 
-::: tip
-This reporter requires installed [`@vitest/ui`](/guide/ui) package.
 :::
 
 ### TAP Reporter
@@ -531,6 +578,7 @@ This reporter requires installed [`@vitest/ui`](/guide/ui) package.
 Outputs a report following [Test Anything Protocol](https://testanything.org/) (TAP).
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=tap
 ```
@@ -542,9 +590,11 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example of a TAP report:
+
 ```bash
 TAP version 13
 1..1
@@ -571,6 +621,7 @@ not ok 1 - __tests__/test-file-1.test.ts # time=14.00ms {
 Outputs a TAP flat report. Like the `tap` reporter, test results are formatted to follow TAP standards, but test suites are formatted as a flat list rather than a nested hierarchy.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=tap-flat
 ```
@@ -582,9 +633,11 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Example of a TAP flat report:
+
 ```bash
 TAP version 13
 1..2
@@ -605,6 +658,7 @@ ok 2 - __tests__/test-file-1.test.ts > first test file > 4 - 2 should equal 2 # 
 Displays a list of hanging processes, if any are preventing Vitest from exiting safely. The `hanging-process` reporter does not itself display test results, but can be used in conjunction with another reporter to monitor processes while tests run. Using this reporter can be resource-intensive, so should generally be reserved for debugging purposes in situations where Vitest consistently cannot exit the process.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=hanging-process
 ```
@@ -616,6 +670,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ### GitHub Actions Reporter {#github-actions-reporter}
@@ -688,6 +743,24 @@ export default defineConfig({
 })
 ```
 
+The job summary title defaults to `Vitest Test Report` or `(${test.name}) Vitest Test Report` when [`test.name` is set](/config/name).
+
+You can customize the title by setting `jobSummary.title` to distinguish multiple Vitest invocations that append to the same job summary. Please note that `test.name` will not be displayed when using a custom title.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          title: 'My Test Report',
+        },
+      }],
+    ],
+  },
+})
+```
+
 The flaky tests section of the summary includes permalink URLs that link test names directly to the relevant source lines on GitHub. These links are generated automatically using environment variables that GitHub Actions provides (`$GITHUB_REPOSITORY`, `$GITHUB_SHA`, and `$GITHUB_WORKSPACE`), so no configuration is needed in most cases.
 
 If you need to override these values — for example, when running in a container or a custom environment — you can customize them via the `fileLinks` option:
@@ -726,6 +799,7 @@ Outputs a minimal report containing only failed tests and their error messages. 
 This reporter is well optimized for AI coding assistants and LLM-based workflows to reduce token usage. It is [enabled automatically](#default-configuration) when Vitest detects it is running inside an AI coding agent.
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=minimal
 ```
@@ -737,6 +811,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ### Blob Reporter
@@ -774,7 +849,7 @@ export default defineConfig({
 })
 ```
 
-Blob reporter output doesn't include file-based [attachments](/api/advanced/artifacts.html#testattachment).
+Blob reporter output doesn't include file-based [attachments](/api/advanced/artifacts#testattachment).
 Make sure to merge [`attachmentsDir`](/config/attachmentsdir) separately alongside blob reports on CI when using this feature.
 
 ::: tip
@@ -786,6 +861,7 @@ Both `--reporter=blob` and `--merge-reports` do not work in watch mode.
 You can use third-party custom reporters installed from NPM by specifying their package name in the reporters' option:
 
 :::code-group
+
 ```bash [CLI]
 npx vitest --reporter=some-published-vitest-reporter
 ```
@@ -797,6 +873,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 Additionally, you can define your own [custom reporters](/guide/advanced/reporters) and use them by specifying their file path:

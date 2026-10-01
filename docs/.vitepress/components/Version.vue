@@ -9,7 +9,11 @@ const { type = 'stable' } = defineProps<{
 <template>
   <VPBadge
     :type="type === 'experimental' ? 'warning' : 'info'"
-    :title="type === 'experimental' ? 'This feature is experimental and does not follow SemVer.' : undefined"
+    :title="
+      type === 'experimental'
+        ? 'This feature is experimental and does not follow SemVer.'
+        : undefined
+    "
   >
     <slot />+
   </VPBadge>

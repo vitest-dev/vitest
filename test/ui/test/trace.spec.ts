@@ -17,7 +17,7 @@ test.describe('ui', () => {
       open: false,
     })
     vitest = server.vitest
-    baseURL = `${server.url}/__vitest__/`
+    baseURL = server.url
   })
 
   test.afterAll(async () => {
@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 11, fail: 0 })
+    await assertTestCounts(page, { pass: 13, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -35,6 +35,10 @@ test.describe('ui', () => {
 
   test('viewport', async ({ page }) => {
     await testViewport(page)
+  })
+
+  test('popover', async ({ page }) => {
+    await testPopover(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -53,8 +57,28 @@ test.describe('ui', () => {
     await testScroll(page)
   })
 
+  test('nested', async ({ page }) => {
+    await testNested(page)
+  })
+
   test('attempts', async ({ page }) => {
     await testAttempts(page)
+  })
+
+  test('persists selection in URL', async ({ page }) => {
+    await testPersistsSelectionInURL(page)
+  })
+
+  test('persists attempt in URL', async ({ page }) => {
+    await testPersistsAttemptInURL(page)
+  })
+
+  test('focused trace mode', async ({ page }) => {
+    await testFocusedTraceMode(page)
+  })
+
+  test('persists resized trace panes across reloads', async ({ page }) => {
+    await testPersistsResizedTracePanes(page)
   })
 })
 
@@ -79,7 +103,7 @@ test.describe('html reporter', () => {
       },
       {
         root,
-        build: { outDir: 'html' },
+        build: { outDir: '.vitest' },
       },
     )
     previewServer = server.previewServer
@@ -92,16 +116,19 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 11, fail: 0 })
+    await assertTestCounts(page, { pass: 13, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
-    await page.goto(baseURL)
     await testBasic(page)
   })
 
   test('viewport', async ({ page }) => {
     await testViewport(page)
+  })
+
+  test('popover', async ({ page }) => {
+    await testPopover(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -120,8 +147,28 @@ test.describe('html reporter', () => {
     await testScroll(page)
   })
 
+  test('nested', async ({ page }) => {
+    await testNested(page)
+  })
+
   test('attempts', async ({ page }) => {
     await testAttempts(page)
+  })
+
+  test('persists selection in URL', async ({ page }) => {
+    await testPersistsSelectionInURL(page)
+  })
+
+  test('persists attempt in URL', async ({ page }) => {
+    await testPersistsAttemptInURL(page)
+  })
+
+  test('focused trace mode', async ({ page }) => {
+    await testFocusedTraceMode(page)
+  })
+
+  test('persists resized trace panes across reloads', async ({ page }) => {
+    await testPersistsResizedTracePanes(page)
   })
 })
 
@@ -132,18 +179,74 @@ async function testBasic(page: Page) {
   await openExplorerItem(page, 'simple')
   await expect(traceView).toBeVisible()
 
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect
+    .poll(() => traceStepNames.allInnerTexts())
+    .toEqual(['Render simple', 'Render another', 'test finished'])
+
   // selecting steps should open source code view
-  const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
-  await traceSteps.getByText('Render simple').click()
+  await traceSteps.nth(0).click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
+  await expect(traceSteps.nth(0)).toBeFocused()
+
+  // verify source location highlight
+  const activeLine = page.getByTestId('editor').locator('.CodeMirror-activeline')
+  await expect(activeLine).toContainText('Render simple')
+
+  // markers ordered by 'test finished' > 'Render simple' > 'Render another'
+  const traceEditorMarkers = page.getByTestId('editor').getByTestId('trace-editor-marker')
+  await expect(traceEditorMarkers).toHaveCount(3)
+  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
 
   // verify snapshot replay in iframe
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // verify selector highlight
-  await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+  const traceHighlight = traceFrame.getByTestId('trace-view-highlight')
+  const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
+  await expect(traceHighlight).toBeVisible()
+  await expect(showHighlightCheckbox).toBeChecked()
+
+  // hide selector highlight and persist preference across reloads
+  await showHighlightCheckbox.uncheck()
+  await expect(traceHighlight).toBeHidden()
+  await page.reload()
+  await expect(traceView).toBeVisible()
+  await expect(traceHighlight).toBeHidden()
+  await expect(showHighlightCheckbox).not.toBeChecked()
+  await showHighlightCheckbox.check()
+  await expect(traceHighlight).toBeVisible()
+
+  // selecting 2nd trace step with keyboard and verify again
+  await traceSteps.nth(0).press('ArrowDown')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect(activeLine).toContainText('Render another')
+  await expect(traceSteps.nth(1)).toBeFocused()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')
+
+  await traceSteps.nth(1).press('End')
+  await expect(traceSteps.nth(2)).toBeFocused()
+  await expect(traceSteps.nth(2)).toHaveAttribute('aria-selected', 'true')
+  await traceSteps.nth(2).press('ArrowDown')
+  await expect(traceSteps.nth(2)).toBeFocused()
+  await traceSteps.nth(2).press('Home')
+  await expect(traceSteps.nth(0)).toBeFocused()
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await traceSteps.nth(0).press('ArrowUp')
+  await expect(traceSteps.nth(0)).toBeFocused()
+
+  // selecting 1st trace step from editor and verify again
+  await traceEditorMarkers.nth(1).click()
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
@@ -153,6 +256,12 @@ async function testBasic(page: Page) {
   // verify closing trace viewer doesn't immediately auto-open it again
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
   await expect(traceView).toBeHidden()
+
+  // reopen the trace viewer from the report
+  await page.getByTestId('btn-report').click()
+  await page.getByTestId('trace-open-button').click()
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Switch Target' })).toBeVisible()
 }
 
 async function testViewport(page: Page) {
@@ -164,6 +273,22 @@ async function testViewport(page: Page) {
   await expect(traceView).toBeVisible()
   await traceSteps.getByText('Render viewport').click()
   await expect(traceFrame.locator('.viewport-pass')).toBeVisible()
+}
+
+async function testPopover(page: Page) {
+  await openExplorerItem(page, 'popover')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step-name')
+  const traceFrame = traceView.frameLocator('iframe')
+  const popoverContent = traceFrame.getByText('Popover content')
+  await expect(traceView).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
+  await traceSteps.getByText('Render open popover').click()
+  await expect(popoverContent).toBeVisible()
+  await traceSteps.getByText('Render closed popover').click()
+  await expect(popoverContent).toBeHidden()
 }
 
 async function testPseudoState(page: Page) {
@@ -221,7 +346,10 @@ async function testCssLink(page: Page) {
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceView).toBeVisible()
-  await expect(traceFrame.getByRole('button', { name: 'Linked CSS' })).toHaveCSS('color', 'rgb(50, 100, 255)')
+  await expect(traceFrame.getByRole('button', { name: 'Linked CSS' })).toHaveCSS(
+    'color',
+    'rgb(50, 100, 255)',
+  )
 }
 
 async function testImage(page: Page) {
@@ -248,25 +376,290 @@ async function testAttempts(page: Page) {
 
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
+  const traceSteps = traceView.getByTestId('trace-step')
 
   await expect(traceView).toBeVisible()
+  const attemptSelect = traceView.getByRole('combobox', { name: 'Trace attempt' })
+  await expect(attemptSelect.locator('option')).toHaveText(['Initial run', 'Retry 1', 'Retry 2'])
 
-  const traceOpenButtons = page.getByTestId('trace-open-button')
-  await expect(traceOpenButtons).toHaveText([
-    'Open trace viewer',
-    'Open trace viewer Retry 1',
-    'Open trace viewer Retry 2',
-  ])
-
-  await traceOpenButtons.nth(0).click()
+  await expect(attemptSelect).toHaveValue('0:0')
   await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 
-  await traceOpenButtons.nth(1).click()
+  // trace step is reset to first step when switching attempts
+  await traceSteps.nth(1).click()
+  await attemptSelect.selectOption('0:1')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
   await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 
-  await traceOpenButtons.nth(2).click()
+  await attemptSelect.selectOption('0:2')
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+}
+
+async function testNested(page: Page) {
+  await openExplorerItem(page, 'nested')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect(traceView).toBeVisible()
+  await expect
+    .poll(() => traceStepNames.allInnerTexts())
+    .toEqual([
+      'Outer group',
+      'Outer mark',
+      'Inner group',
+      'Inner mark',
+      'click',
+      'Sibling mark',
+      'test finished',
+    ])
+}
+
+async function testPersistsSelectionInURL(page: Page) {
+  await openExplorerItem(page, 'simple')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  // Opening a test selects its first trace step and persists it in the URL.
+  await expect(traceView).toBeVisible()
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+  await expect
+    .poll(() => getHashParams(page))
+    .toMatchObject({
+      traceStep: '0',
+      test: testId,
+    })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+
+  // Reloading restores the auto-opened default step.
+  await page.reload()
+  await expect
+    .poll(() => getHashParams(page))
+    .toMatchObject({
+      traceStep: '0',
+      test: testId,
+    })
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // Selecting another trace step updates the URL and rendered snapshot.
+  await traceSteps.nth(1).click()
+  await expect
+    .poll(() => getHashParams(page))
+    .toMatchObject({
+      traceStep: '1',
+      test: testId,
+    })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+
+  // Reloading preserves the same URL, selected step, and rendered snapshot.
+  await page.reload()
+  await expect
+    .poll(() => getHashParams(page))
+    .toMatchObject({
+      traceStep: '1',
+      test: testId,
+    })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+
+  // Invalid attempt and step values fall back to the first available entry.
+  const invalidSelectionUrl = new URL(page.url())
+  const invalidParams = new URLSearchParams(invalidSelectionUrl.hash.split('?')[1])
+  invalidParams.set('traceAttempt', 'constructor')
+  invalidParams.set('traceStep', '999')
+  invalidSelectionUrl.hash = `/?${invalidParams}`
+  // Leave the app so the invalid URL exercises initialization, not hash navigation.
+  await page.goto('about:blank')
+  await page.goto(invalidSelectionUrl.href)
+  await expect
+    .poll(() => getHashParams(page))
+    .toMatchObject({
+      traceStep: '0',
+      test: testId,
+    })
+  expect(getHashParams(page)).not.toHaveProperty('traceAttempt')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // Closing removes only trace state and preserves the selected test.
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect(traceView).not.toBeVisible()
+  const params = getHashParams(page)
+  expect(params).toMatchObject({ test: testId })
+  expect(params).not.toHaveProperty('traceAttempt')
+  expect(params).not.toHaveProperty('traceStep')
+}
+
+async function testPersistsAttemptInURL(page: Page) {
+  await openExplorerItem(page, 'retried test')
+  const testId = getHashParams(page).test
+  expect(testId).toBeDefined()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  // Selecting a retry writes its attempt key to the URL.
+  await traceView.getByRole('combobox', { name: 'Trace attempt' }).selectOption('0:1')
+  await expect
+    .poll(() => getHashParams(page))
+    .toMatchObject({
+      traceAttempt: '0:1',
+      traceStep: '0',
+      test: testId,
+    })
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+
+  // Reloading preserves the same URL and selected retry snapshot.
+  await page.reload()
+  await expect
+    .poll(() => getHashParams(page))
+    .toMatchObject({
+      traceAttempt: '0:1',
+      traceStep: '0',
+      test: testId,
+    })
+  await expect(traceView.getByRole('combobox', { name: 'Trace attempt' })).toHaveValue('0:1')
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+}
+
+async function testFocusedTraceMode(page: Page) {
+  // Opening the trace layout without a selection shows its empty state.
+  const standardUrl = page.url()
+  const emptyTraceUrl = new URL(standardUrl)
+  emptyTraceUrl.hash = '/?layout=trace'
+  await page.goto(emptyTraceUrl.href)
+  await expect(page.getByText('No trace found')).toBeVisible()
+
+  // Select a trace step in the standard layout.
+  await page.goto(standardUrl)
+  await openExplorerItem(page, 'simple')
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceView.getByTestId('trace-view-title')).toHaveText('Trace Viewer')
+  await traceSteps.nth(1).click()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+
+  // Follow its new-tab URL in the current page to inspect the focused layout.
+  const openFocusedTrace = traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })
+  await expect(openFocusedTrace).toHaveAttribute('target', '_blank')
+  const focusedUrl = await openFocusedTrace.getAttribute('href')
+  if (!focusedUrl) {
+    throw new Error('Focused trace URL is unavailable')
+  }
+  await page.goto(focusedUrl)
+
+  // The focused layout fills the viewport, preserves selection, and hides standard controls.
+  const viewport = page.viewportSize()
+  if (!viewport) {
+    throw new Error('Viewport size is unavailable')
+  }
+  await expect(traceView).toBeVisible()
+  await expect(page.getByAltText('Vitest logo')).toBeHidden()
+  await expect(traceView.getByTestId('trace-view-title').locator('span')).toHaveText([
+    'simple',
+    'basic.test.ts',
+  ])
+  await expect(traceView.getByRole('link', { name: 'Open Trace Viewer in New Tab' })).toBeHidden()
+  await expect(traceView.getByRole('button', { name: 'Close Trace Viewer' })).toBeHidden()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect
+    .poll(() => traceView.boundingBox())
+    .toEqual({
+      x: 0,
+      y: 0,
+      width: viewport.width,
+      height: viewport.height,
+    })
+
+  // Reloading restores the selected trace step.
+  await page.reload()
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+}
+
+function getHashParams(page: Page) {
+  const hash = new URL(page.url()).hash
+  return Object.fromEntries(new URLSearchParams(hash.split('?')[1]))
+}
+
+async function testPersistsResizedTracePanes(page: Page) {
+  // Opening a trace renders resizable step list and iframe panes.
+  await openExplorerItem(page, 'simple')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByRole('listbox', { name: 'Trace steps' })
+  const splitpanes = traceView.locator('.splitpanes').first()
+  const splitter = splitpanes.locator('.splitpanes__splitter').first()
+  await expect(traceView).toBeVisible()
+  await expect(splitter).toBeVisible()
+
+  const initialTraceStepsBox = await traceSteps.boundingBox()
+  const traceViewBox = await traceView.boundingBox()
+  const splitterBox = await splitter.boundingBox()
+  if (!initialTraceStepsBox || !traceViewBox || !splitterBox) {
+    throw new Error('Trace split panes are not visible')
+  }
+
+  // Resize the step list from its 30% default to roughly 60% and persist both pane sizes.
+  expect(initialTraceStepsBox.width).toBeLessThan(traceViewBox.width / 2)
+  await page.mouse.move(
+    splitterBox.x + splitterBox.width / 2,
+    splitterBox.y + splitterBox.height / 2,
+  )
+  await page.mouse.down()
+  await page.mouse.move(
+    traceViewBox.x + traceViewBox.width * 0.6,
+    splitterBox.y + splitterBox.height / 2,
+    { steps: 5 },
+  )
+  await page.mouse.up()
+
+  // wait for storage update
+  await expect.poll(async () => (await getStoredTracePaneSizes(page))?.[0]).toBeGreaterThan(55)
+  const expectedTraceStepsBox = await traceSteps.boundingBox()
+  if (!expectedTraceStepsBox) {
+    throw new Error('Trace steps are not visible')
+  }
+  // The resize visibly expands the step list without moving it.
+  expect(expectedTraceStepsBox).toEqual({
+    x: expect.closeTo(initialTraceStepsBox.x, 1),
+    y: expect.closeTo(initialTraceStepsBox.y, 1),
+    width: expect.any(Number),
+    height: expect.closeTo(initialTraceStepsBox.height, 1),
+  })
+  expect(expectedTraceStepsBox.width).toBeGreaterThan(traceViewBox.width / 2)
+
+  // Reloading repeatedly preserves the resized trace step geometry.
+  for (let i = 0; i < 2; i++) {
+    await page.reload()
+    await expect(traceView).toBeVisible()
+    await expect
+      .poll(() => traceSteps.boundingBox())
+      .toEqual({
+        x: expect.closeTo(expectedTraceStepsBox.x, 1),
+        y: expect.closeTo(expectedTraceStepsBox.y, 1),
+        width: expect.closeTo(expectedTraceStepsBox.width, 1),
+        height: expect.closeTo(expectedTraceStepsBox.height, 1),
+      })
+  }
+}
+
+function getStoredTracePaneSizes(page: Page): Promise<number[] | null> {
+  return page.evaluate(() => {
+    const value = localStorage.getItem('vitest-ui_splitpanes-traceViewSplitSizes')
+    return value ? JSON.parse(value) : null
+  })
 }

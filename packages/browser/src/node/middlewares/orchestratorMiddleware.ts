@@ -3,7 +3,9 @@ import type { ParentBrowserProject } from '../projectParent'
 import { resolveOrchestrator } from '../serverOrchestrator'
 import { allowIframes, disableCache } from './utils'
 
-export function createOrchestratorMiddleware(parentServer: ParentBrowserProject): Connect.NextHandleFunction {
+export function createOrchestratorMiddleware(
+  parentServer: ParentBrowserProject,
+): Connect.NextHandleFunction {
   return async function vitestOrchestratorMiddleware(req, res, next) {
     if (!req.url) {
       return next()
@@ -20,6 +22,9 @@ export function createOrchestratorMiddleware(parentServer: ParentBrowserProject)
 
       res.write(html, 'utf-8')
       res.end()
+      return
     }
+    res.statusCode = 404
+    res.end('Not found')
   }
 }

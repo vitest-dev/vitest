@@ -28,7 +28,7 @@ describe('testing vi utils', () => {
     expect(mod2).toBe(mod3)
   })
 
-  test('resetting modules doesn\'t reset vitest', async () => {
+  test("resetting modules doesn't reset vitest", async () => {
     const v1 = await import('vitest')
     vi.resetModules()
     const v2 = await import('vitest')
@@ -71,7 +71,7 @@ describe('testing vi utils', () => {
     })
 
     if (0) {
-      const mockFactory = (): FooBar => ({} as FooBar)
+      const mockFactory = (): FooBar => ({}) as FooBar
 
       vi.mocked(mockFactory, { partial: true }).mockReturnValue({
         foo: vi.fn(),
@@ -85,7 +85,7 @@ describe('testing vi utils', () => {
         baz: 'baz',
       })
 
-      const mockFactoryAsync = async (): Promise<FooBar> => ({} as FooBar)
+      const mockFactoryAsync = async (): Promise<FooBar> => ({}) as FooBar
 
       vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
         foo: vi.fn(),
@@ -102,7 +102,7 @@ describe('testing vi utils', () => {
 
     function fetchSomething(): Promise<Response> {
       return fetch('https://vitest.dev/')
-    };
+    }
     if (0) {
       // type check only
       vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
@@ -163,9 +163,7 @@ describe('testing vi utils', () => {
         return this.barMock()
       }
 
-      public getBar: Mock<() => string> = vi
-        .fn()
-        .mockImplementation(() => this.barMock())
+      public getBar: Mock<() => string> = vi.fn().mockImplementation(() => this.barMock())
     }
 
     // type check only
@@ -218,16 +216,11 @@ describe('testing vi utils', () => {
     }
 
     // verify `spyOn` is assignable to `MockInstance` with overload
-    const spy: MockInstance<MyElement['scrollTo']> = vi.spyOn(
-      MyElement.prototype,
-      'scrollTo',
-    )
+    const spy: MockInstance<MyElement['scrollTo']> = vi.spyOn(MyElement.prototype, 'scrollTo')
 
     // however `Parameters` only picks up the last overload
     // due to typescript limitation
-    expectTypeOf(spy.mock.calls).toEqualTypeOf<
-      [x: number, y: number][]
-    >()
+    expectTypeOf(spy.mock.calls).toEqualTypeOf<[x: number, y: number][]>()
   })
 
   test(`mock.contexts types`, () => {
@@ -257,24 +250,24 @@ describe('testing vi utils', () => {
       (v: number): number
       other: (v: number) => number
     }
-    vi.fn<Handler>().mockImplementation(v => v + 1)
+    vi.fn<Handler>().mockImplementation((v) => v + 1)
   })
 
   test('can change config', () => {
     const state = getWorkerState()
     expect(state.config.hookTimeout).toBe(10000)
-    expect(state.config.clearMocks).toBe(false)
-    vi.setConfig({ hookTimeout: 6000, clearMocks: true })
-    expect(state.config.hookTimeout).toBe(6000)
     expect(state.config.clearMocks).toBe(true)
+    vi.setConfig({ hookTimeout: 6000, clearMocks: false })
+    expect(state.config.hookTimeout).toBe(6000)
+    expect(state.config.clearMocks).toBe(false)
     vi.resetConfig()
     expect(state.config.hookTimeout).toBe(10000)
-    expect(state.config.clearMocks).toBe(false)
+    expect(state.config.clearMocks).toBe(true)
   })
 
   test('loads unloaded module', async () => {
     let mod: any
-    import('../src/timeout').then(m => mod = m)
+    import('../src/timeout').then((m) => (mod = m))
 
     expect(mod).toBeUndefined()
 

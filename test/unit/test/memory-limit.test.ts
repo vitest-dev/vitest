@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { getWorkerMemoryLimit } from 'vitest/src/utils/memory-limit.js'
+import { getWorkerMemoryLimit } from '../../../packages/vitest/src/utils/memory-limit.js'
 
 describe('getWorkerMemoryLimit', () => {
   it('should prioritize vmMemoryLimit', () => {
-    expect(getWorkerMemoryLimit({ vmMemoryLimit: '512MB', maxWorkers: 1, watch: false })).toBe('512MB')
+    expect(getWorkerMemoryLimit({ vmMemoryLimit: '512MB', maxWorkers: 1, watch: false })).toBe(
+      '512MB',
+    )
   })
 
   it('should calculate 1/maxWorkers', () => {

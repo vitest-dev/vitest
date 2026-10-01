@@ -1,4 +1,4 @@
-import libCoverage from 'istanbul-lib-coverage'
+import * as libCoverage from '@vitest/istanbul-lib-coverage'
 import { expect } from 'vitest'
 import { readCoverageJson, runVitest, test } from '../utils'
 
@@ -20,7 +20,9 @@ test('pre-transpiled code with source maps to original (#5341)', async () => {
     ]
   `)
 
-  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/pre-transpiled/original.ts')
+  const fileCoverage = coverageMap.fileCoverageFor(
+    '<process-cwd>/fixtures/src/pre-transpiled/original.ts',
+  )
 
   expect(fileCoverage).toMatchInlineSnapshot(`
     {

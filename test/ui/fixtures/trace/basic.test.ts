@@ -8,11 +8,23 @@ import { commands, page } from 'vitest/browser'
 test('simple', async () => {
   document.body.innerHTML = '<button>Simple</button>'
   await page.getByRole('button').mark('Render simple')
+
+  document.body.innerHTML = '<button>Another</button>'
+  await page.getByRole('button').mark('Render another')
 })
 
 test('switch-target', async () => {
   document.body.innerHTML = '<button>Switch Target</button>'
   await page.getByRole('button').mark('Render switch target')
+})
+
+test('popover', async () => {
+  document.body.innerHTML = '<div popover="auto" style="inset: auto; top: 0; left: 0; margin: 0">Popover content</div>'
+  const popover = document.querySelector<HTMLElement>('[popover]')!
+  const popoverContent = page.getByText('Popover content')
+  await popoverContent.mark('Render closed popover')
+  popover.showPopover()
+  await popoverContent.mark('Render open popover')
 })
 
 test('pseudo-state', async () => {

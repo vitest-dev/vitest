@@ -1,4 +1,4 @@
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type { Params } from './params'
 import { useLocalStorage, watchOnce } from '@vueuse/core'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
@@ -12,13 +12,10 @@ export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
 export const coverageVisible = ref(false)
 export const disableCoverage = ref(true)
-export const coverage = computed(() => config.value?.coverage)
+const coverage = computed(() => config.value?.coverage)
 export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
-  return (
-    coverageConfigured.value
-    && !!coverage.value?.htmlDir
-  )
+  return coverageConfigured.value && !!coverage.value?.htmlDir
 })
 export const mainSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-mainSizes',
@@ -29,16 +26,17 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
   [
     // @ts-expect-error "browserState" is not initialised yet
     window.__vitest_browser_runner__?.provider === 'webdriverio'
-      ? ((viewport.value[0] / window.outerWidth) * 100)
+      ? (viewport.value[0] / window.outerWidth) * 100
       : 33,
     67,
   ],
 )
-
-export const detailsPanelVisible = useLocalStorage<boolean>(
-  'vitest-ui_details-panel-visible',
-  true,
+export const traceViewSplitSizes = useLocalStorage<[steps: number, iframe: number]>(
+  'vitest-ui_splitpanes-traceViewSplitSizes',
+  [30, 70],
 )
+
+export const detailsPanelVisible = useLocalStorage<boolean>('vitest-ui_details-panel-visible', true)
 
 export const detailsPosition = ref<'right' | 'bottom'>('right')
 
@@ -87,8 +85,7 @@ export function initializeNavigation() {
       currentModule.value = current
       dashboardVisible.value = false
       coverageVisible.value = false
-    }
-    else {
+    } else {
       watchOnce(
         () => client.state.getFiles(),
         () => {
@@ -112,7 +109,13 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo({ file, line, view, test, column }: Params) {
+export function navigateTo({
+  file,
+  line,
+  view,
+  test,
+  column,
+}: Omit<Params, 'layout' | 'traceAttempt' | 'traceStep'>) {
   activeFileId.value = file
   lineNumber.value = line
   columnNumber.value = column
@@ -123,24 +126,13 @@ export function navigateTo({ file, line, view, test, column }: Params) {
 }
 
 export function clickOnTask(task: Task) {
-  if (task.type === 'test') {
-    if (viewMode.value === 'editor') {
-      showTaskSource(task)
-    }
-    else {
-      navigateTo({
-        file: task.file.id,
-        line: null,
-        column: null,
-        view: viewMode.value,
-        test: task.id,
-      })
-    }
-  }
-  else {
+  const isFile = 'filepath' in task
+  if (!isFile && viewMode.value === 'editor') {
+    showTaskSource(task)
+  } else {
     navigateTo({
       file: task.file.id,
-      test: null,
+      test: isFile ? null : task.id,
       line: null,
       view: viewMode.value,
       column: null,
@@ -183,10 +175,7 @@ export function updateBrowserPanel() {
   panels.details.browser = calculateBrowserPanel()
   panels.details.main = 100 - panels.details.browser
 
-  detailSizes.value = [
-    panels.details.browser,
-    panels.details.main,
-  ]
+  detailSizes.value = [panels.details.browser, panels.details.main]
 }
 
 export function toggleDetailsPosition() {

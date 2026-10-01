@@ -1,10 +1,4 @@
-import type {
-  Graph,
-  GraphConfig,
-  GraphController,
-  GraphLink,
-  GraphNode,
-} from 'd3-graph-controller'
+import type { Graph, GraphController, GraphLink, GraphNode } from 'd3-graph-controller'
 import type { ModuleGraphData } from 'vitest'
 import { defineGraph, defineLink, defineNode } from 'd3-graph-controller'
 import { calcExternalLabels, createModuleLabelItem } from '~/utils/task'
@@ -14,17 +8,9 @@ export type ModuleType = 'external' | 'inline'
 export type ModuleNode = GraphNode<ModuleType>
 export type ModuleLink = GraphLink<ModuleType, ModuleNode>
 export type ModuleGraph = Graph<ModuleType, ModuleNode, ModuleLink>
-export type ModuleGraphController = GraphController<
-  ModuleType,
-  ModuleNode,
-  ModuleLink
->
-export type ModuleGraphConfig = GraphConfig<ModuleType, ModuleNode, ModuleLink>
-
+export type ModuleGraphController = GraphController<ModuleType, ModuleNode, ModuleLink>
 function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
-  const labels = modules.map(module =>
-    createModuleLabelItem(module),
-  )
+  const labels = modules.map((module) => createModuleLabelItem(module))
   const map = calcExternalLabels(labels)
   return labels.map(({ raw, id, splitsCopy }) => {
     return defineNode<ModuleType, ModuleNode>({
@@ -32,9 +18,7 @@ function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
       label: {
         color: 'var(--color-node-external)',
         fontSize: '0.875rem',
-        text: id.includes('node_modules')
-          ? (map.get(raw) ?? raw)
-          : splitsCopy[splitsCopy.length - 1],
+        text: id.includes('node_modules') ? (map.get(raw) ?? raw) : splitsCopy.at(-1)!,
       },
       isFocused: false,
       id,
@@ -57,10 +41,7 @@ function defineInlineModuleNode(module: string, isRoot: boolean): ModuleNode {
   })
 }
 
-export function getModuleGraph(
-  data: ModuleGraphData,
-  rootPath: string | undefined,
-): ModuleGraph {
+export function getModuleGraph(data: ModuleGraphData, rootPath: string | undefined): ModuleGraph {
   if (!data) {
     return defineGraph({})
   }
@@ -68,14 +49,11 @@ export function getModuleGraph(
   const externalizedNodes = !config.value.experimental?.viteModuleRunner
     ? defineExternalModuleNodes([...data.inlined, ...data.externalized])
     : defineExternalModuleNodes(data.externalized)
-  const inlinedNodes
-    = !config.value.experimental?.viteModuleRunner
-      ? []
-      : data.inlined.map(module =>
-        defineInlineModuleNode(module, module === rootPath),
-      ) ?? []
+  const inlinedNodes = !config.value.experimental?.viteModuleRunner
+    ? []
+    : (data.inlined.map((module) => defineInlineModuleNode(module, module === rootPath)) ?? [])
   const nodes = [...externalizedNodes, ...inlinedNodes]
-  const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
+  const nodeMap = Object.fromEntries(nodes.map((node) => [node.id, node]))
   const links = Object.entries(data.graph).flatMap(
     ([module, deps]) =>
       deps
@@ -93,7 +71,7 @@ export function getModuleGraph(
             label: false,
           })
         })
-        .filter(link => link !== undefined) as ModuleLink[],
+        .filter((link) => link !== undefined) as ModuleLink[],
   )
   return defineGraph({ nodes, links })
 }

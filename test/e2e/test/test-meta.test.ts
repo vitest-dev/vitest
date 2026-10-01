@@ -1,6 +1,6 @@
 import type { TestCase, TestSuite } from 'vitest/node'
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 test('meta can be defined on test options', async () => {
   const { stderr, ctx } = await runInlineTests({
@@ -214,7 +214,7 @@ test('meta is accessible from task.meta inside tests', async () => {
   })
 
   expect(stderr).toBe('')
-  const metaLine = stdout.split('\n').find(line => line.startsWith('META:'))
+  const metaLine = stdout.split('\n').find((line) => line.startsWith('META:'))
   expect(metaLine).toBeDefined()
   expect(JSON.parse(metaLine!.slice('META:'.length))).toMatchInlineSnapshot(`
     {
@@ -743,8 +743,8 @@ test('meta inheritance across multiple files', async () => {
 
   expect(stderr).toBe('')
   const testModules = ctx!.state.getTestModules()
-  const file1Module = testModules.find(m => m.moduleId.includes('file1'))!
-  const file2Module = testModules.find(m => m.moduleId.includes('file2'))!
+  const file1Module = testModules.find((m) => m.moduleId.includes('file1'))!
+  const file2Module = testModules.find((m) => m.moduleId.includes('file2'))!
 
   const suite1 = file1Module.children.at(0) as TestSuite
   const suite2 = file2Module.children.at(0) as TestSuite

@@ -6,20 +6,22 @@ import { StableTestFileOrderSorter } from '../../test-utils'
 test('cancels previous run before starting new one', async () => {
   const errors: unknown[] = []
 
-  const vitest = await createVitest('test', {
+  const vitest = await createVitest({
     maxWorkers: 1,
     maxConcurrency: 1,
     watch: false,
     bail: 1,
     root: resolve(import.meta.dirname, '../fixtures/bail-race'),
     sequence: { sequencer: StableTestFileOrderSorter },
-    reporters: [{
-      onTestRunEnd(_, unhandledErrors) {
-        if (unhandledErrors.length) {
-          errors.push(...unhandledErrors)
-        }
+    reporters: [
+      {
+        onTestRunEnd(_, unhandledErrors) {
+          if (unhandledErrors.length) {
+            errors.push(...unhandledErrors)
+          }
+        },
       },
-    }],
+    ],
   })
   onTestFinished(() => vitest.close())
 

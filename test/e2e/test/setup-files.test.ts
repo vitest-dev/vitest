@@ -1,19 +1,22 @@
 import { promises as fs } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
-test.each(['threads', 'vmThreads'])('%s: print stdout and stderr correctly when called in the setup file', async (pool) => {
-  const { stdout, stderr } = await runVitest({
-    root: 'fixtures/setup-files',
-    include: ['empty.test.ts'],
-    setupFiles: ['./console-setup.ts'],
-    pool,
-  })
+test.each(['threads', 'vmThreads'])(
+  '%s: print stdout and stderr correctly when called in the setup file',
+  async (pool) => {
+    const { stdout, stderr } = await runVitest({
+      root: 'fixtures/setup-files',
+      include: ['empty.test.ts'],
+      setupFiles: ['./console-setup.ts'],
+      pool,
+    })
 
-  const filepath = 'empty.test.ts'
-  expect(stdout).toContain(`stdout | ${filepath}`)
-  expect(stderr).toContain(`stderr | ${filepath}`)
-})
+    const filepath = 'empty.test.ts'
+    expect(stdout).toContain(`stdout | ${filepath}`)
+    expect(stderr).toContain(`stderr | ${filepath}`)
+  },
+)
 
 describe('setup files with forceRerunTrigger', () => {
   const file = './fixtures/setup-files/empty-setup.ts'
@@ -28,10 +31,13 @@ describe('setup files with forceRerunTrigger', () => {
   }
 
   // Note that this test will fail locally if you have uncommitted changes
-  it.runIf(process.env.GITHUB_ACTIONS && !process.env.ECOSYSTEM_CI)('should run no tests if setup file is not changed', async () => {
-    const { stdout } = await run()
-    expect(stdout).toContain('No test files found, exiting with code 0')
-  })
+  it.runIf(process.env.GITHUB_ACTIONS && !process.env.ECOSYSTEM_CI)(
+    'should run no tests if setup file is not changed',
+    async () => {
+      const { stdout } = await run()
+      expect(stdout).toContain('No test files found, exiting with code 0')
+    },
+  )
 
   it('should run the whole test suite if setup file is changed', async () => {
     const codes = 'export const a = 1'
@@ -82,4 +88,120 @@ it('setup files resolution in nested folder with bare name', async () => {
       },
     }
   `)
+})
+
+it('re-evaluates an extensionless setup file when isolation is disabled', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': `
+      export default {
+        test: {
+          isolate: false,
+          maxWorkers: 1,
+          setupFiles: ['./setup'],
+        },
+      }
+    `,
+    'setup.js': `
+      import { beforeEach } from 'vitest'
+
+      beforeEach(() => {
+        globalThis.setupFileHookCalled = true
+      })
+    `,
+    'a.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('runs setup hook in a', () => {
+        expect(globalThis.setupFileHookCalled).toBe(true)
+        globalThis.setupFileHookCalled = false
+      })
+    `,
+    'b.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('runs setup hook in b', () => {
+        expect(globalThis.setupFileHookCalled).toBe(true)
+        globalThis.setupFileHookCalled = false
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "runs setup hook in a": "passed",
+      },
+      "b.test.js": {
+        "runs setup hook in b": "passed",
+      },
+    }
+  `)
+})
+
+describe('sequence.setupFiles', () => {
+  function run(expectedOrder: string[], sequence?: { setupFiles: 'list' | 'parallel' }) {
+    return runInlineTests({
+      'vitest.config.js': `
+        export default {
+          test: {
+            setupFiles: ['./first-setup.js', './second-setup.js'],
+            ${sequence ? `sequence: ${JSON.stringify(sequence)},` : ''}
+          },
+        }
+      `,
+      'first-setup.js': `
+        globalThis.setupOrder ??= []
+        await new Promise(resolve => setTimeout(resolve, 100))
+        globalThis.setupOrder.push('first')
+      `,
+      'second-setup.js': `
+        globalThis.setupOrder ??= []
+        globalThis.setupOrder.push('second')
+      `,
+      'order.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('setup order', () => {
+          expect(globalThis.setupOrder).toEqual(${JSON.stringify(expectedOrder)})
+        })
+      `,
+    })
+  }
+
+  it('runs setup files in the defined order by default', async () => {
+    const { stderr, testTree } = await run(['first', 'second'])
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "order.test.js": {
+          "setup order": "passed",
+        },
+      }
+    `)
+  })
+
+  it('runs setup files in the defined order with "list"', async () => {
+    const { stderr, testTree } = await run(['first', 'second'], { setupFiles: 'list' })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "order.test.js": {
+          "setup order": "passed",
+        },
+      }
+    `)
+  })
+
+  it('runs setup files in parallel with "parallel"', async () => {
+    const { stderr, testTree } = await run(['second', 'first'], { setupFiles: 'parallel' })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "order.test.js": {
+          "setup order": "passed",
+        },
+      }
+    `)
+  })
 })

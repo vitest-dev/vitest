@@ -9,11 +9,11 @@ import type {
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
 import type { VitestClient } from './ws'
-import { createFileTask, getTasks } from '@vitest/runner/utils'
-import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 import { isSuite as isTaskSuite } from '~/utils/task'
+import { createFileTask, getTasks } from '../../../../vitest/src/utils/tasks'
 import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
@@ -22,38 +22,55 @@ import { testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
 
-export { ENTRY_URL, HOST, isReport, PORT } from '../../constants'
+export { isReport } from '../../constants'
 
-export const client: VitestClient = (function createVitestClient() {
+function createVitestClient(): VitestClient {
+  let client: VitestClient
   if (isReport) {
-    return createStaticClient()
-  }
-  else {
-    return createWsClient(ENTRY_URL, {
-      reactive: (data, ctxKey) => {
-        return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
-      },
+    client = createStaticClient()
+  } else {
+    client = createWsClient(ENTRY_URL, {
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
-          explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
+          explorerTree.recordTestArtifact(testId, {
+            type: 'internal:annotation',
+            annotation,
+            location: annotation.location,
+          })
         },
         onTestArtifactRecord(testId, artifact) {
           explorerTree.recordTestArtifact(testId, artifact)
         },
+        onSpecsCollected(specs, startTime) {
+          // Run-start specifications identify files before their task trees are collected.
+          specs?.forEach((spec) => {
+            client.state.clearFiles(spec)
+          })
+          explorerTree.startTime = startTime || performance.now()
+        },
+        onCollected(files) {
+          // Collection supplies complete task trees that supersede any file placeholders.
+          client.state.collectFiles(files)
+          if (files) {
+            explorerTree.pruneStaleTasks(files)
+          }
+        },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
+          client.state.updateTasks(packs)
           explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
         },
-        onSpecsCollected(_specs, startTime) {
-          explorerTree.startTime = startTime || performance.now()
+        onTestRemoved(path?: string) {
+          if (path) {
+            client.state.removeFile(path)
+            explorerTree.removeFile(path)
+          }
+        },
+        onUserConsoleLog(log) {
+          client.state.updateUserLog(log)
         },
         onFinished(_files, errors, _coverage, executionTime) {
           explorerTree.endRun(executionTime)
-          // don't change the testRunState.value here:
-          // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
-          // - if we change here the state before the tasks states are updated, the cursor position will be lost
-          // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
-          // testRunState.value = 'idle'
           unhandledErrors.value = (errors || []).map(parseError)
         },
         onFinishedReportCoverage() {
@@ -66,21 +83,31 @@ export const client: VitestClient = (function createVitestClient() {
       },
     })
   }
-})()
+  return client
+}
+
+export const client: VitestClient = createVitestClient()
 
 export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
-export const status = ref<WebSocketStatus>('CONNECTING')
-export const availableProjects = shallowRef<string[]>([])
+const status = ref<WebSocketStatus>('CONNECTING')
+export const availableProjects = computed(
+  () => config.value.projects?.map((project) => project.name || '') || [],
+)
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
   return currentFileId ? findById(currentFileId) : undefined
 })
-export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
+export const currentLogs = computed(
+  () =>
+    getTasks(current.value)
+      .map((i) => i?.logs || [])
+      .flat() || [],
+)
 
 export function findById(id: string) {
   const file = client.state.idMap.get(id)
-  return file ? file as RunnerTestFile : undefined
+  return file as RunnerTestFile | undefined
 }
 
 export const isConnected = computed(() => status.value === 'OPEN')
@@ -138,7 +165,10 @@ export function runFiles(useFiles: RunnerTestFile[]) {
 
   explorerTree.startRun()
 
-  return client.rpc.rerun(useFiles.map(i => i.filepath), true)
+  return client.rpc.rerun(
+    useFiles.map((i) => i.filepath),
+    true,
+  )
 }
 
 export function runTask(task: RunnerTask) {
@@ -149,16 +179,8 @@ export function runTask(task: RunnerTask) {
   return client.rpc.rerunTask(task.id)
 }
 
-export function runCurrent() {
-  if (current.value) {
-    return runFiles([current.value])
-  }
-}
-
 // @ts-expect-error not typed global
-export const browserState = window.__vitest_browser_runner__ as
-  | BrowserRunnerState
-  | undefined
+export const browserState = window.__vitest_browser_runner__ as BrowserRunnerState | undefined
 
 // @ts-expect-error not typed global
 window.__vitest_ui_api__ = ui
@@ -176,10 +198,7 @@ watch(
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
       ])
-      const projects = _config.projects.map(project => ({
-        name: project.name || '',
-        color: project.color,
-      }))
+      config.value = _config
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
         files = filenames.map(([{ name, root }, filepath]) => {
@@ -188,12 +207,10 @@ watch(
           return file
         })
       }
-      availableProjects.value = projects.map(p => p.name)
-      explorerTree.loadFiles(files, projects)
+      explorerTree.loadFiles(files)
       client.state.collectFiles(files)
       explorerTree.startRun()
       unhandledErrors.value = (errors || []).map(parseError)
-      config.value = _config
     })
 
     ws.addEventListener('close', () => {

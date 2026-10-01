@@ -2,7 +2,7 @@ import type { defineConfig } from 'vitest/config'
 import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
-type Configuration = NonNullable<NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>>
+type Configuration = NonNullable<NarrowToTestConfig<Parameters<typeof defineConfig>[0]>>
 
 test('reporters, single', () => {
   assertType<Configuration>({ reporters: 'default' })
@@ -41,6 +41,7 @@ test('reporters, multiple', () => {
 test('reporters, with options', () => {
   assertType<Configuration>({
     reporters: [
+      ['github-actions', { jobSummary: { title: 'Custom Test Report' } }],
       ['json', { outputFile: 'test.json' }],
       ['junit', { classname: 'something', suiteName: 'Suite name', outputFile: 'test.json' }],
       ['vitest-sonar-reporter', { outputFile: 'report.xml' }],
@@ -50,10 +51,6 @@ test('reporters, with options', () => {
 
 test('reporters, mixed variations', () => {
   assertType<Configuration>({
-    reporters: [
-      'default',
-      ['verbose'],
-      ['json', { outputFile: 'test.json' }],
-    ],
+    reporters: ['default', ['verbose'], ['json', { outputFile: 'test.json' }]],
   })
 })

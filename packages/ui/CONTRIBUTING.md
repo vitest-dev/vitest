@@ -67,5 +67,5 @@ For example,
 
 ```bash
 pnpm -C packages/ui test:ui --reporter=html --run
-HTML_REPORT_DIR="$PWD/packages/ui/html" pnpm -C packages/ui dev:client
+HTML_REPORT_DIR="$PWD/packages/ui/.vitest" pnpm -C packages/ui dev:client
 ```

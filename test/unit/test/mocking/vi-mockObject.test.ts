@@ -46,7 +46,9 @@ test('vi.mockRestore() does not affect mocks', () => {
   expect(new mocked.Class()).toBeInstanceOf(mocked.Class)
 })
 
-test('vi.mockRestore() on respied method does not restore it to the original', async ({ annotate }) => {
+test('vi.mockRestore() on respied method does not restore it to the original', async ({
+  annotate,
+}) => {
   await annotate('https://github.com/vitest-dev/vitest/issues/8319', 'issue')
 
   const mocked = mockModule()
@@ -83,6 +85,30 @@ test('instance mocks are independently tracked, but prototype shares the state',
   expect(t1.method).toHaveBeenCalledTimes(2)
   // tracks methods even when t1.method implementation is overridden
   expect(Class.prototype.method).toHaveBeenCalledTimes(3)
+})
+
+test('clearAllMocks clears instance and prototype state', () => {
+  const { Class } = mockModule()
+  const instance = new Class()
+  vi.clearAllMocks()
+
+  instance.method()
+  expect(instance.method).toHaveBeenCalledOnce()
+  expect(Class.prototype.method).toHaveBeenCalledOnce()
+
+  vi.clearAllMocks()
+
+  expect(instance.method).not.toHaveBeenCalled()
+  expect(Class.prototype.method).not.toHaveBeenCalled()
+})
+
+test('resetAllMocks resets uncalled prototype configuration', () => {
+  const { Class } = mockModule()
+  Class.prototype.method.mockReturnValue(42)
+
+  vi.resetAllMocks()
+
+  expect(new Class().method()).toBe(undefined)
 })
 
 test('instance methods and prototype method share the state', () => {
@@ -221,16 +247,19 @@ test('the array is not empty when spying', () => {
 })
 
 function mockModule(type: 'automock' | 'autospy' = 'automock') {
-  return vi.mockObject({
-    [Symbol.toStringTag]: 'Module',
-    __esModule: true,
-    method(..._args: any[]) {
-      return 42
-    },
-    Class: class {
+  return vi.mockObject(
+    {
+      [Symbol.toStringTag]: 'Module',
+      __esModule: true,
       method(..._args: any[]) {
         return 42
-      }
+      },
+      Class: class {
+        method(..._args: any[]) {
+          return 42
+        }
+      },
     },
-  }, { spy: type === 'autospy' })
+    { spy: type === 'autospy' },
+  )
 }

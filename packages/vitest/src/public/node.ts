@@ -6,11 +6,13 @@ export const version: string = Vitest.version
 export { isValidApiRequest } from '../api/check'
 export { escapeTestName } from '../node/ast-collect'
 export type { CacheKeyIdGenerator, CacheKeyIdGeneratorContext } from '../node/cache/fsModuleCache'
-export { parseCLI } from '../node/cli/cac'
+export { createCLI, parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export type { CliOptions } from '../node/cli/cli-api'
 export { startVitest } from '../node/cli/cli-api'
+export { PluginHarness } from '../node/config/pluginHarness'
 export { resolveApiServerConfig } from '../node/config/resolveConfig'
+export { resolveConfig } from '../node/config/resolveConfig'
 export type {
   OnServerRestartHandler,
   OnTestsRerunHandler,
@@ -19,10 +21,13 @@ export type {
 } from '../node/core'
 export { BaseCoverageProvider } from '../node/coverage'
 export { createVitest } from '../node/create'
-export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
+export {
+  BrowserConnectionError,
+  GitNotFoundError,
+  FilesNotFoundError as TestsNotFoundError,
+} from '../node/errors'
+export { Logger } from '../node/logger'
 export { VitestPackageInstaller } from '../node/packageInstaller'
-export { VitestPlugin } from '../node/plugins'
-export { resolveConfig } from '../node/plugins/publicConfig'
 export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
@@ -40,12 +45,10 @@ export { ThreadsPoolWorker } from '../node/pools/workers/threadsWorker'
 export { TypecheckPoolWorker } from '../node/pools/workers/typecheckWorker'
 export { VmForksPoolWorker } from '../node/pools/workers/vmForksWorker'
 export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
-export type { SerializedTestProject, TestProject } from '../node/project'
 
+export type { SerializedTestProject, TestProject } from '../node/project'
 export {
   AgentReporter,
-  BenchmarkReporter,
-  BenchmarkReportsMap,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
@@ -56,12 +59,10 @@ export {
   ReportersMap,
   TapFlatReporter,
   TapReporter,
-  VerboseBenchmarkReporter,
   VerboseReporter,
 } from '../node/reporters'
 export type {
   BaseReporter,
-  BenchmarkBuiltinReporters,
   BuiltinReporterOptions,
   BuiltinReporters,
   JsonAssertionResult,
@@ -73,13 +74,12 @@ export type {
 } from '../node/reporters'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
-export type { JUnitOptions } from '../node/reporters/junit'
 
+export type { JUnitOptions, SuiteNameTemplateVariables } from '../node/reporters/junit'
 export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
   TaskOptions,
-
   TestCase,
   TestCollection,
   TestDiagnostic,
@@ -88,18 +88,16 @@ export type {
   TestResult,
   TestResultFailed,
   TestResultPassed,
+  TestResultPending,
   TestResultSkipped,
   TestState,
   TestSuite,
   TestSuiteState,
 } from '../node/reporters/reported-tasks'
 export { experimental_getRunnerTask } from '../node/reporters/reported-tasks'
-export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
-export type {
-  TestSequencer,
-  TestSequencerConstructor,
-} from '../node/sequencers/types'
+export { BaseSequencer } from '../node/sequencers/BaseSequencer'
+export type { TestSequencer, TestSequencerConstructor } from '../node/sequencers/types'
 export { registerConsoleShortcuts } from '../node/stdin'
 export type { TestSpecification, TestSpecificationOptions } from '../node/test-specification'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
@@ -116,10 +114,11 @@ export type {
   BrowserProvider,
   BrowserProviderOption,
   BrowserScript,
+  BrowserServerContribution,
   BrowserServerFactory,
-  BrowserServerOptions,
   BrowserServerState,
   BrowserServerStateSession,
+  BrowserTraceViewOptions,
   CDPSession,
   ParentProjectBrowser,
   ProjectBrowser,
@@ -182,9 +181,9 @@ export type {
   RawErrsMap as TypeCheckRawErrorsMap,
   RootAndTarget as TypeCheckRootAndTarget,
 } from '../typecheck/types'
-
 export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
 export { createDebugger } from '../utils/debugger'
+export { generateFileHash } from '../utils/tasks'
 export type {
   RunnerTask,
   RunnerTaskResult,
@@ -193,8 +192,13 @@ export type {
   RunnerTestFile,
   RunnerTestSuite,
 } from './index'
-export { generateFileHash } from '@vitest/runner/utils'
 export type { SerializedError } from '@vitest/utils'
+// Re-exported from Vitest's own bundled `tinyrainbow` instance. Vitest inlines
+// `tinyrainbow` into its dist, so importing the package directly gives a different
+// object than the one the reporters use; this export lets programmatic consumers
+// (e.g. the test suite) disable ANSI colors on the instance Vitest actually renders
+// with.
+export { disableDefaultColors } from 'tinyrainbow'
 
 export {
   esbuildVersion,

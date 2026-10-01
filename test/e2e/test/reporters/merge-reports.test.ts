@@ -1,18 +1,20 @@
-import type { RunVitestConfig } from '#test-utils'
-import type { File, Test } from '@vitest/runner/types'
+import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
-import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
-import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
+import type { RunVitestConfig } from '#test-utils'
+import type { HTMLReportMetadata } from '../../../../packages/ui/client/composables/client/static.js'
+import type { MergeReport } from '../../../../packages/vitest/src/node/reporters/blob.js'
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { buildTestTree, runVitest, useFS } from '#test-utils'
+import { gunzipSync } from 'node:zlib'
 import { playwright } from '@vitest/browser-playwright'
-import { createFileTask } from '@vitest/runner/utils'
-import { stringify } from 'flatted'
+import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
-import { beforeEach, expect, test } from 'vitest'
+import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
-import { getModuleGraph } from 'vitest/src/utils/graph.js'
+import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
+import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph.js'
+import { deriveModuleGraphData } from '../../../../packages/vitest/src/utils/serialized-module-graph.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -35,7 +37,11 @@ test('merge reports', async () => {
     reporters: [['blob', { outputFile: './.vitest/blob/second-run.json' }]],
   })
 
-  const { stdout: reporterDefault, stderr: stderrDefault, exitCode } = await runVitest({
+  const {
+    stdout: reporterDefault,
+    stderr: stderrDefault,
+    exitCode,
+  } = await runVitest({
     root: './fixtures/reporters/merge-reports',
     mergeReports: reportsDir,
     reporters: [['default', { isTTY: false }]],
@@ -45,10 +51,7 @@ test('merge reports', async () => {
 
   const stdoutCheck = trimReporterOutput(reporterDefault)
   const stderrArr = stderrDefault.split('\n')
-  const stderrCheck = [
-    ...stderrArr.slice(4, 19),
-    ...stderrArr.slice(21, -3),
-  ]
+  const stderrCheck = [...stderrArr.slice(4, 19), ...stderrArr.slice(21, -3)]
 
   expect(stderrDefault).toMatch('Failed Tests 2')
 
@@ -109,26 +112,28 @@ test('merge reports', async () => {
 
      ❯ second.test.ts (3 tests | 1 failed) <time>
        × test 2-1 <time>
+       ✓ group (2)
          ✓ test 2-2 <time>
          ✓ test 2-3 <time>
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
 
-  const { stdout: reporterJson } = await runVitest({
+  const { ctx } = await runVitest({
     root: './fixtures/reporters/merge-reports',
     mergeReports: reportsDir,
-    reporters: [['json', { outputFile: /** so it outputs into stdout */ null }]],
+    reporters: 'json',
   })
 
   const slash = (r: string) => r.replace(/\\/g, '/')
-  const path = (r: string) => slash(r)
-    .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
+  const path = (r: string) => slash(r).replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
 
-  const json = JSON.parse(reporterJson)
+  const json = JSON.parse(
+    readFileSync(resolve(ctx!.config.root, '.vitest/json/output.json'), 'utf-8'),
+  )
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'
@@ -176,6 +181,7 @@ test('merge reports', async () => {
           "assertionResults": [
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "test 1-1",
               "meta": {},
@@ -185,6 +191,7 @@ test('merge reports', async () => {
             },
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [
                 "AssertionError: expected 1 to be 2 // Object.is equality
         at <root>/fixtures/reporters/merge-reports/first.test.ts:15:13",
@@ -206,6 +213,7 @@ test('merge reports', async () => {
           "assertionResults": [
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [
                 "AssertionError: expected 1 to be 2 // Object.is equality
         at <root>/fixtures/reporters/merge-reports/second.test.ts:5:13",
@@ -220,6 +228,7 @@ test('merge reports', async () => {
               "ancestorTitles": [
                 "group",
               ],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "group test 2-2",
               "meta": {},
@@ -231,6 +240,7 @@ test('merge reports', async () => {
               "ancestorTitles": [
                 "group",
               ],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "group test 2-3",
               "meta": {},
@@ -253,12 +263,14 @@ test('merge reports', async () => {
 test('total and merged execution times are shown', async () => {
   for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
     const index = 1 + _index
-    const file = createFileTask(
+    const file = TestRunner.createFileTask(
       resolve('./fixtures/reporters/merge-reports', name),
       resolve('./fixtures/reporters/merge-reports'),
       '',
     )
     file.tasks.push(createTest('some test', file))
+    file.collectDuration = 2000 * index
+    file.collectFetchDuration = 2000 * index
 
     await writeBlob(
       [version, [file], [], undefined, 1500 * index, {}],
@@ -275,7 +287,7 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('✓ first.test.ts (1 test)')
   expect(stdout).toContain('✓ second.test.ts (1 test)')
 
-  expect(stdout).toContain('Duration  4.50s')
+  expect(stdout).toContain('Duration  4.50s (transform 100%')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
@@ -339,32 +351,33 @@ it("repro2", () => {
   expect(result2.exitCode).toBe(0)
 })
 
-test.for([
-  'node',
-  'browser',
-])('module graph and html reporter $0', async (mode) => {
+test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) => {
   const root = resolve('./fixtures/reporters/merge-reports-module-graph')
   const reportsDir = resolve(root, '.vitest/blob')
   rmSync(reportsDir, { force: true, recursive: true })
 
-  const baseConfig: TestUserConfig = {
-    root,
-  }
-  if (mode === 'browser') {
-    baseConfig.browser = {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-        },
-      ],
-      headless: true,
+  const baseConfig = () => {
+    const baseConfig: TestUserConfig = {
+      root,
     }
+
+    if (mode === 'browser') {
+      baseConfig.browser = {
+        enabled: true,
+        provider: playwright(),
+        instances: [
+          {
+            browser: 'chromium',
+          },
+        ],
+        headless: true,
+      }
+    }
+    return baseConfig
   }
 
   const result = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: ['blob'],
   })
   expect.assert(result.ctx)
@@ -382,11 +395,14 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/basic.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/sub/format.ts",
               "<root>/util.ts"
             ]
           },
-          "externalized": [],
+          "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>"
+          ],
           "inlined": [
             "<root>/basic.test.ts",
             "<root>/sub/format.ts",
@@ -401,11 +417,13 @@ test.for([
               "<root>/sub/subject.ts"
             ],
             "<root>/second.test.ts": [
+              "<optimized-deps>/vitest.js",
               "<root>/util.ts",
               "<optimized-deps>/obug.js"
             ]
           },
           "externalized": [
+            "<optimized-deps>/vitest.js?v=<hash>",
             "<optimized-deps>/obug.js?v=<hash>"
           ],
           "inlined": [
@@ -416,8 +434,7 @@ test.for([
         }
       }"
     `)
-  }
-  else {
+  } else {
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
         "<root>/basic.test.ts": {
@@ -467,7 +484,7 @@ test.for([
   }
 
   const result2 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: reportsDir,
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
@@ -476,35 +493,57 @@ test.for([
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
   const result3 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: resolve(root, '.vitest/blob'),
     reporters: ['html'],
   })
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
   expect(result3.stdout).toMatchInlineSnapshot(`
     " HTML  Report is generated
-           You can run npx vite preview --outDir html to see the test results.
+           You can run npx vite preview --outDir .vitest to see the test results.
     "
   `)
+  expect.assert(result3.ctx)
+  const htmlModuleGraphJson = getHtmlReportModuleGraph(result3.ctx)
+  expect(htmlModuleGraphJson).toBe(generatedModuleGraphJson)
 })
 
 async function getSerializedModuleGraph(ctx: Vitest) {
-  const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
+  const files = getSortedFiles(ctx)
   const moduleGraphs = Object.fromEntries(
     await Promise.all(
       files.map(async (file) => {
         const projectName = file.projectName || ''
-        const project = ctx.getProjectByName(projectName)
-        const graph = await getModuleGraph(
-          ctx,
-          projectName,
-          file.filepath,
-          project.config.browser.enabled,
-        )
+        const graph = await getModuleGraph(ctx, projectName, file.filepath, file.viteEnvironment)
         return [file.filepath, graph] as const
       }),
     ),
   )
+  return normalizeModuleGraphJson(ctx, moduleGraphs)
+}
+
+function getHtmlReportModuleGraph(ctx: Vitest) {
+  const metadata: HTMLReportMetadata = parse(
+    gunzipSync(readFileSync(resolve(ctx.config.root, '.vitest/ui/html.meta.json.gz'))).toString(),
+  )
+  const moduleGraphs = Object.fromEntries(
+    getSortedFiles(ctx).map((file) => {
+      const projectModules = metadata.environmentModules[file.projectName || '']
+      const graph = deriveModuleGraphData(projectModules, file.filepath, file.viteEnvironment)
+      return [file.filepath, graph] as const
+    }),
+  )
+  return normalizeModuleGraphJson(ctx, moduleGraphs)
+}
+
+function getSortedFiles(ctx: Vitest) {
+  return ctx.state
+    .getFiles()
+    .slice()
+    .sort((a, b) => a.filepath.localeCompare(b.filepath))
+}
+
+function normalizeModuleGraphJson(ctx: Vitest, moduleGraphs: object) {
   return JSON.stringify(moduleGraphs, null, 2)
     .replaceAll(ctx.config.root, '<root>')
     .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')
@@ -514,14 +553,18 @@ async function getSerializedModuleGraph(ctx: Vitest) {
 
 function trimReporterOutput(report: string) {
   const rows = report
+    .replace(/(?:[a-z]+ \d+%(?:, )?)+/g, '<breakdown>')
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(/blob report written to (.*)/g, 'blob report written to <path>')
     .split('\n')
 
   // Trim start and end, capture just rendered tree
-  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
-  rows.splice(rows.findIndex(row => row.includes('Start at')), 1)
+  rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  rows.splice(
+    rows.findIndex((row) => row.includes('Start at')),
+    1,
+  )
 
   return rows.join('\n').trim()
 }
@@ -544,6 +587,7 @@ function createTest(name: string, file: File): Test {
     result: { state: 'pass' },
     meta: {},
     context: {} as any,
+    benchmarks: [],
   }
 }
 
@@ -569,11 +613,14 @@ test("macos only", () => {})
 `,
   })
   process.env.TEST_LABEL_ENV = 'linux'
-  const result1 = await runVitest({
-    root,
-    globals: true,
-    reporters: [['blob', { label: 'linux' }]],
-  }, ['first', 'second'])
+  const result1 = await runVitest(
+    {
+      root,
+      globals: true,
+      reporters: [['blob', { label: 'linux' }]],
+    },
+    ['first', 'second'],
+  )
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
   expect(result1.errorTree()).toMatchInlineSnapshot(`
     {
@@ -591,15 +638,18 @@ test("macos only", () => {})
   `)
   process.env.TEST_LABEL_ENV = 'macos'
   process.env.VITEST_BLOB_LABEL = 'macos' // test VITEST_BLOB_LABEL
-  const result2 = await runVitest({
-    root,
-    globals: true,
-    reporters: [
-      'blob',
-      // test the original run's reporter doesn't include label
-      'verbose',
-    ],
-  }, ['first', 'third'])
+  const result2 = await runVitest(
+    {
+      root,
+      globals: true,
+      reporters: [
+        'blob',
+        // test the original run's reporter doesn't include label
+        'verbose',
+      ],
+    },
+    ['first', 'third'],
+  )
   delete process.env.VITEST_BLOB_LABEL
   expect(trimReporterOutput(result2.stdout)).toMatchInlineSnapshot(`
     "✓ first.test.ts > always good <time>
@@ -610,7 +660,7 @@ test("macos only", () => {})
 
      Test Files  1 failed | 1 passed (2)
           Tests  1 failed | 3 passed (4)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
 
     blob report written to <path>"
   `)
@@ -678,7 +728,7 @@ test("macos only", () => {})
 
      Test Files  2 failed | 2 passed (4)
           Tests  2 failed | 6 passed (8)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -752,8 +802,7 @@ test("macos only", () => {})
 })
 
 test('merge reports with projects and labels', async () => {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  useFS(root, {
+  const { root } = useTmpFS({
     'basic.test.ts': `
 import { test, expect } from "vitest";
 
@@ -768,11 +817,11 @@ test("works on browser", () => {
 })
 `,
   })
-  const baseConfig: RunVitestConfig = {
+  const baseConfig = (): RunVitestConfig => ({
+    config: false,
     root,
     projects: [
       {
-        extends: true,
         test: {
           name: 'node',
           sequence: {
@@ -781,7 +830,6 @@ test("works on browser", () => {
         },
       },
       {
-        extends: true,
         test: {
           name: 'browser',
           sequence: {
@@ -801,9 +849,9 @@ test("works on browser", () => {
         },
       },
     ],
-  }
+  })
   const result1 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: [['blob', { label: 'linux' }]],
   })
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
@@ -830,7 +878,7 @@ test("works on browser", () => {
     }
   `)
   const result2 = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     reporters: [['blob', { label: 'macos' }]],
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
@@ -857,35 +905,51 @@ test("works on browser", () => {
     }
   `)
   const result = await runVitest({
-    ...baseConfig,
+    ...baseConfig(),
     mergeReports: resolve(root, '.vitest/blob'),
   })
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
-    "✓ |node|  linux  basic.test.ts > always good <time>
-     ✓ |node|  linux  basic.test.ts > works on node <time>
-     × |node|  linux  basic.test.ts > works on browser <time>
-       → expected 'undefined' not to be 'undefined' // Object.is equality
-     ✓ |browser (chromium)|  linux  basic.test.ts > always good <time>
+    "✓ |browser (chromium)|  linux  basic.test.ts > always good <time>
      × |browser (chromium)|  linux  basic.test.ts > works on node <time>
        → expected 'object' to be 'undefined' // Object.is equality
      ✓ |browser (chromium)|  linux  basic.test.ts > works on browser <time>
-     ✓ |node|  macos  basic.test.ts > always good <time>
-     ✓ |node|  macos  basic.test.ts > works on node <time>
-     × |node|  macos  basic.test.ts > works on browser <time>
+     ✓ |node|  linux  basic.test.ts > always good <time>
+     ✓ |node|  linux  basic.test.ts > works on node <time>
+     × |node|  linux  basic.test.ts > works on browser <time>
        → expected 'undefined' not to be 'undefined' // Object.is equality
      ✓ |browser (chromium)|  macos  basic.test.ts > always good <time>
      × |browser (chromium)|  macos  basic.test.ts > works on node <time>
        → expected 'object' to be 'undefined' // Object.is equality
      ✓ |browser (chromium)|  macos  basic.test.ts > works on browser <time>
+     ✓ |node|  macos  basic.test.ts > always good <time>
+     ✓ |node|  macos  basic.test.ts > works on node <time>
+     × |node|  macos  basic.test.ts > works on browser <time>
+       → expected 'undefined' not to be 'undefined' // Object.is equality
 
      Test Files  4 failed (4)
           Tests  4 failed | 8 passed (12)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  |browser (chromium)|  linux  basic.test.ts > works on node
+    AssertionError: expected 'object' to be 'undefined' // Object.is equality
+
+    Expected: "undefined"
+    Received: "object"
+
+     ❯ basic.test.ts:7:25
+          5|
+          6| test("works on node", () => {
+          7|   expect(typeof window).toBe('undefined')
+           |                         ^
+          8| })
+          9|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
 
      FAIL  |node|  linux  basic.test.ts > works on browser
      FAIL  |node|  macos  basic.test.ts > works on browser
@@ -898,22 +962,6 @@ test("works on browser", () => {
          12| })
          13|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
-
-     FAIL  |browser (chromium)|  linux  basic.test.ts > works on node
-    AssertionError: expected 'object' to be 'undefined' // Object.is equality
-
-    Expected: "undefined"
-    Received: "object"
-
-     ❯ basic.test.ts:7:24
-          5|
-          6| test("works on node", () => {
-          7|   expect(typeof window).toBe('undefined')
-           |                        ^
-          8| })
-          9|
-
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
 
      FAIL  |browser (chromium)|  macos  basic.test.ts > works on node
@@ -922,11 +970,11 @@ test("works on browser", () => {
     Expected: "undefined"
     Received: "object"
 
-     ❯ basic.test.ts:7:24
+     ❯ basic.test.ts:7:25
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
-           |                        ^
+           |                         ^
           8| })
           9|
 
@@ -1001,7 +1049,7 @@ test("top-test", () => {})
   `)
   const tree = buildTestTree(
     result.results,
-    t => ({ '@META': t.meta(), 'state': t.result().state }),
+    (t) => ({ '@META': t.meta(), state: t.result().state }),
     (suite, children) => ({ '@META': suite.meta(), ...children }),
     (file, children) => ({ '@META': file.meta(), ...children }),
   )

@@ -53,8 +53,7 @@ const breakdownIconClass = computed(() => {
     if (totalTime >= thresholds.danger) {
       textClass = 'text-red'
       break
-    }
-    else if (totalTime >= thresholds.warn) {
+    } else if (totalTime >= thresholds.warn) {
       textClass = 'text-orange'
     }
   }
@@ -96,7 +95,7 @@ function filterGraphByLevels(
 
   // Build adjacency list for efficient traversal
   const adjacencyList = new Map<string, Set<string>>()
-  sourceGraph.nodes.forEach(node => adjacencyList.set(node.id, new Set()))
+  sourceGraph.nodes.forEach((node) => adjacencyList.set(node.id, new Set()))
 
   sourceGraph.links.forEach((link) => {
     const sourceId = typeof link.source === 'object' ? link.source.id : String(link.source)
@@ -108,23 +107,22 @@ function filterGraphByLevels(
   let startNodes: string[]
   if (startNodeId) {
     startNodes = [startNodeId]
-  }
-  else {
+  } else {
     // Find root node (node with type 'inline' that appears as source but not target, or first inline node)
-    const targetIds = new Set(sourceGraph.links.map(link =>
-      typeof link.target === 'object' ? link.target.id : String(link.target),
-    ))
-    const rootCandidates = sourceGraph.nodes.filter(
-      node => node.type === 'inline' && !targetIds.has(node.id),
+    const targetIds = new Set(
+      sourceGraph.links.map((link) =>
+        typeof link.target === 'object' ? link.target.id : String(link.target),
+      ),
     )
-    startNodes = rootCandidates.length > 0
-      ? [rootCandidates[0].id]
-      : [sourceGraph.nodes[0].id]
+    const rootCandidates = sourceGraph.nodes.filter(
+      (node) => node.type === 'inline' && !targetIds.has(node.id),
+    )
+    startNodes = rootCandidates.length > 0 ? [rootCandidates[0].id] : [sourceGraph.nodes[0].id]
   }
 
   // BFS to find all nodes within N levels
   const visitedNodes = new Set<string>()
-  const queue: Array<{ id: string; level: number }> = startNodes.map(id => ({ id, level: 0 }))
+  const queue: Array<{ id: string; level: number }> = startNodes.map((id) => ({ id, level: 0 }))
 
   while (queue.length > 0) {
     const { id, level } = queue.shift()!
@@ -145,12 +143,12 @@ function filterGraphByLevels(
     }
   }
 
-  const nodeMap = new Map(sourceGraph.nodes.map(node => [node.id, node]))
+  const nodeMap = new Map(sourceGraph.nodes.map((node) => [node.id, node]))
   const filteredNodes = Array.from(visitedNodes)
-    .map(id => nodeMap.get(id))
-    .filter(node => node !== undefined) as ModuleNode[]
+    .map((id) => nodeMap.get(id))
+    .filter((node) => node !== undefined) as ModuleNode[]
 
-  const filteredNodeMap = new Map(filteredNodes.map(node => [node.id, node]))
+  const filteredNodeMap = new Map(filteredNodes.map((node) => [node.id, node]))
 
   const filteredLinks = sourceGraph.links
     .map((link) => {
@@ -172,7 +170,7 @@ function filterGraphByLevels(
       }
       return null
     })
-    .filter(link => link !== null) as ModuleLink[]
+    .filter((link) => link !== null) as ModuleLink[]
 
   return {
     nodes: filteredNodes,
@@ -220,14 +218,12 @@ function updateNodeColors() {
     if (node.id === focusedNode.value) {
       color = 'var(--color-node-focused)'
       labelColor = 'var(--color-node-focused)'
-    }
-    else if (node.type === 'inline') {
+    } else if (node.type === 'inline') {
       const originalColor = node.color
       const isRoot = originalColor === 'var(--color-node-root)'
       color = isRoot ? 'var(--color-node-root)' : 'var(--color-node-inline)'
       labelColor = color
-    }
-    else {
+    } else {
       color = 'var(--color-node-external)'
       labelColor = 'var(--color-node-external)'
     }
@@ -244,7 +240,7 @@ function updateNodeColors() {
     })
   })
 
-  const nodeMap = new Map(updatedNodes.map(node => [node.id, node]))
+  const nodeMap = new Map(updatedNodes.map((node) => [node.id, node]))
 
   const updatedLinks = filteredGraph.value.links.map((link) => {
     const sourceId = typeof link.source === 'object' ? link.source.id : String(link.source)
@@ -283,16 +279,13 @@ function resetGraphController(reset = false) {
   if (nodesLength > 300) {
     zoom = 0.3
     min = 0.2
-  }
-  else if (nodesLength > 200) {
+  } else if (nodesLength > 200) {
     zoom = 0.4
     min = 0.3
-  }
-  else if (nodesLength > 100) {
+  } else if (nodesLength > 100) {
     zoom = 0.5
     min = 0.3
-  }
-  else if (nodesLength > 50) {
+  } else if (nodesLength > 50) {
     zoom = 0.7
     zoom = 0.4
   }
@@ -328,9 +321,10 @@ function resetGraphController(reset = false) {
       modifiers: {
         node: bindOnClick,
       },
-      positionInitializer: graph.value.nodes.length === 1
-        ? PositionInitializers.Centered
-        : PositionInitializers.Randomized,
+      positionInitializer:
+        graph.value.nodes.length === 1
+          ? PositionInitializers.Centered
+          : PositionInitializers.Randomized,
       zoom: {
         initial: zoom,
         min,
@@ -343,9 +337,7 @@ function resetGraphController(reset = false) {
 const isValidClick = (event: PointerEvent) => event.button === 0
 const isRightClick = (event: PointerEvent) => event.button === 2
 
-function bindOnClick(
-  selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>,
-) {
+function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
   if (isReport) {
     return
   }
@@ -410,67 +402,41 @@ function bindOnClick(
 </script>
 
 <template>
-  <div h-full min-h-75 flex-1 overflow="hidden">
+  <div class="h-full min-h-75 flex-1 overflow-hidden">
     <div>
-      <div flex items-center gap-2 px-3 py-2>
-        <div
-          flex="~ gap-1"
-          items-center
-          select-none
-        >
+      <div class="flex items-center gap-2 px-3 py-2">
+        <div class="flex gap-1 items-center select-none">
           <div class="pr-2">
-            {{ filteredGraph.nodes.length }}/{{ graph.nodes.length }} {{ filteredGraph.nodes.length === 1 ? 'module' : 'modules' }}
+            {{ filteredGraph.nodes.length }}/{{ graph.nodes.length }}
+            {{ filteredGraph.nodes.length === 1 ? 'module' : 'modules' }}
           </div>
-          <input
-            id="hide-node-modules"
-            v-model="hideNodeModules"
-            type="checkbox"
-          >
+          <input id="hide-node-modules" v-model="hideNodeModules" type="checkbox" />
           <label
-            font-light
-            text-sm
-            ws-nowrap
-            overflow-hidden
-            select-none
-            truncate
+            class="font-light text-sm ws-nowrap overflow-hidden select-none truncate border-b-2 border-$cm-namespace"
             for="hide-node-modules"
-            border-b-2
-            border="$cm-namespace"
-          >Hide node_modules</label>
+            >Hide node_modules</label
+          >
         </div>
         <div
           v-for="node of controller?.nodeTypes.sort()"
           :key="node"
-          flex="~ gap-1"
-          items-center
-          select-none
+          class="flex gap-1 items-center select-none"
         >
           <input
             :id="`type-${node}`"
             type="checkbox"
             :checked="controller?.nodeTypeFilter.includes(node)"
             @change="setFilter(node, ($event as any).target.checked)"
-          >
+          />
           <label
-            font-light
-            text-sm
-            ws-nowrap
-            overflow-hidden
-            capitalize
-            select-none
-            truncate
+            class="font-light text-sm ws-nowrap overflow-hidden capitalize select-none truncate border-b-2"
             :for="`type-${node}`"
-            border-b-2
             :style="{ 'border-color': `var(--color-node-${node})` }"
-          >{{ node }} Modules</label>
+            >{{ node }} Modules</label
+          >
         </div>
-        <div flex-auto />
-        <div
-          flex="~ gap-2"
-          items-center
-          text-xs
-          opacity-60
-        >
+        <div class="flex-auto" />
+        <div class="flex gap-2 items-center text-xs opacity-60">
           <span>Click on node: details • Right-click/Shift: expand graph</span>
         </div>
         <div>
@@ -489,15 +455,14 @@ function bindOnClick(
           />
         </div>
         <div>
-          <IconButton
-            v-tooltip.bottom="'Reset'"
-            icon="i-carbon-reset"
-            @click="resetToRoot()"
-          />
+          <IconButton v-tooltip.bottom="'Reset'" icon="i-carbon-reset" @click="resetToRoot()" />
         </div>
       </div>
     </div>
-    <div v-if="breakdownShow" class="absolute bg-[#eee] dark:bg-[#222] border-base right-0 mr-2 rounded-xl mt-2">
+    <div
+      v-if="breakdownShow"
+      class="absolute bg-[#eee] dark:bg-[#222] border-base right-0 mr-2 rounded-xl mt-2"
+    >
       <ViewModuleGraphImportBreakdown @select="(id, type) => setSelectedModule(id, type)" />
     </div>
     <div ref="el" />
@@ -523,7 +488,7 @@ function bindOnClick(
 :root {
   --color-link-label: var(--color-text);
   --color-link: #ddd;
-  --color-node-external: #6C5C33;
+  --color-node-external: #6c5c33;
   --color-node-inline: #8bc4a0;
   --color-node-root: #6e9aa5;
   --color-node-focused: #e67e22;

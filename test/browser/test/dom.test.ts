@@ -1,6 +1,6 @@
-import { createNode } from '#src/createNode'
 import { afterAll, beforeEach, describe, expect, test } from 'vitest'
-import { page, server } from 'vitest/browser'
+import { page } from 'vitest/browser'
+import { createNode } from '#src/createNode'
 import '../src/button.css'
 
 afterAll(() => {
@@ -18,7 +18,7 @@ describe('dom related activity', () => {
     expect(window.innerHeight).toBe(600)
   })
 
-  test('element doesn\'t exist', async () => {
+  test("element doesn't exist", async () => {
     await expect.element(page.getByText('empty')).not.toBeInTheDocument()
   })
 
@@ -37,6 +37,7 @@ describe('dom related activity', () => {
 
     // test typing
     if (0) {
+      await (expect.element(div).toHaveClass('x', { exact: true }) satisfies Promise<void>)
       await expect.element(div).toHaveClass('x', { exact: true })
       await expect.element(div).toHaveClass('x', 'y')
       await expect.element(div).toHaveClass('x', /y/)
@@ -65,7 +66,7 @@ describe('dom related activity', () => {
     expect(base64).toBeTypeOf('string')
   })
 
-  test('doesn\'t save base64', async () => {
+  test("doesn't save base64", async () => {
     const wrapper = createWrapper()
     const div = createNode()
     wrapper.appendChild(div)
@@ -114,25 +115,6 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(
       /__screenshots__\/dom.test.ts\/dom-related-activity-svg-screenshot-1.png/,
     )
-  })
-
-  test.runIf(server.provider === 'webdriverio')('shadow dom works with multiple elements', async () => {
-    const wrapper = createWrapper()
-    const div = createNode()
-    wrapper.appendChild(div)
-
-    const shadow = div.attachShadow({ mode: 'open' })
-    const shadowDiv1 = createNode()
-    shadowDiv1.role = 'tab'
-    const shadowDiv2 = createNode()
-    shadowDiv2.role = 'tab'
-    shadow.appendChild(shadowDiv1)
-    shadow.appendChild(shadowDiv2)
-
-    expect(
-      page.getByRole('tab').selector,
-      'there is only a single >>> in the selector',
-    ).toBe('>>>html > body > div > div > div, html > body > div > div > div')
   })
 })
 

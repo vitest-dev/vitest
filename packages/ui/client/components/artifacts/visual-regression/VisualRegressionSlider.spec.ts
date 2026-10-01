@@ -44,14 +44,12 @@ describe('VisualRegressionSlider', () => {
 
     expect(images.all()).toHaveLength(2)
 
-    await expect.element(referenceImage).toHaveProperty(
-      'src',
-      expect.stringContaining(encodeURIComponent(reference.path)),
-    )
-    await expect.element(actualImage).toHaveProperty(
-      'src',
-      expect.stringContaining(encodeURIComponent(actual.path)),
-    )
+    await expect
+      .element(referenceImage)
+      .toHaveProperty('src', expect.stringContaining(encodeURIComponent(reference.path)))
+    await expect
+      .element(actualImage)
+      .toHaveProperty('src', expect.stringContaining(encodeURIComponent(actual.path)))
 
     // images should be wrapped in (hidden) containers with role presentation
     // @ts-expect-error extended only for this block
@@ -76,10 +74,7 @@ describe('VisualRegressionSlider', () => {
 
     const container = page.getByLabelText(containerLabel)
     const input = page.getByLabelText(inputLabel)
-    const status = page.getByRole(
-      'status',
-      { hasText: 'Showing 50% reference, 50% actual' },
-    )
+    const status = page.getByRole('status').filter({ hasText: 'Showing 50% reference, 50% actual' })
 
     // container with accessible label should exist and contain input and status
     await expect.element(container).toBeInTheDocument()
@@ -94,10 +89,7 @@ describe('VisualRegressionSlider', () => {
 
     // status element should exist and be connected to the input
     await expect.element(status).toBeInTheDocument()
-    await expect.element(status).toHaveAttribute(
-      'for',
-      input.element().getAttribute('id'),
-    )
+    await expect.element(status).toHaveAttribute('for', input.element().getAttribute('id'))
   })
 
   it('has slider boundaries', async () => {
@@ -142,15 +134,12 @@ describe('VisualRegressionSlider', () => {
     await expect.element(status).toHaveTextContent('Showing 51% reference, 49% actual')
 
     // mouse interaction
-    await userEvent.click(
-      input,
-      {
-        position: {
-          x: 1,
-          y: input.element().getBoundingClientRect().height / 2,
-        },
+    await userEvent.click(input, {
+      position: {
+        x: 1,
+        y: input.element().getBoundingClientRect().height / 2,
       },
-    )
+    })
     await userEvent.click(status)
 
     await expect.element(input).toHaveValue('0')

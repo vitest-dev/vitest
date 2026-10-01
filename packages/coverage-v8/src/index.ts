@@ -1,6 +1,7 @@
 import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
+import assert from 'node:assert'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, rm } from 'node:fs/promises'
@@ -9,6 +10,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
+import { writeCoverageFile } from './commands'
 import { loadProvider } from './load-provider'
 
 let enabled = false
@@ -41,9 +43,9 @@ const mod: CoverageProviderModule & {
     await session.post('Profiler.startPreciseCoverage', { callCount: true, detailed: true })
   },
 
-  async takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
+  async takeCoverage(options): Promise<string | undefined> {
     if (provider === 'stackblitz') {
-      return { result: [] }
+      return
     }
 
     const session = this.session as inspector.Session
@@ -58,7 +60,8 @@ const mod: CoverageProviderModule & {
     // Reduce amount of data sent over rpc by doing some early result filtering
     for (const entry of coverage.result as ScriptCoverageWithOffset[]) {
       if (filterResult(entry)) {
-        entry.startOffset = options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0
+        entry.startOffset =
+          options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0
 
         result.push(entry)
       }
@@ -68,7 +71,7 @@ const mod: CoverageProviderModule & {
       const filenames = await readdir(this.extendedContextCoverageDir)
       const contents = await Promise.all(
         filenames
-          .filter(filename => filename.endsWith('.json'))
+          .filter((filename) => filename.endsWith('.json'))
           .map(async (filename) => {
             const path = `${this.extendedContextCoverageDir}/${filename}`
 
@@ -93,7 +96,10 @@ const mod: CoverageProviderModule & {
       }
     }
 
-    return { result }
+    const coverageFilesDirectory = options?.coverageFilesDirectory
+    assert(coverageFilesDirectory, 'coverageFilesDirectory is required')
+
+    return await writeCoverageFile(coverageFilesDirectory, { result })
   },
 
   async stopCoverage({ isolate }) {

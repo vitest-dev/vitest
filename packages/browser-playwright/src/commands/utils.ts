@@ -8,13 +8,7 @@ export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
 
 type ConvertElementToLocator<T> = T extends Element | Locator ? SerializedLocator : T
 type ConvertUserEventParameters<T extends unknown[]> = {
-  [K in keyof T]: ConvertElementToLocator<T[K]>;
-}
-
-export function defineBrowserCommand<T extends unknown[]>(
-  fn: BrowserCommand<T>,
-): BrowserCommand<T> {
-  return fn
+  [K in keyof T]: ConvertElementToLocator<T[K]>
 }
 
 // strip iframe locator part from the trace description e.g.

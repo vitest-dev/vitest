@@ -1,6 +1,5 @@
-import type { RunnerTestFile } from 'vitest'
 import { faker } from '@faker-js/faker'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, TestRunner } from 'vitest'
 import { config } from '~/composables/client'
 import { page, render } from '~/test'
 import ViewReport from './ViewReport.vue'
@@ -42,30 +41,19 @@ const error = {
   diff,
 }
 
-const fileWithTextStacks: RunnerTestFile = {
-  id: 'f-1',
-  name: 'test/plain-stack-trace.ts',
-  type: 'suite',
-  mode: 'run',
-  filepath: 'test/plain-stack-trace.ts',
-  fullName: 'test/plain-stack-trace.ts',
-  meta: {},
-  result: {
-    state: 'fail',
-    errors: [error],
-  },
-  tasks: [],
-  projectName: '',
-  file: null!,
+const fileWithTextStacks = TestRunner.createFileTask('test/plain-stack-trace.ts', '', '')
+fileWithTextStacks.mode = 'run'
+fileWithTextStacks.result = {
+  state: 'fail',
+  errors: [error],
 }
-fileWithTextStacks.file = fileWithTextStacks
 
 describe.todo('ViewReport', () => {
   describe('RunnerTestFile where stacks are in text', () => {
     beforeEach(async () => {
       await render(ViewReport, {
         props: {
-          file: fileWithTextStacks,
+          suite: fileWithTextStacks,
         },
         attrs: {
           'data-testid': viewReportTestId,
@@ -93,33 +81,22 @@ describe.todo('ViewReport', () => {
   })
 
   it('test html stack trace without html message', async () => {
-    const file: RunnerTestFile = {
-      id: 'f-1',
-      name: 'test/plain-stack-trace.ts',
-      type: 'suite',
-      mode: 'run',
-      filepath: 'test/plain-stack-trace.ts',
-      fullName: 'test/plain-stack-trace.ts',
-      meta: {},
-      result: {
-        state: 'fail',
-        errors: [
-          {
-            name: 'Do some test',
-            stacks: [],
-            stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
-            message: 'Error: Transform failed with 1 error:',
-            diff,
-          },
-        ],
-      },
-      tasks: [],
-      projectName: '',
-      file: null!,
+    const file = TestRunner.createFileTask('test/plain-stack-trace.ts', '', '')
+    file.mode = 'run'
+    file.result = {
+      state: 'fail',
+      errors: [
+        {
+          name: 'Do some test',
+          stacks: [],
+          stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+          message: 'Error: Transform failed with 1 error:',
+          diff,
+        },
+      ],
     }
-    file.file = file
     const container = await render(ViewReport, {
-      props: { file },
+      props: { suite: file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
     const preElements = taskError.element().querySelectorAll('pre')
@@ -128,58 +105,34 @@ describe.todo('ViewReport', () => {
     expect(preElements[0].textContent, 'error has the correct plain text').toBe(
       'Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts',
     )
-    expect(
-      preElements[0].children,
-      'the pre container has the correct children',
-    ).toHaveLength(2)
+    expect(preElements[0].children, 'the pre container has the correct children').toHaveLength(2)
 
     const [bold, stack] = preElements[0].children
     expect(bold.tagName, 'error contains <b> element').toBe('B')
-    expect(bold.textContent, 'the <b> error element is correct').toBe(
-      'Do some test',
-    )
+    expect(bold.textContent, 'the <b> error element is correct').toBe('Do some test')
 
-    expect(
-      stack.children,
-      'the stack children elements is correct',
-    ).toHaveLength(0)
-    expect(stack.innerHTML, 'stack has the correct message').toBe(
-      'test/plain-stack-trace.ts',
-    )
-    expect(
-      stack.getAttribute('style'),
-      'the stack has the correct text color',
-    ).toBe('color:#A50')
+    expect(stack.children, 'the stack children elements is correct').toHaveLength(0)
+    expect(stack.innerHTML, 'stack has the correct message').toBe('test/plain-stack-trace.ts')
+    expect(stack.getAttribute('style'), 'the stack has the correct text color').toBe('color:#A50')
   })
 
   it('test html stack trace and message', async () => {
-    const file: RunnerTestFile = {
-      id: 'f-1',
-      name: 'test/plain-stack-trace.ts',
-      type: 'suite',
-      mode: 'run',
-      filepath: 'test/plain-stack-trace.ts',
-      fullName: 'test/plain-stack-trace.ts',
-      meta: {},
-      result: {
-        state: 'fail',
-        errors: [
-          {
-            name: 'Do some test',
-            stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
-            stacks: [],
-            message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
-            diff,
-          },
-        ],
-      },
-      tasks: [],
-      projectName: '',
-      file: null!,
+    const file = TestRunner.createFileTask('test/plain-stack-trace.ts', '', '')
+    file.mode = 'run'
+    file.result = {
+      state: 'fail',
+      errors: [
+        {
+          name: 'Do some test',
+          stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+          stacks: [],
+          message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
+          diff,
+        },
+      ],
     }
-    file.file = file
     const container = await render(ViewReport, {
-      props: { file },
+      props: { suite: file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
     const preElements = taskError.element().querySelectorAll('pre')
@@ -188,42 +141,28 @@ describe.todo('ViewReport', () => {
     expect(preElements[0].textContent, 'error has the correct plain text').toBe(
       'Do some test: Error: Transform failed with 1 error:test/plain-stack-trace.ts',
     )
-    expect(
-      preElements[0].children,
-      'the pre container has the correct children',
-    ).toHaveLength(3)
+    expect(preElements[0].children, 'the pre container has the correct children').toHaveLength(3)
 
     const [bold, error, stack] = preElements[0].children
     expect(bold.tagName, 'error contains <b> element').toBe('B')
-    expect(bold.textContent, 'the <b> error element is correct').toBe(
-      'Do some test',
-    )
+    expect(bold.textContent, 'the <b> error element is correct').toBe('Do some test')
 
     expect(error.innerHTML, 'the error has the correct message').toBe(
       'Error: Transform failed with 1 error:',
     )
-    expect(
-      error.getAttribute('style'),
-      'the error has the correct background color',
-    ).toBe('background-color:#00A')
-
-    expect(
-      stack.children,
-      'the stack children elements is correct',
-    ).toHaveLength(0)
-    expect(stack.innerHTML, 'stack has the correct message').toBe(
-      'test/plain-stack-trace.ts',
+    expect(error.getAttribute('style'), 'the error has the correct background color').toBe(
+      'background-color:#00A',
     )
-    expect(
-      stack.getAttribute('style'),
-      'the stack has the correct text color',
-    ).toBe('color:#A50')
+
+    expect(stack.children, 'the stack children elements is correct').toHaveLength(0)
+    expect(stack.innerHTML, 'stack has the correct message').toBe('test/plain-stack-trace.ts')
+    expect(stack.getAttribute('style'), 'the stack has the correct text color').toBe('color:#A50')
   })
 
   it('test diff display', async () => {
     const component = await render(ViewReport, {
       props: {
-        file: fileWithTextStacks,
+        suite: fileWithTextStacks,
       },
     })
 

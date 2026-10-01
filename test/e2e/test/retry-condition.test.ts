@@ -1,7 +1,7 @@
 import type { RunVitestConfig } from '#test-utils'
-import { runInlineTests } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { expect, it } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 function modeToConfig(mode: string): RunVitestConfig {
   if (mode === 'playwright') {
@@ -19,8 +19,9 @@ function modeToConfig(mode: string): RunVitestConfig {
 }
 
 it.for(['node', 'playwright'])('test.retry.condition is correctly serialized %s', async (mode) => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.js': /* js */`
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
       test('task.retry.condition is correctly deserialized', ({ task }) => {
@@ -44,13 +45,15 @@ it.for(['node', 'playwright'])('test.retry.condition is correctly serialized %s'
         }
       })
     `,
-  }, {
-    ...modeToConfig(mode),
-    retry: {
-      count: 1,
-      condition: /retry_this/,
     },
-  })
+    {
+      ...modeToConfig(mode),
+      retry: {
+        count: 1,
+        condition: /retry_this/,
+      },
+    },
+  )
   if (mode === 'playwright') {
     expect(stderr).toMatchInlineSnapshot(`
       "
@@ -70,8 +73,7 @@ it.for(['node', 'playwright'])('test.retry.condition is correctly serialized %s'
 
       "
     `)
-  }
-  else {
+  } else {
     expect(stderr).toMatchInlineSnapshot(`
       "
       ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯

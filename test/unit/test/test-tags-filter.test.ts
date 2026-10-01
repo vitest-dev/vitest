@@ -1,9 +1,9 @@
-import type { TestTagDefinition } from '@vitest/runner'
-import { createTagsFilter } from '@vitest/runner/utils'
+import type { TestTagDefinition } from 'vitest'
 import { describe, expect, test } from 'vitest'
+import { createTagsFilter } from '../../../packages/vitest/src/runtime/runner/utils/tags'
 
 function tags(...names: string[]): TestTagDefinition[] {
-  return names.map(name => ({ name }))
+  return names.map((name) => ({ name }))
 }
 
 describe('createTagsFilter', () => {
@@ -155,7 +155,10 @@ describe('createTagsFilter', () => {
     })
 
     test('nested parentheses', () => {
-      const filter = createTagsFilter(['((foo or bar) and baz) or qux'], tags('foo', 'bar', 'baz', 'qux'))
+      const filter = createTagsFilter(
+        ['((foo or bar) and baz) or qux'],
+        tags('foo', 'bar', 'baz', 'qux'),
+      )
       expect(filter(['foo', 'baz'])).toBe(true)
       expect(filter(['bar', 'baz'])).toBe(true)
       expect(filter(['qux'])).toBe(true)
@@ -172,7 +175,10 @@ describe('createTagsFilter', () => {
     })
 
     test('complex expression with parentheses', () => {
-      const filter = createTagsFilter(['(foo && bar) || (baz && !qux)'], tags('foo', 'bar', 'baz', 'qux'))
+      const filter = createTagsFilter(
+        ['(foo && bar) || (baz && !qux)'],
+        tags('foo', 'bar', 'baz', 'qux'),
+      )
       expect(filter(['foo', 'bar'])).toBe(true)
       expect(filter(['baz'])).toBe(true)
       expect(filter(['baz', 'qux'])).toBe(false)
@@ -203,7 +209,10 @@ describe('createTagsFilter', () => {
     })
 
     test('wildcard in middle', () => {
-      const filter = createTagsFilter(['test-*-fast'], tags('test-unit-fast', 'test-e2e-fast', 'test-slow'))
+      const filter = createTagsFilter(
+        ['test-*-fast'],
+        tags('test-unit-fast', 'test-e2e-fast', 'test-slow'),
+      )
       expect(filter(['test-unit-fast'])).toBe(true)
       expect(filter(['test-e2e-fast'])).toBe(true)
       expect(filter(['test-slow'])).toBe(false)
@@ -356,7 +365,10 @@ describe('createTagsFilter', () => {
     })
 
     test('tags with special chars containing operator keywords', () => {
-      const filter = createTagsFilter(['or@tag || and@test || not@feature'], tags('or@tag', 'and@test', 'not@feature', 'other'))
+      const filter = createTagsFilter(
+        ['or@tag || and@test || not@feature'],
+        tags('or@tag', 'and@test', 'not@feature', 'other'),
+      )
       expect(filter(['or@tag'])).toBe(true)
       expect(filter(['and@test'])).toBe(true)
       expect(filter(['not@feature'])).toBe(true)
@@ -364,7 +376,10 @@ describe('createTagsFilter', () => {
     })
 
     test('tags with UTF-8 chars containing operator keywords', () => {
-      const filter = createTagsFilter(['or日本語 || and中文 || not한국어'], tags('or日本語', 'and中文', 'not한국어', 'english'))
+      const filter = createTagsFilter(
+        ['or日本語 || and中文 || not한국어'],
+        tags('or日本語', 'and中文', 'not한국어', 'english'),
+      )
       expect(filter(['or日本語'])).toBe(true)
       expect(filter(['and中文'])).toBe(true)
       expect(filter(['not한국어'])).toBe(true)
@@ -372,7 +387,10 @@ describe('createTagsFilter', () => {
     })
 
     test('operator keywords with @ and UTF-8 in complex expressions', () => {
-      const filter = createTagsFilter(['(or@tag || and@test) && not@feature'], tags('or@tag', 'and@test', 'not@feature', 'other'))
+      const filter = createTagsFilter(
+        ['(or@tag || and@test) && not@feature'],
+        tags('or@tag', 'and@test', 'not@feature', 'other'),
+      )
       expect(filter(['or@tag', 'not@feature'])).toBe(true)
       expect(filter(['and@test', 'not@feature'])).toBe(true)
       expect(filter(['or@tag'])).toBe(false)
@@ -452,7 +470,10 @@ describe('createTagsFilter', () => {
     })
 
     test('complex expression with tags containing operator substrings', () => {
-      const filter = createTagsFilter(['android and editor or nothing'], tags('android', 'editor', 'nothing'))
+      const filter = createTagsFilter(
+        ['android and editor or nothing'],
+        tags('android', 'editor', 'nothing'),
+      )
       // Parsed as: android AND editor OR nothing
       expect(filter(['android', 'editor'])).toBe(true)
       expect(filter(['nothing'])).toBe(true)
@@ -476,7 +497,7 @@ describe('createTagsFilter', () => {
 
     test('throws error when no tags defined', () => {
       expect(() => createTagsFilter(['foo'], [])).toThrow(
-        'The Vitest config does\'t define any "tags"',
+        'The Vitest config doesn\'t define any "tags"',
       )
     })
 
@@ -489,23 +510,39 @@ describe('createTagsFilter', () => {
 
   describe('parser errors', () => {
     test('throws error for unclosed parenthesis', () => {
-      expect(() => createTagsFilter(['(foo and bar'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: missing closing ")" in "(foo and bar"]`)
+      expect(() =>
+        createTagsFilter(['(foo and bar'], tags('foo', 'bar')),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Invalid tags expression: missing closing ")" in "(foo and bar"]`,
+      )
     })
 
     test('throws error for unexpected closing parenthesis', () => {
-      expect(() => createTagsFilter(['foo and bar)'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected ")" in "foo and bar)"]`)
+      expect(() =>
+        createTagsFilter(['foo and bar)'], tags('foo', 'bar')),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Invalid tags expression: unexpected ")" in "foo and bar)"]`,
+      )
     })
 
     test('throws error for empty parentheses', () => {
-      expect(() => createTagsFilter(['()'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected ")" in "()"]`)
+      expect(() => createTagsFilter(['()'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Invalid tags expression: unexpected ")" in "()"]`,
+      )
     })
 
     test('throws error for operator without operand', () => {
-      expect(() => createTagsFilter(['foo and'], tags('foo', 'bar'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected end of expression in "foo and"]`)
+      expect(() =>
+        createTagsFilter(['foo and'], tags('foo', 'bar')),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Invalid tags expression: unexpected end of expression in "foo and"]`,
+      )
     })
 
     test('throws error for leading operator', () => {
-      expect(() => createTagsFilter(['and foo'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(`[Error: Invalid tags expression: unexpected "and" in "and foo"]`)
+      expect(() => createTagsFilter(['and foo'], tags('foo'))).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Invalid tags expression: unexpected "and" in "and foo"]`,
+      )
     })
   })
 
@@ -525,7 +562,10 @@ describe('createTagsFilter', () => {
     })
 
     test('run browser tests for chrome or firefox but not edge', () => {
-      const filter = createTagsFilter(['browser && (chrome || firefox) && !edge'], tags('browser', 'chrome', 'firefox', 'edge'))
+      const filter = createTagsFilter(
+        ['browser && (chrome || firefox) && !edge'],
+        tags('browser', 'chrome', 'firefox', 'edge'),
+      )
       expect(filter(['browser', 'chrome'])).toBe(true)
       expect(filter(['browser', 'firefox'])).toBe(true)
       expect(filter(['browser', 'edge'])).toBe(false)

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "jsx": "react",
+    "jsx": "react-jsx",
     "lib": ["esnext", "dom"],
     "module": "node16",
     "moduleResolution": "node16",
@@ -12,10 +12,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "./vitest.setup.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "./vitest.setup.ts"],
   "exclude": ["node_modules"]
 }

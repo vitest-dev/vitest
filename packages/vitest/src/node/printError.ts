@@ -1,4 +1,4 @@
-/* eslint-disable prefer-template */
+/* oxlint-disable prefer-template */
 import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions, Logger } from './logger'
@@ -72,9 +72,7 @@ export function printError(
   logger: ErrorLogger,
   options: ErrorOptions,
 ): PrintErrorResult | undefined {
-  const project = options.project
-    ?? ctx.coreWorkspaceProject
-    ?? ctx.projects[0]
+  const project = options.project ?? ctx.coreWorkspaceProject ?? ctx.projects[0]
   return printErrorInner(error, project, {
     logger,
     type: options.type,
@@ -85,10 +83,9 @@ export function printError(
       if (error.stacks) {
         if (options.fullStack) {
           return error.stacks
-        }
-        else {
+        } else {
           return error.stacks.filter((stack) => {
-            return !defaultStackIgnorePatterns.some(p => stack.file.match(p))
+            return !defaultStackIgnorePatterns.some((p) => stack.file.match(p))
           })
         }
       }
@@ -143,23 +140,19 @@ function printErrorInner(
 
   const stacks = options.parseErrorStacktrace(e)
 
-  const nearest
-    = error instanceof TypeCheckError
+  const nearest =
+    error instanceof TypeCheckError
       ? error.stacks[0]
       : stacks.find((stack) => {
           // we are checking that this module was processed by us at one point
           try {
-            const environments = [
-              ...Object.values(project._vite?.environments || {}),
-              ...Object.values(project.browser?.vite.environments || {}),
-            ]
+            const environments = Object.values(project.vite.environments || {})
             const hasResult = environments.some((environment) => {
               const modules = environment.moduleGraph.getModulesByFile(stack.file)
-              return [...modules?.values() || []].some(module => !!module.transformResult)
+              return [...(modules?.values() || [])].some((module) => !!module.transformResult)
             })
             return hasResult && existsSync(stack.file)
-          }
-          catch {
+          } catch {
             return false
           }
         })
@@ -172,7 +165,9 @@ function printErrorInner(
     const uniqueScreenshots = Array.from(new Set(options.screenshotPaths))
     const length = uniqueScreenshots.length
     logger.error(`\nFailure screenshot${length > 1 ? 's' : ''}:`)
-    logger.error(uniqueScreenshots.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
+    logger.error(
+      uniqueScreenshots.map((p) => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'),
+    )
     if (!e.diff) {
       logger.error()
     }
@@ -185,11 +180,21 @@ function printErrorInner(
   if ('__vitest_rollup_error__' in e) {
     // https://github.com/vitejs/vite/blob/95020ab49e12d143262859e095025cf02423c1d9/packages/vite/src/node/server/middlewares/error.ts#L25-L36
     const err = e.__vitest_rollup_error__ as any
-    logger.error([
-      err.plugin && `  Plugin: ${c.magenta(err.plugin)}`,
-      err.id && `  File: ${c.cyan(err.id)}${err.loc ? `:${err.loc.line}:${err.loc.column}` : ''}`,
-      err.frame && c.yellow((err.frame as string).split(/\r?\n/g).map(l => ` `.repeat(2) + l).join(`\n`)),
-    ].filter(Boolean).join('\n'))
+    logger.error(
+      [
+        err.plugin && `  Plugin: ${c.magenta(err.plugin)}`,
+        err.id && `  File: ${c.cyan(err.id)}${err.loc ? `:${err.loc.line}:${err.loc.column}` : ''}`,
+        err.frame &&
+          c.yellow(
+            (err.frame as string)
+              .split(/\r?\n/g)
+              .map((l) => ` `.repeat(2) + l)
+              .join(`\n`),
+          ),
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    )
   }
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
@@ -200,20 +205,15 @@ function printErrorInner(
   // if the error provide the frame
   if (e.frame) {
     logger.error(c.yellow(e.frame))
-  }
-  else {
-    const errorProperties = printProperties
-      ? getErrorProperties(e)
-      : {}
+  } else {
+    const errorProperties = printProperties ? getErrorProperties(e) : {}
 
     printStack(logger, project, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
         logger.error(
           generateCodeFrame(
-            sourceCode.length > 100_000
-              ? sourceCode
-              : logger.highlight(nearest.file, sourceCode),
+            sourceCode.length > 100_000 ? sourceCode : logger.highlight(nearest.file, sourceCode),
             4,
             s,
           ),
@@ -237,18 +237,24 @@ function printErrorInner(
   if (testName) {
     logger.error(
       c.red(
-        `The latest test that might've caused the error is "${c.bold(
-          testName,
-        )}". It might mean one of the following:`
-        + '\n- The error was thrown, while Vitest was running this test.'
-        + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.',
+        `The last test to run before this error was "${c.bold(testName)}". This means either:` +
+          '\n- the error was thrown while Vitest was running this test, or' +
+          '\n- the error was thrown after the test completed, and this was the most recent test at that point.',
       ),
     )
   }
 
-  if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
-    (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    printErrorInner(e.cause, project, {
+  if (e.cause != null) {
+    let cause: any = e.cause
+    if (typeof cause !== 'object' || cause === null) {
+      const causeStr = String(cause)
+      cause = { name: 'Caused by', message: causeStr, stack: causeStr }
+    } else if (!('name' in cause)) {
+      cause = { ...cause, name: 'Caused by' }
+    } else {
+      cause.name = `Caused by: ${cause.name}`
+    }
+    printErrorInner(cause, project, {
       showCodeFrame: false,
       logger: options.logger,
       parseErrorStacktrace: options.parseErrorStacktrace,
@@ -304,8 +310,7 @@ function getErrorProperties(e: TestError) {
     // print the original stack if it was ever changed manually by the user
     if (key === 'stack' && e[key] != null && typeof e[key] !== 'string') {
       errorObject[key] = e[key]
-    }
-    else if (key !== 'stack' && !skipErrorProperties.has(key)) {
+    } else if (key !== 'stack' && !skipErrorProperties.has(key)) {
       errorObject[key] = e[key as keyof TestError]
     }
   }
@@ -313,13 +318,10 @@ function getErrorProperties(e: TestError) {
   return errorObject
 }
 
-const esmErrors = [
-  'Cannot use import statement outside a module',
-  'Unexpected token \'export\'',
-]
+const esmErrors = ['Cannot use import statement outside a module', "Unexpected token 'export'"]
 
 function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
-  if (!esmErrors.some(e => stack.includes(e))) {
+  if (!esmErrors.some((e) => stack.includes(e))) {
     return
   }
 
@@ -327,37 +329,29 @@ function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
   let name = path.split('/node_modules/').pop() || ''
   if (name[0] === '@') {
     name = name.split('/').slice(0, 2).join('/')
-  }
-  else {
+  } else {
     name = name.split('/')[0]
   }
 
   if (name) {
     printModuleWarningForPackage(logger, path, name)
-  }
-  else {
+  } else {
     printModuleWarningForSourceCode(logger, path)
   }
 }
 
-function printModuleWarningForPackage(
-  logger: ErrorLogger,
-  path: string,
-  name: string,
-) {
+function printModuleWarningForPackage(logger: ErrorLogger, path: string, name: string) {
   logger.error(
     c.yellow(
-      `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
-      + `You might want to create an issue to the package ${c.bold(
-        `"${name}"`,
-      )} asking `
-      + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
-      + '\n\n'
-      + 'As a temporary workaround you can try to inline the package by updating your config:'
-      + '\n\n'
-      + c.gray(c.dim('// vitest.config.js'))
-      + '\n'
-      + c.green(`export default {
+      `Module ${path} seems to be an ES Module but shipped in a CommonJS package. ` +
+        `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking ` +
+        'them to ship the file in .mjs extension or add "type": "module" in their package.json.' +
+        '\n\n' +
+        'As a temporary workaround you can try to inline the package by updating your config:' +
+        '\n\n' +
+        c.gray(c.dim('// vitest.config.js')) +
+        '\n' +
+        c.green(`export default {
   test: {
     server: {
       deps: {
@@ -375,8 +369,8 @@ function printModuleWarningForPackage(
 function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
   logger.error(
     c.yellow(
-      `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
-      + 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
+      `Module ${path} seems to be an ES Module but shipped in a CommonJS package. ` +
+        'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
     ),
   )
 }
@@ -390,8 +384,7 @@ function printErrorMessage(error: TestError, logger: ErrorLogger) {
   if (error.message.length > 5000) {
     // Protect against infinite stack trace in tinyrainbow
     logger.error(`${c.red(c.bold(errorName))}: ${error.message}`)
-  }
-  else {
+  } else {
     logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
   }
 }
@@ -410,10 +403,7 @@ export function printStack(
 
     logger.error(
       color(
-        ` ${c.dim(F_POINTER)} ${[
-          frame.method,
-          `${path}:${c.dim(`${frame.line}:${frame.column}`)}`,
-        ]
+        ` ${c.dim(F_POINTER)} ${[frame.method, `${path}:${c.dim(`${frame.line}:${frame.column}`)}`]
           .filter(Boolean)
           .join(' ')}`,
       ),
@@ -431,7 +421,7 @@ export function printStack(
 }
 
 function hasProperties(obj: any) {
-  // eslint-disable-next-line no-unreachable-loop
+  // oxlint-disable-next-line no-unreachable-loop
   for (const _key in obj) {
     return true
   }
@@ -444,10 +434,7 @@ export function generateCodeFrame(
   loc: { line: number; column: number } | number,
   range = 2,
 ): string {
-  const start
-    = typeof loc === 'object'
-      ? positionToOffset(source, loc.line, loc.column)
-      : loc
+  const start = typeof loc === 'object' ? positionToOffset(source, loc.line, loc.column) : loc
   const end = start
   const lines = source.split(lineSplitRE)
   const nl = /\r\n/.test(source) ? 2 : 1
@@ -476,19 +463,18 @@ export function generateCodeFrame(
           return ''
         }
 
-        const truncatedLine = truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent).trimEnd()
+        const truncatedLine = truncateString(
+          lines[j].replace(/\t/g, ' '),
+          columns - 5 - indent,
+        ).trimEnd()
         res.push(lineNo(j + 1) + (truncatedLine ? ' ' + truncatedLine : truncatedLine))
 
         if (j === i) {
           // push underline
           const pad = start - (count - lineLength) + (nl - 1)
-          const length = Math.max(
-            1,
-            end > count ? lineLength - pad : end - start,
-          )
+          const length = Math.max(1, end > count ? lineLength - pad : end - start)
           res.push(lineNo() + ' '.repeat(pad + 1) + c.red('^'.repeat(length)))
-        }
-        else if (j > i) {
+        } else if (j > i) {
           if (end > count) {
             const length = Math.max(1, Math.min(end - count, lineLength))
             res.push(lineNo() + ' ' + c.red('^'.repeat(length)))
@@ -501,7 +487,7 @@ export function generateCodeFrame(
   }
 
   if (indent) {
-    res = res.map(line => ' '.repeat(indent) + line)
+    res = res.map((line) => ' '.repeat(indent) + line)
   }
 
   return res.join('\n')

@@ -1,7 +1,8 @@
-import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { SerializedConfig } from '../runtime/config'
+import type { GetterTracker } from '../runtime/getter-tracker'
+import type { CancelReason, FileSpecification, Task } from '../runtime/runner/types'
 import type { Traces } from '../utils/traces'
 import type { Environment } from './environment'
 import type { RunnerRPC, RuntimeRPC } from './rpc'
@@ -30,18 +31,29 @@ export interface WorkerExecuteContext {
   workerId: number
 }
 
+export interface MetaEnv {
+  [key: string]: any
+  BASE_URL: string
+  MODE: string
+  DEV: boolean
+  PROD: boolean
+  SSR: boolean
+}
+
 export interface ContextRPC {
   pool: string
   config: SerializedConfig
   projectName: string
   environment: WorkerTestEnvironment
   rpc: WorkerRPC
+  metaEnv: MetaEnv
   files: FileSpecification[]
   providedContext: Record<string, any>
   invalidates?: string[]
 
   /** Exposed to test runner as `VITEST_WORKER_ID`. Value is unique per each isolated worker. */
   workerId: number
+  concurrencyId: number
 }
 
 export interface WorkerSetupContext {
@@ -50,6 +62,7 @@ export interface WorkerSetupContext {
   config: SerializedConfig
   projectName: string
   rpc: WorkerRPC
+  metaEnv: MetaEnv
   /**
    * @internal
    */
@@ -62,24 +75,24 @@ export interface WorkerGlobalState {
   rpc: WorkerRPC
   current?: Task
   filepath?: string
-  metaEnv: {
-    [key: string]: any
-    BASE_URL: string
-    MODE: string
-    DEV: boolean
-    PROD: boolean
-    SSR: boolean
-  }
+  metaEnv: MetaEnv
+  metaDefines?: Record<string, any>
   environment: Environment
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>
-  onCancel: (listener: (reason: CancelReason) => unknown) => void
+  getterTracker?: GetterTracker
+  onCancel: (listener: (reason: CancelReason) => unknown) => () => void
   onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>
   durations: {
     environment: number
     prepare: number
+    /**
+     * Wall time the worker spent blocked on module fetch requests to the
+     * server, measured as the union of in-flight intervals.
+     */
+    fetch: number
   }
   onFilterStackTrace?: (trace: string) => string
 }

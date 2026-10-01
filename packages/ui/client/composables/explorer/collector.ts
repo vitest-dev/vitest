@@ -1,7 +1,18 @@
-import type { File, Task, TaskResultPack, Test, TestArtifact } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
-import { isTestCase } from '@vitest/runner/utils'
+import type {
+  RunnerTestFile as File,
+  RunnerTask as Task,
+  RunnerTaskResultPack as TaskResultPack,
+  RunnerTestCase as Test,
+  TestArtifact,
+} from 'vitest'
+import type {
+  CollectFilteredTests,
+  CollectorInfo,
+  Filter,
+  FilteredTests,
+  SearchMatcher,
+} from '~/composables/explorer/types'
 import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
@@ -33,7 +44,8 @@ export function runLoadFiles(
   search: SearchMatcher,
   filter: Filter,
 ) {
-  remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
+  remoteFiles
+    .map((f) => [`${f.filepath}:${f.projectName || ''}`, f] as const)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([, f]) => createOrUpdateFileNode(f, collect))
 
@@ -48,30 +60,25 @@ export function runLoadFiles(
 }
 
 export function preparePendingTasks(packs: TaskResultPack[]) {
-  queueMicrotask(() => {
-    const pending = explorerTree.pendingTasks
-    const idMap = client.state.idMap
-    for (const pack of packs) {
-      const result = pack[1]
-      if (result) {
-        const task = idMap.get(pack[0])
-        if (task) {
-          let file = pending.get(task.file.id)
-          if (!file) {
-            file = new Set()
-            pending.set(task.file.id, file)
-          }
-          file.add(task.id)
+  const pending = explorerTree.pendingTasks
+  const idMap = client.state.idMap
+  for (const pack of packs) {
+    const result = pack[1]
+    if (result) {
+      const task = idMap.get(pack[0])
+      if (task) {
+        let file = pending.get(task.file.id)
+        if (!file) {
+          file = new Set()
+          pending.set(task.file.id, file)
         }
+        file.add(task.id)
       }
     }
-  })
+  }
 }
 
-export function recordTestArtifact(
-  id: string,
-  artifact: TestArtifact,
-) {
+export function recordTestArtifact(id: string, artifact: TestArtifact) {
   const pending = explorerTree.pendingTasks
   const idMap = client.state.idMap
   const test = idMap.get(id)
@@ -85,8 +92,7 @@ export function recordTestArtifact(
 
     if (artifact.type === 'internal:annotation') {
       test.annotations.push(artifact.annotation)
-    }
-    else {
+    } else {
       test.artifacts.push(artifact)
     }
   }
@@ -105,31 +111,21 @@ export function runCollect(
   }
 
   const collect = !start
-  queueMicrotask(() => {
-    if (end) {
-      traverseFiles(collect)
-    }
-    else {
-      traverseReceivedFiles(collect)
-    }
-  })
+  if (end) {
+    traverseFiles(collect)
+  } else {
+    traverseReceivedFiles(collect)
+  }
 
-  queueMicrotask(() => {
-    collectData(summary, executionTime)
-  })
+  collectData(summary, executionTime)
 
-  queueMicrotask(() => {
-    if (end) {
-      summary.failedSnapshot = uiFiles.value && hasFailedSnapshot(
-        uiFiles.value.map(f => findById(f.id)!),
-      )
-      summary.failedSnapshotEnabled = true
-    }
-  })
+  if (end) {
+    summary.failedSnapshot =
+      uiFiles.value && hasFailedSnapshot(uiFiles.value.map((f) => findById(f.id)!))
+    summary.failedSnapshotEnabled = true
+  }
 
-  queueMicrotask(() => {
-    doRunFilter(search, filter, end)
-  })
+  doRunFilter(search, filter, end)
 }
 
 function* collectRunningTodoTests() {
@@ -155,7 +151,7 @@ function traverseFiles(collect: boolean) {
   // add missing files: now we have only files with running tests on the initial ws open event
   const files = client.state.getFiles()
   const currentFiles = explorerTree.nodes
-  const missingFiles = files.filter(f => !currentFiles.has(f.id))
+  const missingFiles = files.filter((f) => !currentFiles.has(f.id))
   for (let i = 0; i < missingFiles.length; i++) {
     createOrUpdateFileNode(missingFiles[i], collect)
     createOrUpdateEntry(missingFiles[i].tasks)
@@ -187,10 +183,9 @@ function traverseReceivedFiles(collect: boolean) {
 
   // add missing files: now we have only files with running tests on the initial ws open event
   const currentFiles = explorerTree.nodes
-  const missingFiles = Array
-    .from(updatedFiles.keys())
-    .filter(id => !currentFiles.has(id))
-    .map(id => findById(id))
+  const missingFiles = Array.from(updatedFiles.keys())
+    .filter((id) => !currentFiles.has(id))
+    .map((id) => findById(id))
     .filter(Boolean) as File[]
 
   let newFile: File
@@ -216,46 +211,33 @@ function traverseReceivedFiles(collect: boolean) {
       continue
     }
     createOrUpdateFileNode(file, collect)
-    createOrUpdateEntry(Array.from(entries, id => idMap.get(id)).filter(Boolean) as Task[])
+    createOrUpdateEntry(Array.from(entries, (id) => idMap.get(id)).filter(Boolean) as Task[])
   }
 }
 
-function doRunFilter(
-  search: SearchMatcher,
-  filter: Filter,
-  end = false,
-) {
+function doRunFilter(search: SearchMatcher, filter: Filter, end = false) {
   const expandAll = treeFilter.value.expandAll
   const resetExpandAll = expandAll !== true
   const ids = new Set(openedTreeItems.value)
   const applyExpandNodes = (ids.size > 0 && expandAll === false) || resetExpandAll
 
-  // refresh explorer
-  queueMicrotask(() => {
-    refreshExplorer(search, filter, end)
-  })
+  refreshExplorer(search, filter, end)
 
   // initialize the explorer
   if (!initialized.value) {
-    queueMicrotask(() => {
-      if (uiEntries.value.length || end) {
-        initialized.value = true
-      }
-    })
+    if (uiEntries.value.length || end) {
+      initialized.value = true
+    }
   }
 
   if (applyExpandNodes) {
     // expand all nodes
-    queueMicrotask(() => {
-      expandNodesOnEndRun(ids, end)
-      if (resetExpandAll) {
-        treeFilter.value.expandAll = false
-      }
-    })
+    expandNodesOnEndRun(ids, end)
+    if (resetExpandAll) {
+      treeFilter.value.expandAll = false
+    }
     // refresh explorer
-    queueMicrotask(() => {
-      refreshExplorer(search, filter, end)
-    })
+    refreshExplorer(search, filter, end)
   }
 }
 
@@ -274,14 +256,13 @@ function createOrUpdateEntry(tasks: Task[]) {
     task = tasks[i]
     if (isSuite(task)) {
       createOrUpdateSuiteTask(task.id, true)
-    }
-    else {
+    } else {
       createOrUpdateNodeTask(task.id)
     }
   }
 }
 
-export function resetCollectorInfo(summary: CollectorInfo) {
+function resetCollectorInfo(summary: CollectorInfo) {
   summary.files = 0
   summary.time = ''
   summary.filesFailed = 0
@@ -301,13 +282,12 @@ export function resetCollectorInfo(summary: CollectorInfo) {
   summary.failedSnapshotEnabled = false
 }
 
-function collectData(
-  summary: CollectorInfo,
-  time: number,
-) {
+function collectData(summary: CollectorInfo, time: number) {
   const idMap = client.state.idMap
-  const filesMap = new Map(explorerTree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
-  const useFiles = Array.from(filesMap.values(), file => [file.id, findById(file.id)] as const)
+  const filesMap = new Map(
+    explorerTree.root.tasks.filter((f) => idMap.has(f.id)).map((f) => [f.id, f]),
+  )
+  const useFiles = Array.from(filesMap.values(), (file) => [file.id, findById(file.id)] as const)
   const data = {
     files: filesMap.size,
     time: time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`,
@@ -336,32 +316,19 @@ function collectData(
     }
     if (f.result?.state === 'fail') {
       data.filesFailed++
-    }
-    else if (f.result?.state === 'pass') {
+    } else if (f.result?.state === 'pass') {
       data.filesSuccess++
-    }
-    else if (f.mode === 'skip') {
+    } else if (f.mode === 'skip') {
       data.filesIgnore++
       data.filesSkipped++
-    }
-    else if (f.mode === 'todo') {
+    } else if (f.mode === 'todo') {
       data.filesIgnore++
       data.filesTodo++
-    }
-    else {
+    } else {
       data.filesRunning++
     }
 
-    const {
-      failed,
-      success,
-      skipped,
-      total,
-      ignored,
-      todo,
-      expectedFail,
-      slow,
-    } = collectTests(f)
+    const { failed, success, skipped, total, ignored, todo, expectedFail, slow } = collectTests(f)
 
     data.totalTests += total
     data.testsFailed += failed
@@ -412,21 +379,17 @@ function collectTests(file: File, search: SearchMatcher = () => true, filter?: F
       }
       if (t.result?.state === 'fail') {
         data.failed++
-      }
-      else if (t.result?.state === 'pass') {
+      } else if (t.result?.state === 'pass') {
         // Check if this is an expected failure
         if (t.fails) {
           data.expectedFail++
-        }
-        else {
+        } else {
           data.success++
         }
-      }
-      else if (t.mode === 'skip') {
+      } else if (t.mode === 'skip') {
         data.ignored++
         data.skipped++
-      }
-      else if (t.mode === 'todo') {
+      } else if (t.mode === 'todo') {
         data.ignored++
         data.todo++
       }
@@ -449,44 +412,32 @@ export function collectTestsTotalData(
   if (onlyTests) {
     // todo: apply similar logic when filtered
     return tests
-      .map(file => collectTests(file, search, filter))
-      .reduce((acc, {
-        failed,
-        success,
-        ignored,
-        running,
-      }) => {
-        acc.failed += failed
-        acc.success += success
-        acc.skipped += ignored
-        acc.running += running
-        return acc
-      }, { failed: 0, success: 0, skipped: 0, running: 0 })
-  }
-  else if (filtered) {
+      .map((file) => collectTests(file, search, filter))
+      .reduce(
+        (acc, { failed, success, ignored, running }) => {
+          acc.failed += failed
+          acc.success += success
+          acc.skipped += ignored
+          acc.running += running
+          return acc
+        },
+        { failed: 0, success: 0, skipped: 0, running: 0 },
+      )
+  } else if (filtered) {
     const data = {
       failed: 0,
       success: 0,
       skipped: 0,
       running: 0,
     } satisfies FilteredTests
-    // will match when the filter entry is active or filter is inactive (skipped excluded)
-    // for example, we should update all when the filter is empty
-    // but shouldn't update failed if we're filtering by success
-    const empty = !filter.success && !filter.failed
-    const applyFailed = filter.failed || empty
-    const applySuccess = filter.success || empty
     for (const f of tests) {
       if (f.result?.state === 'fail') {
-        data.failed += applyFailed ? 1 : 0
-      }
-      else if (f.result?.state === 'pass') {
-        data.success += applySuccess ? 1 : 0
-      }
-      else if (f.mode === 'skip' || f.mode === 'todo') {
-        // just ignore
-      }
-      else {
+        data.failed++
+      } else if (f.result?.state === 'pass') {
+        data.success++
+      } else if (f.mode === 'skip' || f.mode === 'todo') {
+        data.skipped++
+      } else {
         data.running++
       }
     }
@@ -502,10 +453,9 @@ function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
-    if (isTestCase(s)) {
+    if (s.type === 'test') {
       yield s
-    }
-    else {
+    } else {
       yield* testsCollector(s.tasks)
     }
   }

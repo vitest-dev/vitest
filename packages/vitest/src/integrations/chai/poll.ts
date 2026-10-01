@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
-import type { Test } from '@vitest/runner'
+import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
@@ -36,14 +36,9 @@ const unsupported = [
  * @throws Always throws the provided error with an amended stack trace
  */
 function throwWithCause(error: any, source: Error) {
-  if (error.cause == null) {
-    error.cause = new Error('Matcher did not succeed in time.')
-  }
+  error.cause ??= new Error('Matcher did not succeed in time.')
 
-  throw copyStackTrace(
-    error,
-    source,
-  )
+  throw copyStackTrace(error, source)
 }
 
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
@@ -127,8 +122,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                 const output = await assertionFunction.call(assertion, ...args)
                 await onSettled?.({ assertion, status: 'pass' })
                 return output
-              }
-              catch (err) {
+              } catch (err) {
                 await onSettled?.({ assertion, status: 'fail' })
                 throwWithCause(err, STACK_TRACE_ERROR)
               }
@@ -171,18 +165,14 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   await onSettled?.({ assertion, status: 'pass' })
 
                   return output
-                }
-                catch (err) {
+                } catch (err) {
                   lastError = err
                   // no retry for toMatchScreenshot since
                   // it owns retry/stability after the first element resolution
                   if (key === 'toMatchScreenshot') {
                     break
                   }
-                  const result = await raceWith(
-                    delay(interval, setTimeout),
-                    timeoutPromise,
-                  )
+                  const result = await raceWith(delay(interval, setTimeout), timeoutPromise)
                   if (!result.ok) {
                     break
                   }
@@ -191,8 +181,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   }
                 }
               }
-            }
-            finally {
+            } finally {
               clearTimeout(timerId)
             }
             if (lastError) {
@@ -205,7 +194,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           test.onFinished.push(() => {
             if (!awaited) {
               const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
-              const name = chai.util.flag(assertion, '_poll.element') ? 'element(locator)' : 'poll(assertion)'
+              const name = chai.util.flag(assertion, '_poll.element')
+                ? 'element(locator)'
+                : 'poll(assertion)'
               const assertionString = `expect.${name}.${negated}${String(key)}()`
               const error = new Error(
                 `${assertionString} was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:\n\nawait ${assertionString}\n`,
@@ -214,20 +205,26 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }
           })
           let resultPromise: Promise<void> | undefined
+          // lets `expect.element` register the poll with the task deadline
+          const wrap = chai.util.flag(assertion, '_poll.wrap') as
+            | ((promise: Promise<void>, source: Error) => Promise<void>)
+            | undefined
+          const start = () =>
+            (resultPromise ||= wrap ? wrap(promise(), STACK_TRACE_ERROR) : promise())
           // only .then is enough to check awaited, but we type this as `Promise<void>` in global types
           // so let's follow it
           return {
             then(onFulfilled, onRejected) {
               awaited = true
-              return (resultPromise ||= promise()).then(onFulfilled, onRejected)
+              return start().then(onFulfilled, onRejected)
             },
             catch(onRejected) {
               awaited = true
-              return (resultPromise ||= promise()).catch(onRejected)
+              return start().catch(onRejected)
             },
             finally(onFinally) {
               awaited = true
-              return (resultPromise ||= promise()).finally(onFinally)
+              return start().finally(onFinally)
             },
             [Symbol.toStringTag]: 'Promise',
           } satisfies Promise<void>
@@ -249,12 +246,9 @@ function raceWith<A, B>(
   promise: Promise<A>,
   other?: Promise<B>,
 ): Promise<{ ok: true; value: A } | { ok: false; value: B }> {
-  const left = promise.then(value => ({ ok: true as const, value }))
+  const left = promise.then((value) => ({ ok: true as const, value }))
   if (!other) {
     return left
   }
-  return Promise.race([
-    left,
-    other.then(value => ({ ok: false as const, value })),
-  ])
+  return Promise.race([left, other.then((value) => ({ ok: false as const, value }))])
 }

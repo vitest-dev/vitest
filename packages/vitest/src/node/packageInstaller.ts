@@ -22,13 +22,10 @@ export class VitestPackageInstaller {
       try {
         targetRequire.resolve(dependency, { paths: [root, __dirname] })
         return true
-      }
-      catch {}
+      } catch {}
     }
 
-    if (
-      /* @__PURE__ */ isPackageExists(dependency, { paths: [root, __dirname] })
-    ) {
+    if (/* @__PURE__ */ isPackageExists(dependency, { paths: [root, __dirname] })) {
       return true
     }
 
@@ -49,14 +46,10 @@ export class VitestPackageInstaller {
 
     if (install) {
       const packageName = version ? `${dependency}@${version}` : dependency
-      await (
-        await import('@antfu/install-pkg')
-      ).installPackage(packageName, { dev: true })
+      await (await import('@antfu/install-pkg')).installPackage(packageName, { dev: true })
       // TODO: somehow it fails to load the package after installation, remove this when it's fixed
       process.stderr.write(
-        c.yellow(
-          `\nPackage ${packageName} installed, re-run the command to start.\n`,
-        ),
+        c.yellow(`\nPackage ${packageName} installed, re-run the command to start.\n`),
       )
       process.exit()
       return true

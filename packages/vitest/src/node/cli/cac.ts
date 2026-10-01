@@ -1,14 +1,13 @@
 import type { CAC, Command } from 'cac'
-import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils/helpers'
 import cac from 'cac'
 import { normalize } from 'pathe'
-import c, { disableDefaultColors } from 'tinyrainbow'
+import { disableDefaultColors } from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { isAgent, isForceColor } from '../../utils/env'
-import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 import { setupTabCompletions } from './completions'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
@@ -20,10 +19,8 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
 
   function transform(value: unknown) {
     if (!option.array && Array.isArray(value)) {
-      const received = value.map(s => typeof s === 'string' ? `"${s}"` : s).join(', ')
-      throw new Error(
-        `Expected a single value for option "${command}", received [${received}]`,
-      )
+      const received = value.map((s) => (typeof s === 'string' ? `"${s}"` : s)).join(', ')
+      throw new Error(`Expected a single value for option "${command}", received [${received}]`)
     }
     value = removeQuotes(value)
     if (option.transform) {
@@ -86,24 +83,26 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   addCliOptions(cli, cliOptionsConfig)
 
   cli.help((info) => {
-    const helpSection = info.find(current => current.title?.startsWith('For more info, run any command'))
+    const helpSection = info.find((current) =>
+      current.title?.startsWith('For more info, run any command'),
+    )
 
     if (helpSection) {
       helpSection.body += '\n  $ vitest --help --expand-help'
     }
 
-    const options = info.find(current => current.title === 'Options')
+    const options = info.find((current) => current.title === 'Options')
 
     if (typeof options !== 'object') {
       return info
     }
 
-    const helpIndex = process.argv.findIndex(arg => arg === '--help')
+    const helpIndex = process.argv.findIndex((arg) => arg === '--help')
     const subcommands = process.argv.slice(helpIndex + 1)
 
     const defaultOutput = options.body
       .split('\n')
-      .filter(line => /^\s+--\S+\./.test(line) === false)
+      .filter((line) => /^\s+--\S+\./.test(line) === false)
       .join('\n')
 
     // Filter out options with dot-notation if --help is not called with a subcommand (default behavior)
@@ -112,13 +111,16 @@ export function createCLI(options: CliParseOptions = {}): CAC {
       return info
     }
 
-    if (subcommands.length === 1 && (subcommands[0] === '--expand-help' || subcommands[0] === '--expandHelp')) {
+    if (
+      subcommands.length === 1 &&
+      (subcommands[0] === '--expand-help' || subcommands[0] === '--expandHelp')
+    ) {
       return info
     }
 
     const subcommandMarker = '$SUB_COMMAND_MARKER$'
 
-    const banner = info.find(current => /^vitest\/\d+\.\d+\.\d+$/.test(current.body))
+    const banner = info.find((current) => /^vitest\/\d+\.\d+\.\d+$/.test(current.body))
     function addBannerWarning(warning: string) {
       if (typeof banner?.body === 'string') {
         if (banner?.body.includes(warning)) {
@@ -135,7 +137,9 @@ export function createCLI(options: CliParseOptions = {}): CAC {
 
       // --help --expand-help can't be called with multiple subcommands and is handled above
       if (subcommand === '--expand-help' || subcommand === '--expandHelp') {
-        addBannerWarning('--expand-help subcommand ignored because, when used with --help, it must be the only subcommand')
+        addBannerWarning(
+          '--expand-help subcommand ignored because, when used with --help, it must be the only subcommand',
+        )
         continue
       }
 
@@ -143,7 +147,7 @@ export function createCLI(options: CliParseOptions = {}): CAC {
       if (subcommand.startsWith('--')) {
         options.body = options.body
           .split('\n')
-          .map(line => (line.trim().startsWith(subcommand)) ? `${subcommandMarker}${line}` : line)
+          .map((line) => (line.trim().startsWith(subcommand) ? `${subcommandMarker}${line}` : line))
           .join('\n')
       }
     }
@@ -151,8 +155,8 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     // Filter based on the marked options to preserve the original sort order
     options.body = options.body
       .split('\n')
-      .map(line => line.startsWith(subcommandMarker) ? line.split(subcommandMarker)[1] : '')
-      .filter(line => line.length !== 0)
+      .map((line) => (line.startsWith(subcommandMarker) ? line.split(subcommandMarker)[1] : ''))
+      .filter((line) => line.length !== 0)
       .join('\n')
 
     if (!options.body) {
@@ -163,43 +167,30 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     return info
   })
 
-  cli
-    .command('run [...filters]', undefined, options)
-    .action(run)
+  cli.command('run [...filters]', undefined, options).action(run)
 
-  cli
-    .command('related [...filters]', undefined, options)
-    .action(runRelated)
+  cli.command('related [...filters]', undefined, options).action(runRelated)
 
-  cli
-    .command('watch [...filters]', undefined, options)
-    .action(watch)
+  cli.command('watch [...filters]', undefined, options).action(watch)
 
-  cli
-    .command('dev [...filters]', undefined, options)
-    .action(watch)
+  cli.command('dev [...filters]', undefined, options).action(watch)
 
-  addCliOptions(
-    cli
-      .command('bench [...filters]', undefined, options)
-      .action(benchmark),
-    benchCliOptionsConfig,
-  )
+  cli.command('bench [...filters]', undefined, options).action(benchmark)
 
-  cli
-    .command('init <project>', undefined, options)
-    .action(init)
+  cli.command('init <project>', undefined, options).action(init)
+
+  cli.command('doctor [...filters]', undefined, options).action(doctorCommand)
 
   addCliOptions(
     cli
       .command('list [...filters]', undefined, options)
-      .action((filters, options) => collect('test', filters, options)),
+      .action((filters, options) => collect(filters, options)),
     collectCliOptionsConfig,
   )
 
   cli
     .command('[...filters]', undefined, options)
-    .action((filters, options) => start('test', filters, options))
+    .action((filters, options) => start(filters, options))
 
   setupTabCompletions(cli)
   return cli
@@ -223,14 +214,17 @@ function removeQuotes<T>(str: T): T {
 
 function splitArgv(argv: string): string[] {
   const reg = /(['"])(?:(?!\1).)+\1/g
-  argv = argv.replace(reg, match => match.replace(/\s/g, '\x00'))
+  argv = argv.replace(reg, (match) => match.replace(/\s/g, '\x00'))
   return argv.split(' ').map((arg: string) => {
     arg = arg.replace(/\0/g, ' ')
     return removeQuotes(arg)
   })
 }
 
-export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
+export function parseCLI(
+  argv: string | string[],
+  config: CliParseOptions = {},
+): {
   filter: string[]
   options: CliOptions
 } {
@@ -263,24 +257,26 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
-  await start('test', [], argv)
+  await start([], argv)
 }
 
 async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
   options.watch = true
-  await start('test', cliFilters, options)
+  await start(cliFilters, options)
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
   // "vitest run --watch" should still be watch mode
   options.run = !options.watch
 
-  await start('test', cliFilters, options)
+  await start(cliFilters, options)
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
-  console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
-  await start('benchmark', cliFilters, options)
+  options.benchmarkOnly = true
+  options.coverage ??= {}
+  options.coverage.enabled = false
+  await start(cliFilters, options)
 }
 
 function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions {
@@ -288,7 +284,7 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
     argv.cliExclude = toArray(argv.exclude)
     delete argv.exclude
   }
-  if (cliFilters.some(filter => filter.includes(':'))) {
+  if (cliFilters.some((filter) => filter.includes(':'))) {
     argv.includeTaskLocation ??= true
   }
 
@@ -303,31 +299,51 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
   return argv
 }
 
-async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
+async function start(cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     const { startVitest } = await import('./cli-api')
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
+    const ctx = await startVitest(
+      cliFilters.map(normalize),
+      normalizeCliOptions(cliFilters, options),
+    )
     if (!ctx.shouldKeepServer()) {
       await ctx.exit()
     }
-  }
-  catch (e) {
+  } catch (e) {
     const { errorBanner } = await import('../reporters/renderers/utils')
     console.error(`\n${errorBanner('Startup Error')}`)
     console.error(e)
     console.error('\n\n')
 
-    if (process.exitCode == null) {
-      process.exitCode = 1
-    }
+    process.exitCode ??= 1
 
+    process.exit()
+  }
+}
+
+async function doctorCommand(cliFilters: string[], options: CliOptions): Promise<void> {
+  try {
+    const { doctor } = await import('./doctor')
+    await doctor(cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
+    process.exit()
+  } catch (e) {
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Doctor Error')}`)
+    console.error(e)
+    console.error('\n\n')
+
+    process.exitCode ??= 1
     process.exit()
   }
 }
 
 async function init(project: string) {
   if (project !== 'browser') {
-    console.error(new Error('Only the "browser" project is supported. Use "vitest init browser" to create a new project.'))
+    console.error(
+      new Error(
+        'Only the "browser" project is supported. Use "vitest init browser" to create a new project.',
+      ),
+    )
     process.exit(1)
   }
 
@@ -335,14 +351,19 @@ async function init(project: string) {
   await create()
 }
 
-async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
+async function collect(cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
-    const ctx = await prepareVitest(mode, {
-      ...normalizeCliOptions(cliFilters, options),
-      watch: false,
-      run: true,
-    }, undefined, undefined, cliFilters)
+    const ctx = await prepareVitest(
+      {
+        ...normalizeCliOptions(cliFilters, options),
+        watch: false,
+        run: true,
+      },
+      undefined,
+      undefined,
+      cliFilters,
+    )
     if (!options.filesOnly) {
       const { testModules: tests, unhandledErrors: errors } = await ctx.collect(
         cliFilters.map(normalize),
@@ -354,30 +375,26 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
 
       if (errors.length) {
         console.error('\nThere were unhandled errors during test collection')
-        errors.forEach(e => console.error(e))
+        errors.forEach((e) => console.error(e))
         console.error('\n\n')
         await ctx.close()
         return
       }
 
       processCollected(ctx, tests, options)
-    }
-    else {
+    } else {
       const files = await ctx.getRelevantTestSpecifications(cliFilters.map(normalize))
       outputFileList(files, options)
     }
 
     await ctx.close()
-  }
-  catch (e) {
+  } catch (e) {
     const { errorBanner } = await import('../reporters/renderers/utils')
     console.error(`\n${errorBanner('Collect Error')}`)
     console.error(e)
     console.error('\n\n')
 
-    if (process.exitCode == null) {
-      process.exitCode = 1
-    }
+    process.exitCode ??= 1
 
     process.exit()
   }

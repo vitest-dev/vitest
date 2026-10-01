@@ -1,6 +1,7 @@
-import type { DOMWindow, VirtualConsole as IVirtualConsole } from 'jsdom'
+import type { ConstructorOptions, DOMWindow, VirtualConsole as IVirtualConsole } from 'jsdom'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import { createRequire } from 'node:module'
 import { URL as NodeURL } from 'node:url'
 import { populateGlobal } from './utils'
 
@@ -15,17 +16,13 @@ function catchWindowErrors(window: DOMWindow) {
   const addEventListener = window.addEventListener.bind(window)
   const removeEventListener = window.removeEventListener.bind(window)
   window.addEventListener('error', throwUnhandlerError)
-  window.addEventListener = function (
-    ...args: [any, any, any]
-  ) {
+  window.addEventListener = function (...args: [any, any, any]) {
     if (args[0] === 'error') {
       userErrorListenerCount++
     }
     return addEventListener.apply(this, args)
   }
-  window.removeEventListener = function (
-    ...args: [any, any, any]
-  ) {
+  window.removeEventListener = function (...args: [any, any, any]) {
     if (args[0] === 'error' && userErrorListenerCount) {
       userErrorListenerCount--
     }
@@ -40,6 +37,34 @@ let NodeFormData_!: typeof FormData
 let NodeBlob_!: typeof Blob
 let NodeRequest_!: typeof Request
 
+interface LegacyResourceLoader {
+  new (options?: { userAgent?: string }): NonNullable<ConstructorOptions['resources']>
+}
+
+function getResourceOptions(
+  jsdom: typeof import('jsdom'),
+  resources: JSDOMOptions['resources'],
+  userAgent: string | undefined,
+) {
+  const ResourceLoader = (
+    jsdom as typeof jsdom & {
+      ResourceLoader?: LegacyResourceLoader
+    }
+  ).ResourceLoader
+
+  // jsdom 28 replaced ResourceLoader with a resources options object.
+  if (!ResourceLoader) {
+    return {
+      resources: userAgent ? { userAgent } : resources,
+    }
+  }
+
+  return {
+    resources: resources ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
+    userAgent,
+  }
+}
+
 export default <Environment>{
   name: 'jsdom',
   viteEnvironment: 'client',
@@ -49,9 +74,8 @@ export default <Environment>{
     NodeBlob_ = globalThis.Blob
     NodeRequest_ = globalThis.Request
 
-    const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
-      'jsdom',
-    )
+    const jsdomModule = await import('jsdom')
+    const { CookieJar, JSDOM, VirtualConsole } = jsdomModule
     const {
       html = '<!DOCTYPE html>',
       userAgent,
@@ -70,7 +94,7 @@ export default <Environment>{
       virtualConsole = new VirtualConsole()
       // jsdom <27
       if ('sendTo' in virtualConsole) {
-        (virtualConsole.sendTo as any)(globalThis.console)
+        ;(virtualConsole.sendTo as any)(globalThis.console)
       }
       // jsdom >=27
       else {
@@ -79,16 +103,13 @@ export default <Environment>{
     }
     let dom = new JSDOM(html, {
       pretendToBeVisual,
-      resources:
-        resources
-        ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
       runScripts,
       url,
       virtualConsole,
       cookieJar: cookieJar ? new CookieJar() : undefined,
       includeNodeLocations,
       contentType,
-      userAgent,
+      ...getResourceOptions(jsdomModule, resources, userAgent),
       ...restOptions,
     })
 
@@ -116,10 +137,7 @@ export default <Environment>{
     ] as const
     for (const name of globalNames) {
       const value = globalThis[name]
-      if (
-        typeof value !== 'undefined'
-        && typeof dom.window[name] === 'undefined'
-      ) {
+      if (typeof value !== 'undefined' && typeof dom.window[name] === 'undefined') {
         dom.window[name] = value
       }
     }
@@ -162,9 +180,8 @@ export default <Environment>{
     NodeBlob_ = globalThis.Blob
     NodeRequest_ = globalThis.Request
 
-    const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
-      'jsdom',
-    )
+    const jsdomModule = await import('jsdom')
+    const { CookieJar, JSDOM, VirtualConsole } = jsdomModule
     const {
       html = '<!DOCTYPE html>',
       userAgent,
@@ -183,7 +200,7 @@ export default <Environment>{
       virtualConsole = new VirtualConsole()
       // jsdom <27
       if ('sendTo' in virtualConsole) {
-        (virtualConsole.sendTo as any)(globalThis.console)
+        ;(virtualConsole.sendTo as any)(globalThis.console)
       }
       // jsdom >=27
       else {
@@ -192,16 +209,13 @@ export default <Environment>{
     }
     const dom = new JSDOM(html, {
       pretendToBeVisual,
-      resources:
-        resources
-        ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
       runScripts,
       url,
       virtualConsole,
       cookieJar: cookieJar ? new CookieJar() : undefined,
       includeNodeLocations,
       contentType,
-      userAgent,
+      ...getResourceOptions(jsdomModule, resources, userAgent),
       ...restOptions,
     })
 
@@ -224,8 +238,8 @@ export default <Environment>{
         clearWindowErrors()
         dom.window.close()
         delete global.jsdom
-        keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => (global[k] = v))
+        keys.forEach((key) => delete global[key])
+        originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }
   },
@@ -244,8 +258,7 @@ function createCompatRequest(utils: CompatUtils) {
           compatInit.body = utils.makeCompatFormData(init.body)
         }
         super(input, compatInit)
-      }
-      else {
+      } else {
         super(...args)
       }
     }
@@ -280,12 +293,31 @@ interface CompatUtils {
   makeCompatFormData: (formData: FormData) => FormData
 }
 
+// jsdom keeps Blob bytes on an internal "impl" object and exposes no synchronous
+// public way to read them, so this reaches into its generated bindings
+function createBlobImplGetter(window: DOMWindow): (blob: Blob) => any {
+  const _require = createRequire(import.meta.url)
+  // jsdom 28.1 moved the generated bindings; jsdom has no "exports" map, so both subpaths resolve
+  for (const id of [
+    'jsdom/lib/generated/idl/utils.js',
+    'jsdom/lib/jsdom/living/generated/utils.js',
+  ]) {
+    try {
+      const { implForWrapper } = _require(id)
+      if (typeof implForWrapper === 'function') {
+        return implForWrapper
+      }
+    } catch {}
+  }
+  // jsdom < 30.1 also stores the impl under an own Symbol("impl")
+  const implSymbol = Object.getOwnPropertySymbols(new window.Blob())[0]
+  return (blob) => (blob as any)[implSymbol]
+}
+
+let getBlobImpl: (blob: Blob) => any
+
 function createCompatUtils(window: DOMWindow): CompatUtils {
-  // this returns a hidden Symbol(impl)
-  // this is cursed, and jsdom should just implement fetch API itself
-  const implSymbol = Object.getOwnPropertySymbols(
-    Object.getOwnPropertyDescriptors(new window.Blob()),
-  )[0]
+  getBlobImpl ??= createBlobImplGetter(window)
   const utils = {
     window,
     makeCompatFormData(formData: FormData) {
@@ -293,16 +325,21 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       formData.forEach((value, key) => {
         if (value instanceof window.Blob) {
           nodeFormData.append(key, utils.makeCompatBlob(value as any) as any)
-        }
-        else {
+        } else {
           nodeFormData.append(key, value)
         }
       })
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
-      const buffer = (blob as any)[implSymbol]._buffer
-      return new NodeBlob_([buffer], { type: blob.type })
+      const impl = getBlobImpl(blob)
+      if (!impl) {
+        throw new TypeError(
+          'Vitest cannot read the bytes of a jsdom Blob. This is a Vitest bug, please report it with your jsdom version.',
+        )
+      }
+      // jsdom 28 renamed `_buffer` to `_bytes`
+      return new NodeBlob_([impl._bytes ?? impl._buffer], { type: blob.type })
     },
   }
   return utils

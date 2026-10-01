@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, expect, test } from 'vitest'
 
-interface Fixture { foo: number }
+interface Fixture {
+  foo: number
+}
 
 const test1 = test.extend<Fixture>({
   foo: 1,

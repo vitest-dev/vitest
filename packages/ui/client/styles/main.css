@@ -1,7 +1,7 @@
 html,
 body {
   height: 100%;
-  font-family: "Readex Pro", sans-serif;
+  font-family: 'Readex Pro', sans-serif;
   scroll-behavior: smooth;
 }
 
@@ -10,6 +10,7 @@ body {
   --color-text-dark: #ddd;
   --color-text: var(--color-text-light);
   --background-color: #e4e4e4;
+  --splitpane-handle-size: 5px;
 }
 
 html.dark {
@@ -51,6 +52,8 @@ html.dark {
   --cm-regex: #ab5e3f;
   --cm-json-property: #698c96;
   --cm-line-number-gutter: #f8f8f8;
+  /* blue-500, with higher opacity in dark mode */
+  --cm-line-highlight-background: rgb(59 130 246 / 10%);
   /* scrollbars colors */
   --cm-ttc-c-thumb: #eee;
   --cm-ttc-c-track: white;
@@ -79,11 +82,23 @@ html.dark {
   --cm-json-property: #6b8b9e;
   --cm-line-number: #888888;
   --cm-line-number-gutter: #161616;
-  --cm-line-highlight-background: #444444;
+  --cm-line-highlight-background: rgb(59 130 246 / 18%);
   --cm-selection-background: #44444450;
   /* scrollbars colors */
   --cm-ttc-c-thumb: #222;
   --cm-ttc-c-track: #111;
+}
+
+.CodeMirror-activeline-background {
+  background: var(--cm-line-highlight-background);
+}
+
+/*
+ * code mirror has readOnly: 'nocursor' option, but it would disable editor input and prevent focus.
+ * this only hides the cursor caret while keeping the editor region focusable and selectable.
+ */
+.codemirror-hide-cursor .CodeMirror-cursors {
+  visibility: hidden !important;
 }
 
 .splitpanes__pane {
@@ -97,7 +112,7 @@ html.dark {
 }
 
 .splitpanes__splitter:before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 0;
@@ -114,13 +129,13 @@ html.dark {
 .splitpanes--vertical > .splitpanes__splitter:before {
   /* make vertical scroll usable */
   left: 0;
-  right: -10px;
+  right: calc(var(--splitpane-handle-size) * -1);
   height: 100%;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
   top: 0;
-  bottom: -10px;
+  bottom: calc(var(--splitpane-handle-size) * -1);
   width: 100%;
 }
 
@@ -217,13 +232,13 @@ html.dark {
 }
 
 @property --viewport-width {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: true;
   initial-value: 0px;
 }
 
 @property --viewport-height {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: true;
   initial-value: 0px;
 }
@@ -233,13 +248,13 @@ html.dark {
   Registering as a typed `<length>` property forces Firefox to resolve the unit to an absolute pixel value at computed-value time, before it reaches the function
 */
 @property --container-width {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: false;
   initial-value: 0px;
 }
 
 @property --container-height {
-  syntax: "<length>";
+  syntax: '<length>';
   inherits: false;
   initial-value: 0px;
 }

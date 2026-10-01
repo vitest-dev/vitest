@@ -1,4 +1,4 @@
-import type { TestTagDefinition } from '@vitest/runner'
+import type { TestTagDefinition } from '../runtime/runner/types'
 import type { TestProject } from './project'
 
 export function populateProjectsTags(rootProject: TestProject, projects: TestProject[]): void {
@@ -17,7 +17,7 @@ export function populateProjectsTags(rootProject: TestProject, projects: TestPro
 
   // Add missing tags to each project (without overriding local definitions)
   for (const project of allProjects) {
-    const projectTagNames = new Set(project.config.tags.map(t => t.name))
+    const projectTagNames = new Set(project.config.tags.map((t) => t.name))
     for (const [tagName, tagDef] of globalTags) {
       if (!projectTagNames.has(tagName)) {
         project.config.tags.push(tagDef)

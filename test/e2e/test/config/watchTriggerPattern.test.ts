@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
-import { editFile, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { editFile, runVitest } from '#test-utils'
 
 const root = resolve(import.meta.dirname, '../../fixtures/config/watch-trigger-pattern')
 
@@ -14,10 +14,7 @@ test('watch trigger pattern picks up the file', async () => {
 
   await vitest.waitForStdout('Waiting for file changes')
 
-  editFile(
-    resolve(root, 'folder/fs/text.txt'),
-    content => content.replace('world', 'vitest'),
-  )
+  editFile(resolve(root, 'folder/fs/text.txt'), (content) => content.replace('world', 'vitest'))
 
   await vitest.waitForStderr('basic.test.ts')
 

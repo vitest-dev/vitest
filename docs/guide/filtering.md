@@ -9,7 +9,7 @@ As your test suite grows, running every test on every change becomes slow and di
 Vitest offers several ways to filter tests: from the command line, inside your test files, and through tags. Each approach is useful in different situations.
 
 ::: tip Performance Note
-Filters like `-t`, `--tags-filter`, `.only`, and `.skip` are applied *per test file* — Vitest still has to run each test file to discover which tests match. In a large project, this overhead adds up even if only a few tests actually execute.
+Filters like `-t`, `--tags-filter`, `.only`, and `.skip` are applied _per test file_ — Vitest still has to run each test file to discover which tests match. In a large project, this overhead adds up even if only a few tests actually execute.
 
 To avoid this, always pass a file path alongside your filter so Vitest only loads the files you care about:
 
@@ -22,6 +22,7 @@ Alternatively, you can use the [`--experimental.preParse`](/config/experimental#
 ```bash
 vitest --experimental.preParse -t "handles empty input"
 ```
+
 :::
 
 ## Filtering by File Name
@@ -44,7 +45,7 @@ This is useful when you know which file you need to work on and want to skip eve
 
 ## Filtering by Test Name
 
-Sometimes the test you care about is buried in a file with many other tests. The `-t` (or `--testNamePattern`) option filters by the test's name rather than the filename. It accepts a regex pattern and matches against the full test name, which includes any `describe` block names:
+Sometimes the test you care about is buried in a file with many other tests. The `-t` (or `--testNamePattern`) option filters by the test's name rather than the filename. It accepts a regex pattern and matches against the full test name, which is the enclosing `describe` block names and the test name joined with `' > '` (for example `math > adds`):
 
 ```bash
 vitest -t "handles empty input"
@@ -60,7 +61,7 @@ This runs only tests whose name matches `"handles empty input"` inside files mat
 
 ## Filtering by Line Number
 
-When you're looking at a specific test in your editor, you often just want to run *that one test*. You can point directly to a line number:
+When you're looking at a specific test in your editor, you often just want to run _that one test_. You can point directly to a line number:
 
 ```bash
 vitest basic/foo.test.ts:10

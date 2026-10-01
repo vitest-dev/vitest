@@ -1,6 +1,6 @@
 import type { TestUserConfig } from 'vitest/node'
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 test.for([
   { isolate: true },
@@ -33,7 +33,7 @@ test.for([
 })
 
 function createTest(fileName: string) {
-  return /* ts */`
+  return /* ts */ `
     import { expect, test } from 'vitest'
 
     const testPath = expect.getState().testPath;

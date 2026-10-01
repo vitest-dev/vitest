@@ -1,25 +1,34 @@
-import { runVitest } from '#test-utils'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'pathe'
-
 import { describe, expect, it } from 'vitest'
+import { runVitest } from '#test-utils'
 
 describe('json reporter', async () => {
   const root = resolve(import.meta.dirname, '..', '..', 'fixtures', 'reporters')
   const projectRoot = resolve(import.meta.dirname, '..', '..', '..', '..')
 
-  it('generates correct report', async () => {
-    const { stdout } = await runVitest({
-      reporters: 'json',
-      root,
-      include: ['**/json-fail-import.test.ts', '**/json-fail.test.ts'],
-      includeTaskLocation: true,
-    }, ['json-fail'])
+  function readJsonReport() {
+    return JSON.parse(readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8'))
+  }
 
-    const data = JSON.parse(stdout)
+  it('generates correct report', async () => {
+    await runVitest(
+      {
+        reporters: 'json',
+        root,
+        include: ['**/json-fail-import.test.ts', '**/json-fail.test.ts'],
+        includeTaskLocation: true,
+      },
+      ['json-fail'],
+    )
+
+    const data = readJsonReport()
 
     expect(data.testResults).toHaveLength(2)
 
-    const failedImport = data.testResults.find((r: any) => r.name.includes('json-fail-import.test'))!
+    const failedImport = data.testResults.find((r: any) =>
+      r.name.includes('json-fail-import.test'),
+    )!
     const failedTest = data.testResults.find((r: any) => r.name.includes('json-fail.test'))!
 
     expect(failedTest.assertionResults).toHaveLength(1)
@@ -31,22 +40,24 @@ describe('json reporter', async () => {
     const result = failedTest.assertionResults[0]
     delete result.duration
     const rootRegexp = new RegExp(projectRoot, 'g')
-    result.failureMessages = result.failureMessages
-      .map((m: string) => {
-        const errorStack = m.split('\n').slice(0, 2).join('\n')
-        return errorStack.replace(/\\/g, '/').replace(rootRegexp, '<root>')
-      })
+    result.failureMessages = result.failureMessages.map((m: string) => {
+      const errorStack = m.split('\n').slice(0, 2).join('\n')
+      return errorStack.replace(/\\/g, '/').replace(rootRegexp, '<root>')
+    })
     expect(result).toMatchSnapshot()
   })
 
   it('generates empty json with success: false', async () => {
-    const { stdout } = await runVitest({
-      reporters: 'json',
-      root,
-      includeTaskLocation: true,
-    }, ['json-non-existing-files'])
+    await runVitest(
+      {
+        reporters: 'json',
+        root,
+        includeTaskLocation: true,
+      },
+      ['json-non-existing-files'],
+    )
 
-    const json = JSON.parse(stdout)
+    const json = readJsonReport()
     json.startTime = 0
     expect(json).toMatchInlineSnapshot(`
       {
@@ -83,14 +94,17 @@ describe('json reporter', async () => {
   })
 
   it('generates empty json with success: true', async () => {
-    const { stdout } = await runVitest({
-      reporters: 'json',
-      root,
-      includeTaskLocation: true,
-      passWithNoTests: true,
-    }, ['json-non-existing-files'])
+    await runVitest(
+      {
+        reporters: 'json',
+        root,
+        includeTaskLocation: true,
+        passWithNoTests: true,
+      },
+      ['json-non-existing-files'],
+    )
 
-    const json = JSON.parse(stdout)
+    const json = readJsonReport()
     json.startTime = 0
     expect(json).toMatchInlineSnapshot(`
       {
@@ -131,22 +145,22 @@ describe('json reporter', async () => {
     ['passed', 'all-skipped.test.ts'],
     ['failed', 'some-failing.test.ts'],
   ])('resolves to "%s" status for test file "%s"', async (expected, file) => {
-    const { stdout } = await runVitest({ reporters: 'json', root, include: [`**/${file}`] })
+    await runVitest({ reporters: 'json', root, include: [`**/${file}`] })
 
-    const data = JSON.parse(stdout)
+    const data = readJsonReport()
 
     expect(data.testResults).toHaveLength(1)
     expect(data.testResults[0].status).toBe(expected)
   })
 
   it('includes all meta fields when filterMeta is not set', async () => {
-    const { stdout } = await runVitest({
+    await runVitest({
       reporters: 'json',
       root,
       include: ['**/json-meta.test.ts'],
     })
 
-    const data = JSON.parse(stdout)
+    const data = readJsonReport()
     const results = data.testResults[0].assertionResults
     const passing = results.find((r: any) => r.title === 'pass')
 
@@ -154,19 +168,38 @@ describe('json reporter', async () => {
   })
 
   it('filterMeta filters meta fields by key', async () => {
-    const { stdout } = await runVitest({
-      reporters: [['json', {
-        filterMeta: key => key !== 'custom',
-      }]],
+    await runVitest({
+      reporters: [
+        [
+          'json',
+          {
+            filterMeta: (key) => key !== 'custom',
+          },
+        ],
+      ],
       root,
       include: ['**/json-meta.test.ts'],
     })
 
-    const data = JSON.parse(stdout)
+    const data = readJsonReport()
     const results = data.testResults[0].assertionResults
 
     for (const result of results) {
       expect(result.meta).toEqual({})
     }
+  })
+
+  it('prints report to stdout when stdout option is set', async () => {
+    const { stdout } = await runVitest({
+      reporters: [['json', { stdout: true }]],
+      root,
+      include: ['**/ok.test.ts'],
+    })
+    const data = JSON.parse(stdout)
+    expect(data).toMatchObject({
+      numTotalTests: 1,
+      numPassedTests: 1,
+      success: true,
+    })
   })
 })

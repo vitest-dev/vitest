@@ -1,50 +1,29 @@
-import type { CoverageMapData } from 'istanbul-lib-coverage'
 import type { CoverageProviderModule } from 'vitest/node'
-import type { IstanbulCoverageProvider } from './provider'
-import { COVERAGE_STORE_KEY } from './constants'
+import assert from 'node:assert'
+import { BaseCoverageProviderModule } from './base'
+import { writeCoverageFile } from './commands'
 
 const mod: CoverageProviderModule = {
-  takeCoverage() {
-    // @ts-expect-error -- untyped global
-    return globalThis[COVERAGE_STORE_KEY]
-  },
+  takeCoverage(options) {
+    const coverage = BaseCoverageProviderModule.takeCoverage()
 
-  // Reset coverage map to prevent duplicate results if this is called twice in row
-  startCoverage() {
-    // @ts-expect-error -- untyped global
-    const coverageMap = globalThis[COVERAGE_STORE_KEY] as CoverageMapData
-
-    // When isolated, there are no previous results
-    if (!coverageMap) {
+    if (!coverage) {
       return
     }
 
-    for (const filename in coverageMap) {
-      const branches = coverageMap[filename].b
+    const coverageFilesDirectory = options?.coverageFilesDirectory
+    assert(coverageFilesDirectory, 'coverageFilesDirectory is required')
 
-      for (const key in branches) {
-        branches[key] = branches[key].map(() => 0)
-      }
-
-      for (const metric of ['f', 's'] as const) {
-        const entry = coverageMap[filename][metric]
-
-        for (const key in entry) {
-          entry[key] = 0
-        }
-      }
-    }
+    return writeCoverageFile(coverageFilesDirectory, coverage)
   },
 
-  async getProvider(): Promise<IstanbulCoverageProvider> {
-    // to not bundle the provider
-    const providerPath = './provider.js'
-    const { IstanbulCoverageProvider } = (await import(
-      /* @vite-ignore */
-      providerPath,
-    )) as typeof import('./provider')
+  startCoverage() {
+    BaseCoverageProviderModule.startCoverage()
+  },
 
-    return new IstanbulCoverageProvider()
+  getProvider() {
+    return BaseCoverageProviderModule.getProvider()
   },
 }
+
 export default mod

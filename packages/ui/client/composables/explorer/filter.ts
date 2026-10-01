@@ -1,8 +1,20 @@
-import type { Task } from '@vitest/runner'
-import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
+import type { RunnerTask as Task } from 'vitest'
+import type {
+  FileTreeNode,
+  Filter,
+  FilterResult,
+  ParentTreeNode,
+  SearchMatcher,
+  UITaskTreeNode,
+} from '~/composables/explorer/types'
 import { client, config, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
-import { currentProjectName, filteredFiles, projectSort, uiEntries } from '~/composables/explorer/state'
+import {
+  currentProjectName,
+  filteredFiles,
+  projectSort,
+  uiEntries,
+} from '~/composables/explorer/state'
 import {
   getSortedRootTasks,
   isFileNode,
@@ -19,22 +31,13 @@ export function testMatcher(task: Task, search: SearchMatcher, filter: Filter) {
  * @param search The search applied.
  * @param filter The filter applied.
  */
-export function runFilter(
-  search: SearchMatcher,
-  filter: Filter,
-) {
-  const entries = [...filterAll(
-    search,
-    filter,
-  )]
+export function runFilter(search: SearchMatcher, filter: Filter) {
+  const entries = [...filterAll(search, filter)]
   uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
 }
 
-export function* filterAll(
-  search: SearchMatcher,
-  filter: Filter,
-) {
+export function* filterAll(search: SearchMatcher, filter: Filter) {
   const project = currentProjectName.value
   const tasks = getSortedRootTasks(projectSort.value)
 
@@ -46,33 +49,22 @@ export function* filterAll(
   }
 }
 
-export function* filterNode(
-  node: UITaskTreeNode,
-  search: SearchMatcher,
-  filter: Filter,
-) {
+export function* filterNode(node: UITaskTreeNode, search: SearchMatcher, filter: Filter) {
+  // Parent node IDs that match or contain a matching descendant.
   const treeNodes = new Set<string>()
-
+  // Direct match state of visited parents, used to include their immediate children.
   const parentsMap = new Map<string, boolean>()
+  // Visited nodes with their effective match state, consumed bottom-up by filterParents.
   const list: FilterResult[] = []
-
+  // Matching file ID, or owning file ID when filtering an expanded subtree.
   let fileId: string | undefined
 
   if (filter.onlyTests) {
-    for (const [match, child] of visitNode(
-      node,
-      treeNodes,
-      n => matcher(n, search, filter),
-    )) {
+    for (const [match, child] of visitNode(node, treeNodes, (n) => matcher(n, search, filter))) {
       list.push([match, child])
     }
-  }
-  else {
-    for (const [match, child] of visitNode(
-      node,
-      treeNodes,
-      n => matcher(n, search, filter),
-    )) {
+  } else {
+    for (const [match, child] of visitNode(node, treeNodes, (n) => matcher(n, search, filter))) {
       if (isParentNode(child)) {
         parentsMap.set(child.id, match)
         if (isFileNode(child)) {
@@ -80,30 +72,29 @@ export function* filterNode(
             fileId = child.id
           }
           list.push([match, child])
-        }
-        else {
+        } else {
           list.push([match || parentsMap.get(child.parentId) === true, child])
         }
-      }
-      else {
+      } else {
         list.push([match || parentsMap.get(child.parentId) === true, child])
       }
     }
     // when expanding a non-file node
     if (!fileId && !isFileNode(node) && 'fileId' in node) {
       fileId = node.fileId as string
+      const file = explorerTree.nodes.get(fileId)
+      if (file && matcher(file, search, filter)) {
+        treeNodes.add(fileId)
+      }
     }
   }
 
+  // TODO: Let filterParents own this traversal-local state.
   const filesToShow = new Set<string>()
 
-  const entries = [...filterParents(
-    list,
-    filter.onlyTests,
-    treeNodes,
-    filesToShow,
-    fileId,
-  )].reverse()
+  const entries = [
+    ...filterParents(list, filter.onlyTests, treeNodes, filesToShow, fileId),
+  ].reverse()
 
   // We show only the files and parents whose parent is expanded.
   // Filtering will return all the nodes matching the filter and their parents.
@@ -123,7 +114,9 @@ export function* filterNode(
 
   // collect files and all suites whose parent is expanded
   const parents = new Set(
-    entries.filter(e => isFileNode(e) || (isParentNode(e) && map.get(e.parentId)?.expanded)).map(e => e.id),
+    entries
+      .filter((e) => isFileNode(e) || (isParentNode(e) && map.get(e.parentId)?.expanded))
+      .map((e) => e.id),
   )
 
   // collect files, and suites and tests whose parent is expanded
@@ -157,8 +150,7 @@ function expandCollapseNode(
 
       return child
     }
-  }
-  else {
+  } else {
     // show the parent if matches the filter or at least one child matches the filter
     if (match || treeNodes.has(child.id) || filesToShow.has(child.id)) {
       const parent = explorerTree.nodes.get(child.parentId)
@@ -181,7 +173,13 @@ function* filterParents(
   for (let i = list.length - 1; i >= 0; i--) {
     const [match, child] = list[i]
     const isParent = isParentNode(child)
-    if (!collapseParents && nodeId && treeNodes.has(nodeId) && 'fileId' in child && child.fileId === nodeId) {
+    if (
+      !collapseParents &&
+      nodeId &&
+      treeNodes.has(nodeId) &&
+      'fileId' in child &&
+      child.fileId === nodeId
+    ) {
       if (isParent) {
         treeNodes.add(child.id)
       }
@@ -198,18 +196,11 @@ function* filterParents(
     }
 
     if (isParent) {
-      const node = expandCollapseNode(
-        match,
-        child,
-        treeNodes,
-        collapseParents,
-        filesToShow,
-      )
+      const node = expandCollapseNode(match, child, treeNodes, collapseParents, filesToShow)
       if (node) {
         yield node
       }
-    }
-    else if (match) {
+    } else if (match) {
       const parent = explorerTree.nodes.get(child.parentId)
       if (parent && isFileNode(parent)) {
         filesToShow.add(parent.id)
@@ -223,7 +214,11 @@ function matchState(task: Task, filter: Filter) {
   if (filter.slow) {
     if (task.type === 'test') {
       const threshold = config.value.slowTestThreshold
-      if (typeof threshold === 'number' && typeof task.result?.duration === 'number' && task.result.duration > threshold) {
+      if (
+        typeof threshold === 'number' &&
+        typeof task.result?.duration === 'number' &&
+        task.result.duration > threshold
+      ) {
         return true
       }
     }
@@ -247,11 +242,7 @@ function matchState(task: Task, filter: Filter) {
   return false
 }
 
-function matchTask(
-  task: Task,
-  search: SearchMatcher,
-  filter: Filter,
-) {
+function matchTask(task: Task, search: SearchMatcher, filter: Filter) {
   // search and filter will apply together
   if (search(task)) {
     const hasStatusFilter = filter.success || filter.failed || filter.skipped || filter.slow
@@ -259,8 +250,7 @@ function matchTask(
       if (matchState(task, filter)) {
         return true
       }
-    }
-    else {
+    } else {
       return true
     }
   }
@@ -282,11 +272,9 @@ function* visitNode(
         treeNodes.add(parent.id)
         parent = explorerTree.nodes.get(parent.parentId)
       }
-    }
-    else if (isFileNode(node)) {
+    } else if (isFileNode(node)) {
       treeNodes.add(node.id)
-    }
-    else {
+    } else {
       treeNodes.add(node.id)
       let parent = explorerTree.nodes.get(node.parentId)
       while (parent) {

@@ -4,13 +4,22 @@ title: Vitest UI | Guide
 
 # Vitest UI
 
-Powered by Vite, Vitest also has a dev server under the hood when running the tests. This allows Vitest to provide a beautiful UI to view and interact with your tests. The Vitest UI is optional, so you'll need to install it with:
+Vitest UI is a visual interface for exploring your test results. You can use it interactively while tests run or as a static HTML report for reviewing completed runs.
+
+Vitest UI is optional, so you'll need to install it with:
 
 ```bash
 npm i -D @vitest/ui
 ```
 
-Then you can start the tests with UI by passing the `--ui` flag:
+<img alt="Vitest UI" img-light src="/ui-1-light.png">
+<img alt="Vitest UI" img-dark src="/ui-1-dark.png">
+
+## Live UI
+
+The Live UI runs alongside Vitest's development server and requires [watch mode](/config/watch), which is enabled by default. It stays connected to the running Vitest process, so results update as tests rerun. You can also rerun selected tests, update failed snapshots, and edit test files directly from the UI.
+
+Start it by passing the `--ui` flag:
 
 ```bash
 vitest --ui
@@ -18,14 +27,17 @@ vitest --ui
 
 Then you can visit the Vitest UI at <a href="http://localhost:51204/__vitest__/">`http://localhost:51204/__vitest__/`</a>
 
-::: warning
-The UI is interactive and requires a running Vite server, so make sure to run Vitest in `watch` mode (the default). Alternatively, you can generate a static HTML report that looks identical to the Vitest UI by specifying `html` in config's `reporters` option.
+::: tip
+Vitest UI access is protected. If the direct URL shows an error, open the URL with a token printed by Vitest in the terminal, for example `http://localhost:51204/__vitest__/?token=...`.
 :::
 
-<img alt="Vitest UI" img-light src="/ui-1-light.png">
-<img alt="Vitest UI" img-dark src="/ui-1-dark.png">
+## HTML Reporter
 
-UI can also be used as a reporter. Use `'html'` reporter in your Vitest configuration to generate HTML output and preview the results of your tests:
+The HTML reporter writes test results to a static version of Vitest UI. The result views remain navigable, but the report is read-only and cannot rerun tests, update snapshots, or edit test files. It is useful for run mode, CI, and automated workflows where results are reviewed later.
+
+Use the `html` reporter from the command line or in your Vitest configuration:
+
+::: code-group
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -37,38 +49,107 @@ export default defineConfig({
 })
 ```
 
-You can check your coverage report in Vitest UI: see [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
-
-::: warning
-If you still want to see how your tests are running in real time in the terminal, add `configDefaults.reporters` to the `reporters` option: `['html', ...configDefaults.reporters]`.
-:::
-
-::: tip
-To preview your HTML report, you can use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
-
-```sh
-npx vite preview --outDir ./html
+```bash [CLI]
+vitest run --reporter=html
 ```
 
-You can configure output with [`outputFile`](/config/outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.
 :::
 
-::: tip
+::: tip Keep terminal output
+Configuring the HTML reporter replaces the default terminal reporter. To keep terminal output, [include Vitest's default reporters](/guide/reporters#default-configuration).
+
+```ts [vitest.config.ts]
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: ['html', ...configDefaults.reporters],
+  },
+})
+```
+
+:::
+
+### Preview Locally
+
+By default, the report entry is written to `.vitest/index.html`. You can configure the artifact directory with the HTML reporter's `outputDir` option.
+
+To preview the default output, use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
+
+```sh
+npx vite preview --outDir .vitest
+```
+
+Open the URL printed by Vite in your browser. Alternatively, [VS Code's Integrated Browser](https://code.visualstudio.com/docs/debugtest/integrated-browser) can open `.vitest/index.html` directly without a preview server.
+
+### Share as a Single File
+
+Set `singleFile` to generate a self-contained HTML report:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['html', { singleFile: true }],
+    ],
+  },
+})
+```
+
+When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole output directory.
+
+Because everything is inlined, you can open `<outputDir>/index.html` directly in a browser with a `file://` URL. No preview server is required.
+
+::: warning
+`singleFile` has two caveats:
+
+- The file can grow very large because everything is embedded inline. It can be slow to open, memory-hungry, or exceed the size limits of artifact viewers and static hosts.
+- Coverage HTML reports are not inlined yet and remain as separate files.
+
+Prefer the default multi-file report when the suite has many or large attachments, or when you need coverage included in the bundle.
+:::
+
+### View Reports from CI
+
 To view the HTML report from CI, for example in GitHub Actions, upload the output directory as an artifact:
 
 ```yaml
-- uses: actions/upload-artifact@v4
+- uses: actions/upload-artifact@v7
   id: upload-report
   with:
     name: vitest-report
-    path: html/
+    path: .vitest/
 
-- name: Viewer link in summary
-  run: echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
+- name: Link HTML report
+  run: echo "::notice title=Vitest HTML report::$REPORT_URL"
+  env:
+    REPORT_URL: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}
 ```
 
-This adds a link to the job summary. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
-:::
+This adds the report link as a notice annotation on the workflow run. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
+
+When you use `singleFile: true`, you can upload the report as a single file and view it directly from GitHub artifacts with the [`archive: false` option](https://github.com/actions/upload-artifact#upload-an-individual-file-unzipped):
+
+```yaml
+- uses: actions/upload-artifact@v7
+  id: upload-report
+  with:
+    path: .vitest/index.html
+    archive: false
+
+- name: Link HTML report
+  run: echo "::notice title=Vitest HTML report::$REPORT_URL"
+  env:
+    REPORT_URL: ${{ steps.upload-report.outputs.artifact-url }}
+```
+
+## Coverage
+
+Vitest UI displays coverage results in both the Live UI and HTML reports. See [Vitest UI Coverage](/guide/coverage#vitest-ui) for setup and usage.
+
+## Trace View
+
+Vitest UI replays recorded browser interactions when [`browser.traceView`](/guide/browser/trace-view) is enabled. The Live UI streams trace entries as tests run, while HTML reports preserve recorded traces for later review.
 
 ## Module Graph
 
@@ -103,7 +184,7 @@ By left-clicking on the module node, you open the Module Info view.
 <img alt="The module info view for an inlined module" img-light src="/ui/light-module-info.png">
 <img alt="The module info view for an inlined module" img-dark src="/ui/dark-module-info.png">
 
-This view is separated into two parts. The top part shows the full module ID and some diagnostics about the module. If [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache) is enabled, there will be a "cached" or "not cached" badge. On the right you can see time diagnostics:
+This view is separated into two parts. The top part shows the full module ID and some diagnostics about the module. If [`fsModuleCache`](/config/fsmodulecache) is enabled, there will be a "cached" or "not cached" badge. On the right you can see time diagnostics:
 
 - Self Time: the time it took to import the module, excluding static imports.
 - Total Time: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.

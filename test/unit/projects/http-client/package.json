@@ -1,0 +1,6 @@
+{
+  "name": "http-client",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts"
+}

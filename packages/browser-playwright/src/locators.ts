@@ -1,11 +1,7 @@
 import type {
-  UserEventClearOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
-  UserEventFillOptions,
   UserEventHoverOptions,
-  UserEventSelectOptions,
-  UserEventUploadOptions,
 } from 'vitest/browser'
 import {
   getByAltTextSelector,
@@ -17,59 +13,37 @@ import {
   getByTitleSelector,
   getIframeScale,
   Locator,
-  processTimeoutOptions,
   selectorEngine,
 } from '@vitest/browser/locators'
 import { page, server } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
 
 class PlaywrightLocator extends Locator {
-  constructor(public selector: string, protected _container?: Element) {
+  constructor(
+    public selector: string,
+    protected _container?: Element,
+  ) {
     super()
   }
 
   public override click(options?: UserEventClickOptions) {
-    return super.click(processTimeoutOptions(processClickOptions(options)))
+    return super.click(processClickOptions(options))
   }
 
   public override dblClick(options?: UserEventClickOptions): Promise<void> {
-    return super.dblClick(processTimeoutOptions(processClickOptions(options)))
+    return super.dblClick(processClickOptions(options))
   }
 
   public override tripleClick(options?: UserEventClickOptions): Promise<void> {
-    return super.tripleClick(processTimeoutOptions(processClickOptions(options)))
-  }
-
-  public override selectOptions(
-    value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
-    options?: UserEventSelectOptions,
-  ): Promise<void> {
-    return super.selectOptions(value, processTimeoutOptions(options))
-  }
-
-  public override clear(options?: UserEventClearOptions): Promise<void> {
-    return super.clear(processTimeoutOptions(options))
+    return super.tripleClick(processClickOptions(options))
   }
 
   public override hover(options?: UserEventHoverOptions): Promise<void> {
-    return super.hover(processTimeoutOptions(processHoverOptions(options)))
-  }
-
-  public override upload(
-    files: string | string[] | File | File[],
-    options?: UserEventUploadOptions,
-  ): Promise<void> {
-    return super.upload(files, processTimeoutOptions(options))
-  }
-
-  public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    return super.fill(text, processTimeoutOptions(options))
+    return super.hover(processHoverOptions(options))
   }
 
   public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
-    return super.dropTo(target, processTimeoutOptions(
-      processDragAndDropOptions(options),
-    ))
+    return super.dropTo(target, processDragAndDropOptions(options))
   }
 
   protected locator(selector: string) {
@@ -77,10 +51,7 @@ class PlaywrightLocator extends Locator {
   }
 
   protected elementLocator(element: Element) {
-    return new PlaywrightLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
+    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
   }
 }
 
@@ -92,7 +63,9 @@ page.extend({
     return new PlaywrightLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
+    return new PlaywrightLocator(
+      getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId),
+    )
   },
   getByAltText(text, options) {
     return new PlaywrightLocator(getByAltTextSelector(text, options))
@@ -108,19 +81,14 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PlaywrightLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
+    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
   },
   frameLocator(locator: Locator) {
-    return new PlaywrightLocator(
-      `${locator.selector} >> internal:control=enter-frame`,
-    )
+    return new PlaywrightLocator(`${locator.selector} >> internal:control=enter-frame`)
   },
 })
 
-__INTERNAL._createLocator = selector => new PlaywrightLocator(selector)
+__INTERNAL._createLocator = (selector) => new PlaywrightLocator(selector)
 
 function processDragAndDropOptions(options?: UserEventDragAndDropOptions) {
   if (!options) {

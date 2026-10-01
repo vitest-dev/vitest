@@ -21,17 +21,23 @@ export default defineConfig({
           root: './space_browser_inline',
           browser: {
             enabled: true,
-            instances: [{ browser: process.env.BROWSER as 'chromium' || 'chromium' }],
+            instances: [{ browser: (process.env.BROWSER as 'chromium') || 'chromium' }],
             headless: true,
             provider: playwright(),
           },
           alias: {
-            'test-alias-from-vitest': new URL('./space_browser_inline/test-alias-to.ts', import.meta.url).pathname,
+            'test-alias-from-vitest': new URL(
+              './space_browser_inline/test-alias-to.ts',
+              import.meta.url,
+            ).pathname,
           },
         },
         resolve: {
           alias: {
-            'test-alias-from-vite': new URL('./space_browser_inline/test-alias-to.ts', import.meta.url).pathname,
+            'test-alias-from-vite': new URL(
+              './space_browser_inline/test-alias-to.ts',
+              import.meta.url,
+            ).pathname,
           },
         },
       },

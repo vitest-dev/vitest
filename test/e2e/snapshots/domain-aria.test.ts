@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
-test('aria snapshot', async () => {
+test('aria snapshot', { tags: ['browser'] }, async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-aria')
   const testFile = join(root, 'basic.test.ts')
   const snapshotFile = join(root, '__snapshots__/basic.test.ts.snap')
@@ -61,8 +61,7 @@ test('aria snapshot', async () => {
   `)
 
   // hand-edit snapshot to introduce regex patterns for "semantic match" test
-  editFile(snapshotFile, s => s
-    .replace(`- button "1234"`, `- button /\\\\d+/`))
+  editFile(snapshotFile, (s) => s.replace(`- button "1234"`, `- button /\\\\d+/`))
 
   // re-run without update — regex pattern matches, all pass, snapshot unchanged
   result = await runVitest({ root, update: 'none' })
@@ -96,9 +95,11 @@ test('aria snapshot', async () => {
   `)
 
   // edit test
-  editFile(testFile, s => s
-    .replace('<p>Original</p>', '<p>Changed</p>')
-    .replace(`aria-label="1234"`, `aria-label="9999"`))
+  editFile(testFile, (s) =>
+    s
+      .replace('<p>Original</p>', '<p>Changed</p>')
+      .replace(`aria-label="1234"`, `aria-label="9999"`),
+  )
 
   // run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })
@@ -110,7 +111,7 @@ test('aria snapshot', async () => {
     Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
 
     Failure screenshot:
-      - snapshots/fixtures/domain-aria/__screenshots__/basic.test.ts/semantic-match-with-regex-in-snapshot-1.png
+      - snapshots/fixtures/domain-aria/.vitest/attachments/failure-screenshots/basic.test.ts/semantic-match-with-regex-in-snapshot.png
 
     - Expected
     + Received
@@ -119,11 +120,11 @@ test('aria snapshot', async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:20:24
+     ❯ basic.test.ts:20:25
          18|     <button aria-label="9999">Pattern</button>
          19|   \`
          20|   expect(document.body).toMatchAriaSnapshot()
-           |                        ^
+           |                         ^
          21| })
          22|
 

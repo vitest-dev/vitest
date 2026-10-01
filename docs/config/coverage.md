@@ -5,7 +5,7 @@ outline: deep
 
 # coverage <CRoot /> {#coverage}
 
-You can use [`v8`](/guide/coverage.html#v8-provider), [`istanbul`](/guide/coverage.html#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
+You can use [`v8`](/guide/coverage#v8-provider), [`istanbul`](/guide/coverage#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -45,7 +45,9 @@ List of files included in coverage as glob patterns. By default only files cover
 
 It is recommended to pass file extensions in the pattern.
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+Patterns are matched against each file's path relative to the project root. A pattern with no glob wildcard is treated as a directory and matches everything inside it, so `include: ['src']` is equivalent to `include: ['src/**']`.
+
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.exclude
 
@@ -54,9 +56,9 @@ See [Including and excluding files from coverage report](/guide/coverage.html#in
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
-List of files excluded from coverage as glob patterns.
+List of files excluded from coverage as glob patterns. Patterns are matched the same way as [`coverage.include`](#coverage-include).
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.clean
 
@@ -96,14 +98,13 @@ Directory to write coverage report to.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
-Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reports`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
+Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@vitest/istanbul-lib-report`](https://github.com/vitest-dev/istanbuljs/tree/main/packages/istanbul-lib-report/src/reports) for details about reporter specific options.
 
 The reporter has three different types:
 
 - A single reporter: `{ reporter: 'html' }`
 - Multiple reporters without options: `{ reporter: ['html', 'json'] }`
 - A single or multiple reporters with reporter options:
-  <!-- eslint-skip -->
   ```ts
   {
     reporter: [
@@ -116,7 +117,6 @@ The reporter has three different types:
 
 You can also pass custom coverage reporters. See [Guide - Custom Coverage Reporter](/guide/coverage#custom-coverage-reporter) for more information.
 
-<!-- eslint-skip -->
 ```ts
   {
     reporter: [
@@ -184,7 +184,6 @@ If a threshold is set to a positive number, it will be interpreted as the minimu
 
 If a threshold is set to a negative number, it will be treated as the maximum number of uncovered items allowed. For example, setting the lines threshold to `-10` means that no more than 10 lines may be uncovered.
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -233,12 +232,64 @@ Global threshold for statements.
 
 ### coverage.thresholds.perFile
 
-- **Type:** `boolean`
+- **Type:** `boolean | { 100?: boolean, lines?: number, functions?: number, branches?: number, statements?: number }`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholds.perFile`, `--coverage.thresholds.perFile=false`
 
-Check thresholds per file.
+When `true`, each file is checked against the top-level thresholds instead of the project-wide aggregate. When set to an object, both are checked: the aggregate against the top-level thresholds, and every file against these per-file minimums.
+
+```ts
+{
+  coverage: {
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+      perFile: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    }
+  }
+}
+```
+
+`{ 100: true }` is also accepted inside the object as a shortcut for setting all four metrics to `100`:
+
+```ts
+{
+  coverage: {
+    thresholds: {
+      lines: 80,
+      perFile: {
+        100: true,
+      },
+    }
+  }
+}
+```
+
+`perFile` can also be set on an individual [glob-pattern threshold](/config/coverage#coverage-thresholds-glob-pattern). Glob patterns do **not** inherit the top-level `perFile`; set it on each glob explicitly.
+
+```ts
+{
+  coverage: {
+    thresholds: {
+      perFile: true,
+      lines: 80,
+
+      'src/utils/**': {
+        lines: 90,
+        perFile: true,
+      },
+    }
+  }
+}
+```
 
 ### coverage.thresholds.autoUpdate
 
@@ -250,15 +301,17 @@ Check thresholds per file.
 Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is better than the configured thresholds.
 This option helps to maintain thresholds when coverage is improved.
 
-You can also pass a function for formatting the updated threshold values:
+You can also pass a function for formatting the updated threshold values. The function receives the new threshold as the first argument and the previous threshold as the second:
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
     thresholds: {
-      // Update thresholds without decimals
-      autoUpdate: (newThreshold) => Math.floor(newThreshold),
+      // Log the change and update without decimals
+      autoUpdate: (newThreshold, previousThreshold) => {
+        console.log(`Updated threshold from ${previousThreshold} to ${newThreshold}`)
+        return Math.floor(newThreshold)
+      },
 
       // 95.85 -> 95
       functions: 95,
@@ -279,18 +332,19 @@ Shortcut for `--coverage.thresholds.lines 100 --coverage.thresholds.functions 10
 
 ### coverage.thresholds[glob-pattern]
 
-- **Type:** `{ statements?: number functions?: number branches?: number lines?: number }`
+- **Type:** `{ statements?: number, functions?: number, branches?: number, lines?: number, perFile?: boolean | object }`
 - **Default:** `undefined`
 - **Available for providers:** `'v8' | 'istanbul'`
 
 Sets thresholds for files matching the glob pattern.
+
+Each glob pattern can set its own `perFile` (`boolean | object`), checked exactly like the top-level `perFile` but scoped to the matched files. Glob patterns do not inherit the top-level `perFile` — set it per glob.
 
 ::: tip NOTE
 Vitest counts all files, including those covered by glob-patterns, into the global coverage thresholds.
 This is different from Jest behavior.
 :::
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -305,6 +359,8 @@ This is different from Jest behavior.
         functions: 90,
         branches: 85,
         lines: 80,
+        // each matching file must individually hit the thresholds above
+        perFile: true,
       },
 
       // Files matching this pattern will only have lines thresholds set.
@@ -325,7 +381,6 @@ This is different from Jest behavior.
 
 Sets thresholds to 100 for files matching the glob pattern.
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -355,7 +410,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 ## coverage.watermarks
 
 - **Type:**
-<!-- eslint-skip -->
+
 ```ts
 {
   statements?: [number, number],
@@ -366,7 +421,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 ```
 
 - **Default:**
-<!-- eslint-skip -->
+
 ```ts
 {
   statements: [50, 80],
@@ -395,11 +450,10 @@ Concurrency limit used when processing the coverage results.
 - **Type:** `(options: InstrumenterOptions) => CoverageInstrumenter`
 - **Available for providers:** `'istanbul'`
 
-Factory for a custom instrumenter to use in place of the default `istanbul-lib-instrument`. Vitest calls the factory once during initialization and reuses the returned instrumenter for every file. The rest of the Istanbul pipeline (collection, merging, reporting) is unchanged.
+Factory for a custom instrumenter to use in place of the default `@vitest/istanbul-lib-instrument`. Vitest calls the factory once during initialization and reuses the returned instrumenter for every file. The rest of the Istanbul pipeline (collection, merging, reporting) is unchanged.
 
 The factory receives an `InstrumenterOptions` object with Vitest's runtime coverage settings, and must return an object implementing the `CoverageInstrumenter` interface. Both types are exported from `vitest/node`.
 
-<!-- eslint-skip -->
 ```ts
 interface InstrumenterOptions {
   coverageVariable: string
@@ -415,7 +469,6 @@ interface CoverageInstrumenter {
 }
 ```
 
-<!-- eslint-skip -->
 ```ts
 import { defineConfig } from 'vitest/config'
 import { createInstrumenter } from '@vitest/some-custom-instrumenter'
@@ -444,7 +497,7 @@ Specifies the module name or path for the custom coverage provider module. See [
 - **Default:** Automatically inferred from `html`, `html-spa`, or `lcov` coverage reporters
 - **CLI:** `--coverage.htmlDir=<path>`
 
-Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters#html-reporter).
 
 This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
 

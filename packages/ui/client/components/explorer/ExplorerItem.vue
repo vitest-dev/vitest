@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task, TaskState } from '@vitest/runner'
+import type { RunnerTask as Task, TaskState } from 'vitest'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { computed, nextTick } from 'vue'
@@ -9,7 +9,7 @@ import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { coverageEnabled, disableCoverage } from '~/composables/navigation'
-import { getBadgeTextColor } from '~/utils/task'
+import { getProjectBadgeStyle } from '~/utils/task'
 import IconAction from '../IconAction.vue'
 import IconButton from '../IconButton.vue'
 import StatusIcon from '../StatusIcon.vue'
@@ -29,7 +29,7 @@ const {
   type,
   disableTaskLocation,
   onItemClick,
-  projectNameColor,
+  projectName,
   state,
 } = defineProps<{
   taskId: string
@@ -46,7 +46,6 @@ const {
   expandable: boolean
   search?: string
   projectName?: string
-  projectNameColor: string
   disableTaskLocation?: boolean
   onItemClick?: (task: Task) => void
 }>()
@@ -65,14 +64,12 @@ const failedSnapshot = computed(() => {
 
 function toggleOpen() {
   if (!expandable) {
-    onItemClick?.(task.value!)
     return
   }
 
   if (opened) {
     explorerTree.collapseNode(taskId)
-  }
-  else {
+  } else {
     explorerTree.expandNode(taskId)
   }
 }
@@ -86,8 +83,7 @@ async function onRun(task: Task) {
 
   if (type === 'file') {
     await runFiles([task.file])
-  }
-  else {
+  } else {
     await runTask(task)
   }
 }
@@ -96,17 +92,14 @@ function updateSnapshot(task: Task) {
   return client.rpc.updateSnapshot(task.file)
 }
 
-const data = computed(() => {
-  return indent <= 0 ? [] : Array.from({ length: indent }, (_, i) => `${taskId}-${i}`)
-})
 const gridStyles = computed(() => {
-  const entries = data.value
   const gridColumns: string[] = []
-  // folder icon
-  if (type === 'file' || type === 'suite') {
-    gridColumns.push('min-content')
+  // allocate zero-width columns to simulate indentation via grid gap
+  for (let i = 0; i < indent; i++) {
+    gridColumns.push('0')
   }
-
+  // all items have collapse/expand icon equivalent spacing
+  gridColumns.push('min-content')
   // status icon
   gridColumns.push('min-content')
   // typecheck icon
@@ -117,11 +110,7 @@ const gridStyles = computed(() => {
   gridColumns.push('minmax(0, 1fr)')
   // action buttons
   gridColumns.push('min-content')
-
-  // all the vertical lines with width 1rem and mx-2: always centered
-  return `grid-template-columns: ${
-    entries.map(() => '1rem').join(' ')
-  } ${gridColumns.join(' ')};`
+  return `grid-template-columns: ${gridColumns.join(' ')};`
 })
 
 const runButtonTitle = computed(() => {
@@ -140,7 +129,7 @@ const highlighted = computed(() => {
   const regex = highlightRegex.value
   const useName = escapedName.value
   return regex
-    ? useName.replace(regex, match => `<span class="highlight">${match}</span>`)
+    ? useName.replace(regex, (match) => `<span class="highlight">${match}</span>`)
     : useName
 })
 
@@ -152,19 +141,20 @@ const showDetailsTooltip = computed(() => {
       ? 'View Suite Source Code'
       : 'View Test Source Code'
 })
-const showDetailsClasses = computed(() => disableShowDetails.value ? 'color-red5 dark:color-#f43f5e' : null)
+const showDetailsClasses = computed(() =>
+  disableShowDetails.value ? 'color-red5 dark:color-#f43f5e' : null,
+)
 
 function showDetails() {
   const t = task.value!
   if (type === 'file') {
     onItemClick?.(t)
-  }
-  else {
+  } else {
     showTaskSource(t)
   }
 }
 
-const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor))
+const projectBadgeStyle = computed(() => getProjectBadgeStyle(config.value, projectName))
 
 /**
 experiments trying to show tags compactly
@@ -194,47 +184,66 @@ const tagsBgGradient = computed(() => {
 <template>
   <div
     v-if="task"
-    items-center
-    p="x-2 y-1"
-    grid="~ rows-1 items-center gap-x-2"
-    w-full
-    h-28px
-    border-rounded
-    hover="bg-active"
-    cursor-pointer
-    class="item-wrapper"
+    class="item-wrapper items-center py-1 px-2 grid gap-x-2 grid-rows-1 w-full h-28px rounded hover:bg-active cursor-pointer"
     :style="gridStyles"
     :aria-label="name"
     :data-current="current"
     data-testid="explorer-item"
-    @click="toggleOpen()"
+    @click="onItemClick?.(task)"
   >
     <template v-if="indent > 0">
-      <div v-for="i in data" :key="i" border="solid gray-500 dark:gray-400" class="vertical-line" h-28px inline-flex mx-2 op20 />
+      <div
+        v-for="i in indent"
+        :key="i"
+        class="h-28px ml-1.5 op10 border-l-1px border-solid border-gray-500 dark:border-gray-400"
+      />
     </template>
-    <div v-if="type === 'file' || type === 'suite'" w-4>
-      <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
+    <div class="w-4 h-full">
+      <button
+        v-if="type === 'file' || type === 'suite'"
+        type="button"
+        class="w-full h-full flex items-center"
+        :aria-label="`${opened ? 'Collapse' : 'Expand'} ${name}`"
+        @click.stop="toggleOpen"
+      >
+        <div class="op40" :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right'" />
+      </button>
     </div>
-    <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
-    <div flex items-baseline gap-2 overflow-hidden>
-      <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
-      <span v-if="type === 'file' && label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
-      <span text-sm truncate font-light>
-        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
+    <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" class="w-4" />
+    <div class="flex items-baseline gap-2 overflow-hidden">
+      <div
+        v-if="type === 'file' && typecheck"
+        v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'"
+        class="i-logos:typescript-icon flex-shrink-0"
+      />
+      <span
+        v-if="type === 'file' && label"
+        class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 flex-shrink-0"
+        >{{ label }}</span
+      >
+      <span class="text-sm truncate font-light">
+        <span
+          v-if="type === 'file' && projectName"
+          class="rounded-full py-0.5 px-2 mr-1 text-xs"
+          :style="projectBadgeStyle"
+        >
           {{ projectName }}
         </span>
-        <span :class="state === 'fail' ? 'text-red-700 dark:text-red-500' : undefined" v-html="highlighted" />
+        <span
+          :class="state === 'fail' ? 'text-red-700 dark:text-red-500' : undefined"
+          v-html="highlighted"
+        />
       </span>
       <span
         v-if="typeof duration === 'number'"
-        text="xs"
+        class="text-xs"
         :class="slow ? 'text-yellow-700 dark:text-yellow-500' : 'op20'"
         style="white-space: nowrap"
       >
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div gap-1 justify-end items-center flex-grow-1 pl-1 class="test-actions">
+    <div class="test-actions gap-1 justify-end items-center flex-grow-1 pl-1">
       <!-- <div
         v-if="tagsBorderGradient"
         text-xs
@@ -268,11 +277,18 @@ const tagsBgGradient = computed(() => {
           @click.prevent.stop="showDetails"
         />
         <template #popper>
-          <div v-if="disableShowDetails" class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
+          <div
+            v-if="disableShowDetails"
+            class="op100 gap-1 py-1 grid items-center grid-cols-[1.5em_1fr]"
+          >
             <div class="i-carbon:information-square w-1.5em h-1.5em" />
-            <div>{{ showDetailsTooltip }}: this feature is not available, you have disabled <span class="text-[#add467]">includeTaskLocation</span> in your configuration file.</div>
+            <div>
+              {{ showDetailsTooltip }}: this feature is not available, you have disabled
+              <span class="text-[#add467]">includeTaskLocation</span> in your configuration file.
+            </div>
             <div style="grid-column: 2">
-              Clicking this button the code tab will position the cursor at first line in the source code since the UI doesn't have the information available.
+              Clicking this button the code tab will position the cursor at first line in the source
+              code since the UI doesn't have the information available.
             </div>
           </div>
           <div v-else>
@@ -286,7 +302,7 @@ const tagsBgGradient = computed(() => {
         data-testid="btn-run-test"
         :title="runButtonTitle"
         icon="i-carbon:play-filled-alt"
-        text-green-700 dark:text-green-500
+        class="text-green-700 dark:text-green-500"
         :disabled="config.api?.allowExec === false"
         @click.prevent.stop="onRun(task)"
       />
@@ -295,12 +311,6 @@ const tagsBgGradient = computed(() => {
 </template>
 
 <style scoped>
-.vertical-line:first-of-type {
-  @apply border-l-2px;
-}
-.vertical-line + .vertical-line {
-  @apply border-r-1px;
-}
 .test-actions {
   display: none;
 }

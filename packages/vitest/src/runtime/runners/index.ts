@@ -1,12 +1,11 @@
-import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
+import type { VitestRunner, VitestRunnerConstructor } from '../runner/types'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
-import { NodeBenchmarkRunner } from './benchmark'
 import { TestRunner } from './test'
 
 async function getTestRunnerConstructor(
@@ -14,9 +13,7 @@ async function getTestRunnerConstructor(
   moduleRunner: TestModuleRunner,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    return (
-      config.mode === 'test' ? TestRunner : NodeBenchmarkRunner
-    ) as any as VitestRunnerConstructor
+    return TestRunner as any as VitestRunnerConstructor
   }
   const mod = await moduleRunner.import(config.runner)
   if (!mod.default && typeof mod.default !== 'function') {
@@ -53,14 +50,14 @@ export async function resolveTestRunner(
   }
 
   if ('__setTraces' in testRunner) {
-    (testRunner.__setTraces as any)(traces)
+    ;(testRunner.__setTraces as any)(traces)
   }
 
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, moduleRunner),
     loadSnapshotSerializers(config, moduleRunner),
   ])
-  testRunner.config.diffOptions = diffOptions
+  testRunner.config._diffOptions = diffOptions
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
@@ -73,7 +70,11 @@ export async function resolveTestRunner(
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTestAnnotate = testRunner.onTestAnnotate
   testRunner.onTestAnnotate = async (test, annotation) => {
-    const p = rpc().onTaskArtifactRecord(test.id, { type: 'internal:annotation', location: annotation.location, annotation })
+    const p = rpc().onTaskArtifactRecord(test.id, {
+      type: 'internal:annotation',
+      location: annotation.location,
+      annotation,
+    })
     const overriddenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
     const vitestResult = await p
     return overriddenResult || vitestResult.annotation
@@ -84,7 +85,7 @@ export async function resolveTestRunner(
     const p = rpc().onTaskArtifactRecord(test.id, artifact)
     const overriddenResult = await originalOnTestArtifactRecord?.call(testRunner, test, artifact)
     const vitestResult = await p
-    return overriddenResult as typeof artifact || vitestResult
+    return (overriddenResult as typeof artifact) || vitestResult
   }
 
   const originalOnCollectStart = testRunner.onCollectStart
@@ -107,7 +108,11 @@ export async function resolveTestRunner(
     // Strip function conditions from retry config before sending via RPC
     // Functions cannot be cloned by structured clone algorithm
     const sanitizeRetryConditions = (task: any) => {
-      if (task.retry && typeof task.retry === 'object' && typeof task.retry.condition === 'function') {
+      if (
+        task.retry &&
+        typeof task.retry === 'object' &&
+        typeof task.retry.condition === 'function'
+      ) {
         // Remove function condition - it can't be serialized
         task.retry = { ...task.retry, condition: undefined }
       }
@@ -129,7 +134,7 @@ export async function resolveTestRunner(
     if (coverage) {
       rpc().onAfterSuiteRun({
         coverage,
-        testFiles: files.map(file => file.name).sort(),
+        testFiles: files.map((file) => file.name).sort(),
         environment: state.environment.viteEnvironment || state.environment.name,
         projectName: state.ctx.projectName,
       })

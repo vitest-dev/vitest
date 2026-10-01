@@ -15,8 +15,7 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
 
     const result = fn()
     return result
-  }
-  finally {
+  } finally {
     globalThis.setTimeout = currentSetTimeout
     globalThis.clearTimeout = currentClearTimeout
   }
@@ -24,17 +23,7 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export async function rpcDone(): Promise<unknown[] | undefined> {
-  if (!promises.size) {
-    return
-  }
-  const awaitable = Array.from(promises)
-  return Promise.all(awaitable)
-}
-
-export function createSafeRpc(
-  client: VitestBrowserClient,
-): VitestBrowserClient['rpc'] {
+export function createSafeRpc(client: VitestBrowserClient): VitestBrowserClient['rpc'] {
   return new Proxy(client.rpc, {
     get(target, p, handler) {
       if (p === 'then') {
@@ -47,8 +36,7 @@ export function createSafeRpc(
           promises.add(result)
           try {
             return await result
-          }
-          finally {
+          } finally {
             promises.delete(result)
           }
         })

@@ -1,6 +1,6 @@
 import type { TestCase, TestModule } from './reported-tasks'
-import { getTestName } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
+import { getTestName } from '../../utils/tasks'
 import { DefaultReporter } from './default'
 import { F_RIGHT } from './renderers/figures'
 import { separator } from './renderers/utils'
@@ -18,7 +18,11 @@ export class VerboseReporter extends DefaultReporter {
 
     const testResult = test.result()
 
-    if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
+    if (
+      this.ctx.config.hideSkippedTests &&
+      testResult.state === 'skipped' &&
+      test.options.mode !== 'todo'
+    ) {
       return
     }
 
@@ -26,7 +30,7 @@ export class VerboseReporter extends DefaultReporter {
 
     title += test.module.task.name
     if (test.location) {
-      title += c.dim(`:${test.location.line}:${test.location.column}`)
+      title += c.dim(`:${test.location.line}`)
     }
     title += separator
 
@@ -36,13 +40,19 @@ export class VerboseReporter extends DefaultReporter {
     this.log(title)
 
     if (testResult.state === 'failed') {
-      testResult.errors.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error.message}`)))
+      testResult.errors.forEach((error) => this.log(c.red(`   ${F_RIGHT} ${error.message}`)))
     }
 
     if (test.annotations().length) {
       this.log()
       this.printAnnotations(test, 'log', 3)
       this.log()
+    }
+
+    const benchmarks = test.benchmarks()
+    const inlineBenchmarks = benchmarks.filter((b) => b.tasks.length > 0)
+    if (inlineBenchmarks.length > 0) {
+      this.printBenchmarkTable(inlineBenchmarks, '')
     }
   }
 }

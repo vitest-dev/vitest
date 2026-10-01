@@ -1,16 +1,18 @@
 import type { TestAnnotation, TestArtifact } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { format } from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
+import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-const test3Content = /* ts */`
+const test3Content = /* ts */ `
 export async function externalArtifactRecord(recordArtifact, task) {
   await recordArtifact(task, { type: 'external' })
 }
 `
 
-const artifactsTest = /* ts */`
+const artifactsTest = /* ts */ `
 import { test, describe, recordArtifact } from 'vitest'
 import { externalArtifactRecord } from './test-3.js'
 
@@ -41,9 +43,7 @@ describe('API', () => {
         enabled: true,
         provider: playwright(),
         headless: true,
-        instances: [
-          { browser: 'chromium' as const },
-        ],
+        instances: [{ browser: 'chromium' as const }],
       },
     },
   ])('artifacts are exposed correctly in $name', async (options) => {
@@ -67,10 +67,14 @@ describe('API', () => {
               events.push('[annotate]')
             },
             onTestCaseArtifactRecord(testCase, artifact) {
-              const path = artifact.attachments?.map(
-                attachment => attachment.path?.replace(testCase.project.config.root, '<root>').replace(/\w+\.js$/, '<hash>.js'),
+              const path = artifact.attachments?.map((attachment) =>
+                attachment.path
+                  ?.replace(testCase.project.config.root, '<root>')
+                  .replace(/\w+\.js$/, '<hash>.js'),
               )
-              events.push(`[artifact] ${testCase.name} ${artifact.type} path=${format(path)} contentType=${format(artifact.attachments?.map(attachment => attachment.contentType))} body=${format(artifact.attachments?.map(attachment => attachment.body))}`)
+              events.push(
+                `[artifact] ${testCase.name} ${artifact.type} path=${format(path)} contentType=${format(artifact.attachments?.map((attachment) => attachment.contentType))} body=${format(artifact.attachments?.map((attachment) => attachment.body))}`,
+              )
             },
             onTestCaseReady(testCase) {
               events.push(`[ready] ${testCase.name}`)
@@ -82,10 +86,9 @@ describe('API', () => {
                 if (Array.isArray(artifact.attachments)) {
                   for (const attachment of artifact.attachments) {
                     if (attachment?.path) {
-                      attachment.path = attachment.path.replace(
-                        testCase.project.config.root,
-                        '<root>',
-                      ).replace(/\w+\.js$/, '<hash>.js')
+                      attachment.path = attachment.path
+                        .replace(testCase.project.config.root, '<root>')
+                        .replace(/\w+\.js$/, '<hash>.js')
                     }
                   }
                 }
@@ -247,8 +250,9 @@ describe('API', () => {
   })
 
   test('can record artifacts even after the test finished running', async () => {
-    const { stderr } = await runInlineTests({
-      'basic.test.ts': `
+    const { stderr } = await runInlineTests(
+      {
+        'basic.test.ts': `
         import { recordArtifact } from 'vitest'
         test('finished early', ({ task }) => {
           setTimeout(() => {
@@ -260,11 +264,53 @@ describe('API', () => {
           await new Promise(r => setTimeout(() => r(), 100))
         })
       `,
-    }, { globals: true })
+      },
+      { globals: true },
+    )
     expect(stderr).toBe('')
+  })
+
+  test('recordArtifact uses vi.defineHelper callsite', async () => {
+    const artifacts: TestArtifact[] = []
+    const { root, stderr } = await runInlineTests(
+      {
+        'basic.test.ts': `
+        import { recordArtifact, test, vi } from 'vitest'
+
+        const record = vi.defineHelper(async (task) => {
+          await Promise.resolve()
+          return recordArtifact(task, { type: 'helper' })
+        })
+
+        test('records an artifact', async ({ task }) => {
+          await record(task)
+        })
+      `,
+      },
+      {
+        reporters: [
+          {
+            onTestCaseResult(testCase) {
+              artifacts.push(...testCase.artifacts())
+            },
+          },
+        ],
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(artifacts).toHaveLength(1)
+    expect(artifacts[0]).toMatchObject({
+      type: 'helper',
+      location: {
+        file: resolve(root, 'basic.test.ts'),
+        line: 10,
+      },
+    })
   })
 })
 
+// verify artifacts don't affect reporter output
 describe('reporters', () => {
   test('tap', async () => {
     const { stdout } = await runInlineTests(
@@ -311,7 +357,7 @@ describe('reporters', () => {
   })
 
   test('junit', async () => {
-    const { stdout } = await runInlineTests(
+    const { root } = await runInlineTests(
       {
         'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
@@ -320,10 +366,10 @@ describe('reporters', () => {
       { reporters: ['junit'] },
     )
 
-    const result = stdout
+    const result = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
       .replace(/time="[\d.]+"/g, 'time="0"')
       .replace(/timestamp="[\w\-:.]+"/g, 'timestamp="0"')
-      .replace(/hostname="[\w.\-]+"/g, 'hostname="CI"')
+      .replace(/hostname="[\w.-]+"/g, 'hostname="CI"')
 
     expect(result).toMatchInlineSnapshot(`
       "<?xml version="1.0" encoding="UTF-8" ?>
@@ -366,9 +412,10 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
@@ -380,7 +427,7 @@ describe('reporters', () => {
        Test Files  1 passed (1)
             Tests  2 passed (2)
          Start at  <time>
-         Duration  <duration> (transform <duration>, setup <duration>, import <duration>, tests <duration>, environment <duration>)
+         Duration  <duration> (<breakdown>)
 
       "
     `)
@@ -398,9 +445,10 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
@@ -411,7 +459,7 @@ describe('reporters', () => {
        Test Files  1 passed (1)
             Tests  2 passed (2)
          Start at  <time>
-         Duration  <duration> (transform <duration>, setup <duration>, import <duration>, tests <duration>, environment <duration>)
+         Duration  <duration> (<breakdown>)
 
       "
     `)

@@ -40,7 +40,7 @@ If test body is not provided, the test is marked as `todo`.
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
 ::: tip
-In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
+In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration/jest#done-callback).
 :::
 
 ## Test Options
@@ -109,6 +109,7 @@ test('heavy test', { skip: true, timeout: 10_000 }, () => {
   // ...
 })
 ```
+
 :::
 
 ### retry
@@ -286,7 +287,7 @@ test('server uses correct port', ({ config, server }) => {
 
 ## test.override <Version>4.1.0</Version> {#test-override}
 
-Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context.html#overriding-fixture-values) for more information.
+Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context#overriding-fixture-values) for more information.
 
 ```ts
 import { test as baseTest, describe, expect } from 'vitest'
@@ -557,24 +558,24 @@ test.each([
 
 You can also access Object attributes with `.`, if you are using objects as arguments:
 
-  ```ts
-  test.each`
-  a               | b      | expected
-  ${{ val: 1 }}   | ${'b'} | ${'1b'}
-  ${{ val: 2 }}   | ${'b'} | ${'2b'}
-  ${{ val: 3 }}   | ${'b'} | ${'3b'}
-  `('add($a.val, $b) -> $expected', ({ a, b, expected }) => {
-    expect(a.val + b).toBe(expected)
-  })
+```ts
+test.each`
+a               | b      | expected
+${{ val: 1 }}   | ${'b'} | ${'1b'}
+${{ val: 2 }}   | ${'b'} | ${'2b'}
+${{ val: 3 }}   | ${'b'} | ${'3b'}
+`('add($a.val, $b) -> $expected', ({ a, b, expected }) => {
+  expect(a.val + b).toBe(expected)
+})
 
-  // this will return
-  // ✓ add(1, b) -> 1b
-  // ✓ add(2, b) -> 2b
-  // ✓ add(3, b) -> 3b
-  ```
+// this will return
+// ✓ add(1, b) -> 1b
+// ✓ add(2, b) -> 2b
+// ✓ add(3, b) -> 3b
+```
 
-* First row should be column names, separated by `|`;
-* One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
+- First row should be column names, separated by `|`;
+- One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -670,235 +671,8 @@ Scoped `aroundAll` hook that inherits types from [`test.extend`](#test-extend). 
 
 ## bench <Experimental /> {#bench}
 
-- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
+::: warning Updated in Vitest 5
+The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`, and the `bench.skip` / `bench.only` / `bench.todo` helpers have been removed. `bench` is now a [test-context fixture](/guide/test-context#bench) accessed from inside a `test()`.
 
-::: danger
-Benchmarking is experimental and does not follow SemVer.
+See the [Benchmarking guide](/guide/benchmarking) for the new API.
 :::
-
-`bench` defines a benchmark. In Vitest terms, benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
-
-Vitest uses the [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
-
-```ts
-import { bench } from 'vitest'
-
-bench('normal sorting', () => {
-  const x = [1, 5, 4, 2, 3]
-  x.sort((a, b) => {
-    return a - b
-  })
-}, { time: 1000 })
-```
-
-```ts
-export interface Options {
-  /**
-   * time needed for running a benchmark task (milliseconds)
-   * @default 500
-   */
-  time?: number
-
-  /**
-   * number of times that a task should run if even the time option is finished
-   * @default 10
-   */
-  iterations?: number
-
-  /**
-   * function to get the current timestamp in milliseconds
-   */
-  now?: () => number
-
-  /**
-   * An AbortSignal for aborting the benchmark
-   */
-  signal?: AbortSignal
-
-  /**
-   * Throw if a task fails (events will not work if true)
-   */
-  throws?: boolean
-
-  /**
-   * warmup time (milliseconds)
-   * @default 100ms
-   */
-  warmupTime?: number
-
-  /**
-   * warmup iterations
-   * @default 5
-   */
-  warmupIterations?: number
-
-  /**
-   * setup function to run before each benchmark task (cycle)
-   */
-  setup?: Hook
-
-  /**
-   * teardown function to run after each benchmark task (cycle)
-   */
-  teardown?: Hook
-}
-```
-After the test case is run, the output structure information is as follows:
-
-```
-  name                      hz     min     max    mean     p75     p99    p995    p999     rme  samples
-· normal sorting  6,526,368.12  0.0001  0.3638  0.0002  0.0002  0.0002  0.0002  0.0004  ±1.41%   652638
-```
-```ts
-export interface TaskResult {
-  /*
-   * the last error that was thrown while running the task
-   */
-  error?: unknown
-
-  /**
-   * The amount of time in milliseconds to run the benchmark task (cycle).
-   */
-  totalTime: number
-
-  /**
-   * the minimum value in the samples
-   */
-  min: number
-  /**
-   * the maximum value in the samples
-   */
-  max: number
-
-  /**
-   * the number of operations per second
-   */
-  hz: number
-
-  /**
-   * how long each operation takes (ms)
-   */
-  period: number
-
-  /**
-   * task samples of each task iteration time (ms)
-   */
-  samples: number[]
-
-  /**
-   * samples mean/average (estimate of the population mean)
-   */
-  mean: number
-
-  /**
-   * samples variance (estimate of the population variance)
-   */
-  variance: number
-
-  /**
-   * samples standard deviation (estimate of the population standard deviation)
-   */
-  sd: number
-
-  /**
-   * standard error of the mean (a.k.a. the standard deviation of the sampling distribution of the sample mean)
-   */
-  sem: number
-
-  /**
-   * degrees of freedom
-   */
-  df: number
-
-  /**
-   * critical value of the samples
-   */
-  critical: number
-
-  /**
-   * margin of error
-   */
-  moe: number
-
-  /**
-   * relative margin of error
-   */
-  rme: number
-
-  /**
-   * median absolute deviation
-   */
-  mad: number
-
-  /**
-   * p50/median percentile
-   */
-  p50: number
-
-  /**
-   * p75 percentile
-   */
-  p75: number
-
-  /**
-   * p99 percentile
-   */
-  p99: number
-
-  /**
-   * p995 percentile
-   */
-  p995: number
-
-  /**
-   * p999 percentile
-   */
-  p999: number
-}
-```
-
-### bench.skip
-
-- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
-
-You can use `bench.skip` syntax to skip running certain benchmarks.
-
-```ts
-import { bench } from 'vitest'
-
-bench.skip('normal sorting', () => {
-  const x = [1, 5, 4, 2, 3]
-  x.sort((a, b) => {
-    return a - b
-  })
-})
-```
-
-### bench.only
-
-- **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
-
-Use `bench.only` to only run certain benchmarks in a given suite. This is useful when debugging.
-
-```ts
-import { bench } from 'vitest'
-
-bench.only('normal sorting', () => {
-  const x = [1, 5, 4, 2, 3]
-  x.sort((a, b) => {
-    return a - b
-  })
-})
-```
-
-### bench.todo
-
-- **Type:** `(name: string | Function) => void`
-
-Use `bench.todo` to stub benchmarks to be implemented later.
-
-```ts
-import { bench } from 'vitest'
-
-bench.todo('unimplemented test')
-```

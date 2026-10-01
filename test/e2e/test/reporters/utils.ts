@@ -1,18 +1,18 @@
 import type { ModuleGraph, ViteDevServer } from 'vite'
 import type { RunnerTestCase, RunnerTestSuite, TestError } from 'vitest'
-import type { Vitest } from 'vitest/src/node/core.js'
-import type { Logger } from 'vitest/src/node/logger.js'
-import type { StateManager } from 'vitest/src/node/state.js'
-import type { ResolvedConfig } from 'vitest/src/node/types/config.js'
-import type { RunnerTestFile } from 'vitest/src/public/index.js'
-import { createFileTask } from '@vitest/runner/utils'
+import type { Vitest } from '../../../../packages/vitest/src/node/core.js'
+import type { Logger } from '../../../../packages/vitest/src/node/logger.js'
+import type { StateManager } from '../../../../packages/vitest/src/node/state.js'
+import type { ResolvedConfig } from '../../../../packages/vitest/src/node/types/config.js'
+import type { RunnerTestFile } from '../../../../packages/vitest/src/public/index.js'
+import { TestRunner } from 'vitest'
 
 export function trimReporterOutput(report: string) {
   const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
 
   // Trim start and end, capture just rendered tree
-  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
-  rows.splice(rows.findIndex(row => row.includes('Test Files')))
+  rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  rows.splice(rows.findIndex((row) => row.includes('Test Files')))
 
   return rows.join('\n').trim()
 }
@@ -54,7 +54,7 @@ export function getContext(): Context {
   // @ts-expect-error logger is readonly
   context.logger = {
     ctx: context as Vitest,
-    log: (text: string) => output += `${text}\n`,
+    log: (text: string) => (output += `${text}\n`),
     highlight: () => {},
   } as unknown as Logger
 
@@ -66,7 +66,7 @@ export function getContext(): Context {
   }
 }
 
-const file = createFileTask(
+const file = TestRunner.createFileTask(
   '/vitest/test/unit/test/basic.test.ts',
   '/vitest/test/unit/test',
   '',
@@ -91,7 +91,7 @@ const suite: RunnerTestSuite = {
   tasks: [],
 }
 
-const passedFile = createFileTask(
+const passedFile = TestRunner.createFileTask(
   '/vitest/test/unit/test/basic.test.ts',
   '/vitest/test/unit/test',
   '',
@@ -117,6 +117,7 @@ passedFile.tasks.push({
     duration: 1.4422860145568848,
   },
   context: null as any,
+  benchmarks: [],
 })
 
 const error: TestError = {
@@ -128,17 +129,18 @@ const error: TestError = {
   stacks: undefined!,
 }
 error.showDiff = true
-error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
-  + '    at /vitest/test/unit/test/basic.test.ts:8:32\n'
-  + '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
-  + '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
-  + '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'
-  + '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n'
-  + '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n'
-  + '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n'
-  + '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n'
-  + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
-  + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
+error.stack =
+  'AssertionError: expected 2.23606797749979 to equal 2\n' +
+  '    at /vitest/test/unit/test/basic.test.ts:8:32\n' +
+  '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n' +
+  '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n' +
+  '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n' +
+  '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n' +
+  '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n' +
+  '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n' +
+  '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n' +
+  '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n' +
+  '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
 const tasks: RunnerTestCase[] = [
   {
@@ -165,6 +167,7 @@ const tasks: RunnerTestCase[] = [
     },
     timeout: 0,
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_1`,
@@ -182,6 +185,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 1.0237109661102295 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_3`,
@@ -199,6 +203,7 @@ const tasks: RunnerTestCase[] = [
     artifacts: [],
     result: undefined,
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_4`,
@@ -216,6 +221,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 100.50598406791687 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_5`,
@@ -233,6 +239,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 20.184875011444092 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_6`,
@@ -250,6 +257,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 0.33245420455932617 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_7`,
@@ -267,6 +275,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 19.738605976104736 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_8`,
@@ -284,6 +293,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 0.1923508644104004 },
     context: null as any,
+    benchmarks: [],
     logs: [
       {
         content: '[33merror[39m',
@@ -309,6 +319,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: undefined,
     context: null as any,
+    benchmarks: [],
   },
 ]
 

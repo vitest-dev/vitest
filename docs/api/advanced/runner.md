@@ -95,7 +95,7 @@ export interface VitestRunner {
   /**
    * Publicly available configuration.
    */
-  config: VitestRunnerConfig
+  config: SerializedConfig
   /**
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
@@ -135,6 +135,7 @@ export default class Runner {
   }
 }
 ```
+
 :::
 
 ::: warning
@@ -260,13 +261,11 @@ export interface TaskResult {
    */
   hooks?: Partial<Record<'afterAll' | 'beforeAll' | 'beforeEach' | 'afterEach', TaskState>>
   /**
-   * The amount of times the task was retried. The task is retried only if it
-   * failed and `retry` option is set.
+   * The number of times the task has been retried across all repeats.
    */
   retryCount?: number
   /**
-   * The amount of times the task was repeated. The task is repeated only if
-   * `repeats` option is set. This number also contains `retryCount`.
+   * The zero-based index of the current repeat.
    */
   repeatCount?: number
 }

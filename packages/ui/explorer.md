@@ -1,6 +1,7 @@
 # Explorer Overall Behavior
 
 This document describes the overall behavior of the new Explorer component and the logic for:
+
 - searching
 - expanding/collapsing nodes
 - filtering by status
@@ -11,17 +12,20 @@ Check [Notes](#notes) for a brief summary about the old and the new logic.
 ## New Logic
 
 The explorer will not use the `idsMap` and `filesMap` directly from the `ws-client` state to render the tree. It will use new types to represent the tree in the ui, and a new logic to handle the tree list in the DOM:
+
 - [nodes](client/composables/explorer/tree.ts): changes in the `ws-client` state will be mapped here with tree structure.
 - [uiEntries](client/composables/explorer/state.ts): a shallow ref to represent the flat tree entries in the ui, the logic will use `nodes` to build it.
 
-Any operation in the explorer using `queueMicrotask` to avoid blocking the main thread, and any operation on list/map using `generators`.
+Explorer updates are throttled with `requestAnimationFrame`, and operations on lists and maps use generators.
 
 The explorer logic splits the actions in three main parts:
+
 - collecting tasks while running the tests
 - searching/filtering: hereinafter searching for simplicity
 - expanding/collapsing nodes
 
 Whereas collecting and searching are complex operations, expanding/collapsing nodes is a simple operation. Why?:
+
 - collecting tasks: we need to traverse the full tree to update every test/suite/file in the ui tree: we're collecting `ws-client` messages from the server, and the nodes in the ui must be updated to reflect the state.
 - searching: we need to traverse the full tree to collect every test/suite/file in the tree matching applied search and/or the filter.
 - expanding/collapsing: simple operation that only requires traversing nodes present in the ui switching the `expanded` property (_expanding all nodes requires full search_).
@@ -39,6 +43,7 @@ The logic is implemented in [collect](client/composables/explorer/collector.ts) 
 
 Search and filtering are quite simple, we only need to apply some logic to the task name, mode and result state.
 The complexity lies in filtering the nodes of the entire tree. We need to traverse the tree several times:
+
 - from top to bottom to collect all tasks matching the search/filter criteria (full tree): `visitNodes` function in the [filter](client/composables/explorer/filter.ts) module.
 - from bottom to top to collect tasks and parent tasks containing children matching the search/filter criteria (full tree): `filterParents` in the [filter](client/composables/explorer/filter.ts) module.
 - from top to bottom to collect parent tasks for expanded files tasks, or parent tasks whose parent tasks are expanded (filtered tree from the previous step).
@@ -51,6 +56,7 @@ The search logic can be found in [filter](client/composables/explorer/filter.ts)
 ### Collapsing nodes
 
 This is the cheapest operation in the explorer, it only requires traversing the nodes in the ui and updating the `expanded` property:
+
 - collapsing all nodes: traverse the full tree ([nodes](client/composables/explorer/tree.ts) in the explorer tree) and set `expanded` to `false`, then filter the `uiEntries` by `file` type.
 - collapsing a single node: traverse the full tree and set `expanded` to `false` for the node and all its children, and replace the child in the `uiEntries` with the new collapsed one, removing its children from `uiEntries`.
 
@@ -59,6 +65,7 @@ The actions can be found in the [tree class](client/composables/explorer/tree.ts
 ### Expanding nodes
 
 This is also an affordable operation in the explorer, it only requires traversing the nodes in the ui and updating the `expanded` property:
+
 - collapsing all nodes: traverse the full tree ([nodes](client/composables/explorer/tree.ts) in the explorer tree) and set `expanded` to `true`, then rebuild the `uiEntries` using `filterAll` in the `search` module.
 - expanding single node: traverse its children in the ui ([nodes](client/composables/explorer/tree.ts) in the explorer tree) and set `expanded` to `true`, then filter its children using `filterNode` in the `search` module, and rebuild `uiEntries` replacing the current node in the ui tree with the new node and its filtered children.
 
@@ -73,6 +80,7 @@ It is using a new approach to handle the tree list, now we have a separated vue 
 Now we are able to update the tree list only when the entries are updated and not when the WebSocket state is updated, which is a huge performance improvement.
 
 Some numbers running `test/unit` with Vitest UI (162 files with 3 workspaces: 5100+ tests) in a `i7-12700H` laptop:
+
 - tree list: after server finishing running the tests, Vitest UI took ~1 minute to finish rendering the full tree (~150MB of memory usage)
 - explorer: Vitest UI finishing rendering the full tree before the server reporter shows the tests summary (~10MB of memory usage)
 

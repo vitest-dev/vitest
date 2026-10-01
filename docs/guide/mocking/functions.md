@@ -8,6 +8,10 @@ If you need to pass down a custom function implementation as an argument or crea
 
 Both `vi.spyOn` and `vi.fn` share the same methods.
 
+::: tip
+If you need a mock to return different values depending on the arguments it receives, [`vi.when()`](/api/vi#vi-when) lets you define argument-specific behaviors without writing your own `if/else` logic. See the [Conditional Mocking](/guide/recipes/conditional-mocking) recipe for details.
+:::
+
 ## Example
 
 ```js
@@ -37,7 +41,7 @@ it('should get the latest message with a spy', () => {
   expect(spy.getMockName()).toEqual('getLatest')
 
   expect(messages.getLatest()).toEqual(
-    messages.items[messages.items.length - 1],
+    messages.items.at(-1),
   )
 
   expect(spy).toHaveBeenCalledTimes(1)

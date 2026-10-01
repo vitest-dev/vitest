@@ -1,16 +1,23 @@
+import type { SerializedError } from '@vitest/utils'
 import type {
   File as RunnerTestFile,
+  TaskEventData,
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
+  TestArtifact,
   TestAttachment,
-} from '@vitest/runner'
-import type { TaskEventData, TestArtifact } from '@vitest/runner/types/tasks'
-import type { SerializedError } from '@vitest/utils'
+  TestBenchmark,
+} from '../runtime/runner/types'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { ReportedHookContext, TestCase, TestCollection, TestModule } from './reporters/reported-tasks'
+import type {
+  ReportedHookContext,
+  TestCase,
+  TestCollection,
+  TestModule,
+} from './reporters/reported-tasks'
 import type { TestSpecification } from './test-specification'
 import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
@@ -28,7 +35,7 @@ export class TestRun {
   constructor(private vitest: Vitest) {}
 
   async start(specifications: TestSpecification[]): Promise<void> {
-    const filepaths = specifications.map(spec => spec.moduleId)
+    const filepaths = specifications.map((spec) => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
     await this.vitest.report('onTestRunStart', [...specifications])
@@ -55,33 +62,42 @@ export class TestRun {
     await this.vitest.report('onUserConsoleLog', log)
   }
 
-  async recordArtifact<Artifact extends TestArtifact>(testId: string, artifact: Artifact): Promise<Artifact> {
-    const task = this.vitest.state.idMap.get(testId)
-    const entity = task && this.vitest.state.getReportedEntity(task)
+  async recordBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
+    const testCase = this.getTestCaseById(testId, 'Benchmark')
+    testCase.task.benchmarks.push(benchmark)
+    await this.vitest.report('onTestCaseBenchmark', testCase, benchmark)
+  }
 
-    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
-    assert(entity.type === 'test', `Artifacts can only be recorded on a test, instead got ${entity.type}`)
+  async recordArtifact<Artifact extends TestArtifact>(
+    testId: string,
+    artifact: Artifact,
+  ): Promise<Artifact> {
+    const testCase = this.getTestCaseById(testId, 'Artifact')
 
     // annotations won't resolve as artifacts for backwards compatibility until next major
     if (artifact.type === 'internal:annotation') {
-      await this.resolveTestAttachment(entity, artifact.annotation.attachment, artifact.annotation.message)
+      await this.resolveTestAttachment(
+        testCase,
+        artifact.annotation.attachment,
+        artifact.annotation.message,
+      )
 
-      entity.task.annotations.push(artifact.annotation)
+      testCase.task.annotations.push(artifact.annotation)
 
-      await this.vitest.report('onTestCaseAnnotate', entity, artifact.annotation)
+      await this.vitest.report('onTestCaseAnnotate', testCase, artifact.annotation)
 
       return artifact
     }
 
     if (Array.isArray(artifact.attachments)) {
       await Promise.all(
-        artifact.attachments.map(attachment => this.resolveTestAttachment(entity, attachment)),
+        artifact.attachments.map((attachment) => this.resolveTestAttachment(testCase, attachment)),
       )
     }
 
-    entity.task.artifacts.push(artifact)
+    testCase.task.artifacts.push(artifact)
 
-    await this.vitest.report('onTestCaseArtifactRecord', entity, artifact)
+    await this.vitest.report('onTestCaseArtifactRecord', testCase, artifact)
 
     return artifact
   }
@@ -102,19 +118,35 @@ export class TestRun {
     await this.vitest.report('onTaskUpdate', update, events)
   }
 
-  async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {
+  private getTestCaseById(testId: string, recordType: string) {
+    const task = this.vitest.state.idMap.get(testId)
+    const entity = task && this.vitest.state.getReportedEntity(task)
+
+    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
+    assert(
+      entity.type === 'test',
+      `${recordType} can only be recorded on a test, instead got ${entity.type}`,
+    )
+    return entity
+  }
+
+  async end(
+    specifications: TestSpecification[],
+    errors: unknown[],
+    coverage?: unknown,
+  ): Promise<void> {
     if (coverage) {
       await this.vitest.report('onCoverage', coverage)
     }
 
     // specification won't have the File task if they were filtered by the --shard command
-    const modules = specifications.map(spec => spec.testModule).filter(s => s != null)
+    const modules = specifications.map((spec) => spec.testModule).filter((s) => s != null)
 
     const state: TestRunEndReason = this.vitest.isCancelling
       ? 'interrupted'
-      // by this point, the run will be marked as failed if there are any errors,
-      // should it be done by testRun.end?
-      : this.hasFailed(modules)
+      : // by this point, the run will be marked as failed if there are any errors,
+        // should it be done by testRun.end?
+        this.hasFailed(modules)
         ? 'failed'
         : 'passed'
 
@@ -134,11 +166,7 @@ export class TestRun {
         externalized: Object.keys(meta.externalized).length,
         inlined: Object.keys(meta.tmps).length,
       }
-      await writeFile(
-        path,
-        JSON.stringify(meta, null, 2),
-        'utf-8',
-      )
+      await writeFile(path, JSON.stringify(meta, null, 2), 'utf-8')
       this.vitest.logger.log(`Metadata written to ${path}`)
     }
   }
@@ -148,7 +176,7 @@ export class TestRun {
       return !this.vitest.config.passWithNoTests
     }
 
-    return modules.some(m => !m.ok())
+    return modules.some((m) => !m.ok())
   }
 
   // make sure the error always has a "stacks" property
@@ -164,11 +192,11 @@ export class TestRun {
 
         const project = this.vitest.getProjectByName(task!.file.projectName || '')
         if (isBrowser) {
-          error.stacks = project.browser?.parseErrorStacktrace(error, {
-            frameFilter: project.config.onStackTrace,
-          }) || []
-        }
-        else {
+          error.stacks =
+            project.browser?.parseErrorStacktrace(error, {
+              frameFilter: project.config.onStackTrace,
+            }) || []
+        } else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
             getSourceMap(file) {
@@ -176,6 +204,8 @@ export class TestRun {
               // source map is already applied for inlined modules.
               // Module node exists due to Vitest fetch module,
               // but transformResult should be empty for external modules.
+              // TODO: this uses client module graph and thus miss detects
+              // inlined modules in ssr environment as if external.
               const mod = project.vite.moduleGraph.getModuleById(file)
               if (!mod?.transformResult && existsSync(file)) {
                 const code = readFileSync(file, 'utf-8')
@@ -211,7 +241,10 @@ export class TestRun {
     }
 
     if (event === 'suite-finished') {
-      assert(entity.type === 'suite' || entity.type === 'module', 'Entity type must be suite or module')
+      assert(
+        entity.type === 'suite' || entity.type === 'module',
+        'Entity type must be suite or module',
+      )
 
       if (entity.state() === 'skipped') {
         // everything inside suite or a module is skipped,
@@ -222,8 +255,7 @@ export class TestRun {
 
       if (entity.type === 'module') {
         await this.vitest.report('onTestModuleEnd', entity)
-      }
-      else {
+      } else {
         await this.vitest.report('onTestSuiteResult', entity)
       }
 
@@ -246,20 +278,20 @@ export class TestRun {
     if (event.startsWith('before-hook') || event.startsWith('after-hook')) {
       const isBefore = event.startsWith('before-hook')
 
-      const hook: ReportedHookContext = entity.type === 'test'
-        ? {
-            name: isBefore ? 'beforeEach' : 'afterEach',
-            entity,
-          }
-        : {
-            name: isBefore ? 'beforeAll' : 'afterAll',
-            entity,
-          }
+      const hook: ReportedHookContext =
+        entity.type === 'test'
+          ? {
+              name: isBefore ? 'beforeEach' : 'afterEach',
+              entity,
+            }
+          : {
+              name: isBefore ? 'beforeAll' : 'afterAll',
+              entity,
+            }
 
       if (event.endsWith('-start')) {
         await this.vitest.report('onHookStart', hook)
-      }
-      else {
+      } else {
         await this.vitest.report('onHookEnd', hook)
       }
 
@@ -272,7 +304,11 @@ export class TestRun {
     }
   }
 
-  private async resolveTestAttachment(test: TestCase, attachment: TestAttachment | undefined, filename?: string): Promise<TestAttachment | undefined> {
+  private async resolveTestAttachment(
+    test: TestCase,
+    attachment: TestAttachment | undefined,
+    filename?: string,
+  ): Promise<TestAttachment | undefined> {
     const project = test.project
     if (!attachment) {
       return attachment
@@ -302,8 +338,7 @@ export class TestRun {
       if (child.type === 'test') {
         await this.vitest.report('onTestCaseReady', child)
         await this.vitest.report('onTestCaseResult', child)
-      }
-      else {
+      } else {
         await this.vitest.report('onTestSuiteReady', child)
         await this.reportChildren(child.children)
         await this.vitest.report('onTestSuiteResult', child)

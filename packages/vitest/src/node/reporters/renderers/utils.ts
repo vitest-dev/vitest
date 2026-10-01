@@ -1,6 +1,6 @@
-import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import type { Formatter } from 'tinyrainbow'
+import type { Task } from '../../../runtime/runner/types'
 import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
 import { truncateString as utilsTruncateString } from '@vitest/utils/display'
@@ -18,14 +18,14 @@ import {
   F_TODO,
 } from './figures'
 
-export const pointer: string = c.yellow(F_POINTER)
-export const skipped: string = c.dim(c.gray(F_DOWN))
-export const todo: string = c.dim(c.gray(F_TODO))
-export const benchmarkPass: string = c.green(F_DOT)
-export const testPass: string = c.green(F_CHECK)
+const pointer: string = c.yellow(F_POINTER)
+const skipped: string = c.dim(c.gray(F_DOWN))
+const todo: string = c.dim(c.gray(F_TODO))
+const benchmarkPass: string = c.green(F_DOT)
+const testPass: string = c.green(F_CHECK)
 export const taskFail: string = c.red(F_CROSS)
-export const suiteFail: string = c.red(F_POINTER)
-export const pending: string = c.gray('·')
+const suiteFail: string = c.red(F_POINTER)
+const pending: string = c.gray('·')
 export const separator: string = c.dim(' > ')
 
 const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
@@ -55,8 +55,7 @@ export function divider(
     const textLength = stripVTControlCharacters(text).length
     if (left == null && right != null) {
       left = cols - textLength - right
-    }
-    else {
+    } else {
       left = left ?? Math.floor((cols - textLength) / 2)
       right = cols - textLength - left
     }
@@ -67,7 +66,7 @@ export function divider(
   return F_LONG_DASH.repeat(cols)
 }
 
-export function formatTestPath(root: string, path: string): string {
+function formatTestPath(root: string, path: string): string {
   if (isAbsolute(path)) {
     path = relative(root, path)
   }
@@ -79,10 +78,7 @@ export function formatTestPath(root: string, path: string): string {
   return slash(c.dim(`${dir}/`) + c.bold(base)) + c.dim(ext)
 }
 
-export function renderSnapshotSummary(
-  rootDir: string,
-  snapshots: SnapshotSummary,
-): string[] {
+export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummary): string[] {
   const summary: string[] = []
 
   if (snapshots.added) {
@@ -98,11 +94,8 @@ export function renderSnapshotSummary(
   if (snapshots.filesRemoved) {
     if (snapshots.didUpdate) {
       summary.push(c.bold(c.green(`${snapshots.filesRemoved} files removed `)))
-    }
-    else {
-      summary.push(
-        c.bold(c.yellow(`${snapshots.filesRemoved} files obsolete `)),
-      )
+    } else {
+      summary.push(c.bold(c.yellow(`${snapshots.filesRemoved} files obsolete `)))
     }
   }
 
@@ -118,21 +111,13 @@ export function renderSnapshotSummary(
   if (snapshots.unchecked) {
     if (snapshots.didUpdate) {
       summary.push(c.bold(c.green(`${snapshots.unchecked} removed`)))
-    }
-    else {
+    } else {
       summary.push(c.bold(c.yellow(`${snapshots.unchecked} obsolete`)))
     }
 
     snapshots.uncheckedKeysByFile.forEach((uncheckedFile) => {
-      summary.push(
-        `${c.gray(F_DOWN_RIGHT)} ${formatTestPath(
-          rootDir,
-          uncheckedFile.filePath,
-        )}`,
-      )
-      uncheckedFile.keys.forEach(key =>
-        summary.push(`  ${c.gray(F_DOT)} ${key}`),
-      )
+      summary.push(`${c.gray(F_DOWN_RIGHT)} ${formatTestPath(rootDir, uncheckedFile.filePath)}`)
+      uncheckedFile.keys.forEach((key) => summary.push(`  ${c.gray(F_DOT)} ${key}`))
     })
   }
 
@@ -143,11 +128,7 @@ export function countTestErrors(tasks: Task[]): number {
   return tasks.reduce((c, i) => c + (i.result?.errors?.length || 0), 0)
 }
 
-export function getStateString(
-  tasks: Task[],
-  name = 'tests',
-  showTotal = true,
-): string {
+export function getStateString(tasks: Task[], name = 'tests', showTotal = true): string {
   if (tasks.length === 0) {
     return c.dim(`no ${name}`)
   }
@@ -159,9 +140,9 @@ export function getStateString(
     }
     return i.result?.state === 'pass' ? acc + 1 : acc
   }, 0)
-  const failed = tasks.reduce((acc, i) => i.result?.state === 'fail' ? acc + 1 : acc, 0)
-  const skipped = tasks.reduce((acc, i) => i.mode === 'skip' ? acc + 1 : acc, 0)
-  const todo = tasks.reduce((acc, i) => i.mode === 'todo' ? acc + 1 : acc, 0)
+  const failed = tasks.reduce((acc, i) => (i.result?.state === 'fail' ? acc + 1 : acc), 0)
+  const skipped = tasks.reduce((acc, i) => (i.mode === 'skip' ? acc + 1 : acc), 0)
+  const todo = tasks.reduce((acc, i) => (i.mode === 'todo' ? acc + 1 : acc), 0)
   const expectedFail = tasks.reduce((acc, i) => {
     // Count tests that are marked as .fails and passed (which means they failed as expected)
     if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
@@ -213,30 +194,6 @@ export function getStateSymbol(task: Task): string {
   return ' '
 }
 
-export function duration(time: number, locale = 'en-us'): string {
-  if (time < 1) {
-    return `${Number((time * 1e3).toFixed(2)).toLocaleString(locale)} ps`
-  }
-
-  if (time < 1e3) {
-    return `${Number(time.toFixed(2)).toLocaleString(locale)} ns`
-  }
-  if (time < 1e6) {
-    return `${Number((time / 1e3).toFixed(2)).toLocaleString(locale)} µs`
-  }
-  if (time < 1e9) {
-    return `${Number((time / 1e6).toFixed(2)).toLocaleString(locale)} ms`
-  }
-  if (time < 1e12) {
-    return `${Number((time / 1e9).toFixed(2)).toLocaleString(locale)} s`
-  }
-  if (time < 36e11) {
-    return `${Number((time / 60e9).toFixed(2)).toLocaleString(locale)} m`
-  }
-
-  return `${Number((time / 36e11).toFixed(2)).toLocaleString(locale)} h`
-}
-
 export function formatTimeString(date: Date): string {
   return date.toTimeString().split(' ')[0]
 }
@@ -248,7 +205,10 @@ export function formatTime(time: number): string {
   return `${Math.round(time)}ms`
 }
 
-export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>, suffix = ' '): string {
+export function formatProjectName(
+  project?: Pick<TestProject, 'name' | 'color'>,
+  suffix = ' ',
+): string {
   if (!project?.name) {
     return ''
   }
@@ -259,9 +219,7 @@ export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>,
   let background = project.color && c[`bg${capitalize(project.color)}`]
 
   if (!background) {
-    const index = project.name
-      .split('')
-      .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+    const index = project.name.split('').reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
 
     background = labelDefaultColors[index % labelDefaultColors.length]
   }
@@ -269,8 +227,13 @@ export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>,
   return c.black(background(` ${project.name} `)) + suffix
 }
 
-export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
-  const bgColor = `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
+export function withLabel(
+  color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow',
+  label: string,
+  message?: string,
+) {
+  const bgColor =
+    `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
   return `${c.bold(c.black(c[bgColor](` ${label} `)))} ${message ? c[color](message) : ''}`
 }
 

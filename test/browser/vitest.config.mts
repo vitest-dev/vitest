@@ -7,7 +7,11 @@ import { instances, provider } from './settings'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
-const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
+const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = (
+  { testPath },
+  arg1,
+  arg2,
+) => {
   return { testPath, arg1, arg2 }
 }
 
@@ -21,7 +25,8 @@ export default defineConfig({
       'x-custom': 'hello',
       // Vitest iframe should still be loaded
       'X-Frame-Options': 'DENY',
-      'content-security-policy': 'frame-src https://example.com; frame-ancestors https://example.com',
+      'content-security-policy':
+        'frame-src https://example.com; frame-ancestors https://example.com',
     },
   },
   optimizeDeps: {
@@ -72,12 +77,14 @@ export default defineConfig({
       { name: 'test', priority: 5 },
       { name: 'browser', priority: 1 },
     ],
+    benchmark: {
+      enabled: true,
+    },
     alias: {
       '#src': resolve(dir, './src'),
     },
     diff: './custom-diff-config.ts',
     outputFile: {
-      html: './html/index.html',
       json: './browser.json',
     },
     onConsoleLog(log) {
@@ -117,8 +124,7 @@ export default defineConfig({
               const result = await mod.default(url)
               res.end(JSON.stringify(result))
               return
-            }
-            catch (e) {
+            } catch (e) {
               next(e)
               return
             }

@@ -4,25 +4,39 @@ import { playwright } from '@vitest/browser-playwright'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, config: false, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+async function vitest(
+  cliOptions: TestUserConfig,
+  configValue: TestUserConfig = {},
+  viteConfig: ViteUserConfig = {},
+  vitestOptions: VitestOptions = {},
+) {
+  const vitest = await createVitest(
+    'test',
+    { ...cliOptions, config: false, watch: false },
+    { ...viteConfig, test: configValue as any },
+    vitestOptions,
+  )
   onTestFinished(() => vitest.close())
   return vitest
 }
 
 test('can change global configuration', async () => {
-  const v = await vitest({}, {}, {
-    plugins: [
-      {
-        name: 'test',
-        configureVitest({ vitest }) {
-          vitest.config.coverage.enabled = true
-          vitest.config.coverage.exclude = ['**/*']
-          vitest.config.setupFiles.push('test/setup.ts')
+  const v = await vitest(
+    {},
+    {},
+    {
+      plugins: [
+        {
+          name: 'test',
+          configureVitest({ vitest }) {
+            vitest.config.coverage.enabled = true
+            vitest.config.coverage.exclude = ['**/*']
+            vitest.config.setupFiles.push('test/setup.ts')
+          },
         },
-      },
-    ],
-  })
+      ],
+    },
+  )
   expect(v.config.coverage.enabled).toBe(true)
   expect(v.config.coverage.exclude).toEqual(['**/*'])
   // setup is not resolved
@@ -30,21 +44,24 @@ test('can change global configuration', async () => {
 })
 
 test('can change the project and the global configurations', async () => {
-  const v = await vitest({}, {
-    projects: [
-      {
-        plugins: [
-          {
-            name: 'test',
-            configureVitest({ vitest, project }) {
-              vitest.config.setupFiles.push('test/setup.ts')
-              project.config.setupFiles.push('test/project-setup.ts')
+  const v = await vitest(
+    {},
+    {
+      projects: [
+        {
+          plugins: [
+            {
+              name: 'test',
+              configureVitest({ vitest, project }) {
+                vitest.config.setupFiles.push('test/setup.ts')
+                project.config.setupFiles.push('test/project-setup.ts')
+              },
             },
-          },
-        ],
-      },
-    ],
-  })
+          ],
+        },
+      ],
+    },
+  )
 
   expect(v.config.setupFiles).toEqual(['test/setup.ts'])
   const rootProject = v.getRootProject()
@@ -57,50 +74,57 @@ test('can change the project and the global configurations', async () => {
 })
 
 test('plugin is not called if the project is filtered out', async () => {
-  const { projects } = await vitest({
-    project: 'project-2',
-  }, {
-    projects: [
-      {
-        test: {
-          name: 'project-1',
-        },
-        plugins: [
-          {
-            name: 'test',
-            configureVitest() {
-              expect.unreachable()
-            },
+  const { projects } = await vitest(
+    {
+      project: 'project-2',
+    },
+    {
+      projects: [
+        {
+          test: {
+            name: 'project-1',
           },
-        ],
-      },
-      {
-        test: {
-          name: 'project-2',
+          plugins: [
+            {
+              name: 'test',
+              configureVitest() {
+                expect.unreachable()
+              },
+            },
+          ],
         },
-      },
-    ],
-  })
+        {
+          test: {
+            name: 'project-2',
+          },
+        },
+      ],
+    },
+  )
   expect(projects).toHaveLength(1)
   expect(projects[0].name).toBe('project-2')
 })
 
 test('can inject the plugin', async () => {
   let newWorkspace: TestProject[] = []
-  const v = await vitest({}, {}, {
-    plugins: [
-      {
-        name: 'test',
-        async configureVitest({ injectTestProjects }) {
-          newWorkspace = await injectTestProjects({
-            test: {
-              name: 'project-1',
-            },
-          })
+  const v = await vitest(
+    {},
+    {},
+    {
+      plugins: [
+        {
+          name: 'test',
+          async configureVitest({ injectTestProjects }) {
+            newWorkspace = await injectTestProjects({
+              test: {
+                name: 'project-1',
+              },
+            })
+          },
         },
-      },
-    ],
-  })
+      ],
+    },
+  )
   expect(v.projects).toHaveLength(2)
   // the default project that called configureVitest
   expect(v.projects[0].name).toBe('')
@@ -140,7 +164,7 @@ test('injected plugin is filtered by the --project filter', async () => {
   expect(newWorkspace).toHaveLength(0)
 })
 
-test('injected plugin is not filtered by the --project filter when it\'s overridden', async () => {
+test("injected plugin is not filtered by the --project filter when it's overridden", async () => {
   let newWorkspace: TestProject[] = []
   const { projects } = await vitest({
     project: 'project-1',
@@ -174,106 +198,122 @@ test('injected plugin is not filtered by the --project filter when it\'s overrid
 })
 
 test('adding a plugin with existing name throws and error', async () => {
-  await expect(() => throws({
-    projects: [
-      {
-        test: {
-          name: 'project-1',
+  await expect(() =>
+    throws({
+      projects: [
+        {
+          test: {
+            name: 'project-1',
+          },
+          plugins: [
+            {
+              name: 'test',
+              async configureVitest({ injectTestProjects }) {
+                await injectTestProjects({
+                  test: {
+                    name: 'project-1',
+                  },
+                })
+              },
+            },
+          ],
         },
-        plugins: [
-          {
-            name: 'test',
-            async configureVitest({ injectTestProjects }) {
-              await injectTestProjects({
-                test: {
-                  name: 'project-1',
-                },
-              })
-            },
-          },
-        ],
-      },
-    ],
-  }),
-  ).rejects.toThrow('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
+      ],
+    }),
+  ).rejects.toThrow(
+    'Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.',
+  )
 
-  await expect(() => throws({
-    projects: [
-      {
-        plugins: [
-          {
-            name: 'test',
-            async configureVitest({ injectTestProjects }) {
-              await injectTestProjects({
-                test: {
-                  name: 'project-1',
-                },
-              })
-              await injectTestProjects({
-                test: {
-                  name: 'project-1',
-                },
-              })
-            },
-          },
-        ],
-      },
-    ],
-  }),
-  ).rejects.toThrow('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
-
-  await expect(() => throws({
-    projects: [
-      {
-        plugins: [
-          {
-            name: 'test',
-            async configureVitest({ injectTestProjects }) {
-              await injectTestProjects([
-                {
+  await expect(() =>
+    throws({
+      projects: [
+        {
+          plugins: [
+            {
+              name: 'test',
+              async configureVitest({ injectTestProjects }) {
+                await injectTestProjects({
                   test: {
                     name: 'project-1',
                   },
-                },
-                {
+                })
+                await injectTestProjects({
                   test: {
                     name: 'project-1',
                   },
-                },
-              ])
+                })
+              },
             },
-          },
-        ],
-      },
-    ],
-  }),
-  ).rejects.toThrow('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
+          ],
+        },
+      ],
+    }),
+  ).rejects.toThrow(
+    'Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.',
+  )
+
+  await expect(() =>
+    throws({
+      projects: [
+        {
+          plugins: [
+            {
+              name: 'test',
+              async configureVitest({ injectTestProjects }) {
+                await injectTestProjects([
+                  {
+                    test: {
+                      name: 'project-1',
+                    },
+                  },
+                  {
+                    test: {
+                      name: 'project-1',
+                    },
+                  },
+                ])
+              },
+            },
+          ],
+        },
+      ],
+    }),
+  ).rejects.toThrow(
+    'Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.',
+  )
 })
 
 test('can access browser.instances[].browser', async () => {
   const names: { browser: string; project: string }[] = []
 
-  await vitest({}, {
-    name: 'custom-project-name',
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        { browser: 'chromium', name: 'custom-name-for-chromium-browser' },
-        { browser: 'webkit', name: 'custom-name-for-webkit-browser' },
-        { browser: 'firefox', name: 'custom-name-for-firefox-browser' },
+  await vitest(
+    {},
+    {
+      name: 'custom-project-name',
+      browser: {
+        enabled: true,
+        provider: playwright(),
+        instances: [
+          { browser: 'chromium', name: 'custom-name-for-chromium-browser' },
+          { browser: 'webkit', name: 'custom-name-for-webkit-browser' },
+          { browser: 'firefox', name: 'custom-name-for-firefox-browser' },
+        ],
+      },
+    },
+    {
+      plugins: [
+        {
+          name: 'test',
+          configureVitest(context) {
+            names.push({
+              browser: context.project.config.browser.name,
+              project: context.project.name,
+            })
+          },
+        },
       ],
     },
-  }, {
-    plugins: [
-      {
-        name: 'test',
-        configureVitest(context) {
-          names.push({ browser: context.project.config.browser.name, project: context.project.name })
-        },
-      },
-    ],
-  })
+  )
 
   expect(names).toMatchInlineSnapshot(`
     [
@@ -293,35 +333,41 @@ test('can access browser.instances[].browser', async () => {
   `)
 })
 
-test('can access project\'s browser.instances[].browser', async () => {
+test("can access project's browser.instances[].browser", async () => {
   const names: { browser: string; project: string }[] = []
 
-  await vitest({}, {
-    projects: [
-      {
-        plugins: [
-          {
-            name: 'test',
-            configureVitest(context) {
-              names.push({ browser: context.project.config.browser.name, project: context.project.name })
+  await vitest(
+    {},
+    {
+      projects: [
+        {
+          plugins: [
+            {
+              name: 'test',
+              configureVitest(context) {
+                names.push({
+                  browser: context.project.config.browser.name,
+                  project: context.project.name,
+                })
+              },
+            },
+          ],
+          test: {
+            name: 'custom-project-name',
+            browser: {
+              enabled: true,
+              provider: playwright(),
+              instances: [
+                { browser: 'chromium', name: 'custom-name-for-chromium-browser' },
+                { browser: 'webkit', name: 'custom-name-for-webkit-browser' },
+                { browser: 'firefox', name: 'custom-name-for-firefox-browser' },
+              ],
             },
           },
-        ],
-        test: {
-          name: 'custom-project-name',
-          browser: {
-            enabled: true,
-            provider: playwright(),
-            instances: [
-              { browser: 'chromium', name: 'custom-name-for-chromium-browser' },
-              { browser: 'webkit', name: 'custom-name-for-webkit-browser' },
-              { browser: 'firefox', name: 'custom-name-for-firefox-browser' },
-            ],
-          },
         },
-      },
-    ],
-  })
+      ],
+    },
+  )
 
   expect(names).toMatchInlineSnapshot(`
     [

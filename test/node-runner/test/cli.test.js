@@ -2,11 +2,9 @@ import test from 'node:test'
 import { startVitest } from 'vitest/node'
 
 await test('importing vitest in the global setup is reported as an error', async (t) => {
-  const vitest = await startVitest('test', [], {
+  const vitest = await startVitest([], {
     root: './fixtures/globalSetup',
-    globalSetup: [
-      './failing.ts',
-    ],
+    globalSetup: ['./failing.ts'],
     reporters: [{}],
   })
   const modules = vitest.state.getTestModules()

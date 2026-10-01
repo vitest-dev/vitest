@@ -1,8 +1,8 @@
 export class FilesNotFoundError extends Error {
   code = 'VITEST_FILES_NOT_FOUND'
 
-  constructor(mode: 'test' | 'benchmark') {
-    super(`No ${mode} files found`)
+  constructor() {
+    super(`No test files found`)
   }
 }
 
@@ -14,12 +14,18 @@ export class GitNotFoundError extends Error {
   }
 }
 
+export class BrowserConnectionError extends Error {
+  code = 'VITEST_BROWSER_CONNECTION_CLOSED'
+}
+
 export class LocationFilterFileNotFoundError extends Error {
   code = 'VITEST_LOCATION_FILTER_FILE_NOT_FOUND'
 
   constructor(filename: string) {
-    super(`Couldn\'t find file ${filename}. Note when specifying the test `
-      + 'location you have to specify the full test filename.')
+    super(
+      `Couldn't find file ${filename}. Note when specifying the test ` +
+        'location you have to specify the full test filename.',
+    )
   }
 }
 
@@ -35,15 +41,9 @@ export class RangeLocationFilterProvidedError extends Error {
   code = 'VITEST_RANGE_LOCATION_FILTER_PROVIDED'
 
   constructor(filter: string) {
-    super(`Found "-" in location filter ${filter}.  Note that range location filters `
-      + `are not supported.  Consider specifying the exact line numbers of your tests.`)
-  }
-}
-
-export class VitestFilteredOutProjectError extends Error {
-  code = 'VITEST_FILTERED_OUT_PROJECT'
-
-  constructor() {
-    super('VITEST_FILTERED_OUT_PROJECT')
+    super(
+      `Found "-" in location filter ${filter}.  Note that range location filters ` +
+        `are not supported.  Consider specifying the exact line numbers of your tests.`,
+    )
   }
 }

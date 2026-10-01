@@ -14,6 +14,7 @@ This guide assumes you know how to work with [Vite plugins](https://vite.dev/gui
 Vitest supports a `configureVitest` [plugin](https://vite.dev/guide/api-plugin.html) hook since version 3.1.
 
 ::: code-group
+
 ```ts [only vitest]
 import type { Vite, VitestPluginContext } from 'vitest/node'
 
@@ -26,6 +27,7 @@ export function plugin(): Vite.Plugin {
   }
 }
 ```
+
 ```ts [vite and vitest]
 /// <reference types="vitest/config" />
 
@@ -43,6 +45,7 @@ export function plugin(): Plugin {
   }
 }
 ```
+
 :::
 
 ::: tip TypeScript
@@ -51,6 +54,7 @@ Vitest re-exports all Vite type-only imports via a `Vite` namespace, which you c
 ```ts
 /// <reference types="vitest/config" />
 ```
+
 :::
 
 Unlike [`reporter.onInit`](/api/advanced/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [test project](/guide/projects) if your plugin is defined in the project and not in the global config.
@@ -117,14 +121,14 @@ Note that this will only affect projects injected with [`injectTestProjects`](#i
 :::
 
 ::: tip Referencing the Current Config
-If you want to keep the user configuration, you can specify the `extends` property. All other properties will be merged with the user defined config.
+Inline configurations inherit the root config by default. If you want to inherit a specific configuration file instead, set the `extends` property to its path. All other properties will be merged with the user defined config.
 
 The project's `configFile` can be accessed in Vite's config: `project.vite.config.configFile`.
 
-Note that this will also inherit the `name` - Vitest doesn't allow multiple projects with the same name, so this will throw an error. Make sure you specified a different name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
+Note that the `name` is never inherited because Vitest doesn't allow multiple projects with the same name. Make sure every project has a unique name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
 :::
 
-### experimental_defineCacheKeyGenerator <Version type="experimental">4.0.11</Version> <Experimental /> {#definecachekeygenerator}
+### defineCacheKeyGenerator <Version>5.0.0</Version> {#definecachekeygenerator}
 
 ```ts
 interface CacheKeyIdGeneratorContext {
@@ -133,7 +137,7 @@ interface CacheKeyIdGeneratorContext {
   sourceCode: string
 }
 
-function experimental_defineCacheKeyGenerator(
+function defineCacheKeyGenerator(
   callback: (context: CacheKeyIdGeneratorContext) => string | undefined | null | false
 ): void
 ```
@@ -142,7 +146,7 @@ Define a generator that will be applied before hashing the cache key.
 
 Use this to make sure Vitest generates correct hash. It is a good idea to define this function if your plugin can be registered with different options.
 
-This is called only if [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache) is defined.
+This is called only if [`fsModuleCache`](/config/fsmodulecache) is enabled.
 
 ```ts
 interface PluginOptions {
@@ -159,8 +163,8 @@ export function plugin(options: PluginOptions) {
         options.replacePropertyValue
       )
     },
-    configureVitest({ experimental_defineCacheKeyGenerator }) {
-      experimental_defineCacheKeyGenerator(() => {
+    configureVitest({ defineCacheKeyGenerator }) {
+      defineCacheKeyGenerator(() => {
         // since these options affect the transform result,
         // return them together as a unique string
         return options.replacePropertyKey + options.replacePropertyValue

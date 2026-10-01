@@ -2,7 +2,11 @@ import type { SerializedLocator } from '@vitest/browser'
 import type { ScreenshotOptions } from 'vitest/browser'
 import type { BrowserCommandContext } from 'vitest/node'
 import { mkdir } from 'node:fs/promises'
-import { resolveScreenshotPath } from '@vitest/browser'
+import {
+  assertBrowserApiWrite,
+  assertBrowserFileAccess,
+  resolveScreenshotPath,
+} from '@vitest/browser'
 import { dirname, normalize } from 'pathe'
 import { getDescribedLocator } from './utils'
 
@@ -12,7 +16,7 @@ interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | '
   target?: 'element' | 'page'
 }
 
-const SCREENSHOT_STYLES = /* css */`
+const SCREENSHOT_STYLES = /* css */ `
   iframe[data-vitest="true"] {
     position: absolute !important;
     inset: 0 !important;
@@ -38,12 +42,7 @@ export async function takeScreenshot(
     throw new Error(`Cannot take a screenshot without a test path`)
   }
 
-  const path = resolveScreenshotPath(
-    context.testPath,
-    name,
-    context.project.config,
-    options.path,
-  )
+  const path = resolveScreenshotPath(context.testPath, name, context.project.config, options.path)
 
   // playwright does not need a screenshot path if we don't intend to save it
   let savePath: string | undefined
@@ -51,10 +50,13 @@ export async function takeScreenshot(
   if (options.save) {
     savePath = normalize(path)
 
+    assertBrowserApiWrite(context.project, savePath)
+    assertBrowserFileAccess(context.project, savePath)
+
     await mkdir(dirname(savePath), { recursive: true })
   }
 
-  const mask = options.mask?.map(selector => getDescribedLocator(context, selector))
+  const mask = options.mask?.map((selector) => getDescribedLocator(context, selector))
   const style = context.project.config.browser.ui
     ? options.style === undefined
       ? SCREENSHOT_STYLES
@@ -74,18 +76,22 @@ export async function takeScreenshot(
   }
 
   const { target, ...config } = options
-  const buffer = target === 'page'
-    ? await context.page.screenshot({
-        ...config,
-        mask,
-        path: savePath,
-        style,
-      })
-    : await getDescribedLocator(context, { selector: 'body', locator: 'locator(\'body\')' }).screenshot({
-        ...config,
-        mask,
-        path: savePath,
-        style,
-      })
+  const buffer =
+    target === 'page'
+      ? await context.page.screenshot({
+          ...config,
+          mask,
+          path: savePath,
+          style,
+        })
+      : await getDescribedLocator(context, {
+          selector: 'body',
+          locator: "locator('body')",
+        }).screenshot({
+          ...config,
+          mask,
+          path: savePath,
+          style,
+        })
   return { buffer, path }
 }

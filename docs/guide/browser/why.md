@@ -23,9 +23,9 @@ To achieve the highest level of confidence in our tests, it's crucial to test in
 
 When using Vitest browser, it is important to consider the following drawbacks:
 
-### Early Development
+### Not a Drop-In Replacement
 
-The browser mode feature of Vitest is still in its early stages of development. As such, it may not yet be fully optimized, and there may be some bugs or issues that have not yet been ironed out. It is recommended that users augment their Vitest browser experience with a standalone browser-side test runner like WebdriverIO, Cypress or Playwright.
+The browser mode feature of Vitest does not completely replace standalone end-to-end test runners. It is recommended that users augment their Vitest browser experience with a standalone browser-side test runner like WebdriverIO, Cypress or Playwright.
 
 ### Longer Initialization
 

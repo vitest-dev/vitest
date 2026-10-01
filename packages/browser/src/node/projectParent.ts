@@ -12,6 +12,7 @@ import type {
 } from 'vitest/node'
 import type { BrowserServerState } from './state'
 import { readFile } from 'node:fs/promises'
+import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { join, resolve } from 'pathe'
@@ -50,28 +51,39 @@ export class ParentBrowserProject {
   private sourceMapCache = new Map<string, any>()
 
   constructor(
-    public project: TestProject,
+    ctx: { config: ResolvedConfig; vitest: Vitest },
     public base: string,
   ) {
-    this.vitest = project.vitest
-    this.config = project.config
+    this.vitest = ctx.vitest
+    this.config = ctx.config
     this.stackTraceOptions = {
-      frameFilter: project.config.onStackTrace,
+      frameFilter: this.config.onStackTrace,
       getSourceMap: (id) => {
         if (this.sourceMapCache.has(id)) {
           return this.sourceMapCache.get(id)
         }
 
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
-        // handle non-inline source map such as pre-bundled deps in node_modules/.vite
-        if (result && !result.map) {
-          const filePath = id.split('?')[0]
+        const filePath = id.split('?')[0]
+        // prefer the map stored on disk when the transform pipeline can't
+        // provide a usable one:
+        // - pre-bundled deps: the pipeline map resolves back into the
+        //   optimizer cache, while the map esbuild wrote next to the file
+        //   points at the real package sources
+        // - an empty `mappings` means the map was intentionally not served
+        //   to the browser (`vitest:browser:framework-sourcemaps`), but disk
+        //   is still the source of truth for error stack traces
+        if (
+          result &&
+          (!result.map ||
+            result.map.mappings === '' ||
+            filePath.startsWith(this.vite.config.cacheDir))
+        ) {
           const extracted = extractSourcemapFromFile(result.code, filePath)
           this.sourceMapCache.set(id, extracted?.map)
           return extracted?.map
         }
 
-        this.sourceMapCache.set(id, result?.map)
         return result?.map
       },
       getUrlId: (id) => {
@@ -100,13 +112,13 @@ export class ParentBrowserProject {
     }
 
     // validate names because they can't be used as identifiers
-    for (const command in project.config.browser.commands) {
+    for (const command in this.config.browser.commands) {
       if (!/^[a-z_$][\w$]*$/i.test(command)) {
         throw new Error(
           `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
         )
       }
-      this.commands[command] = project.config.browser.commands[command]
+      this.commands[command] = this.config.browser.commands[command]
     }
 
     this.prefixTesterUrl = `${base || '/'}`
@@ -114,26 +126,23 @@ export class ParentBrowserProject {
     this.faviconUrl = `${base}__vitest__/favicon.svg`
 
     this.manifest = (async () => {
-      return JSON.parse(
-        await readFile(`${distRoot}/client/.vite/manifest.json`, 'utf8'),
-      )
-    })().then(manifest => (this.manifest = manifest))
+      return JSON.parse(await readFile(`${distRoot}/client/.vite/manifest.json`, 'utf8'))
+    })().then((manifest) => (this.manifest = manifest))
 
-    this.orchestratorHtml = (project.config.browser.ui
-      ? readFile(resolve(distRoot, 'client/__vitest__/index.html'), 'utf8')
-      : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8'))
-      .then(html => (this.orchestratorHtml = html))
-    this.injectorJs = readFile(
-      resolve(distRoot, 'client/esm-client-injector.js'),
-      'utf8',
-    ).then(js => (this.injectorJs = js))
+    this.orchestratorHtml = (
+      this.config.browser.ui
+        ? readFile(resolve(uiClientRoot, 'index.html'), 'utf8')
+        : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8')
+    ).then((html) => (this.orchestratorHtml = html))
+    this.injectorJs = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf8').then(
+      (js) => (this.injectorJs = js),
+    )
     this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
 
     this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
-    this.stateJs = readFile(
-      resolve(distRoot, 'state.js'),
-      'utf-8',
-    ).then(js => (this.stateJs = js))
+    this.stateJs = readFile(resolve(distRoot, 'state.js'), 'utf-8').then(
+      (js) => (this.stateJs = js),
+    )
   }
 
   public setServer(vite: Vite.ViteDevServer): void {
@@ -144,29 +153,19 @@ export class ParentBrowserProject {
     if (!this.vite) {
       throw new Error(`Cannot spawn child server without a parent dev server.`)
     }
-    const clone = new ProjectBrowser(
-      this,
-      project,
-      '/',
-    )
+    const clone = new ProjectBrowser(this, project, '/')
     this.children.add(clone)
     return clone
   }
 
-  public parseErrorStacktrace(
-    e: TestError,
-    options: StackTraceParserOptions = {},
-  ): ParsedStack[] {
+  public parseErrorStacktrace(e: TestError, options: StackTraceParserOptions = {}): ParsedStack[] {
     return parseErrorStacktrace(e, {
       ...this.stackTraceOptions,
       ...options,
     })
   }
 
-  public parseStacktrace(
-    trace: string,
-    options: StackTraceParserOptions = {},
-  ): ParsedStack[] {
+  public parseStacktrace(trace: string, options: StackTraceParserOptions = {}): ParsedStack[] {
     return parseStacktrace(trace, {
       ...this.stackTraceOptions,
       ...options,
@@ -189,19 +188,23 @@ export class ParentBrowserProject {
     const browser = browserSession.project.browser!
     const provider = browser.provider
     if (!provider) {
-      throw new Error(`Browser provider is not defined for the project "${browserSession.project.name}".`)
+      throw new Error(
+        `Browser provider is not defined for the project "${browserSession.project.name}".`,
+      )
     }
     if (!provider.getCDPSession) {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const session = await this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
-      const promise = provider.getCDPSession!(sessionId).finally(() => {
-        this.cdpSessionsPromises.delete(rpcId)
-      })
-      this.cdpSessionsPromises.set(rpcId, promise)
-      return promise
-    })()
+    const session =
+      (await this.cdpSessionsPromises.get(rpcId)) ??
+      (await (async () => {
+        const promise = provider.getCDPSession!(sessionId).finally(() => {
+          this.cdpSessionsPromises.delete(rpcId)
+        })
+        this.cdpSessionsPromises.set(rpcId, promise)
+        return promise
+      })())
 
     const rpc = (browser.state as BrowserServerState).testers.get(rpcId)
     if (!rpc) {
@@ -209,10 +212,7 @@ export class ParentBrowserProject {
     }
 
     const handler = new BrowserServerCDPHandler(session, rpc)
-    this.cdps.set(
-      rpcId,
-      handler,
-    )
+    this.cdps.set(rpcId, handler)
     return handler
   }
 
@@ -228,10 +228,11 @@ export class ParentBrowserProject {
     const promises = scripts.map(
       async ({ content, src, async, id, type = 'module' }, index): Promise<HtmlTagDescriptor> => {
         const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
-        const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
+        const transformId =
+          srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
-        const contentProcessed
-          = content && type === 'module'
+        const contentProcessed =
+          content && type === 'module'
             ? (await server.pluginContainer.transform(content, transformId)).code
             : content
         return {
@@ -250,13 +251,11 @@ export class ParentBrowserProject {
         }
       },
     )
-    return (await Promise.all(promises))
+    return await Promise.all(promises)
   }
 
   resolveTesterUrl(pathname: string): { sessionId: string; testFile: string } {
-    const [sessionId, testFile] = pathname
-      .slice(this.prefixTesterUrl.length)
-      .split('/')
+    const [sessionId, testFile] = pathname.slice(this.prefixTesterUrl.length).split('/')
     const decodedTestFile = decodeURIComponent(testFile)
     return { sessionId, testFile: decodedTestFile }
   }

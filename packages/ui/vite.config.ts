@@ -3,9 +3,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
-import { presetAttributify, presetIcons, presetWind3, transformerDirectives } from 'unocss'
+import { presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
+import { resolveApiToken } from '../vitest/src/node/config/apiToken'
 
 export default defineConfig({
   base: './',
@@ -19,7 +20,15 @@ export default defineConfig({
   plugins: [
     Vue(),
     Unocss({
-      presets: [presetWind3(), presetAttributify(), presetIcons()],
+      presets: [presetWind3(), presetIcons()],
+      content: {
+        pipeline: {
+          include: [
+            // by default .ts is excluded
+            /\/client\/.*\.(ts|vue)($|\?)/,
+          ],
+        },
+      },
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -28,14 +37,12 @@ export default defineConfig({
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
         'focus-base': 'border-gray-500 dark:border-gray-400',
-        'highlight': 'bg-[#eab306] text-[#323238] dark:bg-[#323238] dark:text-[#eab306]',
+        highlight: 'bg-[#eab306] text-[#323238] dark:bg-[#323238] dark:text-[#eab306]',
 
         'tab-button': 'font-light op50 hover:op80 h-full px-4',
         'tab-button-active': 'op100 bg-gray-500:10',
       },
-      transformers: [
-        transformerDirectives(),
-      ],
+      transformers: [transformerDirectives()],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
     process.env.HTML_REPORT_DIR
@@ -59,10 +66,9 @@ export default defineConfig({
 })
 
 function devUiScriptPlugin(): Plugin {
-  const UI_SCRIPT_RE = /<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/
-  const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
+  const BROWSER_SCRIPT_RE =
+    /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
 
-  const uiUrl = `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`
   const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
 
   return {
@@ -91,19 +97,11 @@ function devUiScriptPlugin(): Plugin {
         ]
       }
 
-      const response = await fetch(uiUrl)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch VITEST_API_TOKEN from ${uiUrl}`)
-      }
-      const testHtml = await response.text()
-      const tokenScript = testHtml.match(UI_SCRIPT_RE)?.[1]
-      if (!tokenScript) {
-        throw new Error('Failed to extract VITEST_API_TOKEN from the response')
-      }
+      const token = resolveApiToken(process.cwd()).token
       return [
         {
           tag: 'script',
-          children: tokenScript,
+          children: `window.VITEST_API_TOKEN = ${JSON.stringify(token)}`,
           injectTo: 'head-prepend',
         },
       ]
@@ -119,10 +117,11 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       return !!htmlDir && env.command === 'serve' && env.mode !== 'test'
     },
     async transformIndexHtml() {
+      const metadataCode = `window.HTML_REPORT_METADATA=fetch(new URL("./${REPORT_FILE}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
       return [
         {
           tag: 'script',
-          children: `window.METADATA_PATH="${REPORT_FILE}"`,
+          children: metadataCode,
         },
       ]
     },
@@ -130,7 +129,7 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url || '', `http://localhost`)
         if (url.pathname === `/${REPORT_FILE}`) {
-          const data = fs.readFileSync(path.join(htmlDir, REPORT_FILE))
+          const data = fs.readFileSync(path.join(htmlDir, 'ui', REPORT_FILE))
           res.end(data)
           return
         }

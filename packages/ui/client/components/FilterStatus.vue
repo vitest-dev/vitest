@@ -22,20 +22,12 @@ function toggle() {
     @click.prevent="toggle"
   >
     <span
-      :class="[
-        modelValue ? 'i-carbon:checkbox-checked-filled' : 'i-carbon:checkbox',
-      ]"
-      text-lg
-      flex-shrink-0
+      :class="[modelValue ? 'i-carbon:checkbox-checked-filled' : 'i-carbon:checkbox']"
+      class="text-lg flex-shrink-0"
       aria-hidden="true"
     />
-    <input
-      v-model="modelValue"
-      type="checkbox"
-      :disabled="disabled"
-      sr-only
-    >
-    <span flex-1 ms-2 select-none whitespace-nowrap truncate>{{ label }}</span>
+    <input v-model="modelValue" type="checkbox" :disabled="disabled" class="sr-only" />
+    <span class="flex-1 ms-2 select-none whitespace-nowrap truncate">{{ label }}</span>
   </label>
 </template>
 

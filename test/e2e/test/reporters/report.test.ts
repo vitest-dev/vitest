@@ -18,9 +18,7 @@ test('sets root', async () => {
 
   const report = vitest.createReport('example-reporter')
 
-  expect(normalize(report.root)).toBe(
-    resolve(vitest.config.root, '.vitest', 'example-reporter'),
-  )
+  expect(normalize(report.root)).toBe(resolve(vitest.config.root, '.vitest', 'example-reporter'))
 })
 
 test('writeFile() creates file in scoped directory', async () => {
@@ -29,14 +27,22 @@ test('writeFile() creates file in scoped directory', async () => {
   const report = vitest.createReport('example-reporter')
   await report.writeFile('example-report.txt', 'Example report here!')
 
-  expect(readFileSync(resolve(vitest.config.root, '.vitest', 'example-reporter', 'example-report.txt'), 'utf-8')).toBe('Example report here!')
+  expect(
+    readFileSync(
+      resolve(vitest.config.root, '.vitest', 'example-reporter', 'example-report.txt'),
+      'utf-8',
+    ),
+  ).toBe('Example report here!')
 })
 
 test('readFile() reads a file in scoped directory', async () => {
   const vitest = await run()
 
   const report = vitest.createReport('example-reporter')
-  writeFileSync(resolve(vitest.config.root, '.vitest', 'example-reporter', 'example-report.txt'), 'Example report here!')
+  writeFileSync(
+    resolve(vitest.config.root, '.vitest', 'example-reporter', 'example-report.txt'),
+    'Example report here!',
+  )
 
   await expect(report.readFile('example-report.txt')).resolves.toBe('Example report here!')
 })

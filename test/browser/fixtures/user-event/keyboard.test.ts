@@ -15,7 +15,6 @@ test('non US keys', async () => {
   await expect.element(page.getByPlaceholder("fill-#7396")).toHaveValue('éèù')
 
   // playwright: garbled characters
-  // webdriverio: error: invalid argument: missing command parameters
   // preview: ok
   if (server.provider === 'playwright') {
     await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
@@ -24,31 +23,15 @@ test('non US keys', async () => {
     } else {
       await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
     }
-  } else if (server.provider === 'webdriverio') {
-    await expect(() =>
-      userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
-    ).rejects.toThrow()
   } else {
     await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
   }
 
   // playwright: ok
-  // webdriverio: error: ChromeDriver only supports characters in the BMP
   // preview: ok
-  if (server.provider === 'webdriverio') {
-    if (server.browser === 'firefox') {
-      await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
-      await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
-    } else {
-      await expect(() =>
-        userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
-      ).rejects.toThrow()
-    }
-  } else {
-    await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
-    await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
-  }
+  await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
+  await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
 })
 
 test('click with modifier', async () => {
@@ -63,7 +46,6 @@ test('click with modifier', async () => {
   });
 
   await userEvent.keyboard('{Shift>}')
-  // By using an empty object as the option, this opts in to using a chain of actions instead of an elementClick in webdriver.
   await userEvent.click(el, {})
   await userEvent.keyboard('{/Shift}')
   await expect.poll(() => el.textContent).toContain("[ok]")
@@ -73,7 +55,6 @@ test('click with modifier', async () => {
 // https://testing-library.com/docs/user-event/keyboard
 // https://github.com/testing-library/user-event/blob/main/src/keyboard/keyMap.ts
 // https://playwright.dev/docs/api/class-keyboard
-// https://webdriver.io/docs/api/browser/keys/
 test('special keys', async () => {
   async function testKeyboard(text: string) {
     let data: any;
@@ -96,14 +77,6 @@ test('special keys', async () => {
     expect(await testKeyboard('{ShiftLeft}')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
     expect(await testKeyboard('{ShiftRight}')).toMatchInlineSnapshot(`"Shift|ShiftRight|2"`);
     expect(await testKeyboard('[Shift]')).toMatchInlineSnapshot(`undefined`);
-    expect(await testKeyboard('[ShiftLeft]')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
-    expect(await testKeyboard('[ShiftRight]')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
-  }
-  if (server.provider === 'webdriverio') {
-    expect(await testKeyboard('{Shift}')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
-    expect(await testKeyboard('{ShiftLeft}')).toMatchInlineSnapshot(`"ERROR"`);
-    expect(await testKeyboard('{ShiftRight}')).toMatchInlineSnapshot(`"ERROR"`);
-    expect(await testKeyboard('[Shift]')).toMatchInlineSnapshot(`"ERROR"`);
     expect(await testKeyboard('[ShiftLeft]')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
     expect(await testKeyboard('[ShiftRight]')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
   }

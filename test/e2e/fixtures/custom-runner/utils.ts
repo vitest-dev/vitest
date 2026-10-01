@@ -1,4 +1,4 @@
-import { Suite } from "@vitest/runner"
+import { Suite } from "../../../../packages/vitest/src/runtime/runner"
 
 export function getSuiteNames(suite?: Suite) {
   const names = []

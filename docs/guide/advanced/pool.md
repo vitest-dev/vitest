@@ -43,13 +43,11 @@ export default defineConfig({
   test: {
     projects: [
       {
-        extends: true,
         test: {
           pool: 'threads',
         },
       },
       {
-        extends: true,
         test: {
           pool: customPool({
             customProperty: true,

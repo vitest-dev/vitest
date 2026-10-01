@@ -4,17 +4,20 @@ import { runVitest, StableTestFileOrderSorter } from '../../test-utils'
 // Test to detect that there are no unexpected logs, like NodeJS MaxListenersExceededWarning
 
 describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool) => {
-  test.each([true, false])(`should not log anything unexpected { isolate: %s }`, async (isolate) => {
-    const { stdout, stderr } = await runVitest({
-      root: './fixtures/no-unexpected-logging',
-      pool,
-      isolate,
-      sequence: { sequencer: StableTestFileOrderSorter },
-    })
+  test.each([true, false])(
+    `should not log anything unexpected { isolate: %s }`,
+    async (isolate) => {
+      const { stdout, stderr } = await runVitest({
+        root: './fixtures/no-unexpected-logging',
+        pool,
+        isolate,
+        sequence: { sequencer: StableTestFileOrderSorter },
+      })
 
-    expect(stderr).toBe('')
+      expect(stderr).toBe('')
 
-    expect(normalizeOutput(stdout)).toBe(`
+      expect(normalizeOutput(stdout)).toBe(
+        `
  RUN  v[...]
 
  ✓ fixture-1.test.ts > test 1 [...]ms
@@ -33,23 +36,29 @@ describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool
  Test Files  12 passed (12)
       Tests  12 passed (12)
    Start at  [...]
-   Duration  [...]ms (transform [...]ms, setup [...]ms, import [...]ms, tests [...]ms, environment [...]ms)
+   Duration  [...]ms (<breakdown>)
 
-   `.trim())
-  })
+   `.trim(),
+      )
+    },
+  )
 })
 
 function normalizeOutput(stdtout: string) {
-  const rows = stdtout.replace(/\d?\.?\d+m?s/g, '[...]ms').split('\n').map((row) => {
-    if (row.includes('RUN  v')) {
-      return `${row.split('RUN  v')[0]}RUN  v[...]`
-    }
+  const rows = stdtout
+    .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
+    .replace(/\d?\.?\d+m?s/g, '[...]ms')
+    .split('\n')
+    .map((row) => {
+      if (row.includes('RUN  v')) {
+        return `${row.split('RUN  v')[0]}RUN  v[...]`
+      }
 
-    if (row.includes('Start at')) {
-      return row.replace(/\d+:\d+:\d+/, '[...]')
-    }
-    return row
-  })
+      if (row.includes('Start at')) {
+        return row.replace(/\d+:\d+:\d+/, '[...]')
+      }
+      return row
+    })
 
   return rows.join('\n').trim()
 }

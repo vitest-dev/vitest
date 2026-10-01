@@ -12,6 +12,7 @@ const mousedownCommand: BrowserCommand<[selector: string]> = async (ctx, selecto
 export default defineConfig({
   test: {
     ui: true,
+    includeTaskLocation: true,
     browser: {
       enabled: true,
       provider: playwright(),

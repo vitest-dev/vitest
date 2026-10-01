@@ -1,5 +1,9 @@
 import type { Context, Span } from '@opentelemetry/api'
-import type { ContextTestEnvironment, WorkerExecuteContext, WorkerTestEnvironment } from '../../types/worker'
+import type {
+  ContextTestEnvironment,
+  WorkerExecuteContext,
+  WorkerTestEnvironment,
+} from '../../types/worker'
 import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { SerializedConfig } from '../types/config'
@@ -24,8 +28,8 @@ export interface PoolWorker {
   readonly reportMemory?: boolean
   readonly cacheFs?: boolean
 
-  on: (event: string, callback: (arg: any) => void) => void
-  off: (event: string, callback: (arg: any) => void) => void
+  on: (event: string, callback: (...args: any[]) => void) => void
+  off: (event: string, callback: (...args: any[]) => void) => void
   send: (message: WorkerRequest) => void
   deserialize: (data: unknown) => unknown
 
@@ -65,9 +69,8 @@ export interface PoolRunnerOTEL {
   files: string[]
 }
 
-export type WorkerRequest
-  = { __vitest_worker_request__: true } & (
-    | {
+export type WorkerRequest = { __vitest_worker_request__: true } & (
+  | {
       type: 'start'
       poolId: number
       workerId: WorkerExecuteContext['workerId'] // Initial worker ID, may change when non-isolated worker runs multiple test files
@@ -83,26 +86,25 @@ export type WorkerRequest
         otelCarrier?: OTELCarrier
       }
     }
-    | {
+  | {
       type: 'stop'
       otelCarrier?: OTELCarrier
     }
-    | {
+  | {
       type: 'run'
       context: WorkerExecuteContext
       otelCarrier?: OTELCarrier
     }
-    | {
+  | {
       type: 'collect'
       context: WorkerExecuteContext
       otelCarrier?: OTELCarrier
     }
-    | { type: 'cancel' }
+  | { type: 'cancel' }
 )
 
-export type WorkerResponse
-  = { __vitest_worker_response__: true } & (
-    | { type: 'started'; error?: unknown }
-    | { type: 'stopped'; error?: unknown }
-    | { type: 'testfileFinished'; usedMemory?: number; error?: unknown }
+export type WorkerResponse = { __vitest_worker_response__: true } & (
+  | { type: 'started'; error?: unknown }
+  | { type: 'stopped'; error?: unknown }
+  | { type: 'testfileFinished'; usedMemory?: number; error?: unknown }
 )

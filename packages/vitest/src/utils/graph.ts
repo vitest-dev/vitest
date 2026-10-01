@@ -1,4 +1,4 @@
-import type { EnvironmentModuleNode } from 'vite'
+import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { ModuleGraphData } from '../types/general'
 import { getTestFileEnvironment } from './environments'
@@ -7,17 +7,25 @@ export async function getModuleGraph(
   ctx: Vitest,
   projectName: string,
   testFilePath: string,
-  browser = false,
+  viteEnvironment?: string,
 ): Promise<ModuleGraphData> {
   const graph: Record<string, string[]> = {}
   const externalized = new Set<string>()
   const inlined = new Set<string>()
 
   const project = ctx.getProjectByName(projectName)
+  const browser = project.config.browser.enabled
 
-  const environment = project.config.experimental.viteModuleRunner === false
-    ? project.vite.environments.__vitest__
-    : getTestFileEnvironment(project, testFilePath, browser)
+  let environment: DevEnvironment | undefined
+
+  if (viteEnvironment) {
+    environment = project.vite.environments[viteEnvironment]
+  } else {
+    environment =
+      project.config.experimental.viteModuleRunner === false
+        ? project.vite.environments.__vitest__
+        : getTestFileEnvironment(project, testFilePath, browser)
+  }
 
   if (!environment) {
     throw new Error(`Cannot find environment for ${testFilePath}`)
@@ -29,10 +37,10 @@ export async function getModuleGraph(
       return
     }
     if (
-      mod.id === '\0vitest/browser'
+      mod.id === '\0vitest/browser' ||
       // the export helper is injected in all vue files
       // so the module graph becomes too bouncy
-      || mod.id.includes('plugin-vue:export-helper')
+      mod.id.includes('plugin-vue:export-helper')
     ) {
       return
     }
@@ -57,11 +65,9 @@ export async function getModuleGraph(
     }
     inlined.add(id)
     const mods = Array.from(mod.importedModules).filter(
-      i => i.id && !i.id.includes('/vitest/dist/'),
+      (i) => i.id && !i.id.includes('/vitest/dist/'),
     )
-    graph[id] = mods.map(m => get(m)).filter(
-      Boolean,
-    ) as string[]
+    graph[id] = mods.map((m) => get(m)).filter(Boolean) as string[]
     return id
   }
 

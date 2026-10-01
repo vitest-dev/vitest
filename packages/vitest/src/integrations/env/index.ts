@@ -5,8 +5,8 @@ import jsdom from './jsdom'
 import node from './node'
 
 export const environments: {
-  'node': Environment
-  'jsdom': Environment
+  node: Environment
+  jsdom: Environment
   'happy-dom': Environment
   'edge-runtime': Environment
 } = {
@@ -15,5 +15,3 @@ export const environments: {
   'happy-dom': happy,
   'edge-runtime': edge,
 }
-
-export const envs: string[] = Object.keys(environments)

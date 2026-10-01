@@ -192,7 +192,7 @@ await button.click() // Interactive methods work fine ✅
 await expect.element(button).toBeVisible() // Querying elements does not work ❌
 ```
 
-If you need to work with cross-origin iframes, you'll need to pass `args: ["--disable-web-security"]` in [`launchOptions`](/config/browser/playwright.html#launchoptions). Or alternatively create a custom [browser command](/api/browser/commands.html#custom-commands) that accesses the iframe on server side where it's available.
+If you need to work with cross-origin iframes, you'll need to pass `args: ["--disable-web-security"]` in [`launchOptions`](/config/browser/playwright#launchoptions). Or alternatively create a custom [browser command](/api/browser/commands#custom-commands) that accesses the iframe on server side where it's available.
 :::
 
 ::: danger IMPORTANT
@@ -211,6 +211,8 @@ The `cdp` export returns the current Chrome DevTools Protocol session. It is mos
 
 ::: warning
 CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
+
+CDP is a privileged debugging API. It is available only when browser API write and exec operations are enabled through [`api.allowWrite`](/config/api#api-allowwrite), and [`api.allowExec`](/config/api#api-allowexec).
 :::
 
 ```ts
@@ -344,22 +346,26 @@ const html = utils.prettyDOM(element, undefined, {
 **Common Patterns:**
 
 Filter out scripts and styles:
+
 ```ts
 utils.configurePrettyDOM({ filterNode: 'script, style' })
 ```
 
 Hide specific elements with data attributes:
+
 ```ts
 utils.configurePrettyDOM({ filterNode: '[data-test-hide]' })
 ```
 
 Hide nested content within an element:
+
 ```ts
 // Hides all children of elements with data-test-hide-content
 utils.configurePrettyDOM({ filterNode: '[data-test-hide-content] *' })
 ```
 
 Combine multiple selectors:
+
 ```ts
 utils.configurePrettyDOM({
   filterNode: 'script, style, [data-test-hide], svg'

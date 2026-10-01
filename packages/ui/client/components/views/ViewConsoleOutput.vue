@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { getNames } from '@vitest/runner/utils'
 import { computed } from 'vue'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
+import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import ViewConsoleOutputEntry from './ViewConsoleOutputEntry.vue'
 
 const formattedLogs = computed(() => {
   const data = logs.value
   if (data) {
     const filter = createAnsiToHtmlFilter(isDark.value)
-    return data.map(({ taskId, type, time, content }) => ({ taskId, type, time, content: filter.toHtml(escapeHtml(content)) }))
+    return data.map(({ taskId, type, time, content }) => ({
+      taskId,
+      type,
+      time,
+      content: filter.toHtml(escapeHtml(content)),
+    }))
   }
 
   return undefined
@@ -27,8 +32,8 @@ function getTaskName(id?: string) {
 </script>
 
 <template>
-  <div v-if="formattedLogs?.length" h-full class="scrolls" flex flex-col data-testid="logs">
-    <div v-for="{ taskId, type, time, content } of formattedLogs" :key="taskId" font-mono>
+  <div v-if="formattedLogs?.length" class="scrolls h-full flex flex-col" data-testid="logs">
+    <div v-for="{ taskId, type, time, content } of formattedLogs" :key="taskId" class="font-mono">
       <ViewConsoleOutputEntry
         :task-name="getTaskName(taskId)"
         :type="type"
@@ -37,7 +42,8 @@ function getTaskName(id?: string) {
       />
     </div>
   </div>
-  <div v-else p6>
-    Log something in your test and it would print here. (e.g. <pre inline>console.log(foo)</pre>)
+  <div v-else class="p6">
+    Log something in your test and it would print here, e.g.
+    <pre class="inline">console.log(foo)</pre>
   </div>
 </template>

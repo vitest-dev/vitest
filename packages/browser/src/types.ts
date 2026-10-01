@@ -1,13 +1,20 @@
-import type { MockedModuleSerialized, ServerIdResolution, ServerMockResolution } from '@vitest/mocker'
-import type { TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
+import type {
+  MockedModuleSerialized,
+  ServerIdResolution,
+  ServerMockResolution,
+} from '@vitest/mocker'
 import type { BirpcReturn } from 'birpc'
 import type {
   AfterSuiteRunMeta,
+  BaselineData,
   BrowserTesterOptions,
   CancelReason,
   RunnerTestFile,
-  SerializedTestSpecification,
   SnapshotResult,
+  RunnerTaskEventPack as TaskEventPack,
+  RunnerTaskResultPack as TaskResultPack,
+  TestArtifact,
+  TestBenchmark,
   TestExecutionMethod,
   UserConsoleLog,
 } from 'vitest'
@@ -19,21 +26,30 @@ export interface WebSocketBrowserHandlers {
   onUnhandledError: (error: unknown, type: string) => Promise<void>
   onQueued: (method: TestExecutionMethod, file: RunnerTestFile) => void
   onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
-  onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
-  onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
+  onTaskArtifactRecord: <Artifact extends TestArtifact>(
+    testId: string,
+    artifact: Artifact,
+  ) => Promise<Artifact>
+  onTaskUpdate: (
+    method: TestExecutionMethod,
+    packs: TaskResultPack[],
+    events: TaskEventPack[],
+  ) => void
+  onTestBenchmark: (testId: string, benchmark: TestBenchmark) => void
+  readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
+  writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
+  onOrchestratorReady: () => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
+  readSnapshotFileData: (id: string) => Promise<Record<string, string> | null>
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
   sendLog: (method: TestExecutionMethod, log: UserConsoleLog) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
-  resolveId: (
-    id: string,
-    importer?: string,
-  ) => Promise<ServerIdResolution | null>
+  resolveId: (id: string, importer?: string) => Promise<ServerIdResolution | null>
   triggerCommand: <T>(
     sessionId: string,
     command: string,
@@ -46,9 +62,7 @@ export interface WebSocketBrowserHandlers {
     options: { mock: 'spy' | 'factory' | 'auto' },
   ) => Promise<ServerMockResolution>
   invalidate: (ids: string[]) => void
-  getBrowserFileSourceMap: (
-    id: string,
-  ) => SourceMap | null | { mappings: '' } | undefined
+  getBrowserFileSourceMap: (id: string) => SourceMap | null | { mappings: '' } | undefined
   wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 
   registerMock: (sessionId: string, mock: MockedModuleSerialized) => void
@@ -57,18 +71,12 @@ export interface WebSocketBrowserHandlers {
 
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown
-  trackCdpEvent: (sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
-}
-
-export type Awaitable<T> = T | PromiseLike<T>
-
-export interface WebSocketEvents {
-  onCollected?: (files: RunnerTestFile[]) => Awaitable<void>
-  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
-  onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
-  onPathsCollected?: (paths?: string[]) => Awaitable<void>
-  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
-  onFinishedReportCoverage: () => void
+  trackCdpEvent: (
+    sessionId: string,
+    type: 'on' | 'once' | 'off',
+    event: string,
+    listenerId: string,
+  ) => void
 }
 
 export interface WebSocketBrowserEvents {
@@ -84,10 +92,7 @@ export interface WebSocketBrowserEvents {
   }>
 }
 
-export type WebSocketBrowserRPC = BirpcReturn<
-  WebSocketBrowserEvents,
-  WebSocketBrowserHandlers
->
+export type WebSocketBrowserRPC = BirpcReturn<WebSocketBrowserEvents, WebSocketBrowserHandlers>
 
 interface SourceMap {
   file: string

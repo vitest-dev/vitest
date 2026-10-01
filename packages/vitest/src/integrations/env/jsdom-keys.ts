@@ -209,6 +209,7 @@ const OTHER_KEYS = [
   'innerHeight',
   'innerWidth',
   'length',
+  'localStorage',
   'location',
   'matchMedia',
   'moveBy',
@@ -241,6 +242,7 @@ const OTHER_KEYS = [
   'scrollX',
   'scrollY',
   'self',
+  'sessionStorage',
   /* 'setInterval', */
   /* 'setTimeout', */
   'stop',

@@ -1,4 +1,3 @@
-import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
@@ -7,6 +6,13 @@ import type { Vitest } from '../node/core'
 import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
 import type { TestSpecification } from '../node/test-specification'
 import type { Reporter } from '../node/types/reporter'
+import type {
+  File,
+  TaskEventPack,
+  TaskResultPack,
+  TestAnnotation,
+  TestArtifact,
+} from '../runtime/runner/types'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   ExternalResult,
@@ -101,10 +107,12 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           return ctx.serializedRootConfig
         },
         getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
-          return ctx.projects.map(p => ({ name: p.name, color: p.color }))
+          return ctx.projects.map((p) => ({ name: p.name, color: p.color }))
         },
         async getExternalResult(moduleId: string, testFileTaskId: string) {
-          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as
+            | TestModule
+            | undefined
           if (!testModule) {
             return undefined
           }
@@ -117,18 +125,20 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
           try {
             result.source = await fs.readFile(moduleId, 'utf-8')
-          }
-          catch {}
+          } catch {}
 
           return result
         },
-        async getTransformResult(projectName: string, moduleId, testFileTaskId, browser = false) {
+        async getTransformResult(projectName: string, moduleId, testFileTaskId) {
           const project = ctx.getProjectByName(projectName)
-          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as
+            | TestModule
+            | undefined
           if (!testModule || !isFileServingAllowed(project.vite.config, moduleId)) {
             return
           }
 
+          const browser = !!project.config.browser.enabled
           const environment = getTestFileEnvironment(project, testModule.moduleId, browser)
 
           const moduleNode = environment?.moduleGraph.getModuleById(moduleId)
@@ -138,9 +148,10 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
           const result: TransformResultWithSource = moduleNode.transformResult
           try {
-            result.source = result.source || (moduleNode.file ? await fs.readFile(moduleNode.file, 'utf-8') : undefined)
-          }
-          catch {}
+            result.source =
+              result.source ||
+              (moduleNode.file ? await fs.readFile(moduleNode.file, 'utf-8') : undefined)
+          } catch {}
 
           // TODO: store this in HTML reporter separately
           const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
@@ -148,15 +159,17 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             result.transformTime = transformDuration
           }
           try {
-            const diagnostic = await ctx.experimental_getSourceModuleDiagnostic(moduleId, testModule)
+            const diagnostic = await ctx.experimental_getSourceModuleDiagnostic(
+              moduleId,
+              testModule,
+            )
             result.modules = diagnostic.modules
             result.untrackedModules = diagnostic.untrackedModules
-          }
-          catch {}
+          } catch {}
           return result
         },
-        async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
-          return getModuleGraph(ctx, project, id, browser)
+        async getModuleGraph(project, id, viteEnvironment): Promise<ModuleGraphData> {
+          return getModuleGraph(ctx, project, id, viteEnvironment)
         },
         async updateSnapshot(file?: File) {
           // silently ignore exec/write attempts if not allowed
@@ -166,8 +179,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           }
           if (!file) {
             await ctx.updateSnapshot()
-          }
-          else {
+          } else {
             await ctx.updateSnapshot([file.filepath])
           }
         },
@@ -176,7 +188,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         },
         async getTestFiles() {
           const spec = await ctx.globTestSpecifications()
-          return spec.map(spec => [
+          return spec.map((spec) => [
             {
               name: spec.project.config.name,
               root: spec.project.config.root,
@@ -187,14 +199,15 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         },
       },
       {
-        post: msg => ws.send(msg),
-        on: fn => ws.on('message', fn),
+        post: (msg) => ws.send(msg),
+        on: (fn) => ws.on('message', fn),
         eventNames: [
           'onUserConsoleLog',
           'onFinished',
           'onFinishedReportCoverage',
           'onCollected',
           'onTaskUpdate',
+          'onTestRemoved',
         ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
@@ -213,7 +226,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   ctx.reporters.push(new WebSocketReporter(ctx, wss, clients))
 }
 
-export class WebSocketReporter implements Reporter {
+class WebSocketReporter implements Reporter {
   private start = 0
   private end = 0
   constructor(
@@ -238,7 +251,7 @@ export class WebSocketReporter implements Reporter {
     }
 
     this.start = performance.now()
-    const serializedSpecs = specifications.map(spec => spec.toJSON())
+    const serializedSpecs = specifications.map((spec) => spec.toJSON())
     this.clients.forEach((client) => {
       client.onSpecsCollected?.(serializedSpecs)?.catch?.(noop)
     })
@@ -274,24 +287,39 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
+  onTestRemoved(trigger?: string): void {
+    if (this.clients.size === 0) {
+      return
+    }
+
+    this.clients.forEach((client) => {
+      client.onTestRemoved?.(trigger)?.catch?.(noop)
+    })
+  }
+
   private sum<T>(items: T[], cb: (_next: T) => number | undefined) {
     return items.reduce((total, next) => {
       return total + Math.max(cb(next) || 0, 0)
     }, 0)
   }
 
-  onTestRunEnd(testModules: ReadonlyArray<TestModule>, unhandledErrors: ReadonlyArray<SerializedError>): void {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+  ): void {
     if (!this.clients.size) {
       return
     }
 
-    const files = testModules.map(testModule => testModule.task)
+    const files = testModules.map((testModule) => testModule.task)
     const errors = [...unhandledErrors]
 
     this.end = performance.now()
     const blobs = this.ctx.state.blobs
     // Execution time is either sum of all runs of `--merge-reports` or the current run's time
-    const executionTime = blobs?.executionTimes ? this.sum(blobs.executionTimes, time => time) : this.end - this.start
+    const executionTime = blobs?.executionTimes
+      ? this.sum(blobs.executionTimes, (time) => time)
+      : this.end - this.start
 
     this.clients.forEach((client) => {
       client.onFinished?.(files, errors, undefined, executionTime)?.catch?.(noop)

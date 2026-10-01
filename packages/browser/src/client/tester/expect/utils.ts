@@ -46,17 +46,13 @@ export function getElementFromUserInput(
   const defaultView = elementOrLocator?.ownerDocument?.defaultView || window
 
   if (
-    elementOrLocator instanceof defaultView.HTMLElement
-    || elementOrLocator instanceof defaultView.SVGElement
+    elementOrLocator instanceof defaultView.HTMLElement ||
+    elementOrLocator instanceof defaultView.SVGElement
   ) {
     return elementOrLocator
   }
 
-  throw new UserInputElementTypeError(
-    elementOrLocator,
-    matcherFn,
-    context,
-  )
+  throw new UserInputElementTypeError(elementOrLocator, matcherFn, context)
 }
 
 export function getNodeFromUserInput(
@@ -70,17 +66,11 @@ export function getNodeFromUserInput(
 
   const defaultView = elementOrLocator.ownerDocument?.defaultView || window
 
-  if (
-    elementOrLocator instanceof defaultView.Node
-  ) {
+  if (elementOrLocator instanceof defaultView.Node) {
     return elementOrLocator
   }
 
-  throw new UserInputNodeTypeError(
-    elementOrLocator,
-    matcherFn,
-    context,
-  )
+  throw new UserInputNodeTypeError(elementOrLocator, matcherFn, context)
 }
 
 export function getMessage(
@@ -155,7 +145,12 @@ export function toSentence(
 }
 
 class GenericTypeError extends Error {
-  constructor(expectedString: string, received: unknown, matcherFn: (...args: any) => any, context: MatcherState) {
+  constructor(
+    expectedString: string,
+    received: unknown,
+    matcherFn: (...args: any) => any,
+    context: MatcherState,
+  ) {
     super()
 
     if (Error.captureStackTrace) {
@@ -163,22 +158,13 @@ class GenericTypeError extends Error {
     }
     let withType = ''
     try {
-      withType = context.utils.printWithType(
-        'Received',
-        received,
-        context.utils.printReceived,
-      )
-    }
-    catch {
+      withType = context.utils.printWithType('Received', received, context.utils.printReceived)
+    } catch {
       // Can throw for Document:
       // https://github.com/jsdom/jsdom/issues/2304
     }
     this.message = [
-      context.utils.matcherHint(
-        `${context.isNot ? '.not' : ''}.${matcherFn.name}`,
-        'received',
-        '',
-      ),
+      context.utils.matcherHint(`${context.isNot ? '.not' : ''}.${matcherFn.name}`, 'received', ''),
       '',
 
       `${context.utils.RECEIVED_COLOR(
@@ -190,21 +176,13 @@ class GenericTypeError extends Error {
 }
 
 class UserInputElementTypeError extends GenericTypeError {
-  constructor(
-    element: unknown,
-    matcherFn: (...args: any) => any,
-    context: MatcherState,
-  ) {
+  constructor(element: unknown, matcherFn: (...args: any) => any, context: MatcherState) {
     super('an HTMLElement or an SVGElement', element, matcherFn, context)
   }
 }
 
 class UserInputNodeTypeError extends GenericTypeError {
-  constructor(
-    element: unknown,
-    matcherFn: (...args: any) => any,
-    context: MatcherState,
-  ) {
+  constructor(element: unknown, matcherFn: (...args: any) => any, context: MatcherState) {
     super('a Node', element, matcherFn, context)
   }
 }
@@ -244,10 +222,10 @@ export function getSingleElementValue(
 }
 
 function getSelectValue({ multiple, options }: HTMLSelectElement) {
-  const selectedOptions = [...options].filter(option => option.selected)
+  const selectedOptions = [...options].filter((option) => option.selected)
 
   if (multiple) {
-    return [...selectedOptions].map(opt => opt.value)
+    return Array.from(selectedOptions, (opt) => opt.value)
   }
   /* istanbul ignore if */
   if (selectedOptions.length === 0) {
@@ -282,8 +260,7 @@ export function normalize(text: string): string {
 export function matches(textToMatch: string, matcher: string | RegExp): boolean {
   if (matcher instanceof RegExp) {
     return matcher.test(textToMatch)
-  }
-  else {
+  } else {
     return textToMatch.includes(String(matcher))
   }
 }

@@ -6,15 +6,20 @@ import type { TestProjectConfiguration } from './config'
 export interface VitestPluginContext {
   vitest: Vitest
   project: TestProject
-  injectTestProjects: (config: TestProjectConfiguration | TestProjectConfiguration[]) => Promise<TestProject[]>
+  injectTestProjects: (
+    config: TestProjectConfiguration | TestProjectConfiguration[],
+  ) => Promise<TestProject[]>
   /**
-   * Define a generator that will be applied before hashing the cache key.
+   * Define a generator that will be applied before hashing this project's cache key.
    *
    * Use this to make sure Vitest generates correct hash. It is a good idea
    * to define this function if your plugin can be registered with different options.
    *
-   * This is called only if `experimental.fsModuleCache` is defined.
-   * @experimental
+   * This is called only if `fsModuleCache` is enabled.
+   */
+  defineCacheKeyGenerator: (callback: CacheKeyIdGenerator) => void
+  /**
+   * @deprecated Use {@link defineCacheKeyGenerator} instead.
    */
   experimental_defineCacheKeyGenerator: (callback: CacheKeyIdGenerator) => void
 }

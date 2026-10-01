@@ -27,6 +27,6 @@ These are e2e tests for UI package. We are using `playwright` to test it.
 
 Place your tests here if you are testing Vitest behaviour when file is created/updated/removed.
 
-----
+---
 
 All other categories just group tests by type.

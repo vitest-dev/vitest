@@ -17,7 +17,7 @@ describe('stacktraces should respect sourcemaps', async () => {
 
       expect(stderr).toBeTruthy()
       const lines = String(stderr).split(/\n/g)
-      const index = lines.findIndex(val => val.includes(`${file}:`))
+      const index = lines.findIndex((val) => val.includes(`${file}:`))
       const msg = lines.slice(index, index + 8).join('\n')
       expect(removeLines(msg)).toMatchSnapshot()
     })
@@ -34,7 +34,7 @@ describe('stacktraces should pick error frame if present', async () => {
 
       expect(stderr).toBeTruthy()
       const lines = String(stderr).split(/\n/g)
-      const index = lines.findIndex(val => val.includes('FAIL'))
+      const index = lines.findIndex((val) => val.includes('FAIL'))
       const msg = lines.slice(index, index + 8).join('\n')
       expect(msg).toMatchSnapshot()
     })
@@ -58,10 +58,13 @@ describe('stacktrace filtering', async () => {
   const testFile = resolve(root, './error-with-stack.test.js')
 
   it('filters stacktraces', async () => {
-    const { stderr } = await runVitest({
-      root,
-      onStackTrace: (_error, { method }) => method !== 'b',
-    }, [testFile])
+    const { stderr } = await runVitest(
+      {
+        root,
+        onStackTrace: (_error, { method }) => method !== 'b',
+      },
+      [testFile],
+    )
 
     expect(removeLines(stderr)).toMatchSnapshot()
   })
@@ -72,21 +75,27 @@ describe('stacktrace in dependency package', () => {
   const testFile = resolve(root, './error-in-package.test.js')
 
   it('external', async () => {
-    const { stderr } = await runVitest({
-      root,
-    }, [testFile])
+    const { stderr } = await runVitest(
+      {
+        root,
+      },
+      [testFile],
+    )
     expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
   })
 
   it('inline', async () => {
-    const { stderr } = await runVitest({
-      root,
-      server: {
-        deps: {
-          inline: [/@test\/test-dep-error/],
+    const { stderr } = await runVitest(
+      {
+        root,
+        server: {
+          deps: {
+            inline: [/@test\/test-dep-error/],
+          },
         },
       },
-    }, [testFile])
+      [testFile],
+    )
     expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
   })
 })
@@ -94,10 +103,13 @@ describe('stacktrace in dependency package', () => {
 it('stacktrace in vmThreads', async () => {
   const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
-  const { stderr } = await runVitest({
-    root,
-    pool: 'vmThreads',
-  }, [testFile])
+  const { stderr } = await runVitest(
+    {
+      root,
+      pool: 'vmThreads',
+    },
+    [testFile],
+  )
 
   expect(removeLines(stderr)).toMatchSnapshot()
 })
@@ -292,12 +304,12 @@ it('resolves/rejects', async () => {
            18|       })
            19|
 
+      Caused by: 3
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
 
       "
     `)
-  }
-  else {
+  } else {
     expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
@@ -371,6 +383,7 @@ it('resolves/rejects', async () => {
          18|       })
          19|
 
+    Caused by: 3
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
 
     "

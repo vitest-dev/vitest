@@ -12,6 +12,7 @@ If you are using [TypeScript](/guide/browser/#typescript) or want to have correc
 ```ts
 /// <reference types="vitest/browser" />
 ```
+
 :::
 
 Tests in the browser might fail inconsistently due to their asynchronous nature. Because of this, it is important to have a way to guarantee that assertions succeed even if the condition is delayed (by a timeout, network request, or animation, for example). For this purpose, Vitest provides retriable assertions out of the box via the [`expect.poll`](/api/expect#poll) and `expect.element` APIs:
@@ -34,7 +35,7 @@ test('error banner is rendered', async () => {
   // It will repeatedly check that the element exists in the DOM and that
   // the content of `element.textContent` is equal to "Error!"
   // until all the conditions are met
-  await expect.element(banner).toHaveTextContent('Error!')
+  await expect.element(banner).toMatchTextContent('Error!')
 })
 ```
 
@@ -56,12 +57,13 @@ interface ExpectPollOptions {
 ::: tip
 Like [`expect.poll`](/api/expect#poll), `expect.element` retries DOM assertions until they pass or the timeout is reached. When it receives a locator, Vitest resolves it with [`locator.findElement()`](/api/browser/locators#findelement) before running the DOM assertion. The `timeout` option applies to the whole retry operation. The `interval` option controls how often failed DOM assertions are retried, but locator resolution uses `findElement`'s own increasing retry intervals.
 
-`toHaveTextContent` and all other assertions are still available on a regular `expect` without a built-in retry-ability mechanism:
+`toMatchTextContent` and all other assertions are still available on a regular `expect` without a built-in retry-ability mechanism:
 
 ```ts
 // will fail immediately if .textContent is not `'Error!'`
-expect(banner).toHaveTextContent('Error!')
+expect(banner).toMatchTextContent('Error!')
 ```
+
 :::
 
 ## toBeDisabled
@@ -738,21 +740,15 @@ The usual rules of css precedence apply.
 
 ```ts
 function toHaveTextContent(
-  text: string | RegExp,
+  text: string | number,
   options?: { normalizeWhitespace: boolean }
 ): Promise<void>
 ```
 
-This allows you to check whether the given node has a text content or not. This
+This matcher allows you to validate that an element's text matches provided string exactly. This
 supports elements, but also text nodes and fragments.
 
-When a `string` argument is passed through, it will perform a partial
-case-sensitive match to the node content.
-
-To perform a case-insensitive match, you can use a `RegExp` with the `/i`
-modifier.
-
-If you want to match the whole content, you can use a `RegExp` to do it.
+If you wish to perform a partial check or do a case-sensitive match, use [`toMatchTextContent`](#tomatchtextcontent) instead.
 
 ```html
 <span data-testid="text-content">Text Content</span>
@@ -761,12 +757,43 @@ If you want to match the whole content, you can use a `RegExp` to do it.
 ```ts
 const element = getByTestId('text-content')
 
-await expect.element(element).toHaveTextContent('Content')
+await expect.element(element).toHaveTextContent('Text Content')
+await expect.element(element).not.toHaveTextContent('Content')
+```
+
+## toMatchTextContent
+
+```ts
+function toMatchTextContent(
+  text: string | number | RegExp,
+  options?: { normalizeWhitespace: boolean }
+): Promise<void>
+```
+
+This matcher allows you to check whether the given node has a text content or not. This
+supports elements, but also text nodes and fragments.
+
+When a `string` argument is passed through, it will perform a partial
+case-sensitive match to the node content.
+
+To perform a case-insensitive match, you can use a `RegExp` with the `/i`
+modifier.
+
+If you want to match the whole content, you can use a `RegExp` to do it or [`toHaveTextContent`](#tohavetextcontent) matcher instead.
+
+```html
+<span data-testid="text-content">Text Content</span>
+```
+
+```ts
+const element = getByTestId('text-content')
+
+await expect.element(element).toMatchTextContent('Content')
 // to match the whole content
-await expect.element(element).toHaveTextContent(/^Text Content$/)
+await expect.element(element).toMatchTextContent(/^Text Content$/)
 // to use case-insensitive match
-await expect.element(element).toHaveTextContent(/content$/i)
-await expect.element(element).not.toHaveTextContent('content')
+await expect.element(element).toMatchTextContent(/content$/i)
+await expect.element(element).not.toMatchTextContent('content')
 ```
 
 ## toHaveValue
@@ -1001,6 +1028,7 @@ Also note that unlike `testing-library`, Vitest ignores all custom roles except 
 await expect.element(getByTestId('switch')).toHaveRole('switch') // ✅
 await expect.element(getByTestId('switch')).toHaveRole('alert') // ❌
 ```
+
 :::
 
 ## toHaveSelection
@@ -1188,12 +1216,13 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
     },
   })
   ```
+
   :::
 
 - `screenshotOptions: object`
 
   The same options allowed by
-  [`locator.screenshot()`](/api/browser/locators.html#screenshot), except for:
+  [`locator.screenshot()`](/api/browser/locators#screenshot), except for:
 
   - `'base64'`
   - `'path'`

@@ -1,27 +1,31 @@
 import type { Context, Span } from '@opentelemetry/api'
-import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
+import type { FileSpecification } from '../../runtime/runner/types'
 import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
-import type { BrowserProvider } from '../types/browser'
+import type { BrowserProvider, CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
+import { statfsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
 import { detectCodeBlock } from '../../utils/test-helpers'
+import { BrowserConnectionError } from '../errors'
 
 const debug = createDebugger('vitest:browser:pool')
+
+const PROVIDER_CLOSE_TIMEOUT = 10_000
 
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const numCpus
-    = typeof nodeos.availableParallelism === 'function'
+  const numCpus =
+    typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
@@ -57,16 +61,18 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     const testFilesCode = new Map<string, string>()
     const testFileTags = new WeakMap<TestSpecification, string[]>()
 
-    await Promise.all(specs.map(async (spec) => {
-      let code = testFilesCode.get(spec.moduleId)
-      // TODO: this really should be done only once when collecting specifications
-      if (code == null) {
-        code = await readFile(spec.moduleId, 'utf-8').catch(() => '')
-        testFilesCode.set(spec.moduleId, code)
-      }
-      const { tags } = detectCodeBlock(code)
-      testFileTags.set(spec, tags)
-    }))
+    await Promise.all(
+      specs.map(async (spec) => {
+        let code = testFilesCode.get(spec.moduleId)
+        // TODO: this really should be done only once when collecting specifications
+        if (code == null) {
+          code = await readFile(spec.moduleId, 'utf-8').catch(() => '')
+          testFilesCode.set(spec.moduleId, code)
+        }
+        const { tags } = detectCodeBlock(code)
+        testFileTags.set(spec, tags)
+      }),
+    )
 
     // to keep the sorting, we need to iterate over specs separately
     for (const spec of specs) {
@@ -88,29 +94,36 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    const initialisedPools = await Promise.all([...groupedFiles.entries()].map(async ([project, files]) => {
-      await project._initBrowserProvider()
+    const initialisedPools = await Promise.all(
+      Array.from(groupedFiles.entries(), async ([project, files]) => {
+        await project._initBrowserProvider()
 
-      if (!project.browser) {
-        throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-      }
+        if (!project.browser) {
+          throw new TypeError(
+            `The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`,
+          )
+        }
 
-      if (isCancelled) {
-        return
-      }
+        if (isCancelled) {
+          return
+        }
 
-      debug?.('provider is ready for %s project', project.name)
+        debug?.('provider is ready for %s project', project.name)
 
-      const pool = ensurePool(project)
-      vitest.state.clearFiles(project, files.map(f => f.filepath))
-      providers.add(project.browser!.provider)
+        const pool = ensurePool(project)
+        vitest.state.clearFiles(
+          project,
+          files.map((f) => f.filepath),
+        )
+        providers.add(project.browser!.provider)
 
-      return {
-        pool,
-        provider: project.browser!.provider,
-        runTests: () => pool.runTests(method, files),
-      }
-    }))
+        return {
+          pool,
+          provider: project.browser!.provider,
+          runTests: () => pool.runTests(method, files),
+        }
+      }),
+    )
 
     if (isCancelled) {
       return
@@ -127,13 +140,12 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
       if (pool.provider.mocker && pool.provider.supportsParallelism) {
         parallelPools.push(pool.runTests)
-      }
-      else {
+      } else {
         nonParallelPools.push(pool.runTests)
       }
     }
 
-    await Promise.all(parallelPools.map(runTests => runTests()))
+    await Promise.all(parallelPools.map((runTests) => runTests()))
 
     for (const runTests of nonParallelPools) {
       if (isCancelled) {
@@ -146,11 +158,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
   function getThreadsCount(project: TestProject) {
     const config = project.config.browser
-    if (
-      !config.headless
-      || !config.fileParallelism
-      || !project.browser!.provider.supportsParallelism
-    ) {
+    if (!config.headless || !project.browser!.provider.supportsParallelism) {
       return 1
     }
 
@@ -164,7 +172,26 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
   return {
     name: 'browser',
     async close() {
-      await Promise.all([...providers].map(provider => provider.close()))
+      // a frozen or crashed browser never answers the close message;
+      // don't wait for it forever, the browser process is killed
+      // when this process exits anyway
+      await Promise.all(
+        Array.from(providers, (provider) => {
+          let timer: ReturnType<typeof setTimeout>
+          return Promise.race([
+            Promise.resolve(provider.close()).finally(() => clearTimeout(timer)),
+            new Promise<void>((resolve) => {
+              timer = setTimeout(() => {
+                vitest.logger.warn(
+                  `The browser did not close within ${PROVIDER_CLOSE_TIMEOUT}ms. The browser process will be killed when the process exits.`,
+                )
+                resolve()
+              }, PROVIDER_CLOSE_TIMEOUT)
+              timer.unref()
+            }),
+          ])
+        }),
+      )
       vitest._browserSessions.sessionIds.clear()
       providers.clear()
       vitest.projects.forEach((project) => {
@@ -174,8 +201,8 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       })
       debug?.('browser pool closed all providers')
     },
-    runTests: files => runWorkspaceTests('run', files),
-    collectTests: files => runWorkspaceTests('collect', files),
+    runTests: (files) => runWorkspaceTests('run', files),
+    collectTests: (files) => runWorkspaceTests('collect', files),
   }
 }
 
@@ -217,7 +244,12 @@ class BrowserPool {
   }
 
   public reject(error: Error): void {
-    this._promise?.reject(error)
+    // if user cancels the test run manually, ignore the error and exit gracefully
+    if (this.project.vitest.isCancelling && error instanceof BrowserConnectionError) {
+      this._promise?.resolve()
+    } else {
+      this._promise?.reject(error)
+    }
     this._promise = undefined
     this.cancel()
   }
@@ -253,10 +285,7 @@ class BrowserPool {
 
     // open the minimum amount of tabs
     // if there is only 1 file running, we don't need 8 tabs running
-    const workerCount = Math.min(
-      this.options.maxWorkers - this.orchestrators.size,
-      files.length,
-    )
+    const workerCount = Math.min(this.options.maxWorkers - this.orchestrators.size, files.length)
 
     const promises: Promise<void>[] = []
     for (let i = 0; i < workerCount; i++) {
@@ -264,20 +293,21 @@ class BrowserPool {
       this.project.vitest._browserSessions.sessionIds.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
-      let page = this._traces.$(
-        `vitest.browser.open`,
-        {
-          context: this._otel.context,
-          attributes: {
-            'vitest.browser.session_id': sessionId,
+      const page = this._traces
+        .$(
+          `vitest.browser.open`,
+          {
+            context: this._otel.context,
+            attributes: {
+              'vitest.browser.session_id': sessionId,
+            },
           },
-        },
-        () => this.openPage(sessionId, { parallel: workerCount > 1 }),
-      )
-      page = page.then(() => {
-        // start running tests on the page when it's ready
-        this.runNextTest(method, sessionId)
-      })
+          () => this.openPage(sessionId, { parallel: workerCount > 1 }),
+        )
+        .then(() => {
+          // start running tests on the page when it's ready
+          this.runNextTest(method, sessionId)
+        })
       promises.push(page)
     }
     await Promise.all(promises)
@@ -287,15 +317,44 @@ class BrowserPool {
 
   private async openPage(sessionId: string, options: { parallel: boolean }): Promise<void> {
     await this.project._openBrowserPage(sessionId, {
-      reject: error => this.reject(error),
+      reject: (error) => this.reject(error),
       parallel: options.parallel,
     })
+  }
+
+  // stable slot id (1..maxWorkers) assigned to each session/orchestrator on its
+  // first run, exposed to the test runner as both `concurrencyId` and `workerId`.
+  // the id lives on the session, so it is freed when the session disconnects, and
+  // the used set is derived from the live orchestrators, so it stays within maxWorkers
+  private getConcurrencyId(sessionId: string): number {
+    const sessions = this.project.vitest._browserSessions
+    const session = sessions.getSession(sessionId)
+    if (session?.concurrencyId) {
+      return session.concurrencyId
+    }
+    const used = new Set<number>()
+    for (const id of this.orchestrators.keys()) {
+      const concurrencyId = sessions.getSession(id)?.concurrencyId
+      if (concurrencyId) {
+        used.add(concurrencyId)
+      }
+    }
+    let concurrencyId = 1
+    while (used.has(concurrencyId)) {
+      concurrencyId++
+    }
+    if (session) {
+      session.concurrencyId = concurrencyId
+    }
+    return concurrencyId
   }
 
   private getOrchestrator(sessionId: string) {
     const orchestrator = this.orchestrators.get(sessionId)
     if (!orchestrator) {
-      throw new Error(`Orchestrator not found for session ${sessionId}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+      throw new Error(
+        `Orchestrator not found for session ${sessionId}. This is a bug in Vitest. Please, open a new issue with reproduction.`,
+      )
     }
     return orchestrator
   }
@@ -309,8 +368,7 @@ class BrowserPool {
       this._promise?.resolve()
       this._promise = undefined
       debug?.('[%s] all tests finished running', sessionId)
-    }
-    else {
+    } else {
       debug?.(
         `did not finish sessions for ${sessionId}: |ready - %s| |overall - %s|`,
         [...this.readySessions].join(', '),
@@ -324,7 +382,7 @@ class BrowserPool {
 
     if (!file) {
       debug?.('[%s] no more tests to run', sessionId)
-      const isolate = this.project.config.browser.isolate
+      const isolate = this.project.config.isolate
       // we don't need to cleanup testers if isolation is enabled,
       // because cleanup is done at the end of every test
       if (isolate) {
@@ -335,8 +393,9 @@ class BrowserPool {
       // we need to cleanup testers first because there is only
       // one iframe and it does the cleanup only after everything is completed
       const orchestrator = this.getOrchestrator(sessionId)
-      orchestrator.cleanupTesters()
-        .catch(error => this.reject(error))
+      orchestrator
+        .cleanupTesters()
+        .catch((error) => this.reject(error))
         .finally(() => this.finishSession(sessionId))
       return
     }
@@ -348,53 +407,62 @@ class BrowserPool {
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
 
-    this.setBreakpoint(sessionId, file.filepath).then(() => {
-      // this starts running tests inside the orchestrator
-      const testersPromise = this._traces.$(
-        `vitest.browser.run`,
-        {
-          context: this._otel.context,
-          attributes: {
-            'code.file.path': file.filepath,
+    // warm the transform cache while the iframe is booting so the test
+    // file import doesn't wait for the transform; mirrors the URL the
+    // tester will request (see `importFile` in the browser runner)
+    const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(
+      /\/+/g,
+      '/',
+    )
+    void this.project.vite.transformRequest(fileUrl).catch(() => {})
+
+    this.setBreakpoint(sessionId, file.filepath)
+      .then(() => {
+        // this starts running tests inside the orchestrator
+        const testersPromise = this._traces.$(
+          `vitest.browser.run`,
+          {
+            context: this._otel.context,
+            attributes: {
+              'code.file.path': file.filepath,
+            },
           },
-        },
-        async () => {
-          return orchestrator.createTesters(
-            {
+          async () => {
+            const concurrencyId = this.getConcurrencyId(sessionId)
+            return orchestrator.createTesters({
               method,
               files: [file],
               // this will be parsed by the test iframe, not the orchestrator
               // so we need to stringify it first to avoid double serialization
               providedContext: this._providedContext || '[{}]',
               otelCarrier: this._traces.getContextCarrier(),
-            },
-          )
-        },
-      )
-      testersPromise
-        .then(() => {
-          debug?.('[%s] test %s finished running', sessionId, file)
-          this.runNextTest(method, sessionId)
-        })
-        .catch((error) => {
-          // if user cancels the test run manually, ignore the error and exit gracefully
-          if (
-            this.project.vitest.isCancelling
-            && error instanceof Error
-            && error.message.startsWith('Browser connection was closed while running tests')
-          ) {
-            this.cancel()
-            this._promise?.resolve()
-            this._promise = undefined
-            debug?.('[%s] browser connection was closed', sessionId)
-            return
-          }
-          debug?.('[%s] error during %s test run: %s', sessionId, file, error)
-          this.reject(
-            new Error(`Failed to run the test ${file.filepath}.`, { cause: error }),
-          )
-        })
-    }).catch(err => this.reject(err))
+              concurrencyId,
+              // in the browser there is a single tab per orchestrator,
+              // so the worker id matches the concurrency slot
+              workerId: concurrencyId,
+            })
+          },
+        )
+        testersPromise
+          .then(async () => {
+            debug?.('[%s] test %s finished running', sessionId, file)
+            await maybeCollectChromiumGarbage(this.project, sessionId)
+            this.runNextTest(method, sessionId)
+          })
+          .catch((error) => {
+            // if user cancels the test run manually, ignore the error and exit gracefully
+            if (this.project.vitest.isCancelling && error instanceof BrowserConnectionError) {
+              this.cancel()
+              this._promise?.resolve()
+              this._promise = undefined
+              debug?.('[%s] browser connection was closed', sessionId)
+              return
+            }
+            debug?.('[%s] error during %s test run: %s', sessionId, file, error)
+            this.reject(new Error(`Failed to run the test ${file.filepath}.`, { cause: error }))
+          })
+      })
+      .catch((err) => this.reject(err))
   }
 
   async setBreakpoint(sessionId: string, file: string) {
@@ -406,7 +474,11 @@ class BrowserPool {
     const browser = this.project.config.browser.name
 
     if (shouldIgnoreDebugger(provider.name, browser)) {
-      debug?.('[$s] ignoring debugger in %s browser because it is not supported', sessionId, browser)
+      debug?.(
+        '[$s] ignoring debugger in %s browser because it is not supported',
+        sessionId,
+        browser,
+      )
       return
     }
 
@@ -429,4 +501,99 @@ function shouldIgnoreDebugger(provider: string, browser: string) {
     return browser !== 'chrome' && browser !== 'edge'
   }
   return browser !== 'chromium'
+}
+
+// Best-effort workaround for chromium/playwright bug
+// https://issues.chromium.org/issues/530892387
+
+// Trigger gc on lower disk (default to 4GB)
+const chromiumGCDiskThreshold = process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB
+  ? Number(process.env.VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB) * 1024 ** 3
+  : 4 * 1024 ** 3
+const forceChromiumGC = !!process.env.VITEST_CHROMIUM_GC_FORCE
+const debugGC = createDebugger('vitest:browser:gc')
+
+async function maybeCollectChromiumGarbage(project: TestProject, sessionId: string): Promise<void> {
+  // trigger only on linux/chromium/playwright
+  const provider = project.browser!.provider
+  if (
+    (!forceChromiumGC && process.platform !== 'linux') ||
+    provider.name !== 'playwright' ||
+    project.config.browser.name !== 'chromium' ||
+    !project.config.isolate ||
+    !provider.getCDPSession
+  ) {
+    return
+  }
+
+  const start = performance.now()
+  const diagnostics: Record<string, any> = {
+    statfsBeforeMs: undefined,
+    statfsAfterMs: undefined,
+    cdpSessionMs: undefined,
+    cdpSendMs: undefined,
+    cdpDetachMs: undefined,
+    forced: forceChromiumGC,
+  }
+  try {
+    // Playwright enables --disable-dev-shm-usage by default, which makes
+    // Chromium use TMPDIR or /tmp for shared memory files.
+    // https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/chromium/chromiumSwitches.ts
+    // https://source.chromium.org/chromium/chromium/src/+/main:base/files/file_util_posix.cc
+    const tempDirectory = process.env.TMPDIR || '/tmp'
+    let operationStart = performance.now()
+    const fsStats = statfsSync(tempDirectory)
+    diagnostics.statfsBeforeMs = performance.now() - operationStart
+
+    const available = fsStats.bavail * fsStats.bsize
+    diagnostics.availableBytesBefore = available.toString()
+    diagnostics.thresholdBytes = chromiumGCDiskThreshold.toString()
+    diagnostics.tempDirectory = tempDirectory
+    diagnostics.triggered = available < chromiumGCDiskThreshold
+    if (available >= chromiumGCDiskThreshold) {
+      return
+    }
+
+    operationStart = performance.now()
+    // `detach` is available only internally and not on CDPSession type
+    const cdp = (await provider.getCDPSession(sessionId)) as CDPSession & {
+      detach: () => Promise<void>
+    }
+    diagnostics.cdpSessionMs = performance.now() - operationStart
+
+    try {
+      operationStart = performance.now()
+      await cdp.send('HeapProfiler.collectGarbage')
+      diagnostics.cdpSendMs = performance.now() - operationStart
+    } finally {
+      operationStart = performance.now()
+      await cdp.detach().catch((error) => {
+        debugGC?.('[%s] failed to detach Chromium CDP session: %s', sessionId, error)
+      })
+      diagnostics.cdpDetachMs = performance.now() - operationStart
+    }
+
+    if (debugGC?.enabled) {
+      operationStart = performance.now()
+      const fsStatsAfter = statfsSync(tempDirectory)
+      diagnostics.statfsAfterMs = performance.now() - operationStart
+      diagnostics.availableBytesAfter = (fsStatsAfter.bavail * fsStatsAfter.bsize).toString()
+    }
+
+    const availableGiB = available / 1024 ** 3
+    const thresholdGiB = chromiumGCDiskThreshold / 1024 ** 3
+    debugGC?.(
+      '[%s] Low disk space detected in %s (%s GiB available, %s GiB threshold). Vitest triggered Chromium garbage collection to prevent browser crashes.',
+      sessionId,
+      tempDirectory,
+      availableGiB.toFixed(1),
+      thresholdGiB.toFixed(1),
+    )
+  } catch (error) {
+    // don't surface if fs or cdp fails
+    debugGC?.('[%s] failed to collect Chromium garbage: %s', sessionId, error)
+  } finally {
+    diagnostics.totalMs = performance.now() - start
+    debugGC?.('[%s] Chromium garbage collection check: %O', sessionId, diagnostics)
+  }
 }

@@ -1,8 +1,4 @@
-import type {
-  BenchmarkUserOptions,
-  CoverageOptions,
-  UserConfig,
-} from './node/types/config'
+import type { CoverageOptions, ResolvedBenchmarkOptions, UserConfig } from './node/types/config'
 import type { FieldsWithDefaultValues } from './node/types/coverage'
 import os from 'node:os'
 import { isAgent, isCI } from './utils/env'
@@ -10,18 +6,17 @@ import { isAgent, isCI } from './utils/env'
 export { defaultBrowserPort } from './constants'
 
 export const defaultInclude: string[] = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude: string[] = [
-  '**/node_modules/**',
-  '**/.git/**',
-]
-export const benchmarkConfigDefaults: Required<
-  Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-> = {
+export const defaultExclude: string[] = ['**/node_modules/**', '**/.git/**']
+export const benchmarkConfigDefaults: ResolvedBenchmarkOptions = {
+  enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
-  reporters: ['default'],
-  includeSamples: false,
+  retainSamples: false,
+  suppressExportGetterWarnings: false,
+  // Populated automatically when Vitest clones the parent project; the default
+  // here applies to the (unused) raw config that's never run as a benchmark.
+  projectName: '',
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
@@ -33,18 +28,10 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
   reportsDirectory: './coverage',
   exclude: [],
   reportOnFailure: false,
-  reporter: [
-    'text',
-    'html',
-    'clover',
-    'json',
-  ],
+  reporter: ['text', 'html', 'clover', 'json'],
   allowExternal: false,
   excludeAfterRemap: false,
-  processingConcurrency: Math.min(
-    20,
-    os.availableParallelism?.() ?? os.cpus().length,
-  ),
+  processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
   ignoreClassMethods: [],
   skipFull: false,
   watermarks: {
@@ -56,7 +43,7 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
   autoAttachSubprocess: false,
 }
 
-export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
+const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
 }
@@ -66,6 +53,7 @@ export const configDefaults: Readonly<{
   isolate: boolean
   watch: boolean
   globals: boolean
+  injectCjsGlobals: boolean
   environment: 'node'
   clearMocks: boolean
   restoreMocks: boolean
@@ -105,8 +93,9 @@ export const configDefaults: Readonly<{
   isolate: true,
   watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
+  injectCjsGlobals: true,
   environment: 'node',
-  clearMocks: false,
+  clearMocks: true,
   restoreMocks: false,
   mockReset: false,
   unstubGlobals: false,
@@ -114,7 +103,7 @@ export const configDefaults: Readonly<{
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,
-  forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
+  forceRerunTriggers: ['**/package.json', '**/{vitest,vite}.config.*'],
   update: false,
   reporters: [
     isAgent ? 'minimal' : 'default',

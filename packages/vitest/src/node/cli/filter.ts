@@ -12,16 +12,14 @@ export function parseFilter(filter: string): FileFilter {
     filter.substring(colonIndex + 1),
   ]
 
-  if (lineNumber.match(/^\d+$/)) {
+  if (/^\d+$/.test(lineNumber)) {
     return {
       filename: parsedFilename,
       lineNumber: Number.parseInt(lineNumber),
     }
-  }
-  else if (lineNumber.match(/^\d+-\d+$/)) {
+  } else if (/^\d+-\d+$/.test(lineNumber)) {
     throw new RangeLocationFilterProvidedError(filter)
-  }
-  else {
+  } else {
     return { filename: filter }
   }
 }
@@ -32,16 +30,13 @@ export interface FileFilter {
 }
 
 export function groupFilters(filters: FileFilter[]): Record<string, number[]> {
-  const groupedFilters_ = groupBy(filters, f => f.filename)
-  const groupedFilters = Object.fromEntries(Object.entries(groupedFilters_)
-    .map((entry) => {
+  const groupedFilters_ = groupBy(filters, (f) => f.filename)
+  const groupedFilters = Object.fromEntries(
+    Object.entries(groupedFilters_).map((entry) => {
       const [filename, filters] = entry
-      const testLocations = filters.map(f => f.lineNumber)
+      const testLocations = filters.map((f) => f.lineNumber)
 
-      return [
-        filename,
-        testLocations.filter(l => l !== undefined) as number[],
-      ]
+      return [filename, testLocations.filter((l) => l !== undefined) as number[]]
     }),
   )
 

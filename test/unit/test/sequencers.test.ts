@@ -30,7 +30,7 @@ function buildWorkspace() {
 const workspace = buildWorkspace()
 
 function workspaced(files: string[]) {
-  return files.map(file => new TestSpecification(workspace, file, 'forks'))
+  return files.map((file) => new TestSpecification(workspace, file, 'forks'))
 }
 
 describe('base sequencer', () => {
@@ -135,7 +135,10 @@ describe('base sequencer', () => {
     { files: 5, count: 4, expected: [2, 1, 1, 1] },
     { files: 9, count: 4, expected: [3, 2, 2, 2] },
   ])('shard x/$count distributes $files files as $expected', async ({ count, files, expected }) => {
-    const specs = Array.from({ length: files }, (_, id) => ({ moduleId: `file-${id}.test.ts` } as TestSpecification))
+    const specs = Array.from(
+      { length: files },
+      (_, id) => ({ moduleId: `file-${id}.test.ts` }) as TestSpecification,
+    )
     const slices = []
 
     for (const index of Array.from({ length: count }).keys()) {

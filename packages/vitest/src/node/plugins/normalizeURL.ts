@@ -14,29 +14,29 @@ export function NormalizeURLPlugin(): Plugin {
     enforce: 'post',
     transform(code) {
       if (
-        this.environment.name !== 'client'
-        || !code.includes('new URL')
-        || !code.includes('import.meta.url')
+        this.environment.name !== 'client' ||
+        !code.includes('new URL') ||
+        !code.includes('import.meta.url')
       ) {
         return
       }
 
       const cleanString = stripLiteral(code)
-      const assetImportMetaUrlRE
-      // vite injects new URL(path, import.meta.url) in the code
-      // rolldown-vite injects new URL(path, '' + import.meta.url) in the code
-        = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*(?:'' \+ )?import\.meta\.url\s*(?:,\s*)?\)/g
+      const assetImportMetaUrlRE =
+        // vite injects new URL(path, import.meta.url) in the code
+        // rolldown-vite injects new URL(path, '' + import.meta.url) in the code
+        /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*(?:'' \+ )?import\.meta\.url\s*(?:,\s*)?\)/g
 
       let updatedCode = code
       let match: RegExpExecArray | null
-      // eslint-disable-next-line no-cond-assign
+      // oxlint-disable-next-line no-cond-assign
       while ((match = assetImportMetaUrlRE.exec(cleanString))) {
         const { 0: exp, index } = match
         const metaUrlIndex = index + exp.indexOf('import.meta.url')
-        updatedCode
-          = updatedCode.slice(0, metaUrlIndex)
-            + locationString
-            + updatedCode.slice(metaUrlIndex + metaUrlLength)
+        updatedCode =
+          updatedCode.slice(0, metaUrlIndex) +
+          locationString +
+          updatedCode.slice(metaUrlIndex + metaUrlLength)
       }
 
       return {

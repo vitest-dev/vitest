@@ -22,6 +22,10 @@ import { getBrowserProvider } from './utils'
 export class ProjectBrowser implements IProjectBrowser {
   public testerHtml: Promise<string> | string
   public testerFilepath: string
+  // the tester template is read once per server, so the transformed HTML
+  // is stable too — computing it for every iframe request pays the whole
+  // transformIndexHtml plugin pipeline each time
+  public testerHtmlTransformed: Promise<string> | undefined
 
   public provider!: BrowserProvider
   public vitest: Vitest
@@ -48,20 +52,14 @@ export class ProjectBrowser implements IProjectBrowser {
       throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
     }
     this.testerFilepath = testerHtmlPath
-    this.testerHtml = readFile(
-      this.testerFilepath,
-      'utf8',
-    ).then(html => (this.testerHtml = html))
+    this.testerHtml = readFile(this.testerFilepath, 'utf8').then((html) => (this.testerHtml = html))
   }
 
   private commands = {} as Record<string, BrowserCommand<any, any>>
 
   public registerCommand<K extends keyof BrowserCommands>(
     name: K,
-    cb: BrowserCommand<
-      Parameters<BrowserCommands[K]>,
-      ReturnType<BrowserCommands[K]>
-    >,
+    cb: BrowserCommand<Parameters<BrowserCommands[K]>, ReturnType<BrowserCommands[K]>>,
   ): void {
     if (!/^[a-z_$][\w$]*$/i.test(name)) {
       throw new Error(
@@ -109,17 +107,11 @@ export class ProjectBrowser implements IProjectBrowser {
     }
   }
 
-  public parseErrorStacktrace(
-    e: TestError,
-    options: StackTraceParserOptions = {},
-  ): ParsedStack[] {
+  public parseErrorStacktrace(e: TestError, options: StackTraceParserOptions = {}): ParsedStack[] {
     return this.parent.parseErrorStacktrace(e, options)
   }
 
-  public parseStacktrace(
-    trace: string,
-    options: StackTraceParserOptions = {},
-  ): ParsedStack[] {
+  public parseStacktrace(trace: string, options: StackTraceParserOptions = {}): ParsedStack[] {
     return this.parent.parseStacktrace(trace, options)
   }
 

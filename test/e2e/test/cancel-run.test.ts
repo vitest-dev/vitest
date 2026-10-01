@@ -21,11 +21,17 @@ test('can force cancel a run via CLI', async () => {
     include: ['blocked-thread.test.ts'],
     reporters: [{ onTestModuleStart: () => onTestModuleStart.resolve() }],
   })
-  onTestFinished(() => vitest.close())
+  onTestFinished(async () => {
+    await vitest.close()
+    // this test stubs `process.exit` to survive `vitest.exit()`, so it also has
+    // to disarm the force-exit watchdog that `exit()` armed — otherwise the
+    // timer would `process.exit()` this worker `teardownTimeout` later
+    clearTimeout(vitest._exitTimeout)
+  })
 
   const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
   stdin.isTTY = true
-  stdin.setRawMode = () => stdin
+  stdin.setRawMode = vi.fn().mockReturnValue(stdin)
   registerConsoleShortcuts(vitest, stdin, new Writable())
 
   const onLog = vi.spyOn(vitest.logger, 'log').mockImplementation(() => {})
@@ -37,16 +43,21 @@ test('can force cancel a run via CLI', async () => {
   stdin.emit('data', CTRL_C)
 
   // Let the test case start running
-  await new Promise(resolve => setTimeout(resolve, 100))
+  await new Promise((resolve) => setTimeout(resolve, 100))
 
-  const logs = onLog.mock.calls.map(log => stripVTControlCharacters(log[0] || '').trim())
+  const logs = onLog.mock.calls.map((log) => stripVTControlCharacters(log[0] || '').trim())
   expect(logs).toContain('Cancelling test run. Press CTRL+c again to exit forcefully.')
 
-  // Second CTRL+c should stop run
-  stdin.emit('data', CTRL_C)
+  // Second CTRL+c should stop run. Raw mode should be disabled so Node handles the second CTRL+c as SIGINT and exit forcefully.
+  expect.soft(stdin.setRawMode).toHaveBeenLastCalledWith(false)
+
+  // Test cleanup:
+  vitest.exit(true)
   await promise
 
-  expect(onExit).toHaveBeenCalled()
+  // `exit()` calls `process.exit` only after `close()` finishes — poll instead
+  // of racing the teardown
+  await expect.poll(() => onExit).toHaveBeenCalled()
 })
 
 test('cancelling test run stops test execution immediately', async () => {
@@ -57,23 +68,25 @@ test('cancelling test run stops test execution immediately', async () => {
   const vitest = await createVitest('test', {
     root: 'fixtures/cancel-run',
     include: ['blocked-test-cases.test.ts'],
-    reporters: [{
-      onTestCaseReady(testCase) {
-        onTestCaseHooks.push(`onTestCaseReady ${testCase.name}`)
+    reporters: [
+      {
+        onTestCaseReady(testCase) {
+          onTestCaseHooks.push(`onTestCaseReady ${testCase.name}`)
+        },
+        onTestCaseResult(testCase) {
+          onTestCaseHooks.push(`onTestCaseResult ${testCase.name}`)
+          onTestCaseHooks.push('') // padding
+        },
+        onTestCaseAnnotate: (_, annotation) => {
+          if (annotation.message === 'Running long test, do the cancelling now!') {
+            onSlowTestRunning.resolve()
+          }
+        },
+        onTestRunEnd(testModules) {
+          onTestRunEnd.resolve(testModules)
+        },
       },
-      onTestCaseResult(testCase) {
-        onTestCaseHooks.push(`onTestCaseResult ${testCase.name}`)
-        onTestCaseHooks.push('') // padding
-      },
-      onTestCaseAnnotate: (_, annotation) => {
-        if (annotation.message === 'Running long test, do the cancelling now!') {
-          onSlowTestRunning.resolve()
-        }
-      },
-      onTestRunEnd(testModules) {
-        onTestRunEnd.resolve(testModules)
-      },
-    }],
+    ],
   })
   onTestFinished(() => vitest.close())
 
@@ -87,7 +100,7 @@ test('cancelling test run stops test execution immediately', async () => {
 
   expect(testModules).toHaveLength(1)
 
-  const tests = Array.from(testModules[0].children.allTests()).map(test => ({
+  const tests = Array.from(testModules[0].children.allTests()).map((test) => ({
     name: test.name,
     status: test.result().state,
     note: (test.result() as any).note,

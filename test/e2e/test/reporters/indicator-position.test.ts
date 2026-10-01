@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('should print correct indicator position', async () => {
   const filename = resolve('./fixtures/reporters/indicator-position.test.js')

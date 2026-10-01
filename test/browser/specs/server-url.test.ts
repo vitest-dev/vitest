@@ -10,10 +10,10 @@ test('server-url http', async () => {
     root: './fixtures/server-url',
     watch: true, // otherwise the browser is closed before we can get the url
   })
-  const url = ctx?.projects[0].browser?.vite.resolvedUrls?.local[0]
+  const url = ctx?.projects[0].vite.resolvedUrls?.local[0]
   expect(stderr).toBe('')
-  expect(url).toBeDefined()
-  expect(new URL(url).port).toBe('51133')
+  expect.assert(url)
+  expect(new URL(url).port).toBe('31133')
 })
 
 test('server-url https', async () => {
@@ -23,8 +23,8 @@ test('server-url https', async () => {
     watch: true, // otherwise the browser is closed before we can get the url
   })
   expect(stderr).toBe('')
-  const url = ctx?.projects[0].browser?.vite.resolvedUrls?.local[0]
-  expect(url).toBeDefined()
-  expect(new URL(url).port).toBe('51122')
+  const url = ctx?.projects[0].vite.resolvedUrls?.local[0]
+  expect.assert(url)
+  expect(new URL(url).port).toBe('31122')
   expect(stdout).toReportSummaryTestFiles({ passed: instances.length })
 })

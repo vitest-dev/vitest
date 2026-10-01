@@ -1,7 +1,14 @@
-import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
+import {
+  assertTypes,
+  deepClone,
+  deepMerge,
+  isNegativeNaN,
+  objectAttr,
+  toArray,
+} from '@vitest/utils/helpers'
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
-import { beforeAll, describe, expect, test } from 'vitest'
+import { beforeAll, describe, expect, onTestFinished, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import { resetModules } from '../../../packages/vitest/src/runtime/utils'
 
@@ -24,6 +31,65 @@ describe('assertTypes', () => {
 })
 
 describe('deepMerge', () => {
+  test('does not merge prototype mutation properties', () => {
+    onTestFinished(() => {
+      Reflect.deleteProperty(Object.prototype, 'rootPolluted')
+      Reflect.deleteProperty(Object.prototype, 'nestedPolluted')
+    })
+
+    const source = JSON.parse(`{
+      "__proto__": { "rootPolluted": true },
+      "constructor": { "name": "Object", "injected": true },
+      "prototype": { "injected": true },
+      "nested": {
+        "__proto__": { "nestedPolluted": true },
+        "constructor": { "name": "Object", "injected": true },
+        "prototype": { "injected": true }
+      }
+    }`)
+
+    const merged = deepMerge(
+      {
+        constructor: { name: 'Object', preserved: true },
+        prototype: { preserved: true },
+        nested: {
+          constructor: { name: 'Object', preserved: true },
+          prototype: { preserved: true },
+        },
+      },
+      source,
+    )
+
+    expect({
+      merged,
+      rootPolluted: ({} as any).rootPolluted,
+      nestedPolluted: ({} as any).nestedPolluted,
+    }).toMatchInlineSnapshot(`
+      {
+        "merged": {
+          "constructor": {
+            "name": "Object",
+            "preserved": true,
+          },
+          "nested": {
+            "constructor": {
+              "name": "Object",
+              "preserved": true,
+            },
+            "prototype": {
+              "preserved": true,
+            },
+          },
+          "prototype": {
+            "preserved": true,
+          },
+        },
+        "nestedPolluted": undefined,
+        "rootPolluted": undefined,
+      }
+    `)
+  })
+
   test('non plain objects retain their prototype, arrays are not merging, plain objects are merging', () => {
     class TestA {
       baz = 'baz'
@@ -77,18 +143,21 @@ describe('deepMerge', () => {
       }
     }
 
-    const obj = deepMergeSnapshot({
-      regexp: /test/,
-      test: new Test(),
-      name: 'name',
-      foo: 5,
-      array: [/test/, 'test'],
-    }, {
-      name: expect.stringContaining('name'),
-      foo: 88,
-      array: [/test2/],
-      test: { baz: 'baz' },
-    })
+    const obj = deepMergeSnapshot(
+      {
+        regexp: /test/,
+        test: new Test(),
+        name: 'name',
+        foo: 5,
+        array: [/test/, 'test'],
+      },
+      {
+        name: expect.stringContaining('name'),
+        foo: 88,
+        array: [/test2/],
+        test: { baz: 'baz' },
+      },
+    )
 
     expect(obj.regexp instanceof RegExp).toBe(true)
     expect(obj.test instanceof Test).toBe(false)
@@ -150,9 +219,9 @@ describe('deepClone', () => {
     })
     expect(deepClone(objB).value).toEqual(objB.value)
     expect(Object.getOwnPropertyDescriptor(deepClone(objB), 'value')?.writable).toEqual(false)
-    expect(
-      Object.getOwnPropertyDescriptor(deepClone(objB), 'writableValue')?.writable,
-    ).toEqual(true)
+    expect(Object.getOwnPropertyDescriptor(deepClone(objB), 'writableValue')?.writable).toEqual(
+      true,
+    )
     expect(
       Object.getOwnPropertyDescriptor(deepClone(objB, { forceWritable: true }), 'value')?.writable,
     ).toEqual(true)
@@ -165,7 +234,10 @@ describe('deepClone', () => {
 
   test('can clone classes with proxied enumerable getters', () => {
     const obj = Symbol.for('aClass')
-    interface TestShape { a: number; b: string }
+    interface TestShape {
+      a: number
+      b: string
+    }
     class A {
       [obj]: TestShape
       constructor(data: TestShape) {
@@ -205,7 +277,7 @@ describe('deepClone', () => {
   })
 })
 
-describe('resetModules doesn\'t resets only user modules', () => {
+describe("resetModules doesn't resets only user modules", () => {
   const moduleCache = new EvaluatedModules()
   const modules = [
     ['/some-module.ts', true],
@@ -243,8 +315,7 @@ describe('resetModules doesn\'t resets only user modules', () => {
     if (reset) {
       expect(cached).toHaveProperty('exports', undefined)
       expect(cached).toHaveProperty('promise', undefined)
-    }
-    else {
+    } else {
       expect(cached).toHaveProperty('exports')
       expect(cached).toHaveProperty('promise')
     }
@@ -280,15 +351,15 @@ describe('objectAttr', () => {
 
 describe('isNegativeNaN', () => {
   test.each`
-  value | expected
-  ${Number.NaN} | ${false}
-  ${-Number.NaN} | ${true}
-  ${0} | ${false}
-  ${-0} | ${false}
-  ${1} | ${false}
-  ${-1} | ${false}
-  ${Number.POSITIVE_INFINITY} | ${false}
-  ${Number.NEGATIVE_INFINITY} | ${false}
+    value                       | expected
+    ${Number.NaN}               | ${false}
+    ${-Number.NaN}              | ${true}
+    ${0}                        | ${false}
+    ${-0}                       | ${false}
+    ${1}                        | ${false}
+    ${-1}                       | ${false}
+    ${Number.POSITIVE_INFINITY} | ${false}
+    ${Number.NEGATIVE_INFINITY} | ${false}
   `('isNegativeNaN($value) -> $expected', ({ value, expected }) => {
     expect(isNegativeNaN(value)).toBe(expected)
   })
@@ -365,7 +436,7 @@ describe('parseSingleFFOrSafariStack', () => {
     const size = 40
 
     const obj = Object.fromEntries(
-      [...Array.from({ length: size }).keys()].map(i => [`prop${i}`, i]),
+      Array.from(Array.from({ length: size }).keys(), (i) => [`prop${i}`, i]),
     )
 
     class PrettyError extends globalThis.Error {

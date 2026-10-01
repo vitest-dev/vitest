@@ -7,7 +7,6 @@ import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
-import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { Traces } from '../../utils/traces'
 import { emitModuleRunner } from '../listeners'
 import { listenForErrors } from '../moduleRunner/errorCatcher'
@@ -15,6 +14,7 @@ import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startVitestModuleRunner'
 import { run } from '../runBaseTests'
+import { setupEnv } from '../setup-common'
 import { getSafeWorkerState, provideWorkerState } from '../utils'
 
 let _moduleRunner: TestModuleRunner
@@ -27,10 +27,14 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
     return _moduleRunner
   }
 
-  process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
-  }
   const state = () => getSafeWorkerState() || options.state
+
+  process.exit = (code = process.exitCode || 0): never => {
+    const filepath = state().filepath
+    throw new Error(
+      `process.exit unexpectedly called with "${code}"${filepath ? ` (test file: ${filepath})` : ''}`,
+    )
+  }
 
   listenForErrors(state)
 
@@ -54,10 +58,10 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
         spyModule,
       })
     }
-    _moduleRunner = new NativeModuleRunner(
-      root,
-      mocker,
-    )
+    // imported lazily (pulls in `local-pkg`) so it stays out of the default
+    // worker startup graph; only the `viteModuleRunner: false` path needs it
+    const { NativeModuleRunner } = await import('../../utils/nativeModuleRunner')
+    _moduleRunner = new NativeModuleRunner(root, mocker)
     return _moduleRunner
   }
 
@@ -69,7 +73,9 @@ let _currentEnvironment!: Environment
 let _environmentTime: number
 
 /** @experimental */
-export async function setupBaseEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
+export async function setupBaseEnvironment(
+  context: WorkerSetupContext,
+): Promise<() => Promise<void>> {
   if (context.config.experimental.viteModuleRunner === false) {
     const { setupNodeLoaderHooks } = await import('./native')
     await setupNodeLoaderHooks(context)
@@ -82,18 +88,8 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
     config,
   } = context
 
-  // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
-  if (context.config.serializedDefines) {
-    try {
-      runInThisContext(`(() =>{\n${context.config.serializedDefines}})()`, {
-        lineOffset: 1,
-        filename: 'virtual:load-defines.js',
-      })
-    }
-    catch (error: any) {
-      throw new Error(`Failed to load custom "defines": ${error.message}`)
-    }
-  }
+  setupEnv(config.env, context.metaEnv)
+
   const otel = context.traces
 
   const { environment, loader } = await loadEnvironment(
@@ -122,16 +118,17 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
   }
 
   return async () => {
-    await otel.$(
-      'vitest.runtime.environment.teardown',
-      () => env.teardown(globalThis),
-    )
+    await otel.$('vitest.runtime.environment.teardown', () => env.teardown(globalThis))
     await loader?.close()
   }
 }
 
 /** @experimental */
-export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
+export async function runBaseTests(
+  method: 'run' | 'collect',
+  state: WorkerGlobalState,
+  traces: Traces,
+): Promise<void> {
   const { ctx } = state
   state.environment = _currentEnvironment
   state.durations.environment = _environmentTime
@@ -140,6 +137,18 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
   state.moduleExecutionInfo = moduleExecutionInfo
 
   provideWorkerState(globalThis, state)
+
+  // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
+  if (state.config.serializedDefines) {
+    try {
+      runInThisContext(`(() =>{\n${state.config.serializedDefines}})()`, {
+        lineOffset: 1,
+        filename: 'virtual:load-defines.js',
+      })
+    } catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
 
   if (ctx.invalidates) {
     ctx.invalidates.forEach((filepath) => {
@@ -167,12 +176,5 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
 
   emitModuleRunner(moduleRunner as any)
 
-  await run(
-    method,
-    ctx.files,
-    ctx.config,
-    moduleRunner,
-    _currentEnvironment,
-    traces,
-  )
+  await run(method, ctx.files, ctx.config, moduleRunner, _currentEnvironment, traces)
 }

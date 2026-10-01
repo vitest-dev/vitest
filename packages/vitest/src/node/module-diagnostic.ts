@@ -1,5 +1,5 @@
-import type { ImportDuration } from '@vitest/runner'
 import type { EnvironmentModuleGraph, TransformResult } from 'vite'
+import type { ImportDuration } from '../runtime/runner/types'
 import type {
   ModuleDefinitionDiagnostic,
   ModuleDefinitionDurationsDiagnostic,
@@ -28,13 +28,16 @@ export function collectModuleDurationsDiagnostic(
   }
 
   const modules: ModuleDefinitionDurationsDiagnostic[] = []
-  const modulesById: Record<string, {
-    selfTime: number
-    totalTime: number
-    transformTime?: number
-    external?: boolean
-    importer?: string
-  }> = {}
+  const modulesById: Record<
+    string,
+    {
+      selfTime: number
+      totalTime: number
+      transformTime?: number
+      external?: boolean
+      importer?: string
+    }
+  > = {}
 
   const allModules = [...moduleDiagnostic.modules, ...moduleDiagnostic.untracked]
 
@@ -42,7 +45,7 @@ export function collectModuleDurationsDiagnostic(
 
   // this aggregates the times for _ALL_ tests if testModule is not passed
   // so if the module was imported in separate tests, the time will be accumulated
-  for (const files of (testModule ? [[testModule.task]] : state.filesMap.values())) {
+  for (const files of testModule ? [[testModule.task]] : state.filesMap.values()) {
     for (const file of files) {
       const importDurations = file.importDurations
       if (!importDurations) {
@@ -83,7 +86,8 @@ export function collectModuleDurationsDiagnostic(
           modulesById[resolvedId].totalTime += durations.totalTime
 
           // don't aggregate
-          modulesById[resolvedId].transformTime = state.metadata[currentModule.project.name]?.duration[resolvedUrl]?.[0]
+          modulesById[resolvedId].transformTime =
+            state.metadata[currentModule.project.name]?.duration[resolvedUrl]?.[0]
         }
       })
     }
@@ -107,8 +111,7 @@ export function collectModuleDurationsDiagnostic(
         external: durations.external,
         importer: durations.importer,
       })
-    }
-    else {
+    } else {
       visitedInFile.add(diagnostic.resolvedId)
       modules.push({
         ...diagnostic,
@@ -134,8 +137,7 @@ export function collectModuleDurationsDiagnostic(
         resolvedUrl: diagnostic.resolvedUrl,
         url: diagnostic.rawUrl,
       })
-    }
-    else {
+    } else {
       visitedInFile.add(diagnostic.resolvedId)
       untracked.push({
         ...durations,
@@ -152,7 +154,11 @@ export function collectModuleDurationsDiagnostic(
   }
 }
 
-function getModuleImporter(moduleId: string, durations: ImportDuration, testModule: TestModule): string | undefined {
+function getModuleImporter(
+  moduleId: string,
+  durations: ImportDuration,
+  testModule: TestModule,
+): string | undefined {
   if (durations.importer === moduleId) {
     return moduleId
   }
@@ -162,9 +168,7 @@ function getModuleImporter(moduleId: string, durations: ImportDuration, testModu
     }
 
     const setupFiles = testModule.project.config.setupFiles
-    return setupFiles.includes(moduleId)
-      ? moduleId
-      : durations.importer
+    return setupFiles.includes(moduleId) ? moduleId : durations.importer
   }
   return durations.importer
 }
@@ -213,9 +217,13 @@ export async function collectSourceModulesLocations(
       if (sourceImport) {
         if (modules[sourceImport.rawUrl]) {
           // remove imports with a different resolvedId
-          const differentImports = modules[sourceImport.rawUrl].filter(d => d.resolvedId !== row.resolvedId)
+          const differentImports = modules[sourceImport.rawUrl].filter(
+            (d) => d.resolvedId !== row.resolvedId,
+          )
           untracked.push(...differentImports)
-          modules[sourceImport.rawUrl] = modules[sourceImport.rawUrl].filter(d => d.resolvedId === row.resolvedId)
+          modules[sourceImport.rawUrl] = modules[sourceImport.rawUrl].filter(
+            (d) => d.resolvedId === row.resolvedId,
+          )
         }
 
         modules[sourceImport.rawUrl] ??= []
@@ -312,7 +320,10 @@ function parseSourceImportsAndExports(source: string): Map<string, SourceStaticI
   return sourcesMap
 }
 
-async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transformResult: TransformResult) {
+async function parseTransformResult(
+  moduleGraph: EnvironmentModuleGraph,
+  transformResult: TransformResult,
+) {
   const code = transformResult.code
   const regexp = /(?:__vite_ssr_import__|__vite_ssr_dynamic_import__)\("([^"]+)"/g
   const lineColumnMap = createIndexLocationsMap(code)
@@ -322,30 +333,32 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
     endIndex: number
   }[] = []
   let match: RegExpMatchArray | null
-  // eslint-disable-next-line no-cond-assign
-  while (match = regexp.exec(code)) {
+  // oxlint-disable-next-line no-cond-assign
+  while ((match = regexp.exec(code))) {
     const startIndex = match.index!
     const endIndex = match.index! + match[0].length - 1 // 1 is "
     importPositions.push({ raw: match[1], startIndex, endIndex })
   }
 
-  const results = await Promise.all(importPositions.map(async ({ startIndex, endIndex, raw }) => {
-    const position = lineColumnMap.get(startIndex)!
-    const endPosition = lineColumnMap.get(endIndex)!
-    const moduleNode = await moduleGraph.getModuleByUrl(raw)
-    if (!position || !endPosition || !moduleNode || !moduleNode.id) {
-      return
-    }
+  const results = await Promise.all(
+    importPositions.map(async ({ startIndex, endIndex, raw }) => {
+      const position = lineColumnMap.get(startIndex)!
+      const endPosition = lineColumnMap.get(endIndex)!
+      const moduleNode = await moduleGraph.getModuleByUrl(raw)
+      if (!position || !endPosition || !moduleNode || !moduleNode.id) {
+        return
+      }
 
-    return {
-      resolvedId: moduleNode.id,
-      resolvedUrl: moduleNode.url,
-      start: position,
-      end: endPosition,
-      startIndex,
-      endIndex,
-    }
-  }))
+      return {
+        resolvedId: moduleNode.id,
+        resolvedUrl: moduleNode.url,
+        start: position,
+        end: endPosition,
+        startIndex,
+        endIndex,
+      }
+    }),
+  )
 
-  return results.filter(n => n != null)
+  return results.filter((n) => n != null)
 }

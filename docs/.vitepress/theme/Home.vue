@@ -19,12 +19,14 @@ import Intro from './Intro.vue'
   <VitestFeatureGrid />
   <Sponsors
     description="Vitest is free and open source, made possible by wonderful sponsors."
-    sponsor-link="https://github.com/sponsors/vitest-dev" :sponsors="sponsors"
+    sponsor-link="https://github.com/sponsors/vitest-dev"
+    :sponsors="sponsors"
   />
   <Spacer />
   <Footer
     heading="Start testing with Vitest"
-    subheading="Supercharge your tests with unparalleled performance made for the modern web" button-text="Get started"
+    subheading="Supercharge your tests with unparalleled performance made for the modern web"
+    button-text="Get started"
     button-link="/guide/"
   />
 </template>

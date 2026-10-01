@@ -1,6 +1,5 @@
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../types/worker'
-import { getSafeTimers } from '@vitest/utils/timers'
 
 const NAME_WORKER_STATE = '__vitest_worker__'
 
@@ -12,13 +11,13 @@ export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
   const workerState = globalThis[NAME_WORKER_STATE]
   if (!workerState) {
-    const errorMsg
-      = 'Vitest failed to access its internal state.'
-        + '\n\nOne of the following is possible:'
-        + '\n- "vitest" is imported directly without running "vitest" command'
-        + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
-        + '\n- "vitest" is imported inside Vite / Vitest config file'
-        + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
+    const errorMsg =
+      'Vitest failed to access its internal state.' +
+      '\n\nOne of the following is possible:' +
+      '\n- "vitest" is imported directly without running "vitest" command' +
+      '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)' +
+      '\n- "vitest" is imported inside Vite / Vitest config file' +
+      '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
     throw new Error(errorMsg)
   }
   return workerState
@@ -40,11 +39,6 @@ export function provideWorkerState(context: any, state: WorkerGlobalState): Work
   return state
 }
 
-export function getCurrentEnvironment(): string {
-  const state = getWorkerState()
-  return state?.environment.name
-}
-
 export function isChildProcess(): boolean {
   return typeof process !== 'undefined' && !!process.send
 }
@@ -61,7 +55,7 @@ export function resetModules(modules: EvaluatedModules, resetMocks = false): voi
     ...(!resetMocks ? [/^mock:/] : []),
   ]
   modules.idToModuleMap.forEach((node, path) => {
-    if (skipPaths.some(re => re.test(path))) {
+    if (skipPaths.some((re) => re.test(path))) {
       return
     }
 
@@ -70,26 +64,4 @@ export function resetModules(modules: EvaluatedModules, resetMocks = false): voi
     node.evaluated = false
     node.importers.clear()
   })
-}
-
-function waitNextTick() {
-  const { setTimeout } = getSafeTimers()
-  return new Promise(resolve => setTimeout(resolve, 0))
-}
-
-export async function waitForImportsToResolve(): Promise<void> {
-  await waitNextTick()
-  const state = getWorkerState()
-  const promises: Promise<unknown>[] = []
-  const resolvingCount = state.resolvingModules.size
-  for (const [_, mod] of state.evaluatedModules.idToModuleMap) {
-    if (mod.promise && !mod.evaluated) {
-      promises.push(mod.promise)
-    }
-  }
-  if (!promises.length && !resolvingCount) {
-    return
-  }
-  await Promise.allSettled(promises)
-  await waitForImportsToResolve()
 }

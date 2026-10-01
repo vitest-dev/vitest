@@ -1,9 +1,8 @@
-import type { File, Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
+import type { File, Task } from '../runtime/runner/types'
 import type { Vitest } from './core'
 import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { isTestCase } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -19,35 +18,34 @@ const keys = [
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
-  ['b', 'start the browser server if not started yet'],
   ['q', 'quit'],
 ]
-const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
+const cancelKeys = ['space', 'c', 'h', ...keys.map((key) => key[0]).flat()]
 
-export function printShortcutsHelp(): void {
+function printShortcutsHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
 ${keys
   .map(
-    i =>
-      c.dim('  press ')
-      + c.reset([i[0]].flat().map(c.bold).join(', '))
-      + c.dim(` to ${i[1]}`),
+    (i) => c.dim('  press ') + c.reset([i[0]].flat().map(c.bold).join(', ')) + c.dim(` to ${i[1]}`),
   )
   .join('\n')}
 `,
   )
 }
 
-function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterObject> {
-  if (isTestCase(t)) {
-    if (t.name.match(filter)) {
+function* traverseFilteredTestNames(
+  parentName: string,
+  filter: RegExp,
+  t: Task,
+): Generator<FilterObject> {
+  if (t.type === 'test') {
+    if (filter.test(t.name)) {
       const displayName = `${parentName} > ${t.name}`
       yield { key: t.name, toString: () => displayName }
     }
-  }
-  else {
+  } else {
     parentName = parentName.length ? `${parentName} > ${t.name}` : t.name
     for (const task of t.tasks) {
       yield* traverseFilteredTestNames(parentName, filter, task)
@@ -66,8 +64,7 @@ function* getFilteredTestNames(pattern: string, suite: File[]): Generator<Filter
         yield* traverseFilteredTestNames('', reg, file)
       }
     }
-  }
-  catch {
+  } catch {
     // `new RegExp` may throw error when input is invalid regexp
   }
 }
@@ -82,19 +79,17 @@ export function registerConsoleShortcuts(
   async function _keypressHandler(str: string, key: any) {
     // Cancel run and exit when ctrl-c or esc is pressed.
     // If cancelling takes long and key is pressed multiple times, exit forcefully.
-    if (
-      str === '\x03'
-      || str === '\x1B'
-      || (key && key.ctrl && key.name === 'c')
-    ) {
+    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) {
       if (!ctx.isCancelling) {
-        ctx.logger.log(
-          c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
-        )
+        ctx.logger.log(c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'))
         process.exitCode = 130
+
+        // Unregister raw mode so that second CTRL+c is handled by Node.js as SIGINT
+        off()
 
         await ctx.cancelCurrentRun('keyboard-input')
       }
+
       return ctx.exit(true)
     }
 
@@ -152,14 +147,6 @@ export function registerConsoleShortcuts(
     if (name === 'p') {
       return inputFilePattern()
     }
-    if (name === 'b') {
-      await ctx._initBrowserServers()
-      ctx.projects.forEach((project) => {
-        ctx.logger.log()
-        ctx.logger.printBrowserBanner(project)
-      })
-      return null
-    }
   }
 
   async function keypressHandler(str: string, key: any) {
@@ -168,11 +155,7 @@ export function registerConsoleShortcuts(
 
   async function inputNamePattern() {
     off()
-    const watchFilter = new WatchFilter<'object'>(
-      'Input test name pattern (RegExp)',
-      stdin,
-      stdout,
-    )
+    const watchFilter = new WatchFilter<'object'>('Input test name pattern (RegExp)', stdin, stdout)
     const filter = await watchFilter.filter((str: string) => {
       return [...getFilteredTestNames(str, ctx.state.getFiles())]
     })
@@ -185,16 +168,10 @@ export function registerConsoleShortcuts(
 
     const files = ctx.state.getFilepaths()
     // if running in standalone mode, Vitest instance doesn't know about any test file
-    const cliFiles
-      = ctx.config.standalone && !files.length
-        ? await ctx._globTestFilepaths()
-        : undefined
+    const cliFiles =
+      ctx.config.standalone && !files.length ? await ctx._globTestFilepaths() : undefined
 
-    await ctx.changeNamePattern(
-      filter?.trim() || '',
-      cliFiles,
-      'change pattern',
-    )
+    await ctx.changeNamePattern(filter?.trim() || '', cliFiles, 'change pattern')
   }
 
   async function inputProjectName() {
@@ -214,17 +191,13 @@ export function registerConsoleShortcuts(
   async function inputFilePattern() {
     off()
 
-    const watchFilter = new WatchFilter(
-      'Input filename pattern',
-      stdin,
-      stdout,
-    )
+    const watchFilter = new WatchFilter('Input filename pattern', stdin, stdout)
 
     const filter = await watchFilter.filter(async (str: string) => {
       const specifications = await ctx.globTestSpecifications([str])
 
       return specifications
-        .map(specification => relative(ctx.config.root, specification.moduleId))
+        .map((specification) => relative(ctx.config.root, specification.moduleId))
         .filter((file, index, all) => all.indexOf(file) === index)
     })
 
@@ -240,7 +213,7 @@ export function registerConsoleShortcuts(
     await ctx.changeFilenamePattern(
       latestFilename,
       filter && lastResults.length
-        ? lastResults.map(i => resolve(ctx.config.root, i))
+        ? lastResults.map((i) => resolve(ctx.config.root, i))
         : undefined,
     )
   }

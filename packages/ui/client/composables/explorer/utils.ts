@@ -1,4 +1,4 @@
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import type {
   FileTreeNode,
   ParentTreeNode,
@@ -7,26 +7,21 @@ import type {
   TestTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { isTestCase } from '@vitest/runner/utils'
 import { client, config } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
-import { getBadgeNameColor, isSuite as isTaskSuite } from '~/utils/task'
+import { isSuite as isTaskSuite } from '~/utils/task'
 
 export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
   return node.type === 'test'
 }
 
 export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode {
-  return node.mode === 'run' && (node.type === 'test')
+  return node.mode === 'run' && node.type === 'test'
 }
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
   return node.type === 'file'
-}
-
-export function isSuiteNode(node: UITaskTreeNode): node is SuiteTreeNode {
-  return node.type === 'suite'
 }
 
 export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | SuiteTreeNode {
@@ -55,18 +50,13 @@ export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.t
       const durationA = a.duration ?? 0
       const durationB = b.duration ?? 0
       if (durationA !== durationB) {
-        return sort === 'duration-desc'
-          ? durationB - durationA
-          : durationA - durationB
+        return sort === 'duration-desc' ? durationB - durationA : durationA - durationB
       }
-    }
-    else if (sort === 'asc' || sort === 'desc') {
+    } else if (sort === 'asc' || sort === 'desc') {
       const projectA = a.projectName || ''
       const projectB = b.projectName || ''
       if (projectA !== projectB) {
-        return sort === 'asc'
-          ? projectA.localeCompare(projectB)
-          : projectB.localeCompare(projectA)
+        return sort === 'asc' ? projectA.localeCompare(projectB) : projectB.localeCompare(projectA)
       }
     }
     // Default sort (by filepath, then project) is the fallback
@@ -76,10 +66,13 @@ export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.t
   return sorted
 }
 
-export function createOrUpdateFileNode(
-  file: File,
-  collect = false,
-) {
+/**
+ * Create or update the explorer node that mirrors a runner file.
+ *
+ * @param file Runner file whose explorer node should be synchronized.
+ * @param collect Synchronize all descendant task nodes when true; update only the file node when false.
+ */
+export function createOrUpdateFileNode(file: File, collect = false) {
   let fileNode = explorerTree.nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
@@ -87,14 +80,14 @@ export function createOrUpdateFileNode(
     fileNode.label = file.meta?.__vitest_label__
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
-    fileNode.duration = typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined
+    fileNode.duration =
+      typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined
     fileNode.slow = false
     fileNode.collectDuration = file.collectDuration
     fileNode.setupDuration = file.setupDuration
     fileNode.environmentLoad = file.environmentLoad
     fileNode.prepareDuration = file.prepareDuration
-  }
-  else {
+  } else {
     fileNode = {
       id: file.id,
       parentId: 'root',
@@ -109,11 +102,11 @@ export function createOrUpdateFileNode(
       typecheck: !!file.meta && 'typecheck' in file.meta,
       label: file.meta?.__vitest_label__,
       indent: 0,
-      duration: typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined,
+      duration:
+        typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined,
       slow: false,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: explorerTree.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
@@ -130,10 +123,7 @@ export function createOrUpdateFileNode(
   }
 }
 
-export function createOrUpdateSuiteTask(
-  id: string,
-  all: boolean,
-) {
+export function createOrUpdateSuiteTask(id: string, all: boolean) {
   const node = explorerTree.nodes.get(id)
   if (!node || !isParentNode(node)) {
     return
@@ -159,23 +149,18 @@ export function createOrUpdateNodeTask(id: string) {
 
   const task = client.state.idMap.get(id)
   // if it is not a test just return
-  if (!task || !isTestCase(task)) {
+  if (!task || task.type !== 'test') {
     return
   }
 
   createOrUpdateNode(node.parentId, task, false)
 }
 
-export function createOrUpdateNode(
-  parentId: string,
-  task: Task,
-  createAll: boolean,
-) {
+export function createOrUpdateNode(parentId: string, task: Task, createAll: boolean) {
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
-  const duration = typeof task.result?.duration === 'number'
-    ? Math.round(task.result.duration)
-    : undefined
+  const duration =
+    typeof task.result?.duration === 'number' ? Math.round(task.result.duration) : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
     if (taskNode) {
@@ -189,9 +174,8 @@ export function createOrUpdateNode(
       taskNode.duration = duration
       taskNode.slow = isSlowTestTask(task)
       taskNode.state = task.result?.state
-    }
-    else {
-      if (isTestCase(task)) {
+    } else {
+      if (task.type === 'test') {
         taskNode = {
           id: task.id,
           fileId: task.file.id,
@@ -206,8 +190,7 @@ export function createOrUpdateNode(
           slow: isSlowTestTask(task),
           state: task.result?.state,
         } as TestTreeNode
-      }
-      else {
+      } else {
         taskNode = {
           id: task.id,
           fileId: task.file.id,
@@ -235,6 +218,38 @@ export function createOrUpdateNode(
       for (let i = 0; i < task.tasks.length; i++) {
         createOrUpdateNode(taskNode.id, task.tasks[i], createAll)
       }
+    }
+  }
+}
+
+export function pruneStaleChildren(
+  nodes: Map<string, UITaskTreeNode>,
+  parentNode: ParentTreeNode,
+  tasks: Task[],
+) {
+  const taskById = new Map(tasks.map((task) => [task.id, task] as const))
+  for (const child of [...parentNode.tasks]) {
+    const task = taskById.get(child.id)
+    if (!task || task.type !== child.type) {
+      removeNodeSubtree(nodes, child)
+    } else if (isParentNode(child) && task.type === 'suite') {
+      pruneStaleChildren(nodes, child, task.tasks)
+    }
+  }
+}
+
+export function removeNodeSubtree(nodes: Map<string, UITaskTreeNode>, node: UITaskTreeNode) {
+  if (isParentNode(node)) {
+    for (const child of [...node.tasks]) {
+      removeNodeSubtree(nodes, child)
+    }
+  }
+  nodes.delete(node.id)
+  const parent = nodes.get(node.parentId)
+  if (parent && isParentNode(parent) && parent.children.delete(node.id)) {
+    const index = parent.tasks.findIndex((task) => task.id === node.id)
+    if (index !== -1) {
+      parent.tasks.splice(index, 1)
     }
   }
 }

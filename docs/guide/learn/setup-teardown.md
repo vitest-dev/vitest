@@ -33,15 +33,20 @@ test('items starts with 3 fruits', () => {
   expect(items).toHaveLength(3)
 })
 
+test('can remove an item', () => {
+  items.pop()
+  expect(items).toHaveLength(2)
+})
+
 test('can add an item', () => {
   items.push('date')
   expect(items).toHaveLength(4)
-  // afterEach will reset items for the next test,
-  // so this mutation won't leak into other tests
+  // beforeEach reset the array to 3 items before this test ran,
+  // proving that mutations from the previous test do not leak.
 })
 ```
 
-Without these hooks, the second test's `push` would affect any test that runs after it, which is a classic source of flaky tests. The hooks guarantee clean state for every test.
+Without these hooks, mutations like `pop` or `push` from earlier tests would affect subsequent ones, which is a classic source of flaky tests, while the hooks guarantee clean state for every test.
 
 ## One-Time Setup
 
@@ -246,5 +251,5 @@ expect.extend(customMatchers)
 Unlike `beforeAll`, which runs once per file, setup files run in a separate phase before the test file even starts being collected. This makes them the right place for things like extending the `expect` API or configuring global polyfills.
 
 ::: tip
-For advanced cases where your test needs to run *inside* a wrapping context (like a database transaction or a tracing span), see the [`aroundEach`](/api/hooks#aroundeach) and [`aroundAll`](/api/hooks#aroundall) hooks. For the complete lifecycle picture, see [Test Run Lifecycle](/guide/lifecycle).
+For advanced cases where your test needs to run _inside_ a wrapping context (like a database transaction or a tracing span), see the [`aroundEach`](/api/hooks#aroundeach) and [`aroundAll`](/api/hooks#aroundall) hooks. For the complete lifecycle picture, see [Test Run Lifecycle](/guide/lifecycle).
 :::

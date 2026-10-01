@@ -6,10 +6,14 @@ interface SummaryOptions {
 }
 
 expect.extend({
-  toReportPassedTest(stdout: string, testName: string, testProject?: string | BrowserInstanceOption[]) {
+  toReportPassedTest(
+    stdout: string,
+    testName: string,
+    testProject?: string | BrowserInstanceOption[],
+  ) {
     const checks: BrowserInstanceOption[] | undefined = Array.isArray(testProject)
       ? testProject
-      : (testProject && [{ browser: testProject }])
+      : testProject && [{ browser: testProject }]
 
     const pass = checks?.length
       ? checks.every(({ browser }) => {
@@ -22,7 +26,7 @@ expect.extend({
       pass,
       message: () => {
         const includePattern = checks?.length
-          ? checks.map(check => `✓ |${check.browser}| ${testName}`).join('\n')
+          ? checks.map((check) => `✓ |${check.browser}| ${testName}`).join('\n')
           : `✓ ${testName}`
         return `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`
       },
@@ -33,7 +37,8 @@ expect.extend({
     const pass = !passed || stdout.includes(includePattern)
     return {
       pass,
-      message: () => `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`,
+      message: () =>
+        `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`,
     }
   },
   toReportSummaryTests(stdout: string, { passed }: SummaryOptions) {
@@ -41,7 +46,8 @@ expect.extend({
     const pass = !passed || stdout.includes(includePattern)
     return {
       pass,
-      message: () => `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`,
+      message: () =>
+        `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`,
     }
   },
   toReportNoErrors(stderr: string) {
@@ -54,15 +60,15 @@ expect.extend({
 })
 
 declare module 'vitest' {
-  interface Matchers {
-    // eslint-disable-next-line ts/method-signature-style
-    toReportPassedTest(testName: string, testProject?: string | BrowserInstanceOption[]): void
-    // eslint-disable-next-line ts/method-signature-style
-    toReportSummaryTestFiles(options: SummaryOptions): void
-    // eslint-disable-next-line ts/method-signature-style
-    toReportSummaryTests(options: SummaryOptions): void
-    // eslint-disable-next-line ts/method-signature-style
-    toReportNoErrors(): void
+  interface Matchers<R> {
+    // oxlint-disable-next-line typescript/method-signature-style
+    toReportPassedTest(testName: string, testProject?: string | BrowserInstanceOption[]): R
+    // oxlint-disable-next-line typescript/method-signature-style
+    toReportSummaryTestFiles(options: SummaryOptions): R
+    // oxlint-disable-next-line typescript/method-signature-style
+    toReportSummaryTests(options: SummaryOptions): R
+    // oxlint-disable-next-line typescript/method-signature-style
+    toReportNoErrors(): R
   }
 }
 

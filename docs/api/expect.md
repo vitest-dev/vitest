@@ -9,8 +9,11 @@ type Awaitable<T> = T | PromiseLike<T>
 `expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides Chai-style assertions (e.g., [`expect(spy).to.have.been.called()`](#called)) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
 
 ```ts
-export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
-  <T>(actual: T, message?: string): Assertion<T>
+export interface ExpectStatic
+  extends Chai.ExpectStatic,
+  Matchers<any>,
+  AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<void, T>
   extend: (expects: MatchersObject) => void
   anything: () => any
   any: (constructor: unknown) => any
@@ -141,6 +144,7 @@ expect(flakyValue).toMatchSnapshot()
 
 - `.resolves` and `.rejects` are not supported. `expect.poll` already awaits the condition if it's asynchronous.
 - `toThrow` and its aliases are not supported because the `expect.poll` condition is always resolved before the matcher gets the value
+
 :::
 
 ## not
@@ -444,6 +448,7 @@ test('toBeTypeOf cannot check for null or array', () => {
   expect([]).toBeTypeOf('object')
 })
 ```
+
 :::
 
 ## toBeInstanceOf
@@ -573,9 +578,9 @@ To test if something was thrown, use [`toThrow`](#tothrow) assertion.
 
 Differences from [`.toEqual`](#toequal):
 
--  Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
--  Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
--  Object types are checked to be equal. e.g. A class instance with fields `a` and `b` will not equal a literal object with fields `a` and `b`.
+- Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
+- Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
+- Object types are checked to be equal. e.g. A class instance with fields `a` and `b` will not equal a literal object with fields `a` and `b`.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -797,12 +802,14 @@ You can provide an optional argument to test that a specific error is thrown:
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
 
 This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
+
 ```ts
 test('expect rejects toThrow', async ({ expect }) => {
   const promise = Promise.reject(new Error('Test'))
   await expect(promise).rejects.toThrow()
 })
 ```
+
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
@@ -849,6 +856,7 @@ test('throws on pineapples', async () => {
   await expect(() => getAsyncFruitStock()).rejects.toThrow('empty')
 })
 ```
+
 :::
 
 :::tip
@@ -860,6 +868,7 @@ test('throws non-Error values', () => {
   expect(() => { throw { message: 'error' } }).toThrow({ message: 'error' })
 })
 ```
+
 :::
 
 :::warning Unhandled Rejections with Fake Timers
@@ -906,6 +915,7 @@ test('rejects', async () => {
   await assertion
 })
 ```
+
 :::
 
 ## toMatchSnapshot
@@ -917,7 +927,7 @@ This ensures that a value matches the most recent snapshot.
 You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
 
 :::tip
-  When a snapshot mismatches and causes the test to fail, if the mismatch is expected, you can press `u` key to update the snapshot once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
+When a snapshot mismatches and causes the test to fail, if the mismatch is expected, you can press `u` key to update the snapshot once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
 :::
 
 ```ts
@@ -1453,6 +1463,38 @@ test('spy function returns bananas on second call', async () => {
 })
 ```
 
+## toHaveBeenExhausted <Version>5.0.0</Version> {#tohavebeenexhausted}
+
+- **Type:** `() => void`
+
+This assertion checks that every behavior registered on a [`vi.when`](/api/vi#vi-when) chain has been consumed. A behavior is considered exhausted when it has been called the number of times specified by its `times` option, or at least once for behaviors that apply indefinitely.
+
+Requires a `When` chain returned by `vi.when` to be passed to `expect`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('all behaviors were consumed', () => {
+  const spy = vi.fn()
+  const w = vi.when(spy)
+    .calledWith(1)
+    .thenReturnOnce('once')
+    .calledWith(2)
+    .thenReturn('always')
+
+  expect(w).not.toHaveBeenExhausted()
+
+  spy(1) // consumes the `thenReturnOnce` behavior
+  spy(2) // satisfies the `thenReturn` behavior (called at least once)
+
+  expect(w).toHaveBeenExhausted()
+})
+```
+
+::: warning
+A `When` chain with no registered behaviors is never considered exhausted. `toHaveBeenExhausted` only passes when at least one `calledWith` with an associated action (`then*`) has been registered and every registered behavior has been fully consumed.
+:::
+
 ## called <Version>4.1.0</Version> {#called}
 
 - **Type:** `Assertion` (property, not a method)
@@ -1787,7 +1829,7 @@ test('spy called after another', () => {
 ```
 
 ::: tip Migration Guide
-For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration#mocha-chai-sinon).
+For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration/mocha).
 :::
 
 ## toSatisfy
@@ -1837,9 +1879,7 @@ test('buyApples returns new stock id', async () => {
 ```
 
 :::warning
-If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
-
-Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
+If the assertion is not awaited, the test will be marked as "failed" at the end of the test.
 :::
 
 ## rejects
@@ -1868,9 +1908,7 @@ test('buyApples throws an error when no id provided', async () => {
 ```
 
 :::warning
-If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
-
-Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
+If the assertion is not awaited, the test will be marked as "failed" at the end of the test.
 :::
 
 ## expect.assertions
@@ -1902,6 +1940,7 @@ test('all assertions are called', async () => {
   await doAsync(callback1, callback2)
 })
 ```
+
 ::: warning
 When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
@@ -1985,6 +2024,28 @@ test.each(errorDirs)('build fails with "%s"', async (dir) => {
         expect.unreachable('All error test must be handled')
         break
     }
+  }
+})
+```
+
+## expect.fail
+
+- **Type:** `(message?: string) => never`
+
+Explicitly forces a test failure with an optional custom message.
+
+For example, you can use it inside a `try/catch` block to ensure an error was thrown:
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fails when error is not thrown', async () => {
+  try {
+    await performAction()
+    expect.fail('Expected performAction to throw an error')
+  }
+  catch (error) {
+    expect(error).toBeInstanceOf(CustomError)
   }
 })
 ```
@@ -2210,12 +2271,11 @@ import { expect, test } from 'vitest'
 
 test('custom matchers', () => {
   expect.extend({
-    toBeFoo: (received, expected) => {
-      if (received !== 'foo') {
-        return {
-          message: () => `expected ${received} to be foo`,
-          pass: false,
-        }
+    toBeFoo(received) {
+      const { isNot } = this
+      return {
+        message: () => `expected ${received} is${isNot ? ' not' : ''} foo`,
+        pass: received === 'foo',
       }
     },
   })
@@ -2231,18 +2291,19 @@ If you want your matchers to appear in every test, you should call this method i
 
 This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
 
-If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
+If you are using TypeScript, you can extend the default `Matchers` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
 ```ts
-interface CustomMatchers<R = unknown> {
-  toBeFoo: () => R
-}
+import 'vitest'
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
+  interface Matchers<R, T> {
+    toBeFoo: () => R
+  }
 }
 ```
+
+`R` is the assertion return type, and `T` is the type of the received value.
 
 ::: warning
 Don't forget to include the ambient declaration file in your `tsconfig.json`.

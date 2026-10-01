@@ -1,27 +1,34 @@
 import type { EachMapping } from '@jridgewell/trace-mapping'
-import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { ChildProcess } from 'node:child_process'
 import type { Result } from 'tinyexec'
+import type { FileInformation } from '../node/ast-collect'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
-import type { FileInformation } from './collect'
+import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '../runtime/runner/types'
 import type { TscErrorInfo } from './types'
 import os from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { eachMapping, generatedPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { basename, join, resolve } from 'pathe'
 import { x } from 'tinyexec'
+import { astCollectFileInformation } from '../node/ast-collect'
 import { distDir } from '../paths'
 import { createLocationsIndexMap } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
-import { collectTests } from './collect'
 import { getRawErrsMapFromTsCompile } from './parse'
+
+// the V8 fatal output of a checker that ran out of memory
+export const OOM_OUTPUT_PATTERN: RegExp =
+  /JavaScript heap out of memory|Reached heap limit|Allocation failed/i
 
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
 
-  constructor(public message: string, public stacks: ParsedStack[]) {
+  constructor(
+    public message: string,
+    public stacks: ParsedStack[],
+  ) {
     super(message)
   }
 }
@@ -32,9 +39,7 @@ export interface TypecheckResults {
   time: number
 }
 
-type Callback<Args extends Array<any> = []> = (
-  ...args: Args
-) => Awaitable<void>
+type Callback<Args extends Array<any> = []> = (...args: Args) => Awaitable<void>
 
 export class Typechecker {
   private _onParseStart?: Callback
@@ -53,7 +58,7 @@ export class Typechecker {
 
   protected files: string[] = []
 
-  constructor(protected project: TestProject) { }
+  constructor(protected project: TestProject) {}
 
   public setFiles(files: string[]): void {
     this.files = files
@@ -71,10 +76,8 @@ export class Typechecker {
     this._onWatcherRerun = fn
   }
 
-  protected async collectFileTests(
-    filepath: string,
-  ): Promise<FileInformation | null> {
-    return collectTests(this.project, filepath)
+  protected async collectFileTests(filepath: string): Promise<FileInformation | null> {
+    return astCollectFileInformation(this.project, filepath, { pool: 'typescript' })
   }
 
   protected getFiles(): string[] {
@@ -83,16 +86,17 @@ export class Typechecker {
 
   public async collectTests(): Promise<Record<string, FileInformation>> {
     const tests = (
-      await Promise.all(
-        this.getFiles().map(filepath => this.collectFileTests(filepath)),
-      )
-    ).reduce((acc, data) => {
-      if (!data) {
+      await Promise.all(this.getFiles().map((filepath) => this.collectFileTests(filepath)))
+    ).reduce(
+      (acc, data) => {
+        if (!data) {
+          return acc
+        }
+        acc[data.filepath] = data
         return acc
-      }
-      acc[data.filepath] = data
-      return acc
-    }, {} as Record<string, FileInformation>)
+      },
+      {} as Record<string, FileInformation>,
+    )
     this._tests = tests
     return tests
   }
@@ -125,16 +129,20 @@ export class Typechecker {
   }> {
     // Detect if tsc output is help text instead of error output
     // This happens when tsconfig.json is missing and tsc can't find any config
-    if (output.includes('The TypeScript Compiler - Version') || output.includes('COMMON COMMANDS')) {
+    if (
+      output.includes('The TypeScript Compiler - Version') ||
+      output.includes('COMMON COMMANDS')
+    ) {
       const { typecheck } = this.project.config
       const tsconfigPath = typecheck.tsconfig || 'tsconfig.json'
-      const msg = `TypeScript compiler returned help text instead of type checking results.\n`
-        + `This usually means the tsconfig file was not found.\n\n`
-        + `Possible solutions:\n`
-        + `  1. Ensure '${tsconfigPath}' exists in your project root\n`
-        + `  2. If using a custom tsconfig, verify the path in your Vitest config:\n`
-        + `     test: { typecheck: { tsconfig: 'path/to/tsconfig.json' } }\n`
-        + `  3. Check that the tsconfig file is valid JSON`
+      const msg =
+        `TypeScript compiler returned help text instead of type checking results.\n` +
+        `This usually means the tsconfig file was not found.\n\n` +
+        `Possible solutions:\n` +
+        `  1. Ensure '${tsconfigPath}' exists in your project root\n` +
+        `  2. If using a custom tsconfig, verify the path in your Vitest config:\n` +
+        `     test: { typecheck: { tsconfig: 'path/to/tsconfig.json' } }\n` +
+        `  3. Check that the tsconfig file is valid JSON`
 
       throw new Error(msg)
     }
@@ -157,21 +165,17 @@ export class Typechecker {
         this.markPassed(file)
         return
       }
-      const sortedDefinitions = [
-        ...definitions.sort((a, b) => b.start - a.start),
-      ]
+      const sortedDefinitions = [...definitions.sort((a, b) => b.start - a.start)]
       // has no map for ".js" files that use // @ts-check
-      const traceMap = (map && new TraceMap(map as any))
+      const traceMap = map && new TraceMap(map as any)
       const indexMap = createLocationsIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state:
-            task.mode === 'run' || task.mode === 'only' ? state : task.mode,
+          state: task.mode === 'run' || task.mode === 'only' ? state : task.mode,
         }
         if (task.suite) {
           markState(task.suite, state)
-        }
-        else if (task.file && task !== task.file) {
+        } else if (task.file && task !== task.file) {
           markState(task.file, state)
         }
       }
@@ -186,14 +190,10 @@ export class Typechecker {
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column
         const index = indexMap.get(`${line}:${column}`)
-        const definition
-          = index != null
-            && sortedDefinitions.find(
-              def => def.start <= index && def.end >= index,
-            )
+        const definition =
+          index != null && sortedDefinitions.find((def) => def.start <= index && def.end >= index)
         const suite = definition ? definition.task : file
-        const state: TaskState
-          = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
+        const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
         const errors = suite.result?.errors || []
         suite.result = {
           state,
@@ -203,8 +203,7 @@ export class Typechecker {
         if (state === 'fail') {
           if (suite.suite) {
             markState(suite.suite, 'fail')
-          }
-          else if (suite.file && suite !== suite.file) {
+          } else if (suite.file && suite !== suite.file) {
             markState(suite.file, 'fail')
           }
         }
@@ -226,25 +225,24 @@ export class Typechecker {
     }
   }
 
-  protected async parseTscLikeOutput(output: string): Promise<Map<string, {
-    error: TestError
-    originalError: TscErrorInfo
-  }[]>> {
-    const errorsMap = await getRawErrsMapFromTsCompile(output)
-    const typesErrors = new Map<
+  protected async parseTscLikeOutput(output: string): Promise<
+    Map<
       string,
-      { error: TestError; originalError: TscErrorInfo }[]
-    >()
+      {
+        error: TestError
+        originalError: TscErrorInfo
+      }[]
+    >
+  > {
+    const errorsMap = await getRawErrsMapFromTsCompile(output)
+    const typesErrors = new Map<string, { error: TestError; originalError: TscErrorInfo }[]>()
     errorsMap.forEach((errors, path) => {
       const filepath = resolve(this.project.config.root, path)
       const suiteErrors = errors.map((info) => {
         const limit = Error.stackTraceLimit
         Error.stackTraceLimit = 0
         // Some expect-type errors have the most useful information on the second line e.g. `This expression is not callable.\n  Type 'ExpectString<number>' has no call signatures.`
-        const errMsg = info.errMsg.replace(
-          /\r?\n\s*(Type .* has no call signatures)/g,
-          ' $1',
-        )
+        const errMsg = info.errMsg.replace(/\r?\n\s*(Type .* has no call signatures)/g, ' $1')
         const error = new TypeCheckError(errMsg, [
           {
             file: filepath,
@@ -286,6 +284,14 @@ export class Typechecker {
     return this.process?.exitCode != null && this.process.exitCode
   }
 
+  public getSignal(): NodeJS.Signals | null {
+    return this.process?.signalCode ?? null
+  }
+
+  public getChecker(): string {
+    return this.project.config.typecheck.checker
+  }
+
   public getOutput(): string {
     return this._output
   }
@@ -293,15 +299,11 @@ export class Typechecker {
   private async spawn() {
     const { root, watch, typecheck } = this.project.config
 
-    const args = [
-      '--pretty',
-      'false',
-    ]
+    const args = ['--pretty', 'false']
 
     if (typecheck.build) {
       args.unshift('--build')
-    }
-    else {
+    } else {
       args.push(
         '--noEmit',
         '--incremental',
@@ -344,7 +346,11 @@ export class Typechecker {
 
     return new Promise<{ result: Result }>((resolve, reject) => {
       if (!child.process || !child.process.stdout) {
-        reject(new Error(`Failed to initialize ${typecheck.checker}. This is a bug in Vitest - please, open an issue with reproduction.`))
+        reject(
+          new Error(
+            `Failed to initialize ${typecheck.checker}. This is a bug in Vitest - please, open an issue with reproduction.`,
+          ),
+        )
         return
       }
 
@@ -401,15 +407,17 @@ export class Typechecker {
         child.process?.off('error', onError)
         clearTimeout(timeout)
         if (process.platform === 'win32') {
-          // on Windows, the process might be spawned but fail to start
-          // we wait for a potential error here. if "close" event didn't trigger,
-          // we resolve the promise
-          winTimeout = setTimeout(() => {
-            resolved = true
-            resolve({ result: child })
-          }, 200)
-        }
-        else {
+          // on Windows, the process might be spawned but fail to start,
+          // so we wait for the "close" event instead of resolving right away.
+          // `start` awaits the process anyway; the watch process never exits,
+          // so resolve it after a grace period
+          if (watch) {
+            winTimeout = setTimeout(() => {
+              resolved = true
+              resolve({ result: child })
+            }, 200)
+          }
+        } else {
           resolved = true
           resolve({ result: child })
         }
@@ -417,8 +425,19 @@ export class Typechecker {
 
       if (process.platform === 'win32') {
         child.process.once('close', (code) => {
-          if (code != null && code !== 0 && !dataReceived) {
+          // an OOM abort writes only to stderr, but the checker did start;
+          // `start` awaits the process and reports the crash from its output
+          if (
+            code != null &&
+            code !== 0 &&
+            !dataReceived &&
+            !OOM_OUTPUT_PATTERN.test(this._output)
+          ) {
             onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+          } else if (!resolved) {
+            clearTimeout(winTimeout)
+            resolved = true
+            resolve({ result: child })
           }
         })
       }
@@ -446,7 +465,7 @@ export class Typechecker {
   }
 
   public getTestFiles(): File[] {
-    return Object.values(this._tests || {}).map(i => i.file)
+    return Object.values(this._tests || {}).map((i) => i.file)
   }
 
   public getTestPacksAndEvents(): {
@@ -466,7 +485,10 @@ export class Typechecker {
   }
 }
 
-function findGeneratedPosition(traceMap: TraceMap, { line, column, source }: { line: number; column: number; source: string }) {
+function findGeneratedPosition(
+  traceMap: TraceMap,
+  { line, column, source }: { line: number; column: number; source: string },
+) {
   const found = generatedPositionFor(traceMap, {
     line,
     column,
@@ -481,17 +503,19 @@ function findGeneratedPosition(traceMap: TraceMap, { line, column, source }: { l
   const mappings: (EachMapping & { originalLine: number })[] = []
   eachMapping(traceMap, (m) => {
     if (
-      m.source === source
-      && m.originalLine !== null
-      && m.originalColumn !== null
-      && (line === m.originalLine ? column < m.originalColumn : line < m.originalLine)
+      m.source === source &&
+      m.originalLine !== null &&
+      m.originalColumn !== null &&
+      (line === m.originalLine ? column < m.originalColumn : line < m.originalLine)
     ) {
       mappings.push(m)
     }
   })
   const next = mappings
     .sort((a, b) =>
-      a.originalLine === b.originalLine ? a.originalColumn - b.originalColumn : a.originalLine - b.originalLine,
+      a.originalLine === b.originalLine
+        ? a.originalColumn - b.originalColumn
+        : a.originalLine - b.originalLine,
     )
     .at(0)
   if (next) {

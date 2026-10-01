@@ -8,13 +8,11 @@
 import type { Config, NewPlugin, Printer, Refs } from '../types'
 import { printListItems, printObjectProperties } from '../collections'
 
-const asymmetricMatcher
-  = typeof Symbol === 'function' && Symbol.for
-    ? Symbol.for('jest.asymmetricMatcher')
-    : 0x13_57_A5
+const asymmetricMatcher =
+  typeof Symbol === 'function' && Symbol.for ? Symbol.for('jest.asymmetricMatcher') : 0x13_57_a5
 const SPACE = ' '
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   val: any,
   config: Config,
   indentation: string,
@@ -24,10 +22,7 @@ export const serialize: NewPlugin['serialize'] = (
 ) => {
   const stringedValue = val.toString()
 
-  if (
-    stringedValue === 'ArrayContaining'
-    || stringedValue === 'ArrayNotContaining'
-  ) {
+  if (stringedValue === 'ArrayContaining' || stringedValue === 'ArrayNotContaining') {
     if (++depth > config.maxDepth) {
       return `[${stringedValue}]`
     }
@@ -41,10 +36,7 @@ export const serialize: NewPlugin['serialize'] = (
     )}]`
   }
 
-  if (
-    stringedValue === 'ObjectContaining'
-    || stringedValue === 'ObjectNotContaining'
-  ) {
+  if (stringedValue === 'ObjectContaining' || stringedValue === 'ObjectNotContaining') {
     if (++depth > config.maxDepth) {
       return `[${stringedValue}]`
     }
@@ -58,26 +50,12 @@ export const serialize: NewPlugin['serialize'] = (
     )}}`
   }
 
-  if (
-    stringedValue === 'StringMatching'
-    || stringedValue === 'StringNotMatching'
-  ) {
-    return (
-      stringedValue
-      + SPACE
-      + printer(val.sample, config, indentation, depth, refs)
-    )
+  if (stringedValue === 'StringMatching' || stringedValue === 'StringNotMatching') {
+    return stringedValue + SPACE + printer(val.sample, config, indentation, depth, refs)
   }
 
-  if (
-    stringedValue === 'StringContaining'
-    || stringedValue === 'StringNotContaining'
-  ) {
-    return (
-      stringedValue
-      + SPACE
-      + printer(val.sample, config, indentation, depth, refs)
-    )
+  if (stringedValue === 'StringContaining' || stringedValue === 'StringNotContaining') {
+    return stringedValue + SPACE + printer(val.sample, config, indentation, depth, refs)
   }
 
   if (typeof val.toAsymmetricMatcher !== 'function') {
@@ -89,8 +67,7 @@ export const serialize: NewPlugin['serialize'] = (
   return val.toAsymmetricMatcher()
 }
 
-export const test: NewPlugin['test'] = (val: any) =>
-  val && val.$$typeof === asymmetricMatcher
+const test: NewPlugin['test'] = (val: any) => val && val.$$typeof === asymmetricMatcher
 
 const plugin: NewPlugin = { serialize, test }
 

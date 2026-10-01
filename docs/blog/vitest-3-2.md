@@ -75,6 +75,7 @@ The `worker` fixture is initiated once per worker, but note that by default Vite
 You can now set a custom [color](/config/name) when using `projects`:
 
 ::: details Config Example
+
 ```ts{6-9,14-17}
 export default defineConfig({
   test: {
@@ -104,6 +105,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 <img src="/v3-2-custom-colors.png" alt="an example of project names with custom backgrounds" />
@@ -239,7 +241,7 @@ Vitest now has a `Matchers` type that you can extend to add type support for all
 
 For example, to have a type-safe `toBeFoo` matcher, you can write something like this:
 
-```ts twoslash
+```ts
 import { expect } from 'vitest'
 
 interface CustomMatchers<R = unknown> {
@@ -252,7 +254,6 @@ declare module 'vitest' {
 
 expect.extend({
   toBeFoo(actual, arg) {
-    //            ^?
     // ... implementation
     return {
       pass: true,
@@ -320,8 +321,9 @@ Tests in these projects will run in this order:
 
  1. flaky |> runs after slow and fast alone
 ```
+
 :::
 
-----
+---
 
 The complete list of changes is at the [Vitest 3.2 Changelog](https://github.com/vitest-dev/vitest/releases/tag/v3.2.0).

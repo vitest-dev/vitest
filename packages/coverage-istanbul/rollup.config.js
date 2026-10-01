@@ -1,5 +1,4 @@
 import { builtinModules, createRequire } from 'node:module'
-import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { join } from 'pathe'
@@ -12,6 +11,7 @@ const pkg = require('./package.json')
 
 const entries = {
   index: 'src/index.ts',
+  browser: 'src/browser.ts',
   provider: 'src/provider.ts',
 }
 
@@ -20,9 +20,6 @@ const external = [
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
-
-  // We bundle istanbul-lib-instrument but don't want to bundle its babel dependency
-  '@babel/core',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -31,11 +28,6 @@ const plugins = [
   ...dtsUtils.isolatedDecl(),
   nodeResolve(),
   json(),
-  commonjs({
-    // "istanbul-lib-source-maps > @jridgewell/trace-mapping" is not CJS
-    // "istanbul-lib-instrument > @jridgewell/trace-mapping" is not CJS
-    esmExternals: ['@jridgewell/trace-mapping'],
-  }),
   oxc({
     transform: { target: 'node20' },
   }),
@@ -61,16 +53,5 @@ export default defineConfig(() => [
     watch: false,
     external,
     plugins: dtsUtils.dts(),
-    onLog(level, log, handler) {
-      // we don't control the source of "istanbul-lib-coverage"
-      if (
-        level === 'warn'
-        && log.exporter === 'istanbul-lib-coverage'
-        && log.message.includes('"Range" is imported')
-      ) {
-        return
-      }
-      handler(level, log)
-    },
   },
 ])

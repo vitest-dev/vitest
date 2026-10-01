@@ -2,17 +2,20 @@ import { expect, test } from 'vitest'
 import { runInlineTests as base } from '../../test-utils'
 
 test('does not report leaks when disabled', async () => {
-  const { stdout, stderr } = await runInlineTests({
-    'packages/example/test/example.test.ts': `
+  const { stdout, stderr } = await runInlineTests(
+    {
+      'packages/example/test/example.test.ts': `
       test('leaks', () => {
         setTimeout(() => {}, 100_000)
         setInterval(() => {}, 100_000)
         new Promise((resolve) => {})
       })
     `,
-  }, {
-    detectAsyncLeaks: false,
-  })
+    },
+    {
+      detectAsyncLeaks: false,
+    },
+  )
 
   expect.soft(stdout).not.toContain('Leak')
   expect.soft(stderr).toBe('')
@@ -212,35 +215,39 @@ test('fetch', async () => {
   `)
 })
 
-test('fs handle', async () => {
+test('fs watcher', async () => {
   const { stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
-      import { readFile } from 'node:fs'
+      import { watch } from 'node:fs'
 
-      test('leaking fs handle', () => {
-        readFile(import.meta.filename, () => {});
+      test('leaking fs watcher', () => {
+        watch(import.meta.filename, () => {});
       })
     `,
     'packages/example/test/example-2.test.ts': `
-      import { readFile } from 'node:fs'
+      import { watch } from 'node:fs'
 
-      test('not a leak', async () => {
-        await new Promise(resolve => readFile(import.meta.filename, () => { resolve() }));
+      test('not a leak', () => {
+        watch(import.meta.filename, () => {}).close();
       })
     `,
   })
 
-  // This might be racy. Sometimes readFile fires two FSREQCALLBACK's, sometimes just one.
-  expect(stderr).toContain(`\
-FSREQCALLBACK leaking in packages/example/test/example.test.ts
-  3|
-  4|       test('leaking fs handle', () => {
-  5|         readFile(import.meta.filename, () => {});
-   |         ^
-  6|       })
-  7|
- ❯ packages/example/test/example.test.ts:5:9
-`)
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    FSEVENTWRAP leaking in packages/example/test/example.test.ts
+      3|
+      4|       test('leaking fs watcher', () => {
+      5|         watch(import.meta.filename, () => {});
+       |         ^
+      6|       })
+      7|
+     ❯ packages/example/test/example.test.ts:5:9
+
+    "
+  `)
 })
 
 test('http server', async () => {
@@ -282,15 +289,16 @@ test('http server', async () => {
 })
 
 test('leak in project setup', async () => {
-  const { stdout, stderr } = await runInlineTests({
-    'packages/first/test/example-1.test.ts': `
+  const { stdout, stderr } = await runInlineTests(
+    {
+      'packages/first/test/example-1.test.ts': `
       import { test } from 'vitest';
 
       test('leaking timeout', () => {
         setTimeout(() => {}, 100_000)
       })
     `,
-    'packages/second/test/example-2.test.ts': `
+      'packages/second/test/example-2.test.ts': `
       import { test } from 'vitest';
       import source from '../src/source'
 
@@ -298,12 +306,14 @@ test('leak in project setup', async () => {
         source()
       })
     `,
-    'packages/second/src/source.ts': `
+      'packages/second/src/source.ts': `
       export default function source() {
         setTimeout(() => {}, 100_000)
       }
     `,
-  }, { projects: ['packages/*'] })
+    },
+    { projects: ['packages/*'] },
+  )
 
   expect.soft(stdout).toContain('Leaks  2 leak')
 
@@ -334,8 +344,49 @@ test('leak in project setup', async () => {
   `)
 })
 
+test('pipe wrap', async () => {
+  const { stdout, stderr } = await runInlineTests(
+    {
+      'packages/example/test/example.test.ts': `
+      import { spawn } from 'node:child_process'
+
+      test('not a leak', () => {
+        void process.stdin
+      })
+
+      test('leaking pipe', () => {
+        spawn(process.execPath, ['-e', 'process.stdin.resume()'], { stdio: ['pipe', 'ignore', 'ignore'] }).unref()
+      })
+    `,
+    },
+    { pool: 'forks' },
+  )
+
+  expect.soft(stdout).toContain('Leaks  1 leak')
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    PIPEWRAP leaking in packages/example/test/example.test.ts
+      7|
+      8|       test('leaking pipe', () => {
+      9|         spawn(process.execPath, ['-e', 'process.stdin.resume()'], { stdio:…
+       |         ^
+     10|       })
+     11|
+     ❯ packages/example/test/example.test.ts:9:9
+
+    "
+  `)
+})
+
 async function runInlineTests(...params: Parameters<typeof base>) {
-  const result = await base(params[0], { globals: true, detectAsyncLeaks: true, ...params[1] }, params[2])
+  const result = await base(
+    params[0],
+    { globals: true, detectAsyncLeaks: true, pool: 'forks', ...params[1] },
+    params[2],
+  )
 
   return { ...result, stderr: trimWhitespace(result.stderr) }
 }
@@ -343,6 +394,6 @@ async function runInlineTests(...params: Parameters<typeof base>) {
 function trimWhitespace(value: string) {
   return value
     .split('\n')
-    .map(line => line.replace(/[ \t]+$/g, ''))
+    .map((line) => line.replace(/[ \t]+$/g, ''))
     .join('\n')
 }

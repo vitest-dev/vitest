@@ -9,11 +9,9 @@ import { instances, providers, provider } from '../../settings'
 
 // ignore https errors due to self-signed certificate from plugin-basic-ssl
 // https://playwright.dev/docs/api/class-browser#browser-new-context-option-ignore-https-errors
-// https://webdriver.io/docs/configuration/#strictssl and acceptInsecureCerts in https://webdriver.io/docs/api/browser/#properties
 const configuredProvider = (function () {
   switch (provider.name) {
     case 'playwright': return providers.playwright()
-    case 'webdriverio': return providers.webdriverio({ strictSSL: false, capabilities: { acceptInsecureCerts: true } })
     default: {
       throw new Error(`Invalid provider: ${provider.name}`)
     }
@@ -25,8 +23,11 @@ export default defineConfig({
     !!process.env.TEST_HTTPS && basicSsl(),
   ],
   test: {
+    // below the OS ephemeral port range (32768+ on Linux): a kernel-assigned
+    // outbound socket holding the fixed port would make Vite silently bind
+    // port+1 and fail the exact-port assertions
+    api: process.env.TEST_HTTPS ? 31122 : 31133,
     browser: {
-      api: process.env.TEST_HTTPS ? 51122 : 51133,
       enabled: true,
       provider: configuredProvider,
       instances,

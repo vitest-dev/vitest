@@ -20,3 +20,15 @@ test('can run custom pools with Vitest', async () => {
   expect(vitest.stdout).toContain('Test Files  2 passed')
   expect(vitest.stdout).toContain('Tests  2 passed')
 })
+
+test('custom pool can deliver the first message while the worker registers its listener', async () => {
+  const vitest = await runVitest({
+    root: './fixtures/custom-pool-sync-transport',
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(vitest.stderr).toBe('')
+  expect(vitest.stdout).toContain('✓ |sync-transport-pool-test| tests/basic.spec.ts')
+  expect(vitest.stdout).toContain('Test Files  1 passed')
+  expect(vitest.stdout).toContain('Tests  1 passed')
+})

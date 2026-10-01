@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import type { TaskPopulated, Test } from '@vitest/runner'
+import type { TaskPopulated, Test } from '../../runtime/runner/types'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
@@ -9,8 +9,9 @@ import {
   GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest } from '@vitest/runner'
+import { getCurrentTest } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
+import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'
 import './setup'
 
@@ -23,8 +24,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
     if (_test) {
       // @ts-expect-error internal
       return assert.withTest(_test) as Assertion
-    }
-    else {
+    } else {
       return assert
     }
   }) as ExpectStatic
@@ -32,7 +32,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
   expect.getState = () => getState<MatcherState>(expect)
-  expect.setState = state => setState(state as Partial<MatcherState>, expect)
+  expect.setState = (state) => setState(state as Partial<MatcherState>, expect)
 
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
@@ -49,18 +49,15 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
       get testPath() {
         return getWorkerState().filepath
       },
-      currentTestName: test
-        ? test.fullTestName ?? ''
-        : globalState.currentTestName,
+      currentTestName: test ? (test.fullTestName ?? '') : globalState.currentTestName,
     },
     expect,
   )
 
   expect.assert = chai.assert
   // @ts-expect-error untyped
-  expect.extend = matchers => chai.expect.extend(expect, matchers)
-  expect.addEqualityTesters = customTesters =>
-    addCustomEqualityTesters(customTesters)
+  expect.extend = (matchers) => chai.expect.extend(expect, matchers)
+  expect.addEqualityTesters = (customTesters) => addCustomEqualityTesters(customTesters)
 
   expect.soft = (...args) => {
     // @ts-expect-error private soft access
@@ -70,9 +67,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   expect.poll = createExpectPoll(expect)
 
   expect.unreachable = (message?: string) => {
-    chai.assert.fail(
-      `expected${message ? ` "${message}" ` : ' '}not to be reached`,
-    )
+    chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
   }
 
   function assertions(expected: number) {
@@ -108,6 +103,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   expect.extend(customMatchers)
+  expect.extend(benchMatchers)
 
   return expect
 }

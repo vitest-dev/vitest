@@ -87,6 +87,7 @@ Tests in these projects will run in this order:
 
  1. flaky |> runs after slow and fast alone
 ```
+
 :::
 
 ## sequence.shuffle
@@ -99,13 +100,15 @@ If you want files and tests to run randomly, you can enable it with this option,
 
 Vitest usually uses cache to sort tests, so long-running tests start earlier, which makes tests run faster. If your files and tests run in random order, you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another test run previously.
 
-### sequence.shuffle.files {#sequence-shuffle-files}
+### sequence.shuffle.files <CRoot /> {#sequence-shuffle-files}
 
 - **Type:** `boolean`
 - **Default:** `false`
 - **CLI:** `--sequence.shuffle.files`, `--sequence.shuffle.files=false`
 
 Whether to randomize files, be aware that long running tests will not start earlier if you enable this option.
+
+Because file ordering is shared across [projects](/guide/projects), this option is resolved from the root config only. A project can still randomize its own tests with [`sequence.shuffle.tests`](#sequence-shuffle-tests).
 
 ### sequence.shuffle.tests {#sequence-shuffle-tests}
 
@@ -124,7 +127,7 @@ Whether to randomize tests.
 If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
 
 ::: warning
-When you run tests with `sequence.concurrent` and `expect.requireAssertions` set to `true`, you should use [local expect](/guide/test-context.html#expect) instead of the global one. Otherwise, this may cause false negatives in [some situations (#8469)](https://github.com/vitest-dev/vitest/issues/8469).
+When you run tests with `sequence.concurrent` and `expect.requireAssertions` set to `true`, you should use [local expect](/guide/test-context#expect) instead of the global one. Otherwise, this may cause false negatives in [some situations (#8469)](https://github.com/vitest-dev/vitest/issues/8469).
 :::
 
 ## sequence.seed <CRoot />
@@ -154,7 +157,7 @@ This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is 
 ## sequence.setupFiles {#sequence-setupfiles}
 
 - **Type:** `'list' | 'parallel'`
-- **Default:** `'parallel'`
+- **Default:** `'list'`
 - **CLI:** `--sequence.setupFiles=<value>`
 
 Changes the order in which setup files are executed.

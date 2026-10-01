@@ -9,7 +9,7 @@ const NPM_BUILTIN_NAMESPACE = 'npm:'
 // Supported by Bun
 const BUN_BUILTIN_NAMESPACE = 'bun:'
 // Some runtimes like Bun injects namespaced modules here, which is not a node builtin
-const nodeBuiltins = builtinModules.filter(id => !id.includes(':'))
+const nodeBuiltins = builtinModules.filter((id) => !id.includes(':'))
 
 const { bun: isBun, deno: isDeno } = process.versions
 
@@ -24,7 +24,7 @@ export function isBuiltin(id: string): boolean {
   return isNodeBuiltin(id)
 }
 
-export function isNodeBuiltin(id: string): boolean {
+function isNodeBuiltin(id: string): boolean {
   if (id.startsWith(NODE_BUILTIN_NAMESPACE)) {
     return true
   }
@@ -43,9 +43,9 @@ export function toBuiltin(id: string): string {
     id = id.slice(browserExternalLength)
   }
   if (
-    id.startsWith(NPM_BUILTIN_NAMESPACE)
-    || id.startsWith(BUN_BUILTIN_NAMESPACE)
-    || id.startsWith(NODE_BUILTIN_NAMESPACE)
+    id.startsWith(NPM_BUILTIN_NAMESPACE) ||
+    id.startsWith(BUN_BUILTIN_NAMESPACE) ||
+    id.startsWith(NODE_BUILTIN_NAMESPACE)
   ) {
     return id
   }

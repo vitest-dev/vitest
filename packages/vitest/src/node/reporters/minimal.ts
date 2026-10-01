@@ -1,3 +1,4 @@
+import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { DefaultReporterOptions } from './default'
 import type { TestCase, TestModule, TestModuleState } from './reported-tasks'
@@ -7,7 +8,14 @@ export class MinimalReporter extends DefaultReporter {
   renderSucceed = false
 
   constructor(options: DefaultReporterOptions = {}) {
-    super({ silent: 'passed-only', ...options, summary: false })
+    super({ ...options, summary: false })
+  }
+
+  onInit(ctx: Vitest): void {
+    if (this.silent == null && !ctx.config.providedOptions.silent) {
+      this.silent = 'passed-only'
+    }
+    super.onInit(ctx)
   }
 
   onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
@@ -29,5 +37,3 @@ export class MinimalReporter extends DefaultReporter {
     }
   }
 }
-
-export { MinimalReporter as AgentReporter }

@@ -12,12 +12,10 @@ import { getWorkerState } from '../runtime/utils'
 export { environments as builtinEnvironments } from '../integrations/env/index'
 export { populateGlobal } from '../integrations/env/utils'
 export { VitestNodeSnapshotEnvironment as VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
-export type {
-  Environment,
-  EnvironmentReturn,
-  VmEnvironmentReturn,
-} from '../types/environment'
-export type { VitestRunner, VitestRunnerConfig } from '@vitest/runner'
+export type { SerializedConfig } from '../runtime/config'
+
+export type { VitestRunner } from '../runtime/runner/types'
+export type { Environment, EnvironmentReturn, VmEnvironmentReturn } from '../types/environment'
 export type { SnapshotEnvironment } from '@vitest/snapshot/environment'
 
 // #region internal

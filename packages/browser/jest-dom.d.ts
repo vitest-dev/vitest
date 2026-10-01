@@ -1,9 +1,9 @@
 // Disable automatic exports.
 
-import { ARIARole } from './aria-role.ts'
+import { ARIARole } from './aria-role.js'
 import { Locator, ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
-export interface TestingLibraryMatchers<E, R> {
+export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unknown> {
   /**
    * @description
    * Assert whether an element is present in the document or not.
@@ -266,17 +266,39 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(noClasses).not.toHaveClass()
    * @see https://vitest.dev/api/browser/assertions#tohaveclass
    */
-  toHaveClass(...classNames:
-   | (string | RegExp)[]
-   | [string, options?: {exact: boolean}]
-   | [string, string, options?: {exact: boolean}]
-   | [string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, string, string, options?: {exact: boolean}]
-   | [string, string, string, string, string, string, string, string, string, options?: {exact: boolean}]
+  toHaveClass(
+    ...classNames:
+      | (string | RegExp)[]
+      | [string, options?: { exact: boolean }]
+      | [string, string, options?: { exact: boolean }]
+      | [string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, string, string, options?: { exact: boolean }]
+      | [string, string, string, string, string, string, string, options?: { exact: boolean }]
+      | [
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          options?: { exact: boolean },
+        ]
+      | [
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          options?: { exact: boolean },
+        ]
   ): R
   /**
    * @description
@@ -379,6 +401,22 @@ export interface TestingLibraryMatchers<E, R> {
   toHaveStyle(css: string | Partial<CSSStyleDeclaration>): R
   /**
    * @description
+   * Validate that the given element's text content matches the provided string exactly.
+   *
+   * Supports elements, but also text nodes and fragments.
+   *
+   * If you wish to perform a partial check or use a RegExp, use `toMatchTextContent` instead.
+   * @example
+   * <span data-testid="text-content">Text Content</span>
+   *
+   * const element = page.getByTestId('text-content')
+   * await expect.element(element).toHaveTextContent('Text Content')
+   * await expect.element(element).not.toHaveTextContent('Content')
+   * @see https://vitest.dev/api/browser/assertions#tohavetextcontent
+   */
+  toHaveTextContent(text: string | number, options?: { normalizeWhitespace: boolean }): R
+  /**
+   * @description
    * Check whether the given element has a text content or not.
    *
    * When a string argument is passed through, it will perform a partial case-sensitive match to the element
@@ -391,18 +429,15 @@ export interface TestingLibraryMatchers<E, R> {
    * <span data-testid="text-content">Text Content</span>
    *
    * const element = page.getByTestId('text-content')
-   * await expect.element(element).toHaveTextContent('Content')
+   * await expect.element(element).toMatchTextContent('Content')
    * // to match the whole content
-   * await expect.element(element).toHaveTextContent(/^Text Content$/)
+   * await expect.element(element).toMatchTextContent(/^Text Content$/)
    * // to use case-insensitive match
-   * await expect.element(element).toHaveTextContent(/content$/i)
-   * await expect.element(element).not.toHaveTextContent('content')
-   * @see https://vitest.dev/api/browser/assertions#tohavetextcontent
+   * await expect.element(element).toMatchTextContent(/content$/i)
+   * await expect.element(element).not.toMatchTextContent('content')
+   * @see https://vitest.dev/api/browser/assertions#tomatchtextcontent
    */
-  toHaveTextContent(
-    text: string | number | RegExp,
-    options?: {normalizeWhitespace: boolean},
-  ): R
+  toMatchTextContent(text: string | number | RegExp, options?: { normalizeWhitespace: boolean }): R
   /**
    * @description
    * Check whether the given form element has the specified value.
@@ -469,7 +504,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.getByTestId('logo')).toHaveAccessibleDescription('The logo of Our Company')
    * @see https://vitest.dev/api/browser/assertions#tohaveaccessibledescription
    */
-  toHaveAccessibleDescription(text?: string | RegExp | E): R
+  toHaveAccessibleDescription(text?: string | RegExp | T): R
 
   /**
    * @description
@@ -508,7 +543,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * @see https://vitest.dev/api/browser/assertions#tohaveaccessibleerrormessage
    */
-  toHaveAccessibleErrorMessage(text?: string | RegExp | E): R
+  toHaveAccessibleErrorMessage(text?: string | RegExp | T): R
 
   /**
    * @description
@@ -539,7 +574,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.getByTestId('input-title')).toHaveAccessibleName()
    * @see https://vitest.dev/api/browser/assertions#tohaveaccessiblename
    */
-  toHaveAccessibleName(text?: string | RegExp | E): R
+  toHaveAccessibleName(text?: string | RegExp | T): R
   /**
    * @description
    * This allows you to assert that an element has the expected
@@ -752,7 +787,7 @@ export interface TestingLibraryMatchers<E, R> {
    * @see https://vitest.dev/guide/browser/aria-snapshots
    * @see https://vitest.dev/api/expect#tomatchariasnapshot
    */
-  toMatchAriaSnapshot: () => void
+  toMatchAriaSnapshot(): R
   /**
    * @experimental
    * @description
@@ -783,5 +818,5 @@ export interface TestingLibraryMatchers<E, R> {
    * @see https://vitest.dev/guide/browser/aria-snapshots
    * @see https://vitest.dev/api/expect#tomatchariaInlinesnapshot
    */
-  toMatchAriaInlineSnapshot: (inlineSnapshot?: string) => void
+  toMatchAriaInlineSnapshot(inlineSnapshot?: string): R
 }

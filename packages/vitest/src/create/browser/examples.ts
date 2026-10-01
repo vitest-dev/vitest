@@ -68,7 +68,7 @@ import { render } from 'vitest-browser-vue'
 import HelloWorld from './HelloWorld.vue'
 
 test('renders name', async () => {
-  const { getByText } = render(HelloWorld, {
+  const { getByText } = await render(HelloWorld, {
     props: { name: 'Vitest' },
   })
   await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
@@ -98,7 +98,7 @@ import { render } from 'vitest-browser-svelte'
 import HelloWorld from './HelloWorld.svelte'
 
 test('renders name', async () => {
-  const { getByText } = render(HelloWorld, { name: 'Vitest' })
+  const { getByText } = await render(HelloWorld, { name: 'Vitest' })
   await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
@@ -340,8 +340,7 @@ export async function generateExampleFiles(framework: string, lang: 'ts' | 'js')
 
   if (isJSX && lang === 'ts') {
     fileName = fileName.replace('.jsx', '.tsx')
-  }
-  else if (fileName.endsWith('.js') && lang === 'ts') {
+  } else if (fileName.endsWith('.js') && lang === 'ts') {
     fileName = fileName.replace('.js', '.ts')
   }
 

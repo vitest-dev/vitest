@@ -52,7 +52,7 @@ export function runCollapseNode(id: string) {
 export function runCollapseAllTask() {
   // collapse all nodes
   collapseAllNodes(explorerTree.root.tasks)
-  const entries = [...uiEntries.value.filter(isFileNode)]
+  const entries = uiEntries.value.filter(isFileNode)
   collapseAllNodes(entries)
   // collapse all nodes
   openedTreeItems.value = []

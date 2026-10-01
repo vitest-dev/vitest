@@ -8,8 +8,7 @@ async function teardownWindow(win: {
   if (win.close && win.happyDOM.abort) {
     await win.happyDOM.abort()
     win.close()
-  }
-  else {
+  } else {
     win.happyDOM.cancelAsync()
   }
 }
@@ -81,8 +80,8 @@ export default <Environment>{
     return {
       async teardown(global) {
         await teardownWindow(win)
-        keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => (global[k] = v))
+        keys.forEach((key) => delete global[key])
+        originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }
   },
