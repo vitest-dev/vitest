@@ -1,7 +1,6 @@
 import type { DevEnvironment } from 'vite'
 import type { Vitest } from '../node/core'
 import type { ModuleGraphData } from '../types/general'
-import { isWindows } from './env'
 import { getTestFileEnvironment } from './environments'
 
 export interface ModuleGraphNode {
@@ -113,11 +112,4 @@ export function getEnvironmentModuleGraph(
 
 function clearId(id?: string | null) {
   return id?.replace(/\?v=\w+$/, '') || ''
-}
-
-export function normalizeId(id: string): string {
-  if (id.startsWith('/@fs/')) {
-    id = id.slice(isWindows ? 5 : 4)
-  }
-  return id
 }

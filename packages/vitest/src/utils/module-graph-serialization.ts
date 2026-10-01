@@ -2,7 +2,7 @@ import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { TestProject } from '../node/project'
 import type { ModuleGraphData } from '../types/general'
 import type { ModuleGraphEnvironment, ModuleGraphNode, ModuleGraphProject } from './graph'
-import { getEnvironmentModuleGraph, normalizeId } from './graph'
+import { getEnvironmentModuleGraph } from './graph'
 
 export type SerializedEnvironmentModuleNode = [
   id: number,
@@ -172,7 +172,7 @@ function createModuleGraphShell(
       browser:
         browserCacheDir != null ? { vite: { config: { cacheDir: browserCacheDir } } } : undefined,
       _resolver: {
-        wasExternalized: (id) => external.get(normalizeId(id)) ?? false,
+        wasExternalized: (id) => external.get(id) ?? false,
       },
     },
     environment: {
