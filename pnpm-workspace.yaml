@@ -1,6 +1,7 @@
 catalogMode: prefer
 
 catalogPrune: true
+ignoreWorkspaceCycles: true
 ignoreWorkspaceRootCheck: true
 minimumReleaseAgeExcludePrune: true
 shellEmulator: true
