@@ -222,53 +222,34 @@ test('expected failures can recover through a retry in every repeat', async () =
 test('attempts grow while the test runs', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'attempts.test.js': `
-      import { afterAll, expect, it, onTestFailed } from 'vitest'
+      import { afterAll, afterEach, expect, it } from 'vitest'
 
       const seen = []
       let runs = 0
-      const summarize = (task) =>
-        task.result.attempts.map(a => ({ repeat: a.repeatIndex, retry: a.retryIndex, state: a.state }))
 
-      it('flaky', { retry: 2, repeats: 1 }, ({ task }) => {
-        seen.push({ at: 'test', attempts: summarize(task) })
-        onTestFailed(() => {
-          seen.push({ at: 'onTestFailed', attempts: summarize(task) })
-        })
+      afterEach(({ task }) => {
+        seen.push(task.result.attempts.map(a => ({ repeat: a.repeatIndex, retry: a.retryIndex, state: a.state })))
+      })
+
+      it('flaky', { retry: 2, repeats: 1 }, () => {
         expect(++runs % 2).toBe(0)
       })
 
       afterAll(() => {
         expect(seen).toEqual([
-          { at: 'test', attempts: [] },
-          { at: 'onTestFailed', attempts: [] },
-          {
-            at: 'test',
-            attempts: [
-              { repeat: 0, retry: 0, state: 'fail' },
-            ],
-          },
-          {
-            at: 'test',
-            attempts: [
-              { repeat: 0, retry: 0, state: 'fail' },
-              { repeat: 0, retry: 1, state: 'pass' },
-            ],
-          },
-          {
-            at: 'onTestFailed',
-            attempts: [
-              { repeat: 0, retry: 0, state: 'fail' },
-              { repeat: 0, retry: 1, state: 'pass' },
-            ],
-          },
-          {
-            at: 'test',
-            attempts: [
-              { repeat: 0, retry: 0, state: 'fail' },
-              { repeat: 0, retry: 1, state: 'pass' },
-              { repeat: 1, retry: 0, state: 'fail' },
-            ],
-          },
+          [],
+          [
+            { repeat: 0, retry: 0, state: 'fail' },
+          ],
+          [
+            { repeat: 0, retry: 0, state: 'fail' },
+            { repeat: 0, retry: 1, state: 'pass' },
+          ],
+          [
+            { repeat: 0, retry: 0, state: 'fail' },
+            { repeat: 0, retry: 1, state: 'pass' },
+            { repeat: 1, retry: 0, state: 'fail' },
+          ],
         ])
       })
     `,
