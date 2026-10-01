@@ -24,13 +24,6 @@ export type SerializedEnvironmentModuleNode = [
 
 // What `getTestFileModuleGraph` reads, satisfied by live Vite objects and by the serialized shell.
 
-// subset of `EnvironmentModuleNode`
-export interface ModuleGraphQueryNode {
-  id: string | null
-  file: string | null
-  importedModules: Set<ModuleGraphQueryNode>
-}
-
 // subset of `TestProject`
 export interface ModuleGraphQueryProject {
   config: {
@@ -44,4 +37,11 @@ export interface ModuleGraphQueryProject {
 // subset of `DevEnvironment`
 export interface ModuleGraphQueryEnvironment {
   moduleGraph: { getModuleById: (id: string) => ModuleGraphQueryNode | undefined }
+}
+
+// subset of `EnvironmentModuleNode`
+export interface ModuleGraphQueryNode {
+  id: string | null
+  file: string | null
+  importedModules: Set<ModuleGraphQueryNode>
 }
