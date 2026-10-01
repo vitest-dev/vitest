@@ -13,8 +13,8 @@ import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
 import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
-import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph.js'
-import { deriveModuleGraphData } from '../../../../packages/vitest/src/utils/module-graph-serialization.js'
+import { getModuleGraph } from '../../../../packages/vitest/src/node/module-graph.js'
+import { getSerializedTestFileModuleGraph } from '../../../../packages/vitest/src/utils/module-graph/serialized.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -529,7 +529,11 @@ function getHtmlReportModuleGraph(ctx: Vitest) {
   const moduleGraphs = Object.fromEntries(
     getSortedFiles(ctx).map((file) => {
       const projectModules = metadata.environmentModules[file.projectName || '']
-      const graph = deriveModuleGraphData(projectModules, file.filepath, file.viteEnvironment)
+      const graph = getSerializedTestFileModuleGraph(
+        projectModules,
+        file.filepath,
+        file.viteEnvironment,
+      )
       return [file.filepath, graph] as const
     }),
   )

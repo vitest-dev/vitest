@@ -1,54 +1,7 @@
-import type { DevEnvironment } from 'vite'
-import type { Vitest } from '../node/core'
-import type { ModuleGraphData } from '../types/general'
-import { getTestFileEnvironment } from './environments'
+import type { ModuleGraphData } from '../../types/general'
+import type { ModuleGraphEnvironment, ModuleGraphNode, ModuleGraphProject } from './types'
 
-export interface ModuleGraphNode {
-  id: string | null
-  file: string | null
-  importedModules: Set<ModuleGraphNode>
-}
-
-export interface ModuleGraphProject {
-  config: {
-    setupFiles: string[]
-    browser: { enabled: boolean }
-  }
-  browser?: { vite: { config: { cacheDir: string } } }
-  _resolver: { wasExternalized: (id: string) => string | false }
-}
-
-export interface ModuleGraphEnvironment {
-  moduleGraph: { getModuleById: (id: string) => ModuleGraphNode | undefined }
-}
-
-export async function getModuleGraph(
-  ctx: Vitest,
-  projectName: string,
-  testFilePath: string,
-  viteEnvironment?: string,
-): Promise<ModuleGraphData> {
-  const project = ctx.getProjectByName(projectName)
-  const browser = project.config.browser.enabled
-
-  let environment: DevEnvironment | undefined
-
-  if (viteEnvironment) {
-    environment = project.vite.environments[viteEnvironment]
-  } else {
-    environment =
-      project.config.experimental.viteModuleRunner === false
-        ? project.vite.environments.__vitest__
-        : getTestFileEnvironment(project, testFilePath, browser)
-  }
-
-  if (!environment) {
-    throw new Error(`Cannot find environment for ${testFilePath}`)
-  }
-  return getEnvironmentModuleGraph(project, environment, testFilePath)
-}
-
-export function getEnvironmentModuleGraph(
+export function getTestFileModuleGraph(
   project: ModuleGraphProject,
   environment: ModuleGraphEnvironment,
   testFilePath: string,

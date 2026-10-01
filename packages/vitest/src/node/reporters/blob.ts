@@ -1,6 +1,6 @@
 import type { SerializedError } from '@vitest/utils'
 import type { File } from '../../runtime/runner/types'
-import type { SerializedProjectEnvironmentModules } from '../../utils/module-graph-serialization'
+import type { SerializedProjectModules } from '../../utils/module-graph/types'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
@@ -11,10 +11,7 @@ import { sanitizeFilePath } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import {
-  deserializeEnvironmentModuleGraph,
-  serializeProjectModules,
-} from '../../utils/module-graph-serialization'
+import { restoreProjectModules, serializeProjectModules } from '../module-graph'
 
 export interface BlobOptions {
   outputFile?: string
@@ -160,14 +157,7 @@ export async function readBlobs(
         return
       }
 
-      modulesByProject.external.forEach(([id, externalized]) => {
-        project._resolver.externalizeCache.set(id, externalized)
-      })
-
-      Object.entries(modulesByProject.environments).forEach(([environmentName, moduleGraph]) => {
-        const environment = project.vite.environments[environmentName]
-        deserializeEnvironmentModuleGraph(environment, moduleGraph)
-      })
+      restoreProjectModules(project, modulesByProject)
     })
   })
 
@@ -207,5 +197,5 @@ export type MergeReport = [
 ]
 
 interface MergeReportEnvironmentModules {
-  [projectName: string]: SerializedProjectEnvironmentModules
+  [projectName: string]: SerializedProjectModules
 }

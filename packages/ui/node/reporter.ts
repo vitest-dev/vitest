@@ -14,7 +14,7 @@ import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
-import { serializeProjectModules } from '../../vitest/src/utils/module-graph-serialization'
+import { serializeProjectModules } from '../../vitest/src/node/module-graph'
 import { distClientRoot } from './paths'
 
 const gzipAsync = promisify(gzip)
