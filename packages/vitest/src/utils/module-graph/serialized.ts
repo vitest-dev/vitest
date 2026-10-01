@@ -8,7 +8,7 @@ import type {
 } from './types'
 import { getTestFileModuleGraph } from './query'
 
-const emptyModuleGraph: ModuleGraphData = {
+const EMPTY_MODULE_GRAPH: ModuleGraphData = {
   graph: {},
   externalized: [],
   inlined: [],
@@ -20,7 +20,7 @@ export function getSerializedTestFileModuleGraph(
   viteEnvironment?: string,
 ): ModuleGraphData {
   if (!projectModules) {
-    return emptyModuleGraph
+    return EMPTY_MODULE_GRAPH
   }
 
   let serializedGraph: SerializedEnvironmentModuleGraph | undefined
@@ -38,7 +38,7 @@ export function getSerializedTestFileModuleGraph(
   }
 
   if (!serializedGraph) {
-    return emptyModuleGraph
+    return EMPTY_MODULE_GRAPH
   }
 
   const { project, environment } = createModuleGraphShell(projectModules, serializedGraph)
