@@ -3,12 +3,19 @@ import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
+import { getModuleSubgraph } from '../../../../vitest/src/utils/module-subgraph'
 import { StateManager } from './state'
 
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
+  moduleGraph: {
+    [projectName: string]: {
+      [environmentName: string]: ModuleGraphData & {
+        roots: { [testModuleId: string]: string[] }
+      }
+    }
+  }
   unhandledErrors: unknown[]
   testModules: {
     projectName: string
@@ -39,7 +46,12 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
       return metadata.config
     },
     getModuleGraph: async (projectName, id) => {
-      return metadata.moduleGraph[projectName]?.[id]
+      for (const data of Object.values(metadata.moduleGraph[projectName] ?? {})) {
+        if (data.roots[id]) {
+          return getModuleSubgraph(data, data.roots[id])
+        }
+      }
+      return { graph: {}, externalized: [], inlined: [] }
     },
     getUnhandledErrors: async () => {
       return metadata.unhandledErrors

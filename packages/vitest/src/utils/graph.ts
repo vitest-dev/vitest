@@ -1,5 +1,6 @@
 import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
+import type { TestProject } from '../node/project'
 import type { ModuleGraphData } from '../types/general'
 import { getTestFileEnvironment } from './environments'
 
@@ -9,13 +10,18 @@ export async function getModuleGraph(
   testFilePath: string,
   viteEnvironment?: string,
 ): Promise<ModuleGraphData> {
-  const graph: Record<string, string[]> = {}
-  const externalized = new Set<string>()
-  const inlined = new Set<string>()
-
   const project = ctx.getProjectByName(projectName)
-  const browser = project.config.browser.enabled
+  const environment = getModuleGraphEnvironment(project, testFilePath, viteEnvironment)
+  const collector = createModuleGraphCollector(project, environment)
+  collector.add(testFilePath)
+  return collector.getData()
+}
 
+export function getModuleGraphEnvironment(
+  project: TestProject,
+  testFilePath: string,
+  viteEnvironment?: string,
+): DevEnvironment {
   let environment: DevEnvironment | undefined
 
   if (viteEnvironment) {
@@ -24,12 +30,26 @@ export async function getModuleGraph(
     environment =
       project.config.experimental.viteModuleRunner === false
         ? project.vite.environments.__vitest__
-        : getTestFileEnvironment(project, testFilePath, browser)
+        : getTestFileEnvironment(project, testFilePath, project.config.browser.enabled)
   }
 
   if (!environment) {
     throw new Error(`Cannot find environment for ${testFilePath}`)
   }
+  return environment
+}
+
+export function createModuleGraphCollector(
+  project: TestProject,
+  environment: DevEnvironment,
+): {
+  add: (testFilePath: string) => string[]
+  getData: () => ModuleGraphData
+} {
+  const graph: Record<string, string[]> = {}
+  const externalized = new Set<string>()
+  const inlined = new Set<string>()
+  const browser = project.config.browser.enabled
   const seen = new Map<EnvironmentModuleNode, string>()
 
   function get(mod?: EnvironmentModuleNode) {
@@ -60,7 +80,7 @@ export async function getModuleGraph(
       return external
     }
     if (browser && mod.file?.includes(project.browser!.vite.config.cacheDir)) {
-      externalized.add(mod.id)
+      externalized.add(id)
       return id
     }
     inlined.add(id)
@@ -71,15 +91,20 @@ export async function getModuleGraph(
     return id
   }
 
-  get(environment.moduleGraph.getModuleById(testFilePath))
-  project.config.setupFiles.forEach((setupFile) => {
-    get(environment.moduleGraph.getModuleById(setupFile))
-  })
+  // returns graph roots of the test file including setup files
+  function add(testFilePath: string): string[] {
+    return [testFilePath, ...project.config.setupFiles]
+      .map((file) => get(environment.moduleGraph.getModuleById(file)))
+      .filter((id) => id != null)
+  }
 
   return {
-    graph,
-    externalized: Array.from(externalized),
-    inlined: Array.from(inlined),
+    add,
+    getData: () => ({
+      graph,
+      externalized: Array.from(externalized),
+      inlined: Array.from(inlined),
+    }),
   }
 }
 
