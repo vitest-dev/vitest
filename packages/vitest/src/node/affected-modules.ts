@@ -13,6 +13,8 @@ const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime
 
 interface ModuleNode {
   dependencies: string[]
+  // files added by plugins with `addWatchFile`, they are not modules and are never transformed
+  watchedFiles: string[]
   mocked: Set<string>
   failed?: boolean
 }
@@ -228,7 +230,7 @@ class ProjectGraph {
     try {
       return await this.transformModule(id)
     } catch {
-      return { dependencies: [], mocked: new Set(), failed: true }
+      return { dependencies: [], watchedFiles: [], mocked: new Set(), failed: true }
     }
   }
 
@@ -249,12 +251,14 @@ class ProjectGraph {
       id,
       getStaticMocks(this.environment, id, transformed),
     )
-    // ids keep the query, so `./file.txt?raw` is walked as its own module
-    const node = this.environment.moduleGraph.getModuleById(id)
+    // `deps` only has the imports, the other modules were added by plugins with `addWatchFile`
+    const imports = new Set([...(transformed.deps || []), ...(transformed.dynamicDeps || [])])
     const dependencies: string[] = []
-    node?.importedModules.forEach((imported) => {
+    const watchedFiles: string[] = []
+    // ids keep the query, so `./file.txt?raw` is walked as its own module
+    this.environment.moduleGraph.getModuleById(id)?.importedModules.forEach((imported) => {
       if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
-        dependencies.push(imported.id)
+        ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
       }
     })
     redirects.forEach((file) => {
@@ -263,7 +267,11 @@ class ProjectGraph {
       }
     })
 
-    return { dependencies, mocked: new Set(Array.from(replaced, (mockedId) => cleanUrl(mockedId))) }
+    return {
+      dependencies,
+      watchedFiles,
+      mocked: new Set(Array.from(replaced, (mockedId) => cleanUrl(mockedId))),
+    }
   }
 }
 
@@ -350,17 +358,25 @@ class GraphWalk {
     if (node.failed || this.changed.has(cleanUrl(id))) {
       this.changed.add(id)
     }
-    this.dependencies.set(id, node.dependencies)
+    this.dependencies.set(
+      id,
+      node.watchedFiles.length ? [...node.dependencies, ...node.watchedFiles] : node.dependencies,
+    )
+    node.watchedFiles.forEach((file) => this.addImporter(file, id))
     await Promise.all(
       node.dependencies.map((dep) => {
-        let importedBy = this.importers.get(dep)
-        if (!importedBy) {
-          this.importers.set(dep, (importedBy = new Set()))
-        }
-        importedBy.add(id)
+        this.addImporter(dep, id)
         return mocked.has(dep) ? undefined : this.addModule(dep, mocked)
       }),
     )
+  }
+
+  private addImporter(id: string, importer: string): void {
+    let importedBy = this.importers.get(id)
+    if (!importedBy) {
+      this.importers.set(id, (importedBy = new Set()))
+    }
+    importedBy.add(importer)
   }
 }
 

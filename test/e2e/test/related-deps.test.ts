@@ -270,6 +270,131 @@ test.each([
   },
 )
 
+test.each([
+  ['a dynamic import', `test('a', async () => { await import('./src/dep.js') })`],
+  ['import.meta.glob', `import.meta.glob('./src/*.js', { eager: true })\ntest('a', () => {})`],
+])('a module loaded with %s runs the test that loads it', async (_, body) => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'src/dep.js': `import './nested/nested.js'`,
+      'src/nested/nested.js': 'export {}',
+      'a.test.js': `
+        import { test } from 'vitest'
+        ${body}
+      `,
+      'b.test.js': testFile('b'),
+    },
+    { related: ['src/nested/nested.js'] },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+})
+
+describe('files added with addWatchFile', () => {
+  // the plugin builds src/template.js from src/template.html
+  const templatePlugin = (hook: 'load' | 'transform', test = {}) => `
+    import { readFileSync } from 'node:fs'
+    export default {
+      plugins: [{
+        name: 'template',
+        ${hook}(${hook === 'load' ? 'id' : '_code, id'}) {
+          if (id.endsWith('/src/template.js')) {
+            const html = id.replace(/\\.js$/, '.html')
+            this.addWatchFile(html)
+            return \`export default \${JSON.stringify(readFileSync(html, 'utf-8'))}\`
+          }
+        },
+      }],
+      test: ${JSON.stringify(test)},
+    }
+  `
+  const files = {
+    'src/template.html': '<div></div>',
+    'src/template.js': 'export default ""',
+    'src/wrapper.js': `import './template.js'`,
+    'src/other.js': 'export {}',
+    'a.test.js': testFile('a', `import './src/template.js'`),
+    'b.test.js': testFile('b', `import './src/wrapper.js'`),
+    'c.test.js': testFile('c', `import './src/other.js'`),
+  }
+
+  test.each(['load', 'transform'] as const)(
+    'a file added in %s runs the tests that import the module',
+    async (hook) => {
+      const { stderr, testTree } = await runInlineTests(
+        { ...files, 'vitest.config.js': templatePlugin(hook) },
+        { related: ['src/template.html'] },
+      )
+
+      expect(stderr).toBe('')
+      expect(testTree()).toMatchInlineSnapshot(`
+        {
+          "a.test.js": {
+            "a": "passed",
+          },
+          "b.test.js": {
+            "b": "passed",
+          },
+        }
+      `)
+    },
+  )
+
+  // the added file is not a module, so it must not be transformed and fail
+  test.each(['load', 'transform'] as const)(
+    'an unrelated change does not run the tests that import a module with a file added in %s',
+    async (hook) => {
+      const { stderr, testTree } = await runInlineTests(
+        { ...files, 'vitest.config.js': templatePlugin(hook) },
+        { related: ['src/other.js'] },
+      )
+
+      expect(stderr).toBe('')
+      expect(testTree()).toMatchInlineSnapshot(`
+        {
+          "c.test.js": {
+            "c": "passed",
+          },
+        }
+      `)
+    },
+  )
+
+  test('a file added in a plugin is followed for modules served from the fs module cache', async () => {
+    const config = templatePlugin('transform', {
+      fsModuleCache: true,
+      fsModuleCachePath: './node_modules/.vitest-fs-cache',
+    })
+    const cold = await runInlineTests({ ...files, 'vitest.config.js': config })
+    expect(cold.stderr).toBe('')
+    await cold.ctx?.close()
+
+    const { stderr, testTree } = await runVitest({
+      root: cold.root,
+      related: ['src/template.html'],
+    })
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+})
+
 test('imports are followed for modules served from the fs module cache', async () => {
   const cold = await runInlineTests({
     'vitest.config.js': {
