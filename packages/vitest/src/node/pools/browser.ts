@@ -244,7 +244,12 @@ class BrowserPool {
   }
 
   public reject(error: Error): void {
-    this._promise?.reject(error)
+    // if user cancels the test run manually, ignore the error and exit gracefully
+    if (this.project.vitest.isCancelling && error instanceof BrowserConnectionError) {
+      this._promise?.resolve()
+    } else {
+      this._promise?.reject(error)
+    }
     this._promise = undefined
     this.cancel()
   }

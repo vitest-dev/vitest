@@ -464,11 +464,11 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
             ],
             "<root>/second.test.ts": [
               "<root>/util.ts",
-              "<node_modules>/obug/dist/node.js"
+              "<node_modules>/obug/dist/ansi.js"
             ]
           },
           "externalized": [
-            "<node_modules>/obug/dist/node.js"
+            "<node_modules>/obug/dist/ansi.js"
           ],
           "inlined": [
             "<root>/second.test.ts",

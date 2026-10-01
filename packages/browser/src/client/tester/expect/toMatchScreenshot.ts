@@ -9,7 +9,7 @@ import { recordArtifact } from 'vitest'
 import { getBrowserState } from '../../utils'
 import { serializeElement } from '../tester-utils'
 
-const counters = new Map<string, { current: number }>([])
+const counters = new WeakMap<NonNullable<MatcherState['task']>, { current: number }>([])
 
 export default async function toMatchScreenshot(
   this: MatcherState,
@@ -25,13 +25,16 @@ export default async function toMatchScreenshot(
     throw new Error("'toMatchScreenshot' cannot be used without test context")
   }
 
-  const counterName = `${this.task.result?.repeatCount ?? 0}${this.testPath}${this.currentTestName}`
-  let counter = counters.get(counterName)
+  let counter = counters.get(this.task)
 
   if (counter === undefined) {
     counter = { current: 0 }
 
-    counters.set(counterName, counter)
+    counters.set(this.task, counter)
+
+    this.task.context.onTestFinished((ctx) => {
+      counters.delete(ctx.task)
+    })
   }
 
   counter.current += 1

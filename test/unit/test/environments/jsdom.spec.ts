@@ -349,6 +349,17 @@ test('URL.createObjectUrl works properly', () => {
   }).not.toThrow()
 })
 
+test('URL.createObjectURL keeps the Blob bytes', async () => {
+  const url = URL.createObjectURL(new Blob(['hello world'], { type: 'text/plain' }))
+  expect(url).toMatch(/^blob:/)
+
+  const response = await fetch(url)
+  URL.revokeObjectURL(url)
+
+  expect(response.headers.get('content-type')).toBe('text/plain')
+  expect(await response.text()).toBe('hello world')
+})
+
 test('compat classes preserve their .name property', () => {
   expect(URL.name).toBe('URL')
   expect(Request.name).toBe('Request')

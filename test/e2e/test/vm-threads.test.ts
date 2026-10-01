@@ -66,6 +66,52 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// the same module is transformed differently by the client (jsdom) and ssr
+// (node) environments, so a worker running both must not reuse one's script
+// (env names are interpolated so they don't set this file's own environment)
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s does not share compiled modules between vite environments',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests({
+      'env.js': `export const env = '__ENV__'`,
+      'client.test.js': `
+          // @vitest-environment ${'jsdom'}
+          import { expect, test } from 'vitest'
+          import { env } from './env.js'
+
+          test('client', () => {
+            expect(env).toBe('client')
+          })
+        `,
+      'ssr.test.js': `
+          // @vitest-environment ${'node'}
+          import { expect, test } from 'vitest'
+          import { env } from './env.js'
+
+          test('ssr', () => {
+            expect(env).toBe('ssr')
+          })
+        `,
+      'vitest.config.js': `
+          export default {
+            plugins: [{
+              name: 'env-name',
+              transform(code, id) {
+                if (id.endsWith('env.js')) {
+                  return code.replace('__ENV__', this.environment.name)
+                }
+              },
+            }],
+            test: { pool: '${pool}', maxWorkers: 1 },
+          }
+        `,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // vm pools resolve `isolate` to false (isolation comes from a fresh VM
 // context per run request), which used to trigger the "single non-isolated
 // worker receives all files at once" batching with `maxWorkers: 1` — all

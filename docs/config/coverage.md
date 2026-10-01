@@ -5,7 +5,7 @@ outline: deep
 
 # coverage <CRoot /> {#coverage}
 
-You can use [`v8`](/guide/coverage.html#v8-provider), [`istanbul`](/guide/coverage.html#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
+You can use [`v8`](/guide/coverage#v8-provider), [`istanbul`](/guide/coverage#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -47,7 +47,7 @@ It is recommended to pass file extensions in the pattern.
 
 Patterns are matched against each file's path relative to the project root. A pattern with no glob wildcard is treated as a directory and matches everything inside it, so `include: ['src']` is equivalent to `include: ['src/**']`.
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.exclude
 
@@ -58,7 +58,7 @@ See [Including and excluding files from coverage report](/guide/coverage.html#in
 
 List of files excluded from coverage as glob patterns. Patterns are matched the same way as [`coverage.include`](#coverage-include).
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.clean
 
@@ -497,7 +497,7 @@ Specifies the module name or path for the custom coverage provider module. See [
 - **Default:** Automatically inferred from `html`, `html-spa`, or `lcov` coverage reporters
 - **CLI:** `--coverage.htmlDir=<path>`
 
-Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters#html-reporter).
 
 This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
 
