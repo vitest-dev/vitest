@@ -21,8 +21,11 @@ import {
   panels,
 } from '~/composables/navigation'
 import { layoutMode } from '~/composables/params'
-import { activeTraceView } from '~/composables/trace-view'
+import { activeTraceView, initializeTraceView } from '~/composables/trace-view'
 
+// the router's first navigation replaces the URL with its initial value,
+// so restore the trace selection only after it, when this page is set up
+initializeTraceView()
 const dashboardVisible = initializeNavigation()
 
 const onBrowserPanelResizing = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {

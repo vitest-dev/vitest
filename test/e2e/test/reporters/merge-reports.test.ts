@@ -447,7 +447,7 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
         "": {
           "ssr": {
             "modules": {
-              "<node_modules>/obug/dist/node.js": {
+              "<node_modules>/obug/dist/ansi.js": {
                 "external": true,
                 "imports": []
               },
@@ -462,7 +462,7 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
                 "external": false,
                 "imports": [
                   "<root>/util.ts",
-                  "<node_modules>/obug/dist/node.js"
+                  "<node_modules>/obug/dist/ansi.js"
                 ]
               },
               "<root>/sub/format.ts": {

@@ -281,9 +281,7 @@ export function getTraceAttemptLabel(trace: BrowserTraceData) {
 }
 
 // Restore trace URL state once its selected test becomes available.
-initializeTraceView()
-
-function initializeTraceView() {
+export function initializeTraceView() {
   const attemptKey = selectedTraceAttempt.value
   const step = selectedTraceStep.value
   if (!selectedTest.value || (attemptKey == null && step == null)) {
