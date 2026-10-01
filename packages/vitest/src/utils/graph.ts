@@ -54,7 +54,10 @@ function getSharedModuleGraphByEnvironment(
     collectors[environment.name].add(testModule.moduleId)
   }
   return Object.fromEntries(
-    Object.entries(collectors).map(([name, collector]) => [name, collector.data]),
+    Object.entries(collectors).map(([environmentName, collector]) => [
+      environmentName,
+      collector.data,
+    ]),
   )
 }
 
