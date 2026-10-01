@@ -1,0 +1,35 @@
+packages/vitest/src/node/ast-collect.ts
+  s_9d48a2300498d5::t_01071489b946ff 19
+packages/vitest/src/node/core.ts
+  s_9d48a2300498d5::t_aeef9c1f7515bd 44,171,258,326
+packages/vitest/src/node/environments/serverRunner.ts
+  s_9d48a2300498d5::t_06da085de09ed0 3,13,32-38,70,77
+packages/vitest/src/node/environments/transformService.ts
+  s_9d48a2300498d5::t_f65ac7a072fa64 45,57,65-98
+packages/vitest/src/node/plugins/ssrRunnerFixer.ts
+  s_9d48a2300498d5::t_91caee3aeff78f 15
+packages/vitest/src/node/pools/rpc.ts
+  s_9d48a2300498d5::t_c66623ccadf980 14,73-74
+packages/vitest/src/node/project.ts
+  s_9d48a2300498d5::t_d59fbd8245975f 22,64,99,111,535,542,554
+packages/vitest/src/node/specifications.ts
+  s_9d48a2300498d5::t_7b705d039771f2 222-223
+test/e2e/test/caching.test.ts
+  s_9d48a2300498d5::t_2013193f75f171 197-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6e3ea76074ab714d1f8ec89f73e8dd9d68e46980",
+  "prompts": {},
+  "sessions": {
+    "s_9d48a2300498d5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f0914adc3ffeStcly36athmgQ8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
