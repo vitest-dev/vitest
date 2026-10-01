@@ -40,7 +40,9 @@ export function serializeProjectModules(project: TestProject): SerializedProject
   const serialized: SerializedProjectModules = {
     environments: {},
     external: [],
-    setupFiles: project.config.setupFiles,
+    project: {
+      setupFiles: project.config.setupFiles,
+    },
   }
 
   Object.entries(project.vite.environments).forEach(([environmentName, environment]) => {
@@ -48,10 +50,10 @@ export function serializeProjectModules(project: TestProject): SerializedProject
   })
 
   if (project.config.experimental.viteModuleRunner === false) {
-    serialized.defaultEnvironment = '__vitest__'
+    serialized.project.defaultEnvironment = '__vitest__'
   } else if (project.config.browser.enabled) {
-    serialized.defaultEnvironment = 'client'
-    serialized.browserCacheDir = project.browser?.vite.config.cacheDir
+    serialized.project.defaultEnvironment = 'client'
+    serialized.project.browserCacheDir = project.browser?.vite.config.cacheDir
   }
 
   for (const [id, value] of project._resolver.externalizeCache.entries()) {

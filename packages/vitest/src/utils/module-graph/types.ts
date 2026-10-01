@@ -14,10 +14,12 @@ export interface SerializedProjectModules {
   environments: {
     [environmentName: string]: SerializedEnvironmentModuleGraph
   }
-  defaultEnvironment?: string
-  browserCacheDir?: string
   external: [id: string, externalized: string][]
-  setupFiles: string[]
+  project: {
+    setupFiles: string[]
+    defaultEnvironment?: string
+    browserCacheDir?: string
+  }
 }
 
 export interface ModuleGraphNode {

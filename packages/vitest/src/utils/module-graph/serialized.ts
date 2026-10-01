@@ -38,11 +38,11 @@ function createModuleGraphShell(
   }
 
   const external = new Map(projectModules.external)
-  const browserCacheDir = projectModules.browserCacheDir
+  const { setupFiles, browserCacheDir } = projectModules.project
   return {
     project: {
       config: {
-        setupFiles: projectModules.setupFiles,
+        setupFiles,
         browser: { enabled: browserCacheDir != null },
       },
       browser:
@@ -67,7 +67,7 @@ export function getSerializedTestFileModuleGraph(
   }
 
   let serializedGraph: SerializedEnvironmentModuleGraph | undefined
-  const environmentName = viteEnvironment || projectModules.defaultEnvironment
+  const environmentName = viteEnvironment || projectModules.project.defaultEnvironment
   if (environmentName) {
     serializedGraph = projectModules.environments[environmentName]
   } else {
