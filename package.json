@@ -49,7 +49,7 @@
     "@types/node": "24.13.3",
     "@types/semver": "catalog:",
     "bumpp": "^10.4.1",
-    "changelogithub": "^14.0.0",
+    "changelogithub": "^15.0.5",
     "knip": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
