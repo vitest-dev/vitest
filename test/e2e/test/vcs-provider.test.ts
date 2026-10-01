@@ -8,6 +8,10 @@ function affectedSummary(stdout: string) {
   return stdout.split('\n').find((line) => line.includes('Affected'))
 }
 
+function unaffectedModules(stdout: string) {
+  return stdout.split('\n').filter((line) => line.includes('(not affected)'))
+}
+
 test('custom vcsProvider that returns specific files runs only matching tests', async () => {
   const { testTree, stderr, stdout } = await runInlineTests(
     {
@@ -93,6 +97,40 @@ test('related prints how many test files were affected', async () => {
       },
     }
   `)
+  expect(affectedSummary(stdout)).toMatchInlineSnapshot(
+    `"   Affected  1 of 2 test files (related to src/changed.ts)"`,
+  )
+  expect(unaffectedModules(stdout)).toMatchInlineSnapshot(`
+    [
+      " ○ not-related.test.ts (not affected)",
+    ]
+  `)
+})
+
+test('agent reporter does not print unaffected test files', async () => {
+  const { stderr, stdout } = await runInlineTests(
+    {
+      'src/changed.ts': 'export const a = 1',
+      'related.test.ts': `
+      import { a } from './src/changed.ts'
+      import { test, expect } from 'vitest'
+      test('related test', () => {
+        expect(a).toBe(1)
+      })
+    `,
+      'not-related.test.ts': `
+      import { test } from 'vitest'
+      test('not related test', () => {})
+    `,
+    },
+    {
+      related: ['src/changed.ts'],
+      reporters: ['agent'],
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(unaffectedModules(stdout)).toMatchInlineSnapshot(`[]`)
   expect(affectedSummary(stdout)).toMatchInlineSnapshot(
     `"   Affected  1 of 2 test files (related to src/changed.ts)"`,
   )

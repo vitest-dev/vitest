@@ -54,6 +54,9 @@ export class DefaultReporter extends BaseReporter {
     unhandledErrors: ReadonlyArray<SerializedError>,
     reason: TestRunEndReason,
   ): void {
+    if (testModules.length) {
+      this.printUnaffectedTestModules()
+    }
     super.onTestRunEnd(testModules, unhandledErrors, reason)
     this.summary?.onTestRunEnd()
   }

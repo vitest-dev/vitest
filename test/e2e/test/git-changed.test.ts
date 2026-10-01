@@ -34,18 +34,26 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
 })
 
 it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {
-  const { stdout, stderr } = await runVitest({
+  const { stderr, testTree } = await runVitest({
     related: 'src/sourceA.ts',
     root: './fixtures/git-changed/related',
     globals: true,
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('3 passed')
-  expect(stdout).toContain('related.test.ts')
-  expect(stdout).toContain('deep-related-imports.test.ts')
-  expect(stdout).toContain('deep-related-exports.test.ts')
-  expect(stdout).not.toContain('not-related.test.ts')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "deep-related-exports.test.ts": {
+        "values": "passed",
+      },
+      "deep-related-imports.test.ts": {
+        "values": "passed",
+      },
+      "related.test.ts": {
+        "A equals A": "passed",
+      },
+    }
+  `)
 })
 
 it.skipIf(process.env.ECOSYSTEM_CI)(
@@ -69,14 +77,20 @@ it.skipIf(process.env.ECOSYSTEM_CI)(
       (content) => `${content}\n`,
     )
 
-    const { stdout, stderr } = await runVitest({
+    const { stderr, testTree } = await runVitest({
       changed: true,
       root: './fixtures/git-changed/workspace',
     })
 
     expect(stderr).toBe('')
-    expect(stdout).toContain('1 passed')
-    expect(stdout).toContain('packageA')
-    expect(stdout).not.toContain('packageB')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "index.test.js": {
+          "getLetter": {
+            "should return c": "passed",
+          },
+        },
+      }
+    `)
   },
 )

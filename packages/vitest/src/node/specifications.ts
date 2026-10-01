@@ -159,11 +159,14 @@ export class VitestSpecifications {
       affectedByProject.set(project, await this.getAffectedModules(project, projectSpecs, related))
     }
 
-    const affectedSpecs = specs.filter((spec) =>
-      affectedByProject.get(spec.project)!.has(spec.moduleId),
-    )
-    this.vitest._sourceFilterResult = { affected: affectedSpecs.length, total: specs.length }
-    return affectedSpecs
+    const affected: TestSpecification[] = []
+    const unaffected: TestSpecification[] = []
+    for (const spec of specs) {
+      const isAffected = affectedByProject.get(spec.project)!.has(spec.moduleId)
+      ;(isAffected ? affected : unaffected).push(spec)
+    }
+    this.vitest._sourceFilterResult = { total: specs.length, unaffected }
+    return affected
   }
 
   /**

@@ -151,7 +151,7 @@ export class Vitest {
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
-  /** @internal */ _sourceFilterResult?: { affected: number; total: number }
+  /** @internal */ _sourceFilterResult?: { total: number; unaffected: TestSpecification[] }
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ cancelPromise?: Promise<void | void[]>
