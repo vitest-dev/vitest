@@ -1,6 +1,6 @@
 import type { TestFsStructure } from '../../test-utils'
 import { describe, expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
+import { buildTestProjectTree, runInlineTests } from '../../test-utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
 
 const testFilename = 'basic.test.ts'
@@ -33,6 +33,50 @@ function extractScreenshotPath(string: string): string | undefined {
 }
 
 describe('failure screenshots', () => {
+  test.each([false, true])(
+    'captures the document body with shadow body: %s',
+    async (shadowBody) => {
+      const result = await runBrowserTests({
+        [testFilename]: /* ts */ `
+        import { test, expect } from 'vitest'
+
+        test('shadow-body', () => {
+          if (${shadowBody}) {
+            const host = document.createElement('div')
+            document.body.append(host)
+            const shadow = host.attachShadow({ mode: 'open' })
+            const body = document.createElement('body')
+            body.style.display = 'none'
+            shadow.append(body)
+          }
+          expect(1).toBe(2)
+        })
+      `,
+      })
+
+      const artifacts = buildTestProjectTree(result.results, (testCase) =>
+        testCase.artifacts().map((artifact) => ({
+          type: artifact.type,
+          attachments: artifact.attachments?.length,
+        })),
+      )
+      expect(Object.values(artifacts)).toMatchInlineSnapshot(`
+      [
+        {
+          "basic.test.ts": {
+            "shadow-body": [
+              {
+                "attachments": 1,
+                "type": "internal:failureScreenshot",
+              },
+            ],
+          },
+        },
+      ]
+    `)
+    },
+  )
+
   describe('`toMatchScreenshot`', () => {
     test('usually does NOT produce a failure screenshot', async () => {
       const { stderr } = await runBrowserTests({
