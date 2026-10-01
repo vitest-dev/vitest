@@ -239,10 +239,9 @@ describe('jest-expect', () => {
     expect(new Stock('x')).not.toStrictEqual(expect.toBeOneOf([{ type: 'x' }]))
     expect(new Stock('x')).toStrictEqual(expect.toBeOneOf([new Stock('x')]))
 
-    // non-asymmetric usage only sees registered testers
-    // TODO: https://github.com/vitest-dev/vitest/issues/11296
+    // non-asymmetric usage
     expect(new Set(['x'])).toBeOneOf([new Set(['x'])])
-    expect(new Set()).toBeOneOf([new Set(['x'])])
+    expect(new Set()).not.toBeOneOf([new Set(['x'])])
   })
 
   // https://github.com/vitest-dev/vitest/issues/11071
@@ -824,6 +823,20 @@ describe('Map and Set equality', () => {
     expect(new Set(['y'])).not.toBeOneOf(new Set([set]))
     expect(new Set(['x'])).toEqual(expect.toBeOneOf([set]))
     expect(new Set(['y'])).not.toEqual(expect.toBeOneOf([set]))
+  })
+
+  it('toThrow with asymmetric matcher', () => {
+    class DataError extends Error {
+      constructor(public data: unknown) {
+        super('data')
+      }
+    }
+    const fn = () => {
+      throw new DataError(new Set(['x']))
+    }
+
+    expect(fn).toThrow(expect.objectContaining({ data: set }))
+    expect(fn).not.toThrow(expect.objectContaining({ data: new Set(['y']) }))
   })
 
   it('return matchers', () => {
