@@ -387,7 +387,7 @@ test('getApplesCount has some unusual side effects...', () => {
 
 - **Type:** `(sample: Array<any> | Set<any>) => any`
 
-`toBeOneOf` asserts if a value matches any of the values in the provided array or set. Values are compared with the same deep equality as [`toEqual`](#toequal), including testers added with [`expect.addEqualityTesters`](#expect-addequalitytesters).
+`toBeOneOf` asserts if a value matches any of the values in the provided array or set. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 ::: warning EXPERIMENTAL
 Providing a `Set` is an experimental feature and may change in a future release.
@@ -1298,7 +1298,7 @@ test('spy function returns a value two times', () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a certain value at least once. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal), including testers added with [`expect.addEqualityTesters`](#expect-addequalitytesters).
+You can call this assertion to check if a function has successfully returned a certain value at least once. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -1316,7 +1316,7 @@ test('spy function returns a product', () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a certain value when it was last invoked. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal), including testers added with [`expect.addEqualityTesters`](#expect-addequalitytesters).
+You can call this assertion to check if a function has successfully returned a certain value when it was last invoked. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -1335,7 +1335,7 @@ test('spy function returns bananas on a last call', () => {
 
 - **Type:** `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a certain value on a certain call. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal), including testers added with [`expect.addEqualityTesters`](#expect-addequalitytesters).
+You can call this assertion to check if a function has successfully returned a certain value on a certain call. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 The count starts at 1. So, to check the second entry, you would write `.toHaveNthReturnedWith(2, ...)`.
 
@@ -1403,7 +1403,7 @@ test('spy function resolved a value two times', async () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value at least once. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal), including testers added with [`expect.addEqualityTesters`](#expect-addequalitytesters).
+You can call this assertion to check if a function has successfully resolved a certain value at least once. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
@@ -1423,7 +1423,7 @@ test('spy function resolved a product', async () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value when it was last invoked. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal), including testers added with [`expect.addEqualityTesters`](#expect-addequalitytesters).
+You can call this assertion to check if a function has successfully resolved a certain value when it was last invoked. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
@@ -1444,7 +1444,7 @@ test('spy function resolves bananas on a last call', async () => {
 
 - **Type:** `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal), including testers added with [`expect.addEqualityTesters`](#expect-addequalitytesters).
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
