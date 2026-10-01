@@ -10,6 +10,7 @@ import { getSpecificationDocblock } from '../utils/test-helpers'
 import { getStaticMocks, resolveStaticMocks } from './environments/staticMocks'
 
 const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime'])
+const clientEnvironments = new Set(['jsdom', 'happy-dom'])
 
 interface ModuleNode {
   dependencies: string[]
@@ -49,15 +50,16 @@ export class AffectedModulesResolver {
       projectSpecs.push(spec)
     }
 
-    const affectedSpecs = new Set<TestSpecification>()
-    for (const [project, projectSpecs] of specsByProject) {
-      const affected = await this.resolveProject(project, projectSpecs)
-      affected.forEach((spec) => affectedSpecs.add(spec))
-    }
+    const affected = await Promise.all(
+      Array.from(specsByProject, ([project, projectSpecs]) =>
+        this.findAffectedInProject(project, projectSpecs),
+      ),
+    )
+    const affectedSpecs = new Set(affected.flat())
     return specs.filter((spec) => affectedSpecs.has(spec))
   }
 
-  private async resolveProject(
+  private async findAffectedInProject(
     project: TestProject,
     specs: TestSpecification[],
   ): Promise<TestSpecification[]> {
@@ -65,7 +67,41 @@ export class AffectedModulesResolver {
       return specs
     }
 
-    const graph = new ProjectGraph(project, this)
+    // walk the graph of the environment that runs the test, so the run reuses the transforms
+    const environments = await Promise.all(specs.map((spec) => this.getViteEnvironment(spec)))
+    const specsByEnvironment = new Map<DevEnvironment, TestSpecification[]>()
+    specs.forEach((spec, index) => {
+      let environmentSpecs = specsByEnvironment.get(environments[index])
+      if (!environmentSpecs) {
+        specsByEnvironment.set(environments[index], (environmentSpecs = []))
+      }
+      environmentSpecs.push(spec)
+    })
+
+    const affected = await Promise.all(
+      Array.from(specsByEnvironment, ([environment, environmentSpecs]) =>
+        this.findAffectedInEnvironment(project, environment, environmentSpecs),
+      ),
+    )
+    return affected.flat()
+  }
+
+  // mirrors the `viteEnvironment` of the builtin environments, custom ones are only known in the worker
+  private async getViteEnvironment(spec: TestSpecification): Promise<DevEnvironment> {
+    const environments = spec.project.vite.environments
+    if (spec.pool === 'browser') {
+      return environments.ssr
+    }
+    const { environment } = await getSpecificationDocblock(spec)
+    return (clientEnvironments.has(environment.name) && environments.client) || environments.ssr
+  }
+
+  private async findAffectedInEnvironment(
+    project: TestProject,
+    environment: DevEnvironment,
+    specs: TestSpecification[],
+  ): Promise<TestSpecification[]> {
+    const graph = new ProjectGraph(project, environment, this)
     const config = project.config
 
     // setup files are walked without mocks: a mock only applies to the files loaded after it
@@ -99,10 +135,8 @@ export class AffectedModulesResolver {
 
     // mocks from setup files apply to every test file of the project
     const projectMocks = new Set<string>()
-    for (const file of setupFiles) {
-      const { mocked } = await graph.getMocks(file)
-      mocked.forEach((id) => projectMocks.add(id))
-    }
+    const setupMocks = await Promise.all(setupFiles.map((file) => graph.getMocks(file)))
+    setupMocks.forEach(({ mocked }) => mocked.forEach((id) => projectMocks.add(id)))
 
     const specMocks = new Map<TestSpecification, Set<string>>()
     await Promise.all(
@@ -205,18 +239,16 @@ export class AffectedModulesResolver {
 }
 
 /**
- * Transforms every module of a project at most once, no matter how many walks reach it.
+ * Transforms every module of a project's Vite environment at most once, no matter how many walks reach it.
  */
 class ProjectGraph {
   private modules = new Map<string, Promise<ModuleNode | null>>()
-  private environment: DevEnvironment
 
   constructor(
     private project: TestProject,
+    private environment: DevEnvironment,
     private resolver: AffectedModulesResolver,
-  ) {
-    this.environment = project.vite.environments.ssr
-  }
+  ) {}
 
   getModule(id: string): Promise<ModuleNode | null> {
     let node = this.modules.get(id)

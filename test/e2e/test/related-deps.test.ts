@@ -577,6 +577,81 @@ test('a force rerun trigger inside a dot folder runs every test', async () => {
   `)
 })
 
+test.each([
+  ['jsdom', 'comment'],
+  ['happy-dom', 'comment'],
+  ['jsdom', 'config'],
+  ['node', 'comment'],
+  ['edge-runtime', 'comment'],
+])('a test in %s set by a %s is walked in the environment that runs it', async (name, source) => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'src/dep.js': 'export {}',
+    'a.test.js': testFile(
+      'a',
+      `${source === 'comment' ? environmentComment(name) : ''}\nimport './src/dep.js'`,
+    ),
+  })
+  const vitest = await createVitest({
+    root,
+    watch: false,
+    config: false,
+    related: ['src/dep.js'],
+    ...(source === 'config' ? { environment: name } : {}),
+  })
+  onTestFinished(() => vitest.close())
+
+  const specifications = await vitest.getRelevantTestSpecifications()
+  const { environments } = vitest.getRootProject().vite
+  const transformed = (environment: string) =>
+    ['a.test.js', 'src/dep.js'].filter(
+      (file) =>
+        environments[environment].moduleGraph.getModuleById(resolve(root, file))?.transformResult,
+    )
+  expect({
+    affected: specifications.length,
+    client: transformed('client'),
+    ssr: transformed('ssr'),
+  }).toEqual({
+    affected: 1,
+    ...(name === 'jsdom' || name === 'happy-dom'
+      ? { client: ['a.test.js', 'src/dep.js'], ssr: [] }
+      : { client: [], ssr: ['a.test.js', 'src/dep.js'] }),
+  })
+})
+
+test('mocks are applied to tests that run in the client environment', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'src/dep.js': `import './nested.js'`,
+    'src/nested.js': 'export {}',
+    'a.test.js': `
+      ${environmentComment('jsdom')}
+      import { test, vi } from 'vitest'
+      import './src/dep.js'
+
+      vi.mock('./src/dep.js', () => ({}))
+
+      test('a', () => {})
+    `,
+    'b.test.js': testFile('b', `${environmentComment('jsdom')}\nimport './src/dep.js'`),
+    'c.test.js': testFile('c', `import './src/dep.js'`),
+  })
+  const vitest = await createVitest({
+    root,
+    watch: false,
+    config: false,
+    related: ['src/nested.js'],
+  })
+  onTestFinished(() => vitest.close())
+
+  const specifications = await vitest.getRelevantTestSpecifications()
+  expect(specifications.map((spec) => spec.moduleId.slice(root.length + 1)).sort()).toEqual([
+    'b.test.js',
+    'c.test.js',
+  ])
+})
+
 describe('mocked modules', () => {
   // records the files transformed by the project, relative to the root
   const trackTransforms = (config = '{}') => `
