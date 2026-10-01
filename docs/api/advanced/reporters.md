@@ -21,6 +21,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
           - [`onHookEnd(beforeEach)`](#onhookend)
           - [`onHookStart(afterEach)`](#onhookstart)
           - [`onHookEnd(afterEach)`](#onhookend)
+          - [`onTestCaseAttempt`](#ontestcaseattempt) <Version>5.1.0</Version>
         - [`onTestCaseResult`](#ontestcaseresult)
       - [`onHookStart(afterAll)`](#onhookstart)
       - [`onHookEnd(afterAll)`](#onhookend)
@@ -308,6 +309,28 @@ This method is called before the test starts to run or it was skipped. Note that
 ::: warning
 Notice that it's possible to have [`testCase.result()`](/api/advanced/test-case#result) with `passed` or `failed` state already when `onTestCaseReady` is called. This can happen if test was running too fast and both `onTestCaseReady` and `onTestCaseResult` were scheduled to run in the same microtask.
 :::
+
+## onTestCaseAttempt <Version>5.1.0</Version> {#ontestcaseattempt}
+
+```ts
+function onTestCaseAttempt(testCase: TestCase, attempt: TestAttempt): Awaitable<void>
+```
+
+This method is called every time a run of the test finishes, including every [`retry`](/config/retry) and [`repeats`](/api/test#repeats) run. It is called after the `afterEach` hooks of that run, and before `onTestCaseResult` for the last run. Tests that are skipped without running, for example with `test.skip`, do not call it.
+
+The `attempt` argument has the same data as the matching entry in [`testCase.attempts()`](/api/advanced/test-case#attempts). Use it instead of reading the last item of `testCase.attempts()`, because `attempts()` can already include later runs by the time the hook is called, for example when running with `--merge-reports`.
+
+```ts
+import type { Reporter, TestAttempt, TestCase } from 'vitest/node'
+
+export default {
+  onTestCaseAttempt(testCase: TestCase, attempt: TestAttempt) {
+    if (attempt.state === 'failed') {
+      console.log(`${testCase.fullName} failed on retry ${attempt.retryIndex}`)
+    }
+  },
+} satisfies Reporter
+```
 
 ## onTestCaseResult
 
