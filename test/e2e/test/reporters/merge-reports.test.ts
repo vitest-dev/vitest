@@ -557,7 +557,9 @@ async function getSerializedModuleGraph(ctx: Vitest) {
   return normalizeModuleGraphJson(ctx, moduleGraphs)
 }
 
-// the html report stores modules per environment, so keep only what the file reaches
+// read the written html report the way its static client does, to check that sharing one graph
+// per environment loses nothing. The client gets the whole environment's modules and the UI
+// only shows what the file's roots reach, so prune to that before comparing with the live graph.
 function getHtmlReportModuleGraph(ctx: Vitest) {
   const metadata: HTMLReportMetadata = parse(
     gunzipSync(readFileSync(resolve(ctx.config.root, '.vitest/ui/html.meta.json.gz'))).toString(),
