@@ -276,6 +276,9 @@ test('skipping during a retry ends attempts with a skipped attempt', async () =>
 
       let runs = 0
 
+      // |             repeat 0              |  repeat 1  |
+      // | retry 0 -> retry 1 ->  retry 2    |            |
+      // |  fail   ->  skip   -> (not run)   | (not run)  |
       it('skips on retry', { retry: 2, repeats: 1 }, ({ skip }) => {
         if (++runs === 2) {
           skip()
