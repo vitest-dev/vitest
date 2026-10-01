@@ -81,6 +81,7 @@ export type {
   ModuleDiagnostic,
   TaskOptions,
   TestAttempt,
+  TestAttemptState,
   TestCase,
   TestCollection,
   TestDiagnostic,

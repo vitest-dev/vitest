@@ -623,7 +623,8 @@ function buildOptions(task: RunnerTestCase | RunnerTestSuite): TaskOptions {
   }
 }
 
-export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
+export type TestAttemptState = 'skipped' | 'failed' | 'passed'
+export type TestSuiteState = TestAttemptState | 'pending'
 export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
 
@@ -632,7 +633,7 @@ export type TestState = TestResult['state']
  */
 export interface TestAttempt {
   /** The state after applying the test's expected failure option. */
-  readonly state: 'passed' | 'failed' | 'skipped'
+  readonly state: TestAttemptState
   /** Errors produced by this attempt. */
   readonly errors: ReadonlyArray<TestError> | undefined
   /** How long in milliseconds the attempt took to run. */
