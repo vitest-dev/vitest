@@ -3,7 +3,11 @@ import { createVitest } from 'vitest/node'
 import { runInlineTests, useFS } from '#test-utils'
 
 function testFile(name: string, imports = '') {
-  return `${imports}\nimport { test } from 'vitest'\ntest('${name}', () => {})\n`
+  return `
+    ${imports}
+    import { test } from 'vitest'
+    test('${name}', () => {})
+  `
 }
 
 // written this way so the comment is not picked up from this file
@@ -78,7 +82,10 @@ test('a file imported by a global setup runs every test', async () => {
   const { stderr, testTree } = await runInlineTests(
     {
       'vitest.config.js': { test: { globalSetup: ['./global-setup.js'] } },
-      'global-setup.js': `import './src/helper.js'\nexport default () => {}`,
+      'global-setup.js': `
+        import './src/helper.js'
+        export default () => {}
+      `,
       'src/helper.js': 'export {}',
       'a.test.js': testFile('a'),
       'b.test.js': testFile('b'),
@@ -235,10 +242,14 @@ test('a manual mock from __mocks__ runs only the test that mocks it', async () =
     {
       'src/dep.js': 'export const value = 1',
       'src/__mocks__/dep.js': 'export const value = 2',
-      'a.test.js': testFile(
-        'a',
-        `import { vi } from 'vitest'\nimport './src/dep.js'\nvi.mock('./src/dep.js')`,
-      ),
+      'a.test.js': `
+        import { test, vi } from 'vitest'
+        import './src/dep.js'
+
+        vi.mock('./src/dep.js')
+
+        test('a', () => {})
+      `,
       'b.test.js': testFile('b', `import './src/dep.js'`),
     },
     { related: ['src/__mocks__/dep.js'] },
@@ -257,10 +268,16 @@ test('a manual mock from __mocks__ runs only the test that mocks it', async () =
 test('the environment comment is read when filtering and reused by the run', async () => {
   const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
   useFS(root, {
-    'a.test.js': testFile('a', `${environmentComment('node')}\nimport './src/helper.js'`),
+    'a.test.js': `
+      ${environmentComment('node')}
+      import { test } from 'vitest'
+      import './src/helper.js'
+
+      test('a', () => {})
+    `,
     'src/helper.js': 'export {}',
   })
-  const vitest = await createVitest('test', { root, watch: false, config: false })
+  const vitest = await createVitest({ root, watch: false, config: false })
   onTestFinished(() => vitest.close())
 
   const [unfiltered] = await vitest.globTestSpecifications()
@@ -305,8 +322,14 @@ describe('mocked modules', () => {
     return transformed
   }
 
-  const mockedTest = (mock: string) =>
-    testFile('a', `import { vi } from 'vitest'\nimport './src/dep.js'\n${mock}`)
+  const mockedTest = (mock: string) => `
+    import { test, vi } from 'vitest'
+    import './src/dep.js'
+
+    ${mock}
+
+    test('a', () => {})
+  `
 
   test('a module mocked with a factory is not transformed', async () => {
     const transformed = useTransformed()
@@ -425,11 +448,20 @@ describe('mocked modules', () => {
     const { stderr, testTree } = await runInlineTests(
       {
         'vitest.config.js': trackTransforms(`{ setupFiles: ['./setup.js'] }`),
-        'setup.js': `import { vi } from 'vitest'\nvi.mock('./src/dep.js', () => ({}))\n`,
+        'setup.js': `
+          import { vi } from 'vitest'
+          vi.mock('./src/dep.js', () => ({}))
+        `,
         'src/dep.js': 'export {}',
         'src/other.js': 'export {}',
         'a.test.js': testFile('a', `import './src/dep.js'`),
-        'b.test.js': testFile('b', `import './src/dep.js'\nimport './src/other.js'`),
+        'b.test.js': `
+          import { test } from 'vitest'
+          import './src/dep.js'
+          import './src/other.js'
+
+          test('b', () => {})
+        `,
       },
       { related: ['src/dep.js', 'src/other.js'] },
     )
@@ -458,10 +490,15 @@ describe('mocked modules', () => {
         'src/dep.js': 'export {}',
         'src/shared.js': `import './changed.js'`,
         'src/changed.js': 'export {}',
-        'a.test.js': testFile(
-          'a',
-          `import { vi } from 'vitest'\nimport './src/dep.js'\nimport './src/shared.js'\nvi.mock('./src/dep.js', () => ({}))`,
-        ),
+        'a.test.js': `
+          import { test, vi } from 'vitest'
+          import './src/dep.js'
+          import './src/shared.js'
+
+          vi.mock('./src/dep.js', () => ({}))
+
+          test('a', () => {})
+        `,
         'b.test.js': testFile('b', `import './src/shared.js'`),
       },
       { related: ['src/changed.js'] },
@@ -514,12 +551,19 @@ describe('mocked modules', () => {
   test('a package redirected to the root __mocks__ is followed', async () => {
     const { stderr, testTree } = await runInlineTests(
       {
-        '__mocks__/tinyspy.js': `import '../src/helper.js'\nexport const spyOn = () => {}`,
+        '__mocks__/tinyspy.js': `
+          import '../src/helper.js'
+          export const spyOn = () => {}
+        `,
         'src/helper.js': 'export {}',
-        'a.test.js': testFile(
-          'a',
-          `import { vi } from 'vitest'\nimport 'tinyspy'\nvi.mock('tinyspy')`,
-        ),
+        'a.test.js': `
+          import { test, vi } from 'vitest'
+          import 'tinyspy'
+
+          vi.mock('tinyspy')
+
+          test('a', () => {})
+        `,
         'b.test.js': testFile('b', `import 'tinyspy'`),
       },
       { related: ['src/helper.js'] },
@@ -539,8 +583,17 @@ describe('mocked modules', () => {
     const { stderr, testTree } = await runInlineTests(
       {
         'src/dep.js': 'export {}',
-        'src/helper.js': `import { vi } from 'vitest'\nvi.mock('./dep.js', () => ({}))\n`,
-        'a.test.js': testFile('a', `import './src/helper.js'\nimport './src/dep.js'`),
+        'src/helper.js': `
+          import { vi } from 'vitest'
+          vi.mock('./dep.js', () => ({}))
+        `,
+        'a.test.js': `
+          import { test } from 'vitest'
+          import './src/helper.js'
+          import './src/dep.js'
+
+          test('a', () => {})
+        `,
       },
       { related: ['src/dep.js'] },
     )
@@ -566,7 +619,10 @@ describe('files loaded for every test', () => {
     [
       'snapshotEnvironment',
       { snapshotEnvironment: './loaded.js' },
-      `import { VitestSnapshotEnvironment } from 'vitest/runtime'\nexport default new VitestSnapshotEnvironment()`,
+      `
+        import { VitestSnapshotEnvironment } from 'vitest/runtime'
+        export default new VitestSnapshotEnvironment()
+      `,
     ],
     ['diff', { diff: './loaded.js' }, 'export default {}'],
     ['runner', { runner: './loaded.js' }, `export { TestRunner as default } from 'vitest'`],
@@ -575,7 +631,10 @@ describe('files loaded for every test', () => {
     const { stderr, testTree } = await runInlineTests(
       {
         'vitest.config.js': { test: config },
-        'loaded.js': `import './src/helper.js'\n${content}`,
+        'loaded.js': `
+          import './src/helper.js'
+          ${content}
+        `,
         'src/helper.js': 'export {}',
         'a.test.js': testFile('a'),
         'b.test.js': testFile('b'),
@@ -720,7 +779,10 @@ describe('projects', () => {
             ],
           },
         },
-        'setup.js': `import { vi } from 'vitest'\nvi.mock('./src/dep.js', () => ({}))\n`,
+        'setup.js': `
+          import { vi } from 'vitest'
+          vi.mock('./src/dep.js', () => ({}))
+        `,
         'src/dep.js': 'export {}',
         'first/a.test.js': testFile('a', `import '../src/dep.js'`),
         'second/b.test.js': testFile('b', `import '../src/dep.js'`),
@@ -783,10 +845,16 @@ test('the environment comment is ignored for browser tests', async () => {
         },
       }
     `,
-    'a.test.js': testFile('a', `${environmentComment('custom')}\nimport './src/helper.js'`),
+    'a.test.js': `
+      ${environmentComment('custom')}
+      import { test } from 'vitest'
+      import './src/helper.js'
+
+      test('a', () => {})
+    `,
     'src/helper.js': 'export {}',
   })
-  const vitest = await createVitest('test', { root, watch: false })
+  const vitest = await createVitest({ root, watch: false })
   onTestFinished(() => vitest.close())
 
   vitest.config.related = [`${root}/src/helper.js`]
@@ -824,12 +892,14 @@ test('the run uses the environment comment read when filtering', async () => {
         },
       }
     `,
-    'a.test.js': `${environmentComment('custom')}
-import { expect, test } from 'vitest'
-test('environment', () => expect(globalThis.__environment).toBe('custom'))
-`,
+    'a.test.js': `
+      ${environmentComment('custom')}
+      import { expect, test } from 'vitest'
+
+      test('environment', () => expect(globalThis.__environment).toBe('custom'))
+    `,
   })
-  const vitest = await createVitest('test', { root, watch: false, reporters: [{}] })
+  const vitest = await createVitest({ root, watch: false, reporters: [{}] })
   onTestFinished(() => vitest.close())
 
   vitest.config.related = [`${root}/env.js`]

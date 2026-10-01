@@ -786,7 +786,10 @@ test('prewarm follows __mocks__ redirects and setup file mocks', async () => {
     'redirected/__mocks__/mock-leaf.js': 'export {}',
     'setup-mocked/index.js': `import './leaf.js'`,
     'setup-mocked/leaf.js': 'export {}',
-    'setup.js': `import { vi } from 'vitest'\nvi.mock('./setup-mocked/index.js', () => ({}))\n`,
+    'setup.js': `
+      import { vi } from 'vitest'
+      vi.mock('./setup-mocked/index.js', () => ({}))
+    `,
     'consumer.test.js': `
       import { test, vi } from 'vitest'
       import './redirected/index.js'

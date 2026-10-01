@@ -338,15 +338,21 @@ test.each([
   [
     'snapshot serializer',
     { snapshotSerializers: ['./loaded.js'] },
-    `export default { serialize: () => '', test: () => false }\n`,
+    `export default { serialize: () => '', test: () => false }`,
   ],
-  ['diff config', { diff: './loaded.js' }, 'export default {}\n'],
+  ['diff config', { diff: './loaded.js' }, 'export default {}'],
 ])('editing a %s reruns the tests of its project', async (_, options, content) => {
   const { vitest, fs } = await testUtils.runInlineTests(
     {
       'loaded.js': content,
-      'first/a.test.js': `import { test } from 'vitest'\ntest('[first] reruns', () => {})\n`,
-      'second/b.test.js': `import { test } from 'vitest'\ntest("[second] doesn't rerun", () => {})\n`,
+      'first/a.test.js': `
+        import { test } from 'vitest'
+        test('[first] reruns', () => {})
+      `,
+      'second/b.test.js': `
+        import { test } from 'vitest'
+        test("[second] doesn't rerun", () => {})
+      `,
       'vitest.config.js': {
         test: {
           projects: [
