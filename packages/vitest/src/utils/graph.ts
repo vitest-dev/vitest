@@ -2,7 +2,7 @@ import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
 import type { TestModule } from '../node/reporters/reported-tasks'
-import type { ModuleGraphData, SharedModuleGraphData } from '../types/general'
+import type { ModuleGraphData, SharedModuleGraphData, SharedModuleGraphs } from '../types/general'
 import { getTestFileEnvironment } from './environments'
 
 export async function getModuleGraph(
@@ -18,9 +18,7 @@ export async function getModuleGraph(
   return { modules: collector.data.modules, roots }
 }
 
-export function getSharedModuleGraphs(testModules: ReadonlyArray<TestModule>): {
-  [projectName: string]: { [environmentName: string]: SharedModuleGraphData }
-} {
+export function getSharedModuleGraphs(testModules: ReadonlyArray<TestModule>): SharedModuleGraphs {
   const testModulesByProject = new Map<TestProject, TestModule[]>()
   for (const testModule of testModules) {
     const projectTestModules = testModulesByProject.get(testModule.project) ?? []
@@ -28,7 +26,7 @@ export function getSharedModuleGraphs(testModules: ReadonlyArray<TestModule>): {
     testModulesByProject.set(testModule.project, projectTestModules)
   }
 
-  const result: ReturnType<typeof getSharedModuleGraphs> = {}
+  const result: SharedModuleGraphs = {}
   for (const [project, projectTestModules] of testModulesByProject) {
     result[project.name] = getProjectSharedModuleGraphs(project, projectTestModules)
   }
@@ -38,7 +36,7 @@ export function getSharedModuleGraphs(testModules: ReadonlyArray<TestModule>): {
 function getProjectSharedModuleGraphs(
   project: TestProject,
   testModules: TestModule[],
-): { [environmentName: string]: SharedModuleGraphData } {
+): SharedModuleGraphs[string] {
   const collectors: { [environmentName: string]: ModuleGraphCollector } = {}
   for (const testModule of testModules) {
     const environment = getModuleGraphEnvironment(

@@ -1,5 +1,5 @@
 import type { RunnerTestFile, SerializedRootConfig } from 'vitest'
-import type { SharedModuleGraphData } from '../../../../vitest/src/types/general'
+import type { SharedModuleGraphs } from '../../../../vitest/src/types/general'
 import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
@@ -9,9 +9,7 @@ import { StateManager } from './state'
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
-  moduleGraph: {
-    [projectName: string]: { [environmentName: string]: SharedModuleGraphData }
-  }
+  moduleGraph: SharedModuleGraphs
   unhandledErrors: unknown[]
   testModules: {
     projectName: string
