@@ -232,6 +232,9 @@ test('attempts grow while the test runs', async () => {
         seen.push(task.result.attempts.map(({ repeatIndex, retryIndex, state }) => ({ repeatIndex, retryIndex, state })))
       })
 
+      // |      repeat 0      |      repeat 1      |
+      // | retry 0 -> retry 1 | retry 0 -> retry 1 |
+      // |  fail   ->  pass   |  fail   ->  pass   |
       it('flaky', { retry: 2, repeats: 1 }, () => {
         expect(++runs % 2).toBe(0)
       })
