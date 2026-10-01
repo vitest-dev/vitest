@@ -1,0 +1,19 @@
+test/e2e/test/vcs-provider.test.ts
+  s_1132508b8b894b::t_482ec532d3a732 7-10,12,58-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7b3d9622d1a03c3c5c173179d5724f03c000435c",
+  "prompts": {},
+  "sessions": {
+    "s_1132508b8b894b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f095f7a96ffeYb3NgWUs6mJSki",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
