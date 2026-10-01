@@ -15,6 +15,7 @@ const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime
 interface ModuleNode {
   dependencies: string[]
   mocked: Set<string>
+  failed?: boolean
 }
 
 /**
@@ -223,7 +224,16 @@ class ProjectGraph {
     return (await this.getModule(filepath))?.mocked ?? new Set()
   }
 
+  // a module that fails to load is treated as affected, so its tests run and report the error
   private async loadModule(filepath: string): Promise<ModuleNode | null> {
+    try {
+      return await this.transformModule(filepath)
+    } catch {
+      return { dependencies: [], mocked: new Set(), failed: true }
+    }
+  }
+
+  private async transformModule(filepath: string): Promise<ModuleNode | null> {
     const mod = this.environment.moduleGraph.getModuleById(filepath)
     const transformed =
       mod?.transformResult ||
@@ -259,6 +269,7 @@ class ProjectGraph {
 class GraphWalk {
   private importers = new Map<string, Set<string>>()
   private visited = new Set<string>()
+  private failed = new Set<string>()
   private _affected: Set<string> | undefined
 
   constructor(
@@ -290,6 +301,9 @@ class GraphWalk {
     if (!node) {
       return
     }
+    if (node.failed) {
+      this.failed.add(filepath)
+    }
     await Promise.all(
       node.dependencies.map(async (dep) => {
         if (this.mocked.has(dep)) {
@@ -309,7 +323,10 @@ class GraphWalk {
     if (this._affected) {
       return this._affected
     }
-    const affected = new Set<string>(this.related.filter((file) => !this.mocked.has(file)))
+    const affected = new Set<string>([
+      ...this.related.filter((file) => !this.mocked.has(file)),
+      ...this.failed,
+    ])
     const queue = [...affected]
     while (queue.length) {
       const importedBy = this.importers.get(queue.pop()!)

@@ -1,3 +1,4 @@
+import type { TestModule } from 'vitest/node'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { runInlineTests, useFS } from '#test-utils'
@@ -682,6 +683,94 @@ describe('files loaded for every test', () => {
       }
     `)
   })
+})
+
+describe('modules that fail to load', () => {
+  const broken = 'export const = 1'
+
+  test('a test that imports a broken module runs and reports the error', async () => {
+    const { results } = await runInlineTests(
+      {
+        'src/broken.js': broken,
+        'src/changed.js': 'export {}',
+        'src/other.js': 'export {}',
+        'a.test.js': testFile('a', `import './src/broken.js'`),
+        'b.test.js': testFile('b', `import './src/changed.js'`),
+        'c.test.js': testFile('c', `import './src/other.js'`),
+      },
+      { related: ['src/changed.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "a.test.js",
+          "failed",
+        ],
+        [
+          "b.test.js",
+          "passed",
+        ],
+      ]
+    `)
+  })
+
+  test('a broken test file runs and reports the error', async () => {
+    const { results } = await runInlineTests(
+      {
+        'src/changed.js': 'export {}',
+        'a.test.js': broken,
+        'b.test.js': testFile('b', `import './src/changed.js'`),
+        'c.test.js': testFile('c'),
+      },
+      { related: ['src/changed.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "a.test.js",
+          "failed",
+        ],
+        [
+          "b.test.js",
+          "passed",
+        ],
+      ]
+    `)
+  })
+
+  test('a broken setup file runs every test', async () => {
+    const { results } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+        'setup.js': broken,
+        'src/changed.js': 'export {}',
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b', `import './src/changed.js'`),
+      },
+      { related: ['src/changed.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "a.test.js",
+          "failed",
+        ],
+        [
+          "b.test.js",
+          "failed",
+        ],
+      ]
+    `)
+  })
+
+  function moduleStates(modules: TestModule[]) {
+    return modules
+      .map((testModule) => [testModule.relativeModuleId, testModule.state()])
+      .sort(([a], [b]) => a.localeCompare(b))
+  }
 })
 
 describe('projects', () => {
