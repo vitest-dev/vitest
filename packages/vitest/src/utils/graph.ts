@@ -128,9 +128,8 @@ function createModuleGraphCollector(
     if (browser && mod.file?.includes(project.browser!.vite.config.cacheDir)) {
       return addExternal(id)
     }
-    const module: ModuleGraphData['modules'][string] = { external: false, imports: [] }
-    data.modules[id] = module
-    module.imports = Array.from(mod.importedModules)
+    data.modules[id] = { external: false, imports: [] }
+    data.modules[id].imports = Array.from(mod.importedModules)
       .filter((i) => i.id && !i.id.includes('/vitest/dist/'))
       .map((m) => get(m))
       .filter((id) => id != null)
