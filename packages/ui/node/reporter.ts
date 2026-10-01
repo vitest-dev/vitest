@@ -14,7 +14,7 @@ import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
-import { getProjectModuleGraphs } from '../../vitest/src/utils/graph'
+import { getSharedModuleGraphs } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
 
 const gzipAsync = promisify(gzip)
@@ -120,7 +120,7 @@ async function serializeReportMetadata(
     files: [],
     config: ctx.serializedRootConfig,
     unhandledErrors: [...unhandledErrors],
-    moduleGraph: getProjectModuleGraphs(testModules),
+    moduleGraph: getSharedModuleGraphs(testModules),
     testModules: [],
     sourceCode: {
       codeTable: [],

@@ -2,11 +2,7 @@ import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
 import type { TestModule } from '../node/reporters/reported-tasks'
-import type {
-  EnvironmentModuleGraphData,
-  ModuleGraphData,
-  ProjectModuleGraphData,
-} from '../types/general'
+import type { ModuleGraphData, SharedModuleGraphData } from '../types/general'
 import { getTestFileEnvironment } from './environments'
 
 export async function getModuleGraph(
@@ -22,9 +18,9 @@ export async function getModuleGraph(
   return { modules: collector.data.modules, roots }
 }
 
-export function getProjectModuleGraphs(
-  testModules: ReadonlyArray<TestModule>,
-): Record<string, ProjectModuleGraphData> {
+export function getSharedModuleGraphs(testModules: ReadonlyArray<TestModule>): {
+  [projectName: string]: { [environmentName: string]: SharedModuleGraphData }
+} {
   const testModulesByProject = new Map<TestProject, TestModule[]>()
   for (const testModule of testModules) {
     const projectTestModules = testModulesByProject.get(testModule.project) ?? []
@@ -32,18 +28,18 @@ export function getProjectModuleGraphs(
     testModulesByProject.set(testModule.project, projectTestModules)
   }
 
-  const result: Record<string, ProjectModuleGraphData> = {}
+  const result: ReturnType<typeof getSharedModuleGraphs> = {}
   for (const [project, projectTestModules] of testModulesByProject) {
-    result[project.name] = getProjectModuleGraph(project, projectTestModules)
+    result[project.name] = getProjectSharedModuleGraphs(project, projectTestModules)
   }
   return result
 }
 
-function getProjectModuleGraph(
+function getProjectSharedModuleGraphs(
   project: TestProject,
   testModules: TestModule[],
-): ProjectModuleGraphData {
-  const collectors: Record<string, ModuleGraphCollector> = {}
+): { [environmentName: string]: SharedModuleGraphData } {
+  const collectors: { [environmentName: string]: ModuleGraphCollector } = {}
   for (const testModule of testModules) {
     const environment = getModuleGraphEnvironment(
       project,
@@ -81,7 +77,7 @@ function getModuleGraphEnvironment(
 }
 
 interface ModuleGraphCollector {
-  data: EnvironmentModuleGraphData
+  data: SharedModuleGraphData
   add: (testFilePath: string) => string[]
 }
 
@@ -89,7 +85,7 @@ function createModuleGraphCollector(
   project: TestProject,
   environment: DevEnvironment,
 ): ModuleGraphCollector {
-  const data: EnvironmentModuleGraphData = { modules: {}, roots: {} }
+  const data: SharedModuleGraphData = { modules: {}, rootsByTestFile: {} }
   const browser = project.config.browser.enabled
   const seen = new Map<EnvironmentModuleNode, string>()
 
@@ -139,7 +135,7 @@ function createModuleGraphCollector(
     const roots = [testFilePath, ...project.config.setupFiles]
       .map((file) => get(environment.moduleGraph.getModuleById(file)))
       .filter((id) => id != null)
-    data.roots[testFilePath] = roots
+    data.rootsByTestFile[testFilePath] = roots
     return roots
   }
 

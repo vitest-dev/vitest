@@ -565,9 +565,9 @@ function getHtmlReportModuleGraph(ctx: Vitest) {
   const moduleGraphs = Object.fromEntries(
     getSortedFiles(ctx).map((file) => {
       const environment = Object.values(metadata.moduleGraph[file.projectName || '']).find(
-        (environment) => environment.roots[file.filepath],
+        (environment) => environment.rootsByTestFile[file.filepath],
       )!
-      const roots = environment.roots[file.filepath]
+      const roots = environment.rootsByTestFile[file.filepath]
       const modules: ModuleGraphData['modules'] = {}
       const visit = (id: string) => {
         if (!modules[id]) {

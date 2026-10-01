@@ -22,15 +22,13 @@ export interface UserConsoleLog {
 }
 
 export interface ModuleGraphData {
-  modules: Record<string, { external: boolean; imports: string[] }>
+  modules: { [id: string]: { external: boolean; imports: string[] } }
   roots: string[]
 }
 
-export type ProjectModuleGraphData = Record<string, EnvironmentModuleGraphData>
-
-export interface EnvironmentModuleGraphData {
+export interface SharedModuleGraphData {
   modules: ModuleGraphData['modules']
-  roots: Record<string, string[]>
+  rootsByTestFile: { [testFile: string]: string[] }
 }
 
 export interface ProvidedContext {}

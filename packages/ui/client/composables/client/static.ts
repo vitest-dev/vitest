@@ -1,5 +1,5 @@
 import type { RunnerTestFile, SerializedRootConfig } from 'vitest'
-import type { ProjectModuleGraphData } from '../../../../vitest/src/types/general'
+import type { SharedModuleGraphData } from '../../../../vitest/src/types/general'
 import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
@@ -9,7 +9,9 @@ import { StateManager } from './state'
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
-  moduleGraph: Record<string, ProjectModuleGraphData>
+  moduleGraph: {
+    [projectName: string]: { [environmentName: string]: SharedModuleGraphData }
+  }
   unhandledErrors: unknown[]
   testModules: {
     projectName: string
@@ -40,9 +42,11 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
       return metadata.config
     },
     getModuleGraph: async (projectName, id) => {
-      for (const { modules, roots } of Object.values(metadata.moduleGraph[projectName] ?? {})) {
-        if (roots[id]) {
-          return { modules, roots: roots[id] }
+      for (const { modules, rootsByTestFile } of Object.values(
+        metadata.moduleGraph[projectName] ?? {},
+      )) {
+        if (rootsByTestFile[id]) {
+          return { modules, roots: rootsByTestFile[id] }
         }
       }
       return { modules: {}, roots: [] }
