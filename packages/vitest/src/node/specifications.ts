@@ -117,6 +117,8 @@ export class VitestSpecifications {
   }
 
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
+    this.vitest._sourceFilterResult = undefined
+
     if (this.vitest.config.changed && !this.vitest.config.related) {
       const related = await this.vitest.vcs.findChangedFiles({
         root: this.vitest.config.root,
@@ -157,7 +159,11 @@ export class VitestSpecifications {
       affectedByProject.set(project, await this.getAffectedModules(project, projectSpecs, related))
     }
 
-    return specs.filter((spec) => affectedByProject.get(spec.project)!.has(spec.moduleId))
+    const affectedSpecs = specs.filter((spec) =>
+      affectedByProject.get(spec.project)!.has(spec.moduleId),
+    )
+    this.vitest._sourceFilterResult = { affected: affectedSpecs.length, total: specs.length }
+    return affectedSpecs
   }
 
   /**
@@ -213,7 +219,8 @@ export class VitestSpecifications {
       const environment = project.vite.environments.ssr
       const mod = environment.moduleGraph.getModuleById(filepath)
       const transformed =
-        mod?.transformResult || (await withLimit(() => environment.transformRequest(filepath)))
+        mod?.transformResult ||
+        (await withLimit(() => project._transformService.transform(filepath, environment)))
       if (!transformed) {
         return
       }

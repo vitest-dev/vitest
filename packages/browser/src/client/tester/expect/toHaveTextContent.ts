@@ -20,7 +20,7 @@ import { getMessage, getNodeFromUserInput, normalize } from './utils'
 export default function toHaveTextContent(
   this: MatcherState,
   actual: Element | Locator,
-  matcher: string | number,
+  matcher?: string | number,
   options: { normalizeWhitespace?: boolean } = { normalizeWhitespace: true },
 ): MatcherResult {
   const node = getNodeFromUserInput(actual, toHaveTextContent, this)
@@ -28,6 +28,23 @@ export default function toHaveTextContent(
   const textContent = options.normalizeWhitespace
     ? normalize(node.textContent || '')
     : (node.textContent || '').replace(/\u00A0/g, ' ') // Replace &nbsp; with normal spaces
+
+  if (matcher === undefined) {
+    return {
+      pass: textContent !== '',
+      message: () => {
+        const to = this.isNot ? 'not to' : 'to'
+        return getMessage(
+          this,
+          this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toHaveTextContent`, 'element', ''),
+          `Expected element ${to} have text content`,
+          '',
+          'Received',
+          textContent,
+        )
+      },
+    }
+  }
 
   const expectedText = String(matcher)
 

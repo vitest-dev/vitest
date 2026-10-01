@@ -7,7 +7,6 @@ import type { CancelReason, File } from '../runtime/runner/types'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
 import type { PluginHarness } from './config/pluginHarness'
-import type { VitestFetchFunction } from './environments/fetchModule'
 import type { Logger } from './logger'
 import type { VitestPackageInstaller } from './packageInstaller'
 import type { ProcessPool } from './pool'
@@ -41,8 +40,8 @@ import { VitestCache } from './cache'
 import { FileSystemModuleCache } from './cache/fsModuleCache'
 import { matchesProjectFilter, resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
-import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
+import { ModuleTransformService } from './environments/transformService'
 import { FilesNotFoundError } from './errors'
 import {
   collectModuleDurationsDiagnostic,
@@ -151,6 +150,7 @@ export class Vitest {
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
+  /** @internal */ _sourceFilterResult?: { affected: number; total: number }
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ cancelPromise?: Promise<void | void[]>
@@ -168,7 +168,7 @@ export class Vitest {
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun
   /** @internal */ _resolver!: VitestResolver
-  /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _transformService!: ModuleTransformService
   /** @internal */ _fsCache!: FileSystemModuleCache
   /** @internal */ _tmpDir: string | undefined = join(tmpdir(), nanoid())
   /** @internal */ _traces!: Traces
@@ -255,7 +255,7 @@ export class Vitest {
     this._resolver = new VitestResolver(this.viteConfig.cacheDir, resolved)
     // a closed run removes the temp dir, so a restart must allocate a new one
     const tmpDir = (this._tmpDir ??= join(tmpdir(), nanoid()))
-    this._fetcher = createFetchModuleFunction(
+    this._transformService = new ModuleTransformService(
       this._resolver,
       resolved,
       this._fsCache,
@@ -323,7 +323,7 @@ export class Vitest {
     this.runner =
       resolved.experimental.viteModuleRunner === false
         ? new NativeModuleRunner(resolved.root)
-        : new ServerModuleRunner(environment, this._fetcher, resolved)
+        : new ServerModuleRunner(environment, this._transformService, resolved)
     this.vcs = await loadVCSProvider(this.runner, resolved.experimental.vcsProvider)
 
     if (resolved.watch) {
@@ -1102,6 +1102,7 @@ export class Vitest {
         // all subsequent runs will treat this as a fresh run
         this.config.changed = false
         this.config.related = undefined
+        this._sourceFilterResult = undefined
       })
 
       return await this.runningPromise
@@ -1301,6 +1302,7 @@ export class Vitest {
       // all subsequent runs will treat this as a fresh run
       this.config.changed = false
       this.config.related = undefined
+      this._sourceFilterResult = undefined
     })
 
     return await this.runningPromise

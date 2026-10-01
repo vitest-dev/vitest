@@ -11,6 +11,7 @@ import * as libReport from '@vitest/istanbul-lib-report'
 import * as libSourceMaps from '@vitest/istanbul-lib-source-maps'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
+import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider, isCSSRequest } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
@@ -158,6 +159,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     coverageMap.filter((filename) => {
       const exists = existsSync(filename)
+
+      // files can be instrumented before the changed files are resolved
+      if (this.changedFiles && !this.changedFiles.includes(normalize(filename))) {
+        return false
+      }
 
       if (this.options.excludeAfterRemap) {
         return exists && this.isIncluded(filename)
