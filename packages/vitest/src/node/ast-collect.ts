@@ -16,7 +16,7 @@ import {
   createTaskName,
 } from '../utils/tasks'
 import { detectCodeBlock } from '../utils/test-helpers'
-import { toRollupError } from './environments/fetchModule'
+import { toRollupError } from './environments/transformService'
 
 interface ParsedFile extends File {
   start: number

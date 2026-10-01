@@ -219,7 +219,8 @@ export class VitestSpecifications {
       const environment = project.vite.environments.ssr
       const mod = environment.moduleGraph.getModuleById(filepath)
       const transformed =
-        mod?.transformResult || (await withLimit(() => environment.transformRequest(filepath)))
+        mod?.transformResult ||
+        (await withLimit(() => project._transformService.transform(filepath, environment)))
       if (!transformed) {
         return
       }

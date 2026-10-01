@@ -10,8 +10,8 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { isBuiltin, toBuiltin } from '../../utils/modules'
-import { handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
+import { handleRollupError } from '../environments/transformService'
 
 interface MethodsOptions {
   cacheFs?: boolean
@@ -70,8 +70,8 @@ export function createMethodsRPC(
     const state = project.vitest.state
     const start = performance.now()
 
-    return await project
-      ._fetcher(url, importer, environment, cacheFs, options, otelCarrier)
+    return await project._transformService
+      .fetch(url, importer, environment, cacheFs, options, otelCarrier)
       .then((result) => {
         const metadata = state.metadata[project.name]
         if ('externalize' in result) {
