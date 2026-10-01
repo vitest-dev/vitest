@@ -396,10 +396,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       return Promise.resolve()
     }
     const context = page.context()
-    const armed = this.armedContexts.get(context) ?? this.probeInterception(page).catch((error) => {
-      this.armedContexts.delete(context)
-      throw error
-    })
+    const armed =
+      this.armedContexts.get(context) ??
+      this.probeInterception(page).catch((error) => {
+        this.armedContexts.delete(context)
+        throw error
+      })
     this.armedContexts.set(context, armed)
     return armed
   }
@@ -408,24 +410,33 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const probeUrl = '/__vitest_interception_probe__'
     const probePattern = `**${probeUrl}`
     const context = page.context()
-    await context.route(probePattern, route => route.fulfill({
-      status: 204,
-      headers: { 'x-vitest-probe': '1' },
-    }))
+    await context.route(probePattern, (route) =>
+      route.fulfill({
+        status: 204,
+        headers: { 'x-vitest-probe': '1' },
+      }),
+    )
     const deadline = Date.now() + 5_000
     while (Date.now() < deadline) {
-      const intercepted = await page.evaluate(
-        url => fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(1_000) })
-          .then(r => r.headers.has('x-vitest-probe'), () => false),
-        probeUrl,
-      ).catch(() => false)
+      const intercepted = await page
+        .evaluate(
+          (url) =>
+            fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(1_000) }).then(
+              (r) => r.headers.has('x-vitest-probe'),
+              () => false,
+            ),
+          probeUrl,
+        )
+        .catch(() => false)
       if (intercepted) {
         return
       }
-      await new Promise(resolve => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 10))
     }
     await context.unroute(probePattern)
-    throw new Error(`Cannot verify that ${this.browserName} request interception is active after 5s; module mocks would not apply reliably (#8339)`)
+    throw new Error(
+      `Cannot verify that ${this.browserName} request interception is active after 5s; module mocks would not apply reliably (#8339)`,
+    )
   }
 
   private createMocker(): BrowserModuleMocker {
