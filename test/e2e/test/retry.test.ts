@@ -230,21 +230,45 @@ test('attempts grow while the test runs', async () => {
         task.result.attempts.map(a => ({ repeat: a.repeatIndex, retry: a.retryIndex, state: a.state }))
 
       it('flaky', { retry: 2, repeats: 1 }, ({ task }) => {
-        seen.push(['run', ...summarize(task)])
+        seen.push({ at: 'test', attempts: summarize(task) })
         onTestFailed(() => {
-          seen.push(['failed', ...summarize(task)])
+          seen.push({ at: 'onTestFailed', attempts: summarize(task) })
         })
         expect(++runs % 2).toBe(0)
       })
 
       afterAll(() => {
         expect(seen).toEqual([
-          ['run'],
-          ['failed'],
-          ['run', { repeat: 0, retry: 0, state: 'fail' }],
-          ['run', { repeat: 0, retry: 0, state: 'fail' }, { repeat: 0, retry: 1, state: 'pass' }],
-          ['failed', { repeat: 0, retry: 0, state: 'fail' }, { repeat: 0, retry: 1, state: 'pass' }],
-          ['run', { repeat: 0, retry: 0, state: 'fail' }, { repeat: 0, retry: 1, state: 'pass' }, { repeat: 1, retry: 0, state: 'fail' }],
+          { at: 'test', attempts: [] },
+          { at: 'onTestFailed', attempts: [] },
+          {
+            at: 'test',
+            attempts: [
+              { repeat: 0, retry: 0, state: 'fail' },
+            ],
+          },
+          {
+            at: 'test',
+            attempts: [
+              { repeat: 0, retry: 0, state: 'fail' },
+              { repeat: 0, retry: 1, state: 'pass' },
+            ],
+          },
+          {
+            at: 'onTestFailed',
+            attempts: [
+              { repeat: 0, retry: 0, state: 'fail' },
+              { repeat: 0, retry: 1, state: 'pass' },
+            ],
+          },
+          {
+            at: 'test',
+            attempts: [
+              { repeat: 0, retry: 0, state: 'fail' },
+              { repeat: 0, retry: 1, state: 'pass' },
+              { repeat: 1, retry: 0, state: 'fail' },
+            ],
+          },
         ])
       })
     `,
