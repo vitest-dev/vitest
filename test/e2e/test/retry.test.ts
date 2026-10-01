@@ -229,7 +229,7 @@ test('attempts grow while the test runs', async () => {
 
       // the current attempt is recorded after afterEach, so only previous attempts are visible
       afterEach(({ task }) => {
-        seen.push(task.result.attempts.map(a => ({ repeat: a.repeatIndex, retry: a.retryIndex, state: a.state })))
+        seen.push(task.result.attempts.map(({ repeatIndex, retryIndex, state }) => ({ repeatIndex, retryIndex, state })))
       })
 
       it('flaky', { retry: 2, repeats: 1 }, () => {
@@ -240,16 +240,16 @@ test('attempts grow while the test runs', async () => {
         expect(seen).toEqual([
           [],
           [
-            { repeat: 0, retry: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
           ],
           [
-            { repeat: 0, retry: 0, state: 'fail' },
-            { repeat: 0, retry: 1, state: 'pass' },
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 1, state: 'pass' },
           ],
           [
-            { repeat: 0, retry: 0, state: 'fail' },
-            { repeat: 0, retry: 1, state: 'pass' },
-            { repeat: 1, retry: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 1, state: 'pass' },
+            { repeatIndex: 1, retryIndex: 0, state: 'fail' },
           ],
         ])
       })
@@ -290,17 +290,17 @@ test('skipping during a retry ends attempts with a skipped attempt', async () =>
   expect(
     skipsOnRetry
       .attempts()
-      .map((a) => ({ repeat: a.repeatIndex, retry: a.retryIndex, state: a.state })),
+      .map(({ repeatIndex, retryIndex, state }) => ({ repeatIndex, retryIndex, state })),
   ).toMatchInlineSnapshot(`
     [
       {
-        "repeat": 0,
-        "retry": 0,
+        "repeatIndex": 0,
+        "retryIndex": 0,
         "state": "failed",
       },
       {
-        "repeat": 0,
-        "retry": 1,
+        "repeatIndex": 0,
+        "retryIndex": 1,
         "state": "skipped",
       },
     ]
