@@ -2,7 +2,12 @@ import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
 import type { TestModule } from '../node/reporters/reported-tasks'
-import type { ModuleGraphData, SharedModuleGraphData, SharedModuleGraphs } from '../types/general'
+import type {
+  ModuleGraphData,
+  SharedModuleGraphByEnvironment,
+  SharedModuleGraphByProject,
+  SharedModuleGraphData,
+} from '../types/general'
 import { getTestFileEnvironment } from './environments'
 
 export async function getModuleGraph(
@@ -18,7 +23,9 @@ export async function getModuleGraph(
   return { modules: collector.data.modules, roots }
 }
 
-export function getSharedModuleGraphs(testModules: ReadonlyArray<TestModule>): SharedModuleGraphs {
+export function getSharedModuleGraphByProject(
+  testModules: ReadonlyArray<TestModule>,
+): SharedModuleGraphByProject {
   const testModulesByProject = new Map<TestProject, TestModule[]>()
   for (const testModule of testModules) {
     const projectTestModules = testModulesByProject.get(testModule.project) ?? []
@@ -26,17 +33,17 @@ export function getSharedModuleGraphs(testModules: ReadonlyArray<TestModule>): S
     testModulesByProject.set(testModule.project, projectTestModules)
   }
 
-  const result: SharedModuleGraphs = {}
+  const result: SharedModuleGraphByProject = {}
   for (const [project, projectTestModules] of testModulesByProject) {
-    result[project.name] = getProjectSharedModuleGraphs(project, projectTestModules)
+    result[project.name] = getSharedModuleGraphByEnvironment(project, projectTestModules)
   }
   return result
 }
 
-function getProjectSharedModuleGraphs(
+function getSharedModuleGraphByEnvironment(
   project: TestProject,
   testModules: TestModule[],
-): SharedModuleGraphs[string] {
+): SharedModuleGraphByEnvironment {
   const collectors: { [environmentName: string]: ModuleGraphCollector } = {}
   for (const testModule of testModules) {
     const environment = getModuleGraphEnvironment(

@@ -31,8 +31,12 @@ export interface SharedModuleGraphData {
   rootsByTestFile: { [testFile: string]: string[] }
 }
 
-export interface SharedModuleGraphs {
-  [projectName: string]: { [environmentName: string]: SharedModuleGraphData }
+export interface SharedModuleGraphByEnvironment {
+  [environmentName: string]: SharedModuleGraphData
+}
+
+export interface SharedModuleGraphByProject {
+  [projectName: string]: SharedModuleGraphByEnvironment
 }
 
 export interface ProvidedContext {}
