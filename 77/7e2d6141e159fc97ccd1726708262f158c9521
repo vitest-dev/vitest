@@ -1,0 +1,19 @@
+test/e2e/test/related-deps.test.ts
+  s_9d48a2300498d5::t_f2edcda982ec4c 623-675
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "777e2d6141e159fc97ccd1726708262f158c9521",
+  "prompts": {},
+  "sessions": {
+    "s_9d48a2300498d5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f0914adc3ffeStcly36athmgQ8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
