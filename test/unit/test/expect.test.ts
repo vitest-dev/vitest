@@ -281,10 +281,9 @@ describe('recursive custom equality tester', () => {
     const mockFn = vi.fn((person: Person) => [person, person2])
     mockFn(person1)
 
-    expect(mockFn).toHaveBeenCalledWith(person1)
-    expect(mockFn).toHaveBeenCalledWith(person1)
-    expect(mockFn).toHaveBeenLastCalledWith(person1)
-    expect(mockFn).toHaveBeenNthCalledWith(1, person1)
+    expect(mockFn).toHaveBeenCalledWith(person2)
+    expect(mockFn).toHaveBeenLastCalledWith(person2)
+    expect(mockFn).toHaveBeenNthCalledWith(1, person2)
 
     expect(mockFn).toHaveReturnedWith([person2, person1])
     expect(mockFn).toHaveLastReturnedWith([person2, person1])
