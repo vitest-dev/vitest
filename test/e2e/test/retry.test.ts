@@ -235,7 +235,7 @@ test('attempts grow while the test runs', async () => {
       // |      repeat 0      |      repeat 1      |
       // | retry 0 -> retry 1 | retry 0 -> retry 1 |
       // |  fail   ->  pass   |  fail   ->  pass   |
-      it('flaky', { retry: 2, repeats: 1 }, () => {
+      it('flaky', { retry: 1, repeats: 1 }, () => {
         expect(++runs % 2).toBe(0)
       })
 
