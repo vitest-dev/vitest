@@ -26,6 +26,13 @@ export interface ModuleGraphData {
   roots: string[]
 }
 
+export interface EnvironmentModuleGraphData {
+  modules: ModuleGraphData['modules']
+  roots: Record<string, string[]>
+}
+
+export type ProjectModuleGraphData = Record<string, EnvironmentModuleGraphData>
+
 export interface ProvidedContext {}
 
 export interface ResolveFunctionResult {

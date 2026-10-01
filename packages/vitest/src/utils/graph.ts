@@ -1,7 +1,12 @@
 import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
-import type { ModuleGraphData } from '../types/general'
+import type { TestModule } from '../node/reporters/reported-tasks'
+import type {
+  EnvironmentModuleGraphData,
+  ModuleGraphData,
+  ProjectModuleGraphData,
+} from '../types/general'
 import { getTestFileEnvironment } from './environments'
 
 export async function getModuleGraph(
@@ -14,10 +19,46 @@ export async function getModuleGraph(
   const environment = getModuleGraphEnvironment(project, testFilePath, viteEnvironment)
   const collector = createModuleGraphCollector(project, environment)
   const roots = collector.add(testFilePath)
-  return { modules: collector.modules, roots }
+  return { modules: collector.data.modules, roots }
 }
 
-export function getModuleGraphEnvironment(
+export function getProjectModuleGraphs(
+  testModules: ReadonlyArray<TestModule>,
+): Record<string, ProjectModuleGraphData> {
+  const testModulesByProject = new Map<TestProject, TestModule[]>()
+  for (const testModule of testModules) {
+    const projectTestModules = testModulesByProject.get(testModule.project) ?? []
+    projectTestModules.push(testModule)
+    testModulesByProject.set(testModule.project, projectTestModules)
+  }
+
+  const result: Record<string, ProjectModuleGraphData> = {}
+  for (const [project, projectTestModules] of testModulesByProject) {
+    result[project.name] = getProjectModuleGraph(project, projectTestModules)
+  }
+  return result
+}
+
+function getProjectModuleGraph(
+  project: TestProject,
+  testModules: TestModule[],
+): ProjectModuleGraphData {
+  const collectors: Record<string, ModuleGraphCollector> = {}
+  for (const testModule of testModules) {
+    const environment = getModuleGraphEnvironment(
+      project,
+      testModule.moduleId,
+      testModule.viteEnvironment?.name,
+    )
+    collectors[environment.name] ??= createModuleGraphCollector(project, environment)
+    collectors[environment.name].add(testModule.moduleId)
+  }
+  return Object.fromEntries(
+    Object.entries(collectors).map(([name, collector]) => [name, collector.data]),
+  )
+}
+
+function getModuleGraphEnvironment(
   project: TestProject,
   testFilePath: string,
   viteEnvironment?: string,
@@ -39,19 +80,21 @@ export function getModuleGraphEnvironment(
   return environment
 }
 
-export function createModuleGraphCollector(
+interface ModuleGraphCollector {
+  data: EnvironmentModuleGraphData
+  add: (testFilePath: string) => string[]
+}
+
+function createModuleGraphCollector(
   project: TestProject,
   environment: DevEnvironment,
-): {
-  modules: ModuleGraphData['modules']
-  add: (testFilePath: string) => string[]
-} {
-  const modules: ModuleGraphData['modules'] = {}
+): ModuleGraphCollector {
+  const data: EnvironmentModuleGraphData = { modules: {}, roots: {} }
   const browser = project.config.browser.enabled
   const seen = new Map<EnvironmentModuleNode, string>()
 
   function addExternal(id: string) {
-    modules[id] ??= { external: true, imports: [] }
+    data.modules[id] ??= { external: true, imports: [] }
     return id
   }
 
@@ -83,7 +126,7 @@ export function createModuleGraphCollector(
       return addExternal(id)
     }
     const module: ModuleGraphData['modules'][string] = { external: false, imports: [] }
-    modules[id] = module
+    data.modules[id] = module
     module.imports = Array.from(mod.importedModules)
       .filter((i) => i.id && !i.id.includes('/vitest/dist/'))
       .map((m) => get(m))
@@ -91,14 +134,16 @@ export function createModuleGraphCollector(
     return id
   }
 
-  // returns graph roots of the test file including setup files
+  // graph roots of the test file including setup files
   function add(testFilePath: string): string[] {
-    return [testFilePath, ...project.config.setupFiles]
+    const roots = [testFilePath, ...project.config.setupFiles]
       .map((file) => get(environment.moduleGraph.getModuleById(file)))
       .filter((id) => id != null)
+    data.roots[testFilePath] = roots
+    return roots
   }
 
-  return { modules, add }
+  return { data, add }
 }
 
 function clearId(id?: string | null) {
