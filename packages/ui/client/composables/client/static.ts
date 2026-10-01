@@ -41,15 +41,11 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
     getConfig: async () => {
       return metadata.config
     },
-    getModuleGraph: async (projectName, id) => {
-      for (const { modules, rootsByTestFile } of Object.values(
-        metadata.moduleGraph[projectName] ?? {},
-      )) {
-        if (rootsByTestFile[id]) {
-          return { modules, roots: rootsByTestFile[id] }
-        }
-      }
-      return { modules: {}, roots: [] }
+    getModuleGraph: async (projectName, id, viteEnvironment) => {
+      const graph = viteEnvironment
+        ? metadata.moduleGraph[projectName]?.[viteEnvironment]
+        : undefined
+      return { modules: graph?.modules ?? {}, roots: graph?.rootsByTestFile[id] ?? [] }
     },
     getUnhandledErrors: async () => {
       return metadata.unhandledErrors
