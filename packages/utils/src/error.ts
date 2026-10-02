@@ -40,13 +40,32 @@ export function processError(
   } catch {}
 
   try {
-    return serializeValue(err)
+    const serializedError = serializeValue(err)
+    if (typeof serializedError?.message === 'string') {
+      return serializedError
+    }
+    return {
+      message: `Non-Error value thrown: ${formatThrownValue(serializedError, diffOptions)}`,
+      serializedValue: serializedError,
+    }
   } catch (e: any) {
     return serializeValue(
       new Error(
         `Failed to fully serialize error: ${e?.message}\nInner error message: ${err?.message}`,
       ),
     )
+  }
+}
+
+function formatThrownValue(value: unknown, options?: DiffOptions): string {
+  try {
+    return prettyFormat(value, getDefaultFormatOptions(options))
+  } catch {
+    try {
+      return String(value)
+    } catch {
+      return '<unknown>'
+    }
   }
 }
 

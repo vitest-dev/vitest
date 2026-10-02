@@ -16,7 +16,9 @@ test('handle custom error without name', async () => {
             ---
             error:
                 name: "Unknown Error"
-                message: "undefined"
+                message: "Non-Error value thrown: {
+      \\"noName\\": \\"hi\\",
+    }"
             ...
         not ok 2 - string # time=[...]
             ---
@@ -33,8 +35,10 @@ test('handle custom error without name', async () => {
         not ok 4 - number name object # time=[...]
             ---
             error:
-                name: "1234"
-                message: "undefined"
+                name: "Unknown Error"
+                message: "Non-Error value thrown: {
+      \\"name\\": 1234,
+    }"
             ...
     }
     "
@@ -55,7 +59,9 @@ test('tap-flat handles custom error without name', async () => {
         ---
         error:
             name: "Unknown Error"
-            message: "undefined"
+            message: "Non-Error value thrown: {
+      \\"noName\\": \\"hi\\",
+    }"
         ...
     not ok 2 - basic.test.ts > string # time=[...]
         ---
@@ -72,8 +78,10 @@ test('tap-flat handles custom error without name', async () => {
     not ok 4 - basic.test.ts > number name object # time=[...]
         ---
         error:
-            name: "1234"
-            message: "undefined"
+            name: "Unknown Error"
+            message: "Non-Error value thrown: {
+      \\"name\\": 1234,
+    }"
         ...
     "
   `)
