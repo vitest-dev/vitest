@@ -209,6 +209,8 @@ A few settings outside this repository guard the release process above: GitHub r
   - required reviewer; publishing pauses until a maintainer approves the `Release` environment deployment.
   - self-review disabled; the maintainer who triggered the release cannot approve their own publish.
   - deployment restricted to `main` and the `v*` branches; a publish can only run from a real release branch, never from an arbitrary or feature branch.
+- **release-bot environment** — holds the `vitest-release-bot` credentials for [`Prepare Publish`](./.github/workflows/prepare-publish.yml) and [`Promote Stable Docs`](./.github/workflows/promote-docs.yml); the `Release` environment holds its own copy for the tag push.
+  - deployment restricted to `main` and the `v*` branches; a workflow pushed to any other branch cannot use the app, which can bypass the tag ruleset and push to the `release` docs branch.
 - **npm publishing** — npm settings control how packages are authenticated and released.
   - trusted publishing (OIDC); each package's trusted publisher on npm pins the source repository (`vitest-dev/vitest`), workflow file (`publish.yml`), and environment (`Release`), so publishes use short-lived tokens from that workflow alone with no long-lived npm token to leak, and they carry provenance attestation automatically so users can trace a package back to the exact workflow run that produced it.
   - staged publishing; a publish run only stages the packages, and they go live only after a maintainer reviews and approves them on npm with 2FA, so a bad or accidental publish can be discarded before it becomes installable.
