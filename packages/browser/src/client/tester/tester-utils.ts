@@ -121,6 +121,7 @@ const ACTION_TRACE_COMMANDS = new Set([
   '__vitest_tab',
   '__vitest_keyboard',
   '__vitest_takeScreenshot',
+  '__vitest_pointer',
 ])
 
 export class CommandsManager {
