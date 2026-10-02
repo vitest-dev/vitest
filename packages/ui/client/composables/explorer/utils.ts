@@ -12,10 +12,6 @@ import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
 import { isSuite as isTaskSuite } from '~/utils/task'
 
-export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
-  return node.type === 'test'
-}
-
 export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode {
   return node.mode === 'run' && node.type === 'test'
 }
