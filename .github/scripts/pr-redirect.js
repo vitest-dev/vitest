@@ -124,6 +124,13 @@ export default async function redirectPullRequest({ github, context, core }) {
   const redirect = createRedirect({ github, context, core })
   const pr = context.payload.pull_request
 
+  const { owner, repo } = context.repo
+  const { data: current } = await github.rest.pulls.get({ owner, repo, pull_number: pr.number })
+  if (current.state !== 'open') {
+    core.info(`#${pr.number} is skipped: already closed`)
+    return
+  }
+
   const approved = await redirect.readApprovedContributors()
   let reason = await redirect.findReasonToSkip(pr, approved)
   if (

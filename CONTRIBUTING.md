@@ -245,7 +245,7 @@ flowchart TD
 
 ### Pull Request Redirect
 
-The [`PR Redirect`](./.github/workflows/pr-redirect.yml) workflow applies the [pull request policy](#pull-request-policy) when a pull request is opened or reopened. It comments on the pull request, pointing to the linked issues or asking to open a new one, and closes it. It never touches pull requests from members of the `vitest-dev` organization, from repository collaborators, or from apps that push branches to this repository (for example, Renovate). Users with write access to the repository control the rest:
+The [`AI Policy`](./.github/workflows/ai-policy.yml) workflow applies the [pull request policy](#pull-request-policy) when a pull request is opened or reopened. It comments on the pull request, pointing to the linked issues or asking to open a new one, and closes it. It never touches pull requests from members of the `vitest-dev` organization, from repository collaborators, or from apps that push branches to this repository (for example, Renovate). Users with write access to the repository control the rest:
 
 - Reopen a pull request to keep it open. The workflow closes it again only if someone without write access reopens it.
 - Comment `/trust` on a pull request to add its author to the approved contributors. Comment `/trust username` to add a specific user. It must be a regular comment on a pull request, not a review, and it must contain nothing but the command. The [`Approve Contributor`](./.github/workflows/approve-contributor.yml) workflow reacts to it with 🚀 when the user is on the list.

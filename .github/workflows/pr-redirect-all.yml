@@ -1,6 +1,6 @@
 name: PR Redirect All
 
-# Closes every open pull request that the "PR Redirect" workflow would close,
+# Closes every open pull request that the "AI Policy" workflow would close,
 # see "Pull Request Policy" in CONTRIBUTING.md.
 #
 # SECURITY: this workflow must never check out or run code from a pull request.
