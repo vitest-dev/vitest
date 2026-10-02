@@ -12,7 +12,7 @@ import { getSortedRootTasks, isFileNode, isParentNode } from '~/composables/expl
 
 interface FilterNodeContext {
   nodes: ReadonlyMap<string, UITaskTreeNode>
-  tasks: ReadonlyMap<string, Task>
+  taskIdMap: ReadonlyMap<string, Task>
   search: SearchMatcher
   filter: Filter
   slowTestThreshold: number | undefined
@@ -50,17 +50,17 @@ export function runFilter(search: SearchMatcher, filter: Filter): void {
  */
 export function filterAll(search: SearchMatcher, filter: Filter): UITaskTreeNode[] {
   const project = currentProjectName.value
-  const tasks = getSortedRootTasks(explorerTree.root.tasks, projectSort.value)
+  const files = getSortedRootTasks(explorerTree.root.tasks, projectSort.value)
   const entries: UITaskTreeNode[] = []
   const context: FilterNodeContext = {
     nodes: explorerTree.nodes,
-    tasks: client.state.idMap,
+    taskIdMap: client.state.idMap,
     search,
     filter,
     slowTestThreshold: config.value.slowTestThreshold,
   }
 
-  for (const node of tasks) {
+  for (const node of files) {
     if (project && node.projectName !== project) {
       continue
     }
@@ -133,7 +133,7 @@ function matchesNode(node: UITaskTreeNode, context: FilterNodeContext): boolean 
   if (context.filter.onlyTests && node.type !== 'test') {
     return false
   }
-  const task = context.tasks.get(node.id)
+  const task = context.taskIdMap.get(node.id)
   return task ? matchTask(task, context.search, context.filter, context.slowTestThreshold) : false
 }
 

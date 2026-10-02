@@ -49,7 +49,7 @@ export function runExpandNode(id: string, search: SearchMatcher, filter: Filter)
   treeItems.add(node.id)
   const subtree = filterNode(node, {
     nodes: explorerTree.nodes,
-    tasks: client.state.idMap,
+    taskIdMap: client.state.idMap,
     search,
     filter,
     slowTestThreshold: config.value.slowTestThreshold,
