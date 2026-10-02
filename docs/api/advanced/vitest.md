@@ -46,7 +46,7 @@ You can get the latest summary of snapshots via the `vitest.snapshot.summary` pr
 
 Cache manager that stores the results of the previous test runs. In Vitest itself this is only used by the default sequencer to sort tests.
 
-### cache.getTestSpecificationResult <Version>5.1.0</Version> {#cache-gettestspecificationresult}
+### cache.getTestSpecificationResult <Version type="experimental">5.0.4</Version> {#cache-gettestspecificationresult}
 
 Returns the result of the test file from the previous test runs, or `undefined` if Vitest has no result for it.
 
