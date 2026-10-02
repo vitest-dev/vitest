@@ -34,24 +34,12 @@ export function testMatcher(
 }
 
 /**
- * Rebuild the explorer rows for the whole tree and publish them to `uiEntries` and `filteredFiles`.
+ * Rebuild the explorer rows for every file of the current project, in sort order, and publish them to
+ * `uiEntries` and `filteredFiles`.
  */
 export function runFilter(search: SearchMatcher, filter: Filter): void {
-  const entries = filterAll(search, filter)
-  uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
-}
-
-/**
- * Return the explorer rows for every file of the current project, in sort order.
- *
- * Reads the current project, sort order, explorer tree, task state, and config. Kept parents are marked
- * expanded, and nothing else is written.
- */
-function filterAll(search: SearchMatcher, filter: Filter): UITaskTreeNode[] {
   const project = currentProjectName.value
   const files = getSortedRootTasks(explorerTree.root.tasks, projectSort.value)
-  const entries: UITaskTreeNode[] = []
   const context: FilterNodeContext = {
     nodes: explorerTree.nodes,
     taskIdMap: client.state.idMap,
@@ -59,17 +47,11 @@ function filterAll(search: SearchMatcher, filter: Filter): UITaskTreeNode[] {
     filter,
     slowTestThreshold: config.value.slowTestThreshold,
   }
-
-  for (const node of files) {
-    if (project && node.projectName !== project) {
-      continue
-    }
-    for (const entry of filterNode(node, context)) {
-      entries.push(entry)
-    }
-  }
-
-  return entries
+  const entries = files
+    .filter((file) => !project || file.projectName === project)
+    .flatMap((file) => filterNode(file, context))
+  uiEntries.value = entries
+  filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
 }
 
 /**
