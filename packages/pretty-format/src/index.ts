@@ -94,7 +94,7 @@ function printFunction(val: Function, printFunctionName: boolean): string {
 }
 
 function printSymbol(val: symbol): string {
-  return String(val).replace(SYMBOL_REGEXP, 'Symbol($1)')
+  return Symbol.prototype.toString.call(val).replace(SYMBOL_REGEXP, 'Symbol($1)')
 }
 
 function printError(val: Error): string {
