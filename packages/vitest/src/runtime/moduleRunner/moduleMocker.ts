@@ -2,6 +2,7 @@ import type { ManualMockedModule, MockedModule } from '@vitest/mocker'
 import type { EvaluatedModuleNode } from 'vite/module-runner'
 import type { BareModuleMockerOptions } from './bareModuleMocker'
 import type { VitestModuleRunner } from './moduleRunner'
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { resolve } from 'node:path'
 import vm from 'node:vm'
 import { AutomockedModule, RedirectedModule } from '@vitest/mocker'
@@ -14,6 +15,15 @@ const spyModulePath = resolve(distDir, 'spy.js')
 export interface VitestMockerOptions extends BareModuleMockerOptions {
   context?: vm.Context
 }
+
+interface FactoryContext {
+  mock: MockedModule | null
+  callstack: string[]
+  evaluations: Set<Promise<unknown>>
+  parent: FactoryContext | undefined
+}
+
+const factoryContexts = new AsyncLocalStorage<FactoryContext>()
 
 export class VitestMocker extends BareModuleMocker {
   private filterPublicKeys: (symbol | string)[]
@@ -213,24 +223,76 @@ export class VitestMocker extends BareModuleMocker {
         this.mockObject(mod, exports, mock.type)
         return exports
       }
-      if (mock.type === 'manual' && !callstack.includes(mockId) && !callstack.includes(url)) {
+      if (
+        mock.type === 'manual' &&
+        !callstack.includes(mockId) &&
+        !callstack.includes(url) &&
+        !this.isFactoryImport(mock)
+      ) {
+        const factory: FactoryContext = {
+          mock,
+          callstack,
+          evaluations: this.getEvaluations(callstack),
+          parent: this.getActiveFactory(),
+        }
+        const mockCallstack = [...callstack, mockId]
         try {
-          callstack.push(mockId)
-          // this will not work if user does Promise.all(import(), import())
-          // we can also use AsyncLocalStorage to store callstack, but this won't work in the browser
-          // maybe we should improve mock API in the future?
-          this.mockContext.callstack = callstack
-          return await this.callFunctionMock(mockId, this.getMockPath(url), mock)
+          this.mockContext.callstack = mockCallstack
+          return await factoryContexts.run(factory, () =>
+            this.callFunctionMock(mockId, this.getMockPath(url), mock),
+          )
         } finally {
+          mockCallstack.pop()
+          factory.mock = null
+          factory.callstack = []
+          factory.evaluations.clear()
           this.mockContext.callstack = null
-          const indexMock = callstack.indexOf(mockId)
-          callstack.splice(indexMock, 1)
         }
       } else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
         span.setAttribute('vitest.mock.redirect', mock.redirect)
         return mock.redirect
       }
     })
+  }
+
+  public isFactoryImport(mock: MockedModule): boolean {
+    for (let factory = this.getActiveFactory(); factory; factory = factory.parent) {
+      if (factory.mock === mock) {
+        return true
+      }
+    }
+    return false
+  }
+
+  public withFactoryCallstack(mod: EvaluatedModuleNode, callstack: string[]): string[] {
+    if (!mod.promise || mod.evaluated) {
+      return callstack
+    }
+    for (let factory = this.getActiveFactory(); factory; factory = factory.parent) {
+      if (factory.evaluations.has(mod.promise)) {
+        return [...factory.callstack, ...callstack]
+      }
+    }
+    return callstack
+  }
+
+  private getEvaluations(callstack: string[]): Set<Promise<unknown>> {
+    const evaluations = new Set<Promise<unknown>>()
+    for (const id of callstack) {
+      const promise = this.evaluatedModules.getModuleById(id)?.promise
+      if (promise) {
+        evaluations.add(promise)
+      }
+    }
+    return evaluations
+  }
+
+  private getActiveFactory(): FactoryContext | undefined {
+    let factory = factoryContexts.getStore()
+    while (factory && !factory.mock) {
+      factory = factory.parent
+    }
+    return factory
   }
 
   public async mockedRequest(
