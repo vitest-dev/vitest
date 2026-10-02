@@ -34,7 +34,7 @@ export function testMatcher(
 }
 
 /**
- * Filter child nodes using search, filter and only tests.
+ * Rebuild the explorer rows for the whole tree and publish them to `uiEntries` and `filteredFiles`.
  *
  * @param search The search applied.
  * @param filter The filter applied.
@@ -45,6 +45,11 @@ export function runFilter(search: SearchMatcher, filter: Filter) {
   filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
 }
 
+/**
+ * Return the explorer rows for every file of the current project, in sort order.
+ *
+ * Kept parents are marked expanded. Nothing else is written.
+ */
 export function filterAll(search: SearchMatcher, filter: Filter) {
   const project = currentProjectName.value
   const tasks = getSortedRootTasks(projectSort.value)
@@ -69,11 +74,23 @@ export function filterAll(search: SearchMatcher, filter: Filter) {
   return entries
 }
 
+/**
+ * Return the rows the full filter shows for `node` and its subtree: `node` first, then its visible
+ * descendants in tree order, or nothing when `node` does not pass the filter.
+ *
+ * `node` can be anywhere in the tree, because matches inherited from its ancestors are checked too.
+ */
 export function filterNode(node: UITaskTreeNode, context: FilterNodeContext) {
   const filteredTree = filterTreeNode(node, context, hasMatchingAncestor(node, context))
   return filteredTree ? flattenVisibleTree(filteredTree) : []
 }
 
+/**
+ * Return the kept part of the subtree under `node`, or `undefined` when `node` is not kept.
+ *
+ * A node is kept when an ancestor matched (`ancestorMatches`) or when the node or one of its descendants
+ * matched (`subtreeMatches`). Kept parents are marked expanded.
+ */
 function filterTreeNode(
   node: UITaskTreeNode,
   context: FilterNodeContext,
