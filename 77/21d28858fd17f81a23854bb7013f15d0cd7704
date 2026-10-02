@@ -1,0 +1,23 @@
+.github/workflows/prepare-publish.yml
+  s_266879a5fbc1a6::t_cf940f678654c1 40-41
+.github/workflows/promote-docs.yml
+  s_266879a5fbc1a6::t_b9dafe8dd0a5f2 31-33
+CONTRIBUTING.md
+  s_266879a5fbc1a6::t_90babeafcdf518 212-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7721d28858fd17f81a23854bb7013f15d0cd7704",
+  "prompts": {},
+  "sessions": {
+    "s_266879a5fbc1a6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f03c31b27ffeDSD4MFWiDfbxX1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
