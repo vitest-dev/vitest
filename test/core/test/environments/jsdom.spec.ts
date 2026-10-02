@@ -182,6 +182,13 @@ describe('FormData', () => {
 
     expect(retrievedBlob).toBeInstanceOf(File)
   })
+
+  test('keeps Blob bytes when used as a Request body', async () => {
+    const blob = new Blob(['hello world'], { type: 'text/plain' })
+    const request = new Request('http://localhost/', { method: 'POST', body: blob })
+
+    expect(await request.text()).toBe('hello world')
+  })
 })
 
 test('DOM APIs accept AbortController', () => {
@@ -317,6 +324,17 @@ test('URL.createObjectUrl works properly', () => {
   expect(() => {
     URL.createObjectURL(new File([], 'name.js'))
   }).not.toThrow()
+})
+
+test('URL.createObjectURL keeps the Blob bytes', async () => {
+  const url = URL.createObjectURL(new Blob(['hello world'], { type: 'text/plain' }))
+  expect(url).toMatch(/^blob:/)
+
+  const response = await fetch(url)
+  URL.revokeObjectURL(url)
+
+  expect(response.headers.get('content-type')).toBe('text/plain')
+  expect(await response.text()).toBe('hello world')
 })
 
 test('compat classes preserve their .name property', () => {
