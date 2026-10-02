@@ -37,7 +37,6 @@ import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
-import { FileSystemModuleCache } from './cache/fsModuleCache'
 import { matchesProjectFilter, resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
 import { ServerModuleRunner } from './environments/serverRunner'
@@ -144,7 +143,7 @@ export class Vitest {
    */
   public snapshot!: SnapshotManager
   /**
-   * Test results and test file stats cache. Primarily used by the sequencer to sort tests.
+   * The cache of the previous test runs. Primarily used by the sequencer to sort tests.
    */
   public cache!: VitestCache
 
@@ -169,7 +168,6 @@ export class Vitest {
   /** @internal */ _testRun: TestRun
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _transformService!: ModuleTransformService
-  /** @internal */ _fsCache!: FileSystemModuleCache
   /** @internal */ _tmpDir: string | undefined = join(tmpdir(), nanoid())
   /** @internal */ _traces!: Traces
   /** @internal */ _harness: PluginHarness
@@ -243,14 +241,13 @@ export class Vitest {
     this.state = new StateManager({
       onUnhandledError: resolved.onUnhandledError,
     })
-    this.cache = new VitestCache(this.logger)
+    this.cache = new VitestCache(this)
     const otelSdkPath = this.config.experimental.openTelemetry?.sdkPath
     this._traces = new Traces({
       enabled: !!this.config.experimental.openTelemetry?.enabled,
       sdkPath: otelSdkPath,
       watchMode: this.config.watch,
     })
-    this._fsCache = new FileSystemModuleCache(this)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._resolver = new VitestResolver(this.viteConfig.cacheDir, resolved)
     // a closed run removes the temp dir, so a restart must allocate a new one
@@ -258,7 +255,7 @@ export class Vitest {
     this._transformService = new ModuleTransformService(
       this._resolver,
       resolved,
-      this._fsCache,
+      this.cache._modules,
       this._traces,
       tmpDir,
     )
@@ -369,11 +366,6 @@ export class Vitest {
     if (!resolved.watch) {
       await server.watcher.close()
     }
-
-    this.cache.results.setConfig(resolved.root, resolved.cache)
-    try {
-      await this.cache.results.readFromCache()
-    } catch {}
   }
 
   /** @internal */
@@ -397,7 +389,7 @@ export class Vitest {
             vitest: this,
             injectTestProjects: this.injectTestProject,
             defineCacheKeyGenerator: (callback) =>
-              this._fsCache.defineCacheKeyGenerator(project.config, callback),
+              this.cache._modules.defineCacheKeyGenerator(project.config, callback),
             /**
              * @deprecated Use `defineCacheKeyGenerator` instead.
              */
@@ -408,7 +400,7 @@ export class Vitest {
                   '`experimental_defineCacheKeyGenerator` is deprecated. Use `defineCacheKeyGenerator` instead.',
                 )
               }
-              this._fsCache.defineCacheKeyGenerator(project.config, callback)
+              this.cache._modules.defineCacheKeyGenerator(project.config, callback)
             },
           }),
         )
@@ -475,7 +467,7 @@ export class Vitest {
       }
     }
 
-    await this._fsCache.ensureCacheIntegrity()
+    await this.cache._load()
 
     await Promise.all([...this._onSetServer.map((fn) => fn()), this._traces.waitInit()])
   }
@@ -540,7 +532,9 @@ export class Vitest {
   private clearAllCachePaths() {
     this.projects.forEach(({ vite }) => {
       const environments = Object.values(vite.environments)
-      environments.forEach((environment) => this._fsCache.invalidateAllCachePaths(environment))
+      environments.forEach((environment) =>
+        this.cache._modules.invalidateAllCachePaths(environment),
+      )
     })
   }
 
@@ -688,8 +682,7 @@ export class Vitest {
    * Deletes all Vitest caches, including the `fsModuleCache`.
    */
   public async clearCache(): Promise<void> {
-    await this.cache.results.clearCache()
-    await this._fsCache.clearCache()
+    await this.cache._clear()
   }
 
   /**
@@ -915,9 +908,6 @@ export class Vitest {
         }
 
         if (specifications.length) {
-          // populate once, update cache on watch
-          await this.cache.stats.populateStats(this.config.root, specifications)
-
           testModules = await this.runFiles(specifications, true)
         }
 
@@ -1055,6 +1045,8 @@ export class Vitest {
       // schedule the new run
       this.runningPromise = (async () => {
         try {
+          const startTime = Date.now()
+
           if (!this.pool) {
             this.pool = createPool(this)
           }
@@ -1076,12 +1068,7 @@ export class Vitest {
             this.state.catchError(err, 'Unhandled Error')
           }
 
-          const files = this.state.getFiles()
-
-          this.cache.results.updateResults(files)
-          try {
-            await this.cache.results.writeToCache()
-          } catch {}
+          await this.cache._results.update(specs, startTime)
 
           return {
             testModules: this.state.getTestModules(),
@@ -1602,7 +1589,7 @@ export class Vitest {
 
         modules.forEach((module) => {
           moduleGraph.invalidateModule(module)
-          this._fsCache.invalidateCachePath(environment, module.id!)
+          this.cache._modules.invalidateCachePath(environment, module.id!)
         })
       })
     })

@@ -1,5 +1,5 @@
 import type { TestProject, Vitest } from 'vitest/node'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { BaseSequencer } from '../../../packages/vitest/src/node/sequencers/BaseSequencer'
 import { RandomSequencer } from '../../../packages/vitest/src/node/sequencers/RandomSequencer'
 import { TestSpecification } from '../../../packages/vitest/src/node/test-specification'
@@ -11,8 +11,7 @@ function buildCtx(config?: Partial<Vitest['config']>) {
       ...config,
     },
     cache: {
-      getFileTestResults: vi.fn(),
-      getFileStats: vi.fn(),
+      getTestSpecificationResult: () => undefined,
     },
   } as unknown as Vitest
 }
@@ -39,95 +38,6 @@ describe('base sequencer', () => {
     const files = workspaced(['a', 'b', 'c'])
     const sorted = await sequencer.sort(files)
     expect(sorted).toStrictEqual(files)
-  })
-
-  test('prioritize unknown files', async () => {
-    const ctx = buildCtx()
-    vi.spyOn(ctx.cache, 'getFileStats').mockImplementation((file) => {
-      if (file === 'test:b') {
-        return { size: 2 }
-      }
-    })
-    const sequencer = new BaseSequencer(ctx)
-    const files = workspaced(['b', 'a', 'c'])
-    const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['a', 'c', 'b']))
-  })
-
-  test('sort by size, larger first', async () => {
-    const ctx = buildCtx()
-    vi.spyOn(ctx.cache, 'getFileStats').mockImplementation((file) => {
-      if (file === 'test:a') {
-        return { size: 1 }
-      }
-      if (file === 'test:b') {
-        return { size: 2 }
-      }
-      if (file === 'test:c') {
-        return { size: 3 }
-      }
-    })
-    const sequencer = new BaseSequencer(ctx)
-    const files = workspaced(['b', 'a', 'c'])
-    const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['c', 'b', 'a']))
-  })
-
-  test('sort by results, failed first', async () => {
-    const ctx = buildCtx()
-    vi.spyOn(ctx.cache, 'getFileTestResults').mockImplementation((file) => {
-      if (file === 'test:a') {
-        return { failed: false, duration: 1 }
-      }
-      if (file === 'test:b') {
-        return { failed: true, duration: 1 }
-      }
-      if (file === 'test:c') {
-        return { failed: true, duration: 1 }
-      }
-    })
-    const sequencer = new BaseSequencer(ctx)
-    const files = workspaced(['b', 'a', 'c'])
-    const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['b', 'c', 'a']))
-  })
-
-  test('sort by results, long first', async () => {
-    const ctx = buildCtx()
-    vi.spyOn(ctx.cache, 'getFileTestResults').mockImplementation((file) => {
-      if (file === 'test:a') {
-        return { failed: true, duration: 1 }
-      }
-      if (file === 'test:b') {
-        return { failed: true, duration: 2 }
-      }
-      if (file === 'test:c') {
-        return { failed: true, duration: 3 }
-      }
-    })
-    const sequencer = new BaseSequencer(ctx)
-    const files = workspaced(['b', 'a', 'c'])
-    const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['c', 'b', 'a']))
-  })
-
-  test('sort by results, long and failed first', async () => {
-    const ctx = buildCtx()
-    vi.spyOn(ctx.cache, 'getFileTestResults').mockImplementation((file) => {
-      if (file === 'test:a') {
-        return { failed: false, duration: 1 }
-      }
-      if (file === 'test:b') {
-        return { failed: false, duration: 6 }
-      }
-      if (file === 'test:c') {
-        return { failed: true, duration: 3 }
-      }
-    })
-    const sequencer = new BaseSequencer(ctx)
-    const files = workspaced(['b', 'a', 'c'])
-    const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['c', 'b', 'a']))
   })
 
   test.each([

@@ -99,7 +99,7 @@ export class TestProject {
     this._transformService = new ModuleTransformService(
       this._resolver,
       this.config,
-      this.vitest._fsCache,
+      this.vitest.cache._modules,
       this.vitest._traces,
       this.tmpDir,
     )

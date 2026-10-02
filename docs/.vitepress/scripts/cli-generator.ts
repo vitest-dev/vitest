@@ -62,7 +62,7 @@ function resolveCommand(name: string, config: CLIOption<any> | null): any {
     title += `-${config.shorthand}, `
   }
   title += `--${config.alias || name}`
-  if ('argument' in config) {
+  if ('argument' in config && config.argument) {
     title += ` ${config.argument}`
   }
   title += '`'

@@ -812,6 +812,13 @@ Threshold in milliseconds for a test or suite to be considered slow (default: `3
 
 Default timeout of a teardown function in milliseconds (default: `10000`)
 
+### cache
+
+- **CLI:** `--cache`
+- **Config:** [cache](/config/cache)
+
+Store the results of test runs to run failed and longer test files first (default: `true`)
+
 ### maxConcurrency
 
 - **CLI:** `--maxConcurrency <number>`

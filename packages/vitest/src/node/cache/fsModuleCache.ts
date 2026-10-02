@@ -390,7 +390,7 @@ export class FileSystemModuleCache {
  *
  * Added in https://github.com/vitest-dev/vitest/pull/7531
  */
-async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
+export async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
   const dir = dirname(realFilePath)
   const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
 

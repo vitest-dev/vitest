@@ -822,9 +822,10 @@ export function resolveTestConfig(
   }
 
   if (resolved.cache !== false) {
-    if (resolved.cache && typeof resolved.cache.dir === 'string') {
+    // projects inherit the root option, so only the root config warns
+    if (!globalConfig && resolved.cache && typeof resolved.cache.dir === 'string') {
       logger.deprecate(
-        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir/vitest"`,
+        `"cache.dir" is deprecated and has no effect. Use Vite's "cacheDir" instead if you want to change the cache directory. Note that the cache is written to "cacheDir/vitest".`,
       )
     }
 

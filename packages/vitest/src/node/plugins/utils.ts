@@ -1,10 +1,11 @@
 import type { DepOptimizationOptions, UserConfig as ViteConfig } from 'vite'
 import type { DepsOptimizationOptions, UserConfig } from '../types/config'
-import { dirname } from 'pathe'
+import { slash } from '@vitest/utils/helpers'
+import { dirname, resolve } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import * as vite from 'vite'
 import { rootDir } from '../../paths'
-import { VitestCache } from '../cache'
+import { hash } from '../hash'
 
 export function resolveTestCacheDir(
   root: string,
@@ -13,11 +14,8 @@ export function resolveTestCacheDir(
 ): string {
   const name = testConfig.name
   const label = typeof name === 'string' ? name : name?.label || ''
-  return VitestCache.resolveCacheDir(
-    root,
-    testConfig.cache != null && testConfig.cache !== false ? testConfig.cache.dir : viteCacheDir,
-    label,
-  )
+  const baseDir = slash(viteCacheDir || 'node_modules/.vite')
+  return resolve(root, baseDir, 'vitest', hash('sha1', label, 'hex'))
 }
 
 export function resolveOptimizerConfig(
