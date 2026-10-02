@@ -1,4 +1,7 @@
-import type { TestBenchmark, TestBenchmarkTask } from '../../../packages/vitest/src/runtime/runner/types'
+import type {
+  TestBenchmark,
+  TestBenchmarkTask,
+} from '../../../packages/vitest/src/runtime/runner/types'
 import { stripVTControlCharacters } from 'node:util'
 import { describe, expect, it } from 'vitest'
 import { BaseReporter } from '../../../packages/vitest/src/node/reporters/base'
@@ -88,11 +91,9 @@ describe('formatRelativeScore', () => {
 
 describe('renderBenchmarkTableText', () => {
   it('adds relative scores aligned in their own column and keeps fastest/slowest suffixes', () => {
-    const output = renderBenchmarkTableText(bench([
-      task('fast', 100, 1),
-      task('mid', 200, 2),
-      task('slow', 400, 3),
-    ]))
+    const output = renderBenchmarkTableText(
+      bench([task('fast', 100, 1), task('mid', 200, 2), task('slow', 400, 3)]),
+    )
     const lines = output.split('\n')
     expect(lines[2]).toContain('2.00x slower')
     expect(lines[3]).toContain('4.00x slower')
@@ -123,8 +124,8 @@ describe('printBenchmarkTable (default reporter path)', () => {
     const logs: string[] = []
     callPrint(bench([task('fast', 100, 1), task('slow', 200, 2)]), logs)
     const lines = logs.join('\n').split('\n')
-    const fastRow = lines.find(l => l.includes('fast'))!
-    const slowRow = lines.find(l => l.includes('slow'))!
+    const fastRow = lines.find((l) => l.includes('fast'))!
+    const slowRow = lines.find((l) => l.includes('slow'))!
     expect(fastRow).toContain('fastest')
     expect(fastRow).not.toContain('slower')
     expect(slowRow).toContain('2.00x slower')

@@ -80,7 +80,7 @@ export function renderBenchmarkTableText(
     const head = [columnName, ...BENCH_TABLE_HEAD]
     const widths = computeBenchColumnWidths(head, rows)
     const scoreLabels = computeRelativeScores(tasks).map(formatRelativeScore)
-    const scoreWidth = Math.max(...scoreLabels.map(label => label.length))
+    const scoreWidth = Math.max(...scoreLabels.map((label) => label.length))
     lines.push(padBenchRow(head, widths).join('  '))
     for (const [index, task] of tasks.entries()) {
       let row = padBenchRow(renderBenchmarkRow(task), widths).join('  ')

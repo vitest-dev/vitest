@@ -1424,7 +1424,7 @@ export abstract class BaseReporter implements Reporter {
       const tableHead = [columnName, ...BENCH_TABLE_HEAD]
       const widths = computeBenchColumnWidths(tableHead, rows)
       const scoreLabels = computeRelativeScores(tasks).map(formatRelativeScore)
-      const scoreWidth = Math.max(...scoreLabels.map(label => label.length))
+      const scoreWidth = Math.max(...scoreLabels.map((label) => label.length))
       const indent = ` ${basePadding}  `
 
       this.log(`${indent}${padBenchRow(tableHead, widths).map(c.bold).join('  ')}`)
