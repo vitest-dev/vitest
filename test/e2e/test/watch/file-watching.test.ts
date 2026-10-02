@@ -87,6 +87,111 @@ test('answer is 42', () => {
   await vitest.waitForStdout('1 passed')
 })
 
+// the stylesheet depends on `math.ts` and `tokens.json` the way a Tailwind stylesheet
+// depends on the sources it scans and on its config
+function stylesheetConfig(test = {}) {
+  return /* ts */ `
+import { resolve } from 'node:path'
+
+export default {
+  css: {
+    postcss: {
+      plugins: [
+        {
+          postcssPlugin: 'dependencies',
+          Once(root, { result }) {
+            for (const file of ['math.ts', 'tokens.json']) {
+              result.messages.push({
+                type: 'dependency',
+                plugin: 'dependencies',
+                file: resolve(import.meta.dirname, file),
+                parent: result.opts.from,
+              })
+            }
+          },
+        },
+      ],
+    },
+  },
+  test: ${JSON.stringify({ css: true, ...test })},
+}
+`
+}
+
+const stylesheetFixture = {
+  'math.ts': mathTs,
+  'math.test.ts': `import './styles.css'\n${mathTestTs}`,
+  'example.ts': exampleTs,
+  'example.test.ts': `import './styles.css'\n${exampleTestTs}`,
+  'styles.css': `@import './base.css';\n`,
+  'base.css': `html { color: red }\n`,
+  'tokens.json': `{}\n`,
+  'vitest.config.ts': stylesheetConfig(),
+}
+
+test('editing source file a stylesheet depends on reruns only the tests importing it', async () => {
+  const { vitest, fs } = await testUtils.runInlineTests(stylesheetFixture, { watch: true })
+
+  fs.editFile('math.ts', modifyContent)
+
+  await vitest.waitForStdout('New code running')
+  await vitest.waitForStdout('RERUN  ../math.ts')
+  await vitest.waitForStdout('1 passed')
+})
+
+test('editing source file a stylesheet of another project depends on reruns only the tests importing it', async () => {
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      ...stylesheetFixture,
+      'math.test.ts': mathTestTs,
+      // separate config files, so the projects don't share a Vite server
+      'vitest.config.ts': {
+        test: { projects: ['./vitest.styled.config.ts', './vitest.unit.config.ts'] },
+      },
+      'vitest.styled.config.ts': stylesheetConfig({ name: 'styled', include: ['example.test.ts'] }),
+      'vitest.unit.config.ts': { test: { name: 'unit', include: ['math.test.ts'] } },
+    },
+    { watch: true },
+  )
+
+  fs.editFile('math.ts', modifyContent)
+
+  await vitest.waitForStdout('New code running')
+  await vitest.waitForStdout('RERUN  ../math.ts')
+  await vitest.waitForStdout('1 passed')
+})
+
+test('editing file only a stylesheet depends on reruns the tests importing the stylesheet', async () => {
+  const { vitest, fs } = await testUtils.runInlineTests(stylesheetFixture, { watch: true })
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('tokens.json', (content) => `${content}\n`)
+
+  await vitest.waitForStdout('RERUN  ../tokens.json')
+  await vitest.waitForStdout('example.test.ts')
+  await vitest.waitForStdout('math.test.ts')
+  await vitest.waitForStdout('2 passed')
+})
+
+test('editing stylesheet imported by a test and another stylesheet reruns the tests importing either', async () => {
+  const { vitest, fs } = await testUtils.runInlineTests(
+    { ...stylesheetFixture, 'math.test.ts': `import './base.css'\n${mathTestTs}` },
+    { watch: true },
+  )
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('base.css', (content) => `${content}\n`)
+
+  await vitest.waitForStdout('RERUN  ../base.css')
+  await vitest.waitForStdout('example.test.ts')
+  await vitest.waitForStdout('math.test.ts')
+  await vitest.waitForStdout('2 passed')
+})
+
 test('editing force rerun trigger reruns all tests', async () => {
   const { vitest, fs } = await testUtils.runInlineTests(
     {
