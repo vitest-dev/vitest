@@ -44,7 +44,7 @@ import {
   padBenchRow,
   renderBenchmarkRow,
 } from './renderers/benchmark-table'
-import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
+import { F_CHECK, F_DOWN_RIGHT, F_POINTER, F_UNAFFECTED } from './renderers/figures'
 import {
   countTestErrors,
   divider,
@@ -329,6 +329,26 @@ export abstract class BaseReporter implements Reporter {
     const title = this.getEntityPrefix(testModule)
 
     return ` ${title} ${testModule.task.name} ${suffix}`
+  }
+
+  protected printUnaffectedTestModules(): void {
+    const unaffected = this.ctx._sourceFilterResult?.unaffected
+    if (!unaffected?.length || !this.ctx.config.related) {
+      return
+    }
+
+    for (const spec of unaffected) {
+      let title = c.magenta(F_UNAFFECTED)
+      if (spec.project.name) {
+        title += ` ${formatProjectName(spec.project, '')}`
+      }
+      if (spec.pool === 'typescript') {
+        title += ` ${c.bgBlue(c.bold(' TS '))}`
+      }
+      this.log(
+        ` ${title} ${c.dim(relative(spec.project.config.root, spec.moduleId))} ${c.dim('(not affected)')}`,
+      )
+    }
   }
 
   protected printTestSuite(testSuite: TestSuite): void {
@@ -666,6 +686,7 @@ export abstract class BaseReporter implements Reporter {
     if (!result || !related) {
       return
     }
+    const affected = result.total - result.unaffected.length
 
     const sources =
       related.length === 1 && !this.ctx.config.changed
@@ -674,7 +695,7 @@ export abstract class BaseReporter implements Reporter {
 
     this.log(
       padSummaryTitle('Affected'),
-      `${result.affected} of ${result.total} test files`,
+      `${affected} of ${result.total} test files`,
       c.dim(`(related to ${sources})`),
     )
   }

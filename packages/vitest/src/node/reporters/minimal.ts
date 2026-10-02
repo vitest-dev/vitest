@@ -30,6 +30,10 @@ export class MinimalReporter extends DefaultReporter {
     super.printTestModule(testModule)
   }
 
+  protected printUnaffectedTestModules(): void {
+    // irrelevant for agent
+  }
+
   protected printTestCase(moduleState: TestModuleState, test: TestCase): void {
     const testResult = test.result()
     if (testResult.state === 'failed') {
