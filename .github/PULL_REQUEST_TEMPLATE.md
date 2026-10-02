@@ -6,9 +6,11 @@ Resolves #issue-number
 
 This pull request will be closed automatically unless you are an approved contributor. See "Pull Request Policy" in CONTRIBUTING.md.
 
-Please insert your description here and provide especially info about the "what" this PR is solving -->
+Please insert your description here, in your own words, and provide especially info about the "what" this PR is solving -->
 
 ### Please don't delete this checklist! Before submitting the PR, please make sure you do the following:
+
+- [ ] Read the [AI Contribution Policy](https://github.com/vitest-dev/vitest/blob/main/AI_POLICY.md). You understand every change in this PR and can explain it.
 
 - [ ] It's really useful if your PR references an issue where it is discussed ahead of time. If the feature is substantial or introduces breaking changes without a discussion, PR might be closed.
 - [ ] Ideally, include a test that fails without this PR but passes with it.

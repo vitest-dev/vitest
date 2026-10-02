@@ -65,7 +65,7 @@ jobs:
 
             If you believe this was flagged by mistake, leave a comment.
 
-            *These measures help us reduce maintenance burden and keep the team's work efficient. See our [AI contributions policy](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md#ai-contributions) for more context.*
+            *These measures help us reduce maintenance burden and keep the team's work efficient. See our [AI contribution policy](https://github.com/vitest-dev/vitest/blob/main/AI_POLICY.md) for more context.*
 
   pr-clanker-comment:
     runs-on: ubuntu-slim
