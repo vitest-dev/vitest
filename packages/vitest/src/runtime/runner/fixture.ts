@@ -426,8 +426,12 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
         }
         cachedFixtures.add(fixture)
 
-        const resolvedValue = await resolveTestFixtureValue(fixture, context, cleanupFnArray)
-        context[fixture.name] = resolvedValue
+        try {
+          context[fixture.name] = await resolveTestFixtureValue(fixture, context, cleanupFnArray)
+        } catch (error) {
+          cachedFixtures.delete(fixture)
+          throw error
+        }
 
         cleanupFnArray.push(() => {
           cachedFixtures.delete(fixture)
@@ -503,11 +507,14 @@ async function resolveScopeFixtureValue(
     fixture.name,
     fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
     cleanupFnFileArray,
-  ).then((value) => {
-    fixtureContext[fixture.name] = value
-    scopedFixturePromiseCache.delete(fixture)
-    return value
-  })
+  )
+    .then((value) => {
+      fixtureContext[fixture.name] = value
+      return value
+    })
+    .finally(() => {
+      scopedFixturePromiseCache.delete(fixture)
+    })
   scopedFixturePromiseCache.set(fixture, promise)
   return promise
 }
