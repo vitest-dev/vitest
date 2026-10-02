@@ -620,6 +620,160 @@ test.each([
   })
 })
 
+describe('snapshot files', () => {
+  const snapshotTest = (name: string) => `
+    import { expect, test } from 'vitest'
+    test('${name}', () => { expect('${name}').toMatchSnapshot() })
+  `
+  const snapshot = (name: string) =>
+    `// Vitest Snapshot v1\n\nexports[\`${name} 1\`] = \`"${name}"\`;\n`
+
+  test('a changed snapshot runs the test that owns it', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'a.test.js': snapshotTest('a'),
+        'b.test.js': snapshotTest('b'),
+        '__snapshots__/a.test.js.snap': snapshot('a'),
+        '__snapshots__/b.test.js.snap': snapshot('b'),
+      },
+      { related: ['__snapshots__/a.test.js.snap'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+
+  test('a snapshot from resolveSnapshotPath runs the test that owns it', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': `
+          import { basename, join } from 'node:path'
+          export default {
+            test: {
+              resolveSnapshotPath: (testPath, extension) =>
+                join(import.meta.dirname, 'snapshots', basename(testPath) + extension),
+            },
+          }
+        `,
+        'a.test.js': snapshotTest('a'),
+        'b.test.js': snapshotTest('b'),
+        'snapshots/a.test.js.snap': snapshot('a'),
+        'snapshots/b.test.js.snap': snapshot('b'),
+      },
+      { related: ['snapshots/b.test.js.snap'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+})
+
+describe('env files', () => {
+  test.each(['.env', '.env.local', '.env.test', '.env.test.local'])(
+    'a changed %s runs every test',
+    async (envFile) => {
+      const { stderr, testTree } = await runInlineTests(
+        {
+          [envFile]: 'VITE_VALUE=1',
+          'a.test.js': `
+            import { expect, test } from 'vitest'
+            test('a', () => { expect(import.meta.env.VITE_VALUE).toBe('1') })
+          `,
+          'b.test.js': testFile('b'),
+        },
+        { related: [envFile] },
+      )
+
+      expect(stderr).toBe('')
+      expect(testTree()).toMatchInlineSnapshot(`
+        {
+          "a.test.js": {
+            "a": "passed",
+          },
+          "b.test.js": {
+            "b": "passed",
+          },
+        }
+      `)
+    },
+  )
+
+  test('an env file runs only the tests of the project that loads it', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { projects: ['./first', './second'] } },
+        'first/vitest.config.js': { test: { name: 'first' } },
+        'first/.env': 'VITE_VALUE=1',
+        'first/a.test.js': testFile('a'),
+        'second/vitest.config.js': { test: { name: 'second' } },
+        'second/b.test.js': testFile('b'),
+      },
+      { related: ['first/.env'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+      }
+    `)
+  })
+
+  test('an env file from envDir runs every test', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { envDir: './env' },
+        'env/.env': 'VITE_VALUE=1',
+        '.env': 'VITE_VALUE=2',
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b'),
+        'src/other.js': 'export {}',
+      },
+      { related: ['env/.env'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+
+  test('an env file outside of envDir is ignored', async () => {
+    const { testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { envDir: './env' },
+        'env/.env': 'VITE_VALUE=1',
+        '.env': 'VITE_VALUE=2',
+        'a.test.js': testFile('a'),
+      },
+      { related: ['.env'] },
+    )
+
+    expect(testTree()).toMatchInlineSnapshot(`{}`)
+  })
+})
+
 test('global setup and environments are walked in the environment that loads them', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {

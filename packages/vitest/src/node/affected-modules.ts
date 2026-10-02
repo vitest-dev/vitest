@@ -64,7 +64,10 @@ export class AffectedModulesResolver {
     project: TestProject,
     specs: TestSpecification[],
   ): Promise<TestSpecification[]> {
-    if (this.dependsOnConfig(project.vite.config.configFileDependencies)) {
+    if (
+      this.dependsOnConfig(project.vite.config.configFileDependencies) ||
+      this.dependsOnConfig(getEnvFiles(project))
+    ) {
       return specs
     }
 
@@ -93,12 +96,17 @@ export class AffectedModulesResolver {
 
     // walk the graph of the environment that runs the test, so the run reuses the transforms
     const affected: TestSpecification[] = []
+    const related = new Set(this.related)
+    const snapshotContext = { config: project.serializedConfig }
     const environments = await Promise.all(specs.map((spec) => this.getViteEnvironment(spec)))
     const specsByEnvironment = new Map<DevEnvironment, TestSpecification[]>()
     specs.forEach((spec, index) => {
       // always run the spec if environment file is updated
       const environmentFile = environmentFiles[index]
-      if (environmentFile && affectedByVitest.has(environmentFile)) {
+      if (
+        (environmentFile && affectedByVitest.has(environmentFile)) ||
+        related.has(this.getSnapshotFile(spec, snapshotContext))
+      ) {
         affected.push(spec)
         return
       }
@@ -115,6 +123,11 @@ export class AffectedModulesResolver {
       ),
     )
     return [...affected, ...affectedInEnvironments.flat()]
+  }
+
+  private getSnapshotFile(spec: TestSpecification, context: object): string {
+    const path = this.vitest.snapshot.resolvePath(spec.moduleId, context)
+    return resolve(spec.project.config.root, path)
   }
 
   // mirrors the `viteEnvironment` of the builtin environments, custom ones are only known in the worker
@@ -251,6 +264,17 @@ export class AffectedModulesResolver {
       this.transformQueue.shift()?.()
     }
   }
+}
+
+// files loaded into `import.meta.env`, mirrors Vite's `loadEnv`
+function getEnvFiles(project: TestProject): string[] {
+  const { envDir, mode } = project.vite.config
+  if (typeof envDir !== 'string') {
+    return []
+  }
+  return ['.env', '.env.local', `.env.${mode}`, `.env.${mode}.local`].map((file) =>
+    resolve(envDir, file),
+  )
 }
 
 /**
