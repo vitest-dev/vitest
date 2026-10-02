@@ -1073,7 +1073,7 @@ export function resolveTestConfig(
       resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
     }
   }
-  resolved.fsModuleCache ??= false
+  resolved.fsModuleCache ??= true
   if (resolved.fsModuleCachePath) {
     resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
   }

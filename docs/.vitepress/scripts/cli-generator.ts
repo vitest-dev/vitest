@@ -1,8 +1,8 @@
-import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config'
+import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config.ts'
 import { writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config'
+import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config.ts'
 
 const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const cliTablePath = resolve(docsDir, './guide/cli-generated.md')

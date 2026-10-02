@@ -43,5 +43,6 @@
     "test/workspaces-browser/results.json",
     "test/e2e/deps/error",
     "test/e2e/deps/malformed-source-map",
+    "test/e2e/deps/optimizer/unparsable",
   ],
 }

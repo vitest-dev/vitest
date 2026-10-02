@@ -42,10 +42,10 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.7'
+  private version = '1.0.0-beta.8'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
-  private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
+  private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
   private warnedDeprecatedIgnore = new Set<string>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // surprisingly, on some machines this has negligible effect
@@ -62,8 +62,13 @@ export class FileSystemModuleCache {
     this.metadataFilePath = join(this.rootCache, METADATA_FILE)
   }
 
-  public defineCacheKeyGenerator(callback: CacheKeyIdGenerator): void {
-    this.fsCacheKeyGenerators.add(callback)
+  public defineCacheKeyGenerator(config: ResolvedConfig, callback: CacheKeyIdGenerator): void {
+    let generators = this.fsCacheKeyGenerators.get(config)
+    if (!generators) {
+      generators = new Set()
+      this.fsCacheKeyGenerators.set(config, generators)
+    }
+    generators.add(callback)
   }
 
   // A plugin can exclude itself from the cache key via `api.vitest.ignoreFsModuleCache`.
@@ -142,7 +147,7 @@ export class FileSystemModuleCache {
       url: meta.url,
       file: meta.file,
       code,
-      importedUrls: meta.importedUrls,
+      imports: meta.imports,
       mappings: meta.mappings,
       moduleType: meta.moduleType,
       deps: meta.deps,
@@ -155,7 +160,7 @@ export class FileSystemModuleCache {
     cachedFilePath: string,
     fetchResult: VitestFetchResult,
     transformResult: TransformResult | null,
-    importedUrls: string[] = [],
+    imports: CachedModuleImports = { urls: [], ids: {} },
     mappings: boolean = false,
   ): Promise<void> {
     if ('code' in fetchResult) {
@@ -163,7 +168,7 @@ export class FileSystemModuleCache {
         file: fetchResult.file,
         id: fetchResult.id,
         url: fetchResult.url,
-        importedUrls,
+        imports,
         mappings,
         moduleType: fetchResult.moduleType,
         deps: transformResult?.deps,
@@ -224,7 +229,7 @@ export class FileSystemModuleCache {
 
     let hashString = ''
 
-    for (const generator of this.fsCacheKeyGenerators) {
+    for (const generator of this.fsCacheKeyGenerators.get(vitestConfig) || []) {
       const result = generator({ environment, id, sourceCode: fileContent })
       if (typeof result === 'string') {
         hashString += result
@@ -407,11 +412,17 @@ export interface CachedInlineModuleMeta {
   file: string | null
   code: string
   mappings: boolean
-  importedUrls: string[]
+  imports: CachedModuleImports
   moduleType?: ModuleType
   deps?: string[]
   dynamicDeps?: string[]
   staticMocks?: StaticMockCall[] | null
+}
+
+export interface CachedModuleImports {
+  urls: string[]
+  // resolved ids that differ from the id derived from the url
+  ids: Record<string, string>
 }
 
 /**

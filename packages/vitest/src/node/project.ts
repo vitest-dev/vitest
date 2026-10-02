@@ -3,7 +3,6 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
-import type { VitestFetchFunction } from './environments/fetchModule'
 import type { GlobalSetupFile } from './globalSetup'
 import type { TestSpecificationOptions } from './test-specification'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
@@ -19,8 +18,8 @@ import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { BenchmarkManager } from './benchmark'
 import { serializeConfig } from './config/serializeConfig'
-import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
+import { ModuleTransformService } from './environments/transformService'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { listenClusterServer } from './plugins/browserLoader'
 import { getFilePoolName } from './pool'
@@ -62,7 +61,7 @@ export class TestProject {
 
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _resolver!: VitestResolver
-  /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _transformService!: ModuleTransformService
   /** @internal */ _serializedDefines?: string
   /** @internal */ _sharedViteServer = false
   /** @internal */ testFilesList: string[] | null = null
@@ -97,7 +96,7 @@ export class TestProject {
   _initializeRunners(server: ViteDevServer) {
     this._serializedDefines = createDefinesScript(this.config._scriptDefines)
     this._resolver = new VitestResolver(server.config.cacheDir, this.config)
-    this._fetcher = createFetchModuleFunction(
+    this._transformService = new ModuleTransformService(
       this._resolver,
       this.config,
       this.vitest._fsCache,
@@ -109,7 +108,7 @@ export class TestProject {
     this.runner =
       this.config.experimental.viteModuleRunner === false
         ? new NativeModuleRunner(this.config.root)
-        : new ServerModuleRunner(environment, this._fetcher, this.config)
+        : new ServerModuleRunner(environment, this._transformService, this.config)
   }
 
   // "provide" is a property, not a method to keep the context when destructed in the global setup,
@@ -533,14 +532,14 @@ export class TestProject {
     const project = new TestProject(vitest, vitest.vite, vitest.viteConfig, vitest.config)
     project.runner = vitest.runner
     project._resolver = vitest._resolver
-    project._fetcher = vitest._fetcher
+    project._transformService = vitest._transformService
     project._serializedDefines = createDefinesScript(vitest.config._scriptDefines)
     return project
   }
 
   /**
    * Create a sibling project that shares server-derived resources (Vite server,
-   * runner, resolver, fetcher) with a primary project. The sibling has its own
+   * runner, resolver, transform service) with a primary project. The sibling has its own
    * distinct `projectConfig`, but the same `viteConfig` reference as the primary.
    *
    * Used for browser-instance and benchmark variants whose entries share a
@@ -552,7 +551,7 @@ export class TestProject {
     const sibling = new TestProject(parent.vitest, parent.vite, parent.viteConfig, config)
     sibling.runner = parent.runner
     sibling._resolver = parent._resolver
-    sibling._fetcher = parent._fetcher
+    sibling._transformService = parent._transformService
     sibling._parent = parent
     sibling._serializedDefines = parent._serializedDefines
     return sibling

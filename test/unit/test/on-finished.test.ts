@@ -105,9 +105,7 @@ describe('repeats fail', () => {
       state.push(`${tag}fail`)
     })
 
-    if (t.task.result?.repeatCount === 1) {
-      throw new Error('fail')
-    }
+    throw new Error('fail')
   })
 
   it('assert', () => {
@@ -115,11 +113,13 @@ describe('repeats fail', () => {
       [
         "(0, 0) run",
         "(0, 0) finish",
+        "(0, 0) fail",
         "(0, 1) run",
         "(0, 1) finish",
         "(0, 1) fail",
         "(0, 2) run",
         "(0, 2) finish",
+        "(0, 2) fail",
       ]
     `)
   })
@@ -186,12 +186,6 @@ describe('retry fail', () => {
         "(0, 0) run",
         "(0, 0) finish",
         "(0, 0) fail",
-        "(1, 0) run",
-        "(1, 0) finish",
-        "(1, 0) fail",
-        "(2, 0) run",
-        "(2, 0) finish",
-        "(2, 0) fail",
       ]
     `)
   })

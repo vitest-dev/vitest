@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -32,6 +32,7 @@
   },
   "exports": {
     ".": {
+      "__vitest_source__": "./src/public/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -65,6 +66,7 @@
       "types": "./import-meta.d.ts"
     },
     "./node": {
+      "__vitest_source__": "./src/public/node.ts",
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
@@ -78,15 +80,18 @@
       "default": "./dist/traces.js"
     },
     "./config": {
+      "__vitest_source__": "./src/public/config.ts",
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
       "default": "./dist/config.js"
     },
     "./runtime": {
+      "__vitest_source__": "./src/public/runtime.ts",
       "types": "./dist/runtime.d.ts",
       "default": "./dist/runtime.js"
     },
     "./worker": {
+      "__vitest_source__": "./src/public/worker.ts",
       "types": "./worker.d.ts",
       "default": "./dist/worker.js"
     }
@@ -178,19 +183,20 @@
     "tinybench": "catalog:",
     "tinyexec": "catalog:",
     "tinyglobby": "catalog:",
-    "why-is-node-running": "^3.2.1"
+    "why-is-node-running": "3.2.1"
   },
   "devDependencies": {
-    "@antfu/install-pkg": "^2.0.1",
+    "@antfu/install-pkg": "^2.1.0",
     "@bomb.sh/tab": "^0.0.22",
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.1",
     "@sinonjs/fake-timers": "15.4.0",
     "@types/jsdom": "^30.0.0",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.19.0",
     "@types/picomatch": "^4.0.3",
     "@types/prompts": "^2.4.9",
+    "@types/ws": "catalog:",
     "@vitest/expect": "workspace:*",
     "@vitest/istanbul-lib-coverage": "catalog:",
     "@vitest/istanbul-lib-report": "catalog:",
@@ -203,7 +209,7 @@
     "birpc": "catalog:",
     "cac": "catalog:",
     "flatted": "catalog:",
-    "happy-dom": "^20.12.0",
+    "happy-dom": "^20.14.5",
     "jsdom": "^30.1.1",
     "local-pkg": "^1.2.1",
     "mime": "^4.1.0",

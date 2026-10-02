@@ -412,9 +412,11 @@ export interface TestingLibraryMatchers<R extends void | Promise<void>, T = unkn
    * const element = page.getByTestId('text-content')
    * await expect.element(element).toHaveTextContent('Text Content')
    * await expect.element(element).not.toHaveTextContent('Content')
+   * // element has some text content
+   * await expect.element(element).toHaveTextContent()
    * @see https://vitest.dev/api/browser/assertions#tohavetextcontent
    */
-  toHaveTextContent(text: string | number, options?: { normalizeWhitespace: boolean }): R
+  toHaveTextContent(text?: string | number, options?: { normalizeWhitespace: boolean }): R
   /**
    * @description
    * Check whether the given element has a text content or not.

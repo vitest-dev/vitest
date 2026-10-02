@@ -13,8 +13,8 @@ const testName = 'screenshot-snapshot'
 const bgColor = '#fff'
 
 const testContent = /* ts */ `
-import { page, server } from 'vitest/browser'
-import { describe, test } from 'vitest'
+import { page } from 'vitest/browser'
+import { test } from 'vitest'
 import { render } from './utils'
 
 const dataTestId = 'inline-test'
@@ -284,3 +284,39 @@ describe('--watch', () => {
     await vitest.waitForStdout(`Test Files  ${instances.length} passed`, 20_000)
   })
 })
+
+test.for([{ option: 'retry' }, { option: 'repeats' }] as const)(
+  'uses the same reference when "$option" is set',
+  async ({ option }) => {
+    const { fs } = await runBrowserTests(
+      {
+        [testFilename]: /* ts */ `
+          import { page } from 'vitest/browser'
+          import { test } from 'vitest'
+          import { render } from './utils'
+
+          const dataTestId = 'inline-test'
+
+          test('${testName}', async ({ expect }) => {
+            render('<div data-testid="' + dataTestId + '" style="background-color: ${bgColor}; font-size: 20px;">Inline Test</div>')
+
+            await expect(page.getByTestId(dataTestId)).toMatchScreenshot()
+
+            expect(1).toBe(2)
+          })
+        `,
+        'utils.ts': utilsContent,
+      },
+      {
+        update: 'new',
+        [option]: 2,
+      },
+    )
+
+    expect(fs.readdir('__screenshots__/basic.test.ts')).toEqual(
+      instances.map(
+        (instance) => `screenshot-snapshot-1-${instance.browser}-${process.platform}.png`,
+      ),
+    )
+  },
+)
