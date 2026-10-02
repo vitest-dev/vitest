@@ -3,6 +3,7 @@ import type { Logger } from '../logger'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
+import { ignoreInput, ignoreOutput } from '@voidzero-dev/vite-task-client'
 import { dirname, relative, resolve } from 'pathe'
 import { Vitest } from '../core'
 
@@ -30,6 +31,9 @@ export class ResultsCache {
     this.root = root
     if (config) {
       this.cachePath = resolve(config.dir, 'results.json')
+      // Only used to order tests, so Vite Task doesn't need to track it
+      ignoreInput(this.cachePath)
+      ignoreOutput(this.cachePath)
     }
   }
 

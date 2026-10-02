@@ -204,6 +204,7 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
+    "@voidzero-dev/vite-task-client": "^0.2.0",
     "acorn": "8.11.3",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",

@@ -5,6 +5,7 @@ import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
+import { ignoreInput, ignoreOutput } from '@voidzero-dev/vite-task-client'
 import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import c from 'tinyrainbow'
@@ -29,6 +30,12 @@ const parallelFsCacheRead = new Map<
   string,
   Promise<{ code: string; meta: CachedInlineModuleMeta } | undefined>
 >()
+
+// Entries are keyed by content, so Vite Task doesn't need to track the cache.
+function ignoreCacheDirInViteTask(dir: string): void {
+  ignoreInput(dir)
+  ignoreOutput(dir)
+}
 
 export class FileSystemModuleCache {
   /**
@@ -60,6 +67,7 @@ export class FileSystemModuleCache {
       vitest.config.fsModuleCachePath ||
       join(searchForWorkspaceRoot(vitest.viteConfig.root), 'node_modules', DEFAULT_CACHE_DIRNAME)
     this.metadataFilePath = join(this.rootCache, METADATA_FILE)
+    ignoreCacheDirInViteTask(this.rootCache)
   }
 
   public defineCacheKeyGenerator(config: ResolvedConfig, callback: CacheKeyIdGenerator): void {
@@ -294,6 +302,7 @@ export class FileSystemModuleCache {
     if (cacheRoot == null) {
       cacheRoot = vitestConfig.fsModuleCachePath || this.rootCache
       this.fsCacheRoots.set(vitestConfig, cacheRoot)
+      ignoreCacheDirInViteTask(cacheRoot)
       if (!existsSync(cacheRoot)) {
         mkdirSync(cacheRoot, { recursive: true })
       }

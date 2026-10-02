@@ -1049,6 +1049,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
+      '@voidzero-dev/vite-task-client':
+        specifier: ^0.2.0
+        version: 0.2.0
       acorn:
         specifier: 8.11.3
         version: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
@@ -5432,6 +5435,10 @@ packages:
 
   '@vitest/test-fn@file:test/unit/deps/dep-fn':
     resolution: {directory: test/unit/deps/dep-fn, type: directory}
+
+  '@voidzero-dev/vite-task-client@0.2.0':
+    resolution: {integrity: sha512-y932hw4I0qrdlqbDhOC4VS7mtLad+MtXToSVJIZ79Cd7Ib6p4bRuoTRrx6OeedhdPm2yf9+r8ndlhJjn8LbsxQ==}
+    engines: {node: '>=18'}
 
   '@voidzero-dev/vitepress-theme@5.0.7':
     resolution: {integrity: sha512-8sbGA7K79OD/NHfH0xIIhQcrzGUheVbbHEqqV2lRLg1CI11Ssh08408DVzNuFiyeyNXOBhCTqt30BraUNe7OZw==}
@@ -13420,6 +13427,8 @@ snapshots:
       '@vitest/test-dep1': file:test/unit/deps/dep1
 
   '@vitest/test-fn@file:test/unit/deps/dep-fn': {}
+
+  '@voidzero-dev/vite-task-client@0.2.0': {}
 
   '@voidzero-dev/vitepress-theme@5.0.7(axios@1.13.4(debug@4.4.3(supports-color@10.2.2)))(change-case@5.4.4)(focus-trap@8.2.2)(typescript@5.9.3)(vite@8.0.11(@types/node@24.19.0)(esbuild@0.28.1)(jiti@2.7.0)(sass-embedded@1.105.1)(sass@1.105.1)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vitepress@2.0.0-alpha.20(@types/node@24.19.0)(axios@1.13.4(debug@4.4.3(supports-color@10.2.2)))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.28)(sass-embedded@1.105.1)(sass@1.105.1)(terser@5.48.0)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1))(vue@3.5.43(typescript@5.9.3))':
     dependencies:
