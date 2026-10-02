@@ -80,14 +80,14 @@ export function filterAll(search: SearchMatcher, filter: Filter): UITaskTreeNode
  */
 export function filterNode(node: UITaskTreeNode, context: FilterNodeContext): UITaskTreeNode[] {
   const filteredTree = filterTreeNode(node, context, hasMatchingAncestor(node, context))
-  return filteredTree ? flattenVisibleTree(filteredTree) : []
+  return filteredTree ? revealKeptTree(filteredTree) : []
 }
 
 /**
  * Return the kept part of the subtree under `node`, or `undefined` when `node` is not kept.
  *
  * A node is kept when an ancestor matched (`ancestorMatches`) or when the node or one of its descendants
- * matched (`subtreeMatches`). Kept parents are marked expanded.
+ * matched (`subtreeMatches`). Nothing is written.
  */
 function filterTreeNode(
   node: UITaskTreeNode,
@@ -105,10 +105,6 @@ function filterTreeNode(
 
   if (!ancestorMatches && !subtreeMatches) {
     return undefined
-  }
-
-  if (isParentNode(node)) {
-    node.expanded = true
   }
 
   return {
@@ -137,16 +133,16 @@ function matchesNode(node: UITaskTreeNode, context: FilterNodeContext): boolean 
   return task ? matchTask(task, context.search, context.filter, context.slowTestThreshold) : false
 }
 
-function flattenVisibleTree(
-  tree: FilteredTreeNode,
-  entries: UITaskTreeNode[] = [],
-): UITaskTreeNode[] {
+/**
+ * Mark every kept parent expanded and return all kept nodes in tree order.
+ */
+function revealKeptTree(tree: FilteredTreeNode, entries: UITaskTreeNode[] = []): UITaskTreeNode[] {
   entries.push(tree.node)
-  if (!isParentNode(tree.node) || !tree.node.expanded) {
-    return entries
+  if (isParentNode(tree.node)) {
+    tree.node.expanded = true
   }
   for (const child of tree.children) {
-    flattenVisibleTree(child, entries)
+    revealKeptTree(child, entries)
   }
 
   return entries
