@@ -35,9 +35,6 @@ export function testMatcher(
 
 /**
  * Rebuild the explorer rows for the whole tree and publish them to `uiEntries` and `filteredFiles`.
- *
- * @param search The search applied.
- * @param filter The filter applied.
  */
 export function runFilter(search: SearchMatcher, filter: Filter) {
   const entries = filterAll(search, filter)
