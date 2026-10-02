@@ -1,7 +1,7 @@
 name: Approve Contributor
 
 # Adds a user to the list of approved contributors when a maintainer comments
-# `LGTM+` or `LGTM+ @username`, see "Pull Request Policy" in CONTRIBUTING.md.
+# `/trust` or `/trust username` on a pull request, see "Pull Request Policy" in CONTRIBUTING.md.
 #
 # SECURITY: anyone can trigger this workflow with a comment. It must never check out
 # or run code from a pull request. The script trusts only the permission that the API
@@ -10,8 +10,6 @@ name: Approve Contributor
 
 on:
   issue_comment:
-    types: [created]
-  discussion_comment:
     types: [created]
 
 permissions: {}
@@ -23,8 +21,10 @@ concurrency:
 jobs:
   approve:
     # this only skips unrelated comments, the script validates the command and the commenter
-    # `startsWith` ignores the case, so `lgtm+` passes too
-    if: github.repository == 'vitest-dev/vitest' && startsWith(github.event.comment.body, 'LGTM+')
+    if: |
+      github.repository == 'vitest-dev/vitest' &&
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/trust')
     name: Approve Contributor
     runs-on: ubuntu-slim
     timeout-minutes: 5
@@ -38,6 +38,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: .github/scripts
+          ref: main
       - name: Approve
         id: approve
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -54,9 +55,7 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 5
     permissions:
-      issues: write # to react to a comment on an issue
       pull-requests: write # to react to a comment on a PR
-      discussions: write # to react to a comment on a discussion
     steps:
       - name: React
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

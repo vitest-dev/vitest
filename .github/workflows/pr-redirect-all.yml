@@ -1,0 +1,47 @@
+name: PR Redirect All
+
+# Closes every open pull request that the "PR Redirect" workflow would close,
+# see "Pull Request Policy" in CONTRIBUTING.md.
+#
+# SECURITY: this workflow must never check out or run code from a pull request.
+# The script reads pull requests through the API and uses their content only as data.
+# Do not interpolate PR titles, bodies, branch names or comments into `run` steps or scripts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Log the decisions without changing anything
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  redirect:
+    if: github.repository == 'vitest-dev/vitest'
+    name: Redirect Open PRs
+    runs-on: ubuntu-slim
+    timeout-minutes: 30
+    permissions:
+      contents: read # to check out the script and read the list of approved contributors
+      issues: read # to read the issues linked to a PR
+      pull-requests: write # to comment on and close PRs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          ref: main
+      - name: Redirect
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DRY_RUN: ${{ inputs.dry-run }}
+        with:
+          script: |
+            const { redirectOpenPullRequests } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-redirect.js`)
+            await redirectOpenPullRequests({ github, context, core })

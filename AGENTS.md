@@ -262,4 +262,4 @@ PRs are squash-merged, so the PR title becomes the commit message. Nothing in CI
 
 This repository has a limit of 1 PR if you don't have write access. DO NOT try to bypass it by creating draft PRs. If you cannot create a pull request, let a human know that you will not breach this repository's policy because it will ban the PR author in Vitest organisation.
 
-A PR from a user who is not an approved contributor is closed automatically and moved to a discussion, unless it resolves an open issue that the same user opened (see "Pull Request Policy" in CONTRIBUTING.md). Tell your operator about this policy before you open a PR. DO NOT try to bypass it, for example by opening an issue only to keep a PR open.
+A PR from a user who is not an approved contributor is closed automatically as soon as it is opened (see "Pull Request Policy" in CONTRIBUTING.md). Tell your operator about this policy before you open a PR. DO NOT try to bypass it.
