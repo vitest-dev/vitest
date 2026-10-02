@@ -565,6 +565,21 @@ async function testSuiteReport(page: Page) {
     .getByRole('button', { name: 'Expand successful suite', exact: true })
     .click()
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
+
+  // a suite match shows its whole subtree, also after re-expanding a nested suite
+  await page.getByPlaceholder('Search...').fill('nested failure')
+  await expect(getExplorerItem(page, 'successful suite')).toHaveCount(0)
+  await expect(getExplorerItem(page, 'failing nested child')).toBeVisible()
+
+  const nestedSuite = getExplorerItem(page, 'failing nested suite')
+  await nestedSuite
+    .getByRole('button', { name: 'Collapse failing nested suite', exact: true })
+    .dispatchEvent('click')
+  await expect(getExplorerItem(page, 'failing nested child')).not.toBeVisible()
+  await nestedSuite
+    .getByRole('button', { name: 'Expand failing nested suite', exact: true })
+    .dispatchEvent('click')
+  await expect(getExplorerItem(page, 'failing nested child')).toBeVisible()
 }
 
 async function testTagsFilter(page: Page, options: { mode: 'ui' | 'static' }) {
