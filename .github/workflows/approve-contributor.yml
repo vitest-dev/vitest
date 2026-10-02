@@ -28,8 +28,10 @@ jobs:
     name: Approve Contributor
     runs-on: ubuntu-slim
     timeout-minutes: 5
+    # the app secrets live in an environment that only `main` can use
+    environment: approve-contributor
     permissions:
-      contents: write # to check out the script and commit the list to the `approved-contributors` branch
+      contents: read # to check out the script
     outputs:
       approved: ${{ steps.approve.outputs.approved }}
     steps:
@@ -39,10 +41,20 @@ jobs:
           persist-credentials: false
           sparse-checkout: .github/scripts
           ref: main
+      # the app can bypass the ruleset that protects the `approved-contributors` branch
+      - id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.TRUST_GITHUB_APP_ID }}
+          private-key: ${{ secrets.TRUST_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
       - name: Approve
         id: approve
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
             const { default: approveContributor } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/approve-contributor.js`)
             await approveContributor({ github, context, core })
