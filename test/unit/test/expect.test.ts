@@ -245,6 +245,7 @@ describe('recursive custom equality tester', () => {
     }
   }
 
+  // different `personId`, so they are equal only through `arePersonsEqual`
   const person1 = new Person('Luke Skywalker', new Address('Tatooine'))
   const person2 = new Person('Luke Skywalker', new Address('Tatooine'))
 
@@ -260,6 +261,8 @@ describe('recursive custom equality tester', () => {
     expect(new Set([person1])).toEqual(new Set([person2]))
     expect([person1]).toContainEqual(person2)
     expect({ a: person1 }).toHaveProperty('a', person2)
+    expect(person1).toBeOneOf([person2])
+    expect(person1).toBeOneOf(new Set([person2]))
     expect({ a: person1, b: undefined }).toStrictEqual({
       a: person2,
       b: undefined,
@@ -273,6 +276,7 @@ describe('recursive custom equality tester', () => {
   test('asymmetric matchers pass different Address objects', () => {
     expect([person1]).toEqual(expect.arrayContaining([person2]))
     expect({ a: 1, b: { c: person1 } }).toEqual(expect.objectContaining({ b: { c: person2 } }))
+    expect(person1).toEqual(expect.toBeOneOf([person2]))
   })
 
   test('toBe recommends toStrictEqual even with different Address objects', () => {
@@ -295,19 +299,25 @@ describe('recursive custom equality tester', () => {
     expect(a).toEqual(b)
   })
 
-  test('spy matchers pass different Person objects', () => {
+  test('spy matchers pass different Person objects', async () => {
     const mockFn = vi.fn((person: Person) => [person, person2])
     mockFn(person1)
 
-    expect(mockFn).toHaveBeenCalledWith(person1)
-    expect(mockFn).toHaveBeenCalledWith(person1)
-    expect(mockFn).toHaveBeenLastCalledWith(person1)
-    expect(mockFn).toHaveBeenNthCalledWith(1, person1)
+    expect(mockFn).toHaveBeenCalledWith(person2)
+    expect(mockFn).toHaveBeenLastCalledWith(person2)
+    expect(mockFn).toHaveBeenNthCalledWith(1, person2)
 
-    expect(mockFn).toHaveReturnedWith([person1, person2])
-    expect(mockFn).toHaveLastReturnedWith([person1, person2])
-    expect(mockFn).to.have.lastReturnedWith([person1, person2])
-    expect(mockFn).toHaveNthReturnedWith(1, [person1, person2])
+    expect(mockFn).toHaveReturnedWith([person2, person1])
+    expect(mockFn).toHaveLastReturnedWith([person2, person1])
+    expect(mockFn).to.have.lastReturnedWith([person2, person1])
+    expect(mockFn).toHaveNthReturnedWith(1, [person2, person1])
+
+    const asyncFn = vi.fn(async () => person1)
+    await asyncFn()
+
+    expect(asyncFn).toHaveResolvedWith(person2)
+    expect(asyncFn).toHaveLastResolvedWith(person2)
+    expect(asyncFn).toHaveNthResolvedWith(1, person2)
   })
 })
 

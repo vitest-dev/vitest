@@ -166,17 +166,26 @@ export class Logger {
 
   printNoTestFound(filters?: string[]): void {
     const config = this.ctx.config
+    // test files were found, but none of them depend on the changed files
+    const noAffectedTests = !!this.ctx._sourceFilterResult?.total
+    const message = !noAffectedTests
+      ? 'No test files found'
+      : config.related?.length
+        ? 'No affected test files found'
+        : 'No changed files found'
 
-    if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected test files found\n`)
+    if (config.watch && noAffectedTests) {
+      this.log(`${message}\n`)
     } else if (config.watch) {
-      this.log(c.red(`No test files found. You can change the file name pattern by pressing "p"\n`))
+      this.log(c.red(`${message}. You can change the file name pattern by pressing "p"\n`))
+    } else if (config.passWithNoTests) {
+      this.log(`${message}, exiting with code 0\n`)
     } else {
-      if (config.passWithNoTests) {
-        this.log(`No test files found, exiting with code 0\n`)
-      } else {
-        this.error(c.red(`No test files found, exiting with code 1\n`))
-      }
+      this.error(c.red(`${message}, exiting with code 1\n`))
+    }
+
+    if (noAffectedTests) {
+      return
     }
 
     const comma = c.dim(', ')

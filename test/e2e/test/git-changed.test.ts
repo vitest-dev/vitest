@@ -1,6 +1,7 @@
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createFile, editFile, resolvePath, runVitest } from '../../test-utils'
+import { createFile, editFile, resolvePath, runVitest, useFS } from '../../test-utils'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
@@ -29,7 +30,7 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
 
   it('should run no tests if file does not exist', async () => {
     const { stdout } = await run()
-    expect(stdout).toContain('No test files found, exiting with code 0')
+    expect(stdout).toMatch(/No (changed|affected test) files found, exiting with code 0/)
   })
 })
 
@@ -56,9 +57,34 @@ it.skipIf(process.env.ECOSYSTEM_CI)(
       root: './fixtures/git-changed/workspace',
     })
 
-    expect(stdout).toContain('No test files found, exiting with code 0')
+    expect(stdout).toMatch(/No (changed|affected test) files found, exiting with code 0/)
   },
 )
+
+it('fails when git cannot resolve the changed revision', async () => {
+  const { stderr, exitCode } = await runVitest({
+    changed: 'does-not-exist',
+    root: './fixtures/git-changed/related',
+  })
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('Command `git diff --name-only does-not-exist...HEAD` failed:')
+})
+
+it('fails when --changed is used outside of a git repository', async () => {
+  // the e2e folder is inside the vitest repository, so the fixture has to live outside of it
+  const { root } = useFS(join(tmpdir(), `vitest-test-${crypto.randomUUID()}`), {
+    'basic.test.js': `import { test } from 'vitest'\ntest('basic', () => {})`,
+  })
+
+  const { stderr, exitCode } = await runVitest({ changed: true, root })
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatchInlineSnapshot(`
+    "Could not find Git root. Have you initialized git with \`git init\`?
+    "
+  `)
+})
 
 // Fixes #4674
 it.skipIf(process.env.ECOSYSTEM_CI)(

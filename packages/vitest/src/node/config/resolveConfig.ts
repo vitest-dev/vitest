@@ -633,8 +633,6 @@ export function resolveTestConfig(
     '**/node_modules/**',
   ].filter((pattern) => typeof pattern === 'string')
 
-  resolved.forceRerunTriggers = [...resolved.forceRerunTriggers, ...resolved.setupFiles]
-
   if (resolved.cliExclude) {
     resolved.exclude.push(...resolved.cliExclude)
   }
@@ -684,7 +682,6 @@ export function resolveTestConfig(
   resolved.snapshotSerializers = resolved.snapshotSerializers.map((file) =>
     resolvePath(file, resolved.root),
   )
-  resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
 
   if (options.resolveSnapshotPath) {
     delete (resolved as any).resolveSnapshotPath
@@ -719,7 +716,6 @@ export function resolveTestConfig(
 
   if (typeof resolved.diff === 'string') {
     resolved.diff = resolvePath(resolved.diff, resolved.root)
-    resolved.forceRerunTriggers.push(resolved.diff)
   }
 
   if (options.related) {
@@ -1073,7 +1069,7 @@ export function resolveTestConfig(
       resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
     }
   }
-  resolved.fsModuleCache ??= false
+  resolved.fsModuleCache ??= true
   if (resolved.fsModuleCachePath) {
     resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
   }

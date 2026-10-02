@@ -26,34 +26,17 @@ jobs:
       )
     name: AgentScan Alert
     permissions:
-      contents: read # to check out the repo for local actions
-      pull-requests: write # comment and label on PRs
+      pull-requests: write # comment, label and close PRs
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          # we checkout just to read ./issue-helper
-          # we do not care about user code
-          ref: main
       - name: AgentScan
         id: agentscan
         uses: MatteoGabriele/agentscan-action@8112fb79b33fafb8506159df20129a34209ac410 # v2.5.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          mode: labels
+          # the `labels` mode also labels accounts with mixed signals,
+          # only maintainers add the `maybe automated` label
+          mode: silent
           trusted-author-associations: 'owner, collaborator, member'
-          label-automation: bot
-          label-mixed: maybe automated
-          label-community-flagged: bot
-
-      # agentscan-action puts a label automatically and we send a comment if the account looks suspicious
-      - name: Comment mixed accounts
-        if: steps.agentscan.outputs.classification == 'mixed' && steps.agentscan.outputs.community-flagged != 'true'
-        uses: ./.github/actions/send-ai-bot-comment
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: ${{ github.event.pull_request.number }}
-          login: ${{ github.event.pull_request.user.login }}
 
       # if the account is confirmed to be a bot, just close the PR
       - name: Close flagged accounts
@@ -70,6 +53,13 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: ['bot'],
+            })
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,

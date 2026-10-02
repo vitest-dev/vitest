@@ -824,7 +824,7 @@ Maximum number of concurrent tests and suites during test file execution (defaul
 - **CLI:** `--fsModuleCache`
 - **Config:** [fsModuleCache](/config/fsmodulecache)
 
-Cache transformed modules on the file system and reuse them between reruns (default: `false`)
+Cache transformed modules on the file system and reuse them between reruns (default: `true`)
 
 ### fsModuleCachePath
 

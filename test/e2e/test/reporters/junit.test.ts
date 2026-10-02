@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { expect, test, TestRunner } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runVitest, runVitestCli } from '#test-utils'
+import { runInlineTests, runVitest, runVitestCli } from '#test-utils'
 import { getDuration } from '../../../../packages/vitest/src/node/reporters/junit'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
@@ -111,6 +111,36 @@ test('time', async () => {
 test('format error', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root }, ['error.test.ts'])
   expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+})
+
+test('strips ANSI sequences from the failure message attribute', async () => {
+  const { root } = await runInlineTests(
+    {
+      'ansi.test.ts': /* ts */ `
+        import { test } from 'vitest'
+
+        test('ansi', () => {
+          throw new Error('\\x1b[36m<body>\\x1b[39m')
+        })
+      `,
+    },
+    { reporters: 'junit' },
+  )
+
+  expect(stabilizeReport(readJunitReport(root))).toMatchInlineSnapshot(`
+    "<?xml version="1.0" encoding="UTF-8" ?>
+    <testsuites name="vitest tests" tests="1" failures="1" errors="0" time="...">
+        <testsuite name="ansi.test.ts" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">
+            <testcase classname="ansi.test.ts" name="ansi" time="...">
+                <failure message="&lt;body&gt;" type="Error">
+    Error: &lt;body&gt;
+     ❯ ansi.test.ts:5:17
+                </failure>
+            </testcase>
+        </testsuite>
+    </testsuites>
+    "
+  `)
 })
 
 test('write testsuite name relative to root config', async () => {

@@ -716,7 +716,7 @@ export interface InlineConfig {
    * Cache transformed modules on the file system and reuse them between reruns
    * and separate Vitest processes, which can significantly speed up cold starts.
    *
-   * @default false
+   * @default true
    */
   fsModuleCache?: boolean
 

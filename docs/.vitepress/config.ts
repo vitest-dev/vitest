@@ -116,6 +116,13 @@ export default ({ mode }: { mode: string }) => {
               : [
                   transformerNotationWordHighlight(),
                   transformerTwoslash({
+                    // resolve types from source, so the docs don't need built packages
+                    twoslashOptions: {
+                      compilerOptions: {
+                        moduleResolution: 100 /* Bundler */,
+                        customConditions: ['__vitest_source__'],
+                      },
+                    },
                     processHoverInfo: (info) => {
                       if (info.includes(process.cwd())) {
                         return info.replace(new RegExp(process.cwd(), 'g'), '')

@@ -35,7 +35,7 @@ describe('setup files with forceRerunTrigger', () => {
     'should run no tests if setup file is not changed',
     async () => {
       const { stdout } = await run()
-      expect(stdout).toContain('No test files found, exiting with code 0')
+      expect(stdout).toMatch(/No (changed|affected test) files found, exiting with code 0/)
     },
   )
 

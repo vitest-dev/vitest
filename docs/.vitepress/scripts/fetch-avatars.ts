@@ -1,7 +1,7 @@
 import { existsSync, promises as fsp } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'pathe'
-import { teamEmeritiMembers, teamMembers } from '../contributors'
+import { teamEmeritiMembers, teamMembers } from '../contributors.ts'
 
 const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const dirAvatars = resolve(docsDir, 'public/user-avatars/')

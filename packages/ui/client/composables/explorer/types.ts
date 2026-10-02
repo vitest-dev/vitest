@@ -1,7 +1,5 @@
 import type { RunMode, RunnerTask as Task, TaskState } from 'vitest'
 
-export type FilterResult = [match: boolean, node: UITaskTreeNode]
-
 export interface FilteredTests {
   failed: number
   success: number

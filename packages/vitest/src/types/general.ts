@@ -21,10 +21,22 @@ export interface UserConsoleLog {
   size: number
 }
 
+interface ModuleGraphModules {
+  [id: string]: { external: boolean; imports: string[] }
+}
+
 export interface ModuleGraphData {
-  graph: Record<string, string[]>
-  externalized: string[]
-  inlined: string[]
+  modules: ModuleGraphModules
+  roots: string[]
+}
+
+export interface SharedModuleGraphByProject {
+  [projectName: string]: { [environmentName: string]: SharedModuleGraphData }
+}
+
+export interface SharedModuleGraphData {
+  modules: ModuleGraphModules
+  rootsByTestFile: { [testFile: string]: string[] }
 }
 
 export interface ProvidedContext {}

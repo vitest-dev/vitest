@@ -1,5 +1,4 @@
 import type { MatchersObject } from './types'
-import { iterableEquality } from './jest-utils'
 
 // selectively ported from https://github.com/jest-community/jest-extended
 export const customMatchers: MatchersObject = {
@@ -30,19 +29,18 @@ ${printReceived(actual)}`,
 
   toBeOneOf(actual: unknown, expected: Array<unknown> | Set<unknown>) {
     const { equals, customTesters } = this
-    const { printReceived, printExpected, matcherHint } = this.utils
+    const { printReceived, printExpected, matcherHint, iterableEquality } = this.utils
+    const testers = [...customTesters, iterableEquality]
 
     let pass: boolean
 
     if (Array.isArray(expected)) {
-      pass =
-        expected.length === 0 ||
-        expected.some((item) => equals(item, actual, [...customTesters, iterableEquality]))
+      pass = expected.length === 0 || expected.some((item) => equals(item, actual, testers))
     } else if (expected instanceof Set) {
       pass =
         expected.size === 0 ||
         expected.has(actual) ||
-        [...expected].some((item) => equals(item, actual, [...customTesters, iterableEquality]))
+        [...expected].some((item) => equals(item, actual, testers))
     } else {
       throw new TypeError(
         `You must provide an array or set to ${matcherHint('.toBeOneOf')}, not '${typeof expected}'.`,

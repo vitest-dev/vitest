@@ -1,0 +1,72 @@
+name: Approve Contributor
+
+# Adds a user to the list of approved contributors when a maintainer comments
+# `LGTM+` or `LGTM+ @username`, see "Pull Request Policy" in CONTRIBUTING.md.
+#
+# SECURITY: anyone can trigger this workflow with a comment. It must never check out
+# or run code from a pull request. The script trusts only the permission that the API
+# reports for the commenter, and it uses the comment only as data.
+# Do not interpolate the comment into `run` steps or scripts.
+
+on:
+  issue_comment:
+    types: [created]
+  discussion_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.comment.id }}
+  cancel-in-progress: false
+
+jobs:
+  approve:
+    # this only skips unrelated comments, the script validates the command and the commenter
+    # `startsWith` ignores the case, so `lgtm+` passes too
+    if: github.repository == 'vitest-dev/vitest' && startsWith(github.event.comment.body, 'LGTM+')
+    name: Approve Contributor
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      contents: write # to check out the script and commit the list to the `approved-contributors` branch
+    outputs:
+      approved: ${{ steps.approve.outputs.approved }}
+    steps:
+      # these events always check out the default branch
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - name: Approve
+        id: approve
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { default: approveContributor } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/approve-contributor.js`)
+            await approveContributor({ github, context, core })
+
+  # a separate job, so the job that can write to the repository has no other permission
+  confirm:
+    needs: approve
+    if: needs.approve.outputs.approved == 'true'
+    name: Confirm Approval
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      issues: write # to react to a comment on an issue
+      pull-requests: write # to react to a comment on a PR
+      discussions: write # to react to a comment on a discussion
+    steps:
+      - name: React
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            await github.graphql(
+              `mutation ($subjectId: ID!) {
+                addReaction(input: { subjectId: $subjectId, content: ROCKET }) {
+                  clientMutationId
+                }
+              }`,
+              { subjectId: context.payload.comment.node_id },
+            )
