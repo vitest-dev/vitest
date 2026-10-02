@@ -105,4 +105,30 @@ describe('failure screenshots', () => {
       )
     })
   })
+
+  test('succeeds even if the document contains multiple bodies', async () => {
+    const { stderr } = await runBrowserTests({
+      [testFilename]: /* ts */ `
+          import { expect, test } from 'vitest'
+
+          test('fails on purpose, element has an extra <body>', async () => {
+            const host = document.createElement('div')
+            host.appendChild(document.createElement('body'))
+            document.body.appendChild(host)
+          
+            expect(1).toBe(2)
+          })
+        `,
+      'utils.ts': utilsContent,
+    })
+
+    expect(stderr).toContain('expected 1 to be 2')
+    expect(stderr).toContain('Failure screenshot:')
+
+    const screenshotPath = extractScreenshotPath(stderr)
+
+    expect(screenshotPath).toContain(
+      '.vitest/attachments/failure-screenshots/basic.test.ts/fails-on-purpose--element-has-an-extra--body-.png',
+    )
+  })
 })

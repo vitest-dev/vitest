@@ -86,12 +86,14 @@ export async function takeScreenshot(
         })
       : await getDescribedLocator(context, {
           selector: 'body',
-          locator: "locator('body')",
-        }).screenshot({
-          ...config,
-          mask,
-          path: savePath,
-          style,
+          locator: "locator('body').first()",
         })
+          .first()
+          .screenshot({
+            ...config,
+            mask,
+            path: savePath,
+            style,
+          })
   return { buffer, path }
 }
