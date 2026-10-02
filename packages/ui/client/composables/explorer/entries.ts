@@ -1,5 +1,10 @@
 import type { UITaskTreeNode } from '~/composables/explorer/types'
 
+/**
+ * Replace the rows of `node` and its visible descendants with `subtree`.
+ *
+ * `entries` must be in tree order, so descendants are the rows right after `node` with a larger indent.
+ */
 export function replaceSubtreeEntries(
   entries: readonly UITaskTreeNode[],
   node: UITaskTreeNode,
