@@ -47,7 +47,7 @@ export function runExpandNode(id: string, search: SearchMatcher, filter: Filter)
 
   const treeItems = new Set(openedTreeItems.value)
   treeItems.add(node.id)
-  const filteredSubtree = filterNode(node, {
+  const subtree = filterNode(node, {
     nodes: explorerTree.nodes,
     tasks: client.state.idMap,
     search,
@@ -55,8 +55,7 @@ export function runExpandNode(id: string, search: SearchMatcher, filter: Filter)
     slowTestThreshold: config.value.slowTestThreshold,
   })
 
-  const subtree = isFileNode(node) ? filteredSubtree : [node, ...filteredSubtree]
-  const entries = replaceSubtreeEntries(uiEntries.value, node, subtree)
+  const entries = replaceSubtreeEntries(uiEntries.value, node, subtree.length ? subtree : [node])
   openedTreeItems.value = Array.from(treeItems)
   // Keep expandAll state as it is: expanding individual shouldn't prevent expanding all the nodes ("expand all" button)
   // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items

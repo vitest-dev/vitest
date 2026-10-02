@@ -73,7 +73,7 @@ export function filterNode(node: UITaskTreeNode, context: FilterNodeContext) {
   const { onlyTests } = context.filter
   const ancestorMatches = !onlyTests && hasMatchingAncestor(node, context)
   const filteredTree = filterTreeNode(node, onlyTests, context, ancestorMatches)
-  return filteredTree ? flattenVisibleTree(filteredTree, isFileNode(node)) : []
+  return filteredTree ? flattenVisibleTree(filteredTree) : []
 }
 
 function filterTreeNode(
@@ -122,19 +122,13 @@ function matchesNode(node: UITaskTreeNode, context: FilterNodeContext) {
   return task ? matchTask(task, context.search, context.filter, context.slowTestThreshold) : false
 }
 
-function flattenVisibleTree(
-  tree: FilteredTreeNode,
-  includeRoot: boolean,
-  entries: UITaskTreeNode[] = [],
-) {
-  if (includeRoot) {
-    entries.push(tree.node)
-  }
+function flattenVisibleTree(tree: FilteredTreeNode, entries: UITaskTreeNode[] = []) {
+  entries.push(tree.node)
   if (!isParentNode(tree.node) || !tree.node.expanded) {
     return entries
   }
   for (const child of tree.children) {
-    flattenVisibleTree(child, true, entries)
+    flattenVisibleTree(child, entries)
   }
 
   return entries
