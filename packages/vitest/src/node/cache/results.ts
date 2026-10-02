@@ -2,7 +2,7 @@ import type { File } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm } from 'node:fs/promises'
+import { mkdir, readFile, rm, stat } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'pathe'
 import { createDebugger } from '../../utils/debugger'
 import { atomicWriteFile } from './fsModuleCache'
@@ -49,6 +49,8 @@ export class ResultsCache {
   private legacyResults: Map<string, CachedTestFileResult> | undefined
   private recordedTasks = new WeakSet<File>()
   private path: string | null
+  // the version of the file that this process read or wrote last
+  private fileStamp: string | undefined
 
   constructor(private vitest: Vitest) {
     this.path = vitest.config.cache ? resolve(vitest.viteConfig.cacheDir, 'results.json') : null
@@ -73,13 +75,15 @@ export class ResultsCache {
   }
 
   async read(): Promise<void> {
-    if (!this.path || !existsSync(this.path)) {
+    const path = this.path
+    const stamp = path ? await getFileStamp(path) : undefined
+    // the file does not exist, or this process already has its content
+    if (!path || !stamp || stamp === this.fileStamp) {
       return
     }
+    this.fileStamp = stamp
     try {
-      const { version, projects }: SerializedResults = JSON.parse(
-        await readFile(this.path, 'utf-8'),
-      )
+      const { version, projects }: SerializedResults = JSON.parse(await readFile(path, 'utf-8'))
       if (version !== RESULTS_VERSION) {
         debug?.(`ignored ${this.path}, the version ${version} is not supported`)
         return
@@ -141,6 +145,7 @@ export class ResultsCache {
   async clear(): Promise<void> {
     this.projects.clear()
     this.legacyResults = undefined
+    this.fileStamp = undefined
     if (this.path && existsSync(this.path)) {
       await rm(this.path, { force: true })
       this.vitest.logger.log('[cache] cleared results cache at', this.path)
@@ -161,9 +166,15 @@ export class ResultsCache {
     )
   }
 
+  // relative to the root, so the cache is the same in CI and locally
   private getFilePath(specification: TestSpecification): string {
-    // relative to the root, so the cache is the same in CI and locally
-    return relative(this.vitest.config.root, specification.moduleId)
+    const root = this.vitest.config.root
+    const moduleId = specification.moduleId
+    // "relative" normalizes both paths, which is slow for thousands of files
+    if (moduleId.startsWith(root) && moduleId[root.length] === '/') {
+      return moduleId.slice(root.length + 1)
+    }
+    return relative(root, moduleId)
   }
 
   private getProjectResults(name: string): ProjectResults {
@@ -190,6 +201,7 @@ export class ResultsCache {
     try {
       await mkdir(dirname(this.path), { recursive: true })
       await atomicWriteFile(this.path, JSON.stringify(results))
+      this.fileStamp = await getFileStamp(this.path)
     } catch (error) {
       debug?.(`failed to write ${this.path}: ${error}`)
     }
@@ -198,4 +210,10 @@ export class ResultsCache {
 
 function isFinalState(state: string | undefined): boolean {
   return state === 'pass' || state === 'fail' || state === 'skip' || state === 'todo'
+}
+
+// every write replaces the file, so a write by another process changes the inode
+async function getFileStamp(path: string): Promise<string | undefined> {
+  const stats = await stat(path).catch(() => undefined)
+  return stats && `${stats.ino}:${stats.mtimeMs}:${stats.size}`
 }
