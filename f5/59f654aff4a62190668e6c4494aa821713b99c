@@ -1,0 +1,23 @@
+.github/actions/send-ai-bot-comment/action.yml
+  s_266879a5fbc1a6::t_3e0ce624a2ceb7 35
+.github/workflows/issue-labeled.yml
+  s_266879a5fbc1a6::t_38d1eb63b65bad 68
+.github/workflows/pr-labeled-automated.yml
+  s_266879a5fbc1a6::t_e4e41db29c4b12 52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f559f654aff4a62190668e6c4494aa821713b99c",
+  "prompts": {},
+  "sessions": {
+    "s_266879a5fbc1a6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f03c31b27ffeDSD4MFWiDfbxX1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
