@@ -131,7 +131,7 @@ test('expected failures exhaust retries in every repeat when assertions pass', a
 })
 
 test('expected failures can recover through a retry in every repeat', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { stderr, errorTree, results } = await runInlineTests({
     'repeats.test.js': `
       import { afterAll, expect, it } from 'vitest'
 
@@ -157,6 +157,161 @@ test('expected failures can recover through a retry in every repeat', async () =
       },
     }
   `)
+
+  const [test] = results[0].children.allTests()
+  const attempts = test.attempts()
+  expect(
+    attempts.map((attempt) => ({
+      state: attempt.state,
+      errors: attempt.errors?.map((error) => error.message) || [],
+      retryIndex: attempt.retryIndex,
+      repeatIndex: attempt.repeatIndex,
+    })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatIndex": 0,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatIndex": 0,
+        "retryIndex": 1,
+        "state": "passed",
+      },
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatIndex": 1,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatIndex": 1,
+        "retryIndex": 1,
+        "state": "passed",
+      },
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatIndex": 2,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatIndex": 2,
+        "retryIndex": 1,
+        "state": "passed",
+      },
+    ]
+  `)
+  attempts.forEach((attempt) => {
+    expect(attempt.duration).toBeGreaterThanOrEqual(0)
+    expect(attempt.startTime).toBeGreaterThan(0)
+  })
+})
+
+test('attempts grow while the test runs', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'attempts.test.js': `
+      import { afterAll, afterEach, expect, it } from 'vitest'
+
+      const seen = []
+      let runs = 0
+
+      // the current attempt is recorded after afterEach, so only previous attempts are visible
+      afterEach(({ task }) => {
+        seen.push(task.result.attempts.map(({ repeatIndex, retryIndex, state }) => ({ repeatIndex, retryIndex, state })))
+      })
+
+      // |      repeat 0      |      repeat 1      |
+      // | retry 0 -> retry 1 | retry 0 -> retry 1 |
+      // |  fail   ->  pass   |  fail   ->  pass   |
+      it('flaky', { retry: 1, repeats: 1 }, () => {
+        expect(++runs % 2).toBe(0)
+      })
+
+      afterAll(() => {
+        expect(seen).toEqual([
+          [],
+          [
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+          ],
+          [
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 1, state: 'pass' },
+          ],
+          [
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 1, state: 'pass' },
+            { repeatIndex: 1, retryIndex: 0, state: 'fail' },
+          ],
+        ])
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "attempts.test.js": {
+        "flaky": "passed",
+      },
+    }
+  `)
+})
+
+test('skipping during a retry ends attempts with a skipped attempt', async () => {
+  const { stderr, results } = await runInlineTests({
+    'skip.test.js': `
+      import { expect, it } from 'vitest'
+
+      let runs = 0
+
+      // |             repeat 0              |  repeat 1  |
+      // | retry 0 -> retry 1 ->  retry 2    |            |
+      // |  fail   ->  skip   -> (not run)   | (not run)  |
+      it('skips on retry', { retry: 2, repeats: 1 }, ({ skip }) => {
+        if (++runs === 2) {
+          skip()
+        }
+        expect(1).toBe(2)
+      })
+
+      it.skip('skipped statically', () => {})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  const [skipsOnRetry, skippedStatically] = results[0].children.allTests()
+  expect(skipsOnRetry.result().state).toBe('skipped')
+  expect(
+    skipsOnRetry
+      .attempts()
+      .map(({ repeatIndex, retryIndex, state }) => ({ repeatIndex, retryIndex, state })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "repeatIndex": 0,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "repeatIndex": 0,
+        "retryIndex": 1,
+        "state": "skipped",
+      },
+    ]
+  `)
+  expect(skippedStatically.attempts()).toEqual([])
 })
 
 test('syntax errors remain failures after successful repeats', async () => {

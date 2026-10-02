@@ -81,6 +81,8 @@ export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
   TaskOptions,
+  TestAttempt,
+  TestAttemptState,
   TestCase,
   TestCollection,
   TestDiagnostic,

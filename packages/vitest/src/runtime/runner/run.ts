@@ -12,6 +12,7 @@ import type {
   Task,
   TaskMeta,
   TaskResult,
+  TaskResultAttempt,
   TaskResultPack,
   TaskState,
   TaskUpdateEvent,
@@ -586,6 +587,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     state: 'run',
     startTime: unixNow(),
     retryCount: 0,
+    attempts: [],
   }
   updateTask('test-prepare', test, runner)
 
@@ -602,7 +604,20 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      const attemptStart = now()
+      const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
+      const recordAttempt = (state: TaskResultAttempt['state']) => {
+        const errors = test.result!.errors?.slice(attemptErrorsStart)
+        test.result!.attempts!.push({
+          state,
+          errors: errors?.length ? errors : undefined,
+          duration: now() - attemptStart,
+          startTime: attemptStartTime,
+          retryIndex: retryCount,
+          repeatIndex: repeatCount,
+        })
+      }
       let beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
@@ -694,12 +709,14 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {
+        recordAttempt('skip')
         test.mode = 'skip'
         test.result = {
           state: 'skip',
           note: test.result?.note,
           pending: true,
           duration: now() - start,
+          attempts: test.result.attempts,
         }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
@@ -724,6 +741,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           }
         }
       }
+      recordAttempt(test.result.state === 'pass' ? 'pass' : 'fail')
       if (test.result.state === 'pass') {
         break
       }
