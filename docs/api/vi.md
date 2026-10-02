@@ -828,7 +828,7 @@ function when(spy: Mock, options?: WhenOptions): When
 
 Defines per-argument behaviors on a spy, replacing its implementation for the duration of the `when` chain.
 
-Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with deep equality and support asymmetric matchers such as `expect.any()`.
+Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with the same deep equality as [`toEqual`](/api/expect#toequal) and support asymmetric matchers such as `expect.any()`.
 
 ```ts
 const spy = vi.fn()

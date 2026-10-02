@@ -239,10 +239,9 @@ describe('jest-expect', () => {
     expect(new Stock('x')).not.toStrictEqual(expect.toBeOneOf([{ type: 'x' }]))
     expect(new Stock('x')).toStrictEqual(expect.toBeOneOf([new Stock('x')]))
 
-    // non-asymmetric usage only sees registered testers
-    // TODO: https://github.com/vitest-dev/vitest/issues/11296
+    // non-asymmetric usage
     expect(new Set(['x'])).toBeOneOf([new Set(['x'])])
-    expect(new Set()).toBeOneOf([new Set(['x'])])
+    expect(new Set()).not.toBeOneOf([new Set(['x'])])
   })
 
   // https://github.com/vitest-dev/vitest/issues/11071
@@ -795,6 +794,70 @@ describe('toBeOneOf()', () => {
     snapshotError(() =>
       expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }),
     )
+  })
+})
+
+// https://github.com/vitest-dev/vitest/issues/11296
+describe('Map and Set equality', () => {
+  it('toContainEqual', () => {
+    expect([new Map([['x', 1]])]).toContainEqual(new Map([['x', 1]]))
+    expect([new Map([['y', 1]])]).not.toContainEqual(new Map([['x', 1]]))
+    expect([new Set(['x'])]).toContainEqual(new Set(['x']))
+    expect([new Set(['y'])]).not.toContainEqual(new Set(['x']))
+  })
+
+  it('toHaveProperty', () => {
+    expect({ a: new Map([['x', 1]]) }).toHaveProperty('a', new Map([['x', 1]]))
+    expect({ a: new Map([['y', 1]]) }).not.toHaveProperty('a', new Map([['x', 1]]))
+    expect({ a: new Set(['x']) }).toHaveProperty('a', new Set(['x']))
+    expect({ a: new Set(['y']) }).not.toHaveProperty('a', new Set(['x']))
+  })
+
+  it('toBeOneOf', () => {
+    expect(new Map([['x', 1]])).toBeOneOf([new Map([['x', 1]])])
+    expect(new Map([['y', 1]])).not.toBeOneOf([new Map([['x', 1]])])
+    expect(new Set(['x'])).toBeOneOf(new Set([new Set(['x'])]))
+    expect(new Set(['y'])).not.toBeOneOf(new Set([new Set(['x'])]))
+    expect(new Set(['x'])).toEqual(expect.toBeOneOf([new Set(['x'])]))
+    expect(new Set(['y'])).not.toEqual(expect.toBeOneOf([new Set(['x'])]))
+  })
+
+  it('toThrow with asymmetric matcher', () => {
+    class DataError extends Error {
+      constructor(public data: unknown) {
+        super('data')
+      }
+    }
+    const fn = () => {
+      throw new DataError(new Set(['x']))
+    }
+
+    expect(fn).toThrow(expect.objectContaining({ data: new Set(['x']) }))
+    expect(fn).not.toThrow(expect.objectContaining({ data: new Set(['y']) }))
+  })
+
+  it('return matchers', () => {
+    const fn = vi.fn(() => new Set(['x']))
+    fn()
+
+    expect(fn).toHaveReturnedWith(new Set(['x']))
+    expect(fn).not.toHaveReturnedWith(new Set(['y']))
+    expect(fn).toHaveLastReturnedWith(new Set(['x']))
+    expect(fn).not.toHaveLastReturnedWith(new Set(['y']))
+    expect(fn).toHaveNthReturnedWith(1, new Set(['x']))
+    expect(fn).not.toHaveNthReturnedWith(1, new Set(['y']))
+  })
+
+  it('resolve matchers', async () => {
+    const fn = vi.fn(async () => new Map([['x', 1]]))
+    await fn()
+
+    expect(fn).toHaveResolvedWith(new Map([['x', 1]]))
+    expect(fn).not.toHaveResolvedWith(new Map([['y', 1]]))
+    expect(fn).toHaveLastResolvedWith(new Map([['x', 1]]))
+    expect(fn).not.toHaveLastResolvedWith(new Map([['y', 1]]))
+    expect(fn).toHaveNthResolvedWith(1, new Map([['x', 1]]))
+    expect(fn).not.toHaveNthResolvedWith(1, new Map([['y', 1]]))
   })
 })
 
