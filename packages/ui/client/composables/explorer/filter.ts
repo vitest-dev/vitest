@@ -70,23 +70,20 @@ export function filterAll(search: SearchMatcher, filter: Filter) {
 }
 
 export function filterNode(node: UITaskTreeNode, context: FilterNodeContext) {
-  const { onlyTests } = context.filter
-  const ancestorMatches = !onlyTests && hasMatchingAncestor(node, context)
-  const filteredTree = filterTreeNode(node, onlyTests, context, ancestorMatches)
+  const filteredTree = filterTreeNode(node, context, hasMatchingAncestor(node, context))
   return filteredTree ? flattenVisibleTree(filteredTree) : []
 }
 
 function filterTreeNode(
   node: UITaskTreeNode,
-  onlyTests: boolean,
   context: FilterNodeContext,
   ancestorMatches: boolean,
 ): FilteredTreeNode | undefined {
-  const nodeMatches = (!onlyTests || node.type === 'test') && matchesNode(node, context)
+  const nodeMatches = matchesNode(node, context)
   const descendantsInheritMatch = ancestorMatches || nodeMatches
   const children = isParentNode(node)
     ? node.tasks
-        .map((child) => filterTreeNode(child, onlyTests, context, descendantsInheritMatch))
+        .map((child) => filterTreeNode(child, context, descendantsInheritMatch))
         .filter((child) => child !== undefined)
     : []
   const subtreeMatches = nodeMatches || children.some((child) => child.subtreeMatches)
@@ -118,6 +115,9 @@ function hasMatchingAncestor(node: UITaskTreeNode, context: FilterNodeContext) {
 }
 
 function matchesNode(node: UITaskTreeNode, context: FilterNodeContext) {
+  if (context.filter.onlyTests && node.type !== 'test') {
+    return false
+  }
   const task = context.tasks.get(node.id)
   return task ? matchTask(task, context.search, context.filter, context.slowTestThreshold) : false
 }
