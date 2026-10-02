@@ -29,14 +29,14 @@ export function testMatcher(
   search: SearchMatcher,
   filter: Filter,
   slowTestThreshold: number | undefined,
-) {
+): boolean {
   return matchTask(task, search, filter, slowTestThreshold)
 }
 
 /**
  * Rebuild the explorer rows for the whole tree and publish them to `uiEntries` and `filteredFiles`.
  */
-export function runFilter(search: SearchMatcher, filter: Filter) {
+export function runFilter(search: SearchMatcher, filter: Filter): void {
   const entries = filterAll(search, filter)
   uiEntries.value = entries
   filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
@@ -48,7 +48,7 @@ export function runFilter(search: SearchMatcher, filter: Filter) {
  * Reads the current project, sort order, explorer tree, task state, and config. Kept parents are marked
  * expanded, and nothing else is written.
  */
-export function filterAll(search: SearchMatcher, filter: Filter) {
+export function filterAll(search: SearchMatcher, filter: Filter): UITaskTreeNode[] {
   const project = currentProjectName.value
   const tasks = getSortedRootTasks(explorerTree.root.tasks, projectSort.value)
   const entries: UITaskTreeNode[] = []
@@ -78,7 +78,7 @@ export function filterAll(search: SearchMatcher, filter: Filter) {
  *
  * `node` can be anywhere in the tree, because matches inherited from its ancestors are checked too.
  */
-export function filterNode(node: UITaskTreeNode, context: FilterNodeContext) {
+export function filterNode(node: UITaskTreeNode, context: FilterNodeContext): UITaskTreeNode[] {
   const filteredTree = filterTreeNode(node, context, hasMatchingAncestor(node, context))
   return filteredTree ? flattenVisibleTree(filteredTree) : []
 }
@@ -118,7 +118,7 @@ function filterTreeNode(
   }
 }
 
-function hasMatchingAncestor(node: UITaskTreeNode, context: FilterNodeContext) {
+function hasMatchingAncestor(node: UITaskTreeNode, context: FilterNodeContext): boolean {
   let parent = context.nodes.get(node.parentId)
   while (parent) {
     if (matchesNode(parent, context)) {
@@ -129,7 +129,7 @@ function hasMatchingAncestor(node: UITaskTreeNode, context: FilterNodeContext) {
   return false
 }
 
-function matchesNode(node: UITaskTreeNode, context: FilterNodeContext) {
+function matchesNode(node: UITaskTreeNode, context: FilterNodeContext): boolean {
   if (context.filter.onlyTests && node.type !== 'test') {
     return false
   }
@@ -137,7 +137,10 @@ function matchesNode(node: UITaskTreeNode, context: FilterNodeContext) {
   return task ? matchTask(task, context.search, context.filter, context.slowTestThreshold) : false
 }
 
-function flattenVisibleTree(tree: FilteredTreeNode, entries: UITaskTreeNode[] = []) {
+function flattenVisibleTree(
+  tree: FilteredTreeNode,
+  entries: UITaskTreeNode[] = [],
+): UITaskTreeNode[] {
   entries.push(tree.node)
   if (!isParentNode(tree.node) || !tree.node.expanded) {
     return entries
@@ -149,7 +152,7 @@ function flattenVisibleTree(tree: FilteredTreeNode, entries: UITaskTreeNode[] = 
   return entries
 }
 
-function matchState(task: Task, filter: Filter, slowTestThreshold: number | undefined) {
+function matchState(task: Task, filter: Filter, slowTestThreshold: number | undefined): boolean {
   if (filter.slow) {
     if (task.type === 'test') {
       if (
@@ -185,7 +188,7 @@ function matchTask(
   search: SearchMatcher,
   filter: Filter,
   slowTestThreshold: number | undefined,
-) {
+): boolean {
   // search and filter will apply together
   if (search(task)) {
     const hasStatusFilter = filter.success || filter.failed || filter.skipped || filter.slow

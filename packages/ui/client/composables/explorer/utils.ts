@@ -38,7 +38,10 @@ export function isSlowTestTask(task: Task) {
   return typeof threshold === 'number' && duration > threshold
 }
 
-export function getSortedRootTasks(tasks: readonly FileTreeNode[], sort: SortUIType) {
+export function getSortedRootTasks(
+  tasks: readonly FileTreeNode[],
+  sort: SortUIType,
+): FileTreeNode[] {
   const sorted = [...tasks]
 
   sorted.sort((a, b) => {
@@ -254,7 +257,7 @@ export function replaceSubtreeEntries(
   entries: readonly UITaskTreeNode[],
   node: UITaskTreeNode,
   subtree: readonly UITaskTreeNode[],
-) {
+): UITaskTreeNode[] {
   const descendants = new Set<string>()
   collectDescendantIds(node, descendants)
   const result: UITaskTreeNode[] = []
@@ -268,7 +271,7 @@ export function replaceSubtreeEntries(
   return result
 }
 
-function collectDescendantIds(node: UITaskTreeNode, ids: Set<string>) {
+function collectDescendantIds(node: UITaskTreeNode, ids: Set<string>): void {
   if (isParentNode(node)) {
     for (const child of node.tasks) {
       ids.add(child.id)
