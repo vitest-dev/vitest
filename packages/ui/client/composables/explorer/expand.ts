@@ -1,13 +1,14 @@
 import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
-import { findById } from '~/composables/client'
-import { filterAll, filterNode } from '~/composables/explorer/filter'
+import { client, config } from '~/composables/client'
+import { filterNode, runFilter } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
-import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
+import { openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import {
   createOrUpdateNode,
   createOrUpdateSuiteTask,
   isFileNode,
   isParentNode,
+  replaceSubtreeEntries,
 } from '~/composables/explorer/utils'
 
 /**
@@ -46,11 +47,15 @@ export function runExpandNode(id: string, search: SearchMatcher, filter: Filter)
 
   const treeItems = new Set(openedTreeItems.value)
   treeItems.add(node.id)
-  // collect children
-  // the first node is itself only when it is a file
-  const children = new Set(filterNode(node, search, filter))
+  const subtree = filterNode(node, {
+    nodes: explorerTree.nodes,
+    taskIdMap: client.state.idMap,
+    search,
+    filter,
+    slowTestThreshold: config.value.slowTestThreshold,
+  })
 
-  const entries = [...collectExpandedNode(node, children)]
+  const entries = replaceSubtreeEntries(uiEntries.value, node, subtree)
   openedTreeItems.value = Array.from(treeItems)
   // Keep expandAll state as it is: expanding individual shouldn't prevent expanding all the nodes ("expand all" button)
   // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
@@ -81,11 +86,9 @@ export function runExpandNode(id: string, search: SearchMatcher, filter: Filter)
  */
 export function runExpandAll(search: SearchMatcher, filter: Filter) {
   expandAllNodes(explorerTree.root.tasks, false)
-  const entries = [...filterAll(search, filter)]
   treeFilter.value.expandAll = false
   openedTreeItems.value = []
-  uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map((f) => findById(f.id)!)
+  runFilter(search, filter)
 }
 
 export function expandNodesOnEndRun(ids: Set<string>, end: boolean) {
@@ -111,34 +114,5 @@ function expandAllNodes(nodes: UITaskTreeNode[], updateState: boolean) {
   if (updateState) {
     treeFilter.value.expandAll = false
     openedTreeItems.value = []
-  }
-}
-
-/**
- * Build the complete next explorer entry list by emitting an expanded node and its filtered
- * subtree at the node's current position.
- *
- * `children` contains only entries produced by filtering the expanded subtree. This function
- * walks the complete current `uiEntries`. When it reaches `node`, it emits the node unless
- * `children` already contains it, followed by the children. Unrelated entries are copied
- * unchanged, while existing entries with the same IDs are skipped to avoid duplicates.
- *
- * TODO: Make this a pure splice over explicit entries and keep expansion state changes in
- * `runExpandNode`.
- */
-function* collectExpandedNode(node: UITaskTreeNode, children: Set<UITaskTreeNode>) {
-  const id = node.id
-  const ids = new Set(Array.from(children).map((n) => n.id))
-
-  for (const child of uiEntries.value) {
-    if (child.id === id) {
-      child.expanded = true
-      if (!ids.has(child.id)) {
-        yield node
-      }
-      yield* children
-    } else if (!ids.has(child.id)) {
-      yield child
-    }
   }
 }
