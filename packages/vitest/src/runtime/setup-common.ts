@@ -28,6 +28,26 @@ function setupDefines(config: SerializedConfig) {
   }
 }
 
+// Restore the keys configured through `test.env` into `process.env`. Under
+// `isolate: false` a worker is reused for several files and `config.env` is
+// merged into `process.env` only once, at spawn time, so a file that assigns to
+// one of those keys leaks its value into every later file. Keys the config does
+// not mention are left alone: leaking those between files is the documented
+// behaviour of `isolate: false` and this does not change it.
+export function applyConfigEnv(env: Record<string, any> | undefined): void {
+  if (!env) {
+    return
+  }
+  for (const key in env) {
+    // `process.env` coerces everything to a string, but assigning a boolean
+    // throws on some Node versions, and Vite's own keys (PROD, DEV, SSR) reach
+    // this object as booleans. Stringify the way the spawn-time merge in
+    // `node/pool.ts` does, so both paths produce identical values.
+    const value = env[key]
+    process.env[key] = typeof value === 'boolean' ? (value ? '1' : '') : String(value)
+  }
+}
+
 export function setupEnv(env: Record<string, any>, metaEnv: Record<string, any>): void {
   for (const key in env) {
     metaEnv[key] = env[key]

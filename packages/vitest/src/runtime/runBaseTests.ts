@@ -11,6 +11,7 @@ import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
 import { collectTests, startTests } from './runner/run'
 import { resolveTestRunner } from './runners'
+import { applyConfigEnv } from './setup-common'
 import { setupGlobalEnv } from './setup-node'
 import { getWorkerState, resetModules } from './utils'
 
@@ -50,6 +51,13 @@ export async function run(
   try {
     await traces.$(`vitest.test.runner.${method}`, async () => {
       for (const file of files) {
+        // `isolate: false` reuses this worker for every file, and `config.env`
+        // is merged into `process.env` once, when the worker is spawned. A file
+        // that assigns to one of those keys would otherwise leak its value into
+        // every later file in this worker, so restore the configured keys before
+        // each one. Vitest 4 did this too.
+        applyConfigEnv(config.env)
+
         if (config.isolate) {
           moduleRunner.mocker?.reset()
           resetModules(workerState.evaluatedModules, true)
