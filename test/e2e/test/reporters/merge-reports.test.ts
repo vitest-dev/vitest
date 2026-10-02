@@ -1,17 +1,19 @@
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { RunVitestConfig } from '#test-utils'
+import type { HTMLReportMetadata } from '../../../../packages/ui/client/composables/client/static.js'
 import type { MergeReport } from '../../../../packages/vitest/src/node/reporters/blob.js'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { gunzipSync } from 'node:zlib'
 import { playwright } from '@vitest/browser-playwright'
-import { stringify } from 'flatted'
+import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
 import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
-import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph.js'
+import { getSharedModuleGraphByProject } from '../../../../packages/vitest/src/utils/graph.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -373,125 +375,141 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
     return baseConfig
   }
 
+  // run tests and keep the module graph the html reporter would store as the reference
   const result = await runVitest({
     ...baseConfig(),
     reporters: ['blob'],
   })
   expect.assert(result.ctx)
-  const generatedModuleGraphJson = await getSerializedModuleGraph(result.ctx)
+  const generatedModuleGraphJson = getSerializedModuleGraph(result.ctx)
   if (mode === 'browser') {
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
-        "<root>/basic.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/sub/format.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/basic.test.ts": [
-              "<optimized-deps>/vitest.js",
-              "<root>/sub/format.ts",
-              "<root>/util.ts"
-            ]
-          },
-          "externalized": [
-            "<optimized-deps>/vitest.js?v=<hash>"
-          ],
-          "inlined": [
-            "<root>/basic.test.ts",
-            "<root>/sub/format.ts",
-            "<root>/sub/subject.ts",
-            "<root>/util.ts"
-          ]
-        },
-        "<root>/second.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/second.test.ts": [
-              "<optimized-deps>/vitest.js",
-              "<root>/util.ts",
-              "<optimized-deps>/obug.js"
-            ]
-          },
-          "externalized": [
-            "<optimized-deps>/vitest.js?v=<hash>",
-            "<optimized-deps>/obug.js?v=<hash>"
-          ],
-          "inlined": [
-            "<root>/second.test.ts",
-            "<root>/util.ts",
-            "<root>/sub/subject.ts"
-          ]
+        "chromium": {
+          "client": {
+            "modules": {
+              "<root>/basic.test.ts": {
+                "external": false,
+                "imports": [
+                  "<optimized-deps>/vitest.js",
+                  "<root>/sub/format.ts",
+                  "<root>/util.ts"
+                ]
+              },
+              "<optimized-deps>/obug.js": {
+                "external": true,
+                "imports": []
+              },
+              "<optimized-deps>/vitest.js": {
+                "external": true,
+                "imports": []
+              },
+              "<root>/second.test.ts": {
+                "external": false,
+                "imports": [
+                  "<optimized-deps>/vitest.js",
+                  "<root>/util.ts",
+                  "<optimized-deps>/obug.js"
+                ]
+              },
+              "<root>/sub/format.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              },
+              "<root>/sub/subject.ts": {
+                "external": false,
+                "imports": []
+              },
+              "<root>/util.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              }
+            },
+            "rootsByTestFile": {
+              "<root>/basic.test.ts": [
+                "<root>/basic.test.ts"
+              ],
+              "<root>/second.test.ts": [
+                "<root>/second.test.ts"
+              ]
+            }
+          }
         }
       }"
     `)
   } else {
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
-        "<root>/basic.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/sub/format.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/basic.test.ts": [
-              "<root>/sub/format.ts",
-              "<root>/util.ts"
-            ]
-          },
-          "externalized": [],
-          "inlined": [
-            "<root>/basic.test.ts",
-            "<root>/sub/format.ts",
-            "<root>/sub/subject.ts",
-            "<root>/util.ts"
-          ]
-        },
-        "<root>/second.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/second.test.ts": [
-              "<root>/util.ts",
-              "<node_modules>/obug/dist/ansi.js"
-            ]
-          },
-          "externalized": [
-            "<node_modules>/obug/dist/ansi.js"
-          ],
-          "inlined": [
-            "<root>/second.test.ts",
-            "<root>/util.ts",
-            "<root>/sub/subject.ts"
-          ]
+        "": {
+          "ssr": {
+            "modules": {
+              "<node_modules>/obug/dist/ansi.js": {
+                "external": true,
+                "imports": []
+              },
+              "<root>/basic.test.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/format.ts",
+                  "<root>/util.ts"
+                ]
+              },
+              "<root>/second.test.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/util.ts",
+                  "<node_modules>/obug/dist/ansi.js"
+                ]
+              },
+              "<root>/sub/format.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              },
+              "<root>/sub/subject.ts": {
+                "external": false,
+                "imports": []
+              },
+              "<root>/util.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              }
+            },
+            "rootsByTestFile": {
+              "<root>/basic.test.ts": [
+                "<root>/basic.test.ts"
+              ],
+              "<root>/second.test.ts": [
+                "<root>/second.test.ts"
+              ]
+            }
+          }
         }
       }"
     `)
   }
 
+  // merging the blob restores the same module graph
   const result2 = await runVitest({
     ...baseConfig(),
     mergeReports: reportsDir,
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
   expect.assert(result2.ctx)
-  const restoredModuleGraphJson = await getSerializedModuleGraph(result2.ctx)
+  const restoredModuleGraphJson = getSerializedModuleGraph(result2.ctx)
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
+  // the html report generated from the blob stores the same module graph
   const result3 = await runVitest({
     ...baseConfig(),
-    mergeReports: resolve(root, '.vitest/blob'),
+    mergeReports: reportsDir,
     reporters: ['html'],
   })
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
@@ -500,23 +518,28 @@ test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) 
            You can run npx vite preview --outDir .vitest to see the test results.
     "
   `)
+  expect.assert(result3.ctx)
+  expect(getHtmlReportModuleGraph(result3.ctx)).toBe(generatedModuleGraphJson)
 })
 
-async function getSerializedModuleGraph(ctx: Vitest) {
-  const files = ctx.state
-    .getFiles()
-    .slice()
-    .sort((a, b) => a.filepath.localeCompare(b.filepath))
-  const moduleGraphs = Object.fromEntries(
-    await Promise.all(
-      files.map(async (file) => {
-        const projectName = file.projectName || ''
-        const graph = await getModuleGraph(ctx, projectName, file.filepath, file.viteEnvironment)
-        return [file.filepath, graph] as const
-      }),
-    ),
+function getSerializedModuleGraph(ctx: Vitest) {
+  return normalizeModuleGraphJson(ctx, getSharedModuleGraphByProject(ctx.state.getTestModules()))
+}
+
+function getHtmlReportModuleGraph(ctx: Vitest) {
+  const metadata: HTMLReportMetadata = parse(
+    gunzipSync(readFileSync(resolve(ctx.config.root, '.vitest/ui/html.meta.json.gz'))).toString(),
   )
-  return JSON.stringify(moduleGraphs, null, 2)
+  return normalizeModuleGraphJson(ctx, metadata.moduleGraph)
+}
+
+function normalizeModuleGraphJson(ctx: Vitest, moduleGraph: object) {
+  // sort object keys since their order follows test file order, which isn't stable
+  const sortKeys = (_key: string, value: unknown) =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+      : value
+  return JSON.stringify(moduleGraph, sortKeys, 2)
     .replaceAll(ctx.config.root, '<root>')
     .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')
     .replace(/<node_modules>\/\.vite\/vitest\/[a-f0-9]{40}\/deps\/([^"?]+)/g, '<optimized-deps>/$1')

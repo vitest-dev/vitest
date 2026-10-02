@@ -14,7 +14,7 @@ import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
-import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { getSharedModuleGraphByProject } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
 
 const gzipAsync = promisify(gzip)
@@ -120,7 +120,7 @@ async function serializeReportMetadata(
     files: [],
     config: ctx.serializedRootConfig,
     unhandledErrors: [...unhandledErrors],
-    moduleGraph: {},
+    moduleGraph: getSharedModuleGraphByProject(testModules),
     testModules: [],
     sourceCode: {
       codeTable: [],
@@ -147,8 +147,6 @@ async function serializeReportMetadata(
     return index
   }
 
-  const promises: Promise<void>[] = []
-
   for (const testModule of testModules) {
     result.files.push(testModule.task)
 
@@ -167,22 +165,7 @@ async function serializeReportMetadata(
         testModuleCodes[projectName][testModule.relativeModuleId] = getCodeIndex(code)
       } catch {}
     }
-
-    // TODO: https://github.com/vitest-dev/vitest/issues/9763
-    promises.push(
-      (async () => {
-        result.moduleGraph[projectName] ??= {}
-        result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
-          ctx,
-          projectName,
-          testModule.moduleId,
-          testModule.viteEnvironment?.name,
-        )
-      })(),
-    )
   }
-
-  await Promise.all(promises)
 
   return result
 }

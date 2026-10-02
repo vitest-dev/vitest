@@ -9,6 +9,9 @@ export type ModuleNode = GraphNode<ModuleType>
 export type ModuleLink = GraphLink<ModuleType, ModuleNode>
 export type ModuleGraph = Graph<ModuleType, ModuleNode, ModuleLink>
 export type ModuleGraphController = GraphController<ModuleType, ModuleNode, ModuleLink>
+
+const NODE_MODULES_RE = /[/\\]node_modules[/\\]/
+
 function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
   const labels = modules.map((module) => createModuleLabelItem(module))
   const map = calcExternalLabels(labels)
@@ -41,22 +44,47 @@ function defineInlineModuleNode(module: string, isRoot: boolean): ModuleNode {
   })
 }
 
-export function getModuleGraph(data: ModuleGraphData, rootPath: string | undefined): ModuleGraph {
+export function getModuleGraph(
+  data: ModuleGraphData | undefined,
+  rootPath: string | undefined,
+  hideNodeModules = false,
+): ModuleGraph {
   if (!data) {
     return defineGraph({})
   }
 
+  const inlined: string[] = []
+  const externalized: string[] = []
+  const seen = new Set<string>()
+  function visit(id: string) {
+    const module = data!.modules[id]
+    if (seen.has(id) || !module) {
+      return
+    }
+    seen.add(id)
+    if (module.external) {
+      externalized.push(id)
+      return
+    }
+    inlined.push(id)
+    module.imports.forEach(visit)
+  }
+  data.roots.forEach(visit)
+
+  const isVisible = (id: string) => !hideNodeModules || !NODE_MODULES_RE.test(id)
+  const visibleInlined = inlined.filter(isVisible)
+  const visibleExternalized = externalized.filter(isVisible)
   const externalizedNodes = !config.value.experimental?.viteModuleRunner
-    ? defineExternalModuleNodes([...data.inlined, ...data.externalized])
-    : defineExternalModuleNodes(data.externalized)
+    ? defineExternalModuleNodes([...visibleInlined, ...visibleExternalized])
+    : defineExternalModuleNodes(visibleExternalized)
   const inlinedNodes = !config.value.experimental?.viteModuleRunner
     ? []
-    : (data.inlined.map((module) => defineInlineModuleNode(module, module === rootPath)) ?? [])
+    : visibleInlined.map((module) => defineInlineModuleNode(module, module === rootPath))
   const nodes = [...externalizedNodes, ...inlinedNodes]
   const nodeMap = Object.fromEntries(nodes.map((node) => [node.id, node]))
-  const links = Object.entries(data.graph).flatMap(
-    ([module, deps]) =>
-      deps
+  const links = inlined.flatMap(
+    (module) =>
+      data.modules[module].imports
         .map((dep) => {
           const source = nodeMap[module]
           const target = nodeMap[dep]
