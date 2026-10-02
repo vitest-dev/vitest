@@ -10,8 +10,7 @@ import type { CompareKeys, Config, Printer, Refs } from './types'
 
 function getKeysOfEnumerableProperties(object: Record<string, unknown>, compareKeys: CompareKeys) {
   const rawKeys = Object.keys(object)
-  const keys: Array<string | symbol>
-    = compareKeys === null ? rawKeys : rawKeys.sort(compareKeys)
+  const keys: Array<string | symbol> = compareKeys === null ? rawKeys : rawKeys.sort(compareKeys)
 
   if (Object.getOwnPropertySymbols) {
     for (const symbol of Object.getOwnPropertySymbols(object)) {
@@ -56,20 +55,8 @@ export function printIteratorEntries(
         break
       }
 
-      const name = printer(
-        current.value[0],
-        config,
-        indentationNext,
-        depth,
-        refs,
-      )
-      const value = printer(
-        current.value[1],
-        config,
-        indentationNext,
-        depth,
-        refs,
-      )
+      const name = printer(current.value[0], config, indentationNext, depth, refs)
+      const value = printer(current.value[1], config, indentationNext, depth, refs)
 
       result += name + separator + value
 
@@ -77,8 +64,7 @@ export function printIteratorEntries(
 
       if (!current.done) {
         result += `,${config.spacingInner}`
-      }
-      else if (!config.min) {
+      } else if (!config.min) {
         result += ','
       }
     }
@@ -126,8 +112,7 @@ export function printIteratorValues(
 
       if (!current.done) {
         result += `,${config.spacingInner}`
-      }
-      else if (!config.min) {
+      } else if (!config.min) {
         result += ','
       }
     }
@@ -181,8 +166,7 @@ export function printListItems(
 
       if (i < length - 1) {
         result += `,${config.spacingInner}`
-      }
-      else if (!config.min) {
+      } else if (!config.min) {
         result += ','
       }
     }
@@ -224,17 +208,17 @@ export function printObjectProperties(
       }
 
       const key = keys[i]
-      const name = !config.quoteKeys && isUnquotableKey(key)
-        ? key as string
-        : printer(key, config, indentationNext, depth, refs)
+      const name =
+        !config.quoteKeys && isUnquotableKey(key)
+          ? (key as string)
+          : printer(key, config, indentationNext, depth, refs)
       const value = printer(val[key], config, indentationNext, depth, refs)
 
       result += `${name}: ${value}`
 
       if (i < keys.length - 1) {
         result += `,${config.spacingInner}`
-      }
-      else if (!config.min) {
+      } else if (!config.min) {
         result += ','
       }
     }

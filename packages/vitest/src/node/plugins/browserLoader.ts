@@ -5,10 +5,12 @@ import type {
 } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
+import type { ParentProjectBrowser } from '../types/browser'
 import type {
-  ParentProjectBrowser,
-} from '../types/browser'
-import type { ConfigResolutionCaptures, ResolvedConfig, ResolvedProjectEntry } from '../types/config'
+  ConfigResolutionCaptures,
+  ResolvedConfig,
+  ResolvedProjectEntry,
+} from '../types/config'
 import c from 'tinyrainbow'
 import { createViteServer } from '../vite'
 import { createViteLogger } from '../viteLogger'
@@ -20,11 +22,9 @@ function sortPluginsByEnforce(plugins: VitePlugin[]): VitePlugin[] {
   for (const plugin of plugins) {
     if (plugin.enforce === 'pre') {
       pre.push(plugin)
-    }
-    else if (plugin.enforce === 'post') {
+    } else if (plugin.enforce === 'post') {
       post.push(plugin)
-    }
-    else {
+    } else {
       normal.push(plugin)
     }
   }
@@ -51,10 +51,12 @@ export function BrowserLoaderPlugin(
         // (e.g. connect mode). All instances in a project share one provider
         // (validated in `resolveTestConfig`), so any instance's server factory
         // builds the shared server.
-        const provider = browser.provider
-          ?? browser.instances?.find(instance => instance.provider)?.provider
+        const provider =
+          browser.provider ?? browser.instances?.find((instance) => instance.provider)?.provider
         if (!provider || typeof provider.serverFactory !== 'function') {
-          throw new Error(`Browser Mode was enabled, but provider was not specified anywhere. See https://vitest.dev/guide/browser/#configuration`)
+          throw new Error(
+            `Browser Mode was enabled, but provider was not specified anywhere. See https://vitest.dev/guide/browser/#configuration`,
+          )
         }
         const contribution = await provider.serverFactory()
         captures.browserContribution = contribution
@@ -70,22 +72,25 @@ export function BrowserLoaderPlugin(
             info(message, options) {
               // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L76-L86
               // https://github.com/vitejs/vite/blob/ba3119397d0110952f29965774c627a3017d7292/packages/vite/src/node/optimizer/optimizer.ts#L483-L490
-              const isOptimizerMessage
-                = message.includes('dependency optimized: ')
-                  || message.includes('dependencies optimized: ')
-                  || message.includes('optimized dependencies changed. reloading')
+              const isOptimizerMessage =
+                message.includes('dependency optimized: ') ||
+                message.includes('dependencies optimized: ') ||
+                message.includes('optimized dependencies changed. reloading')
               if (isOptimizerMessage) {
                 // escalate from `info` to `warn` so it shows up on Vitest's default logLevel `warn`
                 logger.warn(message, options)
-              }
-              else {
+              } else {
                 logger.info(message, options)
               }
               if (message.includes('optimized dependencies changed. reloading')) {
                 logger.warn(
                   [
-                    c.yellow(`\n${c.bold('[vitest]')} Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`),
-                    c.yellow(`For a stable experience, add the newly optimized dependencies to your config's ${c.bold('`optimizeDeps.include`')} field manually.\n`),
+                    c.yellow(
+                      `\n${c.bold('[vitest]')} Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`,
+                    ),
+                    c.yellow(
+                      `For a stable experience, add the newly optimized dependencies to your config's ${c.bold('`optimizeDeps.include`')} field manually.\n`,
+                    ),
                   ].join(''),
                 )
               }
@@ -102,7 +107,7 @@ export function BrowserLoaderPlugin(
           // `vitest:browser:esm-injector` must run after `vitest:mocks`, which is
           // added by the main pipeline and is not part of `contribution.plugins`.
           return sortPluginsByEnforce(
-            contribution.plugins.filter(plugin => plugin.enforce !== 'post'),
+            contribution.plugins.filter((plugin) => plugin.enforce !== 'post'),
           )
         }
         return false
@@ -127,13 +132,35 @@ export function BrowserLoaderPlugin(
         const contribution = captures.browserContribution
         if (contribution && environment.name === 'client') {
           return sortPluginsByEnforce(
-            contribution.plugins.filter(plugin => plugin.enforce === 'post'),
+            contribution.plugins.filter((plugin) => plugin.enforce === 'post'),
           )
         }
         return false
       },
     },
   ]
+}
+
+const deferredListen = new WeakMap<
+  ViteDevServer,
+  { port: number | undefined; listening?: Promise<void> }
+>()
+
+export function listenClusterServer(server: ViteDevServer): Promise<void> {
+  const deferred = deferredListen.get(server)
+  if (!deferred) {
+    return Promise.resolve()
+  }
+  deferred.listening ??= server.listen(deferred.port).then(
+    () => {
+      deferredListen.delete(server)
+    },
+    (error) => {
+      deferred.listening = undefined
+      throw error
+    },
+  )
+  return deferred.listening
 }
 
 export async function createClusterServer(
@@ -160,9 +187,9 @@ export async function createClusterServer(
   // initialize a provider that could adopt and close the prepared browser.
   for (const child of children) {
     if (
-      child.hidden
-      || child.hasTestFiles === false
-      || (child.projectConfig.typecheck.enabled && child.projectConfig.typecheck.only)
+      child.hidden ||
+      child.hasTestFiles === false ||
+      (child.projectConfig.typecheck.enabled && child.projectConfig.typecheck.only)
     ) {
       continue
     }
@@ -173,7 +200,13 @@ export async function createClusterServer(
   }
 
   const server = await createViteServer(viteConfig)
-  await server.listen(config.api.port)
+  // listen on startup only for `api`/`ui`, otherwise on the first browser launch
+  // (collect-only processes never listen, so Vite never starts a dependency scan)
+  if (config._apiRequested) {
+    await server.listen(config.api.port)
+  } else {
+    deferredListen.set(server, { port: config.api.port })
+  }
   contribution.setupRpc(parent)
   return { server, parent }
 }

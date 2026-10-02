@@ -73,9 +73,8 @@ class Action<T = void> implements Promise<T> {
   async #run(): Promise<T> {
     const timeout = resolveActionTimeout(this.#options)
     const options = timeout == null ? this.#options : { ...this.#options, timeout }
-    const args = typeof this.#args === 'function'
-      ? await this.#args(options)
-      : [...this.#args, options]
+    const args =
+      typeof this.#args === 'function' ? await this.#args(options) : [...this.#args, options]
     const promise = getBrowserState().commands.triggerCommand<T>(
       this.#command,
       args,
@@ -90,7 +89,7 @@ class Action<T = void> implements Promise<T> {
   // the command starts only when awaited, so an unawaited action cannot reject unhandled
   #start(): Promise<T> {
     this.#awaited = true
-    return this.#promise ??= this.#run()
+    return (this.#promise ??= this.#run())
   }
 
   then<R1 = T, R2 = never>(
@@ -128,7 +127,12 @@ export class UploadAction extends Action {
     options?: ActionOptions,
     errorSource?: Error,
   ) {
-    super('__vitest_upload', async options => [target, await readFiles(files), options], options, errorSource)
+    super(
+      '__vitest_upload',
+      async (options) => [target, await readFiles(files), options],
+      options,
+      errorSource,
+    )
   }
 }
 
@@ -138,27 +142,35 @@ export class ScreenshotAction<T> extends Action<T> {
     options: ActionOptions,
     serialize: () => Promise<Record<string, unknown>>,
   ) {
-    super('__vitest_screenshot', async options => [name, { ...options, ...await serialize() }], options)
+    super(
+      '__vitest_screenshot',
+      async (options) => [name, { ...options, ...(await serialize()) }],
+      options,
+    )
   }
 }
 
-function readFiles(files: string | string[] | File | File[]): Promise<(string | { name: string; mimeType: string; base64: string })[]> {
-  return Promise.all((Array.isArray(files) ? files : [files]).map(async (file) => {
-    if (typeof file === 'string') {
-      return file
-    }
-    const bas64String = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
-      reader.readAsDataURL(file)
-    })
+function readFiles(
+  files: string | string[] | File | File[],
+): Promise<(string | { name: string; mimeType: string; base64: string })[]> {
+  return Promise.all(
+    (Array.isArray(files) ? files : [files]).map(async (file) => {
+      if (typeof file === 'string') {
+        return file
+      }
+      const bas64String = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
+        reader.readAsDataURL(file)
+      })
 
-    return {
-      name: file.name,
-      mimeType: file.type,
-      // strip prefix `data:[<media-type>][;base64],`
-      base64: bas64String.slice(bas64String.indexOf(',') + 1),
-    }
-  }))
+      return {
+        name: file.name,
+        mimeType: file.type,
+        // strip prefix `data:[<media-type>][;base64],`
+        base64: bas64String.slice(bas64String.indexOf(',') + 1),
+      }
+    }),
+  )
 }

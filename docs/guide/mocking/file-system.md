@@ -9,6 +9,7 @@ Vitest doesn't provide any file system mocking API out of the box. You can use `
 To automatically redirect every `fs` call to `memfs`, you can create `__mocks__/fs.cjs` and `__mocks__/fs/promises.cjs` files at the root of your project:
 
 ::: code-group
+
 ```ts [__mocks__/fs.cjs]
 // we can also use `import`, but then
 // every export should be explicitly defined
@@ -24,6 +25,7 @@ module.exports = fs
 const { fs } = require('memfs')
 module.exports = fs.promises
 ```
+
 :::
 
 ```ts [read-hello-world.js]

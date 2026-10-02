@@ -5,7 +5,7 @@ outline: deep
 
 # coverage <CRoot /> {#coverage}
 
-You can use [`v8`](/guide/coverage.html#v8-provider), [`istanbul`](/guide/coverage.html#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
+You can use [`v8`](/guide/coverage#v8-provider), [`istanbul`](/guide/coverage#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -47,7 +47,7 @@ It is recommended to pass file extensions in the pattern.
 
 Patterns are matched against each file's path relative to the project root. A pattern with no glob wildcard is treated as a directory and matches everything inside it, so `include: ['src']` is equivalent to `include: ['src/**']`.
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.exclude
 
@@ -58,7 +58,7 @@ See [Including and excluding files from coverage report](/guide/coverage.html#in
 
 List of files excluded from coverage as glob patterns. Patterns are matched the same way as [`coverage.include`](#coverage-include).
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.clean
 
@@ -105,7 +105,6 @@ The reporter has three different types:
 - A single reporter: `{ reporter: 'html' }`
 - Multiple reporters without options: `{ reporter: ['html', 'json'] }`
 - A single or multiple reporters with reporter options:
-  <!-- eslint-skip -->
   ```ts
   {
     reporter: [
@@ -118,7 +117,6 @@ The reporter has three different types:
 
 You can also pass custom coverage reporters. See [Guide - Custom Coverage Reporter](/guide/coverage#custom-coverage-reporter) for more information.
 
-<!-- eslint-skip -->
 ```ts
   {
     reporter: [
@@ -186,7 +184,6 @@ If a threshold is set to a positive number, it will be interpreted as the minimu
 
 If a threshold is set to a negative number, it will be treated as the maximum number of uncovered items allowed. For example, setting the lines threshold to `-10` means that no more than 10 lines may be uncovered.
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -242,7 +239,6 @@ Global threshold for statements.
 
 When `true`, each file is checked against the top-level thresholds instead of the project-wide aggregate. When set to an object, both are checked: the aggregate against the top-level thresholds, and every file against these per-file minimums.
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -264,7 +260,6 @@ When `true`, each file is checked against the top-level thresholds instead of th
 
 `{ 100: true }` is also accepted inside the object as a shortcut for setting all four metrics to `100`:
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -280,7 +275,6 @@ When `true`, each file is checked against the top-level thresholds instead of th
 
 `perFile` can also be set on an individual [glob-pattern threshold](/config/coverage#coverage-thresholds-glob-pattern). Glob patterns do **not** inherit the top-level `perFile`; set it on each glob explicitly.
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -309,7 +303,6 @@ This option helps to maintain thresholds when coverage is improved.
 
 You can also pass a function for formatting the updated threshold values. The function receives the new threshold as the first argument and the previous threshold as the second:
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -352,7 +345,6 @@ Vitest counts all files, including those covered by glob-patterns, into the glob
 This is different from Jest behavior.
 :::
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -389,7 +381,6 @@ This is different from Jest behavior.
 
 Sets thresholds to 100 for files matching the glob pattern.
 
-<!-- eslint-skip -->
 ```ts
 {
   coverage: {
@@ -419,7 +410,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 ## coverage.watermarks
 
 - **Type:**
-<!-- eslint-skip -->
+
 ```ts
 {
   statements?: [number, number],
@@ -430,7 +421,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 ```
 
 - **Default:**
-<!-- eslint-skip -->
+
 ```ts
 {
   statements: [50, 80],
@@ -463,7 +454,6 @@ Factory for a custom instrumenter to use in place of the default `@vitest/istanb
 
 The factory receives an `InstrumenterOptions` object with Vitest's runtime coverage settings, and must return an object implementing the `CoverageInstrumenter` interface. Both types are exported from `vitest/node`.
 
-<!-- eslint-skip -->
 ```ts
 interface InstrumenterOptions {
   coverageVariable: string
@@ -479,7 +469,6 @@ interface CoverageInstrumenter {
 }
 ```
 
-<!-- eslint-skip -->
 ```ts
 import { defineConfig } from 'vitest/config'
 import { createInstrumenter } from '@vitest/some-custom-instrumenter'
@@ -508,7 +497,7 @@ Specifies the module name or path for the custom coverage provider module. See [
 - **Default:** Automatically inferred from `html`, `html-spa`, or `lcov` coverage reporters
 - **CLI:** `--coverage.htmlDir=<path>`
 
-Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters#html-reporter).
 
 This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
 

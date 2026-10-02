@@ -20,8 +20,7 @@ test('empty serializer output', async () => {
 
   // clean slate
   fs.rmSync(path.join(root, '__snapshots__'), { recursive: true, force: true })
-  editFile(testFile, s => s
-    .replace(/toMatchInlineSnapshot\(`[^`]*`/g, 'toMatchInlineSnapshot('))
+  editFile(testFile, (s) => s.replace(/toMatchInlineSnapshot\(`[^`]*`/g, 'toMatchInlineSnapshot('))
 
   let result = await runVitest({
     root,
@@ -71,8 +70,7 @@ test('empty serializer output', async () => {
   `)
 
   // TODO: snapshot comparison normalizes whitespaces. probably hard to fix.
-  editFile(testFile, s => s
-    .replace(`__unwrap__: " ".repeat(4)`, `__unwrap__: " ".repeat(8)`))
+  editFile(testFile, (s) => s.replace(`__unwrap__: " ".repeat(4)`, `__unwrap__: " ".repeat(8)`))
   result = await runVitest({
     root,
     update: 'none',

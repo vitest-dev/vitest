@@ -3,7 +3,12 @@ if (globalThis.process?.env.VITE_MODULE_RUNNER === 'false') {
 
   registerHooks({
     resolve(specifier, context, nextResolve) {
-      if (context.parentURL && specifier.startsWith('.') && !/\.[a-z]+$/.test(specifier) && !context.parentURL.includes('/node_modules/')) {
+      if (
+        context.parentURL &&
+        specifier.startsWith('.') &&
+        !/\.[a-z]+$/.test(specifier) &&
+        !context.parentURL.includes('/node_modules/')
+      ) {
         specifier += '.ts'
       }
 

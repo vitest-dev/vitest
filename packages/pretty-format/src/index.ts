@@ -50,7 +50,6 @@ function isWindow(val: unknown) {
   return typeof window !== 'undefined' && val === window
 }
 
-// eslint-disable-next-line regexp/no-super-linear-backtracking
 const SYMBOL_REGEXP = /^Symbol\((.*)\)(.*)$/
 const NEWLINE_REGEXP = /\n/g
 
@@ -64,18 +63,18 @@ class PrettyFormatPluginError extends Error {
 
 function isToStringedArrayType(toStringed: string): boolean {
   return (
-    toStringed === '[object Array]'
-    || toStringed === '[object ArrayBuffer]'
-    || toStringed === '[object DataView]'
-    || toStringed === '[object Float32Array]'
-    || toStringed === '[object Float64Array]'
-    || toStringed === '[object Int8Array]'
-    || toStringed === '[object Int16Array]'
-    || toStringed === '[object Int32Array]'
-    || toStringed === '[object Uint8Array]'
-    || toStringed === '[object Uint8ClampedArray]'
-    || toStringed === '[object Uint16Array]'
-    || toStringed === '[object Uint32Array]'
+    toStringed === '[object Array]' ||
+    toStringed === '[object ArrayBuffer]' ||
+    toStringed === '[object DataView]' ||
+    toStringed === '[object Float32Array]' ||
+    toStringed === '[object Float64Array]' ||
+    toStringed === '[object Int8Array]' ||
+    toStringed === '[object Int16Array]' ||
+    toStringed === '[object Int32Array]' ||
+    toStringed === '[object Uint8Array]' ||
+    toStringed === '[object Uint8ClampedArray]' ||
+    toStringed === '[object Uint16Array]' ||
+    toStringed === '[object Uint32Array]'
   )
 }
 
@@ -95,7 +94,7 @@ function printFunction(val: Function, printFunctionName: boolean): string {
 }
 
 function printSymbol(val: symbol): string {
-  return String(val).replace(SYMBOL_REGEXP, 'Symbol($1)')
+  return Symbol.prototype.toString.call(val).replace(SYMBOL_REGEXP, 'Symbol($1)')
 }
 
 function printError(val: Error): string {
@@ -132,7 +131,7 @@ function printBasicValue(
     return printBigInt(val)
   }
   if (typeOf === 'string') {
-    const q = singleQuote ? '\'' : '"'
+    const q = singleQuote ? "'" : '"'
     if (escapeString) {
       // escape quote in each case, e.g.
       //   it's me -> 'it\'s me'
@@ -157,10 +156,7 @@ function printBasicValue(
   if (toStringed === '[object WeakSet]') {
     return 'WeakSet {}'
   }
-  if (
-    toStringed === '[object Function]'
-    || toStringed === '[object GeneratorFunction]'
-  ) {
+  if (toStringed === '[object Function]' || toStringed === '[object GeneratorFunction]') {
     return printFunction(val, printFunctionName)
   }
   if (toStringed === '[object Symbol]') {
@@ -209,11 +205,11 @@ function printComplexValue(
   const min = config.min
 
   if (
-    config.callToJSON
-    && !hitMaxDepth
-    && val.toJSON
-    && typeof val.toJSON === 'function'
-    && !hasCalledToJSON
+    config.callToJSON &&
+    !hitMaxDepth &&
+    val.toJSON &&
+    typeof val.toJSON === 'function' &&
+    !hasCalledToJSON
   ) {
     return printer(val.toJSON(), config, indentation, depth, refs, true)
   }
@@ -223,49 +219,49 @@ function printComplexValue(
     return hitMaxDepth
       ? '[Arguments]'
       : `${min ? '' : 'Arguments '}[${printListItems(
-        val,
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}]`
+          val,
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+        )}]`
   }
   if (isToStringedArrayType(toStringed)) {
     return hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
-        !config.printBasicPrototype && val.constructor.name === 'Array'
-          ? ''
-          : `${val.constructor.name} `
-      }[${printListItems(val, config, indentation, depth, refs, printer)}]`
+          !config.printBasicPrototype && val.constructor.name === 'Array'
+            ? ''
+            : `${val.constructor.name} `
+        }[${printListItems(val, config, indentation, depth, refs, printer)}]`
   }
   if (toStringed === '[object Map]') {
     return hitMaxDepth
       ? '[Map]'
       : `Map {${printIteratorEntries(
-        val.entries(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-        ' => ',
-        val.size,
-      )}}`
+          val.entries(),
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+          ' => ',
+          val.size,
+        )}}`
   }
   if (toStringed === '[object Set]') {
     return hitMaxDepth
       ? '[Set]'
       : `Set {${printIteratorValues(
-        val.values(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-        val.size,
-      )}}`
+          val.values(),
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+          val.size,
+        )}}`
   }
 
   // Avoid failure to serialize global window object in jsdom test environment.
@@ -273,21 +269,14 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
-      !config.printBasicPrototype && getConstructorName(val) === 'Object'
-        ? ''
-        : `${getConstructorName(val)} `
-    }{${printObjectProperties(
-      val,
-      config,
-      indentation,
-      depth,
-      refs,
-      printer,
-    )}}`
+        !config.printBasicPrototype && getConstructorName(val) === 'Object'
+          ? ''
+          : `${getConstructorName(val)} `
+      }{${printObjectProperties(val, config, indentation, depth, refs, printer)}}`
 }
 
 const ErrorPlugin: NewPlugin = {
-  test: val => val && val instanceof Error,
+  test: (val) => val && val instanceof Error,
   serialize(val: Error, config, indentation, depth, refs, printer) {
     if (refs.includes(val)) {
       return '[Circular]'
@@ -297,22 +286,22 @@ const ErrorPlugin: NewPlugin = {
     const { message, cause, ...rest } = val
     const entries = {
       message,
-      ...typeof cause !== 'undefined' ? { cause } : {},
-      ...val instanceof AggregateError ? { errors: val.errors } : {},
+      ...(typeof cause !== 'undefined' ? { cause } : {}),
+      ...(val instanceof AggregateError ? { errors: val.errors } : {}),
       ...rest,
     }
     const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
     return hitMaxDepth
       ? `[${name}]`
       : `${name} {${printObjectProperties(
-        entries,
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-        null,
-      )}}`
+          entries,
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+          null,
+        )}}`
   },
 }
 
@@ -335,13 +324,10 @@ function printPlugin(
       ? plugin.serialize(val, config, indentation, depth, refs, printer)
       : plugin.print(
           val,
-          valChild => printer(valChild, config, indentation, depth, refs),
+          (valChild) => printer(valChild, config, indentation, depth, refs),
           (str) => {
             const indentationNext = indentation + config.indent
-            return (
-              indentationNext
-              + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
-            )
+            return indentationNext + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
           },
           {
             edgeSpacing: config.spacingOuter,
@@ -350,8 +336,7 @@ function printPlugin(
           },
           config.colors,
         )
-  }
-  catch (error: any) {
+  } catch (error: any) {
     throw new PrettyFormatPluginError(error.message, error.stack)
   }
   if (typeof printed !== 'string') {
@@ -368,8 +353,7 @@ function findPlugin(plugins: Plugins, val: unknown) {
       if (plugin.test(val)) {
         return plugin
       }
-    }
-    catch (error: any) {
+    } catch (error: any) {
       throw new PrettyFormatPluginError(error.message, error.stack)
     }
   }
@@ -390,8 +374,7 @@ function printer(
   const plugin = findPlugin(config.plugins, val)
   if (plugin !== null) {
     result = printPlugin(plugin, val, config, indentation, depth, refs)
-  }
-  else {
+  } else {
     const basicResult = printBasicValue(
       val,
       config.printFunctionName,
@@ -401,16 +384,8 @@ function printer(
     )
     if (basicResult !== null) {
       result = basicResult
-    }
-    else {
-      result = printComplexValue(
-        val,
-        config,
-        indentation,
-        depth,
-        refs,
-        hasCalledToJSON,
-      )
+    } else {
+      result = printComplexValue(val, config, indentation, depth, refs, hasCalledToJSON)
     }
   }
 
@@ -437,9 +412,7 @@ const DEFAULT_THEME: Theme = {
   value: 'green',
 }
 
-const DEFAULT_THEME_KEYS = Object.keys(DEFAULT_THEME) as Array<
-  keyof typeof DEFAULT_THEME
->
+const DEFAULT_THEME_KEYS = Object.keys(DEFAULT_THEME) as Array<keyof typeof DEFAULT_THEME>
 
 export const DEFAULT_OPTIONS: Options = {
   callToJSON: true,
@@ -473,9 +446,7 @@ function validateOptions(options: OptionsReceived) {
   }
 
   if (options.min && options.indent !== undefined && options.indent !== 0) {
-    throw new Error(
-      'pretty-format: Options "min" and "indent" cannot be used together.',
-    )
+    throw new Error('pretty-format: Options "min" and "indent" cannot be used together.')
   }
 }
 
@@ -483,14 +454,9 @@ function getColorsHighlight(): Colors {
   return DEFAULT_THEME_KEYS.reduce((colors, key) => {
     const value = DEFAULT_THEME[key]
     const color = value && (styles as any)[value]
-    if (
-      color
-      && typeof color.close === 'string'
-      && typeof color.open === 'string'
-    ) {
+    if (color && typeof color.close === 'string' && typeof color.open === 'string') {
       colors[key] = color
-    }
-    else {
+    } else {
       throw new Error(
         `pretty-format: Option "theme" has a key "${key}" whose value "${value}" is undefined in ansi-styles.`,
       )
@@ -523,14 +489,12 @@ function getConfig(options?: OptionsReceived): Config {
     callToJSON: options?.callToJSON ?? DEFAULT_OPTIONS.callToJSON,
     colors: options?.highlight ? getColorsHighlight() : getColorsEmpty(),
     compareKeys:
-    typeof options?.compareKeys === 'function' || options?.compareKeys === null
-      ? options.compareKeys
-      : DEFAULT_OPTIONS.compareKeys,
+      typeof options?.compareKeys === 'function' || options?.compareKeys === null
+        ? options.compareKeys
+        : DEFAULT_OPTIONS.compareKeys,
     escapeRegex: getEscapeRegex(options),
     escapeString: getEscapeString(options),
-    indent: options?.min
-      ? ''
-      : createIndent(options?.indent ?? DEFAULT_OPTIONS.indent),
+    indent: options?.min ? '' : createIndent(options?.indent ?? DEFAULT_OPTIONS.indent),
     maxDepth: options?.maxDepth ?? DEFAULT_OPTIONS.maxDepth,
     maxWidth: options?.maxWidth ?? DEFAULT_OPTIONS.maxWidth,
     min: options?.min ?? DEFAULT_OPTIONS.min,

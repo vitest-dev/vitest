@@ -42,8 +42,9 @@ test('file fixture whose setup failed is set up again on retry', async () => {
 })
 
 test('worker fixture whose setup failed does not poison the next file', async () => {
-  const { stdout, errorTree } = await runInlineTests({
-    'fixture.ts': `
+  const { stdout, errorTree } = await runInlineTests(
+    {
+      'fixture.ts': `
       import { test } from 'vitest'
 
       let attempts = 0
@@ -62,20 +63,22 @@ test('worker fixture whose setup failed does not poison the next file', async ()
         ],
       })
     `,
-    '1-basic.test.ts': `
+      '1-basic.test.ts': `
       import { extended } from './fixture'
       extended('test1', ({ worker: _worker }) => {})
     `,
-    '2-basic.test.ts': `
+      '2-basic.test.ts': `
       import { extended } from './fixture'
       extended('test1', ({ worker: _worker }) => {})
     `,
-  }, {
-    isolate: false,
-    maxWorkers: 1,
-    pool: 'threads',
-    sequence: { sequencer: StableTestFileOrderSorter },
-  })
+    },
+    {
+      isolate: false,
+      maxWorkers: 1,
+      pool: 'threads',
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+  )
 
   expect(getFixtureLogs(stdout)).toMatchInlineSnapshot(`
     ">> init worker 1
@@ -98,7 +101,7 @@ test('worker fixture whose setup failed does not poison the next file', async ()
 function getFixtureLogs(stdout: string) {
   return stdout
     .split('\n')
-    .filter(line => line.startsWith('>> init'))
+    .filter((line) => line.startsWith('>> init'))
     .join('\n')
 }
 

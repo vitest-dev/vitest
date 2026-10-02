@@ -1,0 +1,79 @@
+name: Promote Stable Docs
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: Git ref to promote to the release branch.
+        required: false
+        default: main
+        type: string
+    secrets:
+      RELEASE_GITHUB_APP_ID:
+        required: true
+      RELEASE_GITHUB_APP_PRIVATE_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Git ref to promote to the release branch.
+        required: true
+        default: main
+        type: string
+
+concurrency:
+  group: promote-stable-docs
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    if: github.repository == 'vitest-dev/vitest'
+    name: Promote stable documentation
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate target
+        run: |
+          VERSION="$(jq -r .version package.json)"
+          TAG="v$VERSION"
+
+          if [[ "$VERSION" == *-* ]]; then
+            echo "Cannot promote prerelease version $VERSION"
+            exit 1
+          fi
+
+          git fetch origin \
+            "+refs/heads/release:refs/remotes/origin/release" \
+            "+refs/tags/$TAG:refs/tags/$TAG"
+
+          if ! git merge-base --is-ancestor "$TAG" HEAD; then
+            echo "Target does not contain stable release tag $TAG"
+            exit 1
+          fi
+
+          if ! git merge-base --is-ancestor origin/release HEAD; then
+            echo "Target is not a fast-forward of the release branch"
+            exit 1
+          fi
+
+      - id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.RELEASE_GITHUB_APP_ID }}
+          private-key: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
+      - name: Promote release branch
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/release"

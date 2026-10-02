@@ -6,8 +6,7 @@ test('object', () => {
       type: 'object',
       map: new Map(),
     },
-  })
-    .toMatchInlineSnapshot(`
+  }).toMatchInlineSnapshot(`
         {
           "foo": {
             "map": Map {},

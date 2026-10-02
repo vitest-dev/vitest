@@ -18,13 +18,13 @@ export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
   setSafeTimers()
 
   if (config.globals) {
-    (await import('../integrations/globals')).registerApiGlobally()
+    ;(await import('../integrations/globals')).registerApiGlobally()
   }
 }
 
 function setupDefines(config: SerializedConfig) {
   for (const key in config.defines) {
-    (globalThis as any)[key] = config.defines[key]
+    ;(globalThis as any)[key] = config.defines[key]
   }
 }
 
@@ -47,14 +47,9 @@ export async function loadDiffConfig(
 
   const diffModule = await moduleRunner.import(config.diff)
 
-  if (
-    diffModule
-    && typeof diffModule.default === 'object'
-    && diffModule.default != null
-  ) {
+  if (diffModule && typeof diffModule.default === 'object' && diffModule.default != null) {
     return diffModule.default as DiffOptions
-  }
-  else {
+  } else {
     throw new Error(
       `invalid diff config file ${config.diff}. Must have a default export with config object`,
     )
@@ -71,16 +66,13 @@ export async function loadSnapshotSerializers(
     files.map(async (file) => {
       const mo = await moduleRunner.import(file)
       if (!mo || typeof mo.default !== 'object' || mo.default === null) {
-        throw new Error(
-          `invalid snapshot serializer file ${file}. Must export a default object`,
-        )
+        throw new Error(`invalid snapshot serializer file ${file}. Must export a default object`)
       }
 
       const config = mo.default
       if (
-        typeof config.test !== 'function'
-        || (typeof config.serialize !== 'function'
-          && typeof config.print !== 'function')
+        typeof config.test !== 'function' ||
+        (typeof config.serialize !== 'function' && typeof config.print !== 'function')
       ) {
         throw new TypeError(
           `invalid snapshot serializer in ${file}. Must have a 'test' method along with either a 'serialize' or 'print' method.`,
@@ -91,5 +83,5 @@ export async function loadSnapshotSerializers(
     }),
   )
 
-  snapshotSerializers.forEach(serializer => addSerializer(serializer))
+  snapshotSerializers.forEach((serializer) => addSerializer(serializer))
 }

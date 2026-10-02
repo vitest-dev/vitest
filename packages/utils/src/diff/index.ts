@@ -9,10 +9,7 @@
 
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { DiffOptions } from './types'
-import {
-  format as prettyFormat,
-  plugins as prettyFormatPlugins,
-} from '@vitest/pretty-format'
+import { format as prettyFormat, plugins as prettyFormatPlugins } from '@vitest/pretty-format'
 import c from 'tinyrainbow'
 import { stringify } from '../display'
 import { deepClone, getOwnProperties, getType as getSimpleType } from '../helpers'
@@ -82,7 +79,12 @@ const DEFAULT_MEMORIZE: Memorize = (_, v) => v
  * @param options Diff options
  * @returns {string | null} a string diff
  */
-export function diff(a: any, b: any, options?: DiffOptions, memorize: Memorize = DEFAULT_MEMORIZE): string | undefined {
+export function diff(
+  a: any,
+  b: any,
+  options?: DiffOptions,
+  memorize: Memorize = DEFAULT_MEMORIZE,
+): string | undefined {
   if (Object.is(a, b)) {
     return ''
   }
@@ -106,8 +108,8 @@ export function diff(a: any, b: any, options?: DiffOptions, memorize: Memorize =
   }
 
   if (expectedType !== getType(b)) {
-    const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator }
-      = normalizeDiffOptions(options)
+    const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator } =
+      normalizeDiffOptions(options)
     const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
     let aDisplay = prettyFormat(a, formatOptions)
     let bDisplay = prettyFormat(b, formatOptions)
@@ -117,7 +119,7 @@ export function diff(a: any, b: any, options?: DiffOptions, memorize: Memorize =
     // (For example, playwright's ElementHandle can become about 200_000_000 length string)
     const MAX_LENGTH = 100_000
     function truncate(s: string) {
-      return s.length <= MAX_LENGTH ? s : (`${s.slice(0, MAX_LENGTH)}...`)
+      return s.length <= MAX_LENGTH ? s : `${s.slice(0, MAX_LENGTH)}...`
     }
     aDisplay = memorize('expected', truncate(aDisplay))
     bDisplay = memorize('actual', truncate(bDisplay))
@@ -185,8 +187,7 @@ function compareObjects(
   try {
     const formatOptions = getFormatOptions(FORMAT_OPTIONS, options)
     difference = getObjectsDifference(a, b, formatOptions, options, memorize)
-  }
-  catch {
+  } catch {
     hasThrown = true
   }
 
@@ -198,10 +199,7 @@ function compareObjects(
     difference = getObjectsDifference(a, b, formatOptions, options, memorize)
 
     if (difference !== noDiffMessage && !hasThrown) {
-      difference = `${getCommonMessage(
-        SIMILAR_MESSAGE,
-        options,
-      )}\n\n${difference}`
+      difference = `${getCommonMessage(SIMILAR_MESSAGE, options)}\n\n${difference}`
     }
   }
 
@@ -239,8 +237,7 @@ function getObjectsDifference(
 
   if (aCompare === bCompare) {
     return getCommonMessage(NO_DIFF_MESSAGE, options)
-  }
-  else {
+  } else {
     const aDisplay = memorize('expected', prettyFormat(a, formatOptions))
     const bDisplay = memorize('actual', prettyFormat(b, formatOptions))
 
@@ -264,9 +261,7 @@ function isAsymmetricMatcher(data: any) {
 function isReplaceable(obj1: any, obj2: any) {
   const obj1Type = getSimpleType(obj1)
   const obj2Type = getSimpleType(obj2)
-  return (
-    obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
-  )
+  return obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
 }
 
 export function printDiffOrStringify(
@@ -278,32 +273,28 @@ export function printDiffOrStringify(
   const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
 
   if (
-    typeof expected === 'string'
-    && typeof received === 'string'
-    && expected.length > 0
-    && received.length > 0
-    && expected.length <= MAX_DIFF_STRING_LENGTH
-    && received.length <= MAX_DIFF_STRING_LENGTH
-    && expected !== received
+    typeof expected === 'string' &&
+    typeof received === 'string' &&
+    expected.length > 0 &&
+    received.length > 0 &&
+    expected.length <= MAX_DIFF_STRING_LENGTH &&
+    received.length <= MAX_DIFF_STRING_LENGTH &&
+    expected !== received
   ) {
     if (expected.includes('\n') || received.includes('\n')) {
       return diffStringsUnified(expected, received, options)
     }
 
     const [diffs] = diffStringsRaw(expected, received, true)
-    const hasCommonDiff = diffs.some(diff => diff[0] === DIFF_EQUAL)
+    const hasCommonDiff = diffs.some((diff) => diff[0] === DIFF_EQUAL)
 
     const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
-    const expectedLine
-      = printLabel(aAnnotation)
-        + printExpected(
-          getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff),
-        )
-    const receivedLine
-      = printLabel(bAnnotation)
-        + printReceived(
-          getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff),
-        )
+    const expectedLine =
+      printLabel(aAnnotation) +
+      printExpected(getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff))
+    const receivedLine =
+      printLabel(bAnnotation) +
+      printReceived(getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff))
 
     return `${expectedLine}\n${receivedLine}`
   }
@@ -311,7 +302,10 @@ export function printDiffOrStringify(
   // if (isLineDiffable(expected, received)) {
   const clonedExpected = deepClone(expected, { forceWritable: true })
   const clonedReceived = deepClone(received, { forceWritable: true })
-  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedReceived, clonedExpected)
+  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(
+    clonedReceived,
+    clonedExpected,
+  )
   const memorize = memory ? createMemorize(memory) : DEFAULT_MEMORIZE
   const difference = diff(replacedExpected, replacedActual, options, memorize)
 
@@ -340,10 +334,10 @@ export function replaceAsymmetricMatcher(
 } {
   // handle asymmetric Error.cause diff
   if (
-    actual instanceof Error
-    && expected instanceof Error
-    && typeof actual.cause !== 'undefined'
-    && typeof expected.cause === 'undefined'
+    actual instanceof Error &&
+    expected instanceof Error &&
+    typeof actual.cause !== 'undefined' &&
+    typeof expected.cause === 'undefined'
   ) {
     delete actual.cause
     return {
@@ -367,8 +361,11 @@ export function replaceAsymmetricMatcher(
         // When matcher matches, replace expected with actual value
         // so they appear the same in the diff
         expected[key] = actualValue
-      }
-      else if ('sample' in expectedValue && expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
+      } else if (
+        'sample' in expectedValue &&
+        expectedValue.sample !== undefined &&
+        isReplaceable(actualValue, expectedValue.sample)
+      ) {
         // For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
         // Matcher doesn't match: unwrap but keep structure to show mismatch
         const replaced = replaceAsymmetricMatcher(
@@ -380,12 +377,14 @@ export function replaceAsymmetricMatcher(
         actual[key] = replaced.replacedActual
         expected[key] = replaced.replacedExpected
       }
-    }
-    else if (isAsymmetricMatcher(actualValue)) {
+    } else if (isAsymmetricMatcher(actualValue)) {
       if (actualValue.asymmetricMatch(expectedValue)) {
         actual[key] = expectedValue
-      }
-      else if ('sample' in actualValue && actualValue.sample !== undefined && isReplaceable(actualValue.sample, expectedValue)) {
+      } else if (
+        'sample' in actualValue &&
+        actualValue.sample !== undefined &&
+        isReplaceable(actualValue.sample, expectedValue)
+      ) {
         const replaced = replaceAsymmetricMatcher(
           actualValue.sample,
           expectedValue,
@@ -395,8 +394,7 @@ export function replaceAsymmetricMatcher(
         actual[key] = replaced.replacedActual
         expected[key] = replaced.replacedExpected
       }
-    }
-    else if (isReplaceable(actualValue, expectedValue)) {
+    } else if (isReplaceable(actualValue, expectedValue)) {
       const replaced = replaceAsymmetricMatcher(
         actualValue,
         expectedValue,
@@ -415,17 +413,13 @@ export function replaceAsymmetricMatcher(
 
 type PrintLabel = (string: string) => string
 export function getLabelPrinter(...strings: Array<string>): PrintLabel {
-  const maxLength = strings.reduce(
-    (max, string) => (string.length > max ? string.length : max),
-    0,
-  )
-  return (string: string): string =>
-    `${string}: ${' '.repeat(maxLength - string.length)}`
+  const maxLength = strings.reduce((max, string) => (string.length > max ? string.length : max), 0)
+  return (string: string): string => `${string}: ${' '.repeat(maxLength - string.length)}`
 }
 
 const SPACE_SYMBOL = '\u{00B7}' // middle dot
 function replaceTrailingSpaces(text: string): string {
-  return text.replace(/\s+$/gm, spaces => SPACE_SYMBOL.repeat(spaces.length))
+  return text.replace(/\s+$/gm, (spaces) => SPACE_SYMBOL.repeat(spaces.length))
 }
 
 function printReceived(object: unknown): string {
@@ -435,11 +429,15 @@ function printExpected(value: unknown): string {
   return c.green(replaceTrailingSpaces(stringify(value)))
 }
 
-function getCommonAndChangedSubstrings(diffs: Array<Diff>, op: number, hasCommonDiff: boolean): string {
+function getCommonAndChangedSubstrings(
+  diffs: Array<Diff>,
+  op: number,
+  hasCommonDiff: boolean,
+): string {
   return diffs.reduce(
     (reduced: string, diff: Diff): string =>
-      reduced
-      + (diff[0] === DIFF_EQUAL
+      reduced +
+      (diff[0] === DIFF_EQUAL
         ? diff[1]
         : diff[0] === op
           ? hasCommonDiff

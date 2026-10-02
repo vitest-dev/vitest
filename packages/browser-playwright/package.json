@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser-playwright",
   "type": "module",
-  "version": "5.0.0",
+  "version": "5.0.3",
   "description": "Browser running for Vitest using playwright",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -25,6 +25,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest_source__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -59,7 +60,9 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
+    "pathe": "catalog:",
     "playwright": "catalog:",
+    "vite": "catalog:",
     "vitest": "workspace:*"
   }
 }

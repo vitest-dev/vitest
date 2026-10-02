@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/no-new-array */
+/* oxlint-disable unicorn/no-new-array */
 
 const store: bigint[] = []
 
@@ -27,7 +27,7 @@ function randomBigInt(bitLength: number): bigint {
     // MSB should be one to guarantee bit length
     .fill('1')
     // Fill string with 0s and 1s
-    .reduce(bin => bin + Math.round(Math.random()).toString())
+    .reduce((bin) => bin + Math.round(Math.random()).toString())
 
   return BigInt(`0b${binaryString}`)
 }

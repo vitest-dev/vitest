@@ -42,23 +42,17 @@ function getDefaultOptions(): DiffOptionsNormalized {
 }
 
 function getCompareKeys(compareKeys?: CompareKeys): CompareKeys {
-  return compareKeys && typeof compareKeys === 'function'
-    ? compareKeys
-    : undefined
+  return compareKeys && typeof compareKeys === 'function' ? compareKeys : undefined
 }
 
 function getContextLines(contextLines?: number): number {
-  return typeof contextLines === 'number'
-    && Number.isSafeInteger(contextLines)
-    && contextLines >= 0
+  return typeof contextLines === 'number' && Number.isSafeInteger(contextLines) && contextLines >= 0
     ? contextLines
     : DIFF_CONTEXT_DEFAULT
 }
 
 // Pure function returns options with all properties.
-export function normalizeDiffOptions(
-  options: DiffOptions = {},
-): DiffOptionsNormalized {
+export function normalizeDiffOptions(options: DiffOptions = {}): DiffOptionsNormalized {
   return {
     ...getDefaultOptions(),
     ...options,

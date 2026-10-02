@@ -94,6 +94,7 @@ declare module 'vitest' {
 
 await expect('foo').toBeAsyncAssertion()
 ```
+
 :::
 
 The first argument inside a matcher's function is the received value (the one inside `expect(received)`). The rest are arguments passed directly to the matcher. Since version 4.1, Vitest exposes several types that can be used by your custom matcher:
@@ -148,6 +149,24 @@ If matcher was called on `resolved/rejected`, this value will contain the name o
 ## `equals`
 
 This is a utility function that allows you to compare two values. It will return `true` if values are equal, `false` otherwise. This function is used internally for almost every matcher. It supports objects with asymmetric matchers by default.
+
+## `customTesters`
+
+Equality testers to pass to `equals`, including ones registered with [`expect.addEqualityTesters`](/api/expect#expect-addequalitytesters).
+
+`equals` alone does not compare the contents of `Map` and `Set`. To get the same equality as `toEqual`, add `this.utils.iterableEquality`:
+
+```ts
+expect.extend({
+  toMyEqual(received: unknown, expected: unknown) {
+    const pass = this.equals(received, expected, [...this.customTesters, this.utils.iterableEquality])
+    return {
+      pass,
+      message: () => `expected ${this.utils.printReceived(received)} to equal ${this.utils.printExpected(expected)}`,
+    }
+  },
+})
+```
 
 ## `utils`
 

@@ -6,11 +6,7 @@ export function CoverageTransform(harness: PluginHarness): VitePlugin {
     name: 'vitest:coverage-transform',
     enforce: 'post',
     transform(srcCode, id) {
-      return harness.getVitest().coverageProvider?.onFileTransform?.(
-        srcCode,
-        id,
-        this,
-      )
+      return harness.getVitest().coverageProvider?.onFileTransform?.(srcCode, id, this)
     },
   }
 }

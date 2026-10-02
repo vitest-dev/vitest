@@ -118,14 +118,19 @@ ${indent}}\`)
       }\`)
   `
     const s = new MagicString(code)
-    replaceInlineSnap(code, s, 0, `
+    replaceInlineSnap(
+      code,
+      s,
+      0,
+      `
     {
       "bar": {
         "map2": Map {},
         "type": "object1",
       },
     }
-  `)
+  `,
+    )
     expect(s.toString()).toMatchInlineSnapshot(`
       "
         expect({}).toMatchInlineSnapshot(
@@ -149,14 +154,19 @@ ${indent}}\`)
 
   describe('replaceObjectSnap()', () => {
     it('without snapshot', async () => {
-      const code = 'expect({ foo: \'bar\' }).toMatchInlineSnapshot({ foo: expect.any(String) })'
+      const code = "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) })"
 
       const s = new MagicString(code)
-      replaceInlineSnap(code, s, 23, `
+      replaceInlineSnap(
+        code,
+        s,
+        23,
+        `
       {
         "foo": Any<String>,
       }
-    `)
+    `,
+      )
 
       expect(s.toString()).toMatchInlineSnapshot(`
         "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`
@@ -168,14 +178,20 @@ ${indent}}\`)
     })
 
     it('with snapshot', async () => {
-      const code = 'expect({ foo: \'bar\' }).toMatchInlineSnapshot({ foo: expect.any(String) }, `{ }`)'
+      const code =
+        "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, `{ }`)"
 
       const s = new MagicString(code)
-      replaceInlineSnap(code, s, 23, `
+      replaceInlineSnap(
+        code,
+        s,
+        23,
+        `
       {
         "foo": Any<String>,
       }
-    `)
+    `,
+      )
 
       expect(s.toString()).toMatchInlineSnapshot(`
         "expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`

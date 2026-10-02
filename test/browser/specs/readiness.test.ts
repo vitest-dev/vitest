@@ -1,17 +1,20 @@
 import { expect, test } from 'vitest'
 import { instances, runInlineBrowserTests } from './utils'
 
-test('prepare waits until the tester can receive browser channel events', { timeout: 5000 }, async () => {
-  const { stderr, testTree } = await runInlineBrowserTests(
-    {
-      'basic.test.ts': `
+test(
+  'prepare waits until the tester can receive browser channel events',
+  { timeout: 5000 },
+  async () => {
+    const { stderr, testTree } = await runInlineBrowserTests(
+      {
+        'basic.test.ts': `
         import { expect, test } from 'vitest'
 
         test('runs in the browser', () => {
           expect(1).toBe(1)
         })
       `,
-      'delayed-tester.html': `
+        'delayed-tester.html': `
         <!DOCTYPE html>
         <html lang="en">
           <head>
@@ -40,36 +43,40 @@ test('prepare waits until the tester can receive browser channel events', { time
           <body></body>
         </html>
       `,
-    },
-    {
-      browser: {
-        instances: [instances[0]],
-        testerHtmlPath: './delayed-tester.html',
       },
-    },
-  )
+      {
+        browser: {
+          instances: [instances[0]],
+          testerHtmlPath: './delayed-tester.html',
+        },
+      },
+    )
 
-  expect(stderr).toBe('')
-  expect(testTree()).toMatchInlineSnapshot(`
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "runs in the browser": "passed",
       },
     }
   `)
-})
+  },
+)
 
-test('fails instead of hanging when the tester never becomes ready', { timeout: 20000 }, async () => {
-  const { stderr, fs, testTree } = await runInlineBrowserTests(
-    {
-      'basic.test.ts': `
+test(
+  'fails instead of hanging when the tester never becomes ready',
+  { timeout: 20000 },
+  async () => {
+    const { stderr, fs, testTree } = await runInlineBrowserTests(
+      {
+        'basic.test.ts': `
         import { expect, test } from 'vitest'
 
         test('never runs', () => {
           expect(1).toBe(1)
         })
       `,
-      'silent-tester.html': `
+        'silent-tester.html': `
         <!DOCTYPE html>
         <html lang="en">
           <head>
@@ -88,32 +95,38 @@ test('fails instead of hanging when the tester never becomes ready', { timeout: 
           <body></body>
         </html>
       `,
-    },
-    {
-      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '2000' },
-      browser: {
-        instances: [instances[0]],
-        testerHtmlPath: './silent-tester.html',
       },
-    },
-  )
+      {
+        env: { VITEST_BROWSER_IFRAME_TIMEOUT: '2000' },
+        browser: {
+          instances: [instances[0]],
+          testerHtmlPath: './silent-tester.html',
+        },
+      },
+    )
 
-  expect(stderr).toContain(`Failed to run the test ${fs.resolveFile('basic.test.ts')}`)
-  expect(stderr).toContain(`The iframe "${fs.resolveFile('basic.test.ts')}" did not become ready within 2000ms. The tester likely failed to initialize, check the browser console for errors.`)
-  expect(testTree()).toMatchInlineSnapshot(`{}`)
-})
+    expect(stderr).toContain(`Failed to run the test ${fs.resolveFile('basic.test.ts')}`)
+    expect(stderr).toContain(
+      `The iframe "${fs.resolveFile('basic.test.ts')}" did not become ready within 2000ms. The tester likely failed to initialize, check the browser console for errors.`,
+    )
+    expect(testTree()).toMatchInlineSnapshot(`{}`)
+  },
+)
 
-test('fails instead of hanging when the tester stops responding to messages', { timeout: 20000 }, async () => {
-  const { stderr, fs, testTree } = await runInlineBrowserTests(
-    {
-      'basic.test.ts': `
+test(
+  'fails instead of hanging when the tester stops responding to messages',
+  { timeout: 20000 },
+  async () => {
+    const { stderr, fs, testTree } = await runInlineBrowserTests(
+      {
+        'basic.test.ts': `
         import { expect, test } from 'vitest'
 
         test('never runs', () => {
           expect(1).toBe(1)
         })
       `,
-      'unresponsive-tester.html': `
+        'unresponsive-tester.html': `
         <!DOCTYPE html>
         <html lang="en">
           <head>
@@ -134,17 +147,20 @@ test('fails instead of hanging when the tester stops responding to messages', { 
           <body></body>
         </html>
       `,
-    },
-    {
-      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '2000' },
-      browser: {
-        instances: [instances[0]],
-        testerHtmlPath: './unresponsive-tester.html',
       },
-    },
-  )
+      {
+        env: { VITEST_BROWSER_IFRAME_TIMEOUT: '2000' },
+        browser: {
+          instances: [instances[0]],
+          testerHtmlPath: './unresponsive-tester.html',
+        },
+      },
+    )
 
-  expect(stderr).toContain(`Failed to run the test ${fs.resolveFile('basic.test.ts')}`)
-  expect(stderr).toContain(`The iframe "${fs.resolveFile('basic.test.ts')}" did not acknowledge the "prepare" message within 2000ms. The tester might have crashed, been removed, or be blocked by a long synchronous task.`)
-  expect(testTree()).toMatchInlineSnapshot(`{}`)
-})
+    expect(stderr).toContain(`Failed to run the test ${fs.resolveFile('basic.test.ts')}`)
+    expect(stderr).toContain(
+      `The iframe "${fs.resolveFile('basic.test.ts')}" did not acknowledge the "prepare" message within 2000ms. The tester might have crashed, been removed, or be blocked by a long synchronous task.`,
+    )
+    expect(testTree()).toMatchInlineSnapshot(`{}`)
+  },
+)

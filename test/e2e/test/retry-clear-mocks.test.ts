@@ -4,7 +4,7 @@ import { runInlineTests } from '../../test-utils'
 
 it('vitest correctly resets mocks between tests', async () => {
   const { stderr, results } = await runInlineTests({
-    'basic.test.js': /* js */`
+    'basic.test.js': /* js */ `
       import { it, vi, expect } from 'vitest'
       let i = 0
       const mock = vi.fn(() => true)
@@ -31,7 +31,7 @@ it('vitest correctly resets mocks between tests', async () => {
 
 it('vitest correctly clears mocks between tests', async () => {
   const { stderr, results } = await runInlineTests({
-    'basic.test.js': /* js */`
+    'basic.test.js': /* js */ `
       import { it, vi, expect } from 'vitest'
       let i = 0
       const mock = vi.fn()
@@ -57,7 +57,7 @@ it('vitest correctly clears mocks between tests', async () => {
 
 it('vitest correctly restores mocks between tests', async () => {
   const { stderr, results } = await runInlineTests({
-    'basic.test.js': /* js */`
+    'basic.test.js': /* js */ `
       import { it, vi, expect } from 'vitest'
       let i = 0
       const obj = {

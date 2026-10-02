@@ -33,16 +33,19 @@ export class StateManager {
   /** Number of test workers that were started during the run. */
   workersSpawned = 0
 
-  metadata: Record<string, {
-    externalized: Record<string, string>
-    duration: Record<string, number[]>
-    tmps: Record<string, string>
-    dumpDir?: string
-    outline?: {
-      externalized: number
-      inlined: number
+  metadata: Record<
+    string,
+    {
+      externalized: Record<string, string>
+      duration: Record<string, number[]>
+      tmps: Record<string, string>
+      dumpDir?: string
+      outline?: {
+        externalized: number
+        inlined: number
+      }
     }
-  }> = {}
+  > = {}
 
   onUnhandledError?: OnUnhandledErrorCallback
 
@@ -51,23 +54,18 @@ export class StateManager {
     timeoutIncreased: false,
   }
 
-  constructor(
-    options: {
-      onUnhandledError?: OnUnhandledErrorCallback
-    },
-  ) {
+  constructor(options: { onUnhandledError?: OnUnhandledErrorCallback }) {
     this.onUnhandledError = options.onUnhandledError
   }
 
   catchError(error: unknown, type: string): void {
     if (isAggregateError(error)) {
-      return error.errors.forEach(error => this.catchError(error, type))
+      return error.errors.forEach((error) => this.catchError(error, type))
     }
 
     if (typeof error === 'object' && error !== null) {
-      (error as Record<string, unknown>).type = type
-    }
-    else {
+      ;(error as Record<string, unknown>).type = type
+    } else {
       error = { type, message: error }
     }
 
@@ -89,7 +87,7 @@ export class StateManager {
   }
 
   catchLeaks(leaks: AsyncLeak[]): void {
-    leaks.forEach(leak => this.leakSet.add(leak))
+    leaks.forEach((leak) => this.leakSet.add(leak))
   }
 
   clearErrors(): void {
@@ -111,24 +109,27 @@ export class StateManager {
   getFiles(keys?: string[]): File[] {
     if (keys) {
       return keys
-        .map(key => this.filesMap.get(key)!)
+        .map((key) => this.filesMap.get(key)!)
         .flat()
-        .filter(file => file && !file.local)
+        .filter((file) => file && !file.local)
     }
-    return Array.from(this.filesMap.values()).flat().filter(file => !file.local).sort((f1, f2) => {
-      // print typecheck files first
-      if (f1.meta?.typecheck && f2.meta?.typecheck) {
-        return 0
-      }
-      if (f1.meta?.typecheck) {
-        return -1
-      }
-      return 1
-    })
+    return Array.from(this.filesMap.values())
+      .flat()
+      .filter((file) => !file.local)
+      .sort((f1, f2) => {
+        // print typecheck files first
+        if (f1.meta?.typecheck && f2.meta?.typecheck) {
+          return 0
+        }
+        if (f1.meta?.typecheck) {
+          return -1
+        }
+        return 1
+      })
   }
 
   getTestModules(keys?: string[]): TestModule[] {
-    return this.getFiles(keys).map(file => this.getReportedEntity(file) as TestModule)
+    return this.getFiles(keys).map((file) => this.getReportedEntity(file) as TestModule)
   }
 
   getFilepaths(): string[] {
@@ -137,8 +138,8 @@ export class StateManager {
 
   getFailedFilepaths(): string[] {
     return this.getFiles()
-      .filter(i => i.result?.state === 'fail')
-      .map(i => i.filepath)
+      .filter((i) => i.result?.state === 'fail')
+      .map((i) => i.filepath)
   }
 
   collectPaths(paths: string[] = []): void {
@@ -151,33 +152,27 @@ export class StateManager {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
       const currentFile = existing.find(
-        i => i.projectName === file.projectName
-          && i.meta.typecheck === file.meta.typecheck
-          && i.meta.__vitest_label__ === file.meta.__vitest_label__,
+        (i) =>
+          i.projectName === file.projectName &&
+          i.meta.typecheck === file.meta.typecheck &&
+          i.meta.__vitest_label__ === file.meta.__vitest_label__,
       )
       // keep logs for the previous file because it should always be initiated before the collections phase
       // which means that all logs are collected during the collection and not inside tests
       if (currentFile) {
         file.logs = currentFile.logs
       }
-      const otherFiles = existing.filter(i => i !== currentFile)
+      const otherFiles = existing.filter((i) => i !== currentFile)
       otherFiles.push(file)
       this.filesMap.set(file.filepath, otherFiles)
       this.updateId(file, project)
     })
   }
 
-  clearFiles(
-    project: TestProject,
-    paths: string[] = [],
-  ): void {
+  clearFiles(project: TestProject, paths: string[] = []): void {
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
-      const fileTask = createFileTask(
-        path,
-        project.config.root,
-        project.config.name,
-      )
+      const fileTask = createFileTask(path, project.config.root, project.config.name)
       fileTask.local = true
       TestModule.register(fileTask, project)
       this.idMap.set(fileTask.id, fileTask)
@@ -185,14 +180,11 @@ export class StateManager {
         this.filesMap.set(path, [fileTask])
         return
       }
-      const filtered = files.filter(
-        file => file.projectName !== project.config.name,
-      )
+      const filtered = files.filter((file) => file.projectName !== project.config.name)
       // always keep a File task, so we can associate logs with it
       if (!filtered.length) {
         this.filesMap.set(path, [fileTask])
-      }
-      else {
+      } else {
         this.filesMap.set(path, [...filtered, fileTask])
       }
     })
@@ -205,11 +197,9 @@ export class StateManager {
 
     if (task.type === 'suite' && 'filepath' in task) {
       TestModule.register(task, project)
-    }
-    else if (task.type === 'suite') {
+    } else if (task.type === 'suite') {
       TestSuite.register(task, project)
-    }
-    else {
+    } else {
       TestCase.register(task, project)
     }
 
@@ -255,9 +245,7 @@ export class StateManager {
   }
 
   getCountOfFailedTests(): number {
-    return Array.from(this.idMap.values()).filter(
-      t => t.result?.state === 'fail',
-    ).length
+    return Array.from(this.idMap.values()).filter((t) => t.result?.state === 'fail').length
   }
 
   cancelFiles(files: FileSpecification[], project: TestProject): void {
@@ -270,7 +258,7 @@ export class StateManager {
 
     this.collectFiles(
       project,
-      nonRegisteredFiles.map(file =>
+      nonRegisteredFiles.map((file) =>
         createFileTask(file.filepath, project.config.root, project.config.name),
       ),
     )

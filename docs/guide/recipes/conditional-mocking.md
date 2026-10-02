@@ -56,12 +56,12 @@ test('returns user data', async () => {
 
 The same approach works across all mock outcome types. Here is the full set of actions and their equivalents:
 
-| Action | Equivalent to | Equivalent code |
-|---|---|---|
-| `thenReturn(value)` | `mockReturnValue(value)` | `return value` |
-| `thenThrow(error)` | `mockThrow(error)` | `throw error` |
+| Action               | Equivalent to              | Equivalent code                 |
+| -------------------- | -------------------------- | ------------------------------- |
+| `thenReturn(value)`  | `mockReturnValue(value)`   | `return value`                  |
+| `thenThrow(error)`   | `mockThrow(error)`         | `throw error`                   |
 | `thenResolve(value)` | `mockResolvedValue(value)` | `return Promise.resolve(value)` |
-| `thenReject(error)` | `mockRejectedValue(error)` | `return Promise.reject(error)` |
+| `thenReject(error)`  | `mockRejectedValue(error)` | `return Promise.reject(error)`  |
 
 ## Stacking actions
 
@@ -143,6 +143,7 @@ As a result, the first call with any string returns `'admin'`, while later calls
 expect(getRole('user@example.com')).toBe('admin')
 expect(getRole('user@example.com')).toBe('user')
 ```
+
 :::
 
 ## Handling unmatched calls

@@ -2,7 +2,7 @@ import { trace } from '@opentelemetry/api'
 import { test } from 'vitest'
 
 test('other', async () => {
-  await new Promise(r => setTimeout(r, 150))
+  await new Promise((r) => setTimeout(r, 150))
 })
 
 test('custom', async () => {
@@ -16,7 +16,7 @@ test('custom', async () => {
   const tracer = trace.getTracer('custom-scope')
   await tracer.startActiveSpan('custom-span', async (span) => {
     span.setAttribute('custom-attribute', 'hello world')
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await new Promise((resolve) => setTimeout(resolve, 50))
     span.end()
   })
 

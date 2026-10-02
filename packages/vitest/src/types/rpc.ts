@@ -1,8 +1,22 @@
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
-import type { BaselineData, CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '../runtime/runner/types'
+import type {
+  BaselineData,
+  CancelReason,
+  File,
+  TaskEventPack,
+  TaskResultPack,
+  TestArtifact,
+  TestBenchmark,
+} from '../runtime/runner/types'
 import type { OTELCarrier } from '../utils/traces'
-import type { AfterSuiteRunMeta, AsyncLeak, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
+import type {
+  AfterSuiteRunMeta,
+  AsyncLeak,
+  FetchCachedFileSystemResult,
+  ResolveFunctionResult,
+  UserConsoleLog,
+} from './general'
 
 export interface RuntimeRPC {
   fetch: (
@@ -12,13 +26,20 @@ export interface RuntimeRPC {
     options?: FetchFunctionOptions,
     otelCarrier?: OTELCarrier,
   ) => Promise<FetchResult | FetchCachedFileSystemResult>
-  resolve: (id: string, importer: string | undefined, environment: string) => Promise<ResolveFunctionResult | null>
+  resolve: (
+    id: string,
+    importer: string | undefined,
+    environment: string,
+  ) => Promise<ResolveFunctionResult | null>
   /**
    * Returns the modules of the given test files' import graphs that the server
    * has already processed, so a fresh worker can load them from disk without
    * paying a `fetch` round-trip per module.
    */
-  fetchWarmModules: (environment: string, files: string[]) => Promise<Record<string, FetchResult | FetchCachedFileSystemResult>>
+  fetchWarmModules: (
+    environment: string,
+    files: string[],
+  ) => Promise<Record<string, FetchResult | FetchCachedFileSystemResult>>
   /**
    * Transforms the import graphs of the given test files ahead of the
    * worker's own fetches. Fired by vm pool workers before their environment
@@ -35,7 +56,10 @@ export interface RuntimeRPC {
   onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTestBenchmark: (testId: string, bench: TestBenchmark) => void
-  onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
+  onTaskArtifactRecord: <Artifact extends TestArtifact>(
+    testId: string,
+    artifact: Artifact,
+  ) => Promise<Artifact>
   onTaskUpdate: (pack: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number

@@ -25,6 +25,8 @@ export interface StaticMockCall {
   hasFactory: boolean
   /** the factory uses `importOriginal`/`importActual` */
   factoryLoadsOriginal: boolean
+  /** called without a factory or options, so the module is automocked or redirected to `__mocks__` */
+  automock?: boolean
 }
 
 export interface HoistMocksOptions {
@@ -69,8 +71,10 @@ To fix this issue you can either:
 - enable the 'globals' option`
 
 function API_NOT_FOUND_CHECK(names: string[]) {
-  return `\nif (${names.map(name => `typeof globalThis["${name}"] === "undefined"`).join(' && ')}) `
-    + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+  return (
+    `\nif (${names.map((name) => `typeof globalThis["${name}"] === "undefined"`).join(' && ')}) ` +
+    `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+  )
 }
 
 function isIdentifier(node: any): node is Positioned<Identifier> {
@@ -91,8 +95,10 @@ function getNodeTail(code: string, node: Node) {
   return end
 }
 
-const regexpHoistable
-  = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\s*\(/
+const regexpHoistable =
+  /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock|importActual)\s*\(/
+// calls that load the original module even if it is mocked
+const originalLoadingMethodNames = ['doUnmock', 'importActual']
 const hashbangRE = /^#!.*\n/
 
 // Public redistributions of Vitest that re-export its mocking API (`vi`)
@@ -119,8 +125,7 @@ export function hoistMocks(
   let ast: any
   try {
     ast = parse(code)
-  }
-  catch (err) {
+  } catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}.`)
     return
   }
@@ -184,22 +189,16 @@ export function hoistMocks(
       for (const spec of node.specifiers) {
         if (spec.type === 'ImportSpecifier') {
           if (spec.imported.type === 'Identifier') {
-            idToImportMap.set(
-              spec.local.name,
-              `${importId}.${spec.imported.name}`,
-            )
-          }
-          else {
+            idToImportMap.set(spec.local.name, `${importId}.${spec.imported.name}`)
+          } else {
             idToImportMap.set(
               spec.local.name,
               `${importId}[${JSON.stringify(spec.imported.value as string)}]`,
             )
           }
-        }
-        else if (spec.type === 'ImportDefaultSpecifier') {
+        } else if (spec.type === 'ImportDefaultSpecifier') {
           idToImportMap.set(spec.local.name, `${importId}.default`)
-        }
-        else {
+        } else {
           // namespace specifier
           idToImportMap.set(spec.local.name, importId)
         }
@@ -208,9 +207,8 @@ export function hoistMocks(
   }
 
   const declaredConst = new Set<string>()
-  const hoistedNodes: Set<Positioned<
-  CallExpression | VariableDeclaration | AwaitExpression
-  >> = new Set()
+  const hoistedNodes: Set<Positioned<CallExpression | VariableDeclaration | AwaitExpression>> =
+    new Set()
 
   function createSyntaxError(node: Positioned<Node>, message: string) {
     const _error = new SyntaxError(message)
@@ -226,50 +224,34 @@ export function hoistMocks(
     return serializedError
   }
 
-  function assertNotDefaultExport(
-    node: Positioned<CallExpression>,
-    error: string,
-  ) {
-    const defaultExport = findNodeAround(
-      ast,
-      node.start,
-      'ExportDefaultDeclaration',
-    )?.node as Positioned<ExportDefaultDeclaration> | undefined
+  function assertNotDefaultExport(node: Positioned<CallExpression>, error: string) {
+    const defaultExport = findNodeAround(ast, node.start, 'ExportDefaultDeclaration')?.node as
+      | Positioned<ExportDefaultDeclaration>
+      | undefined
     if (
-      defaultExport?.declaration === node
-      || (defaultExport?.declaration.type === 'AwaitExpression'
-        && defaultExport.declaration.argument === node)
+      defaultExport?.declaration === node ||
+      (defaultExport?.declaration.type === 'AwaitExpression' &&
+        defaultExport.declaration.argument === node)
     ) {
       throw createSyntaxError(defaultExport, error)
     }
   }
 
-  function assertNotNamedExport(
-    node: Positioned<VariableDeclaration>,
-    error: string,
-  ) {
-    const nodeExported = findNodeAround(
-      ast,
-      node.start,
-      'ExportNamedDeclaration',
-    )?.node as Positioned<ExportNamedDeclaration> | undefined
+  function assertNotNamedExport(node: Positioned<VariableDeclaration>, error: string) {
+    const nodeExported = findNodeAround(ast, node.start, 'ExportNamedDeclaration')?.node as
+      | Positioned<ExportNamedDeclaration>
+      | undefined
     if (nodeExported?.declaration === node) {
       throw createSyntaxError(nodeExported, error)
     }
   }
 
   function getVariableDeclaration(node: Positioned<CallExpression>) {
-    const declarationNode = findNodeAround(
-      ast,
-      node.start,
-      'VariableDeclaration',
-    )?.node as Positioned<VariableDeclaration> | undefined
+    const declarationNode = findNodeAround(ast, node.start, 'VariableDeclaration')?.node as
+      | Positioned<VariableDeclaration>
+      | undefined
     const init = declarationNode?.declarations[0]?.init
-    if (
-      init
-      && (init === node
-        || (init.type === 'AwaitExpression' && init.argument === node))
-    ) {
+    if (init && (init === node || (init.type === 'AwaitExpression' && init.argument === node))) {
       return declarationNode
     }
   }
@@ -293,16 +275,14 @@ export function hoistMocks(
 
       if (info.hasBindingShortcut) {
         s.appendLeft(id.end, `: ${binding}`)
-      }
-      else if (info.classDeclaration) {
+      } else if (info.classDeclaration) {
         if (!declaredConst.has(id.name)) {
           declaredConst.add(id.name)
           // locate the top-most node containing the class declaration
           const topNode = parentStack[parentStack.length - 2]
           s.prependRight(topNode.start, `const ${id.name} = ${binding};\n`)
         }
-      }
-      else if (
+      } else if (
         // don't transform class name identifier
         !info.classExpression
       ) {
@@ -316,7 +296,6 @@ export function hoistMocks(
       // if (!options.globalThisAccessor) {
       //   return
       // }
-
       // const globalThisAccessor = options.globalThisAccessor
       // const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(() => import(`
       // const importSubstring = code.substring(node.start, node.end)
@@ -330,10 +309,10 @@ export function hoistMocks(
     },
     onCallExpression(node) {
       if (
-        node.callee.type === 'MemberExpression'
-        && isIdentifier(node.callee.object)
-        && utilsObjectNames.includes(node.callee.object.name)
-        && isIdentifier(node.callee.property)
+        node.callee.type === 'MemberExpression' &&
+        isIdentifier(node.callee.object) &&
+        utilsObjectNames.includes(node.callee.object.name) &&
+        isIdentifier(node.callee.property)
       ) {
         const methodName = node.callee.property.name
         usedUtilityExports.add(node.callee.object.name)
@@ -343,58 +322,55 @@ export function hoistMocks(
           const method = `${node.callee.object.name}.${methodName}`
           assertNotDefaultExport(
             node,
-            `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`,
+            `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn't return anything.`,
           )
           const declarationNode = getVariableDeclaration(node)
           if (declarationNode) {
             assertNotNamedExport(
               declarationNode,
-              `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`,
+              `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn't return anything.`,
             )
           }
           if (options.onStaticMock) {
             const specifier = getStaticSpecifier(node.arguments[0])
             if (specifier != null) {
               // anything but an inline function may still load the original
-              const factory = node.arguments[1]?.type === 'ArrowFunctionExpression' || node.arguments[1]?.type === 'FunctionExpression'
-                ? node.arguments[1] as Positioned<ArrowFunctionExpression | FunctionExpression>
-                : undefined
+              const factory =
+                node.arguments[1]?.type === 'ArrowFunctionExpression' ||
+                node.arguments[1]?.type === 'FunctionExpression'
+                  ? (node.arguments[1] as Positioned<ArrowFunctionExpression | FunctionExpression>)
+                  : undefined
               options.onStaticMock({
                 method: methodName,
                 specifier,
                 hasFactory: factory != null,
-                factoryLoadsOriginal: factory != null
-                  && (factory.params.length > 0 || code.slice(factory.start, factory.end).includes('importActual')),
+                automock: node.arguments.length === 1,
+                factoryLoadsOriginal:
+                  factory != null &&
+                  (factory.params.length > 0 ||
+                    code.slice(factory.start, factory.end).includes('importActual')),
               })
             }
           }
           // rewrite vi.mock(import('..')) into vi.mock('..')
           if (
-            node.type === 'CallExpression'
-            && node.callee.type === 'MemberExpression'
-            && dynamicImportMockMethodNames.includes((node.callee.property as Identifier).name)
+            node.type === 'CallExpression' &&
+            node.callee.type === 'MemberExpression' &&
+            dynamicImportMockMethodNames.includes((node.callee.property as Identifier).name)
           ) {
             const moduleInfo = node.arguments[0] as Positioned<Expression>
             // vi.mock(import('./path')) -> vi.mock('./path')
             if (moduleInfo.type === 'ImportExpression') {
               const source = moduleInfo.source as Positioned<Expression>
-              s.overwrite(
-                moduleInfo.start,
-                moduleInfo.end,
-                s.slice(source.start, source.end),
-              )
+              s.overwrite(moduleInfo.start, moduleInfo.end, s.slice(source.start, source.end))
             }
             // vi.mock(await import('./path')) -> vi.mock('./path')
             if (
-              moduleInfo.type === 'AwaitExpression'
-              && moduleInfo.argument.type === 'ImportExpression'
+              moduleInfo.type === 'AwaitExpression' &&
+              moduleInfo.argument.type === 'ImportExpression'
             ) {
               const source = moduleInfo.argument.source as Positioned<Expression>
-              s.overwrite(
-                moduleInfo.start,
-                moduleInfo.end,
-                s.slice(source.start, source.end),
-              )
+              s.overwrite(moduleInfo.start, moduleInfo.end, s.slice(source.start, source.end))
             }
           }
           hoistedNodes.add(node)
@@ -409,17 +385,25 @@ export function hoistMocks(
             source = moduleInfo.source as Positioned<Expression>
           }
           if (
-            moduleInfo.type === 'AwaitExpression'
-            && moduleInfo.argument.type === 'ImportExpression'
+            moduleInfo.type === 'AwaitExpression' &&
+            moduleInfo.argument.type === 'ImportExpression'
           ) {
             source = moduleInfo.argument.source as Positioned<Expression>
           }
           if (source) {
-            s.overwrite(
-              moduleInfo.start,
-              moduleInfo.end,
-              s.slice(source.start, source.end),
-            )
+            s.overwrite(moduleInfo.start, moduleInfo.end, s.slice(source.start, source.end))
+          }
+        }
+
+        if (options.onStaticMock && originalLoadingMethodNames.includes(methodName)) {
+          const specifier = getStaticSpecifier(node.arguments[0])
+          if (specifier != null) {
+            options.onStaticMock({
+              method: methodName,
+              specifier,
+              hasFactory: false,
+              factoryLoadsOriginal: false,
+            })
           }
         }
 
@@ -438,13 +422,10 @@ export function hoistMocks(
             )
             // hoist "const variable = vi.hoisted(() => {})"
             hoistedNodes.add(declarationNode)
-          }
-          else {
-            const awaitedExpression = findNodeAround(
-              ast,
-              node.start,
-              'AwaitExpression',
-            )?.node as Positioned<AwaitExpression> | undefined
+          } else {
+            const awaitedExpression = findNodeAround(ast, node.start, 'AwaitExpression')?.node as
+              | Positioned<AwaitExpression>
+              | undefined
             // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
             const moveNode = awaitedExpression?.argument === node ? awaitedExpression : node
             hoistedNodes.add(moveNode)
@@ -461,14 +442,15 @@ export function hoistMocks(
   function getNodeName(node: CallExpression) {
     const callee = node.callee || {}
     if (
-      callee.type === 'MemberExpression'
-      && isIdentifier(callee.property)
-      && isIdentifier(callee.object)
+      callee.type === 'MemberExpression' &&
+      isIdentifier(callee.property) &&
+      isIdentifier(callee.object)
     ) {
       const argument = node.arguments[0] as Positioned<Expression>
-      const argStr = argument.type === 'Literal' || argument.type === 'ImportExpression'
-        ? code.slice(argument.start, argument.end)
-        : ''
+      const argStr =
+        argument.type === 'Literal' || argument.type === 'ImportExpression'
+          ? code.slice(argument.start, argument.end)
+          : ''
       return `${callee.object.name}.${callee.property.name}(${argStr})`
     }
     return '"hoisted method"'
@@ -541,10 +523,12 @@ export function hoistMocks(
         '',
         ...Array.from(hoistedNodes, (invalidNode) => {
           const currentLocation = locations.get(invalidNode.start)
-          const originalLocation = map && currentLocation && originalPositionFor(map, currentLocation)
-          const location = originalLocation?.column != null && originalLocation?.line != null
-            ? ` at ${relative(options.root || process.cwd(), id)}:${originalLocation.line}:${originalLocation.column + 1}`
-            : ''
+          const originalLocation =
+            map && currentLocation && originalPositionFor(map, currentLocation)
+          const location =
+            originalLocation?.column != null && originalLocation?.line != null
+              ? ` at ${relative(options.root || process.cwd(), id)}:${originalLocation.line}:${originalLocation.column + 1}`
+              : ''
           return `- ${getNodeName(getNodeCall(invalidNode))}${location}`
         }),
         '',
@@ -561,8 +545,7 @@ export function hoistMocks(
     // don't hoist into itself if it's already at the top
     if (hoistIndex === end || hoistIndex === node.start) {
       hoistIndex = end
-    }
-    else {
+    } else {
       s.move(node.start, end, hoistIndex)
     }
   }
@@ -575,22 +558,16 @@ export function hoistMocks(
     let importLine = `const ${importId} = await `
     if (options.globalThisAccessor) {
       importLine += `globalThis[${options.globalThisAccessor}].wrapDynamicImport(() => import(${sourceString}));\n`
-    }
-    else {
+    } else {
       importLine += `import(${sourceString});\n`
     }
 
-    s.update(
-      importNode.start,
-      importNode.end,
-      importLine,
-    )
+    s.update(importNode.start, importNode.end, importLine)
 
     if (importNode.start === hoistIndex) {
       // no need to hoist, but update hoistIndex to keep the order
       hoistIndex = importNode.end
-    }
-    else {
+    } else {
       // There will be an error if the module is called before it is imported,
       // so the module import statement is hoisted to the top
       s.move(importNode.start, importNode.end, hoistIndex)
@@ -600,16 +577,14 @@ export function hoistMocks(
   if (!hoistedModuleImported && arrayNodes.length > 0) {
     const utilityImports = [...usedUtilityExports]
     // "vi" or "vitest" is imported from a module other than "vitest"
-    if (utilityImports.some(name => idToImportMap.has(name))) {
+    if (utilityImports.some((name) => idToImportMap.has(name))) {
       s.appendLeft(hashbangEnd, API_NOT_FOUND_CHECK(utilityImports))
     }
     // if "vi" or "vitest" are not imported at all, import them
     else if (utilityImports.length) {
       s.appendLeft(
         hashbangEnd,
-        `import { ${[...usedUtilityExports].join(', ')} } from ${JSON.stringify(
-          hoistedModule,
-        )}\n`,
+        `import { ${[...usedUtilityExports].join(', ')} } from ${JSON.stringify(hoistedModule)}\n`,
       )
     }
   }
@@ -631,8 +606,7 @@ function createIndexLocationsMap(source: string): Map<number, { line: number; co
     if (char === '\n' || char === '\r\n') {
       line++
       column = 0
-    }
-    else {
+    } else {
       column++
     }
   }

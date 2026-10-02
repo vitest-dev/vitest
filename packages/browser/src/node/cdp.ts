@@ -23,10 +23,7 @@ export class BrowserServerCDPHandler {
 
     if (!this.listeners[event]) {
       this.listeners[event] = (payload) => {
-        this.tester.cdpEvent(
-          event,
-          payload,
-        )
+        this.tester.cdpEvent(event, payload)
         if (once) {
           this.off(event, id)
         }
@@ -40,7 +37,7 @@ export class BrowserServerCDPHandler {
     if (!this.listenerIds[event]) {
       this.listenerIds[event] = []
     }
-    this.listenerIds[event] = this.listenerIds[event].filter(l => l !== id)
+    this.listenerIds[event] = this.listenerIds[event].filter((l) => l !== id)
 
     if (!this.listenerIds[event].length) {
       this.session.off(event as any, this.listeners[event])

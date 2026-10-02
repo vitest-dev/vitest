@@ -1,5 +1,5 @@
-/* eslint-disable style/no-tabs */
 import type { Rolldown } from 'vite'
+import type { StaticMockCall } from '../../../packages/mocker/src/node/hoistMocks'
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
@@ -13,11 +13,7 @@ function parse(code: string, options: any): any {
 
 const hoistMocksOptions: HoistMocksPluginOptions = {
   codeFrameGenerator(node: any, id: string, code: string) {
-    return generateCodeFrame(
-      code,
-      4,
-      node.start + 1,
-    )
+    return generateCodeFrame(code, 4, node.start + 1)
   },
   root: '/',
 }
@@ -27,15 +23,88 @@ function hoistSimple(code: string, url = '/test.js') {
 }
 
 function hoistSimpleCode(code: string, options?: HoistMocksPluginOptions) {
-  return hoistMockAndResolve(code, '/test.js', parse, { ...hoistMocksOptions, ...options })?.code.trim()
+  return hoistMockAndResolve(code, '/test.js', parse, {
+    ...hoistMocksOptions,
+    ...options,
+  })?.code.trim()
 }
 
+test('reports static mocks', () => {
+  const calls: StaticMockCall[] = []
+  hoistSimpleCode(
+    `
+  vi.mock('./automocked')
+  vi.mock('./factory', () => ({}))
+  vi.mock('./original', async (importOriginal) => importOriginal())
+  vi.mock('./spy', { spy: true })
+  vi.unmock('./unmocked')
+  vi.doUnmock('./do-unmocked')
+  vi.importActual('./actual')
+  vi.doMock('./do-mocked', () => ({}))
+  `,
+    { onStaticMock: (call) => calls.push(call) },
+  )
+  expect(calls).toMatchInlineSnapshot(`
+    [
+      {
+        "automock": true,
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "mock",
+        "specifier": "./automocked",
+      },
+      {
+        "automock": false,
+        "factoryLoadsOriginal": false,
+        "hasFactory": true,
+        "method": "mock",
+        "specifier": "./factory",
+      },
+      {
+        "automock": false,
+        "factoryLoadsOriginal": true,
+        "hasFactory": true,
+        "method": "mock",
+        "specifier": "./original",
+      },
+      {
+        "automock": false,
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "mock",
+        "specifier": "./spy",
+      },
+      {
+        "automock": true,
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "unmock",
+        "specifier": "./unmocked",
+      },
+      {
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "doUnmock",
+        "specifier": "./do-unmocked",
+      },
+      {
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "importActual",
+        "specifier": "./actual",
+      },
+    ]
+  `)
+})
+
 test('hoists mock, unmock, hoisted', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
   vi.mock('path', () => {})
   vi.unmock('path')
   vi.hoisted(() => {})
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "import { vi } from "vitest"
     vi.mock('path', () => {})
     vi.unmock('path')
@@ -44,13 +113,15 @@ test('hoists mock, unmock, hoisted', () => {
 })
 
 test('always hoists import from vitest', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
 import { vi } from 'vitest'
 vi.mock('path', () => {})
 vi.unmock('path')
 vi.hoisted(() => {})
 import { test } from 'vitest'
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})
@@ -61,12 +132,14 @@ import { test } from 'vitest'
 })
 
 test('recognizes the vite-plus/test redistribution as the hoisted module', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
 import { vi } from 'vite-plus/test'
 vi.mock('path', () => {})
 vi.unmock('path')
 vi.hoisted(() => {})
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})
@@ -76,7 +149,8 @@ vi.hoisted(() => {})
 })
 
 test('always hoists all imports but they are under mocks', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
   import { vi } from 'vitest'
   import { someValue } from './path.js'
   import { someValue2 } from './path2.js'
@@ -84,7 +158,8 @@ test('always hoists all imports but they are under mocks', () => {
   vi.unmock('path')
   vi.hoisted(() => {})
   import { test } from 'vitest'
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})
@@ -99,11 +174,13 @@ test('always hoists all imports but they are under mocks', () => {
 })
 
 test('correctly mocks namespaced', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
   import { vi } from 'vitest'
   import add, * as AddModule from '../src/add'
   vi.mock('../src/add', () => {})
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "vi.mock('../src/add', () => {})
     const __vi_import_0__ = await import("../src/add");
 
@@ -112,12 +189,14 @@ test('correctly mocks namespaced', () => {
 })
 
 test('correctly access import', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
   import { vi } from 'vitest'
   import add from '../src/add'
   add();
   vi.mock('../src/add', () => {})
-  `)).toMatchInlineSnapshot(`
+  `),
+  ).toMatchInlineSnapshot(`
     "vi.mock('../src/add', () => {})
     const __vi_import_0__ = await import("../src/add");
 
@@ -129,12 +208,16 @@ test('correctly access import', () => {
 
 describe('transform', () => {
   const hoistSimpleCodeWithoutMocks = (code: string) => {
-    return hoistMockAndResolve(`import {vi} from "vitest";\n${code}\nvi.mock('faker');\n`, '/test.js', parse, hoistMocksOptions)?.code.trim()
+    return hoistMockAndResolve(
+      `import {vi} from "vitest";\n${code}\nvi.mock('faker');\n`,
+      '/test.js',
+      parse,
+      hoistMocksOptions,
+    )?.code.trim()
   }
   test('default import', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(`import foo from 'vue';console.log(foo.bar)`),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`import foo from 'vue';console.log(foo.bar)`))
+      .toMatchInlineSnapshot(`
       "vi.mock('faker');
       const __vi_import_0__ = await import("vue");
       import {vi} from "vitest";
@@ -144,7 +227,8 @@ describe('transform', () => {
 
   test('can use imported variables inside the mock', () => {
     expect(
-      hoistMockAndResolve(`
+      hoistMockAndResolve(
+        `
 import { vi } from 'vitest'
 import user from './user'
 import { admin } from './admin'
@@ -154,7 +238,11 @@ vi.mock('./mock.js', () => ({
     admin: admin,
   }))
 }))
-`, './test.js', parse, hoistMocksOptions)?.code.trim(),
+`,
+        './test.js',
+        parse,
+        hoistMocksOptions,
+      )?.code.trim(),
     ).toMatchInlineSnapshot(`
       "vi.mock('./mock.js', () => ({
         getSession: vi.fn().mockImplementation(() => ({
@@ -171,7 +259,8 @@ vi.mock('./mock.js', () => ({
 
   test('can use hoisted variables inside the mock', () => {
     expect(
-      hoistMockAndResolve(`
+      hoistMockAndResolve(
+        `
 import { vi } from 'vitest'
 const { user, admin } = await vi.hoisted(async () => {
   const { default: user } = await import('./user')
@@ -184,7 +273,11 @@ vi.mock('./mock.js', () => {
     admin: admin,
   }))
 })
-`, './test.js', parse, hoistMocksOptions)?.code.trim(),
+`,
+        './test.js',
+        parse,
+        hoistMocksOptions,
+      )?.code.trim(),
     ).toMatchInlineSnapshot(`
       "const { user, admin } = await vi.hoisted(async () => {
         const { default: user } = await import('./user')
@@ -204,9 +297,7 @@ vi.mock('./mock.js', () => {
 
   test('named import', () => {
     expect(
-      hoistSimpleCodeWithoutMocks(
-        `import { ref } from 'vue';function foo() { return ref(0) }`,
-      ),
+      hoistSimpleCodeWithoutMocks(`import { ref } from 'vue';function foo() { return ref(0) }`),
     ).toMatchInlineSnapshot(`
       "vi.mock('faker');
       const __vi_import_0__ = await import("vue");
@@ -229,8 +320,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('export function declaration', () => {
-    expect(hoistSimpleCodeWithoutMocks(`export function foo() {}`))
-      .toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export function foo() {}`)).toMatchInlineSnapshot(`
         "vi.mock('faker');
         import {vi} from "vitest";
         export function foo() {}"
@@ -238,8 +328,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('export class declaration', () => {
-    expect(hoistSimpleCodeWithoutMocks(`export class foo {}`))
-      .toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export class foo {}`)).toMatchInlineSnapshot(`
         "vi.mock('faker');
         import {vi} from "vitest";
         export class foo {}"
@@ -247,8 +336,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('export var declaration', () => {
-    expect(hoistSimpleCodeWithoutMocks(`export const a = 1, b = 2`))
-      .toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export const a = 1, b = 2`)).toMatchInlineSnapshot(`
         "vi.mock('faker');
         import {vi} from "vitest";
         export const a = 1, b = 2"
@@ -256,9 +344,8 @@ vi.mock('./mock.js', () => {
   })
 
   test('export named', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(`const a = 1, b = 2; export { a, b as c }`),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`const a = 1, b = 2; export { a, b as c }`))
+      .toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
       const a = 1, b = 2; export { a, b as c }"
@@ -266,9 +353,8 @@ vi.mock('./mock.js', () => {
   })
 
   test('export named from', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(`export { ref, computed as c } from 'vue'`),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export { ref, computed as c } from 'vue'`))
+      .toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
       export { ref, computed as c } from 'vue'"
@@ -276,11 +362,8 @@ vi.mock('./mock.js', () => {
   })
 
   test('named exports of imported binding', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(
-        `import {createApp} from 'vue';export {createApp}`,
-      ),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`import {createApp} from 'vue';export {createApp}`))
+      .toMatchInlineSnapshot(`
       "vi.mock('faker');
       const __vi_import_0__ = await import("vue");
       import {vi} from "vitest";
@@ -289,11 +372,8 @@ vi.mock('./mock.js', () => {
   })
 
   test('export * from', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(
-        `export * from 'vue'\n` + `export * from 'react'`,
-      ),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export * from 'vue'\n` + `export * from 'react'`))
+      .toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
       export * from 'vue'
@@ -302,8 +382,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('export * as from', () => {
-    expect(hoistSimpleCodeWithoutMocks(`export * as foo from 'vue'`))
-      .toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export * as foo from 'vue'`)).toMatchInlineSnapshot(`
         "vi.mock('faker');
         import {vi} from "vitest";
         export * as foo from 'vue'"
@@ -311,9 +390,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('export default', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(`export default {}`),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export default {}`)).toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
       export default {}"
@@ -321,11 +398,8 @@ vi.mock('./mock.js', () => {
   })
 
   test('export then import minified', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(
-        `export * from 'vue';import {createApp} from 'vue';`,
-      ),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export * from 'vue';import {createApp} from 'vue';`))
+      .toMatchInlineSnapshot(`
       "vi.mock('faker');
       const __vi_import_0__ = await import("vue");
       import {vi} from "vitest";
@@ -334,11 +408,8 @@ vi.mock('./mock.js', () => {
   })
 
   test('hoist import to top', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(
-        `path.resolve('server.js');import path from 'node:path';`,
-      ),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`path.resolve('server.js');import path from 'node:path';`))
+      .toMatchInlineSnapshot(`
       "vi.mock('faker');
       const __vi_import_0__ = await import("node:path");
       import {vi} from "vitest";
@@ -347,9 +418,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('import.meta', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(`console.log(import.meta.url)`),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`console.log(import.meta.url)`)).toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
       console.log(import.meta.url)"
@@ -357,9 +426,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('dynamic import', () => {
-    const result = hoistSimpleCodeWithoutMocks(
-      `export const i = () => import('./foo')`,
-    )
+    const result = hoistSimpleCodeWithoutMocks(`export const i = () => import('./foo')`)
     expect(result).toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
@@ -368,9 +435,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('do not rewrite method definition', () => {
-    const result = hoistSimpleCodeWithoutMocks(
-      `import { fn } from 'vue';class A { fn() { fn() } }`,
-    )
+    const result = hoistSimpleCodeWithoutMocks(`import { fn } from 'vue';class A { fn() { fn() } }`)
     expect(result).toMatchInlineSnapshot(`
       "vi.mock('faker');
       const __vi_import_0__ = await import("vue");
@@ -470,9 +535,7 @@ vi.mock('./mock.js', () => {
   // #2221
   test('should declare variable for imported super class', () => {
     expect(
-      hoistSimpleCodeWithoutMocks(
-        `import { Foo } from './dependency';` + `class A extends Foo {}`,
-      ),
+      hoistSimpleCodeWithoutMocks(`import { Foo } from './dependency';` + `class A extends Foo {}`),
     ).toMatchInlineSnapshot(`
       "vi.mock('faker');
       const __vi_import_0__ = await import("./dependency");
@@ -485,9 +548,9 @@ vi.mock('./mock.js', () => {
     // first class that uses the binding
     expect(
       hoistSimpleCodeWithoutMocks(
-        `import { Foo } from './dependency';`
-        + `export default class A extends Foo {}\n`
-        + `export class B extends Foo {}`,
+        `import { Foo } from './dependency';` +
+          `export default class A extends Foo {}\n` +
+          `export class B extends Foo {}`,
       ),
     ).toMatchInlineSnapshot(`
       "vi.mock('faker');
@@ -501,16 +564,14 @@ vi.mock('./mock.js', () => {
 
   // #4049
   test('should handle default export variants', () => {
-  // default anonymous functions
-    expect(hoistSimpleCodeWithoutMocks(`export default function() {}\n`))
-      .toMatchInlineSnapshot(`
+    // default anonymous functions
+    expect(hoistSimpleCodeWithoutMocks(`export default function() {}\n`)).toMatchInlineSnapshot(`
         "vi.mock('faker');
         import {vi} from "vitest";
         export default function() {}"
       `)
     // default anonymous class
-    expect(hoistSimpleCodeWithoutMocks(`export default class {}\n`))
-      .toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export default class {}\n`)).toMatchInlineSnapshot(`
         "vi.mock('faker');
         import {vi} from "vitest";
         export default class {}"
@@ -518,8 +579,7 @@ vi.mock('./mock.js', () => {
     // default named functions
     expect(
       hoistSimpleCodeWithoutMocks(
-        `export default function foo() {}\n`
-        + `foo.prototype = Object.prototype;`,
+        `export default function foo() {}\n` + `foo.prototype = Object.prototype;`,
       ),
     ).toMatchInlineSnapshot(`
       "vi.mock('faker');
@@ -529,9 +589,7 @@ vi.mock('./mock.js', () => {
     `)
     // default named classes
     expect(
-      hoistSimpleCodeWithoutMocks(
-        `export default class A {}\n` + `export class B extends A {}`,
-      ),
+      hoistSimpleCodeWithoutMocks(`export default class A {}\n` + `export class B extends A {}`),
     ).toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
@@ -541,27 +599,25 @@ vi.mock('./mock.js', () => {
   })
 
   test('sourcemap source', () => {
-    const map = (
-      (hoistSimple(
-        `vi.mock(any);
+    const map = hoistSimple(
+      `vi.mock(any);
       export const a = 1`,
-        '/input.js',
-      ))?.map
-    )
+      '/input.js',
+    )?.map
     expect(map?.sources).toStrictEqual(['/input.js'])
   })
 
   test('overwrite bindings', () => {
     expect(
       hoistSimpleCodeWithoutMocks(
-        `import { inject } from 'vue';`
-        + `const a = { inject }\n`
-        + `const b = { test: inject }\n`
-        + `function c() { const { test: inject } = { test: true }; console.log(inject) }\n`
-        + `const d = inject\n`
-        + `function f() {  console.log(inject) }\n`
-        + `function e() { const { inject } = { inject: true } }\n`
-        + `function g() { const f = () => { const inject = true }; console.log(inject) }\n`,
+        `import { inject } from 'vue';` +
+          `const a = { inject }\n` +
+          `const b = { test: inject }\n` +
+          `function c() { const { test: inject } = { test: true }; console.log(inject) }\n` +
+          `const d = inject\n` +
+          `function f() {  console.log(inject) }\n` +
+          `function e() { const { inject } = { inject: true } }\n` +
+          `function g() { const f = () => { const inject = true }; console.log(inject) }\n`,
       ),
     ).toMatchInlineSnapshot(`
       "vi.mock('faker');
@@ -578,9 +634,7 @@ vi.mock('./mock.js', () => {
   })
 
   test('Empty array pattern', () => {
-    expect(
-      hoistSimpleCodeWithoutMocks(`const [, LHS, RHS] = inMatch;`),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`const [, LHS, RHS] = inMatch;`)).toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
       const [, LHS, RHS] = inMatch;"
@@ -913,10 +967,10 @@ export function fn1() {
 
   // https://github.com/vitest-dev/vitest/issues/1141
   test('export default expression', () => {
-  // esbuild transform result of following TS code
-  // export default <MyFn> function getRandom() {
-  //   return Math.random()
-  // }
+    // esbuild transform result of following TS code
+    // export default <MyFn> function getRandom() {
+    //   return Math.random()
+    // }
     const code = `
 export default (function getRandom() {
   return Math.random();
@@ -931,9 +985,7 @@ export default (function getRandom() {
       });"
     `)
 
-    expect(
-      hoistSimpleCodeWithoutMocks(`export default (class A {});`),
-    ).toMatchInlineSnapshot(`
+    expect(hoistSimpleCodeWithoutMocks(`export default (class A {});`)).toMatchInlineSnapshot(`
       "vi.mock('faker');
       import {vi} from "vitest";
       export default (class A {});"
@@ -1242,9 +1294,9 @@ const Bar = class Foo {
   })
 
   test('import and export ordering', () => {
-  // Given all imported modules logs `mod ${mod}` on execution,
-  // and `foo` is `bar`, the logging order should be:
-  // "mod a", "mod foo", "mod b", "bar1", "bar2"
+    // Given all imported modules logs `mod ${mod}` on execution,
+    // and `foo` is `bar`, the logging order should be:
+    // "mod a", "mod foo", "mod b", "bar1", "bar2"
     expect(
       hoistSimpleCodeWithoutMocks(`
 console.log(foo + 1)
@@ -1405,7 +1457,8 @@ console.log(path.mocked);
   })
 
   test('correctly hoists when import.meta is used', () => {
-    expect(hoistSimpleCode(`
+    expect(
+      hoistSimpleCode(`
 import { calc } from './calc'
 function sum(a, b) {
   return calc("+", 1, 2);
@@ -1418,7 +1471,8 @@ if (import.meta.vitest) {
     expect(sum(1, 2)).toBe(3)
   })
 }
-      `)).toMatchInlineSnapshot(`
+      `),
+    ).toMatchInlineSnapshot(`
         "import { vi } from "vitest"
         vi.mock('faker')
         const __vi_import_0__ = await import("./calc");
@@ -1438,13 +1492,15 @@ if (import.meta.vitest) {
   })
 
   test('injects an error if a utility import is imported from an external module', () => {
-    expect(hoistSimpleCode(`
+    expect(
+      hoistSimpleCode(`
 import { expect, test, vi } from './proxy-module'
 vi.mock('vite')
 test('hi', () => {
   expect(1 + 1).toEqual(2)
 })
-      `)).toMatchInlineSnapshot(`
+      `),
+    ).toMatchInlineSnapshot(`
         "if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' option") }
         __vi_import_0__.vi.mock('vite')
         const __vi_import_0__ = await import("./proxy-module");
@@ -1461,8 +1517,7 @@ describe('throws an error when nodes are incompatible', () => {
   const getErrorWhileHoisting = (code: string) => {
     try {
       hoistMockAndResolve(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
-    }
-    catch (err: any) {
+    } catch (err: any) {
       return err
     }
   }
@@ -1644,40 +1699,39 @@ describe("some suite", () => {
     const map: Rolldown.SourceMap = {
       file: '/test.js',
       toUrl: () => 'not called',
-      mappings: 'AAAA,SAAS,MAAM,UAAU;;AAGzB,GAAG,KAAK,kBAAkB;AAE1B,IAAI,WAAW;CACb,GAAG,KAAK,kBAAkB;;AAG5B,KAAK,mBAAmB;CACtB,GAAG,KAAK,kBAAkB;EAC1B;AAEF,KAAK,mBAAmB;CACtB,IAAI,WAAW;EACb,GAAG,KAAK,kBAAkB;EAC1B,GAAG,cAAc,GAAG;EACpB,GAAG,KAAK,OAAO,mBAAmB;EAClC,MAAM,WAAW,GAAG,cAAc,GAAG;;EAEvC;AAEF,SAAS,oBAAoB;CAC3B,IAAI,WAAW;EACb,GAAG,KAAK,kBAAkB;;EAE5B',
+      mappings:
+        'AAAA,SAAS,MAAM,UAAU;;AAGzB,GAAG,KAAK,kBAAkB;AAE1B,IAAI,WAAW;CACb,GAAG,KAAK,kBAAkB;;AAG5B,KAAK,mBAAmB;CACtB,GAAG,KAAK,kBAAkB;EAC1B;AAEF,KAAK,mBAAmB;CACtB,IAAI,WAAW;EACb,GAAG,KAAK,kBAAkB;EAC1B,GAAG,cAAc,GAAG;EACpB,GAAG,KAAK,OAAO,mBAAmB;EAClC,MAAM,WAAW,GAAG,cAAc,GAAG;;EAEvC;AAEF,SAAS,oBAAoB;CAC3B,IAAI,WAAW;EACb,GAAG,KAAK,kBAAkB;;EAE5B',
       names: [],
-      sources: [
-        '/test.js',
-      ],
+      sources: ['/test.js'],
       version: 3,
       sourcesContent: [
-        'import { test, vi } from \'vitest\'\n'
-        + '\n'
-        + '// correct\n'
-        + 'vi.mock(\'./hello-world-1\')\n'
-        + '\n'
-        + 'if (condition) {\n'
-        + '  vi.mock(\'./hello-world-2\')\n'
-        + '}\n'
-        + '\n'
-        + 'test(\'some test\', () => {\n'
-        + '  vi.mock(\'./hello-world-3\')\n'
-        + '})\n'
-        + '\n'
-        + 'test(\'some test\', () => {\n'
-        + '  if (condition) {\n'
-        + '    vi.mock(\'./hello-world-4\')\n'
-        + '    vi.hoisted(() => {})\n'
-        + '    vi.mock(import(\'./hello-world-5\'))\n'
-        + '    const variable = vi.hoisted(() => {})\n'
-        + '  }\n'
-        + '})\n'
-        + '\n'
-        + 'describe(\'some suite\', () => {\n'
-        + '  if (condition) {\n'
-        + '    vi.mock(\'./hello-world-6\')\n'
-        + '  }\n'
-        + '})\n',
+        "import { test, vi } from 'vitest'\n" +
+          '\n' +
+          '// correct\n' +
+          "vi.mock('./hello-world-1')\n" +
+          '\n' +
+          'if (condition) {\n' +
+          "  vi.mock('./hello-world-2')\n" +
+          '}\n' +
+          '\n' +
+          "test('some test', () => {\n" +
+          "  vi.mock('./hello-world-3')\n" +
+          '})\n' +
+          '\n' +
+          "test('some test', () => {\n" +
+          '  if (condition) {\n' +
+          "    vi.mock('./hello-world-4')\n" +
+          '    vi.hoisted(() => {})\n' +
+          "    vi.mock(import('./hello-world-5'))\n" +
+          '    const variable = vi.hoisted(() => {})\n' +
+          '  }\n' +
+          '})\n' +
+          '\n' +
+          "describe('some suite', () => {\n" +
+          '  if (condition) {\n' +
+          "    vi.mock('./hello-world-6')\n" +
+          '  }\n' +
+          '})\n',
       ],
     }
     expect(() => hoistSimpleCode(code, { getMap: () => map })).toThrowErrorMatchingInlineSnapshot(`
@@ -1716,16 +1770,20 @@ if (import.meta.vitest) {
 })
 
 test('does not transform when hoistable API only appears in comments', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
 import { lib } from 'lib'
 // vi.mock('lib')
 console.log(lib)
-  `)).toMatchInlineSnapshot(`undefined`)
+  `),
+  ).toMatchInlineSnapshot(`undefined`)
 })
 
 test('does not transform when hoistable API only appears in strings', () => {
-  expect(hoistSimpleCode(`
+  expect(
+    hoistSimpleCode(`
 import { lib } from 'lib'
 console.log("vi.mock('lib')", lib)
-  `)).toMatchInlineSnapshot(`undefined`)
+  `),
+  ).toMatchInlineSnapshot(`undefined`)
 })

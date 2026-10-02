@@ -1,8 +1,7 @@
 import type { SerializedLocator } from '@vitest/browser'
-
-// Note: this augments `screenshotOptions` types
-import type {} from '@vitest/browser-playwright'
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
+// Note: this augments `screenshotOptions` types
+import type {} from '../../../../../browser-playwright'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
@@ -12,13 +11,15 @@ import { basename, dirname, extname, join, relative, resolve } from 'pathe'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
 
-type GlobalOptions = Required<Omit<
-  NonNullable<
-    NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']
-    & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
-  >,
-  'comparators' | 'screenshotDirectory'
->>
+type GlobalOptions = Required<
+  Omit<
+    NonNullable<
+      NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot'] &
+        NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
+    >,
+    'comparators' | 'screenshotDirectory'
+  >
+>
 
 const defaultOptions = {
   comparatorName: 'pixelmatch',
@@ -43,13 +44,14 @@ const defaultOptions = {
     platform,
     testFileDirectory,
     testFileName,
-  }) => resolve(
-    root,
-    attachmentsDir,
-    testFileDirectory,
-    testFileName,
-    `${arg}-${browserName}-${platform}${ext}`,
-  ),
+  }) =>
+    resolve(
+      root,
+      attachmentsDir,
+      testFileDirectory,
+      testFileName,
+      `${arg}-${browserName}-${platform}${ext}`,
+    ),
   resolveScreenshotPath: ({
     arg,
     ext,
@@ -58,13 +60,14 @@ const defaultOptions = {
     testFileDirectory,
     testFileName,
     browserName,
-  }) => resolve(
-    root,
-    testFileDirectory,
-    screenshotDirectory,
-    testFileName,
-    `${arg}-${browserName}-${platform}${ext}`,
-  ),
+  }) =>
+    resolve(
+      root,
+      testFileDirectory,
+      screenshotDirectory,
+      testFileName,
+      `${arg}-${browserName}-${platform}${ext}`,
+    ),
 } satisfies GlobalOptions
 
 type SupportedCodecs = Parameters<typeof getCodec>[0]
@@ -85,19 +88,17 @@ export interface ResolvedOptions {
   }
 }
 
-export function resolveOptions(
-  {
-    context,
-    name,
-    options,
-    testName,
-  }: {
-    context: BrowserCommandContext
-    name: string
-    testName: string
-    options: ScreenshotMatcherOptions
-  },
-): ResolvedOptions {
+export function resolveOptions({
+  context,
+  name,
+  options,
+  testName,
+}: {
+  context: BrowserCommandContext
+  name: string
+  testName: string
+  options: ScreenshotMatcherOptions
+}): ResolvedOptions {
   if (context.testPath === undefined) {
     throw new Error('`resolveOptions` has to be used in a test file')
   }
@@ -128,14 +129,14 @@ export function resolveOptions(
   const resolvePathData = {
     arg: sanitizeArg(
       // remove the extension only if it ends up being used
-      extensionFromName.endsWith(extension)
-        ? basename(name, extensionFromName)
-        : name,
+      extensionFromName.endsWith(extension) ? basename(name, extensionFromName) : name,
     ),
     ext: `.${extension}`,
     platform: platform(),
     root,
-    screenshotDirectory: context.project.config.browser.expect?.toMatchScreenshot?.screenshotDirectory ?? '__screenshots__',
+    screenshotDirectory:
+      context.project.config.browser.expect?.toMatchScreenshot?.screenshotDirectory ??
+      '__screenshots__',
     attachmentsDir: relative(root, context.project.config.attachmentsDir),
     testFileDirectory: relative(root, dirname(context.testPath)),
     testFileName: basename(context.testPath),
@@ -202,7 +203,10 @@ function sanitize(input: string, keepPaths: boolean): string {
       .replace(/-{2,}/g, '-')
   }
 
-  return input.split('/').map(path => sanitize(path, false)).join('/')
+  return input
+    .split('/')
+    .map((path) => sanitize(path, false))
+    .join('/')
 }
 
 /**
@@ -243,13 +247,14 @@ export function takeScreenshotBuffer({
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
   target?: ScreenshotMatcherArguments[2]['target']
 }): Promise<Buffer<ArrayBufferLike>> {
-  return context.triggerCommand(
-    '__vitest_takeScreenshot',
-    name,
-    { ...screenshotOptions, save: false, element, target },
-  ).then(
-    ({ buffer }) => buffer,
-  )
+  return context
+    .triggerCommand('__vitest_takeScreenshot', name, {
+      ...screenshotOptions,
+      save: false,
+      element,
+      target,
+    })
+    .then(({ buffer }) => buffer)
 }
 
 export function takeDecodedScreenshot({
@@ -263,9 +268,7 @@ export function takeDecodedScreenshot({
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
   target?: ScreenshotMatcherArguments[2]['target']
 }): ReturnType<AnyCodec['decode']> {
-  return takeScreenshotBuffer(options).then(
-    buffer => codec.decode(buffer, {}),
-  )
+  return takeScreenshotBuffer(options).then((buffer) => codec.decode(buffer, {}))
 }
 
 /**
@@ -279,8 +282,7 @@ export function asyncTimeout(timeout: number): Promise<null> {
   return new Promise((resolve) => {
     if (timeout === 0) {
       resolve(null)
-    }
-    else {
+    } else {
       setTimeout(resolve, timeout, null)
     }
   })

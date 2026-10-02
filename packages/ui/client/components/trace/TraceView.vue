@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import type { SplitpanesResizedPayload } from 'splitpanes'
-import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
+import type {
+  NormalizedBrowserTraceData,
+  NormalizedBrowserTraceEntry,
+  TraceSelection,
+} from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
 import { traceViewSplitSizes } from '~/composables/navigation'
-import { getTraceEntryClass, selectActiveTraceStep, showTraceSelectorHighlight } from '~/composables/trace-view'
+import {
+  getTraceEntryClass,
+  selectActiveTraceStep,
+  showTraceSelectorHighlight,
+} from '~/composables/trace-view'
 
 const props = defineProps<{
   trace: NormalizedBrowserTraceData
@@ -35,17 +43,13 @@ function onStepKeydown(event: KeyboardEvent, index: number) {
   let nextIndex: number
   if (event.key === 'ArrowUp') {
     nextIndex = Math.max(index - 1, 0)
-  }
-  else if (event.key === 'ArrowDown') {
+  } else if (event.key === 'ArrowDown') {
     nextIndex = Math.min(index + 1, entries.value.length - 1)
-  }
-  else if (event.key === 'Home') {
+  } else if (event.key === 'Home') {
     nextIndex = 0
-  }
-  else if (event.key === 'End') {
+  } else if (event.key === 'End') {
     nextIndex = entries.value.length - 1
-  }
-  else {
+  } else {
     return
   }
 
@@ -60,57 +64,58 @@ function onStepKeydown(event: KeyboardEvent, index: number) {
   }
 }
 
-watch([selectedStep, iframeEl], ([step, iframe]) => {
-  if (!step || !iframe) {
-    return
-  }
-  const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
-  iframe.style.width = `${viewport.width}px`
-  iframe.style.height = `${viewport.height}px`
-  // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
-  // https://github.com/rrweb-io/rrweb/blob/master/packages/rrweb/src/replay/index.ts
-  // doc.open/close resets the iframe document to a blank state before rebuild.
-  // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
-  // but external resources (images, stylesheets) won't load without a server.
-  const doc = iframe.contentDocument!
-  // TODO: rrweb also closes and opens the document during rebuild, so this reset may be redundant.
-  doc.open()
-  doc.close()
-  const mirror = createMirror()
-  // rrweb >=2.0 hardened the API to force sandbox iframe usage https://github.com/rrweb-io/rrweb/issues/1817. We already ensure the same manually so opt-out the guard by UNSAFE_allowUnprotectedRebuild
-  rebuild(serialized, {
-    doc,
-    cache: createCache(),
-    mirror,
-    UNSAFE_allowUnprotectedRebuild: true,
-  })
-  // Close rrweb's parser after rebuilding. During page load, leaving it open
-  // prevents the parent load event, which browsers may show as an endless spinner.
-  doc.close()
-  for (const [className, ids] of Object.entries(pseudoClassIds)) {
-    for (const id of ids) {
-      const el = mirror.getNode(id) as HTMLElement | null
-      if (className === ':popover-open') {
-        el?.showPopover?.()
-      }
-      else if (el?.classList) {
-        el.classList.add(className)
+watch(
+  [selectedStep, iframeEl],
+  ([step, iframe]) => {
+    if (!step || !iframe) {
+      return
+    }
+    const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
+    iframe.style.width = `${viewport.width}px`
+    iframe.style.height = `${viewport.height}px`
+    // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
+    // https://github.com/rrweb-io/rrweb/blob/master/packages/rrweb/src/replay/index.ts
+    // doc.open/close resets the iframe document to a blank state before rebuild.
+    // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
+    // but external resources (images, stylesheets) won't load without a server.
+    const doc = iframe.contentDocument!
+    // TODO: rrweb also closes and opens the document during rebuild, so this reset may be redundant.
+    doc.open()
+    doc.close()
+    const mirror = createMirror()
+    // rrweb >=2.0 hardened the API to force sandbox iframe usage https://github.com/rrweb-io/rrweb/issues/1817. We already ensure the same manually so opt-out the guard by UNSAFE_allowUnprotectedRebuild
+    rebuild(serialized, {
+      doc,
+      cache: createCache(),
+      mirror,
+      UNSAFE_allowUnprotectedRebuild: true,
+    })
+    // Close rrweb's parser after rebuilding. During page load, leaving it open
+    // prevents the parent load event, which browsers may show as an endless spinner.
+    doc.close()
+    for (const [className, ids] of Object.entries(pseudoClassIds)) {
+      for (const id of ids) {
+        const el = mirror.getNode(id) as HTMLElement | null
+        if (className === ':popover-open') {
+          el?.showPopover?.()
+        } else if (el?.classList) {
+          el.classList.add(className)
+        }
       }
     }
-  }
-  iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
-  if (selectorId != null) {
-    const el = mirror.getNode(selectorId)
-    if (el) {
-      // Overlay highlight technique adapted from Playwright's highlight.ts:
-      // https://github.com/microsoft/playwright/blob/main/packages/injected/src/highlight.ts
-      // getBoundingClientRect() gives viewport-relative coords; position:fixed overlay matches.
-      // Simplified version: no shadow DOM glass pane, no tooltip.
-      iframe.contentWindow!.requestAnimationFrame(() => {
-        const rect = (el as Element).getBoundingClientRect()
-        const overlay = doc.createElement('div')
-        overlay.setAttribute('data-testid', 'trace-view-highlight')
-        overlay.style.cssText = `
+    iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
+    if (selectorId != null) {
+      const el = mirror.getNode(selectorId)
+      if (el) {
+        // Overlay highlight technique adapted from Playwright's highlight.ts:
+        // https://github.com/microsoft/playwright/blob/main/packages/injected/src/highlight.ts
+        // getBoundingClientRect() gives viewport-relative coords; position:fixed overlay matches.
+        // Simplified version: no shadow DOM glass pane, no tooltip.
+        iframe.contentWindow!.requestAnimationFrame(() => {
+          const rect = (el as Element).getBoundingClientRect()
+          const overlay = doc.createElement('div')
+          overlay.setAttribute('data-testid', 'trace-view-highlight')
+          overlay.style.cssText = `
           position: fixed;
           pointer-events: none;
           z-index: 2147483647;
@@ -122,16 +127,19 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
           border: 2px solid #3b82f6;
           box-sizing: border-box;
         `
-        overlay.style.display = showTraceSelectorHighlight.value ? '' : 'none'
-        doc.documentElement.appendChild(overlay)
-      })
+          overlay.style.display = showTraceSelectorHighlight.value ? '' : 'none'
+          doc.documentElement.appendChild(overlay)
+        })
+      }
     }
-  }
-}, { immediate: true })
+  },
+  { immediate: true },
+)
 
 watch(showTraceSelectorHighlight, (show) => {
-  const overlay = iframeEl.value?.contentDocument
-    ?.querySelector<HTMLElement>('[data-testid="trace-view-highlight"]')
+  const overlay = iframeEl.value?.contentDocument?.querySelector<HTMLElement>(
+    '[data-testid="trace-view-highlight"]',
+  )
   if (overlay) {
     overlay.style.display = show ? '' : 'none'
   }
@@ -154,9 +162,7 @@ function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
 }
 
 function formatTraceTime(ms: number) {
-  return ms < 1000
-    ? `${Math.round(ms)}ms`
-    : `${(ms / 1000).toFixed(1)}s`
+  return ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`
 }
 
 function formatTraceTiming(step: NormalizedBrowserTraceEntry) {
@@ -165,9 +171,7 @@ function formatTraceTiming(step: NormalizedBrowserTraceEntry) {
   }
 
   const startTime = `+${formatTraceTime(step.startTime)}`
-  return step.duration == null
-    ? startTime
-    : `${startTime} · ${formatTraceTime(step.duration)}`
+  return step.duration == null ? startTime : `${startTime} · ${formatTraceTime(step.duration)}`
 }
 
 function formatStepName(step: NormalizedBrowserTraceEntry) {
@@ -192,10 +196,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
 </script>
 
 <template>
-  <Splitpanes
-    class="h-full min-h-0"
-    @resized="onSplitpanesResized"
-  >
+  <Splitpanes class="h-full min-h-0" @resized="onSplitpanesResized">
     <Pane :size="traceViewSplitSizes[0]" min-size="20">
       <div
         class="h-full min-h-0 p-4 flex flex-col gap-1 overflow-auto"
@@ -242,10 +243,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
               <div class="text-xs opacity-60 truncate">
                 {{ formatTraceTiming(step) }}
               </div>
-              <div
-                v-if="step.element"
-                class="font-mono text-xs opacity-70 truncate"
-              >
+              <div v-if="step.element" class="font-mono text-xs opacity-70 truncate">
                 {{ step.element.locator }}
               </div>
             </div>
@@ -262,9 +260,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
           :sandbox="iframeSandbox"
           style="background: white; border: none; color-scheme: normal; flex: none"
         />
-        <div v-else class="text-sm opacity-50 p-4">
-          No trace step found
-        </div>
+        <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
       </div>
     </Pane>
   </Splitpanes>

@@ -8,7 +8,12 @@ import { join, relative } from 'pathe'
 import { computed } from 'vue'
 import { client, config } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
-import { formatPreciseTime, formatTime, getDurationClass, getImportDurationType } from '~/utils/task'
+import {
+  formatPreciseTime,
+  formatTime,
+  getDurationClass,
+  getImportDurationType,
+} from '~/utils/task'
 import Badge from './Badge.vue'
 import CodeMirrorContainer from './CodeMirrorContainer.vue'
 import IconButton from './IconButton.vue'
@@ -52,18 +57,18 @@ const isCached = computed(() => {
   return index !== -1
 })
 
-const code = computed(
-  () => {
-    if (!result.value || !('code' in result.value)) {
-      return null
-    }
-    return result.value.code
+const code = computed(() => {
+  if (!result.value || !('code' in result.value)) {
+    return null
+  }
+  return (
+    result.value.code
       .replace(/\/\/# sourceMappingURL=.*\n/, '')
       .replace(/\/\/# sourceMappingSource=.*\n/, '')
       .replace(/\/\/# vitestCache=.*\n?/, '')
       .trim() || ''
-  },
-)
+  )
+})
 const sourceMap = computed(() => {
   if (!result.value || !('map' in result.value)) {
     return {
@@ -139,13 +144,13 @@ function createDurationDiv(duration: number) {
 }
 
 function markImportDurations(codemirror: EditorFromTextArea) {
-  lineWidgets.forEach(lw => lw.clear())
+  lineWidgets.forEach((lw) => lw.clear())
   lineWidgets.length = 0
 
-  widgetElements.forEach(el => el.remove())
+  widgetElements.forEach((el) => el.remove())
   widgetElements.length = 0
 
-  markers.forEach(m => m.clear())
+  markers.forEach((m) => m.clear())
   markers.length = 0
 
   if (result.value && 'modules' in result.value) {
@@ -221,44 +226,54 @@ onKeyStroke('Escape', () => {
           />
           Module Info
           <VueTooltip class="inline cursor-help">
-            <Badge type="custom" class="ml-1" :style="{ backgroundColor: `var(--color-node-${type})` }">
+            <Badge
+              type="custom"
+              class="ml-1"
+              :style="{ backgroundColor: `var(--color-node-${type})` }"
+            >
               {{ type }}
             </Badge>
             <template #popper>
               This is module is {{ type === 'external' ? 'externalized' : 'inlined' }}.
               <template v-if="type === 'external'">
-                It means that the module was not processed by Vite plugins, but instead was directly imported by the environment.
+                It means that the module was not processed by Vite plugins, but instead was directly
+                imported by the environment.
               </template>
-              <template v-else>
-                It means that the module was processed by Vite plugins.
-              </template>
+              <template v-else> It means that the module was processed by Vite plugins. </template>
             </template>
           </VueTooltip>
           <VueTooltip v-if="isCached === true" class="inline cursor-help">
-            <Badge type="tip" class="ml-2">
-              cached
-            </Badge>
+            <Badge type="tip" class="ml-2"> cached </Badge>
             <template #popper>
-              This module is cached on the file system under `fsModuleCachePath` ("node_modules/.vitest-cache" by default).
+              This module is cached on the file system under `fsModuleCachePath`
+              ("node_modules/.vitest-cache" by default).
             </template>
           </VueTooltip>
           <VueTooltip v-if="isCached === false" class="inline cursor-help">
-            <Badge type="warning" class="ml-2">
-              not cached
-            </Badge>
+            <Badge type="warning" class="ml-2"> not cached </Badge>
             <template #popper>
-              <p>This module is not cached on the file system. It might be the first test run after cache invalidation or</p>
-              <p>it was excluded manually via `experimental_defineCacheKeyGenerator`, or it cannot be cached (modules with `import.meta.glob`, for example).</p>
+              <p>
+                This module is not cached on the file system. It might be the first test run after
+                cache invalidation or
+              </p>
+              <p>
+                it was excluded manually via `experimental_defineCacheKeyGenerator`, or it cannot be
+                cached (modules with `import.meta.glob`, for example).
+              </p>
             </template>
           </VueTooltip>
         </p>
         <div class="mr-8 flex gap-2 items-center">
-          <VueTooltip v-if="durations.selfTime != null && durations.external !== true" class="inline cursor-help">
+          <VueTooltip
+            v-if="durations.selfTime != null && durations.external !== true"
+            class="inline cursor-help"
+          >
             <Badge :type="getImportDurationType(durations.selfTime)">
               self: {{ formatTime(durations.selfTime) }}
             </Badge>
             <template #popper>
-              It took {{ formatPreciseTime(durations.selfTime) }} to import this module, excluding static imports.
+              It took {{ formatPreciseTime(durations.selfTime) }} to import this module, excluding
+              static imports.
             </template>
           </VueTooltip>
           <VueTooltip v-if="durations.totalTime != null" class="inline cursor-help">
@@ -266,15 +281,20 @@ onKeyStroke('Escape', () => {
               total: {{ formatTime(durations.totalTime) }}
             </Badge>
             <template #popper>
-              It took {{ formatPreciseTime(durations.totalTime) }} to import the whole module, including static imports.
+              It took {{ formatPreciseTime(durations.totalTime) }} to import the whole module,
+              including static imports.
             </template>
           </VueTooltip>
-          <VueTooltip v-if="result && 'transformTime' in result && result.transformTime" class="inline cursor-help">
+          <VueTooltip
+            v-if="result && 'transformTime' in result && result.transformTime"
+            class="inline cursor-help"
+          >
             <Badge :type="getImportDurationType(result.transformTime)">
               transform: {{ formatTime(result.transformTime) }}
             </Badge>
             <template #popper>
-              It took {{ formatPreciseTime(result.transformTime) }} to transform this module by Vite plugins.
+              It took {{ formatPreciseTime(result.transformTime) }} to transform this module by Vite
+              plugins.
             </template>
           </VueTooltip>
         </div>
@@ -288,14 +308,13 @@ onKeyStroke('Escape', () => {
         @click="emit('close')"
       />
     </div>
-    <div v-if="!result" class="p-5">
-      No transform result found for this module.
-    </div>
+    <div v-if="!result" class="p-5">No transform result found for this module.</div>
     <template v-else>
-      <div class="grid grid-rows-[min-content_auto] overflow-hidden flex-auto" :class="{ 'cols-2': code != null }">
-        <div class="px-3 py-1 bg-overlay border-base border-b border-t border-r">
-          Source
-        </div>
+      <div
+        class="grid grid-rows-[min-content_auto] overflow-hidden flex-auto"
+        :class="{ 'cols-2': code != null }"
+      >
+        <div class="px-3 py-1 bg-overlay border-base border-b border-t border-r">Source</div>
         <div v-if="code != null" class="px-3 py-1 bg-overlay border-base border-b border-t">
           Transformed
         </div>

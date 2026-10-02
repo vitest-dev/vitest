@@ -15,12 +15,16 @@ beforeAll(() => {
   const changed = original.replace('This file will be modified by test cases', 'Changed!')
   writeFileSync(FILE_TO_CHANGE, changed, 'utf8')
 
-  writeFileSync(NEW_UNCOVERED_FILE, `
+  writeFileSync(
+    NEW_UNCOVERED_FILE,
+    `
   // This file is not covered by any tests but should be picked by --changed
   export default function helloworld() {
     return 'Hello world'
   }
-  `.trim(), 'utf8')
+  `.trim(),
+    'utf8',
+  )
 
   return function restore() {
     writeFileSync(FILE_TO_CHANGE, original, 'utf8')
@@ -48,7 +52,9 @@ test('{ changed: "HEAD" }', { skip: SKIP }, async () => {
     ]
   `)
 
-  const uncoveredFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/new-uncovered-file.ts')
+  const uncoveredFile = coverageMap.fileCoverageFor(
+    '<process-cwd>/fixtures/src/new-uncovered-file.ts',
+  )
   const changedFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/file-to-change.ts')
 
   expect([uncoveredFile, changedFile]).toMatchInlineSnapshot(`
@@ -71,10 +77,7 @@ test('{ changed: "HEAD" }', { skip: SKIP }, async () => {
 
 test('{ coverage.changed: "HEAD" }', async () => {
   await runVitest({
-    include: [
-      'fixtures/test/file-to-change.test.ts',
-      'fixtures/test/math.test.ts',
-    ],
+    include: ['fixtures/test/file-to-change.test.ts', 'fixtures/test/math.test.ts'],
     coverage: {
       include: [
         'fixtures/src/file-to-change.ts',
@@ -101,10 +104,7 @@ test('{ coverage.changed: "HEAD" }', async () => {
 
 test('{ coverage.changed: "HEAD", excludeAfterRemap: true }', async () => {
   await runVitest({
-    include: [
-      'fixtures/test/file-to-change.test.ts',
-      'fixtures/test/math.test.ts',
-    ],
+    include: ['fixtures/test/file-to-change.test.ts', 'fixtures/test/math.test.ts'],
     coverage: {
       include: [
         'fixtures/src/file-to-change.ts',
@@ -131,14 +131,32 @@ test('{ coverage.changed: "HEAD", excludeAfterRemap: true }', async () => {
 })
 
 test('{ changed: "v0.0.1", coverage.changed: "HEAD" }', async () => {
-  await runVitest({
-    include: [
-      'fixtures/test/file-to-change.test.ts',
-      'fixtures/test/math.test.ts',
-    ],
+  const changedSinceTag = [
+    'file-to-change.ts',
+    'new-uncovered-file.ts',
+    'untested-file.ts',
+    'math.ts',
+  ]
 
-    // v0.0.1 is an actual git tag in Vitest repository
+  await runVitest({
+    include: ['fixtures/test/file-to-change.test.ts', 'fixtures/test/math.test.ts'],
+
     changed: 'v0.0.1',
+
+    experimental: {
+      // CI uses a shallow clone without tags, so git cannot diff against v0.0.1
+      vcsProvider: {
+        async findChangedFiles({ changedSince }) {
+          if (changedSince === 'v0.0.1') {
+            return changedSinceTag.map((file) => resolve('./fixtures/src', file))
+          }
+          if (changedSince === 'HEAD') {
+            return [FILE_TO_CHANGE, NEW_UNCOVERED_FILE]
+          }
+          throw new Error(`Unexpected changedSince: ${changedSince}`)
+        },
+      },
+    },
 
     coverage: {
       include: [

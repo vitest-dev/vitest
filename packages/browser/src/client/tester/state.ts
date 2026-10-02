@@ -33,7 +33,7 @@ const state: WorkerGlobalState = {
       throw new Error('Not called in the browser')
     },
   },
-  onCleanup: fn => getBrowserState().cleanups.push(fn),
+  onCleanup: (fn) => getBrowserState().cleanups.push(fn),
   evaluatedModules: new EvaluatedModules(),
   resolvingModules: new Set(),
   moduleExecutionInfo: new Map(),
@@ -94,7 +94,7 @@ function createCdp() {
     off(event: string, listener: (payload: any) => void) {
       const listenerId = getId(listener)
       if (listeners[event]) {
-        listeners[event] = listeners[event].filter(l => l !== listener)
+        listeners[event] = listeners[event].filter((l) => l !== listener)
       }
       rpc().trackCdpEvent(sessionId, 'off', event, listenerId).catch(error)
       return cdp
@@ -104,8 +104,7 @@ function createCdp() {
         listeners[event].forEach((l) => {
           try {
             l(payload)
-          }
-          catch (err) {
+          } catch (err) {
             error(err)
           }
         })

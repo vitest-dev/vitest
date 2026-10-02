@@ -20,6 +20,7 @@ To enable [Browser Mode](/guide/browser/), you must also specify the [`provider`
 - [playwright](/config/browser/playwright)
 - [webdriverio](/config/browser/webdriverio)
 - [preview](/config/browser/preview)
+
 :::
 
 ## Example

@@ -37,11 +37,7 @@ export default function toMatchTextContent(
       const to = this.isNot ? 'not to' : 'to'
       return getMessage(
         this,
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toMatchTextContent`,
-          'element',
-          '',
-        ),
+        this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toMatchTextContent`, 'element', ''),
         checkingWithEmptyString
           ? `Checking with empty string will always match, use .toBeEmptyDOMElement() instead`
           : `Expected element ${to} match text content`,

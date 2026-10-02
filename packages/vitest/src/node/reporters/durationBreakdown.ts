@@ -20,9 +20,7 @@ export interface DurationBreakdownInput {
   typecheckTime: number
 }
 
-export function computeDurationBreakdown(
-  input: DurationBreakdownInput,
-): DurationBreakdown {
+export function computeDurationBreakdown(input: DurationBreakdownInput): DurationBreakdown {
   const sums = {
     transform: 0,
     setup: 0,
@@ -54,16 +52,14 @@ export function computeDurationBreakdown(
       time,
       percent: total > 0 ? (time / total) * 100 : 0,
     }))
-    .filter(phase => phase.percent >= 0.5)
+    .filter((phase) => phase.percent >= 0.5)
     .sort((a, b) => b.time - a.time)
 
   return { total, phases }
 }
 
 export function formatDurationBreakdown(breakdown: DurationBreakdown): string {
-  return breakdown.phases
-    .map(phase => `${phase.name} ${formatPercent(phase.percent)}`)
-    .join(', ')
+  return breakdown.phases.map((phase) => `${phase.name} ${formatPercent(phase.percent)}`).join(', ')
 }
 
 function formatPercent(percent: number): string {

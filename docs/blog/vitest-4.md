@@ -59,6 +59,7 @@ With this release we are removing the `experimental` tag from [Browser Mode](/gu
 To define a provider, you now need to install a separate package: [`@vitest/browser-playwright`](https://npmx.dev/package/@vitest/browser-playwright), [`@vitest/browser-webdriverio`](https://npmx.dev/package/@vitest/browser-webdriverio), or [`@vitest/browser-preview`](https://npmx.dev/package/@vitest/browser-preview). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
 
 ::: code-group
+
 ```ts [playwright]
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright' // [!code ++]
@@ -85,6 +86,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```ts [webdriverio]
 import { defineConfig } from 'vitest/config'
 import { webdriverio } from '@vitest/browser-webdriverio' // [!code ++]
@@ -111,6 +113,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```ts [preview]
 import { defineConfig } from 'vitest/config'
 import { preview } from '@vitest/browser-preview' // [!code ++]
@@ -127,6 +130,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 The context is no longer imported from `@vitest/browser/context` (but it will keep working until the next major version for better compatibility with tools that did not update yet), now just import from `vitest/browser`:
@@ -147,7 +151,7 @@ With these changes, the `@vitest/browser` package can be removed from your depen
 Vitest 4 adds support for [Visual Regression testing](/guide/browser/visual-regression-testing.md) in Browser Mode. We will continue to iterate on this feature to improve the experience.
 
 Visual regression testing in Vitest can be done through the
-[`toMatchScreenshot` assertion](/api/browser/assertions.html#tomatchscreenshot):
+[`toMatchScreenshot` assertion](/api/browser/assertions#tomatchscreenshot):
 
 ```ts
 import { expect, test } from 'vitest'

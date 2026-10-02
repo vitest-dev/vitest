@@ -42,7 +42,7 @@ export default <Environment>{
     })
     return {
       teardown(global) {
-        keys.forEach(key => delete global[key])
+        keys.forEach((key) => delete global[key])
         originals.forEach((d, k) => Object.defineProperty(global, k, d))
       },
     }

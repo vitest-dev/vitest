@@ -10,19 +10,19 @@ const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
 const entries = {
-  'index': 'src/index.ts',
-  'helpers': 'src/helpers.ts',
-  'diff': 'src/diff/index.ts',
-  'error': 'src/error.ts',
+  index: 'src/index.ts',
+  helpers: 'src/helpers.ts',
+  diff: 'src/diff/index.ts',
+  error: 'src/error.ts',
   'source-map': 'src/source-map.ts',
   'source-map/node': 'src/source-map/node.ts',
-  'types': 'src/types.ts',
-  'constants': 'src/constants.ts',
-  'offset': 'src/offset.ts',
-  'timers': 'src/timers.ts',
-  'display': 'src/display.ts',
-  'resolver': 'src/resolver.ts',
-  'serialize': 'src/serialize.ts',
+  types: 'src/types.ts',
+  constants: 'src/constants.ts',
+  offset: 'src/offset.ts',
+  timers: 'src/timers.ts',
+  display: 'src/display.ts',
+  resolver: 'src/resolver.ts',
+  serialize: 'src/serialize.ts',
 }
 
 const external = [

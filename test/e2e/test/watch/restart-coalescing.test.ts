@@ -7,15 +7,18 @@ import { runInlineTests } from '#test-utils'
 // were re-instantiated but not yet initialized, crashing the run with
 // "Cannot read properties of undefined (reading 'logger')".
 test('concurrent restarts are coalesced instead of overlapping', async () => {
-  const { ctx, vitest } = await runInlineTests({
-    'basic.test.ts': /* ts */ `
+  const { ctx, vitest } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
 import { expect, test } from 'vitest'
 
 test('basic', () => {
   expect(1).toBe(1)
 })
 `,
-  }, { watch: true })
+    },
+    { watch: true },
+  )
 
   const restart = (ctx as any)._restart.bind(ctx)
   await Promise.all([restart('config'), restart('config'), restart('config')])

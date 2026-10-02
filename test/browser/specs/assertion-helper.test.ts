@@ -7,7 +7,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
   })
 
   const projectTree = errorTree({ project: true, stackTrace: true })
-  expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
+  expect(Object.keys(projectTree).sort()).toEqual(instances.map((i) => i.browser).sort())
 
   for (const [name, tree] of Object.entries(projectTree)) {
     if (name === 'firefox') {
@@ -33,8 +33,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
           },
         }
       `)
-    }
-    else if (name === 'webkit') {
+    } else if (name === 'webkit') {
       expect.soft(tree).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {
@@ -57,8 +56,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
           },
         }
       `)
-    }
-    else {
+    } else {
       expect.soft(tree).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {

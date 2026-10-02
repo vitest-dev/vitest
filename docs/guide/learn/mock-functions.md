@@ -178,7 +178,7 @@ Alternatively, you can make your assertion before the mutation happens.
 
 ## Spying on Methods
 
-[`vi.spyOn`](/api/vi#vi-spyon) is different from `vi.fn()` in an important way. Instead of creating a brand new function, it wraps an *existing* method on an object. The original implementation still works by default, but you can observe every call and optionally override the behavior:
+[`vi.spyOn`](/api/vi#vi-spyon) is different from `vi.fn()` in an important way. Instead of creating a brand new function, it wraps an _existing_ method on an object. The original implementation still works by default, but you can observe every call and optionally override the behavior:
 
 ```js
 import { expect, test, vi } from 'vitest'

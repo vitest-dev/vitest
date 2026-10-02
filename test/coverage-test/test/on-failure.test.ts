@@ -5,13 +5,16 @@ import { captureStdout, coverageTest, normalizeURL, runVitest, test } from '../u
 test('report is not generated when tests fail', async () => {
   const stdout = captureStdout()
 
-  const { exitCode } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: ['**/fixtures/src/math.ts'],
-      reporter: 'text',
+  const { exitCode } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/math.ts'],
+        reporter: 'text',
+      },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(stdout()).toBe('')
   expect(exitCode).toBe(1)
@@ -20,14 +23,17 @@ test('report is not generated when tests fail', async () => {
 test('report is generated when tests fail and { reportOnFailure: true }', async () => {
   const stdout = captureStdout()
 
-  const { exitCode } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: ['**/fixtures/src/math.ts'],
-      reporter: 'text',
-      reportOnFailure: true,
+  const { exitCode } = await runVitest(
+    {
+      include: [normalizeURL(import.meta.url)],
+      coverage: {
+        include: ['**/fixtures/src/math.ts'],
+        reporter: 'text',
+        reportOnFailure: true,
+      },
     },
-  }, { throwOnError: false })
+    { throwOnError: false },
+  )
 
   expect(stdout()).toMatchInlineSnapshot(`
     "----------|---------|----------|---------|---------|-------------------

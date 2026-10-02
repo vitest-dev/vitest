@@ -14,7 +14,9 @@ const { task } = defineProps<{
 const showScreenshot = ref(false)
 const artifact = computed(() => {
   if (task.type === 'test') {
-    const artifact = task.artifacts.find(artifact => artifact.type === 'internal:failureScreenshot')
+    const artifact = task.artifacts.find(
+      (artifact) => artifact.type === 'internal:failureScreenshot',
+    )
 
     if (artifact !== undefined) {
       return artifact
@@ -23,8 +25,11 @@ const artifact = computed(() => {
 
   return null
 })
-const screenshotUrl = computed(() =>
-  artifact.value && artifact.value.attachments.length && getAttachmentUrl(artifact.value.attachments[0]),
+const screenshotUrl = computed(
+  () =>
+    artifact.value &&
+    artifact.value.attachments.length &&
+    getAttachmentUrl(artifact.value.attachments[0]),
 )
 
 function openScreenshot() {

@@ -16,10 +16,14 @@ describe('running browser tests', async () => {
   let failedTests: JsonTestResult[]
   let vitest: Vitest
   const events: string[] = []
-  const emittedBenchmarks: Array<{ projectName: string; testName: string; benchmark: TestBenchmark }> = []
+  const emittedBenchmarks: Array<{
+    projectName: string
+    testName: string
+    benchmark: TestBenchmark
+  }> = []
 
   beforeAll(async () => {
-    ({
+    ;({
       stderr,
       stdout,
       ctx: vitest,
@@ -56,8 +60,10 @@ describe('running browser tests', async () => {
 
     const browserResult = await readFile('./browser.json', 'utf-8')
     browserResultJson = JSON.parse(browserResult) as JsonTestResults
-    const getPassed = (results: JsonTestResult[]) => results.filter(result => result.status === 'passed' && !result.message)
-    const getFailed = (results: JsonTestResult[]) => results.filter(result => result.status === 'failed')
+    const getPassed = (results: JsonTestResult[]) =>
+      results.filter((result) => result.status === 'passed' && !result.message)
+    const getFailed = (results: JsonTestResult[]) =>
+      results.filter((result) => result.status === 'failed')
     passedTests = getPassed(browserResultJson.testResults)
     failedTests = getFailed(browserResultJson.testResults)
   })
@@ -65,7 +71,7 @@ describe('running browser tests', async () => {
   test('tests are actually running', () => {
     expect(stderr).toBe('')
 
-    const testFiles = Array.from(new Set(browserResultJson.testResults.map(t => t.name)))
+    const testFiles = Array.from(new Set(browserResultJson.testResults.map((t) => t.name)))
 
     vitest.projects.forEach((project) => {
       // the order is non-deterministic
@@ -73,13 +79,15 @@ describe('running browser tests', async () => {
     })
 
     // test files are optimized automatically (type-check-only files are excluded)
-    const runtimeTestFiles = testFiles.filter(f => !f.endsWith('.test-d.ts'))
-    expect(vitest.projects.map(p => p.vite.config.optimizeDeps.entries))
-      .toEqual(vitest.projects.map(() => expect.arrayContaining(runtimeTestFiles)))
+    const runtimeTestFiles = testFiles.filter((f) => !f.endsWith('.test-d.ts'))
+    expect(vitest.projects.map((p) => p.vite.config.optimizeDeps.entries)).toEqual(
+      vitest.projects.map(() => expect.arrayContaining(runtimeTestFiles)),
+    )
 
-    const testFilesCount = readdirSync('./test')
-      .filter(n => n.includes('.test.') || n.includes('.test-d.') || n.includes('.bench.'))
-      .length + 1 // 1 is in-source-test
+    const testFilesCount =
+      readdirSync('./test').filter(
+        (n) => n.includes('.test.') || n.includes('.test-d.') || n.includes('.bench.'),
+      ).length + 1 // 1 is in-source-test
 
     expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
     expect(passedTests).toHaveLength(browserResultJson.testResults.length)
@@ -87,40 +95,46 @@ describe('running browser tests', async () => {
   })
 
   test('benchmarks run in a dedicated `(bench)` project per browser instance', () => {
-    const benchProjects = vitest.projects.filter(p => p.name.endsWith('(bench)'))
-    expect(benchProjects.map(p => p.name).sort()).toEqual(
+    const benchProjects = vitest.projects.filter((p) => p.name.endsWith('(bench)'))
+    expect(benchProjects.map((p) => p.name).sort()).toEqual(
       instances.map(({ browser }) => `${browser} (bench)`).sort(),
     )
   })
 
   test('perProject benchmarks emit tasks with the perProject flag in every browser', () => {
-    const records = emittedBenchmarks.filter(e =>
-      e.testName === 'perProject registrations flow through the browser RPC (onTestBenchmark)',
+    const records = emittedBenchmarks.filter(
+      (e) =>
+        e.testName === 'perProject registrations flow through the browser RPC (onTestBenchmark)',
     )
     // the test calls `.run()` twice, so each browser produces 2 benchmark records
     expect(records.length, `perProject emitted: ${records.length}`).toBe(2 * instances.length)
     for (const record of records) {
       expect(record.benchmark.tasks, `empty tasks for ${record.projectName}`).toHaveLength(1)
       const [task] = record.benchmark.tasks
-      expect(task.perProject, `missing perProject flag on ${record.projectName}/${task.name}`).toBe(true)
+      expect(task.perProject, `missing perProject flag on ${record.projectName}/${task.name}`).toBe(
+        true,
+      )
       expect(task.fromStore).toBeUndefined()
     }
   })
 
   test('bench.compare emits one benchmark with both registrations ranked', () => {
-    const records = emittedBenchmarks.filter(e =>
-      e.testName === 'bench.compare resolves a BenchStorage in the browser',
+    const records = emittedBenchmarks.filter(
+      (e) => e.testName === 'bench.compare resolves a BenchStorage in the browser',
     )
     expect(records.length).toBe(instances.length)
     for (const record of records) {
-      expect(record.benchmark.tasks.map(t => t.name).sort(), `unexpected tasks for ${record.projectName}`).toEqual(['a', 'b'])
-      expect(record.benchmark.tasks.map(t => t.rank).sort()).toEqual([1, 2])
+      expect(
+        record.benchmark.tasks.map((t) => t.name).sort(),
+        `unexpected tasks for ${record.projectName}`,
+      ).toEqual(['a', 'b'])
+      expect(record.benchmark.tasks.map((t) => t.rank).sort()).toEqual([1, 2])
     }
   })
 
   test('writeResult flows through the write-artifact RPC in every browser', () => {
-    const records = emittedBenchmarks.filter(e =>
-      e.testName === 'writeResult exercises the writeBenchmarkResult RPC round-trip',
+    const records = emittedBenchmarks.filter(
+      (e) => e.testName === 'writeResult exercises the writeBenchmarkResult RPC round-trip',
     )
     expect(records.length).toBe(instances.length)
     for (const record of records) {
@@ -137,9 +151,11 @@ describe('running browser tests', async () => {
       { name: 'browser', priority: 1 },
     ])
 
-    const testModule = vitest.state.getTestModules().find(m => m.moduleId.includes('tags.test.ts'))
+    const testModule = vitest.state
+      .getTestModules()
+      .find((m) => m.moduleId.includes('tags.test.ts'))
     expect.assert(testModule)
-    expect(buildTestTree([testModule], t => t.tags)).toMatchInlineSnapshot(`
+    expect(buildTestTree([testModule], (t) => t.tags)).toMatchInlineSnapshot(`
       {
         "test/tags.test.ts": {
           "suite 1": {
@@ -161,7 +177,7 @@ describe('running browser tests', async () => {
 
   test('runs in-source tests', () => {
     expect(stdout).toContain('src/actions.ts')
-    const actionsTest = passedTests.find(t => t.name.includes('/actions.ts'))
+    const actionsTest = passedTests.find((t) => t.name.includes('/actions.ts'))
     expect.assert(actionsTest)
     expect(actionsTest.assertionResults).toHaveLength(1)
   })
@@ -176,10 +192,7 @@ describe('console logging tests', async () => {
   let stderr: string
   let stdout: string
   beforeAll(async () => {
-    ({
-      stderr,
-      stdout,
-    } = await runBrowserTests({
+    ;({ stderr, stdout } = await runBrowserTests({
       root: './fixtures/print-logs',
       // assert on Vitest's own console forwarding rather than Vite's client
       // relay, which does not run when the tester loads the stubbed @vite/client
@@ -192,16 +205,20 @@ describe('console logging tests', async () => {
     expect(stdout).toContain('hello from console.log')
     expect(stdout).toContain('hello from console.info')
     expect(stdout).toContain('hello from console.debug')
-    expect(stdout).toContain(`
+    expect(stdout).toContain(
+      `
 {
   hello: 'from dir',
 }
-      `.trim())
-    expect(stdout).toContain(`
+      `.trim(),
+    )
+    expect(stdout).toContain(
+      `
 {
   hello: 'from dirxml',
 }
-      `.trim())
+      `.trim(),
+    )
     expect(stdout).toContain('dom <div />')
     expect(stdout).toContain('default: 1')
     expect(stdout).toContain('default: 2')
@@ -230,14 +247,18 @@ describe('console logging tests', async () => {
   })
 
   test(`logs have stack traces`, () => {
-    expect(stdout).toMatch(`
+    expect(stdout).toMatch(
+      `
 log with a stack
  ❯ test/logs.test.ts:58:11
-    `.trim())
-    expect(stderr).toMatch(`
+    `.trim(),
+    )
+    expect(stderr).toMatch(
+      `
 error with a stack
  ❯ test/logs.test.ts:59:11
-    `.trim())
+    `.trim(),
+    )
     // console.trace processes the stack trace correctly
     expect(stderr).toMatch('test/logs.test.ts:60:11')
   })
@@ -301,7 +322,9 @@ test(`stack trace points to correct file in every browser when failed`, async ()
   // column is 13 in safari, 9 in others
   expect(stderr).toMatch(/throwError src\/error.ts:8:(13|9)/)
 
-  expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.')
+  expect(stderr).toContain(
+    'The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.',
+  )
   expect(stderr).toMatch(/failing.test.ts:19:28/)
   expect(stderr).toMatch(/failing.test.ts:20:28/)
   expect(stderr).toMatch(/failing.test.ts:21:28/)
@@ -366,7 +389,7 @@ test('viewport', async () => {
   })
 })
 
-test('in-source tests don\'t run when the module is imported by the test', async () => {
+test("in-source tests don't run when the module is imported by the test", async () => {
   const { stderr, stdout } = await runBrowserTests({}, ['mocking.test.ts'])
   expect(stderr).toBe('')
 
@@ -406,32 +429,37 @@ test('re-evaluate setupFiles on each test run even when isolate is false', async
   })
 })
 
-test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFailed }) => {
-  const { stderr } = await runBrowserTests({
-    root: './fixtures/timeout-hooks',
-  })
+test.runIf(provider.name === 'playwright')(
+  'timeout hooks',
+  async ({ onTestFailed }) => {
+    const { stderr } = await runBrowserTests({
+      root: './fixtures/timeout-hooks',
+    })
 
-  onTestFailed(() => {
-    console.error(stderr)
-  })
+    onTestFailed(() => {
+      console.error(stderr)
+    })
 
-  const lines = stderr.split('\n')
-  const timeoutErrorsIndexes: number[] = []
-  lines.forEach((line, index) => {
-    if (line.includes('TimeoutError:')) {
-      timeoutErrorsIndexes.push(index)
-    }
-  })
+    const lines = stderr.split('\n')
+    const timeoutErrorsIndexes: number[] = []
+    lines.forEach((line, index) => {
+      if (line.includes('TimeoutError:')) {
+        timeoutErrorsIndexes.push(index)
+      }
+    })
 
-  const snapshot = timeoutErrorsIndexes.map((index) => {
-    return [
-      lines[index - 1],
-      lines[index].replace(/Timeout \d+ms exceeded/, 'Timeout <ms> exceeded'),
-      lines[index + 4],
-    ].join('\n')
-  }).sort().join('\n\n')
+    const snapshot = timeoutErrorsIndexes
+      .map((index) => {
+        return [
+          lines[index - 1],
+          lines[index].replace(/Timeout \d+ms exceeded/, 'Timeout <ms> exceeded'),
+          lines[index + 4],
+        ].join('\n')
+      })
+      .sort()
+      .join('\n\n')
 
-  expect(snapshot).toMatchInlineSnapshot(`
+    expect(snapshot).toMatchInlineSnapshot(`
     " FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
     TimeoutError: locator.click: Timeout <ms> exceeded.
      ❯ hooks-timeout.test.ts:39:46
@@ -541,12 +569,16 @@ test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFaile
      ❯ hooks-timeout.test.ts:54:48"
   `)
 
-  // page.getByRole('code').click()
-  expect(stderr).toContain('locator.click: Timeout')
-  // playwright error is proxied from the server to the client and back correctly
-  expect(stderr).toContain('waiting for locator(\'[data-vitest="true"]\').contentFrame().getByRole(\'code\')')
-  expect(stderr).toMatch(/hooks-timeout.test.ts:6:34/)
-  // await expect.element().toBeVisible()
-  expect(stderr).toContain('Cannot find element with locator: getByRole(\'code\')')
-  expect(stderr).toMatch(/hooks-timeout.test.ts:10:50/)
-}, 120_000 * 3)
+    // page.getByRole('code').click()
+    expect(stderr).toContain('locator.click: Timeout')
+    // playwright error is proxied from the server to the client and back correctly
+    expect(stderr).toContain(
+      "waiting for locator('[data-vitest=\"true\"]').contentFrame().getByRole('code')",
+    )
+    expect(stderr).toMatch(/hooks-timeout.test.ts:6:34/)
+    // await expect.element().toBeVisible()
+    expect(stderr).toContain("Cannot find element with locator: getByRole('code')")
+    expect(stderr).toMatch(/hooks-timeout.test.ts:10:50/)
+  },
+  120_000 * 3,
+)

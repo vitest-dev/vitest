@@ -17,21 +17,15 @@ function hasCommonDiff(diffs: Array<Diff>, isMultiline: boolean): boolean {
   if (isMultiline) {
     // Important: Ignore common newline that was appended to multiline strings!
     const iLast = diffs.length - 1
-    return diffs.some(
-      (diff, i) => diff[0] === DIFF_EQUAL && (i !== iLast || diff[1] !== '\n'),
-    )
+    return diffs.some((diff, i) => diff[0] === DIFF_EQUAL && (i !== iLast || diff[1] !== '\n'))
   }
 
-  return diffs.some(diff => diff[0] === DIFF_EQUAL)
+  return diffs.some((diff) => diff[0] === DIFF_EQUAL)
 }
 
 // Compare two strings character-by-character.
 // Format as comparison lines in which changed substrings have inverse colors.
-export function diffStringsUnified(
-  a: string,
-  b: string,
-  options?: DiffOptions,
-): string {
+export function diffStringsUnified(a: string, b: string, options?: DiffOptions): string {
   if (a !== b && a.length !== 0 && b.length !== 0) {
     const isMultiline = a.includes('\n') || b.includes('\n')
 
