@@ -38,7 +38,7 @@ export function isSlowTestTask(task: Task) {
   return typeof threshold === 'number' && duration > threshold
 }
 
-export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.tasks) {
+export function getSortedRootTasks(tasks: readonly FileTreeNode[], sort: SortUIType) {
   const sorted = [...tasks]
 
   sorted.sort((a, b) => {

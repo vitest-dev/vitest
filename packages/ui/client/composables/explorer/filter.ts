@@ -45,11 +45,12 @@ export function runFilter(search: SearchMatcher, filter: Filter) {
 /**
  * Return the explorer rows for every file of the current project, in sort order.
  *
- * Kept parents are marked expanded. Nothing else is written.
+ * Reads the current project, sort order, explorer tree, task state, and config. Kept parents are marked
+ * expanded, and nothing else is written.
  */
 export function filterAll(search: SearchMatcher, filter: Filter) {
   const project = currentProjectName.value
-  const tasks = getSortedRootTasks(projectSort.value)
+  const tasks = getSortedRootTasks(explorerTree.root.tasks, projectSort.value)
   const entries: UITaskTreeNode[] = []
   const context: FilterNodeContext = {
     nodes: explorerTree.nodes,
