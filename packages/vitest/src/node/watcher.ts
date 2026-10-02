@@ -41,6 +41,10 @@ export class VitestWatcher {
     if (this.vitest.config.forceRerunTriggers.length) {
       watcher.add(this.vitest.config.forceRerunTriggers)
     }
+    const projectFiles = this.vitest.projects.flatMap(getProjectWatchedFiles)
+    if (projectFiles.length) {
+      watcher.add(projectFiles)
+    }
 
     watcher.on('change', this.onFileChange)
     watcher.on('unlink', this.onFileDelete)
@@ -141,25 +145,25 @@ export class VitestWatcher {
     }
   }
 
-  private handleSetupFile(filepath: string) {
-    let isSetupFile: boolean = false
+  private handleProjectFile(filepath: string) {
+    let isProjectFile: boolean = false
 
     this.vitest.projects.forEach((project) => {
-      if (!project.config.setupFiles.includes(filepath)) {
+      if (!getProjectWatchedFiles(project).includes(filepath)) {
         return
       }
 
       this.vitest.state.filesMap.forEach((files) => {
         files.forEach((file) => {
           if (file.projectName === project.name) {
-            isSetupFile = true
+            isProjectFile = true
             this.changedTests.add(file.filepath)
           }
         })
       })
     })
 
-    return isSetupFile
+    return isProjectFile
   }
 
   /**
@@ -170,12 +174,12 @@ export class VitestWatcher {
       return false
     }
 
-    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
+    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers, { dot: true })) {
       this.vitest.state.getFilepaths().forEach((file) => this.changedTests.add(file))
       return true
     }
 
-    if (this.handleSetupFile(filepath)) {
+    if (this.handleProjectFile(filepath)) {
       return true
     }
 
@@ -239,6 +243,16 @@ export class VitestWatcher {
 
     return !!files.length
   }
+}
+
+// files loaded outside of the test module graph that affect every test in the project
+function getProjectWatchedFiles(project: TestProject): string[] {
+  const { setupFiles, snapshotSerializers, diff } = project.config
+  const files = [...setupFiles, ...snapshotSerializers]
+  if (typeof diff === 'string') {
+    files.push(diff)
+  }
+  return files
 }
 
 export interface WatcherTriggerPattern {

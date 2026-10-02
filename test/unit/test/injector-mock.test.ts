@@ -1,4 +1,5 @@
 import type { Rolldown } from 'vite'
+import type { StaticMockCall } from '../../../packages/mocker/src/node/hoistMocks'
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
@@ -27,6 +28,74 @@ function hoistSimpleCode(code: string, options?: HoistMocksPluginOptions) {
     ...options,
   })?.code.trim()
 }
+
+test('reports static mocks', () => {
+  const calls: StaticMockCall[] = []
+  hoistSimpleCode(
+    `
+  vi.mock('./automocked')
+  vi.mock('./factory', () => ({}))
+  vi.mock('./original', async (importOriginal) => importOriginal())
+  vi.mock('./spy', { spy: true })
+  vi.unmock('./unmocked')
+  vi.doUnmock('./do-unmocked')
+  vi.importActual('./actual')
+  vi.doMock('./do-mocked', () => ({}))
+  `,
+    { onStaticMock: (call) => calls.push(call) },
+  )
+  expect(calls).toMatchInlineSnapshot(`
+    [
+      {
+        "automock": true,
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "mock",
+        "specifier": "./automocked",
+      },
+      {
+        "automock": false,
+        "factoryLoadsOriginal": false,
+        "hasFactory": true,
+        "method": "mock",
+        "specifier": "./factory",
+      },
+      {
+        "automock": false,
+        "factoryLoadsOriginal": true,
+        "hasFactory": true,
+        "method": "mock",
+        "specifier": "./original",
+      },
+      {
+        "automock": false,
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "mock",
+        "specifier": "./spy",
+      },
+      {
+        "automock": true,
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "unmock",
+        "specifier": "./unmocked",
+      },
+      {
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "doUnmock",
+        "specifier": "./do-unmocked",
+      },
+      {
+        "factoryLoadsOriginal": false,
+        "hasFactory": false,
+        "method": "importActual",
+        "specifier": "./actual",
+      },
+    ]
+  `)
+})
 
 test('hoists mock, unmock, hoisted', () => {
   expect(

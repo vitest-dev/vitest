@@ -1,9 +1,9 @@
-import type { StaticMockCall } from '@vitest/mocker/node'
 import type { DevEnvironment, EnvironmentModuleNode, FetchResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { OTELCarrier } from '../../utils/traces'
+import type { StaticMockedModules } from '../environments/staticMocks'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { isBuiltin, toBuiltin } from '../../utils/modules'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
+import { getStaticMocks, resolveStaticMocks } from '../environments/staticMocks'
 import { handleRollupError } from '../environments/transformService'
 
 interface MethodsOptions {
@@ -172,39 +173,25 @@ export function createMethodsRPC(
       const environment = getEnvironment(environmentName)
       const moduleGraph = environment.moduleGraph
 
-      function getStaticMocks(node: EnvironmentModuleNode): StaticMockCall[] | null | undefined {
-        return (
-          node.transformResult?.__vitestStaticMocks ??
-          environment.pluginContainer.getModuleInfo(node.id!)?.meta?.vitestStaticMocks
-        )
+      function getNodeMocks(node: EnvironmentModuleNode) {
+        return getStaticMocks(environment, node.id!, node.transformResult)
       }
 
-      // modules the root replaces with an inline factory are never requested
-      async function resolveMockedIds(root: EnvironmentModuleNode): Promise<Set<string>> {
-        const ids = new Set<string>()
-        const mocks = getStaticMocks(root)?.filter(
-          (mock) => mock.method === 'mock' && mock.hasFactory && !mock.factoryLoadsOriginal,
-        )
-        if (mocks?.length) {
-          await Promise.all(
-            mocks.map(async (mock) => {
-              const resolved = await environment.pluginContainer
-                .resolveId(mock.specifier, root.id ?? undefined)
-                .catch(() => null)
-              if (resolved) {
-                ids.add(resolved.id)
-              }
-            }),
-          )
+      const resolvedMocks = new Map<string, Promise<StaticMockedModules>>()
+      function resolveNodeMocks(node: EnvironmentModuleNode): Promise<StaticMockedModules> {
+        let mocks = resolvedMocks.get(node.id!)
+        if (!mocks) {
+          mocks = resolveStaticMocks(environment, project.config, node.id!, getNodeMocks(node))
+          resolvedMocks.set(node.id!, mocks)
         }
-        return ids
+        return mocks
       }
 
       // `import()` targets load on demand; a hoisted file's imports are all
       // rewritten to `import()`, so none of them count
       function getDynamicOnlyIds(node: EnvironmentModuleNode): Set<string> | undefined {
         const result = node.transformResult
-        if (!result?.dynamicDeps?.length || getStaticMocks(node)) {
+        if (!result?.dynamicDeps?.length || getNodeMocks(node)) {
           return undefined
         }
         const staticDeps = new Set(result.deps)
@@ -266,33 +253,48 @@ export function createMethodsRPC(
         }
       }
 
-      async function walkRoot(root: EnvironmentModuleNode): Promise<void> {
-        const skip = await resolveMockedIds(root)
-        skip.add(root.id!)
-        await walkNode(root, skip)
+      async function walkRoot(root: EnvironmentModuleNode, setupMocks: Set<string>): Promise<void> {
+        const { replaced, redirects } = await resolveNodeMocks(root)
+        const skip = new Set([...setupMocks, ...replaced, root.id!])
+        await Promise.all([
+          walkNode(root, skip),
+          ...redirects.map(async (redirect) => {
+            const loaded = await load(redirect, root.id ?? undefined)
+            if (loaded && !skip.has(loaded.id!)) {
+              skip.add(loaded.id!)
+              await walkNode(loaded, skip)
+            }
+          }),
+        ])
       }
 
-      async function loadRoot(url: string): Promise<void> {
-        const root = await load(url, undefined)
-        if (root) {
-          await walkRoot(root)
+      async function loadRoots(file: string): Promise<EnvironmentModuleNode[]> {
+        const nodes = moduleGraph.getModulesByFile(file)
+        if (nodes?.size) {
+          return Promise.all(
+            Array.from(nodes, async (node) =>
+              node.transformResult ? node : load(node.url, undefined),
+            ),
+          ).then((roots) => roots.filter((root) => root != null))
         }
+        const root = await load(file, undefined)
+        return root ? [root] : []
       }
 
-      await Promise.all(
-        [...files, ...project.config.setupFiles].map(async (file) => {
-          const nodes = moduleGraph.getModulesByFile(file)
-          if (nodes?.size) {
-            await Promise.all(
-              Array.from(nodes, (node) =>
-                node.transformResult ? walkRoot(node) : loadRoot(node.url),
-              ),
-            )
-          } else {
-            await loadRoot(file)
-          }
+      const setupRoots = await Promise.all(project.config.setupFiles.map(loadRoots))
+      // mocks from setup files apply to every test file of the project
+      const setupMocks = new Set<string>()
+      for (const root of setupRoots.flat()) {
+        ;(await resolveNodeMocks(root)).replaced.forEach((id) => setupMocks.add(id))
+      }
+
+      await Promise.all([
+        ...setupRoots.flat().map((root) => walkRoot(root, new Set())),
+        ...files.map(async (file) => {
+          const roots = await loadRoots(file)
+          await Promise.all(roots.map((root) => walkRoot(root, setupMocks)))
         }),
-      )
+      ])
     },
     async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]

@@ -4,6 +4,11 @@ import { expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { runInlineTests, useFS } from '#test-utils'
 
+const testFile = `
+  import { test } from 'vitest'
+  test('basic', () => {})
+`
+
 function affectedSummary(stdout: string) {
   return stdout.split('\n').find((line) => line.includes('Affected'))
 }
@@ -127,9 +132,84 @@ test('custom vcsProvider that returns no files runs no tests', async () => {
     },
   )
 
-  expect(stdout).toContain(`No test files found, exiting with code 0`)
+  expect(noTestsMessage(stdout)).toMatchInlineSnapshot(
+    `"No changed files found, exiting with code 0"`,
+  )
   expect(testTree()).toMatchInlineSnapshot('{}')
 })
+
+test('changed files that no test imports are reported as not affecting any test', async () => {
+  const { stdout, stderr, exitCode } = await runInlineTests(
+    {
+      'vitest.config.js': vcsConfig(['src/unused.js']),
+      'src/unused.js': 'export {}',
+      'a.test.js': testFile,
+      'b.test.js': testFile,
+    },
+    { changed: true },
+  )
+
+  expect(stderr).toBe('')
+  expect(exitCode).toBe(0)
+  expect(noTestsMessage(stdout)).toMatchInlineSnapshot(
+    `"No affected test files found, exiting with code 0"`,
+  )
+})
+
+test('a related file that no test imports fails without passWithNoTests', async () => {
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'src/unused.js': 'export {}',
+      'basic.test.js': testFile,
+    },
+    { related: ['src/unused.js'] },
+  )
+
+  expect(exitCode).toBe(1)
+  expect(noTestsMessage(stderr)).toMatchInlineSnapshot(
+    `"No affected test files found, exiting with code 1"`,
+  )
+})
+
+test('a filter that matches no test files is reported even with changed files', async () => {
+  const { stderr, exitCode } = await runInlineTests(
+    {
+      'vitest.config.js': vcsConfig([]),
+      'basic.test.js': testFile,
+    },
+    { changed: true, passWithNoTests: false, $cliFilters: ['does-not-exist'] },
+  )
+
+  expect(exitCode).toBe(1)
+  expect(noTestsMessage(stderr)).toMatchInlineSnapshot(`
+    "No test files found, exiting with code 1
+    filter: does-not-exist"
+  `)
+})
+
+function vcsConfig(changed: string[]) {
+  return `
+    import { resolve } from 'node:path'
+    export default {
+      test: {
+        experimental: {
+          vcsProvider: {
+            async findChangedFiles({ root }) {
+              return ${JSON.stringify(changed)}.map((file) => resolve(root, file))
+            },
+          },
+        },
+      },
+    }
+  `
+}
+
+function noTestsMessage(output: string) {
+  return output
+    .split('\n')
+    .filter((line) => /No .* found|filter:/.test(line))
+    .join('\n')
+}
 
 test('custom vcsProvider that returns all files runs all tests', async () => {
   const { testTree, stderr } = await runInlineTests(

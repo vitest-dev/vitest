@@ -351,14 +351,17 @@ export class TestProject {
       return true
     }
     const relativeId = relative(this.config.dir || this.config.root, moduleId)
-    if (pm.isMatch(relativeId, this.config.exclude)) {
+    if (pm.isMatch(relativeId, this.config.exclude, { dot: true })) {
       return false
     }
-    if (pm.isMatch(relativeId, this.config.include)) {
+    if (pm.isMatch(relativeId, this.config.include, { dot: true })) {
       this.markTestFile(moduleId)
       return true
     }
-    if (this.config.includeSource?.length && pm.isMatch(relativeId, this.config.includeSource)) {
+    if (
+      this.config.includeSource?.length &&
+      pm.isMatch(relativeId, this.config.includeSource, { dot: true })
+    ) {
       const code = source?.() || readFileSync(moduleId, 'utf-8')
       if (isInSourceTestCode(code)) {
         this.markTestFile(moduleId)
