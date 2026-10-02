@@ -10,7 +10,7 @@ import {
 } from '~/composables/explorer/state'
 import { getSortedRootTasks, isFileNode, isParentNode } from '~/composables/explorer/utils'
 
-export interface FilterNodeContext {
+interface FilterNodeContext {
   nodes: ReadonlyMap<string, UITaskTreeNode>
   tasks: ReadonlyMap<string, Task>
   search: SearchMatcher
