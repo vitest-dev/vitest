@@ -1,0 +1,23 @@
+.github/workflows/ai-policy.yml
+  s_266879a5fbc1a6::t_8c20e4068d52cf 1-8,12,20,35,38-39,53,88-115
+.github/workflows/pr-redirect-all.yml
+  s_266879a5fbc1a6::t_1672b17ef12b05 3
+CONTRIBUTING.md
+  s_266879a5fbc1a6::t_9a872697e354e2 248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0e9ebb2658bb06a6b193165ac27e30e8d27ecfa8",
+  "prompts": {},
+  "sessions": {
+    "s_266879a5fbc1a6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f03c31b27ffeDSD4MFWiDfbxX1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
