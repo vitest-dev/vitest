@@ -740,22 +740,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<timeout>',
   },
   cache: {
-    description: 'Enable cache',
+    description:
+      'Store the results of test runs to run failed and longer test files first (default: `true`)',
     argument: '', // allow only boolean
-    subcommands: {
-      dir: null,
-    },
-    default: true,
-    // cache can only be "false" or an object
-    transform(cache) {
-      if (typeof cache !== 'boolean' && cache) {
-        throw new Error('--cache.dir is deprecated')
-      }
-      if (cache) {
-        return {}
-      }
-      return cache
-    },
+    subcommands: null,
   },
   maxConcurrency: {
     description:

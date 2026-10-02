@@ -107,8 +107,6 @@ export class VitestWatcher {
     if (this.vitest.state.filesMap.has(id)) {
       this.vitest.projects.forEach((project) => project._removeCachedTestFile(id))
       this.vitest.state.filesMap.delete(id)
-      this.vitest.cache.results.removeFromCache(id)
-      this.vitest.cache.stats.removeStats(id)
       this.changedTests.delete(id)
       this.vitest.report('onTestRemoved', id)
     }

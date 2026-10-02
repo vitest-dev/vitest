@@ -6,6 +6,7 @@ export const version: string = Vitest.version
 export { isValidApiRequest } from '../api/check'
 export { escapeTestName } from '../node/ast-collect'
 export type { CacheKeyIdGenerator, CacheKeyIdGeneratorContext } from '../node/cache/fsModuleCache'
+export type { CachedTestFileResult } from '../node/cache/results'
 export { createCLI, parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export type { CliOptions } from '../node/cli/cli-api'

@@ -1,33 +1,83 @@
-import type { Logger } from '../logger'
-import type { SuiteResultCache } from './results'
-import { slash } from '@vitest/utils/helpers'
+import type { Vitest } from '../core'
+import type { TestSpecification } from '../test-specification'
+import type { CachedTestFileResult } from './results'
+import { statSync } from 'node:fs'
 import { resolve } from 'pathe'
-import { hash } from '../hash'
-import { FilesStatsCache } from './files'
+import { FileSystemModuleCache } from './fsModuleCache'
 import { ResultsCache } from './results'
 
 export class VitestCache {
-  results: ResultsCache
-  stats: FilesStatsCache = new FilesStatsCache()
+  /** @internal */
+  _results: ResultsCache
+  /** @internal */
+  _modules: FileSystemModuleCache
 
-  constructor(logger: Logger) {
-    this.results = new ResultsCache(logger)
+  private fileStats = new Map<string, { size: number } | undefined>()
+  private warnedMethods = new Set<string>()
+
+  /** @internal */
+  constructor(private vitest: Vitest) {
+    this._results = new ResultsCache(vitest)
+    this._modules = new FileSystemModuleCache(vitest)
   }
 
-  getFileTestResults(key: string): SuiteResultCache | undefined {
-    return this.results.getResults(key)
+  /**
+   * Returns the result of the test file from the previous test runs.
+   */
+  getTestSpecificationResult(specification: TestSpecification): CachedTestFileResult | undefined {
+    return this._results.get(specification)
   }
 
-  getFileStats(key: string):
-    | {
-        size: number
+  /**
+   * @deprecated Use `getTestSpecificationResult(specification)` instead.
+   */
+  getFileTestResults(key: string): CachedTestFileResult | undefined {
+    this.deprecate('getFileTestResults', 'Use "getTestSpecificationResult(specification)" instead.')
+    return this._results.getByLegacyKey(key)
+  }
+
+  /**
+   * @deprecated Vitest does not cache file sizes anymore. Read the size from the file system instead.
+   */
+  getFileStats(key: string): { size: number } | undefined {
+    this.deprecate('getFileStats', 'Read the size from the file system instead.')
+    if (!this.fileStats.has(key)) {
+      this.fileStats.set(key, this.readFileStats(key))
+    }
+    return this.fileStats.get(key)
+  }
+
+  /** @internal */
+  async _load(): Promise<void> {
+    await Promise.all([this._results.read(), this._modules.ensureCacheIntegrity()])
+  }
+
+  /** @internal */
+  async _clear(): Promise<void> {
+    await this._results.clear()
+    await this._modules.clearCache()
+  }
+
+  private readFileStats(key: string): { size: number } | undefined {
+    for (const project of this.vitest.projects) {
+      const prefix = `${project.name}:`
+      if (!key.startsWith(prefix)) {
+        continue
       }
-    | undefined {
-    return this.stats.getStats(key)
+      try {
+        const file = resolve(this.vitest.config.root, key.slice(prefix.length))
+        const stats = statSync(file, { throwIfNoEntry: false })
+        if (stats) {
+          return { size: stats.size }
+        }
+      } catch {}
+    }
   }
 
-  static resolveCacheDir(root: string, dir?: string, projectName?: string): string {
-    const baseDir = slash(dir || 'node_modules/.vite')
-    return resolve(root, baseDir, 'vitest', hash('sha1', projectName || '', 'hex'))
+  private deprecate(method: string, message: string): void {
+    if (!this.warnedMethods.has(method)) {
+      this.warnedMethods.add(method)
+      this.vitest.logger.deprecate(`"vitest.cache.${method}" is deprecated. ${message}`)
+    }
   }
 }
