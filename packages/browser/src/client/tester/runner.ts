@@ -32,6 +32,7 @@ import { getTestName } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getOrchestratorState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
+import { createScreenshotFileName } from './screenshotFileName'
 import { recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
@@ -199,7 +200,7 @@ function createBrowserRunner(
               this.config.attachmentsDir,
               'failure-screenshots',
               basename(task.file.filepath),
-              `${task.fullTestName.replace(/\W/g, '-')}.png`,
+              createScreenshotFileName(task.fullTestName, { sanitize: 'nonWord' }),
             ),
           })
           .catch((err) => {

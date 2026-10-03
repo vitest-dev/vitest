@@ -21,6 +21,7 @@ import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { ScreenshotAction } from './action'
+import { createScreenshotFileName } from './screenshotFileName'
 import { isLocator, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
@@ -331,7 +332,9 @@ export const page: BrowserPage = {
     screenshotIds[repeatCount] ??= {}
     screenshotIds[repeatCount][taskName] = number + 1
 
-    const name = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
+    const name =
+      options.path ||
+      createScreenshotFileName(taskName, { sanitize: 'alphanumeric', repeatNumber: number })
 
     return new ScreenshotAction(name, options, async () => {
       const [element, ...mask] = await Promise.all([
