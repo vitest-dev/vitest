@@ -474,6 +474,17 @@ describe('default reporter', async () => {
     )
   })
 
+  // retries of the same failure should only produce one FAIL header.
+  test('does not print duplicate FAIL headers for retries', async () => {
+    const { stderr } = await runVitest({
+      include: ['fixtures/reporters/retry-failure.test.ts'],
+      reporters: [['default', { isTTY: true, summary: false }]],
+      config: false,
+    })
+
+    expect(stderr.match(/FAIL.*retry failure/g)).toHaveLength(1)
+  })
+
   test('merge identical errors', async () => {
     const { stderr } = await runVitest({
       root: 'fixtures/reporters/merge-errors',
