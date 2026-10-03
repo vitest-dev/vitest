@@ -181,10 +181,7 @@ test('bench exposes plain and perProject compositions and prints a table', async
   const headerIdx = lines.findIndex((l) => /^\s*name\s+hz\s+min/.test(l))
   expect(headerIdx, `inline table header not found in stdout:\n${stdout}`).toBeGreaterThanOrEqual(0)
   const [header, ...rows] = lines.slice(headerIdx, headerIdx + 3)
-  const normalized = formatBenchTable([
-    header,
-    ...rows.map((r) => r.replace(/\s+(?:fastest|slowest)\s*$/, '')).sort(),
-  ])
+  const normalized = formatBenchTable([header, ...rows.map((r) => stripBenchSuffix(r)).sort()])
 
   expect(normalized).toMatchInlineSnapshot(`
     "     name        hz  min  max  mean  p75  p99  p995  p999   rme  samples
@@ -200,6 +197,13 @@ test('bench exposes plain and perProject compositions and prints a table', async
 // Rebuilds a benchmark table with every numeric cell replaced by `d+`, padded
 // with spaces so each column keeps its natural alignment (first column
 // left-aligned, numeric columns right-aligned — same rules the reporter uses).
+// `fastest` / `slowest` and the slowdown label `1.04x slower` are timing
+// decorations that only appear on some rows; strip both so row parsing and
+// snapshots stay deterministic.
+function stripBenchSuffix(line: string) {
+  return line.replace(/\s+(?:fastest|slowest)\s*$/, '').replace(/\s+[\d.]+x slower\s*$/, '')
+}
+
 // Column widths come from the normalized content so measurement noise at
 // `time: 0` can't shift them between runs. The negative lookbehind on `\d+`
 // keeps column labels like `p75` / `p995` intact.
@@ -261,10 +265,7 @@ async function runComposition(benchCall: string): Promise<{
   const lines = stdout.split('\n')
   const headerIdx = lines.findIndex((l) => /^\s*name\s+hz\s+min/.test(l))
   expect(headerIdx, `inline table header not found in stdout:\n${stdout}`).toBeGreaterThanOrEqual(0)
-  const inlineTable = formatBenchTable([
-    lines[headerIdx],
-    lines[headerIdx + 1].replace(/\s+(?:fastest|slowest)\s*$/, ''),
-  ])
+  const inlineTable = formatBenchTable([lines[headerIdx], stripBenchSuffix(lines[headerIdx + 1])])
 
   // the cross-project section is a divider + a series of titled sub-tables
   // (each 2 lines: `project …` header + data row). Reformat each sub-table
@@ -278,7 +279,7 @@ async function runComposition(benchCall: string): Promise<{
     for (let i = 0; i < xpLines.length; i++) {
       const line = xpLines[i]
       if (/^\s*project\s+hz\s+min/.test(line) && i + 1 < xpLines.length) {
-        out.push(formatBenchTable([line, xpLines[i + 1].replace(/\s+(?:fastest|slowest)\s*$/, '')]))
+        out.push(formatBenchTable([line, stripBenchSuffix(xpLines[i + 1])]))
         i++
       } else {
         out.push(line)
@@ -353,10 +354,7 @@ test('junit reporter embeds the benchmark table inside <system-out>', async () =
   const tableLines = systemOut!.split('\n').filter((l) => l.trim())
   expect(tableLines).toHaveLength(3)
   const [header, ...rows] = tableLines
-  const formatted = formatBenchTable([
-    header,
-    ...rows.map((r) => r.replace(/\s+(?:fastest|slowest)\s*$/, '')).sort(),
-  ])
+  const formatted = formatBenchTable([header, ...rows.map((r) => stripBenchSuffix(r)).sort()])
 
   expect(formatted).toMatchInlineSnapshot(`
     "name  hz  min  max  mean  p75  p99  p995  p999   rme  samples
@@ -732,10 +730,7 @@ test('`bench.from()` rows render rme and samples columns from the stored data', 
   // Find the row for "stored" and inspect its last two cells.
   const storedRow = lines.slice(headerIdx + 1, headerIdx + 3).find((l) => /^\s*stored\b/.test(l))!
   expect(storedRow, `stored row not found in:\n${stdout}`).toBeDefined()
-  const cells = storedRow
-    .trim()
-    .replace(/\s+(?:fastest|slowest)\s*$/, '')
-    .split(/\s+/)
+  const cells = stripBenchSuffix(storedRow.trim()).split(/\s+/)
   // rme + samples must be real values, not the `-` placeholder
   expect(cells[cells.length - 2]).toBe('±1.23%')
   expect(cells.at(-1)).toBe('7')
@@ -1021,10 +1016,7 @@ test('multi-project run aggregates perProject tasks into a single cross-project 
     `cross-project sub-table header not found in stdout:\n${stdout}`,
   ).toBeGreaterThan(-1)
   const [header, ...rows] = lines.slice(headerIdx, headerIdx + 3)
-  const normalized = formatBenchTable([
-    header,
-    ...rows.map((r) => r.replace(/\s+(?:fastest|slowest)\s*$/, '')).sort(),
-  ])
+  const normalized = formatBenchTable([header, ...rows.map((r) => stripBenchSuffix(r)).sort()])
   expect(normalized).toMatchInlineSnapshot(`
     "   project      hz  min  max  mean  p75  p99  p995  p999   rme  samples
        one (bench)  d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+
