@@ -5,7 +5,10 @@ export interface ConcurrencyLimiter extends ConcurrencyLimiterFn {
   acquire: () => (() => void) | Promise<() => void>
 }
 
-type ConcurrencyLimiterFn = <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T>
+type ConcurrencyLimiterFn = <Args extends unknown[], T>(
+  func: (...args: Args) => PromiseLike<T> | T,
+  ...args: Args
+) => Promise<T>
 
 /**
  * Return a function for running multiple async operations with limited concurrency.
@@ -53,8 +56,7 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
       if (tail) {
         // There are pending tasks, so append to the queue.
         tail = tail[1] = [() => resolve(release)]
-      }
-      else {
+      } else {
         // No other pending tasks, initialize the queue with a new tail and head.
         head = tail = [() => resolve(release)]
       }
@@ -70,8 +72,7 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
         }
         release()
         return Promise.resolve(result)
-      }
-      catch (error) {
+      } catch (error) {
         release()
         return Promise.reject(error)
       }

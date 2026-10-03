@@ -28,7 +28,7 @@ Be aware that only packages in `deps.optimizer?.[mode].include` option are bundl
 This options also inherits your `optimizeDeps` configuration (for web Vitest will extend `optimizeDeps`, for ssr - `ssr.optimizeDeps`). If you redefine `include`/`exclude` option in `deps.optimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
 
 ::: tip
-You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.optimizer?.[mode].force` option.
+You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.optimizer?.[mode].force` option.
 :::
 
 ### deps.optimizer.{mode}.enabled
@@ -38,7 +38,7 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 
 Enable dependency optimization.
 
-## deps.client  {#deps-client}
+## deps.client {#deps-client}
 
 - **Type:** `{ transformAssets?, ... }`
 

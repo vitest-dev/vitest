@@ -10,6 +10,7 @@ outline: deep
 Define values that can be accessed inside your tests using `inject` method.
 
 :::code-group
+
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -21,6 +22,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```ts [api.test.js]
 import { expect, inject, test } from 'vitest'
 
@@ -28,6 +30,7 @@ test('api key is defined', () => {
   expect(inject('API_KEY')).toBe('123')
 })
 ```
+
 :::
 
 ::: warning
@@ -47,4 +50,5 @@ declare module 'vitest' {
 // mark this file as a module so augmentation works correctly
 export {}
 ```
+
 :::

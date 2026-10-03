@@ -2,7 +2,7 @@ import type { IncomingMessage } from 'node:http'
 import type { PluginHarness, Vite } from 'vitest/node'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
-import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import { parseCookie, stringifySetCookie } from 'cookie'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
@@ -14,15 +14,16 @@ export { distClientRoot }
 
 const UI_TOKEN_COOKIE = 'vitest-ui-token'
 const UI_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
-const AUTH_REQUIRED_MESSAGE = 'Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...'
+const AUTH_REQUIRED_MESSAGE =
+  'Vitest UI requires authentication. Open the URL with the token printed in the terminal, e.g. http://localhost:51204/__vitest__/?token=...'
 
 export default (harness: PluginHarness): Vite.Plugin => {
   if (harness.version !== version) {
     harness.logger.warn(
       c.yellow(
-        `Loaded ${c.inverse(c.yellow(` vitest@${harness.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
-        + '\nRunning mixed versions is not supported and may lead into bugs'
-        + '\nUpdate your dependencies and make sure the versions match.',
+        `Loaded ${c.inverse(c.yellow(` vitest@${harness.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.` +
+          '\nRunning mixed versions is not supported and may lead into bugs' +
+          '\nUpdate your dependencies and make sure the versions match.',
       ),
     )
   }
@@ -38,7 +39,9 @@ export default (harness: PluginHarness): Vite.Plugin => {
         const base = uiOptions.uiBase
 
         function serializeTokenCookie(): string {
-          return serializeCookie(UI_TOKEN_COOKIE, ctx.config.api.token, {
+          return stringifySetCookie({
+            name: UI_TOKEN_COOKIE,
+            value: ctx.config.api.token,
             path: base,
             httpOnly: true,
             maxAge: UI_TOKEN_COOKIE_MAX_AGE,
@@ -56,8 +59,7 @@ export default (harness: PluginHarness): Vite.Plugin => {
               Buffer.from(cookieToken),
               Buffer.from(ctx.config.api.token),
             )
-          }
-          catch {
+          } catch {
             return false
           }
         }
@@ -66,7 +68,7 @@ export default (harness: PluginHarness): Vite.Plugin => {
         // Connect matches it exactly like the static handlers below, which it
         // routes case-insensitively and on `.`/`/` boundaries; a pathname
         // comparison here would diverge and be bypassable (e.g. /__vitest__/Coverage).
-        // eslint-disable-next-line prefer-arrow-callback
+        // oxlint-disable-next-line prefer-arrow-callback
         server.middlewares.use(base, function vitestUiAuth(req, res, next) {
           // a valid `?token=` bootstraps the cookie so later cookie-only
           // requests (the coverage iframe and its child assets) stay authorized
@@ -90,10 +92,7 @@ export default (harness: PluginHarness): Vite.Plugin => {
               single: true,
               dev: true,
               setHeaders: (res) => {
-                res.setHeader(
-                  'Cache-Control',
-                  'public,max-age=0,must-revalidate',
-                )
+                res.setHeader('Cache-Control', 'public,max-age=0,must-revalidate')
               },
             }),
           )
@@ -101,7 +100,7 @@ export default (harness: PluginHarness): Vite.Plugin => {
 
         const clientIndexHtml = fs.readFileSync(resolve(distClientRoot, 'index.html'), 'utf-8')
 
-        // eslint-disable-next-line prefer-arrow-callback
+        // oxlint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestAttachment(req, res, next) {
           if (!req.url) {
             return next()
@@ -130,18 +129,16 @@ export default (harness: PluginHarness): Vite.Plugin => {
               fs.createReadStream(fsPath)
                 .pipe(res)
                 .on('close', () => res.end())
-            }
-            catch (err) {
+            } catch (err) {
               next(err)
             }
-          }
-          else {
+          } else {
             next()
           }
         })
 
         // serve index.html with api token
-        // eslint-disable-next-line prefer-arrow-callback
+        // oxlint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
           if (req.url) {
             const url = new URL(req.url, 'http://localhost')

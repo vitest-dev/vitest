@@ -1,10 +1,6 @@
 export const lineSplitRE: RegExp = /\r?\n/
 
-export function positionToOffset(
-  source: string,
-  lineNumber: number,
-  columnNumber: number,
-): number {
+export function positionToOffset(source: string, lineNumber: number, columnNumber: number): number {
   const lines = source.split(lineSplitRE)
   const nl = /\r\n/.test(source) ? 2 : 1
   let start = 0

@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 
 import { expect, it } from 'vitest'
-
 import GlobalsWorker from '../src/web-worker/worker-globals?worker'
 import '@vitest/web-worker'
 
@@ -49,8 +48,7 @@ it('returns globals on self correctly', async () => {
           origin: 'http://localhost:3000',
         })
         resolve()
-      }
-      catch (err) {
+      } catch (err) {
         reject(err)
       }
     }

@@ -1,17 +1,19 @@
 import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { RunVitestConfig } from '#test-utils'
+import type { HTMLReportMetadata } from '../../../../packages/ui/client/composables/client/static.js'
 import type { MergeReport } from '../../../../packages/vitest/src/node/reporters/blob.js'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { gunzipSync } from 'node:zlib'
 import { playwright } from '@vitest/browser-playwright'
-import { stringify } from 'flatted'
+import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
 import { buildTestTree, runVitest, useFS, useTmpFS } from '#test-utils'
-import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph.js'
+import { getSharedModuleGraphByProject } from '../../../../packages/vitest/src/utils/graph.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -34,7 +36,11 @@ test('merge reports', async () => {
     reporters: [['blob', { outputFile: './.vitest/blob/second-run.json' }]],
   })
 
-  const { stdout: reporterDefault, stderr: stderrDefault, exitCode } = await runVitest({
+  const {
+    stdout: reporterDefault,
+    stderr: stderrDefault,
+    exitCode,
+  } = await runVitest({
     root: './fixtures/reporters/merge-reports',
     mergeReports: reportsDir,
     reporters: [['default', { isTTY: false }]],
@@ -44,10 +50,7 @@ test('merge reports', async () => {
 
   const stdoutCheck = trimReporterOutput(reporterDefault)
   const stderrArr = stderrDefault.split('\n')
-  const stderrCheck = [
-    ...stderrArr.slice(4, 19),
-    ...stderrArr.slice(21, -3),
-  ]
+  const stderrCheck = [...stderrArr.slice(4, 19), ...stderrArr.slice(21, -3)]
 
   expect(stderrDefault).toMatch('Failed Tests 2')
 
@@ -125,10 +128,11 @@ test('merge reports', async () => {
   })
 
   const slash = (r: string) => r.replace(/\\/g, '/')
-  const path = (r: string) => slash(r)
-    .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
+  const path = (r: string) => slash(r).replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
 
-  const json = JSON.parse(readFileSync(resolve(ctx!.config.root, '.vitest/json/output.json'), 'utf-8'))
+  const json = JSON.parse(
+    readFileSync(resolve(ctx!.config.root, '.vitest/json/output.json'), 'utf-8'),
+  )
   json.testResults.forEach((result: any) => {
     result.startTime = '<time>'
     result.endTime = '<time>'
@@ -346,10 +350,7 @@ it("repro2", () => {
   expect(result2.exitCode).toBe(0)
 })
 
-test.for([
-  'node',
-  'browser',
-])('module graph and html reporter $0', async (mode) => {
+test.for(['node', 'browser'])('module graph and html reporter $0', async (mode) => {
   const root = resolve('./fixtures/reporters/merge-reports-module-graph')
   const reportsDir = resolve(root, '.vitest/blob')
   rmSync(reportsDir, { force: true, recursive: true })
@@ -374,126 +375,141 @@ test.for([
     return baseConfig
   }
 
+  // run tests and keep the module graph the html reporter would store as the reference
   const result = await runVitest({
     ...baseConfig(),
     reporters: ['blob'],
   })
   expect.assert(result.ctx)
-  const generatedModuleGraphJson = await getSerializedModuleGraph(result.ctx)
+  const generatedModuleGraphJson = getSerializedModuleGraph(result.ctx)
   if (mode === 'browser') {
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
-        "<root>/basic.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/sub/format.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/basic.test.ts": [
-              "<optimized-deps>/vitest.js",
-              "<root>/sub/format.ts",
-              "<root>/util.ts"
-            ]
-          },
-          "externalized": [
-            "<optimized-deps>/vitest.js?v=<hash>"
-          ],
-          "inlined": [
-            "<root>/basic.test.ts",
-            "<root>/sub/format.ts",
-            "<root>/sub/subject.ts",
-            "<root>/util.ts"
-          ]
-        },
-        "<root>/second.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/second.test.ts": [
-              "<optimized-deps>/vitest.js",
-              "<root>/util.ts",
-              "<optimized-deps>/obug.js"
-            ]
-          },
-          "externalized": [
-            "<optimized-deps>/vitest.js?v=<hash>",
-            "<optimized-deps>/obug.js?v=<hash>"
-          ],
-          "inlined": [
-            "<root>/second.test.ts",
-            "<root>/util.ts",
-            "<root>/sub/subject.ts"
-          ]
+        "chromium": {
+          "client": {
+            "modules": {
+              "<root>/basic.test.ts": {
+                "external": false,
+                "imports": [
+                  "<optimized-deps>/vitest.js",
+                  "<root>/sub/format.ts",
+                  "<root>/util.ts"
+                ]
+              },
+              "<optimized-deps>/obug.js": {
+                "external": true,
+                "imports": []
+              },
+              "<optimized-deps>/vitest.js": {
+                "external": true,
+                "imports": []
+              },
+              "<root>/second.test.ts": {
+                "external": false,
+                "imports": [
+                  "<optimized-deps>/vitest.js",
+                  "<root>/util.ts",
+                  "<optimized-deps>/obug.js"
+                ]
+              },
+              "<root>/sub/format.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              },
+              "<root>/sub/subject.ts": {
+                "external": false,
+                "imports": []
+              },
+              "<root>/util.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              }
+            },
+            "rootsByTestFile": {
+              "<root>/basic.test.ts": [
+                "<root>/basic.test.ts"
+              ],
+              "<root>/second.test.ts": [
+                "<root>/second.test.ts"
+              ]
+            }
+          }
         }
       }"
     `)
-  }
-  else {
+  } else {
     expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
       "{
-        "<root>/basic.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/sub/format.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/basic.test.ts": [
-              "<root>/sub/format.ts",
-              "<root>/util.ts"
-            ]
-          },
-          "externalized": [],
-          "inlined": [
-            "<root>/basic.test.ts",
-            "<root>/sub/format.ts",
-            "<root>/sub/subject.ts",
-            "<root>/util.ts"
-          ]
-        },
-        "<root>/second.test.ts": {
-          "graph": {
-            "<root>/sub/subject.ts": [],
-            "<root>/util.ts": [
-              "<root>/sub/subject.ts"
-            ],
-            "<root>/second.test.ts": [
-              "<root>/util.ts",
-              "<node_modules>/obug/dist/node.js"
-            ]
-          },
-          "externalized": [
-            "<node_modules>/obug/dist/node.js"
-          ],
-          "inlined": [
-            "<root>/second.test.ts",
-            "<root>/util.ts",
-            "<root>/sub/subject.ts"
-          ]
+        "": {
+          "ssr": {
+            "modules": {
+              "<node_modules>/obug/dist/ansi.js": {
+                "external": true,
+                "imports": []
+              },
+              "<root>/basic.test.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/format.ts",
+                  "<root>/util.ts"
+                ]
+              },
+              "<root>/second.test.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/util.ts",
+                  "<node_modules>/obug/dist/ansi.js"
+                ]
+              },
+              "<root>/sub/format.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              },
+              "<root>/sub/subject.ts": {
+                "external": false,
+                "imports": []
+              },
+              "<root>/util.ts": {
+                "external": false,
+                "imports": [
+                  "<root>/sub/subject.ts"
+                ]
+              }
+            },
+            "rootsByTestFile": {
+              "<root>/basic.test.ts": [
+                "<root>/basic.test.ts"
+              ],
+              "<root>/second.test.ts": [
+                "<root>/second.test.ts"
+              ]
+            }
+          }
         }
       }"
     `)
   }
 
+  // merging the blob restores the same module graph
   const result2 = await runVitest({
     ...baseConfig(),
     mergeReports: reportsDir,
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
   expect.assert(result2.ctx)
-  const restoredModuleGraphJson = await getSerializedModuleGraph(result2.ctx)
+  const restoredModuleGraphJson = getSerializedModuleGraph(result2.ctx)
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
+  // the html report generated from the blob stores the same module graph
   const result3 = await runVitest({
     ...baseConfig(),
-    mergeReports: resolve(root, '.vitest/blob'),
+    mergeReports: reportsDir,
     reporters: ['html'],
   })
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
@@ -502,25 +518,28 @@ test.for([
            You can run npx vite preview --outDir .vitest to see the test results.
     "
   `)
+  expect.assert(result3.ctx)
+  expect(getHtmlReportModuleGraph(result3.ctx)).toBe(generatedModuleGraphJson)
 })
 
-async function getSerializedModuleGraph(ctx: Vitest) {
-  const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
-  const moduleGraphs = Object.fromEntries(
-    await Promise.all(
-      files.map(async (file) => {
-        const projectName = file.projectName || ''
-        const graph = await getModuleGraph(
-          ctx,
-          projectName,
-          file.filepath,
-          file.viteEnvironment,
-        )
-        return [file.filepath, graph] as const
-      }),
-    ),
+function getSerializedModuleGraph(ctx: Vitest) {
+  return normalizeModuleGraphJson(ctx, getSharedModuleGraphByProject(ctx.state.getTestModules()))
+}
+
+function getHtmlReportModuleGraph(ctx: Vitest) {
+  const metadata: HTMLReportMetadata = parse(
+    gunzipSync(readFileSync(resolve(ctx.config.root, '.vitest/ui/html.meta.json.gz'))).toString(),
   )
-  return JSON.stringify(moduleGraphs, null, 2)
+  return normalizeModuleGraphJson(ctx, metadata.moduleGraph)
+}
+
+function normalizeModuleGraphJson(ctx: Vitest, moduleGraph: object) {
+  // sort object keys since their order follows test file order, which isn't stable
+  const sortKeys = (_key: string, value: unknown) =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+      : value
+  return JSON.stringify(moduleGraph, sortKeys, 2)
     .replaceAll(ctx.config.root, '<root>')
     .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')
     .replace(/<node_modules>\/\.vite\/vitest\/[a-f0-9]{40}\/deps\/([^"?]+)/g, '<optimized-deps>/$1')
@@ -536,8 +555,11 @@ function trimReporterOutput(report: string) {
     .split('\n')
 
   // Trim start and end, capture just rendered tree
-  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
-  rows.splice(rows.findIndex(row => row.includes('Start at')), 1)
+  rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  rows.splice(
+    rows.findIndex((row) => row.includes('Start at')),
+    1,
+  )
 
   return rows.join('\n').trim()
 }
@@ -586,11 +608,14 @@ test("macos only", () => {})
 `,
   })
   process.env.TEST_LABEL_ENV = 'linux'
-  const result1 = await runVitest({
-    root,
-    globals: true,
-    reporters: [['blob', { label: 'linux' }]],
-  }, ['first', 'second'])
+  const result1 = await runVitest(
+    {
+      root,
+      globals: true,
+      reporters: [['blob', { label: 'linux' }]],
+    },
+    ['first', 'second'],
+  )
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
   expect(result1.errorTree()).toMatchInlineSnapshot(`
     {
@@ -608,15 +633,18 @@ test("macos only", () => {})
   `)
   process.env.TEST_LABEL_ENV = 'macos'
   process.env.VITEST_BLOB_LABEL = 'macos' // test VITEST_BLOB_LABEL
-  const result2 = await runVitest({
-    root,
-    globals: true,
-    reporters: [
-      'blob',
-      // test the original run's reporter doesn't include label
-      'verbose',
-    ],
-  }, ['first', 'third'])
+  const result2 = await runVitest(
+    {
+      root,
+      globals: true,
+      reporters: [
+        'blob',
+        // test the original run's reporter doesn't include label
+        'verbose',
+      ],
+    },
+    ['first', 'third'],
+  )
   delete process.env.VITEST_BLOB_LABEL
   expect(trimReporterOutput(result2.stdout)).toMatchInlineSnapshot(`
     "✓ first.test.ts > always good <time>
@@ -1016,7 +1044,7 @@ test("top-test", () => {})
   `)
   const tree = buildTestTree(
     result.results,
-    t => ({ '@META': t.meta(), 'state': t.result().state }),
+    (t) => ({ '@META': t.meta(), state: t.result().state }),
     (suite, children) => ({ '@META': suite.meta(), ...children }),
     (file, children) => ({ '@META': file.meta(), ...children }),
   )

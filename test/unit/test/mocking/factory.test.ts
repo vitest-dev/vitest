@@ -5,14 +5,13 @@ import logger from '../../src/mocks/log'
 import * as moduleA from '../../src/mocks/moduleA'
 import * as moduleB from '../../src/mocks/moduleB'
 
-vi
-  .mock('../../src/mocks/example', () => ({
-    mocked: true,
-    then: 'a then export',
-    ok: undefined,
-    square: (a: any, b: any) => a + b,
-    asyncSquare: async (a: any, b: any) => Promise.resolve(a + b),
-  }))
+vi.mock('../../src/mocks/example', () => ({
+  mocked: true,
+  then: 'a then export',
+  ok: undefined,
+  square: (a: any, b: any) => a + b,
+  asyncSquare: async (a: any, b: any) => Promise.resolve(a + b),
+}))
 
 // doesn't think comments are mocks
 // vi.mock('../../src/mocks/example', () => ({
@@ -59,15 +58,27 @@ vi.mock('../../src/mocks/default.ts', () => null)
 
 describe('mocking with factory', () => {
   test('missing exports on mock', () => {
-    expect(() => example.default).toThrow('[vitest] No "default" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.boolean).toThrow('[vitest] No "boolean" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.object).toThrow('[vitest] No "object" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.array).toThrow('[vitest] No "array" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.someClasses).toThrow('[vitest] No "someClasses" export is defined on the "../../src/mocks/example" mock')
+    expect(() => example.default).toThrow(
+      '[vitest] No "default" export is defined on the "../../src/mocks/example" mock',
+    )
+    expect(() => example.boolean).toThrow(
+      '[vitest] No "boolean" export is defined on the "../../src/mocks/example" mock',
+    )
+    expect(() => example.object).toThrow(
+      '[vitest] No "object" export is defined on the "../../src/mocks/example" mock',
+    )
+    expect(() => example.array).toThrow(
+      '[vitest] No "array" export is defined on the "../../src/mocks/example" mock',
+    )
+    expect(() => example.someClasses).toThrow(
+      '[vitest] No "someClasses" export is defined on the "../../src/mocks/example" mock',
+    )
   })
 
   it('non-object return on factory gives error', async () => {
-    await expect(() => import('../../src/mocks/default.js').then(m => m.default)).rejects.toThrow('[vitest] vi.mock("../../src/mocks/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+    await expect(() => import('../../src/mocks/default.js').then((m) => m.default)).rejects.toThrow(
+      '[vitest] vi.mock("../../src/mocks/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?',
+    )
   })
 
   test('defined exports on mock', async () => {

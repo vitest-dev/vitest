@@ -1,7 +1,7 @@
 import type { UITaskTreeNode } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
-import { isFileNode, isParentNode } from '~/composables/explorer/utils'
+import { isFileNode, isParentNode, replaceSubtreeEntries } from '~/composables/explorer/utils'
 
 /**
  * Collapse all nodes: all children collapsed.
@@ -24,9 +24,10 @@ export function runCollapseNode(id: string) {
     return
   }
 
+  node.expanded = false
   const treeItems = new Set(openedTreeItems.value)
   treeItems.delete(node.id)
-  const entries = [...collectCollapseNode(node)]
+  const entries = replaceSubtreeEntries(uiEntries.value, node, [node])
   openedTreeItems.value = Array.from(treeItems)
   // Keep expandAll state as it is: collapsing individual shouldn't prevent collapsing all the nodes ("collapse all" button)
   // There is a watcher on composable search.ts to reset to undefined expandAll if there are no opened items
@@ -52,7 +53,7 @@ export function runCollapseNode(id: string) {
 export function runCollapseAllTask() {
   // collapse all nodes
   collapseAllNodes(explorerTree.root.tasks)
-  const entries = [...uiEntries.value.filter(isFileNode)]
+  const entries = uiEntries.value.filter(isFileNode)
   collapseAllNodes(entries)
   // collapse all nodes
   openedTreeItems.value = []
@@ -66,41 +67,5 @@ function collapseAllNodes(nodes: UITaskTreeNode[]) {
       node.expanded = false
       collapseAllNodes(node.tasks)
     }
-  }
-}
-
-function* collectChildNodes(node: UITaskTreeNode, itself: boolean): Generator<string> {
-  if (itself) {
-    yield node.id
-  }
-
-  if (isParentNode(node)) {
-    for (let i = 0; i < node.tasks.length; i++) {
-      yield* collectChildNodes(node.tasks[i], true)
-    }
-  }
-}
-
-function* collectCollapseNode(node: UITaskTreeNode) {
-  const id = node.id
-  // collect children to remove from the list
-  const childNodes = new Set<string>(collectChildNodes(node, false))
-  for (let i = 0; i < uiEntries.value.length; i++) {
-    const child = uiEntries.value[i]
-    // collapse current node and return it
-    if (child.id === id) {
-      child.expanded = false
-      yield child
-      continue
-    }
-
-    // remove children from the list
-    if (childNodes.has(child.id)) {
-      childNodes.delete(child.id)
-      continue
-    }
-
-    // return the node
-    yield child
   }
 }

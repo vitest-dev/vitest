@@ -10,7 +10,7 @@ describe('chainable', () => {
     expect(chain()).toEqual({})
     expect(chain.a()).toEqual({ a: true })
 
-    // eslint-disable-next-line ts/no-unused-expressions
+    // oxlint-disable-next-line typescript/no-unused-expressions
     chain.a
 
     expect(chain()).toEqual({})

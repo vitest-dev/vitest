@@ -121,6 +121,7 @@ vi.mocked(namedExport).mockReturnValue(100)
 expect(namedExport()).toBe(100)
 expect(namedExport).toBe(mocks.namedExport)
 ```
+
 :::
 
 ::: warning
@@ -135,6 +136,7 @@ vi.mock('./path/to/module.js', () => {
   }
 })
 ```
+
 :::
 
 If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [`deps.moduleDirectories`](/config/deps#deps-moduledirectories) config option.
@@ -198,6 +200,7 @@ vi.doMock('./increment.js') // this will be called _after_ the import statement
 
 import { increment } from './increment.js'
 ```
+
 :::
 
 ```ts [increment.js]
@@ -247,6 +250,7 @@ it('uses the normal version of my-module again', () => {
   const myModule = await import('my-module') // not mocked
 })
 ```
+
 :::
 
 ### vi.mocked
@@ -491,7 +495,7 @@ Instances keep the prototype chain of the implementation class, so its prototype
 function mockObject<T>(value: T, options?: MockOptions): MaybeMockedDeep<T>
 ```
 
-Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
+Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking#automocking-algorithm) for the detail.
 
 ```ts
 const original = {
@@ -632,6 +636,7 @@ it('calls console.log', () => {
 })
 // console.log is restored here
 ```
+
 :::
 
 ::: tip
@@ -650,6 +655,7 @@ console.log(cart.getApples()) // 42
 spy.mockReturnValue(10)
 console.log(cart.getApples()) // still 42!
 ```
+
 :::
 
 ::: tip
@@ -706,6 +712,7 @@ You can also change the value by simply assigning it, but you won't be able to u
 ```ts
 import.meta.env.MODE = 'test'
 ```
+
 :::
 
 ### vi.unstubAllEnvs {#vi-unstuballenvs}
@@ -771,6 +778,7 @@ globalThis.innerWidth = 100
 // if you are using jsdom or happy-dom
 window.innerWidth = 100
 ```
+
 :::
 
 ### vi.unstubAllGlobals {#vi-unstuballglobals}
@@ -820,7 +828,7 @@ function when(spy: Mock, options?: WhenOptions): When
 
 Defines per-argument behaviors on a spy, replacing its implementation for the duration of the `when` chain.
 
-Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with deep equality and support asymmetric matchers such as `expect.any()`.
+Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with the same deep equality as [`toEqual`](/api/expect#toequal) and support asymmetric matchers such as `expect.any()`.
 
 ```ts
 const spy = vi.fn()
@@ -837,16 +845,16 @@ expect(spy(2)).toBe('two')
 
 Available `then*` methods:
 
-| Method | Description |
-|--------|-------------|
-| `thenReturn(value, options?)` | Returns `value`. |
-| `thenReturnOnce(value)` | Returns `value` once, then falls back. |
-| `thenThrow(error, options?)` | Throws `error`. |
-| `thenThrowOnce(error)` | Throws `error` once, then falls back. |
+| Method                         | Description                                |
+| ------------------------------ | ------------------------------------------ |
+| `thenReturn(value, options?)`  | Returns `value`.                           |
+| `thenReturnOnce(value)`        | Returns `value` once, then falls back.     |
+| `thenThrow(error, options?)`   | Throws `error`.                            |
+| `thenThrowOnce(error)`         | Throws `error` once, then falls back.      |
 | `thenResolve(value, options?)` | Returns a resolved `Promise` with `value`. |
-| `thenResolveOnce(value)` | Resolves once, then falls back. |
-| `thenReject(error, options?)` | Returns a rejected `Promise` with `error`. |
-| `thenRejectOnce(error)` | Rejects once, then falls back. |
+| `thenResolveOnce(value)`       | Resolves once, then falls back.            |
+| `thenReject(error, options?)`  | Returns a rejected `Promise` with `error`. |
+| `thenRejectOnce(error)`        | Rejects once, then falls back.             |
 
 The optional `times` option limits how many times a behavior applies before being exhausted. Behaviors registered for the same arguments are consumed last-in-first-out: the most recently registered behavior is tried first, and once exhausted, earlier ones act as fallbacks.
 
@@ -914,6 +922,7 @@ const spy = vi.fn(() => 'original')
 
 expect(spy('hello')).toBe('original')
 ```
+
 :::
 
 ### vi.isWhenChain <Version>5.0.0</Version> {#vi-iswhenchain}
@@ -1505,7 +1514,6 @@ test('example', () => {
 
 Example output:
 
-<!-- eslint-skip -->
 ```js
 FAIL  example.test.ts > example
 AssertionError: expected 'left' to deeply equal 'right'

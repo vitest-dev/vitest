@@ -144,6 +144,7 @@ expect(flakyValue).toMatchSnapshot()
 
 - `.resolves` and `.rejects` are not supported. `expect.poll` already awaits the condition if it's asynchronous.
 - `toThrow` and its aliases are not supported because the `expect.poll` condition is always resolved before the matcher gets the value
+
 :::
 
 ## not
@@ -386,7 +387,7 @@ test('getApplesCount has some unusual side effects...', () => {
 
 - **Type:** `(sample: Array<any> | Set<any>) => any`
 
-`toBeOneOf` asserts if a value matches any of the values in the provided array or set.
+`toBeOneOf` asserts if a value matches any of the values in the provided array or set. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 ::: warning EXPERIMENTAL
 Providing a `Set` is an experimental feature and may change in a future release.
@@ -447,6 +448,7 @@ test('toBeTypeOf cannot check for null or array', () => {
   expect([]).toBeTypeOf('object')
 })
 ```
+
 :::
 
 ## toBeInstanceOf
@@ -576,9 +578,9 @@ To test if something was thrown, use [`toThrow`](#tothrow) assertion.
 
 Differences from [`.toEqual`](#toequal):
 
--  Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
--  Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
--  Object types are checked to be equal. e.g. A class instance with fields `a` and `b` will not equal a literal object with fields `a` and `b`.
+- Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
+- Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
+- Object types are checked to be equal. e.g. A class instance with fields `a` and `b` will not equal a literal object with fields `a` and `b`.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -800,12 +802,14 @@ You can provide an optional argument to test that a specific error is thrown:
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
 
 This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
+
 ```ts
 test('expect rejects toThrow', async ({ expect }) => {
   const promise = Promise.reject(new Error('Test'))
   await expect(promise).rejects.toThrow()
 })
 ```
+
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
@@ -852,6 +856,7 @@ test('throws on pineapples', async () => {
   await expect(() => getAsyncFruitStock()).rejects.toThrow('empty')
 })
 ```
+
 :::
 
 :::tip
@@ -863,6 +868,7 @@ test('throws non-Error values', () => {
   expect(() => { throw { message: 'error' } }).toThrow({ message: 'error' })
 })
 ```
+
 :::
 
 :::warning Unhandled Rejections with Fake Timers
@@ -909,6 +915,7 @@ test('rejects', async () => {
   await assertion
 })
 ```
+
 :::
 
 ## toMatchSnapshot
@@ -920,7 +927,7 @@ This ensures that a value matches the most recent snapshot.
 You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
 
 :::tip
-  When a snapshot mismatches and causes the test to fail, if the mismatch is expected, you can press `u` key to update the snapshot once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
+When a snapshot mismatches and causes the test to fail, if the mismatch is expected, you can press `u` key to update the snapshot once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
 :::
 
 ```ts
@@ -1291,7 +1298,7 @@ test('spy function returns a value two times', () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a value with certain parameters at least once. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a certain value at least once. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -1309,7 +1316,7 @@ test('spy function returns a product', () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a certain value when it was last invoked. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a certain value when it was last invoked. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -1328,7 +1335,7 @@ test('spy function returns bananas on a last call', () => {
 
 - **Type:** `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a certain value on a certain call. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 The count starts at 1. So, to check the second entry, you would write `.toHaveNthReturnedWith(2, ...)`.
 
@@ -1396,7 +1403,7 @@ test('spy function resolved a value two times', async () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value at least once. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value at least once. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
@@ -1416,7 +1423,7 @@ test('spy function resolved a product', async () => {
 
 - **Type:** `(returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value when it was last invoked. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value when it was last invoked. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
@@ -1437,7 +1444,7 @@ test('spy function resolves bananas on a last call', async () => {
 
 - **Type:** `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`. Values are compared with the same deep equality as [`toEqual`](#toequal).
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
@@ -1933,6 +1940,7 @@ test('all assertions are called', async () => {
   await doAsync(callback1, callback2)
 })
 ```
+
 ::: warning
 When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::

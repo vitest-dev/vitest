@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { estimateModuleEvaluationSaving, getImportDiagnostics, getTransformDiagnostics } from '../../../packages/vitest/src/node/reporters/diagnostics'
+import {
+  estimateModuleEvaluationSaving,
+  getImportDiagnostics,
+  getTransformDiagnostics,
+} from '../../../packages/vitest/src/node/reporters/diagnostics'
 
 // the barrel-file shape: 20 test files that each re-evaluate the same
 // 800-module graph to use a few symbols from it
@@ -59,21 +63,29 @@ describe('getImportDiagnostics', () => {
 
   it('fires exactly at the minimum duplication', () => {
     // 10 fetches per module on 8 lanes: duplication (10 - 8) / 10 = 0.2
-    expect(getImportDiagnostics([{
-      ...barrelProject,
-      fetchCounts: Array.from({ length: 800 }, () => 10),
-    }])).toHaveLength(1)
+    expect(
+      getImportDiagnostics([
+        {
+          ...barrelProject,
+          fetchCounts: Array.from({ length: 800 }, () => 10),
+        },
+      ]),
+    ).toHaveLength(1)
   })
 
   it('fires exactly at the minimum import time and share', () => {
     // 2s of imports over 8s of tracked time is exactly the 2s / 25% minimum;
     // saving on 4 lanes: 2s * 0.8 / 4 = 400ms, above the 250ms floor
-    expect(getImportDiagnostics([{
-      ...barrelProject,
-      importTime: 2_000,
-      trackedTime: 8_000,
-      parallelism: 4,
-    }])).toHaveLength(1)
+    expect(
+      getImportDiagnostics([
+        {
+          ...barrelProject,
+          importTime: 2_000,
+          trackedTime: 8_000,
+          parallelism: 4,
+        },
+      ]),
+    ).toHaveLength(1)
   })
 
   it('treats every repeated fetch as avoidable on a single lane', () => {
@@ -85,32 +97,44 @@ describe('getImportDiagnostics', () => {
 
   it('reports every affected project', () => {
     const diagnostics = getImportDiagnostics([barrelProject, { ...barrelProject, name: 'ui' }])
-    expect(diagnostics.map(diagnostic => diagnostic.name)).toEqual(['barrel', 'ui'])
+    expect(diagnostics.map((diagnostic) => diagnostic.name)).toEqual(['barrel', 'ui'])
   })
 
   it('stays quiet for disjoint per-file graphs - reused workers would not help', () => {
     // every module belongs to one or two test files: no fetch count exceeds
     // the parallelism, so nothing is re-evaluated beyond what lanes require
-    expect(getImportDiagnostics([{
-      ...barrelProject,
-      fetchCounts: Array.from({ length: 800 }, (_, i) => (i % 2 === 0 ? 1 : 2)),
-    }])).toEqual([])
+    expect(
+      getImportDiagnostics([
+        {
+          ...barrelProject,
+          fetchCounts: Array.from({ length: 800 }, (_, i) => (i % 2 === 0 ? 1 : 2)),
+        },
+      ]),
+    ).toEqual([])
   })
 
   it('stays quiet when the tests dominate the run', () => {
-    expect(getImportDiagnostics([{
-      ...barrelProject,
-      importTime: 2_500,
-      trackedTime: 30_000,
-    }])).toEqual([])
+    expect(
+      getImportDiagnostics([
+        {
+          ...barrelProject,
+          importTime: 2_500,
+          trackedTime: 30_000,
+        },
+      ]),
+    ).toEqual([])
   })
 
   it('stays quiet when the import time is small in absolute terms', () => {
-    expect(getImportDiagnostics([{
-      ...barrelProject,
-      importTime: 1_500,
-      trackedTime: 2_000,
-    }])).toEqual([])
+    expect(
+      getImportDiagnostics([
+        {
+          ...barrelProject,
+          importTime: 1_500,
+          trackedTime: 2_000,
+        },
+      ]),
+    ).toEqual([])
   })
 
   it('does not suggest disabling isolation the user explicitly enabled', () => {
@@ -172,20 +196,28 @@ describe('getTransformDiagnostics', () => {
   })
 
   it('stays quiet when the tests dominate the run', () => {
-    expect(getTransformDiagnostics([{
-      ...coldProject,
-      transformTime: 3_000,
-      trackedTime: 30_000,
-    }])).toEqual([])
+    expect(
+      getTransformDiagnostics([
+        {
+          ...coldProject,
+          transformTime: 3_000,
+          trackedTime: 30_000,
+        },
+      ]),
+    ).toEqual([])
   })
 
   it('stays quiet when the saving is negligible relative to a long run', () => {
-    expect(getTransformDiagnostics([{
-      ...coldProject,
-      transformTime: 2_500,
-      trackedTime: 9_000,
-      executionTime: 300_000,
-    }])).toEqual([])
+    expect(
+      getTransformDiagnostics([
+        {
+          ...coldProject,
+          transformTime: 2_500,
+          trackedTime: 9_000,
+          executionTime: 300_000,
+        },
+      ]),
+    ).toEqual([])
   })
 })
 

@@ -1,18 +1,15 @@
-import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config'
+import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config.ts'
 import { writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config'
+import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config.ts'
 
 const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const cliTablePath = resolve(docsDir, './guide/cli-generated.md')
 
 const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined
 
-const skipCli = new Set([
-  'mergeReports',
-  'shard',
-])
+const skipCli = new Set(['mergeReports', 'shard'])
 
 const skipConfig = new Set([
   'config',
@@ -45,12 +42,14 @@ const skipConfig = new Set([
 ])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {
-  return Object.entries(options).flatMap(
-    ([subcommandName, subcommandConfig]) => resolveCommand(
-      parentName ? `${parentName}.${subcommandName}` : subcommandName,
-      subcommandConfig,
-    ),
-  ).filter(nonNullable)
+  return Object.entries(options)
+    .flatMap(([subcommandName, subcommandConfig]) =>
+      resolveCommand(
+        parentName ? `${parentName}.${subcommandName}` : subcommandName,
+        subcommandConfig,
+      ),
+    )
+    .filter(nonNullable)
 }
 
 function resolveCommand(name: string, config: CLIOption<any> | null): any {
@@ -63,7 +62,7 @@ function resolveCommand(name: string, config: CLIOption<any> | null): any {
     title += `-${config.shorthand}, `
   }
   title += `--${config.alias || name}`
-  if ('argument' in config) {
+  if ('argument' in config && config.argument) {
     title += ` ${config.argument}`
   }
   title += '`'
@@ -80,12 +79,18 @@ function resolveCommand(name: string, config: CLIOption<any> | null): any {
 
 const options = resolveOptions(cliOptionsConfig)
 
-const template = options.map((option) => {
-  const title = option.title
-  const cli = option.cli
-  const [page, ...hash] = (title.startsWith('browser.') ? title.slice(8) : title).toLowerCase().split('.')
-  const config = skipConfig.has(title) ? '' : `[${title}](${title.includes('browser.') ? '/config/browser/' : '/config/'}${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''})`
-  return `### ${title}\n\n- **CLI:** ${cli}\n${config ? `- **Config:** ${config}\n` : ''}\n${option.description.replace(/https:\/\/vitest\.dev\//g, '/')}\n`
-}).join('\n')
+const template = options
+  .map((option) => {
+    const title = option.title
+    const cli = option.cli
+    const [page, ...hash] = (title.startsWith('browser.') ? title.slice(8) : title)
+      .toLowerCase()
+      .split('.')
+    const config = skipConfig.has(title)
+      ? ''
+      : `[${title}](${title.includes('browser.') ? '/config/browser/' : '/config/'}${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''})`
+    return `### ${title}\n\n- **CLI:** ${cli}\n${config ? `- **Config:** ${config}\n` : ''}\n${option.description.replace(/https:\/\/vitest\.dev\//g, '/')}\n`
+  })
+  .join('\n')
 
 writeFileSync(cliTablePath, template, 'utf-8')

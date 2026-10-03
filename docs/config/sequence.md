@@ -87,6 +87,7 @@ Tests in these projects will run in this order:
 
  1. flaky |> runs after slow and fast alone
 ```
+
 :::
 
 ## sequence.shuffle
@@ -126,7 +127,7 @@ Whether to randomize tests.
 If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
 
 ::: warning
-When you run tests with `sequence.concurrent` and `expect.requireAssertions` set to `true`, you should use [local expect](/guide/test-context.html#expect) instead of the global one. Otherwise, this may cause false negatives in [some situations (#8469)](https://github.com/vitest-dev/vitest/issues/8469).
+When you run tests with `sequence.concurrent` and `expect.requireAssertions` set to `true`, you should use [local expect](/guide/test-context#expect) instead of the global one. Otherwise, this may cause false negatives in [some situations (#8469)](https://github.com/vitest-dev/vitest/issues/8469).
 :::
 
 ## sequence.seed <CRoot />
@@ -156,7 +157,7 @@ This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is 
 ## sequence.setupFiles {#sequence-setupfiles}
 
 - **Type:** `'list' | 'parallel'`
-- **Default:** `'parallel'`
+- **Default:** `'list'`
 - **CLI:** `--sequence.setupFiles=<value>`
 
 Changes the order in which setup files are executed.

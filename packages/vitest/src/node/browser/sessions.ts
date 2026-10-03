@@ -27,7 +27,11 @@ export class BrowserSessions {
     let isConnected = false
     let isReady = false
     const timeout = setTimeout(() => {
-      defer.reject(new Error(`Failed to connect to the browser session "${sessionId}" [${project.name}] within the timeout.`))
+      defer.reject(
+        new Error(
+          `Failed to connect to the browser session "${sessionId}" [${project.name}] within the timeout.`,
+        ),
+      )
     }, project.config.browser.connectTimeout ?? 60_000).unref()
 
     const resolveIfReady = () => {

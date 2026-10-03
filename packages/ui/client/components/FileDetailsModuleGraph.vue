@@ -12,31 +12,16 @@ const props = defineProps<{
 }>()
 
 const hideNodeModules = ref(true)
-const NODE_MODULES_RE = /[/\\]node_modules[/\\]/
 
 const { state: graphData, isLoading } = useAsyncState(
-  () => client.rpc.getModuleGraph(
-    props.projectName,
-    props.file.filepath,
-    props.file.viteEnvironment,
-  ),
+  () =>
+    client.rpc.getModuleGraph(props.projectName, props.file.filepath, props.file.viteEnvironment),
   undefined,
 )
 
-const graph = computed(() => {
-  if (!graphData.value) {
-    return { nodes: [], links: [] }
-  }
-  let moduleGraph = graphData.value
-  if (hideNodeModules.value) {
-    moduleGraph = {
-      ...moduleGraph,
-      inlined: moduleGraph.inlined.filter(n => !NODE_MODULES_RE.test(n)),
-      externalized: moduleGraph.externalized.filter(n => !NODE_MODULES_RE.test(n)),
-    }
-  }
-  return getModuleGraph(moduleGraph, props.file.filepath)
-})
+const graph = computed(() =>
+  getModuleGraph(graphData.value, props.file.filepath, hideNodeModules.value),
+)
 </script>
 
 <template>

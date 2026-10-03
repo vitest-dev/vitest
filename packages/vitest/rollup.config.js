@@ -16,18 +16,18 @@ const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
 const entries = {
-  'path': 'src/paths.ts',
-  'index': 'src/public/index.ts',
-  'cli': 'src/node/cli.ts',
-  'config': 'src/public/config.ts',
-  'node': 'src/public/node.ts',
-  'browser': 'src/public/browser.ts',
-  'spy': 'src/integrations/spy.ts',
-  'runtime': 'src/public/runtime.ts',
-  'worker': 'src/public/worker.ts',
+  path: 'src/paths.ts',
+  index: 'src/public/index.ts',
+  cli: 'src/node/cli.ts',
+  config: 'src/public/config.ts',
+  node: 'src/public/node.ts',
+  browser: 'src/public/browser.ts',
+  spy: 'src/integrations/spy.ts',
+  runtime: 'src/public/runtime.ts',
+  worker: 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
   'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
-  'traces': 'src/utils/traces.ts',
+  traces: 'src/utils/traces.ts',
 
   // just so that we have a separate chunk, this is not a public api
   'task-utils': 'src/utils/tasks.ts',
@@ -43,12 +43,12 @@ const entries = {
 }
 
 const dtsEntries = {
-  'index': 'src/public/index.ts',
-  'node': 'src/public/node.ts',
-  'browser': 'src/public/browser.ts',
-  'runtime': 'src/public/runtime.ts',
-  'config': 'src/public/config.ts',
-  'worker': 'src/public/worker.ts',
+  index: 'src/public/index.ts',
+  node: 'src/public/node.ts',
+  browser: 'src/public/browser.ts',
+  runtime: 'src/public/runtime.ts',
+  config: 'src/public/config.ts',
+  worker: 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
 
@@ -131,11 +131,7 @@ export default ({ watch }) =>
           return '{}'
         }
       },
-      plugins: [
-        ...dtsUtils.isolatedDecl(),
-        ...plugins,
-        !watch && licensePlugin(),
-      ],
+      plugins: [...dtsUtils.isolatedDecl(), ...plugins, !watch && licensePlugin()],
       onwarn,
     },
     {
@@ -153,8 +149,7 @@ export default ({ watch }) =>
       input: dtsUtils.dtsInput(dtsEntries),
       output: {
         dir: 'dist',
-        entryFileNames: chunk =>
-          `${normalize(chunk.name).replace('src/', '')}.d.ts`,
+        entryFileNames: (chunk) => `${normalize(chunk.name).replace('src/', '')}.d.ts`,
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
@@ -183,86 +178,69 @@ function licensePlugin() {
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
         .filter(({ name }) => !name?.startsWith('@vitest/'))
-        .sort(({ name: nameA }, { name: nameB }) =>
-          nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
-        )
-        .map(
-          ({
-            name,
-            license,
-            licenseText,
-            author,
-            maintainers,
-            contributors,
-            repository,
-          }) => {
-            let text = `## ${name}\n`
-            if (license) {
-              text += `License: ${license}\n`
-            }
+        .sort(({ name: nameA }, { name: nameB }) => (nameA > nameB ? 1 : nameB > nameA ? -1 : 0))
+        .map(({ name, license, licenseText, author, maintainers, contributors, repository }) => {
+          let text = `## ${name}\n`
+          if (license) {
+            text += `License: ${license}\n`
+          }
 
-            const names = new Set()
-            if (author && author.name) {
-              names.add(author.name)
-            }
+          const names = new Set()
+          if (author && author.name) {
+            names.add(author.name)
+          }
 
-            for (const person of maintainers.concat(contributors)) {
-              if (person && person.name) {
-                names.add(person.name)
+          for (const person of maintainers.concat(contributors)) {
+            if (person && person.name) {
+              names.add(person.name)
+            }
+          }
+          if (names.size > 0) {
+            text += `By: ${Array.from(names).join(', ')}\n`
+          }
+
+          if (repository) {
+            text += `Repository: ${repository.url || repository}\n`
+          }
+
+          if (!licenseText) {
+            try {
+              const pkgDir = dirname(
+                resolve(join(name, 'package.json'), {
+                  preserveSymlinks: false,
+                }),
+              )
+              const [licenseFile] = globSync(`${pkgDir}/LICENSE*`, {
+                caseSensitiveMatch: false,
+                expandDirectories: false,
+              })
+              if (licenseFile) {
+                licenseText = fs.readFileSync(licenseFile, 'utf-8')
               }
-            }
-            if (names.size > 0) {
-              text += `By: ${Array.from(names).join(', ')}\n`
-            }
-
-            if (repository) {
-              text += `Repository: ${repository.url || repository}\n`
-            }
-
-            if (!licenseText) {
-              try {
-                const pkgDir = dirname(
-                  resolve(join(name, 'package.json'), {
-                    preserveSymlinks: false,
-                  }),
-                )
-                const [licenseFile] = globSync(`${pkgDir}/LICENSE*`, {
-                  caseSensitiveMatch: false,
-                  expandDirectories: false,
-                })
-                if (licenseFile) {
-                  licenseText = fs.readFileSync(licenseFile, 'utf-8')
-                }
-              }
-              catch {}
-            }
-            if (licenseText) {
-              text += `\n${licenseText
-                .trim()
-                .replace(/(\r\n|\r)/g, '\n')
-                .split('\n')
-                .map(line => (line ? `> ${line}` : '>'))
-                .join('\n')}\n`
-            }
-            licenses.add(license)
-            return text
-          },
-        )
+            } catch {}
+          }
+          if (licenseText) {
+            text += `\n${licenseText
+              .trim()
+              .replace(/(\r\n|\r)/g, '\n')
+              .split('\n')
+              .map((line) => (line ? `> ${line}` : '>'))
+              .join('\n')}\n`
+          }
+          licenses.add(license)
+          return text
+        })
         .join('\n---------------------------------------\n\n')
-      const licenseText
-        = '# Vitest core license\n'
-          + `Vitest is released under the MIT license:\n\n${coreLicense}\n# Licenses of bundled dependencies\n`
-          + 'The published Vitest artifact additionally contains code with the following licenses:\n'
-          + `${sortLicenses(licenses).join(', ')}\n\n`
-          + `# Bundled dependencies:\n${dependencyLicenseTexts}`
+      const licenseText =
+        '# Vitest core license\n' +
+        `Vitest is released under the MIT license:\n\n${coreLicense}\n# Licenses of bundled dependencies\n` +
+        'The published Vitest artifact additionally contains code with the following licenses:\n' +
+        `${sortLicenses(licenses).join(', ')}\n\n` +
+        `# Bundled dependencies:\n${dependencyLicenseTexts}`
       const existingLicenseText = fs.readFileSync('LICENSE.md', 'utf8')
       if (existingLicenseText !== licenseText) {
         fs.writeFileSync('LICENSE.md', licenseText)
-        console.warn(
-          c.yellow(
-            '\nLICENSE.md updated. You should commit the updated file.\n',
-          ),
-        )
+        console.warn(c.yellow('\nLICENSE.md updated. You should commit the updated file.\n'))
       }
     },
   })
@@ -279,10 +257,9 @@ function sortLicenses(licenses) {
   let withParenthesis = []
   let noParenthesis = []
   licenses.forEach((license) => {
-    if (/^\(/.test(license)) {
+    if (license.startsWith('(')) {
       withParenthesis.push(license)
-    }
-    else {
+    } else {
       noParenthesis.push(license)
     }
   })

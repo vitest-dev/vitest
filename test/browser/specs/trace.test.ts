@@ -1,4 +1,7 @@
-import type { BrowserTraceData, BrowserTraceEntry } from '../../../packages/browser/src/client/tester/trace'
+import type {
+  BrowserTraceData,
+  BrowserTraceEntry,
+} from '../../../packages/browser/src/client/tester/trace'
 import { stripVTControlCharacters } from 'node:util'
 import { relative } from 'pathe'
 import { expect, test } from 'vitest'
@@ -57,7 +60,7 @@ test('trace view artifacts', async () => {
   const projectErrorTree = buildTestProjectTree(result.results, (testCase) => {
     const result = testCase.result()
     return result.state === 'failed'
-      ? result.errors.map(e => stripVTControlCharacters(e.message))
+      ? result.errors.map((e) => stripVTControlCharacters(e.message))
       : result.state
   })
 
@@ -67,7 +70,7 @@ test('trace view artifacts', async () => {
       if (artifact.type === 'internal:browserTrace') {
         const data = artifact.data as BrowserTraceData
         return {
-          entries: data.entries.map(e => formatEntry(e)),
+          entries: data.entries.map((e) => formatEntry(e)),
           ...(data.retry ? { retry: data.retry } : {}),
           ...(data.repeats ? { repeats: data.repeats } : {}),
         }

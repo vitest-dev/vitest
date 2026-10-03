@@ -35,9 +35,7 @@ export interface ModuleLabelItem {
   finished: boolean
 }
 
-export function calcExternalLabels(
-  labels: ModuleLabelItem[],
-): Map<string, string> {
+export function calcExternalLabels(labels: ModuleLabelItem[]): Map<string, string> {
   const result: Map<string, string> = new Map()
   const splitMap: Map<string, number[]> = new Map()
   const firsts: number[] = []
@@ -61,8 +59,7 @@ export function calcExternalLabels(
         label.candidate += label.candidate === '' ? head : `/${head}`
         splitMap.get(head)?.push(i)
         splits.shift()
-      }
-      else {
+      } else {
         splitMap.set(head, [i])
         // record the index of the label where the head first appears
         firsts.push(i)
@@ -133,9 +130,7 @@ export function getBadgeNameColor(name: string | undefined, transparent = false)
   if (!name) {
     return ''
   }
-  const index = name
-    .split('')
-    .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+  const index = name.split('').reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
   const colors = isDark.value
     ? ['yellow', 'cyan', '#006800', 'magenta']
     : ['#ff5400', '#02a4a4', 'green', 'magenta']
@@ -167,15 +162,15 @@ export function getProjectConfigByName(
   config: Partial<SerializedRootConfig>,
   projectName: string | undefined,
 ) {
-  return config.projects?.find(project => project.name === projectName)
+  return config.projects?.find((project) => project.name === projectName)
 }
 
 export function getProjectBadgeStyle(
   config: Partial<SerializedRootConfig>,
   projectName: string | undefined,
 ) {
-  const backgroundColor = getProjectConfigByName(config, projectName)?.color
-    ?? getBadgeNameColor(projectName)
+  const backgroundColor =
+    getProjectConfigByName(config, projectName)?.color ?? getBadgeNameColor(projectName)
 
   return {
     backgroundColor,

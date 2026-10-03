@@ -21,12 +21,7 @@ export type Tester = (
 ) => boolean | undefined
 
 export interface TesterContext {
-  equals: (
-    a: unknown,
-    b: unknown,
-    customTesters?: Array<Tester>,
-    strictCheck?: boolean,
-  ) => boolean
+  equals: (a: unknown, b: unknown, customTesters?: Array<Tester>, strictCheck?: boolean) => boolean
 }
 export type { DiffOptions } from '@vitest/utils/diff'
 
@@ -53,12 +48,7 @@ export interface MatcherState {
    * @deprecated exists only in types
    */
   error?: Error
-  equals: (
-    a: unknown,
-    b: unknown,
-    customTesters?: Array<Tester>,
-    strictCheck?: boolean,
-  ) => boolean
+  equals: (a: unknown, b: unknown, customTesters?: Array<Tester>, strictCheck?: boolean) => boolean
   /**
    * @deprecated exists only in types
    */
@@ -102,26 +92,28 @@ export type AsyncExpectationResult = Promise<SyncExpectationResult>
 
 export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 
-export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends Array<any> = Array<any>> {
+export interface RawMatcherFn<
+  T extends MatcherState = MatcherState,
+  E extends Array<any> = Array<any>,
+> {
   (this: T, received: any, ...expected: E): ExpectationResult
 }
 
 // Allow unused type parameters to preserve their names for extensions.
 // Type parameter names must be identical when extending those types.
-// eslint-disable-next-line
+// oxlint-disable-next-line
 export interface Matchers<R extends void | Promise<void> = void | Promise<void>, T = unknown> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
-> & ThisType<T> & {
-  [K in keyof Matchers]?: RawMatcherFn<T, Parameters<Matchers[K]>>
-}
+> &
+  ThisType<T> & {
+    [K in keyof Matchers]?: RawMatcherFn<T, Parameters<Matchers[K]>>
+  }
 
 export interface ExpectStatic
-  extends Chai.ExpectStatic,
-  Matchers<any>,
-  AsymmetricMatchersContaining {
+  extends Chai.ExpectStatic, Matchers<any>, AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<void, T>
   extend: (expects: MatchersObject) => void
   anything: () => any
@@ -213,14 +205,18 @@ export interface AsymmetricMatchersContaining extends Matchers<any>, CustomMatch
 
 type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
 
-export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
-  ? WithAsymmetricMatcher<T> | DeeplyAllowMatchers<Element>[]
-  : T extends object
-    ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
-    : WithAsymmetricMatcher<T>
+export type DeeplyAllowMatchers<T> =
+  T extends Array<infer Element>
+    ? WithAsymmetricMatcher<T> | DeeplyAllowMatchers<Element>[]
+    : T extends object
+      ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
+      : WithAsymmetricMatcher<T>
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-export interface JestAssertion<R extends void | Promise<void>, T = unknown> extends CustomMatcher<R> {
+export interface JestAssertion<
+  R extends void | Promise<void>,
+  // oxlint-disable-next-line no-unused-vars
+  T = unknown,
+> extends CustomMatcher<R> {
   /**
    * Used when you want to check that two objects have the same value.
    * This matcher recursively checks the equality of all fields, rather than checking for object identity.
@@ -412,10 +408,7 @@ export interface JestAssertion<R extends void | Promise<void>, T = unknown> exte
    * expect(user).toHaveProperty('address.city', 'New York');
    * expect(config).toHaveProperty(['settings', 'theme'], 'dark');
    */
-  toHaveProperty: <E>(
-    property: string | (string | number)[],
-    value?: E,
-  ) => R
+  toHaveProperty: <E>(property: string | (string | number)[], value?: E) => R
 
   /**
    * Using exact equality with floating point numbers is a bad idea.
@@ -631,8 +624,10 @@ type VitestAssertion<A, R extends void | Promise<void>, T = unknown> = {
   [K in keyof A]: A[K] extends Chai.Assertion
     ? Assertion<R, T>
     : A[K] extends (...args: any[]) => any
-      ? R extends Promise<void> ? PromisifyFunction<A[K]> : A[K]
-      : VitestAssertion<A[K], R, T>;
+      ? R extends Promise<void>
+        ? PromisifyFunction<A[K]>
+        : A[K]
+      : VitestAssertion<A[K], R, T>
 } & ((type: string, message?: string) => Assertion<R, T>)
 
 type Promisify<O> = {
@@ -646,10 +641,11 @@ type PromisifyFunction<T> = T extends (...args: infer A) => infer R
 export type PromisifyAssertion<T> = Assertion<Promise<void>, Awaited<T>>
 
 export interface Assertion<R extends void | Promise<void> = void, T = unknown>
-  extends VitestAssertion<Chai.Assertion, R, T>,
-  JestAssertion<R, T>,
-  ChaiMockAssertion<R, T>,
-  Matchers<R, T> {
+  extends
+    VitestAssertion<Chai.Assertion, R, T>,
+    JestAssertion<R, T>,
+    ChaiMockAssertion<R, T>,
+    Matchers<R, T> {
   /**
    * Ensures a value is of a specific type.
    *

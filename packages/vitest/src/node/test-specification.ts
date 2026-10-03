@@ -1,4 +1,5 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
+import type { ContextTestEnvironment } from '../types/worker'
 import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
 import type { Pool } from './types/config'
@@ -10,6 +11,12 @@ export interface TestSpecificationOptions {
   testIds?: string[]
   testLines?: number[]
   testTagsFilter?: string[]
+}
+
+/** @internal */
+export interface SpecificationDocblock {
+  environment: ContextTestEnvironment
+  tags: string[]
 }
 
 export class TestSpecification {
@@ -46,6 +53,9 @@ export class TestSpecification {
    */
   public testTagsFilter: string[] | undefined
 
+  /** @internal */
+  public _docblock: SpecificationDocblock | undefined
+
   /**
    * This class represents a test suite for a test module within a single project.
    * @internal
@@ -59,18 +69,18 @@ export class TestSpecification {
     taskIdOverride?: string,
   ) {
     const projectName = project.config.name
-    this.taskId = taskIdOverride ?? generateFileHash(
-      relative(project.config.root, moduleId),
-      projectName,
-      { typecheck: pool === 'typescript', __vitest_label__: project.config.mergeReportsLabel },
-    )
+    this.taskId =
+      taskIdOverride ??
+      generateFileHash(relative(project.config.root, moduleId), projectName, {
+        typecheck: pool === 'typescript',
+        __vitest_label__: project.config.mergeReportsLabel,
+      })
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
     if (Array.isArray(testLinesOrOptions)) {
       this.testLines = testLinesOrOptions
-    }
-    else if (testLinesOrOptions && typeof testLinesOrOptions === 'object') {
+    } else if (testLinesOrOptions && typeof testLinesOrOptions === 'object') {
       this.testLines = testLinesOrOptions.testLines
       this.testNamePattern = testLinesOrOptions.testNamePattern
       this.testIds = testLinesOrOptions.testIds

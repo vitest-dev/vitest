@@ -1,6 +1,4 @@
-import type {
-  UserConfig as ViteUserConfig,
-} from 'vite'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { CliOptions } from './cli/cli-api'
 import type { VitestOptions } from './core'
 import type { VitestRunMode } from './types/config'
@@ -37,8 +35,7 @@ export async function createVitest(
     options = optionsOrViteOverrides as CliOptions
     viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig
     vitestOptions = maybeVitestOptions
-  }
-  else {
+  } else {
     options = modeOrOptions
     viteOverrides = optionsOrViteOverrides as ViteUserConfig
     vitestOptions = viteOverridesOrVitestOptions as VitestOptions
@@ -48,23 +45,12 @@ export async function createVitest(
   const packageInstaller = vitestOptions.packageInstaller ?? new VitestPackageInstaller()
   const pluginHarness = new PluginHarness(logger, packageInstaller)
 
-  const config = await resolveConfig(
-    options,
-    viteOverrides,
-    pluginHarness,
-  )
+  const config = await resolveConfig(options, viteOverrides, pluginHarness)
 
-  const vitest = new Vitest(
-    pluginHarness,
-    config,
-  )
+  const vitest = new Vitest(pluginHarness, config)
 
   try {
     await vitest._start(config)
-
-    if (vitest.config.api.port && vitest.config.ui && vitest.config.open) {
-      vitest.vite.openBrowser()
-    }
 
     return vitest
   }

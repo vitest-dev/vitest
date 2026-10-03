@@ -37,8 +37,7 @@ function signalAll(pids: number[], signal: NodeJS.Signals) {
   for (const pid of pids) {
     try {
       process.kill(pid, signal)
-    }
-    catch {
+    } catch {
       // the process is already gone
     }
   }
@@ -48,20 +47,23 @@ function signalAll(pids: number[], signal: NodeJS.Signals) {
 // any browser death that leaves the socket open (vitest-dev/vitest#10791);
 // requires a locally launched playwright browser and POSIX signals
 test.runIf(
-  provider.name === 'playwright'
-  && process.platform !== 'win32'
-  && !process.env.BROWSER_WS_ENDPOINT,
-)('fails instead of hanging when the browser stops responding mid-run', { timeout: 60_000 }, async () => {
-  process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL = '1000'
-  let frozenPids: number[] = []
-  onTestFinished(() => {
-    delete process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
-    signalAll(frozenPids, 'SIGCONT')
-  })
+  provider.name === 'playwright' &&
+    process.platform !== 'win32' &&
+    !process.env.BROWSER_WS_ENDPOINT,
+)(
+  'fails instead of hanging when the browser stops responding mid-run',
+  { timeout: 60_000 },
+  async () => {
+    process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL = '1000'
+    let frozenPids: number[] = []
+    onTestFinished(() => {
+      delete process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL
+      signalAll(frozenPids, 'SIGCONT')
+    })
 
-  const { ctx, fs } = await runInlineBrowserTests(
-    {
-      'basic.test.ts': `
+    const { ctx, fs } = await runInlineBrowserTests(
+      {
+        'basic.test.ts': `
         import { test } from 'vitest'
 
         test('first', () => {})
@@ -70,41 +72,42 @@ test.runIf(
           await new Promise(resolve => setTimeout(resolve, 60_000))
         })
       `,
-    },
-    {
-      reporters: [
-        {
-          onTestCaseResult() {
-            if (!frozenPids.length) {
-              frozenPids = findDescendantBrowserProcesses()
-              expect(frozenPids.length).toBeGreaterThan(0)
-              signalAll(frozenPids, 'SIGSTOP')
-            }
-          },
-          // unfreeze before `startVitest` closes the provider, so the
-          // browser can answer the close message
-          onTestRunEnd() {
-            signalAll(frozenPids, 'SIGCONT')
-          },
-        },
-      ],
-      browser: {
-        instances: [instances[0]],
       },
-    },
-  )
+      {
+        reporters: [
+          {
+            onTestCaseResult() {
+              if (!frozenPids.length) {
+                frozenPids = findDescendantBrowserProcesses()
+                expect(frozenPids.length).toBeGreaterThan(0)
+                signalAll(frozenPids, 'SIGSTOP')
+              }
+            },
+            // unfreeze before `startVitest` closes the provider, so the
+            // browser can answer the close message
+            onTestRunEnd() {
+              signalAll(frozenPids, 'SIGCONT')
+            },
+          },
+        ],
+        browser: {
+          instances: [instances[0]],
+        },
+      },
+    )
 
-  const unhandledErrors = ctx!.state.getUnhandledErrors() as Error[]
-  const messages = unhandledErrors.map((error) => {
-    const cause = error.cause as Error | undefined
-    return cause ? `${error.message} ${cause.message}` : error.message
-  })
-  expect(messages).toContainEqual(
-    `Failed to run the test ${fs.resolveFile('basic.test.ts')}. `
-    + `[vitest] The browser orchestrator did not respond to a heartbeat ping for 2000ms. `
-    + `The browser process might be frozen or killed. Closing the connection.`,
-  )
-})
+    const unhandledErrors = ctx!.state.getUnhandledErrors() as Error[]
+    const messages = unhandledErrors.map((error) => {
+      const cause = error.cause as Error | undefined
+      return cause ? `${error.message} ${cause.message}` : error.message
+    })
+    expect(messages).toContainEqual(
+      `Failed to run the test ${fs.resolveFile('basic.test.ts')}. ` +
+        `[vitest] The browser orchestrator did not respond to a heartbeat ping for 2000ms. ` +
+        `The browser process might be frozen or killed. Closing the connection.`,
+    )
+  },
+)
 
 test('warns when VITEST_BROWSER_HEARTBEAT_INTERVAL is not a number and uses the default', async () => {
   process.env.VITEST_BROWSER_HEARTBEAT_INTERVAL = 'not-a-number'
@@ -128,8 +131,8 @@ test('warns when VITEST_BROWSER_HEARTBEAT_INTERVAL is not a number and uses the 
   )
 
   expect(stderr).toContain(
-    'VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "not-a-number". '
-    + 'Using the default interval of 15000ms instead.',
+    'VITEST_BROWSER_HEARTBEAT_INTERVAL is expected to be a number, received "not-a-number". ' +
+      'Using the default interval of 15000ms instead.',
   )
   expect(ctx!.state.getUnhandledErrors()).toEqual([])
 })

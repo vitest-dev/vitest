@@ -1,6 +1,5 @@
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
-
 import { runVitest } from '../../test-utils'
 
 it('should fail', async () => {
@@ -11,7 +10,7 @@ it('should fail', async () => {
   const msg = String(stderr)
     .split(/\n/g)
     .reverse()
-    .find(i => i.includes('Error: '))
+    .find((i) => i.includes('Error: '))
     ?.trim()
   expect(msg).toBe('Error: error')
   expect(stderr).not.toContain('__vite_ssr_export_default__')

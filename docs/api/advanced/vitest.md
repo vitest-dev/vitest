@@ -44,7 +44,40 @@ You can get the latest summary of snapshots via the `vitest.snapshot.summary` pr
 
 ## cache
 
-Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
+Cache manager that stores the results of the previous test runs. In Vitest itself this is only used by the default sequencer to sort tests.
+
+### cache.getTestSpecificationResult <Version type="experimental">5.0.4</Version> {#cache-gettestspecificationresult}
+
+Returns the result of the test file from the previous test runs, or `undefined` if Vitest has no result for it.
+
+```ts
+function getTestSpecificationResult(
+  specification: TestSpecification
+): CachedTestFileResult | undefined
+
+interface CachedTestFileResult {
+  /**
+   * The file has a known failure.
+   * Only a complete run of the file clears it.
+   */
+  failed: boolean
+  /**
+   * Duration of the last complete run in milliseconds.
+   */
+  duration: number
+  /**
+   * Unix timestamp in milliseconds of the start of the last complete run.
+   * It is not set if the file never ran completely.
+   */
+  lastRun?: number
+}
+```
+
+A run is not complete if it was cancelled or if it executed only a part of the file, for example, because of a test name pattern, a line filter or `.only`.
+
+::: warning
+`vitest.cache.getFileTestResults` and `vitest.cache.getFileStats` are deprecated and will be removed in the next major version. Use `getTestSpecificationResult` instead of `getFileTestResults`. Vitest does not cache file sizes anymore; read the size from the file system if your sequencer needs it.
+:::
 
 ## watcher <Version>4.0.0</Version> {#watcher}
 
@@ -168,6 +201,7 @@ This method can be slow because it needs to filter `--changed` flags. Do not use
 
 - If you need to get the list of specifications for known test files, use [`getModuleSpecifications`](#getmodulespecifications) instead.
 - If you need to get the list of all possible test files, use [`globTestSpecifications`](#globtestspecifications).
+
 :::
 
 ## mergeReports
@@ -410,6 +444,7 @@ const dynamicExample = await vitest.import('./example.js')
 
 dynamicExample !== staticExample // ✅
 ```
+
 :::
 
 ::: info
@@ -483,6 +518,7 @@ function onFilterWatchedSpecification(
   fn: (specification: TestSpecification) => boolean
 ): void
 ```
+
 Register a handler that will be called when a file is changed. This callback should return `true` or `false`, indicating whether the test file needs to be rerun.
 
 With this method, you can hook into the default watcher logic to delay or discard tests that the user doesn't want to keep track of at the moment:
@@ -580,6 +616,7 @@ import { escapeTestName } from 'vitest/node'
 // turns into /hello, .+?/
 const escapedPattern = new RegExp(escapeTestName('hello, %s', true))
 ```
+
 :::
 
 ::: warning
@@ -621,6 +658,7 @@ export function experimental_getSourceModuleDiagnostic(
 ```
 
 ::: details Types
+
 ```ts
 export interface ModuleDefinitionLocation {
   line: number
@@ -660,6 +698,7 @@ export interface SourceModuleDiagnostic {
   untrackedModules: UntrackedModuleDefinitionDiagnostic[]
 }
 ```
+
 :::
 
 Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not provided, `selfTime` and `totalTime` will be aggregated across all tests that were running the last time. If the module was not transformed or executed, the diagnostic will be empty.
@@ -674,7 +713,7 @@ At the moment, the [browser](/guide/browser/) modules are not supported.
 function createReport(scope: string): Report
 ```
 
-Creates a report that is limited to the given scope. `Report` follows Vitest's rules around [Storing artifacts on file system](/guide/advanced/reporters.html#storing-artifacts-on-file-system).
+Creates a report that is limited to the given scope. `Report` follows Vitest's rules around [Storing artifacts on file system](/guide/advanced/reporters#storing-artifacts-on-file-system).
 
 `Report` provides collection of utilities for writing test results, temporary files and other artifacts on the file system. It's especially intended for third party integrations like custom reporters.
 
@@ -704,7 +743,6 @@ const report = vitest.createReport('my-json-reporter')
 // Is <project-root>/.vitest/my-json-reporter
 const root = report.root
 ```
-
 
 ### Report.clean
 
@@ -772,7 +810,6 @@ const filenames: string[] = await report.readdir()
 
 ### Report.delete
 
-<!-- eslint-skip -->
 ```ts
 function delete(filename: string): Promise<void>
 ```
@@ -785,4 +822,3 @@ const report = vitest.createReport('my-json-reporter')
 // Deletes file from .vitest/my-json-reporter/test-report.json
 await report.delete('test-report.json')
 ```
-

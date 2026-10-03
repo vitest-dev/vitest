@@ -20,7 +20,7 @@ test('testNamePattern matches the " > "-joined full name', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(buildTree(t => t.result().state)).toMatchInlineSnapshot(`
+  expect(buildTree((t) => t.result().state)).toMatchInlineSnapshot(`
     {
       "a.test.js": {
         "group": {
@@ -38,7 +38,7 @@ test('testNamePattern no longer matches the space-joined chain across suites', a
   })
 
   expect(stderr).toBe('')
-  expect(buildTree(t => t.result().state)).toMatchInlineSnapshot(`
+  expect(buildTree((t) => t.result().state)).toMatchInlineSnapshot(`
     {
       "a.test.js": {
         "group": {

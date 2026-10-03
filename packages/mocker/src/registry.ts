@@ -16,9 +16,7 @@ export class MockerRegistry {
     this.registryById.set(mock.id, mock)
   }
 
-  public register(
-    json: MockedModuleSerialized,
-  ): MockedModule
+  public register(json: MockedModuleSerialized): MockedModule
   public register(
     type: 'redirect',
     raw: string,
@@ -33,18 +31,8 @@ export class MockerRegistry {
     url: string,
     factory: () => any,
   ): ManualMockedModule
-  public register(
-    type: 'automock',
-    raw: string,
-    id: string,
-    url: string,
-  ): AutomockedModule
-  public register(
-    type: 'autospy',
-    id: string,
-    raw: string,
-    url: string,
-  ): AutospiedModule
+  public register(type: 'automock', raw: string, id: string, url: string): AutomockedModule
+  public register(type: 'autospy', id: string, raw: string, url: string): AutospiedModule
   public register(
     typeOrEvent: MockedModuleType | MockedModuleSerialized,
     raw?: string,
@@ -57,36 +45,34 @@ export class MockerRegistry {
     if (typeof typeOrEvent === 'object') {
       const event = typeOrEvent
       if (
-        event instanceof AutomockedModule
-        || event instanceof AutospiedModule
-        || event instanceof ManualMockedModule
-        || event instanceof RedirectedModule
+        event instanceof AutomockedModule ||
+        event instanceof AutospiedModule ||
+        event instanceof ManualMockedModule ||
+        event instanceof RedirectedModule
       ) {
         throw new TypeError(
-          `[vitest] Cannot register a mock that is already defined. `
-          + `Expected a JSON representation from \`MockedModule.toJSON\`, instead got "${event.type}". `
-          + `Use "registry.add()" to update a mock instead.`,
+          `[vitest] Cannot register a mock that is already defined. ` +
+            `Expected a JSON representation from \`MockedModule.toJSON\`, instead got "${event.type}". ` +
+            `Use "registry.add()" to update a mock instead.`,
         )
       }
       if (event.type === 'automock') {
         const module = AutomockedModule.fromJSON(event)
         this.add(module)
         return module
-      }
-      else if (event.type === 'autospy') {
+      } else if (event.type === 'autospy') {
         const module = AutospiedModule.fromJSON(event)
         this.add(module)
         return module
-      }
-      else if (event.type === 'redirect') {
+      } else if (event.type === 'redirect') {
         const module = RedirectedModule.fromJSON(event)
         this.add(module)
         return module
-      }
-      else if (event.type === 'manual') {
-        throw new Error(`Cannot set serialized manual mock. Define a factory function manually with \`ManualMockedModule.fromJSON()\`.`)
-      }
-      else {
+      } else if (event.type === 'manual') {
+        throw new Error(
+          `Cannot set serialized manual mock. Define a factory function manually with \`ManualMockedModule.fromJSON()\`.`,
+        )
+      } else {
         throw new Error(`Unknown mock type: ${(event as any).type}`)
       }
     }
@@ -110,23 +96,19 @@ export class MockerRegistry {
       const mock = new ManualMockedModule(raw, id, url, factoryOrRedirect)
       this.add(mock)
       return mock
-    }
-    else if (type === 'automock' || type === 'autospy') {
-      const mock = type === 'automock'
-        ? new AutomockedModule(raw, id, url)
-        : new AutospiedModule(raw, id, url)
+    } else if (type === 'automock' || type === 'autospy') {
+      const mock =
+        type === 'automock' ? new AutomockedModule(raw, id, url) : new AutospiedModule(raw, id, url)
       this.add(mock)
       return mock
-    }
-    else if (type === 'redirect') {
+    } else if (type === 'redirect') {
       if (typeof factoryOrRedirect !== 'string') {
         throw new TypeError('[vitest] Redirect mocks require a redirect string.')
       }
       const mock = new RedirectedModule(raw, id, url, factoryOrRedirect)
       this.add(mock)
       return mock
-    }
-    else {
+    } else {
       throw new Error(`[vitest] Unknown mock type: ${type}`)
     }
   }
@@ -152,18 +134,18 @@ export class MockerRegistry {
   }
 }
 
-export type MockedModule
-  = | AutomockedModule
-    | AutospiedModule
-    | ManualMockedModule
-    | RedirectedModule
+export type MockedModule =
+  | AutomockedModule
+  | AutospiedModule
+  | ManualMockedModule
+  | RedirectedModule
 export type MockedModuleType = 'automock' | 'autospy' | 'manual' | 'redirect'
 
-export type MockedModuleSerialized
-  = | AutomockedModuleSerialized
-    | AutospiedModuleSerialized
-    | ManualMockedModuleSerialized
-    | RedirectedModuleSerialized
+export type MockedModuleSerialized =
+  | AutomockedModuleSerialized
+  | AutospiedModuleSerialized
+  | ManualMockedModuleSerialized
+  | RedirectedModuleSerialized
 
 export class AutomockedModule {
   public readonly type = 'automock'
@@ -276,8 +258,7 @@ export class ManualMockedModule<T = any> {
     let exports: any
     try {
       exports = this.factory()
-    }
-    catch (err: any) {
+    } catch (err: any) {
       throw createHelpfulError(err)
     }
 
@@ -314,9 +295,9 @@ export class ManualMockedModule<T = any> {
 
 function createHelpfulError(cause: Error) {
   const error = new Error(
-    '[vitest] There was an error when mocking a module. '
-    + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
-    + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
+    '[vitest] There was an error when mocking a module. ' +
+      'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. ' +
+      'Read more: https://vitest.dev/api/vi.html#vi-mock',
   )
   error.cause = cause
   return error

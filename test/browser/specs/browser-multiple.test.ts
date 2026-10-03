@@ -1,6 +1,5 @@
 import type { Vitest } from 'vitest/node'
 import { resolve } from 'pathe'
-
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -20,7 +19,7 @@ it('automatically assigns the port', async () => {
           ctx = ctx_
         },
         onTestRunEnd() {
-          urls = ctx.projects.map(p => p.browser?.vite.resolvedUrls?.local[0])
+          urls = ctx.projects.map((p) => p.browser?.vite.resolvedUrls?.local[0])
         },
       },
     ],

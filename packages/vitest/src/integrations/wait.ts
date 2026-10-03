@@ -29,10 +29,9 @@ export function waitFor<T>(
   callback: WaitForCallback<T>,
   options: number | WaitForOptions = {},
 ): Promise<T> {
-  const { setTimeout, setInterval, clearTimeout, clearInterval }
-    = getSafeTimers()
-  const { interval = 50, timeout = 1000 }
-    = typeof options === 'number' ? { timeout: options } : options
+  const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
+  const { interval = 50, timeout = 1000 } =
+    typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<T>((resolve, reject) => {
@@ -58,10 +57,7 @@ export function waitFor<T>(
       }
       let error = lastError
       if (!error) {
-        error = copyStackTrace(
-          new Error('Timed out in waitFor!'),
-          STACK_TRACE_ERROR,
-        )
+        error = copyStackTrace(new Error('Timed out in waitFor!'), STACK_TRACE_ERROR)
       }
 
       reject(error)
@@ -78,9 +74,9 @@ export function waitFor<T>(
       try {
         const result = callback()
         if (
-          result !== null
-          && typeof result === 'object'
-          && typeof (result as any).then === 'function'
+          result !== null &&
+          typeof result === 'object' &&
+          typeof (result as any).then === 'function'
         ) {
           const thenable = result as PromiseLike<T>
           promiseStatus = 'pending'
@@ -94,13 +90,11 @@ export function waitFor<T>(
               lastError = rejectedValue
             },
           )
-        }
-        else {
+        } else {
           onResolve(result as T)
           return true
         }
-      }
-      catch (error) {
+      } catch (error) {
         lastError = error
       }
     }
@@ -116,8 +110,7 @@ export function waitFor<T>(
 
 export type WaitUntilCallback<T> = () => T | Promise<T>
 
-export interface WaitUntilOptions
-  extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
+export interface WaitUntilOptions extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
 
 type Truthy<T> = T extends false | '' | 0 | null | undefined ? never : T
 
@@ -125,10 +118,9 @@ export function waitUntil<T>(
   callback: WaitUntilCallback<T>,
   options: number | WaitUntilOptions = {},
 ): Promise<Truthy<T>> {
-  const { setTimeout, setInterval, clearTimeout, clearInterval }
-    = getSafeTimers()
-  const { interval = 50, timeout = 1000 }
-    = typeof options === 'number' ? { timeout: options } : options
+  const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
+  const { interval = 50, timeout = 1000 } =
+    typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
 
   return new Promise<Truthy<T>>((resolve, reject) => {
@@ -141,10 +133,7 @@ export function waitUntil<T>(
         clearInterval(intervalId)
       }
       if (!error) {
-        error = copyStackTrace(
-          new Error('Timed out in waitUntil!'),
-          STACK_TRACE_ERROR,
-        )
+        error = copyStackTrace(new Error('Timed out in waitUntil!'), STACK_TRACE_ERROR)
       }
       reject(error)
     }
@@ -176,9 +165,9 @@ export function waitUntil<T>(
       try {
         const result = callback()
         if (
-          result !== null
-          && typeof result === 'object'
-          && typeof (result as any).then === 'function'
+          result !== null &&
+          typeof result === 'object' &&
+          typeof (result as any).then === 'function'
         ) {
           const thenable = result as PromiseLike<T>
           promiseStatus = 'pending'
@@ -192,12 +181,10 @@ export function waitUntil<T>(
               onReject(rejectedValue)
             },
           )
-        }
-        else {
+        } else {
           return onResolve(result as T)
         }
-      }
-      catch (error) {
+      } catch (error) {
         onReject(error as Error)
       }
     }

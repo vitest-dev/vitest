@@ -32,8 +32,7 @@ export function findMockRedirect(
           // if the same name, return the file
           if (statSync(path).isFile()) {
             return path
-          }
-          else {
+          } else {
             // find folder/index.{js,ts}
             const indexFile = findFile(path, 'index')
             if (indexFile) {
@@ -72,12 +71,7 @@ const builtins = new Set([
 ])
 
 // https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
-const prefixedBuiltins = new Set([
-  'node:sea',
-  'node:sqlite',
-  'node:test',
-  'node:test/reporters',
-])
+const prefixedBuiltins = new Set(['node:sea', 'node:sqlite', 'node:test', 'node:test/reporters'])
 const NODE_BUILTIN_NAMESPACE = 'node:'
 function isNodeBuiltin(id: string): boolean {
   // Added in v18.6.0
@@ -88,8 +82,6 @@ function isNodeBuiltin(id: string): boolean {
     return true
   }
   return builtins.has(
-    id.startsWith(NODE_BUILTIN_NAMESPACE)
-      ? id.slice(NODE_BUILTIN_NAMESPACE.length)
-      : id,
+    id.startsWith(NODE_BUILTIN_NAMESPACE) ? id.slice(NODE_BUILTIN_NAMESPACE.length) : id,
   )
 }

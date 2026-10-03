@@ -1,6 +1,5 @@
 import { createRequire } from 'node:module'
 import { expect, test } from 'vitest'
-
 import { runVitest } from '../../test-utils'
 
 test('correctly runs tests if custom env is a file', async () => {

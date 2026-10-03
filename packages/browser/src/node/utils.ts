@@ -4,7 +4,6 @@ import type {
   ResolvedConfig,
   TestProject,
 } from 'vitest/node'
-
 import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
 import { parseKeyDef as tlParse } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -55,12 +54,7 @@ export function resolveScreenshotPath(
   const dir = dirname(testPath)
   const base = basename(testPath)
   if (config.browser.screenshotDirectory) {
-    return resolve(
-      config.browser.screenshotDirectory,
-      relative(config.root, dir),
-      base,
-      name,
-    )
+    return resolve(config.browser.screenshotDirectory, relative(config.root, dir), base, name)
   }
   return resolve(dir, '__screenshots__', base, name)
 }
@@ -88,7 +82,9 @@ export async function getBrowserProvider(
     )
   }
   if (typeof options.provider.providerFactory !== 'function') {
-    throw new TypeError(`The "${name}" browser provider does not provide a "providerFactory" function. Received ${typeof options.provider.providerFactory}.`)
+    throw new TypeError(
+      `The "${name}" browser provider does not provide a "providerFactory" function. Received ${typeof options.provider.providerFactory}.`,
+    )
   }
   return options.provider.providerFactory(project)
 }
@@ -100,8 +96,8 @@ export function slash(path: string): string {
 export function assertBrowserFileAccess(project: TestProject, path: string): void {
   const normalized = slash(path)
   if (
-    !isFileLoadingAllowed(project.vite.config, normalized)
-    && !isFileLoadingAllowed(project.vitest.vite.config, normalized)
+    !isFileLoadingAllowed(project.vite.config, normalized) &&
+    !isFileLoadingAllowed(project.vitest.vite.config, normalized)
   ) {
     throw new Error(
       `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,

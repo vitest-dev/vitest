@@ -86,16 +86,16 @@ expect(spy).to.have.been.calledWith('arg1', 'arg2')
 
 Vitest supports all common sinon-chai assertions:
 
-| Sinon-Chai | Vitest | Description |
-|------------|--------|-------------|
-| `spy.called` | `called` | Spy was called at least once |
-| `spy.calledOnce` | `calledOnce` | Spy was called exactly once |
-| `spy.calledTwice` | `calledTwice` | Spy was called exactly twice |
-| `spy.calledThrice` | `calledThrice` | Spy was called exactly three times |
-| `spy.callCount(n)` | `callCount(n)` | Spy was called n times |
-| `spy.calledWith(...)` | `calledWith(...)` | Spy was called with specific args |
+| Sinon-Chai                | Vitest                | Description                            |
+| ------------------------- | --------------------- | -------------------------------------- |
+| `spy.called`              | `called`              | Spy was called at least once           |
+| `spy.calledOnce`          | `calledOnce`          | Spy was called exactly once            |
+| `spy.calledTwice`         | `calledTwice`         | Spy was called exactly twice           |
+| `spy.calledThrice`        | `calledThrice`        | Spy was called exactly three times     |
+| `spy.callCount(n)`        | `callCount(n)`        | Spy was called n times                 |
+| `spy.calledWith(...)`     | `calledWith(...)`     | Spy was called with specific args      |
 | `spy.calledOnceWith(...)` | `calledOnceWith(...)` | Spy was called once with specific args |
-| `spy.returned(value)` | `returned` | Spy returned specific value |
+| `spy.returned(value)`     | `returned`            | Spy returned specific value            |
 
 See the [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions) documentation for the complete list.
 
@@ -177,6 +177,7 @@ vi.useRealTimers()
 3. **Parallel execution**: Vitest runs tests in parallel by default, Mocha runs sequentially
 
 For more information, see:
+
 - [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions)
 - [Mocking Guide](/guide/mocking)
 - [Vi API](/api/vi)

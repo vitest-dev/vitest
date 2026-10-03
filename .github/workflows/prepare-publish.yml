@@ -37,6 +37,8 @@ jobs:
     if: github.repository == 'vitest-dev/vitest'
     name: Prepare release PR
     runs-on: ubuntu-latest
+    # the app secrets live in an environment that only release branches can use
+    environment: release-bot
     permissions:
       contents: read # checkout target branch
     steps:

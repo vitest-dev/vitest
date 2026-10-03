@@ -1,10 +1,7 @@
 import type { Assertion, ChaiPlugin } from './types'
 
 export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
-  function defProperty(
-    name: keyof Assertion,
-    delegateTo: keyof Assertion,
-  ) {
+  function defProperty(name: keyof Assertion, delegateTo: keyof Assertion) {
     utils.addProperty(
       chai.Assertion.prototype,
       name,
@@ -20,11 +17,7 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
     )
   }
 
-  function defPropertyWithArgs(
-    name: keyof Assertion,
-    delegateTo: keyof Assertion,
-    ...args: any[]
-  ) {
+  function defPropertyWithArgs(name: keyof Assertion, delegateTo: keyof Assertion, ...args: any[]) {
     utils.addProperty(
       chai.Assertion.prototype,
       name,
@@ -40,10 +33,7 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
     )
   }
 
-  function defMethod(
-    name: keyof Assertion,
-    delegateTo: keyof Assertion,
-  ) {
+  function defMethod(name: keyof Assertion, delegateTo: keyof Assertion) {
     utils.addMethod(
       chai.Assertion.prototype,
       name,

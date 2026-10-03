@@ -6,13 +6,13 @@ import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-const test3Content = /* ts */`
+const test3Content = /* ts */ `
 export async function externalAnnotate(annotate) {
   await annotate('external')
 }
 `
 
-const annotationTest = /* ts */`
+const annotationTest = /* ts */ `
 import { test, describe } from 'vitest'
 import { externalAnnotate } from './test-3.js'
 
@@ -47,9 +47,7 @@ describe('API', () => {
         enabled: true,
         provider: playwright(),
         headless: true,
-        instances: [
-          { browser: 'chromium' as const },
-        ],
+        instances: [{ browser: 'chromium' as const }],
       },
     },
   ])('annotations are exposed correctly in $name', async (options) => {
@@ -70,8 +68,12 @@ describe('API', () => {
           'default',
           {
             onTestCaseAnnotate(testCase, annotation) {
-              const path = annotation.attachment?.path?.replace(testCase.project.config.root, '<root>').replace(/\w+\.js$/, '<hash>.js')
-              events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} path=${path} contentType=${annotation.attachment?.contentType} body=${annotation.attachment?.body}`)
+              const path = annotation.attachment?.path
+                ?.replace(testCase.project.config.root, '<root>')
+                .replace(/\w+\.js$/, '<hash>.js')
+              events.push(
+                `[annotate] ${testCase.name} ${annotation.message} ${annotation.type} path=${path} contentType=${annotation.attachment?.contentType} body=${annotation.attachment?.body}`,
+              )
             },
             onTestCaseArtifactRecord() {
               events.push('[artifact]')
@@ -83,10 +85,9 @@ describe('API', () => {
               events.push(`[result] ${testCase.name}`)
               annotations[testCase.name] = testCase.annotations().map((annotation) => {
                 if (annotation.attachment?.path) {
-                  annotation.attachment.path = annotation.attachment.path.replace(
-                    testCase.project.config.root,
-                    '<root>',
-                  ).replace(/\w+\.js$/, '<hash>.js')
+                  annotation.attachment.path = annotation.attachment.path
+                    .replace(testCase.project.config.root, '<root>')
+                    .replace(/\w+\.js$/, '<hash>.js')
                 }
                 if (annotation.location) {
                   annotation.location.file = annotation.location.file.replace(
@@ -285,8 +286,9 @@ describe('API', () => {
   })
 
   test('cannot annotate tests when the test finished running', async () => {
-    const { stderr } = await runInlineTests({
-      'basic.test.ts': `
+    const { stderr } = await runInlineTests(
+      {
+        'basic.test.ts': `
         test('finished early', ({ annotate }) => {
           setTimeout(() => {
             annotate('invalid annotations')
@@ -297,8 +299,12 @@ describe('API', () => {
           await new Promise(r => setTimeout(() => r(), 100))
         })
       `,
-    }, { globals: true })
-    expect(stderr).toContain('Cannot annotate tests outside of the test run. The test "finished early" finished running with the "pass" state already.')
+      },
+      { globals: true },
+    )
+    expect(stderr).toContain(
+      'Cannot annotate tests outside of the test run. The test "finished early" finished running with the "pass" state already.',
+    )
   })
 })
 
@@ -384,7 +390,7 @@ describe('reporters', () => {
     const result = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
       .replace(/time="[\d.]+"/g, 'time="0"')
       .replace(/timestamp="[\w\-:.]+"/g, 'timestamp="0"')
-      .replace(/hostname="[\w.\-]+"/g, 'hostname="CI"')
+      .replace(/hostname="[\w.-]+"/g, 'hostname="CI"')
 
     expect(result).toMatchInlineSnapshot(`
       "<?xml version="1.0" encoding="UTF-8" ?>
@@ -529,7 +535,7 @@ describe('reporters', () => {
     test('default reporter prints annotations after the error', async () => {
       const { stdout, stderr } = await runInlineTests(
         {
-          'basic.test.ts': /* ts */`
+          'basic.test.ts': /* ts */ `
             import { test } from 'vitest'
 
             test('non-failing test', ({ annotate }) => {
@@ -577,7 +583,7 @@ describe('reporters', () => {
     test('default reporter prints the same error with the same annotations only once', async () => {
       const { stderr } = await runInlineTests(
         {
-          'basic.test.ts': /* ts */`
+          'basic.test.ts': /* ts */ `
             import { test } from 'vitest'
 
             test.for([1, 2])('failed test %i', (num, { annotate }) => {
@@ -616,7 +622,7 @@ describe('reporters', () => {
     test('default reporter prints different annotations after the same error', async () => {
       const { stderr } = await runInlineTests(
         {
-          'basic.test.ts': /* ts */`
+          'basic.test.ts': /* ts */ `
             import { test } from 'vitest'
 
             test.for([1, 2])('failed test %i', (num, { annotate }) => {
@@ -706,9 +712,9 @@ test("world", ({ annotate }) => {
     }
   `)
   const files = readdirSync(path.join(result.root, '.vitest/attachments'))
-  const contents = files.sort().map(file =>
-    result.fs.readFile(path.join('.vitest/attachments', file)),
-  )
+  const contents = files
+    .sort()
+    .map((file) => result.fs.readFile(path.join('.vitest/attachments', file)))
   expect(contents).toMatchInlineSnapshot(`
     [
       "HELLO",

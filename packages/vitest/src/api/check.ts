@@ -8,10 +8,7 @@ export function isValidApiRequest(config: ResolvedConfig, req: IncomingMessage):
   // validate token. token is injected in ui/tester/orchestrator html, which is cross origin protected.
   try {
     const token = url.searchParams.get('token')
-    if (token && crypto.timingSafeEqual(
-      Buffer.from(token),
-      Buffer.from(config.api.token),
-    )) {
+    if (token && crypto.timingSafeEqual(Buffer.from(token), Buffer.from(config.api.token))) {
       return true
     }
   }

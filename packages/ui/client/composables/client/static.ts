@@ -1,8 +1,5 @@
-import type {
-  ModuleGraphData,
-  RunnerTestFile,
-  SerializedRootConfig,
-} from 'vitest'
+import type { RunnerTestFile, SerializedRootConfig } from 'vitest'
+import type { SharedModuleGraphByProject } from '../../../../vitest/src/types/general'
 import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
@@ -12,7 +9,7 @@ import { StateManager } from './state'
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
+  moduleGraph: SharedModuleGraphByProject
   unhandledErrors: unknown[]
   testModules: {
     projectName: string
@@ -28,7 +25,8 @@ export interface HTMLReportMetadata {
 function deserializeReportMetadata(metadata: HTMLReportMetadata) {
   const sourceCodes: { [moduleId: string]: string } = {}
   for (const testModule of metadata.testModules) {
-    const codeIndex = metadata.sourceCode.testModules[testModule.projectName]?.[testModule.relativeModuleId]
+    const codeIndex =
+      metadata.sourceCode.testModules[testModule.projectName]?.[testModule.relativeModuleId]
     if (codeIndex != null) {
       sourceCodes[testModule.moduleId] = metadata.sourceCode.codeTable[codeIndex]
     }
@@ -41,8 +39,13 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
     getConfig: async () => {
       return metadata.config
     },
-    getModuleGraph: async (projectName, id) => {
-      return metadata.moduleGraph[projectName]?.[id]
+    getModuleGraph: async (projectName, id, viteEnvironment) => {
+      // the reporter keys graphs by the environment the file ran in, which is the file's
+      // `viteEnvironment`. It's unset only for files that never ran, which have no graph.
+      const graph = viteEnvironment
+        ? metadata.moduleGraph[projectName]?.[viteEnvironment]
+        : undefined
+      return { modules: graph?.modules ?? {}, roots: graph?.rootsByTestFile[id] ?? [] }
     },
     getUnhandledErrors: async () => {
       return metadata.unhandledErrors
@@ -77,11 +80,10 @@ export function createStaticClient(): VitestClient {
     // Check for gzip magic numbers (0x1f 0x8b) to determine if content is compressed.
     // This handles cases where a static server incorrectly sets Content-Encoding: gzip
     // for .gz files, causing the browser to auto-decompress before we process the raw gzip data.
-    if (content.length >= 2 && content[0] === 0x1F && content[1] === 0x8B) {
+    if (content.length >= 2 && content[0] === 0x1f && content[1] === 0x8b) {
       const decompressed = strFromU8(decompressSync(content))
       metadata = parse(decompressed)
-    }
-    else {
+    } else {
       metadata = parse(strFromU8(content))
     }
     ctx.rpc = deserializeReportMetadata(metadata)

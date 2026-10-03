@@ -11,6 +11,7 @@ import * as libReport from '@vitest/istanbul-lib-report'
 import * as libSourceMaps from '@vitest/istanbul-lib-source-maps'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
+import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider, isCSSRequest } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
@@ -44,8 +45,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         coverageGlobalScopeFunc: false,
         ignoreClassMethods: this.options.ignoreClassMethods,
       }) as Instrumenter
-    }
-    else {
+    } else {
       this.instrumenter = createInstrumenter({
         produceSourceMap: true,
         autoWrap: false,
@@ -75,7 +75,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     return true
   }
 
-  onFileTransform(sourceCode: string, id: string, pluginCtx: Vite.Rollup.TransformPluginContext): { code: string; map: any } | undefined {
+  onFileTransform(
+    sourceCode: string,
+    id: string,
+    pluginCtx: Vite.Rollup.TransformPluginContext,
+  ): { code: string; map: any } | undefined {
     if (!this.requiresTransform(id)) {
       return
     }
@@ -90,11 +94,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       // Exclude in-source test's test cases
       .replaceAll(/(if +\(import\.meta\.vitest\))/g, '/* istanbul ignore next */ $1')
 
-    const code = this.instrumenter.instrumentSync(
-      sourceCode,
-      id,
-      sourceMap as any,
-    )
+    const code = this.instrumenter.instrumentSync(sourceCode, id, sourceMap as any)
 
     if (!id.includes('vitest-uncovered-coverage=true')) {
       const transformMap = new GenMapping(sourceMap)
@@ -114,11 +114,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       delete encodedMap.ignoreList
       delete encodedMap.sourceRoot
 
-      this.instrumenter.instrumentSync(
-        sourceCode,
-        id,
-        encodedMap as any,
-      )
+      this.instrumenter.instrumentSync(sourceCode, id, encodedMap as any)
     }
 
     const map = this.instrumenter.lastSourceMap() as any
@@ -164,6 +160,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     coverageMap.filter((filename) => {
       const exists = existsSync(filename)
 
+      // files can be instrumented before the changed files are resolved
+      if (this.changedFiles && !this.changedFiles.includes(normalize(filename))) {
+        return false
+      }
+
       if (this.options.excludeAfterRemap) {
         return exists && this.isIncluded(filename)
       }
@@ -186,19 +187,19 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     })
 
     if (this.hasTerminalReporter(this.options.reporter)) {
-      this.ctx.logger.log(
-        c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name),
-      )
+      this.ctx.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.name))
     }
 
     for (const reporter of this.options.reporter) {
       // Type assertion required for custom reporters
-      const reportInstance = await libReport
-        .createAsync(reporter[0] as Parameters<typeof libReport.create>[0], {
+      const reportInstance = await libReport.createAsync(
+        reporter[0] as Parameters<typeof libReport.create>[0],
+        {
           skipFull: this.options.skipFull,
           projectRoot: this.ctx.config.root,
           ...reporter[1],
-        })
+        },
+      )
 
       reportInstance.execute(context)
     }
@@ -230,7 +231,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
       if (debug.enabled) {
         start = performance.now()
-        timeout = setTimeout(() => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)), 3_000)
+        timeout = setTimeout(
+          () => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)),
+          3_000,
+        )
 
         debug('Uncovered file %d/%d', index, uncoveredFiles.length)
       }
@@ -256,7 +260,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   // this means the coverage will not be injected because the modules are cached,
   // so we are invalidating all modules that don't have the istanbul coverage injected
   onEnabled(): void {
-    const environments = this.ctx.projects.flatMap(project => [
+    const environments = this.ctx.projects.flatMap((project) => [
       ...Object.values(project.vite.environments),
       ...Object.values(project.browser?.vite.environments || {}),
     ])
@@ -269,7 +273,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     })
   }
 
-  private invalidateTree(node: Vite.EnvironmentModuleNode, moduleGraph: Vite.EnvironmentModuleGraph, seen: Set<Vite.EnvironmentModuleNode>) {
+  private invalidateTree(
+    node: Vite.EnvironmentModuleNode,
+    moduleGraph: Vite.EnvironmentModuleGraph,
+    seen: Set<Vite.EnvironmentModuleNode>,
+  ) {
     if (seen.has(node)) {
       return
     }

@@ -56,12 +56,15 @@ describe.concurrent('wrapper', () => {
 }
 
 test('deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': deadlockSource(true),
-  }, {
-    maxConcurrency: 2,
-    testTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': deadlockSource(true),
+    },
+    {
+      maxConcurrency: 2,
+      testTimeout: 500,
+    },
+  )
 
   // "a" and "b" fill both concurrency slots and wait for `defers[2]`.
   // "c" is queued until one slot is released by timeout, then it starts,
@@ -86,11 +89,14 @@ test('deadlocks with insufficient maxConcurrency', async () => {
 })
 
 test('passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': deadlockSource(false),
-  }, {
-    maxConcurrency: 3,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': deadlockSource(false),
+    },
+    {
+      maxConcurrency: 3,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -150,12 +156,15 @@ describe.concurrent('wrapper', () => {
 }
 
 test('suite deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': suiteDeadlockSource(true),
-  }, {
-    maxConcurrency: 2,
-    testTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': suiteDeadlockSource(true),
+    },
+    {
+      maxConcurrency: 2,
+      testTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -181,11 +190,14 @@ test('suite deadlocks with insufficient maxConcurrency', async () => {
 })
 
 test('suite passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': suiteDeadlockSource(false),
-  }, {
-    maxConcurrency: 3,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': suiteDeadlockSource(false),
+    },
+    {
+      maxConcurrency: 3,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -238,12 +250,15 @@ describe.concurrent('s2', () => {
 `
 
 test('neighboring suite beforeAll deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': beforeAllNeighboringSuitesSource,
-  }, {
-    maxConcurrency: 1,
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': beforeAllNeighboringSuitesSource,
+    },
+    {
+      maxConcurrency: 1,
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -264,11 +279,14 @@ test('neighboring suite beforeAll deadlocks with insufficient maxConcurrency', a
 })
 
 test('neighboring suite beforeAll passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': beforeAllNeighboringSuitesSource,
-  }, {
-    maxConcurrency: 2,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': beforeAllNeighboringSuitesSource,
+    },
+    {
+      maxConcurrency: 2,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -318,12 +336,15 @@ describe.concurrent('s2', () => {
 `
 
 test('neighboring suite afterAll deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': afterAllNeighboringSuitesSource,
-  }, {
-    maxConcurrency: 1,
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': afterAllNeighboringSuitesSource,
+    },
+    {
+      maxConcurrency: 1,
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -344,11 +365,14 @@ test('neighboring suite afterAll deadlocks with insufficient maxConcurrency', as
 })
 
 test('neighboring suite afterAll passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': afterAllNeighboringSuitesSource,
-  }, {
-    maxConcurrency: 2,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': afterAllNeighboringSuitesSource,
+    },
+    {
+      maxConcurrency: 2,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -399,13 +423,16 @@ describe.concurrent('wrapper', () => {
 `
 
 test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': beforeEachDeadlockSource,
-  }, {
-    maxConcurrency: 2,
-    sequence: { hooks: 'parallel' },
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': beforeEachDeadlockSource,
+    },
+    {
+      maxConcurrency: 2,
+      sequence: { hooks: 'parallel' },
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -422,12 +449,15 @@ test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
 })
 
 test('beforeEach passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': beforeEachDeadlockSource,
-  }, {
-    maxConcurrency: 3,
-    sequence: { hooks: 'parallel' },
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': beforeEachDeadlockSource,
+    },
+    {
+      maxConcurrency: 3,
+      sequence: { hooks: 'parallel' },
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -475,13 +505,16 @@ describe.concurrent('wrapper', () => {
 `
 
 test('afterEach deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': afterEachDeadlockSource,
-  }, {
-    maxConcurrency: 2,
-    sequence: { hooks: 'parallel' },
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': afterEachDeadlockSource,
+    },
+    {
+      maxConcurrency: 2,
+      sequence: { hooks: 'parallel' },
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -498,12 +531,15 @@ test('afterEach deadlocks with insufficient maxConcurrency', async () => {
 })
 
 test('afterEach passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': afterEachDeadlockSource,
-  }, {
-    maxConcurrency: 3,
-    sequence: { hooks: 'parallel' },
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': afterEachDeadlockSource,
+    },
+    {
+      maxConcurrency: 3,
+      sequence: { hooks: 'parallel' },
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -552,12 +588,15 @@ describe.concurrent('s2', () => {
 `
 
 test('neighboring suite aroundAll deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundAllNeighboringSuitesSource,
-  }, {
-    maxConcurrency: 1,
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundAllNeighboringSuitesSource,
+    },
+    {
+      maxConcurrency: 1,
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -577,11 +616,14 @@ test('neighboring suite aroundAll deadlocks with insufficient maxConcurrency', a
 })
 
 test('neighboring suite aroundAll passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': aroundAllNeighboringSuitesSource,
-  }, {
-    maxConcurrency: 2,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundAllNeighboringSuitesSource,
+    },
+    {
+      maxConcurrency: 2,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -633,19 +675,22 @@ describe.concurrent('s2', () => {
 `
 
 test('neighboring suite aroundAll teardown deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundAllNeighboringSuitesPostSource,
-  }, {
-    maxConcurrency: 1,
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundAllNeighboringSuitesPostSource,
+    },
+    {
+      maxConcurrency: 1,
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "s1": {
           "__suite_errors__": [
-            "The teardown phase of \"aroundAll\" hook timed out after 500ms.",
+            "The teardown phase of "aroundAll" hook timed out after 500ms.",
           ],
           "a": "passed",
         },
@@ -658,11 +703,14 @@ test('neighboring suite aroundAll teardown deadlocks with insufficient maxConcur
 })
 
 test('neighboring suite aroundAll teardown passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': aroundAllNeighboringSuitesPostSource,
-  }, {
-    maxConcurrency: 2,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundAllNeighboringSuitesPostSource,
+    },
+    {
+      maxConcurrency: 2,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -714,13 +762,16 @@ describe.concurrent('s2', () => {
 `
 
 test('neighboring suite aroundAll does not hang when setup times out before late teardown acquire', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundAllSetupTimeoutLateTeardownAcquireSource,
-  }, {
-    maxConcurrency: 1,
-    hookTimeout: 500,
-    testTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundAllSetupTimeoutLateTeardownAcquireSource,
+    },
+    {
+      maxConcurrency: 1,
+      hookTimeout: 500,
+      testTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -776,19 +827,22 @@ describe.concurrent('wrapper', () => {
 `
 
 test('neighboring test aroundEach deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundEachNeighboringTestsSource,
-  }, {
-    maxConcurrency: 1,
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundEachNeighboringTestsSource,
+    },
+    {
+      maxConcurrency: 1,
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "wrapper": {
           "a": [
-            "The setup phase of \"aroundEach\" hook timed out after 500ms.",
+            "The setup phase of "aroundEach" hook timed out after 500ms.",
           ],
           "b": "passed",
         },
@@ -798,11 +852,14 @@ test('neighboring test aroundEach deadlocks with insufficient maxConcurrency', a
 })
 
 test('neighboring test aroundEach passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': aroundEachNeighboringTestsSource,
-  }, {
-    maxConcurrency: 2,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundEachNeighboringTestsSource,
+    },
+    {
+      maxConcurrency: 2,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -851,19 +908,22 @@ describe.concurrent('wrapper', () => {
 `
 
 test('neighboring test aroundEach teardown deadlocks with insufficient maxConcurrency', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundEachNeighboringTestsPostSource,
-  }, {
-    maxConcurrency: 1,
-    hookTimeout: 500,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundEachNeighboringTestsPostSource,
+    },
+    {
+      maxConcurrency: 1,
+      hookTimeout: 500,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "wrapper": {
           "a": [
-            "The teardown phase of \"aroundEach\" hook timed out after 500ms.",
+            "The teardown phase of "aroundEach" hook timed out after 500ms.",
           ],
           "b": "passed",
         },
@@ -873,11 +933,14 @@ test('neighboring test aroundEach teardown deadlocks with insufficient maxConcur
 })
 
 test('neighboring test aroundEach teardown passes when maxConcurrency is high enough', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': aroundEachNeighboringTestsPostSource,
-  }, {
-    maxConcurrency: 2,
-  })
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundEachNeighboringTestsPostSource,
+    },
+    {
+      maxConcurrency: 2,
+    },
+  )
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -930,11 +993,14 @@ describe.concurrent('wrapper', () => {
 `
 
 test('aroundEach continues protocol when outer hook catches runTest error', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundEachOuterCatchesInnerErrorSource,
-  }, {
-    maxConcurrency: 1,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundEachOuterCatchesInnerErrorSource,
+    },
+    {
+      maxConcurrency: 1,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -982,11 +1048,14 @@ describe.concurrent('suite', () => {
 `
 
 test('aroundAll continues protocol when outer hook catches runSuite error', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundAllOuterCatchesInnerErrorSource,
-  }, {
-    maxConcurrency: 1,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundAllOuterCatchesInnerErrorSource,
+    },
+    {
+      maxConcurrency: 1,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -1028,11 +1097,14 @@ describe.concurrent('wrapper', () => {
 `
 
 test('aroundEach enforces teardown timeout when inner error is caught', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundEachCaughtInnerErrorTeardownTimeoutSource,
-  }, {
-    maxConcurrency: 1,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundEachCaughtInnerErrorTeardownTimeoutSource,
+    },
+    {
+      maxConcurrency: 1,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -1074,11 +1146,14 @@ describe.concurrent('suite', () => {
 `
 
 test('aroundAll enforces teardown timeout when inner error is caught', async () => {
-  const { errorTree } = await runInlineTests({
-    'basic.test.ts': aroundAllCaughtInnerErrorTeardownTimeoutSource,
-  }, {
-    maxConcurrency: 1,
-  })
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': aroundAllCaughtInnerErrorTeardownTimeoutSource,
+    },
+    {
+      maxConcurrency: 1,
+    },
+  )
 
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -1096,13 +1171,17 @@ test('aroundAll enforces teardown timeout when inner error is caught', async () 
 })
 
 function extractLogs(log: string) {
-  const result = log.split('\n').filter(line => line.match(/^(?:![<>]|\d+ -> \d+)/)).join('\n')
+  const result = log
+    .split('\n')
+    .filter((line) => line.match(/^(?:![<>]|\d+ -> \d+)/))
+    .join('\n')
   return `\n${result.trim()}\n`
 }
 
 test('sibling task sequential lifecycle guarantee', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 beforeEach(async ({ task }) => {
@@ -1123,10 +1202,12 @@ test.concurrent.for(["a", "b"])("%s", async (_, { task }) => {
   console.log("!< test", task.name)
 })
 `,
-  }, {
-    maxConcurrency: 1,
-    globals: true,
-  })
+    },
+    {
+      maxConcurrency: 1,
+      globals: true,
+    },
+  )
 
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "
@@ -1155,8 +1236,9 @@ test.concurrent.for(["a", "b"])("%s", async (_, { task }) => {
 })
 
 test('sibling suite sequential lifecycle guarantee', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 describe.for(["a", "b"])("%s", { concurrent: true }, () => {
@@ -1179,10 +1261,12 @@ describe.for(["a", "b"])("%s", { concurrent: true }, () => {
   })
 })
 `,
-  }, {
-    maxConcurrency: 1,
-    globals: true,
-  })
+    },
+    {
+      maxConcurrency: 1,
+      globals: true,
+    },
+  )
 
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "
@@ -1215,8 +1299,9 @@ describe.for(["a", "b"])("%s", { concurrent: true }, () => {
 })
 
 test('non-sibling test sequential lifecycle guarantee', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 let inFlight = 0
 
@@ -1245,10 +1330,12 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
   })
 })
 `,
-  }, {
-    maxConcurrency: 2,
-    globals: true,
-  })
+    },
+    {
+      maxConcurrency: 2,
+      globals: true,
+    },
+  )
 
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "
@@ -1292,8 +1379,9 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
 })
 
 test('non-sibling suite sequential lifecycle non-guarantee', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 let inFlight = 0
 
@@ -1322,10 +1410,12 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
   })
 })
 `,
-  }, {
-    maxConcurrency: 2,
-    globals: true,
-  })
+    },
+    {
+      maxConcurrency: 2,
+      globals: true,
+    },
+  )
 
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "

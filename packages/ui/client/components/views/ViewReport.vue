@@ -20,18 +20,14 @@ function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
 
   if (task.type === 'test') {
     return [{ ...task, level }]
-  }
-  else {
-    return [
-      { ...task, level },
-      ...task.tasks.flatMap(t => collectFailed(t, level + 1)),
-    ]
+  } else {
+    return [{ ...task, level }, ...task.tasks.flatMap((t) => collectFailed(t, level + 1))]
   }
 }
 
 const failed = computed(() => {
   const suite = props.suite
-  const failedFlatMap = suite.tasks.flatMap(t => collectFailed(t, 0))
+  const failedFlatMap = suite.tasks.flatMap((t) => collectFailed(t, 0))
   // prepend suite level errors as same indent level as children errors
   if (suite.result?.errors?.length) {
     const taskError: LeveledTask = {

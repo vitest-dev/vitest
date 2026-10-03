@@ -53,18 +53,21 @@ test('multiple doMock for direct virtual module', async () => {
 })
 
 test('multiple resetModules and doMock for indirect virtual module', async () => {
-  const { getVirtualValue: originalGetVirtualValue } = await import('./fixtures/virtual-module-indirect')
+  const { getVirtualValue: originalGetVirtualValue } =
+    await import('./fixtures/virtual-module-indirect')
   expect(originalGetVirtualValue()).toBe('original-indirect')
 
   vi.doMock('virtual-module-indirect', () => ({ value: 'indirect-1' }))
   vi.resetModules()
 
-  const { getVirtualValue: mockedGetVirtualValue1 } = await import('./fixtures/virtual-module-indirect')
+  const { getVirtualValue: mockedGetVirtualValue1 } =
+    await import('./fixtures/virtual-module-indirect')
   expect(mockedGetVirtualValue1()).toBe('indirect-1')
 
   vi.resetModules()
   vi.doMock('virtual-module-indirect', () => ({ value: 'indirect-2' }))
 
-  const { getVirtualValue: mockedGetVirtualValue2 } = await import('./fixtures/virtual-module-indirect')
+  const { getVirtualValue: mockedGetVirtualValue2 } =
+    await import('./fixtures/virtual-module-indirect')
   expect(mockedGetVirtualValue2()).toBe('indirect-2')
 })

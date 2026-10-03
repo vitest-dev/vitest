@@ -1,8 +1,8 @@
 import type { Output } from 'tinyexec'
 import type { VCSProvider, VCSProviderOptions } from './vcs'
 import { resolve } from 'pathe'
-import { x } from 'tinyexec'
-import { GitNotFoundError } from '../errors'
+import { NonZeroExitError, x } from 'tinyexec'
+import { GitCommandError, GitNotFoundError } from '../errors'
 
 export class GitVCSProvider implements VCSProvider {
   private root!: string
@@ -11,22 +11,22 @@ export class GitVCSProvider implements VCSProvider {
     let result: Output
 
     try {
-      result = await x('git', args, { nodeOptions: { cwd: this.root } })
-    }
-    catch (e: any) {
-      e.message = e.stderr
-
-      throw e
+      result = await x('git', args, { nodeOptions: { cwd: this.root }, throwOnError: true })
+    } catch (error) {
+      if (error instanceof NonZeroExitError) {
+        throw new GitCommandError(args, error.output?.stderr.trim() || error.message)
+      }
+      throw error
     }
 
     return result.stdout
       .split('\n')
-      .filter(s => s !== '')
-      .map(changedPath => resolve(this.root, changedPath))
+      .filter((s) => s !== '')
+      .map((changedPath) => resolve(this.root, changedPath))
   }
 
   async findChangedFiles(options: VCSProviderOptions): Promise<string[]> {
-    const root = this.root || await this.getRoot(options.root)
+    const root = this.root || (await this.getRoot(options.root))
     if (!root) {
       throw new GitNotFoundError()
     }
@@ -42,19 +42,12 @@ export class GitVCSProvider implements VCSProvider {
       ])
       return [...committed, ...staged, ...unstaged]
     }
-    const [staged, unstaged] = await Promise.all([
-      this.getStagedFiles(),
-      this.getUnstagedFiles(),
-    ])
+    const [staged, unstaged] = await Promise.all([this.getStagedFiles(), this.getUnstagedFiles()])
     return [...staged, ...unstaged]
   }
 
   private getFilesSince(hash: string) {
-    return this.resolveFilesWithGitCommand([
-      'diff',
-      '--name-only',
-      `${hash}...HEAD`,
-    ])
+    return this.resolveFilesWithGitCommand(['diff', '--name-only', `${hash}...HEAD`])
   }
 
   private getStagedFiles() {
@@ -74,11 +67,10 @@ export class GitVCSProvider implements VCSProvider {
     const args = ['rev-parse', '--show-cdup']
 
     try {
-      const result = await x('git', args, { nodeOptions: { cwd } })
+      const result = await x('git', args, { nodeOptions: { cwd }, throwOnError: true })
 
       return resolve(cwd, result.stdout.trim())
-    }
-    catch {
+    } catch {
       return null
     }
   }

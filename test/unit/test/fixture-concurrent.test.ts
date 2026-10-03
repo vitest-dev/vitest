@@ -5,7 +5,7 @@ export const myTest = test.extend<{
   b: string
 }>({
   a: async ({ task }: any, use) => {
-    await new Promise<void>(resolve => setTimeout(resolve, 200))
+    await new Promise<void>((resolve) => setTimeout(resolve, 200))
     await use(task.id)
   },
   b: async ({ a }, use) => {

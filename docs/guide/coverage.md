@@ -29,12 +29,15 @@ When you start the Vitest process, it will prompt you to install the correspondi
 Or if you prefer to install them manually:
 
 ::: code-group
+
 ```bash [v8]
 npm i -D @vitest/coverage-v8
 ```
+
 ```bash [istanbul]
 npm i -D @vitest/coverage-istanbul
 ```
+
 :::
 
 ## V8 Provider
@@ -140,6 +143,7 @@ All coverage options are listed in [Coverage Config Reference](/config/coverage)
 To test with coverage enabled, you can pass the `--coverage` flag in CLI or set `coverage.enabled` in `vitest.config.ts`:
 
 ::: code-group
+
 ```json [package.json]
 {
   "scripts": {
@@ -148,6 +152,7 @@ To test with coverage enabled, you can pass the `--coverage` flag in CLI or set 
   }
 }
 ```
+
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
@@ -159,6 +164,7 @@ export default defineConfig({
   },
 })
 ```
+
 :::
 
 ## Including and Excluding Files from Coverage Report
@@ -169,6 +175,7 @@ By default Vitest will show only files that were imported during test run.
 To include uncovered files in the report, you'll need to configure [`coverage.include`](/config/coverage#coverage-include) with a pattern that will pick your source files:
 
 ::: code-group
+
 ```ts [vitest.config.ts] {6}
 import { defineConfig } from 'vitest/config'
 
@@ -180,6 +187,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```sh [Covered Files]
 ├── src
 │   ├── components
@@ -198,11 +206,13 @@ export default defineConfig({
 ├── tsup.config.ts        # [!code error]
 └── vitest.config.ts      # [!code error]
 ```
+
 :::
 
 To exclude files that are matching `coverage.include`, you can define an additional [`coverage.exclude`](/config/coverage#coverage-exclude):
 
 ::: code-group
+
 ```ts [vitest.config.ts] {7}
 import { defineConfig } from 'vitest/config'
 
@@ -215,6 +225,7 @@ export default defineConfig({
   },
 })
 ```
+
 ```sh [Covered Files]
 ├── src
 │   ├── components
@@ -233,6 +244,7 @@ export default defineConfig({
 ├── tsup.config.ts        # [!code error]
 └── vitest.config.ts      # [!code error]
 ```
+
 :::
 
 ## Custom Coverage Reporter
@@ -260,6 +272,7 @@ export default defineConfig({
 Custom reporters are loaded by `@vitest/istanbul-lib-report` and must match its reporter interface. See [built-in reporters' implementation](https://github.com/vitest-dev/istanbuljs/tree/main/packages/istanbul-lib-report/src/reports) for reference.
 
 ::: code-group
+
 ```js [custom-reporter.mjs]
 import { ReportBase } from '@vitest/istanbul-lib-report'
 
@@ -285,6 +298,7 @@ export default class CustomReporter extends ReportBase {
   }
 }
 ```
+
 ```js [custom-reporter.cjs]
 const { ReportBase } = require('@vitest/istanbul-lib-report')
 
@@ -307,6 +321,7 @@ module.exports = class CustomReporter extends ReportBase {
   }
 }
 ```
+
 :::
 
 ## Custom Coverage Provider
@@ -514,15 +529,16 @@ export function ignored() { // [!code error]
   return 'Whole file is ignored'// [!code error]
 }// [!code error]
 ```
+
 :::
 
 ## Coverage Performance
 
-If code coverage generation is slow on your project, see [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage).
+If code coverage generation is slow on your project, see [Profiling Test Performance | Code coverage](/guide/profiling-test-performance#code-coverage).
 
 ## Vitest UI
 
-You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters#html-reporter).
 
 This is integrated with builtin coverage reporters with HTML output (`html`, `html-spa`, and `lcov` reporters). `html` reporter is enabled by default and this works out of the box. To integrate with custom reporters, you can configure [`coverage.htmlDir`](/config/coverage#coverage-htmldir).
 

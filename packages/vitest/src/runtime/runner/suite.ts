@@ -20,13 +20,7 @@ import type {
   VitestRunner,
 } from './types'
 import { format, formatRegExp, inspect, truncateString } from '@vitest/utils/display'
-import {
-  isNegativeNaN,
-  isObject,
-  objectAttr,
-  toArray,
-  unique,
-} from '@vitest/utils/helpers'
+import { isNegativeNaN, isObject, objectAttr, toArray, unique } from '@vitest/utils/helpers'
 import { createTaskName } from '../../utils/tasks'
 import {
   abortIfTimeout,
@@ -193,11 +187,11 @@ let currentTestFilepath: string
 function assert(condition: any, message: string) {
   if (!condition) {
     throw new Error(
-      `Vitest failed to find ${message}. One of the following is possible:`
-      + '\n- "vitest" is imported directly without running "vitest" command'
-      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
-      + '\n- "vitest" is imported inside Vite / Vitest config file'
-      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n',
+      `Vitest failed to find ${message}. One of the following is possible:` +
+        '\n- "vitest" is imported directly without running "vitest" command' +
+        '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)' +
+        '\n- "vitest" is imported inside Vite / Vitest config file' +
+        '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n',
     )
   }
 }
@@ -224,10 +218,7 @@ function createDefaultSuite(runner: VitestRunner) {
   return collector
 }
 
-export function clearCollectorContext(
-  file: File,
-  currentRunner: VitestRunner,
-): void {
+export function clearCollectorContext(file: File, currentRunner: VitestRunner): void {
   currentTestFilepath = file.filepath
   runner = currentRunner
   if (!defaultSuite) {
@@ -240,8 +231,8 @@ export function clearCollectorContext(
 }
 
 export function getCurrentSuite<ExtraContext = object>(): SuiteCollector<ExtraContext> {
-  const currentSuite = (collectorContext.currentSuite
-    || defaultSuite) as unknown as SuiteCollector<ExtraContext>
+  const currentSuite = (collectorContext.currentSuite ||
+    defaultSuite) as unknown as SuiteCollector<ExtraContext>
   assert(currentSuite, 'the current suite')
   return currentSuite
 }
@@ -264,7 +255,9 @@ function parseArguments<T extends (...args: any[]) => any>(
   timeoutOrTest: T | number | undefined,
 ) {
   if (timeoutOrTest != null && typeof timeoutOrTest === 'object') {
-    throw new TypeError(`Signature "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
+    throw new TypeError(
+      `Signature "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`,
+    )
   }
 
   let options: TestOptions = {}
@@ -286,8 +279,7 @@ function parseArguments<T extends (...args: any[]) => any>(
       )
     }
     fn = optionsOrFn as T
-  }
-  else if (typeof timeoutOrTest === 'function') {
+  } else if (typeof timeoutOrTest === 'function') {
     fn = timeoutOrTest as T
   }
 
@@ -317,15 +309,17 @@ function createSuiteCollector(
     const testTags = unique([...parentTags, ...toArray(options.tags)])
     const tagsOptions = testTags
       .map((tag) => {
-        const tagDefinition = runner.config.tags?.find(t => t.name === tag)
+        const tagDefinition = runner.config.tags?.find((t) => t.name === tag)
         if (!tagDefinition && runner.config.strictTags) {
           throw createNoTagsError(runner.config.tags, tag)
         }
         return tagDefinition
       })
-      .filter(r => r != null)
+      .filter((r) => r != null)
       // higher priority should be last, run 1, 2, 3, ... etc
-      .sort((tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY))
+      .sort(
+        (tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY),
+      )
       .reduce((acc, tag) => {
         const { name, description, priority, meta, ...options } = tag
         Object.assign(acc, options)
@@ -384,13 +378,7 @@ function createSuiteCollector(
       timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats ?? runner.config.repeats,
-      mode: options.only
-        ? 'only'
-        : options.skip
-          ? 'skip'
-          : options.todo
-            ? 'todo'
-            : 'run',
+      mode: options.only ? 'only' : options.skip ? 'skip' : options.todo ? 'todo' : 'run',
       meta: testMeta,
       annotations: [],
       artifacts: [],
@@ -422,7 +410,10 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withCancel(withAwaitAsyncAssertions(withFixtures(handler, { context }), task), task.context.signal),
+          withCancel(
+            withAwaitAsyncAssertions(withFixtures(handler, { context }), task),
+            task.context.signal,
+          ),
           timeout,
           false,
           stackTraceError,
@@ -512,7 +503,7 @@ function createSuiteCollector(
       tasks: [],
       meta: suiteOptions?.meta ?? Object.create(null),
       concurrent: suiteOptions?.concurrent,
-      tags: unique([...parentTask?.tags || [], ...suiteTags]),
+      tags: unique([...(parentTask?.tags || []), ...suiteTags]),
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
@@ -572,14 +563,17 @@ function createSuiteCollector(
   return collector
 }
 
-function withAwaitAsyncAssertions<T extends (...args: any[]) => any>(fn: T, task: TaskPopulated): T {
+function withAwaitAsyncAssertions<T extends (...args: any[]) => any>(
+  fn: T,
+  task: TaskPopulated,
+): T {
   return (async (...args: any[]) => {
     const fnResult = await fn(...args)
     // some async expect will be added to this array, in case user forget to await them
     if (task.promises) {
       const result = await Promise.allSettled(task.promises)
       const errors = result
-        .map(r => (r.status === 'rejected' ? r.reason : undefined))
+        .map((r) => (r.status === 'rejected' ? r.reason : undefined))
         .filter(Boolean)
       if (errors.length) {
         throw errors
@@ -604,10 +598,10 @@ function createSuite() {
 
     const currentSuite: SuiteCollector | undefined = collectorContext.currentSuite || defaultSuite
 
-    let { options, handler: factory } = parseArguments(
-      factoryOrOptions,
-      optionsOrFactory,
-    ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
+    let { options, handler: factory } = parseArguments(factoryOrOptions, optionsOrFactory) as {
+      options: SuiteOptions
+      handler: SuiteFactory | undefined
+    }
 
     const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
@@ -616,18 +610,23 @@ function createSuite() {
       ...options,
     }
 
-    const shuffle = this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle
+    const shuffle =
+      this.shuffle ??
+      options.shuffle ??
+      currentSuite?.options?.shuffle ??
+      runner?.config.sequence.shuffle
     if (shuffle != null) {
       options.shuffle = shuffle
     }
 
-    let mode: RunMode = (this.only ?? options.only)
-      ? 'only'
-      : (this.skip ?? options.skip)
+    let mode: RunMode =
+      (this.only ?? options.only)
+        ? 'only'
+        : (this.skip ?? options.skip)
           ? 'skip'
           : (this.todo ?? options.todo)
-              ? 'todo'
-              : 'run'
+            ? 'todo'
+            : 'run'
 
     // passed as test(name), assume it's a "todo"
     if (mode === 'run' && !factory) {
@@ -643,20 +642,10 @@ function createSuite() {
       options.meta = Object.assign(Object.create(null), parentMeta, options.meta)
     }
 
-    return createSuiteCollector(
-      formatName(name),
-      factory,
-      mode,
-      this.each,
-      options,
-    )
+    return createSuiteCollector(formatName(name), factory, mode, this.each, options)
   }
 
-  suiteFn.each = function <T>(
-    this: SuiteAPI,
-    cases: ReadonlyArray<T>,
-    ...args: any[]
-  ) {
+  suiteFn.each = function <T>(this: SuiteAPI, cases: ReadonlyArray<T>, ...args: any[]) {
     const context = getChainableContext(this)
     const suite = context.withContext()
     context.setContext('each', true)
@@ -686,16 +675,21 @@ function createSuite() {
               handler ? () => handler(...items) : undefined,
               options.timeout,
             )
+          } else {
+            suite(
+              formatTitle(_name, items, idx),
+              handler ? () => handler(i) : undefined,
+              options.timeout,
+            )
           }
-          else {
-            suite(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options.timeout)
-          }
-        }
-        else {
+        } else {
           if (arrayOnlyCases) {
-            suite(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
-          }
-          else {
+            suite(
+              formatTitle(_name, items, idx),
+              options,
+              handler ? () => handler(...items) : undefined,
+            )
+          } else {
             suite(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
@@ -705,11 +699,7 @@ function createSuite() {
     }
   }
 
-  suiteFn.for = function <T>(
-    this: SuiteAPI,
-    cases: ReadonlyArray<T>,
-    ...args: any[]
-  ) {
+  suiteFn.for = function <T>(this: SuiteAPI, cases: ReadonlyArray<T>, ...args: any[]) {
     const context = getChainableContext(this)
     const suite = context.withContext()
 
@@ -725,15 +715,17 @@ function createSuite() {
       const name_ = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
-        suite(formatTitle(name_, toArray(item), idx), options, handler ? () => handler(item) : undefined)
+        suite(
+          formatTitle(name_, toArray(item), idx),
+          options,
+          handler ? () => handler(item) : undefined,
+        )
       })
     }
   }
 
-  suiteFn.skipIf = (condition: any) =>
-    (condition ? suite.skip : suite) as SuiteAPI
-  suiteFn.runIf = (condition: any) =>
-    (condition ? suite : suite.skip) as SuiteAPI
+  suiteFn.skipIf = (condition: any) => (condition ? suite.skip : suite) as SuiteAPI
+  suiteFn.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
 
   return createChainable(
     ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
@@ -741,16 +733,10 @@ function createSuite() {
   ) as unknown as SuiteAPI
 }
 
-export function createTaskCollector(
-  fn: (...args: any[]) => any,
-): TestAPI {
+export function createTaskCollector(fn: (...args: any[]) => any): TestAPI {
   const taskFn = fn as any
 
-  taskFn.each = function <T>(
-    this: TestAPI,
-    cases: ReadonlyArray<T>,
-    ...args: any[]
-  ) {
+  taskFn.each = function <T>(this: TestAPI, cases: ReadonlyArray<T>, ...args: any[]) {
     const context = getChainableContext(this)
     const test = context.withContext()
     context.setContext('each', true)
@@ -781,16 +767,21 @@ export function createTaskCollector(
               handler ? () => handler(...items) : undefined,
               options.timeout,
             )
+          } else {
+            test(
+              formatTitle(_name, items, idx),
+              handler ? () => handler(i) : undefined,
+              options.timeout,
+            )
           }
-          else {
-            test(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options.timeout)
-          }
-        }
-        else {
+        } else {
           if (arrayOnlyCases) {
-            test(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
-          }
-          else {
+            test(
+              formatTitle(_name, items, idx),
+              options,
+              handler ? () => handler(...items) : undefined,
+            )
+          } else {
             test(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
@@ -800,11 +791,7 @@ export function createTaskCollector(
     }
   }
 
-  taskFn.for = function <T>(
-    this: TestAPI,
-    cases: ReadonlyArray<T>,
-    ...args: any[]
-  ) {
+  taskFn.for = function <T>(this: TestAPI, cases: ReadonlyArray<T>, ...args: any[]) {
     const context = getChainableContext(this)
     const test = context.withContext()
 
@@ -859,21 +846,19 @@ export function createTaskCollector(
       // (name, options, value) or (name, options, fn)
       fixtureOptions = optionsOrFn as object
       fixtureValue = maybeFn
-    }
-    else {
+    } else {
       // (name, value) or (name, fn)
       // Check if optionsOrFn looks like fixture options (has scope or auto)
       if (
-        optionsOrFn !== null
-        && typeof optionsOrFn === 'object'
-        && !Array.isArray(optionsOrFn)
-        && TestFixtures.isFixtureOptions(optionsOrFn)
+        optionsOrFn !== null &&
+        typeof optionsOrFn === 'object' &&
+        !Array.isArray(optionsOrFn) &&
+        TestFixtures.isFixtureOptions(optionsOrFn)
       ) {
         // (name, options) with no value - treat as empty object fixture
         fixtureOptions = optionsOrFn as object
         fixtureValue = {}
-      }
-      else {
+      } else {
         // (name, value) or (name, fn)
         fixtureOptions = undefined
         fixtureValue = optionsOrFn
@@ -890,8 +875,8 @@ export function createTaskCollector(
         const onCleanup = (fn: () => any) => {
           if (cleanup !== undefined) {
             throw new Error(
-              `onCleanup can only be called once per fixture. `
-              + `Define separate fixtures if you need multiple cleanup functions.`,
+              `onCleanup can only be called once per fixture. ` +
+                `Define separate fixtures if you need multiple cleanup functions.`,
             )
           }
           cleanup = fn
@@ -929,7 +914,9 @@ export function createTaskCollector(
   }
 
   taskFn.scoped = function (fixtures: UserFixtures) {
-    console.warn(`test.scoped() is deprecated and will be removed in future versions. Please use test.override() instead.`)
+    console.warn(
+      `test.scoped() is deprecated and will be removed in future versions. Please use test.override() instead.`,
+    )
     return this.override(fixtures)
   }
 
@@ -940,10 +927,7 @@ export function createTaskCollector(
     maybeFn?: (...args: any[]) => any,
   ) {
     const userFixtures = parseBuilderFixtures(fixturesOrName, optionsOrFn, maybeFn)
-    const fixtures = getChainableContext(this).getFixtures().extend(
-      runner,
-      userFixtures,
-    )
+    const fixtures = getChainableContext(this).getFixtures().extend(runner, userFixtures)
 
     const _test = createTest(function (
       name: string | Function,
@@ -966,11 +950,9 @@ export function createTaskCollector(
   taskFn.aroundEach = aroundEach
   taskFn.aroundAll = aroundAll
 
-  const _test = createChainable(
-    ['concurrent', 'skip', 'only', 'todo', 'fails'],
-    taskFn,
-    { fixtures: new TestFixtures() },
-  ) as TestAPI
+  const _test = createChainable(['concurrent', 'skip', 'only', 'todo', 'fails'], taskFn, {
+    fixtures: new TestFixtures(),
+  }) as TestAPI
 
   return _test
 }
@@ -1049,8 +1031,7 @@ function formatTitle(template: string, items: any[], idx: number) {
     (match) => {
       if (i < count) {
         output += format([match[0], items[i++]], inspectOptions)
-      }
-      else {
+      } else {
         output += match[0]
       }
     },
@@ -1088,7 +1069,7 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     .trim()
     .replace(/ /g, '')
     .split('\n')
-    .map(i => i.split('|'))[0]
+    .map((i) => i.split('|'))[0]
   const res: any[] = []
   for (let i = 0; i < Math.floor(args.length / header.length); i++) {
     const oneCase: Record<string, any> = {}

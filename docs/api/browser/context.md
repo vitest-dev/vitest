@@ -192,7 +192,7 @@ await button.click() // Interactive methods work fine ✅
 await expect.element(button).toBeVisible() // Querying elements does not work ❌
 ```
 
-If you need to work with cross-origin iframes, you'll need to pass `args: ["--disable-web-security"]` in [`launchOptions`](/config/browser/playwright.html#launchoptions). Or alternatively create a custom [browser command](/api/browser/commands.html#custom-commands) that accesses the iframe on server side where it's available.
+If you need to work with cross-origin iframes, you'll need to pass `args: ["--disable-web-security"]` in [`launchOptions`](/config/browser/playwright#launchoptions). Or alternatively create a custom [browser command](/api/browser/commands#custom-commands) that accesses the iframe on server side where it's available.
 :::
 
 ::: danger IMPORTANT
@@ -346,22 +346,26 @@ const html = utils.prettyDOM(element, undefined, {
 **Common Patterns:**
 
 Filter out scripts and styles:
+
 ```ts
 utils.configurePrettyDOM({ filterNode: 'script, style' })
 ```
 
 Hide specific elements with data attributes:
+
 ```ts
 utils.configurePrettyDOM({ filterNode: '[data-test-hide]' })
 ```
 
 Hide nested content within an element:
+
 ```ts
 // Hides all children of elements with data-test-hide-content
 utils.configurePrettyDOM({ filterNode: '[data-test-hide-content] *' })
 ```
 
 Combine multiple selectors:
+
 ```ts
 utils.configurePrettyDOM({
   filterNode: 'script, style, [data-test-hide], svg'

@@ -10,8 +10,7 @@ test('rollup error node', async () => {
   if (rolldownVersion) {
     expect(stderr).toContain('"./no-such-export" is not exported')
     expect(stderr).toContain(`Plugin: builtin:vite-resolve`)
-  }
-  else {
+  } else {
     expect(stderr).toContain(`Error: Missing "./no-such-export" specifier in "vite" package`)
     expect(stderr).toContain(`Plugin: vite:import-analysis`)
   }
@@ -26,10 +25,11 @@ test('rollup error web', async () => {
   if (rolldownVersion) {
     expect(stderr).toContain('"./no-such-export" is not exported')
     expect(stderr).toContain(`Plugin: builtin:vite-resolve`)
-  }
-  else {
+  } else {
     expect(stderr).toContain(`Error: Missing "./no-such-export" specifier in "vite" package`)
   }
   expect(stderr).toContain(`Plugin: vite:import-analysis`)
-  expect(stderr).toContain(`Error: Failed to resolve import "@vitejs/no-such-package" from "fixtures/rollup-error/not-found-package.test.ts". Does the file exist?`)
+  expect(stderr).toContain(
+    `Error: Failed to resolve import "@vitejs/no-such-package" from "fixtures/rollup-error/not-found-package.test.ts". Does the file exist?`,
+  )
 })

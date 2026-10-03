@@ -1,5 +1,12 @@
 import type { SerializedError, TestAttachment } from 'vitest'
-import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
+import type {
+  HTMLOptions,
+  Reporter,
+  RunnerTask,
+  RunnerTestFile,
+  TestModule,
+  Vitest,
+} from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
@@ -7,7 +14,7 @@ import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
-import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { getSharedModuleGraphByProject } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
 
 const gzipAsync = promisify(gzip)
@@ -24,21 +31,14 @@ export default class HTMLReporter implements Reporter {
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
-    this.reporterDir = resolve(
-      this.ctx.config.root,
-      this.options.outputDir || '.vitest',
-    )
+    this.reporterDir = resolve(this.ctx.config.root, this.options.outputDir || '.vitest')
   }
 
   async onTestRunEnd(
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
   ): Promise<void> {
-    const result = await serializeReportMetadata(
-      this.ctx,
-      testModules,
-      unhandledErrors,
-    )
+    const result = await serializeReportMetadata(this.ctx, testModules, unhandledErrors)
     if (this.options.singleFile) {
       await inlineAttachments(result.files)
     }
@@ -58,8 +58,7 @@ export default class HTMLReporter implements Reporter {
         data,
         singleFile: true,
       })
-    }
-    else {
+    } else {
       // copy ui assets into `<outputDir>/ui`
       const uiDir = resolve(this.reporterDir, 'ui')
       await fs.rm(uiDir, { recursive: true, force: true })
@@ -86,9 +85,7 @@ export default class HTMLReporter implements Reporter {
     }
 
     this.ctx.logger.log(
-      `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(
-        'Report is generated',
-      )}`,
+      `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta('Report is generated')}`,
     )
     this.ctx.logger.log(
       `${c.dim('       You can run ')}${c.bold(
@@ -123,7 +120,7 @@ async function serializeReportMetadata(
     files: [],
     config: ctx.serializedRootConfig,
     unhandledErrors: [...unhandledErrors],
-    moduleGraph: {},
+    moduleGraph: getSharedModuleGraphByProject(testModules),
     testModules: [],
     sourceCode: {
       codeTable: [],
@@ -150,8 +147,6 @@ async function serializeReportMetadata(
     return index
   }
 
-  const promises: Promise<void>[] = []
-
   for (const testModule of testModules) {
     result.files.push(testModule.task)
 
@@ -166,28 +161,11 @@ async function serializeReportMetadata(
     testModuleCodes[projectName] ??= {}
     if (testModuleCodes[projectName][testModule.relativeModuleId] == null) {
       try {
-        const code = readFileSync(
-          testModule.moduleId,
-          'utf-8',
-        )
+        const code = readFileSync(testModule.moduleId, 'utf-8')
         testModuleCodes[projectName][testModule.relativeModuleId] = getCodeIndex(code)
-      }
-      catch {}
+      } catch {}
     }
-
-    // TODO: https://github.com/vitest-dev/vitest/issues/9763
-    promises.push((async () => {
-      result.moduleGraph[projectName] ??= {}
-      result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
-        ctx,
-        projectName,
-        testModule.moduleId,
-        testModule.viteEnvironment?.name,
-      )
-    })())
   }
-
-  await Promise.all(promises)
 
   return result
 }
@@ -206,8 +184,7 @@ async function handleIndexHtml(options: {
     html = await inlineHtmlAssets(indexHtmlFilePath, html)
     const base64 = options.data.toString('base64')
     metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
-  }
-  else {
+  } else {
     const dataFile = 'html.meta.json.gz'
     await fs.writeFile(resolve(options.dstDir, 'ui', dataFile), options.data)
     metadataCode = `fetch(new URL("./ui/${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
@@ -251,14 +228,17 @@ async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
 }
 
 async function inlineTestAttachment(attachment: TestAttachment): Promise<void> {
-  if (attachment.path && !attachment.path.startsWith('http://') && !attachment.path.startsWith('https://')) {
+  if (
+    attachment.path &&
+    !attachment.path.startsWith('http://') &&
+    !attachment.path.startsWith('https://')
+  ) {
     try {
       const buffer = await fs.readFile(attachment.path)
       attachment.body = buffer.toString('base64')
       attachment.bodyEncoding = 'base64'
       attachment.path = undefined
-    }
-    catch {
+    } catch {
       // Keep the path so report generation does not fail when an attachment
       // cannot be embedded.
     }
@@ -284,10 +264,7 @@ function uint8ArrayFromBase64(base64: string): Uint8Array {
 // regex based inlining for packages/ui/dist/client/index.html
 async function inlineHtmlAssets(file: string, content: string): Promise<string> {
   const baseDir = dirname(file)
-  content = content.replace(
-    /<link rel="icon" href="\.\/favicon\.ico" sizes="48x48">\n/,
-    '',
-  )
+  content = content.replace(/<link rel="icon" href="\.\/favicon\.ico" sizes="48x48">\n/, '')
   content = content.replace(
     /<link rel="icon" href="(\.\/favicon\.svg)" sizes="any" type="image\/svg\+xml">/,
     (_, asset: string) => {
@@ -297,20 +274,20 @@ async function inlineHtmlAssets(file: string, content: string): Promise<string> 
   )
   content = content.replace(
     /<script type="module" src="(\.\/assets\/[^"]+\.js)"><\/script>/,
-    (_, asset: string) => `<script type="module">${escapeInlineScript(readFileSync(resolve(baseDir, asset), 'utf-8'))}</script>`,
+    (_, asset: string) =>
+      `<script type="module">${escapeInlineScript(readFileSync(resolve(baseDir, asset), 'utf-8'))}</script>`,
   )
   content = content.replace(
     /<link rel="stylesheet" href="(\.\/assets\/[^"]+\.css)">/,
-    (_, asset: string) => `<style>${escapeInlineStyle(readFileSync(resolve(baseDir, asset), 'utf-8'))}</style>`,
+    (_, asset: string) =>
+      `<style>${escapeInlineStyle(readFileSync(resolve(baseDir, asset), 'utf-8'))}</style>`,
   )
   return content
 }
 
 function escapeInlineScript(content: string): string {
   // https://github.com/devongovett/rsc-html-stream/blob/9b858445f4f5817470f373ae266dea04d5fcfac3/server.js#L94-L102
-  return content
-    .replace(/<!--/g, '<\\!--')
-    .replace(/<\/(script)/gi, '</\\$1')
+  return content.replace(/<!--/g, '<\\!--').replace(/<\/(script)/gi, '</\\$1')
 }
 
 function escapeInlineStyle(content: string): string {

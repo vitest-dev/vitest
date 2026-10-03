@@ -8,11 +8,6 @@ on:
         required: false
         default: main
         type: string
-    secrets:
-      RELEASE_GITHUB_APP_ID:
-        required: true
-      RELEASE_GITHUB_APP_PRIVATE_KEY:
-        required: true
   workflow_dispatch:
     inputs:
       target:
@@ -33,6 +28,9 @@ jobs:
     if: github.repository == 'vitest-dev/vitest'
     name: Promote stable documentation
     runs-on: ubuntu-slim
+    # the app secrets live in an environment that only release branches can use,
+    # a reusable workflow reads them from the environment, not from the caller
+    environment: release-bot
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

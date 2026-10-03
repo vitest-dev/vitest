@@ -13,13 +13,7 @@ type ModuleLinker = (
   referencingModule: VMModule,
   extra: { assert: object },
 ) => VMModule | Promise<VMModule>
-type ModuleStatus
-  = | 'unlinked'
-    | 'linking'
-    | 'linked'
-    | 'evaluating'
-    | 'evaluated'
-    | 'errored'
+type ModuleStatus = 'unlinked' | 'linking' | 'linked' | 'evaluating' | 'evaluated' | 'errored'
 export interface VMModuleRequest {
   specifier: string
   attributes: Record<string, string>
@@ -55,7 +49,7 @@ export declare class VMSyntheticModule extends VMModule {
   constructor(
     exportNames: string[],
     evaluateCallback: (this: VMSyntheticModule) => void,
-    options?: SyntheticModuleOptions
+    options?: SyntheticModuleOptions,
   )
   /**
    * This method is used after the module is linked to set the values of exports.
@@ -67,9 +61,7 @@ export declare class VMSyntheticModule extends VMModule {
 }
 
 declare interface ImportModuleDynamically {
-  (specifier: string, script: VMModule, importAssertions: object):
-    | VMModule
-    | Promise<VMModule>
+  (specifier: string, script: VMModule, importAssertions: object): VMModule | Promise<VMModule>
 }
 
 export interface SourceTextModuleOptions {
@@ -81,9 +73,7 @@ export interface SourceTextModuleOptions {
   /**
    * Called during evaluation of this module to initialize the `import.meta`.
    */
-  initializeImportMeta?:
-    | ((meta: ImportMeta, module: VMSourceTextModule) => void)
-    | undefined
+  initializeImportMeta?: ((meta: ImportMeta, module: VMSourceTextModule) => void) | undefined
   importModuleDynamically?: ImportModuleDynamically
 }
 export declare class VMSourceTextModule extends VMModule {

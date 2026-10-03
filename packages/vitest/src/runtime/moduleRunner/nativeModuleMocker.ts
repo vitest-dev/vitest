@@ -72,14 +72,15 @@ export class NativeModuleMocker extends BareModuleMocker {
       source = `
 import * as builtinModule from '${toBuiltin(moduleId)}?mock=actual'
 
-${exports.map((key, index) => {
-  return `
+${exports
+  .map((key, index) => {
+    return `
 const __${index} = builtinModule["${key}"]
 export { __${index} as "${key}" }
 `
-}).join('')}`
-    }
-    else {
+  })
+  .join('')}`
+    } else {
       source = result.source?.toString()
     }
 
@@ -94,10 +95,11 @@ export { __${index} as "${key}" }
       const ms = automockModule(
         transformedCode,
         mockType,
-        code => parse(code, {
-          sourceType: 'module',
-          ecmaVersion: 'latest',
-        }),
+        (code) =>
+          parse(code, {
+            sourceType: 'module',
+            ecmaVersion: 'latest',
+          }),
         { id: moduleId },
       )
       const transformed = ms.toString()
@@ -109,8 +111,7 @@ export { __${index} as "${key}" }
         source: code,
         shortCircuit: true,
       }
-    }
-    catch (cause) {
+    } catch (cause) {
       throw new Error(`Cannot automock '${url}' because it failed to parse.`, { cause })
     }
   }
@@ -121,7 +122,9 @@ export { __${index} as "${key}" }
     const mockedModule = this.getDependencyMock(moduleId)
     // should not be possible
     if (mockedModule?.type !== 'manual') {
-      console.warn(`Vitest detected unregistered manual mock ${moduleId}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+      console.warn(
+        `Vitest detected unregistered manual mock ${moduleId}. This is a bug in Vitest. Please, open a new issue with reproduction.`,
+      )
       return
     }
 
@@ -158,8 +161,7 @@ export { __${index} as "${key}" }
         source: manualMockedModule,
         shortCircuit: true,
       }
-    }
-    catch (cause) {
+    } catch (cause) {
       throw new Error(`Failed to mock '${url}'. See the cause for more information.`, { cause })
     }
   }
@@ -187,7 +189,9 @@ export { __${index} as "${key}" }
     const registry = this.getMockerRegistry()
     const mock = registry.getById(id)
     if (!mock || mock.type !== 'manual') {
-      throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)
+      throw new Error(
+        `Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`,
+      )
     }
 
     const mockResult = mock.resolve()
@@ -236,9 +240,8 @@ export { __${index} as "${key}" }
     }
 
     const filename = fileURLToPath(resolvedId)
-    const external = !isAbsolute(filename) || this.isModuleDirectory(resolvedId)
-      ? normalizeModuleId(rawId)
-      : null
+    const external =
+      !isAbsolute(filename) || this.isModuleDirectory(resolvedId) ? normalizeModuleId(rawId) : null
     // file is not mocked, automock or redirect it
     const redirect = this.findMockRedirect(filename, external)
     if (redirect) {
@@ -255,15 +258,10 @@ const replacePercentageRE = /%/g
 function injectQuery(url: string, importer: string, queryToInject: string): string {
   // encode percents for consistent behavior with pathToFileURL
   // see #2614 for details
-  const resolvedUrl = new URL(
-    url.replace(replacePercentageRE, '%25'),
-    importer,
-  )
+  const resolvedUrl = new URL(url.replace(replacePercentageRE, '%25'), importer)
   const { search, hash } = resolvedUrl
   const pathname = cleanUrl(url)
-  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${
-    hash ?? ''
-  }`
+  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${hash ?? ''}`
 }
 
 let __require: NodeJS.Require | undefined
@@ -282,7 +280,9 @@ function genSourceMapUrl(map: SourceMap | string): string {
 function transformCode(code: string, format: string, filename: string) {
   if (format.includes('typescript')) {
     if (!module.stripTypeScriptTypes) {
-      throw new Error(`Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`)
+      throw new Error(
+        `Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`,
+      )
     }
     return module.stripTypeScriptTypes(code)
   }

@@ -4,10 +4,7 @@ import path from 'node:path'
 import dts from 'rollup-plugin-dts'
 import isolatedDecl from 'unplugin-isolated-decl/rollup'
 
-export function createDtsUtils({
-  isolatedDeclDir = '.types',
-  cleanupDir = '.types',
-} = {}) {
+export function createDtsUtils({ isolatedDeclDir = '.types', cleanupDir = '.types' } = {}) {
   return {
     /**
      * @returns {import('rollup').Plugin[]} plugins
@@ -58,10 +55,7 @@ export function createDtsUtils({
         input = { index: '' }
       }
       return Object.fromEntries(
-        Object.keys(input).map(name => [
-          name,
-          `dist/${isolatedDeclDir}/${name}.d.${ext}`,
-        ]),
+        Object.keys(input).map((name) => [name, `dist/${isolatedDeclDir}/${name}.d.${ext}`]),
       )
     },
   }

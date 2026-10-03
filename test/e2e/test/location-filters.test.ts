@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { runVitestCli } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 const fixturePath = './fixtures/location-filters'
 
@@ -135,11 +135,7 @@ describe('location filter with list command', () => {
   })
 
   test('fails on part of filename with location filter', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'list',
-      `-r=${fixturePath}`,
-      `math:999`,
-    )
+    const { stdout, stderr } = await runVitestCli('list', `-r=${fixturePath}`, `math:999`)
 
     expect(stdout).toEqual('')
     expect(stderr).toContain('Collect Error')
@@ -255,11 +251,7 @@ describe('location filter with run command', () => {
   })
 
   test('fails on part of filename with location filter', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'run',
-      `-r=${fixturePath}`,
-      `math:999`,
-    )
+    const { stdout, stderr } = await runVitestCli('run', `-r=${fixturePath}`, `math:999`)
 
     expect(stdout).not.contain('math.test.ts')
     expect(stdout).not.contain('math-with-dashes-in-name.test.ts')
@@ -267,5 +259,44 @@ describe('location filter with run command', () => {
       "Error: Couldn't find file math. Note when specifying the test location you have to specify the full test filename.
       "
     `)
+  })
+})
+
+describe('invalid location filter fails the run', () => {
+  test('range location', async () => {
+    const { stderr, exitCode } = await runVitest({
+      root: fixturePath,
+      $cliFilters: ['basic.test.ts:3-5'],
+    })
+
+    expect(exitCode).toBe(1)
+    expect(stderr).toContain(
+      'Error: Found "-" in location filter basic.test.ts:3-5.  Note that range location filters are not supported.  Consider specifying the exact line numbers of your tests.',
+    )
+  })
+
+  test('location in a file that does not exist', async () => {
+    const { stderr, exitCode } = await runVitest({
+      root: fixturePath,
+      $cliFilters: ['math:999'],
+    })
+
+    expect(exitCode).toBe(1)
+    expect(stderr).toContain(
+      "Error: Couldn't find file math. Note when specifying the test location you have to specify the full test filename.",
+    )
+  })
+
+  test('location while includeTaskLocation is disabled', async () => {
+    const { stderr, exitCode } = await runVitest({
+      root: fixturePath,
+      config: './no-task-location.config.ts',
+      $cliFilters: ['basic.test.ts:3'],
+    })
+
+    expect(exitCode).toBe(1)
+    expect(stderr).toContain(
+      'Error: Received line number filters while `includeTaskLocation` option is disabled',
+    )
   })
 })
