@@ -30,6 +30,8 @@ const MOCK_FINALIZER = new FinalizationRegistry<WeakRef<Mock<Procedure | Constru
 })
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
+// lets a spy on the other accessor tell a copy of an inherited accessor from an own property
+const SPIED_ACCESSOR_COPIES = new WeakMap<object, Set<PropertyKey>>()
 
 export function createMockInstance(
   options: MockInstanceOption = {},
@@ -396,10 +398,32 @@ export function spyOn<T extends object, K extends keyof any>(
     Object.defineProperty(object, key, desc)
   }
 
+  const isCopiedFromPrototype =
+    originalDescriptorObject !== object || !!SPIED_ACCESSOR_COPIES.get(object)?.has(key)
+
+  // `get` and `set` can be spied on separately, so only this accessor is replaced
+  // and a copy of an inherited accessor is kept while the other one is still spied on
+  const getAccessorDescriptorToRestore = (): PropertyDescriptor | undefined => {
+    const current = Object.getOwnPropertyDescriptor(object, key)
+    if (accessType === 'value' || !current || 'value' in current) {
+      return undefined
+    }
+    const siblingType = accessType === 'get' ? 'set' : 'get'
+    if (isCopiedFromPrototype && !isMockFunction(current[siblingType])) {
+      return undefined
+    }
+    return current
+  }
+
   const restore = () => {
+    const accessorDescriptor = getAccessorDescriptorToRestore()
+    if (accessorDescriptor) {
+      Object.defineProperty(object, key, { ...accessorDescriptor, [accessType]: original })
+    }
     // if method is defined on the prototype, we can just remove it from
     // the current object instead of redefining a copy of it
-    if (originalDescriptorObject !== object) {
+    else if (isCopiedFromPrototype) {
+      SPIED_ACCESSOR_COPIES.get(object)?.delete(key)
       Reflect.deleteProperty(object, key)
     } else if (originalDescriptor && !original) {
       Object.defineProperty(object, key, originalDescriptor)
@@ -432,6 +456,12 @@ export function spyOn<T extends object, K extends keyof any>(
     }
 
     throw error
+  }
+
+  if (accessType !== 'value' && originalDescriptorObject !== object) {
+    const copiedKeys = SPIED_ACCESSOR_COPIES.get(object) ?? new Set()
+    copiedKeys.add(key)
+    SPIED_ACCESSOR_COPIES.set(object, copiedKeys)
   }
 
   return mock
