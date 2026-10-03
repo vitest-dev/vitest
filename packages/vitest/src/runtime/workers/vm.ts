@@ -202,4 +202,9 @@ export function setupVmWorker(context: WorkerSetupContext): void {
   // compiled-code caching the flag disables is already covered by the
   // worker's own script and code caches.
   v8.setFlagsFromString('--no-compilation-cache')
+  // Environments like jsdom create objects inside the context with the
+  // worker realm's `Object.create`, so their maps have an always-live
+  // constructor. V8's retained maps then keep every finished context alive
+  // across major GCs, which accumulates the same way.
+  v8.setFlagsFromString('--retain-maps-for-n-gc=0')
 }
