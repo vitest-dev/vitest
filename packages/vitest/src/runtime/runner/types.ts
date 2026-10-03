@@ -487,6 +487,9 @@ interface TestForFunctionReturn<Arg, Context> {
 interface TestForFunction<ExtraContext> {
   // test.for([1, 2, 3])
   // test.for([[1, 2], [3, 4, 5]])
+  <T extends any[] | [any]>(
+    cases: ReadonlyArray<T>,
+  ): TestForFunctionReturn<T, TestContext & ExtraContext>
   <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<T, TestContext & ExtraContext>
 
   // test.for`
