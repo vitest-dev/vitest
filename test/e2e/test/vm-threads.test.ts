@@ -645,6 +645,60 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// Forced GCs skip V8's map retention, so each file churns promoted memory to
+// trigger regular major GCs instead. Uses the real CLI because the in-process
+// harness keeps contexts alive itself
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s does not retain jsdom contexts of finished test files',
+  async (pool) => {
+    const files = 40
+    const root = resolvePath(import.meta.url, `../fixtures/vm-retained-maps-${pool}`)
+    const testFile = `
+      import { expect, test } from 'vitest'
+
+      test('dom', () => {
+        const elements = Array.from({ length: 50 }, (_, i) => {
+          const element = document.createElement('div')
+          element.id = 'i' + i
+          return document.body.appendChild(element)
+        })
+        let length = 0
+        for (let k = 0; k < 20_000; k++) {
+          length += elements[k % 50].id.length
+        }
+        expect(length).toBeGreaterThan(0)
+      })
+    `
+    const fs = useFS(root, {
+      'vitest.config.js': `export default { test: { environment: 'jsdom', setupFiles: ['./setup.js'] } }`,
+      'setup.js': `
+        import { appendFileSync } from 'node:fs'
+        import { fileURLToPath } from 'node:url'
+        import v8 from 'node:v8'
+        const log = fileURLToPath(import.meta.url.replace('setup.js', 'contexts.log'))
+        appendFileSync(log, v8.getHeapStatistics().number_of_native_contexts + '\\n')
+        const survivors = []
+        for (let i = 0; i < 256; i++) {
+          survivors[i % 128] = new Array(50_000).fill(i)
+        }
+        survivors.length = 0
+      `,
+      ...Object.fromEntries(Array.from({ length: files }, (_, i) => [`${i}.test.js`, testFile])),
+    })
+
+    const { stderr, exitCode } = await runVitestCli('run', '--root', root, `--pool=${pool}`)
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+    const alive = fs.readFile('contexts.log').trim().split('\n').map(Number)
+    expect(alive).toHaveLength(files)
+    // how often GCs run depends on the machine, so only check what survives one:
+    // the worker's own contexts and the running file's
+    const aliveAfterGC = alive.filter((count, i) => count < alive[i - 1])
+    expect(Math.min(...aliveAfterGC)).toBeLessThanOrEqual(4)
+  },
+)
+
 // changing V8 flags at runtime invalidates the module code cache shared across
 // files on a worker: via the context's `node:v8` the cache is cleared up front,
 // via anything else (here the worker realm's binding) the rejection is caught
