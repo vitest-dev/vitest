@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, stat } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'pathe'
 import { createDebugger } from '../../utils/debugger'
+import { tagCacheDir } from './cachedirTag'
 import { atomicWriteFile } from './fsModuleCache'
 
 const debug = createDebugger('vitest:cache:results')
@@ -199,7 +200,10 @@ export class ResultsCache {
     }
     const results: SerializedResults = { version: RESULTS_VERSION, projects }
     try {
-      await mkdir(dirname(this.path), { recursive: true })
+      const cacheDir = dirname(this.path)
+      await mkdir(cacheDir, { recursive: true })
+      // the cache is in "cacheDir/vitest/<hash>", Vitest owns the "vitest" directory
+      tagCacheDir(dirname(cacheDir))
       await atomicWriteFile(this.path, JSON.stringify(results))
       this.fileStamp = await getFileStamp(this.path)
     } catch (error) {
