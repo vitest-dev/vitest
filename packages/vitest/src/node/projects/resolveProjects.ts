@@ -789,6 +789,7 @@ async function resolveSingleProjectEntry(
   const { harness, rootViteConfig, rootConfig, parentViteConfig, parentConfig, cliOverrides } =
     context
   const { configFile, ...restOptions } = options
+  const fileProjectRoot = typeof workspacePath === 'string' ? options.root : undefined
 
   const captures: ConfigResolutionCaptures = {}
 
@@ -814,6 +815,7 @@ async function resolveSingleProjectEntry(
 
   const projectInline: ViteInlineConfig = {
     ...inlineOptions,
+    root: fileProjectRoot ? undefined : inlineOptions.root,
     configFile,
     configLoader: parentViteConfig.inlineConfig.configLoader,
     // this will make "mode": "test" inside defineConfig
@@ -828,7 +830,7 @@ async function resolveSingleProjectEntry(
         isInlineEntry ? { options, extendsTrueRootConfig } : undefined,
       ),
       ...(options.plugins || []),
-      ...WorkspaceVitestPlugin(harness, parentViteConfig),
+      ...WorkspaceVitestPlugin(harness, parentViteConfig, fileProjectRoot),
       ...BrowserLoaderPlugin(captures, harness),
     ],
   }
