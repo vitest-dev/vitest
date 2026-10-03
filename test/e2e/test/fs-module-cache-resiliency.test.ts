@@ -1,7 +1,8 @@
 import { chmodSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 import { join } from 'pathe'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { runInlineTests, runVitest } from '#test-utils'
+import { ModuleTransformService } from '../../../packages/vitest/src/node/environments/transformService.ts'
 
 // The on-disk module cache is an optimisation. It lives in a directory nobody
 // owns exclusively — CI images sweep it mid-run, disks fill up, mounts are
@@ -12,6 +13,58 @@ const restore: Array<() => void> = []
 
 afterEach(() => {
   restore.splice(0).forEach((fn) => fn())
+})
+
+test('does not keep a tmp path when caching a tmp copy fails', async () => {
+  const transformResult = {} as { __vitestTmp?: string }
+  const moduleGraphModule = {
+    id: '/src/shared.js',
+    file: '/src/shared.js',
+    transformResult,
+  }
+  const result = {
+    id: '/src/shared.js',
+    url: '/src/shared.js',
+    file: '/src/shared.js',
+    code: 'export const value = 1',
+    invalidate: false,
+  }
+  const saveCachedModule = vi.fn().mockRejectedValue(new Error('ENOSPC: no space left on device'))
+
+  const tmpProjectDir = join(import.meta.dirname, '../fixtures/.tmp-copy-failure')
+  rmSync(tmpProjectDir, { force: true, recursive: true })
+  restore.push(() => rmSync(tmpProjectDir, { force: true, recursive: true }))
+
+  const trace = { setAttribute: vi.fn(), setAttributes: vi.fn() }
+  const traces = {
+    waitInit: vi.fn(),
+    $: vi.fn((_name: string, _options: unknown, callback: any) => callback(trace)),
+  }
+
+  const service = new ModuleTransformService(
+    { shouldExternalize: vi.fn().mockResolvedValue(false) } as any,
+    { fsModuleCache: false, injectCjsGlobals: true } as any,
+    { saveCachedModule } as any,
+    traces as any,
+    tmpProjectDir,
+  )
+
+  ;(service as any).fetchAndProcess = vi.fn().mockResolvedValue(result)
+
+  const environment = {
+    name: 'main',
+    moduleGraph: {
+      ensureEntryFromUrl: vi.fn().mockResolvedValue(moduleGraphModule),
+    },
+  }
+
+  const fetched = await service.fetch('/src/shared.js', undefined, environment as any, true)
+  const fetchedAgain = await service.fetch('/src/shared.js', undefined, environment as any, true)
+
+  expect(fetched).toEqual(result)
+  expect(fetchedAgain).toEqual(result)
+  expect(saveCachedModule).toHaveBeenCalledTimes(2)
+  expect(transformResult.__vitestTmp).toBeUndefined()
 })
 
 // Windows ignores the POSIX mode bits `chmodSync` sets on a directory, so there

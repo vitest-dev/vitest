@@ -183,7 +183,7 @@ export class ModuleTransformService {
 
       const tmpFile = join(tmpDir, hash('sha1', result.id, 'hex'))
       return this.cacheResult(result, tmpFile, transformResult).then((result) => {
-        if (transformResult) {
+        if (transformResult && 'tmp' in result) {
           transformResult.__vitestTmp = tmpFile
         }
         return result
