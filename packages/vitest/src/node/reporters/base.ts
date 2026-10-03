@@ -1482,7 +1482,10 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (previous) {
-          previous[1].push(task)
+          // A retried test can have the same error multiple times. Only report the task once.
+          if (!previous[1].includes(task)) {
+            previous[1].push(task)
+          }
         } else {
           errorsQueue.push([error, [task]])
         }

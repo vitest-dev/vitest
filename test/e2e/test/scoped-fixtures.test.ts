@@ -2785,7 +2785,6 @@ describe('builder pattern API with automatic type inference', () => {
       ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
        FAIL  basic.test.ts > test runs but cleanup fails
-       FAIL  basic.test.ts > test runs but cleanup fails
       Error: cleanup error
        ❯ test.js:10:13
             8|     onCleanup(() => {
