@@ -176,7 +176,9 @@ export async function runVmTests(
   const { run } = (await moduleRunner.import(entryFile)) as typeof import('../runVmTests')
 
   try {
-    await run(method, ctx.files, ctx.config, moduleRunner, traces)
+    await run(method, ctx.files, ctx.config, moduleRunner, traces, () =>
+      externalModulesExecutor.syncBuiltinESMExports(),
+    )
   } finally {
     await traces.$('vitest.runtime.environment.teardown', () => vm.teardown?.())
     // unregisters the runner from Vite's `Error.prepareStackTrace` interceptor:
