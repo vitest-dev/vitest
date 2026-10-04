@@ -387,9 +387,8 @@ export function resolveTestConfig(
   // live on the provider factory (e.g. `playwright({ launchOptions })`). Error
   // instead of silently ignoring a removed option — a config that sets it can
   // never take effect, and the migration needs a code change, not a rename.
-  const browserProviderOptions = (options.browser as
-    | { providerOptions?: unknown }
-    | undefined)?.providerOptions
+  const browserProviderOptions = (options.browser as { providerOptions?: unknown } | undefined)
+    ?.providerOptions
   if (browserProviderOptions != null) {
     throw new Error(
       '"browser.providerOptions" was removed in Vitest 4 and has no effect. ' +
