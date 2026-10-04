@@ -8,6 +8,23 @@ function wrapDiff(diff?: string) {
   return diff && stripVTControlCharacters(`\n${diff}\n`)
 }
 
+class ExampleWithPrivateFieldGetter {
+  #cached: number | undefined
+
+  get value() {
+    if (this.#cached === undefined) {
+      this.#cached = 1 + 1
+    }
+    return this.#cached
+  }
+}
+
+test('formats mismatches for objects with private-field getters', () => {
+  expect(() =>
+    printDiffOrStringify(new ExampleWithPrivateFieldGetter(), { value: 0 }),
+  ).not.toThrow()
+})
+
 test('displays string diff', () => {
   const stringA = 'Hello AWorld'
   const stringB = 'Hello BWorld'

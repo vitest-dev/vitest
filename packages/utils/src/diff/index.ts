@@ -354,6 +354,9 @@ export function replaceAsymmetricMatcher(
   actualReplaced.add(actual)
   expectedReplaced.add(expected)
   getOwnProperties(expected).forEach((key) => {
+    if (!Object.hasOwn(actual, key)) {
+      return
+    }
     const expectedValue = expected[key]
     const actualValue = actual[key]
     if (isAsymmetricMatcher(expectedValue)) {
