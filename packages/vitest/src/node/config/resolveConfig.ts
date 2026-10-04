@@ -383,6 +383,22 @@ export function resolveTestConfig(
     resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
+  // `browser.providerOptions` was removed in Vitest 4: provider options now
+  // live on the provider factory (e.g. `playwright({ launchOptions })`). Error
+  // instead of silently ignoring a removed option — a config that sets it can
+  // never take effect, and the migration needs a code change, not a rename.
+  const browserProviderOptions = (options.browser as
+    | { providerOptions?: unknown }
+    | undefined)?.providerOptions
+  if (browserProviderOptions != null) {
+    throw new Error(
+      '"browser.providerOptions" was removed in Vitest 4 and has no effect. ' +
+        'Pass options to the provider factory instead: ' +
+        '`provider: playwright({ launchOptions: { /* ... */ } })`. ' +
+        'See https://vitest.dev/guide/browser/',
+    )
+  }
+
   // `browser.fileParallelism` was replaced by the top-level `fileParallelism`. Map
   // it (only when browser is enabled, since it was a browser-only option) so
   // existing configs keep working instead of being silently ignored.

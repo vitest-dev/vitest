@@ -181,6 +181,20 @@ test('assigns names as browsers', async () => {
   expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium', 'firefox', 'webkit'])
 })
 
+test('throws on removed browser.providerOptions', async () => {
+  // providerOptions was removed in Vitest 4 (options moved to the provider
+  // factory). Setting it must fail loudly instead of being silently ignored —
+  // a config carrying it never takes effect.
+  // https://github.com/vitest-dev/vitest/issues/11470
+  await expect(config({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      providerOptions: { launchOptions: { executablePath: '/nonexistent' } },
+    } as TestUserConfig['browser'],
+  })).rejects.toThrowError('"browser.providerOptions" was removed in Vitest 4')
+})
+
 test('filters projects', async () => {
   const projects = await config({
     project: 'chromium',
