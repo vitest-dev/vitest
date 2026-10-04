@@ -496,7 +496,18 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         idPredicates.set(key, predicate)
         await page.context().route(predicate, async (route) => {
           if (module.type === 'manual') {
-            const exports = Object.keys(await module.resolve())
+            let exports: string[]
+            try {
+              exports = Object.keys(await module.resolve())
+            } catch (error) {
+              if (
+                this.project.vitest.isCancelling &&
+                (error as Error).cause instanceof BrowserConnectionError
+              ) {
+                return route.abort()
+              }
+              throw error
+            }
             const body = createManualModuleSource(module.url, exports)
             return route.fulfill({
               body,
