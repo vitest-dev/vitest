@@ -1320,6 +1320,9 @@ importers:
       jest-image-snapshot:
         specifier: ^6.5.2
         version: 6.5.2
+      magic-string:
+        specifier: 'catalog:'
+        version: 1.4.2
       obug:
         specifier: ^3.0.0
         version: 3.0.0
