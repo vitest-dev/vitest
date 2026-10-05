@@ -8,15 +8,15 @@ import type {
 import { useElementSize } from '@vueuse/core'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
-import { computed, ref, watch } from 'vue'
-import IconButton from '~/components/IconButton.vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { openLocation } from '~/composables/location'
 import { traceViewSplitSizes } from '~/composables/navigation'
 import {
   getTraceEntryClass,
   selectActiveTraceStep,
   showTraceSelectorHighlight,
-  traceZoom,
+  traceFitScale,
+  traceScale,
 } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -34,50 +34,27 @@ const iframeSandbox = computed(() => {
   return props.trace.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
 
-const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
-
 const replayContainer = ref<HTMLElement>()
 const replayContainerSize = useElementSize(replayContainer)
 const viewport = computed(() => selectedStep.value?.snapshot.viewport)
-const fitScale = computed(() => {
+watchEffect(() => {
   const { width, height } = replayContainerSize
-  if (!viewport.value || !width.value || !height.value) {
-    return 1
+  if (viewport.value && width.value && height.value) {
+    traceFitScale.value = Math.min(
+      width.value / viewport.value.width,
+      height.value / viewport.value.height,
+      1,
+    )
   }
-  return Math.min(width.value / viewport.value.width, height.value / viewport.value.height, 1)
 })
-const scale = computed(() => (traceZoom.value === 'fit' ? fitScale.value : traceZoom.value))
-const nextZoomIn = computed(() => ZOOM_LEVELS.find((level) => level > scale.value + 1e-3))
-const nextZoomOut = computed(() => ZOOM_LEVELS.findLast((level) => level < scale.value - 1e-3))
-const zoomLabel = computed(() =>
-  viewport.value
-    ? `${viewport.value.width}x${viewport.value.height} · ${Math.round(scale.value * 100)}%`
-    : '',
-)
 const scaledViewportStyle = computed(() =>
   viewport.value
     ? {
-        width: `${Math.floor(viewport.value.width * scale.value)}px`,
-        height: `${Math.floor(viewport.value.height * scale.value)}px`,
+        width: `${Math.floor(viewport.value.width * traceScale.value)}px`,
+        height: `${Math.floor(viewport.value.height * traceScale.value)}px`,
       }
     : undefined,
 )
-
-function zoomIn() {
-  traceZoom.value = nextZoomIn.value ?? scale.value
-}
-
-function zoomOut() {
-  traceZoom.value = nextZoomOut.value ?? scale.value
-}
-
-function resetZoom() {
-  traceZoom.value = 1
-}
-
-function fitToPane() {
-  traceZoom.value = 'fit'
-}
 
 function onSelectStep(index: number) {
   selectActiveTraceStep(index)
@@ -301,43 +278,6 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div class="h-full min-h-0 flex flex-col">
-        <div
-          v-if="viewport"
-          class="h-8 flex flex-none items-center justify-end gap-1 border-b border-base px-2 text-xs"
-        >
-          <span data-testid="trace-zoom-label" class="mr-1 tabular-nums opacity-70">{{
-            zoomLabel
-          }}</span>
-          <IconButton
-            v-tooltip.bottom="'Zoom Out'"
-            title="Zoom Out"
-            icon="i-carbon:zoom-out"
-            :disabled="nextZoomOut == null"
-            @click="zoomOut()"
-          />
-          <IconButton
-            v-tooltip.bottom="'Zoom In'"
-            title="Zoom In"
-            icon="i-carbon:zoom-in"
-            :disabled="nextZoomIn == null"
-            @click="zoomIn()"
-          />
-          <IconButton
-            v-tooltip.bottom="'Reset Zoom'"
-            title="Reset Zoom"
-            icon="i-carbon:zoom-reset"
-            :disabled="traceZoom === 1"
-            @click="resetZoom()"
-          />
-          <IconButton
-            v-tooltip.bottom="'Fit to Pane'"
-            title="Fit to Pane"
-            icon="i-carbon:fit-to-screen"
-            :active="traceZoom === 'fit'"
-            :aria-pressed="traceZoom === 'fit'"
-            @click="fitToPane()"
-          />
-        </div>
         <div ref="replayContainer" class="min-h-0 flex flex-1 flex-col overflow-auto">
           <div
             v-if="selectedStep"
@@ -349,7 +289,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
               :key="iframeSandbox"
               :sandbox="iframeSandbox"
               style="background: white; border: none; color-scheme: normal; transform-origin: 0 0"
-              :style="{ transform: `scale(${scale})` }"
+              :style="{ transform: `scale(${traceScale})` }"
             />
           </div>
           <div v-else class="text-sm opacity-50 p-4">No trace step found</div>

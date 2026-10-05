@@ -40,6 +40,12 @@ export const traceZoom = useLocalStorage<number | 'fit'>('vitest-ui_trace-zoom',
   serializer: StorageSerializers.object,
 })
 
+export const traceFitScale = ref(1)
+
+export const traceScale = computed(() =>
+  traceZoom.value === 'fit' ? traceFitScale.value : traceZoom.value,
+)
+
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }

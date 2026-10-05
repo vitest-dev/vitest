@@ -227,6 +227,20 @@ html.dark {
   border-color: var(--background-color);
 }
 
+html.dark .v-popper--theme-dropdown .v-popper__inner {
+  background: #111;
+  color: var(--color-text);
+  border-color: #333;
+}
+
+html.dark .v-popper--theme-dropdown .v-popper__arrow-inner {
+  border-color: #111;
+}
+
+html.dark .v-popper--theme-dropdown .v-popper__arrow-outer {
+  border-color: #333;
+}
+
 .codemirror-busy > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines {
   cursor: wait !important;
 }

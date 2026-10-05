@@ -278,46 +278,53 @@ async function testZoom(page: Page) {
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
   const iframe = traceView.locator('iframe')
-  const zoomLabel = traceView.getByTestId('trace-zoom-label')
-  const zoomIn = traceView.getByRole('button', { name: 'Zoom In' })
-  const zoomOut = traceView.getByRole('button', { name: 'Zoom Out' })
-  const resetZoom = traceView.getByRole('button', { name: 'Reset Zoom' })
-  const fitToPane = traceView.getByRole('button', { name: 'Fit to Pane' })
+  const zoomTrigger = traceView.getByTestId('trace-zoom-trigger')
+  const zoomPopover = page.getByTestId('trace-zoom-popover')
+  const zoomPercent = zoomPopover.getByTestId('trace-zoom-percent')
+  const zoomIn = zoomPopover.getByRole('button', { name: 'Zoom In' })
+  const zoomOut = zoomPopover.getByRole('button', { name: 'Zoom Out' })
+  const fitToPane = zoomPopover.getByRole('button', { name: 'Fit' })
+  const resetZoom = zoomPopover.getByRole('button', { name: 'Reset' })
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // actual size by default
-  await expect(zoomLabel).toHaveText('414x896 · 100%')
+  await expect(zoomTrigger).toHaveText('100%')
+  await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(414)
+
+  // popover shows zoom state
+  await zoomTrigger.click()
+  await expect(zoomPercent).toHaveText('100%')
   await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
   await expect(resetZoom).toBeDisabled()
-  await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(414)
 
   // zoom out and persist across reloads
   await zoomOut.click()
-  await expect(zoomLabel).toHaveText('414x896 · 75%')
+  await expect(zoomPercent).toHaveText('75%')
+  await expect(zoomTrigger).toHaveText('75%')
   await page.reload()
-  await expect(zoomLabel).toHaveText('414x896 · 75%')
+  await expect(zoomTrigger).toHaveText('75%')
   await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(311)
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // fit scales down the tall viewport and persists across reloads
+  await zoomTrigger.click()
   await fitToPane.click()
   await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
-  await expect(zoomLabel).toHaveText(/^414x896 · \d+%$/)
-  const fitLabel = (await zoomLabel.textContent())!
-  expect(Number(fitLabel.match(/(\d+)%/)![1])).toBeLessThan(75)
+  await expect(zoomTrigger).toHaveText(/^Fit \d+%$/)
+  const fitText = (await zoomTrigger.textContent())!
+  expect(Number(fitText.match(/(\d+)%/)![1])).toBeLessThan(75)
   await page.reload()
-  await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
-  await expect(zoomLabel).toHaveText(fitLabel)
+  await expect(zoomTrigger).toHaveText(fitText)
 
   // zooming leaves fit mode
+  await zoomTrigger.click()
   await zoomIn.click()
   await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
 
-  // reset to actual size
-  await fitToPane.click()
+  // back to actual size
   await resetZoom.click()
-  await expect(zoomLabel).toHaveText('414x896 · 100%')
-  await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
+  await expect(zoomPercent).toHaveText('100%')
+  await expect(zoomTrigger).toHaveText('100%')
   await expect(resetZoom).toBeDisabled()
 }
 

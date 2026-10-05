@@ -13,6 +13,7 @@ import {
 } from '~/composables/trace-view'
 import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
+import TraceZoomControl from './TraceZoomControl.vue'
 
 const props = defineProps<{
   selection: TraceSelection
@@ -73,6 +74,7 @@ const traceLayoutPageUrl = computed(() => {
       <span v-else-if="attemptLabel" class="text-xs opacity-70">
         {{ attemptLabel }}
       </span>
+      <TraceZoomControl v-if="trace" />
       <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
         <input v-model="showTraceSelectorHighlight" type="checkbox" />
         <span>Show highlight</span>
