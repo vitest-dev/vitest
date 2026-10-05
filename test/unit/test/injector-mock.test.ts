@@ -1504,7 +1504,6 @@ if (import.meta.vitest) {
   vi.mock('./name', () => mocks)
   vi.unmock('./unmocked')
   test('greet', () => {
-    vi.mock('./nested')
     expect(greet()).toBe(undefined)
   })
 }
@@ -1514,7 +1513,6 @@ if (import.meta.vitest) {
       if (import.meta.vitest) { var mocks = vi.hoisted(() => ({ getName: vi.fn() })) }
       if (import.meta.vitest) { vi.mock('./name', () => mocks) }
       if (import.meta.vitest) { vi.unmock('./unmocked') }
-      if (import.meta.vitest) { vi.mock('./nested') }
       const __vi_import_0__ = await import("./name");
 
 
@@ -1524,7 +1522,7 @@ if (import.meta.vitest) {
       if (import.meta.vitest) {
         const { test, expect, vi } = import.meta.vitest
               test('greet', () => {
-              expect(greet()).toBe(undefined)
+          expect(greet()).toBe(undefined)
         })
       }"
     `)
@@ -1887,7 +1885,34 @@ describe("some suite", () => {
     `)
   })
 
-  it('ignores vi.mock position if import.meta.vitest is present', ({ onTestFinished }) => {
+  it('shows an error when hoisted methods are nested inside an import.meta.vitest block', () => {
+    expect(() =>
+      hoistSimpleCode(`
+import { getName } from './name'
+
+export const greet = () => getName()
+
+if (import.meta.vitest) {
+  const { test, expect, vi } = import.meta.vitest
+  test('greet', () => {
+    vi.mock('./name', () => ({ getName: () => 'mocked' }))
+    expect(greet()).toBe('mocked')
+  })
+}
+      `),
+    ).toThrowErrorMatchingInlineSnapshot(`
+      [Error: 1 call in "test.js" was defined outside of the module's top level scope:
+
+      - vi.mock('./name')
+
+      Although it appears nested, it will be hoisted and executed before anything in this file. Move it to the top level of the \`if (import.meta.vitest)\` block to reflect its actual execution order.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works]
+    `)
+  })
+
+  it('allows hoisted methods on the top level of an import.meta.vitest block', ({
+    onTestFinished,
+  }) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     onTestFinished(() => warn.mockRestore())
     const result = hoistSimpleCode(`
