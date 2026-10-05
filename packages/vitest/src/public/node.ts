@@ -146,6 +146,7 @@ export type {
   SequenceSetupFiles,
   UserConfig as TestUserConfig,
   TypecheckConfig,
+  UIOptions,
   UserWorkspaceConfig,
   VitestEnvironment,
   VitestRunMode,

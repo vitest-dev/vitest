@@ -8,7 +8,7 @@ import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
-import { resolveTestCacheDir } from './utils'
+import { normalizeUIOptions, resolveTestCacheDir } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
 export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
@@ -68,7 +68,7 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
       name: 'vitest:ui-injector',
       enforce: 'post',
       async configResolved(config) {
-        if (config.test.ui) {
+        if (normalizeUIOptions(config.test.ui).enabled) {
           await harness.packageInstaller.ensureInstalled(
             '@vitest/ui',
             resolve(config.root),
