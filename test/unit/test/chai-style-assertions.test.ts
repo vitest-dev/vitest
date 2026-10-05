@@ -203,34 +203,24 @@ describe('Chai-style assertions', () => {
   })
 
   describe('returned', () => {
-    it('passes when spy returned successfully', () => {
+    it('passes when spy returned specific value', () => {
       const spy = vi.fn(() => 'value')
       spy()
       expect(spy).to.have.returned('value')
     })
 
-    it('fails when spy threw an error', () => {
-      const spy = vi
-        .fn(() => {
-          throw new Error('test error')
-        })
-        .mockName('testSpy')
-      try {
-        spy()
-      } catch {}
+    it('fails when spy did not return specific value', () => {
+      const spy = vi.fn(() => 'wrong').mockName('testSpy')
+      spy()
       expect(() => {
         expect(spy).to.have.returned('value')
-      }).toThrow(/expected "testSpy" to be successfully called at least once/)
+      }).toThrow(/expected "testSpy" to return with: 'value' at least once/)
     })
 
-    it('negated: passes when spy did not return', () => {
-      const spy = vi.fn(() => {
-        throw new Error('test error')
-      })
-      try {
-        spy()
-      } catch {}
-      expect(spy).to.not.have.returned
+    it('negated: passes when spy did not return specific value', () => {
+      const spy = vi.fn(() => 'other')
+      spy()
+      expect(spy).to.not.have.returned('value')
     })
   })
 
