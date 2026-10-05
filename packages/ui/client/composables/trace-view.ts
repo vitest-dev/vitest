@@ -1,6 +1,6 @@
 import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
-import { useLocalStorage } from '@vueuse/core'
+import { StorageSerializers, useLocalStorage } from '@vueuse/core'
 import { computed, ref, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
@@ -35,6 +35,10 @@ export const showTraceSelectorHighlight = useLocalStorage(
   'vitest-ui_trace-selector-highlight',
   true,
 )
+
+export const traceZoom = useLocalStorage<number | null>('vitest-ui_trace-zoom', null, {
+  serializer: StorageSerializers.object,
+})
 
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`

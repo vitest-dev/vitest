@@ -80,6 +80,10 @@ test.describe('ui', () => {
   test('persists resized trace panes across reloads', async ({ page }) => {
     await testPersistsResizedTracePanes(page)
   })
+
+  test('zoom', async ({ page }) => {
+    await testZoom(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -169,6 +173,10 @@ test.describe('html reporter', () => {
 
   test('persists resized trace panes across reloads', async ({ page }) => {
     await testPersistsResizedTracePanes(page)
+  })
+
+  test('zoom', async ({ page }) => {
+    await testZoom(page)
   })
 })
 
@@ -262,6 +270,46 @@ async function testBasic(page: Page) {
   await page.getByTestId('trace-open-button').click()
   await expect(traceView).toBeVisible()
   await expect(traceFrame.getByRole('button', { name: 'Switch Target' })).toBeVisible()
+}
+
+async function testZoom(page: Page) {
+  await openExplorerItem(page, 'simple')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+  const iframe = traceView.locator('iframe')
+  const zoomLabel = traceView.getByTestId('trace-zoom-label')
+  const zoomIn = traceView.getByRole('button', { name: 'Zoom In' })
+  const zoomOut = traceView.getByRole('button', { name: 'Zoom Out' })
+  const fitToPane = traceView.getByRole('button', { name: 'Fit to Pane' })
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // fit by default scales down the default tall viewport
+  await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
+  await expect(zoomLabel).toHaveText(/^414x896 · \d+%$/)
+  const fitLabel = await zoomLabel.textContent()
+  expect(Number(fitLabel.match(/(\d+)%/)![1])).toBeLessThan(100)
+
+  // zoom in to actual size
+  for (let i = 0; i < 10 && (await zoomLabel.textContent()) !== '414x896 · 100%'; i++) {
+    await zoomIn.click()
+  }
+  await expect(zoomLabel).toHaveText('414x896 · 100%')
+  await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
+  await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(414)
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+
+  // zoom out and persist across reloads
+  await zoomOut.click()
+  await expect(zoomLabel).toHaveText('414x896 · 75%')
+  await page.reload()
+  await expect(zoomLabel).toHaveText('414x896 · 75%')
+  await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(311)
+
+  // back to fit
+  await fitToPane.click()
+  await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
+  await expect(zoomLabel).toHaveText(fitLabel)
 }
 
 async function testViewport(page: Page) {
