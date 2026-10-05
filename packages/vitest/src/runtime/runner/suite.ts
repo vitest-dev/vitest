@@ -1016,7 +1016,7 @@ function formatTitle(template: string, items: any[], idx: number) {
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
       // print string without quotes
       if (typeof value === 'string') {
-        return truncateString(value, inspectOptions.truncate)
+        return inspectOptions.truncate ? truncateString(value, inspectOptions.truncate) : value
       }
       return inspect(value, inspectOptions)
     })

@@ -1,8 +1,15 @@
-name: Label Automated PR
+name: AI Policy
+
+# Closes pull requests from accounts flagged as bots, then closes pull requests from the community
+# and asks to discuss the change in an issue, see "Pull Request Policy" in CONTRIBUTING.md.
+#
+# SECURITY: this workflow must never check out or run code from a pull request.
+# The jobs read the pull request through the API and use its content only as data.
+# Do not interpolate PR titles, bodies, branch names or comments into `run` steps or scripts.
 
 on:
   # zizmor: ignore[dangerous-triggers]
-  # Information from the PR is used only inside builtin `contains` function, it's not passed down as untrusted code.
+  # Only the script from `main` runs, the pull request is used only as data.
   pull_request_target:
     types: [opened, reopened]
 
@@ -10,7 +17,7 @@ permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   agentscan:
@@ -25,8 +32,11 @@ jobs:
         github.event.pull_request.user.login
       )
     name: AgentScan Alert
+    timeout-minutes: 5
     permissions:
       pull-requests: write # comment, label and close PRs
+    outputs:
+      closed: ${{ steps.close.outcome == 'success' }}
     steps:
       - name: AgentScan
         id: agentscan
@@ -40,6 +50,7 @@ jobs:
 
       # if the account is confirmed to be a bot, just close the PR
       - name: Close flagged accounts
+        id: close
         if: steps.agentscan.outputs.community-flagged == 'true' || steps.agentscan.outputs.classification == 'automation'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
@@ -49,7 +60,7 @@ jobs:
             Your account has been [automatically flagged](https://agentscan.tools/user/${{ github.event.pull_request.user.login }}) as likely to be created by a bot, LLM, or agent,
             and will be automatically closed. If you believe this is a mistake, please reply to this comment and we will review it.
 
-            *These measures help us reduce maintenance burden and keep the team's work efficient. See our [AI contributions policy](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md#ai-contributions) for more context.*
+            *These measures help us reduce maintenance burden and keep the team's work efficient. See our [AI contribution policy](https://github.com/vitest-dev/vitest/blob/main/AI_POLICY.md) for more context.*
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
@@ -74,3 +85,31 @@ jobs:
               pull_number: prNumber,
               state: 'closed',
             });
+
+  redirect:
+    needs: agentscan
+    # runs when agentscan is skipped or fails too, but not when it closed the PR
+    if: |
+      !cancelled() &&
+      github.repository == 'vitest-dev/vitest' &&
+      needs.agentscan.outputs.closed != 'true'
+    name: Redirect Community PR
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      contents: read # to check out the script and read the list of approved contributors
+      issues: read # to read the issues linked to the PR
+      pull-requests: write # to comment on and close the PR
+    steps:
+      # the PR can target any branch, the policy always comes from `main`
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          ref: main
+      - name: Redirect
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { default: redirectPullRequest } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-redirect.js`)
+            await redirectPullRequest({ github, context, core })
