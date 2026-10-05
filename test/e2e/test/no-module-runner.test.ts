@@ -449,7 +449,7 @@ test('add is only once', () => {
     `)
   })
 
-  test('in-source vi.mock works', async () => {
+  test('in-source vi.hoisted and vi.mock work', async () => {
     const { stderr, testTree } = await runNoViteModuleRunnerTests(
       {
         'name.js': `export const getName = () => 'original'`,
@@ -458,9 +458,11 @@ import { getName } from './name.js'
 
 if (import.meta.vitest) {
   const { test, expect, vi } = import.meta.vitest
-  vi.mock('./name.js', () => ({ getName: () => 'mocked' }))
+  const mocks = vi.hoisted(() => ({ getName: vi.fn(() => 'mocked') }))
+  vi.mock('./name.js', () => mocks)
   test('mocks name.js', () => {
     expect(getName()).toBe('mocked')
+    expect(mocks.getName).toHaveBeenCalledOnce()
   })
 }
     `,

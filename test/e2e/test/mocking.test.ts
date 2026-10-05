@@ -384,9 +384,11 @@ export const greet = () => 'hello, ' + getName()
 
 if (import.meta.vitest) {
   const { test, expect, vi } = import.meta.vitest
-  vi.mock('./name.js', () => ({ getName: () => 'b' }))
+  const mocks = vi.hoisted(() => ({ getName: vi.fn(() => 'b') }))
+  vi.mock('./name.js', () => mocks)
   test('b mocks name.js', () => {
     expect(greet()).toBe('hello, b')
+    expect(mocks.getName).toHaveBeenCalledOnce()
   })
 }
     `,

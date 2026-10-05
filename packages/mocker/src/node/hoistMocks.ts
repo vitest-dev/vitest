@@ -265,8 +265,23 @@ export function hoistMocks(
     return code.slice(test.start, test.end) === 'import.meta.vitest'
   }
 
+  const hoistConditions = new Map<Node, string>()
+
+  // in-source `vi.mock` and `vi.hoisted` run only when their file is the test file
+  function addHoistedNode(
+    node: Positioned<CallExpression | VariableDeclaration | AwaitExpression>,
+    parentStack: Node[],
+  ) {
+    hoistedNodes.add(node)
+    const guard = parentStack.find(isImportMetaVitestCheck)
+    if (guard) {
+      const test = guard.test as Positioned<Expression>
+      // copied because the native loader rewrites `import.meta.vitest`
+      hoistConditions.set(node, s.slice(test.start, test.end))
+    }
+  }
+
   const usedUtilityExports = new Set<string>()
-  const mockConditions = new Map<Node, string>()
   let hasImportMetaVitest = false
   let hasMockApiCall = false
 
@@ -383,14 +398,7 @@ export function hoistMocks(
               s.overwrite(moduleInfo.start, moduleInfo.end, s.slice(source.start, source.end))
             }
           }
-          // in-source mocks apply only when their file is the test file
-          const guard = parentStack.find(isImportMetaVitestCheck)
-          if (guard) {
-            const test = guard.test as Positioned<Expression>
-            // copied because the native loader rewrites `import.meta.vitest`
-            mockConditions.set(node, s.slice(test.start, test.end))
-          }
-          hoistedNodes.add(node)
+          addHoistedNode(node, parentStack)
         }
         // vi.doMock(import('./path')) -> vi.doMock('./path')
         // vi.doMock(await import('./path')) -> vi.doMock('./path')
@@ -438,14 +446,14 @@ export function hoistMocks(
               'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.',
             )
             // hoist "const variable = vi.hoisted(() => {})"
-            hoistedNodes.add(declarationNode)
+            addHoistedNode(declarationNode, parentStack)
           } else {
             const awaitedExpression = findNodeAround(ast, node.start, 'AwaitExpression')?.node as
               | Positioned<AwaitExpression>
               | undefined
             // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
             const moveNode = awaitedExpression?.argument === node ? awaitedExpression : node
-            hoistedNodes.add(moveNode)
+            addHoistedNode(moveNode, parentStack)
           }
         }
       }
@@ -559,8 +567,12 @@ export function hoistMocks(
   // hoist vi.mock/vi.hoisted
   for (const node of arrayNodes) {
     const end = getNodeTail(code, node)
-    const condition = mockConditions.get(node)
+    const condition = hoistConditions.get(node)
     if (condition) {
+      // `var` keeps the declared names visible outside of the `if` block
+      if (node.type === 'VariableDeclaration') {
+        s.update(node.start, node.start + node.kind.length, 'var')
+      }
       s.prependRight(node.start, `if (${condition}) { `)
       s.appendLeft(node.end, ' }')
     }

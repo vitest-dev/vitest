@@ -1491,17 +1491,15 @@ if (import.meta.vitest) {
       `)
   })
 
-  test('keeps the import.meta.vitest check for hoisted mocks', () => {
+  test('keeps the import.meta.vitest check for hoisted calls', () => {
     expect(
       hoistSimpleCode(`
-import { vi } from 'vitest'
 import { getName } from './name'
-vi.mock('./top-level')
 
 export const greet = () => getName()
 
 if (import.meta.vitest) {
-  const { test, expect } = import.meta.vitest
+  const { test, expect, vi } = import.meta.vitest
   const mocks = vi.hoisted(() => ({ getName: vi.fn() }))
   vi.mock('./name', () => mocks)
   vi.unmock('./unmocked')
@@ -1509,31 +1507,124 @@ if (import.meta.vitest) {
     vi.mock('./nested')
     expect(greet()).toBe(undefined)
   })
-} else {
-  vi.mock('./else')
 }
       `),
     ).toMatchInlineSnapshot(`
-      "vi.mock('./top-level')
-      const mocks = vi.hoisted(() => ({ getName: vi.fn() }))
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var mocks = vi.hoisted(() => ({ getName: vi.fn() })) }
       if (import.meta.vitest) { vi.mock('./name', () => mocks) }
       if (import.meta.vitest) { vi.unmock('./unmocked') }
       if (import.meta.vitest) { vi.mock('./nested') }
-      vi.mock('./else')
       const __vi_import_0__ = await import("./name");
 
-      import { vi } from 'vitest'
 
 
       export const greet = () => __vi_import_0__.getName()
 
       if (import.meta.vitest) {
-        const { test, expect } = import.meta.vitest
+        const { test, expect, vi } = import.meta.vitest
               test('greet', () => {
               expect(greet()).toBe(undefined)
         })
-      } else {
-        }"
+      }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for vi.hoisted declarations', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  const getName = vi.hoisted(() => vi.fn())
+  let getAge = vi.hoisted(() => vi.fn())
+  var getRole = vi.hoisted(() => vi.fn())
+  vi.mock('./user', () => ({ getName, getAge, getRole }))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var getName = vi.hoisted(() => vi.fn()) }
+      if (import.meta.vitest) { var getAge = vi.hoisted(() => vi.fn()) }
+      if (import.meta.vitest) { var getRole = vi.hoisted(() => vi.fn()) }
+      if (import.meta.vitest) { vi.mock('./user', () => ({ getName, getAge, getRole })) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+              }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for destructured vi.hoisted declarations', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  const { getName, ...user } = vi.hoisted(() => ({ getName: vi.fn(), age: 42 }))
+  const [getAge, getRole = vi.fn()] = vi.hoisted(() => [vi.fn()])
+  const { session: { token } } = vi.hoisted(() => ({ session: { token: 'secret' } }))
+  vi.mock('./user', () => ({ getName, getAge, getRole, user, token }))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var { getName, ...user } = vi.hoisted(() => ({ getName: vi.fn(), age: 42 })) }
+      if (import.meta.vitest) { var [getAge, getRole = vi.fn()] = vi.hoisted(() => [vi.fn()]) }
+      if (import.meta.vitest) { var { session: { token } } = vi.hoisted(() => ({ session: { token: 'secret' } })) }
+      if (import.meta.vitest) { vi.mock('./user', () => ({ getName, getAge, getRole, user, token })) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+              }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for awaited vi.hoisted declarations', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  const { user } = await vi.hoisted(async () => {
+    const { default: user } = await import('./fixtures/user')
+    return { user }
+  })
+  vi.mock('./user', () => ({ getUser: () => user }))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var { user } = await vi.hoisted(async () => {
+          const { default: user } = await import('./fixtures/user')
+          return { user }
+        }) }
+      if (import.meta.vitest) { vi.mock('./user', () => ({ getUser: () => user })) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+          }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for vi.hoisted without a declaration', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  vi.hoisted(() => {
+    process.env.API_URL = 'http://localhost'
+  })
+  await vi.hoisted(() => import('./polyfills'))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { vi.hoisted(() => {
+          process.env.API_URL = 'http://localhost'
+        }) }
+      if (import.meta.vitest) { await vi.hoisted(() => import('./polyfills')) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+          }"
     `)
   })
 
