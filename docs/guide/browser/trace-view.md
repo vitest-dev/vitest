@@ -119,7 +119,7 @@ await page.mark('content rendered')
 await page.getByRole('button', { name: 'Sign in' }).mark('sign in button')
 ```
 
-You can also pass a callback to `page.mark()`. Note that grouping is not currently supported — each inner action is recorded individually, and the mark entry appears at the end:
+You can also pass a callback to `page.mark()` to group steps. The mark entry spans the callback, and the actions inside it are nested under the mark in the step list:
 
 ```ts
 await page.mark('sign in flow', async () => {

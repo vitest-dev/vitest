@@ -8,6 +8,7 @@ import type {
   SharedModuleGraphData,
 } from '../types/general'
 import { getTestFileEnvironment } from './environments'
+import { isBuiltin } from './modules'
 
 export async function getModuleGraph(
   ctx: Vitest,
@@ -120,6 +121,9 @@ function createModuleGraphCollector(
     seen.set(mod, id)
     if (id.startsWith('__vite-browser-external:')) {
       return addExternal(id.slice('__vite-browser-external:'.length))
+    }
+    if (isBuiltin(id)) {
+      return addExternal(id)
     }
     const external = project._resolver.wasExternalized(id)
     if (typeof external === 'string') {
