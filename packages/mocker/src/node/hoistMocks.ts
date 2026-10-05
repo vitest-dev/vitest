@@ -7,6 +7,7 @@ import type {
   Expression,
   FunctionExpression,
   Identifier,
+  IfStatement,
   ImportDeclaration,
   SpreadElement,
   VariableDeclaration,
@@ -256,7 +257,16 @@ export function hoistMocks(
     }
   }
 
+  function isImportMetaVitestCheck(node: Node): node is Positioned<IfStatement> {
+    if (node.type !== 'IfStatement') {
+      return false
+    }
+    const test = node.test as Positioned<Expression>
+    return code.slice(test.start, test.end) === 'import.meta.vitest'
+  }
+
   const usedUtilityExports = new Set<string>()
+  const mockConditions = new Map<Node, string>()
   let hasImportMetaVitest = false
   let hasMockApiCall = false
 
@@ -307,7 +317,7 @@ export function hoistMocks(
       // )
       // s.overwrite(node.end - 1, node.end, '))')
     },
-    onCallExpression(node) {
+    onCallExpression(node, parentStack) {
       if (
         node.callee.type === 'MemberExpression' &&
         isIdentifier(node.callee.object) &&
@@ -372,6 +382,13 @@ export function hoistMocks(
               const source = moduleInfo.argument.source as Positioned<Expression>
               s.overwrite(moduleInfo.start, moduleInfo.end, s.slice(source.start, source.end))
             }
+          }
+          // in-source mocks apply only when their file is the test file
+          const guard = parentStack.find(isImportMetaVitestCheck)
+          if (guard) {
+            const test = guard.test as Positioned<Expression>
+            // copied because the native loader rewrites `import.meta.vitest`
+            mockConditions.set(node, s.slice(test.start, test.end))
           }
           hoistedNodes.add(node)
         }
@@ -542,6 +559,11 @@ export function hoistMocks(
   // hoist vi.mock/vi.hoisted
   for (const node of arrayNodes) {
     const end = getNodeTail(code, node)
+    const condition = mockConditions.get(node)
+    if (condition) {
+      s.prependRight(node.start, `if (${condition}) { `)
+      s.appendLeft(node.end, ' }')
+    }
     // don't hoist into itself if it's already at the top
     if (hoistIndex === end || hoistIndex === node.start) {
       hoistIndex = end

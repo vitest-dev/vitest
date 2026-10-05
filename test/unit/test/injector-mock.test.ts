@@ -1474,7 +1474,7 @@ if (import.meta.vitest) {
       `),
     ).toMatchInlineSnapshot(`
         "import { vi } from "vitest"
-        vi.mock('faker')
+        if (import.meta.vitest) { vi.mock('faker') }
         const __vi_import_0__ = await import("./calc");
 
 
@@ -1489,6 +1489,52 @@ if (import.meta.vitest) {
           })
         }"
       `)
+  })
+
+  test('keeps the import.meta.vitest check for hoisted mocks', () => {
+    expect(
+      hoistSimpleCode(`
+import { vi } from 'vitest'
+import { getName } from './name'
+vi.mock('./top-level')
+
+export const greet = () => getName()
+
+if (import.meta.vitest) {
+  const { test, expect } = import.meta.vitest
+  const mocks = vi.hoisted(() => ({ getName: vi.fn() }))
+  vi.mock('./name', () => mocks)
+  vi.unmock('./unmocked')
+  test('greet', () => {
+    vi.mock('./nested')
+    expect(greet()).toBe(undefined)
+  })
+} else {
+  vi.mock('./else')
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "vi.mock('./top-level')
+      const mocks = vi.hoisted(() => ({ getName: vi.fn() }))
+      if (import.meta.vitest) { vi.mock('./name', () => mocks) }
+      if (import.meta.vitest) { vi.unmock('./unmocked') }
+      if (import.meta.vitest) { vi.mock('./nested') }
+      vi.mock('./else')
+      const __vi_import_0__ = await import("./name");
+
+      import { vi } from 'vitest'
+
+
+      export const greet = () => __vi_import_0__.getName()
+
+      if (import.meta.vitest) {
+        const { test, expect } = import.meta.vitest
+              test('greet', () => {
+              expect(greet()).toBe(undefined)
+        })
+      } else {
+        }"
+    `)
   })
 
   test('injects an error if a utility import is imported from an external module', () => {
@@ -1760,7 +1806,7 @@ if (import.meta.vitest) {
       `)
     expect(result).toMatchInlineSnapshot(`
       "import { vi } from "vitest"
-      vi.mock('./hello-world-1')
+      if (import.meta.vitest) { vi.mock('./hello-world-1') }
 
       if (import.meta.vitest) {
         }"
