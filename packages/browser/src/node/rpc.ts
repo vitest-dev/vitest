@@ -32,7 +32,7 @@ import {
   isValidApiRequest,
 } from 'vitest/node'
 import { WebSocketServer } from 'ws'
-import { deserializeCommandArguments } from '../shared/commands'
+import { replaceUndefined, reviveUndefined } from '../shared/serialization'
 import { slash } from './utils'
 
 const debug = createDebugger('vitest:browser:api')
@@ -452,11 +452,7 @@ export function setupBrowserRpc(
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          return await project.browser!.triggerCommand(
-            command as any,
-            context,
-            ...deserializeCommandArguments(payload),
-          )
+          return await project.browser!.triggerCommand(command as any, context, ...payload)
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
@@ -543,7 +539,7 @@ export function setupBrowserRpc(
         on: (fn) => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
-        deserialize: parse,
+        deserialize: (data) => parse(data, reviveUndefined),
         timeout: -1, // createTesters can take a long time
       },
     )
@@ -579,6 +575,6 @@ function stringifyReplace(key: string, value: any): any {
       ...cloned,
     }
   } else {
-    return value
+    return replaceUndefined(value)
   }
 }

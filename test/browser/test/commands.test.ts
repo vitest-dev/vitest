@@ -67,16 +67,21 @@ it('can run custom commands', async () => {
       arg2: 'arg2',
     })
   }
+
+  {
+    const result = await myCustomCommand([undefined, { value: undefined }], 'arg2')
+    expect(result.arg1).toStrictEqual([undefined, { value: undefined }])
+  }
 })
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
     myCustomCommand: (
-      arg1: string | null | undefined,
+      arg1: unknown,
       arg2: string,
     ) => Promise<{
       testPath: string
-      arg1: string | null | undefined
+      arg1: unknown
       arg2: string
     }>
 

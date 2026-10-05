@@ -8,7 +8,6 @@ import type {
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
-import { serializeCommandArguments } from '../../shared/commands'
 import { getBrowserState, getWorkerState } from '../utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
@@ -198,12 +197,7 @@ export class CommandsManager {
           })
         }
         try {
-          return await rpc.triggerCommand<T>(
-            sessionId,
-            command,
-            filepath,
-            serializeCommandArguments(args),
-          )
+          return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
         } catch (err: any) {
           status = 'fail'
           // rethrow an error to keep the stack trace in browser
