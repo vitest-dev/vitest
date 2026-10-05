@@ -84,7 +84,7 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
             },
           }
         : import('msw/browser'),
-      import('msw/core/http'),
+      import('msw'),
     ])
       .then(([{ setupWorker }, { http }]) => {
         const worker = setupWorker(
