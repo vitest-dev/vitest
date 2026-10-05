@@ -1,3 +1,4 @@
+import type {} from 'temporal-polyfill/types/global'
 import { afterEach, expect, it, vi } from 'vitest'
 
 // use polyfill for node < 26
