@@ -40,7 +40,6 @@
         "*.d.ts",
         "src/client/orchestrator.ts",
         "src/client/public/*.js",
-        "src/client/tester/tester.ts",
         "src/node/index.ts",
       ],
       "vite": {
