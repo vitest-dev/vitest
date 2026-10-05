@@ -284,20 +284,10 @@ async function testZoom(page: Page) {
   const fitToPane = traceView.getByRole('button', { name: 'Fit to Pane' })
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
-  // fit by default scales down the default tall viewport
-  await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
-  await expect(zoomLabel).toHaveText(/^414x896 · \d+%$/)
-  const fitLabel = await zoomLabel.textContent()
-  expect(Number(fitLabel.match(/(\d+)%/)![1])).toBeLessThan(100)
-
-  // zoom in to actual size
-  for (let i = 0; i < 10 && (await zoomLabel.textContent()) !== '414x896 · 100%'; i++) {
-    await zoomIn.click()
-  }
+  // actual size by default
   await expect(zoomLabel).toHaveText('414x896 · 100%')
   await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
   await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(414)
-  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // zoom out and persist across reloads
   await zoomOut.click()
@@ -305,11 +295,21 @@ async function testZoom(page: Page) {
   await page.reload()
   await expect(zoomLabel).toHaveText('414x896 · 75%')
   await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(311)
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
-  // back to fit
+  // fit scales down the tall viewport and persists across reloads
   await fitToPane.click()
   await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
+  await expect(zoomLabel).toHaveText(/^414x896 · \d+%$/)
+  const fitLabel = (await zoomLabel.textContent())!
+  expect(Number(fitLabel.match(/(\d+)%/)![1])).toBeLessThan(75)
+  await page.reload()
+  await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
   await expect(zoomLabel).toHaveText(fitLabel)
+
+  // zooming leaves fit mode
+  await zoomIn.click()
+  await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
 }
 
 async function testViewport(page: Page) {

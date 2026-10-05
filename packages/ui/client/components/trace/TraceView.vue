@@ -46,7 +46,7 @@ const fitScale = computed(() => {
   }
   return Math.min(width.value / viewport.value.width, height.value / viewport.value.height, 1)
 })
-const scale = computed(() => traceZoom.value ?? fitScale.value)
+const scale = computed(() => (traceZoom.value === 'fit' ? fitScale.value : traceZoom.value))
 const nextZoomIn = computed(() => ZOOM_LEVELS.find((level) => level > scale.value + 1e-3))
 const nextZoomOut = computed(() => ZOOM_LEVELS.findLast((level) => level < scale.value - 1e-3))
 const zoomLabel = computed(() =>
@@ -64,15 +64,15 @@ const scaledViewportStyle = computed(() =>
 )
 
 function zoomIn() {
-  traceZoom.value = nextZoomIn.value ?? traceZoom.value
+  traceZoom.value = nextZoomIn.value ?? scale.value
 }
 
 function zoomOut() {
-  traceZoom.value = nextZoomOut.value ?? traceZoom.value
+  traceZoom.value = nextZoomOut.value ?? scale.value
 }
 
 function fitToPane() {
-  traceZoom.value = null
+  traceZoom.value = 'fit'
 }
 
 function onSelectStep(index: number) {
@@ -322,8 +322,8 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
             v-tooltip.bottom="'Fit to Pane'"
             title="Fit to Pane"
             icon="i-carbon:fit-to-screen"
-            :active="traceZoom == null"
-            :aria-pressed="traceZoom == null"
+            :active="traceZoom === 'fit'"
+            :aria-pressed="traceZoom === 'fit'"
             @click="fitToPane()"
           />
         </div>

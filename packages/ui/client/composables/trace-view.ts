@@ -36,7 +36,7 @@ export const showTraceSelectorHighlight = useLocalStorage(
   true,
 )
 
-export const traceZoom = useLocalStorage<number | null>('vitest-ui_trace-zoom', null, {
+export const traceZoom = useLocalStorage<number | 'fit'>('vitest-ui_trace-zoom', 1, {
   serializer: StorageSerializers.object,
 })
 
