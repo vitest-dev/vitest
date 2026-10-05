@@ -23,6 +23,7 @@ export default defineConfig({
       ui: false,
       traceView: {
         enabled: true,
+        ariaSnapshot: true,
         // enabled only on html reporter e2e
         // inlineImages: true,
       },

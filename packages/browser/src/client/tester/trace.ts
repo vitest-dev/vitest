@@ -53,6 +53,7 @@ interface TraceSnapshot {
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
   pseudoClassIds: Record<PseudoClassName, number[]>
+  ariaSnapshot?: string
 }
 
 // Dynamic pseudo-class state isn't preserved in the serialized DOM. rrweb-snapshot
@@ -146,6 +147,10 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
       y: window.scrollY,
     },
     pseudoClassIds: {} as any,
+  }
+  if (traceView.ariaSnapshot) {
+    const { generateAriaTree, renderAriaTree } = getBrowserState().aria
+    result.ariaSnapshot = renderAriaTree(generateAriaTree(document.body))
   }
   for (const className of PSEUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)

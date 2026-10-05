@@ -946,11 +946,13 @@ export function resolveTestConfig(
           enabled: traceView.enabled ?? false,
           recordCanvas: traceView.recordCanvas ?? false,
           inlineImages: traceView.inlineImages ?? false,
+          ariaSnapshot: traceView.ariaSnapshot ?? false,
         }
       : {
           enabled: traceView ?? false,
           recordCanvas: false,
           inlineImages: false,
+          ariaSnapshot: false,
         }
   if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
     resolved.browser.detailsPanelPosition = 'bottom'

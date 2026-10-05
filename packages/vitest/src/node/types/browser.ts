@@ -94,6 +94,16 @@ export interface BrowserTraceViewOptions {
    * @experimental
    */
   inlineImages?: boolean
+
+  /**
+   * Capture the accessibility tree alongside each trace view snapshot.
+   *
+   * The trace viewer shows it in an "Aria" tab next to the DOM replay.
+   *
+   * @default false
+   * @experimental
+   */
+  ariaSnapshot?: boolean
 }
 
 type UnsupportedProperties =

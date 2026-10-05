@@ -24,6 +24,10 @@ const props = defineProps<{
 const entries = computed(() => props.trace.entries)
 const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
 
+const snapshotView = ref<'replay' | 'aria'>('replay')
+const ariaSnapshot = computed(() => selectedStep.value?.snapshot.ariaSnapshot)
+const showAriaSnapshot = computed(() => snapshotView.value === 'aria' && ariaSnapshot.value != null)
+
 const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
@@ -252,15 +256,49 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
       </div>
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
-      <div class="h-full min-h-0 flex flex-col overflow-auto">
-        <iframe
-          v-if="selectedStep"
-          ref="iframeEl"
-          :key="iframeSandbox"
-          :sandbox="iframeSandbox"
-          style="background: white; border: none; color-scheme: normal; flex: none"
-        />
-        <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
+      <div class="h-full min-h-0 flex flex-col">
+        <div
+          v-if="ariaSnapshot != null"
+          role="tablist"
+          aria-label="Trace snapshot view"
+          class="flex flex-none items-center bg-header border-base border-b text-sm"
+        >
+          <button
+            type="button"
+            role="tab"
+            class="tab-button"
+            :class="{ 'tab-button-active': !showAriaSnapshot }"
+            :aria-selected="!showAriaSnapshot"
+            @click="snapshotView = 'replay'"
+          >
+            Replay
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="tab-button"
+            :class="{ 'tab-button-active': showAriaSnapshot }"
+            :aria-selected="showAriaSnapshot"
+            @click="snapshotView = 'aria'"
+          >
+            Aria
+          </button>
+        </div>
+        <div class="min-h-0 flex-1 flex flex-col overflow-auto">
+          <pre
+            v-if="showAriaSnapshot"
+            data-testid="trace-aria-snapshot"
+            class="m-0 p-4 font-mono text-xs whitespace-pre"
+            >{{ ariaSnapshot }}</pre>
+          <iframe
+            v-else-if="selectedStep"
+            ref="iframeEl"
+            :key="iframeSandbox"
+            :sandbox="iframeSandbox"
+            style="background: white; border: none; color-scheme: normal; flex: none"
+          />
+          <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
+        </div>
       </div>
     </Pane>
   </Splitpanes>

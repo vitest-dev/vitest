@@ -423,6 +423,13 @@ Capture canvas pixels in trace-view snapshots (default: `false`)
 
 Inline loaded image pixels in trace-view snapshots (default: `false`)
 
+### browser.traceView.ariaSnapshot
+
+- **CLI:** `--browser.traceView.ariaSnapshot`
+- **Config:** [browser.traceView.ariaSnapshot](/config/browser/traceview#traceview-ariasnapshot)
+
+Capture the accessibility tree in trace-view snapshots (default: `false`)
+
 ### browser.locators.exact
 
 - **CLI:** `--browser.locators.exact`

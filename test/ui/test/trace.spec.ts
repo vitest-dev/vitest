@@ -80,6 +80,10 @@ test.describe('ui', () => {
   test('persists resized trace panes across reloads', async ({ page }) => {
     await testPersistsResizedTracePanes(page)
   })
+
+  test('aria snapshot', async ({ page }) => {
+    await testAriaSnapshot(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -98,6 +102,7 @@ test.describe('html reporter', () => {
           traceView: {
             enabled: true,
             inlineImages: true,
+            ariaSnapshot: true,
           },
         },
       },
@@ -170,7 +175,43 @@ test.describe('html reporter', () => {
   test('persists resized trace panes across reloads', async ({ page }) => {
     await testPersistsResizedTracePanes(page)
   })
+
+  test('aria snapshot', async ({ page }) => {
+    await testAriaSnapshot(page)
+  })
 })
+
+async function testAriaSnapshot(page: Page) {
+  const traceView = page.getByTestId('trace-view')
+  await openExplorerItem(page, 'simple')
+  const traceSteps = traceView.getByTestId('trace-step')
+  await traceSteps.nth(0).click()
+
+  // replay is shown by default
+  const replayTab = traceView.getByRole('tab', { name: 'Replay' })
+  const ariaTab = traceView.getByRole('tab', { name: 'Aria' })
+  await expect(replayTab).toHaveAttribute('aria-selected', 'true')
+  await expect(
+    traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' }),
+  ).toBeVisible()
+
+  // aria tab shows the captured accessibility tree
+  const ariaSnapshot = traceView.getByTestId('trace-aria-snapshot')
+  await ariaTab.click()
+  await expect(ariaTab).toHaveAttribute('aria-selected', 'true')
+  await expect(ariaSnapshot).toHaveText('- button "Simple"')
+  await expect(traceView.locator('iframe')).toHaveCount(0)
+
+  // selected view is kept across steps
+  await traceSteps.nth(1).click()
+  await expect(ariaSnapshot).toHaveText('- button "Another"')
+
+  // switching back rebuilds the replay with highlight
+  await replayTab.click()
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+}
 
 async function testBasic(page: Page) {
   // selecting test case opens trace viewer
