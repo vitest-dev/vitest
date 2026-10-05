@@ -70,7 +70,7 @@ watch(
     if (!step || !iframe) {
       return
     }
-    const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
+    const { serialized, selectorIds, viewport, scroll, pseudoClassIds } = step.snapshot
     iframe.style.width = `${viewport.width}px`
     iframe.style.height = `${viewport.height}px`
     // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
@@ -104,15 +104,17 @@ watch(
       }
     }
     iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
-    if (selectorId != null) {
-      const el = mirror.getNode(selectorId)
-      if (el) {
-        // Overlay highlight technique adapted from Playwright's highlight.ts:
-        // https://github.com/microsoft/playwright/blob/main/packages/injected/src/highlight.ts
-        // getBoundingClientRect() gives viewport-relative coords; position:fixed overlay matches.
-        // Simplified version: no shadow DOM glass pane, no tooltip.
-        iframe.contentWindow!.requestAnimationFrame(() => {
-          const rect = (el as Element).getBoundingClientRect()
+    const elements = (selectorIds ?? [])
+      .map((id) => mirror.getNode(id) as Element | null)
+      .filter((el) => el != null)
+    if (elements.length > 0) {
+      // Overlay highlight technique adapted from Playwright's highlight.ts:
+      // https://github.com/microsoft/playwright/blob/main/packages/injected/src/highlight.ts
+      // getBoundingClientRect() gives viewport-relative coords; position:fixed overlay matches.
+      // Simplified version: no shadow DOM glass pane, no tooltip.
+      iframe.contentWindow!.requestAnimationFrame(() => {
+        for (const el of elements) {
+          const rect = el.getBoundingClientRect()
           const overlay = doc.createElement('div')
           overlay.setAttribute('data-testid', 'trace-view-highlight')
           overlay.style.cssText = `
@@ -129,18 +131,18 @@ watch(
         `
           overlay.style.display = showTraceSelectorHighlight.value ? '' : 'none'
           doc.documentElement.appendChild(overlay)
-        })
-      }
+        }
+      })
     }
   },
   { immediate: true },
 )
 
 watch(showTraceSelectorHighlight, (show) => {
-  const overlay = iframeEl.value?.contentDocument?.querySelector<HTMLElement>(
+  const overlays = iframeEl.value?.contentDocument?.querySelectorAll<HTMLElement>(
     '[data-testid="trace-view-highlight"]',
   )
-  if (overlay) {
+  for (const overlay of overlays ?? []) {
     overlay.style.display = show ? '' : 'none'
   }
 })
