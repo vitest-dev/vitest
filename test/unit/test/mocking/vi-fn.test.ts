@@ -549,6 +549,29 @@ describe('vi.fn() implementations', () => {
     expect(Mock.mock.instances).toEqual([mock])
   })
 
+  test('vi.fn() stores an instance for every call', () => {
+    const returned = { value: 42 }
+    const Mock = vi.fn()
+    const context = {}
+
+    Mock.call(context)
+    const instance = new Mock()
+    Mock.mockImplementationOnce(
+      class {
+        constructor() {
+          return returned
+        }
+      } as any,
+    )
+    const result = new Mock()
+
+    expect(result).toBe(returned)
+    expect(Mock.mock.instances).toHaveLength(3)
+    expect(Mock.mock.instances[0]).toBe(context)
+    expect(Mock.mock.instances[1]).toBe(instance)
+    expect(Mock.mock.instances[2]).toBe(returned)
+  })
+
   test('vi.fn() with mockReturnValue', () => {
     const mock = vi.fn()
     mock.mockReturnValue(42)
