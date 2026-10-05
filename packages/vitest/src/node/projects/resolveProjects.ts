@@ -1039,7 +1039,10 @@ function expandBrowserInstancesInEntries(
       }
       names.add(name)
 
-      const clonedConfig = cloneProjectConfigForBrowserInstance(projectConfig, instance)
+      const clonedConfig = cloneProjectConfigForBrowserInstance(
+        projectConfig === globalConfig ? { ...projectConfig, globalSetup: [] } : projectConfig,
+        instance,
+      )
       clonedConfig.name = name
 
       result.push({
