@@ -164,11 +164,7 @@ function createRunner(vitest: Vitest) {
         .map((file) => vitest.state.getReportedEntity(file))
         .filter((e) => e?.type === 'module')
 
-      const state: TestRunEndReason = vitest.isCancelling
-        ? 'interrupted'
-        : modules.some((m) => !m.ok())
-          ? 'failed'
-          : 'passed'
+      const state: TestRunEndReason = vitest._getTestRunEndReason(modules, [])
 
       await vitest.report('onTestRunEnd', modules, [], state)
       await vitest.report('onWatcherStart', files, [

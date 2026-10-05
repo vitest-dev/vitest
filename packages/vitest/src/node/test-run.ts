@@ -142,13 +142,7 @@ export class TestRun {
     // specification won't have the File task if they were filtered by the --shard command
     const modules = specifications.map((spec) => spec.testModule).filter((s) => s != null)
 
-    const state: TestRunEndReason = this.vitest.isCancelling
-      ? 'interrupted'
-      : // by this point, the run will be marked as failed if there are any errors,
-        // should it be done by testRun.end?
-        this.hasFailed(modules)
-        ? 'failed'
-        : 'passed'
+    const state: TestRunEndReason = this.vitest._getTestRunEndReason(modules, errors)
 
     if (state !== 'passed') {
       process.exitCode = 1
@@ -169,14 +163,6 @@ export class TestRun {
       await writeFile(path, JSON.stringify(meta, null, 2), 'utf-8')
       this.vitest.logger.log(`Metadata written to ${path}`)
     }
-  }
-
-  private hasFailed(modules: TestModule[]) {
-    if (!modules.length) {
-      return !this.vitest.config.passWithNoTests
-    }
-
-    return modules.some((m) => !m.ok())
   }
 
   // make sure the error always has a "stacks" property

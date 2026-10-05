@@ -16,7 +16,7 @@ import type { TestSpecification } from './test-specification'
 import type { ParentProjectBrowser } from './types/browser'
 import type { ResolvedConfig, TestProjectConfiguration } from './types/config'
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
-import type { Reporter } from './types/reporter'
+import type { Reporter, TestRunEndReason } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
 import { rm } from 'node:fs/promises'
@@ -1595,11 +1595,37 @@ export class Vitest {
     })
   }
 
+  /**
+   * Whether these unhandled errors fail the run. The run-end reason shares this
+   * predicate so the verdict cannot disagree with the exit code.
+   * @internal
+   */
+  public _failsOnUnhandledErrors(errors: unknown[]): boolean {
+    return errors.length > 0 && !this.config.dangerouslyIgnoreUnhandledErrors
+  }
+
   /** @internal */
   public _checkUnhandledErrors(errors: unknown[]): void {
-    if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
+    if (this._failsOnUnhandledErrors(errors)) {
       process.exitCode = 1
     }
+  }
+
+  /** @internal */
+  public _getTestRunEndReason(modules: TestModule[], errors: unknown[]): TestRunEndReason {
+    if (this.isCancelling) {
+      return 'interrupted'
+    }
+
+    if (this._failsOnUnhandledErrors(errors)) {
+      return 'failed'
+    }
+
+    if (!modules.length) {
+      return this.config.passWithNoTests ? 'passed' : 'failed'
+    }
+
+    return modules.some((m) => !m.ok()) ? 'failed' : 'passed'
   }
 
   private async reportCoverage(coverage: unknown, allTestsRun: boolean): Promise<void> {

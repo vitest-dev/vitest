@@ -140,7 +140,7 @@ The second argument is a readonly list of unhandled errors that Vitest wasn't ab
 
 The third argument indicated why the test run was finished:
 
-- `passed`: test run was finished normally and there are no errors
+- `passed`: test run was finished normally and there are no errors (unhandled errors do not fail the run when [`dangerouslyIgnoreUnhandledErrors`](/config/dangerouslyignoreunhandlederrors) is enabled)
 - `failed`: test run has at least one error (due to a syntax error during collection or an actual error during test execution)
 - `interrupted`: test was interrupted by [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) call or `Ctrl+C` was pressed in the terminal (note that it's still possible to have failed tests in this case)
 

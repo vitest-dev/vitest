@@ -1,3 +1,4 @@
+import type { TestRunEndReason } from 'vitest/node'
 import { sep } from 'node:path'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
@@ -168,4 +169,47 @@ test('worker that fails to start surfaces the error instead of hanging', async (
     Caused by: Error: Worker exited unexpectedly with exit code 9 during starting state
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
   `)
+})
+
+test('worker death is reported as a failed run, not a passed one', async () => {
+  let reason: TestRunEndReason | undefined
+
+  const { exitCode } = await runVitest({
+    root: './fixtures/pool-worker-exit',
+    pool: 'forks',
+    include: ['1-first.test.ts', '2-crash.test.ts'],
+    reporters: [
+      {
+        onTestRunEnd(_testModules, _unhandledErrors, runEndReason) {
+          reason = runEndReason
+        },
+      },
+    ],
+  })
+
+  // the crashed file never reaches a terminal state, so the run did not pass
+  expect(reason).toBe('failed')
+  expect(exitCode).toBe(1)
+})
+
+test('an ignored unhandled error still reports the run as passed', async () => {
+  let reason: TestRunEndReason | undefined
+
+  const { exitCode } = await runVitest({
+    root: './fixtures/pool-worker-exit',
+    pool: 'forks',
+    include: ['1-first.test.ts', '2-crash.test.ts'],
+    dangerouslyIgnoreUnhandledErrors: true,
+    reporters: [
+      {
+        onTestRunEnd(_testModules, _unhandledErrors, runEndReason) {
+          reason = runEndReason
+        },
+      },
+    ],
+  })
+
+  // `dangerouslyIgnoreUnhandledErrors` opts out of failing the run
+  expect(reason).toBe('passed')
+  expect(exitCode).toBe(0)
 })
