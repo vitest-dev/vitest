@@ -35,7 +35,7 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options?: 
 const FAKE_TIMERS_TICK = 50
 
 /** the provider waits in real time, so fake timers must keep moving for the page to update */
-function advanceFakeTimersWhilePending<T>(promise: Promise<T>): Promise<T> {
+export function advanceFakeTimersWhilePending<T>(promise: Promise<T>): Promise<T> {
   if (!vi.isFakeTimers()) {
     return promise
   }
