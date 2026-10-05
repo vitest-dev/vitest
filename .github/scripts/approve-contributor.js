@@ -3,14 +3,19 @@ const PATH = 'APPROVED_CONTRIBUTORS'
 
 /**
  * Adds a user to the list of approved contributors when a user with write access
- * comments `LGTM+` or `LGTM+ @username`. Sets the `approved` output when the user is on the list.
+ * comments `/approve-user` or `/approve-user username` on a pull request. Sets the `approved` output when the user is on the list.
  */
 export default async function approveContributor({ github, context, core }) {
   const { owner, repo } = context.repo
   const comment = context.payload.comment
   const commenter = comment.user.login
 
-  const match = /^LGTM\+(?: +@([a-z\d][a-z\d-]{0,38}))?$/i.exec(comment.body.trim())
+  if (!context.payload.issue?.pull_request) {
+    core.info('The comment is not on a pull request')
+    return
+  }
+
+  const match = /^\/approve-user(?: +@?([a-z\d][a-z\d-]{0,38}))?$/i.exec(comment.body.trim())
   if (!match) {
     core.info('The comment is not an approval command')
     return
@@ -30,12 +35,8 @@ export default async function approveContributor({ github, context, core }) {
   if (match[1]) {
     const { data } = await github.rest.users.getByUsername({ username: match[1] })
     user = data
-  } else if (context.payload.issue) {
-    user = context.payload.issue.user
   } else {
-    // redirected discussions are opened by the bot, not by the contributor
-    core.setFailed('Use `LGTM+ @username` in a discussion')
-    return
+    user = context.payload.issue.user
   }
   // all deleted accounts share the "ghost" account
   if (user.login === 'ghost') {
