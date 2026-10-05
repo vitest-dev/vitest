@@ -11,6 +11,7 @@ import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
+import { forgetCacheDirTag, tagCacheDir } from './cachedirTag'
 
 const debugFs = createDebugger('vitest:cache:fs')
 const debugMemory = createDebugger('vitest:cache:memory')
@@ -96,6 +97,7 @@ export class FileSystemModuleCache {
       ...this.vitest.projects.map((r) => r.config.fsModuleCachePath || this.rootCache),
     ]
     const uniquePaths = Array.from(new Set(fsCachePaths))
+    uniquePaths.forEach(forgetCacheDirTag)
     await Promise.all(
       uniquePaths.map((directory) => rm(directory, { force: true, recursive: true })),
     )
@@ -297,6 +299,7 @@ export class FileSystemModuleCache {
       if (!existsSync(cacheRoot)) {
         mkdirSync(cacheRoot, { recursive: true })
       }
+      tagCacheDir(cacheRoot)
     }
 
     const fsResultPath = join(cacheRoot, cacheKey)
@@ -330,6 +333,7 @@ export class FileSystemModuleCache {
       if (!existsSync(this.rootCache)) {
         mkdirSync(this.rootCache, { recursive: true })
       }
+      tagCacheDir(this.rootCache)
       await writeFile(this.metadataFilePath, JSON.stringify({ lockfileHash }, null, 2), 'utf-8')
     } catch (error) {
       // Recording the metadata is best-effort and losing the file shouldn't
