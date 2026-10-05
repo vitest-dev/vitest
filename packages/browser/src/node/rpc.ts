@@ -32,6 +32,7 @@ import {
   isValidApiRequest,
 } from 'vitest/node'
 import { WebSocketServer } from 'ws'
+import { deserializeCommandArguments } from '../shared/commands'
 import { slash } from './utils'
 
 const debug = createDebugger('vitest:browser:api')
@@ -451,7 +452,11 @@ export function setupBrowserRpc(
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          return await project.browser!.triggerCommand(command as any, context, ...payload)
+          return await project.browser!.triggerCommand(
+            command as any,
+            context,
+            ...deserializeCommandArguments(payload),
+          )
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)

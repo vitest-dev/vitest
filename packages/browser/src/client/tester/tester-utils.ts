@@ -8,6 +8,7 @@ import type {
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
+import { serializeCommandArguments } from '../../shared/commands'
 import { getBrowserState, getWorkerState } from '../utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
@@ -141,7 +142,6 @@ export class CommandsManager {
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
-    args = args.filter((arg) => arg !== undefined) // remove optional fields
 
     const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command)
       ? `vitest:${command.slice('__vitest_'.length)}`
@@ -179,7 +179,10 @@ export class CommandsManager {
         let status: BrowserTraceEntryStatus = 'pass'
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
         const element =
-          typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0]
+          typeof args[0] === 'object' &&
+          args[0] !== null &&
+          'selector' in args[0] &&
+          'locator' in args[0]
             ? args[0]
             : undefined
         if (hasActiveTraceView) {
@@ -195,7 +198,12 @@ export class CommandsManager {
           })
         }
         try {
-          return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
+          return await rpc.triggerCommand<T>(
+            sessionId,
+            command,
+            filepath,
+            serializeCommandArguments(args),
+          )
         } catch (err: any) {
           status = 'fail'
           // rethrow an error to keep the stack trace in browser
