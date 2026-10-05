@@ -281,12 +281,14 @@ async function testZoom(page: Page) {
   const zoomLabel = traceView.getByTestId('trace-zoom-label')
   const zoomIn = traceView.getByRole('button', { name: 'Zoom In' })
   const zoomOut = traceView.getByRole('button', { name: 'Zoom Out' })
+  const resetZoom = traceView.getByRole('button', { name: 'Reset Zoom' })
   const fitToPane = traceView.getByRole('button', { name: 'Fit to Pane' })
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // actual size by default
   await expect(zoomLabel).toHaveText('414x896 · 100%')
   await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
+  await expect(resetZoom).toBeDisabled()
   await expect.poll(async () => Math.round((await iframe.boundingBox())!.width)).toBe(414)
 
   // zoom out and persist across reloads
@@ -310,6 +312,13 @@ async function testZoom(page: Page) {
   // zooming leaves fit mode
   await zoomIn.click()
   await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
+
+  // reset to actual size
+  await fitToPane.click()
+  await resetZoom.click()
+  await expect(zoomLabel).toHaveText('414x896 · 100%')
+  await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
+  await expect(resetZoom).toBeDisabled()
 }
 
 async function testViewport(page: Page) {

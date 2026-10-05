@@ -71,6 +71,10 @@ function zoomOut() {
   traceZoom.value = nextZoomOut.value ?? scale.value
 }
 
+function resetZoom() {
+  traceZoom.value = 1
+}
+
 function fitToPane() {
   traceZoom.value = 'fit'
 }
@@ -317,6 +321,13 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
             icon="i-carbon:zoom-in"
             :disabled="nextZoomIn == null"
             @click="zoomIn()"
+          />
+          <IconButton
+            v-tooltip.bottom="'Reset Zoom'"
+            title="Reset Zoom"
+            icon="i-carbon:zoom-reset"
+            :disabled="traceZoom === 1"
+            @click="resetZoom()"
           />
           <IconButton
             v-tooltip.bottom="'Fit to Pane'"
