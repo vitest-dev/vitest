@@ -79,14 +79,17 @@ export function TestConfigPlugin(
           // By default, Vite extends arrays, for example, but CLI options should have the priority
           config.test = deepMerge({}, config.test ?? {}, options)
 
-          // apply browser CLI options only if the config already has the browser config and not disabled manually
+          // apply browser CLI options only if the config already has the browser config and not disabled manually,
+          // but let the API create it for a root config without projects (the CLI can't set `provider` or `instances`)
+          const createsRootBrowserConfig =
+            !globalConfig && !config.test.projects && !!(browser?.provider || browser?.instances)
           if (
-            config.test.browser &&
             browser &&
-            (config.test.browser.enabled !== false || browser.enabled)
+            (config.test.browser || createsRootBrowserConfig) &&
+            (config.test.browser?.enabled !== false || browser.enabled)
           ) {
             config.test.browser = mergeConfig(
-              config.test.browser,
+              config.test.browser ?? {},
               browser,
             ) as ResolvedBrowserOptions
           }
