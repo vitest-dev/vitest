@@ -308,6 +308,24 @@
       },
     },
     {
+      "files": ["test/unit/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": ["path"],
+            "patterns": [
+              {
+                "group": ["**/test-utils", "**/test-utils/**"],
+                "importNames": ["runVitest", "runInlineTests", "runVitestCli"],
+                "message": "Tests that start Vitest belong in test/e2e.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       "files": ["docs/**", "packages/web-worker/**", "test/unit/**"],
       "rules": {
         "no-restricted-globals": "off",
