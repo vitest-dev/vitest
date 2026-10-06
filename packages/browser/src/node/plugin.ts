@@ -61,6 +61,8 @@ export default (contribution: BrowserServerContribution): Plugin[] => {
     }),
     {
       name: 'vitest:browser:in-source-tests',
+      // runs after `vitest:mocks`, so hoisted mocks can read `import.meta.vitest`
+      enforce: 'post',
       transform: {
         filter: {
           code: /import\.meta\.vitest/,

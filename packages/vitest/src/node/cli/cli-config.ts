@@ -101,6 +101,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   ui: {
     description: 'Enable UI',
+    argument: '', // empty string means boolean
+    subcommands: null, // don't support custom objects
   },
   open: {
     description: 'Open UI automatically (default: `!process.env.CI`)',

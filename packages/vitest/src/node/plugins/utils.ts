@@ -1,5 +1,5 @@
 import type { DepOptimizationOptions, UserConfig as ViteConfig } from 'vite'
-import type { DepsOptimizationOptions, UserConfig } from '../types/config'
+import type { DepsOptimizationOptions, UIOptions, UserConfig } from '../types/config'
 import { slash } from '@vitest/utils/helpers'
 import { dirname, resolve } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
@@ -16,6 +16,10 @@ export function resolveTestCacheDir(
   const label = typeof name === 'string' ? name : name?.label || ''
   const baseDir = slash(viteCacheDir || 'node_modules/.vite')
   return resolve(root, baseDir, 'vitest', hash('sha1', label, 'hex'))
+}
+
+export function normalizeUIOptions(ui: UserConfig['ui']): UIOptions {
+  return typeof ui === 'object' ? ui : { enabled: ui }
 }
 
 export function resolveOptimizerConfig(
