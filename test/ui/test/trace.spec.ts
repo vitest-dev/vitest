@@ -106,7 +106,6 @@ test.describe('html reporter', () => {
           traceView: {
             enabled: true,
             inlineImages: true,
-            ariaSnapshot: true,
           },
         },
       },
