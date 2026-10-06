@@ -293,12 +293,15 @@ async function testZoom(page: Page) {
   const zoomOut = zoomPopover.getByRole('button', { name: 'Zoom Out' })
   const fitToPane = zoomPopover.getByRole('button', { name: 'Fit' })
   const resetZoom = zoomPopover.getByRole('button', { name: 'Reset' })
-  // fixture viewport is 400x600
+
+  // wait for the snapshot replay
+  await expect(traceFrame.getByRole('button', { name: 'Two' })).toBeVisible()
+
+  // verify zoom label and scaled iframe width of the 400px wide fixture viewport
   async function expectZoom(scale: number) {
     await expect(zoomTrigger).toHaveText(`${Math.round(scale * 100)}%`)
     await expect.poll(async () => (await iframe.boundingBox())!.width).toBeCloseTo(400 * scale, 0)
   }
-  await expect(traceFrame.getByRole('button', { name: 'Two' })).toBeVisible()
 
   // actual size by default
   await expectZoom(1)
