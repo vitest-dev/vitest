@@ -23,18 +23,21 @@ function readDependencies(ctx: Vitest | undefined) {
   const { projects } = JSON.parse(readFileSync(getDependenciesPath(ctx), 'utf-8'))
   const result: Record<string, Record<string, string[]>> = {}
   for (const name in projects) {
-    const { modules, files, globalSetup } = projects[name]
+    const { modules, files, globalSetup, config } = projects[name]
     const project: Record<string, string[]> = (result[name] = {})
     const toFiles = (indices: number[]) =>
       indices
         .map((index: number) => modules[index])
         .filter((file: string) => !file.startsWith('../'))
         .sort()
+    if (config.deps.length) {
+      project['<config>'] = toFiles(config.deps)
+    }
     if (globalSetup) {
-      project['<globalSetup>'] = toFiles(globalSetup)
+      project['<globalSetup>'] = toFiles(globalSetup.deps)
     }
     for (const file in files) {
-      project[file] = toFiles(files[file])
+      project[file] = toFiles(files[file].deps)
     }
   }
   return result
@@ -60,6 +63,9 @@ test('only the tests that loaded a changed file run', async () => {
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "a.test.js": [
           "a.test.js",
           "src/helper.js",
@@ -114,6 +120,9 @@ test.for([
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "a.test.js": [
           "a.test.js",
           "src/inner.js",
@@ -159,6 +168,9 @@ test('a mocked module does not load its own imports', async () => {
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "a.test.js": [
           "a.test.js",
           "src/dep.js",
@@ -206,6 +218,9 @@ test('a file loaded by a setup file or a global setup runs every test', async ()
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "<globalSetup>": [
           "global-setup.js",
           "src/global-helper.js",
@@ -372,6 +387,9 @@ test('a mock loaded from a file is recorded', async () => {
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "automock.test.js": [
           "automock.test.js",
           "src/__mocks__/dep.js",
@@ -438,6 +456,9 @@ test('a file imported with a query and a file added by a plugin are recorded', a
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "raw.test.js": [
           "raw.test.js",
           "src/data.txt",
@@ -485,21 +506,24 @@ test.for([{ pool: 'forks' }, { pool: 'vmForks' }])(
     )
     expect(stderr).toBe('')
     expect(readDependencies(ctx)).toMatchInlineSnapshot(`
-    {
-      "": {
-        "a.test.js": [
-          "a.test.js",
-          "environment.js",
-          "src/environment-helper.js",
-        ],
-        "b.test.js": [
-          "b.test.js",
-          "environment.js",
-          "src/environment-helper.js",
-        ],
-      },
-    }
-  `)
+      {
+        "": {
+          "<config>": [
+            "vitest.config.js",
+          ],
+          "a.test.js": [
+            "a.test.js",
+            "environment.js",
+            "src/environment-helper.js",
+          ],
+          "b.test.js": [
+            "b.test.js",
+            "environment.js",
+            "src/environment-helper.js",
+          ],
+        },
+      }
+    `)
 
     const changed = await runVitest({
       root: fs.root,
@@ -530,6 +554,9 @@ test('a file loaded by a custom runner runs every test', async () => {
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "a.test.js": [
           "a.test.js",
           "runner.js",
@@ -599,6 +626,9 @@ exports[\`snap 1\`] = \`1\`;
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "file.test.js": [
           "file.test.js",
           "fixtures/file.txt",
@@ -648,13 +678,24 @@ test('records are kept per project', async () => {
   expect(stderr).toBe('')
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
+      "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
+      },
       "first": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "first/a.test.js": [
           "first/a.test.js",
           "src/shared.js",
         ],
       },
       "second": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "second/b.test.js": [
           "second/b.test.js",
         ],
@@ -746,6 +787,9 @@ test('a complete run replaces the record of the file and keeps the others', asyn
   expect(readDependencies(filtered.ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "a.test.js": [
           "a.test.js",
           "src/other.js",
@@ -849,6 +893,9 @@ test('a rerun of one file in watch mode keeps the records of the other files', a
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "a.test.js": [
           "a.test.js",
           "src/other.js",

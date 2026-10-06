@@ -514,6 +514,13 @@ Ignore any unhandled errors that occur
 
 Run tests that are affected by the changed files (default: `false`)
 
+### stale
+
+- **CLI:** `--stale`
+- **Config:** [stale](/config/stale)
+
+Run only the tests whose recorded dependencies were modified since the last run of the test. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)
+
 ### sequence.shuffle.files
 
 - **CLI:** `--sequence.shuffle.files`
@@ -998,7 +1005,7 @@ Controls whether Vitest will use Node.js Loader API to process in-source or mock
 - **CLI:** `--experimental.vcsProvider <path>`
 - **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
 
-Custom provider for detecting changed files. (default: `git`)
+Provider for detecting changed files: `git`, `mtime` (requires `experimental.recordDependencies`) or a path to a custom provider. (default: `git`)
 
 ### experimental.recordDependencies
 

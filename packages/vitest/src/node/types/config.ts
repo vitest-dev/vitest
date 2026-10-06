@@ -1026,13 +1026,16 @@ export interface InlineConfig {
     nodeLoader?: boolean
 
     /**
-     * Custom provider for detecting changed files. Used with the `--changed` flag
+     * Provider for detecting changed files. Used with the `--changed` flag
      * to determine which files have been modified.
      *
-     * By default, Vitest uses Git to detect changed files. You can provide a custom
-     * implementation of the `VCSProvider` interface to use a different version control system.
+     * - `'git'` (default) compares the working tree with the `--changed` reference.
+     * - `'mtime'` compares the modification time of every recorded dependency with the run
+     *   that recorded it. It requires `experimental.recordDependencies`.
+     *
+     * You can also provide a custom implementation of the `VCSProvider` interface.
      */
-    vcsProvider?: VCSProvider | string
+    vcsProvider?: 'git' | 'mtime' | VCSProvider | (string & {})
 
     /**
      * Record the modules that every test file loads in the cache and use the records
@@ -1100,6 +1103,13 @@ export interface InlineConfig {
    * @default false
    */
   changed?: boolean | string
+
+  /**
+   * Runs only the tests whose recorded dependencies were modified since the last run of the test.
+   * Requires `cache`.
+   * @default false
+   */
+  stale?: boolean
 }
 
 export interface TypecheckConfig {
