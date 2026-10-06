@@ -99,3 +99,29 @@ test('image', async () => {
     .toHaveProperty('naturalWidth', 0)
   await page.getByAltText('local trace asset').mark('Render image')
 })
+
+test('zoom', async () => {
+  await page.viewport(400, 800)
+  document.body.innerHTML = `
+<style>
+  html,
+  body {
+    margin: 0;
+    height: 100vh;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: lightskyblue;
+  }
+</style>
+<button>One</button>
+<button>Two</button>
+<button>Three</button>
+`
+  await page.mark('Render zoom')
+})
