@@ -252,7 +252,7 @@ export interface UserEvent {
    * @param options - A pointer action or an ordered sequence of pointer actions.
    * @returns A promise that resolves after all pointer actions finish.
    *
-   * @since 5.0.0
+   * @since 5.1.0
    * @experimental The Pointer API is experimental and not subject to semver.
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-pointer}
    *
@@ -474,7 +474,7 @@ export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelD
  * - An object without `keys` moves the pointer.
  * - An array performs its actions in order.
  *
- * @since 5.0.0
+ * @since 5.1.0
  * @experimental
  */
 export type UserEventPointerInput = PointerActionInput | readonly PointerActionInput[]

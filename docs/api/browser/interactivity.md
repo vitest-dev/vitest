@@ -235,7 +235,7 @@ await page.getByRole('tablist').wheel({ direction: 'right' })
 This method is intended for testing UI that explicitly listens to `wheel` events (e.g., custom zoom controls, horizontal tab scrolling, canvas interactions). If you need to scroll the page to bring an element into view, rely on the built-in automatic scrolling functionality provided by other `userEvent` methods or [locator actions](/api/browser/locators#methods) instead.
 :::
 
-## userEvent.pointer <Version type="experimental">5.0.0</Version> <Experimental /> {#userevent-pointer}
+## userEvent.pointer <Version type="experimental">5.1.0</Version> <Experimental /> {#userevent-pointer}
 
 ```ts
 function pointer(options: UserEventPointerInput): Promise<void>
