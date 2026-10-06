@@ -26,8 +26,8 @@ function fitToPane() {
   const el = traceReplayElement.value
   if (el && props.viewport) {
     traceZoom.value = Math.min(
-      el.clientWidth / props.viewport.width,
-      el.clientHeight / props.viewport.height,
+      el.offsetWidth / props.viewport.width,
+      el.offsetHeight / props.viewport.height,
       1,
     )
   }

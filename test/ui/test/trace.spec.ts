@@ -286,6 +286,7 @@ async function testZoom(page: Page) {
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
   const iframe = traceView.locator('iframe')
+  const replay = traceView.getByTestId('trace-replay')
   const zoomTrigger = traceView.getByTestId('trace-zoom-trigger')
   const zoomPopover = page.getByTestId('trace-zoom-popover')
   const zoomPercent = zoomPopover.getByTestId('trace-zoom-percent')
@@ -293,55 +294,82 @@ async function testZoom(page: Page) {
   const zoomOut = zoomPopover.getByRole('button', { name: 'Zoom Out' })
   const fitToPane = zoomPopover.getByRole('button', { name: 'Fit' })
   const resetZoom = zoomPopover.getByRole('button', { name: 'Reset' })
-  const iframeWidth = async () => Math.round((await iframe.boundingBox())!.width)
+  const iframeWidth = async () => (await iframe.boundingBox())!.width
+  // fixture viewport is 400x600
+  const measureFit = () =>
+    replay.evaluate((el: HTMLElement) => Math.min(el.offsetWidth / 400, el.offsetHeight / 600, 1))
+  const formatPercent = (scale: number) => `${Math.round(scale * 100)}%`
+  async function expectZoom(scale: number) {
+    await expect(zoomTrigger).toHaveText(formatPercent(scale))
+    await expect.poll(iframeWidth).toBeCloseTo(400 * scale, 0)
+  }
+  async function fit() {
+    await zoomTrigger.click()
+    const scale = await measureFit()
+    await fitToPane.click()
+    await zoomTrigger.click()
+    await expect(zoomPopover).toBeHidden()
+    await expectZoom(scale)
+    return scale
+  }
   await expect(traceFrame.getByRole('button', { name: 'Two' })).toBeVisible()
 
   // actual size by default
-  await expect(zoomTrigger).toHaveText('100%')
-  await expect.poll(iframeWidth).toBe(400)
-
-  // popover shows zoom state
+  await expectZoom(1)
   await zoomTrigger.click()
   await expect(zoomPercent).toHaveText('100%')
   await expect(resetZoom).toBeDisabled()
 
-  // zoom out and persist across reloads
+  // step through levels and persist across reloads
   await zoomOut.click()
-  await expect(zoomPercent).toHaveText('75%')
-  await expect(zoomTrigger).toHaveText('75%')
-  await expect.poll(iframeWidth).toBe(300)
+  await expectZoom(0.75)
   await zoomOut.click()
-  await expect(zoomPercent).toHaveText('50%')
-  await expect.poll(iframeWidth).toBe(200)
+  await expectZoom(0.5)
   await page.reload()
-  await expect(zoomTrigger).toHaveText('50%')
-  await expect.poll(iframeWidth).toBe(200)
-  await expect(traceFrame.getByRole('button', { name: 'Two' })).toBeVisible()
+  await expectZoom(0.5)
 
-  // fit scales down the tall viewport and persists across reloads
-  await zoomTrigger.click()
-  await fitToPane.click()
-  await expect(zoomTrigger).not.toHaveText('50%')
-  const fitText = (await zoomTrigger.textContent())!
-  const fitPercent = Number(fitText.match(/(\d+)%/)![1])
-  expect(fitPercent).toBeLessThan(100)
-  await expect
-    .poll(async () => Math.abs((await iframeWidth()) - 4 * fitPercent))
-    .toBeLessThanOrEqual(2)
+  // fit to the short pane is limited by height
+  const heightFit = await fit()
+  expect(heightFit).toBeLessThan(0.5)
   await page.reload()
-  await expect(zoomTrigger).toHaveText(fitText)
+  await expectZoom(heightFit)
 
-  // zoom in from fit to the next level
+  // zoom in from fit goes to the next level
   await zoomTrigger.click()
   await zoomIn.click()
-  await expect(zoomPercent).toHaveText(/^(25|50|75|100)%$/)
+  await expectZoom(heightFit < 0.25 ? 0.25 : 0.5)
+
+  // fit is capped at 100% in the tall focused layout
+  const focusedUrl = await traceView
+    .getByRole('link', { name: 'Open Trace Viewer in New Tab' })
+    .getAttribute('href')
+  await page.goto(focusedUrl!)
+  await expect(traceFrame.getByRole('button', { name: 'Two' })).toBeVisible()
+  expect(await fit()).toBe(1)
+
+  // narrowing the replay pane keeps the zoom until fit is applied again
+  const splitter = traceView.locator('.splitpanes__splitter').first()
+  const splitterBox = (await splitter.boundingBox())!
+  const traceViewBox = (await traceView.boundingBox())!
+  await page.mouse.move(splitterBox.x + splitterBox.width / 2, splitterBox.y + 100)
+  await page.mouse.down()
+  await page.mouse.move(traceViewBox.x + traceViewBox.width - 300, splitterBox.y + 100, {
+    steps: 5,
+  })
+  await page.mouse.up()
+  await expectZoom(1)
+  const widthFit = await fit()
+  expect(widthFit).toBeLessThan(1)
+  expect(widthFit).toBeCloseTo(
+    (await replay.evaluate((el: HTMLElement) => el.offsetWidth)) / 400,
+    5,
+  )
 
   // back to actual size
+  await zoomTrigger.click()
   await resetZoom.click()
-  await expect(zoomPercent).toHaveText('100%')
-  await expect(zoomTrigger).toHaveText('100%')
+  await expectZoom(1)
   await expect(resetZoom).toBeDisabled()
-  await expect.poll(iframeWidth).toBe(400)
 }
 
 async function testViewport(page: Page) {
