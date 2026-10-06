@@ -1068,7 +1068,7 @@ export class Vitest {
             this.state.catchError(err, 'Unhandled Error')
           }
 
-          await this.cache._results.update(specs, startTime)
+          await this.cache._update(specs, startTime)
 
           return {
             testModules: this.state.getTestModules(),

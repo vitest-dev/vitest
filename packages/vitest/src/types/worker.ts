@@ -81,6 +81,11 @@ export interface WorkerGlobalState {
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>
+  /**
+   * Module ids and file paths loaded by the current test file. Only set when
+   * `experimental.recordDependencies` is enabled.
+   */
+  dependencies?: Set<string>
   getterTracker?: GetterTracker
   onCancel: (listener: (reason: CancelReason) => unknown) => () => void
   onCleanup: (listener: () => unknown) => void

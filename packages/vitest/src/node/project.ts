@@ -15,6 +15,7 @@ import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { createDefinesScript } from '../utils/config-helpers'
+import { collectEvaluatedDependencies } from '../utils/module-dependencies'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { BenchmarkManager } from './benchmark'
 import { serializeConfig } from './config/serializeConfig'
@@ -216,6 +217,10 @@ export class TestProject {
     }
 
     this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
+    this.vitest.cache._dependencies.recordGlobalSetup(
+      this,
+      collectEvaluatedDependencies(this.runner.evaluatedModules, this.config.globalSetup),
+    )
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.(this)

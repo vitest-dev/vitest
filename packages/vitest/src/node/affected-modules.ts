@@ -267,7 +267,7 @@ export class AffectedModulesResolver {
 }
 
 // files loaded into `import.meta.env`, mirrors Vite's `loadEnv`
-function getEnvFiles(project: TestProject): string[] {
+export function getEnvFiles(project: TestProject): string[] {
   const { envDir, mode } = project.vite.config
   if (typeof envDir !== 'string') {
     return []

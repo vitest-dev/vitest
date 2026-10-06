@@ -105,6 +105,9 @@ export class TestRunner implements VitestTestRunner {
         }
       }
 
+      const snapshotState = this.snapshotClient.getSnapshotState(suite.file.filepath)
+      snapshotState.getSnapshotFiles().forEach((file) => this.workerState.dependencies?.add(file))
+
       const result = await this.snapshotClient.finish(suite.file.filepath)
       if (this.workerState.config.snapshotOptions.updateSnapshot === 'none' && result.unchecked) {
         let message = `Obsolete snapshots found when no snapshot update is expected.\n`

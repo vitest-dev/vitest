@@ -1035,6 +1035,15 @@ export interface InlineConfig {
     vcsProvider?: VCSProvider | string
 
     /**
+     * Record the modules that every test file loads in the cache and use the records
+     * with `--changed` and `--related` instead of walking the module graph statically.
+     *
+     * A test file without a record always runs.
+     * @default false
+     */
+    recordDependencies?: boolean
+
+    /**
      * Parse test specifications before running them.
      * This will apply `.only` flag and test name pattern across all files without running them.
      */

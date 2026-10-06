@@ -936,6 +936,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Custom provider for detecting changed files. (default: `git`)',
         subcommands: null,
       },
+      recordDependencies: {
+        description:
+          'Record the modules loaded by every test file in the cache and use the records with `--changed` and `--related` instead of the static module graph. A test file without a record always runs. (default: `false`)',
+      },
       preParse: {
         description:
           'Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)',

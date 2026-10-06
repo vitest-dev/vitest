@@ -391,6 +391,9 @@ export function createMethodsRPC(
     onAsyncLeaks(leaks) {
       vitest.state.catchLeaks(leaks)
     },
+    onTestModuleDependencies(filepath, dependencies) {
+      vitest.cache._dependencies.record(project, filepath, dependencies)
+    },
     onCancel(reason) {
       vitest.cancelCurrentRun(reason)
     },

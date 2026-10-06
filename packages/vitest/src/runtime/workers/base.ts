@@ -70,6 +70,7 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
 }
 
 let _currentEnvironment!: Environment
+let _environmentModules: string[]
 let _environmentTime: number
 
 /** @experimental */
@@ -100,6 +101,7 @@ export async function setupBaseEnvironment(
     context.config.experimental.viteModuleRunner,
   )
   _currentEnvironment = environment
+  _environmentModules = loader ? Array.from(loader.evaluatedModules.idToModuleMap.keys()) : []
   const env = await otel.$(
     'vitest.runtime.environment.setup',
     {
@@ -135,6 +137,7 @@ export async function runBaseTests(
   // state has new context, but we want to reuse existing ones
   state.evaluatedModules = evaluatedModules
   state.moduleExecutionInfo = moduleExecutionInfo
+  _environmentModules.forEach((id) => state.dependencies?.add(id))
 
   provideWorkerState(globalThis, state)
 
