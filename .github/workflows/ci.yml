@@ -426,18 +426,19 @@ jobs:
           merge-multiple: true
 
       - name: Merge reports
-        continue-on-error: true
         run: |
-          set +e
-          pnpm --filter=./packages/ui --no-bail test:ui --merge-reports
-          cp ./packages/ui/.vitest/index.html ./packages/ui/.vitest/test-ui.html
-          pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports
-          cp -rf ./test/unit/.vitest/index.html ./test/unit/.vitest/test-unit.html
-          cp -rf ./test/e2e/.vitest/index.html ./test/e2e/.vitest/test-e2e.html
+          rc=0
+          pnpm --filter=./packages/ui --no-bail test:ui --merge-reports || rc=1
+          cp ./packages/ui/.vitest/index.html ./packages/ui/.vitest/test-ui.html || rc=1
+          pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports || rc=1
+          cp -rf ./test/unit/.vitest/index.html ./test/unit/.vitest/test-unit.html || rc=1
+          cp -rf ./test/e2e/.vitest/index.html ./test/e2e/.vitest/test-e2e.html || rc=1
+          exit $rc
         env:
           VITEST_CI_MERGE_REPORTS: 'true'
 
       - name: Upload Test UI Report
+        if: ${{ !cancelled() }}
         id: upload-ui-report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -446,6 +447,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Test Unit Report
+        if: ${{ !cancelled() }}
         id: upload-unit-report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -454,6 +456,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Test E2E Report
+        if: ${{ !cancelled() }}
         id: upload-e2e-report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -462,6 +465,7 @@ jobs:
           retention-days: 7
 
       - name: Link CI reports
+        if: ${{ !cancelled() }}
         run: |
           echo "::notice title=CI reports::test/unit: ${STEPS_UPLOAD_UNIT_REPORT_OUTPUTS_ARTIFACT_URL}"
           echo "::notice title=CI reports::test/e2e: ${STEPS_UPLOAD_E2E_REPORT_OUTPUTS_ARTIFACT_URL}"
