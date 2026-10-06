@@ -227,6 +227,8 @@ html.dark {
   border-color: var(--background-color);
 }
 
+/* floating-vue's dropdown theme only has light colors. Its stylesheet loads
+   after this file, so the html.dark prefix is what lets these rules win. */
 html.dark .v-popper--theme-dropdown .v-popper__inner {
   background: #111;
   color: var(--color-text);
