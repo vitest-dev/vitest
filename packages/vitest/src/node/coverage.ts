@@ -170,17 +170,20 @@ export class BaseCoverageProvider {
       return false
     }
 
-    const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
+    // Files outside roots can be matched by absolute or "../" patterns
+    const candidates = matchingRoot
+      ? [relative(matchingRoot, filename)]
+      : [filename, ...roots.map((root) => relative(root, filename))]
 
     const { matchExclude, matchInclude } = this.getGlobMatchers()
 
-    if (matchExclude(relativeFilename)) {
+    if (candidates.some(matchExclude)) {
       this.globCache.set(filename, false)
       return false
     }
 
     // By default `coverage.include` matches all files, except "coverage.exclude"
-    let included = matchInclude(relativeFilename)
+    let included = candidates.some(matchInclude)
 
     if (included && this.changedFiles) {
       included = this.changedFiles.includes(filename)

@@ -1,4 +1,3 @@
-import { resolve } from 'pathe'
 import { expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
@@ -11,7 +10,7 @@ test('{ allowExternal: true } includes files outside project root', async () => 
       include: [
         '**/fixtures/src/math.ts',
         '**/fixtures/external-math.ts',
-        resolve('../test-utils/fixtures/external-uncovered.ts'),
+        '../test-utils/fixtures/**.ts',
       ],
     },
   })
