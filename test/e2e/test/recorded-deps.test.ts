@@ -774,7 +774,7 @@ test('a run of the affected tests keeps the records of the other tests', async (
 })
 
 test('a rerun of one file in watch mode keeps the records of the other files', async () => {
-  const { ctx, fs, stderr } = await runInlineTests(
+  const { ctx, fs, stderr, vitest } = await runInlineTests(
     {
       'src/helper.js': 'export {}',
       'src/other.js': 'export {}',
@@ -784,16 +784,19 @@ test('a rerun of one file in watch mode keeps the records of the other files', a
     { ...config, watch: true },
   )
   expect(stderr).toBe('')
+  await vitest.waitForStdout('Waiting for file changes')
+  vitest.resetOutput()
 
   fs.editFile('a.test.js', (content) => content.replace('src/helper.js', 'src/other.js'))
-  await ctx!.rerunFiles([fs.resolveFile('a.test.js')])
+  await vitest.waitForStdout('RERUN')
+  await vitest.waitForStdout('Waiting for file changes')
 
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
       "": {
         "a.test.js": [
           "a.test.js",
-          "src/helper.js",
+          "src/other.js",
         ],
         "b.test.js": [
           "b.test.js",
