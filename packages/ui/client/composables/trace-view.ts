@@ -322,7 +322,7 @@ function parseTraceStep(value: unknown, entryCount: number): number {
 
 const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
 const traceZoomLevel = useLocalStorage('vitest-ui_trace-zoom', 1)
-const traceReplayElement = shallowRef<HTMLElement>()
+const traceZoomFitContainer = shallowRef<HTMLElement>()
 
 function getActiveTraceViewport() {
   const selection = activeTraceView.value
@@ -351,16 +351,16 @@ export function useTraceZoom() {
   }
 
   function fit() {
-    const el = traceReplayElement.value
+    const el = traceZoomFitContainer.value
     const viewport = getActiveTraceViewport()
     if (el && viewport) {
       level.value = Math.min(el.offsetWidth / viewport.width, el.offsetHeight / viewport.height, 1)
     }
   }
 
-  function setReplayElement(el: unknown) {
-    traceReplayElement.value = el instanceof HTMLElement ? el : undefined
+  function setFitContainer(el: unknown) {
+    traceZoomFitContainer.value = el instanceof HTMLElement ? el : undefined
   }
 
-  return { level, percent, nextIn, nextOut, zoomIn, zoomOut, resetZoom, fit, setReplayElement }
+  return { level, percent, nextIn, nextOut, zoomIn, zoomOut, resetZoom, fit, setFitContainer }
 }

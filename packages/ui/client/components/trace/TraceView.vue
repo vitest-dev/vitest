@@ -32,7 +32,7 @@ const iframeSandbox = computed(() => {
   return props.trace.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
 
-const { level: zoomLevel, setReplayElement } = useTraceZoom()
+const { level: zoomLevel, setFitContainer } = useTraceZoom()
 const viewport = computed(() => selectedStep.value?.snapshot.viewport)
 const scaledViewportStyle = computed(() =>
   viewport.value
@@ -266,7 +266,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
       </div>
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
-      <div :ref="setReplayElement" class="h-full min-h-0 flex flex-col overflow-auto">
+      <div :ref="setFitContainer" class="h-full min-h-0 flex flex-col overflow-auto">
         <div
           v-if="selectedStep"
           class="mx-auto flex-none overflow-hidden"
