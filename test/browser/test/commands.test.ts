@@ -41,22 +41,47 @@ it('can manipulate files', async () => {
 })
 
 it('can run custom commands', async () => {
-  const result = await myCustomCommand('arg1', 'arg2')
-  expect(result).toEqual({
-    testPath: expect.stringMatching('test/browser/test/commands.test.ts'),
-    arg1: 'arg1',
-    arg2: 'arg2',
-  })
+  {
+    const result = await myCustomCommand('arg1', 'arg2')
+    expect(result).toEqual({
+      testPath: expect.stringMatching('test/browser/test/commands.test.ts'),
+      arg1: 'arg1',
+      arg2: 'arg2',
+    })
+  }
+
+  {
+    const result = await myCustomCommand(undefined, 'arg2')
+    expect(result).toEqual({
+      testPath: expect.stringMatching('test/browser/test/commands.test.ts'),
+      arg1: undefined,
+      arg2: 'arg2',
+    })
+  }
+
+  {
+    const result = await myCustomCommand(null, 'arg2')
+    expect(result).toEqual({
+      testPath: expect.stringMatching('test/browser/test/commands.test.ts'),
+      arg1: null,
+      arg2: 'arg2',
+    })
+  }
+
+  {
+    const result = await myCustomCommand([undefined, { value: undefined }], 'arg2')
+    expect(result.arg1).toStrictEqual([undefined, { value: undefined }])
+  }
 })
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
     myCustomCommand: (
-      arg1: string,
+      arg1: unknown,
       arg2: string,
     ) => Promise<{
       testPath: string
-      arg1: string
+      arg1: unknown
       arg2: string
     }>
 

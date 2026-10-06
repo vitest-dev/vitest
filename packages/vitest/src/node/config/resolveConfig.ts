@@ -29,7 +29,7 @@ import { BrowserLoaderPlugin } from '../plugins/browserLoader'
 import { ViteConfigPlugin } from '../plugins/config'
 import { VitestCorePlugin } from '../plugins/index'
 import { TestConfigPlugin } from '../plugins/testConfig'
-import { resolveFsAllow } from '../plugins/utils'
+import { normalizeUIOptions, resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
@@ -92,7 +92,7 @@ export function resolveApiServerConfig(
 
   let api: ApiConfig | undefined
 
-  if (config.ui && !config.api) {
+  if (normalizeUIOptions(config.ui).enabled && !config.api) {
     api = { port: defaultPort }
   } else if (config.api === true) {
     api = { port: defaultPort }
@@ -223,6 +223,10 @@ export function resolveTestConfig(
   const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
   resolved.root = viteConfig.root
   resolved.providedOptions = providedOptions
+
+  const uiOptions = normalizeUIOptions(options.ui)
+  resolved.ui = !!uiOptions.enabled
+  resolved.uiOptions = { theme: uiOptions.theme ?? 'auto' }
 
   // These options are resolved once for the whole run using the root config.
   // Coverage is shared by reference: each project's setup/test/config files are

@@ -123,8 +123,7 @@ function createModuleGraphCollector(
       return addExternal(id.slice('__vite-browser-external:'.length))
     }
     if (isBuiltin(id)) {
-      externalized.add(id)
-      return id
+      return addExternal(id)
     }
     const external = project._resolver.wasExternalized(id)
     if (typeof external === 'string') {

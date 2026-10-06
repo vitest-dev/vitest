@@ -449,6 +449,42 @@ test('add is only once', () => {
     `)
   })
 
+  test('in-source vi.hoisted and vi.mock work', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests(
+      {
+        'name.js': `export const getName = () => 'original'`,
+        'in-source.js': /* js */ `
+import { getName } from './name.js'
+
+if (import.meta.vitest) {
+  const { test, expect, vi } = import.meta.vitest
+  const mocks = vi.hoisted(() => ({ getName: vi.fn(() => 'mocked') }))
+  vi.mock('./name.js', () => mocks)
+  test('mocks name.js', () => {
+    expect(getName()).toBe('mocked')
+    expect(mocks.getName).toHaveBeenCalledOnce()
+  })
+}
+    `,
+        'package.json': JSON.stringify({
+          name: '@test/native-in-source-mock',
+          type: 'module',
+        }),
+      },
+      {
+        includeSource: ['./in-source.js'],
+      },
+    )
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "in-source.js": {
+          "mocks name.js": "passed",
+        },
+      }
+    `)
+  })
+
   test('cannot import JS file without extension in ESM', async () => {
     const { stderr, root } = await runNoViteModuleRunnerTests({
       'add.js': /* js */ `

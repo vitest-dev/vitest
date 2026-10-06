@@ -32,6 +32,7 @@ import {
   isValidApiRequest,
 } from 'vitest/node'
 import { WebSocketServer } from 'ws'
+import { replaceUndefined, reviveUndefined } from '../shared/serialization'
 import { slash } from './utils'
 
 const debug = createDebugger('vitest:browser:api')
@@ -538,7 +539,7 @@ export function setupBrowserRpc(
         on: (fn) => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
-        deserialize: parse,
+        deserialize: (data) => parse(data, reviveUndefined),
         timeout: -1, // createTesters can take a long time
       },
     )
@@ -574,6 +575,6 @@ function stringifyReplace(key: string, value: any): any {
       ...cloned,
     }
   } else {
-    return value
+    return replaceUndefined(value)
   }
 }

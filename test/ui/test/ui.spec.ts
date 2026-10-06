@@ -943,3 +943,43 @@ test.describe('security', () => {
     await testExecute(page, { mode: 'ui-disallow' })
   })
 })
+
+test.describe('theme', () => {
+  let vitest: Vitest | undefined
+  let pageUrl: string
+
+  test.beforeAll(async () => {
+    const server = await startVitestUi({
+      root: './fixtures/main',
+      watch: true,
+      ui: { enabled: true, theme: 'dark' },
+      standalone: true,
+      open: false,
+      reporters: [],
+    })
+    vitest = server.vitest
+    pageUrl = server.url
+  })
+
+  test.afterAll(async () => {
+    await vitest?.close()
+  })
+
+  test('configured theme overrides stored and system theme', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await page.addInitScript(() => localStorage.setItem('vueuse-color-scheme', 'light'))
+    await page.goto(pageUrl)
+
+    const html = page.locator('html')
+    const toggle = page.getByTestId('btn-toggle-dark')
+    await expect(toggle).toBeVisible()
+    await expect(html).toContainClass('dark')
+
+    await toggle.click()
+    await expect(html).not.toContainClass('dark')
+
+    await page.reload()
+    await expect(toggle).toBeVisible()
+    await expect(html).toContainClass('dark')
+  })
+})

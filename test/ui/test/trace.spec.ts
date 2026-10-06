@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 13, fail: 0 })
+    await assertTestCounts(page, { pass: 14, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -39,6 +39,10 @@ test.describe('ui', () => {
 
   test('popover', async ({ page }) => {
     await testPopover(page)
+  })
+
+  test('multiple match highlight', async ({ page }) => {
+    await testMultipleMatchHighlight(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -121,7 +125,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 13, fail: 0 })
+    await assertTestCounts(page, { pass: 14, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -134,6 +138,10 @@ test.describe('html reporter', () => {
 
   test('popover', async ({ page }) => {
     await testPopover(page)
+  })
+
+  test('multiple match highlight', async ({ page }) => {
+    await testMultipleMatchHighlight(page)
   })
 
   test('pseudo-state', async ({ page }) => {
@@ -336,6 +344,33 @@ async function testPopover(page: Page) {
   await expect(popoverContent).toBeVisible()
   await traceSteps.getByText('Render closed popover').click()
   await expect(popoverContent).toBeHidden()
+}
+
+async function testMultipleMatchHighlight(page: Page) {
+  await openExplorerItem(page, 'multiple-match')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+  const traceHighlight = traceFrame.getByTestId('trace-view-highlight')
+  const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
+  await expect(traceView).toBeVisible()
+  await traceView.getByTestId('trace-step-name').getByText('Render multiple').click()
+  await expect(traceFrame.getByRole('button', { name: 'Three' })).toBeVisible()
+  await expect(traceHighlight).toHaveCount(3)
+  const buttons = traceFrame.getByRole('button')
+  for (let i = 0; i < 3; i++) {
+    expect(await traceHighlight.nth(i).boundingBox()).toEqual(await buttons.nth(i).boundingBox())
+  }
+
+  // toggle hides and shows all highlights
+  await showHighlightCheckbox.uncheck()
+  for (let i = 0; i < 3; i++) {
+    await expect(traceHighlight.nth(i)).toBeHidden()
+  }
+  await showHighlightCheckbox.check()
+  for (let i = 0; i < 3; i++) {
+    await expect(traceHighlight.nth(i)).toBeVisible()
+  }
 }
 
 async function testPseudoState(page: Page) {

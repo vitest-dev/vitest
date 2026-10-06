@@ -18,6 +18,11 @@ test('switch-target', async () => {
   await page.getByRole('button').mark('Render switch target')
 })
 
+test('multiple-match', async () => {
+  document.body.innerHTML = '<button>One</button><button>Two</button><button>Three</button>'
+  await page.getByRole('button').mark('Render multiple')
+})
+
 test('popover', async () => {
   document.body.innerHTML = '<div popover="auto" style="inset: auto; top: 0; left: 0; margin: 0">Popover content</div>'
   const popover = document.querySelector<HTMLElement>('[popover]')!
