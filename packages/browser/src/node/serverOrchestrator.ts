@@ -78,6 +78,7 @@ export async function resolveOrchestrator(
       .replace(
         '<!-- !LOAD_METADATA! -->',
         [
+          `<script>window.VITEST_UI_THEME = ${JSON.stringify(globalServer.vitest.config.uiOptions.theme)}</script>`,
           '{__VITEST_INJECTOR__}',
           '{__VITEST_ERROR_CATCHER__}',
           '{__VITEST_SCRIPTS__}',
