@@ -141,7 +141,6 @@ export class CommandsManager {
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
-    args = args.filter((arg) => arg !== undefined) // remove optional fields
 
     const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command)
       ? `vitest:${command.slice('__vitest_'.length)}`
@@ -179,7 +178,10 @@ export class CommandsManager {
         let status: BrowserTraceEntryStatus = 'pass'
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
         const element =
-          typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0]
+          typeof args[0] === 'object' &&
+          args[0] !== null &&
+          'selector' in args[0] &&
+          'locator' in args[0]
             ? args[0]
             : undefined
         if (hasActiveTraceView) {

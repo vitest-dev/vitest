@@ -84,7 +84,10 @@ test('importActual', async () => {
     `)
 
     const graph = await getModuleGraph(ctx!, '', `${root}/basic.test.js`, 'client')
-    expect(graph.externalized.filter((id) => !id.includes('/'))).toMatchInlineSnapshot(`
+    const modules = Object.entries(graph.modules)
+    const externalized = modules.filter(([, m]) => m.external).map(([id]) => id)
+    const inlined = modules.filter(([, m]) => !m.external).map(([id]) => id)
+    expect(externalized.filter((id) => !id.includes('/'))).toMatchInlineSnapshot(`
       [
         "node:crypto",
         "node:path",
@@ -93,7 +96,7 @@ test('importActual', async () => {
         "path",
       ]
     `)
-    expect(graph.inlined.map((id) => id.replace(root, '<root>'))).toMatchInlineSnapshot(`
+    expect(inlined.map((id) => id.replace(root, '<root>'))).toMatchInlineSnapshot(`
       [
         "<root>/basic.test.js",
       ]

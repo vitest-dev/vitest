@@ -81,7 +81,7 @@
     "d3-graph-controller": "^3.1.13",
     "floating-vue": "^5.4.0",
     "mime": "^4.1.0",
-    "rollup": "^4.63.5",
+    "rollup": "^4.64.0",
     "rrweb-snapshot": "2.1.1",
     "splitpanes": "^4.1.2",
     "typescript": "^5.9.3",
@@ -90,7 +90,7 @@
     "vitest-browser-vue": "2.1.0",
     "vue": "catalog:",
     "vue-router": "^5.3.1",
-    "vue-tsc": "^3.3.11",
+    "vue-tsc": "^3.3.12",
     "vue-virtual-scroller": "2.0.1"
   }
 }

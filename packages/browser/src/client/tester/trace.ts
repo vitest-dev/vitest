@@ -48,7 +48,7 @@ interface TraceSnapshot {
     x: number
     y: number
   }
-  selectorId?: number
+  selectorIds?: number[]
   // not used yet for UI but tested
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
@@ -154,21 +154,16 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
   }
   if (serializedLocator) {
     try {
-      const el = engine.querySelector(
+      const elements = engine.querySelectorAll(
         engine.parseSelector(serializedLocator._pwSelector ?? serializedLocator.selector),
         document.documentElement,
-        false,
       )
-      if (!el) {
-        result.selectorResolution = 'missing'
+      const ids = elements.map((el) => mirror.getId(el)).filter((id) => id !== -1)
+      if (ids.length > 0) {
+        result.selectorIds = ids
+        result.selectorResolution = 'matched'
       } else {
-        const id = mirror.getId(el)
-        if (id !== -1) {
-          result.selectorId = id
-          result.selectorResolution = 'matched'
-        } else {
-          result.selectorResolution = 'missing'
-        }
+        result.selectorResolution = 'missing'
       }
     } catch (error) {
       result.selectorResolution = 'error'

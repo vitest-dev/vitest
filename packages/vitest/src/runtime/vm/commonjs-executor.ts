@@ -166,7 +166,7 @@ export class CommonjsExecutor {
         const __dirname = dirname(filename)
         executor.requireCache.set(filename, this)
         try {
-          fn(this.exports, this.require, this, filename, __dirname)
+          fn.call(this.exports, this.exports, this.require, this, filename, __dirname)
           return this.exports
         } finally {
           this.loaded = true

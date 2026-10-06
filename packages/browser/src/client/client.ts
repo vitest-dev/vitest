@@ -6,6 +6,7 @@ import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { replaceUndefined, reviveUndefined } from '../shared/serialization'
 import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type
@@ -134,9 +135,9 @@ function createClient() {
               stack: v.stack,
             }
           }
-          return v
+          return replaceUndefined(v)
         }),
-      deserialize: parse,
+      deserialize: (e) => parse(e, reviveUndefined),
       timeout: -1, // createTesters can take a while
     },
   )

@@ -206,6 +206,37 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s binds top-level this to module.exports in CommonJS',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'node_modules/commonjs-this/package.json': JSON.stringify({
+          name: 'commonjs-this',
+          main: './index.cjs',
+        }),
+        'node_modules/commonjs-this/index.cjs': `
+          'use strict'
+          this.value = 42
+          exports.isExports = this === module.exports
+        `,
+        'basic.test.js': `
+        import { expect, test } from 'vitest'
+        import commonjs from 'commonjs-this'
+
+        test('this is module.exports', () => {
+          expect(commonjs).toEqual({ value: 42, isExports: true })
+        })
+      `,
+      },
+      { pool },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // The module-sync condition was added in Node 22.12/20.19 when require(esm)
 // was unflagged. The fix uses the _resolveFilename conditions option which
 // is only available on Node 22.12+. Node 20 is unfixable and reaches EOL

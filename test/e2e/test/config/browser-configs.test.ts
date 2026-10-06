@@ -181,6 +181,43 @@ test('assigns names as browsers', async () => {
   expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium', 'firefox', 'webkit'])
 })
 
+test('applies programmatic browser options without existing browser config', async () => {
+  const v = await vitest({
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: preview(),
+        instances: [{ browser: 'chromium' }],
+      },
+    },
+  })
+
+  expect(v.projects.map((project) => project.name)).toEqual(['chromium'])
+})
+
+test('applies programmatic browser options only to projects with browser config', async () => {
+  const v = await vitest({
+    projects: [
+      { test: { name: 'node' } },
+      { test: { name: 'browser', browser: { instances: [{ browser: 'chromium' }] } } },
+    ],
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: preview(),
+      },
+    },
+  })
+
+  expect(v.config.browser.enabled).toBe(false)
+  expect(v.projects.map((project) => [project.name, project.config.browser.enabled])).toEqual([
+    ['node', false],
+    ['browser (chromium)', true],
+  ])
+})
+
 test('filters projects', async () => {
   const projects = await config({
     project: 'chromium',

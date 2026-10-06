@@ -54,7 +54,7 @@ The custom function implementation in the types below is marked with a generic `
 :::
 
 ::: warning Class Support {#class-support}
-Shorthand methods like `mockReturnValue`, `mockReturnValueOnce`, `mockResolvedValue` and others cannot be used on a mocked class. Class constructors have [unintuitive behaviour](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor) regarding the return value:
+The `mockReturnValue`, `mockReturnValueOnce`, `mockResolvedValue`, `mockResolvedValueOnce`, `mockRejectedValue` and `mockRejectedValueOnce` methods cannot be used when the mock is called with the `new` keyword. Class constructors have [unintuitive behaviour](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor) regarding the return value:
 
 ```ts {2,7}
 const CorrectDogClass = vi.fn(class {
@@ -74,7 +74,7 @@ Marti instanceof CorrectDogClass // ✅ true
 Newt instanceof IncorrectDogClass // ❌ false!
 ```
 
-Even though the shapes are the same, the _return value_ from the constructor is assigned to `Newt`, which is a plain object, not an instance of a mock. Vitest guards you against this behaviour in shorthand methods (but not in `mockImplementation`!) and throws an error instead.
+Even though the shapes are the same, the _return value_ from the constructor is assigned to `Newt`, which is a plain object, not an instance of a mock. Vitest guards you against this behaviour in these methods (but not in `mockImplementation`!) and throws an error instead.
 
 If you need to mock constructed instance of a class, consider using the `class` syntax with `mockImplementation` instead:
 
@@ -101,7 +101,7 @@ mock.mockImplementation(class {
 function getMockImplementation(): T | undefined
 ```
 
-Returns the current mock implementation if there is one.
+Returns the current mock implementation if there is one. If an implementation was queued with [`mockImplementationOnce`](#mockimplementationonce), it returns the first queued implementation instead.
 
 If the mock was created with [`vi.fn`](/api/vi#vi-fn), it will use the provided method as the mock implementation.
 
@@ -230,7 +230,7 @@ myMockFn() // 'original'
 Can be used with an asynchronous callback. The method has to be awaited to use the original implementation afterward.
 
 ```ts
-test('async callback', () => {
+test('async callback', async () => {
   const myMockFn = vi.fn(() => 'original')
 
   // We await this call since the callback is async
@@ -285,7 +285,7 @@ await asyncMock() // throws Error<'Async error'>
 function mockReset(): Mock<T>
 ```
 
-Does what [`mockClear`](#mockClear) does and resets the mock implementation. This also resets all "once" implementations.
+Does what [`mockClear`](#mockclear) does and resets the mock implementation. This also resets all "once" implementations.
 
 Note that resetting a mock from `vi.fn()` will set the implementation to an empty function that returns `undefined`.
 Resetting a mock from `vi.fn(impl)` will reset the implementation to `impl`.
@@ -315,7 +315,7 @@ To automatically call this method before each test, enable the [`mockReset`](/co
 ## mockRestore
 
 ```ts
-function mockRestore(): Mock<T>
+function mockRestore(): void
 ```
 
 Does what [`mockReset`](#mockreset) does and restores the original descriptors of spied-on objects, if the mock was created with [`vi.spyOn`](/api/vi#vi-spyon).
@@ -411,7 +411,7 @@ mock() // 43
 function mockReturnValueOnce(value: ReturnType<T>): Mock<T>
 ```
 
-Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
+Accepts a value that will be returned during the next function call. TypeScript will only accept values that match the return type of the original function. If chained, each consecutive call will return the specified value.
 
 When the mocked function runs out of implementations, it will invoke the default implementation set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
 
@@ -527,7 +527,7 @@ interface MockResultReturn<T> {
   type: 'return'
   /**
    * The value that was returned from the function.
-   * If the function returned a Promise, then this will be a resolved value.
+   * If the function returned a Promise, then this will be the Promise, not its resolved value.
    */
   value: T
 }
@@ -615,7 +615,7 @@ const settledResults: MockSettledResult<Awaited<ReturnType<T>>>[]
 
 An array containing all values that were resolved or rejected by the function.
 
-If the function returned non-promise values, the `value` will be kept as is, but the `type` will still says `fulfilled` or `rejected`.
+If the function returned non-promise values, the `value` will be kept as is, but the `type` will still say `fulfilled` or `rejected`.
 
 Until the value is resolved or rejected, the `settledResult` type will be `incomplete`.
 
@@ -664,10 +664,14 @@ fn2.mock.invocationCallOrder === [2]
 ## mock.contexts
 
 ```ts
-const contexts: ThisParameterType<T>[]
+type MockProcedureContext<T> = T extends new (...args: any[]) => any
+  ? InstanceType<T>
+  : ThisParameterType<T>
+
+const contexts: MockProcedureContext<T>[]
 ```
 
-This property is an array of `this` values used during each call to the mock function.
+This property is an array of `this` values used during each call to the mock function. If the mock was called with the `new` keyword, the value is the same as in [`mock.instances`](#mock-instances).
 
 ```js
 const fn = vi.fn()
@@ -683,22 +687,23 @@ fn.mock.contexts[1] === context
 ## mock.instances
 
 ```ts
-const instances: ReturnType<T>[]
+const instances: MockProcedureContext<T>[]
 ```
 
-This property is an array containing all instances that were created when the mock was called with the `new` keyword. Note that this is the actual context (`this`) of the function, not a return value.
-
-::: warning
-If the mock was instantiated with `new MyClass()`, then `mock.instances` will be an array with one value:
+This property is an array with one value for each call to the mock function. If the mock was called with the `new` keyword, the value is the object that `new` returned, or `undefined` if the constructor threw an error. Otherwise, the value is the context (`this`) of the call, the same as in [`mock.contexts`](#mock-contexts).
 
 ```js
 const MyClass = vi.fn()
+const context = {}
+
 const a = new MyClass()
+MyClass.call(context)
 
 MyClass.mock.instances[0] === a
+MyClass.mock.instances[1] === context
 ```
 
-If you return a value from the constructor, it will not be in the `instances` array, but instead inside `results`:
+If the implementation returns an object from the constructor, `mock.instances` stores that object:
 
 ```js
 const Spy = vi.fn(function () {
@@ -706,8 +711,6 @@ const Spy = vi.fn(function () {
 })
 const a = new Spy()
 
-Spy.mock.instances[0] !== a
-Spy.mock.results[0] === a
+Spy.mock.instances[0] === a
+Spy.mock.results[0].value === a
 ```
-
-:::
