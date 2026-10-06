@@ -101,7 +101,7 @@ test('image', async () => {
 })
 
 test('zoom', async () => {
-  await page.viewport(400, 800)
+  await page.viewport(400, 600)
   document.body.innerHTML = `
 <style>
   html,
