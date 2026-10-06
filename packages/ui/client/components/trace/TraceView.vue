@@ -271,11 +271,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div class="h-full min-h-0 flex flex-col">
-        <div
-          :ref="setReplayElement"
-          data-testid="trace-replay"
-          class="min-h-0 flex flex-1 flex-col overflow-auto"
-        >
+        <div :ref="setReplayElement" class="min-h-0 flex flex-1 flex-col overflow-auto">
           <div
             v-if="selectedStep"
             class="mx-auto flex-none overflow-hidden"

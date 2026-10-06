@@ -286,7 +286,6 @@ async function testZoom(page: Page) {
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
   const iframe = traceView.locator('iframe')
-  const replay = traceView.getByTestId('trace-replay')
   const zoomTrigger = traceView.getByTestId('trace-zoom-trigger')
   const zoomPopover = page.getByTestId('trace-zoom-popover')
   const zoomPercent = zoomPopover.getByTestId('trace-zoom-percent')
@@ -296,8 +295,6 @@ async function testZoom(page: Page) {
   const resetZoom = zoomPopover.getByRole('button', { name: 'Reset' })
   const iframeWidth = async () => (await iframe.boundingBox())!.width
   // fixture viewport is 400x600
-  const measureFit = () =>
-    replay.evaluate((el: HTMLElement) => Math.min(el.offsetWidth / 400, el.offsetHeight / 600, 1))
   const formatPercent = (scale: number) => `${Math.round(scale * 100)}%`
   async function expectZoom(scale: number) {
     await expect(zoomTrigger).toHaveText(formatPercent(scale))
@@ -319,10 +316,11 @@ async function testZoom(page: Page) {
   await page.reload()
   await expectZoom(0.5)
 
-  // fit matches the measured pane and persists across reloads
+  // fit to the 599x196 replay pane is limited by height and persists across reloads
+  const fitScale = 196 / 600
   await zoomTrigger.click()
-  const fitScale = await measureFit()
   await fitToPane.click()
+  await expect(zoomTrigger).toHaveText('33%')
   await expectZoom(fitScale)
   await page.reload()
   await expectZoom(fitScale)
@@ -330,7 +328,7 @@ async function testZoom(page: Page) {
   // zoom in from fit goes to the next level
   await zoomTrigger.click()
   await zoomIn.click()
-  await expectZoom([0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].find((level) => level > fitScale)!)
+  await expectZoom(0.5)
 
   // back to actual size
   await resetZoom.click()
