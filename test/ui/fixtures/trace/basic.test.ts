@@ -111,14 +111,28 @@ test('zoom', async () => {
   }
 
   body {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 16px;
-    background: lightskyblue;
+    border: 4px solid tomato;
+    background-color: lightskyblue;
+    background-image:
+      linear-gradient(to right, rgb(0 0 0 / 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.15) 1px, transparent 1px);
+    background-size: 50px 50px;
+    font-family: monospace;
+  }
+
+  .corner {
+    position: fixed;
+    padding: 6px 8px;
   }
 </style>
+<span class="corner" style="top: 0; left: 0">0,0</span>
+<span class="corner" style="right: 0; bottom: 0">400,600</span>
 <button>One</button>
 <button>Two</button>
 <button>Three</button>
