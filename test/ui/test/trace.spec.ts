@@ -302,7 +302,6 @@ async function testZoom(page: Page) {
   // popover shows zoom state
   await zoomTrigger.click()
   await expect(zoomPercent).toHaveText('100%')
-  await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
   await expect(resetZoom).toBeDisabled()
 
   // zoom out and persist across reloads
@@ -317,17 +316,16 @@ async function testZoom(page: Page) {
   // fit scales down the tall viewport and persists across reloads
   await zoomTrigger.click()
   await fitToPane.click()
-  await expect(fitToPane).toHaveAttribute('aria-pressed', 'true')
-  await expect(zoomTrigger).toHaveText(/^Fit \d+%$/)
+  await expect(zoomTrigger).not.toHaveText('75%')
   const fitText = (await zoomTrigger.textContent())!
   expect(Number(fitText.match(/(\d+)%/)![1])).toBeLessThan(75)
   await page.reload()
   await expect(zoomTrigger).toHaveText(fitText)
 
-  // zooming leaves fit mode
+  // zoom in from fit to the next level
   await zoomTrigger.click()
   await zoomIn.click()
-  await expect(fitToPane).toHaveAttribute('aria-pressed', 'false')
+  await expect(zoomPercent).toHaveText(/^(25|50|75)%$/)
 
   // back to actual size
   await resetZoom.click()

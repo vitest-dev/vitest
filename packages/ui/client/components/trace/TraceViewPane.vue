@@ -20,6 +20,9 @@ const props = defineProps<{
 }>()
 
 const trace = computed(() => getSelectedTrace(props.selection))
+const selectedViewport = computed(
+  () => trace.value?.entries[props.selection.selectedStepIndex]?.snapshot.viewport,
+)
 const attemptLabel = computed(() => (trace.value ? getTraceAttemptLabel(trace.value) : ''))
 const traceAttempts = computed(() =>
   [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
@@ -74,7 +77,7 @@ const traceLayoutPageUrl = computed(() => {
       <span v-else-if="attemptLabel" class="text-xs opacity-70">
         {{ attemptLabel }}
       </span>
-      <TraceZoomControl v-if="trace" />
+      <TraceZoomControl v-if="trace" :viewport="selectedViewport" />
       <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
         <input v-model="showTraceSelectorHighlight" type="checkbox" />
         <span>Show highlight</span>

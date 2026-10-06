@@ -5,18 +5,17 @@ import type {
   NormalizedBrowserTraceEntry,
   TraceSelection,
 } from '~/composables/trace-view'
-import { useElementSize } from '@vueuse/core'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
 import { traceViewSplitSizes } from '~/composables/navigation'
 import {
   getTraceEntryClass,
   selectActiveTraceStep,
   showTraceSelectorHighlight,
-  traceFitScale,
-  traceScale,
+  traceReplayElement,
+  traceZoom,
 } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -34,27 +33,19 @@ const iframeSandbox = computed(() => {
   return props.trace.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
 
-const replayContainer = ref<HTMLElement>()
-const replayContainerSize = useElementSize(replayContainer)
 const viewport = computed(() => selectedStep.value?.snapshot.viewport)
-watchEffect(() => {
-  const { width, height } = replayContainerSize
-  if (viewport.value && width.value && height.value) {
-    traceFitScale.value = Math.min(
-      width.value / viewport.value.width,
-      height.value / viewport.value.height,
-      1,
-    )
-  }
-})
 const scaledViewportStyle = computed(() =>
   viewport.value
     ? {
-        width: `${Math.floor(viewport.value.width * traceScale.value)}px`,
-        height: `${Math.floor(viewport.value.height * traceScale.value)}px`,
+        width: `${Math.floor(viewport.value.width * traceZoom.value)}px`,
+        height: `${Math.floor(viewport.value.height * traceZoom.value)}px`,
       }
     : undefined,
 )
+
+function setReplayElement(el: unknown) {
+  traceReplayElement.value = el instanceof HTMLElement ? el : undefined
+}
 
 function onSelectStep(index: number) {
   selectActiveTraceStep(index)
@@ -280,7 +271,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div class="h-full min-h-0 flex flex-col">
-        <div ref="replayContainer" class="min-h-0 flex flex-1 flex-col overflow-auto">
+        <div :ref="setReplayElement" class="min-h-0 flex flex-1 flex-col overflow-auto">
           <div
             v-if="selectedStep"
             class="mx-auto flex-none overflow-hidden"
@@ -291,7 +282,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
               :key="iframeSandbox"
               :sandbox="iframeSandbox"
               style="background: white; border: none; color-scheme: normal; transform-origin: 0 0"
-              :style="{ transform: `scale(${traceScale})` }"
+              :style="{ transform: `scale(${traceZoom})` }"
             />
           </div>
           <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
