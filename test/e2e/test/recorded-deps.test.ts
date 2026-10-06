@@ -749,3 +749,88 @@ test('clearing the cache removes the records', async () => {
   await ctx!.clearCache()
   expect(existsSync(path)).toBe(false)
 })
+
+test('a run of the affected tests keeps the records of the other tests', async () => {
+  const { ctx, fs, stderr } = await runInlineTests(
+    {
+      'src/helper.js': 'export {}',
+      'src/other.js': 'export {}',
+      'a.test.js': testFile('a', `import './src/helper.js'`),
+      'b.test.js': testFile('b', `import './src/other.js'`),
+    },
+    config,
+  )
+  expect(stderr).toBe('')
+  const before = readDependencies(ctx)
+
+  const changed = await runVitest({ root: fs.root, ...config, related: ['src/helper.js'] })
+  expect(changed.stderr).toBe('')
+  expect(Object.keys(changed.testTree())).toEqual(['a.test.js'])
+  expect(readDependencies(changed.ctx)).toEqual(before)
+
+  const other = await runVitest({ root: fs.root, ...config, related: ['src/other.js'] })
+  expect(other.stderr).toBe('')
+  expect(Object.keys(other.testTree())).toEqual(['b.test.js'])
+})
+
+test('a rerun of one file in watch mode keeps the records of the other files', async () => {
+  const { ctx, fs, stderr } = await runInlineTests(
+    {
+      'src/helper.js': 'export {}',
+      'src/other.js': 'export {}',
+      'a.test.js': testFile('a', `import './src/helper.js'`),
+      'b.test.js': testFile('b', `import './src/other.js'`),
+    },
+    { ...config, watch: true },
+  )
+  expect(stderr).toBe('')
+
+  fs.editFile('a.test.js', (content) => content.replace('src/helper.js', 'src/other.js'))
+  await ctx!.rerunFiles([fs.resolveFile('a.test.js')])
+
+  expect(readDependencies(ctx)).toMatchInlineSnapshot(`
+    {
+      "": {
+        "a.test.js": [
+          "a.test.js",
+          "src/helper.js",
+        ],
+        "b.test.js": [
+          "b.test.js",
+          "src/other.js",
+        ],
+      },
+    }
+  `)
+})
+
+test('a file that did not run because of bail keeps its record', async () => {
+  const { ctx, fs } = await runInlineTests(
+    {
+      'src/helper.js': 'export {}',
+      'a.test.js': `
+        import { expect, test } from 'vitest'
+        test('a', () => {
+          expect(1).toBe(2)
+        })
+      `,
+      'b.test.js': testFile('b', `import './src/helper.js'`),
+    },
+    config,
+  )
+  const before = readDependencies(ctx)
+  expect(before['']['b.test.js']).toEqual(['b.test.js', 'src/helper.js'])
+
+  // the failed file runs first, so "b" never starts
+  fs.editFile('b.test.js', (content) => content.replace(`import './src/helper.js'`, ''))
+  const bailed = await runVitest({ root: fs.root, ...config, bail: 1, fileParallelism: false })
+  expect(bailed.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "failed",
+      },
+      "b.test.js": {},
+    }
+  `)
+  expect(readDependencies(bailed.ctx)).toEqual(before)
+})
