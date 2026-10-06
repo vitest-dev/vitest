@@ -266,23 +266,21 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
       </div>
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
-      <div class="h-full min-h-0 flex flex-col">
-        <div :ref="setReplayElement" class="min-h-0 flex flex-1 flex-col overflow-auto">
-          <div
-            v-if="selectedStep"
-            class="mx-auto flex-none overflow-hidden"
-            :style="scaledViewportStyle"
-          >
-            <iframe
-              ref="iframeEl"
-              :key="iframeSandbox"
-              :sandbox="iframeSandbox"
-              style="background: white; border: none; color-scheme: normal; transform-origin: 0 0"
-              :style="{ transform: `scale(${zoomLevel})` }"
-            />
-          </div>
-          <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
+      <div :ref="setReplayElement" class="h-full min-h-0 flex flex-col overflow-auto">
+        <div
+          v-if="selectedStep"
+          class="mx-auto flex-none overflow-hidden"
+          :style="scaledViewportStyle"
+        >
+          <iframe
+            ref="iframeEl"
+            :key="iframeSandbox"
+            :sandbox="iframeSandbox"
+            style="background: white; border: none; color-scheme: normal; transform-origin: 0 0"
+            :style="{ transform: `scale(${zoomLevel})` }"
+          />
         </div>
+        <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
       </div>
     </Pane>
   </Splitpanes>
