@@ -28,10 +28,7 @@ const testConfig = defineConfig({
     ],
     browser: {
       enabled: true,
-      traceView: {
-        enabled: true,
-        ariaSnapshot: true,
-      },
+      traceView: true,
       headless: true,
       provider:
         providerName === 'preview'

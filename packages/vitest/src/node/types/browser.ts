@@ -100,7 +100,7 @@ export interface BrowserTraceViewOptions {
    *
    * The trace viewer can switch from the DOM snapshot to an "Aria" view.
    *
-   * @default false
+   * @default true
    * @experimental
    */
   ariaSnapshot?: boolean

@@ -428,7 +428,7 @@ Inline loaded image pixels in trace-view snapshots (default: `false`)
 - **CLI:** `--browser.traceView.ariaSnapshot`
 - **Config:** [browser.traceView.ariaSnapshot](/config/browser/traceview#traceview-ariasnapshot)
 
-Capture the accessibility tree in trace-view snapshots (default: `false`)
+Capture the accessibility tree in trace-view snapshots (default: `true`)
 
 ### browser.locators.exact
 

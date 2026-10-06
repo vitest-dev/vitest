@@ -151,24 +151,7 @@ Each attempt — retry or repeat — is recorded as a separate trace. When a tes
 
 ## Accessibility Tree <Version>5.1.0</Version> {#accessibility-tree}
 
-Enable [`traceView.ariaSnapshot`](/config/browser/traceview#traceview-ariasnapshot) to also capture the page's accessibility tree at each step:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    browser: {
-      traceView: {
-        enabled: true,
-        ariaSnapshot: true,
-      },
-    },
-  },
-})
-```
-
-The trace viewer header then shows a view selector to switch the snapshot pane between **DOM** and **Aria**. The Aria view lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots).
+Trace view also captures the page's accessibility tree at each step. The trace viewer header shows a view selector to switch the snapshot pane between **DOM** and **Aria**. The Aria view lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots). Set [`traceView.ariaSnapshot`](/config/browser/traceview#traceview-ariasnapshot) to `false` to disable it.
 
 ## Snapshot Fidelity
 

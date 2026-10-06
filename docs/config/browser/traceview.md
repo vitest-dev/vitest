@@ -42,7 +42,7 @@ export default defineConfig({
 | `enabled`      | `false` | Enables Vitest trace-view artifact collection.                                                      |
 | `inlineImages` | `false` | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter. |
 | `recordCanvas` | `false` | Captures canvas pixels in snapshots.                                                                |
-| `ariaSnapshot` | `false` | Captures the accessibility tree alongside each snapshot.                                            |
+| `ariaSnapshot` | `true`  | Captures the accessibility tree alongside each snapshot.                                            |
 
 ## browser.traceView.enabled {#traceview-enabled}
 
@@ -71,7 +71,7 @@ Captures canvas pixels in snapshots. This enables a weaker replay iframe sandbox
 ## browser.traceView.ariaSnapshot <Version>5.1.0</Version> {#traceview-ariasnapshot}
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 - **CLI:** `--browser.traceView.ariaSnapshot`
 
 Captures the accessibility tree of the page alongside each snapshot. The trace viewer header can then switch from the DOM snapshot to an **Aria** view, which uses the same format as [aria snapshots](/guide/browser/aria-snapshots).
