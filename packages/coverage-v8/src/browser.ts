@@ -23,8 +23,12 @@ const mod: CoverageProviderModule = {
     return triggerCommand('__vitest_takeV8Coverage', [window.location.href])
   },
 
-  stopCoverage() {
-    // Browser mode should not stop coverage as same V8 instance is shared between tests
+  async stopCoverage({ isolate }) {
+    if (isolate === false) {
+      return
+    }
+
+    await triggerCommand('__vitest_stopV8Coverage')
   },
 
   async getProvider(): Promise<V8CoverageProvider> {

@@ -153,7 +153,7 @@ export default (harness: PluginHarness): Vite.Plugin => {
               }
               const html = clientIndexHtml.replace(
                 '<!-- !LOAD_METADATA! -->',
-                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
+                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)};window.VITEST_UI_THEME = ${JSON.stringify(ctx.config.uiOptions.theme)}</script>`,
               )
               res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
               res.setHeader('Referrer-Policy', 'no-referrer')

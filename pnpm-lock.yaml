@@ -1540,6 +1540,9 @@ importers:
       '@vitest/test-fn':
         specifier: file:./deps/dep-fn
         version: file:test/unit/deps/dep-fn
+      '@vitest/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
