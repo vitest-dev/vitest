@@ -324,14 +324,6 @@ const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
 const traceZoomLevel = useLocalStorage('vitest-ui_trace-zoom', 1)
 const traceZoomFitContainer = shallowRef<HTMLElement>()
 
-function getActiveTraceViewport() {
-  const selection = activeTraceView.value
-  if (!selection) {
-    return
-  }
-  return getSelectedTrace(selection)?.entries[selection.selectedStepIndex]?.snapshot.viewport
-}
-
 export function useTraceZoom() {
   const level = traceZoomLevel
   const percent = computed(() => `${Math.round(level.value * 100)}%`)
@@ -352,7 +344,10 @@ export function useTraceZoom() {
 
   function fit() {
     const el = traceZoomFitContainer.value
-    const viewport = getActiveTraceViewport()
+    const selection = activeTraceView.value
+    const viewport =
+      selection &&
+      getSelectedTrace(selection)?.entries[selection.selectedStepIndex]?.snapshot.viewport
     if (el && viewport) {
       level.value = Math.min(el.offsetWidth / viewport.width, el.offsetHeight / viewport.height, 1)
     }
