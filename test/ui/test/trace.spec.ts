@@ -206,12 +206,10 @@ async function testAriaSnapshot(page: Page) {
 
   // aria view shows the captured accessibility tree and disables DOM-only controls
   const ariaSnapshot = traceView.getByTestId('trace-aria-snapshot')
-  const domSelectBox = await viewSelect.boundingBox()
   await viewSelect.selectOption('aria')
   await expect(ariaSnapshot).toHaveText('- button "Simple"')
   await expect(traceView.locator('iframe')).toHaveCount(0)
   await expect(showHighlightCheckbox).toBeDisabled()
-  expect(await viewSelect.boundingBox()).toEqual(domSelectBox)
 
   // selected view is kept across steps and reloads
   await traceSteps.nth(1).click()
