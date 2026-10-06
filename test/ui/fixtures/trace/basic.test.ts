@@ -101,9 +101,7 @@ test('image', async () => {
 })
 
 test('zoom', async () => {
-  // Fixed size page whose scale and edges are easy to judge in the trace viewer:
-  // a 50px grid shows the zoom level, a red frame and corner labels show whether
-  // the whole page is visible, and centered buttons give content to look at.
+  // three centered buttons on a grid background with a border to see zoom and cutoff
   await page.viewport(400, 600)
   document.body.innerHTML = `
 <style>
