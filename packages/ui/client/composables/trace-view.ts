@@ -1,7 +1,8 @@
 import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
+import type { MaybeRefOrGetter } from 'vue'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { useLocalStorage } from '@vueuse/core'
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, toValue, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
@@ -35,19 +36,6 @@ export const showTraceSelectorHighlight = useLocalStorage(
   'vitest-ui_trace-selector-highlight',
   true,
 )
-
-export const traceSnapshotView = useLocalStorage<'dom' | 'aria'>(
-  'vitest-ui_trace-snapshot-view',
-  'dom',
-)
-
-export function hasTraceAriaSnapshot(trace: BrowserTraceData): boolean {
-  return trace.entries.some((entry) => entry.snapshot.ariaSnapshot != null)
-}
-
-export function isTraceAriaSnapshotShown(trace: BrowserTraceData): boolean {
-  return traceSnapshotView.value === 'aria' && hasTraceAriaSnapshot(trace)
-}
 
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
@@ -331,4 +319,15 @@ export function initializeTraceView() {
 function parseTraceStep(value: unknown, entryCount: number): number {
   const step = typeof value === 'number' ? value : Number(value)
   return Number.isInteger(step) && step >= 0 && step < entryCount ? step : 0
+}
+
+const traceSnapshotView = useLocalStorage<'dom' | 'aria'>('vitest-ui_trace-snapshot-view', 'dom')
+
+export function useTraceSnapshotView(trace: MaybeRefOrGetter<BrowserTraceData | undefined>) {
+  const view = traceSnapshotView
+  const hasAria = computed(
+    () => !!toValue(trace)?.entries.some((entry) => entry.snapshot.ariaSnapshot != null),
+  )
+  const showAria = computed(() => view.value === 'aria' && hasAria.value)
+  return { view, hasAria, showAria }
 }

@@ -8,11 +8,9 @@ import {
   getSelectedTrace,
   getTraceAttemptLabel,
   getTraceAttemptMap,
-  hasTraceAriaSnapshot,
-  isTraceAriaSnapshotShown,
   selectActiveTraceAttempt,
   showTraceSelectorHighlight,
-  traceSnapshotView,
+  useTraceSnapshotView,
 } from '~/composables/trace-view'
 import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
@@ -23,8 +21,11 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => (trace.value ? getTraceAttemptLabel(trace.value) : ''))
-const hasAriaSnapshot = computed(() => !!trace.value && hasTraceAriaSnapshot(trace.value))
-const showAriaSnapshot = computed(() => !!trace.value && isTraceAriaSnapshotShown(trace.value))
+const {
+  view: snapshotView,
+  hasAria: hasAriaSnapshot,
+  showAria: showAriaSnapshot,
+} = useTraceSnapshotView(trace)
 const traceAttempts = computed(() =>
   [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
     key,
@@ -80,7 +81,7 @@ const traceLayoutPageUrl = computed(() => {
       </span>
       <select
         v-if="hasAriaSnapshot"
-        v-model="traceSnapshotView"
+        v-model="snapshotView"
         aria-label="Trace snapshot view"
         class="cursor-pointer border border-base rounded bg-base px-2 py-1 text-xs"
       >

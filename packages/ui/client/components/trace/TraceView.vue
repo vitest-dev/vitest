@@ -12,9 +12,9 @@ import { openLocation } from '~/composables/location'
 import { traceViewSplitSizes } from '~/composables/navigation'
 import {
   getTraceEntryClass,
-  isTraceAriaSnapshotShown,
   selectActiveTraceStep,
   showTraceSelectorHighlight,
+  useTraceSnapshotView,
 } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -24,7 +24,7 @@ const props = defineProps<{
 
 const entries = computed(() => props.trace.entries)
 const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
-const showAriaSnapshot = computed(() => isTraceAriaSnapshotShown(props.trace))
+const { showAria: showAriaSnapshot } = useTraceSnapshotView(() => props.trace)
 
 const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
