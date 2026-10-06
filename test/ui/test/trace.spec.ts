@@ -293,12 +293,10 @@ async function testZoom(page: Page) {
   const zoomOut = zoomPopover.getByRole('button', { name: 'Zoom Out' })
   const fitToPane = zoomPopover.getByRole('button', { name: 'Fit' })
   const resetZoom = zoomPopover.getByRole('button', { name: 'Reset' })
-  const iframeWidth = async () => (await iframe.boundingBox())!.width
   // fixture viewport is 400x600
-  const formatPercent = (scale: number) => `${Math.round(scale * 100)}%`
   async function expectZoom(scale: number) {
-    await expect(zoomTrigger).toHaveText(formatPercent(scale))
-    await expect.poll(iframeWidth).toBeCloseTo(400 * scale, 0)
+    await expect(zoomTrigger).toHaveText(`${Math.round(scale * 100)}%`)
+    await expect.poll(async () => (await iframe.boundingBox())!.width).toBeCloseTo(400 * scale, 0)
   }
   await expect(traceFrame.getByRole('button', { name: 'Two' })).toBeVisible()
 
