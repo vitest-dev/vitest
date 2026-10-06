@@ -9,8 +9,10 @@ import { expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
-// Vitest's module runner replaces Error.prepareStackTrace, which breaks
-// Playwright's source-mapped locations of test steps in traces.
+// Vitest's main-process module runner (globalSetup, reporters, etc.) replaces
+// Error.prepareStackTrace on startup, which breaks Playwright's source-mapped
+// locations of test steps in traces. Restoring it only loses source maps for
+// errors from those main-process modules, which these tests don't rely on.
 async function preserveStackTrace<T>(fn: () => Promise<T>): Promise<T> {
   const prepareStackTrace = Error.prepareStackTrace
   try {
