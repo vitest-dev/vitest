@@ -321,13 +321,18 @@ function parseTraceStep(value: unknown, entryCount: number): number {
   return Number.isInteger(step) && step >= 0 && step < entryCount ? step : 0
 }
 
-const traceSnapshotView = useLocalStorage<'dom' | 'aria'>('vitest-ui_trace-snapshot-view', 'dom')
+const traceSnapshotViewMode = useLocalStorage<'dom' | 'aria'>(
+  'vitest-ui_trace-snapshot-view-mode',
+  'dom',
+)
 
-export function useTraceSnapshotView(trace: MaybeRefOrGetter<BrowserTraceData | undefined>) {
-  const view = traceSnapshotView
-  const hasAria = computed(
+export function useTraceSnapshotViewMode(trace: MaybeRefOrGetter<BrowserTraceData | undefined>) {
+  const snapshotViewMode = traceSnapshotViewMode
+  const hasAriaSnapshot = computed(
     () => !!toValue(trace)?.entries.some((entry) => entry.snapshot.ariaSnapshot != null),
   )
-  const showAria = computed(() => view.value === 'aria' && hasAria.value)
-  return { view, hasAria, showAria }
+  const showAriaSnapshot = computed(
+    () => snapshotViewMode.value === 'aria' && hasAriaSnapshot.value,
+  )
+  return { snapshotViewMode, hasAriaSnapshot, showAriaSnapshot }
 }

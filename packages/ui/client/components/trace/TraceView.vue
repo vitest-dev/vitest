@@ -14,7 +14,7 @@ import {
   getTraceEntryClass,
   selectActiveTraceStep,
   showTraceSelectorHighlight,
-  useTraceSnapshotView,
+  useTraceSnapshotViewMode,
 } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -24,7 +24,7 @@ const props = defineProps<{
 
 const entries = computed(() => props.trace.entries)
 const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
-const { showAria: showAriaSnapshot } = useTraceSnapshotView(() => props.trace)
+const { showAriaSnapshot } = useTraceSnapshotViewMode(() => props.trace)
 
 const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
