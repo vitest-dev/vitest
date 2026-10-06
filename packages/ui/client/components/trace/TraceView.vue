@@ -14,8 +14,7 @@ import {
   getTraceEntryClass,
   selectActiveTraceStep,
   showTraceSelectorHighlight,
-  traceReplayElement,
-  traceZoom,
+  useTraceZoom,
 } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -33,19 +32,16 @@ const iframeSandbox = computed(() => {
   return props.trace.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
 
+const { level: zoomLevel, setReplayElement } = useTraceZoom()
 const viewport = computed(() => selectedStep.value?.snapshot.viewport)
 const scaledViewportStyle = computed(() =>
   viewport.value
     ? {
-        width: `${Math.floor(viewport.value.width * traceZoom.value)}px`,
-        height: `${Math.floor(viewport.value.height * traceZoom.value)}px`,
+        width: `${Math.floor(viewport.value.width * zoomLevel.value)}px`,
+        height: `${Math.floor(viewport.value.height * zoomLevel.value)}px`,
       }
     : undefined,
 )
-
-function setReplayElement(el: unknown) {
-  traceReplayElement.value = el instanceof HTMLElement ? el : undefined
-}
 
 function onSelectStep(index: number) {
   selectActiveTraceStep(index)
@@ -282,7 +278,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
               :key="iframeSandbox"
               :sandbox="iframeSandbox"
               style="background: white; border: none; color-scheme: normal; transform-origin: 0 0"
-              :style="{ transform: `scale(${traceZoom})` }"
+              :style="{ transform: `scale(${zoomLevel})` }"
             />
           </div>
           <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
