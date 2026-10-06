@@ -9,10 +9,23 @@ import { expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
+// Vitest's module runner replaces Error.prepareStackTrace, which breaks
+// Playwright's source-mapped locations of test steps in traces.
+async function preserveStackTrace<T>(fn: () => Promise<T>): Promise<T> {
+  const prepareStackTrace = Error.prepareStackTrace
+  try {
+    return await fn()
+  } finally {
+    Error.prepareStackTrace = prepareStackTrace
+  }
+}
+
 export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  const vitest = await startVitest(undefined, cliOptions, {}, { stdout, stderr })
+  const vitest = await preserveStackTrace(() =>
+    startVitest(undefined, cliOptions, {}, { stdout, stderr }),
+  )
   await vitest.close()
   return vitest
 }
@@ -24,7 +37,9 @@ export async function startVitestUi(
   // silence Vitest logs
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  const vitest = await startVitest(undefined, cliOptions, viteOverrides, { stdout, stderr })
+  const vitest = await preserveStackTrace(() =>
+    startVitest(undefined, cliOptions, viteOverrides, { stdout, stderr }),
+  )
 
   const address = vitest.vite.httpServer?.address()
   assert(address && typeof address === 'object', 'Invalid server address')
@@ -44,7 +59,7 @@ export async function startHtmlReportPreview(
 ): Promise<{ previewServer: PreviewServer; url: string }> {
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  await startVitest('test', undefined, cliOptions, {}, { stdout, stderr })
+  await preserveStackTrace(() => startVitest('test', undefined, cliOptions, {}, { stdout, stderr }))
 
   const previewServer = await preview(previewOptions)
   const address = previewServer.httpServer?.address()
