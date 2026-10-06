@@ -5,7 +5,6 @@ import type { UserEventCommand } from './utils'
 import { parseKeyDef } from '@vitest/browser'
 import { click } from './click'
 import { hover } from './hover'
-import { resolvePageCoordinates } from './utils'
 
 type SerializedPointerInput = ElementToSerializedLocator<UserEventPointerInputNormalized[number]>
 interface PointerReturnData extends Pick<SerializedPointerInput, 'coords' | 'target'> {
@@ -56,14 +55,10 @@ export const pointer: UserEventCommand<PointerEvent> = async (context, input, st
     if (!hasOnlyClickActions) {
       if (target) {
         await hover(context, target, {
-          position:
-            coords &&
-            (await resolvePageCoordinates(context, { x: coords.x ?? 0, y: coords.y ?? 0 }, true)),
+          position: coords,
         })
       } else if (coords) {
-        const pageCoords = await resolvePageCoordinates(context, coords, false)
-
-        await context.page.mouse.move(pageCoords.x, pageCoords.y)
+        await context.page.mouse.move(coords.x, coords.y)
       }
     }
 
@@ -135,28 +130,13 @@ async function keyDefHandler(
       if (pointerAction.target) {
         await click(context, pointerAction.target, {
           ...mouseOptions,
-          position:
-            pointerAction.coords &&
-            (await resolvePageCoordinates(
-              context,
-              {
-                x: pointerAction.coords?.x ?? 0,
-                y: pointerAction.coords?.y ?? 0,
-              },
-              true,
-            )),
+          position: pointerAction.coords,
         })
       } else {
-        const coords = await resolvePageCoordinates(
-          context,
-          {
-            x: pointerAction.coords?.x ?? 0,
-            y: pointerAction.coords?.y ?? 0,
-          },
-          false,
-        )
+        const x = pointerAction.coords?.x ?? 0
+        const y = pointerAction.coords?.y ?? 0
 
-        await context.page.mouse.click(coords.x, coords.y, mouseOptions)
+        await context.page.mouse.click(x, y, mouseOptions)
       }
     } else {
       await context.page.mouse.down(mouseOptions)

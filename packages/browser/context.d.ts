@@ -483,7 +483,9 @@ export type UserEventPointerInput = PointerActionInput | readonly PointerActionI
  *
  * @internal
  */
-export type UserEventPointerInputNormalized = readonly PointerActionInputObject[]
+export type UserEventPointerInputNormalized = readonly (PointerActionInputObject & {
+  coords?: Required<PointerCoords>
+})[]
 
 type PointerActionInput = string | PointerActionInputObject
 type PointerActionInputObject = PointerActionKeys | PointerMoveAction

@@ -23,7 +23,13 @@ import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { ScreenshotAction } from './action'
-import { isLocator, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
+import {
+  getIframeOffset,
+  getIframeScale,
+  isLocator,
+  resolveUserEventWheelOptions,
+  serializeElement,
+} from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
@@ -92,29 +98,28 @@ export function createUserEvent(
           ? { [K in keyof PIN]: K extends 'target' ? SerializedLocator : PIN[K] }
           : never
 
+        const scale = getIframeScale()
+        const offset = getIframeOffset()
         const inputArray = (Array.isArray(input) ? input : [input]) as Extract<
           UserEventPointerInput,
           readonly any[]
         >
         const serializedInputArray = await Promise.all(
-          inputArray.map(async (input) => {
+          inputArray.map<Promise<SerializedInput>>(async (input) => {
             if (typeof input === 'string') {
               return {
                 keys: input,
-              } satisfies SerializedInput
+              }
             }
 
-            if (input.target) {
-              const target = await serializeElement(input.target)
-
-              return {
-                ...input,
-                target,
-              } satisfies SerializedInput
+            return {
+              ...input,
+              target: input.target && (await serializeElement(input.target)),
+              coords: input.coords && {
+                x: input.coords.x ? input.coords.x * scale + (input.target ? 0 : offset.x) : 0,
+                y: input.coords.y ? input.coords.y * scale + (input.target ? 0 : offset.y) : 0,
+              },
             }
-
-            // `target` has been serialized but TS doesn't resolve/remove it from whatever's left of `PointerActionInputObject`
-            return input as SerializedInput
           }),
         )
 
@@ -333,23 +338,29 @@ function createPreviewUserEvent(
         UserEventPointerInput,
         readonly any[]
       >
-      const normalizedInput = inputArray.map((input) => {
+      const normalizedInput = inputArray.map<SerializedInput>((input) => {
         if (typeof input === 'string') {
           return { keys: input } satisfies SerializedInput
         }
 
         const target = input.target
 
-        if (target && isLocator(target)) {
-          return {
-            ...input,
-            get target() {
-              return target.element()
-            },
-          } satisfies SerializedInput
-        }
+        return {
+          ...input,
+          get target() {
+            const value = isLocator(target) ? target.element() : target
 
-        return input as SerializedInput
+            Reflect.defineProperty(this, 'target', {
+              enumerable: true,
+              configurable: true,
+              writable: true,
+              value,
+            })
+
+            return value
+          },
+          coords: input.coords && { x: input.coords.x ?? 0, y: input.coords.y ?? 0 },
+        }
       })
 
       await userEvent.pointer(normalizedInput)
