@@ -8,8 +8,11 @@ import {
   getSelectedTrace,
   getTraceAttemptLabel,
   getTraceAttemptMap,
+  hasTraceAriaSnapshot,
+  isTraceAriaSnapshotShown,
   selectActiveTraceAttempt,
   showTraceSelectorHighlight,
+  traceSnapshotView,
 } from '~/composables/trace-view'
 import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
@@ -20,6 +23,8 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => (trace.value ? getTraceAttemptLabel(trace.value) : ''))
+const hasAriaSnapshot = computed(() => !!trace.value && hasTraceAriaSnapshot(trace.value))
+const showAriaSnapshot = computed(() => !!trace.value && isTraceAriaSnapshotShown(trace.value))
 const traceAttempts = computed(() =>
   [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
     key,
@@ -73,7 +78,19 @@ const traceLayoutPageUrl = computed(() => {
       <span v-else-if="attemptLabel" class="text-xs opacity-70">
         {{ attemptLabel }}
       </span>
-      <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
+      <select
+        v-if="hasAriaSnapshot"
+        v-model="traceSnapshotView"
+        aria-label="Trace snapshot view"
+        class="cursor-pointer border border-base rounded bg-base px-2 py-1 text-xs"
+      >
+        <option value="replay">Replay</option>
+        <option value="aria">Aria</option>
+      </select>
+      <label
+        v-if="!showAriaSnapshot"
+        class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer"
+      >
         <input v-model="showTraceSelectorHighlight" type="checkbox" />
         <span>Show highlight</span>
       </label>

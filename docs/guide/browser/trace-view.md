@@ -168,7 +168,7 @@ export default defineConfig({
 })
 ```
 
-The viewer then shows an **Aria** tab next to the DOM replay. It lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots). The tree is captured from the live page during the test, so it is not affected by the replay limits described below.
+The trace viewer header then shows a view selector to switch between **Replay** and **Aria**. The Aria view lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots). The tree is captured from the live page during the test, so it is not affected by the replay limits described below.
 
 ## Snapshot Fidelity
 

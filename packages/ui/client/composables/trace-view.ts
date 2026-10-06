@@ -36,6 +36,19 @@ export const showTraceSelectorHighlight = useLocalStorage(
   true,
 )
 
+export const traceSnapshotView = useLocalStorage<'replay' | 'aria'>(
+  'vitest-ui_trace-snapshot-view',
+  'replay',
+)
+
+export function hasTraceAriaSnapshot(trace: BrowserTraceData): boolean {
+  return trace.entries.some((entry) => entry.snapshot.ariaSnapshot != null)
+}
+
+export function isTraceAriaSnapshotShown(trace: BrowserTraceData): boolean {
+  return traceSnapshotView.value === 'aria' && hasTraceAriaSnapshot(trace)
+}
+
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }

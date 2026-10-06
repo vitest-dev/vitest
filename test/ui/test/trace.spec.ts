@@ -188,26 +188,30 @@ async function testAriaSnapshot(page: Page) {
   await traceSteps.nth(0).click()
 
   // replay is shown by default
-  const replayTab = traceView.getByRole('tab', { name: 'Replay' })
-  const ariaTab = traceView.getByRole('tab', { name: 'Aria' })
-  await expect(replayTab).toHaveAttribute('aria-selected', 'true')
+  const viewSelect = traceView.getByRole('combobox', { name: 'Trace snapshot view' })
+  const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
+  await expect(viewSelect).toHaveValue('replay')
+  await expect(showHighlightCheckbox).toBeVisible()
   await expect(
     traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' }),
   ).toBeVisible()
 
-  // aria tab shows the captured accessibility tree
+  // aria view shows the captured accessibility tree and hides replay-only controls
   const ariaSnapshot = traceView.getByTestId('trace-aria-snapshot')
-  await ariaTab.click()
-  await expect(ariaTab).toHaveAttribute('aria-selected', 'true')
+  await viewSelect.selectOption('aria')
   await expect(ariaSnapshot).toHaveText('- button "Simple"')
   await expect(traceView.locator('iframe')).toHaveCount(0)
+  await expect(showHighlightCheckbox).toBeHidden()
 
-  // selected view is kept across steps
+  // selected view is kept across steps and reloads
   await traceSteps.nth(1).click()
+  await expect(ariaSnapshot).toHaveText('- button "Another"')
+  await page.reload()
+  await expect(viewSelect).toHaveValue('aria')
   await expect(ariaSnapshot).toHaveText('- button "Another"')
 
   // switching back rebuilds the replay with highlight
-  await replayTab.click()
+  await viewSelect.selectOption('replay')
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
