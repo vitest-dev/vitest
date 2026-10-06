@@ -228,11 +228,12 @@ html.dark {
 }
 
 /* floating-vue's dropdown theme only has light colors. Its stylesheet loads
-   after this file, so the html.dark prefix is what lets these rules win. */
+   after this file, so the html.dark prefix is what lets these rules win.
+   The colors mirror the dark bg-base and border-base shortcuts. */
 html.dark .v-popper--theme-dropdown .v-popper__inner {
   background: #111;
   color: var(--color-text);
-  border-color: #333;
+  border-color: #6b72801a;
 }
 
 html.dark .v-popper--theme-dropdown .v-popper__arrow-inner {
@@ -240,7 +241,7 @@ html.dark .v-popper--theme-dropdown .v-popper__arrow-inner {
 }
 
 html.dark .v-popper--theme-dropdown .v-popper__arrow-outer {
-  border-color: #333;
+  border-color: #6b72801a;
 }
 
 .codemirror-busy > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines {
