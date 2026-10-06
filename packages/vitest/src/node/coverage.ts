@@ -779,10 +779,11 @@ export class BaseCoverageProvider {
   }
 
   createUncoveredFileTransformer(ctx: Vitest) {
+    const rootProject = ctx.getRootProject()
     const projects = new Set([
       ...ctx.projects,
       // Check core last as it will match all files anyway
-      ctx.getRootProject(),
+      rootProject,
     ])
 
     return async (filename: string): Promise<TransformResult | null | undefined> => {
@@ -791,8 +792,13 @@ export class BaseCoverageProvider {
       for (const project of projects) {
         const root = project.config.root
 
-        // On Windows root doesn't start with "/" while filenames do
-        if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
+        if (
+          // On Windows root doesn't start with "/" while filenames do
+          !filename.startsWith(root) &&
+          !filename.startsWith(`/${root}`) &&
+          // If it's file outside project (allowExternal), transform it with the root project
+          project !== rootProject
+        ) {
           continue
         }
 
