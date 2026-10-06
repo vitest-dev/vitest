@@ -19,14 +19,14 @@ This features requires a [`@vitest/ui`](https://npmx.dev/package/@vitest/ui) pac
 Make sure that your UI server is not exposed to the network. Since Vitest 4.1 setting [`api.host`](/config/api) to anything other than `localhost` will disable the buttons to save the code or run any tests for security reasons, effectively making UI a readonly reporter.
 :::
 
-## ui.enabled <Version>5.1.0</Version> {#ui-enabled}
+## ui.enabled <Version type="experimental">5.0.4</Version> {#ui-enabled}
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Enable [Vitest UI](/guide/ui).
 
-## ui.theme <Version>5.1.0</Version> {#ui-theme}
+## ui.theme <Version type="experimental">5.0.4</Version> {#ui-theme}
 
 - **Type:** `'auto' | 'light' | 'dark'`
 - **Default:** `'auto'`
