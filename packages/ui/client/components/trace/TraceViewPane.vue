@@ -88,10 +88,10 @@ const traceLayoutPageUrl = computed(() => {
         <option value="aria">Aria</option>
       </select>
       <label
-        v-if="!showAriaSnapshot"
-        class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer"
+        class="flex items-center gap-1 text-xs ws-nowrap select-none"
+        :class="showAriaSnapshot ? 'op-50 cursor-not-allowed' : 'cursor-pointer'"
       >
-        <input v-model="showTraceSelectorHighlight" type="checkbox" />
+        <input v-model="showTraceSelectorHighlight" type="checkbox" :disabled="showAriaSnapshot" />
         <span>Show highlight</span>
       </label>
       <a

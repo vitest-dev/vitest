@@ -191,17 +191,19 @@ async function testAriaSnapshot(page: Page) {
   const viewSelect = traceView.getByRole('combobox', { name: 'Trace snapshot view' })
   const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
   await expect(viewSelect).toHaveValue('dom')
-  await expect(showHighlightCheckbox).toBeVisible()
+  await expect(showHighlightCheckbox).toBeEnabled()
   await expect(
     traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' }),
   ).toBeVisible()
 
-  // aria view shows the captured accessibility tree and hides DOM-only controls
+  // aria view shows the captured accessibility tree and disables DOM-only controls
   const ariaSnapshot = traceView.getByTestId('trace-aria-snapshot')
+  const domSelectBox = await viewSelect.boundingBox()
   await viewSelect.selectOption('aria')
   await expect(ariaSnapshot).toHaveText('- button "Simple"')
   await expect(traceView.locator('iframe')).toHaveCount(0)
-  await expect(showHighlightCheckbox).toBeHidden()
+  await expect(showHighlightCheckbox).toBeDisabled()
+  expect(await viewSelect.boundingBox()).toEqual(domSelectBox)
 
   // selected view is kept across steps and reloads
   await traceSteps.nth(1).click()
