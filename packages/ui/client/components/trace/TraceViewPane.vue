@@ -21,7 +21,9 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => (trace.value ? getTraceAttemptLabel(trace.value) : ''))
-const { snapshotViewMode, hasAriaSnapshot, showAriaSnapshot } = useTraceSnapshotViewMode(trace)
+const { snapshotViewMode, hasAriaSnapshot, showAriaSnapshot } = useTraceSnapshotViewMode(
+  () => trace.value,
+)
 const traceAttempts = computed(() =>
   [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
     key,

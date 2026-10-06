@@ -1,8 +1,7 @@
 import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
-import type { MaybeRefOrGetter } from 'vue'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { useLocalStorage } from '@vueuse/core'
-import { computed, ref, toValue, watch, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
@@ -326,10 +325,10 @@ const traceSnapshotViewMode = useLocalStorage<'dom' | 'aria'>(
   'dom',
 )
 
-export function useTraceSnapshotViewMode(trace: MaybeRefOrGetter<BrowserTraceData | undefined>) {
+export function useTraceSnapshotViewMode(getTrace: () => BrowserTraceData | undefined) {
   const snapshotViewMode = traceSnapshotViewMode
   const hasAriaSnapshot = computed(
-    () => !!toValue(trace)?.entries.some((entry) => entry.snapshot.ariaSnapshot != null),
+    () => !!getTrace()?.entries.some((entry) => entry.snapshot.ariaSnapshot != null),
   )
   const showAriaSnapshot = computed(
     () => snapshotViewMode.value === 'aria' && hasAriaSnapshot.value,
