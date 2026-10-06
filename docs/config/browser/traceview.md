@@ -74,6 +74,6 @@ Captures canvas pixels in snapshots. This enables a weaker replay iframe sandbox
 - **Default:** `false`
 - **CLI:** `--browser.traceView.ariaSnapshot`
 
-Captures the accessibility tree of the page alongside each snapshot. The trace viewer header can then switch from the DOM replay to an **Aria** view, which uses the same format as [aria snapshots](/guide/browser/aria-snapshots).
+Captures the accessibility tree of the page alongside each snapshot. The trace viewer header can then switch from the DOM snapshot to an **Aria** view, which uses the same format as [aria snapshots](/guide/browser/aria-snapshots).
 
 See [Trace View](/guide/browser/trace-view) for full documentation.

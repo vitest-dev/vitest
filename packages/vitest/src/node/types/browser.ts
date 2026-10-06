@@ -98,7 +98,7 @@ export interface BrowserTraceViewOptions {
   /**
    * Capture the accessibility tree alongside each trace view snapshot.
    *
-   * The trace viewer can switch from the DOM replay to an "Aria" view.
+   * The trace viewer can switch from the DOM snapshot to an "Aria" view.
    *
    * @default false
    * @experimental

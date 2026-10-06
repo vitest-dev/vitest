@@ -187,16 +187,16 @@ async function testAriaSnapshot(page: Page) {
   const traceSteps = traceView.getByTestId('trace-step')
   await traceSteps.nth(0).click()
 
-  // replay is shown by default
+  // DOM snapshot is shown by default
   const viewSelect = traceView.getByRole('combobox', { name: 'Trace snapshot view' })
   const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
-  await expect(viewSelect).toHaveValue('replay')
+  await expect(viewSelect).toHaveValue('dom')
   await expect(showHighlightCheckbox).toBeVisible()
   await expect(
     traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' }),
   ).toBeVisible()
 
-  // aria view shows the captured accessibility tree and hides replay-only controls
+  // aria view shows the captured accessibility tree and hides DOM-only controls
   const ariaSnapshot = traceView.getByTestId('trace-aria-snapshot')
   await viewSelect.selectOption('aria')
   await expect(ariaSnapshot).toHaveText('- button "Simple"')
@@ -210,8 +210,8 @@ async function testAriaSnapshot(page: Page) {
   await expect(viewSelect).toHaveValue('aria')
   await expect(ariaSnapshot).toHaveText('- button "Another"')
 
-  // switching back rebuilds the replay with highlight
-  await viewSelect.selectOption('replay')
+  // switching back rebuilds the DOM snapshot with highlight
+  await viewSelect.selectOption('dom')
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()

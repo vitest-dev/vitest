@@ -84,7 +84,7 @@ const traceLayoutPageUrl = computed(() => {
         aria-label="Trace snapshot view"
         class="cursor-pointer border border-base rounded bg-base px-2 py-1 text-xs"
       >
-        <option value="replay">Replay</option>
+        <option value="dom">DOM</option>
         <option value="aria">Aria</option>
       </select>
       <label

@@ -36,9 +36,9 @@ export const showTraceSelectorHighlight = useLocalStorage(
   true,
 )
 
-export const traceSnapshotView = useLocalStorage<'replay' | 'aria'>(
+export const traceSnapshotView = useLocalStorage<'dom' | 'aria'>(
   'vitest-ui_trace-snapshot-view',
-  'replay',
+  'dom',
 )
 
 export function hasTraceAriaSnapshot(trace: BrowserTraceData): boolean {
