@@ -3,17 +3,12 @@ const PATH = 'APPROVED_CONTRIBUTORS'
 
 /**
  * Adds a user to the list of approved contributors when a user with write access
- * comments `/approve-user` or `/approve-user username` on a pull request. Sets the `approved` output when the user is on the list.
+ * comments `/approve-user` or `/approve-user username` on an issue or a pull request. Sets the `approved` output when the user is on the list.
  */
 export default async function approveContributor({ github, context, core }) {
   const { owner, repo } = context.repo
   const comment = context.payload.comment
   const commenter = comment.user.login
-
-  if (!context.payload.issue?.pull_request) {
-    core.info('The comment is not on a pull request')
-    return
-  }
 
   const match = /^\/approve-user(?: +@?([a-z\d][a-z\d-]{0,38}))?$/i.exec(comment.body.trim())
   if (!match) {

@@ -227,6 +227,22 @@ html.dark {
   border-color: var(--background-color);
 }
 
+/* floating-vue's dropdown theme only has light colors.
+   These dark colors mirror the bg-base and border-base shortcuts. */
+html.dark .v-popper--theme-dropdown .v-popper__inner {
+  background: #111;
+  color: var(--color-text);
+  border-color: #6b72801a;
+}
+
+html.dark .v-popper--theme-dropdown .v-popper__arrow-inner {
+  border-color: #111;
+}
+
+html.dark .v-popper--theme-dropdown .v-popper__arrow-outer {
+  border-color: #6b72801a;
+}
+
 .codemirror-busy > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines {
   cursor: wait !important;
 }

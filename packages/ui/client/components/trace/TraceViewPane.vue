@@ -14,6 +14,7 @@ import {
 } from '~/composables/trace-view'
 import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
+import TraceZoomControl from './TraceZoomControl.vue'
 
 const props = defineProps<{
   selection: TraceSelection
@@ -86,6 +87,7 @@ const traceLayoutPageUrl = computed(() => {
         <option value="dom">DOM</option>
         <option value="aria">Aria</option>
       </select>
+      <TraceZoomControl v-if="trace" :disabled="showAriaSnapshot" />
       <label
         class="flex items-center gap-1 text-xs ws-nowrap select-none"
         :class="showAriaSnapshot ? 'op-50 cursor-not-allowed' : 'cursor-pointer'"

@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 14, fail: 0 })
+    await assertTestCounts(page, { pass: 15, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -83,6 +83,10 @@ test.describe('ui', () => {
 
   test('persists resized trace panes across reloads', async ({ page }) => {
     await testPersistsResizedTracePanes(page)
+  })
+
+  test('zoom', async ({ page }) => {
+    await testZoom(page)
   })
 
   test('aria snapshot', async ({ page }) => {
@@ -124,7 +128,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 14, fail: 0 })
+    await assertTestCounts(page, { pass: 15, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -183,6 +187,10 @@ test.describe('html reporter', () => {
     await testPersistsResizedTracePanes(page)
   })
 
+  test('zoom', async ({ page }) => {
+    await testZoom(page)
+  })
+
   test('aria snapshot', async ({ page }) => {
     await testAriaSnapshot(page)
   })
@@ -197,8 +205,10 @@ async function testAriaSnapshot(page: Page) {
   // DOM snapshot is shown by default
   const viewSelect = traceView.getByRole('combobox', { name: 'Trace snapshot view' })
   const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
+  const zoomTrigger = traceView.getByTestId('trace-zoom-trigger')
   await expect(viewSelect).toHaveValue('dom')
   await expect(showHighlightCheckbox).toBeEnabled()
+  await expect(zoomTrigger).toBeEnabled()
   await expect(
     traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' }),
   ).toBeVisible()
@@ -209,6 +219,7 @@ async function testAriaSnapshot(page: Page) {
   await expect(ariaSnapshot).toHaveText('- button "Simple"')
   await expect(traceView.locator('iframe')).toHaveCount(0)
   await expect(showHighlightCheckbox).toBeDisabled()
+  await expect(zoomTrigger).toBeDisabled()
 
   // selected view is kept across steps and reloads
   await traceSteps.nth(1).click()
@@ -314,6 +325,63 @@ async function testBasic(page: Page) {
   await page.getByTestId('trace-open-button').click()
   await expect(traceView).toBeVisible()
   await expect(traceFrame.getByRole('button', { name: 'Switch Target' })).toBeVisible()
+}
+
+async function testZoom(page: Page) {
+  await openExplorerItem(page, 'zoom')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+  const iframe = traceView.locator('iframe')
+  const zoomTrigger = traceView.getByTestId('trace-zoom-trigger')
+  const zoomPopover = page.getByTestId('trace-zoom-popover')
+  const zoomPercent = zoomPopover.getByTestId('trace-zoom-percent')
+  const zoomIn = zoomPopover.getByRole('button', { name: 'Zoom In' })
+  const zoomOut = zoomPopover.getByRole('button', { name: 'Zoom Out' })
+  const fitToPane = zoomPopover.getByRole('button', { name: 'Fit' })
+  const resetZoom = zoomPopover.getByRole('button', { name: 'Reset' })
+
+  // wait for the snapshot replay
+  await expect(traceFrame.getByRole('button', { name: 'Two' })).toBeVisible()
+
+  // verify zoom label and scaled iframe width of the 400px wide fixture viewport
+  async function expectZoom(scale: number) {
+    await expect(zoomTrigger).toHaveText(`${Math.round(scale * 100)}%`)
+    await expect.poll(async () => (await iframe.boundingBox())!.width).toBeCloseTo(400 * scale, 0)
+  }
+
+  // actual size by default
+  await expectZoom(1)
+  await zoomTrigger.click()
+  await expect(zoomPercent).toHaveText('100%')
+  await expect(resetZoom).toBeDisabled()
+
+  // step through levels and persist across reloads
+  await zoomOut.click()
+  await expectZoom(0.75)
+  await zoomOut.click()
+  await expectZoom(0.5)
+  await page.reload()
+  await expectZoom(0.5)
+
+  // fit to the 599x196 replay pane is limited by height and persists across reloads
+  const fitScale = 196 / 600
+  await zoomTrigger.click()
+  await fitToPane.click()
+  await expect(zoomTrigger).toHaveText('33%')
+  await expectZoom(fitScale)
+  await page.reload()
+  await expectZoom(fitScale)
+
+  // zoom in from fit goes to the next level
+  await zoomTrigger.click()
+  await zoomIn.click()
+  await expectZoom(0.5)
+
+  // back to actual size
+  await resetZoom.click()
+  await expectZoom(1)
+  await expect(resetZoom).toBeDisabled()
 }
 
 async function testViewport(page: Page) {

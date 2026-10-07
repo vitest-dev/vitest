@@ -15,6 +15,7 @@ import {
   selectActiveTraceStep,
   showTraceSelectorHighlight,
   useTraceSnapshotViewMode,
+  useTraceZoom,
 } from '~/composables/trace-view'
 
 const props = defineProps<{
@@ -32,6 +33,17 @@ const iframeSandbox = computed(() => {
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
   return props.trace.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
+
+const { level: zoomLevel, setFitContainer } = useTraceZoom()
+const viewport = computed(() => selectedStep.value?.snapshot.viewport)
+const scaledViewportStyle = computed(() =>
+  viewport.value
+    ? {
+        width: `${Math.floor(viewport.value.width * zoomLevel.value)}px`,
+        height: `${Math.floor(viewport.value.height * zoomLevel.value)}px`,
+      }
+    : undefined,
+)
 
 function onSelectStep(index: number) {
   selectActiveTraceStep(index)
@@ -256,7 +268,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
       </div>
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
-      <div class="h-full min-h-0 flex flex-col overflow-auto">
+      <div :ref="setFitContainer" class="h-full min-h-0 flex flex-col overflow-auto">
         <div v-if="!selectedStep" class="text-sm opacity-50 p-4">No trace step found</div>
         <template v-else-if="showAriaSnapshot">
           <pre
@@ -266,13 +278,15 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
             >{{ selectedStep.snapshot.ariaSnapshot }}</pre>
           <div v-else class="text-sm opacity-50 p-4">No aria snapshot for this step</div>
         </template>
-        <iframe
-          v-else
-          ref="iframeEl"
-          :key="iframeSandbox"
-          :sandbox="iframeSandbox"
-          style="background: white; border: none; color-scheme: normal; flex: none"
-        />
+        <div v-else class="mx-auto flex-none overflow-hidden" :style="scaledViewportStyle">
+          <iframe
+            ref="iframeEl"
+            :key="iframeSandbox"
+            :sandbox="iframeSandbox"
+            style="background: white; border: none; color-scheme: normal; transform-origin: 0 0"
+            :style="{ transform: `scale(${zoomLevel})` }"
+          />
+        </div>
       </div>
     </Pane>
   </Splitpanes>
