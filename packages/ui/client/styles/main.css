@@ -128,14 +128,12 @@ html.dark {
 }
 
 .splitpanes--vertical > .splitpanes__splitter:before {
-  left: calc(var(--splitpane-handle-size) * -1);
-  right: calc(var(--splitpane-handle-size) * -1);
+  inset-inline: calc(var(--splitpane-handle-size) * -1);
   height: 100%;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
-  top: calc(var(--splitpane-handle-size) * -1);
-  bottom: calc(var(--splitpane-handle-size) * -1);
+  inset-block: calc(var(--splitpane-handle-size) * -1);
   width: 100%;
 }
 
