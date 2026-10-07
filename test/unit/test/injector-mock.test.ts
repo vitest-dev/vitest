@@ -1474,7 +1474,7 @@ if (import.meta.vitest) {
       `),
     ).toMatchInlineSnapshot(`
         "import { vi } from "vitest"
-        vi.mock('faker')
+        if (import.meta.vitest) { vi.mock('faker') }
         const __vi_import_0__ = await import("./calc");
 
 
@@ -1489,6 +1489,141 @@ if (import.meta.vitest) {
           })
         }"
       `)
+  })
+
+  test('keeps the import.meta.vitest check for hoisted calls', () => {
+    expect(
+      hoistSimpleCode(`
+import { getName } from './name'
+
+export const greet = () => getName()
+
+if (import.meta.vitest) {
+  const { test, expect, vi } = import.meta.vitest
+  const mocks = vi.hoisted(() => ({ getName: vi.fn() }))
+  vi.mock('./name', () => mocks)
+  vi.unmock('./unmocked')
+  test('greet', () => {
+    expect(greet()).toBe(undefined)
+  })
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var mocks = vi.hoisted(() => ({ getName: vi.fn() })) }
+      if (import.meta.vitest) { vi.mock('./name', () => mocks) }
+      if (import.meta.vitest) { vi.unmock('./unmocked') }
+      const __vi_import_0__ = await import("./name");
+
+
+
+      export const greet = () => __vi_import_0__.getName()
+
+      if (import.meta.vitest) {
+        const { test, expect, vi } = import.meta.vitest
+              test('greet', () => {
+          expect(greet()).toBe(undefined)
+        })
+      }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for vi.hoisted declarations', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  const getName = vi.hoisted(() => vi.fn())
+  let getAge = vi.hoisted(() => vi.fn())
+  var getRole = vi.hoisted(() => vi.fn())
+  vi.mock('./user', () => ({ getName, getAge, getRole }))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var getName = vi.hoisted(() => vi.fn()) }
+      if (import.meta.vitest) { var getAge = vi.hoisted(() => vi.fn()) }
+      if (import.meta.vitest) { var getRole = vi.hoisted(() => vi.fn()) }
+      if (import.meta.vitest) { vi.mock('./user', () => ({ getName, getAge, getRole })) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+              }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for destructured vi.hoisted declarations', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  const { getName, ...user } = vi.hoisted(() => ({ getName: vi.fn(), age: 42 }))
+  const [getAge, getRole = vi.fn()] = vi.hoisted(() => [vi.fn()])
+  const { session: { token } } = vi.hoisted(() => ({ session: { token: 'secret' } }))
+  vi.mock('./user', () => ({ getName, getAge, getRole, user, token }))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var { getName, ...user } = vi.hoisted(() => ({ getName: vi.fn(), age: 42 })) }
+      if (import.meta.vitest) { var [getAge, getRole = vi.fn()] = vi.hoisted(() => [vi.fn()]) }
+      if (import.meta.vitest) { var { session: { token } } = vi.hoisted(() => ({ session: { token: 'secret' } })) }
+      if (import.meta.vitest) { vi.mock('./user', () => ({ getName, getAge, getRole, user, token })) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+              }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for awaited vi.hoisted declarations', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  const { user } = await vi.hoisted(async () => {
+    const { default: user } = await import('./fixtures/user')
+    return { user }
+  })
+  vi.mock('./user', () => ({ getUser: () => user }))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { var { user } = await vi.hoisted(async () => {
+          const { default: user } = await import('./fixtures/user')
+          return { user }
+        }) }
+      if (import.meta.vitest) { vi.mock('./user', () => ({ getUser: () => user })) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+          }"
+    `)
+  })
+
+  test('keeps the import.meta.vitest check for vi.hoisted without a declaration', () => {
+    expect(
+      hoistSimpleCode(`
+if (import.meta.vitest) {
+  const { vi } = import.meta.vitest
+  vi.hoisted(() => {
+    process.env.API_URL = 'http://localhost'
+  })
+  await vi.hoisted(() => import('./polyfills'))
+}
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      if (import.meta.vitest) { vi.hoisted(() => {
+          process.env.API_URL = 'http://localhost'
+        }) }
+      if (import.meta.vitest) { await vi.hoisted(() => import('./polyfills')) }
+
+      if (import.meta.vitest) {
+        const { vi } = import.meta.vitest
+          }"
+    `)
   })
 
   test('injects an error if a utility import is imported from an external module', () => {
@@ -1750,7 +1885,34 @@ describe("some suite", () => {
     `)
   })
 
-  it('ignores vi.mock position if import.meta.vitest is present', ({ onTestFinished }) => {
+  it('shows an error when hoisted methods are nested inside an import.meta.vitest block', () => {
+    expect(() =>
+      hoistSimpleCode(`
+import { getName } from './name'
+
+export const greet = () => getName()
+
+if (import.meta.vitest) {
+  const { test, expect, vi } = import.meta.vitest
+  test('greet', () => {
+    vi.mock('./name', () => ({ getName: () => 'mocked' }))
+    expect(greet()).toBe('mocked')
+  })
+}
+      `),
+    ).toThrowErrorMatchingInlineSnapshot(`
+      [Error: 1 call in "test.js" was defined outside of the module's top level scope:
+
+      - vi.mock('./name')
+
+      Although it appears nested, it will be hoisted and executed before anything in this file. Move it to the top level of the \`if (import.meta.vitest)\` block to reflect its actual execution order.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works]
+    `)
+  })
+
+  it('allows hoisted methods on the top level of an import.meta.vitest block', ({
+    onTestFinished,
+  }) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     onTestFinished(() => warn.mockRestore())
     const result = hoistSimpleCode(`
@@ -1760,7 +1922,7 @@ if (import.meta.vitest) {
       `)
     expect(result).toMatchInlineSnapshot(`
       "import { vi } from "vitest"
-      vi.mock('./hello-world-1')
+      if (import.meta.vitest) { vi.mock('./hello-world-1') }
 
       if (import.meta.vitest) {
         }"

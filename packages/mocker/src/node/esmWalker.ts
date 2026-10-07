@@ -42,7 +42,7 @@ interface Visitors {
   onIdentifier?: (node: Positioned<Identifier>, info: IdentifierInfo, parentStack: Node[]) => void
   onImportMeta?: (node: Positioned<MetaProperty>) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void
-  onCallExpression?: (node: Positioned<CallExpression>) => void
+  onCallExpression?: (node: Positioned<CallExpression>, parentStack: Node[]) => void
 }
 
 const isNodeInPatternWeakSet = new WeakSet<_Node>()
@@ -126,7 +126,7 @@ export function esmWalker(
       }
 
       if (node.type === 'CallExpression') {
-        onCallExpression?.(node as Positioned<CallExpression>)
+        onCallExpression?.(node as Positioned<CallExpression>, parentStack)
       }
 
       if (node.type === 'MetaProperty' && node.meta.name === 'import') {

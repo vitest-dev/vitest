@@ -371,6 +371,56 @@ test('mock works without loading original', () => {
   },
 )
 
+// https://github.com/vitest-dev/vitest/issues/8653
+test.for(['node', 'playwright'])(
+  'in-source vi.mock applies only when its file is the test file (%s)',
+  async (mode) => {
+    const { stderr, errorTree } = await runInlineTests(
+      {
+        './src/name.js': `export const getName = () => 'original'`,
+        './src/b.js': `
+import { getName } from './name.js'
+export const greet = () => 'hello, ' + getName()
+
+if (import.meta.vitest) {
+  const { test, expect, vi } = import.meta.vitest
+  const mocks = vi.hoisted(() => ({ getName: vi.fn(() => 'b') }))
+  vi.mock('./name.js', () => mocks)
+  test('b mocks name.js', () => {
+    expect(greet()).toBe('hello, b')
+    expect(mocks.getName).toHaveBeenCalledOnce()
+  })
+}
+    `,
+        './src/a.js': `
+import { greet } from './b.js'
+
+if (import.meta.vitest) {
+  const { test, expect, vi } = import.meta.vitest
+  vi.mock('./name.js', () => ({ getName: () => 'a' }))
+  test('imported b does not mock name.js', () => {
+    expect(greet()).toBe('hello, a')
+  })
+}
+    `,
+      },
+      { ...modeToConfig(mode), includeSource: ['src/*.js'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(errorTree()).toMatchInlineSnapshot(`
+      {
+        "src/a.js": {
+          "imported b does not mock name.js": "passed",
+        },
+        "src/b.js": {
+          "b mocks name.js": "passed",
+        },
+      }
+    `)
+  },
+)
+
 test('doMock/doUnmock ordering is preserved in resolveMocks', async () => {
   // This tests repeats doUnmock + doMock
   //   vi.doUnmock('/mock-lib-0');
