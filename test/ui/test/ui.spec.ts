@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { existsSync } from 'node:fs'
+import { get as httpGet } from 'node:http'
 import { expect, test } from '@playwright/test'
 import { join } from 'pathe'
 import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
@@ -15,6 +16,22 @@ import {
   startHtmlReportPreview,
   startVitestUi,
 } from './helper'
+
+function rawGet(
+  hostname: string,
+  port: number,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  return new Promise((resolve, reject) => {
+    httpGet({ hostname, port, path }, (res) => {
+      let text = ''
+      res.on('data', (chunk) => {
+        text += chunk
+      })
+      res.on('end', () => resolve({ status: res.statusCode ?? 0, text }))
+    }).on('error', reject)
+  })
+}
 
 const TEST_COUNTS = {
   pass: 21,
@@ -73,6 +90,18 @@ test.describe('ui', () => {
     const badToken = await request.get(badTokenUrl.toString())
     expect(badToken.status()).toBe(403)
     await expect(badToken.text()).resolves.toContain('Vitest UI requires authentication.')
+  })
+
+  test('does not serve ui html for non-normalized paths that resolve to base', async () => {
+    // A client that does not normalize dot-segments (a raw socket, some proxies)
+    // can send a path that Connect treats as outside `base` while the WHATWG URL
+    // parser resolves it back to `base`. Both matchers must agree, or the token
+    // leaks from the html handler without passing the auth gate.
+    const url = new URL(pageUrl)
+    const base = url.pathname.replace(/\/$/, '')
+    const res = await rawGet(url.hostname, Number(url.port), `/x/..${base}/`)
+    expect(res.status).not.toBe(200)
+    expect(res.text).not.toContain('VITEST_API_TOKEN')
   })
 
   test('blocks unauthenticated coverage requests', async ({ request }) => {
