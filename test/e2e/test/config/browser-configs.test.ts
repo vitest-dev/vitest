@@ -7,7 +7,6 @@ import { resolve } from 'pathe'
 import { describe, expect, onTestFailed, onTestFinished, test, vi } from 'vitest'
 import { createVitest, Logger, PluginHarness, resolveConfig } from 'vitest/node'
 import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
-import { getDefaultMaxWorkers } from '../../../../packages/vitest/src/utils/workers.js'
 import { Cli } from '../../../test-utils/cli'
 
 const vitest = vi.defineHelper(
@@ -779,28 +778,32 @@ test('provider options can be changed dynamically in CLI', async () => {
 })
 
 test('fileParallelism on the instance works properly', async () => {
-  const projects = await config({
-    fileParallelism: true,
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-          fileParallelism: false,
+  const { test: rootConfig } = await resolveConfig(
+    { config: false },
+    {
+      test: {
+        fileParallelism: true,
+        browser: {
+          enabled: true,
+          provider: playwright(),
+          instances: [
+            {
+              browser: 'chromium',
+              fileParallelism: false,
+            },
+            {
+              browser: 'firefox',
+              fileParallelism: true,
+            },
+          ],
         },
-        {
-          browser: 'firefox',
-          fileParallelism: true,
-        },
-      ],
+      },
     },
-  })
+  )
+  const projects = rootConfig.resolvedProjects.filter((p) => !p.hidden)
   expect(projects).toHaveLength(2)
   expect(projects[0].projectConfig.maxWorkers).toBe(1)
-  expect(projects[1].projectConfig.maxWorkers).toBe(
-    getDefaultMaxWorkers(projects[1].projectConfig.watch),
-  )
+  expect(projects[1].projectConfig.maxWorkers).toBe(rootConfig.maxWorkers)
 })
 
 test('detailsPanelPosition defaults to right', async () => {
