@@ -17,22 +17,6 @@ import {
   startVitestUi,
 } from './helper'
 
-function rawGet(
-  hostname: string,
-  port: number,
-  path: string,
-): Promise<{ status: number; text: string }> {
-  return new Promise((resolve, reject) => {
-    httpGet({ hostname, port, path }, (res) => {
-      let text = ''
-      res.on('data', (chunk) => {
-        text += chunk
-      })
-      res.on('end', () => resolve({ status: res.statusCode ?? 0, text }))
-    }).on('error', reject)
-  })
-}
-
 const TEST_COUNTS = {
   pass: 21,
   fail: 5,
@@ -99,7 +83,15 @@ test.describe('ui', () => {
     // leaks from the html handler without passing the auth gate.
     const url = new URL(pageUrl)
     const base = url.pathname.replace(/\/$/, '')
-    const res = await rawGet(url.hostname, Number(url.port), `/x/..${base}/`)
+    const res = await new Promise<{ status: number; text: string }>((resolve, reject) => {
+      httpGet({ hostname: url.hostname, port: Number(url.port), path: `/x/..${base}/` }, (res) => {
+        let text = ''
+        res.on('data', (chunk) => {
+          text += chunk
+        })
+        res.on('end', () => resolve({ status: res.statusCode ?? 0, text }))
+      }).on('error', reject)
+    })
     expect(res.status).not.toBe(200)
     expect(res.text).not.toContain('VITEST_API_TOKEN')
   })
