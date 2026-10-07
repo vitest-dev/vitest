@@ -107,6 +107,16 @@ export class ProjectBrowser implements IProjectBrowser {
     }
   }
 
+  async closeBrowserProvider(): Promise<void> {
+    const provider = this.provider
+    if (!provider) {
+      return
+    }
+    // detach first so the next run can create a new provider while this one closes
+    this.provider = undefined as any
+    await provider.close()
+  }
+
   public parseErrorStacktrace(e: TestError, options: StackTraceParserOptions = {}): ParsedStack[] {
     return this.parent.parseErrorStacktrace(e, options)
   }

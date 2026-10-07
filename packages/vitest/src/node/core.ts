@@ -291,6 +291,7 @@ export class Vitest {
     // reuse the same browser ports as the previous run instead of letting the
     // reused harness keep incrementing them
     this._harness._browserLastPort = defaultBrowserPort
+    this._harness._prewarmedBrowsers = 0
     // harness mimics `vitest` access like in `node/create.ts`
     this._harness.setVitest(undefined)
     const config = await resolveConfig(

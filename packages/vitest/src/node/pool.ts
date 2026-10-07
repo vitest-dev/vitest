@@ -1,6 +1,7 @@
 import type { Awaitable } from '@vitest/utils'
 import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
+import type { BrowserPool } from './pools/browser'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
@@ -55,7 +56,7 @@ export function createPool(ctx: Vitest): ProcessPool {
   const Sequencer = ctx.config.sequence.sequencer
   const sequencer = new Sequencer(ctx)
 
-  let browserPool: ProcessPool | undefined
+  let browserPool: BrowserPool | undefined
 
   async function executeTests(
     method: 'run' | 'collect',
@@ -199,11 +200,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
       if (browserSpecs.length) {
         browserPool ??= createBrowserPool(ctx)
-        if (method === 'collect') {
-          promises.push(browserPool.collectTests(browserSpecs))
-        } else {
-          promises.push(browserPool.runTests(browserSpecs))
-        }
+        promises.push(browserPool.runTests(method, browserSpecs, { maxWorkers }))
       }
 
       const groupResults = await Promise.allSettled(promises)
@@ -230,7 +227,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     async close() {
       await Promise.all([
         pool.close(),
-        browserPool?.close?.(),
+        browserPool?.close(),
         ...ctx.projects.map((project) => project.typechecker?.stop()),
       ])
     },

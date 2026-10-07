@@ -459,6 +459,7 @@ export interface ProjectBrowser {
   provider: BrowserProvider
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
+  closeBrowserProvider: () => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
   registerCommand: <K extends keyof BrowserCommands>(

@@ -13,6 +13,10 @@ export class PluginHarness {
    * @internal
    */
   public _browserLastPort = defaultBrowserPort
+  /**
+   * @internal
+   */
+  public _prewarmedBrowsers = 0
 
   constructor(
     public logger: Logger = new Logger(),
