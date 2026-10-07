@@ -7,6 +7,7 @@ import { resolve } from 'pathe'
 import { describe, expect, onTestFailed, onTestFinished, test, vi } from 'vitest'
 import { createVitest, Logger, PluginHarness, resolveConfig } from 'vitest/node'
 import { createConsole, runVitest, runVitestCli, useTmpFS } from '#test-utils'
+import { getDefaultMaxWorkers } from '../../../../packages/vitest/src/utils/workers.js'
 import { Cli } from '../../../test-utils/cli'
 
 const vitest = vi.defineHelper(
@@ -797,7 +798,9 @@ test('fileParallelism on the instance works properly', async () => {
   })
   expect(projects).toHaveLength(2)
   expect(projects[0].projectConfig.maxWorkers).toBe(1)
-  expect(projects[1].projectConfig.maxWorkers).toBe(undefined) // decided dynamically
+  expect(projects[1].projectConfig.maxWorkers).toBe(
+    getDefaultMaxWorkers(projects[1].projectConfig.watch),
+  )
 })
 
 test('detailsPanelPosition defaults to right', async () => {
