@@ -104,3 +104,24 @@ test('mocking out of root', async () => {
     expect(vitest.stdout).toReportPassedTest('basic.test.js', browser)
   })
 })
+
+// fix https://github.com/vitest-dev/vitest/issues/11519
+test('mocks from a setup file apply to static imports of a test file', async () => {
+  const result = await runVitest({
+    root: 'fixtures/mocking-setup-file',
+  })
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
+  expect(result.stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(result.stdout).toReportPassedTest('static-import.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('dynamic-import.test.ts', browser)
+  })
+
+  expect(result.exitCode).toBe(0)
+})
