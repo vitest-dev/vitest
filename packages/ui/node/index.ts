@@ -138,32 +138,31 @@ export default (harness: PluginHarness): Vite.Plugin => {
         })
 
         // serve index.html with api token
+        // Mounted on `base` so Connect applies the same matching as vitestUiAuth
+        // and the sirv handler below. Connect strips `base`, so the UI root is `/`.
         // oxlint-disable-next-line prefer-arrow-callback
-        server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
-          if (req.url) {
-            const url = new URL(req.url, 'http://localhost')
-            if (url.pathname === base) {
-              // vitestUiAuth already validated the request and set the cookie;
-              // redirect to strip the token from the URL
-              if (isValidApiRequest(ctx.config, req)) {
-                res.statusCode = 302
-                res.setHeader('Location', base)
-                res.end()
-                return
-              }
-              const html = clientIndexHtml.replace(
-                '<!-- !LOAD_METADATA! -->',
-                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)};window.VITEST_UI_THEME = ${JSON.stringify(ctx.config.uiOptions.theme)}</script>`,
-              )
-              res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
-              res.setHeader('Referrer-Policy', 'no-referrer')
-              res.setHeader('Content-Type', 'text/html; charset=utf-8')
-              res.write(html)
-              res.end()
-              return
-            }
+        server.middlewares.use(base, function vitestUiHtmlMiddleware(req, res, next) {
+          const { pathname } = new URL(req.url ?? '/', 'http://localhost')
+          if (pathname !== '/') {
+            return next()
           }
-          next()
+          // vitestUiAuth already validated the request and set the cookie;
+          // redirect to strip the token from the URL
+          if (isValidApiRequest(ctx.config, req)) {
+            res.statusCode = 302
+            res.setHeader('Location', base)
+            res.end()
+            return
+          }
+          const html = clientIndexHtml.replace(
+            '<!-- !LOAD_METADATA! -->',
+            `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)};window.VITEST_UI_THEME = ${JSON.stringify(ctx.config.uiOptions.theme)}</script>`,
+          )
+          res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+          res.setHeader('Referrer-Policy', 'no-referrer')
+          res.setHeader('Content-Type', 'text/html; charset=utf-8')
+          res.write(html)
+          res.end()
         })
 
         server.middlewares.use(

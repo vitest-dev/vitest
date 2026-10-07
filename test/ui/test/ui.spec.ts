@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { existsSync } from 'node:fs'
+import { get as httpGet } from 'node:http'
 import { expect, test } from '@playwright/test'
 import { join } from 'pathe'
 import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
@@ -73,6 +74,24 @@ test.describe('ui', () => {
     const badToken = await request.get(badTokenUrl.toString())
     expect(badToken.status()).toBe(403)
     await expect(badToken.text()).resolves.toContain('Vitest UI requires authentication.')
+  })
+
+  test('does not serve ui html for non-normalized paths that resolve to base', async () => {
+    // raw http client to send `..` without normalization
+    const url = new URL(pageUrl)
+    const res = await new Promise<{ status: number; text: string }>((resolve, reject) => {
+      httpGet(
+        { hostname: url.hostname, port: Number(url.port), path: '/x/../__vitest__/' },
+        (res) => {
+          let text = ''
+          res.on('data', (chunk) => {
+            text += chunk
+          })
+          res.on('end', () => resolve({ status: res.statusCode ?? 0, text }))
+        },
+      ).on('error', reject)
+    })
+    expect(res).toEqual({ status: 404, text: '' })
   })
 
   test('blocks unauthenticated coverage requests', async ({ request }) => {
