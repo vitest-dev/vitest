@@ -170,17 +170,20 @@ export class BaseCoverageProvider {
       return false
     }
 
-    const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
+    // Files outside roots can be matched by absolute or "../" patterns
+    const candidates = matchingRoot
+      ? [relative(matchingRoot, filename)]
+      : [filename, ...roots.map((root) => relative(root, filename))]
 
     const { matchExclude, matchInclude } = this.getGlobMatchers()
 
-    if (matchExclude(relativeFilename)) {
+    if (candidates.some(matchExclude)) {
       this.globCache.set(filename, false)
       return false
     }
 
     // By default `coverage.include` matches all files, except "coverage.exclude"
-    let included = matchInclude(relativeFilename)
+    let included = candidates.some(matchInclude)
 
     if (included && this.changedFiles) {
       included = this.changedFiles.includes(filename)
@@ -779,10 +782,11 @@ export class BaseCoverageProvider {
   }
 
   createUncoveredFileTransformer(ctx: Vitest) {
+    const rootProject = ctx.getRootProject()
     const projects = new Set([
       ...ctx.projects,
       // Check core last as it will match all files anyway
-      ctx.getRootProject(),
+      rootProject,
     ])
 
     return async (filename: string): Promise<TransformResult | null | undefined> => {
@@ -791,8 +795,13 @@ export class BaseCoverageProvider {
       for (const project of projects) {
         const root = project.config.root
 
-        // On Windows root doesn't start with "/" while filenames do
-        if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
+        if (
+          // On Windows root doesn't start with "/" while filenames do
+          !filename.startsWith(root) &&
+          !filename.startsWith(`/${root}`) &&
+          // If it's file outside project (allowExternal), transform it with the root project
+          project !== rootProject
+        ) {
           continue
         }
 
