@@ -10,7 +10,6 @@ import type { BrowserProvider, CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
 import { statfsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
@@ -23,18 +22,6 @@ const PROVIDER_CLOSE_TIMEOUT = 10_000
 
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
-
-  const numCpus =
-    typeof nodeos.availableParallelism === 'function'
-      ? nodeos.availableParallelism()
-      : nodeos.cpus().length
-
-  // if there are more than ~12 threads (optimistically), the main thread chokes
-  // https://github.com/vitest-dev/vitest/issues/7871
-  const maxThreadsCount = Math.min(12, numCpus - 1)
-  const threadsCount = vitest.config.watch
-    ? Math.max(Math.floor(maxThreadsCount / 2), 1)
-    : Math.max(maxThreadsCount, 1)
 
   const projectPools = new WeakMap<TestProject, BrowserPool>()
 
@@ -162,11 +149,14 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       return 1
     }
 
-    if (project.config.maxWorkers) {
-      return project.config.maxWorkers
+    const { maxWorkers, providedOptions } = project.config
+    if (providedOptions.maxWorkers) {
+      return maxWorkers
     }
 
-    return threadsCount
+    // if there are more than ~12 threads (optimistically), the main thread chokes
+    // https://github.com/vitest-dev/vitest/issues/7871
+    return Math.min(12, maxWorkers)
   }
 
   return {

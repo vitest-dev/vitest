@@ -24,7 +24,7 @@ import { configFiles, defaultInspectPort } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
-import { getWorkersCountByPercentage } from '../../utils/workers'
+import { getDefaultMaxWorkers, resolveMaxWorkers } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
 import { ViteConfigPlugin } from '../plugins/config'
 import { VitestCorePlugin } from '../plugins/index'
@@ -153,14 +153,6 @@ export function resolveApiServerConfig(
   return api
 }
 
-function resolveInlineWorkerOption(value: string | number): number {
-  if (typeof value === 'string' && value.trim().endsWith('%')) {
-    return getWorkersCountByPercentage(value)
-  } else {
-    return Number(value)
-  }
-}
-
 /**
  * Records which options the user provided explicitly. Must be computed from
  * the raw user config sources BEFORE `configDefaults` is merged in - the
@@ -179,6 +171,7 @@ function captureProvidedOptions(
         (source?.experimental as { fsModuleCache?: boolean } | undefined)?.fsModuleCache != null,
     ),
     silent: sources.some((source) => source?.silent != null),
+    maxWorkers: sources.some((source) => source?.maxWorkers != null),
   }
 }
 
@@ -383,9 +376,9 @@ export function resolveTestConfig(
     throw new Error(`Cannot merge reports with --watch enabled`)
   }
 
-  if (resolved.maxWorkers) {
-    resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
-  }
+  resolved.maxWorkers = resolved.maxWorkers
+    ? resolveMaxWorkers(resolved.maxWorkers)
+    : getDefaultMaxWorkers(resolved.watch)
 
   // `browser.fileParallelism` was replaced by the top-level `fileParallelism`. Map
   // it (only when browser is enabled, since it was a browser-only option) so
@@ -716,6 +709,7 @@ export function resolveTestConfig(
 
   if (process.env.VITEST_MAX_WORKERS) {
     resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
+    resolved.providedOptions.maxWorkers = true
   }
 
   if (typeof resolved.diff === 'string') {

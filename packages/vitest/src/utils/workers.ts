@@ -1,8 +1,19 @@
 import os from 'node:os'
 
-export function getWorkersCountByPercentage(percent: string): number {
-  const maxWorkersCount = os.availableParallelism?.() ?? os.cpus().length
-  const workersCountByPercentage = Math.round((Number.parseInt(percent) / 100) * maxWorkersCount)
+function getAvailableParallelism(): number {
+  return os.availableParallelism?.() ?? os.cpus().length
+}
 
-  return Math.max(1, Math.min(maxWorkersCount, workersCountByPercentage))
+export function getDefaultMaxWorkers(watch: boolean): number {
+  const count = getAvailableParallelism()
+  return watch ? Math.max(Math.floor(count / 2), 1) : Math.max(count - 1, 1)
+}
+
+export function resolveMaxWorkers(value: number | string): number {
+  if (typeof value === 'string' && value.trim().endsWith('%')) {
+    const count = getAvailableParallelism()
+    const byPercentage = Math.round((Number.parseInt(value) / 100) * count)
+    return Math.max(1, Math.min(count, byPercentage))
+  }
+  return Number(value)
 }
