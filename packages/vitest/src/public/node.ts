@@ -113,6 +113,7 @@ export type {
   BrowserModuleMocker,
   BrowserOrchestrator,
   BrowserProvider,
+  BrowserProviderCloseOptions,
   BrowserProviderOption,
   BrowserScript,
   BrowserServerContribution,

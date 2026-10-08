@@ -1,5 +1,9 @@
 import type { TestModule, Vitest } from 'vitest/node'
-import { expect, test } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { playwright } from '@vitest/browser-playwright'
+import { join } from 'pathe'
+import { expect, onTestFinished, test } from 'vitest'
 import { instances, provider, runInlineBrowserTests } from './utils'
 
 const [{ browser }] = instances
@@ -7,6 +11,10 @@ const names = ['first', 'second', 'third']
 
 function countOpenInstances(vitest: Vitest) {
   return vitest.projects.filter((project) => project.browser!.state.orchestrators.size > 0).length
+}
+
+function getSessionIds(vitest: Vitest): Set<string> {
+  return (vitest as any)._browserSessions.sessionIds
 }
 
 function countOpenPages(project: TestModule['project']) {
@@ -160,7 +168,7 @@ test.runIf(provider.name === 'playwright')(
       `
     }
 
-    const { fs, vitest } = await runInlineBrowserTests(files, {
+    const { fs, vitest, ctx } = await runInlineBrowserTests(files, {
       watch: true,
       maxWorkers: 1,
       browser: { instances: createInstances() },
@@ -174,5 +182,118 @@ test.runIf(provider.name === 'playwright')(
     await vitest.waitForStdout(`Test Files  ${names.length} passed`)
 
     expect(vitest.stderr).toBe('')
+    // only the instance that is still open keeps its session
+    expect(getSessionIds(ctx!).size).toBe(1)
+  },
+)
+
+test.runIf(provider.name === 'playwright')(
+  'opens a new page when the page of an instance was closed',
+  async () => {
+    const { fs, vitest } = await runInlineBrowserTests(
+      {
+        'label.ts': `export const label = 'label'`,
+        'closing.test.ts': `
+          import { test } from 'vitest'
+          import { commands } from 'vitest/browser'
+          import { label } from './label'
+          test('closes its own page', async () => {
+            if (label === 'label') {
+              await commands.closePage()
+            }
+          })
+        `,
+      },
+      {
+        watch: true,
+        maxWorkers: 1,
+        browser: {
+          instances: [{ browser, name: names[0] }],
+          commands: {
+            async closePage(context) {
+              await context.page.close()
+            },
+          },
+        },
+        reporters: ['default'],
+      },
+    )
+
+    expect(vitest.stdout).toMatch(/Errors {2}1 error/)
+
+    vitest.resetOutput()
+    fs.editFile('label.ts', () => `export const label = 'fixed'`)
+    await vitest.waitForStdout('Test Files  1 passed')
+
+    expect(vitest.stderr).toBe('')
+  },
+)
+
+test.runIf(provider.name === 'playwright')(
+  'does not share a persistent context between the pages of an instance',
+  async () => {
+    const userDataDir = mkdtempSync(join(tmpdir(), 'vitest-persistent-context-'))
+    onTestFinished(() => rmSync(userDataDir, { recursive: true, force: true }))
+
+    const files: Record<string, string> = {
+      'quick.test.ts': `
+        import { test } from 'vitest'
+        test('runs in quick', () => {})
+      `,
+    }
+    for (let i = 0; i < 4; i++) {
+      files[`slow-${i}.test.ts`] = `
+        import { expect, test } from 'vitest'
+        import { commands } from 'vitest/browser'
+        test('runs alone in its context', async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+          expect(await commands.pagesInContext()).toBe(1)
+        })
+      `
+    }
+
+    const { stderr, testTree } = await runInlineBrowserTests(files, {
+      maxWorkers: 2,
+      browser: {
+        instances: [
+          {
+            browser,
+            name: 'slow',
+            include: ['slow-*.test.ts'],
+            provider: playwright({ persistentContext: userDataDir }),
+          },
+          { browser, name: 'quick', include: ['quick.test.ts'] },
+        ],
+        commands: {
+          pagesInContext(context) {
+            return context.context.pages().length
+          },
+        },
+      },
+    })
+
+    expect(stderr).toMatchInlineSnapshot(`
+      "The persistentContext option is ignored because tests are running in parallel.
+      "
+    `)
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "quick.test.ts": {
+          "runs in quick": "passed",
+        },
+        "slow-0.test.ts": {
+          "runs alone in its context": "passed",
+        },
+        "slow-1.test.ts": {
+          "runs alone in its context": "passed",
+        },
+        "slow-2.test.ts": {
+          "runs alone in its context": "passed",
+        },
+        "slow-3.test.ts": {
+          "runs alone in its context": "passed",
+        },
+      }
+    `)
   },
 )

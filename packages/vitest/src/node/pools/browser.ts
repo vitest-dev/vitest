@@ -5,7 +5,7 @@ import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
-import type { CDPSession } from '../types/browser'
+import type { BrowserProviderCloseOptions, CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
 import { statfsSync } from 'node:fs'
 import { createDefer } from '@vitest/utils/helpers'
@@ -42,7 +42,7 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
   const workers = new Map<TestProject, BrowserWorker>()
   const activeWorkers = new Set<BrowserWorker>()
   const queue: BrowserTask[] = []
-  const exitPromises: Promise<void>[] = []
+  const exitPromises = new Set<Promise<void>>()
   let maxWorkers = 1
   let exclusiveRunning = false
 
@@ -77,14 +77,18 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
 
   function stopWorker(worker: BrowserWorker) {
     workers.delete(worker.project)
-    exitPromises.push(
-      worker.stop().catch((error) => {
+    const exit = worker
+      .stop({ keepWarm: true })
+      .catch((error) => {
         vitest.logger.error(
           `Failed to close the browser for the "${worker.project.name}" project.`,
           error,
         )
-      }),
-    )
+      })
+      .finally(() => {
+        exitPromises.delete(exit)
+      })
+    exitPromises.add(exit)
   }
 
   function evictIdleWorker(except: BrowserWorker | undefined): boolean {
@@ -242,7 +246,7 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
     const stopping = Array.from(workers.values(), (worker) => worker.stop())
     workers.clear()
     activeWorkers.clear()
-    await Promise.all([...stopping, ...exitPromises.splice(0)])
+    await Promise.all([...stopping, ...exitPromises])
     // pages can be opened outside of the pool (`vitest.standalone`)
     await Promise.all(vitest.projects.map((project) => closeProvider(project)))
     vitest._browserSessions.sessionIds.clear()
@@ -282,7 +286,10 @@ async function groupSpecifications(
   return groupedFiles
 }
 
-async function closeProvider(project: TestProject): Promise<void> {
+async function closeProvider(
+  project: TestProject,
+  options?: BrowserProviderCloseOptions,
+): Promise<void> {
   const browser = project.browser
   if (!browser?.provider) {
     return
@@ -293,7 +300,7 @@ async function closeProvider(project: TestProject): Promise<void> {
   // when this process exits anyway
   let timer: ReturnType<typeof setTimeout>
   await Promise.race([
-    browser.closeBrowserProvider().finally(() => clearTimeout(timer)),
+    browser.closeBrowserProvider(options).finally(() => clearTimeout(timer)),
     new Promise<void>((resolve) => {
       timer = setTimeout(() => {
         project.vitest.logger.warn(
@@ -319,10 +326,11 @@ class BrowserWorker {
   // every page this worker opened or adopted, busy ones are running a file
   private sessions = new Set<string>()
   private busySessions = new Set<string>()
-  private openingPages = 0
+  private openingSessions = new Set<string>()
   private readySessions: Set<string>
   private started = false
   private _maxPages = 1
+  private _parallel = false
 
   private _traces: Traces
   private _otel: {
@@ -398,6 +406,9 @@ class BrowserWorker {
     }
     this.started = true
     this._maxPages = this.options.getMaxPages(this.project)
+    // decided once per instance: the budget can add pages later, and a provider
+    // that cannot share state between pages (persistent context) needs to know upfront
+    this._parallel = this._maxPages > 1
     this._providedContext = stringify(this.project.getProvidedContext())
 
     for (const sessionId of [...this.readySessions]) {
@@ -427,25 +438,41 @@ class BrowserWorker {
     this.openPages().catch((error) => this.reject(error))
   }
 
+  // a page that was closed or crashed is gone from the orchestrators,
+  // but this worker would still count it as open
+  private pruneClosedSessions(): void {
+    for (const sessionId of this.sessions) {
+      if (this.openingSessions.has(sessionId) || this.busySessions.has(sessionId)) {
+        continue
+      }
+      if (!this.readySessions.has(sessionId) || !this.orchestrators.has(sessionId)) {
+        debug?.('[%s] the page is closed, forgetting the session', sessionId)
+        this.sessions.delete(sessionId)
+        this.readySessions.delete(sessionId)
+      }
+    }
+  }
+
   private async openPages(): Promise<void> {
     const method = this._method
+    this.pruneClosedSessions()
     // open the minimum amount of tabs
     // if there is only 1 file running, we don't need 8 tabs running
     const allowance = this.options.getPageAllowance(this)
     // pages that are still opening will take the next queued files
-    const unassigned = this._queue.length - this.openingPages
+    const unassigned = this._queue.length - this.openingSessions.size
     const count = Math.min(allowance - this.sessions.size, unassigned)
     if (count <= 0) {
       debug?.('all pages are open, not creating more')
       return
     }
 
-    const parallel = this.sessions.size + count > 1
+    const parallel = this._parallel
     const promises: Promise<void>[] = []
     for (let i = 0; i < count; i++) {
       const sessionId = crypto.randomUUID()
       this.sessions.add(sessionId)
-      this.openingPages++
+      this.openingSessions.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
       const page = this._traces
@@ -461,12 +488,12 @@ class BrowserWorker {
         )
         .then(
           () => {
-            this.openingPages--
+            this.openingSessions.delete(sessionId)
             // start running tests on the page when it's ready
             this.runNextTest(method, sessionId)
           },
           (error) => {
-            this.openingPages--
+            this.openingSessions.delete(sessionId)
             this.sessions.delete(sessionId)
             throw error
           },
@@ -476,10 +503,11 @@ class BrowserWorker {
     await Promise.all(promises)
   }
 
-  async stop(): Promise<void> {
+  async stop(options?: BrowserProviderCloseOptions): Promise<void> {
     this.cancel()
     const sessions = this.project.vitest._browserSessions
-    const orchestrators = Array.from(this.sessions, (sessionId) => {
+    const sessionIds = [...this.sessions]
+    const orchestrators = sessionIds.map((sessionId) => {
       const orchestrator = this.orchestrators.get(sessionId)
       this.orchestrators.delete(sessionId)
       sessions.destroySession(sessionId)
@@ -488,7 +516,9 @@ class BrowserWorker {
     this.sessions.clear()
     this.busySessions.clear()
     this.readySessions.clear()
-    await closeProvider(this.project)
+    await closeProvider(this.project, options)
+    // the pages are closed now, so a late reconnect is not reported as an unknown session
+    sessionIds.forEach((sessionId) => sessions.sessionIds.delete(sessionId))
     orchestrators.forEach((orchestrator) => orchestrator?.$close())
   }
 

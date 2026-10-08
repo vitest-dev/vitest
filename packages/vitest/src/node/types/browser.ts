@@ -56,7 +56,17 @@ export interface BrowserProvider {
   getCommandsContext: (sessionId: string) => Record<string, unknown>
   openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
-  close: () => Awaitable<void>
+  close: (options?: BrowserProviderCloseOptions) => Awaitable<void>
+}
+
+export interface BrowserProviderCloseOptions {
+  /**
+   * The instance is closed to free a slot for another project and can be
+   * opened again later, so the provider may keep the browser process alive
+   * for the next instance instead of launching a new one.
+   * @default false
+   */
+  keepWarm?: boolean
 }
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
@@ -459,7 +469,7 @@ export interface ProjectBrowser {
   provider: BrowserProvider
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
-  closeBrowserProvider: () => Promise<void>
+  closeBrowserProvider: (options?: BrowserProviderCloseOptions) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
   registerCommand: <K extends keyof BrowserCommands>(

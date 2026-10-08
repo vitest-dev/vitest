@@ -6,6 +6,7 @@ import type {
   BrowserCommand,
   BrowserCommandContext,
   BrowserProvider,
+  BrowserProviderCloseOptions,
   ProjectBrowser as IProjectBrowser,
   ResolvedConfig,
   TestProject,
@@ -107,14 +108,14 @@ export class ProjectBrowser implements IProjectBrowser {
     }
   }
 
-  async closeBrowserProvider(): Promise<void> {
+  async closeBrowserProvider(options?: BrowserProviderCloseOptions): Promise<void> {
     const provider = this.provider
     if (!provider) {
       return
     }
     // detach first so the next run can create a new provider while this one closes
     this.provider = undefined as any
-    await provider.close()
+    await provider.close(options)
   }
 
   public parseErrorStacktrace(e: TestError, options: StackTraceParserOptions = {}): ParsedStack[] {

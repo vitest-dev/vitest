@@ -24,6 +24,7 @@ import type {
   BrowserCommand,
   BrowserModuleMocker,
   BrowserProvider,
+  BrowserProviderCloseOptions,
   BrowserProviderOption,
   CDPSession,
   TestProject,
@@ -809,7 +810,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     } as any // overloaded CDPSession type is too tricky in monorepo
   }
 
-  async close(): Promise<void> {
+  async close(options?: BrowserProviderCloseOptions): Promise<void> {
     process.off('SIGTERM', this.onSIGTERM)
 
     debug?.('[%s] closing provider', this.browserName)
@@ -826,7 +827,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const browser = this.browser
     this.browser = null
     const closed = this.closeContexts()
-    if (browser && this.launchOptionsJson && browser.isConnected()) {
+    if (options?.keepWarm && browser && this.launchOptionsJson && browser.isConnected()) {
       // registered before the contexts are closed, so the project that takes
       // over the pool slot finds the browser right away and waits for it
       const kept = closed.then(
