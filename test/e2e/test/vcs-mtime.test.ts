@@ -1,4 +1,5 @@
 import { readFileSync, rmSync } from 'node:fs'
+import { relative } from 'pathe'
 import { expect, test } from 'vitest'
 import { runInlineTests, runVitest } from '../../test-utils'
 
@@ -90,7 +91,7 @@ test('a custom provider receives the dependencies of the test files', async () =
       ...files,
       'vitest.config.js': `
         import { writeFileSync } from 'node:fs'
-        import { relative } from 'node:path'
+        import { relative, sep } from 'node:path'
         export default {
           test: {
             cache: true,
@@ -100,7 +101,7 @@ test('a custom provider receives the dependencies of the test files', async () =
                 async findChangedFiles({ root, resolver }) {
                   const dependencies = await resolver.getDependencies()
                   const files = dependencies
-                    .map(({ file, recordedAt }) => [relative(root, file), typeof recordedAt])
+                    .map(({ file, recordedAt }) => [relative(root, file).split(sep).join('/'), typeof recordedAt])
                     .filter(([file]) => !file.startsWith('..'))
                     .sort()
                   writeFileSync(new URL('./dependencies.json', import.meta.url), JSON.stringify(files))
@@ -155,9 +156,7 @@ test('coverage of changed files uses the dependencies of the run', async () => {
   const changed = await runVitest({ root: fs.root, ...recorded, coverage })
   expect(changed.stderr).toBe('')
   const report = JSON.parse(readFileSync(fs.resolveFile('coverage/coverage-final.json'), 'utf-8'))
-  expect(Object.keys(report).map((file) => file.slice(fs.root.length + 1))).toEqual([
-    'src/helper.js',
-  ])
+  expect(Object.keys(report).map((file) => relative(fs.root, file))).toEqual(['src/helper.js'])
 })
 
 test('--stale records the dependencies and runs the stale tests', async () => {
