@@ -61,6 +61,6 @@ Vitest uses [`os.availableParallelism`](https://nodejs.org/api/os.html#osavailab
 
 ## Browser Mode
 
-In [Browser Mode](/guide/browser/), every browser instance (a [project](/guide/projects) with `browser.enabled`, or an entry in [`browser.instances`](/config/browser/instances)) is a worker, so at most `maxWorkers` instances are open at the same time. The same number is the budget of pages shared by the open instances: a single instance runs up to `maxWorkers` test files in parallel in its own pages, and several instances split the budget between them, with at least one page each.
+In [Browser Mode](/guide/browser/), every browser instance (a [project](/guide/projects) with `browser.enabled`, or an entry in [`browser.instances`](/config/browser/instances)) is a worker, so at most `maxWorkers` instances run at the same time. When another instance needs a slot, an idle headless instance is closed and opens again on its next run. An instance that is not headless stays open for the whole session, so its window is not closed between runs. The same number is the budget of pages shared by the open instances: a single instance runs up to `maxWorkers` test files in parallel in its own pages, and several instances split the budget between them, with at least one page each.
 
 An instance runs a single test file at a time when the browser is not headless, or when the provider does not support parallelism.

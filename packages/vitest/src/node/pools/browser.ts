@@ -91,10 +91,25 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
     exitPromises.add(exit)
   }
 
+  // the user watches the pages of a headed instance, so it stays open
+  function canEvict(project: TestProject): boolean {
+    return project.config.browser.headless
+  }
+
+  function countEvictableWorkers(): number {
+    let count = 0
+    for (const worker of workers.values()) {
+      if (canEvict(worker.project)) {
+        count++
+      }
+    }
+    return count
+  }
+
   function evictIdleWorker(except: BrowserWorker | undefined): boolean {
     // the map keeps the least recently used worker first
     for (const worker of workers.values()) {
-      if (worker !== except && !activeWorkers.has(worker)) {
+      if (worker !== except && !activeWorkers.has(worker) && canEvict(worker.project)) {
         debug?.('closing the idle browser of %s to free a worker slot', worker.project.name)
         stopWorker(worker)
         return true
@@ -130,8 +145,8 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
         return
       }
 
-      const required = worker ? 0 : 1
-      while (workers.size + required > maxWorkers) {
+      const required = worker || !canEvict(task.project) ? 0 : 1
+      while (countEvictableWorkers() + required > maxWorkers) {
         if (!evictIdleWorker(worker)) {
           break
         }

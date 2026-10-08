@@ -499,7 +499,8 @@ export class TestProject {
 
   /** @internal */
   public async _standalone(): Promise<void> {
-    if (!this.isBrowserEnabled()) {
+    // headless pages are opened by the first run, within the `maxWorkers` limit
+    if (!this.isBrowserEnabled() || this.config.browser.headless) {
       return
     }
 

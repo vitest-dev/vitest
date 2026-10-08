@@ -1,4 +1,4 @@
-import type { TestModule, Vitest } from 'vitest/node'
+import type { TestModule, TestProject, Vitest } from 'vitest/node'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { playwright } from '@vitest/browser-playwright'
@@ -415,5 +415,56 @@ test.runIf(provider.name === 'playwright')(
     const [first, second] = runs
     // the closed instance takes the slot of whichever open instance finishes first
     expect(names.filter((name) => first[name] === second[name])).toHaveLength(2)
+  },
+)
+
+test.runIf(provider.name === 'playwright' && browser === 'chromium')(
+  'keeps headed instances open across reruns',
+  async () => {
+    const files: Record<string, string> = {
+      'label.ts': `export const label = 'label'`,
+    }
+    for (const name of names) {
+      files[`${name}.test.ts`] = `
+        import { expect, test } from 'vitest'
+        import { label } from './label'
+        test('reads the label in ${name}', () => {
+          expect(label).toBe('label')
+        })
+      `
+    }
+
+    const opened: string[] = []
+    const { fs, vitest } = await runInlineBrowserTests(files, {
+      watch: true,
+      maxWorkers: 1,
+      browser: {
+        headless: false,
+        ui: false,
+        instances: createInstances(),
+        // the window is hidden by chromium itself, so the pool sees a headed instance
+        provider: playwright({ launchOptions: { args: ['--headless=new'] } }),
+      },
+      reporters: [
+        'default',
+        {
+          onBrowserInit(project: TestProject) {
+            opened.push(project.name)
+          },
+        },
+      ],
+    })
+    await vitest.waitForStdout(`Test Files  ${names.length} passed`)
+    expect(opened.sort()).toEqual([...names].sort())
+
+    for (let i = 0; i < 2; i++) {
+      opened.length = 0
+      vitest.resetOutput()
+      fs.editFile('label.ts', (content) => `${content}\n`)
+      await vitest.waitForStdout(`Test Files  ${names.length} passed`)
+      // every instance stays open, so none of them is initialized again
+      expect(opened).toEqual([])
+    }
+    expect(vitest.stderr).toBe('')
   },
 )
