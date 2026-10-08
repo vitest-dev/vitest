@@ -125,7 +125,7 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
       if (!worker) {
         debug?.('creating a worker for project %s', task.project.name)
         worker = new BrowserWorker(task.project, {
-          maxPages: getThreadsCount(task.project),
+          getMaxPages: getThreadsCount,
           getPageAllowance,
         })
         workers.set(task.project, worker)
@@ -335,6 +335,8 @@ class BrowserWorker {
   private busySessions = new Set<string>()
   private openingPages = 0
   private readySessions: Set<string>
+  private started = false
+  private _maxPages = 1
 
   private _traces: Traces
   private _otel: {
@@ -345,7 +347,7 @@ class BrowserWorker {
   constructor(
     public project: TestProject,
     private options: {
-      maxPages: number
+      getMaxPages: (project: TestProject) => number
       getPageAllowance: (worker: BrowserWorker) => number
     },
   ) {
@@ -353,7 +355,7 @@ class BrowserWorker {
     this._otel = this._traces.startContextSpan('vitest.browser')
     this._otel.span.setAttributes({
       'vitest.project': project.name,
-      'vitest.browser.provider': this.project.browser!.provider.name,
+      'vitest.browser.provider': project.config.browser.provider?.name,
     })
     this.readySessions = project._browserReadySessions
   }
@@ -384,22 +386,33 @@ class BrowserWorker {
   }
 
   get maxPages(): number {
-    return this.options.maxPages
+    return this._maxPages
   }
 
   async runTests(method: 'run' | 'collect', files: FileSpecification[]): Promise<void> {
-    this._promise ??= createDefer<void>()
+    const promise = (this._promise ??= createDefer<void>())
 
     if (!files.length) {
       debug?.('no tests found, finishing test run immediately')
-      this._promise.resolve()
-      return this._promise
+      promise.resolve()
+      return promise
     }
 
     this._method = method
-    this._providedContext = stringify(this.project.getProvidedContext())
-
     this._queue.push(...files)
+
+    // the provider is closed when the pool frees the slot of an idle instance,
+    // so a worker that reopens the instance starts a new one
+    await this.project._initBrowserProvider()
+    if (!this._queue.length) {
+      debug?.('the run was cancelled while the provider was starting')
+      this._promise = undefined
+      promise.resolve()
+      return promise
+    }
+    this.started = true
+    this._maxPages = this.options.getMaxPages(this.project)
+    this._providedContext = stringify(this.project.getProvidedContext())
 
     for (const sessionId of [...this.readySessions]) {
       if (!this._queue.length) {
@@ -417,12 +430,12 @@ class BrowserWorker {
 
     await this.openPages()
     debug?.('all sessions are created')
-    return this._promise
+    return promise
   }
 
   // opens more pages when the budget allows it, e.g. after another instance finished
   grow(): void {
-    if (!this._promise || !this._queue.length) {
+    if (!this.started || !this._promise || !this._queue.length) {
       return
     }
     this.openPages().catch((error) => this.reject(error))

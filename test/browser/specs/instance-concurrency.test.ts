@@ -143,3 +143,36 @@ test.runIf(provider.name === 'playwright')(
     expect(openPages).toEqual([1, 1, 1])
   },
 )
+
+test.runIf(provider.name === 'playwright')(
+  'reruns instances that were closed to free a worker slot',
+  async () => {
+    const files: Record<string, string> = {
+      'label.ts': `export const label = 'label'`,
+    }
+    for (const name of names) {
+      files[`${name}.test.ts`] = `
+        import { expect, test } from 'vitest'
+        import { label } from './label'
+        test('reads the label in ${name}', () => {
+          expect(label).toBe('label')
+        })
+      `
+    }
+
+    const { fs, vitest } = await runInlineBrowserTests(files, {
+      watch: true,
+      maxWorkers: 1,
+      browser: { instances: createInstances() },
+      reporters: ['default'],
+    })
+
+    await vitest.waitForStdout(`Test Files  ${names.length} passed`)
+
+    vitest.resetOutput()
+    fs.editFile('label.ts', (content) => `${content}\n`)
+    await vitest.waitForStdout(`Test Files  ${names.length} passed`)
+
+    expect(vitest.stderr).toBe('')
+  },
+)

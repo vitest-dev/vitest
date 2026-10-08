@@ -127,6 +127,11 @@ export function setupBrowserRpc(
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
+      // the pool closed this instance, its pages can still reconnect while they close
+      if (!project.browser?.provider) {
+        ws.terminate()
+        return
+      }
       wss.emit('connection', ws, request)
 
       const { rpc, offCancel } = setupClient(project, rpcId, ws, { sessionId })
