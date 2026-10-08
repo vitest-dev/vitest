@@ -315,7 +315,11 @@ test('a partial run without a previous record does not create one', async () => 
   expect(stderr).toBe('')
   expect(readDependencies(ctx)).toMatchInlineSnapshot(`
     {
-      "": {},
+      "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
+      },
     }
   `)
 
@@ -336,6 +340,9 @@ test('a partial run without a previous record does not create one', async () => 
   expect(readDependencies(first.ctx)).toMatchInlineSnapshot(`
     {
       "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
         "a.test.js": [
           "a.test.js",
           "src/dynamic.js",
@@ -958,6 +965,9 @@ describe('without the module runner', () => {
     expect(readDependencies(ctx)).toMatchInlineSnapshot(`
       {
         "": {
+          "<config>": [
+            "vitest.config.js",
+          ],
           "a.test.js": [
             "a.test.js",
             "src/helper.js",
@@ -991,6 +1001,9 @@ describe('without the module runner', () => {
     expect(readDependencies(ctx)).toMatchInlineSnapshot(`
       {
         "": {
+          "<config>": [
+            "vitest.config.js",
+          ],
           "a.test.js": [
             "a.test.js",
             "src/inner.js",
@@ -1051,6 +1064,9 @@ describe('without the module runner', () => {
     expect(readDependencies(ctx)).toMatchInlineSnapshot(`
       {
         "": {
+          "<config>": [
+            "vitest.config.js",
+          ],
           "<globalSetup>": [
             "global-setup.js",
             "src/global-helper.js",
@@ -1113,6 +1129,9 @@ describe('without the module runner', () => {
     expect(readDependencies(ctx)).toMatchInlineSnapshot(`
       {
         "": {
+          "<config>": [
+            "vitest.config.js",
+          ],
           "automock.test.js": [
             "automock.test.js",
             "src/__mocks__/dep.js",
