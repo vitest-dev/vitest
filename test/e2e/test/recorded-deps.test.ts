@@ -282,6 +282,61 @@ test('a partial run keeps the modules of the previous complete run', async () =>
   ])
 })
 
+test('a partial run without a previous record does not create one', async () => {
+  const { ctx, fs, stderr } = await runInlineTests(
+    {
+      'src/dynamic.js': 'export {}',
+      'a.test.js': `
+        import { test } from 'vitest'
+        test('static', () => {})
+        test('dynamic', async () => {
+          await import('./src/dynamic.js')
+        })
+      `,
+      'b.test.js': testFile('b'),
+    },
+    { ...config, testNamePattern: 'static' },
+  )
+  expect(stderr).toBe('')
+  expect(readDependencies(ctx)).toMatchInlineSnapshot(`
+    {
+      "": {},
+    }
+  `)
+
+  // files without a record always run, and the complete run records them
+  const first = await runVitest({ root: fs.root, ...config, related: ['src/dynamic.js'] })
+  expect(first.stderr).toBe('')
+  expect(first.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "dynamic": "passed",
+        "static": "passed",
+      },
+      "b.test.js": {
+        "b": "passed",
+      },
+    }
+  `)
+  expect(readDependencies(first.ctx)).toMatchInlineSnapshot(`
+    {
+      "": {
+        "a.test.js": [
+          "a.test.js",
+          "src/dynamic.js",
+        ],
+        "b.test.js": [
+          "b.test.js",
+        ],
+      },
+    }
+  `)
+
+  const second = await runVitest({ root: fs.root, ...config, related: ['src/dynamic.js'] })
+  expect(second.stderr).toBe('')
+  expect(Object.keys(second.testTree())).toEqual(['a.test.js'])
+})
+
 test('a mock loaded from a file is recorded', async () => {
   const { ctx, fs, stderr } = await runInlineTests(
     {

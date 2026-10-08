@@ -394,7 +394,7 @@ export default defineConfig({
 })
 ```
 
-The records are stored in `dependencies.json` next to the [results cache](/config/cache) in Vite's `cacheDir`, so this option has no effect if `cache` is disabled. Every `vitest run` with the option enabled updates the records of the test files it ran. A test file without a record, for example a new test file or a file that ran in a browser or [typecheck](/guide/testing-types) pool, always runs.
+The records are stored in `dependencies.json` next to the [results cache](/config/cache) in Vite's `cacheDir`, so this option has no effect if `cache` is disabled. Every `vitest run` with the option enabled updates the records of the test files it ran. A run that skips some tests of a file, for example with [`-t`](/config/testnamepattern) or `.only`, can miss their dynamic imports, so it only adds files to an existing record and never creates one. A test file without a record, for example a new test file or a file that ran in a browser or [typecheck](/guide/testing-types) pool, always runs.
 
 A record contains:
 

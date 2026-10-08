@@ -126,13 +126,13 @@ export class DependenciesCache {
       }
       const project = this.getProjectDependencies(specification.project.name)
       const file = getRootRelativePath(this.vitest.config.root, specification.moduleId)
-      const indices = this.intern(project, files)
       const previous = project.files.get(file)
-      // a partial run skips tests, so it can miss their dynamic imports
-      if (previous && isPartialRun(this.vitest, specification, task)) {
-        project.files.set(file, Array.from(new Set([...previous, ...indices])))
-      } else {
-        project.files.set(file, indices)
+      // a partial run skips tests, so it can miss their dynamic imports,
+      // without a previous record the file keeps having none and always runs
+      if (!isPartialRun(this.vitest, specification, task)) {
+        project.files.set(file, this.intern(project, files))
+      } else if (previous) {
+        project.files.set(file, Array.from(new Set([...previous, ...this.intern(project, files)])))
       }
     }
 
