@@ -48,7 +48,7 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
 
   function getThreadsCount(project: TestProject) {
     const config = project.config.browser
-    if (!config.headless || !project.browser!.provider.supportsParallelism) {
+    if (!config.headless || !project.browser?.provider?.supportsParallelism) {
       return 1
     }
 
@@ -103,12 +103,24 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
     return false
   }
 
+  // an instance that still has an idle browser runs first, so a slot
+  // is not freed by closing the browser of an instance that runs next
+  function nextTaskIndex(): number {
+    const head = queue[0]
+    const index = queue.findIndex((task) => {
+      const worker = workers.get(task.project)
+      return task.exclusive === head.exclusive && !!worker && !activeWorkers.has(worker)
+    })
+    return index === -1 ? 0 : index
+  }
+
   function schedule(): void {
     while (queue.length) {
-      const task = queue[0]
       if (exclusiveRunning || activeWorkers.size >= maxWorkers) {
         return
       }
+      const index = nextTaskIndex()
+      const task = queue[index]
       if (task.exclusive && activeWorkers.size > 0) {
         return
       }
@@ -134,7 +146,7 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
         workers.set(task.project, worker)
       }
 
-      queue.shift()
+      queue.splice(index, 1)
       activeWorkers.add(worker)
       exclusiveRunning = task.exclusive
 
@@ -185,9 +197,10 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
         async ([project, files]): Promise<BrowserTask | undefined> => {
           await project._initBrowserProvider()
 
-          if (!project.browser) {
+          const provider = project.browser?.provider
+          if (!provider) {
             throw new TypeError(
-              `The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`,
+              `The browser was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`,
             )
           }
 
@@ -202,7 +215,6 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
             files.map((f) => f.filepath),
           )
 
-          const provider = project.browser.provider
           return {
             project,
             files,
@@ -236,7 +248,16 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
     queue.push(...ordered)
     schedule()
 
-    await Promise.all(ordered.map((task) => task.result))
+    const results = await Promise.allSettled(ordered.map((task) => task.result))
+    const errors = results
+      .filter((result) => result.status === 'rejected')
+      .map((result) => result.reason)
+    if (errors.length === 1) {
+      throw errors[0]
+    }
+    if (errors.length > 1) {
+      throw new AggregateError(errors, 'Errors occurred while running browser tests.')
+    }
   }
 
   async function close() {
@@ -321,6 +342,7 @@ class BrowserWorker {
   private _queue: FileSpecification[] = []
   private _method: 'run' | 'collect' = 'run'
   private _promise: DeferPromise<void> | undefined
+  private _error: Error | undefined
   private _providedContext: string | undefined
 
   // every page this worker opened or adopted, busy ones are running a file
@@ -359,16 +381,32 @@ class BrowserWorker {
     this._otel.span.end()
   }
 
-  public reject(error: Error): void {
+  public reject(error: Error, sessionId?: string): void {
     // if user cancels the test run manually, ignore the error and exit gracefully
-    if (this.project.vitest.isCancelling && error instanceof BrowserConnectionError) {
-      this._promise?.resolve()
-    } else {
-      this._promise?.reject(error)
+    if (!this.project.vitest.isCancelling || !(error instanceof BrowserConnectionError)) {
+      this._error ??= error
     }
-    this._promise = undefined
-    this.busySessions.clear()
+    if (sessionId) {
+      this.busySessions.delete(sessionId)
+    }
     this.cancel()
+    // other pages finish the file they are running first
+    if (!this.busySessions.size) {
+      this.settle()
+    }
+  }
+
+  private settle(): void {
+    const promise = this._promise
+    const error = this._error
+    this._promise = undefined
+    this._error = undefined
+    this._otel.span.end()
+    if (error) {
+      promise?.reject(error)
+    } else {
+      promise?.resolve()
+    }
   }
 
   get orchestrators() {
@@ -425,7 +463,7 @@ class BrowserWorker {
       this.runNextTest(method, sessionId)
     }
 
-    await this.openPages()
+    await this.openPages().catch((error) => this.reject(error))
     debug?.('all sessions are created')
     return promise
   }
@@ -524,7 +562,7 @@ class BrowserWorker {
 
   private async openPage(sessionId: string, options: { parallel: boolean }): Promise<void> {
     await this.project._openBrowserPage(sessionId, {
-      reject: (error) => this.reject(error),
+      reject: (error) => this.reject(error, sessionId),
       parallel: options.parallel,
     })
   }
@@ -572,9 +610,7 @@ class BrowserWorker {
 
     // the last page finished running tests
     if (!this.busySessions.size) {
-      this._otel.span.end()
-      this._promise?.resolve()
-      this._promise = undefined
+      this.settle()
       debug?.('[%s] all tests finished running', sessionId)
     } else {
       debug?.(
@@ -661,18 +697,18 @@ class BrowserWorker {
           .catch((error) => {
             // if user cancels the test run manually, ignore the error and exit gracefully
             if (this.project.vitest.isCancelling && error instanceof BrowserConnectionError) {
-              this.cancel()
-              this._promise?.resolve()
-              this._promise = undefined
-              this.busySessions.clear()
               debug?.('[%s] browser connection was closed', sessionId)
+              this.reject(error, sessionId)
               return
             }
             debug?.('[%s] error during %s test run: %s', sessionId, file, error)
-            this.reject(new Error(`Failed to run the test ${file.filepath}.`, { cause: error }))
+            this.reject(
+              new Error(`Failed to run the test ${file.filepath}.`, { cause: error }),
+              sessionId,
+            )
           })
       })
-      .catch((err) => this.reject(err))
+      .catch((err) => this.reject(err, sessionId))
   }
 
   async setBreakpoint(sessionId: string, file: string) {
@@ -680,7 +716,10 @@ class BrowserWorker {
       return
     }
 
-    const provider = this.project.browser!.provider
+    const provider = this.project.browser?.provider
+    if (!provider) {
+      return
+    }
     const browser = this.project.config.browser.name
 
     if (shouldIgnoreDebugger(provider.name, browser)) {
@@ -724,8 +763,9 @@ const debugGC = createDebugger('vitest:browser:gc')
 
 async function maybeCollectChromiumGarbage(project: TestProject, sessionId: string): Promise<void> {
   // trigger only on linux/chromium/playwright
-  const provider = project.browser!.provider
+  const provider = project.browser?.provider
   if (
+    !provider ||
     (!forceChromiumGC && process.platform !== 'linux') ||
     provider.name !== 'playwright' ||
     project.config.browser.name !== 'chromium' ||

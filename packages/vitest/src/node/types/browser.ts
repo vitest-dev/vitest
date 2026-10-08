@@ -466,7 +466,11 @@ export interface BrowserServerContribution {
 export interface ProjectBrowser {
   vite: ViteDevServer
   state: BrowserServerState
-  provider: BrowserProvider
+  /**
+   * The provider of the open browser instance. It is `undefined` until the instance
+   * starts running tests and after the instance is closed to free a worker slot.
+   */
+  provider: BrowserProvider | undefined
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
   closeBrowserProvider: (options?: BrowserProviderCloseOptions) => Promise<void>

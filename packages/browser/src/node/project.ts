@@ -28,7 +28,7 @@ export class ProjectBrowser implements IProjectBrowser {
   // transformIndexHtml plugin pipeline each time
   public testerHtmlTransformed: Promise<string> | undefined
 
-  public provider!: BrowserProvider
+  public provider: BrowserProvider | undefined
   public vitest: Vitest
   public vite: ViteDevServer
   public config: ResolvedConfig
@@ -81,7 +81,9 @@ export class ProjectBrowser implements IProjectBrowser {
     if (name in this.parent.commands) {
       return this.parent.commands[name](context, ...args)
     }
-    throw new Error(`Provider ${this.provider.name} does not support command "${name}".`)
+    throw new Error(
+      `Provider ${this.config.browser.provider?.name} does not support command "${name}".`,
+    )
   }) as any
 
   wrapSerializedConfig(): SerializedConfig {
@@ -114,7 +116,7 @@ export class ProjectBrowser implements IProjectBrowser {
       return
     }
     // detach first so the next run can create a new provider while this one closes
-    this.provider = undefined as any
+    this.provider = undefined
     await provider.close(options)
   }
 

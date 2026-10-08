@@ -789,10 +789,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         String(disposable),
       )
       await disposable?.close()
-      this.pages.clear()
-      this.contexts.clear()
-      this.browser = null
-      this.browserPromise = null
       throw new Error(`[vitest] The provider was closed.`)
     }
   }

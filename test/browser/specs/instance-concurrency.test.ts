@@ -297,3 +297,123 @@ test.runIf(provider.name === 'playwright')(
     `)
   },
 )
+
+test.runIf(provider.name === 'playwright')(
+  'finishes the run after every instance, even when one of them fails',
+  async () => {
+    const events: string[] = []
+
+    const { ctx, root, testTree } = await runInlineBrowserTests(
+      {
+        'failing.test.ts': `
+          import { test } from 'vitest'
+          import { commands } from 'vitest/browser'
+          test('closes its own page', async () => {
+            await commands.closePage()
+          })
+        `,
+        'slow.test.ts': `
+          import { test } from 'vitest'
+          test('runs in slow', async () => {
+            await new Promise(resolve => setTimeout(resolve, 500))
+          })
+        `,
+      },
+      {
+        maxWorkers: 2,
+        browser: {
+          instances: [
+            { browser, name: 'failing', include: ['failing.test.ts'] },
+            { browser, name: 'slow', include: ['slow.test.ts'] },
+          ],
+          commands: {
+            async closePage(context) {
+              await context.page.close()
+            },
+          },
+        },
+        reporters: [
+          {
+            onTestModuleEnd(module: TestModule) {
+              events.push(`end ${module.project.name}`)
+            },
+            onTestRunEnd() {
+              events.push('run end')
+            },
+          },
+        ],
+      },
+    )
+
+    expect(events).toEqual(['end slow', 'run end'])
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "failing.test.ts": {
+          "closes its own page": "pending",
+        },
+        "slow.test.ts": {
+          "runs in slow": "passed",
+        },
+      }
+    `)
+    expect(
+      ctx!.state.getUnhandledErrors().map((error: any) => error.message.replace(root, '<root>')),
+    ).toMatchInlineSnapshot(`
+      [
+        "Failed to run the test <root>/failing.test.ts.",
+      ]
+    `)
+  },
+)
+
+test.runIf(provider.name === 'playwright')(
+  'reuses the pages of instances that stayed open on rerun',
+  async () => {
+    const files: Record<string, string> = {
+      'label.ts': `export const label = 'label'`,
+    }
+    for (const name of names) {
+      files[`${name}.test.ts`] = `
+        import { test } from 'vitest'
+        import { commands } from 'vitest/browser'
+        import { label } from './label'
+        test('records the page in ${name}', async () => {
+          await commands.recordSession(label)
+        })
+      `
+    }
+    const runs: Record<string, string>[] = []
+
+    const { fs, vitest } = await runInlineBrowserTests(files, {
+      watch: true,
+      maxWorkers: 2,
+      browser: {
+        instances: createInstances(),
+        commands: {
+          recordSession(context) {
+            runs.at(-1)![context.project.name] = context.sessionId
+          },
+        },
+      },
+      reporters: [
+        'default',
+        {
+          onTestRunStart() {
+            runs.push({})
+          },
+        },
+      ],
+    })
+
+    await vitest.waitForStdout(`Test Files  ${names.length} passed`)
+
+    vitest.resetOutput()
+    fs.editFile('label.ts', (content) => `${content}\n`)
+    await vitest.waitForStdout(`Test Files  ${names.length} passed`)
+
+    expect(vitest.stderr).toBe('')
+    const [first, second] = runs
+    // the closed instance takes the slot of whichever open instance finishes first
+    expect(names.filter((name) => first[name] === second[name])).toHaveLength(2)
+  },
+)

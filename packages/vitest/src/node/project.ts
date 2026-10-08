@@ -473,7 +473,8 @@ export class TestProject {
       parallel?: boolean
     },
   ): Promise<void> {
-    if (!this.browser) {
+    const provider = this.browser?.provider
+    if (!this.browser || !provider) {
       throw new Error(`browser is not initialized`)
     }
 
@@ -490,7 +491,7 @@ export class TestProject {
     const sessionPromise = this.vitest._browserSessions.createSession(sessionId, this, pool, {
       otelCarrier,
     })
-    const pagePromise = this.browser.provider.openPage(sessionId, url.toString(), {
+    const pagePromise = provider.openPage(sessionId, url.toString(), {
       parallel: pool.parallel ?? false,
     })
     await Promise.all([sessionPromise, pagePromise])
