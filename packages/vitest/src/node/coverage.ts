@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 import { cleanUrl, slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
-import { glob } from 'tinyglobby'
+import { convertPathToPattern, glob } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
@@ -223,7 +223,10 @@ export class BaseCoverageProvider {
   ): Promise<string[]> {
     let includedFiles = await glob(include, {
       cwd: root,
-      ignore: [...this.options.exclude, ...testedFiles.map((file) => slash(file))],
+      ignore: [
+        ...this.options.exclude,
+        ...testedFiles.map((file) => convertPathToPattern(slash(file))),
+      ],
       absolute: true,
       dot: true,
       onlyFiles: true,
