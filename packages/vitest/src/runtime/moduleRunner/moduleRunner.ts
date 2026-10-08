@@ -149,6 +149,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
     callstack: string[] = [],
     metadata?: SSRImportMetadata,
   ) {
+    this.vitestOptions.getWorkerState().dependencies?.add(module.id)
     // @ts-expect-error "cachedRequest" is private
     return super.cachedRequest(url, module, callstack, metadata)
   }

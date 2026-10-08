@@ -15,6 +15,12 @@ import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { createDefinesScript } from '../utils/config-helpers'
+import {
+  collectDependencies,
+  getEvaluatedImports,
+  nativeImports,
+  trackNativeImports,
+} from '../utils/module-dependencies'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { BenchmarkManager } from './benchmark'
 import { serializeConfig } from './config/serializeConfig'
@@ -215,7 +221,24 @@ export class TestProject {
       return
     }
 
+    const native = this.runner instanceof NativeModuleRunner
+    // global setup is imported by this process, so its imports are only known to a resolve hook
+    const canRecord =
+      !native ||
+      !this.vitest.config.experimental.recordDependencies ||
+      !this.config.globalSetup.length ||
+      trackNativeImports()
+
     this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
+    if (canRecord) {
+      this.vitest.cache._dependencies.recordGlobalSetup(
+        this,
+        collectDependencies(
+          native ? nativeImports.getImports : getEvaluatedImports(this.runner.evaluatedModules),
+          this.config.globalSetup,
+        ),
+      )
+    }
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.(this)

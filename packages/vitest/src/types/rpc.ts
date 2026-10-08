@@ -52,6 +52,7 @@ export interface RuntimeRPC {
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
   onAsyncLeaks: (leak: AsyncLeak[]) => void
+  onTestModuleDependencies: (filepath: string, dependencies: string[]) => void
   onQueued: (file: File) => void
   onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void

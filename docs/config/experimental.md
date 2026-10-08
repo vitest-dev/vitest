@@ -375,6 +375,49 @@ export default {
 }
 ```
 
+## experimental.recordDependencies <Version type="experimental">5.0.4</Version> {#experimental-recorddependencies}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Records every file that a test file loads while it runs and uses these records to select tests for [`--changed`](/guide/cli#changed) and [`vitest related`](/guide/cli#vitest-related). Without this option, Vitest transforms the module graph of every test file before the run to find the affected tests. With it, Vitest reads the records from the previous run instead, so the selection does not transform anything.
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      recordDependencies: true,
+    },
+  },
+})
+```
+
+The records are stored in `dependencies.json` next to the [results cache](/config/cache) in Vite's `cacheDir`, so this option has no effect if `cache` is disabled. Every `vitest run` with the option enabled updates the records of the test files it ran. A run that skips some tests of a file, for example with [`-t`](/config/testnamepattern) or `.only`, can miss their dynamic imports, so it only adds files to an existing record and never creates one. A test file without a record, for example a new test file or a file that ran in a browser or [typecheck](/guide/testing-types) pool, always runs.
+
+A record contains:
+
+- the test file and every module it imported, including dynamic imports that ran
+- [setup files](/config/setupfiles), the [custom environment](/config/environment), the [custom runner](/config/runner), [snapshot serializers](/config/snapshotserializers) and their imports
+- mock files from the `__mocks__` folder and modules imported by a mock factory
+- files that plugins watch with `this.addWatchFile`
+- the snapshot file and every file used by [`toMatchFileSnapshot`](/api/expect#tomatchfilesnapshot)
+
+A change in a [global setup](/config/globalsetup) file or its imports, in the config file and its imports, or in an `.env` file runs every test of the project.
+
+Because the records come from a real run, they are exact where the static module graph is not. A module replaced with `vi.mock` and a factory does not load its imports, so they are not recorded. A dynamic import inside a function that the test never calls is not recorded either.
+
+::: warning
+The records describe the files that a test loaded during its last run. If a change that adds an import is committed before the test runs again, a later change in the newly imported file does not select the test, because the commit is no longer part of the `--changed` diff. Run the tests once after you change imports to update the records.
+
+Vitest records only the files it loads itself. Files read with `fs` (for example, fixtures) and the imports of [externalized](/config/server#server-deps-external) modules are not recorded.
+
+If [`isolate`](/config/isolate) is disabled, test files that run in the same worker share the module graph. A record can then contain modules that a previous test file loaded dynamically, so `--changed` can select more tests than necessary, but never fewer.
+
+If [`experimental.viteModuleRunner`](#experimental-vitemodulerunner) is disabled, Vitest records the imports with a resolve hook of [`module.registerHooks`](https://nodejs.org/api/module.html#moduleregisterhooksoptions). Node.js versions without it do not write records, so every test runs.
+:::
+
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`

@@ -3,6 +3,7 @@ import type { TestSpecification } from '../test-specification'
 import type { CachedTestFileResult } from './results'
 import { statSync } from 'node:fs'
 import { resolve } from 'pathe'
+import { DependenciesCache } from './dependencies'
 import { FileSystemModuleCache } from './fsModuleCache'
 import { ResultsCache } from './results'
 
@@ -11,6 +12,8 @@ export class VitestCache {
   _results: ResultsCache
   /** @internal */
   _modules: FileSystemModuleCache
+  /** @internal */
+  _dependencies: DependenciesCache
 
   private fileStats = new Map<string, { size: number } | undefined>()
   private warnedMethods = new Set<string>()
@@ -19,6 +22,7 @@ export class VitestCache {
   constructor(private vitest: Vitest) {
     this._results = new ResultsCache(vitest)
     this._modules = new FileSystemModuleCache(vitest)
+    this._dependencies = new DependenciesCache(vitest)
   }
 
   /**
@@ -53,9 +57,20 @@ export class VitestCache {
   }
 
   /** @internal */
+  async _update(specifications: TestSpecification[], startTime: number): Promise<void> {
+    await Promise.all([
+      this._results.update(specifications, startTime),
+      this._dependencies.update(specifications),
+    ])
+  }
+
+  /** @internal */
   async _clear(): Promise<void> {
-    await this._results.clear()
-    await this._modules.clearCache()
+    await Promise.all([
+      this._results.clear(),
+      this._dependencies.clear(),
+      this._modules.clearCache(),
+    ])
   }
 
   private readFileStats(key: string): { size: number } | undefined {

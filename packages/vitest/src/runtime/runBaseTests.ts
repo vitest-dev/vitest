@@ -7,6 +7,11 @@ import { performance } from 'node:perf_hooks'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import { vi } from '../integrations/vi'
+import {
+  collectDependencies,
+  getEvaluatedImports,
+  nativeImports,
+} from '../utils/module-dependencies'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
 import { collectTests, startTests } from './runner/run'
@@ -47,6 +52,13 @@ export async function run(
   })
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
+  // modules loaded before the first file are shared by every file in this worker
+  const dependencies = workerState.dependencies
+  const preparedModules = new Set(dependencies)
+  const getImports =
+    config.experimental.viteModuleRunner === false
+      ? nativeImports.getImports
+      : getEvaluatedImports(workerState.evaluatedModules)
   try {
     await traces.$(`vitest.test.runner.${method}`, async () => {
       for (const file of files) {
@@ -56,6 +68,7 @@ export async function run(
         }
 
         workerState.filepath = file.filepath
+        dependencies?.clear()
 
         if (method === 'run') {
           const collectAsyncLeaks = config.detectAsyncLeaks
@@ -67,6 +80,13 @@ export async function run(
             { attributes: { 'code.file.path': file.filepath } },
             () => startTests([file], testRunner),
           )
+
+          if (dependencies) {
+            workerState.rpc.onTestModuleDependencies(
+              file.filepath,
+              collectDependencies(getImports, preparedModules, dependencies),
+            )
+          }
 
           const leaks = await collectAsyncLeaks?.()
 

@@ -12,6 +12,7 @@ import { setupChaiConfig } from '../integrations/chai/config'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
+import { collectDependencies, getEvaluatedImports } from '../utils/module-dependencies'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
 import { collectTests, startTests } from './runner/run'
@@ -96,11 +97,16 @@ export async function run(
     performance.now() - workerState.durations.prepare - workerState.durations.environment
 
   const { vi } = VitestIndex
+  // modules loaded before the first file are shared by every file in this worker
+  const dependencies = workerState.dependencies
+  const preparedModules = new Set(dependencies)
+  const getImports = getEvaluatedImports(workerState.evaluatedModules)
 
   try {
     await traces.$(`vitest.test.runner.${method}`, async () => {
       for (const file of files) {
         workerState.filepath = file.filepath
+        dependencies?.clear()
 
         if (method === 'run') {
           const collectAsyncLeaks = config.detectAsyncLeaks
@@ -112,6 +118,13 @@ export async function run(
             { attributes: { 'code.file.path': file.filepath } },
             () => startTests([file], testRunner),
           )
+
+          if (dependencies) {
+            workerState.rpc.onTestModuleDependencies(
+              file.filepath,
+              collectDependencies(getImports, preparedModules, dependencies),
+            )
+          }
 
           const leaks = await collectAsyncLeaks?.()
 
