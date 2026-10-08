@@ -148,3 +148,44 @@ test('does not prewarm a project without test files', async () => {
       .sort(),
   ).toEqual(['with tests', 'without tests'])
 })
+
+test('prewarms only the browser projects that have files matching the CLI filters', async () => {
+  const { prewarmed, spyProvider, freshInstances } = spyOnPrewarm()
+  const browser = `browser (${instances[0].browser})`
+
+  const run = (cliFilters: string[]) =>
+    runInlineTests(
+      {
+        'unit.node.test.ts': basicTest,
+        'ui.browser.test.ts': basicTest,
+      },
+      {
+        watch: false,
+        reporters: 'none',
+        $cliFilters: cliFilters,
+        projects: [
+          { test: { name: 'node', include: ['*.node.test.ts'] } },
+          {
+            test: {
+              name: 'browser',
+              include: ['*.browser.test.ts'],
+              browser: {
+                enabled: true,
+                provider: spyProvider,
+                instances: [freshInstances[0]],
+                headless: true,
+              },
+            },
+          },
+        ],
+      },
+    )
+
+  const nodeOnly = await run(['unit.node.test.ts'])
+  expect(nodeOnly.stderr).toBe('')
+  expect(prewarmed).toEqual([])
+
+  const browserFile = await run(['ui.browser.test.ts'])
+  expect(browserFile.stderr).toBe('')
+  expect(prewarmed).toEqual([browser])
+})

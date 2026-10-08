@@ -1127,6 +1127,7 @@ export async function resolveConfig(
   options: UserConfig = {},
   viteOverrides: ViteUserConfig = {},
   pluginsHarness: PluginHarness = new PluginHarness(),
+  cliFilters: string[] = [],
 ): Promise<ResolvedViteConfig> {
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
   const cliOptionsCopy = deepMerge({}, options) as UserConfig
@@ -1204,6 +1205,7 @@ export async function resolveConfig(
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
   rootConfig._browserContribution = captures.browserContribution
+  rootConfig._cliFilters = cliFilters
   // projects never inherit `tagsFilter` and `browser` from the programmatic
   // config (see `inheritRootViteOverrides`), so remove them from the base too
   if (captures.rawTestConfig) {

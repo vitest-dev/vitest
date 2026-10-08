@@ -36,7 +36,7 @@ import { resolveTestOptions, TestConfigPlugin } from '../plugins/testConfig'
 import { ProjectRootPlugin, WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
-import { globProjectTestFiles } from './globProjectFiles'
+import { filterTestFiles, globProjectTestFiles } from './globProjectFiles'
 
 const debug = createDebugger('vitest:projects')
 
@@ -241,7 +241,7 @@ export async function resolveProjectEntries(
       .join(', ')}`,
   )
 
-  await applyBrowserOptimizeDeps(harness, filtered)
+  await applyBrowserOptimizeDeps(harness, filtered, globalConfig._cliFilters ?? [])
 
   return filtered
 }
@@ -249,6 +249,7 @@ export async function resolveProjectEntries(
 async function applyBrowserOptimizeDeps(
   harness: PluginHarness,
   entries: ResolvedProjectEntry[],
+  cliFilters: string[],
 ): Promise<void> {
   const groups = new Map<ResolvedViteConfig, ResolvedProjectEntry[]>()
   for (const entry of entries) {
@@ -287,7 +288,9 @@ async function applyBrowserOptimizeDeps(
       }
       const fileLists = await Promise.all(projectConfigs.map(globTestFiles))
       projectEntries.forEach((entry, index) => {
-        entry.hasTestFiles = fileLists[index].length > 0
+        const config = projectConfigs[index]
+        entry.hasTestFiles =
+          filterTestFiles(fileLists[index], cliFilters, config.dir || config.root).length > 0
       })
       const testFiles = [...new Set(fileLists.flat())]
       debug?.(

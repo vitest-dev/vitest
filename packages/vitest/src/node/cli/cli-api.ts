@@ -246,7 +246,7 @@ export async function prepareVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  const ctx = await createVitest(options, viteOverrides, vitestOptions)
+  const ctx = await createVitest(options, viteOverrides, { ...vitestOptions, cliFilters })
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)
 

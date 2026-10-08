@@ -11,8 +11,8 @@ import crypto from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
-import { isAbsolute, join, relative } from 'pathe'
+import { deepMerge, nanoid } from '@vitest/utils/helpers'
+import { join, relative } from 'pathe'
 import pm from 'picomatch'
 import { createDefinesScript } from '../utils/config-helpers'
 import {
@@ -30,6 +30,7 @@ import { loadGlobalSetupFiles } from './globalSetup'
 import { listenClusterServer } from './plugins/browserLoader'
 import { getFilePoolName } from './pool'
 import {
+  filterTestFiles,
   globProjectFiles,
   globProjectTestFiles,
   isInSourceTestCode,
@@ -307,8 +308,8 @@ export class TestProject {
       this.typecheckFilesList = typecheckTestFiles
 
       return {
-        testFiles: this.filterFiles(testFiles, filters, dir),
-        typecheckTestFiles: this.filterFiles(typecheckTestFiles, filters, dir),
+        testFiles: filterTestFiles(testFiles, filters, dir),
+        typecheckTestFiles: filterTestFiles(typecheckTestFiles, filters, dir),
       }
     })
   }
@@ -392,32 +393,6 @@ export class TestProject {
       }
     }
     return false
-  }
-
-  private filterFiles(testFiles: string[], filters: string[], dir: string): string[] {
-    if (filters.length && process.platform === 'win32') {
-      filters = filters.map((f) => slash(f))
-    }
-
-    if (filters.length) {
-      return testFiles.filter((t) => {
-        const testFile = relative(dir, t).toLocaleLowerCase()
-        return filters.some((f) => {
-          // if filter is a full file path, we should include it if it's in the same folder
-          if (isAbsolute(f) && t.startsWith(f)) {
-            return true
-          }
-
-          const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-          return (
-            testFile.includes(f.toLocaleLowerCase()) ||
-            testFile.includes(relativePath.toLocaleLowerCase())
-          )
-        })
-      })
-    }
-
-    return testFiles
   }
 
   /**
