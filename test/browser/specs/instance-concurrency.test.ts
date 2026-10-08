@@ -442,8 +442,9 @@ test.runIf(provider.name === 'playwright' && browser === 'chromium')(
         headless: false,
         ui: false,
         instances: createInstances(),
-        // the window is hidden by chromium itself, so the pool sees a headed instance
-        provider: playwright({ launchOptions: { args: ['--headless=new'] } }),
+        // the headless shell has no window, so the pool sees a headed instance
+        // while the test runs on the browser CI installs with `--only-shell`
+        provider: playwright({ launchOptions: { channel: 'chromium-headless-shell' } }),
       },
       reporters: [
         'default',
