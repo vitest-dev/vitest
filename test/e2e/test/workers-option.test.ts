@@ -5,13 +5,11 @@ import {
   resolveMaxWorkers,
 } from '../../../packages/vitest/src/utils/workers.js'
 
-vi.mock(import('node:os'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  default: {
-    ...(await importOriginal()).default,
-    availableParallelism: () => 10,
-  },
-}))
+vi.mock(import('node:os'), async (importOriginal) => {
+  const os = await importOriginal()
+  const availableParallelism = () => 10
+  return { ...os, availableParallelism, default: { ...os.default, availableParallelism } }
+})
 
 describe('workers util', () => {
   test('percent=50% should return 5', () => {
