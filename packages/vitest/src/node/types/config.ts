@@ -1375,6 +1375,7 @@ export interface ResolvedConfig extends Omit<
     environment: boolean
     fsModuleCache: boolean
     silent: boolean
+    maxWorkers: boolean
   }
 
   cliOptions: CliOptions

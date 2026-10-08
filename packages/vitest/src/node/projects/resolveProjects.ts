@@ -24,6 +24,7 @@ import { configFiles as defaultConfigFiles } from '../../constants'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { createDebugger } from '../../utils/debugger'
 import { limitConcurrency } from '../../utils/limit-concurrency'
+import { resolveMaxWorkers } from '../../utils/workers'
 import {
   CaptureRawTestConfig,
   isExcludedByProjectFilter,
@@ -338,7 +339,7 @@ async function resolveDeclaredProjectEntries(
     definitions,
   )
 
-  const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
+  const concurrent = limitConcurrency(os.availableParallelism() || 5)
   const fileProjects = [...configFiles, ...nonConfigDirectories]
 
   const promises: Promise<ResolvedProjectEntry>[] = []
@@ -1177,6 +1178,7 @@ function cloneProjectConfigForBrowserInstance(
     screenshotDirectory,
     screenshotFailures,
     fileParallelism,
+    maxWorkers,
     // @ts-expect-error remove just in case
     browser: _browser,
     name,
@@ -1188,7 +1190,12 @@ function cloneProjectConfigForBrowserInstance(
   return mergeConfig<any, any>(
     {
       ...clonedConfig,
-      maxWorkers: config.fileParallelism === false ? 1 : clonedConfig.maxWorkers,
+      maxWorkers:
+        fileParallelism === false
+          ? 1
+          : maxWorkers != null
+            ? resolveMaxWorkers(maxWorkers)
+            : clonedConfig.maxWorkers,
       browser: {
         ...parentConfig.browser,
         locators: locators

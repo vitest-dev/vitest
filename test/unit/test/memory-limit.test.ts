@@ -3,16 +3,10 @@ import { getWorkerMemoryLimit } from '../../../packages/vitest/src/utils/memory-
 
 describe('getWorkerMemoryLimit', () => {
   it('should prioritize vmMemoryLimit', () => {
-    expect(getWorkerMemoryLimit({ vmMemoryLimit: '512MB', maxWorkers: 1, watch: false })).toBe(
-      '512MB',
-    )
+    expect(getWorkerMemoryLimit({ vmMemoryLimit: '512MB', maxWorkers: 1 })).toBe('512MB')
   })
 
   it('should calculate 1/maxWorkers', () => {
-    expect(getWorkerMemoryLimit({ maxWorkers: 4, watch: false })).toBe(1 / 4)
-  })
-
-  it('should calculate maxWorkers/2 when in watch-mode', () => {
-    expect(getWorkerMemoryLimit({ maxWorkers: 14, watch: true })).toBe(1 / 14)
+    expect(getWorkerMemoryLimit({ maxWorkers: 4 })).toBe(1 / 4)
   })
 })

@@ -299,27 +299,6 @@ function resolveConditions(project: TestProject) {
     .flatMap((c) => ['--conditions', c])
 }
 
-function resolveMaxWorkers(project: TestProject) {
-  if (project.config.maxWorkers) {
-    return project.config.maxWorkers
-  }
-
-  if (project.vitest.config.maxWorkers) {
-    return project.vitest.config.maxWorkers
-  }
-
-  const numCpus =
-    typeof nodeos.availableParallelism === 'function'
-      ? nodeos.availableParallelism()
-      : nodeos.cpus().length
-
-  if (project.vitest.config.watch) {
-    return Math.max(Math.floor(numCpus / 2), 1)
-  }
-
-  return Math.max(numCpus - 1, 1)
-}
-
 function getMemoryLimit(config: ResolvedConfig, pool: string) {
   if (pool !== 'vmForks' && pool !== 'vmThreads') {
     return null
@@ -418,7 +397,7 @@ function groupSpecs(
       return sequential.specs.push([spec])
     }
 
-    const maxWorkers = resolveMaxWorkers(spec.project)
+    const maxWorkers = spec.project.config.maxWorkers
     groups[order] ||= { specs: [], maxWorkers }
 
     // Multiple projects with different maxWorkers but same groupOrder
@@ -458,7 +437,7 @@ function groupSpecs(
   let order = Math.max(0, ...groups.keys()) + 1
 
   for (const projectName in typechecks) {
-    const maxWorkers = resolveMaxWorkers(typechecks[projectName][0].project)
+    const maxWorkers = typechecks[projectName][0].project.config.maxWorkers
     const previous = groups[order - 1]
     if (previous && previous.typecheck && maxWorkers !== previous.maxWorkers) {
       order += 1
