@@ -1,7 +1,7 @@
 import type { Vitest } from 'vitest/node'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { runInlineTests, runVitest } from '../../test-utils'
 
 const config = { cache: true, experimental: { recordDependencies: true } }
@@ -836,4 +836,209 @@ test('a file that did not run because of bail keeps its record', async () => {
     }
   `)
   expect(readDependencies(bailed.ctx)).toEqual(before)
+})
+
+describe('without the module runner', () => {
+  const native = { ...config, experimental: { ...config.experimental, viteModuleRunner: false } }
+
+  test('only the tests that loaded a changed file run', async () => {
+    const { ctx, fs, stderr } = await runInlineTests(
+      {
+        'src/helper.js': `import './inner.js'`,
+        'src/inner.js': 'export {}',
+        'src/other.js': 'export {}',
+        'a.test.js': testFile('a', `import './src/helper.js'`),
+        'b.test.js': testFile('b', `import './src/other.js'`),
+      },
+      native,
+    )
+    expect(stderr).toBe('')
+    expect(readDependencies(ctx)).toMatchInlineSnapshot(`
+      {
+        "": {
+          "a.test.js": [
+            "a.test.js",
+            "src/helper.js",
+            "src/inner.js",
+          ],
+          "b.test.js": [
+            "b.test.js",
+            "src/other.js",
+          ],
+        },
+      }
+    `)
+
+    const changed = await runVitest({ root: fs.root, ...native, related: ['src/inner.js'] })
+    expect(changed.stderr).toBe('')
+    expect(Object.keys(changed.testTree())).toEqual(['a.test.js'])
+  })
+
+  test('a module loaded by a previous file in the same worker is recorded', async () => {
+    const { ctx, fs, stderr } = await runInlineTests(
+      {
+        'src/shared.js': `import './inner.js'`,
+        'src/inner.js': 'export const inner = 1',
+        'a.test.js': testFile('a', `import './src/shared.js'`),
+        'b.test.js': testFile('b', `import './src/shared.js'`),
+        'c.test.js': testFile('c'),
+      },
+      { ...native, isolate: false, fileParallelism: false },
+    )
+    expect(stderr).toBe('')
+    expect(readDependencies(ctx)).toMatchInlineSnapshot(`
+      {
+        "": {
+          "a.test.js": [
+            "a.test.js",
+            "src/inner.js",
+            "src/shared.js",
+          ],
+          "b.test.js": [
+            "b.test.js",
+            "src/inner.js",
+            "src/shared.js",
+          ],
+          "c.test.js": [
+            "c.test.js",
+          ],
+        },
+      }
+    `)
+
+    const changed = await runVitest({ root: fs.root, ...native, related: ['src/inner.js'] })
+    expect(changed.stderr).toBe('')
+    expect(Object.keys(changed.testTree()).sort()).toEqual(['a.test.js', 'b.test.js'])
+  })
+
+  test('a file loaded by a setup file, a global setup or an environment runs every test', async () => {
+    const { ctx, fs, stderr } = await runInlineTests(
+      {
+        'vitest.config.js': {
+          test: {
+            ...native,
+            setupFiles: ['./setup.js'],
+            globalSetup: ['./global-setup.js'],
+            environment: './environment.js',
+          },
+        },
+        'setup.js': `import './src/setup-helper.js'`,
+        'src/setup-helper.js': 'export {}',
+        'global-setup.js': `
+          import './src/global-helper.js'
+          export default () => {}
+        `,
+        'src/global-helper.js': 'export {}',
+        'environment.js': `
+          import './src/environment-helper.js'
+          export default {
+            name: 'custom',
+            viteEnvironment: 'ssr',
+            setup() {
+              return { teardown() {} }
+            },
+          }
+        `,
+        'src/environment-helper.js': 'export {}',
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b'),
+      },
+      native,
+    )
+    expect(stderr).toBe('')
+    expect(readDependencies(ctx)).toMatchInlineSnapshot(`
+      {
+        "": {
+          "<globalSetup>": [
+            "global-setup.js",
+            "src/global-helper.js",
+          ],
+          "a.test.js": [
+            "a.test.js",
+            "environment.js",
+            "setup.js",
+            "src/environment-helper.js",
+            "src/setup-helper.js",
+          ],
+          "b.test.js": [
+            "b.test.js",
+            "environment.js",
+            "setup.js",
+            "src/environment-helper.js",
+            "src/setup-helper.js",
+          ],
+        },
+      }
+    `)
+
+    for (const file of [
+      'src/setup-helper.js',
+      'src/global-helper.js',
+      'src/environment-helper.js',
+    ]) {
+      const changed = await runVitest({ root: fs.root, related: [file] })
+      expect(changed.stderr).toBe('')
+      expect(Object.keys(changed.testTree()).sort()).toEqual(['a.test.js', 'b.test.js'])
+    }
+  })
+
+  test('a mocked module does not load its own imports', async () => {
+    const { ctx, fs, stderr } = await runInlineTests(
+      {
+        'src/dep.js': `
+          import './inner.js'
+          export const dep = 1
+        `,
+        'src/inner.js': 'export const inner = 1',
+        'src/__mocks__/dep.js': 'export const dep = 2',
+        'factory.test.js': `
+          import { test, vi } from 'vitest'
+          import './src/dep.js'
+          vi.mock('./src/dep.js', () => ({ dep: 2 }))
+          test('factory', () => {})
+        `,
+        'automock.test.js': `
+          import { test, vi } from 'vitest'
+          import './src/dep.js'
+          vi.mock('./src/dep.js')
+          test('automock', () => {})
+        `,
+        'plain.test.js': testFile('plain', `import './src/dep.js'`),
+      },
+      native,
+    )
+    expect(stderr).toBe('')
+    expect(readDependencies(ctx)).toMatchInlineSnapshot(`
+      {
+        "": {
+          "automock.test.js": [
+            "automock.test.js",
+            "src/__mocks__/dep.js",
+            "src/dep.js",
+          ],
+          "factory.test.js": [
+            "factory.test.js",
+            "src/dep.js",
+          ],
+          "plain.test.js": [
+            "plain.test.js",
+            "src/dep.js",
+            "src/inner.js",
+          ],
+        },
+      }
+    `)
+
+    const changed = await runVitest({ root: fs.root, ...native, related: ['src/inner.js'] })
+    expect(changed.stderr).toBe('')
+    expect(Object.keys(changed.testTree())).toEqual(['plain.test.js'])
+
+    const mockChanged = await runVitest({
+      root: fs.root,
+      ...native,
+      related: ['src/__mocks__/dep.js'],
+    })
+    expect(mockChanged.stderr).toBe('')
+    expect(Object.keys(mockChanged.testTree())).toEqual(['automock.test.js'])
+  })
 })

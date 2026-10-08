@@ -12,7 +12,7 @@ import { setupChaiConfig } from '../integrations/chai/config'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
-import { collectEvaluatedDependencies } from '../utils/module-dependencies'
+import { collectDependencies, getEvaluatedImports } from '../utils/module-dependencies'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
 import { collectTests, startTests } from './runner/run'
@@ -100,6 +100,7 @@ export async function run(
   // modules loaded before the first file are shared by every file in this worker
   const dependencies = workerState.dependencies
   const preparedModules = new Set(dependencies)
+  const getImports = getEvaluatedImports(workerState.evaluatedModules)
 
   try {
     await traces.$(`vitest.test.runner.${method}`, async () => {
@@ -121,11 +122,7 @@ export async function run(
           if (dependencies) {
             workerState.rpc.onTestModuleDependencies(
               file.filepath,
-              collectEvaluatedDependencies(
-                workerState.evaluatedModules,
-                preparedModules,
-                dependencies,
-              ),
+              collectDependencies(getImports, preparedModules, dependencies),
             )
           }
 

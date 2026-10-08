@@ -414,6 +414,8 @@ The records describe the files that a test loaded during its last run. If a chan
 Vitest records only the files it loads itself. Files read with `fs` (for example, fixtures) and the imports of [externalized](/config/server#server-deps-external) modules are not recorded.
 
 If [`isolate`](/config/isolate) is disabled, test files that run in the same worker share the module graph. A record can then contain modules that a previous test file loaded dynamically, so `--changed` can select more tests than necessary, but never fewer.
+
+If [`experimental.viteModuleRunner`](#experimental-vitemodulerunner) is disabled, Vitest records the imports with a resolve hook of [`module.registerHooks`](https://nodejs.org/api/module.html#moduleregisterhooksoptions). Node.js versions without it do not write records, so every test runs.
 :::
 
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}

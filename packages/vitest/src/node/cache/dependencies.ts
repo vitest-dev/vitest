@@ -158,8 +158,13 @@ export class DependenciesCache {
         files.add(file)
       }
     }
+    // without the module runner, plugins do not transform the modules and cannot watch files
+    const watchedByPlugins = project.config.experimental.viteModuleRunner !== false
     for (const id of dependencies) {
       add(cleanUrl(id))
+      if (!watchedByPlugins) {
+        continue
+      }
       for (const environment of Object.values(project.vite.environments)) {
         const node = environment.moduleGraph.getModuleById(id)
         const transformed = node?.transformResult

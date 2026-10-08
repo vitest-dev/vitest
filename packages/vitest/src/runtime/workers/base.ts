@@ -7,6 +7,7 @@ import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
+import { nativeImports } from '../../utils/module-dependencies'
 import { Traces } from '../../utils/traces'
 import { emitModuleRunner } from '../listeners'
 import { listenForErrors } from '../moduleRunner/errorCatcher'
@@ -70,8 +71,18 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
 }
 
 let _currentEnvironment!: Environment
-let _environmentModules: string[]
+let _environmentModules: Iterable<string> = []
 let _environmentTime: number
+// the files reported by the resolve hook are added here when the module runner is disabled
+let _nativeDependencies: Set<string> | undefined
+let _canRecordDependencies = true
+
+function recordNativeImport(url: string, parentURL: string): void {
+  const file = nativeImports.record(url, parentURL)
+  if (file) {
+    _nativeDependencies?.add(file)
+  }
+}
 
 /** @experimental */
 export async function setupBaseEnvironment(
@@ -79,7 +90,13 @@ export async function setupBaseEnvironment(
 ): Promise<() => Promise<void>> {
   if (context.config.experimental.viteModuleRunner === false) {
     const { setupNodeLoaderHooks } = await import('./native')
-    await setupNodeLoaderHooks(context)
+    const recordDependencies = context.config.experimental.recordDependencies
+    _canRecordDependencies = await setupNodeLoaderHooks(
+      context,
+      recordDependencies ? recordNativeImport : undefined,
+    )
+    // until the tests start, the imports belong to the environment
+    _nativeDependencies = recordDependencies ? new Set() : undefined
   }
 
   const startTime = performance.now()
@@ -101,7 +118,9 @@ export async function setupBaseEnvironment(
     context.config.experimental.viteModuleRunner,
   )
   _currentEnvironment = environment
-  _environmentModules = loader ? Array.from(loader.evaluatedModules.idToModuleMap.keys()) : []
+  _environmentModules = loader
+    ? Array.from(loader.evaluatedModules.idToModuleMap.keys())
+    : (_nativeDependencies ?? [])
   const env = await otel.$(
     'vitest.runtime.environment.setup',
     {
@@ -137,7 +156,16 @@ export async function runBaseTests(
   // state has new context, but we want to reuse existing ones
   state.evaluatedModules = evaluatedModules
   state.moduleExecutionInfo = moduleExecutionInfo
-  _environmentModules.forEach((id) => state.dependencies?.add(id))
+  if (!_canRecordDependencies) {
+    // a test file without a record always runs
+    state.dependencies = undefined
+  }
+  for (const id of _environmentModules) {
+    state.dependencies?.add(id)
+  }
+  if (_nativeDependencies) {
+    _nativeDependencies = state.dependencies
+  }
 
   provideWorkerState(globalThis, state)
 
