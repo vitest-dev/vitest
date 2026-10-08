@@ -18,6 +18,8 @@ import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
 const ID_ALL = '__vitest_all__'
+// the next document gets this long to fire "load" before the unload counts as a broken iframe
+const IFRAME_UNLOAD_TIMEOUT = 5_000
 
 export class IframeOrchestrator {
   private cancelled = false
@@ -243,17 +245,9 @@ export class IframeOrchestrator {
       iframe.onload = () => {
         const href = this.getIframeHref(iframe)
         debug('iframe loaded with href', href)
+        this.iframeLoads.set(iframe, (this.iframeLoads.get(iframe) ?? 0) + 1)
         if (href !== iframe.src) {
-          reject(
-            this.dispatchIframeError(
-              new Error(
-                `Cannot connect to the iframe. ` +
-                  `Did you change the location or submitted a form? ` +
-                  "If so, don't forget to call `event.preventDefault()` to avoid reloading the page.\n\n" +
-                  `Received URL: ${href || 'unknown due to CORS'}\nExpected: ${iframe.src}`,
-              ),
-            ),
-          )
+          reject(this.dispatchIframeError(this.createConnectError(iframe, href)))
         } else if (this.iframes.has(iframeId)) {
           const events = this.iframeEvents.get(iframe)
           if (events?.size) {
@@ -262,9 +256,11 @@ export class IframeOrchestrator {
             )
           } else {
             this.warnReload(iframe, iframeId)
+            this.watchUnload(iframe, iframeId)
           }
         } else {
           this.iframes.set(iframeId, iframe)
+          this.watchUnload(iframe, iframeId)
           this.waitForReady(iframeId)
             .then(() =>
               this.sendEventToIframe({
@@ -346,6 +342,39 @@ export class IframeOrchestrator {
   }
 
   private loggedIframe = new WeakSet<HTMLIFrameElement>()
+  private iframeLoads = new WeakMap<HTMLIFrameElement, number>()
+
+  private createConnectError(iframe: HTMLIFrameElement, href: string | undefined) {
+    return new Error(
+      `Cannot connect to the iframe. ` +
+        `Did you change the location or submitted a form? ` +
+        "If so, don't forget to call `event.preventDefault()` to avoid reloading the page.\n\n" +
+        `Received URL: ${href || 'unknown due to CORS'}\nExpected: ${iframe.src}`,
+    )
+  }
+
+  // Firefox and WebKit fire no "load" for a document that failed to load
+  // (an empty response, a refused connection), so the tester that navigated
+  // away during a test would keep the run waiting forever
+  private watchUnload(iframe: HTMLIFrameElement, iframeId: string) {
+    const loads = this.iframeLoads.get(iframe) ?? 0
+    iframe.contentWindow?.addEventListener(
+      'pagehide',
+      () => {
+        setTimeout(() => {
+          if (
+            this.iframes.get(iframeId) !== iframe ||
+            !this.iframeEvents.get(iframe)?.size ||
+            this.iframeLoads.get(iframe) !== loads
+          ) {
+            return
+          }
+          this.dispatchIframeError(this.createConnectError(iframe, this.getIframeHref(iframe)))
+        }, IFRAME_UNLOAD_TIMEOUT)
+      },
+      { once: true },
+    )
+  }
 
   private createWarningMessage(iframeId: string, location: string) {
     return (
