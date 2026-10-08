@@ -13,6 +13,23 @@ import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
 import { resolveTestCacheDir } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
 
+export function ProjectRootPlugin(projectRoot: string): VitePlugin {
+  return {
+    name: 'vitest:project-root',
+    enforce: 'pre',
+    config: {
+      order: 'pre',
+      handler(viteConfig) {
+        // Vite resolves a relative root against the cwd, which is the root of the workspace
+        viteConfig.root = viteConfig.root ? resolve(projectRoot, viteConfig.root) : projectRoot
+        if (viteConfig.test?.root) {
+          viteConfig.test.root = resolve(projectRoot, viteConfig.test.root)
+        }
+      },
+    },
+  }
+}
+
 export function WorkspaceVitestPlugin(
   harness: PluginHarness,
   globalViteConfig: vite.ResolvedConfig,

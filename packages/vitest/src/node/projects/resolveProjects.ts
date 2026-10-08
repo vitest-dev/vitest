@@ -32,7 +32,7 @@ import {
 } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
 import { resolveTestOptions, TestConfigPlugin } from '../plugins/testConfig'
-import { WorkspaceVitestPlugin } from '../plugins/workspace'
+import { ProjectRootPlugin, WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
 import { globProjectTestFiles } from './globProjectFiles'
@@ -410,7 +410,14 @@ async function resolveDeclaredProjectEntries(
       `project at ${path} resolves its own Vite config: file and directory projects never share the server`,
     )
     promises.push(
-      concurrent(() => resolveSingleProjectEntry(context, { root: projectRoot, configFile }, path)),
+      concurrent(() =>
+        resolveSingleProjectEntry(
+          context,
+          // an inline `root` would take priority over the `root` in the config file
+          { configFile, plugins: [ProjectRootPlugin(projectRoot)] },
+          path,
+        ),
+      ),
     )
   }
 
@@ -882,7 +889,7 @@ async function resolveSingleProjectEntry(
   captures.rawTestConfig = undefined
 
   debug?.(
-    `resolved the Vite config of project "${projectConfig.name}" (${configFile || options.root})`,
+    `resolved the Vite config of project "${projectConfig.name}" (${configFile || projectViteConfig.root})`,
   )
 
   return {
