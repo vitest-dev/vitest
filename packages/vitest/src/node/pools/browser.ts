@@ -8,11 +8,10 @@ import type { TestSpecification } from '../test-specification'
 import type { CDPSession } from '../types/browser'
 import crypto from 'node:crypto'
 import { statfsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
 import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
-import { detectCodeBlock } from '../../utils/test-helpers'
+import { getSpecificationDocblock } from '../../utils/test-helpers'
 import { BrowserConnectionError } from '../errors'
 
 const debug = createDebugger('vitest:browser:pool')
@@ -262,24 +261,11 @@ async function groupSpecifications(
   specs: TestSpecification[],
 ): Promise<Map<TestProject, FileSpecification[]>> {
   const groupedFiles = new Map<TestProject, FileSpecification[]>()
-  const testFilesCode = new Map<string, string>()
-  const testFileTags = new WeakMap<TestSpecification, string[]>()
+  // browser instances of a project share the same test files
+  const code = new Map<string, Promise<string>>()
+  const docblocks = await Promise.all(specs.map((spec) => getSpecificationDocblock(spec, code)))
 
-  await Promise.all(
-    specs.map(async (spec) => {
-      let code = testFilesCode.get(spec.moduleId)
-      // TODO: this really should be done only once when collecting specifications
-      if (code == null) {
-        code = await readFile(spec.moduleId, 'utf-8').catch(() => '')
-        testFilesCode.set(spec.moduleId, code)
-      }
-      const { tags } = detectCodeBlock(code)
-      testFileTags.set(spec, tags)
-    }),
-  )
-
-  // to keep the sorting, we need to iterate over specs separately
-  for (const spec of specs) {
+  specs.forEach((spec, index) => {
     const { project, moduleId, testLines, testIds, testNamePattern, testTagsFilter } = spec
     const files = groupedFiles.get(project) || []
     files.push({
@@ -288,10 +274,10 @@ async function groupSpecifications(
       testIds,
       testNamePattern,
       testTagsFilter,
-      fileTags: testFileTags.get(spec),
+      fileTags: docblocks[index].tags,
     })
     groupedFiles.set(project, files)
-  }
+  })
 
   return groupedFiles
 }
