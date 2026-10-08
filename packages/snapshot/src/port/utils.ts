@@ -90,7 +90,8 @@ export function serialize(
 }
 
 function escapeBacktickString(str: string): string {
-  return str.replace(/`|\\|\$\{/g, '\\$&')
+  // a raw CR inside a template literal is read back as LF
+  return str.replace(/`|\\|\$\{/g, '\\$&').replace(/\r/g, '\\r')
 }
 
 function printBacktickString(str: string): string {

@@ -111,3 +111,52 @@ test.fails('soft', () => {
     }
   `)
 })
+
+test('test names with line endings match their snapshots on the next run', async () => {
+  const result = await runInlineTests(
+    {
+      'basic.test.ts': `
+import { expect, test } from 'vitest'
+
+test.for(['a\\nb', 'a\\r\\nb', 'a\\rb'])('%s', (input) => {
+  expect(input.length).toMatchSnapshot()
+})
+`,
+    },
+    { update: 'new' },
+  )
+  expect(result.stderr).toBe('')
+  expect(result.fs.readFile('__snapshots__/basic.test.ts.snap')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`a
+    b 1\`] = \`3\`;
+
+    exports[\`a\\r
+    b 1\`] = \`4\`;
+
+    exports[\`a\\rb 1\`] = \`3\`;
+    "
+  `)
+
+  const rerun = await runVitest({ root: result.root, update: 'none' })
+  expect(rerun.stderr).toBe('')
+  expect(rerun.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+    {
+      "added": 0,
+      "didUpdate": false,
+      "failure": false,
+      "filesAdded": 0,
+      "filesRemoved": 0,
+      "filesRemovedList": [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 3,
+      "total": 3,
+      "unchecked": 0,
+      "uncheckedKeysByFile": [],
+      "unmatched": 0,
+      "updated": 0,
+    }
+  `)
+})
