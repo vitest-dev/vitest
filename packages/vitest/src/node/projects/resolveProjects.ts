@@ -339,7 +339,7 @@ async function resolveDeclaredProjectEntries(
     definitions,
   )
 
-  const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
+  const concurrent = limitConcurrency(os.availableParallelism() || 5)
   const fileProjects = [...configFiles, ...nonConfigDirectories]
 
   const promises: Promise<ResolvedProjectEntry>[] = []

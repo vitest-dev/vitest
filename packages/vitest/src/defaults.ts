@@ -31,7 +31,7 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
   reporter: ['text', 'html', 'clover', 'json'],
   allowExternal: false,
   excludeAfterRemap: false,
-  processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
+  processingConcurrency: Math.min(20, os.availableParallelism()),
   ignoreClassMethods: [],
   skipFull: false,
   watermarks: {

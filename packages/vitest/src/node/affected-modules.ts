@@ -27,7 +27,7 @@ interface ModuleNode {
  */
 export class AffectedModulesResolver {
   private existsCache = new Map<string, boolean>()
-  private transformConcurrency = os.availableParallelism?.() ?? os.cpus().length
+  private transformConcurrency = os.availableParallelism()
   private activeTransforms = 0
   private transformQueue: Array<() => void> = []
 
