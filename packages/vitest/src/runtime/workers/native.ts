@@ -199,11 +199,12 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     let _ms: MagicString | undefined
     const ms = () => _ms || (_ms = new MagicString(source))
 
-    if (source.includes('import.meta.vitest')) {
+    const hasInSourceMarker = source.includes('import.meta.vitest')
+    if (hasInSourceMarker) {
       replaceInSourceMarker(url, source, ms)
     }
 
-    hoistMocks(
+    const hoisted = hoistMocks(
       transformedCode,
       filename,
       (code) =>
@@ -221,6 +222,14 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
         globalThisAccessor: '"__vitest_mocker__"',
       },
     )
+
+    // hoistMocks rewrites the imported bindings before it knows that there is nothing to hoist
+    if (!hoisted && _ms) {
+      _ms = undefined
+      if (hasInSourceMarker) {
+        replaceInSourceMarker(url, source, ms)
+      }
+    }
 
     let code: string
     if (_ms) {

@@ -485,6 +485,43 @@ if (import.meta.vitest) {
     `)
   })
 
+  test('a hoisted method name inside a string does not break imports', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
+      'add.js': `export const add = (a, b) => a + b`,
+      'basic.test.js': /* js */ `
+import { add } from './add.js'
+
+const fixture = 'vi.mock("./add.js")'
+
+test('add', () => {
+  expect(add(1, 2)).toBe(3)
+})
+    `,
+      'in-source.test.js': /* js */ `
+import { add } from './add.js'
+
+const fixture = 'vi.mock("./add.js")'
+
+test('add', () => {
+  expect(add(1, 2)).toBe(3)
+})
+
+if (import.meta.vitest) {}
+    `,
+    })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "add": "passed",
+        },
+        "in-source.test.js": {
+          "add": "passed",
+        },
+      }
+    `)
+  })
+
   test('cannot import JS file without extension in ESM', async () => {
     const { stderr, root } = await runNoViteModuleRunnerTests({
       'add.js': /* js */ `
