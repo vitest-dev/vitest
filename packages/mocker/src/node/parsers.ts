@@ -39,21 +39,22 @@ export function collectModuleExports(
   if (format === 'module') {
     const [imports_, exports_] = parseModuleSyntax(code, filename)
     const fileExports = exports_.map((p) => p.n)
+    // cached before re-exports are parsed, so circular re-exports stop here
+    cachedFileExports.set(filename, fileExports)
     imports_.forEach(({ ss: start, se: end, n: name }) => {
       const substring = code.substring(start, end).replace(/ +/g, ' ')
       if (name && substring.startsWith('export *') && !substring.startsWith('export * as')) {
         fileExports.push(...tryParseModule(name))
       }
     })
-    cachedFileExports.set(filename, fileExports)
     exports.push(...fileExports)
   } else {
     const { exports: exports_, reexports } = parseCjsSyntax(code, filename)
     const fileExports = [...exports_]
+    cachedFileExports.set(filename, fileExports)
     reexports.forEach((name) => {
       fileExports.push(...tryParseModule(name))
     })
-    cachedFileExports.set(filename, fileExports)
     exports.push(...fileExports)
   }
 
@@ -96,27 +97,26 @@ export function collectModuleExports(
       return cachedFileExports.get(resolvedModulePath)!
     }
 
-    const fileContent = readFileSync(resolvedModulePath, 'utf-8')
     const ext = extname(resolvedModulePath)
+    if (ext === '.json') {
+      return ['default']
+    }
+
+    const fileContent = readFileSync(resolvedModulePath, 'utf-8')
     const code = transformCode(fileContent, resolvedModulePath)
-    if (code == null) {
+    const resolvedModuleFormat = resolveModuleFormat(
+      pathToFileURL(resolvedModulePath).toString(),
+      code,
+    )
+    if (!resolvedModuleFormat) {
+      // can't do wasm, for example
+      console.warn(
+        `Cannot process '${resolvedModulePath}' imported from ${filename} because of unknown file extension: ${ext}.`,
+      )
       cachedFileExports.set(resolvedModulePath, [])
       return []
     }
-
-    const resolvedModuleFormat = resolveModuleFormat(resolvedModulePath, code)
-    if (ext === '.json') {
-      return ['default']
-    } else {
-      // can't do wasm, for example
-      console.warn(
-        `Cannot process '${resolvedModuleFormat}' imported from ${filename} because of unknown file extension: ${ext}.`,
-      )
-    }
-    if (resolvedModuleFormat) {
-      return collectModuleExports(resolvedModulePath, code, resolvedModuleFormat, exports)
-    }
-    return []
+    return collectModuleExports(resolvedModulePath, code, resolvedModuleFormat, exports)
   }
 
   return Array.from(new Set(exports))
