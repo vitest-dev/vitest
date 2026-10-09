@@ -20,6 +20,15 @@ import type {
 } from 'vitest'
 import type { MarkOptions } from 'vitest/browser'
 
+interface OrchestratorCapabilities {
+  /** the browser accepts an import map after a module has loaded */
+  lateImportMaps: boolean
+}
+
+export interface MockImportMap {
+  imports: Record<string, string>
+}
+
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
@@ -39,7 +48,7 @@ export interface WebSocketBrowserHandlers {
   readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
   writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onOrchestratorReady: () => void
+  onOrchestratorReady: (capabilities: OrchestratorCapabilities) => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
@@ -65,7 +74,10 @@ export interface WebSocketBrowserHandlers {
   getBrowserFileSourceMap: (id: string) => SourceMap | null | { mappings: '' } | undefined
   wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 
-  registerMock: (sessionId: string, mock: MockedModuleSerialized) => void
+  registerMock: (
+    sessionId: string,
+    mock: MockedModuleSerialized,
+  ) => Promise<MockImportMap | undefined>
   unregisterMock: (sessionId: string, id: string) => void
   clearMocks: (sessionId: string) => void
 

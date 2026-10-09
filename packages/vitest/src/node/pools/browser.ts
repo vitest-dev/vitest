@@ -32,7 +32,8 @@ interface BrowserTask {
   files: FileSpecification[]
   method: 'run' | 'collect'
   // providers without a per-session mocker share a single mock registry
-  // and some of them cannot drive several pages, so the instance runs alone
+  // unless mocks are forced through the import map, and some of them cannot
+  // drive several pages, so the instance runs alone
   exclusive: boolean
   result: DeferPromise<void>
 }
@@ -234,7 +235,9 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
             project,
             files,
             method,
-            exclusive: !provider.mocker || !provider.supportsParallelism,
+            exclusive:
+              !provider.supportsParallelism ||
+              (!provider.mocker && project.config.browser.importMapMocks !== true),
             result: createDefer<void>(),
           }
         },

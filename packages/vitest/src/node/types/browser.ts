@@ -363,6 +363,20 @@ export interface BrowserConfigOptions {
    * @default true
    */
   trackUnhandledErrors?: boolean
+
+  /**
+   * Serve module mocks through an import map in the tester document instead of
+   * intercepting network requests.
+   *
+   * By default, Vitest checks once per browser whether it accepts an import map
+   * after a module has loaded (Chromium 133+, Safari 18.4+, Firefox 150+ with
+   * `dom.multiple_import_maps.enabled`, which the Playwright provider sets) and
+   * falls back to request interception otherwise. `true` fails in a browser that
+   * cannot, `false` always intercepts.
+   *
+   * @experimental
+   */
+  importMapMocks?: boolean
 }
 
 export interface BrowserCommandContext {

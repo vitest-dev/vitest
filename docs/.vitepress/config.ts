@@ -717,6 +717,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/browser/trackunhandlederrors',
                   },
                   {
+                    text: 'browser.importMapMocks',
+                    link: '/config/browser/importmapmocks',
+                  },
+                  {
                     text: 'browser.expect',
                     link: '/config/browser/expect',
                   },

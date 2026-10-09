@@ -15,7 +15,7 @@ import { Traces } from 'vitest/internal/traces'
 // This needs to be tree shaken properly to not include the whole runner by accident
 import { generateFileHash } from '../../../vitest/src/utils/tasks.js'
 import { getUiAPI } from './ui'
-import { getBrowserState, getConfig } from './utils'
+import { getBrowserState, getConfig, supportsLateImportMaps } from './utils'
 
 const ID_ALL = '__vitest_all__'
 // the next document gets this long to fire "load" before the unload counts as a broken iframe
@@ -55,7 +55,7 @@ export class IframeOrchestrator {
     // Notify the server once the websocket is ready without blocking orchestrator creation.
     void client
       .waitForConnection()
-      .then(() => client.rpc.onOrchestratorReady())
+      .then(() => client.rpc.onOrchestratorReady({ lateImportMaps: supportsLateImportMaps() }))
       .catch((error) => {
         debug('failed to notify orchestrator readiness', error)
       })

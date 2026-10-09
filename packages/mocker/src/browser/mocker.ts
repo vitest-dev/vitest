@@ -253,12 +253,7 @@ export class ModuleMocker implements TestModuleMocker {
   // In case there is a mocked module in the import chain
   public wrapDynamicImport<T>(moduleFactory: () => Promise<T>): Promise<T> {
     if (typeof moduleFactory === 'function') {
-      const promise = new Promise<T>((resolve, reject) => {
-        this.prepare().finally(() => {
-          moduleFactory().then(resolve, reject)
-        })
-      })
-      return promise
+      return this.prepare().then(() => moduleFactory())
     }
     return moduleFactory
   }
