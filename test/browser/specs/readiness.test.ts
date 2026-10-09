@@ -1,6 +1,130 @@
 import { expect, test } from 'vitest'
 import { instances, runInlineBrowserTests } from './utils'
 
+test('fails instead of hanging when the tester iframe never loads', async () => {
+  const { ctx, fs, testTree } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': `
+        import { test } from 'vitest'
+        test('never runs', () => {})
+      `,
+      'delayed-load.html': `
+        <!DOCTYPE html>
+        <html><head><script src="/delayed-load.js"></script></head><body></body></html>
+      `,
+    },
+    {
+      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '1000' },
+      browser: {
+        instances: [instances[0]],
+        testerHtmlPath: './delayed-load.html',
+      },
+      $viteConfig: {
+        plugins: [
+          {
+            name: 'delay-tester-load',
+            configureServer(server) {
+              server.middlewares.use((req, res, next) => {
+                if (req.url !== '/delayed-load.js') {
+                  return next()
+                }
+                const timer = setTimeout(() => {
+                  res.setHeader('Content-Type', 'text/javascript')
+                  res.end('')
+                }, 5000)
+                res.on('close', () => clearTimeout(timer))
+              })
+            },
+          },
+        ],
+      },
+    },
+  )
+
+  expect(
+    ctx!.state.getUnhandledErrors().map((error: any) => ({
+      message: error.message.replace(fs.root, '<root>'),
+      cause: error.cause?.message.replace(fs.root, '<root>'),
+    })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "cause": "The iframe "<root>/basic.test.ts" did not load within 1000ms. The browser might be under heavy load or the iframe failed to start.",
+        "message": "Failed to run the test <root>/basic.test.ts.",
+      },
+    ]
+  `)
+  expect(testTree()).toMatchInlineSnapshot(`{}`)
+})
+
+test(
+  'fails instead of hanging after acknowledging a stalled test file',
+  { timeout: 20000 },
+  async () => {
+    const { ctx, fs, testTree } = await runInlineBrowserTests(
+      {
+        'stalled.test.ts': `await new Promise(() => {})`,
+        'passing.test.ts': `
+        import { test } from 'vitest'
+        test('still runs', () => {})
+      `,
+      },
+      {
+        env: { VITEST_BROWSER_IFRAME_TIMEOUT: '1000' },
+        browser: { instances: [instances[0]] },
+      },
+    )
+
+    expect(
+      ctx!.state.getUnhandledErrors().map((error: any) => ({
+        message: error.message.replace(fs.root, '<root>'),
+        cause: error.cause?.message.replace(fs.root, '<root>'),
+      })),
+    ).toMatchInlineSnapshot(`
+    [
+      {
+        "cause": "The iframe "<root>/stalled.test.ts" did not respond to the "execute" message within 10000ms after acknowledging it. The tester might have stalled or crashed while handling the message.",
+        "message": "Failed to run the test <root>/stalled.test.ts.",
+      },
+    ]
+  `)
+    expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "passing.test.ts": {
+        "still runs": "passed",
+      },
+      "stalled.test.ts": {},
+    }
+  `)
+  },
+)
+
+test('allows acknowledged test work to exceed the acknowledgement timeout', async () => {
+  const { stderr, testTree } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': `
+        import { test } from 'vitest'
+        test('takes longer than the acknowledgement timeout', async () => {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        })
+      `,
+    },
+    {
+      env: { VITEST_BROWSER_IFRAME_TIMEOUT: '1000' },
+      browser: { instances: [instances[0]] },
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "takes longer than the acknowledgement timeout": "passed",
+      },
+    }
+  `)
+})
+
 test(
   'prepare waits until the tester can receive browser channel events',
   { timeout: 5000 },

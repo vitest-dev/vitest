@@ -68,10 +68,10 @@ channel.addEventListener('message', async (e) => {
     messageId: data.messageId,
   })
 
-  await client.waitForConnection()
-  debug?.('event from orchestrator', JSON.stringify(e.data))
-
   try {
+    await client.waitForConnection()
+    debug?.('event from orchestrator', JSON.stringify(e.data))
+
     switch (data.event) {
       case 'execute': {
         const { method, files, context, concurrencyId, workerId } = data

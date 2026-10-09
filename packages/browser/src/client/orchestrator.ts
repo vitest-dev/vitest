@@ -239,10 +239,24 @@ export class IframeOrchestrator {
     otelContext: OTELContext,
   ) {
     const iframe = this.createTestIframe(iframeId)
-    container.appendChild(iframe)
 
     await new Promise<void>((resolve, reject) => {
+      const timeout = getIframeTimeout()
+      const loadTimer = setTimeout(() => {
+        iframe.onload = null
+        iframe.onerror = null
+        reject(
+          this.dispatchIframeError(
+            new Error(
+              `The iframe "${iframeId}" did not load within ${timeout}ms. ` +
+                `The browser might be under heavy load or the iframe failed to start.`,
+            ),
+          ),
+        )
+      }, timeout)
+
       iframe.onload = () => {
+        clearTimeout(loadTimer)
         const href = this.getIframeHref(iframe)
         debug('iframe loaded with href', href)
         this.iframeLoads.set(iframe, (this.iframeLoads.get(iframe) ?? 0) + 1)
@@ -274,6 +288,7 @@ export class IframeOrchestrator {
         }
       }
       iframe.onerror = (e) => {
+        clearTimeout(loadTimer)
         if (typeof e === 'string') {
           reject(this.dispatchIframeError(new Error(e)))
         } else if (e instanceof ErrorEvent) {
@@ -282,6 +297,7 @@ export class IframeOrchestrator {
           reject(this.dispatchIframeError(new Error(`Cannot load the iframe ${iframeId}.`)))
         }
       }
+      container.appendChild(iframe)
     })
     return iframe
   }
@@ -546,20 +562,24 @@ export class IframeOrchestrator {
 
     return new Promise<void>((resolve, reject) => {
       let ackTimer: ReturnType<typeof setTimeout>
+      let responseTimer: ReturnType<typeof setTimeout> | undefined
 
       const cleanupEvents = () => {
         clearTimeout(ackTimer)
+        if (responseTimer) {
+          clearTimeout(responseTimer)
+        }
         channel.removeEventListener('message', onReceived)
         this.eventTarget.removeEventListener('iframeerror', onError)
         events!.delete(event.event)
       }
 
       // The tester acknowledges the message as soon as it receives it, then
-      // sends the actual response once the work is done. We only time out
-      // waiting for the acknowledgement: it proves the tester is alive, after
-      // which the work (e.g. running a whole test file) may take any amount of
-      // time, so there is intentionally no deadline on the response itself.
+      // sends the actual response once the work is done. Allow the response
+      // more time because it can include running a whole test file, but still
+      // bound the wait in case the tester stops responding after the ack.
       const timeout = getIframeTimeout()
+      const responseTimeout = timeout * 10
       ackTimer = setTimeout(() => {
         cleanupEvents()
         reject(
@@ -575,8 +595,16 @@ export class IframeOrchestrator {
           return
         }
         if (e.data.event === `ack:${event.event}`) {
-          // alive and processing: wait for the response without a deadline
           clearTimeout(ackTimer)
+          responseTimer ??= setTimeout(() => {
+            cleanupEvents()
+            reject(
+              new Error(
+                `The iframe "${event.iframeId}" did not respond to the "${event.event}" message within ${responseTimeout}ms after acknowledging it. ` +
+                  `The tester might have stalled or crashed while handling the message.`,
+              ),
+            )
+          }, responseTimeout)
           return
         }
         if (e.data.event === `response:${event.event}`) {
@@ -657,9 +685,9 @@ function debug(...args: unknown[]) {
   }
 }
 
-// Liveness timeout for tester iframes (readiness and message acknowledgement),
-// not a timeout for the test work itself. Overridable via the `VITEST_BROWSER_IFRAME_TIMEOUT`
-// env in case a tester legitimately needs longer to boot or acknowledge.
+// Timeout for iframe loading, readiness and acknowledgements. Responses get
+// ten times this duration to allow for test execution. Overridable via
+// VITEST_BROWSER_IFRAME_TIMEOUT for slower browsers or longer test files.
 function getIframeTimeout(): number {
   return Number(getConfig().env.VITEST_BROWSER_IFRAME_TIMEOUT) || 60_000
 }
