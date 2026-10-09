@@ -24,12 +24,14 @@ import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
-import { isPrimitive, sanitizeFilePath } from '@vitest/utils/helpers'
+import { isPrimitive, sanitizeFilePath, truncateFileName } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
+
+const MAX_FILENAME_BYTES = 255
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -317,9 +319,20 @@ export class TestRun {
     if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
       const currentPath = resolve(project.config.root, path)
       const hash = createHash('sha1').update(currentPath).digest('hex')
+      const suffix = `${hash}${extname(currentPath)}`
+      let prefix = ''
+      if (filename) {
+        const name = sanitizeFilePath(filename)
+        const nameHash = createHash('sha1').update(name).digest('hex').slice(0, 16)
+        prefix = truncateFileName(
+          name,
+          MAX_FILENAME_BYTES - Buffer.byteLength(suffix) - 1,
+          nameHash,
+        )
+      }
       const newPath = resolve(
         project.config.attachmentsDir,
-        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
+        prefix ? `${prefix}-${suffix}` : suffix,
       )
       if (!existsSync(project.config.attachmentsDir)) {
         await mkdir(project.config.attachmentsDir, { recursive: true })

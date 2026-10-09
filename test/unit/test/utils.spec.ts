@@ -4,7 +4,9 @@ import {
   deepMerge,
   isNegativeNaN,
   objectAttr,
+  sanitizeFilePath,
   toArray,
+  truncateFileName,
 } from '@vitest/utils/helpers'
 import { parseSingleFFOrSafariStack, parseSingleStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
@@ -469,5 +471,36 @@ describe('parseSingleStack', () => {
     ['    at http://localhost:63315/100%.test.ts:4:1', '/100%.test.ts'],
   ])('%s', ([line, file]) => {
     expect(parseSingleStack(line)?.file).toBe(file)
+  })
+})
+
+describe('truncateFileName', () => {
+  test('keeps the name when it fits', () => {
+    expect(truncateFileName('hello', 5, 'abcd')).toBe('hello')
+    expect(truncateFileName('hello', 10, 'abcd')).toBe('hello')
+    expect(truncateFileName('', 0, 'abcd')).toBe('')
+  })
+
+  test('cuts the name and appends the hash', () => {
+    expect(truncateFileName('hello-world', 10, 'abcd')).toBe('hello~abcd')
+    expect(truncateFileName('hello-world', 8, 'abcd')).toBe('hel~abcd')
+    expect(truncateFileName('hello-world', 6, 'abcd')).toBe('h~abcd')
+    expect(truncateFileName('hello--world', 11, 'abcd')).toBe('hello~abcd')
+  })
+
+  test('returns an empty name when not even the hash fits', () => {
+    expect(truncateFileName('hello-world', 5, 'abcd')).toBe('')
+    expect(truncateFileName('hello-world', 0, 'abcd')).toBe('')
+  })
+
+  test('does not split multi-byte characters', () => {
+    expect(truncateFileName('жжж', 6, 'abcd')).toBe('жжж')
+    expect(truncateFileName('жжжж', 7, 'abcd')).toBe('ж~abcd')
+    expect(truncateFileName('a€€€', 8, 'abcd')).toBe('a~abcd')
+    expect(truncateFileName('😀😀😀😀', 12, 'abcd')).toBe('😀~abcd')
+  })
+
+  test('the separator can not come from a sanitized name', () => {
+    expect(sanitizeFilePath('a~b')).toBe('a-b')
   })
 })

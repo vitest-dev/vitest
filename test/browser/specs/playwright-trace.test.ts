@@ -1,7 +1,10 @@
-import { readdirSync, rmSync } from 'node:fs'
-import { resolve } from 'pathe'
+import { existsSync, readdirSync, rmSync } from 'node:fs'
+import { basename, resolve } from 'pathe'
+import { chromium } from 'playwright'
 import { afterEach, describe, expect, test } from 'vitest'
-import { provider, runBrowserTests } from './utils'
+import { useTmpFS } from '../../test-utils'
+import { providers } from '../settings'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-view/__traces__')
 const basicTestTracesFolder = resolve(tracesFolder, 'basic.test.ts')
@@ -79,7 +82,10 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
         expect(annotations.length).toBeGreaterThan(0)
 
         annotations.forEach((annotation) => {
-          expect(annotation.message).toContain('basic.test.ts/')
+          expect(annotation.message).toMatch(/^(chromium|firefox|webkit)-[\w-]+-\d+-\d+$/)
+          expect(annotation.attachment!.path).toMatch(
+            new RegExp(`/\\.vitest/attachments/${annotation.message}-[\\da-f]{40}\\.zip$`),
+          )
           expect(annotation.type).toBe('traces')
           expect(annotation.attachment!.contentType).toBe('application/octet-stream')
           expect(annotation.location).toEqual({
@@ -183,6 +189,141 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
 
     // the default reporter outputs attachments
     expect(stderr).toContain('❯ traces')
-    expect(stderr).toContain('↳ __traces__/failing.special.ts/')
+    expect(stderr).toContain('↳ chromium-fail-0-0')
   })
+
+  // the whole path is limited to 260 characters on Windows unless long paths are enabled
+  describe.skipIf(process.platform === 'win32')('long test names', () => {
+    test.for([
+      { name: 'default traces folder', trace: 'on', folder: '__traces__/long.test.ts' },
+      {
+        name: 'custom tracesDir',
+        trace: { mode: 'on', tracesDir: './playwright-traces' },
+        folder: 'playwright-traces',
+      },
+    ] as const)(
+      'trace file names fit into the file system limit ($name)',
+      async ({ trace, folder }) => {
+        const browser = instances[0].browser
+        const name = 'a test with a very long name '.repeat(10).trim()
+        const { ctx, stderr, root } = await runInlineBrowserTests(
+          {
+            'long.test.ts': `
+              import { test } from 'vitest'
+
+              test(${JSON.stringify(name)}, { retry: 1 }, ({ task }) => {
+                if (task.result?.retryCount !== 1) {
+                  throw new Error('failed test')
+                }
+              })
+            `,
+          },
+          {
+            browser: {
+              instances: [instances[0]],
+              trace,
+              // failure screenshots have the same problem with long names, see #11455
+              screenshotFailures: false,
+            },
+          },
+        )
+
+        expect(stderr).toBe('')
+
+        const traces = readdirSync(resolve(root, folder))
+          .filter((file) => file.endsWith('.trace.zip'))
+          .sort()
+        expect(traces.map((file) => file.slice(-14))).toEqual(['-0-0.trace.zip', '-0-1.trace.zip'])
+        traces.forEach((file) => {
+          expect(Buffer.byteLength(file)).toBeLessThanOrEqual(255)
+          expect(file).toMatch(
+            new RegExp(
+              `^${browser}-a-test-with-a-very-long-name-.*~[\\da-f]{16}-0-\\d\\.trace\\.zip$`,
+            ),
+          )
+        })
+
+        const [testModule] = ctx!.state.getTestModules()
+        const [testCase] = Array.from(testModule.children.allTests())
+        const annotations = testCase.annotations()
+        expect(annotations).toHaveLength(2)
+        annotations.forEach((annotation) => {
+          expect(annotation.type).toBe('traces')
+          const attachment = basename(annotation.attachment!.path!)
+          expect(Buffer.byteLength(attachment)).toBeLessThanOrEqual(255)
+          expect(attachment).toMatch(
+            new RegExp(`^${annotation.message.replace('~', '-')}-[\\da-f]{40}\\.zip$`),
+          )
+          expect(existsSync(annotation.attachment!.path!)).toBe(true)
+        })
+        expect(annotations.map((annotation) => `${annotation.message}.trace.zip`).sort()).toEqual(
+          traces,
+        )
+      },
+    )
+  })
+
+  test('consecutive dashes in test names are not collapsed', async () => {
+    const { stderr, root } = await runInlineBrowserTests(
+      {
+        'basic.test.ts': `
+          import { test } from 'vitest'
+
+          test('foo bar', () => {})
+          test('foo: bar', () => {})
+        `,
+      },
+      { browser: { instances: [instances[0]], trace: 'on' } },
+    )
+
+    expect(stderr).toBe('')
+    expect(readdirSync(resolve(root, '__traces__/basic.test.ts')).sort()).toEqual([
+      `${instances[0].browser}-foo--bar-0-0.trace.zip`,
+      `${instances[0].browser}-foo-bar-0-0.trace.zip`,
+    ])
+  })
+
+  // the remote archive must have a different name from the final trace
+  test.runIf(instances[0].browser === 'chromium')(
+    'traces are saved when the browser runs on a remote server with the same tracesDir',
+    async () => {
+      const fs = useTmpFS({
+        'basic.test.ts': `
+          import { test } from 'vitest'
+
+          test('remote test', () => {
+            // ...
+          })
+        `,
+      })
+      const tracesDir = resolve(fs.root, 'playwright-traces')
+      const server = await chromium.launchServer({ headless: true, tracesDir })
+      try {
+        const { ctx, stderr } = await runBrowserTests({
+          root: fs.root,
+          browser: {
+            enabled: true,
+            provider: providers.playwright({
+              connectOptions: { wsEndpoint: server.wsEndpoint() },
+            }),
+            instances: [{ browser: 'chromium' }],
+            trace: { mode: 'on', tracesDir: './playwright-traces' },
+          },
+        })
+
+        expect(stderr).toBe('')
+        expect(readdirSync(tracesDir).filter((file) => file.endsWith('.trace.zip'))).toEqual([
+          'chromium-remote-test-0-0.trace.zip',
+        ])
+
+        const [testModule] = ctx.state.getTestModules()
+        const [testCase] = Array.from(testModule.children.allTests())
+        const [annotation] = testCase.annotations()
+        expect(annotation.message).toBe('chromium-remote-test-0-0')
+        expect(existsSync(annotation.attachment!.path!)).toBe(true)
+      } finally {
+        await server.close()
+      }
+    },
+  )
 })

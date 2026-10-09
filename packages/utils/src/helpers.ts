@@ -401,3 +401,38 @@ export function sanitizeFilePath(s: string): string {
   // oxlint-disable-next-line no-control-regex
   return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
 }
+
+/**
+ * Truncates a filename to `maxBytes` (UTF-8) without splitting characters.
+ * Appends `~{hash}` if truncated.
+ * Returns an empty string if the hash doesn't fit.
+ */
+export function truncateFileName(name: string, maxBytes: number, hash: string): string {
+  const encoder = new TextEncoder()
+  if (encoder.encode(name).length <= maxBytes) {
+    return name
+  }
+
+  const suffix = `~${hash}`
+  const limit = maxBytes - encoder.encode(suffix).length
+
+  if (limit <= 0) {
+    return ''
+  }
+
+  let byteCount = 0
+  let cutIndex = 0
+
+  for (const char of name) {
+    const charBytes = encoder.encode(char).length
+    if (byteCount + charBytes > limit) {
+      break
+    }
+
+    byteCount += charBytes
+    cutIndex += char.length
+  }
+
+  const baseName = name.slice(0, cutIndex).replace(/-+$/, '')
+  return `${baseName}${suffix}`
+}

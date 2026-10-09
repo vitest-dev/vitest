@@ -38,6 +38,13 @@ chromium-my-test-0-0.trace.zip
                   ^ retry count
 ```
 
+To comply with the 255-byte file name limit on most file systems, long test names are truncated. A short hash of the sanitized name is added before the counters to prevent naming collisions:
+
+```
+chromium-my-very-long-test-name-...~1a2b3c4d5e6f7890-0-0.trace.zip
+                                    ^^^^^^^^^^^^^^^^ hash of the sanitized name
+```
+
 To change the output directory, you can set the `tracesDir` option in the `test.browser.trace` configuration. This way all traces will be stored in the same directory, grouped by the test file.
 
 ```ts [vitest.config.js]
@@ -58,7 +65,7 @@ export default defineConfig({
 })
 ```
 
-The traces are available in reporters as [annotations](/guide/test-annotations). For example, in the HTML reporter, you can find the link to the trace file in the test details.
+The traces are available in reporters as [annotations](/guide/test-annotations). The annotation message is the trace filename without `.trace.zip`. For example, in the HTML reporter, you can find the link to the trace file in the test details.
 
 ## Trace markers
 
