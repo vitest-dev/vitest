@@ -171,6 +171,29 @@ describe.runIf(module.registerHooks)('supported', () => {
     await vitest.waitForStdout('1 passed')
   })
 
+  // fix https://github.com/vitest-dev/vitest/issues/7788
+  test('mocks a module next to a test file in a directory with spaces', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
+      'space dir/greet.js': `export function greet() { return 'hello world' }`,
+      'space dir/basic.test.js': `
+        import { greet } from './greet.js'
+        vi.mock('./greet.js', { spy: true })
+        test('greet is mocked', () => {
+          expect(vi.isMockFunction(greet)).toBe(true)
+        })
+      `,
+    })
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "space dir/basic.test.js": {
+          "greet is mocked": "passed",
+        },
+      }
+    `)
+  })
+
   test('updating inline snapshots works', async () => {
     const { fs, stdout } = await runNoViteModuleRunnerTests(
       {

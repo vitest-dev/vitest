@@ -1,6 +1,7 @@
 import { expect, onTestFailed, onTestFinished, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 import { instances } from '../settings'
+import { runInlineBrowserTests } from './utils'
 
 // TODO: investigate `isolate: false` tests.
 // Doesn't seem like we can run things in parallel if there are mocks
@@ -124,4 +125,58 @@ test('mocks from a setup file apply to static imports of a test file', async () 
   })
 
   expect(result.exitCode).toBe(0)
+})
+
+// fix https://github.com/vitest-dev/vitest/issues/7788
+test('mocks modules next to a test file in a directory with spaces', async () => {
+  const { errorTree } = await runInlineBrowserTests({
+    'space dir/source.ts': `export function answer() { return 42 }`,
+    'space dir/redirect.ts': `export function value() { return 'original' }`,
+    'space dir/__mocks__/redirect.ts': `export function value() { return 'mocked' }`,
+    'space dir/factory.ts': `export const name = 'original'`,
+    'space dir/basic.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { name } from './factory'
+import { value } from './redirect'
+import { answer } from './source'
+
+vi.mock('./source', { spy: true })
+vi.mock('./redirect')
+vi.mock('./factory', () => ({ name: 'factory' }))
+
+test('spy', () => {
+  expect(vi.isMockFunction(answer)).toBe(true)
+})
+
+test('redirect', () => {
+  expect(value()).toBe('mocked')
+})
+
+test('factory', () => {
+  expect(name).toBe('factory')
+})
+
+test('error location', () => {
+  expect(answer()).toBe(0)
+})
+`,
+  })
+
+  const trees = errorTree({ project: true, stackTrace: true })
+  expect(Object.keys(trees).sort()).toEqual(instances.map(({ browser }) => browser).sort())
+  for (const tree of Object.values(trees)) {
+    expect(tree).toMatchInlineSnapshot(`
+      {
+        "space dir/basic.test.ts": {
+          "error location": [
+            "expected 42 to be +0 // Object.is equality
+          at space dir/basic.test.ts:24:20",
+          ],
+          "factory": "passed",
+          "redirect": "passed",
+          "spy": "passed",
+        },
+      }
+    `)
+  }
 })

@@ -488,7 +488,7 @@ export function setupBrowserRpc(
             } else {
               if (module.type === 'redirect') {
                 const redirectUrl = new URL(module.redirect)
-                const redirect = join(vite.config.root, slash(redirectUrl.pathname))
+                const redirect = join(vite.config.root, slash(decodeURI(redirectUrl.pathname)))
                 checkFileAccess(redirect)
                 module.redirect = redirect
               }
