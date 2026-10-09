@@ -576,7 +576,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
               url = request.href.slice(request.origin.length)
             }
 
-            const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
+            const result = await this.project
+              .browser!.vite.transformRequest(decodeURI(url))
+              .catch(() => null)
             if (!result) {
               return route.continue()
             }

@@ -6,7 +6,7 @@ import {
   objectAttr,
   toArray,
 } from '@vitest/utils/helpers'
-import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
+import { parseSingleFFOrSafariStack, parseSingleStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
@@ -447,5 +447,27 @@ describe('parseSingleFFOrSafariStack', () => {
     }
 
     parseSingleFFOrSafariStack(new PrettyError(obj).stack!)
+  })
+})
+
+describe('parseSingleStack', () => {
+  test.for([
+    ['    at http://localhost:63315/space%20dir/basic.test.ts:4:1', '/space dir/basic.test.ts'],
+    [
+      'module code@http://localhost:63315/space%20dir/basic.test.ts:4:1',
+      '/space dir/basic.test.ts',
+    ],
+    [
+      '    at http://localhost:63315/@fs/Users/me/my%20project/basic.test.ts:4:1',
+      '/Users/me/my project/basic.test.ts',
+    ],
+    [
+      '    at file:///Users/me/my%20project/test%231.test.ts:4:1',
+      '/Users/me/my project/test#1.test.ts',
+    ],
+    ['    at /Users/me/project/repro-%20.test.ts:4:1', '/Users/me/project/repro-%20.test.ts'],
+    ['    at http://localhost:63315/100%.test.ts:4:1', '/100%.test.ts'],
+  ])('%s', ([line, file]) => {
+    expect(parseSingleStack(line)?.file).toBe(file)
   })
 })
