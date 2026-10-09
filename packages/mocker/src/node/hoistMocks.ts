@@ -290,9 +290,10 @@ export function hoistMocks(
   let hasMockApiCall = false
 
   esmWalker(ast, {
+    // called after all call expressions are visited
     onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
-      if (!binding) {
+      if (!binding || !hasMockApiCall) {
         return
       }
 
