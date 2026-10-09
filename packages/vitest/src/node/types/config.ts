@@ -1,4 +1,3 @@
-import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
@@ -12,6 +11,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
+import type { FakeTimersConfig } from '../../integrations/mock/timers'
 import type { SerializedConfig } from '../../runtime/config'
 import type {
   SequenceHooks,
