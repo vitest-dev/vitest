@@ -66,3 +66,27 @@ test('vitest bails out when the iframe is no longer accessible', async () => {
   expect(stderr).toContain('Received URL: http://')
   expect(stderr).toContain('Expected: http://')
 })
+
+// Firefox fires no "load" event for a document that failed to load, so the
+// orchestrator has to notice the unload itself instead of waiting forever
+test.runIf(
+  provider.name === 'playwright' && instances.some((instance) => instance.browser !== 'webkit'),
+)('vitest bails out when the iframe navigates to an unreachable address', async () => {
+  const { stderr } = await runInlineBrowserTests(
+    {
+      'navigate.test.ts': `
+          import { test } from 'vitest'
+
+          test('navigates away', async () => {
+            location.href = 'http://127.0.0.1:1/'
+            await new Promise(() => {})
+          })
+        `,
+    },
+    {
+      browser: { instances: instances.filter((instance) => instance.browser !== 'webkit') },
+    },
+    { fails: true },
+  )
+  expect(stderr).toMatch(/Cannot connect to the iframe/)
+})

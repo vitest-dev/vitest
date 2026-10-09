@@ -159,6 +159,11 @@ export function setupBrowserRpc(
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
+      // the pool closed this instance, its pages can still reconnect while they close
+      if (!project.browser?.provider) {
+        ws.terminate()
+        return
+      }
       wss.emit('connection', ws, request)
 
       const { rpc, offCancel } = setupClient(project, rpcId, ws, { sessionId })
@@ -267,7 +272,7 @@ export function setupBrowserRpc(
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config?.deps?.moduleDirectories,
     })
-    const mocker = project.browser?.provider.mocker
+    const mocker = project.browser?.provider?.mocker
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
@@ -447,9 +452,9 @@ export function setupBrowserRpc(
           return vitest.state.getCountOfFailedTests()
         },
         async wdioSwitchContext(direction) {
-          const provider = project.browser!.provider
+          const provider = project.browser?.provider
           if (!provider) {
-            throw new Error('Commands are only available for browser tests.')
+            throw new Error(`The browser of the "${project.name}" project is closed.`)
           }
           if (provider.name !== 'webdriverio') {
             throw new Error('Switch context is only available for WebDriverIO provider.')
@@ -462,9 +467,11 @@ export function setupBrowserRpc(
         },
         async triggerCommand(sessionId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', sessionId, command)
-          const provider = project.browser!.provider
+          const provider = project.browser?.provider
           if (!provider) {
-            throw new Error('Commands are only available for browser tests.')
+            throw new Error(
+              `Cannot run the "${command}" command because the browser of the "${project.name}" project is closed.`,
+            )
           }
           const context = Object.assign(
             {

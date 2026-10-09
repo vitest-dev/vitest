@@ -24,6 +24,7 @@ import type {
   BrowserCommand,
   BrowserModuleMocker,
   BrowserProvider,
+  BrowserProviderCloseOptions,
   BrowserProviderOption,
   CDPSession,
   TestProject,
@@ -102,6 +103,7 @@ export function playwright(
 }
 
 interface WarmBrowser {
+  config: LaunchContext['config']
   promise: Promise<Browser>
   launchOptionsJson: string
   pending: Set<WarmBrowser>
@@ -140,15 +142,7 @@ function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptio
   if (warmBrowsers.has(project.config)) {
     return
   }
-  let pending = pendingWarmBrowsers.get(project.vitest)
-  if (!pending) {
-    const pendingBrowsers = new Set<WarmBrowser>()
-    pending = pendingBrowsers
-    pendingWarmBrowsers.set(project.vitest, pendingBrowsers)
-    // Browsers whose projects never initialize a provider (they have no test
-    // files to run) are cleaned up when Vitest closes.
-    project.vitest.onClose(() => closeWarmBrowsers(pendingBrowsers))
-  }
+  const pending = getPendingWarmBrowsers(project.vitest)
   const launchOptions = resolveLaunchOptions(
     project.config.browser,
     project.vitest.config.inspector,
@@ -156,7 +150,8 @@ function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptio
     browserName,
   )
   const entry: WarmBrowser = {
-    launchOptionsJson: JSON.stringify(launchOptions),
+    config: project.config,
+    launchOptionsJson: getWarmBrowserKey(browserName, launchOptions),
     pending,
     promise: (async () => {
       debug?.('[%s] prewarming the browser', browserName)
@@ -176,6 +171,41 @@ function prewarmBrowser(project: LaunchContext, options: PlaywrightProviderOptio
   warmBrowsers.set(project.config, entry)
 }
 
+function getWarmBrowserKey(browserName: string, launchOptions: LaunchOptions): string {
+  return JSON.stringify([browserName, launchOptions])
+}
+
+function getPendingWarmBrowsers(vitest: LaunchContext['vitest']): Set<WarmBrowser> {
+  let pending = pendingWarmBrowsers.get(vitest)
+  if (!pending) {
+    const pendingBrowsers = new Set<WarmBrowser>()
+    pending = pendingBrowsers
+    pendingWarmBrowsers.set(vitest, pendingBrowsers)
+    // Browsers whose projects never initialize a provider (they have no test
+    // files to run) are cleaned up when Vitest closes.
+    vitest.onClose(() => closeWarmBrowsers(pendingBrowsers))
+  }
+  return pending
+}
+
+// the pool closes an idle instance to start another project; the browser
+// process stays warm so the next project adopts it instead of launching one
+function keepWarmBrowser(
+  project: LaunchContext,
+  browser: Promise<Browser>,
+  launchOptionsJson: string,
+) {
+  const pending = getPendingWarmBrowsers(project.vitest)
+  const entry: WarmBrowser = {
+    config: project.config,
+    launchOptionsJson,
+    pending,
+    promise: browser,
+  }
+  pending.add(entry)
+  warmBrowsers.set(project.config, entry)
+}
+
 function takeWarmBrowser(config: LaunchContext['config']): WarmBrowser | undefined {
   const warm = warmBrowsers.get(config)
   if (warm) {
@@ -183,6 +213,26 @@ function takeWarmBrowser(config: LaunchContext['config']): WarmBrowser | undefin
     warm.pending.delete(warm)
   }
   return warm
+}
+
+// fewer browsers are prewarmed than there are projects and the pool starts
+// projects in test order, so a browser prepared for another project is
+// adopted when it is the same browser launched with the same options
+function takeAnyWarmBrowser(
+  vitest: LaunchContext['vitest'],
+  launchOptionsJson: string,
+): WarmBrowser | undefined {
+  const pending = pendingWarmBrowsers.get(vitest)
+  if (!pending) {
+    return
+  }
+  for (const warm of pending) {
+    if (warm.launchOptionsJson === launchOptionsJson) {
+      pending.delete(warm)
+      warmBrowsers.delete(warm.config)
+      return warm
+    }
+  }
 }
 
 async function closeWarmBrowsers(pending: Set<WarmBrowser>): Promise<void> {
@@ -253,6 +303,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public browserName: PlaywrightBrowser
 
   private browserPromise: Promise<Browser> | null = null
+  // set for a locally launched browser, which can be kept warm for another project
+  private launchOptionsJson: string | null = null
   private closing = false
   private armedContexts = new WeakMap<BrowserContext, Promise<void>>()
 
@@ -377,20 +429,26 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         )
         this.browser = this.persistentContext.browser()!
       } else {
-        const warm = takeWarmBrowser(this.project.config)
-        if (warm && warm.launchOptionsJson === JSON.stringify(launchOptions)) {
+        const launchOptionsJson = getWarmBrowserKey(this.browserName, launchOptions)
+        let warm = takeWarmBrowser(this.project.config)
+        if (warm && warm.launchOptionsJson !== launchOptionsJson) {
+          debug?.('[%s] discarding the prewarmed browser, launch options changed', this.browserName)
+          void warm.promise.then((browser) => browser.close()).catch(() => {})
+          warm = undefined
+        }
+        warm ??= takeAnyWarmBrowser(this.project.vitest, launchOptionsJson)
+        if (warm) {
           const browser = await warm.promise.catch(() => null)
           if (browser?.isConnected()) {
             debug?.('[%s] adopting the prewarmed browser', this.browserName)
             this.browser = browser
             this.browserPromise = null
+            this.launchOptionsJson = launchOptionsJson
             return this.browser
           }
-        } else if (warm) {
-          debug?.('[%s] discarding the prewarmed browser, launch options changed', this.browserName)
-          void warm.promise.then((browser) => browser.close()).catch(() => {})
         }
         this.browser = await playwright[this.browserName].launch(launchOptions)
+        this.launchOptionsJson = launchOptionsJson
       }
       this.browserPromise = null
       return this.browser
@@ -739,10 +797,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         String(disposable),
       )
       await disposable?.close()
-      this.pages.clear()
-      this.contexts.clear()
-      this.browser = null
-      this.browserPromise = null
       throw new Error(`[vitest] The provider was closed.`)
     }
   }
@@ -760,7 +814,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     } as any // overloaded CDPSession type is too tricky in monorepo
   }
 
-  async close(): Promise<void> {
+  async close(options?: BrowserProviderCloseOptions): Promise<void> {
     process.off('SIGTERM', this.onSIGTERM)
 
     debug?.('[%s] closing provider', this.browserName)
@@ -776,6 +830,28 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const browser = this.browser
     this.browser = null
+    const closed = this.closeContexts()
+    if (options?.keepWarm && browser && this.launchOptionsJson && browser.isConnected()) {
+      // registered before the contexts are closed, so the project that takes
+      // over the pool slot finds the browser right away and waits for it
+      const kept = closed.then(
+        () => browser,
+        async (error) => {
+          await browser.close().catch(() => {})
+          throw error
+        },
+      )
+      keepWarmBrowser(this.project, kept, this.launchOptionsJson)
+      await kept
+      debug?.('[%s] provider is closed, the browser is kept warm', this.browserName)
+      return
+    }
+    await closed
+    await browser?.close()
+    debug?.('[%s] provider is closed', this.browserName)
+  }
+
+  private async closeContexts(): Promise<void> {
     await Promise.all(Array.from(this.pages.values(), (p) => p.close()))
     this.pages.clear()
     if (this.persistentContext) {
@@ -784,8 +860,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       await Promise.all(Array.from(this.contexts.values(), (c) => c.close()))
     }
     this.contexts.clear()
-    await browser?.close()
-    debug?.('[%s] provider is closed', this.browserName)
   }
 }
 

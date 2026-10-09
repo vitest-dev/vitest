@@ -6,6 +6,7 @@ import type {
   BrowserCommand,
   BrowserCommandContext,
   BrowserProvider,
+  BrowserProviderCloseOptions,
   ProjectBrowser as IProjectBrowser,
   ResolvedConfig,
   TestProject,
@@ -27,7 +28,7 @@ export class ProjectBrowser implements IProjectBrowser {
   // transformIndexHtml plugin pipeline each time
   public testerHtmlTransformed: Promise<string> | undefined
 
-  public provider!: BrowserProvider
+  public provider: BrowserProvider | undefined
   public vitest: Vitest
   public vite: ViteDevServer
   public config: ResolvedConfig
@@ -80,7 +81,9 @@ export class ProjectBrowser implements IProjectBrowser {
     if (name in this.parent.commands) {
       return this.parent.commands[name](context, ...args)
     }
-    throw new Error(`Provider ${this.provider.name} does not support command "${name}".`)
+    throw new Error(
+      `Provider ${this.config.browser.provider?.name} does not support command "${name}".`,
+    )
   }) as any
 
   wrapSerializedConfig(): SerializedConfig {
@@ -105,6 +108,16 @@ export class ProjectBrowser implements IProjectBrowser {
         }
       })
     }
+  }
+
+  async closeBrowserProvider(options?: BrowserProviderCloseOptions): Promise<void> {
+    const provider = this.provider
+    if (!provider) {
+      return
+    }
+    // detach first so the next run can create a new provider while this one closes
+    this.provider = undefined
+    await provider.close(options)
   }
 
   public parseErrorStacktrace(e: TestError, options: StackTraceParserOptions = {}): ParsedStack[] {

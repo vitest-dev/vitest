@@ -221,19 +221,22 @@ export class BaseCoverageProvider {
     include: string[],
     root: string,
   ): Promise<string[]> {
+    const tested = new Set(testedFiles.map((file) => slash(file)))
+
     let includedFiles = await glob(include, {
       cwd: root,
-      ignore: [...this.options.exclude, ...testedFiles.map((file) => slash(file))],
+      ignore: this.options.exclude,
       absolute: true,
       dot: true,
       onlyFiles: true,
     })
 
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
-    includedFiles = includedFiles.filter((file) => this.isIncluded(file, root))
+    includedFiles = includedFiles.filter((file) => !tested.has(file) && this.isIncluded(file, root))
 
     if (this.changedFiles) {
-      includedFiles = this.changedFiles.filter((file) => includedFiles.includes(file))
+      const included = new Set(includedFiles)
+      includedFiles = this.changedFiles.filter((file) => included.has(file))
     }
 
     return includedFiles.map((file) => slash(path.resolve(root, file)))
