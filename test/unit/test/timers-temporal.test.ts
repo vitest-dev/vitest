@@ -45,3 +45,27 @@ it('Temporal.Now follows setSystemTime without fake timers', () => {
   expect(globalThis.Temporal).toBe(real)
   expect(globalThis.Temporal.Now.instant().epochMilliseconds).not.toBe(1234)
 })
+
+it('setSystemTime accepts Temporal.Instant and Temporal.ZonedDateTime', () => {
+  vi.setSystemTime(globalThis.Temporal.Instant.fromEpochMilliseconds(1234))
+  expect(Date.now()).toBe(1234)
+  expect(globalThis.Temporal.Now.instant().epochMilliseconds).toBe(1234)
+
+  vi.useFakeTimers()
+  vi.setSystemTime(
+    globalThis.Temporal.ZonedDateTime.from('2022-02-02T17:30:00+05:30[Asia/Kolkata]'),
+  )
+  expect(new Date().toISOString()).toBe('2022-02-02T12:00:00.000Z')
+})
+
+it('useFakeTimers accepts Temporal as now', () => {
+  vi.useFakeTimers({ now: globalThis.Temporal.Instant.fromEpochMilliseconds(1234) })
+  expect(Date.now()).toBe(1234)
+  expect(globalThis.Temporal.Now.instant().epochMilliseconds).toBe(1234)
+
+  vi.useRealTimers()
+  vi.useFakeTimers({
+    now: globalThis.Temporal.ZonedDateTime.from('2022-02-02T17:30:00+05:30[Asia/Kolkata]'),
+  })
+  expect(new Date().toISOString()).toBe('2022-02-02T12:00:00.000Z')
+})
