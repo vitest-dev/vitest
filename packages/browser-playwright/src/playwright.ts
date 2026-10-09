@@ -254,7 +254,7 @@ function resolveLaunchOptions(
     headless: browser.headless,
   }
 
-  if (browser.importMapMocks && browserName === 'firefox') {
+  if (browserName === 'firefox') {
     // multiple import maps per document are behind a pref in Firefox 150+
     launchOptions.firefoxUserPrefs = {
       'dom.multiple_import_maps.enabled': true,

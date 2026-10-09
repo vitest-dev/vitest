@@ -1,6 +1,8 @@
+import { existsSync, rmSync } from 'node:fs'
+import { resolve } from 'pathe'
 import { expect, onTestFailed, onTestFinished, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
-import { instances } from '../settings'
+import { instances, provider } from '../settings'
 
 // TODO: investigate `isolate: false` tests.
 // Doesn't seem like we can run things in parallel if there are mocks
@@ -153,3 +155,49 @@ test('import map mocks report a module that was imported before it was mocked', 
   )
   expect(result.exitCode).toBe(1)
 })
+
+test.runIf(provider.name === 'playwright')(
+  'mocks fall back to request interception when the browser rejects a late import map',
+  async () => {
+    const result = await runVitest({
+      root: 'fixtures/mocking-import-map-fallback',
+    })
+
+    onTestFailed(() => {
+      console.error(result.stdout)
+      console.error(result.stderr)
+    })
+
+    expect(result.stderr).toReportNoErrors()
+    expect(result.stdout).toReportPassedTest('automocked.test.ts', 'firefox')
+    expect(result.stdout).toReportPassedTest('factory.test.ts', 'firefox')
+    expect(result.exitCode).toBe(0)
+  },
+)
+
+test.each([false, undefined])(
+  'a factory mock that no test imports does not transform the original - importMapMocks %s',
+  async (importMapMocks) => {
+    const transformed = resolve(
+      import.meta.dirname,
+      '../fixtures/mocking-unused-factory/node_modules/.vite/transformed.log',
+    )
+    rmSync(transformed, { force: true })
+
+    const result = await runVitest({
+      root: 'fixtures/mocking-unused-factory',
+      browser: { importMapMocks },
+    })
+
+    onTestFailed(() => {
+      console.error(result.stdout)
+      console.error(result.stderr)
+    })
+
+    expect(result.stderr).toReportNoErrors()
+    instances.forEach(({ browser }) => {
+      expect(result.stdout).toReportPassedTest('no-import.test.ts', browser)
+    })
+    expect(existsSync(transformed)).toBe(false)
+  },
+)

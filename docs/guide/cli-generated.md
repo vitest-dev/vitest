@@ -400,7 +400,7 @@ Control if Vitest catches uncaught exceptions so they can be reported (default: 
 - **CLI:** `--browser.importMapMocks`
 - **Config:** [browser.importMapMocks](/config/browser/importmapmocks)
 
-Serve module mocks through an import map instead of request interception (default: `false`)
+Serve module mocks through an import map instead of request interception. By default, enabled when the browser supports it
 
 ### browser.trace
 

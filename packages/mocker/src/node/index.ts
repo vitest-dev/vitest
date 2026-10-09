@@ -8,7 +8,12 @@ export { hoistMockAndResolve as hoistMocks, hoistMocksPlugin } from './hoistMock
 export type { HoistMocksPluginOptions, HoistMocksResult } from './hoistMocksPlugin'
 export { interceptorPlugin } from './interceptorPlugin'
 export type { ManualMockPluginOptions } from './manualMockPlugin'
-export { manualMockPlugin } from './manualMockPlugin'
+export {
+  collectEnvironmentExports,
+  getManualMockId,
+  getManualMockUrl,
+  manualMockPlugin,
+} from './manualMockPlugin'
 
 export type { InterceptorPluginOptions } from './interceptorPlugin'
 export { mockerPlugin } from './mockerPlugin'

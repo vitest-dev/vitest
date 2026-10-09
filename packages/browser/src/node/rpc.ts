@@ -19,7 +19,7 @@ import {
   ManualMockedModule,
   RedirectedModule,
 } from '@vitest/mocker'
-import { ServerMockResolver } from '@vitest/mocker/node'
+import { getManualMockId, getManualMockUrl, ServerMockResolver } from '@vitest/mocker/node'
 import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
@@ -61,8 +61,7 @@ function resolveMockImportMap(
     return { imports: { [key]: base + redirect.pathname + redirect.search } }
   }
   if (module.type === 'manual') {
-    const query = `mock=manual&url=${encodeURIComponent(module.url)}`
-    return { imports: { [key]: injectQuery(key, query) } }
+    return { imports: { [key]: base + getManualMockUrl(module.url, module.id) } }
   }
   return { imports: { [key]: injectQuery(key, `mock=${module.type}`) } }
 }
@@ -93,9 +92,15 @@ function resolveHeartbeatInterval(vitest: Vitest): number {
   return interval
 }
 
+export interface FactoryExportResolver {
+  sessionId: string
+  resolve: () => Promise<string[]>
+}
+
 export function setupBrowserRpc(
   globalServer: ParentBrowserProject,
   defaultMockerRegistry: MockerRegistry,
+  factoryExportResolvers: Map<string, FactoryExportResolver>,
 ): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
@@ -276,7 +281,9 @@ export function setupBrowserRpc(
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
-        onOrchestratorReady() {
+        onOrchestratorReady(capabilities) {
+          ;(project.browser!.state as BrowserServerState).lateImportMaps =
+            capabilities.lateImportMaps
           const sessions = vitest._browserSessions
           sessions.getSession(options.sessionId)?.ready()
         },
@@ -500,8 +507,36 @@ export function setupBrowserRpc(
           return mockResolver.invalidate(ids)
         },
 
-        async registerMock(sessionId, module) {
-          if (project.config.browser.importMapMocks) {
+        async registerMock(sessionId, module): Promise<MockImportMap | undefined> {
+          const option = project.config.browser.importMapMocks
+          const { lateImportMaps } = project.browser!.state as BrowserServerState
+          if (option === true && lateImportMaps === false) {
+            throw new Error(
+              '"browser.importMapMocks" is enabled, but this browser does not accept an import map after a module has loaded. ' +
+                'Firefox needs the "dom.multiple_import_maps.enabled" preference.',
+            )
+          }
+          if (option !== false && lateImportMaps) {
+            if (module.type !== 'manual') {
+              return resolveMockImportMap(vite, module)
+            }
+            // the shim reads the original only when it loads; until then the
+            // server keeps a way to ask this session for the factory keys
+            // this is a last resort check only if the transformation failed
+            factoryExportResolvers.set(module.url, {
+              sessionId,
+              async resolve() {
+                const { keys } = await rpc.resolveManualMock(module.url)
+                return keys
+              },
+            })
+            // the shim is not tied to the original file, so a changed original
+            // would otherwise keep a stale export list
+            const { moduleGraph } = vite.environments.client
+            const shim = moduleGraph.getModuleById(getManualMockId(module.url, module.id))
+            if (shim) {
+              moduleGraph.invalidateModule(shim)
+            }
             return resolveMockImportMap(vite, module)
           }
           if (!mocker) {
@@ -547,6 +582,11 @@ export function setupBrowserRpc(
           }
         },
         clearMocks(sessionId) {
+          for (const [url, resolver] of factoryExportResolvers) {
+            if (resolver.sessionId === sessionId) {
+              factoryExportResolvers.delete(url)
+            }
+          }
           if (!mocker) {
             return defaultMockerRegistry.clear()
           }

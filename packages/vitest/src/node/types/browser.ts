@@ -368,10 +368,12 @@ export interface BrowserConfigOptions {
    * Serve module mocks through an import map in the tester document instead of
    * intercepting network requests.
    *
-   * Requires a browser that supports multiple import maps per document
-   * (Chromium 133+, Safari 18.4+, Firefox 150+ with `dom.multiple_import_maps.enabled`).
+   * By default, Vitest checks once per browser whether it accepts an import map
+   * after a module has loaded (Chromium 133+, Safari 18.4+, Firefox 150+ with
+   * `dom.multiple_import_maps.enabled`, which the Playwright provider sets) and
+   * falls back to request interception otherwise. `true` fails in a browser that
+   * cannot, `false` always intercepts.
    *
-   * @default false
    * @experimental
    */
   importMapMocks?: boolean
@@ -542,7 +544,6 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     height: number
   }
   screenshotFailures: boolean
-  importMapMocks: boolean
   locators: {
     testIdAttribute: string
     exact: boolean

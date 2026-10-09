@@ -403,7 +403,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       importMapMocks: {
         description:
-          'Serve module mocks through an import map instead of request interception (default: `false`)',
+          'Serve module mocks through an import map instead of request interception. By default, enabled when the browser supports it',
       },
       trace: {
         description:

@@ -8,10 +8,11 @@ import type {
   PluginHarness,
   ResolvedConfig,
 } from 'vitest/node'
+import type { FactoryExportResolver } from './rpc'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { MockerRegistry } from '@vitest/mocker'
-import { interceptorPlugin } from '@vitest/mocker/node'
+import { interceptorPlugin, manualMockPlugin } from '@vitest/mocker/node'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { cleanUrl, toArray } from '@vitest/utils/helpers'
 import { join, resolve } from 'pathe'
@@ -75,6 +76,7 @@ function pinCacheControl(res: ServerResponse, value: string): void {
  */
 export const createBrowserServer: BrowserServerFactory = async () => {
   const mockerRegistry = new MockerRegistry()
+  const factoryExportResolvers = new Map<string, FactoryExportResolver>()
 
   const contribution: BrowserServerContribution = {
     async transformIndexHtml(ctx) {
@@ -262,7 +264,7 @@ body {
       // have their own URLs and keep Vite's immutable caching
       const interceptsMocks = () =>
         Array.from(parentServer.children).some(
-          (child) => !child.project.config.browser.importMapMocks,
+          (child) => child.config.browser.importMapMocks === false || !child.state.lateImportMaps,
         )
 
       server.middlewares.use((req, res, next) => {
@@ -377,13 +379,22 @@ body {
       return new ParentBrowserProject({ config, vitest }, '/')
     },
     setupRpc(parent) {
-      setupBrowserRpc(parent as ParentBrowserProject, mockerRegistry)
+      setupBrowserRpc(parent as ParentBrowserProject, mockerRegistry, factoryExportResolvers)
     },
   }
 
   contribution.plugins = [
     ...BrowserPlugin(contribution),
     interceptorPlugin({ registry: mockerRegistry, registerWebSocketEvents: false }),
+    manualMockPlugin({
+      resolveFactoryExports(url) {
+        const resolver = factoryExportResolvers.get(url)
+        if (!resolver) {
+          throw new Error(`[vitest] The factory mock "${url}" is not registered`)
+        }
+        return resolver.resolve()
+      },
+    }),
     {
       name: 'vitest:browser:framework-sourcemaps',
       enforce: 'post',

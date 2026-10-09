@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite'
-import { automockPlugin, hoistMocksPlugin, manualMockPlugin } from '@vitest/mocker/node'
+import { automockPlugin, hoistMocksPlugin } from '@vitest/mocker/node'
 import { normalize } from 'pathe'
 import { distDir } from '../../paths'
 import { generateCodeFrame } from '../printError'
@@ -26,6 +26,5 @@ export function MocksPlugins(options: MocksPluginOptions = {}): Plugin[] {
       },
     }),
     automockPlugin(),
-    manualMockPlugin(),
   ]
 }

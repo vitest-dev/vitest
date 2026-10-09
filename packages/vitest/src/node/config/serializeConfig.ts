@@ -126,7 +126,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
               }
             : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
-        importMapMocks: browser.importMapMocks ?? false,
+        importMapMocks: browser.importMapMocks,
         trace: browser.trace.mode,
         traceView: browser.traceView,
       }

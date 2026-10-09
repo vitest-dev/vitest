@@ -136,7 +136,7 @@ export interface SerializedConfig {
       inlineImages: boolean
     }
     trackUnhandledErrors: boolean
-    importMapMocks: boolean
+    importMapMocks: boolean | undefined
     detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
