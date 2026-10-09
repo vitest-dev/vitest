@@ -862,6 +862,7 @@ export function resolveTestConfig(
   }
 
   resolved.browser.enabled ??= false
+  resolved.browser.importMapMocks ??= false
   resolved.browser.headless ??= isCI
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI

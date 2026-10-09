@@ -13,11 +13,7 @@
     const viteModule = evaluatedModules.ensureModule(moduleId, moduleId)
 
     viteModule.evaluated = false
-    viteModule.promise = new Promise((resolve, reject) => {
-      __vitest_mocker__.prepare().finally(() => {
-        moduleCallback().then(resolve, reject)
-      });
-    });
+    viteModule.promise = __vitest_mocker__.prepare().then(() => moduleCallback())
     return viteModule.promise.finally(() => {
       viteModule.evaluated = true
       viteModule.promise = undefined

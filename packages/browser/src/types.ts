@@ -20,6 +20,10 @@ import type {
 } from 'vitest'
 import type { MarkOptions } from 'vitest/browser'
 
+export interface MockImportMap {
+  imports: Record<string, string>
+}
+
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
@@ -65,7 +69,10 @@ export interface WebSocketBrowserHandlers {
   getBrowserFileSourceMap: (id: string) => SourceMap | null | { mappings: '' } | undefined
   wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 
-  registerMock: (sessionId: string, mock: MockedModuleSerialized) => void
+  registerMock: (
+    sessionId: string,
+    mock: MockedModuleSerialized,
+  ) => Promise<MockImportMap | undefined>
   unregisterMock: (sessionId: string, id: string) => void
   clearMocks: (sessionId: string) => void
 

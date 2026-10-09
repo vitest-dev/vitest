@@ -353,6 +353,18 @@ export interface BrowserConfigOptions {
    * @default true
    */
   trackUnhandledErrors?: boolean
+
+  /**
+   * Serve module mocks through an import map in the tester document instead of
+   * intercepting network requests.
+   *
+   * Requires a browser that supports multiple import maps per document
+   * (Chromium 133+, Safari 18.4+, Firefox 150+ with `dom.multiple_import_maps.enabled`).
+   *
+   * @default false
+   * @experimental
+   */
+  importMapMocks?: boolean
 }
 
 export interface BrowserCommandContext {
@@ -515,6 +527,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     height: number
   }
   screenshotFailures: boolean
+  importMapMocks: boolean
   locators: {
     testIdAttribute: string
     exact: boolean

@@ -7,6 +7,8 @@ export type { HoistMocksOptions, StaticMockCall } from './hoistMocks'
 export { hoistMockAndResolve as hoistMocks, hoistMocksPlugin } from './hoistMocksPlugin'
 export type { HoistMocksPluginOptions, HoistMocksResult } from './hoistMocksPlugin'
 export { interceptorPlugin } from './interceptorPlugin'
+export type { ManualMockPluginOptions } from './manualMockPlugin'
+export { manualMockPlugin } from './manualMockPlugin'
 
 export type { InterceptorPluginOptions } from './interceptorPlugin'
 export { mockerPlugin } from './mockerPlugin'

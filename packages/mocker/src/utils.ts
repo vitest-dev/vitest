@@ -7,9 +7,10 @@ export function createManualModuleSource(
   moduleUrl: string,
   exports: string[],
   globalAccessor = '"__vitest_mocker__"',
+  method: 'getFactoryModule' | 'resolveFactoryModule' = 'getFactoryModule',
 ): string {
   const source = `
-const __factoryModule__ = await globalThis[${globalAccessor}].getFactoryModule(${JSON.stringify(moduleUrl)});
+const __factoryModule__ = await globalThis[${globalAccessor}].${method}(${JSON.stringify(moduleUrl)});
 `
   const keys = exports
     .map((name, index) => {

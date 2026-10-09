@@ -395,6 +395,13 @@ Serve sourcemaps of dependencies to the browser in headless runs, used by devtoo
 
 Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)
 
+### browser.importMapMocks
+
+- **CLI:** `--browser.importMapMocks`
+- **Config:** [browser.importMapMocks](/config/browser/importmapmocks)
+
+Serve module mocks through an import map instead of request interception (default: `false`)
+
 ### browser.trace
 
 - **CLI:** `--browser.trace <mode>`

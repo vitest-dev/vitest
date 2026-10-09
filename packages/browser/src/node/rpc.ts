@@ -1,4 +1,4 @@
-import type { MockerRegistry } from '@vitest/mocker'
+import type { MockedModuleSerialized, MockerRegistry } from '@vitest/mocker'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
@@ -9,7 +9,7 @@ import type {
   Vitest,
 } from 'vitest/node'
 import type { WebSocket } from 'ws'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
+import type { MockImportMap, WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
@@ -34,6 +34,38 @@ import {
 import { WebSocketServer } from 'ws'
 import { replaceUndefined, reviveUndefined } from '../shared/serialization'
 import { slash } from './utils'
+
+function injectQuery(url: string, query: string): string {
+  return url.includes('?') ? `${url}&${query}` : `${url}?${query}`
+}
+
+// the key must be the exact URL that import analysis emits in the browser,
+// including the dependency version and the HMR timestamp
+function resolveMockImportMap(
+  vite: ParentBrowserProject['vite'],
+  module: MockedModuleSerialized,
+): MockImportMap {
+  let url = module.url
+  const version = /[?&]v=(\w{8})/.exec(module.id)?.[1]
+  if (version) {
+    url = injectQuery(url, `v=${version}`)
+  }
+  const node = vite.environments.client.moduleGraph.getModuleById(module.id)
+  if (node && node.lastHMRTimestamp > 0) {
+    url = injectQuery(url, `t=${node.lastHMRTimestamp}`)
+  }
+  const base = vite.config.base.replace(/\/$/, '')
+  const key = base + url
+  if (module.type === 'redirect') {
+    const redirect = new URL(module.redirect)
+    return { imports: { [key]: base + redirect.pathname + redirect.search } }
+  }
+  if (module.type === 'manual') {
+    const query = `mock=manual&url=${encodeURIComponent(module.url)}`
+    return { imports: { [key]: injectQuery(key, query) } }
+  }
+  return { imports: { [key]: injectQuery(key, `mock=${module.type}`) } }
+}
 
 const debug = createDebugger('vitest:browser:api')
 
@@ -462,6 +494,9 @@ export function setupBrowserRpc(
         },
 
         async registerMock(sessionId, module) {
+          if (project.config.browser.importMapMocks) {
+            return resolveMockImportMap(vite, module)
+          }
           if (!mocker) {
             // make sure modules are not processed yet in case they were imported before
             // and were not mocked

@@ -257,6 +257,14 @@ body {
           ? []
           : ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
 
+      // request interception serves a mocked dependency at the original URL,
+      // so a cached original would never reach the mock; import map mocks
+      // have their own URLs and keep Vite's immutable caching
+      const interceptsMocks = () =>
+        Array.from(parentServer.children).some(
+          (child) => !child.project.config.browser.importMapMocks,
+        )
+
       server.middlewares.use((req, res, next) => {
         const url = req.url
         if (url) {
@@ -268,7 +276,7 @@ body {
           // them in _some_ tests, while keeping original modules in others;
           // there is no way to configure that in Vite, so we pin no-cache
           // and ignore the cache-control Vite sets in the next middleware
-          else if (versionRegexp.test(url) && !url.includes('chunk-')) {
+          else if (versionRegexp.test(url) && !url.includes('chunk-') && interceptsMocks()) {
             pinCacheControl(res, 'no-cache')
           }
         }
