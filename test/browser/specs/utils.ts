@@ -6,6 +6,12 @@ import { instances, provider } from '../settings'
 
 export { instances, provider } from '../settings'
 
+// every browser instance is a worker, so `runVitest`'s default of a single
+// worker would run the instances one after another
+function getMaxWorkers(instanceCount: number) {
+  return Math.max(instanceCount, 1)
+}
+
 export async function runInlineBrowserTests(
   structure: TestFsStructure,
   config?: RunVitestConfig,
@@ -16,6 +22,7 @@ export async function runInlineBrowserTests(
     {
       watch: false,
       reporters: 'none',
+      maxWorkers: getMaxWorkers(config?.browser?.instances?.length ?? instances.length),
       ...config,
       browser: {
         enabled: true,
@@ -39,6 +46,7 @@ export async function runBrowserTests(
     {
       watch: false,
       reporters: 'none',
+      maxWorkers: getMaxWorkers(config?.browser?.instances?.length ?? instances.length),
       ...config,
       browser: { headless: true, ...config?.browser },
       $viteConfig: viteOverrides,

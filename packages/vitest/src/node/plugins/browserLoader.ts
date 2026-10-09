@@ -185,6 +185,7 @@ export async function createClusterServer(
   // Start browser launches now so their latency overlaps Vite server creation.
   // Entries that cannot run browser tests are skipped because they will never
   // initialize a provider that could adopt and close the prepared browser.
+  const harness = vitest._harness
   for (const child of children) {
     if (
       child.hidden ||
@@ -196,7 +197,14 @@ export async function createClusterServer(
     // The Vite server is shared, but each child carries its own resolved
     // provider and browser options, so it must be prewarmed independently.
     const projectConfig = child.projectConfig
-    projectConfig.browser.provider?.prewarm?.({ config: projectConfig, vitest })
+    const prewarm = projectConfig.browser.provider?.prewarm
+    // the pool runs at most `maxWorkers` browser instances at a time,
+    // the rest would only sit idle until their project gets a turn
+    if (!prewarm || harness._prewarmedBrowsers >= projectConfig.maxWorkers) {
+      continue
+    }
+    harness._prewarmedBrowsers++
+    prewarm({ config: projectConfig, vitest })
   }
 
   const server = await createViteServer(viteConfig)
