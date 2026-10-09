@@ -35,8 +35,8 @@ function appendImportMap(importMap: MockImportMap) {
     if (import.meta.resolve(specifier) !== expected) {
       throw new Error(
         `Cannot mock "${specifier}" with an import map because the browser kept its original URL. ` +
-          `Either the module was already imported before vi.mock was registered, ` +
-          `or the browser does not support adding an import map after a module was loaded.`,
+          `The module was already imported before vi.mock was registered, ` +
+          `for example by a setup file or by an earlier test file when "isolate" is false.`,
       )
     }
   }
