@@ -2,10 +2,9 @@ import type { Vitest } from './core'
 import type { TestSpecification } from './test-specification'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
-import { AffectedModulesResolver } from './affected-modules'
 import { groupFilters, parseFilter } from './cli/filter'
 import { IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
-import { RecordedModulesResolver } from './recorded-modules'
+import { createModulesResolver } from './modules-resolver'
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
@@ -123,10 +122,13 @@ export class VitestSpecifications {
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
     this.vitest._sourceFilterResult = undefined
 
+    const resolver = createModulesResolver(this.vitest, specs)
+
     if (this.vitest.config.changed && !this.vitest.config.related) {
       const related = await this.vitest.vcs.findChangedFiles({
         root: this.vitest.config.root,
         changedSince: this.vitest.config.changed,
+        resolver,
       })
       this.vitest.config.related = Array.from(new Set(related))
     }
@@ -149,10 +151,7 @@ export class VitestSpecifications {
       return []
     }
 
-    const resolver = this.vitest.config.experimental.recordDependencies
-      ? new RecordedModulesResolver(this.vitest, related)
-      : new AffectedModulesResolver(this.vitest, related)
-    const affectedSpecs = await resolver.resolve(specs)
+    const affectedSpecs = await resolver.getAffectedSpecifications(related)
     this.vitest._sourceFilterResult = { affected: affectedSpecs.length, total: specs.length }
     return affectedSpecs
   }

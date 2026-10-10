@@ -505,6 +505,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Run tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
   },
+  stale: {
+    description:
+      'Run only the tests whose recorded dependencies were modified since the last run of the test. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)',
+  },
   sequence: {
     description: 'Options for how tests should be sorted',
     argument: '<options>',
@@ -933,7 +937,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       vcsProvider: {
         argument: '<path>',
-        description: 'Custom provider for detecting changed files. (default: `git`)',
+        description:
+          'Provider for detecting changed files: `git`, `mtime` (requires `experimental.recordDependencies`) or a path to a custom provider. (default: `git`)',
         subcommands: null,
       },
       recordDependencies: {
@@ -1029,5 +1034,9 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
   changed: {
     description: 'Print only tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
+  },
+  stale: {
+    description:
+      'Print only the tests whose recorded dependencies were modified since the last run of the test (default: `false`)',
   },
 }

@@ -316,7 +316,7 @@ If you are running tests in Deno, TypeScript files are processed by the runtime 
 
 ## experimental.vcsProvider <Version type="experimental">4.1.1</Version> {#experimental-vcsprovider}
 
-- **Type:** `VCSProvider | string`
+- **Type:** `'git' | 'mtime' | VCSProvider | string`
 
 ```ts
 interface VCSProvider {
@@ -326,14 +326,55 @@ interface VCSProvider {
 interface VCSProviderOptions {
   root: string
   changedSince?: string | boolean
+  /** Resolves the dependencies of the test files of the run. */
+  resolver: ModulesResolver
+}
+
+interface ModulesResolver {
+  /**
+   * Every file whose change can affect the test files of the run.
+   */
+  getDependencies(): Promise<ModuleDependency[]>
+}
+
+interface ModuleDependency {
+  /** Absolute path of the file. */
+  file: string
+  /**
+   * Start time of the oldest run that recorded the file, in milliseconds.
+   * Not set when the dependency comes from the static module graph.
+   */
+  recordedAt?: number
 }
 ```
 
 - **Default:** `'git'`
 
-Custom provider for detecting changed files. Used with the [`--changed`](/guide/cli#changed) flag to determine which files have been modified.
+Provider for detecting changed files. Used with the [`--changed`](/guide/cli#changed) flag to determine which files have been modified.
 
-By default, Vitest uses Git to detect changed files. You can provide a custom implementation of the `VCSProvider` interface to use a different version control system:
+Vitest has two built-in providers:
+
+- `'git'` returns the files that differ from the `--changed` reference, plus staged and untracked files.
+- `'mtime'` <Version type="experimental">5.1.0</Version> returns the recorded dependencies whose modification time is newer than the run that recorded them, and deleted dependencies. It needs [`experimental.recordDependencies`](#experimental-recorddependencies): a dependency without a record is always reported as changed, so every test runs until the records exist. It does not need Git and ignores the `--changed` reference. A `--changed` run updates the records of the tests it ran, so the next `--changed` run selects only the tests whose dependencies changed since.
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      recordDependencies: true,
+      vcsProvider: 'mtime',
+    },
+  },
+})
+```
+
+::: warning
+The `mtime` provider compares file times with the clock of the machine that ran the tests. A checkout or a copy that sets file times in the past is not detected.
+:::
+
+You can provide a custom implementation of the `VCSProvider` interface to use a different version control system. `options.resolver.getDependencies()` returns every file the test files of the run depend on, so a provider can limit its work to these files:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -342,8 +383,9 @@ export default defineConfig({
   test: {
     experimental: {
       vcsProvider: {
-        async findChangedFiles({ root, changedSince }) {
-          // return paths of changed files
+        async findChangedFiles({ root, changedSince, resolver }) {
+          const dependencies = await resolver.getDependencies()
+          // return the paths of the changed files
           return []
         },
       },
@@ -375,7 +417,7 @@ export default {
 }
 ```
 
-## experimental.recordDependencies <Version type="experimental">5.0.4</Version> {#experimental-recorddependencies}
+## experimental.recordDependencies <Version type="experimental">5.1.0</Version> {#experimental-recorddependencies}
 
 - **Type:** `boolean`
 - **Default:** `false`

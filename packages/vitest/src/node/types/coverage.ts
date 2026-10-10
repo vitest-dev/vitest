@@ -7,6 +7,7 @@ import type {
   RuntimeCoverageProviderModule,
 } from '../../utils/coverage'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../test-specification'
 
 type TransformResult = string | Partial<ViteTransformResult> | undefined | null | void
 type CoverageResults = unknown
@@ -27,7 +28,7 @@ export interface CoverageProvider {
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void | Promise<void>
 
   /** Callback called when test run starts */
-  onTestRunStart?: () => void | Promise<void>
+  onTestRunStart?: (specifications: ReadonlyArray<TestSpecification>) => void | Promise<void>
 
   /** Callback called when test run fails due to test failures */
   onTestFailure?: () => void | Promise<void>

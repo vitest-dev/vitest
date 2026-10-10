@@ -37,6 +37,8 @@ import { RandomSequencer } from '../sequencers/RandomSequencer'
 import { API_TOKEN_FILE, resolveApiToken } from './apiToken'
 import { PluginHarness } from './pluginHarness'
 
+const builtinVCSProviders = new Set(['git', 'mtime'])
+
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
   // /some/file
@@ -510,6 +512,17 @@ export function resolveTestConfig(
         resolved.coverage.reporter.push(['text-summary', {}])
       }
     }
+  }
+  if (resolved.stale) {
+    if (resolved.cache === false) {
+      throw new Error(
+        'The "stale" option requires the "cache" option to store the dependencies of the test files.',
+      )
+    }
+    resolved.changed ||= true
+    resolved.experimental ??= {} as any
+    resolved.experimental.recordDependencies = true
+    resolved.experimental.vcsProvider = 'mtime'
   }
   if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
     resolved.coverage.changed = resolved.changed
@@ -1039,7 +1052,7 @@ export function resolveTestConfig(
 
   if (
     typeof resolved.experimental.vcsProvider === 'string' &&
-    resolved.experimental.vcsProvider !== 'git'
+    !builtinVCSProviders.has(resolved.experimental.vcsProvider)
   ) {
     resolved.experimental.vcsProvider = resolvePath(
       resolved.experimental.vcsProvider,
