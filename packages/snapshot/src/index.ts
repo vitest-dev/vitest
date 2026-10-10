@@ -1,5 +1,5 @@
 export { SnapshotClient } from './client'
-export type { MatchResult } from './client'
+export type { MatchResult, MatchMeta } from './client'
 
 export type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
 
@@ -18,3 +18,6 @@ export type {
   SnapshotUpdateState,
   UncheckedSnapshot,
 } from './types'
+
+export { saveSnapshotUpdates } from './update'
+export type { SnapshotUpdate } from './update'
