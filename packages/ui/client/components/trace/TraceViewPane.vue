@@ -10,6 +10,7 @@ import {
   getTraceAttemptMap,
   selectActiveTraceAttempt,
   showTraceSelectorHighlight,
+  useTraceSnapshotViewMode,
 } from '~/composables/trace-view'
 import { getNames } from '../../../../vitest/src/utils/tasks.ts'
 import TraceView from './TraceView.vue'
@@ -21,6 +22,9 @@ const props = defineProps<{
 
 const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() => (trace.value ? getTraceAttemptLabel(trace.value) : ''))
+const { snapshotViewMode, hasAriaSnapshot, showAriaSnapshot } = useTraceSnapshotViewMode(
+  () => trace.value,
+)
 const traceAttempts = computed(() =>
   [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
     key,
@@ -74,9 +78,21 @@ const traceLayoutPageUrl = computed(() => {
       <span v-else-if="attemptLabel" class="text-xs opacity-70">
         {{ attemptLabel }}
       </span>
-      <TraceZoomControl v-if="trace" />
-      <label class="flex items-center gap-1 text-xs ws-nowrap select-none cursor-pointer">
-        <input v-model="showTraceSelectorHighlight" type="checkbox" />
+      <select
+        v-if="hasAriaSnapshot"
+        v-model="snapshotViewMode"
+        aria-label="Trace snapshot view"
+        class="cursor-pointer border border-base rounded bg-base px-2 py-1 text-xs"
+      >
+        <option value="dom">DOM</option>
+        <option value="aria">Aria</option>
+      </select>
+      <TraceZoomControl v-if="trace" :disabled="showAriaSnapshot" />
+      <label
+        class="flex items-center gap-1 text-xs ws-nowrap select-none"
+        :class="showAriaSnapshot ? 'op-50 cursor-not-allowed' : 'cursor-pointer'"
+      >
+        <input v-model="showTraceSelectorHighlight" type="checkbox" :disabled="showAriaSnapshot" />
         <span>Show highlight</span>
       </label>
       <a

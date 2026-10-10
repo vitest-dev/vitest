@@ -424,6 +424,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
           inlineImages: {
             description: 'Inline loaded image pixels in trace-view snapshots (default: `false`)',
           },
+          ariaSnapshot: {
+            description: 'Capture the accessibility tree in trace-view snapshots (default: `true`)',
+          },
         },
       },
       orchestratorScripts: null,

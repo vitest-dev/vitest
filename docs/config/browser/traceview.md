@@ -5,7 +5,7 @@ outline: deep
 
 # browser.traceView <Badge type="warning" text="Experimental" /> <Version>5.0.0</Version>
 
-- **Type:** `boolean | { enabled?: boolean; recordCanvas?: boolean; inlineImages?: boolean }`
+- **Type:** `boolean | { enabled?: boolean; recordCanvas?: boolean; inlineImages?: boolean; ariaSnapshot?: boolean }`
 - **CLI:** `--browser.traceView`
 - **Default:** `false`
 
@@ -42,6 +42,7 @@ export default defineConfig({
 | `enabled`      | `false` | Enables Vitest trace-view artifact collection.                                                      |
 | `inlineImages` | `false` | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter. |
 | `recordCanvas` | `false` | Captures canvas pixels in snapshots.                                                                |
+| `ariaSnapshot` | `true`  | Captures the accessibility tree alongside each snapshot.                                            |
 
 ## browser.traceView.enabled {#traceview-enabled}
 
@@ -66,5 +67,13 @@ Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in
 - **CLI:** `--browser.traceView.recordCanvas`
 
 Captures canvas pixels in snapshots. This enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
+
+## browser.traceView.ariaSnapshot <Version>5.1.0</Version> {#traceview-ariasnapshot}
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **CLI:** `--browser.traceView.ariaSnapshot`
+
+Captures the accessibility tree of the page alongside each snapshot. The trace viewer header can then switch from the DOM snapshot to an **Aria** view, which uses the same format as [aria snapshots](/guide/browser/aria-snapshots).
 
 See [Trace View](/guide/browser/trace-view) for full documentation.

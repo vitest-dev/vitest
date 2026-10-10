@@ -14,6 +14,7 @@ import {
   getTraceEntryClass,
   selectActiveTraceStep,
   showTraceSelectorHighlight,
+  useTraceSnapshotViewMode,
   useTraceZoom,
 } from '~/composables/trace-view'
 
@@ -24,6 +25,7 @@ const props = defineProps<{
 
 const entries = computed(() => props.trace.entries)
 const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
+const { showAriaSnapshot } = useTraceSnapshotViewMode(() => props.trace)
 
 const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
@@ -267,11 +269,16 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
     </Pane>
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div :ref="setFitContainer" class="h-full min-h-0 flex flex-col overflow-auto">
-        <div
-          v-if="selectedStep"
-          class="mx-auto flex-none overflow-hidden"
-          :style="scaledViewportStyle"
-        >
+        <div v-if="!selectedStep" class="text-sm opacity-50 p-4">No trace step found</div>
+        <template v-else-if="showAriaSnapshot">
+          <pre
+            v-if="selectedStep.snapshot.ariaSnapshot != null"
+            data-testid="trace-aria-snapshot"
+            class="m-0 p-4 font-mono text-xs whitespace-pre"
+            >{{ selectedStep.snapshot.ariaSnapshot }}</pre>
+          <div v-else class="text-sm opacity-50 p-4">No aria snapshot for this step</div>
+        </template>
+        <div v-else class="mx-auto flex-none overflow-hidden" :style="scaledViewportStyle">
           <iframe
             ref="iframeEl"
             :key="iframeSandbox"
@@ -280,7 +287,6 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
             :style="{ transform: `scale(${zoomLevel})` }"
           />
         </div>
-        <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
       </div>
     </Pane>
   </Splitpanes>
