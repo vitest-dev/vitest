@@ -127,6 +127,50 @@ test('mocks from a setup file apply to static imports of a test file', async () 
   expect(result.exitCode).toBe(0)
 })
 
+test('vi.unmock and vi.doUnmock restore modules mocked in a setup file', async () => {
+  const result = await runVitest({
+    root: 'fixtures/mocking-unmock',
+  })
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
+  expect(result.stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(result.stdout).toReportPassedTest('unmock.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('do-unmock.test.ts', browser)
+  })
+
+  expect(result.exitCode).toBe(0)
+})
+
+test.each([true, false])(
+  'a mock that a file never loads does not apply to the next file - isolated %s',
+  async (isolate) => {
+    const result = await runVitest({
+      root: 'fixtures/mocking-unloaded',
+      isolate,
+    })
+
+    onTestFailed(() => {
+      console.error(result.stdout)
+      console.error(result.stderr)
+    })
+
+    expect(result.stderr).toReportNoErrors()
+
+    instances.forEach(({ browser }) => {
+      expect(result.stdout).toReportPassedTest('1-mock-not-loaded.test.ts', browser)
+      expect(result.stdout).toReportPassedTest('2-original.test.ts', browser)
+    })
+
+    expect(result.exitCode).toBe(0)
+  },
+)
+
 // fix https://github.com/vitest-dev/vitest/issues/7788
 test('mocks modules next to a test file in a directory with spaces', async () => {
   const { errorTree } = await runInlineBrowserTests({
