@@ -276,6 +276,39 @@ it('correctly reports flaky tests', ({ testModule }) => {
   const result = testFlaky.result()!
   expect(result.state).toBe('passed')
   expect(result.errors).toHaveLength(2)
+  expect(
+    testFlaky.attempts().map((attempt) => ({
+      state: attempt.state,
+      errors: attempt.errors?.map((error) => error.message),
+      retryIndex: attempt.retryIndex,
+      repeatIndex: attempt.repeatIndex,
+    })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "errors": [
+          "expected +0 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 0,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 0,
+        "retryIndex": 1,
+        "state": "failed",
+      },
+      {
+        "errors": undefined,
+        "repeatIndex": 0,
+        "retryIndex": 2,
+        "state": "passed",
+      },
+    ]
+  `)
 })
 
 it('correctly reports repeated tests', ({ testModule }) => {
@@ -287,6 +320,65 @@ it('correctly reports repeated tests', ({ testModule }) => {
   const result = testRepeated.result()!
   expect(result.state).toBe('failed')
   expect(result.errors).toHaveLength(6)
+  expect(
+    testRepeated.attempts().map((attempt) => ({
+      state: attempt.state,
+      errors: attempt.errors?.map((error) => error.message),
+      retryIndex: attempt.retryIndex,
+      repeatIndex: attempt.repeatIndex,
+    })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 0,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 1,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 2,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 3,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 4,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "repeatIndex": 5,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+    ]
+  `)
 })
 
 it('correctly passed down metadata', ({ testModule }) => {
