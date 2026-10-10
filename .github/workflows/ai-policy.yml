@@ -1,7 +1,8 @@
 name: AI Policy
 
 # Closes pull requests from accounts flagged as bots, then closes pull requests from the community
-# and asks to discuss the change in an issue, see "Pull Request Policy" in CONTRIBUTING.md.
+# that do not fix an approved issue and asks to discuss the change in an issue,
+# see "Pull Request Policy" in CONTRIBUTING.md.
 #
 # SECURITY: this workflow must never check out or run code from a pull request.
 # The jobs read the pull request through the API and use its content only as data.

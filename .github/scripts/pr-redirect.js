@@ -1,8 +1,15 @@
-const MARKER = '<!-- vitest-pr-redirect -->'
+const POLICY_MARKER = '<!-- vitest-pr-redirect -->'
+const DUPLICATE_MARKER = '<!-- vitest-pr-redirect:duplicate -->'
+const APPROVED_LABEL = 'approved'
 
 function createRedirect({ github, context, core }) {
   const { owner, repo } = context.repo
   const policyUrl = `https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md#pull-request-policy`
+
+  // closing keywords can point to any repository
+  function isInRepository(node) {
+    return node?.repository.nameWithOwner.toLowerCase() === `${owner}/${repo}`.toLowerCase()
+  }
 
   // a missing list fails the run, an empty list would close the PRs of every approved contributor
   async function readApprovedContributors() {
@@ -62,7 +69,18 @@ function createRedirect({ github, context, core }) {
             closingIssuesReferences(first: 10) {
               nodes {
                 number
+                state
                 repository { nameWithOwner }
+                labels(first: 100) {
+                  nodes { name }
+                }
+                closedByPullRequestsReferences(first: 100) {
+                  nodes {
+                    number
+                    state
+                    repository { nameWithOwner }
+                  }
+                }
               }
             }
           }
@@ -70,50 +88,94 @@ function createRedirect({ github, context, core }) {
       }`,
       { owner, repo, number: pr.number },
     )
-    return repository.pullRequest.closingIssuesReferences.nodes.filter(
-      (issue) =>
-        // closing keywords can point to any repository
-        issue?.repository.nameWithOwner.toLowerCase() === `${owner}/${repo}`.toLowerCase(),
-    )
+    return repository.pullRequest.closingIssuesReferences.nodes.filter(isInRepository)
   }
 
-  async function wasRedirected(pr) {
+  function createComment(marker, pr, lines) {
+    const body = [
+      marker,
+      `Hello @${pr.user.login}. Thank you for taking the time to contribute!`,
+      '',
+      ...lines,
+    ].join('\n')
+    return { marker, body }
+  }
+
+  async function checkLinkedIssues(pr, { reopened }) {
+    const issues = await findLinkedIssues(pr)
+    const approvedIssues = issues.filter(
+      (issue) =>
+        issue.state === 'OPEN' && issue.labels.nodes.some((label) => label.name === APPROVED_LABEL),
+    )
+    for (const issue of approvedIssues) {
+      const others = issue.closedByPullRequestsReferences.nodes.filter(
+        (other) =>
+          isInRepository(other) &&
+          other.state === 'OPEN' &&
+          other.number !== pr.number &&
+          // a reopened PR must not replace the PR that was opened while it was closed
+          (reopened || other.number < pr.number),
+      )
+      if (others.length) {
+        const list = others.map((other) => `#${other.number}`).join(', ')
+        return createComment(DUPLICATE_MARKER, pr, [
+          `The team accepts one pull request per issue, and #${issue.number} already has an open pull request (${list}), so this pull request was closed automatically. If you think that your approach is better, please explain why in #${issue.number}.`,
+          '',
+          `Your changes are not lost: a maintainer can reopen this pull request if the team decides to go forward with it. See our [pull request policy](${policyUrl}) for more context.`,
+        ])
+      }
+    }
+    if (approvedIssues.length) {
+      return { reason: `it fixes the approved issue #${approvedIssues[0].number}` }
+    }
+    const nextStep = issues.length
+      ? `Please keep the discussion in ${issues.map((issue) => `#${issue.number}`).join(', ')}.`
+      : `If there is no issue for this change yet, please [open one](https://github.com/${owner}/${repo}/issues/new/choose) to discuss it with the team first.`
+    return createComment(POLICY_MARKER, pr, [
+      `Unfortunately, the team accepts pull requests only from maintainers and approved contributors, or for issues with the \`${APPROVED_LABEL}\` label, so this pull request was closed automatically. We are sorry about that, it is not a judgement of your work. The number of pull requests grew beyond what the team can review, and this policy gives maintainers the space to triage and prioritize issues at their own pace.`,
+      '',
+      `${nextStep} Your changes are not lost: a maintainer can reopen this pull request if the team decides to go forward with it. See our [pull request policy](${policyUrl}) for more context.`,
+    ])
+  }
+
+  async function findRedirectMarkers(pr) {
     const comments = await github.paginate(github.rest.issues.listComments, {
       owner,
       repo,
       issue_number: pr.number,
       per_page: 100,
     })
-    return comments.some(
-      (comment) => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(MARKER),
+    return new Set(
+      [POLICY_MARKER, DUPLICATE_MARKER].filter((marker) =>
+        comments.some(
+          (comment) =>
+            comment.user?.login === 'github-actions[bot]' && comment.body?.includes(marker),
+        ),
+      ),
     )
   }
 
-  async function close(pr, { comment }) {
+  async function close(pr, comment) {
     if (comment) {
-      const issues = await findLinkedIssues(pr)
-      const nextStep = issues.length
-        ? `Please keep the discussion in ${issues.map((issue) => `#${issue.number}`).join(', ')}.`
-        : `If there is no issue for this change yet, please [open one](https://github.com/${owner}/${repo}/issues/new/choose) to discuss it with the team first.`
       await github.rest.issues.createComment({
         owner,
         repo,
         issue_number: pr.number,
-        body: [
-          MARKER,
-          `Hello @${pr.user.login}. Thank you for taking the time to contribute!`,
-          '',
-          'Unfortunately, the team accepts pull requests only from maintainers and approved contributors, so this pull request was closed automatically. We are sorry about that, it is not a judgement of your work. The number of pull requests grew beyond what the team can review, and this policy gives maintainers the space to triage and prioritize issues at their own pace.',
-          '',
-          `${nextStep} Your changes are not lost: a maintainer can reopen this pull request if the team decides to go forward with it. See our [pull request policy](${policyUrl}) for more context.`,
-        ].join('\n'),
+        body: comment.body,
       })
     }
     await github.rest.pulls.update({ owner, repo, pull_number: pr.number, state: 'closed' })
     core.info(`#${pr.number} by @${pr.user.login} is closed`)
   }
 
-  return { readApprovedContributors, hasWriteAccess, findReasonToSkip, wasRedirected, close }
+  return {
+    readApprovedContributors,
+    hasWriteAccess,
+    findReasonToSkip,
+    checkLinkedIssues,
+    findRedirectMarkers,
+    close,
+  }
 }
 
 /**
@@ -131,21 +193,20 @@ export default async function redirectPullRequest({ github, context, core }) {
     return
   }
 
+  const reopened = context.payload.action === 'reopened'
   const approved = await redirect.readApprovedContributors()
   let reason = await redirect.findReasonToSkip(pr, approved)
-  if (
-    !reason &&
-    context.payload.action === 'reopened' &&
-    (await redirect.hasWriteAccess(context.payload.sender.login))
-  ) {
+  if (!reason && reopened && (await redirect.hasWriteAccess(context.payload.sender.login))) {
     reason = 'a maintainer reopened it'
   }
-  if (reason) {
-    core.info(`#${pr.number} is skipped: ${reason}`)
+  const result = reason ? { reason } : await redirect.checkLinkedIssues(pr, { reopened })
+  if (result.reason) {
+    core.info(`#${pr.number} is skipped: ${result.reason}`)
     return
   }
-  // a PR reopened by its author is closed again without a second comment
-  await redirect.close(pr, { comment: !(await redirect.wasRedirected(pr)) })
+  // a PR reopened by its author gets the same comment only once
+  const markers = await redirect.findRedirectMarkers(pr)
+  await redirect.close(pr, markers.has(result.marker) ? null : result)
 }
 
 /**
@@ -172,12 +233,13 @@ export async function redirectOpenPullRequests({ github, context, core }) {
     // a PR that cannot be processed stays open and must not block the other PRs
     try {
       let reason = await redirect.findReasonToSkip(pr, approved)
-      // the event workflow closes a PR reopened by its author, so only a maintainer could reopen it
-      if (!reason && (await redirect.wasRedirected(pr))) {
-        reason = 'a maintainer reopened it'
+      // the event workflow checks a PR again when someone reopens it
+      if (!reason && (await redirect.findRedirectMarkers(pr)).size) {
+        reason = 'it was reopened after a redirect'
       }
-      if (reason) {
-        core.info(`#${pr.number} is skipped: ${reason}`)
+      const result = reason ? { reason } : await redirect.checkLinkedIssues(pr, { reopened: false })
+      if (result.reason) {
+        core.info(`#${pr.number} is skipped: ${result.reason}`)
         continue
       }
       closed++
@@ -185,7 +247,7 @@ export async function redirectOpenPullRequests({ github, context, core }) {
         core.info(`#${pr.number} by @${pr.user.login} would be closed`)
         continue
       }
-      await redirect.close(pr, { comment: true })
+      await redirect.close(pr, result)
       // GitHub limits how fast a token can create content
       await new Promise((resolve) => setTimeout(resolve, 2000))
     } catch (error) {
