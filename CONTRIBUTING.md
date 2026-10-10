@@ -83,7 +83,9 @@ npm i https://pkg.pr.new/vitest@{commit}
 
 ## Pull Request Policy
 
-The team accepts pull requests only from members of the Vitest team and [approved contributors](https://github.com/vitest-dev/vitest/blob/approved-contributors/APPROVED_CONTRIBUTORS). Any other pull request is closed automatically as soon as it is opened.
+The team accepts pull requests from members of the Vitest team, from [approved contributors](https://github.com/vitest-dev/vitest/blob/approved-contributors/APPROVED_CONTRIBUTORS), and for open issues with the [`approved`](https://github.com/vitest-dev/vitest/issues?q=is%3Aissue%20state%3Aopen%20label%3Aapproved) label. Any other pull request is closed automatically as soon as it is opened.
+
+To work on an approved issue, open the pull request against `main` and link the issue in its description with a [closing keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword), for example `Fixes #123`. The team accepts one pull request per issue: if another pull request for the same issue is already open, the new one is closed automatically.
 
 We know this is unfortunate, and it is not a judgement of your work. The number of pull requests grew beyond what the team can review, and this policy gives maintainers the space to triage and prioritize issues at their own pace. Please describe the bug or the feature in an [issue](https://github.com/vitest-dev/vitest/issues/new/choose) instead, so the team and the community can discuss it first. Your work is not lost: a maintainer can reopen a closed pull request if the team decides to go forward with the change.
 
@@ -249,10 +251,11 @@ flowchart TD
 
 The [`AI Policy`](./.github/workflows/ai-policy.yml) workflow applies the [pull request policy](#pull-request-policy) when a pull request is opened or reopened. It comments on the pull request, pointing to the linked issues or asking to open a new one, and closes it. It never touches pull requests from members of the `vitest-dev` organization, from repository collaborators, or from apps that push branches to this repository (for example, Renovate). Users with write access to the repository control the rest:
 
-- Reopen a pull request to keep it open. The workflow closes it again only if someone without write access reopens it.
+- Add the `approved` label to an issue to accept a pull request for it from anyone. The workflow keeps such a pull request open if it links the issue with a closing keyword, the issue is open, and no other open pull request links the same issue. The label does not reopen pull requests that the workflow closed before.
+- Reopen a pull request to keep it open. If someone without write access reopens it, the workflow applies the policy again.
 - Comment `/approve-user` on an issue or a pull request to add its author to the approved contributors. Comment `/approve-user username` to add a specific user. It must be a regular comment, not a review, and it must contain nothing but the command. The [`Approve Contributor`](./.github/workflows/approve-contributor.yml) workflow reacts to it with 🚀 when the user is on the list.
 - The list is the `APPROVED_CONTRIBUTORS` file on the [`approved-contributors`](https://github.com/vitest-dev/vitest/blob/approved-contributors/APPROVED_CONTRIBUTORS) branch. Each line is an account id followed by the login as a comment, for example `12345 # username`. Only the id counts, so a renamed account stays approved and nobody else can take its place; the login is there for people to read. Delete a line to remove a contributor. Both workflows fail, and no pull request is closed, if the branch or the file is missing.
-- Run the [`PR Redirect All`](./.github/workflows/pr-redirect-all.yml) workflow manually to close every open pull request that the policy would close. It skips pull requests that a maintainer reopened after they were closed. Keep the `dry-run` option on first to see which pull requests it would close.
+- Run the [`PR Redirect All`](./.github/workflows/pr-redirect-all.yml) workflow manually to close every open pull request that the policy would close. It skips pull requests that were reopened after the workflow closed them. If more than one pull request links the same approved issue, it keeps the oldest one. Keep the `dry-run` option on first to see which pull requests it would close.
 
 ## Notes on Dependencies
 
