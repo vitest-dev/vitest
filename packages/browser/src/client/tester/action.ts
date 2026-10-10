@@ -1,4 +1,6 @@
 import type { SerializedLocator } from './locators'
+import { vi } from 'vitest'
+import { getSafeTimers } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
 
 export interface ActionOptions {
@@ -28,6 +30,22 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options?: 
     return options
   }
   return { ...options, timeout } as T
+}
+
+const FAKE_TIMERS_TICK = 50
+
+/** the provider waits in real time, so fake timers must keep moving for the page to update */
+export function advanceFakeTimersWhilePending<T>(promise: Promise<T>): Promise<T> {
+  if (!vi.isFakeTimers()) {
+    return promise
+  }
+  const { setInterval, clearInterval } = getSafeTimers()
+  const interval = setInterval(() => {
+    if (vi.isFakeTimers()) {
+      vi.advanceTimersByTime(FAKE_TIMERS_TICK)
+    }
+  }, FAKE_TIMERS_TICK)
+  return promise.finally(() => clearInterval(interval))
 }
 
 /**
@@ -75,10 +93,8 @@ class Action<T = void> implements Promise<T> {
     const options = timeout == null ? this.#options : { ...this.#options, timeout }
     const args =
       typeof this.#args === 'function' ? await this.#args(options) : [...this.#args, options]
-    const promise = getBrowserState().commands.triggerCommand<T>(
-      this.#command,
-      args,
-      this.#errorSource,
+    const promise = advanceFakeTimersWhilePending(
+      getBrowserState().commands.triggerCommand<T>(this.#command, args, this.#errorSource),
     )
     const deadline = getBrowserState().runner._deadline
     return deadline && timeout != null
