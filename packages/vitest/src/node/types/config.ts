@@ -1031,7 +1031,8 @@ export interface InlineConfig {
      *
      * - `'git'` (default) compares the working tree with the `--changed` reference.
      * - `'mtime'` compares the modification time of every recorded dependency with the run
-     *   that recorded it. It requires `experimental.recordDependencies`.
+     *   that recorded it. It requires `experimental.recordDependencies`. The test files that
+     *   failed in their last run also run.
      *
      * You can also provide a custom implementation of the `VCSProvider` interface.
      */
@@ -1105,8 +1106,8 @@ export interface InlineConfig {
   changed?: boolean | string
 
   /**
-   * Runs only the tests whose recorded dependencies were modified since the last run of the test.
-   * Requires `cache`.
+   * Runs only the tests whose recorded dependencies were modified since the last run of the test,
+   * and the tests that failed in their last run. Requires `cache`.
    * @default false
    */
   stale?: boolean

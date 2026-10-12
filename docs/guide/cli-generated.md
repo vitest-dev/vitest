@@ -519,7 +519,7 @@ Run tests that are affected by the changed files (default: `false`)
 - **CLI:** `--stale`
 - **Config:** [stale](/config/stale)
 
-Run only the tests whose recorded dependencies were modified since the last run of the test. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)
+Run only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)
 
 ### sequence.shuffle.files
 

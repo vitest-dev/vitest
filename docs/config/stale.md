@@ -9,7 +9,7 @@ outline: deep
 - **Default:** `false`
 - **CLI:** `--stale`
 
-Run only the tests whose dependencies were modified since the last run of the test. A test is stale when one of the files it loaded during its last run has a newer modification time than that run, or was deleted. A test that never ran with this option has no record and always runs.
+Run only the tests whose dependencies were modified since the last run of the test. A test is stale when one of the files it loaded during its last run has a newer modification time than that run, or was deleted. A test that never ran with this option has no record and always runs. A test file that failed in its last run also runs, until it passes, because the cause of a failure can be outside the recorded files, for example an environment variable or a server that was down.
 
 ```sh
 vitest run --stale

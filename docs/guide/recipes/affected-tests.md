@@ -27,7 +27,7 @@ The reference is the baseline, so the same command gives the same selection unti
 vitest run --stale
 ```
 
-The first run with `--stale` runs every test and records the files each test loaded, including dynamic imports, mocks, setup files and snapshot files. Every later run compares the modification time of those files with the time of the run that recorded them. A test is stale when one of its files is newer or was deleted, or when the test has no record yet.
+The first run with `--stale` runs every test and records the files each test loaded, including dynamic imports, mocks, setup files and snapshot files. Every later run compares the modification time of those files with the time of the run that recorded them. A test is stale when one of its files is newer or was deleted, or when the test has no record yet. A test file that failed in its last run is always stale, so it runs until it passes, even if the fix was outside the recorded files.
 
 Each run updates the records of the tests it ran, so the baseline moves with you: after a stale run, only the next edit makes tests stale again. Git is not involved, so the flag works in a fresh container, in a worktree with an unrelated history, or in a directory that is not a repository. A new test file, or one that was never recorded, always runs.
 

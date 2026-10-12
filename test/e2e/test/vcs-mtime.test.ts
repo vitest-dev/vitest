@@ -13,6 +13,10 @@ function testFile(name: string, imports = '') {
   `
 }
 
+function affectedSummary(stdout: string) {
+  return stdout.split('\n').find((line) => line.includes('Affected'))
+}
+
 const files = {
   'src/helper.js': 'export {}',
   'src/other.js': 'export {}',
@@ -38,7 +42,7 @@ test('runs the tests that loaded a file modified after their last run', async ()
   // the run above recorded the file again, so nothing is newer than the records
   const unchanged = await runVitest({ root: fs.root, ...recorded, changed: true })
   expect(unchanged.stderr).toBe('')
-  expect(unchanged.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2 })
+  expect(unchanged.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2, failed: 0 })
 })
 
 test('a deleted dependency and a modified config file are detected', async () => {
@@ -119,7 +123,7 @@ test('a custom provider receives the dependencies of the test files', async () =
 
   const changed = await runVitest({ root: fs.root, cache: true, changed: true })
   expect(changed.stderr).toBe('')
-  expect(changed.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2 })
+  expect(changed.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2, failed: 0 })
   expect(JSON.parse(readFileSync(fs.resolveFile('dependencies.json'), 'utf-8')))
     .toMatchInlineSnapshot(`
       [
@@ -172,7 +176,70 @@ test('--stale records the dependencies and runs the stale tests', async () => {
 
   const fresh = await runVitest({ root: fs.root, cache: true, stale: true })
   expect(fresh.stderr).toBe('')
-  expect(fresh.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2 })
+  expect(fresh.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2, failed: 0 })
+})
+
+test('--stale runs a failed test file until it passes', async () => {
+  const stale = { cache: true, stale: true }
+  const database = { DATABASE_URL: 'postgres://localhost:5432/test' }
+  const { fs, errorTree } = await runInlineTests(
+    {
+      ...files,
+      'b.test.js': `
+        import { expect, test } from 'vitest'
+        test('b', () => {
+          expect(process.env.DATABASE_URL).toBeDefined()
+        })
+      `,
+    },
+    stale,
+  )
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+      "b.test.js": {
+        "b": [
+          "expected undefined to be defined",
+        ],
+      },
+    }
+  `)
+
+  const failed = await runVitest({ root: fs.root, ...stale })
+  expect(failed.exitCode).toBe(1)
+  expect(failed.errorTree()).toMatchInlineSnapshot(`
+    {
+      "b.test.js": {
+        "b": [
+          "expected undefined to be defined",
+        ],
+      },
+    }
+  `)
+  expect(affectedSummary(failed.stdout)).toMatchInlineSnapshot(
+    `"   Affected  1 of 2 test files (related to 0 changed files, 1 previously failed)"`,
+  )
+
+  // --related does not compare with the last run, so the failed file does not run
+  const related = await runVitest({ root: fs.root, ...recorded, related: ['src/helper.js'] })
+  expect(related.stderr).toBe('')
+  expect(Object.keys(related.testTree())).toEqual(['a.test.js'])
+
+  const fixed = await runVitest({ root: fs.root, ...stale, env: database })
+  expect(fixed.stderr).toBe('')
+  expect(fixed.testTree()).toMatchInlineSnapshot(`
+    {
+      "b.test.js": {
+        "b": "passed",
+      },
+    }
+  `)
+
+  const passed = await runVitest({ root: fs.root, ...stale, env: database })
+  expect(passed.stderr).toBe('')
+  expect(passed.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2, failed: 0 })
 })
 
 test('--stale requires the cache', async () => {

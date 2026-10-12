@@ -507,7 +507,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   stale: {
     description:
-      'Run only the tests whose recorded dependencies were modified since the last run of the test. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)',
+      'Run only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)',
   },
   sequence: {
     description: 'Options for how tests should be sorted',
@@ -1037,6 +1037,6 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
   },
   stale: {
     description:
-      'Print only the tests whose recorded dependencies were modified since the last run of the test (default: `false`)',
+      'Print only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run (default: `false`)',
   },
 }
