@@ -526,6 +526,7 @@ const defaultClientStub = {
   injectQuery: (id: string) => id,
   createHotContext: () => {
     return {
+      data: {},
       accept: () => {},
       prune: () => {},
       dispose: () => {},
