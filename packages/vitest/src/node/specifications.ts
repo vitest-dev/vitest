@@ -174,6 +174,7 @@ export class VitestSpecifications {
         result.failedTests
           ? spec.project.createSpecification(
               spec.moduleId,
+              // "file:line" filters are the only options a globbed specification can have
               { testNames: result.failedTests, testLines: spec.testLines },
               spec.pool,
             )
