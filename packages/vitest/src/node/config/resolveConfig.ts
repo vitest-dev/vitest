@@ -4,6 +4,7 @@ import type {
   Plugin as VitePlugin,
   UserConfig as ViteUserConfig,
 } from 'vite'
+import type { CliOptions } from '../cli/cli-api'
 import type { Logger } from '../logger'
 import type {
   ApiConfig,
@@ -513,10 +514,11 @@ export function resolveTestConfig(
       }
     }
   }
-  if (resolved.stale) {
+  // CLI options are merged into the test config
+  if ((options as CliOptions).sinceLastRun) {
     if (resolved.cache === false) {
       throw new Error(
-        'The "stale" option requires the "cache" option to store the dependencies of the test files.',
+        'The "--since-last-run" flag requires the "cache" option to store the dependencies of the test files.',
       )
     }
     resolved.changed ||= true

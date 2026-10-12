@@ -514,13 +514,6 @@ Ignore any unhandled errors that occur
 
 Run tests that are affected by the changed files (default: `false`)
 
-### stale
-
-- **CLI:** `--stale`
-- **Config:** [stale](/config/stale)
-
-Run only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)
-
 ### sequence.shuffle.files
 
 - **CLI:** `--sequence.shuffle.files`

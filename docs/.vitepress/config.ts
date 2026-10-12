@@ -621,10 +621,6 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/changed',
                   },
                   {
-                    text: 'stale',
-                    link: '/config/stale',
-                  },
-                  {
                     text: 'experimental',
                     link: '/config/experimental',
                   },

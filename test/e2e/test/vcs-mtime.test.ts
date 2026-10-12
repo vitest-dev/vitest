@@ -4,6 +4,7 @@ import { expect, test } from 'vitest'
 import { runInlineTests, runVitest } from '../../test-utils'
 
 const recorded = { cache: true, experimental: { recordDependencies: true, vcsProvider: 'mtime' } }
+const sinceLastRun = { cache: true, $cliOptions: { sinceLastRun: true } }
 
 function testFile(name: string, imports = '') {
   return `
@@ -163,24 +164,23 @@ test('coverage of changed files uses the dependencies of the run', async () => {
   expect(Object.keys(report).map((file) => relative(fs.root, file))).toEqual(['src/helper.js'])
 })
 
-test('--stale records the dependencies and runs the stale tests', async () => {
+test('--since-last-run records the dependencies and runs the affected tests', async () => {
   // the first run has no records, so every test runs
-  const { fs, stderr, testTree } = await runInlineTests(files, { cache: true, stale: true })
+  const { fs, stderr, testTree } = await runInlineTests(files, sinceLastRun)
   expect(stderr).toBe('')
   expect(Object.keys(testTree()).sort()).toEqual(['a.test.js', 'b.test.js'])
 
   fs.editFile('src/other.js', () => 'export const other = 1')
-  const stale = await runVitest({ root: fs.root, cache: true, stale: true })
-  expect(stale.stderr).toBe('')
-  expect(Object.keys(stale.testTree())).toEqual(['b.test.js'])
+  const changed = await runVitest({ root: fs.root, ...sinceLastRun })
+  expect(changed.stderr).toBe('')
+  expect(Object.keys(changed.testTree())).toEqual(['b.test.js'])
 
-  const fresh = await runVitest({ root: fs.root, cache: true, stale: true })
-  expect(fresh.stderr).toBe('')
-  expect(fresh.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2, failed: 0 })
+  const unchanged = await runVitest({ root: fs.root, ...sinceLastRun })
+  expect(unchanged.stderr).toBe('')
+  expect(unchanged.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2, failed: 0 })
 })
 
-test('--stale runs a failed test file until it passes', async () => {
-  const stale = { cache: true, stale: true }
+test('--since-last-run runs a failed test file until it passes', async () => {
   const database = { DATABASE_URL: 'postgres://localhost:5432/test' }
   const { fs, errorTree } = await runInlineTests(
     {
@@ -192,7 +192,7 @@ test('--stale runs a failed test file until it passes', async () => {
         })
       `,
     },
-    stale,
+    sinceLastRun,
   )
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -207,7 +207,7 @@ test('--stale runs a failed test file until it passes', async () => {
     }
   `)
 
-  const failed = await runVitest({ root: fs.root, ...stale })
+  const failed = await runVitest({ root: fs.root, ...sinceLastRun })
   expect(failed.exitCode).toBe(1)
   expect(failed.errorTree()).toMatchInlineSnapshot(`
     {
@@ -227,7 +227,7 @@ test('--stale runs a failed test file until it passes', async () => {
   expect(related.stderr).toBe('')
   expect(Object.keys(related.testTree())).toEqual(['a.test.js'])
 
-  const fixed = await runVitest({ root: fs.root, ...stale, env: database })
+  const fixed = await runVitest({ root: fs.root, ...sinceLastRun, env: database })
   expect(fixed.stderr).toBe('')
   expect(fixed.testTree()).toMatchInlineSnapshot(`
     {
@@ -237,14 +237,14 @@ test('--stale runs a failed test file until it passes', async () => {
     }
   `)
 
-  const passed = await runVitest({ root: fs.root, ...stale, env: database })
+  const passed = await runVitest({ root: fs.root, ...sinceLastRun, env: database })
   expect(passed.stderr).toBe('')
   expect(passed.ctx!._sourceFilterResult).toEqual({ affected: 0, total: 2, failed: 0 })
 })
 
-test('--stale requires the cache', async () => {
-  const { stderr } = await runInlineTests(files, { cache: false, stale: true })
+test('--since-last-run requires the cache', async () => {
+  const { stderr } = await runInlineTests(files, { ...sinceLastRun, cache: false })
   expect(stderr.split('\n')[0]).toMatchInlineSnapshot(
-    `"Error: The "stale" option requires the "cache" option to store the dependencies of the test files."`,
+    `"Error: The "--since-last-run" flag requires the "cache" option to store the dependencies of the test files."`,
   )
 })

@@ -9,7 +9,7 @@ const cliTablePath = resolve(docsDir, './guide/cli-generated.md')
 
 const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined
 
-const skipCli = new Set(['mergeReports', 'shard'])
+const skipCli = new Set(['mergeReports', 'shard', 'sinceLastRun'])
 
 const skipConfig = new Set([
   'config',
