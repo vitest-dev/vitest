@@ -26,7 +26,7 @@ const keys = [
 
 const cancelKeys = ['space', 'c', 'h', ...keys.map((key) => key[0]).flat()]
 
-function printWatchHelp(): void {
+function printShortcutsHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
@@ -120,7 +120,7 @@ export function registerConsoleShortcuts(
 
     // help
     if (name === 'h') {
-      return printWatchHelp()
+      return printShortcutsHelp()
     }
     // update snapshot
     if (name === 'u') {
