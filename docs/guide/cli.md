@@ -271,3 +271,18 @@ Merges every blob report located in the specified folder (`.vitest/blob/` by def
 ```sh
 vitest --merge-reports --reporter=junit
 ```
+
+### last-failed
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Run only the tests that failed in the last run. Vitest reads the failures from the [results cache](/config/cache) and skips every other test file and test:
+
+```sh
+vitest run --last-failed
+```
+
+A test file runs completely if it failed outside of a test, for example in a `beforeAll` hook or during collection. Vitest selects the tests by their full names, so a renamed test does not run until the file runs again without the flag. If no test failed in the last run, Vitest prints `No failed tests found` and exits with code 1 unless [`--passWithNoTests`](/config/passwithnotests) is set.
+
+The flag can be combined with other filters. For example, `vitest run --last-failed -t login` runs only the failed tests whose names match `login`. In watch mode, only the first run is limited to the failed tests.

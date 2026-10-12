@@ -514,6 +514,12 @@ Ignore any unhandled errors that occur
 
 Run tests that are affected by the changed files (default: `false`)
 
+### lastFailed
+
+- **CLI:** `--lastFailed`
+
+Run only the tests that failed in the last run (default: `false`)
+
 ### sequence.shuffle.files
 
 - **CLI:** `--sequence.shuffle.files`

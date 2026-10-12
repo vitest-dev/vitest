@@ -9,6 +9,7 @@ import { generateFileHash } from '../utils/tasks'
 export interface TestSpecificationOptions {
   testNamePattern?: RegExp
   testIds?: string[]
+  testNames?: string[]
   testLines?: number[]
   testTagsFilter?: string[]
 }
@@ -49,6 +50,10 @@ export class TestSpecification {
    */
   public testIds: string[] | undefined
   /**
+   * The full names of the tests inside of this specification to run, including the parent suites separated with `>`.
+   */
+  public testNames: string[] | undefined
+  /**
    * The tags of tests to run.
    */
   public testTagsFilter: string[] | undefined
@@ -84,6 +89,7 @@ export class TestSpecification {
       this.testLines = testLinesOrOptions.testLines
       this.testNamePattern = testLinesOrOptions.testNamePattern
       this.testIds = testLinesOrOptions.testIds
+      this.testNames = testLinesOrOptions.testNames
       this.testTagsFilter = testLinesOrOptions.testTagsFilter
     }
   }
@@ -110,6 +116,7 @@ export class TestSpecification {
         pool: this.pool,
         testLines: this.testLines,
         testIds: this.testIds,
+        testNames: this.testNames,
         testNamePattern: this.testNamePattern,
         testTagsFilter: this.testTagsFilter,
       },

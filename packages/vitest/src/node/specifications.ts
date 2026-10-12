@@ -32,7 +32,13 @@ export class VitestSpecifications {
   }
 
   public async getRelevantTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.filterTestsBySource(await this.globTestSpecifications(filters))
+    const specifications = await this.filterTestsBySource(
+      await this.globTestSpecifications(filters),
+    )
+    if (this.vitest.config.cliOptions.lastFailed) {
+      return this.filterFailedTests(specifications)
+    }
+    return specifications
   }
 
   public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
@@ -155,5 +161,26 @@ export class VitestSpecifications {
     const affectedSpecs = await resolver.resolve(specs)
     this.vitest._sourceFilterResult = { affected: affectedSpecs.length, total: specs.length }
     return affectedSpecs
+  }
+
+  private filterFailedTests(specs: TestSpecification[]): TestSpecification[] {
+    const failed: TestSpecification[] = []
+    for (const spec of specs) {
+      const result = this.vitest.cache.getTestSpecificationResult(spec)
+      if (!result?.failed) {
+        continue
+      }
+      failed.push(
+        result.failedTests
+          ? spec.project.createSpecification(
+              spec.moduleId,
+              { testNames: result.failedTests, testLines: spec.testLines },
+              spec.pool,
+            )
+          : spec,
+      )
+    }
+    this.vitest._failedFilterResult = { selected: failed.length, total: specs.length }
+    return failed
   }
 }
