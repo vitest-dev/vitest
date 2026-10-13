@@ -5,6 +5,7 @@ import type { Colors } from 'tinyrainbow'
 import type { Test } from '../runtime/runner/types'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
+import type { Track } from './watcher'
 import { relative } from 'node:path'
 import readline from 'node:readline'
 import { saveSnapshotUpdates } from '@vitest/snapshot'
@@ -167,27 +168,37 @@ abstract class SnapshotReviewer {
   protected abstract collectReviews(review: Review): Promise<void>
   protected abstract getEnvironment(): Promise<SnapshotEnvironment>
 
-  async #updateSnapshots(): Promise<void> {
+  async #updateSnapshots(trackFS: Track): Promise<void> {
     const snapshotEnvironment = await this.getEnvironment()
     const snapshotUpdates = new Map<SnapshotEnvironment, SnapshotUpdate[]>([
       [snapshotEnvironment, this.#updates.approved],
     ])
 
-    return saveSnapshotUpdates(snapshotUpdates)
+    return saveSnapshotUpdates(snapshotUpdates, trackFS)
   }
 
   public async startReview(): Promise<void> {
     this.ctx.watcher.unregisterWatcher()
+    const tracker = this.ctx.watcher.createTracker()
 
     try {
       await this.collectReviews(this.#review)
-      await this.#updateSnapshots()
+      await this.#updateSnapshots(tracker.track)
+
+      for (const file of new Set(this.#updates.approved.map(({ file }) => file))) {
+        this.ctx.logger.clearHighlightCache(file)
+        this.ctx.invalidateFile(file)
+      }
+
       // @todo what should happen when there's no approved updates?
       await this.ctx.rerunFiles(
         Array.from(new Set(this.#updates.approved.map(({ meta }) => meta.test.file.filepath))),
         'interactive review done',
       )
+    } catch (e) {
+      console.error(e)
     } finally {
+      tracker.stop()
       this.ctx.watcher.registerWatcher()
     }
   }

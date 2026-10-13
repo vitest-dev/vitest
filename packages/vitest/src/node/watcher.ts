@@ -5,6 +5,20 @@ import { noop, slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import pm from 'picomatch'
 
+type EventName = 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir'
+
+type TrackEventName = EventName | 'any'
+type FileTrackers = Map<string, Set<PromiseWithResolvers<void>>>
+type EventTrackers = Map<TrackEventName, FileTrackers>
+
+export type Track = (
+  filepath: string,
+  options?: {
+    timeout?: number
+    type?: TrackEventName
+  },
+) => Promise<void>
+
 export class VitestWatcher {
   /**
    * Modules that will be invalidated on the next run.
@@ -16,6 +30,7 @@ export class VitestWatcher {
   public readonly changedTests: Set<string> = new Set()
 
   private readonly _onRerun: ((file: string) => void)[] = []
+  private trackers: EventTrackers = new Map()
 
   constructor(private vitest: Vitest) {}
 
@@ -238,6 +253,79 @@ export class VitestWatcher {
     }
 
     return !!files.length
+  }
+
+  public createTracker(): {
+    track: Track
+    stop: () => void
+  } {
+    const watcher = this.vitest.vite.watcher
+
+    watcher.on('all', this.handleTrackEvent)
+
+    const stop = () => {
+      watcher.off('all', this.handleTrackEvent)
+
+      this.trackers.clear()
+    }
+
+    return {
+      track: this.track,
+      // @todo: implement [Symbol.dispose] when dropping support for Node 22
+      stop,
+    }
+  }
+
+  private track: Track = (filepath, { timeout, type = 'any' } = {}) => {
+    const eventTrackers: FileTrackers = this.trackers.get(type) ?? new Map()
+
+    if (eventTrackers.size === 0) {
+      this.trackers.set(type, eventTrackers)
+    }
+
+    const fileTrackers = eventTrackers.get(filepath) ?? new Set()
+
+    if (fileTrackers.size === 0) {
+      eventTrackers.set(filepath, fileTrackers)
+    }
+
+    const resolvers = Promise.withResolvers<void>()
+
+    if (timeout) {
+      const timeoutId = setTimeout(resolvers.reject, timeout)
+
+      resolvers.promise = resolvers.promise
+        .then(() => {
+          clearTimeout(timeoutId)
+        })
+        .catch(() => {})
+    }
+
+    resolvers.promise = resolvers.promise.finally(() => {
+      fileTrackers.delete(resolvers)
+    })
+
+    fileTrackers.add(resolvers)
+
+    return resolvers.promise
+  }
+
+  private handleTrackEvent = (eventName: EventName, path: string): void => {
+    this.resolveTrackEvent('any', path)
+    this.resolveTrackEvent(eventName, path)
+  }
+
+  private resolveTrackEvent(eventName: TrackEventName, path: string): void {
+    const eventTrackers = this.trackers.get(eventName)
+    const fileTrackers = eventTrackers?.get(path)
+
+    if (fileTrackers === undefined) {
+      return
+    }
+
+    for (const resolvers of fileTrackers) {
+      resolvers.resolve()
+    }
   }
 }
 
