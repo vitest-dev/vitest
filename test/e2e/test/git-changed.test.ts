@@ -68,7 +68,7 @@ it('fails when git cannot resolve the changed revision', async () => {
   })
 
   expect(exitCode).toBe(1)
-  expect(stderr).toContain('Command `git diff --name-only does-not-exist...HEAD` failed:')
+  expect(stderr).toContain('Command `git diff --name-only -z does-not-exist...HEAD` failed:')
 })
 
 it('fails when --changed is used outside of a git repository', async () => {
