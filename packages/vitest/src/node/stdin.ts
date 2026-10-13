@@ -23,7 +23,6 @@ const keys = [
   ['w', 'filter by a project name'],
   ['q', 'quit'],
 ]
-
 const cancelKeys = ['space', 'c', 'h', ...keys.map((key) => key[0]).flat()]
 
 function printShortcutsHelp(): void {
