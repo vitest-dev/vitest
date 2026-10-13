@@ -7,10 +7,10 @@ minimumReleaseAgeExcludePrune: true
 shellEmulator: true
 strictPeerDependencies: false
 trustPolicy: no-downgrade
+trustPolicyExcludePrune: true
 trustPolicyExclude:
   - '@trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1'
   - semver@6.3.1
-  - chokidar@4.0.3
   - webdriverio@9.29.1
   - webdriver@9.29.1
   - '@wdio/types@9.29.1'
@@ -19,8 +19,6 @@ trustPolicyExclude:
   - '@wdio/config@9.29.1'
   - '@wdio/logger@9.29.1'
   - '@wdio/protocols@9.29.1'
-  - undici-types@6.21.0
-  - undici@6.21.3
   - rxjs@7.8.2
 packages:
   - docs
