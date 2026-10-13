@@ -387,6 +387,29 @@ describe('Temporal equality', () => {
 
       expect(a).not.toStrictEqual(b)
     })
+
+    test('returns false when components differ but .toString() is identical', () => {
+      const a = Temporal.Duration.from({ seconds: 1 })
+      const b = Temporal.Duration.from({ milliseconds: 1000 })
+      const c = Temporal.Duration.from({ microseconds: 1000000 })
+      const d = Temporal.Duration.from({ seconds: 1, milliseconds: 500 })
+      const e = Temporal.Duration.from({ milliseconds: 1500 })
+
+      expect(a.toString()).toBe(b.toString())
+      expect(b.toString()).toBe(c.toString())
+      expect(d.toString()).toBe(e.toString())
+
+      expect(a).not.toStrictEqual(b)
+      expect(a).not.toEqual(b)
+      expect(b).not.toStrictEqual(c)
+      expect(b).not.toEqual(c)
+      expect(d).not.toStrictEqual(e)
+      expect(d).not.toEqual(e)
+
+      const equalA = Temporal.Duration.from({ seconds: 1, milliseconds: 500 })
+      expect(d).toStrictEqual(equalA)
+      expect(d).toEqual(equalA)
+    })
   })
 })
 

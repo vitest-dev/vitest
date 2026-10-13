@@ -181,7 +181,18 @@ function eq(
     case '[object Temporal.PlainMonthDay]':
       return a.equals(b)
     case '[object Temporal.Duration]':
-      return a.toString() === b.toString()
+      return (
+        a.years === b.years &&
+        a.months === b.months &&
+        a.weeks === b.weeks &&
+        a.days === b.days &&
+        a.hours === b.hours &&
+        a.minutes === b.minutes &&
+        a.seconds === b.seconds &&
+        a.milliseconds === b.milliseconds &&
+        a.microseconds === b.microseconds &&
+        a.nanoseconds === b.nanoseconds
+      )
   }
   if (typeof a !== 'object' || typeof b !== 'object') {
     return false
