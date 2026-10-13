@@ -336,6 +336,17 @@ export class PoolRunner {
     } catch (error) {
       // Ensure we transition to stopped state even on error
       this._state = RunnerState.STOPPED
+      this._eventEmitter.removeAllListeners()
+      this._offCancel()
+      this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
+
+      // The graceful stop failed (e.g. the worker missed the stop handshake): do not leave the process/thread behind
+      await this._traces
+        .$(`vitest.${this.worker.name}.stop`, { context: this._otel?.workerContext }, () =>
+          this.worker.stop(),
+        )
+        .catch(() => {})
+
       throw error
     } finally {
       this._lastTestFiles = []
