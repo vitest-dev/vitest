@@ -5,7 +5,7 @@ import type { TestSpecification } from './test-specification'
 import { existsSync } from 'node:fs'
 import os from 'node:os'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { isAbsolute, resolve } from 'pathe'
+import { dirname, isAbsolute, resolve } from 'pathe'
 import { getSpecificationDocblock } from '../utils/test-helpers'
 import { getStaticMocks, resolveStaticMocks } from './environments/staticMocks'
 
@@ -242,6 +242,9 @@ export class AffectedModulesResolver {
     if (filepath.includes('node_modules')) {
       return false
     }
+    if (this.related.includes(filepath)) {
+      return true
+    }
     const cached = this.existsCache.get(filepath)
     if (cached !== undefined) {
       return cached
@@ -342,10 +345,20 @@ class ProjectGraph {
     const imports = new Set([...(transformed.deps || []), ...(transformed.dynamicDeps || [])])
     const dependencies: string[] = []
     const watchedFiles: string[] = []
+    const idDir = dirname(cleanUrl(id))
     // ids keep the query, so `./file.txt?raw` is walked as its own module
     this.environment.moduleGraph.getModuleById(id)?.importedModules.forEach((imported) => {
-      if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
-        ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
+      let importedId = imported.id
+      let importedFile = imported.file
+      if (importedFile && !isAbsolute(importedFile)) {
+        importedFile = resolve(idDir, importedFile)
+        importedId = importedFile
+      } else if (!importedFile && imported.url.startsWith('.')) {
+        importedFile = resolve(idDir, cleanUrl(imported.url))
+        importedId = importedFile
+      }
+      if (importedId && importedFile && this.resolver.isLocalSourceFile(importedFile)) {
+        ;(imports.has(imported.url) ? dependencies : watchedFiles).push(importedId)
       }
     })
     // `vi.importActual` loads the original without importing it

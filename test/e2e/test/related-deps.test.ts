@@ -1459,6 +1459,38 @@ describe('modules that fail to load', () => {
     `)
   })
 
+  test('a test that imports a deleted file runs and reports the error', async () => {
+    const { results } = await runInlineTests(
+      {
+        'src/changed.js': 'export {}',
+        'a.test.js': testFile('a', `import './src/deleted.js'`),
+        'b.test.js': testFile('b', `import './src/changed.js'`),
+        'c.test.js': testFile('c'),
+      },
+      { related: ['src/deleted.js'] },
+    )
+
+    expect(moduleStates(results)).toEqual([['a.test.js', 'failed']])
+  })
+
+  test('a setup file that imports a deleted file runs every test and reports the error', async () => {
+    const { results } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+        'setup.js': `import './src/deleted.js'`,
+        'src/changed.js': 'export {}',
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b', `import './src/changed.js'`),
+      },
+      { related: ['src/deleted.js'] },
+    )
+
+    expect(moduleStates(results)).toEqual([
+      ['a.test.js', 'failed'],
+      ['b.test.js', 'failed'],
+    ])
+  })
+
   function moduleStates(modules: TestModule[]) {
     return modules
       .map((testModule) => [testModule.relativeModuleId, testModule.state()])
