@@ -197,7 +197,6 @@ abstract class SnapshotReviewer {
   }
 }
 
-const CLEAR_SCREEN_SEQUENCE = '\x1B[H\x1B[J'
 const REVIEW_KEYS: readonly [
   key: string,
   color: keyof Colors extends infer C
@@ -251,9 +250,10 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
 
     try {
       await review(async ({ snapshot, stats }, approve, reject) => {
+        this.ctx.logger.clearFullScreen()
+
         this.#stdout.write(
           [
-            CLEAR_SCREEN_SEQUENCE,
             c.bold(`Reviewing [${c.yellow(`${stats.index + 1}/${stats.length}`)}]`) +
               (snapshot.project.name ? ' ' + formatProjectName(snapshot.project, ':') : ':'),
             `Source: ${c.cyan(
@@ -286,7 +286,7 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
         }
       })
 
-      this.#stdout.write(CLEAR_SCREEN_SEQUENCE)
+      this.ctx.logger.clearFullScreen()
     } catch (error) {
       controls.cleanup()
 
