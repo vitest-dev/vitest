@@ -20,7 +20,7 @@ export class GitVCSProvider implements VCSProvider {
     }
 
     return result.stdout
-      .split('\n')
+      .split('\0')
       .filter((s) => s !== '')
       .map((changedPath) => resolve(this.root, changedPath))
   }
@@ -47,16 +47,17 @@ export class GitVCSProvider implements VCSProvider {
   }
 
   private getFilesSince(hash: string) {
-    return this.resolveFilesWithGitCommand(['diff', '--name-only', `${hash}...HEAD`])
+    return this.resolveFilesWithGitCommand(['diff', '--name-only', '-z', `${hash}...HEAD`])
   }
 
   private getStagedFiles() {
-    return this.resolveFilesWithGitCommand(['diff', '--cached', '--name-only'])
+    return this.resolveFilesWithGitCommand(['diff', '--cached', '--name-only', '-z'])
   }
 
   private getUnstagedFiles() {
     return this.resolveFilesWithGitCommand([
       'ls-files',
+      '-z',
       '--other',
       '--modified',
       '--exclude-standard',
