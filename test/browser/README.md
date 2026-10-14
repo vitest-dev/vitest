@@ -14,7 +14,7 @@ BROWSER=chromium pnpm run test:playwright
 pnpm run test-fixtures --root ./fixtures/locators
 
 # run specific fixture with selected provider and browser
-PROVIDER=webdriverio BROWSER=firefox pnpm run test-fixtures --root ./fixtures/locators
+PROVIDER=playwright BROWSER=firefox pnpm run test-fixtures --root ./fixtures/locators
 ```
 
 ## Using docker playwright
