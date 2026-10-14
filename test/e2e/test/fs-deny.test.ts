@@ -21,16 +21,16 @@ async function resolveDeniedFiles(viteConfig: ViteUserConfig = {}) {
   expect(config.test.resolvedProjects.map((p) => p.viteConfig === config)).toEqual([true, false])
 
   const files = ['.env', 'server.pem', 'secret.txt', 'node_modules/.vitest/.vitest-secret-token']
-  const servers = {
+  const serverConfigs = {
     root: config,
     ...Object.fromEntries(
       config.test.resolvedProjects.map((p) => [p.projectConfig.name, p.viteConfig]),
     ),
   }
   return Object.fromEntries(
-    Object.entries(servers).map(([name, server]) => [
+    Object.entries(serverConfigs).map(([name, serverConfig]) => [
       name,
-      files.filter((file) => !isFileLoadingAllowed(server, `${config.root}/${file}`)),
+      files.filter((file) => !isFileLoadingAllowed(serverConfig, `${config.root}/${file}`)),
     ]),
   )
 }
