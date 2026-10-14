@@ -128,22 +128,16 @@ export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
   return { defines, scriptDefines }
 }
 
-let viteDefaultFsDeny: Promise<string[]> | undefined
-
-function getViteDefaultFsDeny(): Promise<string[]> {
-  viteDefaultFsDeny ??= vite
-    .resolveConfig({ configFile: false, envFile: false, logLevel: 'silent' }, 'serve')
-    .then((config) => config.server.fs.deny)
-  return viteDefaultFsDeny
-}
+// TODO: use Vite's own defaults once they are exported (request upstream)
+const VITE_DEFAULT_FS_DENY = ['.env', '.env.*', '*.{crt,pem}', '**/.git/**']
 
 // Vite drops its default `server.fs.deny` once any value is set,
 // so the defaults are kept explicitly when the user didn't set one.
-export async function appendApiTokenFsDeny(viteConfig: ViteConfig): Promise<void> {
+export function appendApiTokenFsDeny(viteConfig: ViteConfig): void {
   viteConfig.server ??= {}
   viteConfig.server.fs ??= {}
   viteConfig.server.fs.deny = [
-    ...(viteConfig.server.fs.deny ?? (await getViteDefaultFsDeny())),
+    ...(viteConfig.server.fs.deny ?? VITE_DEFAULT_FS_DENY),
     API_TOKEN_FILE,
   ]
 }

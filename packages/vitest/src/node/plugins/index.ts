@@ -21,9 +21,9 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
       },
       config: {
         order: 'post',
-        async handler(viteConfig) {
+        handler(viteConfig) {
           const root = resolve(viteConfig.test?.root || viteConfig.root || process.cwd())
-          await appendApiTokenFsDeny(viteConfig)
+          appendApiTokenFsDeny(viteConfig)
 
           return {
             base: '/',

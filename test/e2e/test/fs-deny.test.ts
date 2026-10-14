@@ -1,4 +1,5 @@
 import type { Vitest } from 'vitest/node'
+import { resolveConfig } from 'vite'
 import { expect, test } from 'vitest'
 import { isFileLoadingAllowed } from 'vitest/node'
 import { runInlineTests } from '../../test-utils'
@@ -85,4 +86,13 @@ test('user fs.deny replaces vite defaults but still denies the api token file', 
       ],
     }
   `)
+})
+
+test('keeps the same fs.deny defaults as vite', async () => {
+  const { server } = await resolveConfig({ configFile: false }, 'serve')
+  const { ctx, stderr } = await runInlineTests({
+    'basic.test.js': `import { test } from 'vitest'; test('ok', () => {})`,
+  })
+  expect(stderr).toBe('')
+  expect(ctx!.viteConfig.server.fs.deny).toEqual([...server.fs.deny, '.vitest-secret-token'])
 })

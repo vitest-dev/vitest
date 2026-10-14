@@ -40,10 +40,10 @@ export function WorkspaceVitestPlugin(
       options() {
         this.meta.watchMode = false
       },
-      async config(viteConfig) {
+      config(viteConfig) {
         const testConfig = viteConfig.test || {}
         const root = testConfig.root || viteConfig.root
-        await appendApiTokenFsDeny(viteConfig)
+        appendApiTokenFsDeny(viteConfig)
 
         const config: ViteConfig = {
           base: '/',
