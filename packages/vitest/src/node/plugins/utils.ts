@@ -129,7 +129,15 @@ export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
 }
 
 // TODO: use Vite's own defaults once they are exported (request upstream)
-const VITE_DEFAULT_FS_DENY = ['.env', '.env.*', '*.{crt,pem}', '**/.git/**']
+// copied from the newest Vite, so older Vite versions get a stricter list
+const VITE_DEFAULT_FS_DENY = [
+  '.env',
+  '.env.*',
+  '*.{crt,pem,key,p12,pfx,cer,der}',
+  '.npmrc',
+  '.yarnrc.yml',
+  '**/.git/**',
+]
 
 // Vite drops its default `server.fs.deny` once any value is set,
 // so the defaults are kept explicitly when the user didn't set one.
