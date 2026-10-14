@@ -5,6 +5,7 @@ import { dirname, resolve } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import * as vite from 'vite'
 import { rootDir } from '../../paths'
+import { API_TOKEN_FILE } from '../config/apiToken'
 import { hash } from '../hash'
 
 export function resolveTestCacheDir(
@@ -125,6 +126,26 @@ export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
     }
   }
   return { defines, scriptDefines }
+}
+
+let viteDefaultFsDeny: Promise<string[]> | undefined
+
+function getViteDefaultFsDeny(): Promise<string[]> {
+  viteDefaultFsDeny ??= vite
+    .resolveConfig({ configFile: false, envFile: false, logLevel: 'silent' }, 'serve')
+    .then((config) => config.server.fs.deny)
+  return viteDefaultFsDeny
+}
+
+// Vite drops its default `server.fs.deny` once any value is set,
+// so the defaults are kept explicitly when the user didn't set one.
+export async function appendApiTokenFsDeny(viteConfig: ViteConfig): Promise<void> {
+  viteConfig.server ??= {}
+  viteConfig.server.fs ??= {}
+  viteConfig.server.fs.deny = [
+    ...(viteConfig.server.fs.deny ?? (await getViteDefaultFsDeny())),
+    API_TOKEN_FILE,
+  ]
 }
 
 export function resolveFsAllow(

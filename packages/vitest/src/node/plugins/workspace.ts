@@ -2,7 +2,6 @@ import type * as vite from 'vite'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import { resolve } from 'pathe'
-import { API_TOKEN_FILE } from '../config/apiToken'
 import { ViteConfigPlugin } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -10,7 +9,7 @@ import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
-import { resolveTestCacheDir } from './utils'
+import { appendApiTokenFsDeny, resolveTestCacheDir } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
 
 export function ProjectRootPlugin(projectRoot: string): VitePlugin {
@@ -41,9 +40,10 @@ export function WorkspaceVitestPlugin(
       options() {
         this.meta.watchMode = false
       },
-      config(viteConfig) {
+      async config(viteConfig) {
         const testConfig = viteConfig.test || {}
         const root = testConfig.root || viteConfig.root
+        await appendApiTokenFsDeny(viteConfig)
 
         const config: ViteConfig = {
           base: '/',
@@ -57,7 +57,6 @@ export function WorkspaceVitestPlugin(
             open: false,
             fs: {
               allow: globalViteConfig.server.fs.allow,
-              deny: [API_TOKEN_FILE],
             },
           },
         }
