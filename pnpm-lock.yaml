@@ -171,7 +171,6 @@ overrides:
   '@vitest/browser': workspace:*
   '@vitest/browser-playwright': workspace:*
   '@vitest/browser-preview': workspace:*
-  '@vitest/browser-webdriverio': workspace:*
   '@vitest/ui': workspace:*
   acorn: 8.11.3
   mlly: ^1.8.0
@@ -626,22 +625,6 @@ importers:
         specifier: workspace:*
         version: link:../vitest
 
-  packages/browser-webdriverio:
-    dependencies:
-      '@vitest/browser':
-        specifier: workspace:*
-        version: link:../browser
-    devDependencies:
-      '@wdio/types':
-        specifier: ^9.24.0
-        version: 9.24.0
-      vitest:
-        specifier: workspace:*
-        version: link:../vitest
-      webdriverio:
-        specifier: ^9.20.0
-        version: 9.20.0
-
   packages/coverage-istanbul:
     dependencies:
       '@babel/core':
@@ -1030,8 +1013,8 @@ importers:
         specifier: workspace:*
         version: link:../browser-preview
       '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../browser-webdriverio
+        specifier: ^4.1.11
+        version: 4.1.11(vitest@packages+vitest)(webdriverio@9.20.0)
       '@vitest/coverage-istanbul':
         specifier: workspace:*
         version: link:../coverage-istanbul
@@ -1239,9 +1222,6 @@ importers:
       '@vitest/browser-preview':
         specifier: workspace:*
         version: link:../../packages/browser-preview
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../../packages/browser-webdriverio
       '@vitest/bundled-lib':
         specifier: link:./bundled-lib
         version: link:bundled-lib
@@ -1314,9 +1294,6 @@ importers:
       '@vitest/browser-preview':
         specifier: workspace:*
         version: link:../../packages/browser-preview
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../../packages/browser-webdriverio
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../../packages/mocker
@@ -1428,9 +1405,6 @@ importers:
       '@vitest/browser-preview':
         specifier: workspace:*
         version: link:../../packages/browser-preview
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../../packages/browser-webdriverio
       '@vitest/test-dep-optimizer-external':
         specifier: file:./deps/optimizer/external
         version: file:test/config/deps/optimizer/external
@@ -5608,6 +5582,12 @@ packages:
   '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual':
     resolution: {directory: test/config/deps/test-dep-virtual, type: directory}
 
+  '@vitest/browser-webdriverio@4.1.11':
+    resolution: {integrity: sha512-utftie0XLjhATDCCRAaCZFVlosjQX6mF8UK+mo0q2yTn+XASUdz21tqvAA6fYRgLDiHAIVI06cBaKAklRp4UVA==}
+    peerDependencies:
+      vitest: workspace:*
+      webdriverio: '*'
+
   '@vitest/cjs-lib@file:test/browser/cjs-lib':
     resolution: {directory: test/browser/cjs-lib, type: directory}
 
@@ -5886,10 +5866,6 @@ packages:
 
   '@wdio/types@9.20.0':
     resolution: {integrity: sha512-zMmAtse2UMCSOW76mvK3OejauAdcFGuKopNRH7crI0gwKTZtvV89yXWRziz9cVXpFgfmJCjf9edxKFWdhuF5yw==}
-    engines: {node: '>=18.20.0'}
-
-  '@wdio/types@9.24.0':
-    resolution: {integrity: sha512-PYYunNl8Uq1r8YMJAK6ReRy/V/XIrCSyj5cpCtR5EqCL6heETOORFj7gt4uPnzidfgbtMBcCru0LgjjlMiH1UQ==}
     engines: {node: '>=18.20.0'}
 
   '@wdio/utils@9.20.0':
@@ -13193,7 +13169,7 @@ snapshots:
       extract-zip: 2.0.1
       progress: 2.0.3
       proxy-agent: 6.5.0
-      semver: 7.7.4
+      semver: 7.8.4
       tar-fs: 3.0.8
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -14214,6 +14190,12 @@ snapshots:
 
   '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual': {}
 
+  '@vitest/browser-webdriverio@4.1.11(vitest@packages+vitest)(webdriverio@9.20.0)':
+    dependencies:
+      '@vitest/browser': link:packages/browser
+      vitest: link:packages/vitest
+      webdriverio: 9.20.0
+
   '@vitest/cjs-lib@file:test/browser/cjs-lib': {}
 
   '@vitest/eslint-plugin@1.6.9(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)(vitest@packages+vitest)':
@@ -14539,10 +14521,6 @@ snapshots:
       '@types/node': 24.12.0
 
   '@wdio/types@9.20.0':
-    dependencies:
-      '@types/node': 24.12.0
-
-  '@wdio/types@9.24.0':
     dependencies:
       '@types/node': 24.12.0
 
@@ -20046,7 +20024,7 @@ snapshots:
       deepmerge-ts: 7.1.5
       https-proxy-agent: 7.0.6
       undici: 6.21.3
-      ws: 8.19.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color

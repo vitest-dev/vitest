@@ -138,7 +138,7 @@
     "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
-    "@vitest/browser-webdriverio": "workspace:*",
+    "@vitest/browser-webdriverio": "^4.1.11",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
