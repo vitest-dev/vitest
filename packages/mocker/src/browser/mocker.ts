@@ -225,7 +225,7 @@ export class ModuleMocker implements TestModuleMocker {
           module = this.registry.register('automock', rawId, resolvedId, mockUrl)
         }
 
-        await this.interceptor.register(module)
+        await this.interceptor.register(module, importer)
       })
       .finally(() => {
         this.queue.delete(promise)

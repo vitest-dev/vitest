@@ -5,9 +5,12 @@ import { getBrowserState, getWorkerState } from '../utils'
 
 export function createModuleMockerInterceptor(): ModuleMockerInterceptor {
   return {
-    async register(module) {
-      const state = getBrowserState()
-      const importMap = await rpc().registerMock(state.sessionId, module.toJSON())
+    async register(module, importer) {
+      const { sessionId } = getBrowserState()
+      const importMap = await rpc().registerMock(sessionId, module.toJSON(), {
+        importer,
+        testFile: getWorkerState().filepath,
+      })
       if (importMap) {
         appendImportMap(importMap)
       }

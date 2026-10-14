@@ -8,7 +8,7 @@ import type {
   PluginHarness,
   ResolvedConfig,
 } from 'vitest/node'
-import type { FactoryExportResolver } from './rpc'
+import type { FactoryExportResolver } from './mocks'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { MockerRegistry } from '@vitest/mocker'
@@ -263,9 +263,7 @@ body {
       // so a cached original would never reach the mock; import map mocks
       // have their own URLs and keep Vite's immutable caching
       const interceptsMocks = () =>
-        Array.from(parentServer.children).some(
-          (child) => child.config.browser.importMapMocks === false || !child.state.lateImportMaps,
-        )
+        Array.from(parentServer.children).some((child) => !child.state.usesImportMaps(child.config))
 
       server.middlewares.use((req, res, next) => {
         const url = req.url

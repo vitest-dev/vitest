@@ -1,4 +1,4 @@
-import type { MockedModuleSerialized, MockerRegistry } from '@vitest/mocker'
+import type { MockerRegistry } from '@vitest/mocker'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
@@ -9,22 +9,20 @@ import type {
   Vitest,
 } from 'vitest/node'
 import type { WebSocket } from 'ws'
-import type { MockImportMap, WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
+import type {
+  WebSocketBrowserEvents,
+  WebSocketBrowserHandlers,
+  WebSocketBrowserRPC,
+} from '../types'
+import type { FactoryExportResolver } from './mocks'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
-import {
-  AutomockedModule,
-  AutospiedModule,
-  ManualMockedModule,
-  RedirectedModule,
-} from '@vitest/mocker'
-import { getManualMockId, getManualMockUrl, ServerMockResolver } from '@vitest/mocker/node'
 import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join, resolve } from 'pathe'
+import { dirname, resolve } from 'pathe'
 import {
   BrowserConnectionError,
   createDebugger,
@@ -33,38 +31,8 @@ import {
 } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 import { replaceUndefined, reviveUndefined } from '../shared/serialization'
+import { createMockHandlers } from './mocks'
 import { slash } from './utils'
-
-function injectQuery(url: string, query: string): string {
-  return url.includes('?') ? `${url}&${query}` : `${url}?${query}`
-}
-
-// the key must be the exact URL that import analysis emits in the browser,
-// including the dependency version and the HMR timestamp
-function resolveMockImportMap(
-  vite: ParentBrowserProject['vite'],
-  module: MockedModuleSerialized,
-): MockImportMap {
-  let url = module.url
-  const version = /[?&]v=(\w{8})/.exec(module.id)?.[1]
-  if (version) {
-    url = injectQuery(url, `v=${version}`)
-  }
-  const node = vite.environments.client.moduleGraph.getModuleById(module.id)
-  if (node && node.lastHMRTimestamp > 0) {
-    url = injectQuery(url, `t=${node.lastHMRTimestamp}`)
-  }
-  const base = vite.config.base.replace(/\/$/, '')
-  const key = base + url
-  if (module.type === 'redirect') {
-    const redirect = new URL(module.redirect)
-    return { imports: { [key]: base + redirect.pathname + redirect.search } }
-  }
-  if (module.type === 'manual') {
-    return { imports: { [key]: base + getManualMockUrl(module.url, module.id) } }
-  }
-  return { imports: { [key]: injectQuery(key, `mock=${module.type}`) } }
-}
 
 const debug = createDebugger('vitest:browser:api')
 
@@ -90,11 +58,6 @@ function resolveHeartbeatInterval(vitest: Vitest): number {
     return DEFAULT_HEARTBEAT_INTERVAL
   }
   return interval
-}
-
-export interface FactoryExportResolver {
-  sessionId: string
-  resolve: () => Promise<string[]>
 }
 
 export function setupBrowserRpc(
@@ -274,12 +237,7 @@ export function setupBrowserRpc(
       sessionId: string
     },
   ) {
-    const mockResolver = new ServerMockResolver(globalServer.vite, {
-      moduleDirectories: project.config?.deps?.moduleDirectories,
-    })
-    const mocker = project.browser?.provider?.mocker
-
-    const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
+    const rpc: WebSocketBrowserRPC = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
         onOrchestratorReady(capabilities) {
           ;(project.browser!.state as BrowserServerState).lateImportMaps =
@@ -449,9 +407,6 @@ export function setupBrowserRpc(
         cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
         },
-        async resolveId(id, importer) {
-          return mockResolver.resolveId(id, importer)
-        },
         debug(...args) {
           vitest.logger.console.debug(...args)
         },
@@ -500,104 +455,12 @@ export function setupBrowserRpc(
           ) as any as BrowserCommandContext
           return await project.browser!.triggerCommand(command as any, context, ...payload)
         },
-        resolveMock(rawId, importer, options) {
-          return mockResolver.resolveMock(rawId, importer, options)
-        },
-        invalidate(ids) {
-          return mockResolver.invalidate(ids)
-        },
-
-        async registerMock(sessionId, module): Promise<MockImportMap | undefined> {
-          const option = project.config.browser.importMapMocks
-          const { lateImportMaps } = project.browser!.state as BrowserServerState
-          if (option === true && lateImportMaps === false) {
-            throw new Error(
-              '"browser.importMapMocks" is enabled, but this browser does not accept an import map after a module has loaded. ' +
-                'Firefox needs the "dom.multiple_import_maps.enabled" preference.',
-            )
-          }
-          if (option !== false && lateImportMaps) {
-            if (module.type !== 'manual') {
-              return resolveMockImportMap(vite, module)
-            }
-            // the shim reads the original only when it loads; until then the
-            // server keeps a way to ask this session for the factory keys
-            // this is a last resort check only if the transformation failed
-            factoryExportResolvers.set(module.url, {
-              sessionId,
-              async resolve() {
-                const { keys } = await rpc.resolveManualMock(module.url)
-                return keys
-              },
-            })
-            // the shim is not tied to the original file, so a changed original
-            // would otherwise keep a stale export list
-            const { moduleGraph } = vite.environments.client
-            const shim = moduleGraph.getModuleById(getManualMockId(module.url, module.id))
-            if (shim) {
-              moduleGraph.invalidateModule(shim)
-            }
-            return resolveMockImportMap(vite, module)
-          }
-          if (!mocker) {
-            // make sure modules are not processed yet in case they were imported before
-            // and were not mocked
-            mockResolver.invalidate([module.id])
-
-            if (module.type === 'manual') {
-              const mock = ManualMockedModule.fromJSON(module, async () => {
-                try {
-                  const { keys } = await rpc.resolveManualMock(module.url)
-                  return Object.fromEntries(keys.map((key) => [key, null]))
-                } catch (err) {
-                  vitest.state.catchError(err, 'Manual Mock Resolver Error')
-                  return {}
-                }
-              })
-              defaultMockerRegistry.add(mock)
-            } else {
-              if (module.type === 'redirect') {
-                const redirectUrl = new URL(module.redirect)
-                const redirect = join(vite.config.root, slash(decodeURI(redirectUrl.pathname)))
-                checkFileAccess(redirect)
-                module.redirect = redirect
-              }
-              defaultMockerRegistry.register(module)
-            }
-            return
-          }
-
-          if (module.type === 'manual') {
-            const manualModule = ManualMockedModule.fromJSON(module, async () => {
-              const { keys } = await rpc.resolveManualMock(module.url)
-              return Object.fromEntries(keys.map((key) => [key, null]))
-            })
-            await mocker.register(sessionId, manualModule)
-          } else if (module.type === 'redirect') {
-            await mocker.register(sessionId, RedirectedModule.fromJSON(module))
-          } else if (module.type === 'automock') {
-            await mocker.register(sessionId, AutomockedModule.fromJSON(module))
-          } else if (module.type === 'autospy') {
-            await mocker.register(sessionId, AutospiedModule.fromJSON(module))
-          }
-        },
-        clearMocks(sessionId) {
-          for (const [url, resolver] of factoryExportResolvers) {
-            if (resolver.sessionId === sessionId) {
-              factoryExportResolvers.delete(url)
-            }
-          }
-          if (!mocker) {
-            return defaultMockerRegistry.clear()
-          }
-          return mocker.clear(sessionId)
-        },
-        unregisterMock(sessionId, id) {
-          if (!mocker) {
-            return defaultMockerRegistry.delete(id)
-          }
-          return mocker.delete(sessionId, id)
-        },
+        ...createMockHandlers(project, {
+          registry: defaultMockerRegistry,
+          factoryExportResolvers,
+          checkFileAccess,
+          rpc: () => rpc,
+        }),
 
         // CDP
         async sendCdpEvent(sessionId: string, event: string, payload?: Record<string, unknown>) {

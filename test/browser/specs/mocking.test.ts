@@ -1,6 +1,7 @@
 import { existsSync, rmSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { expect, onTestFailed, onTestFinished, test } from 'vitest'
+import { defaultExclude } from 'vitest/config'
 import { editFile, runVitest } from '../../test-utils'
 import { instances, provider } from '../settings'
 import { runInlineBrowserTests } from './utils'
@@ -203,9 +204,37 @@ test.each([false, undefined])(
   },
 )
 
+test.each([undefined, true])(
+  'vi.unmock in a test file removes the mocks of a setup file - importMapMocks %s',
+  async (importMapMocks) => {
+    const result = await runVitest({
+      root: 'fixtures/mocking-unmock',
+      exclude: [...defaultExclude, '**/do-unmock.test.ts'],
+      browser: { importMapMocks },
+    })
+
+    onTestFailed(() => {
+      console.error(result.stdout)
+      console.error(result.stderr)
+    })
+
+    expect(result.stderr).toReportNoErrors()
+
+    instances.forEach(({ browser }) => {
+      expect(result.stdout).toReportPassedTest('mocked.test.ts', browser)
+      expect(result.stdout).toReportPassedTest('unmock.test.ts', browser)
+      expect(result.stdout).toReportPassedTest('unmock-do-mock.test.ts', browser)
+    })
+
+    expect(result.exitCode).toBe(0)
+  },
+)
+
+// an import map rule cannot be removed, so vi.doUnmock needs request interception
 test('vi.unmock and vi.doUnmock restore modules mocked in a setup file', async () => {
   const result = await runVitest({
     root: 'fixtures/mocking-unmock',
+    browser: { importMapMocks: false },
   })
 
   onTestFailed(() => {
@@ -216,8 +245,10 @@ test('vi.unmock and vi.doUnmock restore modules mocked in a setup file', async (
   expect(result.stderr).toReportNoErrors()
 
   instances.forEach(({ browser }) => {
+    expect(result.stdout).toReportPassedTest('mocked.test.ts', browser)
     expect(result.stdout).toReportPassedTest('unmock.test.ts', browser)
     expect(result.stdout).toReportPassedTest('do-unmock.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('unmock-do-mock.test.ts', browser)
   })
 
   expect(result.exitCode).toBe(0)

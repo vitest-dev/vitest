@@ -77,6 +77,12 @@ export interface WebSocketBrowserHandlers {
   registerMock: (
     sessionId: string,
     mock: MockedModuleSerialized,
+    context: {
+      /** the module that called `vi.mock` */
+      importer: string
+      /** the test file that is running; its static `vi.unmock` calls cancel mocks from other modules */
+      testFile?: string
+    },
   ) => Promise<MockImportMap | undefined>
   unregisterMock: (sessionId: string, id: string) => void
   clearMocks: (sessionId: string) => void
