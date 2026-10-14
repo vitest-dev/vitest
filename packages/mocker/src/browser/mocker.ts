@@ -56,6 +56,8 @@ export class ModuleMocker implements TestModuleMocker {
   }
 
   public async invalidate(): Promise<void> {
+    // a file can finish before its mocks are registered if it never imports them
+    await Promise.allSettled(this.queue)
     const ids = Array.from(this.mockedIds)
     if (!ids.length) {
       return

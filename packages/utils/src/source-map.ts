@@ -66,7 +66,7 @@ function extractLocation(urlLike: string) {
     const urlObj = new URL(url)
     urlObj.searchParams.delete('import')
     urlObj.searchParams.delete('browserv')
-    url = urlObj.pathname + urlObj.hash + urlObj.search
+    url = tryDecode(urlObj.pathname, decodeURI) + urlObj.hash + urlObj.search
   }
   if (url.startsWith('/@fs/')) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
@@ -76,6 +76,14 @@ function extractLocation(urlLike: string) {
     url = url.replace(REGEXP_VITEST, '').replace(/[?&]$/, '')
   }
   return [url, parts[2] || undefined, parts[3] || undefined]
+}
+
+function tryDecode(value: string, decode: (value: string) => string): string {
+  try {
+    return decode(value)
+  } catch {
+    return value
+  }
 }
 
 export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
@@ -182,7 +190,8 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   }
 
   if (file.startsWith('file://')) {
-    file = file.slice(7)
+    // pathToFileURL also encodes "#" and "?", which decodeURI keeps
+    file = tryDecode(file.slice(7), decodeURIComponent)
   }
 
   // normalize Windows path (\ -> /)

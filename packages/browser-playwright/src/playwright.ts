@@ -542,8 +542,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       return { url: moduleUrl.href, predicate }
     }
 
+    // the tester unmocks by path, but the route is registered by the full url
     function predicateKey(sessionId: string, url: string) {
-      return `${sessionId}:${url}`
+      return `${sessionId}:${new URL(url, 'http://localhost').href}`
     }
 
     return {
@@ -584,7 +585,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
               url = request.href.slice(request.origin.length)
             }
 
-            const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
+            const result = await this.project
+              .browser!.vite.transformRequest(decodeURI(url))
+              .catch(() => null)
             if (!result) {
               return route.continue()
             }
