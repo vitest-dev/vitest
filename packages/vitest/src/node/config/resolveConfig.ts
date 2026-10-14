@@ -34,7 +34,7 @@ import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
-import { API_TOKEN_FILE, resolveApiToken } from './apiToken'
+import { resolveApiToken } from './apiToken'
 import { PluginHarness } from './pluginHarness'
 
 function resolvePath(path: string, root: string) {
@@ -1169,7 +1169,6 @@ export async function resolveConfig(
   rootViteConfig.server.fs.allow.push(
     ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
   )
-  rootViteConfig.server.fs.deny.push(API_TOKEN_FILE)
 
   // the server has been created, we don't need to override vite.server options
   const { token, tokenCreated } = resolveApiToken(rootViteConfig.root)
