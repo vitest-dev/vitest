@@ -3,16 +3,24 @@ import * as vite from 'vite'
 import { expect, test } from 'vitest'
 import { isFileLoadingAllowed, resolveConfig } from 'vitest/node'
 
-const files = ['.env', 'server.pem', 'secret.txt', 'node_modules/.vitest/.vitest-secret-token']
-
-const projects = [
-  { test: { name: 'shared' } },
-  { test: { name: 'own-server', alias: { foo: '/foo' } } },
-]
-
-async function denied(viteConfig: ViteUserConfig = {}) {
-  const config = await resolveConfig({ config: false }, { ...viteConfig, test: { projects } })
+// checks the root server, an inline project sharing it, and a project
+// with its own server (`alias` keeps it from sharing the root server)
+async function resolveDeniedFiles(viteConfig: ViteUserConfig = {}) {
+  const config = await resolveConfig(
+    { config: false },
+    {
+      ...viteConfig,
+      test: {
+        projects: [
+          { test: { name: 'shared' } },
+          { test: { name: 'own-server', alias: { foo: '/foo' } } },
+        ],
+      },
+    },
+  )
   expect(config.test.resolvedProjects.map((p) => p.viteConfig === config)).toEqual([true, false])
+
+  const files = ['.env', 'server.pem', 'secret.txt', 'node_modules/.vitest/.vitest-secret-token']
   const servers = {
     root: config,
     ...Object.fromEntries(
@@ -28,7 +36,7 @@ async function denied(viteConfig: ViteUserConfig = {}) {
 }
 
 test('keeps vite default fs.deny and denies the api token file', async () => {
-  expect(await denied()).toMatchInlineSnapshot(`
+  expect(await resolveDeniedFiles()).toMatchInlineSnapshot(`
     {
       "own-server": [
         ".env",
@@ -50,7 +58,8 @@ test('keeps vite default fs.deny and denies the api token file', async () => {
 })
 
 test('user fs.deny replaces vite defaults but still denies the api token file', async () => {
-  expect(await denied({ server: { fs: { deny: ['secret.txt'] } } })).toMatchInlineSnapshot(`
+  expect(await resolveDeniedFiles({ server: { fs: { deny: ['secret.txt'] } } }))
+    .toMatchInlineSnapshot(`
     {
       "own-server": [
         "secret.txt",
