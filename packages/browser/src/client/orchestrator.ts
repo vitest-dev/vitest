@@ -358,22 +358,22 @@ export class IframeOrchestrator {
   // away during a test would keep the run waiting forever
   private watchUnload(iframe: HTMLIFrameElement, iframeId: string) {
     const loads = this.iframeLoads.get(iframe) ?? 0
-    iframe.contentWindow?.addEventListener(
-      'pagehide',
-      () => {
-        setTimeout(() => {
-          if (
-            this.iframes.get(iframeId) !== iframe ||
-            !this.iframeEvents.get(iframe)?.size ||
-            this.iframeLoads.get(iframe) !== loads
-          ) {
-            return
-          }
-          this.dispatchIframeError(this.createConnectError(iframe, this.getIframeHref(iframe)))
-        }, IFRAME_UNLOAD_TIMEOUT)
-      },
-      { once: true },
-    )
+    iframe.contentWindow?.addEventListener('pagehide', (event) => {
+      // tests can dispatch their own "pagehide"
+      if (!event.isTrusted) {
+        return
+      }
+      setTimeout(() => {
+        if (
+          this.iframes.get(iframeId) !== iframe ||
+          !this.iframeEvents.get(iframe)?.size ||
+          this.iframeLoads.get(iframe) !== loads
+        ) {
+          return
+        }
+        this.dispatchIframeError(this.createConnectError(iframe, this.getIframeHref(iframe)))
+      }, IFRAME_UNLOAD_TIMEOUT)
+    })
   }
 
   private createWarningMessage(iframeId: string, location: string) {
