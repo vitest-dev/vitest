@@ -25,6 +25,7 @@ import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
+import * as esModuleLexer from 'es-module-lexer'
 import { join } from 'pathe'
 import c from 'tinyrainbow'
 import { fetchModule } from 'vite'
@@ -215,7 +216,7 @@ export class ModuleTransformService {
       moduleGraphModule,
       options,
     )
-    const imports = this.getCachedImports(environment, moduleGraphModule)
+    const imports = await this.getCachedImports(environment, moduleGraphModule)
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
@@ -235,11 +236,11 @@ export class ModuleTransformService {
     return cachedResult
   }
 
-  private getCachedImports(
+  private async getCachedImports(
     environment: DevEnvironment,
     node: EnvironmentModuleNode,
-  ): CachedModuleImports {
-    const imports: CachedModuleImports = { urls: [], ids: {} }
+  ): Promise<CachedModuleImports> {
+    const imports: CachedModuleImports = { urls: [], ids: {}, specifiers: {} }
     node.importedModules.forEach(({ url, id }) => {
       if (id == null) {
         return
@@ -249,6 +250,29 @@ export class ModuleTransformService {
         imports.ids[url] = id
       }
     })
+
+    const importer = node.file || node.id
+    if (importer && !isVirtualFile(importer)) {
+      const source = await this.readFileContentToCache(environment, node)
+      if (source) {
+        try {
+          await esModuleLexer.init
+          const [parsedImports] = esModuleLexer.parse(source)
+          for (const item of parsedImports) {
+            if (item.n) {
+              const specifier = item.n
+              const resolved = await environment.pluginContainer
+                .resolveId(specifier, importer)
+                .catch(() => null)
+              if (resolved?.id) {
+                imports.specifiers![specifier] = resolved.id
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+
     return imports
   }
 
@@ -413,7 +437,23 @@ export class ModuleTransformService {
     cachedModule: CachedInlineModuleMeta,
   ): Promise<EnvironmentModuleNode[] | undefined> {
     const safeModulePaths = getSafeModulePaths(environment)
-    const { urls, ids } = cachedModule.imports
+    const { urls, ids, specifiers } = cachedModule.imports
+
+    if (specifiers) {
+      const importer = cachedModule.file || cachedModule.id
+      for (const [specifier, expectedId] of Object.entries(specifiers)) {
+        const resolved = await environment.pluginContainer
+          .resolveId(specifier, importer)
+          .catch(() => null)
+        if (!resolved || resolved.id !== expectedId) {
+          debugFs?.(
+            `${c.red('[stale]')} ${cachedModule.id} imports "${specifier}", which resolved to ${resolved?.id ?? 'null'} instead of ${expectedId}`,
+          )
+          return undefined
+        }
+      }
+    }
+
     const importedModules = await Promise.all(
       urls.map(async (url) => {
         const id = Object.hasOwn(ids, url) ? ids[url] : urlToId(environment, url)

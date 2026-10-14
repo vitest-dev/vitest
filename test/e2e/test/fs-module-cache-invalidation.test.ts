@@ -286,3 +286,214 @@ test('a cached importer is re-transformed after a dependency outside the root is
     }
   `)
 })
+
+test('a cached importer is re-transformed when an import specifier resolves to a different existing file', async () => {
+  const structure = {
+    'src/target/index.ts': `export const value = "index"`,
+    'src/consumer.ts': `export { value } from "./target"`,
+    'src/a.test.ts': /* ts */ `
+      import { expect, it } from 'vitest'
+      import { value } from './consumer'
+      it('reads value', () => {
+        expect(value).toBe("index")
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, config)
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "reads value": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('src/target.ts', `export const value = "file"`)
+  cold.fs.editFile('src/a.test.ts', (content) => content.replace('"index"', '"file"'))
+
+  const warm = await runVitest({ root: cold.root, ...config })
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "reads value": "passed",
+      },
+    }
+  `)
+})
+
+test('a module with dynamic import template is not cached', async () => {
+  const structure = {
+    'locales/en.ts': `export const msg = "hello"`,
+    'src/loader.ts': /* ts */ `
+      export async function load(name: string) {
+        return import(\`../locales/\${name}.ts\`)
+      }
+    `,
+    'src/a.test.ts': /* ts */ `
+      import { expect, it } from 'vitest'
+      import { load } from './loader'
+      it('loads dynamic', async () => {
+        const mod = await load('en')
+        expect(mod.msg).toBe('hello')
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, config)
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "loads dynamic": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('locales/fr.ts', `export const msg = "bonjour"`)
+  cold.fs.editFile('src/a.test.ts', (content) =>
+    content.replace("'en'", "'fr'").replace("'hello'", "'bonjour'"),
+  )
+
+  const warm = await runVitest({ root: cold.root, ...config })
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "loads dynamic": "passed",
+      },
+    }
+  `)
+})
+
+test('a cached module is invalidated when nearest tsconfig changes', async () => {
+  const structure = {
+    'tsconfig.json': JSON.stringify({
+      compilerOptions: {
+        target: 'ES2022',
+        useDefineForClassFields: false,
+      },
+    }),
+    'src/model.ts': /* ts */ `
+      export class User {
+        name?: string
+      }
+    `,
+    'src/a.test.ts': /* ts */ `
+      import { expect, it } from 'vitest'
+      import { User } from './model'
+      it('checks own property', () => {
+        const u = new User()
+        expect(Object.hasOwn(u, 'name')).toBe(false)
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, config)
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "checks own property": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.editFile('tsconfig.json', () =>
+    JSON.stringify({
+      compilerOptions: {
+        target: 'ES2022',
+        useDefineForClassFields: true,
+      },
+    }),
+  )
+  cold.fs.editFile('src/a.test.ts', (content) => content.replace('toBe(false)', 'toBe(true)'))
+
+  const warm = await runVitest({ root: cold.root, ...config })
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "checks own property": "passed",
+      },
+    }
+  `)
+})
+
+test('a cached module is invalidated when a nearer tsconfig is newly created', async () => {
+  const structure = {
+    'tsconfig.json': JSON.stringify({
+      compilerOptions: {
+        target: 'ES2022',
+        useDefineForClassFields: false,
+      },
+    }),
+    'src/model.ts': /* ts */ `
+      export class User {
+        name?: string
+      }
+    `,
+    'src/a.test.ts': /* ts */ `
+      import { expect, it } from 'vitest'
+      import { User } from './model'
+      it('checks own property', () => {
+        const u = new User()
+        expect(Object.hasOwn(u, 'name')).toBe(false)
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, config)
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "checks own property": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  // Create a nearer tsconfig in src/ with useDefineForClassFields: true
+  cold.fs.createFile(
+    'src/tsconfig.json',
+    JSON.stringify({
+      compilerOptions: {
+        target: 'ES2022',
+        useDefineForClassFields: true,
+      },
+    }),
+  )
+  cold.fs.editFile('src/a.test.ts', (content) => content.replace('toBe(false)', 'toBe(true)'))
+
+  const warm = await runVitest({ root: cold.root, ...config })
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "checks own property": "passed",
+      },
+    }
+  `)
+})

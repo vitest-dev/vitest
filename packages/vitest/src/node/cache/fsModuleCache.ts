@@ -19,6 +19,8 @@ const debugMemory = createDebugger('vitest:cache:memory')
 const cacheComment = '\n//# vitestCache='
 const cacheCommentLength = cacheComment.length
 
+const DYNAMIC_IMPORT_TEMPLATE_RE = /\bimport\s*\(\s*`[^`]*\$\{/
+
 const METADATA_FILE = '_metadata.json'
 
 // Default location of the module cache. It lives inside `node_modules` at the
@@ -43,7 +45,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.8'
+  private version = '1.0.0-beta.9'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
@@ -221,11 +223,13 @@ export class FileSystemModuleCache {
     id: string,
     fileContent: string,
   ): string | null {
-    // bail out if file has import.meta.glob because it depends on other files
+    // bail out if file has import.meta.glob or template dynamic import because it depends on other files
     // TODO: figure out a way to still support it
-    if (fileContent.includes('import.meta.glob(')) {
+    if (fileContent.includes('import.meta.glob(') || DYNAMIC_IMPORT_TEMPLATE_RE.test(fileContent)) {
       this.saveMemoryCache(environment, id, null)
-      debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out because it has "import.meta.glob"`)
+      debugMemory?.(
+        `${c.yellow('[write]')} ${id} was bailed out because it has dynamic dependencies`,
+      )
       return null
     }
 
@@ -288,7 +292,12 @@ export class FileSystemModuleCache {
       this.fsEnvironmentHashMap.set(environment, environmentHash)
     }
 
-    hashString += id + fileContent + environmentHash + coverageAffectsCache
+    const nearestTsconfig = findNearestTsconfig(id, config.root)
+    const tsconfigKey = nearestTsconfig
+      ? `${nearestTsconfig}:${tryReadFileSync(nearestTsconfig)}`
+      : ''
+
+    hashString += id + fileContent + environmentHash + coverageAffectsCache + tsconfigKey
 
     const cacheKey = hash('sha1', hashString, 'hex')
 
@@ -427,6 +436,8 @@ export interface CachedModuleImports {
   urls: string[]
   // resolved ids that differ from the id derived from the url
   ids: Record<string, string>
+  // specifier -> resolved id mapping for revalidating imports against the importer
+  specifiers?: Record<string, string>
 }
 
 /**
@@ -537,6 +548,25 @@ function lookupFile(dir: string, fileNames: string[]): string | undefined {
 
     dir = parentDir
   }
+}
+
+function findNearestTsconfig(file: string, root: string): string | null {
+  let current = dirname(file)
+  while (true) {
+    const tsconfig = join(current, 'tsconfig.json')
+    if (existsSync(tsconfig)) {
+      return tsconfig
+    }
+    const jsconfig = join(current, 'jsconfig.json')
+    if (existsSync(jsconfig)) {
+      return jsconfig
+    }
+    if (current === root || dirname(current) === current) {
+      break
+    }
+    current = dirname(current)
+  }
+  return null
 }
 
 function tryReadFileSync(file: string): string {
