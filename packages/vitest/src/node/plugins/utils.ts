@@ -129,7 +129,7 @@ export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
 }
 
 // TODO: use Vite's own defaults once they are exported (request upstream)
-// copied from the newest Vite, so older Vite versions get a stricter list
+// copied from the newest Vite
 const VITE_DEFAULT_FS_DENY = [
   '.env',
   '.env.*',
