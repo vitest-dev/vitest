@@ -2,6 +2,7 @@ import type { Plugin } from 'vite'
 import type { MockedModuleSerialized } from '../registry'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path/posix'
+import { slash } from '@vitest/utils/helpers'
 import { isFileLoadingAllowed } from 'vite'
 import { ManualMockedModule, MockerRegistry } from '../registry'
 import { cleanUrl, createManualModuleSource } from '../utils'
@@ -78,7 +79,7 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
         else {
           if (event.type === 'redirect') {
             const redirectUrl = new URL(event.redirect)
-            const redirect = join(server.config.root, redirectUrl.pathname)
+            const redirect = join(server.config.root, slash(redirectUrl.pathname))
             // the redirect is served through the `load` hook below, so it must
             // stay inside the file-serving allowlist and never escape the root
             if (!isFileLoadingAllowed(server.config, redirect)) {
