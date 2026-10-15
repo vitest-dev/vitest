@@ -1654,6 +1654,46 @@ test('the environment comment is ignored for browser tests', async () => {
   `)
 })
 
+test('browser tests importing an unrelated CSS module are not selected', async () => {
+  const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
+  useFS(root, {
+    'vitest.config.js': `
+      import { playwright } from '@vitest/browser-playwright'
+      export default {
+        test: {
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      }
+    `,
+    'src/button.module.css': '.button { color: red; }',
+    'src/button.js': `
+      import styles from './button.module.css'
+      export const buttonClass = () => styles.button
+    `,
+    'src/other.module.css': '.other { color: blue; }',
+    'src/other.js': `
+      import styles from './other.module.css'
+      export const otherClass = () => styles.other
+    `,
+    'button.test.js': testFile('button', `import './src/button.js'`),
+    'other.test.js': testFile('other', `import './src/other.js'`),
+  })
+  const vitest = await createVitest({ root, watch: false, related: ['src/button.js'] })
+  onTestFinished(() => vitest.close())
+
+  const specifications = await vitest.getRelevantTestSpecifications()
+  expect(specifications.map((spec) => spec.moduleId.slice(root.length + 1))).toMatchInlineSnapshot(`
+    [
+      "button.test.js",
+    ]
+  `)
+})
+
 test('the run uses the environment comment read when filtering', async () => {
   const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
   const { editFile } = useFS(root, {
