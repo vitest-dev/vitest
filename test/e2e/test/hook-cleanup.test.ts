@@ -74,6 +74,151 @@ test.for(['stack', 'list', 'parallel'] as const)(
   },
 )
 
+test('reports every failed hook with sequence.hooks: parallel', async () => {
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.js': `
+        import { beforeAll, beforeEach, describe, test } from 'vitest'
+
+        describe('beforeAll', () => {
+          beforeAll(() => {
+            throw new Error('first beforeAll fails')
+          })
+          beforeAll(() => {
+            throw new Error('second beforeAll fails')
+          })
+          test('skipped', () => {})
+        })
+
+        describe('beforeEach', () => {
+          beforeEach(() => {
+            throw new Error('first beforeEach fails')
+          })
+          beforeEach(() => {
+            throw new Error('second beforeEach fails')
+          })
+          test('fails', () => {})
+        })
+
+        describe('skip', () => {
+          beforeEach(({ skip }) => skip())
+          beforeEach(({ skip }) => skip())
+          test('skipped', () => {})
+        })
+      `,
+    },
+    { sequence: { hooks: 'parallel' } },
+  )
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "beforeAll": {
+          "__suite_errors__": [
+            "first beforeAll fails",
+            "second beforeAll fails",
+          ],
+          "skipped": "skipped",
+        },
+        "beforeEach": {
+          "fails": [
+            "first beforeEach fails",
+            "second beforeEach fails",
+          ],
+        },
+        "skip": {
+          "skipped": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('reports the abort reason once if parallel hooks reject with it', async () => {
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.js': `
+        import { beforeEach, test } from 'vitest'
+
+        beforeEach(() => new Promise((resolve) => setTimeout(resolve, 1000)), 100)
+        beforeEach(async ({ signal }) => {
+          await new Promise((resolve) => signal.addEventListener('abort', resolve))
+          signal.throwIfAborted()
+        })
+        test('fails', () => {})
+      `,
+    },
+    { sequence: { hooks: 'parallel' } },
+  )
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "fails": [
+          "Hook timed out in 100ms.
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+        ],
+      },
+    }
+  `)
+})
+
+test('runs cleanups in sequence.hooks order if a later hook fails', async () => {
+  const logs: Record<string, string> = {}
+  for (const hooks of ['stack', 'list'] as const) {
+    const { stdout } = await runInlineTests(
+      {
+        'basic.test.js': `
+          import { afterAll, afterEach, beforeAll, beforeEach, describe, test } from 'vitest'
+
+          beforeEach(() => () => console.log('>> root beforeEach cleanup'))
+
+          describe('beforeAll', () => {
+            beforeAll(() => () => console.log('>> first beforeAll cleanup'))
+            beforeAll(() => () => console.log('>> second beforeAll cleanup'))
+            beforeAll(() => {
+              throw new Error('beforeAll fails')
+            })
+            afterAll(() => console.log('>> afterAll'))
+            test('skipped', () => {})
+          })
+
+          describe('beforeEach', () => {
+            beforeEach(() => () => console.log('>> first beforeEach cleanup'))
+            beforeEach(() => () => console.log('>> second beforeEach cleanup'))
+            beforeEach(() => {
+              throw new Error('beforeEach fails')
+            })
+            afterEach(() => console.log('>> afterEach'))
+            test('fails', () => {})
+          })
+        `,
+      },
+      { sequence: { hooks } },
+    )
+    logs[hooks] = extractLogs(stdout)
+  }
+
+  expect(logs).toMatchInlineSnapshot(`
+    {
+      "list": ">> afterAll
+    >> first beforeAll cleanup
+    >> second beforeAll cleanup
+    >> afterEach
+    >> root beforeEach cleanup
+    >> first beforeEach cleanup
+    >> second beforeEach cleanup",
+      "stack": ">> afterAll
+    >> second beforeAll cleanup
+    >> first beforeAll cleanup
+    >> afterEach
+    >> second beforeEach cleanup
+    >> first beforeEach cleanup
+    >> root beforeEach cleanup",
+    }
+  `)
+})
+
 test('runs beforeEach cleanups of parent suites on every retry', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'basic.test.js': `

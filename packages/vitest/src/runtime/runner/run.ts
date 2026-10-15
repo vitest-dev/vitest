@@ -207,14 +207,20 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
 
   if (sequence === 'parallel') {
     const results = await Promise.allSettled(hooks.map((hook) => runHook(hook)))
+    // hooks can reject with the same `signal.reason`
+    const errors = new Set<unknown>()
     for (const result of results) {
       if (result.status === 'fulfilled') {
         cleanups.push(result.value)
+      } else {
+        errors.add(result.reason)
       }
     }
-    const rejected = results.find((result) => result.status === 'rejected')
-    if (rejected) {
-      throw rejected.reason
+    if (errors.size === 1) {
+      throw [...errors][0]
+    }
+    if (errors.size > 1) {
+      throw new AggregateError([...errors], `Multiple "${name}" hooks failed.`)
     }
   } else {
     for (const hook of hooks) {
