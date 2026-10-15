@@ -214,6 +214,9 @@ export async function createClusterServer(
     await server.listen(config.api.port)
   } else {
     deferredListen.set(server, { port: config.api.port })
+    // Vite runs plugin buildStart hooks on listen; global setup and --changed
+    // transform modules before the first browser launch
+    await server.environments.client.pluginContainer.buildStart()
   }
   contribution.setupRpc(parent)
   return { server, parent }

@@ -109,6 +109,11 @@ export function setupBrowserRpc(
     const sessions = vitest._browserSessions
 
     if (!sessions.sessionIds.has(sessionId)) {
+      if (sessions.closedSessionIds.has(sessionId)) {
+        debug?.('[%s] ignoring the %s connection of a closed session', sessionId, type)
+        socket.destroy()
+        return
+      }
       const ids = [...sessions.sessionIds].join(', ')
       return error(new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`))
     }

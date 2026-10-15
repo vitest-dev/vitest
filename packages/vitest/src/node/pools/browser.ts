@@ -16,7 +16,7 @@ import { BrowserConnectionError } from '../errors'
 
 const debug = createDebugger('vitest:browser:pool')
 
-const PROVIDER_CLOSE_TIMEOUT = 10_000
+const PROVIDER_CLOSE_TIMEOUT = 30_000
 
 export interface BrowserPool {
   runTests: (
@@ -285,7 +285,9 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
     await Promise.all([...stopping, ...exitPromises])
     // pages can be opened outside of the pool (`vitest.standalone`)
     await Promise.all(vitest.projects.map((project) => closeProvider(project)))
-    vitest._browserSessions.sessionIds.clear()
+    vitest._browserSessions.sessionIds.forEach((sessionId) => {
+      vitest._browserSessions.close(sessionId)
+    })
     vitest.projects.forEach((project) => {
       project.browser?.state.orchestrators.forEach((orchestrator) => {
         orchestrator.$close()
@@ -570,8 +572,7 @@ class BrowserWorker {
     this.busySessions.clear()
     this.readySessions.clear()
     await closeProvider(this.project, options)
-    // the pages are closed now, so a late reconnect is not reported as an unknown session
-    sessionIds.forEach((sessionId) => sessions.sessionIds.delete(sessionId))
+    sessionIds.forEach((sessionId) => sessions.close(sessionId))
     orchestrators.forEach((orchestrator) => orchestrator?.$close())
   }
 

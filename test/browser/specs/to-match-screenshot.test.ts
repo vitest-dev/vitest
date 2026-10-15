@@ -43,6 +43,8 @@ async function runBrowserTests(structure: TestFsStructure, config: ViteUserConfi
       $cliOptions: {
         watch: true,
       },
+      // every instance is a worker, the default of 1 would run them one by one
+      maxWorkers: instances.length,
       browser: {
         enabled: true,
         screenshotFailures: false,

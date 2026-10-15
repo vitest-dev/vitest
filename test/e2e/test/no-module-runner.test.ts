@@ -766,14 +766,22 @@ test('not reported')
     })
 
     // "slice" removes the stack from unhandled error because it references built artifacts
-    expect(stderr.split('\n').slice(0, 17).join('\n')).toMatchInlineSnapshot(`
+    expect(stderr.split('\n').slice(0, 25).join('\n')).toMatchInlineSnapshot(`
       "
       ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
        FAIL  add.test.js [ add.test.js ]
       Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
+       ❯ <anonymous> add.test.js:2:1
+            1|
+            2| import { add } from './add.js'
+             | ^
+            3| vi.mock('./add.js', async () => {
+            4|   await Promise.resolve()
+
       Caused by: Error: error from factory
        ❯ <anonymous> add.test.js:5:9
+       ❯ <anonymous> add.test.js:2:1
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

@@ -138,6 +138,13 @@ test('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
 // { timeout: 120_000, retry: 3 }
 ```
 
+Options set to `undefined` are ignored, so they don't override the values from tags:
+
+```ts
+test('flaky database test', { tags: ['flaky', 'db'], timeout: undefined })
+// { timeout: 30_000, retry: 3 }
+```
+
 ## Using Tags in Tests
 
 You can apply tags to individual tests or entire suites using the `tags` option:
