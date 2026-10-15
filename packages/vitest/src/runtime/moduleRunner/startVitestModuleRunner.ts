@@ -172,7 +172,8 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
                 id: resolvedMock.id,
                 url: resolvedMock.url,
                 invalidate: false,
-                mockedModule: resolvedMock,
+                // the module node outlives the test file, so it must not keep the mock factory alive
+                mockedModule: true,
               }
             }
           }

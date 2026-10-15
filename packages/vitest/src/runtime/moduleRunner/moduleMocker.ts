@@ -64,10 +64,6 @@ export class VitestMocker extends BareModuleMocker {
     this.spyModule = await this.moduleRunner.import(spyModulePath)
   }
 
-  public reset(): void {
-    this.registries.clear()
-  }
-
   protected invalidateModuleById(id: string): void {
     const mockId = this.getMockPath(id)
     const node = this.evaluatedModules.getModuleById(mockId)
@@ -167,7 +163,7 @@ export class VitestMocker extends BareModuleMocker {
     }
 
     if (mock.type === 'manual') {
-      return this.callFunctionMock(id, url, mock)
+      return this.callFunctionMock(this.getMockPath(id), this.getMockPath(url), mock)
     }
     const node = await this.moduleRunner.fetchModule(mock.redirect)
     return this.moduleRunner.cachedRequest(mock.redirect, node, [importer], undefined, true)

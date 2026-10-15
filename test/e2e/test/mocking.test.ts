@@ -726,3 +726,269 @@ test('automock mockReturnValue works', () => {
     }
   `)
 })
+
+function trackScope(name: string) {
+  return `
+const scope = vi.hoisted(() => {
+  const scope = { name: '${name}' }
+  globalThis.scopes = [...(globalThis.scopes ?? []), new WeakRef(scope)]
+  return scope
+})`
+}
+
+test.for(['threads', 'forks'])(
+  'isolate:false releases mocks of finished files (%s)',
+  async (pool) => {
+    const { stderr, errorTree } = await runInlineTests(
+      {
+        './dep-a.ts': `export const dep = () => 'real'`,
+        './dep-b.ts': `export const dep = () => 'real'`,
+        './dep-c.ts': `export const dep = () => 'real'`,
+        './dep-d.ts': `export const dep = () => 'real'`,
+        './dep-e.ts': `export const dep = () => 'real'`,
+        './dep-f.ts': `export const dep = () => 'real'`,
+        './a-factory.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep-a'
+${trackScope('vi.mock factory')}
+vi.mock('./dep-a', () => ({ dep: () => scope.name }))
+test('mocked', () => {
+  expect(dep()).toBe('vi.mock factory')
+})
+    `,
+        './b-automock.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep-b'
+${trackScope('automock')}
+vi.mock('./dep-b')
+test('mocked', () => {
+  vi.mocked(dep).mockImplementation(() => scope.name)
+  expect(dep()).toBe('automock')
+})
+    `,
+        './c-autospy.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep-c'
+${trackScope('autospy')}
+vi.mock('./dep-c', { spy: true })
+test('mocked', () => {
+  vi.mocked(dep).mockImplementation(() => scope.name)
+  expect(dep()).toBe('autospy')
+})
+    `,
+        './d-do-mock.test.ts': `
+import { expect, test, vi } from 'vitest'
+${trackScope('vi.doMock factory')}
+test('mocked', async () => {
+  vi.doMock('./dep-d', () => ({ dep: () => scope.name }))
+  const { dep } = await import('./dep-d')
+  expect(dep()).toBe('vi.doMock factory')
+})
+    `,
+        './e-import-mock.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep-e'
+${trackScope('vi.importMock factory')}
+vi.mock('./dep-e', () => ({ dep: () => scope.name }))
+test('mocked', async () => {
+  const mocked = await vi.importMock('./dep-e')
+  expect(mocked.dep).toBe(dep)
+})
+    `,
+        './f-unused-do-mock.test.ts': `
+import { test, vi } from 'vitest'
+${trackScope('unused vi.doMock factory')}
+test('mock is never imported', () => {
+  vi.doMock('./dep-f', () => ({ dep: () => scope.name }))
+})
+    `,
+        './z-released.test.ts': `
+import v8 from 'node:v8'
+import vm from 'node:vm'
+import { expect, test } from 'vitest'
+
+v8.setFlagsFromString('--expose-gc')
+const gc = vm.runInNewContext('gc')
+v8.setFlagsFromString('--no-expose-gc')
+
+test('mock factories of previous files are released', async () => {
+  expect(globalThis.scopes).toHaveLength(6)
+  let retained = []
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    gc()
+    retained = globalThis.scopes.map((ref) => ref.deref()?.name).filter(Boolean)
+    if (!retained.length) {
+      break
+    }
+  }
+  expect(retained).toEqual([])
+})
+    `,
+      },
+      {
+        pool,
+        isolate: false,
+        sequence: { sequencer: StableTestFileOrderSorter },
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(errorTree()).toMatchInlineSnapshot(`
+      {
+        "a-factory.test.ts": {
+          "mocked": "passed",
+        },
+        "b-automock.test.ts": {
+          "mocked": "passed",
+        },
+        "c-autospy.test.ts": {
+          "mocked": "passed",
+        },
+        "d-do-mock.test.ts": {
+          "mocked": "passed",
+        },
+        "e-import-mock.test.ts": {
+          "mocked": "passed",
+        },
+        "f-unused-do-mock.test.ts": {
+          "mock is never imported": "passed",
+        },
+        "z-released.test.ts": {
+          "mock factories of previous files are released": "passed",
+        },
+      }
+    `)
+  },
+)
+
+test.for(['forks', 'vmThreads'])('mocks of finished files do not apply (%s)', async (pool) => {
+  const realTest = `
+import { expect, test } from 'vitest'
+import * as dep from './dep'
+import * as other from './other'
+test('real', () => {
+  expect(Object.keys(dep)).toEqual(['dep'])
+  expect(dep.dep()).toBe('real')
+  expect(other.other()).toBe('real other')
+})
+`
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      './dep.ts': `export const dep = () => 'real'`,
+      './other.ts': `export const other = () => 'real other'`,
+      './__mocks__/other.ts': `export const other = () => '__mocks__ other'`,
+      './a-factory.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep'
+vi.mock('./dep', () => ({ dep: () => 'factory' }))
+test('factory', () => {
+  expect(dep()).toBe('factory')
+})
+    `,
+      './b-real.test.ts': realTest,
+      './c-automock.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep'
+vi.mock('./dep')
+test('automock', () => {
+  expect(vi.isMockFunction(dep)).toBe(true)
+  expect(dep()).toBe(undefined)
+})
+    `,
+      './d-real.test.ts': realTest,
+      './e-autospy.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep'
+vi.mock('./dep', { spy: true })
+test('autospy', () => {
+  expect(dep()).toBe('real')
+  expect(dep).toHaveBeenCalledTimes(1)
+})
+    `,
+      './f-import-original.test.ts': `
+import { expect, test, vi } from 'vitest'
+import * as dep from './dep'
+vi.mock(import('./dep'), async (importOriginal) => ({ ...await importOriginal(), extra: true }))
+test('importOriginal', () => {
+  expect(dep).toMatchObject({ extra: true })
+  expect(dep.dep()).toBe('real')
+})
+    `,
+      './g-redirect.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { other } from './other'
+vi.mock('./other')
+test('__mocks__', () => {
+  expect(other()).toBe('__mocks__ other')
+})
+    `,
+      './h-real.test.ts': realTest,
+      './i-unused-do-mock.test.ts': `
+import { test, vi } from 'vitest'
+test('mock is never imported', () => {
+  vi.doMock('./dep', () => ({ dep: () => 'unused vi.doMock' }))
+})
+    `,
+      './j-real.test.ts': realTest,
+      './k-import-mock.test.ts': `
+import { expect, test, vi } from 'vitest'
+import { dep } from './dep'
+vi.mock('./dep', () => ({ dep: () => 'factory' }))
+test('importMock', async () => {
+  const mocked = await vi.importMock('./dep')
+  expect(mocked.dep).toBe(dep)
+  expect(dep()).toBe('factory')
+})
+    `,
+      './l-real.test.ts': realTest,
+    },
+    {
+      pool,
+      isolate: false,
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "a-factory.test.ts": {
+        "factory": "passed",
+      },
+      "b-real.test.ts": {
+        "real": "passed",
+      },
+      "c-automock.test.ts": {
+        "automock": "passed",
+      },
+      "d-real.test.ts": {
+        "real": "passed",
+      },
+      "e-autospy.test.ts": {
+        "autospy": "passed",
+      },
+      "f-import-original.test.ts": {
+        "importOriginal": "passed",
+      },
+      "g-redirect.test.ts": {
+        "__mocks__": "passed",
+      },
+      "h-real.test.ts": {
+        "real": "passed",
+      },
+      "i-unused-do-mock.test.ts": {
+        "mock is never imported": "passed",
+      },
+      "j-real.test.ts": {
+        "real": "passed",
+      },
+      "k-import-mock.test.ts": {
+        "importMock": "passed",
+      },
+      "l-real.test.ts": {
+        "real": "passed",
+      },
+    }
+  `)
+})
