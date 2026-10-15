@@ -25,11 +25,10 @@ interface TimelineStep extends TraceEntry {
 
 interface TimelineRow {
   cells: [time: string, duration: string, name: string, locator: string, location: string]
-  status?: 'pass' | 'fail' | 'gap'
+  status?: 'pass' | 'fail'
 }
 
 const MAX_STEPS = 10
-const GAP_THRESHOLD = 100
 
 export function formatTraceTimeline(artifacts: TestArtifact[], root: string): string | undefined {
   const attempt = getLastAttempt(artifacts)
@@ -39,19 +38,7 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
 
   const steps = collectSteps(attempt.entries)
   const shown = steps.slice(-MAX_STEPS)
-  const rows: TimelineRow[] = []
-  let previousEnd = shown[0].startTime
-  for (const step of shown) {
-    const gap = step.startTime - previousEnd
-    if (gap >= GAP_THRESHOLD) {
-      rows.push({
-        cells: ['', `~${formatTime(gap)}`, '(no recorded steps)', '', ''],
-        status: 'gap',
-      })
-    }
-    previousEnd = Math.max(previousEnd, step.startTime + (step.duration ?? 0))
-    rows.push(formatStep(step, root))
-  }
+  const rows = shown.map((step) => formatStep(step, root))
 
   const widths = rows[0].cells.map((_, i) => Math.max(...rows.map((row) => row.cells[i].length)))
   const lines = rows.map(({ cells, status }) => {
@@ -59,10 +46,7 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
       i === 0 ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
     )
     const text = `  ${time}  ${duration}  ${name}  ${c.cyan(locator)}  ${c.dim(location)}`.trimEnd()
-    if (status === 'fail') {
-      return c.red(text)
-    }
-    return status === 'gap' ? c.dim(text) : text
+    return status === 'fail' ? c.red(text) : text
   })
   if (steps.length > shown.length) {
     lines.unshift(c.dim(`  ... ${steps.length - shown.length} earlier steps`))

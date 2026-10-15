@@ -63,7 +63,6 @@ test('prints trace timeline on failure', async () => {
     "Trace (attempt 1, <t>):
      <t> +<t> click getByRole('button') basic.test.ts:12
      <t> +<t> toHaveTextContent getByRole('button') basic.test.ts:13
-     ~<t> (no recorded steps)
      <t> after wait basic.test.ts:15
      <t> +<t> toHaveTextContent [ERROR] getByRole('button') basic.test.ts:16
      <t> test finished basic.test.ts:16"
