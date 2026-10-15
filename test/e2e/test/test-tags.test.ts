@@ -467,6 +467,116 @@ test('custom options override tag options', async () => {
   `)
 })
 
+test('skipIf and runIf override skip from tags like the skip option', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      describe('skipped by tag', { tags: ['skipped'] }, () => {
+        test('no options', () => {})
+        test('skip: false', { skip: false }, () => {})
+        test('skip: undefined', { skip: undefined }, () => {})
+        test.skipIf(false)('skipIf(false)', () => {})
+        test.skipIf(undefined)('skipIf(undefined)', () => {})
+        test.skipIf(true)('skipIf(true)', () => {})
+        test.runIf(true)('runIf(true)', () => {})
+        test.runIf(false)('runIf(false)', () => {})
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [{ name: 'skipped', skip: true }],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "skipped by tag": {
+          "no options": "skipped",
+          "runIf(false)": "skipped",
+          "runIf(true)": "passed",
+          "skip: false": "passed",
+          "skip: undefined": "skipped",
+          "skipIf(false)": "passed",
+          "skipIf(true)": "skipped",
+          "skipIf(undefined)": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('undefined options do not override inherited options', async () => {
+  const { stderr, buildTree } = await runInlineTests({
+    'basic.test.js': `
+      test.skip('test.skip', { skip: undefined }, () => {})
+      test('tag timeout', { tags: ['slow'], timeout: undefined }, () => {})
+      test('tag with undefined timeout', { tags: ['slow', 'ci'] }, () => {})
+      describe('suite', { timeout: 30_000, concurrent: true }, () => {
+        test('test', { timeout: undefined, concurrent: undefined }, () => {})
+        describe('nested suite', { timeout: undefined }, () => {
+          test('test', () => {})
+        })
+      })
+    `,
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          globals: true,
+          tags: [
+            { name: 'slow', timeout: 60_000 },
+            { name: 'ci', timeout: undefined, priority: 1 },
+          ],
+        },
+      }
+    `,
+  })
+  expect(stderr).toBe('')
+  expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "suite": {
+          "nested suite": {
+            "test": {
+              "concurrent": true,
+              "mode": "run",
+              "tags": [],
+              "timeout": 30000,
+            },
+          },
+          "test": {
+            "concurrent": true,
+            "mode": "run",
+            "tags": [],
+            "timeout": 30000,
+          },
+        },
+        "tag timeout": {
+          "mode": "run",
+          "tags": [
+            "slow",
+          ],
+          "timeout": 60000,
+        },
+        "tag with undefined timeout": {
+          "mode": "run",
+          "tags": [
+            "slow",
+            "ci",
+          ],
+          "timeout": 60000,
+        },
+        "test.skip": {
+          "mode": "skip",
+          "tags": [],
+          "timeout": 5000,
+        },
+      },
+    }
+  `)
+})
+
 test('strictFlag: false does not throw an error if test has an undefined tag', async () => {
   const { stderr } = await runInlineTests({
     'basic.test.js': `

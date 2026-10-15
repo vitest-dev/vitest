@@ -526,6 +526,8 @@ export interface InternalChainableContext<API = TestAPI> {
   /** @internal */
   withContext: () => API
   /** @internal */
+  extendContext: (ctx: Partial<InternalTestContext>) => API
+  /** @internal */
   getFixtures: () => TestFixtures
 }
 
