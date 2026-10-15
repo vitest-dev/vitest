@@ -1,59 +1,12 @@
-import type { RunnerTask as Task } from 'vitest'
-import type { BrowserTraceEntryKind } from 'vitest/browser'
+import type {
+  BrowserTraceData,
+  BrowserTraceEntry,
+  BrowserTraceSnapshot,
+  RunnerTask as Task,
+} from 'vitest'
 import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
 import { getBrowserState, getWorkerState, now } from '../utils'
-
-export interface BrowserTraceData {
-  retry: number
-  repeats: number
-  // UI has access to original config but let artifact own this
-  recordCanvas: boolean
-  // Each artifact currently carries one entry; the UI merges entries by attempt.
-  // TODO: revisit whether this should be modeled as a single entry.
-  entries: BrowserTraceEntry[]
-}
-
-export type BrowserTraceEntryStatus = 'pass' | 'fail'
-type BrowserTraceEntryRangePhase = 'start' | 'end'
-type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
-
-interface BrowserTraceEntryRange {
-  id: string
-  phase: BrowserTraceEntryRangePhase
-}
-
-export interface BrowserTraceEntry {
-  name: string
-  kind: BrowserTraceEntryKind
-  range?: BrowserTraceEntryRange
-  status?: BrowserTraceEntryStatus
-  startTime: number
-  // Derived on UI side from range start/end entries.
-  duration?: number
-  stack?: string
-  // resolved server-side from stack in __vitest_recordBrowserTrace command
-  location?: { file: string; line: number; column: number }
-  element?: SerializedLocator
-  snapshot: TraceSnapshot
-}
-
-interface TraceSnapshot {
-  serialized: unknown
-  viewport: {
-    width: number
-    height: number
-  }
-  scroll: {
-    x: number
-    y: number
-  }
-  selectorIds?: number[]
-  // not used yet for UI but tested
-  selectorResolution?: BrowserTraceSelectorResolution
-  selectorError?: string
-  pseudoClassIds: Record<PseudoClassName, number[]>
-}
 
 // Dynamic pseudo-class state isn't preserved in the serialized DOM. rrweb-snapshot
 // rewrites user-action selectors in serialized styles. For example:
@@ -73,8 +26,6 @@ const PSEUDO_CLASS_NAMES = [
   ':focus-within',
   ':popover-open',
 ] as const
-type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
-
 export interface BrowserTraceAttempt {
   retry: number
   repeats: number
@@ -125,7 +76,7 @@ export async function recordBrowserTraceEntry(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
+function takeSnapshot(serializedLocator?: SerializedLocator): BrowserTraceSnapshot {
   const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
@@ -135,7 +86,7 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
     inlineImages: traceView.inlineImages,
     recordCanvas: traceView.recordCanvas,
   })
-  const result: TraceSnapshot = {
+  const result: BrowserTraceSnapshot = {
     serialized,
     viewport: {
       width: window.innerWidth,

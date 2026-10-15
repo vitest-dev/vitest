@@ -1,27 +1,9 @@
-import type { TestArtifact } from '../../../runtime/runner/types'
+import type { NormalizedTraceEntry } from '@vitest/utils/trace'
+import type { BrowserTraceEntry, TestArtifact } from '../../../runtime/runner/types'
+import { groupTraceAttempts } from '@vitest/utils/trace'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { formatTime } from './utils'
-
-interface TraceEntry {
-  name: string
-  range?: { id: string; phase: 'start' | 'end' }
-  status?: 'pass' | 'fail'
-  startTime: number
-  location?: { file: string; line: number; column: number }
-  element?: { locator: string }
-}
-
-interface TraceData {
-  retry: number
-  repeats: number
-  entries: TraceEntry[]
-}
-
-interface TimelineStep extends TraceEntry {
-  depth: number
-  duration?: number
-}
 
 interface TimelineRow {
   cells: [time: string, duration: string, name: string, locator: string, location: string]
@@ -31,12 +13,17 @@ interface TimelineRow {
 const MAX_STEPS = 10
 
 export function formatTraceTimeline(artifacts: TestArtifact[], root: string): string | undefined {
-  const attempt = getLastAttempt(artifacts)
+  const attempts = groupTraceAttempts(
+    artifacts.flatMap((artifact) =>
+      artifact.type === 'internal:browserTrace' ? [artifact.data] : [],
+    ),
+  )
+  const attempt = [...attempts.values()].at(-1)
   if (!attempt) {
     return
   }
 
-  const steps = collectSteps(attempt.entries)
+  const steps = attempt.entries
   // the test end is already shown by the error location
   const visible = steps.filter((step) => step.name !== 'vitest:onAfterRetryTask')
   if (!visible.length) {
@@ -72,56 +59,7 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
   return [`\nTrace (${header.join(', ')}):`, ...lines].join('\n')
 }
 
-function getLastAttempt(artifacts: TestArtifact[]): TraceData | undefined {
-  const attempts = new Map<string, TraceData>()
-  for (const artifact of artifacts) {
-    if (artifact.type !== 'internal:browserTrace') {
-      continue
-    }
-    const data = artifact.data as TraceData
-    const key = `${data.repeats}:${data.retry}`
-    const attempt = attempts.get(key)
-    if (attempt) {
-      attempt.entries.push(...data.entries)
-    } else {
-      attempts.set(key, { ...data, entries: [...data.entries] })
-    }
-  }
-  return [...attempts.values()].at(-1)
-}
-
-function collectSteps(entries: TraceEntry[]): TimelineStep[] {
-  const steps: TimelineStep[] = []
-  const startIndexes = new Map<string, number>()
-  let depth = 0
-  for (const entry of entries) {
-    if (!entry.range) {
-      steps.push({ ...entry, depth })
-    } else if (entry.range.phase === 'start') {
-      startIndexes.set(entry.range.id, steps.length)
-      steps.push({ ...entry, depth })
-      depth++
-    } else {
-      const index = startIndexes.get(entry.range.id)
-      if (index == null) {
-        steps.push({ ...entry, depth: 0 })
-        continue
-      }
-      const start = steps[index]
-      steps[index] = {
-        ...start,
-        ...entry,
-        depth: start.depth,
-        startTime: start.startTime,
-        duration: entry.startTime - start.startTime,
-      }
-      depth--
-    }
-  }
-  return steps
-}
-
-function formatStep(step: TimelineStep, root: string): TimelineRow {
+function formatStep(step: NormalizedTraceEntry<BrowserTraceEntry>, root: string): TimelineRow {
   const location = step.location
     ? `${relative(root, step.location.file)}:${step.location.line}:${step.location.column}`
     : ''
