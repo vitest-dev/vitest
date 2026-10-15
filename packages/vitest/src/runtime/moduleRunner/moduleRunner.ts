@@ -1,4 +1,3 @@
-import type { MockedModule } from '@vitest/mocker'
 import type vm from 'node:vm'
 import type { EvaluatedModuleNode, EvaluatedModules, SSRImportMetadata } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
@@ -173,7 +172,6 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
-      const mockedModule = mod.meta.mockedModule as MockedModule
       const mockId = this.mocker.getMockPath(mod.id)
       const currentMock = this.mocker.getDependencyMock(mod.id)
       // bypass mock and force "importActual" behavior when:
@@ -191,8 +189,9 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
         const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
         return this._cachedRequest(node.url, node, callstack, metadata)
       }
+      // mocked metadata comes from a manual or redirect mock and has no code to automock
       const isAutoMock = currentMock.type === 'automock' || currentMock.type === 'autospy'
-      if (isAutoMock && currentMock !== mockedModule) {
+      if (isAutoMock) {
         const freshNode = await this.fetchModule(injectQuery(url, '_vitest_original'))
         mocked = await this.mocker.requestWithMockedModule(url, freshNode, callstack, currentMock)
       } else {

@@ -84,7 +84,13 @@ export class BareModuleMocker implements TestModuleMocker {
   }
 
   public reset(): void {
+    for (const registry of this.registries.values()) {
+      for (const url of registry.keys()) {
+        this.invalidateModuleById(registry.get(url)!.id)
+      }
+    }
     this.registries.clear()
+    BareModuleMocker.pendingIds = []
   }
 
   protected invalidateModuleById(_id: string): void {

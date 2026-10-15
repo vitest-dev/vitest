@@ -105,6 +105,7 @@ export async function run(
         vi.resetConfig()
         // mocks should not affect different files
         vi.restoreAllMocks()
+        moduleRunner.mocker?.reset()
       }
     })
   } finally {
