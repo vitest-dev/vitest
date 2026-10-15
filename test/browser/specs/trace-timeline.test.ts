@@ -64,8 +64,7 @@ test('prints trace timeline on failure', async () => {
      <t> +<t> click getByRole('button') basic.test.ts:12
      <t> +<t> toHaveTextContent getByRole('button') basic.test.ts:13
      <t> after wait basic.test.ts:15
-     <t> +<t> toHaveTextContent [ERROR] getByRole('button') basic.test.ts:16
-     <t> test finished basic.test.ts:16"
+     <t> +<t> toHaveTextContent [ERROR] getByRole('button') basic.test.ts:16"
   `)
 })
 
@@ -85,8 +84,7 @@ test('prints trace timeline for a failure outside trace steps', async () => {
 
   expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
     "Trace (<t>):
-     <t> +<t> click getByRole('button') basic.test.ts:7
-     <t> test finished basic.test.ts:8"
+     <t> +<t> click getByRole('button') basic.test.ts:7"
   `)
 })
 
@@ -106,8 +104,7 @@ test('prints trace timeline of the last retry', async () => {
 
   expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
     "Trace (<t>, retry 1):
-     <t> +<t> click getByRole('button') basic.test.ts:7
-     <t> test finished basic.test.ts:8"
+     <t> +<t> click getByRole('button') basic.test.ts:7"
   `)
 })
 
@@ -134,5 +131,20 @@ test('does not print trace timeline without trace view', async () => {
       },
     }
   `)
+  expect(extractTimeline(stderr)).toBeUndefined()
+})
+
+test('does not print trace timeline without recorded steps', async () => {
+  const { stderr } = await runBrowserTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      test('fail', () => {
+        expect(1).toBe(2)
+      })
+    `,
+  })
+
+  expect(stderr).toMatch('expected 1 to be 2')
   expect(extractTimeline(stderr)).toBeUndefined()
 })

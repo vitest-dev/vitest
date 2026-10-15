@@ -37,7 +37,12 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
   }
 
   const steps = collectSteps(attempt.entries)
-  const shown = steps.slice(-MAX_STEPS)
+  // the test end is already shown by the error location
+  const visible = steps.filter((step) => step.name !== 'vitest:onAfterRetryTask')
+  if (!visible.length) {
+    return
+  }
+  const shown = visible.slice(-MAX_STEPS)
   const rows = shown.map((step) => formatStep(step, root))
 
   const widths = rows[0].cells.map((_, i) => Math.max(...rows.map((row) => row.cells[i].length)))
@@ -48,8 +53,8 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
     const text = `  ${time}  ${duration}  ${name}  ${c.cyan(locator)}  ${c.dim(location)}`.trimEnd()
     return status === 'fail' ? c.red(text) : text
   })
-  if (steps.length > shown.length) {
-    lines.unshift(c.dim(`  ... ${steps.length - shown.length} earlier steps`))
+  if (visible.length > shown.length) {
+    lines.unshift(c.dim(`  ... ${visible.length - shown.length} earlier steps`))
   }
 
   const total = Math.max(...steps.map((step) => step.startTime + (step.duration ?? 0)))
@@ -129,8 +134,5 @@ function formatStep(step: TimelineStep, root: string): TimelineRow {
 }
 
 function formatStepName(name: string): string {
-  if (name === 'vitest:onAfterRetryTask') {
-    return 'test finished'
-  }
   return name.startsWith('vitest:') ? name.slice('vitest:'.length) : name
 }
