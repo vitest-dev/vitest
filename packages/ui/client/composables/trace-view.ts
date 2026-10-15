@@ -1,5 +1,12 @@
-import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
-import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
+import type { NormalizedTraceData, NormalizedTraceEntry } from '@vitest/utils/trace'
+import type {
+  BrowserTraceData,
+  BrowserTraceEntry,
+  RunnerTestCase,
+  RunnerTestFile,
+  TestArtifact,
+} from 'vitest'
+import { groupTraceAttempts } from '@vitest/utils/trace'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
@@ -21,13 +28,9 @@ export interface TraceEditorMarker {
   active?: boolean
 }
 
-export interface NormalizedBrowserTraceData extends BrowserTraceData {
-  entries: NormalizedBrowserTraceEntry[]
-}
+export type NormalizedBrowserTraceData = NormalizedTraceData<BrowserTraceData>
 
-export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
-  depth: number
-}
+export type NormalizedBrowserTraceEntry = NormalizedTraceEntry<BrowserTraceEntry>
 
 export const activeTraceView = ref<TraceSelection>()
 
@@ -36,82 +39,14 @@ export const showTraceSelectorHighlight = useLocalStorage(
   true,
 )
 
-function getTraceAttemptKey(trace: BrowserTraceData): string {
-  return `${trace.repeats}:${trace.retry}`
-}
-
-function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
-  const merged: NormalizedBrowserTraceEntry[] = []
-  const startMap = new Map<string, number>()
-  const parents: string[] = []
-
-  for (const entry of entries) {
-    const range = entry.range
-    if (!range) {
-      merged.push({
-        ...entry,
-        depth: parents.length,
-      })
-      continue
-    }
-
-    if (range.phase === 'start') {
-      startMap.set(range.id, merged.length)
-      merged.push({
-        ...entry,
-        depth: parents.length,
-      })
-      parents.push(range.id)
-      continue
-    }
-
-    // when range.phase === 'end'
-    const index = startMap.get(range.id)
-    if (index == null) {
-      // unpaired range shouldn't happen but just leave it there
-      merged.push({ ...entry, depth: 0 })
-      continue
-    }
-
-    // Keep the start timestamp for positioning, but derive display duration
-    // from the end event timestamp.
-    const start = merged[index]
-    merged[index] = {
-      ...start,
-      ...entry,
-      startTime: start.startTime,
-      duration: entry.startTime - start.startTime,
-    }
-    parents.pop()
-  }
-
-  return merged
-}
-
 export function getTraceAttemptMap(
   artifacts: TestArtifact[],
 ): Map<string, NormalizedBrowserTraceData> {
-  const grouped: Record<string, BrowserTraceData[]> = {}
-  for (const artifact of artifacts) {
-    if (artifact.type !== 'internal:browserTrace') {
-      continue
-    }
-    const trace = artifact.data as BrowserTraceData
-    const key = getTraceAttemptKey(trace)
-    grouped[key] ??= []
-    grouped[key].push(trace)
-  }
-
-  const merged = new Map<string, NormalizedBrowserTraceData>()
-  for (const [key, traces] of Object.entries(grouped)) {
-    const trace = traces[0]
-    const entries = traces.flatMap((trace) => trace.entries)
-    merged.set(key, {
-      ...trace,
-      entries: normalizeTraceEntries(entries),
-    })
-  }
-  return merged
+  return groupTraceAttempts(
+    artifacts.flatMap((artifact) =>
+      artifact.type === 'internal:browserTrace' ? [artifact.data] : [],
+    ),
+  )
 }
 
 export function getSelectedTrace(
