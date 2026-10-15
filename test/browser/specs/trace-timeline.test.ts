@@ -61,10 +61,11 @@ test('prints trace timeline on failure', async () => {
   expect(stderr.match(/Trace \(/g)).toHaveLength(1)
   expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
     "Trace (<t>):
-     <t> +<t> click getByRole('button') basic.test.ts:12
-     <t> +<t> toHaveTextContent getByRole('button') basic.test.ts:13
+     start duration step locator location
+     <t> <t> click getByRole('button') basic.test.ts:12
+     <t> <t> toHaveTextContent getByRole('button') basic.test.ts:13
      <t> after wait basic.test.ts:15
-     <t> +<t> toHaveTextContent [ERROR] getByRole('button') basic.test.ts:16"
+     <t> <t> toHaveTextContent [ERROR] getByRole('button') basic.test.ts:16"
   `)
 })
 
@@ -84,7 +85,8 @@ test('prints trace timeline for a failure outside trace steps', async () => {
 
   expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
     "Trace (<t>):
-     <t> +<t> click getByRole('button') basic.test.ts:7"
+     start duration step locator location
+     <t> <t> click getByRole('button') basic.test.ts:7"
   `)
 })
 
@@ -104,7 +106,8 @@ test('prints trace timeline of the last retry', async () => {
 
   expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
     "Trace (<t>, retry 1):
-     <t> +<t> click getByRole('button') basic.test.ts:7"
+     start duration step locator location
+     <t> <t> click getByRole('button') basic.test.ts:7"
   `)
 })
 

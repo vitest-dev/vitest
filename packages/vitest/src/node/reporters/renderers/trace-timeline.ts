@@ -43,18 +43,22 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
     return
   }
   const shown = visible.slice(-MAX_STEPS)
-  const rows = shown.map((step) => formatStep(step, root))
+  const headerRow: TimelineRow = { cells: ['start', 'duration', 'step', 'locator', 'location'] }
+  const rows = [headerRow, ...shown.map((step) => formatStep(step, root))]
 
-  const widths = rows[0].cells.map((_, i) => Math.max(...rows.map((row) => row.cells[i].length)))
-  const lines = rows.map(({ cells, status }) => {
-    const [time, duration, name, locator, location] = cells.map((cell, i) =>
+  const widths = headerRow.cells.map((_, i) => Math.max(...rows.map((row) => row.cells[i].length)))
+  const lines = rows.map((row) => {
+    const [time, duration, name, locator, location] = row.cells.map((cell, i) =>
       i === 0 ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
     )
+    if (row === headerRow) {
+      return c.dim(`  ${time}  ${duration}  ${name}  ${locator}  ${location}`.trimEnd())
+    }
     const text = `  ${time}  ${duration}  ${name}  ${c.cyan(locator)}  ${c.dim(location)}`.trimEnd()
-    return status === 'fail' ? c.red(text) : text
+    return row.status === 'fail' ? c.red(text) : text
   })
   if (visible.length > shown.length) {
-    lines.unshift(c.dim(`  ... ${visible.length - shown.length} earlier steps`))
+    lines.splice(1, 0, c.dim(`  ... ${visible.length - shown.length} earlier steps`))
   }
 
   const total = Math.max(...steps.map((step) => step.startTime + (step.duration ?? 0)))
@@ -124,7 +128,7 @@ function formatStep(step: TimelineStep, root: string): TimelineRow {
   return {
     cells: [
       formatTime(step.startTime),
-      step.duration == null ? '' : `+${formatTime(step.duration)}`,
+      step.duration == null ? '' : formatTime(step.duration),
       `${'  '.repeat(step.depth)}${formatStepName(step.name)}`,
       step.element?.locator ?? '',
       location,
