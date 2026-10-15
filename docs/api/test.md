@@ -75,6 +75,8 @@ test('skipped concurrent test', { skip: true, concurrent: true }, () => {
 
 They both work in exactly the same way. To use either one is purely a stylistic choice.
 
+Options set to `undefined` are ignored. They don't override values from the chain, the parent suite, or [tags](/guide/test-tags).
+
 ### timeout
 
 - **Type:** `number`

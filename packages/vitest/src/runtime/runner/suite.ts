@@ -250,6 +250,15 @@ export function createSuiteHooks(): SuiteHooks {
 
 const POSITIVE_INFINITY = Number.POSITIVE_INFINITY
 
+function assignDefined<T extends object>(target: T, source: T): T {
+  for (const key in source) {
+    if (source[key] !== undefined) {
+      target[key] = source[key]
+    }
+  }
+  return target
+}
+
 function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
   timeoutOrTest: T | number | undefined,
@@ -322,7 +331,7 @@ function createSuiteCollector(
       )
       .reduce((acc, tag) => {
         const { name, description, priority, meta, ...options } = tag
-        Object.assign(acc, options)
+        assignDefined(acc, options)
         if (meta) {
           acc.meta = Object.assign(acc.meta ?? Object.create(null), meta)
         }
@@ -331,11 +340,7 @@ function createSuiteCollector(
 
     const testOwnMeta = options.meta
     const parentOptions = collectorContext.currentSuite?.options
-    options = {
-      ...parentOptions,
-      ...tagsOptions,
-      ...options,
-    }
+    options = assignDefined({ ...parentOptions, ...tagsOptions }, options)
     const timeout = options.timeout ?? runner.config.testTimeout
     // TODO: should this be `parentTask.meta`?
     // currently we don't inherit
@@ -449,8 +454,7 @@ function createSuiteCollector(
     }
 
     const test = task(formatName(name), {
-      ...this,
-      ...options,
+      ...assignDefined({ ...this }, options),
       handler,
     }) as unknown as Test
 
@@ -605,10 +609,7 @@ function createSuite() {
 
     const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
-    options = {
-      ...parentOptions,
-      ...options,
-    }
+    options = assignDefined({ ...parentOptions }, options)
 
     const shuffle =
       this.shuffle ??
