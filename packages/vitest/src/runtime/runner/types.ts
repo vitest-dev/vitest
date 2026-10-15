@@ -1,7 +1,6 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { Statistics } from 'tinybench'
-import type { BrowserTraceEntryKind } from '../../public/browser'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
 import type { SerializedConfig } from '../config'
@@ -1476,69 +1475,7 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
 export interface BrowserTraceArtifact extends TestArtifactBase {
   type: 'internal:browserTrace'
   // TODO: should save a dedicated file/binary as attachments?
-  data: BrowserTraceData
-}
-
-/**
- * @experimental
- */
-export interface BrowserTraceData {
-  retry: number
-  repeats: number
-  // UI has access to original config but let artifact own this
-  recordCanvas: boolean
-  // Each artifact currently carries one entry; consumers merge entries by attempt.
-  // TODO: revisit whether this should be modeled as a single entry.
-  entries: BrowserTraceEntry[]
-}
-
-/**
- * @experimental
- */
-export type BrowserTraceEntryStatus = 'pass' | 'fail'
-
-/**
- * @experimental
- */
-export interface BrowserTraceEntry {
-  name: string
-  kind: BrowserTraceEntryKind
-  range?: {
-    id: string
-    phase: 'start' | 'end'
-  }
-  status?: BrowserTraceEntryStatus
-  startTime: number
-  // Derived from range start/end entries when traces are merged by attempt.
-  duration?: number
-  stack?: string
-  // resolved server-side from stack in __vitest_recordBrowserTrace command
-  location?: { file: string; line: number; column: number }
-  element?: {
-    selector: string
-    locator: string
-  }
-  snapshot: BrowserTraceSnapshot
-}
-
-/**
- * @experimental
- */
-export interface BrowserTraceSnapshot {
-  serialized: unknown
-  viewport: {
-    width: number
-    height: number
-  }
-  scroll: {
-    x: number
-    y: number
-  }
-  selectorIds?: number[]
-  // not used yet for UI but tested
-  selectorResolution?: 'matched' | 'missing' | 'error'
-  selectorError?: string
-  pseudoClassIds: Record<string, number[]>
+  data: unknown
 }
 
 interface FailureScreenshotArtifactAttachment extends TestAttachment {

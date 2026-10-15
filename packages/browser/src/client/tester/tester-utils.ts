@@ -1,4 +1,3 @@
-import type { BrowserTraceEntryStatus } from 'vitest'
 import type {
   Locator,
   SelectorOptions,
@@ -7,6 +6,7 @@ import type {
   UserEventWheelOptions,
 } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
+import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'

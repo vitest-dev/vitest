@@ -1,4 +1,7 @@
-import type { BrowserTraceData, BrowserTraceEntry } from 'vitest'
+import type {
+  BrowserTraceData,
+  BrowserTraceEntry,
+} from '../../../packages/browser/src/client/tester/trace'
 import { stripVTControlCharacters } from 'node:util'
 import { relative } from 'pathe'
 import { expect, test } from 'vitest'

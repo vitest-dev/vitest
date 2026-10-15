@@ -78,10 +78,6 @@ export { describe, it, suite, test } from '../runtime/runner/suite'
 export type {
   BaselineData,
   BrowserTraceArtifact,
-  BrowserTraceData,
-  BrowserTraceEntry,
-  BrowserTraceEntryStatus,
-  BrowserTraceSnapshot,
   FailureScreenshotArtifact,
   ImportDuration,
   OnTestFailedHandler,

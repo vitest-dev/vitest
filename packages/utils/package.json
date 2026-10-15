@@ -56,11 +56,6 @@
       "types": "./dist/timers.d.ts",
       "default": "./dist/timers.js"
     },
-    "./trace": {
-      "__vitest_source__": "./src/trace.ts",
-      "types": "./dist/trace.d.ts",
-      "default": "./dist/trace.js"
-    },
     "./display": {
       "__vitest_source__": "./src/display.ts",
       "types": "./dist/display.d.ts",
