@@ -818,10 +818,10 @@ export function createTaskCollector(fn: (...args: any[]) => any): TestAPI {
   }
 
   taskFn.skipIf = function (this: TestAPI, condition: any) {
-    return condition ? this.skip : this
+    return getChainableContext(this).extendContext({ skip: !!condition })
   }
   taskFn.runIf = function (this: TestAPI, condition: any) {
-    return condition ? this : this.skip
+    return getChainableContext(this).extendContext({ skip: !condition })
   }
 
   /**

@@ -467,6 +467,46 @@ test('custom options override tag options', async () => {
   `)
 })
 
+test('skipIf and runIf override skip from tags like the skip option', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      describe('skipped by tag', { tags: ['skipped'] }, () => {
+        test('no options', () => {})
+        test('skip: false', { skip: false }, () => {})
+        test('skip: undefined', { skip: undefined }, () => {})
+        test.skipIf(false)('skipIf(false)', () => {})
+        test.skipIf(undefined)('skipIf(undefined)', () => {})
+        test.skipIf(true)('skipIf(true)', () => {})
+        test.runIf(true)('runIf(true)', () => {})
+        test.runIf(false)('runIf(false)', () => {})
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [{ name: 'skipped', skip: true }],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "skipped by tag": {
+          "no options": "skipped",
+          "runIf(false)": "skipped",
+          "runIf(true)": "passed",
+          "skip: false": "passed",
+          "skip: undefined": "passed",
+          "skipIf(false)": "passed",
+          "skipIf(true)": "skipped",
+          "skipIf(undefined)": "passed",
+        },
+      },
+    }
+  `)
+})
+
 test('strictFlag: false does not throw an error if test has an undefined tag', async () => {
   const { stderr } = await runInlineTests({
     'basic.test.js': `
