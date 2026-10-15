@@ -47,7 +47,7 @@ catch (err) {
 }
 ```
 
-- Objects and arrays created by Node.js APIs and by the test environment come from outside of the sandbox too. This includes the result of `await response.json()` on a `Response` or a `Request`, `structuredClone()`, `path.parse()` and DOM methods like `element.getAttributeNames()`. Their prototype is not the `Object.prototype` or `Array.prototype` of your tests, so [`toStrictEqual`](/api/expect#tostrictequal) does not consider them equal to the same literal, and libraries that detect plain objects by their prototype treat them as class instances. For example, Svelte 5 does not make such an object reactive when it is assigned to `$state`, so updating its nested properties does not update the component. If your tests depend on these values, run them in the `forks` or `threads` pool, or parse fetch responses inside the sandbox in a [setup file](/config/setupfiles):
+- Objects and arrays created by Node.js APIs and by the test environment come from outside of the sandbox too. This includes the result of `await response.json()` on a `Response` or a `Request`, `structuredClone()`, `path.parse()` and DOM methods like `element.getAttributeNames()`. Their prototype is not the `Object.prototype` or `Array.prototype` of your tests, so [`toStrictEqual`](/api/expect#tostrictequal) does not consider them equal to the same literal, and libraries that detect plain objects by their prototype treat them as class instances. If your tests depend on these values, run them in the `forks` or `threads` pool, or parse fetch responses inside the sandbox in a [setup file](/config/setupfiles):
 
 ```ts [vitest.setup.ts]
 Response.prototype.json = async function () {
