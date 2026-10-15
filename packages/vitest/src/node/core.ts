@@ -1639,13 +1639,20 @@ export class Vitest {
         clearTimeout(this._rerunTimer)
         await this.runningPromise?.catch(noop)
 
-        const teardownProjects = [...this.projects]
-        if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
-          teardownProjects.push(this.coreWorkspaceProject)
+        const teardownProjects = new Set<TestProject>()
+        for (const project of this.projects) {
+          // the project that declares browser instances runs their global setup
+          if (project._instanceParent) {
+            teardownProjects.add(project._instanceParent)
+          }
+          teardownProjects.add(project)
+        }
+        if (this.coreWorkspaceProject) {
+          teardownProjects.add(this.coreWorkspaceProject)
         }
         const teardownErrors: unknown[] = []
         // do teardown before closing the server
-        for (const project of teardownProjects.reverse()) {
+        for (const project of [...teardownProjects].reverse()) {
           await project._teardownGlobalSetup().catch((error) => {
             teardownErrors.push(error)
           })
