@@ -53,11 +53,13 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
   }
 
   const total = Math.max(...steps.map((step) => step.startTime + (step.duration ?? 0)))
-  const header = [`attempt ${attempt.retry + 1}`]
-  if (attempt.repeats) {
-    header.push(`repeat ${attempt.repeats + 1}`)
+  const header = [formatTime(total)]
+  if (attempt.retry) {
+    header.push(`retry ${attempt.retry}`)
   }
-  header.push(formatTime(total))
+  if (attempt.repeats) {
+    header.push(`repeat ${attempt.repeats}`)
+  }
   return [`\nTrace (${header.join(', ')}):`, ...lines].join('\n')
 }
 
