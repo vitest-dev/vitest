@@ -16,7 +16,7 @@ import { BrowserConnectionError } from '../errors'
 
 const debug = createDebugger('vitest:browser:pool')
 
-const PROVIDER_CLOSE_TIMEOUT = 10_000
+const PROVIDER_CLOSE_TIMEOUT = 30_000
 
 export interface BrowserPool {
   runTests: (
