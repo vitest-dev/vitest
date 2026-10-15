@@ -45,6 +45,7 @@ import {
   renderBenchmarkRow,
 } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
+import { formatTraceTimeline } from './renderers/trace-timeline'
 import {
   countTestErrors,
   divider,
@@ -1526,6 +1527,14 @@ export abstract class BaseReporter implements Reporter {
         verbose: this.verbose,
         screenshotPaths,
       })
+
+      for (const task of tasks) {
+        const timeline =
+          task.type === 'test' && formatTraceTimeline(task.artifacts, this.ctx.config.root)
+        if (timeline) {
+          this.error(`${timeline}\n`)
+        }
+      }
 
       if (tasks[0].type === 'test' && tasks[0].annotations.length) {
         const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
