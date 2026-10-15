@@ -15,7 +15,7 @@ test.describe('ui on-failure snapshots', () => {
       open: false,
     })
     vitest = server.vitest
-    baseURL = `${server.url}/__vitest__/`
+    baseURL = server.url
   })
 
   test.afterAll(async () => {
