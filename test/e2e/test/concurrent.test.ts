@@ -441,6 +441,8 @@ test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
           "t": [
             "Hook timed out in 500ms.
     If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+            "Hook timed out in 500ms.
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
           ],
         },
       },
@@ -521,6 +523,8 @@ test('afterEach deadlocks with insufficient maxConcurrency', async () => {
       "basic.test.ts": {
         "wrapper": {
           "t": [
+            "Hook timed out in 500ms.
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
             "Hook timed out in 500ms.
     If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
           ],
